@@ -24,6 +24,8 @@ import type {
   ViewTransitionProps,
   ActivityProps,
   SuspenseProps,
+  SuspenseListProps,
+  SuspenseListRevealOrder,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {
@@ -74,6 +76,9 @@ import {
   pushEndInstance,
   pushSegmentFinale,
   getChildFormatContext,
+  getSuspenseFallbackFormatContext,
+  getSuspenseContentFormatContext,
+  getViewTransitionFormatContext,
   writeHoistables,
   writePreambleStart,
   writePreambleEnd,
@@ -138,6 +143,10 @@ import {
   callComponentInDEV,
   callRenderInDEV,
 } from './ReactFizzCallUserSpace';
+import {
+  getViewTransitionClassName,
+  getViewTransitionName,
+} from './ReactFizzViewTransitionComponent';
 
 import {resetOwnerStackLimit} from 'shared/ReactOwnerStackReset';
 import {
@@ -224,6 +233,12 @@ type LegacyContext = {
   [key: string]: any,
 };
 
+type SuspenseListRow = {
+  pendingTasks: number, // The number of tasks, previous rows and inner suspense boundaries blocking this row.
+  boundaries: null | Array<SuspenseBoundary>, // The boundaries in this row waiting to be unblocked by the previous row. (null means this row is not blocked)
+  next: null | SuspenseListRow, // The next row blocked by this one.
+};
+
 const CLIENT_RENDERED = 4; // if it errors or infinitely suspends
 
 type SuspenseBoundary = {
@@ -231,6 +246,7 @@ type SuspenseBoundary = {
   rootSegmentID: number,
   parentFlushed: boolean,
   pendingTasks: number, // when it reaches zero we can show this boundary's content
+  row: null | SuspenseListRow, // the row that this boundary blocks from completing.
   completedSegments: Array<Segment>, // completed but not yet flushed segments.
   byteSize: number, // used to determine whether to inline children boundaries.
   fallbackAbortableTasks: Set<Task>, // used to cancel task on the fallback if the boundary completes or gets canceled.
@@ -261,12 +277,12 @@ type RenderTask = {
   formatContext: FormatContext, // the format's specific context (e.g. HTML/SVG/MathML)
   context: ContextSnapshot, // the current new context that this task is executing in
   treeContext: TreeContext, // the current tree context that this task is executing in
+  row: null | SuspenseListRow, // the current SuspenseList row that this is rendering inside
   componentStack: null | ComponentStackNode, // stack frame description of the currently rendering component
   thenableState: null | ThenableState,
-  isFallback: boolean, // whether this task is rendering inside a fallback tree
   legacyContext: LegacyContext, // the current legacy context that this task is executing in
   debugTask: null | ConsoleTask, // DEV only
-  // DON'T ANY MORE FIELDS. We at 16 already which otherwise requires converting to a constructor.
+  // DON'T ANY MORE FIELDS. We at 16 in prod already which otherwise requires converting to a constructor.
   // Consider splitting into multiple objects or consolidating some fields.
 };
 
@@ -292,13 +308,11 @@ type ReplayTask = {
   formatContext: FormatContext, // the format's specific context (e.g. HTML/SVG/MathML)
   context: ContextSnapshot, // the current new context that this task is executing in
   treeContext: TreeContext, // the current tree context that this task is executing in
+  row: null | SuspenseListRow, // the current SuspenseList row that this is rendering inside
   componentStack: null | ComponentStackNode, // stack frame description of the currently rendering component
   thenableState: null | ThenableState,
-  isFallback: boolean, // whether this task is rendering inside a fallback tree
   legacyContext: LegacyContext, // the current legacy context that this task is executing in
   debugTask: null | ConsoleTask, // DEV only
-  // DON'T ANY MORE FIELDS. We at 16 already which otherwise requires converting to a constructor.
-  // Consider splitting into multiple objects or consolidating some fields.
 };
 
 export type Task = RenderTask | ReplayTask;
@@ -537,7 +551,7 @@ export function createRequest(
     rootContextSnapshot,
     emptyTreeContext,
     null,
-    false,
+    null,
     emptyContextObject,
     null,
   );
@@ -643,7 +657,7 @@ export function resumeRequest(
       rootContextSnapshot,
       emptyTreeContext,
       null,
-      false,
+      null,
       emptyContextObject,
       null,
     );
@@ -671,7 +685,7 @@ export function resumeRequest(
     rootContextSnapshot,
     emptyTreeContext,
     null,
-    false,
+    null,
     emptyContextObject,
     null,
   );
@@ -737,6 +751,7 @@ function pingTask(request: Request, task: Task): void {
 
 function createSuspenseBoundary(
   request: Request,
+  row: null | SuspenseListRow,
   fallbackAbortableTasks: Set<Task>,
   contentPreamble: null | Preamble,
   fallbackPreamble: null | Preamble,
@@ -746,6 +761,7 @@ function createSuspenseBoundary(
     rootSegmentID: -1,
     parentFlushed: false,
     pendingTasks: 0,
+    row: row,
     completedSegments: [],
     byteSize: 0,
     fallbackAbortableTasks,
@@ -762,6 +778,17 @@ function createSuspenseBoundary(
     boundary.errorMessage = null;
     boundary.errorStack = null;
     boundary.errorComponentStack = null;
+  }
+  if (row !== null) {
+    // This boundary will block this row from completing.
+    row.pendingTasks++;
+    const blockedBoundaries = row.boundaries;
+    if (blockedBoundaries !== null) {
+      // Previous rows will block this boundary itself from completing.
+      request.allPendingTasks++;
+      boundary.pendingTasks++;
+      blockedBoundaries.push(boundary);
+    }
   }
   return boundary;
 }
@@ -780,8 +807,8 @@ function createRenderTask(
   formatContext: FormatContext,
   context: ContextSnapshot,
   treeContext: TreeContext,
+  row: null | SuspenseListRow,
   componentStack: null | ComponentStackNode,
-  isFallback: boolean,
   legacyContext: LegacyContext,
   debugTask: null | ConsoleTask,
 ): RenderTask {
@@ -790,6 +817,9 @@ function createRenderTask(
     request.pendingRootTasks++;
   } else {
     blockedBoundary.pendingTasks++;
+  }
+  if (row !== null) {
+    row.pendingTasks++;
   }
   const task: RenderTask = ({
     replay: null,
@@ -805,9 +835,9 @@ function createRenderTask(
     formatContext,
     context,
     treeContext,
+    row,
     componentStack,
     thenableState,
-    isFallback,
   }: any);
   if (!disableLegacyContext) {
     task.legacyContext = legacyContext;
@@ -832,8 +862,8 @@ function createReplayTask(
   formatContext: FormatContext,
   context: ContextSnapshot,
   treeContext: TreeContext,
+  row: null | SuspenseListRow,
   componentStack: null | ComponentStackNode,
-  isFallback: boolean,
   legacyContext: LegacyContext,
   debugTask: null | ConsoleTask,
 ): ReplayTask {
@@ -842,6 +872,9 @@ function createReplayTask(
     request.pendingRootTasks++;
   } else {
     blockedBoundary.pendingTasks++;
+  }
+  if (row !== null) {
+    row.pendingTasks++;
   }
   replay.pendingTasks++;
   const task: ReplayTask = ({
@@ -858,9 +891,9 @@ function createReplayTask(
     formatContext,
     context,
     treeContext,
+    row,
     componentStack,
     thenableState,
-    isFallback,
   }: any);
   if (!disableLegacyContext) {
     task.legacyContext = legacyContext;
@@ -1146,12 +1179,21 @@ function renderSuspenseBoundary(
     // an already completed Suspense boundary. It's too late to do anything about it
     // so we can just render through it.
     const prevKeyPath = someTask.keyPath;
+    const prevContext = someTask.formatContext;
+    const prevRow = someTask.row;
     someTask.keyPath = keyPath;
+    someTask.formatContext = getSuspenseContentFormatContext(
+      request.resumableState,
+      prevContext,
+    );
+    someTask.row = null;
     const content: ReactNodeList = props.children;
     try {
       renderNode(request, someTask, content, -1);
     } finally {
       someTask.keyPath = prevKeyPath;
+      someTask.formatContext = prevContext;
+      someTask.row = prevRow;
     }
     return;
   }
@@ -1159,6 +1201,8 @@ function renderSuspenseBoundary(
   const task: RenderTask = someTask;
 
   const prevKeyPath = task.keyPath;
+  const prevContext = task.formatContext;
+  const prevRow = task.row;
   const parentBoundary = task.blockedBoundary;
   const parentPreamble = task.blockedPreamble;
   const parentHoistableState = task.hoistableState;
@@ -1176,12 +1220,19 @@ function renderSuspenseBoundary(
   if (canHavePreamble(task.formatContext)) {
     newBoundary = createSuspenseBoundary(
       request,
+      task.row,
       fallbackAbortSet,
       createPreambleState(),
       createPreambleState(),
     );
   } else {
-    newBoundary = createSuspenseBoundary(request, fallbackAbortSet, null, null);
+    newBoundary = createSuspenseBoundary(
+      request,
+      task.row,
+      fallbackAbortSet,
+      null,
+      null,
+    );
   }
   if (request.trackedPostpones !== null) {
     newBoundary.trackedContentKeyPath = keyPath;
@@ -1237,6 +1288,10 @@ function renderSuspenseBoundary(
     task.blockedSegment = boundarySegment;
     task.blockedPreamble = newBoundary.fallbackPreamble;
     task.keyPath = fallbackKeyPath;
+    task.formatContext = getSuspenseFallbackFormatContext(
+      request.resumableState,
+      prevContext,
+    );
     boundarySegment.status = RENDERING;
     try {
       renderNode(request, task, fallback, -1);
@@ -1259,6 +1314,7 @@ function renderSuspenseBoundary(
       task.blockedSegment = parentSegment;
       task.blockedPreamble = parentPreamble;
       task.keyPath = prevKeyPath;
+      task.formatContext = prevContext;
     }
 
     // We create a suspended task for the primary content because we want to allow
@@ -1274,11 +1330,14 @@ function renderSuspenseBoundary(
       newBoundary.contentState,
       task.abortSet,
       keyPath,
-      task.formatContext,
+      getSuspenseContentFormatContext(
+        request.resumableState,
+        task.formatContext,
+      ),
       task.context,
       task.treeContext,
+      null, // The row gets reset inside the Suspense boundary.
       task.componentStack,
-      task.isFallback,
       !disableLegacyContext ? task.legacyContext : emptyContextObject,
       __DEV__ ? task.debugTask : null,
     );
@@ -1302,6 +1361,11 @@ function renderSuspenseBoundary(
     task.hoistableState = newBoundary.contentState;
     task.blockedSegment = contentRootSegment;
     task.keyPath = keyPath;
+    task.formatContext = getSuspenseContentFormatContext(
+      request.resumableState,
+      prevContext,
+    );
+    task.row = null;
     contentRootSegment.status = RENDERING;
 
     try {
@@ -1323,6 +1387,14 @@ function renderSuspenseBoundary(
         // the fallback. However, if this boundary ended up big enough to be eligible for outlining
         // we can't do that because we might still need the fallback if we outline it.
         if (!isEligibleForOutlining(request, newBoundary)) {
+          if (prevRow !== null) {
+            // If we have synchronously completed the boundary and it's not eligible for outlining
+            // then we don't have to wait for it to be flushed before we unblock future rows.
+            // This lets us inline small rows in order.
+            if (--prevRow.pendingTasks === 0) {
+              finishSuspenseListRow(request, prevRow);
+            }
+          }
           if (request.pendingRootTasks === 0 && task.blockedPreamble) {
             // The root is complete and this boundary may contribute part of the preamble.
             // We eagerly attempt to prepare the preamble here because we expect most requests
@@ -1388,6 +1460,8 @@ function renderSuspenseBoundary(
       task.hoistableState = parentHoistableState;
       task.blockedSegment = parentSegment;
       task.keyPath = prevKeyPath;
+      task.formatContext = prevContext;
+      task.row = prevRow;
     }
 
     const fallbackKeyPath = [keyPath[0], 'Suspense Fallback', keyPath[2]];
@@ -1404,11 +1478,14 @@ function renderSuspenseBoundary(
       newBoundary.fallbackState,
       fallbackAbortSet,
       fallbackKeyPath,
-      task.formatContext,
+      getSuspenseFallbackFormatContext(
+        request.resumableState,
+        task.formatContext,
+      ),
       task.context,
       task.treeContext,
+      task.row,
       task.componentStack,
-      true,
       !disableLegacyContext ? task.legacyContext : emptyContextObject,
       __DEV__ ? task.debugTask : null,
     );
@@ -1431,6 +1508,8 @@ function replaySuspenseBoundary(
   fallbackSlots: ResumeSlots,
 ): void {
   const prevKeyPath = task.keyPath;
+  const prevContext = task.formatContext;
+  const prevRow = task.row;
   const previousReplaySet: ReplaySet = task.replay;
 
   const parentBoundary = task.blockedBoundary;
@@ -1444,6 +1523,7 @@ function replaySuspenseBoundary(
   if (canHavePreamble(task.formatContext)) {
     resumedBoundary = createSuspenseBoundary(
       request,
+      task.row,
       fallbackAbortSet,
       createPreambleState(),
       createPreambleState(),
@@ -1451,6 +1531,7 @@ function replaySuspenseBoundary(
   } else {
     resumedBoundary = createSuspenseBoundary(
       request,
+      task.row,
       fallbackAbortSet,
       null,
       null,
@@ -1466,6 +1547,11 @@ function replaySuspenseBoundary(
   task.blockedBoundary = resumedBoundary;
   task.hoistableState = resumedBoundary.contentState;
   task.keyPath = keyPath;
+  task.formatContext = getSuspenseContentFormatContext(
+    request.resumableState,
+    prevContext,
+  );
+  task.row = null;
   task.replay = {nodes: childNodes, slots: childSlots, pendingTasks: 1};
 
   try {
@@ -1541,6 +1627,8 @@ function replaySuspenseBoundary(
     task.hoistableState = parentHoistableState;
     task.replay = previousReplaySet;
     task.keyPath = prevKeyPath;
+    task.formatContext = prevContext;
+    task.row = prevRow;
   }
 
   const fallbackKeyPath = [keyPath[0], 'Suspense Fallback', keyPath[2]];
@@ -1562,11 +1650,14 @@ function replaySuspenseBoundary(
     resumedBoundary.fallbackState,
     fallbackAbortSet,
     fallbackKeyPath,
-    task.formatContext,
+    getSuspenseFallbackFormatContext(
+      request.resumableState,
+      task.formatContext,
+    ),
     task.context,
     task.treeContext,
+    task.row,
     task.componentStack,
-    true,
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
     __DEV__ ? task.debugTask : null,
   );
@@ -1575,6 +1666,317 @@ function replaySuspenseBoundary(
   // TODO: This should be queued at a separate lower priority queue so that we only work
   // on preparing fallbacks if we don't have any more main content to task on.
   request.pingedTasks.push(suspendedFallbackTask);
+}
+
+function finishSuspenseListRow(request: Request, row: SuspenseListRow): void {
+  // This row finished. Now we have to unblock all the next rows that were blocked on this.
+  // We do this in a loop to avoid stack overflow for very long lists that get unblocked.
+  let unblockedRow = row.next;
+  while (unblockedRow !== null) {
+    // Unblocking the boundaries will decrement the count of this row but we keep it above
+    // zero so they never finish this row recursively.
+    const unblockedBoundaries = unblockedRow.boundaries;
+    if (unblockedBoundaries !== null) {
+      unblockedRow.boundaries = null;
+      for (let i = 0; i < unblockedBoundaries.length; i++) {
+        finishedTask(request, unblockedBoundaries[i], null, null);
+      }
+    }
+    // Instead we decrement at the end to keep it all in this loop.
+    unblockedRow.pendingTasks--;
+    if (unblockedRow.pendingTasks > 0) {
+      // Still blocked.
+      break;
+    }
+    unblockedRow = unblockedRow.next;
+  }
+}
+
+function createSuspenseListRow(
+  previousRow: null | SuspenseListRow,
+): SuspenseListRow {
+  const newRow: SuspenseListRow = {
+    pendingTasks: 1, // At first the row is blocked on attempting rendering itself.
+    boundaries: null,
+    next: null,
+  };
+  if (previousRow !== null && previousRow.pendingTasks > 0) {
+    // If the previous row is not done yet, we add ourselves to be blocked on it.
+    // When it finishes, we'll decrement our pending tasks.
+    newRow.pendingTasks++;
+    newRow.boundaries = [];
+    previousRow.next = newRow;
+  }
+  return newRow;
+}
+
+function renderSuspenseListRows(
+  request: Request,
+  task: Task,
+  keyPath: KeyNode,
+  rows: Array<ReactNodeList>,
+  revealOrder: 'forwards' | 'backwards',
+): void {
+  // This is a fork of renderChildrenArray that's aware of tracking rows.
+  const prevKeyPath = task.keyPath;
+  const previousComponentStack = task.componentStack;
+  let previousDebugTask = null;
+  if (__DEV__) {
+    previousDebugTask = task.debugTask;
+    // We read debugInfo from task.node.props.children instead of rows because it
+    // might have been an unwrapped iterable so we read from the original node.
+    pushServerComponentStack(task, (task.node: any).props.children._debugInfo);
+  }
+
+  const prevTreeContext = task.treeContext;
+  const prevRow = task.row;
+  const totalChildren = rows.length;
+
+  if (task.replay !== null) {
+    // Replay
+    // First we need to check if we have any resume slots at this level.
+    const resumeSlots = task.replay.slots;
+    if (resumeSlots !== null && typeof resumeSlots === 'object') {
+      let previousSuspenseListRow: null | SuspenseListRow = null;
+      for (let n = 0; n < totalChildren; n++) {
+        // Since we are going to resume into a slot whose order was already
+        // determined by the prerender, we can safely resume it even in reverse
+        // render order.
+        const i = revealOrder !== 'backwards' ? n : totalChildren - 1 - n;
+        const node = rows[i];
+        task.row = previousSuspenseListRow = createSuspenseListRow(
+          previousSuspenseListRow,
+        );
+        task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
+        const resumeSegmentID = resumeSlots[i];
+        // TODO: If this errors we should still continue with the next sibling.
+        if (typeof resumeSegmentID === 'number') {
+          resumeNode(request, task, resumeSegmentID, node, i);
+          // We finished rendering this node, so now we can consume this
+          // slot. This must happen after in case we rerender this task.
+          delete resumeSlots[i];
+        } else {
+          renderNode(request, task, node, i);
+        }
+        if (--previousSuspenseListRow.pendingTasks === 0) {
+          finishSuspenseListRow(request, previousSuspenseListRow);
+        }
+      }
+    } else {
+      let previousSuspenseListRow: null | SuspenseListRow = null;
+      for (let n = 0; n < totalChildren; n++) {
+        // Since we are going to resume into a slot whose order was already
+        // determined by the prerender, we can safely resume it even in reverse
+        // render order.
+        const i = revealOrder !== 'backwards' ? n : totalChildren - 1 - n;
+        const node = rows[i];
+        if (__DEV__) {
+          warnForMissingKey(request, task, node);
+        }
+        task.row = previousSuspenseListRow = createSuspenseListRow(
+          previousSuspenseListRow,
+        );
+        task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
+        renderNode(request, task, node, i);
+        if (--previousSuspenseListRow.pendingTasks === 0) {
+          finishSuspenseListRow(request, previousSuspenseListRow);
+        }
+      }
+    }
+  } else {
+    task = ((task: any): RenderTask); // Refined
+    if (revealOrder !== 'backwards') {
+      // Forwards direction
+      let previousSuspenseListRow: null | SuspenseListRow = null;
+      for (let i = 0; i < totalChildren; i++) {
+        const node = rows[i];
+        if (__DEV__) {
+          warnForMissingKey(request, task, node);
+        }
+        task.row = previousSuspenseListRow = createSuspenseListRow(
+          previousSuspenseListRow,
+        );
+        task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
+        renderNode(request, task, node, i);
+        if (--previousSuspenseListRow.pendingTasks === 0) {
+          finishSuspenseListRow(request, previousSuspenseListRow);
+        }
+      }
+    } else {
+      // For backwards direction we need to do things a bit differently.
+      // We give each row its own segment so that we can render the content in
+      // reverse order but still emit it in the right order when we flush.
+      const parentSegment = task.blockedSegment;
+      const childIndex = parentSegment.children.length;
+      const insertionIndex = parentSegment.chunks.length;
+      let previousSuspenseListRow: null | SuspenseListRow = null;
+      for (let i = totalChildren - 1; i >= 0; i--) {
+        const node = rows[i];
+        task.row = previousSuspenseListRow = createSuspenseListRow(
+          previousSuspenseListRow,
+        );
+        task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
+        const newSegment = createPendingSegment(
+          request,
+          insertionIndex,
+          null,
+          task.formatContext,
+          // Assume we are text embedded at the trailing edges
+          i === 0 ? parentSegment.lastPushedText : true,
+          true,
+        );
+        // Insert in the beginning of the sequence, which will insert before any previous rows.
+        parentSegment.children.splice(childIndex, 0, newSegment);
+        task.blockedSegment = newSegment;
+        if (__DEV__) {
+          warnForMissingKey(request, task, node);
+        }
+        try {
+          renderNode(request, task, node, i);
+          pushSegmentFinale(
+            newSegment.chunks,
+            request.renderState,
+            newSegment.lastPushedText,
+            newSegment.textEmbedded,
+          );
+          newSegment.status = COMPLETED;
+          finishedSegment(request, task.blockedBoundary, newSegment);
+          if (--previousSuspenseListRow.pendingTasks === 0) {
+            finishSuspenseListRow(request, previousSuspenseListRow);
+          }
+        } catch (thrownValue: mixed) {
+          if (request.status === ABORTING) {
+            newSegment.status = ABORTED;
+          } else {
+            newSegment.status = ERRORED;
+          }
+          throw thrownValue;
+        }
+      }
+      task.blockedSegment = parentSegment;
+      // Reset lastPushedText for current Segment since the new Segments "consumed" it
+      parentSegment.lastPushedText = false;
+    }
+  }
+
+  // Because this context is always set right before rendering every child, we
+  // only need to reset it to the previous value at the very end.
+  task.treeContext = prevTreeContext;
+  task.row = prevRow;
+  task.keyPath = prevKeyPath;
+  if (__DEV__) {
+    task.componentStack = previousComponentStack;
+    task.debugTask = previousDebugTask;
+  }
+}
+
+function renderSuspenseList(
+  request: Request,
+  task: Task,
+  keyPath: KeyNode,
+  props: SuspenseListProps,
+): void {
+  const children: any = props.children;
+  const revealOrder: SuspenseListRevealOrder = props.revealOrder;
+  // TODO: Support tail hidden/collapsed modes.
+  // const tailMode: SuspenseListTailMode = props.tail;
+  if (revealOrder === 'forwards' || revealOrder === 'backwards') {
+    // For ordered reveal, we need to produce rows from the children.
+    if (isArray(children)) {
+      renderSuspenseListRows(request, task, keyPath, children, revealOrder);
+      return;
+    }
+    const iteratorFn = getIteratorFn(children);
+    if (iteratorFn) {
+      const iterator = iteratorFn.call(children);
+      if (iterator) {
+        if (__DEV__) {
+          validateIterable(task, children, -1, iterator, iteratorFn);
+        }
+        // TODO: We currently use the same id algorithm as regular nodes
+        // but we need a new algorithm for SuspenseList that doesn't require
+        // a full set to be loaded up front to support Async Iterable.
+        // When we have that, we shouldn't buffer anymore.
+        let step = iterator.next();
+        if (!step.done) {
+          const rows = [];
+          do {
+            rows.push(step.value);
+            step = iterator.next();
+          } while (!step.done);
+          renderSuspenseListRows(request, task, keyPath, children, revealOrder);
+        }
+        return;
+      }
+    }
+    if (
+      enableAsyncIterableChildren &&
+      typeof (children: any)[ASYNC_ITERATOR] === 'function'
+    ) {
+      const iterator: AsyncIterator<ReactNodeList> = (children: any)[
+        ASYNC_ITERATOR
+      ]();
+      if (iterator) {
+        if (__DEV__) {
+          validateAsyncIterable(task, (children: any), -1, iterator);
+        }
+        // TODO: Update the task.children to be the iterator to avoid asking
+        // for new iterators, but we currently warn for rendering these
+        // so needs some refactoring to deal with the warning.
+
+        // Restore the thenable state before resuming.
+        const prevThenableState = task.thenableState;
+        task.thenableState = null;
+        prepareToUseThenableState(prevThenableState);
+
+        // We need to know how many total rows are in this set, so that we
+        // can allocate enough id slots to acommodate them. So we must exhaust
+        // the iterator before we start recursively rendering the rows.
+        // TODO: This is not great but I think it's inherent to the id
+        // generation algorithm.
+
+        const rows = [];
+
+        let done = false;
+
+        if (iterator === children) {
+          // If it's an iterator we need to continue reading where we left
+          // off. We can do that by reading the first few rows from the previous
+          // thenable state.
+          // $FlowFixMe
+          let step = readPreviousThenableFromState();
+          while (step !== undefined) {
+            if (step.done) {
+              done = true;
+              break;
+            }
+            rows.push(step.value);
+            step = readPreviousThenableFromState();
+          }
+        }
+
+        if (!done) {
+          let step = unwrapThenable(iterator.next());
+          while (!step.done) {
+            rows.push(step.value);
+            step = unwrapThenable(iterator.next());
+          }
+        }
+        renderSuspenseListRows(request, task, keyPath, rows, revealOrder);
+        return;
+      }
+    }
+    // This case will warn on the client. It's the same as independent revealOrder.
+  }
+
+  if (revealOrder === 'together') {
+    // TODO
+  }
+  // For other reveal order modes, we just render it as a fragment.
+  const prevKeyPath = task.keyPath;
+  task.keyPath = keyPath;
+  renderNodeDestructive(request, task, children, -1);
+  task.keyPath = prevKeyPath;
 }
 
 function renderPreamble(
@@ -1607,8 +2009,8 @@ function renderPreamble(
     task.formatContext,
     task.context,
     task.treeContext,
+    task.row,
     task.componentStack,
-    task.isFallback,
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
     __DEV__ ? task.debugTask : null,
   );
@@ -1653,7 +2055,6 @@ function renderHostElement(
       task.hoistableState,
       task.formatContext,
       segment.lastPushedText,
-      task.isFallback,
     );
     segment.lastPushedText = false;
     const prevContext = task.formatContext;
@@ -2271,9 +2672,43 @@ function renderViewTransition(
   keyPath: KeyNode,
   props: ViewTransitionProps,
 ) {
+  const prevContext = task.formatContext;
   const prevKeyPath = task.keyPath;
+  // Get the name off props or generate an auto-generated one in case we need it.
+  const autoName = getViewTransitionName(
+    props,
+    task.treeContext,
+    request.resumableState,
+  );
+  task.formatContext = getViewTransitionFormatContext(
+    request.resumableState,
+    prevContext,
+    getViewTransitionClassName(props.default, props.update),
+    getViewTransitionClassName(props.default, props.enter),
+    getViewTransitionClassName(props.default, props.exit),
+    getViewTransitionClassName(props.default, props.share),
+    props.name,
+    autoName,
+  );
   task.keyPath = keyPath;
-  renderNodeDestructive(request, task, props.children, -1);
+  if (props.name != null && props.name !== 'auto') {
+    renderNodeDestructive(request, task, props.children, -1);
+  } else {
+    // This will be auto-assigned a name which claims a "useId" slot.
+    // This component materialized an id. We treat this as its own level, with
+    // a single "child" slot.
+    const prevTreeContext = task.treeContext;
+    const totalChildren = 1;
+    const index = 0;
+    // Modify the id context. Because we'll need to reset this if something
+    // suspends or errors, we'll use the non-destructive render path.
+    task.treeContext = pushTreeContext(prevTreeContext, totalChildren, index);
+    renderNode(request, task, props.children, -1);
+    // Like the other contexts, this does not need to be in a finally block
+    // because renderNode takes care of unwinding the stack.
+    task.treeContext = prevTreeContext;
+  }
+  task.formatContext = prevContext;
   task.keyPath = prevKeyPath;
 }
 
@@ -2324,11 +2759,7 @@ function renderElement(
       return;
     }
     case REACT_SUSPENSE_LIST_TYPE: {
-      // TODO: SuspenseList should control the boundaries.
-      const prevKeyPath = task.keyPath;
-      task.keyPath = keyPath;
-      renderNodeDestructive(request, task, props.children, -1);
-      task.keyPath = prevKeyPath;
+      renderSuspenseList(request, task, keyPath, props);
       return;
     }
     case REACT_VIEW_TRANSITION_TYPE: {
@@ -3478,8 +3909,8 @@ function spawnNewSuspendedReplayTask(
     task.formatContext,
     task.context,
     task.treeContext,
+    task.row,
     task.componentStack,
-    task.isFallback,
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
     __DEV__ ? task.debugTask : null,
   );
@@ -3520,8 +3951,8 @@ function spawnNewSuspendedRenderTask(
     task.formatContext,
     task.context,
     task.treeContext,
+    task.row,
     task.componentStack,
-    task.isFallback,
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
     __DEV__ ? task.debugTask : null,
   );
@@ -3829,10 +4260,19 @@ function erroredReplay(
 function erroredTask(
   request: Request,
   boundary: Root | SuspenseBoundary,
+  row: null | SuspenseListRow,
   error: mixed,
   errorInfo: ThrownInfo,
   debugTask: null | ConsoleTask,
 ) {
+  if (row !== null) {
+    if (--row.pendingTasks === 0) {
+      finishSuspenseListRow(request, row);
+    }
+  }
+
+  request.allPendingTasks--;
+
   // Report the error to a global handler.
   let errorDigest;
   // We don't handle halts here because we only halt when prerendering and
@@ -3884,7 +4324,6 @@ function erroredTask(
     }
   }
 
-  request.allPendingTasks--;
   if (request.allPendingTasks === 0) {
     completeAll(request);
   }
@@ -3899,7 +4338,7 @@ function abortTaskSoft(this: Request, task: Task): void {
   const segment = task.blockedSegment;
   if (segment !== null) {
     segment.status = ABORTED;
-    finishedTask(request, boundary, segment);
+    finishedTask(request, boundary, task.row, segment);
   }
 }
 
@@ -3913,6 +4352,7 @@ function abortRemainingSuspenseBoundary(
 ): void {
   const resumedBoundary = createSuspenseBoundary(
     request,
+    null,
     new Set(),
     null,
     null,
@@ -4012,6 +4452,13 @@ function abortTask(task: Task, request: Request, error: mixed): void {
     segment.status = ABORTED;
   }
 
+  const row = task.row;
+  if (row !== null) {
+    if (--row.pendingTasks === 0) {
+      finishSuspenseListRow(request, row);
+    }
+  }
+
   const errorInfo = getThrownInfo(task.componentStack);
 
   if (boundary === null) {
@@ -4034,7 +4481,7 @@ function abortTask(task: Task, request: Request, error: mixed): void {
             // we just need to mark it as postponed.
             logPostpone(request, postponeInstance.message, errorInfo, null);
             trackPostpone(request, trackedPostpones, task, segment);
-            finishedTask(request, null, segment);
+            finishedTask(request, null, row, segment);
           } else {
             const fatal = new Error(
               'The render was aborted with postpone when the shell is incomplete. Reason: ' +
@@ -4053,7 +4500,7 @@ function abortTask(task: Task, request: Request, error: mixed): void {
           // We log the error but we still resolve the prerender
           logRecoverableError(request, error, errorInfo, null);
           trackPostpone(request, trackedPostpones, task, segment);
-          finishedTask(request, null, segment);
+          finishedTask(request, null, row, segment);
         } else {
           logRecoverableError(request, error, errorInfo, null);
           fatalError(request, error, errorInfo, null);
@@ -4125,7 +4572,7 @@ function abortTask(task: Task, request: Request, error: mixed): void {
             abortTask(fallbackTask, request, error),
           );
           boundary.fallbackAbortableTasks.clear();
-          return finishedTask(request, boundary, segment);
+          return finishedTask(request, boundary, row, segment);
         }
       }
       boundary.status = CLIENT_RENDERED;
@@ -4142,7 +4589,7 @@ function abortTask(task: Task, request: Request, error: mixed): void {
         logPostpone(request, postponeInstance.message, errorInfo, null);
         if (request.trackedPostpones !== null && segment !== null) {
           trackPostpone(request, request.trackedPostpones, task, segment);
-          finishedTask(request, task.blockedBoundary, segment);
+          finishedTask(request, task.blockedBoundary, row, segment);
 
           // If this boundary was still pending then we haven't already cancelled its fallbacks.
           // We'll need to abort the fallbacks, which will also error that parent boundary.
@@ -4298,8 +4745,15 @@ function finishedSegment(
 function finishedTask(
   request: Request,
   boundary: Root | SuspenseBoundary,
+  row: null | SuspenseListRow,
   segment: null | Segment,
 ) {
+  if (row !== null) {
+    if (--row.pendingTasks === 0) {
+      finishSuspenseListRow(request, row);
+    }
+  }
+  request.allPendingTasks--;
   if (boundary === null) {
     if (segment !== null && segment.parentFlushed) {
       if (request.completedRootSegment !== null) {
@@ -4347,6 +4801,13 @@ function finishedTask(
         if (!isEligibleForOutlining(request, boundary)) {
           boundary.fallbackAbortableTasks.forEach(abortTaskSoft, request);
           boundary.fallbackAbortableTasks.clear();
+          const boundaryRow = boundary.row;
+          if (boundaryRow !== null) {
+            // If we aren't eligible for outlining, we don't have to wait until we flush it.
+            if (--boundaryRow.pendingTasks === 0) {
+              finishSuspenseListRow(request, boundaryRow);
+            }
+          }
         }
 
         if (
@@ -4382,7 +4843,6 @@ function finishedTask(
     }
   }
 
-  request.allPendingTasks--;
   if (request.allPendingTasks === 0) {
     completeAll(request);
   }
@@ -4446,7 +4906,7 @@ function retryRenderTask(
     task.abortSet.delete(task);
     segment.status = COMPLETED;
     finishedSegment(request, task.blockedBoundary, segment);
-    finishedTask(request, task.blockedBoundary, segment);
+    finishedTask(request, task.blockedBoundary, task.row, segment);
   } catch (thrownValue: mixed) {
     resetHooksState();
 
@@ -4499,7 +4959,7 @@ function retryRenderTask(
       }
 
       trackPostpone(request, trackedPostpones, task, segment);
-      finishedTask(request, task.blockedBoundary, segment);
+      finishedTask(request, task.blockedBoundary, task.row, segment);
       return;
     }
 
@@ -4533,7 +4993,7 @@ function retryRenderTask(
           __DEV__ ? task.debugTask : null,
         );
         trackPostpone(request, trackedPostpones, task, segment);
-        finishedTask(request, task.blockedBoundary, segment);
+        finishedTask(request, task.blockedBoundary, task.row, segment);
         return;
       }
     }
@@ -4545,6 +5005,7 @@ function retryRenderTask(
     erroredTask(
       request,
       task.blockedBoundary,
+      task.row,
       x,
       errorInfo,
       __DEV__ ? task.debugTask : null,
@@ -4592,7 +5053,7 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
     task.replay.pendingTasks--;
 
     task.abortSet.delete(task);
-    finishedTask(request, task.blockedBoundary, null);
+    finishedTask(request, task.blockedBoundary, task.row, null);
   } catch (thrownValue) {
     resetHooksState();
 
@@ -4904,6 +5365,16 @@ function flushSegment(
     // Emit a client rendered suspense boundary wrapper.
     // We never queue the inner boundary so we'll never emit its content or partial segments.
 
+    const row = boundary.row;
+    if (row !== null) {
+      // Since this boundary end up client rendered, we can unblock future suspense list rows.
+      // This means that they may appear out of order if the future rows succeed but this is
+      // a client rendered row.
+      if (--row.pendingTasks === 0) {
+        finishSuspenseListRow(request, row);
+      }
+    }
+
     if (__DEV__) {
       writeStartClientRenderedSuspenseBoundary(
         destination,
@@ -4992,6 +5463,16 @@ function flushSegment(
     if (hoistableState) {
       hoistHoistables(hoistableState, boundary.contentState);
     }
+
+    const row = boundary.row;
+    if (row !== null && isEligibleForOutlining(request, boundary)) {
+      // Once we have written the boundary, we can unblock the row and let future
+      // rows be written. This may schedule new completed boundaries.
+      if (--row.pendingTasks === 0) {
+        finishSuspenseListRow(request, row);
+      }
+    }
+
     // We can inline this boundary's content as a complete boundary.
     writeStartCompletedSuspenseBoundary(destination, request.renderState);
 
@@ -5069,6 +5550,15 @@ function flushCompletedBoundary(
     flushPartiallyCompletedSegment(request, destination, boundary, segment);
   }
   completedSegments.length = 0;
+
+  const row = boundary.row;
+  if (row !== null && isEligibleForOutlining(request, boundary)) {
+    // Once we have written the boundary, we can unblock the row and let future
+    // rows be written. This may schedule new completed boundaries.
+    if (--row.pendingTasks === 0) {
+      finishSuspenseListRow(request, row);
+    }
+  }
 
   writeHoistablesForBoundary(
     destination,
@@ -5262,6 +5752,7 @@ function flushCompletedQueues(
 
     // Next we check the completed boundaries again. This may have had
     // boundaries added to it in case they were too larged to be inlined.
+    // SuspenseListRows might have been unblocked as well.
     // New ones might be added in this loop.
     const largeBoundaries = request.completedBoundaries;
     for (i = 0; i < largeBoundaries.length; i++) {
