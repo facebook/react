@@ -29,6 +29,7 @@ import {
   markInstructionIds,
   promoteTemporary,
   reversePostorderBlocks,
+  todoPopulateAliasingEffects,
 } from '../HIR';
 import {createTemporaryPlace} from '../HIR/HIRBuilder';
 import {enterSSA} from '../SSA';
@@ -146,6 +147,7 @@ function emitLoadLoweredContextCallee(
     id: makeInstructionId(0),
     loc: GeneratedSource,
     lvalue: createTemporaryPlace(env, GeneratedSource),
+    effects: todoPopulateAliasingEffects(),
     value: loadGlobal,
   };
 }
@@ -192,6 +194,7 @@ function emitPropertyLoad(
     lvalue: object,
     value: loadObj,
     id: makeInstructionId(0),
+    effects: todoPopulateAliasingEffects(),
     loc: GeneratedSource,
   };
 
@@ -206,6 +209,7 @@ function emitPropertyLoad(
     lvalue: element,
     value: loadProp,
     id: makeInstructionId(0),
+    effects: todoPopulateAliasingEffects(),
     loc: GeneratedSource,
   };
   return {
@@ -278,6 +282,7 @@ function emitSelectorFn(env: Environment, keys: Array<string>): Instruction {
       loc: GeneratedSource,
     },
     lvalue: createTemporaryPlace(env, GeneratedSource),
+    effects: todoPopulateAliasingEffects(),
     loc: GeneratedSource,
   };
   return fnInstr;
@@ -294,6 +299,7 @@ function emitArrayInstr(elements: Array<Place>, env: Environment): Instruction {
     id: makeInstructionId(0),
     value: array,
     lvalue: arrayLvalue,
+    effects: todoPopulateAliasingEffects(),
     loc: GeneratedSource,
   };
   return arrayInstr;
