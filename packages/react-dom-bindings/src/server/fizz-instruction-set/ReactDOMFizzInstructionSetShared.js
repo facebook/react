@@ -13,6 +13,8 @@ const SUSPENSE_PENDING_START_DATA = '$?';
 const SUSPENSE_QUEUED_START_DATA = '$~';
 const SUSPENSE_FALLBACK_START_DATA = '$!';
 
+const SUSPENSEY_FONT_TIMEOUT = 500;
+
 // TODO: Symbols that are referenced outside this module use dynamic accessor
 // notation instead of dot notation to prevent Closure's advanced compilation
 // mode from renaming. We could use extern files instead, but I couldn't get it
@@ -251,7 +253,18 @@ export function revealCompletedBoundariesWithViewTransitions(
       const transition = (document['__reactViewTransition'] = document[
         'startViewTransition'
       ]({
-        update: revealBoundaries.bind(null, batch),
+        update: () => {
+          revealBoundaries(
+            batch,
+            // Force layout to trigger font loading, we pass the actual value to trick minifiers.
+            document.documentElement.clientHeight,
+          );
+          return Promise.race([
+            // Block on fonts finishing loading before revealing these boundaries.
+            document.fonts.ready,
+            new Promise(resolve => setTimeout(resolve, SUSPENSEY_FONT_TIMEOUT)),
+          ]);
+        },
         types: [], // TODO: Add a hard coded type for Suspense reveals.
       }));
       transition.ready.finally(() => {
