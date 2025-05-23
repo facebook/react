@@ -8344,6 +8344,23 @@ const testsTypescript = {
         },
       ],
     },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.foo);
+          });
+        }
+      `,
+      options: [{requireExplicitEffectDeps: true}],
+      errors: [
+        {
+          message:
+            'React Hook useEffect always requires dependencies. Please add a dependency array or an explicit `undefined`',
+          suggestions: undefined,
+        },
+      ],
+    },
   ],
 };
 
