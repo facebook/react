@@ -101,6 +101,7 @@ export type ReactiveInstruction = {
   id: InstructionId;
   lvalue: Place | null;
   value: ReactiveValue;
+  effects?: Array<AliasingEffect> | null; // TODO make non-optional
   loc: SourceLocation;
 };
 
