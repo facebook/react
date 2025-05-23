@@ -235,6 +235,7 @@ function rewriteBlock(
       type: null,
       loc: terminal.loc,
     },
+    effects: null,
   });
   block.terminal = {
     kind: 'goto',
@@ -263,5 +264,6 @@ function declareTemporary(
       type: null,
       loc: result.loc,
     },
+    effects: null,
   });
 }
