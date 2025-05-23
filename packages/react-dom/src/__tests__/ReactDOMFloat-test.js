@@ -704,8 +704,14 @@ describe('ReactDOMFloat', () => {
         (gate(flags => flags.shouldUseFizzExternalRuntime)
           ? '<script src="react-dom/unstable_server-external-runtime" async=""></script>'
           : '') +
-        '<link rel="expect" href="#«R»" blocking="render"/><title>foo</title></head>' +
-        '<body>bar<template id="«R»"></template>',
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<link rel="expect" href="#«R»" blocking="render"/>'
+          : '') +
+        '<title>foo</title></head>' +
+        '<body>bar' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<template id="«R»"></template>'
+          : ''),
       '</body></html>',
     ]);
   });
