@@ -628,6 +628,17 @@ export const EnvironmentConfigSchema = z.object({
    * ```
    */
   lowerContextAccess: ExternalFunctionSchema.nullable().default(null),
+
+  /**
+   * If enabled, ConstantPropgation will try to resolve ternaries.
+   *
+   * // input
+   * const x = true ? b : c;
+   *
+   * // output
+   * const x = b;
+   */
+  enableTernaryConstantPropagation: z.boolean().default(true),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
