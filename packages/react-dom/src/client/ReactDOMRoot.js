@@ -95,12 +95,8 @@ import {
   defaultOnCaughtError,
   defaultOnRecoverableError,
 } from 'react-reconciler/src/ReactFiberReconciler';
+import {defaultOnDefaultTransitionIndicator} from './ReactDOMDefaultTransitionIndicator';
 import {ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
-
-function defaultOnDefaultTransitionIndicator(): void | (() => void) {
-  // TODO: Implement the default
-  return function () {};
-}
 
 // $FlowFixMe[missing-this-annot]
 function ReactDOMRoot(internalRoot: FiberRoot) {

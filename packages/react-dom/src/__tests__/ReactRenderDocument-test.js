@@ -78,14 +78,20 @@ describe('rendering React components at document', () => {
         root = ReactDOMClient.hydrateRoot(testDocument, <Root hello="world" />);
       });
       expect(testDocument.body.innerHTML).toBe(
-        'Hello world' + '<template id="«R»"></template>',
+        'Hello world' +
+          (gate(flags => flags.enableFizzBlockingRender)
+            ? '<template id="«R»"></template>'
+            : ''),
       );
 
       await act(() => {
         root.render(<Root hello="moon" />);
       });
       expect(testDocument.body.innerHTML).toBe(
-        'Hello moon' + '<template id="«R»"></template>',
+        'Hello moon' +
+          (gate(flags => flags.enableFizzBlockingRender)
+            ? '<template id="«R»"></template>'
+            : ''),
       );
 
       expect(body === testDocument.body).toBe(true);
@@ -112,7 +118,10 @@ describe('rendering React components at document', () => {
         root = ReactDOMClient.hydrateRoot(testDocument, <Root />);
       });
       expect(testDocument.body.innerHTML).toBe(
-        'Hello world' + '<template id="«R»"></template>',
+        'Hello world' +
+          (gate(flags => flags.enableFizzBlockingRender)
+            ? '<template id="«R»"></template>'
+            : ''),
       );
 
       const originalDocEl = testDocument.documentElement;
@@ -124,9 +133,15 @@ describe('rendering React components at document', () => {
       expect(testDocument.firstChild).toBe(originalDocEl);
       expect(testDocument.head).toBe(originalHead);
       expect(testDocument.body).toBe(originalBody);
-      expect(originalBody.innerHTML).toBe('<template id="«R»"></template>');
+      expect(originalBody.innerHTML).toBe(
+        gate(flags => flags.enableFizzBlockingRender)
+          ? '<template id="«R»"></template>'
+          : '',
+      );
       expect(originalHead.innerHTML).toBe(
-        '<link rel="expect" href="#«R»" blocking="render">',
+        gate(flags => flags.enableFizzBlockingRender)
+          ? '<link rel="expect" href="#«R»" blocking="render">'
+          : '',
       );
     });
 
@@ -166,7 +181,10 @@ describe('rendering React components at document', () => {
       });
 
       expect(testDocument.body.innerHTML).toBe(
-        'Hello world' + '<template id="«R»"></template>',
+        'Hello world' +
+          (gate(flags => flags.enableFizzBlockingRender)
+            ? '<template id="«R»"></template>'
+            : ''),
       );
 
       await act(() => {
@@ -174,7 +192,9 @@ describe('rendering React components at document', () => {
       });
 
       expect(testDocument.body.innerHTML).toBe(
-        '<template id="«R»"></template>' + 'Goodbye world',
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<template id="«R»"></template>'
+          : '') + 'Goodbye world',
       );
     });
 
@@ -205,7 +225,10 @@ describe('rendering React components at document', () => {
       });
 
       expect(testDocument.body.innerHTML).toBe(
-        'Hello world' + '<template id="«R»"></template>',
+        'Hello world' +
+          (gate(flags => flags.enableFizzBlockingRender)
+            ? '<template id="«R»"></template>'
+            : ''),
       );
     });
 
@@ -341,7 +364,10 @@ describe('rendering React components at document', () => {
       expect(testDocument.body.innerHTML).toBe(
         favorSafetyOverHydrationPerf
           ? 'Hello world'
-          : 'Goodbye world<template id="«R»"></template>',
+          : 'Goodbye world' +
+              (gate(flags => flags.enableFizzBlockingRender)
+                ? '<template id="«R»"></template>'
+                : ''),
       );
     });
 
