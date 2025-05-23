@@ -22,6 +22,7 @@ import {
   watchSrc,
 } from './runner-watch';
 import * as runnerWorker from './runner-worker';
+import { performance } from 'perf_hooks';
 import {execSync} from 'child_process';
 
 const WORKER_PATH = require.resolve('./runner-worker.js');
