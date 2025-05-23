@@ -107,15 +107,7 @@ export default function Page({url, navigate}) {
 
   const [showModal, setShowModal] = useState(false);
   const portal = showModal ? (
-    createPortal(
-      <div className="portal">
-        Portal: {!show ? 'A' : 'B'}
-        <ViewTransition>
-          <div>{!show ? 'A' : 'B'}</div>
-        </ViewTransition>
-      </div>,
-      document.body
-    )
+    createPortal(<Modal show={show} />, document.body)
   ) : (
     <button
       onClick={() =>
@@ -244,3 +236,15 @@ export default function Page({url, navigate}) {
     </div>
   );
 }
+
+const Modal = function ({show}) {
+  return (
+    <div className="portal">
+      Portal: {!show ? 'A' : 'B'}
+      <ViewTransition>
+        <div>{!show ? 'A' : 'B'}</div>
+      </ViewTransition>
+    </div>
+  );
+};
+Modal.displayName = '#ModalName@InvalidCharacters#';
