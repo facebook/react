@@ -95,45 +95,58 @@ function inheritFunctionEffects(
 
   return effects
     .flatMap(effect => {
-      if (effect.kind === 'GlobalMutation' || effect.kind === 'ReactMutation') {
-        return [effect];
-      } else {
-        const effects: Array<FunctionEffect | null> = [];
-        CompilerError.invariant(effect.kind === 'ContextMutation', {
-          reason: 'Expected ContextMutation',
-          loc: null,
-        });
-        /**
-         * Contextual effects need to be replayed against the current inference
-         * state, which may know more about the value to which the effect applied.
-         * The main cases are:
-         * 1. The mutated context value is _still_ a context value in the current scope,
-         *    so we have to continue propagating the original context mutation.
-         * 2. The mutated context value is a mutable value in the current scope,
-         *    so the context mutation was fine and we can skip propagating the effect.
-         * 3. The mutated context value  is an immutable value in the current scope,
-         *    resulting in a non-ContextMutation FunctionEffect. We propagate that new,
-         *    more detailed effect to the current function context.
-         */
-        for (const place of effect.places) {
-          if (state.isDefined(place)) {
-            const replayedEffect = inferOperandEffect(state, {
-              ...place,
-              loc: effect.loc,
-              effect: effect.effect,
-            });
-            if (replayedEffect != null) {
-              if (replayedEffect.kind === 'ContextMutation') {
-                // Case 1, still a context value so propagate the original effect
-                effects.push(effect);
-              } else {
-                // Case 3, immutable value so propagate the more precise effect
-                effects.push(replayedEffect);
-              }
-            } // else case 2, local mutable value so this effect was fine
-          }
+      switch (effect.kind) {
+        case 'GlobalMutation':
+        case 'ReactMutation': {
+          return [effect];
         }
-        return effects;
+        case 'ContextMutation': {
+          const effects: Array<FunctionEffect | null> = [];
+          CompilerError.invariant(effect.kind === 'ContextMutation', {
+            reason: 'Expected ContextMutation',
+            loc: null,
+          });
+          /**
+           * Contextual effects need to be replayed against the current inference
+           * state, which may know more about the value to which the effect applied.
+           * The main cases are:
+           * 1. The mutated context value is _still_ a context value in the current scope,
+           *    so we have to continue propagating the original context mutation.
+           * 2. The mutated context value is a mutable value in the current scope,
+           *    so the context mutation was fine and we can skip propagating the effect.
+           * 3. The mutated context value  is an immutable value in the current scope,
+           *    resulting in a non-ContextMutation FunctionEffect. We propagate that new,
+           *    more detailed effect to the current function context.
+           */
+          for (const place of effect.places) {
+            if (state.isDefined(place)) {
+              const replayedEffect = inferOperandEffect(state, {
+                ...place,
+                loc: effect.loc,
+                effect: effect.effect,
+              });
+              if (replayedEffect != null) {
+                if (replayedEffect.kind === 'ContextMutation') {
+                  // Case 1, still a context value so propagate the original effect
+                  effects.push(effect);
+                } else {
+                  // Case 3, immutable value so propagate the more precise effect
+                  effects.push(replayedEffect);
+                }
+              } // else case 2, local mutable value so this effect was fine
+            }
+          }
+          return effects;
+        }
+        case 'CaptureEffect': {
+          return [];
+        }
+        default: {
+          assertExhaustive(
+            effect,
+            `Unexpected effect kind '${(effect as any).kind}'`,
+          );
+        }
       }
     })
     .filter((effect): effect is FunctionEffect => effect != null);
@@ -298,26 +311,31 @@ export function inferTerminalFunctionEffects(
 export function transformFunctionEffectErrors(
   functionEffects: Array<FunctionEffect>,
 ): Array<CompilerErrorDetailOptions> {
-  return functionEffects.map(eff => {
-    switch (eff.kind) {
-      case 'ReactMutation':
-      case 'GlobalMutation': {
-        return eff.error;
+  return functionEffects
+    .map(eff => {
+      switch (eff.kind) {
+        case 'ReactMutation':
+        case 'GlobalMutation': {
+          return eff.error;
+        }
+        case 'ContextMutation': {
+          return {
+            severity: ErrorSeverity.Invariant,
+            reason: `Unexpected ContextMutation in top-level function effects`,
+            loc: eff.loc,
+          };
+        }
+        case 'CaptureEffect': {
+          return null;
+        }
+        default:
+          assertExhaustive(
+            eff,
+            `Unexpected function effect kind \`${(eff as any).kind}\``,
+          );
       }
-      case 'ContextMutation': {
-        return {
-          severity: ErrorSeverity.Invariant,
-          reason: `Unexpected ContextMutation in top-level function effects`,
-          loc: eff.loc,
-        };
-      }
-      default:
-        assertExhaustive(
-          eff,
-          `Unexpected function effect kind \`${(eff as any).kind}\``,
-        );
-    }
-  });
+    })
+    .filter(eff => eff != null) as Array<CompilerErrorDetailOptions>;
 }
 
 function isEffectSafeOutsideRender(effect: FunctionEffect): boolean {
