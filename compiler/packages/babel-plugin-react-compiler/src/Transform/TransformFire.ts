@@ -31,6 +31,7 @@ import {
   NonLocalImportSpecifier,
   Place,
   promoteTemporary,
+  todoPopulateAliasingEffects,
 } from '../HIR';
 import {createTemporaryPlace, markInstructionIds} from '../HIR/HIRBuilder';
 import {getOrInsertWith} from '../Utils/utils';
@@ -436,6 +437,7 @@ function makeLoadUseFireInstruction(
     value: instrValue,
     lvalue: {...useFirePlace},
     loc: GeneratedSource,
+    effects: todoPopulateAliasingEffects(),
   };
 }
 
@@ -460,6 +462,7 @@ function makeLoadFireCalleeInstruction(
     },
     lvalue: {...loadedFireCallee},
     loc: GeneratedSource,
+    effects: todoPopulateAliasingEffects(),
   };
 }
 
@@ -483,6 +486,7 @@ function makeCallUseFireInstruction(
     value: useFireCall,
     lvalue: {...useFireCallResultPlace},
     loc: GeneratedSource,
+    effects: todoPopulateAliasingEffects(),
   };
 }
 
@@ -511,6 +515,7 @@ function makeStoreUseFireInstruction(
     },
     lvalue: fireFunctionBindingLValuePlace,
     loc: GeneratedSource,
+    effects: todoPopulateAliasingEffects(),
   };
 }
 

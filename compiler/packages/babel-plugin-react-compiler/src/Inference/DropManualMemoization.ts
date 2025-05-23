@@ -197,6 +197,7 @@ function makeManualMemoizationMarkers(
         deps: depsList,
         loc: fnExpr.loc,
       },
+      effects: null,
       loc: fnExpr.loc,
     },
     {
@@ -208,6 +209,7 @@ function makeManualMemoizationMarkers(
         decl: {...memoDecl},
         loc: fnExpr.loc,
       },
+      effects: null,
       loc: fnExpr.loc,
     },
   ];

@@ -12,6 +12,7 @@ import {
   GeneratedSource,
   HIRFunction,
   Instruction,
+  Place,
 } from './HIR';
 import {markPredecessors} from './HIRBuilder';
 import {terminalFallthrough, terminalHasFallthrough} from './visitors';
@@ -80,20 +81,22 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
         suggestions: null,
       });
       const operand = Array.from(phi.operands.values())[0]!;
+      const lvalue: Place = {
+        kind: 'Identifier',
+        identifier: phi.place.identifier,
+        effect: Effect.ConditionallyMutate,
+        reactive: false,
+        loc: GeneratedSource,
+      };
       const instr: Instruction = {
         id: predecessor.terminal.id,
-        lvalue: {
-          kind: 'Identifier',
-          identifier: phi.place.identifier,
-          effect: Effect.ConditionallyMutate,
-          reactive: false,
-          loc: GeneratedSource,
-        },
+        lvalue: {...lvalue},
         value: {
           kind: 'LoadLocal',
           place: {...operand},
           loc: GeneratedSource,
         },
+        effects: [{kind: 'Alias', from: {...operand}, into: {...lvalue}}],
         loc: GeneratedSource,
       };
       predecessor.instructions.push(instr);

@@ -27,6 +27,7 @@ import {
   Place,
   promoteTemporary,
   SpreadPattern,
+  todoPopulateAliasingEffects,
 } from '../HIR';
 import {
   createTemporaryPlace,
@@ -151,6 +152,7 @@ export function inlineJsxTransform(
               type: null,
               loc: instr.value.loc,
             },
+            effects: todoPopulateAliasingEffects(),
             loc: instr.loc,
           };
           currentBlockInstructions.push(varInstruction);
@@ -167,6 +169,7 @@ export function inlineJsxTransform(
               },
               loc: instr.value.loc,
             },
+            effects: todoPopulateAliasingEffects(),
             loc: instr.loc,
           };
           currentBlockInstructions.push(devGlobalInstruction);
@@ -220,6 +223,7 @@ export function inlineJsxTransform(
               type: null,
               loc: instr.value.loc,
             },
+            effects: todoPopulateAliasingEffects(),
             loc: instr.loc,
           };
           thenBlockInstructions.push(reassignElseInstruction);
@@ -292,6 +296,7 @@ export function inlineJsxTransform(
               ],
               loc: instr.value.loc,
             },
+            effects: todoPopulateAliasingEffects(),
             loc: instr.loc,
           };
           elseBlockInstructions.push(reactElementInstruction);
@@ -309,6 +314,7 @@ export function inlineJsxTransform(
               type: null,
               loc: instr.value.loc,
             },
+            effects: todoPopulateAliasingEffects(),
             loc: instr.loc,
           };
           elseBlockInstructions.push(reassignConditionalInstruction);
@@ -436,6 +442,7 @@ function createSymbolProperty(
       binding: {kind: 'Global', name: 'Symbol'},
       loc: instr.value.loc,
     },
+    effects: todoPopulateAliasingEffects(),
     loc: instr.loc,
   };
   nextInstructions.push(symbolInstruction);
@@ -450,6 +457,7 @@ function createSymbolProperty(
       property: makePropertyLiteral('for'),
       loc: instr.value.loc,
     },
+    effects: todoPopulateAliasingEffects(),
     loc: instr.loc,
   };
   nextInstructions.push(symbolForInstruction);
@@ -463,6 +471,7 @@ function createSymbolProperty(
       value: symbolName,
       loc: instr.value.loc,
     },
+    effects: todoPopulateAliasingEffects(),
     loc: instr.loc,
   };
   nextInstructions.push(symbolValueInstruction);
@@ -478,6 +487,7 @@ function createSymbolProperty(
       args: [symbolValueInstruction.lvalue],
       loc: instr.value.loc,
     },
+    effects: todoPopulateAliasingEffects(),
     loc: instr.loc,
   };
   const $$typeofProperty: ObjectProperty = {
@@ -508,6 +518,7 @@ function createTagProperty(
           value: componentTag.name,
           loc: instr.value.loc,
         },
+        effects: todoPopulateAliasingEffects(),
         loc: instr.loc,
       };
       tagProperty = {
@@ -634,6 +645,7 @@ function createPropsProperties(
           elements: [...children],
           loc: instr.value.loc,
         },
+        effects: todoPopulateAliasingEffects(),
         loc: instr.loc,
       };
       nextInstructions.push(childrenPropInstruction);
@@ -657,6 +669,7 @@ function createPropsProperties(
         value: null,
         loc: instr.value.loc,
       },
+      effects: todoPopulateAliasingEffects(),
       loc: instr.loc,
     };
     refProperty = {
@@ -678,6 +691,7 @@ function createPropsProperties(
         value: null,
         loc: instr.value.loc,
       },
+      effects: todoPopulateAliasingEffects(),
       loc: instr.loc,
     };
     keyProperty = {
@@ -711,6 +725,7 @@ function createPropsProperties(
         properties: props,
         loc: instr.value.loc,
       },
+      effects: todoPopulateAliasingEffects(),
       loc: instr.loc,
     };
     propsProperty = {
