@@ -84,9 +84,15 @@ describe('ReactDOMFizzServerBrowser', () => {
       ),
     );
     const result = await readResult(stream);
-    expect(result).toMatchInlineSnapshot(
-      `"<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/></head><body>hello world<template id="«R»"></template></body></html>"`,
-    );
+    if (gate(flags => flags.enableFizzBlockingRender)) {
+      expect(result).toMatchInlineSnapshot(
+        `"<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/></head><body>hello world<template id="«R»"></template></body></html>"`,
+      );
+    } else {
+      expect(result).toMatchInlineSnapshot(
+        `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
+      );
+    }
   });
 
   it('should emit bootstrap script src at the end', async () => {
@@ -529,7 +535,15 @@ describe('ReactDOMFizzServerBrowser', () => {
 
     const result = await readResult(stream);
     expect(result).toEqual(
-      '<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/><title>foo</title></head><body>bar<template id="«R»"></template></body></html>',
+      '<!DOCTYPE html><html><head>' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<link rel="expect" href="#«R»" blocking="render"/>'
+          : '') +
+        '<title>foo</title></head><body>bar' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<template id="«R»"></template>'
+          : '') +
+        '</body></html>',
     );
   });
 

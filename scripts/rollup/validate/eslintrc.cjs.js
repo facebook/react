@@ -35,6 +35,7 @@ module.exports = {
     FinalizationRegistry: 'readonly',
 
     ScrollTimeline: 'readonly',
+    navigation: 'readonly',
 
     // Vendor specific
     MSApp: 'readonly',
