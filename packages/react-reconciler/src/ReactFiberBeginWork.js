@@ -14,6 +14,9 @@ import type {
   ViewTransitionProps,
   ActivityProps,
   SuspenseProps,
+  SuspenseListProps,
+  SuspenseListRevealOrder,
+  SuspenseListTailMode,
   TracingMarkerProps,
   CacheProps,
   ProfilerProps,
@@ -26,7 +29,6 @@ import type {ActivityState} from './ReactFiberActivityComponent';
 import type {
   SuspenseState,
   SuspenseListRenderState,
-  SuspenseListTailMode,
 } from './ReactFiberSuspenseComponent';
 import type {SuspenseContext} from './ReactFiberSuspenseContext';
 import type {
@@ -3222,8 +3224,6 @@ function findLastContentRow(firstChild: null | Fiber): null | Fiber {
   return lastContentRow;
 }
 
-type SuspenseListRevealOrder = 'forwards' | 'backwards' | 'together' | void;
-
 function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
   if (__DEV__) {
     if (
@@ -3410,7 +3410,7 @@ function updateSuspenseListComponent(
   workInProgress: Fiber,
   renderLanes: Lanes,
 ) {
-  const nextProps = workInProgress.pendingProps;
+  const nextProps: SuspenseListProps = workInProgress.pendingProps;
   const revealOrder: SuspenseListRevealOrder = nextProps.revealOrder;
   const tailMode: SuspenseListTailMode = nextProps.tail;
   const newChildren = nextProps.children;
@@ -3543,6 +3543,12 @@ function updateViewTransition(
       current === null
         ? ViewTransitionNamedMount | ViewTransitionNamedStatic
         : ViewTransitionNamedStatic;
+  } else {
+    // The server may have used useId to auto-assign a generated name for this boundary.
+    // We push a materialization to ensure child ids line up with the server.
+    if (getIsHydrating()) {
+      pushMaterializedTreeId(workInProgress);
+    }
   }
   if (__DEV__) {
     // $FlowFixMe[prop-missing]
