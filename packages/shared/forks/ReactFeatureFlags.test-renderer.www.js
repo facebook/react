@@ -71,6 +71,7 @@ export const renameElementSymbol = false;
 
 export const enableObjectFiber = false;
 export const enableShallowPropDiffing = false;
+export const enableEagerAlternateStateNodeCleanup = false;
 
 export const enableHydrationLaneScheduling = true;
 
@@ -83,6 +84,7 @@ export const enableFastAddPropertiesInDiffing = false;
 export const enableLazyPublicInstanceInFabric = false;
 export const enableScrollEndPolyfill = true;
 export const enableSuspenseyImages = false;
+export const enableFizzBlockingRender = true;
 export const enableSrcObject = false;
 export const enableHydrationChangeEvent = false;
 export const enableDefaultTransitionIndicator = false;

@@ -579,6 +579,7 @@ module.exports = {
     JSONValue: 'readonly',
     JSResourceReference: 'readonly',
     MouseEventHandler: 'readonly',
+    NavigateEvent: 'readonly',
     PropagationPhases: 'readonly',
     PropertyDescriptor: 'readonly',
     React$AbstractComponent: 'readonly',
@@ -634,5 +635,6 @@ module.exports = {
     AsyncLocalStorage: 'readonly',
     async_hooks: 'readonly',
     globalThis: 'readonly',
+    navigation: 'readonly',
   },
 };

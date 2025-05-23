@@ -98,6 +98,8 @@ export const enableScrollEndPolyfill = __EXPERIMENTAL__;
 
 export const enableSuspenseyImages = false;
 
+export const enableFizzBlockingRender = __EXPERIMENTAL__; // rel="expect"
+
 export const enableSrcObject = __EXPERIMENTAL__;
 
 export const enableHydrationChangeEvent = __EXPERIMENTAL__;
@@ -140,6 +142,8 @@ export const passChildrenWhenCloningPersistedNodes = false;
 export const enablePersistedModeClonedFlag = false;
 
 export const enableShallowPropDiffing = false;
+
+export const enableEagerAlternateStateNodeCleanup = true;
 
 /**
  * Enables an expiration time for retry lanes to avoid starvation.

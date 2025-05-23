@@ -332,10 +332,10 @@ jobs:
           git --no-pager diff -U0 --cached | grep '^[+-]' | head -n 100
           echo "===================="
           # Ignore REVISION or lines removing @generated headers.
-          if git diff --cached ':(exclude)*REVISION' | grep -vE "^(@@|diff|index|\-\-\-|\+\+\+|\- \* @generated SignedSource)" | grep "^[+-]" > /dev/null; then
+          if git diff --cached ':(exclude)*REVISION' ':(exclude)*/eslint-plugin-react-hooks/package.json' | grep -vE "^(@@|diff|index|\-\-\-|\+\+\+|\- \* @generated SignedSource)" | grep "^[+-]" > /dev/null; then
             echo "Changes detected"
             echo "===== Changes ====="
-            git --no-pager diff --cached ':(exclude)*REVISION' | grep -vE "^(@@|diff|index|\-\-\-|\+\+\+|\- \* @generated SignedSource)" | grep "^[+-]" | head -n 50
+            git --no-pager diff --cached ':(exclude)*REVISION' ':(exclude)*/eslint-plugin-react-hooks/package.json' | grep -vE "^(@@|diff|index|\-\-\-|\+\+\+|\- \* @generated SignedSource)" | grep "^[+-]" | head -n 50
             echo "==================="
             echo "should_commit=true" >> "$GITHUB_OUTPUT"
           else
