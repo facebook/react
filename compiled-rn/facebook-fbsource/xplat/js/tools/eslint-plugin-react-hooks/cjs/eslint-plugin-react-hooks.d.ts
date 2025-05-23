@@ -29,6 +29,9 @@ declare const rules: {
                             type: "string";
                         };
                     };
+                    requireExplicitEffectDeps: {
+                        type: "boolean";
+                    };
                 };
             }[];
         };

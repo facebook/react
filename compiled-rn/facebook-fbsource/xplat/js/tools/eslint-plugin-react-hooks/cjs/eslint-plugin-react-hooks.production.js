@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<bdd683a9d87a6bb38d73841d11543299>>
+ * @generated SignedSource<<889ac8117053af5c38dd22c2455642bf>>
  */
 
 'use strict';
@@ -47,6 +47,9 @@ const rule$2 = {
                             type: 'string',
                         },
                     },
+                    requireExplicitEffectDeps: {
+                        type: 'boolean',
+                    }
                 },
             },
         ],
@@ -62,10 +65,12 @@ const rule$2 = {
         const experimental_autoDependenciesHooks = rawOptions && Array.isArray(rawOptions.experimental_autoDependenciesHooks)
             ? rawOptions.experimental_autoDependenciesHooks
             : [];
+        const requireExplicitEffectDeps = rawOptions && rawOptions.requireExplicitEffectDeps || false;
         const options = {
             additionalHooks,
             experimental_autoDependenciesHooks,
             enableDangerousAutofixThisMayCauseInfiniteLoops,
+            requireExplicitEffectDeps,
         };
         function reportProblem(problem) {
             if (enableDangerousAutofixThisMayCauseInfiniteLoops) {
@@ -924,6 +929,13 @@ const rule$2 = {
                         `Did you forget to pass a callback to the hook?`,
                 });
                 return;
+            }
+            if (!maybeNode && isEffect && options.requireExplicitEffectDeps) {
+                reportProblem({
+                    node: reactiveHook,
+                    message: `React Hook ${reactiveHookName} always requires dependencies. ` +
+                        `Please add a dependency array or an explicit \`undefined\``
+                });
             }
             const isAutoDepsHook = options.experimental_autoDependenciesHooks.includes(reactiveHookName);
             if ((!declaredDependenciesNode ||
