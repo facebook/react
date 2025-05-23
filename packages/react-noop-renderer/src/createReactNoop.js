@@ -1142,9 +1142,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     // TODO: Turn this on once tests are fixed
     // console.error(error);
   }
-  function onDefaultTransitionIndicator(): void | (() => void) {
-    // TODO: Allow this as an option.
-  }
+  function onDefaultTransitionIndicator(): void | (() => void) {}
 
   let idCounter = 0;
 

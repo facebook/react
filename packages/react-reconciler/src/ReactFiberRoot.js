@@ -79,6 +79,9 @@ function FiberRootNode(
   this.pingedLanes = NoLanes;
   this.warmLanes = NoLanes;
   this.expiredLanes = NoLanes;
+  if (enableDefaultTransitionIndicator) {
+    this.indicatorLanes = NoLanes;
+  }
   this.errorRecoveryDisabledLanes = NoLanes;
   this.shellSuspendCounter = 0;
 
@@ -94,6 +97,7 @@ function FiberRootNode(
 
   if (enableDefaultTransitionIndicator) {
     this.onDefaultTransitionIndicator = onDefaultTransitionIndicator;
+    this.pendingIndicator = null;
   }
 
   this.pooledCache = null;
