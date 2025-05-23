@@ -194,7 +194,15 @@
       if (shouldStartViewTransition) {
         var transition = (document.__reactViewTransition =
           document.startViewTransition({
-            update: revealBoundaries.bind(null, batch),
+            update: function () {
+              revealBoundaries(batch, document.documentElement.clientHeight);
+              return Promise.race([
+                document.fonts.ready,
+                new Promise(function (resolve) {
+                  return setTimeout(resolve, 500);
+                })
+              ]);
+            },
             types: []
           }));
         transition.ready.finally(function () {
