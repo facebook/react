@@ -9,7 +9,7 @@ import * as t from '@babel/types';
 import {ZodError, z} from 'zod';
 import {fromZodError} from 'zod-validation-error';
 import {CompilerError} from '../CompilerError';
-import {Logger} from '../Entrypoint';
+import {Logger, ProgramContext} from '../Entrypoint';
 import {Err, Ok, Result} from '../Utils/Result';
 import {
   DEFAULT_GLOBALS,
@@ -47,7 +47,7 @@ import {
   ShapeRegistry,
   addHook,
 } from './ObjectShape';
-import {Scope as BabelScope} from '@babel/traverse';
+import {Scope as BabelScope, NodePath} from '@babel/traverse';
 import {TypeSchema} from './TypeSchema';
 
 export const ReactElementSymbolSchema = z.object({
@@ -78,6 +78,8 @@ export const InstrumentationSchema = z
   );
 
 export type ExternalFunction = z.infer<typeof ExternalFunctionSchema>;
+export const USE_FIRE_FUNCTION_NAME = 'useFire';
+export const EMIT_FREEZE_GLOBAL_GATING = '__DEV__';
 
 export const MacroMethodSchema = z.union([
   z.object({type: z.literal('wildcard')}),
@@ -89,6 +91,8 @@ export const MacroSchema = z.union([
   z.string(),
   z.tuple([z.string(), z.array(MacroMethodSchema)]),
 ]);
+
+export type CompilerMode = 'all_features' | 'no_inferred_memo';
 
 export type Macro = z.infer<typeof MacroSchema>;
 export type MacroMethod = z.infer<typeof MacroMethodSchema>;
@@ -146,7 +150,7 @@ export type Hook = z.infer<typeof HookSchema>;
  *   missing some recursive Object / Function shapeIds
  */
 
-const EnvironmentConfigSchema = z.object({
+export const EnvironmentConfigSchema = z.object({
   customHooks: z.map(z.string(), HookSchema).default(new Map()),
 
   /**
@@ -239,8 +243,6 @@ const EnvironmentConfigSchema = z.object({
    */
   enableUseTypeAnnotations: z.boolean().default(false),
 
-  enableFunctionDependencyRewrite: z.boolean().default(true),
-
   /**
    * Enables inference of optional dependency chains. Without this flag
    * a property chain such as `props?.items?.foo` will infer as a dep on
@@ -281,7 +283,7 @@ const EnvironmentConfigSchema = z.object({
       z.array(
         z.object({
           function: ExternalFunctionSchema,
-          numRequiredArgs: z.number(),
+          numRequiredArgs: z.number().min(1, 'numRequiredArgs must be > 0'),
         }),
       ),
     )
@@ -325,6 +327,11 @@ const EnvironmentConfigSchema = z.object({
   validateNoJSXInTryStatements: z.boolean().default(false),
 
   /**
+   * Validates against dynamically creating components during render.
+   */
+  validateStaticComponents: z.boolean().default(false),
+
+  /**
    * Validates that the dependencies of all effect hooks are memoized. This helps ensure
    * that Forget does not introduce infinite renders caused by a dependency changing,
    * triggering an effect, which triggers re-rendering, which causes a dependency to change,
@@ -346,6 +353,16 @@ const EnvironmentConfigSchema = z.object({
    */
   validateNoCapitalizedCalls: z.nullable(z.array(z.string())).default(null),
   validateBlocklistedImports: z.nullable(z.array(z.string())).default(null),
+
+  /**
+   * Validate against impure functions called during render
+   */
+  validateNoImpureFunctionsInRender: z.boolean().default(false),
+
+  /**
+   * Validate against passing mutable functions to hooks
+   */
+  validateNoFreezingKnownMutableFunctions: z.boolean().default(false),
 
   /*
    * When enabled, the compiler assumes that hooks follow the Rules of React:
@@ -615,141 +632,6 @@ const EnvironmentConfigSchema = z.object({
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
 
-/**
- * For test fixtures and playground only.
- *
- * Pragmas are straightforward to parse for boolean options (`:true` and
- * `:false`). These are 'enabled' config values for non-boolean configs (i.e.
- * what is used when parsing `:true`).
- */
-const testComplexConfigDefaults: PartialEnvironmentConfig = {
-  validateNoCapitalizedCalls: [],
-  enableChangeDetectionForDebugging: {
-    source: 'react-compiler-runtime',
-    importSpecifierName: '$structuralCheck',
-  },
-  enableEmitFreeze: {
-    source: 'react-compiler-runtime',
-    importSpecifierName: 'makeReadOnly',
-  },
-  enableEmitInstrumentForget: {
-    fn: {
-      source: 'react-compiler-runtime',
-      importSpecifierName: 'useRenderCounter',
-    },
-    gating: {
-      source: 'react-compiler-runtime',
-      importSpecifierName: 'shouldInstrument',
-    },
-    globalGating: '__DEV__',
-  },
-  enableEmitHookGuards: {
-    source: 'react-compiler-runtime',
-    importSpecifierName: '$dispatcherGuard',
-  },
-  inlineJsxTransform: {
-    elementSymbol: 'react.transitional.element',
-    globalDevVar: 'DEV',
-  },
-  lowerContextAccess: {
-    source: 'react-compiler-runtime',
-    importSpecifierName: 'useContext_withSelector',
-  },
-  inferEffectDependencies: [
-    {
-      function: {
-        source: 'react',
-        importSpecifierName: 'useEffect',
-      },
-      numRequiredArgs: 1,
-    },
-    {
-      function: {
-        source: 'shared-runtime',
-        importSpecifierName: 'useSpecialEffect',
-      },
-      numRequiredArgs: 2,
-    },
-    {
-      function: {
-        source: 'useEffectWrapper',
-        importSpecifierName: 'default',
-      },
-      numRequiredArgs: 1,
-    },
-  ],
-};
-
-/**
- * For snap test fixtures and playground only.
- */
-export function parseConfigPragmaForTests(pragma: string): EnvironmentConfig {
-  const maybeConfig: any = {};
-  // Get the defaults to programmatically check for boolean properties
-  const defaultConfig = EnvironmentConfigSchema.parse({});
-
-  for (const token of pragma.split(' ')) {
-    if (!token.startsWith('@')) {
-      continue;
-    }
-    const keyVal = token.slice(1);
-    let [key, val = undefined] = keyVal.split(':');
-    const isSet = val === undefined || val === 'true';
-
-    if (isSet && key in testComplexConfigDefaults) {
-      maybeConfig[key] =
-        testComplexConfigDefaults[key as keyof PartialEnvironmentConfig];
-      continue;
-    }
-
-    if (key === 'customMacros' && val) {
-      const valSplit = val.split('.');
-      if (valSplit.length > 0) {
-        const props = [];
-        for (const elt of valSplit.slice(1)) {
-          if (elt === '*') {
-            props.push({type: 'wildcard'});
-          } else if (elt.length > 0) {
-            props.push({type: 'name', name: elt});
-          }
-        }
-        maybeConfig[key] = [[valSplit[0], props]];
-      }
-      continue;
-    }
-
-    if (
-      key !== 'enableResetCacheOnSourceFileChanges' &&
-      typeof defaultConfig[key as keyof EnvironmentConfig] !== 'boolean'
-    ) {
-      // skip parsing non-boolean properties
-      continue;
-    }
-    if (val === undefined || val === 'true') {
-      maybeConfig[key] = true;
-    } else {
-      maybeConfig[key] = false;
-    }
-  }
-  const config = EnvironmentConfigSchema.safeParse(maybeConfig);
-  if (config.success) {
-    /**
-     * Unless explicitly enabled, do not insert HMR handling code
-     * in test fixtures or playground to reduce visual noise.
-     */
-    if (config.data.enableResetCacheOnSourceFileChanges == null) {
-      config.data.enableResetCacheOnSourceFileChanges = false;
-    }
-    return config.data;
-  }
-  CompilerError.invariant(false, {
-    reason: 'Internal error, could not parse config from pragma string',
-    description: `${fromZodError(config.error)}`,
-    loc: null,
-    suggestions: null,
-  });
-}
-
 export type PartialEnvironmentConfig = Partial<EnvironmentConfig>;
 
 export type ReactFunctionType = 'Component' | 'Hook' | 'Other';
@@ -785,34 +667,40 @@ export class Environment {
   code: string | null;
   config: EnvironmentConfig;
   fnType: ReactFunctionType;
-  useMemoCacheIdentifier: string;
-  hasLoweredContextAccess: boolean;
+  compilerMode: CompilerMode;
+  programContext: ProgramContext;
   hasFireRewrite: boolean;
+  hasInferredEffect: boolean;
+  inferredEffectLocations: Set<SourceLocation> = new Set();
 
   #contextIdentifiers: Set<t.Identifier>;
   #hoistedIdentifiers: Set<t.Identifier>;
+  parentFunction: NodePath<t.Function>;
 
   constructor(
     scope: BabelScope,
     fnType: ReactFunctionType,
+    compilerMode: CompilerMode,
     config: EnvironmentConfig,
     contextIdentifiers: Set<t.Identifier>,
+    parentFunction: NodePath<t.Function>, // the outermost function being compiled
     logger: Logger | null,
     filename: string | null,
     code: string | null,
-    useMemoCacheIdentifier: string,
+    programContext: ProgramContext,
   ) {
     this.#scope = scope;
     this.fnType = fnType;
+    this.compilerMode = compilerMode;
     this.config = config;
     this.filename = filename;
     this.code = code;
     this.logger = logger;
-    this.useMemoCacheIdentifier = useMemoCacheIdentifier;
+    this.programContext = programContext;
     this.#shapes = new Map(DEFAULT_SHAPES);
     this.#globals = new Map(DEFAULT_GLOBALS);
-    this.hasLoweredContextAccess = false;
     this.hasFireRewrite = false;
+    this.hasInferredEffect = false;
 
     if (
       config.disableMemoizationForDebugging &&
@@ -854,8 +742,13 @@ export class Environment {
       this.#moduleTypes.set(REANIMATED_MODULE_NAME, reanimatedModuleType);
     }
 
+    this.parentFunction = parentFunction;
     this.#contextIdentifiers = contextIdentifiers;
     this.#hoistedIdentifiers = new Set();
+  }
+
+  get isInferredMemoEnabled(): boolean {
+    return this.compilerMode !== 'no_inferred_memo';
   }
 
   get nextIdentifierId(): IdentifierId {
@@ -868,6 +761,23 @@ export class Environment {
 
   get nextScopeId(): ScopeId {
     return makeScopeId(this.#nextScope++);
+  }
+
+  get scope(): BabelScope {
+    return this.#scope;
+  }
+
+  logErrors(errors: Result<void, CompilerError>): void {
+    if (errors.isOk() || this.logger == null) {
+      return;
+    }
+    for (const error of errors.unwrapErr().details) {
+      this.logger.logEvent(this.filename, {
+        kind: 'CompileError',
+        detail: error,
+        fnLoc: null,
+      });
+    }
   }
 
   isContextIdentifier(node: t.Identifier): boolean {
@@ -1059,10 +969,34 @@ export class Environment {
       moduleName.toLowerCase() === 'react-dom'
     );
   }
+  static knownReactModules: ReadonlyArray<string> = ['react', 'react-dom'];
+
+  getFallthroughPropertyType(
+    receiver: Type,
+    _property: Type,
+  ): BuiltInType | PolyType | null {
+    let shapeId = null;
+    if (receiver.kind === 'Object' || receiver.kind === 'Function') {
+      shapeId = receiver.shapeId;
+    }
+
+    if (shapeId !== null) {
+      const shape = this.#shapes.get(shapeId);
+
+      CompilerError.invariant(shape !== undefined, {
+        reason: `[HIR] Forget internal error: cannot resolve shape ${shapeId}`,
+        description: null,
+        loc: null,
+        suggestions: null,
+      });
+      return shape.properties.get('*') ?? null;
+    }
+    return null;
+  }
 
   getPropertyType(
     receiver: Type,
-    property: string,
+    property: string | number,
   ): BuiltInType | PolyType | null {
     let shapeId = null;
     if (receiver.kind === 'Object' || receiver.kind === 'Function') {
@@ -1080,17 +1014,19 @@ export class Environment {
         loc: null,
         suggestions: null,
       });
-      let value =
-        shape.properties.get(property) ?? shape.properties.get('*') ?? null;
-      if (value === null && isHookName(property)) {
-        value = this.#getCustomHookType();
+      if (typeof property === 'string') {
+        return (
+          shape.properties.get(property) ??
+          shape.properties.get('*') ??
+          (isHookName(property) ? this.#getCustomHookType() : null)
+        );
+      } else {
+        return shape.properties.get('*') ?? null;
       }
-      return value;
-    } else if (isHookName(property)) {
+    } else if (typeof property === 'string' && isHookName(property)) {
       return this.#getCustomHookType();
-    } else {
-      return null;
     }
+    return null;
   }
 
   getFunctionSignature(type: FunctionType): FunctionSignature | null {

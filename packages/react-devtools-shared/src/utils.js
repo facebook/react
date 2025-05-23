@@ -24,6 +24,7 @@ import {
   REACT_SUSPENSE_LIST_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_TRACING_MARKER_TYPE,
+  REACT_VIEW_TRANSITION_TYPE,
 } from 'shared/ReactSymbols';
 import {enableRenderableContext} from 'shared/ReactFeatureFlags';
 import {
@@ -553,6 +554,7 @@ export type DataType =
   | 'class_instance'
   | 'data_view'
   | 'date'
+  | 'error'
   | 'function'
   | 'html_all_collection'
   | 'html_element'
@@ -562,6 +564,7 @@ export type DataType =
   | 'nan'
   | 'null'
   | 'number'
+  | 'thenable'
   | 'object'
   | 'react_element'
   | 'regexp'
@@ -570,6 +573,21 @@ export type DataType =
   | 'typed_array'
   | 'undefined'
   | 'unknown';
+
+function isError(data: Object): boolean {
+  // If it doesn't event look like an error, it won't be an actual error.
+  if ('name' in data && 'message' in data) {
+    while (data) {
+      // $FlowFixMe[method-unbinding]
+      if (Object.prototype.toString.call(data) === '[object Error]') {
+        return true;
+      }
+      data = Object.getPrototypeOf(data);
+    }
+  }
+
+  return false;
+}
 
 /**
  * Get a enhanced/artificial type string based on the object instance
@@ -630,6 +648,10 @@ export function getDataType(data: Object): DataType {
         }
       } else if (data.constructor && data.constructor.name === 'RegExp') {
         return 'regexp';
+      } else if (typeof data.then === 'function') {
+        return 'thenable';
+      } else if (isError(data)) {
+        return 'error';
       } else {
         // $FlowFixMe[method-unbinding]
         const toStringValue = Object.prototype.toString.call(data);
@@ -678,6 +700,7 @@ function typeOfWithLegacyElementSymbol(object: any): mixed {
           case REACT_STRICT_MODE_TYPE:
           case REACT_SUSPENSE_TYPE:
           case REACT_SUSPENSE_LIST_TYPE:
+          case REACT_VIEW_TRANSITION_TYPE:
             return type;
           default:
             const $$typeofType = type && type.$$typeof;
@@ -739,6 +762,8 @@ export function getDisplayNameForReactElement(
       return 'Suspense';
     case REACT_SUSPENSE_LIST_TYPE:
       return 'SuspenseList';
+    case REACT_VIEW_TRANSITION_TYPE:
+      return 'ViewTransition';
     case REACT_TRACING_MARKER_TYPE:
       return 'TracingMarker';
     default:
@@ -911,7 +936,61 @@ export function formatDataForPreview(
     case 'date':
       return data.toString();
     case 'class_instance':
-      return data.constructor.name;
+      try {
+        let resolvedConstructorName = data.constructor.name;
+        if (typeof resolvedConstructorName === 'string') {
+          return resolvedConstructorName;
+        }
+
+        resolvedConstructorName = Object.getPrototypeOf(data).constructor.name;
+        if (typeof resolvedConstructorName === 'string') {
+          return resolvedConstructorName;
+        }
+
+        try {
+          return truncateForDisplay(String(data));
+        } catch (error) {
+          return 'unserializable';
+        }
+      } catch (error) {
+        return 'unserializable';
+      }
+    case 'thenable':
+      let displayName: string;
+      if (isPlainObject(data)) {
+        displayName = 'Thenable';
+      } else {
+        let resolvedConstructorName = data.constructor.name;
+        if (typeof resolvedConstructorName !== 'string') {
+          resolvedConstructorName =
+            Object.getPrototypeOf(data).constructor.name;
+        }
+        if (typeof resolvedConstructorName === 'string') {
+          displayName = resolvedConstructorName;
+        } else {
+          displayName = 'Thenable';
+        }
+      }
+      switch (data.status) {
+        case 'pending':
+          return `pending ${displayName}`;
+        case 'fulfilled':
+          if (showFormattedValue) {
+            const formatted = formatDataForPreview(data.value, false);
+            return `fulfilled ${displayName} {${truncateForDisplay(formatted)}}`;
+          } else {
+            return `fulfilled ${displayName} {…}`;
+          }
+        case 'rejected':
+          if (showFormattedValue) {
+            const formatted = formatDataForPreview(data.reason, false);
+            return `rejected ${displayName} {${truncateForDisplay(formatted)}}`;
+          } else {
+            return `rejected ${displayName} {…}`;
+          }
+        default:
+          return displayName;
+      }
     case 'object':
       if (showFormattedValue) {
         const keys = Array.from(getAllEnumerableKeys(data)).sort(alphaSortKeys);
@@ -935,13 +1014,15 @@ export function formatDataForPreview(
       } else {
         return '{…}';
       }
+    case 'error':
+      return truncateForDisplay(String(data));
     case 'boolean':
     case 'number':
     case 'infinity':
     case 'nan':
     case 'null':
     case 'undefined':
-      return data;
+      return String(data);
     default:
       try {
         return truncateForDisplay(String(data));
@@ -974,9 +1055,17 @@ export function backendToFrontendSerializedElementMapper(
   };
 }
 
-// Chrome normalizes urls like webpack-internals:// but new URL don't, so cannot use new URL here.
-export function normalizeUrl(url: string): string {
-  return url.replace('/./', '/');
+/**
+ * Should be used when treating url as a Chrome Resource URL.
+ */
+export function normalizeUrlIfValid(url: string): string {
+  try {
+    // TODO: Chrome will use the basepath to create a Resource URL.
+    return new URL(url).toString();
+  } catch {
+    // Giving up if it's not a valid URL without basepath
+    return url;
+  }
 }
 
 export function getIsReloadAndProfileSupported(): boolean {

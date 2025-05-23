@@ -17,7 +17,6 @@ export {buildReactiveScopeTerminalsHIR} from './BuildReactiveScopeTerminalsHIR';
 export {computeDominatorTree, computePostDominatorTree} from './Dominator';
 export {
   Environment,
-  parseConfigPragmaForTests,
   validateEnvironmentConfig,
   type EnvironmentConfig,
   type ExternalFunction,
@@ -32,5 +31,5 @@ export {
 } from './HIRBuilder';
 export {mergeConsecutiveBlocks} from './MergeConsecutiveBlocks';
 export {mergeOverlappingReactiveScopesHIR} from './MergeOverlappingReactiveScopesHIR';
-export {printFunction, printHIR} from './PrintHIR';
+export {printFunction, printHIR, printFunctionWithOutlined} from './PrintHIR';
 export {pruneUnusedLabelsHIR} from './PruneUnusedLabelsHIR';

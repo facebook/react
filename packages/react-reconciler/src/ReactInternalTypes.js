@@ -18,6 +18,7 @@ import type {
   ReactComponentInfo,
   ReactDebugInfo,
 } from 'shared/ReactTypes';
+import type {TransitionTypes} from 'react/src/ReactTransitionType';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Flags} from './ReactFiberFlags';
@@ -25,19 +26,20 @@ import type {Lane, Lanes, LaneMap} from './ReactFiberLane';
 import type {RootTag} from './ReactRootTags';
 import type {
   Container,
+  Instance,
   TimeoutHandle,
   NoTimeout,
+  ActivityInstance,
   SuspenseInstance,
   TransitionStatus,
 } from './ReactFiberConfig';
 import type {Cache} from './ReactFiberCacheComponent';
-import type {
-  TracingMarkerInstance,
-  Transition,
-} from './ReactFiberTracingMarkerComponent';
+import type {Transition} from 'react/src/ReactStartTransition';
+import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates';
 import type {ComponentStackNode} from 'react-server/src/ReactFizzComponentStack';
 import type {ThenableState} from './ReactFiberThenable';
+import type {ScheduledGesture} from './ReactFiberGestureScheduler';
 
 // Unwind Circular: moved from ReactFiberHooks.old
 export type HookType =
@@ -47,7 +49,6 @@ export type HookType =
   | 'useRef'
   | 'useEffect'
   | 'useEffectEvent'
-  | 'useResourceEffect'
   | 'useInsertionEffect'
   | 'useLayoutEffect'
   | 'useCallback'
@@ -220,8 +221,6 @@ type BaseFiberRootProperties = {
 
   pingCache: WeakMap<Wakeable, Set<mixed>> | Map<Wakeable, Set<mixed>> | null,
 
-  // A finished work-in-progress HostRoot that's ready to be committed.
-  finishedWork: Fiber | null,
   // Timeout handle returned by setTimeout. Used to cancel a pending timeout, if
   // it's superseded by a new one.
   timeoutHandle: TimeoutHandle | NoTimeout,
@@ -249,10 +248,9 @@ type BaseFiberRootProperties = {
   pingedLanes: Lanes,
   warmLanes: Lanes,
   expiredLanes: Lanes,
+  indicatorLanes: Lanes, // enableDefaultTransitionIndicator only
   errorRecoveryDisabledLanes: Lanes,
   shellSuspendCounter: number,
-
-  finishedLanes: Lanes,
 
   entangledLanes: Lanes,
   entanglements: LaneMap<Lanes>,
@@ -283,7 +281,18 @@ type BaseFiberRootProperties = {
     errorInfo: {+componentStack?: ?string},
   ) => void,
 
+  // enableDefaultTransitionIndicator only
+  onDefaultTransitionIndicator: () => void | (() => void),
+  pendingIndicator: null | (() => void),
+
   formState: ReactFormState<any, any> | null,
+
+  // enableViewTransition only
+  transitionTypes: null | TransitionTypes, // TODO: Make this a LaneMap.
+  // enableGestureTransition only
+  pendingGestures: null | ScheduledGesture,
+  stoppingGestures: null | ScheduledGesture,
+  gestureClone: null | Instance,
 };
 
 // The following attributes are only used by DevTools and are only present in DEV builds.
@@ -294,8 +303,10 @@ type UpdaterTrackingOnlyFiberRootProperties = {
 };
 
 export type SuspenseHydrationCallbacks = {
-  onHydrated?: (suspenseInstance: SuspenseInstance) => void,
-  onDeleted?: (suspenseInstance: SuspenseInstance) => void,
+  +onHydrated?: (
+    hydrationBoundary: SuspenseInstance | ActivityInstance,
+  ) => void,
+  +onDeleted?: (hydrationBoundary: SuspenseInstance | ActivityInstance) => void,
   ...
 };
 
@@ -354,7 +365,7 @@ export type TransitionTracingCallbacks = {
 // The following fields are only used in transition tracing in Profile builds
 type TransitionTracingOnlyFiberRootProperties = {
   transitionCallbacks: null | TransitionTracingCallbacks,
-  transitionLanes: Array<Set<Transition> | null>,
+  transitionLanes: LaneMap<Set<Transition> | null>,
   // Transitions on the root can be represented as a bunch of tracing markers.
   // Each entangled group of transitions can be treated as a tracing marker.
   // It will have a set of pending suspense boundaries. These transitions
@@ -398,14 +409,8 @@ export type Dispatcher = {
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,
   ): void,
+  // TODO: Non-nullable once `enableUseEffectEventHook` is on everywhere.
   useEffectEvent?: <Args, F: (...Array<Args>) => mixed>(callback: F) => F,
-  useResourceEffect?: (
-    create: () => mixed,
-    createDeps: Array<mixed> | void | null,
-    update: ((resource: mixed) => void) | void,
-    updateDeps: Array<mixed> | void | null,
-    destroy: ((resource: mixed) => void) | void,
-  ) => void,
   useInsertionEffect(
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,
@@ -433,8 +438,8 @@ export type Dispatcher = {
     getServerSnapshot?: () => T,
   ): T,
   useId(): string,
-  useCacheRefresh?: () => <T>(?() => T, ?T) => void,
-  useMemoCache?: (size: number) => Array<any>,
+  useCacheRefresh: () => <T>(?() => T, ?T) => void,
+  useMemoCache: (size: number) => Array<any>,
   useHostTransitionStatus: () => TransitionStatus,
   useOptimistic: <S, A>(
     passthrough: S,

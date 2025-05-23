@@ -1212,12 +1212,17 @@ describe('ReactIncrementalErrorHandling', () => {
       </Provider>,
     );
 
-    await expect(async () => {
-      await waitForAll([]);
-    }).toErrorDev([
-      'Provider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-      'Provider uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
-      'Connector uses the legacy contextTypes API which will be removed soon. Use React.createContext() with React.useContext() instead.',
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      'Provider uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in Provider (at **)',
+      'Provider uses the legacy contextTypes API which will soon be removed. ' +
+        'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        '    in Provider (at **)',
+      'Connector uses the legacy contextTypes API which will be removed soon. ' +
+        'Use React.createContext() with React.useContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in Connector (at **)',
     ]);
 
     // If the context stack does not unwind, span will get 'abcde'
@@ -1248,13 +1253,6 @@ describe('ReactIncrementalErrorHandling', () => {
       </ErrorBoundary>,
     );
     await waitForAll([]);
-    if (gate(flags => !flags.enableOwnerStacks)) {
-      assertConsoleErrorDev([
-        'React.jsx: type is invalid -- expected a string',
-        // React retries once on error
-        'React.jsx: type is invalid -- expected a string',
-      ]);
-    }
 
     expect(ReactNoop).toMatchRenderedOutput(
       <span
@@ -1303,13 +1301,7 @@ describe('ReactIncrementalErrorHandling', () => {
       </ErrorBoundary>,
     );
     await waitForAll([]);
-    if (gate(flags => !flags.enableOwnerStacks)) {
-      assertConsoleErrorDev([
-        'React.jsx: type is invalid -- expected a string',
-        // React retries once on error
-        'React.jsx: type is invalid -- expected a string',
-      ]);
-    }
+
     expect(ReactNoop).toMatchRenderedOutput(
       <span
         prop={
@@ -1328,12 +1320,6 @@ describe('ReactIncrementalErrorHandling', () => {
   it('recovers from uncaught reconciler errors', async () => {
     const InvalidType = undefined;
     ReactNoop.render(<InvalidType />);
-    if (gate(flags => !flags.enableOwnerStacks)) {
-      assertConsoleErrorDev(
-        ['React.jsx: type is invalid -- expected a string'],
-        {withoutStack: true},
-      );
-    }
 
     await waitForThrow(
       'Element type is invalid: expected a string (for built-in components) or ' +

@@ -26,6 +26,8 @@ import {
 
 import {createServerReference as createServerReferenceImpl} from 'react-client/src/ReactFlightReplyClient';
 
+export {registerServerReference} from 'react-client/src/ReactFlightReplyClient';
+
 function noServerCall() {
   throw new Error(
     'Server Functions cannot be called during initial render. ' +

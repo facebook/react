@@ -19,6 +19,7 @@ import type {
   ChildSet,
   Resource,
 } from './ReactFiberConfig';
+import type {ActivityState} from './ReactFiberActivityComponent';
 import type {
   SuspenseState,
   SuspenseListRenderState,
@@ -27,8 +28,7 @@ import type {
 import type {
   OffscreenState,
   OffscreenQueue,
-} from './ReactFiberActivityComponent';
-import {isOffscreenManual} from './ReactFiberActivityComponent';
+} from './ReactFiberOffscreenComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 import type {Cache} from './ReactFiberCacheComponent';
 import {
@@ -41,7 +41,8 @@ import {
   enableRenderableContext,
   passChildrenWhenCloningPersistedNodes,
   disableLegacyMode,
-  enableSiblingPrerendering,
+  enableViewTransition,
+  enableSuspenseyImages,
 } from 'shared/ReactFeatureFlags';
 
 import {now} from './Scheduler';
@@ -74,8 +75,15 @@ import {
   CacheComponent,
   TracingMarkerComponent,
   Throw,
+  ViewTransitionComponent,
+  ActivityComponent,
 } from './ReactWorkTags';
-import {NoMode, ConcurrentMode, ProfileMode} from './ReactTypeOfMode';
+import {
+  NoMode,
+  ConcurrentMode,
+  ProfileMode,
+  SuspenseyImagesMode,
+} from './ReactTypeOfMode';
 import {
   Placement,
   Update,
@@ -92,6 +100,8 @@ import {
   ScheduleRetry,
   ShouldSuspendCommit,
   Cloned,
+  ViewTransitionStatic,
+  Hydrate,
 } from './ReactFiberFlags';
 
 import {
@@ -100,6 +110,7 @@ import {
   resolveSingletonInstance,
   appendInitialChild,
   finalizeInitialChildren,
+  finalizeHydratedChildren,
   supportsMutation,
   supportsPersistence,
   supportsResources,
@@ -113,6 +124,8 @@ import {
   preparePortalMount,
   prepareScopeUpdate,
   maySuspendCommit,
+  maySuspendCommitOnUpdate,
+  maySuspendCommitInSyncRender,
   mayResourceSuspendCommit,
   preloadInstance,
   preloadResource,
@@ -143,6 +156,7 @@ import {popProvider} from './ReactFiberNewContext';
 import {
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,
+  prepareToHydrateHostActivityInstance,
   prepareToHydrateHostSuspenseInstance,
   popHydrationState,
   resetHydrationState,
@@ -164,6 +178,7 @@ import {
   includesSomeLane,
   mergeLanes,
   claimNextRetryLane,
+  includesOnlySuspenseyCommitEligibleLanes,
 } from './ReactFiberLane';
 import {resetChildFibers} from './ReactChildFiber';
 import {createScopeInstance} from './ReactFiberScope';
@@ -338,7 +353,12 @@ function appendAllChildrenToContainer(
   workInProgress: Fiber,
   needsVisibilityToggle: boolean,
   isHidden: boolean,
-) {
+): boolean {
+  // Host components that have their visibility toggled by an OffscreenComponent
+  // do not support passChildrenWhenCloningPersistedNodes. To inform the callee
+  // about their presence, we track and return if they were added to the
+  // child set.
+  let hasOffscreenComponentChild = false;
   if (supportsPersistence) {
     // We only have the top Fiber that was created but we need recurse down its
     // children to find all the terminal nodes.
@@ -375,14 +395,14 @@ function appendAllChildrenToContainer(
         if (child !== null) {
           child.return = node;
         }
-        // If Offscreen is not in manual mode, detached tree is hidden from user space.
-        const _needsVisibilityToggle = !isOffscreenManual(node);
         appendAllChildrenToContainer(
           containerChildSet,
           node,
-          /* needsVisibilityToggle */ _needsVisibilityToggle,
+          /* needsVisibilityToggle */ true,
           /* isHidden */ true,
         );
+
+        hasOffscreenComponentChild = true;
       } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
@@ -390,13 +410,13 @@ function appendAllChildrenToContainer(
       }
       node = (node: Fiber);
       if (node === workInProgress) {
-        return;
+        return hasOffscreenComponentChild;
       }
       // $FlowFixMe[incompatible-use] found when upgrading Flow
       while (node.sibling === null) {
         // $FlowFixMe[incompatible-use] found when upgrading Flow
         if (node.return === null || node.return === workInProgress) {
-          return;
+          return hasOffscreenComponentChild;
         }
         node = node.return;
       }
@@ -405,6 +425,8 @@ function appendAllChildrenToContainer(
       node = node.sibling;
     }
   }
+
+  return hasOffscreenComponentChild;
 }
 
 function updateHostContainer(current: null | Fiber, workInProgress: Fiber) {
@@ -465,11 +487,12 @@ function updateHostComponent(
     const currentHostContext = getHostContext();
 
     let newChildSet = null;
+    let hasOffscreenComponentChild = false;
     if (requiresClone && passChildrenWhenCloningPersistedNodes) {
       markCloned(workInProgress);
       newChildSet = createContainerChildSet();
       // If children might have changed, we have to add them all to the set.
-      appendAllChildrenToContainer(
+      hasOffscreenComponentChild = appendAllChildrenToContainer(
         newChildSet,
         workInProgress,
         /* needsVisibilityToggle */ false,
@@ -483,7 +506,7 @@ function updateHostComponent(
       oldProps,
       newProps,
       !requiresClone,
-      newChildSet,
+      !hasOffscreenComponentChild ? newChildSet : undefined,
     );
     if (newInstance === currentInstance) {
       // No changes, just reuse the existing instance.
@@ -510,7 +533,10 @@ function updateHostComponent(
         // Otherwise parents won't know that there are new children to propagate upwards.
         markUpdate(workInProgress);
       }
-    } else if (!passChildrenWhenCloningPersistedNodes) {
+    } else if (
+      !passChildrenWhenCloningPersistedNodes ||
+      hasOffscreenComponentChild
+    ) {
       // If children have changed, we have to add them all to the set.
       appendAllChildren(
         newInstance,
@@ -533,10 +559,18 @@ function updateHostComponent(
 function preloadInstanceAndSuspendIfNeeded(
   workInProgress: Fiber,
   type: Type,
-  props: Props,
+  oldProps: null | Props,
+  newProps: Props,
   renderLanes: Lanes,
 ) {
-  if (!maySuspendCommit(type, props)) {
+  const maySuspend =
+    (enableSuspenseyImages ||
+      (workInProgress.mode & SuspenseyImagesMode) !== NoMode) &&
+    (oldProps === null
+      ? maySuspendCommit(type, newProps)
+      : maySuspendCommitOnUpdate(type, oldProps, newProps));
+
+  if (!maySuspend) {
     // If this flag was set previously, we can remove it. The flag
     // represents whether this particular set of props might ever need to
     // suspend. The safest thing to do is for maySuspendCommit to always
@@ -554,15 +588,25 @@ function preloadInstanceAndSuspendIfNeeded(
   // loaded yet.
   workInProgress.flags |= MaySuspendCommit;
 
-  // preload the instance if necessary. Even if this is an urgent render there
-  // could be benefits to preloading early.
-  // @TODO we should probably do the preload in begin work
-  const isReady = preloadInstance(type, props);
-  if (!isReady) {
-    if (shouldRemainOnPreviousScreen()) {
-      workInProgress.flags |= ShouldSuspendCommit;
+  if (
+    includesOnlySuspenseyCommitEligibleLanes(renderLanes) ||
+    maySuspendCommitInSyncRender(type, newProps)
+  ) {
+    // preload the instance if necessary. Even if this is an urgent render there
+    // could be benefits to preloading early.
+    // @TODO we should probably do the preload in begin work
+    const isReady = preloadInstance(workInProgress.stateNode, type, newProps);
+    if (!isReady) {
+      if (shouldRemainOnPreviousScreen()) {
+        workInProgress.flags |= ShouldSuspendCommit;
+      } else {
+        suspendCommit();
+      }
     } else {
-      suspendCommit();
+      // Even if we're ready we suspend the commit and check again in the pre-commit
+      // phase if we need to suspend anyway. Such as if it's delayed on decoding or
+      // if it was dropped from the cache while rendering due to pressure.
+      workInProgress.flags |= ShouldSuspendCommit;
     }
   }
 }
@@ -622,9 +666,7 @@ function scheduleRetryEffect(
 
     // Track the lanes that have been scheduled for an immediate retry so that
     // we can mark them as suspended upon committing the root.
-    if (enableSiblingPrerendering) {
-      markSpawnedRetryLane(retryLane);
-    }
+    markSpawnedRetryLane(retryLane);
   }
 }
 
@@ -856,6 +898,88 @@ function bubbleProperties(completedWork: Fiber) {
   return didBailout;
 }
 
+function completeDehydratedActivityBoundary(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  nextState: ActivityState | null,
+): boolean {
+  const wasHydrated = popHydrationState(workInProgress);
+
+  if (nextState !== null) {
+    // We might be inside a hydration state the first time we're picking up this
+    // Activity boundary, and also after we've reentered it for further hydration.
+    if (current === null) {
+      if (!wasHydrated) {
+        throw new Error(
+          'A dehydrated suspense component was completed without a hydrated node. ' +
+            'This is probably a bug in React.',
+        );
+      }
+      prepareToHydrateHostActivityInstance(workInProgress);
+      bubbleProperties(workInProgress);
+      if (enableProfilerTimer) {
+        if ((workInProgress.mode & ProfileMode) !== NoMode) {
+          const isTimedOutSuspense = nextState !== null;
+          if (isTimedOutSuspense) {
+            // Don't count time spent in a timed out Suspense subtree as part of the base duration.
+            const primaryChildFragment = workInProgress.child;
+            if (primaryChildFragment !== null) {
+              // $FlowFixMe[unsafe-arithmetic] Flow doesn't support type casting in combination with the -= operator
+              workInProgress.treeBaseDuration -=
+                ((primaryChildFragment.treeBaseDuration: any): number);
+            }
+          }
+        }
+      }
+      return false;
+    } else {
+      emitPendingHydrationWarnings();
+      // We might have reentered this boundary to hydrate it. If so, we need to reset the hydration
+      // state since we're now exiting out of it. popHydrationState doesn't do that for us.
+      resetHydrationState();
+      if ((workInProgress.flags & DidCapture) === NoFlags) {
+        // This boundary did not suspend so it's now hydrated and unsuspended.
+        nextState = workInProgress.memoizedState = null;
+      }
+      // If nothing suspended, we need to schedule an effect to mark this boundary
+      // as having hydrated so events know that they're free to be invoked.
+      // It's also a signal to replay events and the suspense callback.
+      // If something suspended, schedule an effect to attach retry listeners.
+      // So we might as well always mark this.
+      workInProgress.flags |= Update;
+      bubbleProperties(workInProgress);
+      if (enableProfilerTimer) {
+        if ((workInProgress.mode & ProfileMode) !== NoMode) {
+          const isTimedOutSuspense = nextState !== null;
+          if (isTimedOutSuspense) {
+            // Don't count time spent in a timed out Suspense subtree as part of the base duration.
+            const primaryChildFragment = workInProgress.child;
+            if (primaryChildFragment !== null) {
+              // $FlowFixMe[unsafe-arithmetic] Flow doesn't support type casting in combination with the -= operator
+              workInProgress.treeBaseDuration -=
+                ((primaryChildFragment.treeBaseDuration: any): number);
+            }
+          }
+        }
+      }
+      return false;
+    }
+  } else {
+    // Successfully completed this tree. If this was a forced client render,
+    // there may have been recoverable errors during first hydration
+    // attempt. If so, add them to a queue so we can log them in the
+    // commit phase. We also add them to prev state so we can get to them
+    // from the Suspense Boundary.
+    const hydrationErrors = upgradeHydrationErrorsToRecoverable();
+    if (current !== null && current.memoizedState !== null) {
+      const prevState: ActivityState = current.memoizedState;
+      prevState.hydrationErrors = hydrationErrors;
+    }
+    // Fall through to normal Offscreen path
+    return true;
+  }
+}
+
 function completeDehydratedSuspenseBoundary(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -897,7 +1021,7 @@ function completeDehydratedSuspenseBoundary(
       resetHydrationState();
       if ((workInProgress.flags & DidCapture) === NoFlags) {
         // This boundary did not suspend so it's now hydrated and unsuspended.
-        workInProgress.memoizedState = null;
+        nextState = workInProgress.memoizedState = null;
       }
       // If nothing suspended, we need to schedule an effect to mark this boundary
       // as having hydrated so events know that they're free to be invoked.
@@ -1089,6 +1213,7 @@ function completeWork(
             preloadInstanceAndSuspendIfNeeded(
               workInProgress,
               type,
+              null,
               newProps,
               renderLanes,
             );
@@ -1122,10 +1247,10 @@ function completeWork(
               return null;
             }
           } else {
+            const oldProps = current.memoizedProps;
             // This is an Instance
             // We may have props to update on the Hoistable instance.
             if (supportsMutation) {
-              const oldProps = current.memoizedProps;
               if (oldProps !== newProps) {
                 markUpdate(workInProgress);
               }
@@ -1145,6 +1270,7 @@ function completeWork(
             preloadInstanceAndSuspendIfNeeded(
               workInProgress,
               type,
+              oldProps,
               newProps,
               renderLanes,
             );
@@ -1185,6 +1311,11 @@ function completeWork(
 
             // This can happen when we abort work.
             bubbleProperties(workInProgress);
+            if (enableViewTransition) {
+              // Host Components act as their own View Transitions which doesn't run enter/exit animations.
+              // We clear any ViewTransitionStatic flag bubbled from inner View Transitions.
+              workInProgress.subtreeFlags &= ~ViewTransitionStatic;
+            }
             return null;
           }
 
@@ -1210,6 +1341,11 @@ function completeWork(
           }
         }
         bubbleProperties(workInProgress);
+        if (enableViewTransition) {
+          // Host Components act as their own View Transitions which doesn't run enter/exit animations.
+          // We clear any ViewTransitionStatic flag bubbled from inner View Transitions.
+          workInProgress.subtreeFlags &= ~ViewTransitionStatic;
+        }
         return null;
       }
       // Fall through
@@ -1236,6 +1372,11 @@ function completeWork(
 
           // This can happen when we abort work.
           bubbleProperties(workInProgress);
+          if (enableViewTransition) {
+            // Host Components act as their own View Transitions which doesn't run enter/exit animations.
+            // We clear any ViewTransitionStatic flag bubbled from inner View Transitions.
+            workInProgress.subtreeFlags &= ~ViewTransitionStatic;
+          }
           return null;
         }
 
@@ -1249,6 +1390,16 @@ function completeWork(
           // TODO: Move this and createInstance step into the beginPhase
           // to consolidate.
           prepareToHydrateHostInstance(workInProgress, currentHostContext);
+          if (
+            finalizeHydratedChildren(
+              workInProgress.stateNode,
+              type,
+              newProps,
+              currentHostContext,
+            )
+          ) {
+            workInProgress.flags |= Hydrate;
+          }
         } else {
           const rootContainerInstance = getRootHostContainer();
           const instance = createInstance(
@@ -1280,6 +1431,11 @@ function completeWork(
         }
       }
       bubbleProperties(workInProgress);
+      if (enableViewTransition) {
+        // Host Components act as their own View Transitions which doesn't run enter/exit animations.
+        // We clear any ViewTransitionStatic flag bubbled from inner View Transitions.
+        workInProgress.subtreeFlags &= ~ViewTransitionStatic;
+      }
 
       // This must come at the very end of the complete phase, because it might
       // throw to suspend, and if the resource immediately loads, the work loop
@@ -1288,6 +1444,7 @@ function completeWork(
       preloadInstanceAndSuspendIfNeeded(
         workInProgress,
         workInProgress.type,
+        current === null ? null : current.memoizedProps,
         workInProgress.pendingProps,
         renderLanes,
       );
@@ -1325,6 +1482,46 @@ function completeWork(
           );
         }
       }
+      bubbleProperties(workInProgress);
+      return null;
+    }
+    case ActivityComponent: {
+      const nextState: null | ActivityState = workInProgress.memoizedState;
+
+      if (current === null || current.memoizedState !== null) {
+        const fallthroughToNormalOffscreenPath =
+          completeDehydratedActivityBoundary(
+            current,
+            workInProgress,
+            nextState,
+          );
+        if (!fallthroughToNormalOffscreenPath) {
+          if (workInProgress.flags & ForceClientRender) {
+            popSuspenseHandler(workInProgress);
+            // Special case. There were remaining unhydrated nodes. We treat
+            // this as a mismatch. Revert to client rendering.
+            return workInProgress;
+          } else {
+            popSuspenseHandler(workInProgress);
+            // Did not finish hydrating, either because this is the initial
+            // render or because something suspended.
+            return null;
+          }
+        }
+
+        if ((workInProgress.flags & DidCapture) !== NoFlags) {
+          // We called retryActivityComponentWithoutHydrating and tried client rendering
+          // but now we suspended again. We should never arrive here because we should
+          // not have pushed a suspense handler during that second pass and it should
+          // instead have suspended above.
+          throw new Error(
+            'Client rendering an Activity suspended it again. This is a bug in React.',
+          );
+        }
+
+        // Continue with the normal Activity path.
+      }
+
       bubbleProperties(workInProgress);
       return null;
     }
@@ -1369,7 +1566,6 @@ function completeWork(
       if ((workInProgress.flags & DidCapture) !== NoFlags) {
         // Something suspended. Re-render with the fallback children.
         workInProgress.lanes = renderLanes;
-        // Do not reset the effect list.
         if (
           enableProfilerTimer &&
           (workInProgress.mode & ProfileMode) !== NoMode
@@ -1828,6 +2024,16 @@ function completeWork(
         if (instance !== null) {
           popMarkerInstance(workInProgress);
         }
+        bubbleProperties(workInProgress);
+      }
+      return null;
+    }
+    case ViewTransitionComponent: {
+      if (enableViewTransition) {
+        // We're a component that might need an exit transition. This flag will
+        // bubble up to the parent tree to indicate that there's a child that
+        // might need an exit View Transition upon unmount.
+        workInProgress.flags |= ViewTransitionStatic;
         bubbleProperties(workInProgress);
       }
       return null;

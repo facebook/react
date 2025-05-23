@@ -14,11 +14,14 @@ describe('ReactDOMComponentTree', () => {
   let ReactDOMClient;
   let act;
   let container;
+  let assertConsoleErrorDev;
 
   beforeEach(() => {
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     act = require('internal-test-utils').act;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -190,18 +193,18 @@ describe('ReactDOMComponentTree', () => {
       root.render(<Controlled />);
     });
 
-    await expect(
-      async () =>
-        await act(() => {
-          simulateInput(inputRef.current, finishValue);
-        }),
-    ).toErrorDev(
+    await act(() => {
+      simulateInput(inputRef.current, finishValue);
+    });
+    assertConsoleErrorDev([
       'A component is changing an uncontrolled input to be controlled. ' +
         'This is likely caused by the value changing from undefined to ' +
         'a defined value, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
         'element for the lifetime of the component. More info: ' +
-        'https://react.dev/link/controlled-components',
-    );
+        'https://react.dev/link/controlled-components\n' +
+        '    in input (at **)\n' +
+        '    in Controlled (at **)',
+    ]);
   });
 });

@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {enableOwnerStacks} from 'shared/ReactFeatureFlags';
+import {enableViewTransition} from 'shared/ReactFeatureFlags';
 import type {Fiber} from './ReactInternalTypes';
 import type {ReactComponentInfo} from 'shared/ReactTypes';
 
@@ -23,6 +23,8 @@ import {
   SimpleMemoComponent,
   ClassComponent,
   HostText,
+  ViewTransitionComponent,
+  ActivityComponent,
 } from './ReactWorkTags';
 import {
   describeBuiltInComponentFrame,
@@ -52,6 +54,13 @@ function describeFiber(fiber: Fiber): string {
       return describeFunctionComponentFrame(fiber.type.render);
     case ClassComponent:
       return describeClassComponentFrame(fiber.type);
+    case ActivityComponent:
+      return describeBuiltInComponentFrame('Activity');
+    case ViewTransitionComponent:
+      if (enableViewTransition) {
+        return describeBuiltInComponentFrame('ViewTransition');
+      }
+    // Fallthrough
     default:
       return '';
   }
@@ -92,7 +101,7 @@ function describeFunctionComponentFrameWithoutLineNumber(fn: Function): string {
 }
 
 export function getOwnerStackByFiberInDev(workInProgress: Fiber): string {
-  if (!enableOwnerStacks || !__DEV__) {
+  if (!__DEV__) {
     return '';
   }
   try {
@@ -123,6 +132,15 @@ export function getOwnerStackByFiberInDev(workInProgress: Fiber): string {
       case SuspenseListComponent:
         info += describeBuiltInComponentFrame('SuspenseList');
         break;
+      case ActivityComponent:
+        info += describeBuiltInComponentFrame('Activity');
+        break;
+      case ViewTransitionComponent:
+        if (enableViewTransition) {
+          info += describeBuiltInComponentFrame('ViewTransition');
+          break;
+        }
+      // Fallthrough
       case FunctionComponent:
       case SimpleMemoComponent:
       case ClassComponent:

@@ -9,8 +9,12 @@ import {Effect, ValueKind, ValueReason} from './HIR';
 import {
   BUILTIN_SHAPES,
   BuiltInArrayId,
+  BuiltInFireFunctionId,
   BuiltInFireId,
+  BuiltInMapId,
   BuiltInMixedReadonlyId,
+  BuiltInObjectId,
+  BuiltInSetId,
   BuiltInUseActionStateId,
   BuiltInUseContextHookId,
   BuiltInUseEffectHookId,
@@ -21,6 +25,9 @@ import {
   BuiltInUseRefId,
   BuiltInUseStateId,
   BuiltInUseTransitionId,
+  BuiltInWeakMapId,
+  BuiltInWeakSetId,
+  ReanimatedSharedValueId,
   ShapeRegistry,
   addFunction,
   addHook,
@@ -45,29 +52,23 @@ export const DEFAULT_SHAPES: ShapeRegistry = new Map(BUILTIN_SHAPES);
 
 // Hack until we add ObjectShapes for all globals
 const UNTYPED_GLOBALS: Set<string> = new Set([
-  'String',
   'Object',
   'Function',
-  'Number',
   'RegExp',
   'Date',
   'Error',
-  'Function',
   'TypeError',
   'RangeError',
   'ReferenceError',
   'SyntaxError',
   'URIError',
   'EvalError',
-  'Boolean',
   'DataView',
   'Float32Array',
   'Float64Array',
   'Int8Array',
   'Int16Array',
   'Int32Array',
-  'Map',
-  'Set',
   'WeakMap',
   'Uint8Array',
   'Uint8ClampedArray',
@@ -75,16 +76,8 @@ const UNTYPED_GLOBALS: Set<string> = new Set([
   'Uint32Array',
   'ArrayBuffer',
   'JSON',
-  'parseFloat',
-  'parseInt',
   'console',
-  'isNaN',
   'eval',
-  'isFinite',
-  'encodeURI',
-  'decodeURI',
-  'encodeURIComponent',
-  'decodeURIComponent',
 ]);
 
 const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
@@ -97,6 +90,23 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
           positionalParams: [Effect.Read],
           restParam: null,
           returnType: {kind: 'Object', shapeId: BuiltInArrayId},
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Mutable,
+        }),
+      ],
+      [
+        /**
+         * Object.fromEntries(iterable)
+         * iterable: An iterable, such as an Array or Map, containing a list of
+         *           objects. Each object should have two properties.
+         * Returns a new object whose properties are given by the entries of the
+         * iterable.
+         */
+        'fromEntries',
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [Effect.ConditionallyMutate],
+          restParam: null,
+          returnType: {kind: 'Object', shapeId: BuiltInObjectId},
           calleeEffect: Effect.Read,
           returnValueKind: ValueKind.Mutable,
         }),
@@ -119,8 +129,8 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
       ],
       /*
        * https://tc39.es/ecma262/multipage/indexed-collections.html#sec-array.from
-       * Array.from(arrayLike, optionalFn, optionalThis) not added because
-       * the Effect of `arrayLike` is polymorphic i.e.
+       * Array.from(arrayLike, optionalFn, optionalThis)
+       * Note that the Effect of `arrayLike` is polymorphic i.e.
        *  - Effect.read if
        *     - it does not have an @iterator property and is array-like
        *       (i.e. has a length property)
@@ -128,6 +138,20 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
        *  - Effect.mutate if it is a self-mutative iterator (e.g. a generator
        *    function)
        */
+      [
+        'from',
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [
+            Effect.ConditionallyMutateIterator,
+            Effect.ConditionallyMutate,
+            Effect.ConditionallyMutate,
+          ],
+          restParam: Effect.Read,
+          returnType: {kind: 'Object', shapeId: BuiltInArrayId},
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Mutable,
+        }),
+      ],
       [
         'of',
         // Array.of(element0, ..., elementN)
@@ -137,6 +161,44 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
           returnType: {kind: 'Object', shapeId: BuiltInArrayId},
           calleeEffect: Effect.Read,
           returnValueKind: ValueKind.Mutable,
+        }),
+      ],
+    ]),
+  ],
+  [
+    'performance',
+    addObject(DEFAULT_SHAPES, 'performance', [
+      // Static methods (TODO)
+      [
+        'now',
+        // Date.now()
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [],
+          restParam: Effect.Read,
+          returnType: {kind: 'Poly'}, // TODO: could be Primitive, but that would change existing compilation
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Mutable, // same here
+          impure: true,
+          canonicalName: 'performance.now',
+        }),
+      ],
+    ]),
+  ],
+  [
+    'Date',
+    addObject(DEFAULT_SHAPES, 'Date', [
+      // Static methods (TODO)
+      [
+        'now',
+        // Date.now()
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [],
+          restParam: Effect.Read,
+          returnType: {kind: 'Poly'}, // TODO: could be Primitive, but that would change existing compilation
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Mutable, // same here
+          impure: true,
+          canonicalName: 'Date.now',
         }),
       ],
     ]),
@@ -207,6 +269,18 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
           returnType: {kind: 'Primitive'},
           calleeEffect: Effect.Read,
           returnValueKind: ValueKind.Primitive,
+        }),
+      ],
+      [
+        'random',
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [],
+          restParam: Effect.Read,
+          returnType: {kind: 'Poly'}, // TODO: could be Primitive, but that would change existing compilation
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Mutable, // same here
+          impure: true,
+          canonicalName: 'Math.random',
         }),
       ],
     ]),
@@ -307,6 +381,150 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
       calleeEffect: Effect.Read,
       returnValueKind: ValueKind.Primitive,
     }),
+  ],
+  [
+    'parseInt',
+    addFunction(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: {kind: 'Primitive'},
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'parseFloat',
+    addFunction(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: {kind: 'Primitive'},
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'isNaN',
+    addFunction(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: {kind: 'Primitive'},
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'isFinite',
+    addFunction(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: {kind: 'Primitive'},
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'encodeURI',
+    addFunction(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: {kind: 'Primitive'},
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'encodeURIComponent',
+    addFunction(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: {kind: 'Primitive'},
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'decodeURI',
+    addFunction(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: {kind: 'Primitive'},
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'decodeURIComponent',
+    addFunction(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: {kind: 'Primitive'},
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'Map',
+    addFunction(
+      DEFAULT_SHAPES,
+      [],
+      {
+        positionalParams: [Effect.ConditionallyMutateIterator],
+        restParam: null,
+        returnType: {kind: 'Object', shapeId: BuiltInMapId},
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Mutable,
+      },
+      null,
+      true,
+    ),
+  ],
+  [
+    'Set',
+    addFunction(
+      DEFAULT_SHAPES,
+      [],
+      {
+        positionalParams: [Effect.ConditionallyMutateIterator],
+        restParam: null,
+        returnType: {kind: 'Object', shapeId: BuiltInSetId},
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Mutable,
+      },
+      null,
+      true,
+    ),
+  ],
+  [
+    'WeakMap',
+    addFunction(
+      DEFAULT_SHAPES,
+      [],
+      {
+        positionalParams: [Effect.ConditionallyMutateIterator],
+        restParam: null,
+        returnType: {kind: 'Object', shapeId: BuiltInWeakMapId},
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Mutable,
+      },
+      null,
+      true,
+    ),
+  ],
+  [
+    'WeakSet',
+    addFunction(
+      DEFAULT_SHAPES,
+      [],
+      {
+        positionalParams: [Effect.ConditionallyMutateIterator],
+        restParam: null,
+        returnType: {kind: 'Object', shapeId: BuiltInWeakSetId},
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Mutable,
+      },
+      null,
+      true,
+    ),
   ],
   // TODO: rest of Global objects
 ];
@@ -492,7 +710,12 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
       {
         positionalParams: [],
         restParam: null,
-        returnType: {kind: 'Primitive'},
+        returnType: {
+          kind: 'Function',
+          return: {kind: 'Poly'},
+          shapeId: BuiltInFireFunctionId,
+          isConstructor: false,
+        },
         calleeEffect: Effect.Read,
         returnValueKind: ValueKind.Frozen,
       },
@@ -720,7 +943,7 @@ export function getReanimatedModuleType(registry: ShapeRegistry): ObjectType {
       addHook(registry, {
         positionalParams: [],
         restParam: Effect.Freeze,
-        returnType: {kind: 'Poly'},
+        returnType: {kind: 'Object', shapeId: ReanimatedSharedValueId},
         returnValueKind: ValueKind.Mutable,
         noAlias: true,
         calleeEffect: Effect.Read,

@@ -27,7 +27,10 @@ import {
   hydrateRoot as hydrateRootImpl,
 } from './ReactDOMRoot';
 
-import {disableLegacyMode} from 'shared/ReactFeatureFlags';
+import {
+  disableLegacyMode,
+  disableCommentsAsDOMContainers,
+} from 'shared/ReactFeatureFlags';
 import {clearContainer} from 'react-dom-bindings/src/client/ReactFiberConfigDOM';
 import {
   getInstanceFromNode,
@@ -36,7 +39,7 @@ import {
   unmarkContainerAsRoot,
 } from 'react-dom-bindings/src/client/ReactDOMComponentTree';
 import {listenToAllSupportedEvents} from 'react-dom-bindings/src/events/DOMPluginEventSystem';
-import {isValidContainerLegacy} from 'react-dom-bindings/src/client/ReactDOMContainer';
+import {isValidContainer} from 'react-dom-bindings/src/client/ReactDOMContainer';
 import {
   DOCUMENT_NODE,
   ELEMENT_NODE,
@@ -66,6 +69,8 @@ import {
 } from 'react-reconciler/src/ReactCurrentFiber';
 
 import assign from 'shared/assign';
+
+import noop from 'shared/noop';
 
 // Provided by www
 const ReactFiberErrorDialogWWW = require('ReactFiberErrorDialog');
@@ -203,10 +208,10 @@ function getReactRootElementInContainer(container: any) {
   }
 }
 
-function noopOnRecoverableError() {
-  // This isn't reachable because onRecoverableError isn't called in the
-  // legacy API.
-}
+// This isn't reachable because onRecoverableError isn't called in the
+// legacy API.
+const noopOnRecoverableError = noop;
+const noopOnDefaultTransitionIndicator = noop;
 
 function legacyCreateRootFromDOMContainer(
   container: Container,
@@ -236,6 +241,7 @@ function legacyCreateRootFromDOMContainer(
       wwwOnUncaughtError,
       wwwOnCaughtError,
       noopOnRecoverableError,
+      noopOnDefaultTransitionIndicator,
       // TODO(luna) Support hydration later
       null,
       null,
@@ -244,7 +250,9 @@ function legacyCreateRootFromDOMContainer(
     markContainerAsRoot(root.current, container);
 
     const rootContainerElement =
-      container.nodeType === COMMENT_NODE ? container.parentNode : container;
+      !disableCommentsAsDOMContainers && container.nodeType === COMMENT_NODE
+        ? container.parentNode
+        : container;
     // $FlowFixMe[incompatible-call]
     listenToAllSupportedEvents(rootContainerElement);
 
@@ -272,13 +280,16 @@ function legacyCreateRootFromDOMContainer(
       wwwOnUncaughtError,
       wwwOnCaughtError,
       noopOnRecoverableError,
+      noopOnDefaultTransitionIndicator,
       null, // transitionCallbacks
     );
     container._reactRootContainer = root;
     markContainerAsRoot(root.current, container);
 
     const rootContainerElement =
-      container.nodeType === COMMENT_NODE ? container.parentNode : container;
+      !disableCommentsAsDOMContainers && container.nodeType === COMMENT_NODE
+        ? container.parentNode
+        : container;
     // $FlowFixMe[incompatible-call]
     listenToAllSupportedEvents(rootContainerElement);
 
@@ -394,7 +405,7 @@ export function render(
     );
   }
 
-  if (!isValidContainerLegacy(container)) {
+  if (!isValidContainer(container)) {
     throw new Error('Target container is not a DOM element.');
   }
 
@@ -428,7 +439,7 @@ export function unmountComponentAtNode(container: Container): boolean {
     }
     throw new Error('ReactDOM: Unsupported Legacy Mode API.');
   }
-  if (!isValidContainerLegacy(container)) {
+  if (!isValidContainer(container)) {
     throw new Error('Target container is not a DOM element.');
   }
 
@@ -472,7 +483,7 @@ export function unmountComponentAtNode(container: Container): boolean {
       // Check if the container itself is a React root node.
       const isContainerReactRoot =
         container.nodeType === ELEMENT_NODE &&
-        isValidContainerLegacy(container.parentNode) &&
+        isValidContainer(container.parentNode) &&
         // $FlowFixMe[prop-missing]
         // $FlowFixMe[incompatible-use]
         !!container.parentNode._reactRootContainer;

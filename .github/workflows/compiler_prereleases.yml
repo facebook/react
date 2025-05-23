@@ -16,15 +16,19 @@ on:
       version_name:
         required: true
         type: string
+      tag_version:
+        required: false
+        type: string
     secrets:
       NPM_TOKEN:
         required: true
+
+permissions: {}
 
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
   # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#cache-segment-restore-timeout
   SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
-  GH_TOKEN: ${{ github.token }}
   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
 defaults:
@@ -46,10 +50,12 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: compiler-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/**/yarn.lock') }}
+          path: |
+            **/node_modules
+          key: compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/yarn.lock') }}
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - name: Publish packages to npm
         run: |
           cp ./scripts/release/ci-npmrc ~/.npmrc
-          scripts/release/publish.js --frfr --ci --versionName=${{ inputs.version_name }} --tag ${{ inputs.dist_tag }}
+          scripts/release/publish.js --frfr --ci --versionName=${{ inputs.version_name }} --tag=${{ inputs.dist_tag }} ${{ inputs.tag_version && format('--tagVersion={0}', inputs.tag_version) || '' }}

@@ -41,6 +41,8 @@ import {
   createServerReference as createServerReferenceImpl,
 } from 'react-client/src/ReactFlightReplyClient';
 
+export {registerServerReference} from 'react-client/src/ReactFlightReplyClient';
+
 import type {TemporaryReferenceSet} from 'react-client/src/ReactFlightTemporaryReferences';
 
 export {createTemporaryReferenceSet} from 'react-client/src/ReactFlightTemporaryReferences';

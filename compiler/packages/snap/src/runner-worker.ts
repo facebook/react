@@ -7,21 +7,24 @@
 
 import {codeFrameColumns} from '@babel/code-frame';
 import type {PluginObj} from '@babel/core';
-import type {parseConfigPragmaForTests as ParseConfigPragma} from 'babel-plugin-react-compiler/src/HIR/Environment';
+import type {parseConfigPragmaForTests as ParseConfigPragma} from 'babel-plugin-react-compiler/src/Utils/TestUtils';
 import type {printFunctionWithOutlined as PrintFunctionWithOutlined} from 'babel-plugin-react-compiler/src/HIR/PrintHIR';
 import type {printReactiveFunctionWithOutlined as PrintReactiveFunctionWithOutlined} from 'babel-plugin-react-compiler/src/ReactiveScopes/PrintReactiveFunction';
 import {TransformResult, transformFixtureInput} from './compiler';
 import {
-  COMPILER_PATH,
-  COMPILER_INDEX_PATH,
-  PARSE_CONFIG_PRAGMA_PATH,
-  PRINT_HIR_PATH,
-  PRINT_REACTIVE_IR_PATH,
+  PARSE_CONFIG_PRAGMA_IMPORT,
+  PRINT_HIR_IMPORT,
+  PRINT_REACTIVE_IR_IMPORT,
+  PROJECT_SRC,
 } from './constants';
 import {TestFixture, getBasename, isExpectError} from './fixture-utils';
 import {TestResult, writeOutputToString} from './reporter';
 import {runSprout} from './sprout';
-import {CompilerPipelineValue} from 'babel-plugin-react-compiler/src';
+import type {
+  CompilerPipelineValue,
+  Effect,
+  ValueKind,
+} from 'babel-plugin-react-compiler/src';
 import chalk from 'chalk';
 
 const originalConsoleError = console.error;
@@ -61,22 +64,29 @@ async function compile(
   let compileResult: TransformResult | null = null;
   let error: string | null = null;
   try {
+    const importedCompilerPlugin = require(PROJECT_SRC) as Record<
+      string,
+      unknown
+    >;
+
     // NOTE: we intentionally require lazily here so that we can clear the require cache
     // and load fresh versions of the compiler when `compilerVersion` changes.
-    const {default: BabelPluginReactCompiler} = require(COMPILER_PATH) as {
-      default: PluginObj;
-    };
-    const {Effect: EffectEnum, ValueKind: ValueKindEnum} = require(
-      COMPILER_INDEX_PATH,
-    );
-    const {printFunctionWithOutlined} = require(PRINT_HIR_PATH) as {
-      printFunctionWithOutlined: typeof PrintFunctionWithOutlined;
-    };
-    const {printReactiveFunctionWithOutlined} = require(
-      PRINT_REACTIVE_IR_PATH,
-    ) as {
-      printReactiveFunctionWithOutlined: typeof PrintReactiveFunctionWithOutlined;
-    };
+    const BabelPluginReactCompiler = importedCompilerPlugin[
+      'default'
+    ] as PluginObj;
+    const EffectEnum = importedCompilerPlugin['Effect'] as typeof Effect;
+    const ValueKindEnum = importedCompilerPlugin[
+      'ValueKind'
+    ] as typeof ValueKind;
+    const printFunctionWithOutlined = importedCompilerPlugin[
+      PRINT_HIR_IMPORT
+    ] as typeof PrintFunctionWithOutlined;
+    const printReactiveFunctionWithOutlined = importedCompilerPlugin[
+      PRINT_REACTIVE_IR_IMPORT
+    ] as typeof PrintReactiveFunctionWithOutlined;
+    const parseConfigPragmaForTests = importedCompilerPlugin[
+      PARSE_CONFIG_PRAGMA_IMPORT
+    ] as typeof ParseConfigPragma;
 
     let lastLogged: string | null = null;
     const debugIRLogger = shouldLog
@@ -106,9 +116,6 @@ async function compile(
           }
         }
       : () => {};
-    const {parseConfigPragmaForTests} = require(PARSE_CONFIG_PRAGMA_PATH) as {
-      parseConfigPragmaForTests: typeof ParseConfigPragma;
-    };
 
     // only try logging if we filtered out all but one fixture,
     // since console log order is non-deterministic

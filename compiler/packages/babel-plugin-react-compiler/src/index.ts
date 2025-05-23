@@ -19,23 +19,30 @@ export {
   parsePluginOptions,
   OPT_OUT_DIRECTIVES,
   OPT_IN_DIRECTIVES,
-  findDirectiveEnablingMemoization,
+  ProgramContext,
+  tryFindDirectiveEnablingMemoization as findDirectiveEnablingMemoization,
   findDirectiveDisablingMemoization,
   type CompilerPipelineValue,
+  type Logger,
+  type LoggerEvent,
   type PluginOptions,
 } from './Entrypoint';
 export {
   Effect,
   ValueKind,
-  parseConfigPragmaForTests,
   printHIR,
+  printFunctionWithOutlined,
   validateEnvironmentConfig,
   type EnvironmentConfig,
   type ExternalFunction,
   type Hook,
   type SourceLocation,
 } from './HIR';
-export {printReactiveFunction} from './ReactiveScopes';
+export {
+  printReactiveFunction,
+  printReactiveFunctionWithOutlined,
+} from './ReactiveScopes';
+export {parseConfigPragmaForTests} from './Utils/TestUtils';
 declare global {
   let __DEV__: boolean | null | undefined;
 }

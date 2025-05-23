@@ -22,18 +22,18 @@ let ReactDOMServer;
 let Scheduler;
 let assertLog;
 let container;
-let act;
+let serverAct;
 
 describe('ReactClassComponentPropResolutionFizz', () => {
   beforeEach(() => {
     jest.resetModules();
     Scheduler = require('scheduler');
-    patchMessageChannel(Scheduler);
-    act = require('internal-test-utils').act;
+    patchMessageChannel();
 
     React = require('react');
     ReactDOMServer = require('react-dom/server.browser');
     assertLog = require('internal-test-utils').assertLog;
+    serverAct = require('internal-test-utils').serverAct;
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -41,17 +41,6 @@ describe('ReactClassComponentPropResolutionFizz', () => {
   afterEach(() => {
     document.body.removeChild(container);
   });
-
-  async function serverAct(callback) {
-    let maybePromise;
-    await act(() => {
-      maybePromise = callback();
-      if (maybePromise && typeof maybePromise.catch === 'function') {
-        maybePromise.catch(() => {});
-      }
-    });
-    return maybePromise;
-  }
 
   async function readIntoContainer(stream) {
     const reader = stream.getReader();

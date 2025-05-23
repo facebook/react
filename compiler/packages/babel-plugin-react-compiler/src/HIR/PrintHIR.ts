@@ -6,7 +6,6 @@
  */
 
 import generate from '@babel/generator';
-import {printReactiveFunction} from '..';
 import {CompilerError} from '../CompilerError';
 import {printReactiveScopeSummary} from '../ReactiveScopes/PrintReactiveFunction';
 import DisjointSet from '../Utils/DisjointSet';
@@ -331,6 +330,9 @@ function printObjectPropertyKey(key: ObjectPropertyKey): string {
     case 'computed': {
       return `[${printPlace(key.name)}]`;
     }
+    case 'number': {
+      return String(key.name);
+    }
   }
 }
 
@@ -538,9 +540,6 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
         .split('\n')
         .map(line => `      ${line}`)
         .join('\n');
-      const deps = instrValue.loweredFunc.dependencies
-        .map(dep => printPlace(dep))
-        .join(',');
       const context = instrValue.loweredFunc.func.context
         .map(dep => printPlace(dep))
         .join(',');
@@ -557,7 +556,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
           })
           .join(', ') ?? '';
       const type = printType(instrValue.loweredFunc.func.returnType).trim();
-      value = `${kind} ${name} @deps[${deps}] @context[${context}] @effects[${effects}]${type !== '' ? ` return${type}` : ''}:\n${fn}`;
+      value = `${kind} ${name} @context[${context}] @effects[${effects}]${type !== '' ? ` return${type}` : ''}:\n${fn}`;
       break;
     }
     case 'TaggedTemplateExpression': {
@@ -702,10 +701,6 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
     }
     case 'FinishMemoize': {
       value = `FinishMemoize decl=${printPlace(instrValue.decl)}`;
-      break;
-    }
-    case 'ReactiveFunctionValue': {
-      value = `FunctionValue ${printReactiveFunction(instrValue.fn)}`;
       break;
     }
     default: {

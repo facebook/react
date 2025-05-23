@@ -99,9 +99,11 @@ class Env extends Map<IdentifierId, RefAccessType> {
   }
 }
 
-export function validateNoRefAccessInRender(fn: HIRFunction): void {
+export function validateNoRefAccessInRender(
+  fn: HIRFunction,
+): Result<void, CompilerError> {
   const env = new Env();
-  validateNoRefAccessInRenderImpl(fn, env).unwrap();
+  return validateNoRefAccessInRenderImpl(fn, env).map(_ => undefined);
 }
 
 function refTypeOfType(place: Place): RefAccessType {
@@ -285,7 +287,7 @@ function validateNoRefAccessInRenderImpl(
           }
           case 'ComputedLoad':
           case 'PropertyLoad': {
-            if (typeof instr.value.property !== 'string') {
+            if (instr.value.kind === 'ComputedLoad') {
               validateNoDirectRefValueAccess(errors, instr.value.property, env);
             }
             const objType = env.get(instr.value.object.identifier.id);

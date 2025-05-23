@@ -21,6 +21,7 @@ let ReactDOM;
 let ReactDOMClient;
 let ReactDOMFizzServer;
 let Suspense;
+let SuspenseList;
 let textCache;
 let loadCache;
 let writable;
@@ -31,11 +32,11 @@ let hasErrored = false;
 let fatalError = undefined;
 let renderOptions;
 let waitForAll;
-let waitForThrow;
 let assertLog;
 let Scheduler;
 let clientAct;
 let streamingContainer;
+let assertConsoleErrorDev;
 
 describe('ReactDOMFloat', () => {
   beforeEach(() => {
@@ -63,6 +64,9 @@ describe('ReactDOMFloat', () => {
     global.Node = global.window.Node;
     global.addEventListener = global.window.addEventListener;
     global.MutationObserver = global.window.MutationObserver;
+    // The Fizz runtime assumes requestAnimationFrame exists so we need to polyfill it.
+    global.requestAnimationFrame = global.window.requestAnimationFrame = cb =>
+      setTimeout(cb);
     container = document.getElementById('container');
 
     React = require('react');
@@ -71,13 +75,14 @@ describe('ReactDOMFloat', () => {
     ReactDOMFizzServer = require('react-dom/server');
     Stream = require('stream');
     Suspense = React.Suspense;
+    SuspenseList = React.unstable_SuspenseList;
     Scheduler = require('scheduler/unstable_mock');
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
-    waitForThrow = InternalTestUtils.waitForThrow;
     assertLog = InternalTestUtils.assertLog;
     clientAct = InternalTestUtils.act;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
 
     textCache = new Map();
     loadCache = new Set();
@@ -122,6 +127,7 @@ describe('ReactDOMFloat', () => {
     buffer = '';
 
     if (!bufferedContent) {
+      jest.runAllTimers();
       return;
     }
 
@@ -230,6 +236,9 @@ describe('ReactDOMFloat', () => {
       div.innerHTML = bufferedContent;
       await insertNodesAndExecuteScripts(div, streamingContainer, CSPnonce);
     }
+    await 0;
+    // Let throttled boundaries reveal
+    jest.runAllTimers();
   }
 
   function getMeaningfulChildren(element) {
@@ -250,7 +259,10 @@ describe('ReactDOMFloat', () => {
             node.tagName !== 'TEMPLATE' &&
             node.tagName !== 'template' &&
             !node.hasAttribute('hidden') &&
-            !node.hasAttribute('aria-hidden'))
+            !node.hasAttribute('aria-hidden') &&
+            // Ignore the render blocking expect
+            (node.getAttribute('rel') !== 'expect' ||
+              node.getAttribute('blocking') !== 'render'))
         ) {
           const props = {};
           const attributes = node.attributes;
@@ -497,132 +509,138 @@ describe('ReactDOMFloat', () => {
   it('warns if you render resource-like elements above <head> or <body>', async () => {
     const root = ReactDOMClient.createRoot(document);
 
-    await expect(async () => {
-      root.render(
-        <>
-          <noscript>foo</noscript>
-          <html>
-            <body>foo</body>
-          </html>
-        </>,
-      );
-      const aggregateError = await waitForThrow();
-      expect(aggregateError.errors.length).toBe(2);
-      expect(aggregateError.errors[0].message).toContain(
-        'Invalid insertion of NOSCRIPT',
-      );
-      expect(aggregateError.errors[1].message).toContain(
-        'The node to be removed is not a child of this node',
-      );
-    }).toErrorDev(
+    root.render(
+      <>
+        <noscript>foo</noscript>
+        <html>
+          <body>foo</body>
+        </html>
+      </>,
+    );
+    await waitForAll([]);
+    assertConsoleErrorDev([
       [
         'Cannot render <noscript> outside the main document. Try moving it into the root <head> tag.',
-        'In HTML, <noscript> cannot be a child of <#document>.',
+        {withoutStack: true},
       ],
-      {withoutStack: 1},
+    ]);
+
+    root.render(
+      <html>
+        <template>foo</template>
+        <body>foo</body>
+      </html>,
     );
-
-    await expect(async () => {
-      root.render(
-        <html>
-          <template>foo</template>
-          <body>foo</body>
-        </html>,
-      );
-      await waitForAll([]);
-    }).toErrorDev([
-      'Cannot render <template> outside the main document. Try moving it into the root <head> tag.',
-      'In HTML, <template> cannot be a child of <html>.',
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      'Cannot render <template> outside the main document. Try moving it into the root <head> tag.\n' +
+        '    in html (at **)',
+      'In HTML, <template> cannot be a child of <html>.\n' +
+        'This will cause a hydration error.\n\n' +
+        '> <html>\n' +
+        '>   <template>\n' +
+        '    ...\n' +
+        '\n' +
+        '    in template (at **)',
     ]);
 
-    await expect(async () => {
-      root.render(
-        <html>
-          <body>foo</body>
-          <style>foo</style>
-        </html>,
-      );
-      await waitForAll([]);
-    }).toErrorDev([
-      'Cannot render a <style> outside the main document without knowing its precedence and a unique href key. React can hoist and deduplicate <style> tags if you provide a `precedence` prop along with an `href` prop that does not conflict with the `href` values used in any other hoisted <style> or <link rel="stylesheet" ...> tags.  Note that hoisting <style> tags is considered an advanced feature that most will not use directly. Consider moving the <style> tag to the <head> or consider adding a `precedence="default"` and `href="some unique resource identifier"`.',
-      'In HTML, <style> cannot be a child of <html>.',
+    root.render(
+      <html>
+        <body>foo</body>
+        <style>foo</style>
+      </html>,
+    );
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      'Cannot render a <style> outside the main document without knowing its precedence ' +
+        'and a unique href key. React can hoist and deduplicate <style> tags if you provide a ' +
+        '`precedence` prop along with an `href` prop that does not conflict with the `href` ' +
+        'values used in any other hoisted <style> or <link rel="stylesheet" ...> tags.  ' +
+        'Note that hoisting <style> tags is considered an advanced feature that most will not use directly. ' +
+        'Consider moving the <style> tag to the <head> or consider adding a `precedence="default"` ' +
+        'and `href="some unique resource identifier"`.\n' +
+        '    in html (at **)',
+      'In HTML, <style> cannot be a child of <html>.\n' +
+        'This will cause a hydration error.\n\n' +
+        '> <html>\n' +
+        '    <body>\n' +
+        '>   <style>\n' +
+        '\n' +
+        '    in style (at **)',
     ]);
 
-    await expect(async () => {
-      root.render(
-        <>
-          <html>
-            <body>foo</body>
-          </html>
-          <link rel="stylesheet" href="foo" />
-        </>,
-      );
-      const aggregateError = await waitForThrow();
-      expect(aggregateError.errors.length).toBe(2);
-      expect(aggregateError.errors[0].message).toContain(
-        'Invalid insertion of LINK',
-      );
-      expect(aggregateError.errors[1].message).toContain(
-        'The node to be removed is not a child of this node',
-      );
-    }).toErrorDev(
+    root.render(
+      <>
+        <html>
+          <body>foo</body>
+        </html>
+        <link rel="stylesheet" href="foo" />
+      </>,
+    );
+    await waitForAll([]);
+    assertConsoleErrorDev([
       [
-        'Cannot render a <link rel="stylesheet" /> outside the main document without knowing its precedence. Consider adding precedence="default" or moving it into the root <head> tag.',
-        'In HTML, <link> cannot be a child of <#document>.',
+        'Cannot render a <link rel="stylesheet" /> outside the main document without knowing its precedence. ' +
+          'Consider adding precedence="default" or moving it into the root <head> tag.',
+        {withoutStack: true},
       ],
-      {withoutStack: 1},
-    );
-
-    await expect(async () => {
-      root.render(
-        <>
-          <html>
-            <body>foo</body>
-            <script href="foo" />
-          </html>
-        </>,
-      );
-      await waitForAll([]);
-    }).toErrorDev([
-      'Cannot render a sync or defer <script> outside the main document without knowing its order. Try adding async="" or moving it into the root <head> tag.',
-      'In HTML, <script> cannot be a child of <html>.',
     ]);
 
-    await expect(async () => {
-      root.render(
+    root.render(
+      <>
         <html>
-          <script async={true} onLoad={() => {}} href="bar" />
           <body>foo</body>
-        </html>,
-      );
-      await waitForAll([]);
-    }).toErrorDev([
-      'Cannot render a <script> with onLoad or onError listeners outside the main document. Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or somewhere in the <body>.',
+          <script href="foo" />
+        </html>
+      </>,
+    );
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      'Cannot render a sync or defer <script> outside the main document without knowing its order. ' +
+        'Try adding async="" or moving it into the root <head> tag.\n' +
+        '    in html (at **)',
+      'In HTML, <script> cannot be a child of <html>.\n' +
+        'This will cause a hydration error.\n' +
+        '\n' +
+        '> <html>\n' +
+        '    <body>\n' +
+        '>   <script href="foo">\n' +
+        '\n' +
+        '    in script (at **)',
     ]);
 
-    await expect(async () => {
-      root.render(
-        <>
-          <link rel="foo" onLoad={() => {}} href="bar" />
-          <html>
-            <body>foo</body>
-          </html>
-        </>,
-      );
-      const aggregateError = await waitForThrow();
-      expect(aggregateError.errors.length).toBe(2);
-      expect(aggregateError.errors[0].message).toContain(
-        'Invalid insertion of LINK',
-      );
-      expect(aggregateError.errors[1].message).toContain(
-        'The node to be removed is not a child of this node',
-      );
-    }).toErrorDev(
-      [
-        'Cannot render a <link> with onLoad or onError listeners outside the main document. Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or somewhere in the <body>.',
-      ],
-      {withoutStack: 1},
+    root.render(
+      <html>
+        <script async={true} onLoad={() => {}} href="bar" />
+        <body>foo</body>
+      </html>,
     );
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      'Cannot render a <script> with onLoad or onError listeners outside the main document. ' +
+        'Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or ' +
+        'somewhere in the <body>.\n' +
+        '    in html (at **)',
+    ]);
+
+    root.render(
+      <>
+        <link rel="foo" onLoad={() => {}} href="bar" />
+        <html>
+          <body>foo</body>
+        </html>
+      </>,
+    );
+    await waitForAll([]);
+    assertConsoleErrorDev(
+      [
+        'Cannot render a <link> with onLoad or onError listeners outside the main document. ' +
+          'Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or ' +
+          'somewhere in the <body>.',
+      ],
+      {withoutStack: true},
+    );
+    return;
   });
 
   it('can acquire a resource after releasing it in the same commit', async () => {
@@ -684,7 +702,18 @@ describe('ReactDOMFloat', () => {
       pipe(writable);
     });
     expect(chunks).toEqual([
-      '<!DOCTYPE html><html><head><script async="" src="foo"></script><title>foo</title></head><body>bar',
+      '<!DOCTYPE html><html><head><script async="" src="foo"></script>' +
+        (gate(flags => flags.shouldUseFizzExternalRuntime)
+          ? '<script src="react-dom/unstable_server-external-runtime" async=""></script>'
+          : '') +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<link rel="expect" href="#«R»" blocking="render"/>'
+          : '') +
+        '<title>foo</title></head>' +
+        '<body>bar' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<template id="«R»"></template>'
+          : ''),
       '</body></html>',
     ]);
   });
@@ -718,7 +747,9 @@ describe('ReactDOMFloat', () => {
     });
 
     expect(
-      Array.from(document.getElementsByTagName('script')).map(n => n.outerHTML),
+      Array.from(document.querySelectorAll('script[async]')).map(
+        n => n.outerHTML,
+      ),
     ).toEqual(['<script src="src-of-external-runtime" async=""></script>']);
   });
 
@@ -1220,6 +1251,13 @@ body {
       pipe(writable);
     });
 
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>loading...</body>
+      </html>,
+    );
+
     await act(() => {
       resolveText('unblock');
     });
@@ -1247,9 +1285,7 @@ body {
     const suspenseInstance = boundaryTemplateInstance.previousSibling;
 
     expect(suspenseInstance.data).toEqual('$!');
-    expect(boundaryTemplateInstance.dataset.dgst).toBe(
-      'Resource failed to load',
-    );
+    expect(boundaryTemplateInstance.dataset.dgst).toBe('CSS failed to load');
 
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
@@ -1295,7 +1331,7 @@ body {
     );
     expect(errors).toEqual([
       'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
-      'Resource failed to load',
+      'CSS failed to load',
     ]);
   });
 
@@ -2222,40 +2258,43 @@ body {
         </html>
       );
     }
-    await expect(async () => {
-      await act(() => {
-        const {pipe} = renderToPipeableStream(<App />);
-        pipe(writable);
-      });
-      expect(getMeaningfulChildren(document)).toEqual(
-        <html>
-          <head>
-            <link
-              rel="stylesheet"
-              href="foo"
-              data-precedence="default"
-              crossorigin="anonymous"
-              media="all"
-              integrity="somehash"
-              referrerpolicy="origin"
-              data-foo={'"quoted"'}
-              nonstandardattr="attr"
-              properlyformattednonstandardattr="attr"
-            />
-          </head>
-          <body>
-            <div>loading...</div>
-          </body>
-        </html>,
-      );
-    }).toErrorDev([
-      'React does not recognize the `nonStandardAttr` prop on a DOM element.' +
-        ' If you intentionally want it to appear in the DOM as a custom attribute,' +
-        ' spell it as lowercase `nonstandardattr` instead. If you accidentally passed it from a' +
-        ' parent component, remove it from the DOM element.',
-      'Invalid values for props `shouldnotincludefunctions`, `norsymbols` on <link> tag. Either remove them from' +
-        ' the element, or pass a string or number value to keep them in the DOM. For' +
-        ' details, see https://react.dev/link/attribute-behavior',
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link
+            rel="stylesheet"
+            href="foo"
+            data-precedence="default"
+            crossorigin="anonymous"
+            media="all"
+            integrity="somehash"
+            referrerpolicy="origin"
+            data-foo={'"quoted"'}
+            nonstandardattr="attr"
+            properlyformattednonstandardattr="attr"
+          />
+        </head>
+        <body>
+          <div>loading...</div>
+        </body>
+      </html>,
+    );
+    assertConsoleErrorDev([
+      'React does not recognize the `nonStandardAttr` prop on a DOM element. ' +
+        'If you intentionally want it to appear in the DOM as a custom attribute, ' +
+        'spell it as lowercase `nonstandardattr` instead. If you accidentally passed it from a ' +
+        'parent component, remove it from the DOM element.\n' +
+        '    in link (at **)\n' +
+        '    in App (at **)',
+      'Invalid values for props `shouldnotincludefunctions`, `norsymbols` on <link> tag. ' +
+        'Either remove them from the element, or pass a string or number value to keep them in the DOM. ' +
+        'For details, see https://react.dev/link/attribute-behavior \n' +
+        '    in link (at **)\n' +
+        '    in App (at **)',
     ]);
 
     // Now we flush the stylesheet with the boundary
@@ -2592,30 +2631,128 @@ body {
     );
   });
 
-  it('warns if you render a tag with itemProp outside <body> or <head>', async () => {
+  it('warns if you render <meta> tag with itemProp outside <body> or <head>', async () => {
     const root = ReactDOMClient.createRoot(document);
     root.render(
       <html>
         <meta itemProp="foo" />
+      </html>,
+    );
+
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      'Cannot render a <meta> outside the main document if it has an `itemProp` prop. ' +
+        '`itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. ' +
+        'If you were intending for React to hoist this <meta> remove the `itemProp` prop. ' +
+        'Otherwise, try moving this tag into the <head> or <body> of the Document.\n' +
+        '    in html (at **)',
+      'In HTML, <meta> cannot be a child of <html>.\n' +
+        'This will cause a hydration error.\n' +
+        '\n' +
+        '> <html>\n' +
+        '>   <meta itemProp="foo">' +
+        '\n' +
+        '\n    in meta (at **)',
+    ]);
+  });
+
+  it('warns if you render a <title> tag with itemProp outside <body> or <head>', async () => {
+    const root = ReactDOMClient.createRoot(document);
+    root.render(
+      <html>
         <title itemProp="foo">title</title>
+      </html>,
+    );
+
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      'Cannot render a <title> outside the main document if it has an `itemProp` prop. ' +
+        '`itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. ' +
+        'If you were intending for React to hoist this <title> remove the `itemProp` prop. ' +
+        'Otherwise, try moving this tag into the <head> or <body> of the Document.\n' +
+        '    in html (at **)',
+      'In HTML, <title> cannot be a child of <html>.\n' +
+        'This will cause a hydration error.\n' +
+        '\n' +
+        '> <html>\n' +
+        '>   <title itemProp="foo">' +
+        '\n' +
+        '\n    in title (at **)',
+    ]);
+  });
+
+  it('warns if you render a <style> tag with itemProp outside <body> or <head>', async () => {
+    const root = ReactDOMClient.createRoot(document);
+    root.render(
+      <html>
         <style itemProp="foo">style</style>
+      </html>,
+    );
+
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      'Cannot render a <style> outside the main document if it has an `itemProp` prop. ' +
+        '`itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. ' +
+        'If you were intending for React to hoist this <style> remove the `itemProp` prop. ' +
+        'Otherwise, try moving this tag into the <head> or <body> of the Document.\n' +
+        '    in html (at **)',
+      'In HTML, <style> cannot be a child of <html>.\n' +
+        'This will cause a hydration error.\n' +
+        '\n' +
+        '> <html>\n' +
+        '>   <style itemProp="foo">' +
+        '\n' +
+        '\n    in style (at **)',
+    ]);
+  });
+
+  it('warns if you render a <link> tag with itemProp outside <body> or <head>', async () => {
+    const root = ReactDOMClient.createRoot(document);
+    root.render(
+      <html>
         <link itemProp="foo" />
+      </html>,
+    );
+
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      'Cannot render a <link> outside the main document if it has an `itemProp` prop. ' +
+        '`itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. ' +
+        'If you were intending for React to hoist this <link> remove the `itemProp` prop. ' +
+        'Otherwise, try moving this tag into the <head> or <body> of the Document.\n' +
+        '    in html (at **)',
+      'In HTML, <link> cannot be a child of <html>.\n' +
+        'This will cause a hydration error.\n' +
+        '\n' +
+        '> <html>\n' +
+        '>   <link itemProp="foo">\n' +
+        '\n' +
+        '    in link (at **)',
+    ]);
+  });
+
+  it('warns if you render a <script> tag with itemProp outside <body> or <head>', async () => {
+    const root = ReactDOMClient.createRoot(document);
+    root.render(
+      <html>
         <script itemProp="foo" />
       </html>,
     );
-    await expect(async () => {
-      await waitForAll([]);
-    }).toErrorDev([
-      'Cannot render a <meta> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <meta> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
-      'Cannot render a <title> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <title> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
-      'Cannot render a <style> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <style> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
-      'Cannot render a <link> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <link> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
-      'Cannot render a <script> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <script> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
-      'In HTML, <meta> cannot be a child of <html>',
-      'In HTML, <title> cannot be a child of <html>',
-      'In HTML, <style> cannot be a child of <html>',
-      'In HTML, <link> cannot be a child of <html>',
-      'In HTML, <script> cannot be a child of <html>',
+
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      'Cannot render a <script> outside the main document if it has an `itemProp` prop. ' +
+        '`itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. ' +
+        'If you were intending for React to hoist this <script> remove the `itemProp` prop. ' +
+        'Otherwise, try moving this tag into the <head> or <body> of the Document.\n' +
+        '    in html (at **)',
+      'In HTML, <script> cannot be a child of <html>.\n' +
+        'This will cause a hydration error.\n' +
+        '\n' +
+        '> <html>\n' +
+        '>   <script itemProp="foo">\n' +
+        '\n' +
+        '    in script (at **)',
     ]);
   });
 
@@ -3246,27 +3383,29 @@ body {
     });
     await waitForAll([]);
 
-    // Although the commit suspended, a preload was inserted.
-    expect(getMeaningfulChildren(document)).toEqual(
-      <html>
-        <head>
-          <link rel="preload" href="foo" as="style" />
-        </head>
-        <body>loading...</body>
-      </html>,
-    );
+    if (gate(flags => flags.alwaysThrottleRetries)) {
+      // Although the commit suspended, a preload was inserted.
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="preload" href="foo" as="style" />
+          </head>
+          <body>loading...</body>
+        </html>,
+      );
 
-    loadPreloads(['foo']);
-    assertLog(['load preload: foo']);
-    expect(getMeaningfulChildren(document)).toEqual(
-      <html>
-        <head>
-          <link rel="stylesheet" href="foo" data-precedence="default" />
-          <link rel="preload" href="foo" as="style" />
-        </head>
-        <body>loading...</body>
-      </html>,
-    );
+      loadPreloads(['foo']);
+      assertLog(['load preload: foo']);
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" data-precedence="default" />
+            <link rel="preload" href="foo" as="style" />
+          </head>
+          <body>loading...</body>
+        </html>,
+      );
+    }
 
     loadStylesheets(['foo']);
     assertLog(['load stylesheet: foo']);
@@ -3296,35 +3435,36 @@ body {
       );
     });
     await waitForAll([]);
-    expect(getMeaningfulChildren(document)).toEqual(
-      <html>
-        <head>
-          <link rel="stylesheet" href="foo" data-precedence="default" />
-          <link rel="preload" href="foo" as="style" />
-          <link rel="preload" href="bar" as="style" />
-        </head>
-        <body>
-          <div style="display: none;">hello</div>loading...
-        </body>
-      </html>,
-    );
+    if (gate(flags => flags.alwaysThrottleRetries)) {
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" data-precedence="default" />
+            <link rel="preload" href="foo" as="style" />
+            <link rel="preload" href="bar" as="style" />
+          </head>
+          <body>
+            <div style="display: none;">hello</div>loading...
+          </body>
+        </html>,
+      );
 
-    loadPreloads(['bar']);
-    assertLog(['load preload: bar']);
-    expect(getMeaningfulChildren(document)).toEqual(
-      <html>
-        <head>
-          <link rel="stylesheet" href="foo" data-precedence="default" />
-          <link rel="stylesheet" href="bar" data-precedence="default" />
-          <link rel="preload" href="foo" as="style" />
-          <link rel="preload" href="bar" as="style" />
-        </head>
-        <body>
-          <div style="display: none;">hello</div>loading...
-        </body>
-      </html>,
-    );
-
+      loadPreloads(['bar']);
+      assertLog(['load preload: bar']);
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" data-precedence="default" />
+            <link rel="stylesheet" href="bar" data-precedence="default" />
+            <link rel="preload" href="foo" as="style" />
+            <link rel="preload" href="bar" as="style" />
+          </head>
+          <body>
+            <div style="display: none;">hello</div>loading...
+          </body>
+        </html>,
+      );
+    }
     loadStylesheets(['bar']);
     assertLog(['load stylesheet: bar']);
     expect(getMeaningfulChildren(document)).toEqual(
@@ -3483,12 +3623,13 @@ body {
       </html>,
     );
 
-    await expect(async () => {
-      loadStylesheets();
-    }).toErrorDev([
+    loadStylesheets();
+    assertLog(['load stylesheet: foo']);
+    await waitForAll([]);
+    assertConsoleErrorDev([
       "Hydration failed because the server rendered HTML didn't match the client.",
     ]);
-    assertLog(['load stylesheet: foo']);
+    jest.runAllTimers();
 
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
@@ -4705,12 +4846,14 @@ body {
       );
     }
 
-    await expect(async () => {
-      await act(() => {
-        renderToPipeableStream(<App />).pipe(writable);
-      });
-    }).toErrorDev([
-      'React encountered a hoistable style tag for the same href as a preload: "foo". When using a style tag to inline styles you should not also preload it as a stylsheet.',
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+    assertConsoleErrorDev([
+      'React encountered a hoistable style tag for the same href as a preload: "foo". ' +
+        'When using a style tag to inline styles you should not also preload it as a stylsheet.\n' +
+        '    in style (at **)\n' +
+        '    in App (at **)',
     ]);
 
     expect(getMeaningfulChildren(document)).toEqual(
@@ -5080,6 +5223,10 @@ body {
       </html>,
     );
     loadStylesheets();
+    // Let the styles flush and then flush the boundaries
+    await 0;
+    await 0;
+    jest.runAllTimers();
     assertLog([
       'load stylesheet: shell preinit/shell',
       'load stylesheet: shell/shell preinit',
@@ -5404,13 +5551,23 @@ body {
         );
       }
 
-      await expect(async () => {
-        await act(() => {
-          renderToPipeableStream(<App url="foo" />).pipe(writable);
-        });
-      }).toErrorDev([
-        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered something with type "object" as a second argument instead. This argument is reserved for future options and is currently disallowed. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
-        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered something with type "object" as a second argument instead. This argument is reserved for future options and is currently disallowed. It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. Browsers do not perform DNS queries using CORS and setting this attribute on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
+      await act(() => {
+        renderToPipeableStream(<App url="foo" />).pipe(writable);
+      });
+      assertConsoleErrorDev([
+        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, ' +
+          'but encountered something with type "object" as a second argument instead. ' +
+          'This argument is reserved for future options and is currently disallowed. ' +
+          'Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.\n' +
+          '    in App (at **)',
+        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, ' +
+          'but encountered something with type "object" as a second argument instead. ' +
+          'This argument is reserved for future options and is currently disallowed. ' +
+          'It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. ' +
+          'Browsers do not perform DNS queries using CORS and setting this attribute ' +
+          'on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just ' +
+          'a single string argument, `href`.\n' +
+          '    in App (at **)',
       ]);
 
       expect(getMeaningfulChildren(document)).toEqual(
@@ -5423,11 +5580,21 @@ body {
       );
 
       const root = ReactDOMClient.hydrateRoot(document, <App url="foo" />);
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev([
-        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered something with type "object" as a second argument instead. This argument is reserved for future options and is currently disallowed. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
-        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered something with type "object" as a second argument instead. This argument is reserved for future options and is currently disallowed. It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. Browsers do not perform DNS queries using CORS and setting this attribute on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
+      await waitForAll([]);
+      assertConsoleErrorDev([
+        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, ' +
+          'but encountered something with type "object" as a second argument instead. ' +
+          'This argument is reserved for future options and is currently disallowed. ' +
+          'Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.\n' +
+          '    in App (at **)',
+        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, ' +
+          'but encountered something with type "object" as a second argument instead. ' +
+          'This argument is reserved for future options and is currently disallowed. ' +
+          'It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. ' +
+          'Browsers do not perform DNS queries using CORS and setting this attribute ' +
+          'on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just ' +
+          'a single string argument, `href`.\n' +
+          '    in App (at **)',
       ]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
@@ -5439,11 +5606,21 @@ body {
       );
 
       root.render(<App url="bar" />);
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev([
-        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered something with type "object" as a second argument instead. This argument is reserved for future options and is currently disallowed. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
-        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered something with type "object" as a second argument instead. This argument is reserved for future options and is currently disallowed. It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. Browsers do not perform DNS queries using CORS and setting this attribute on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
+      await waitForAll([]);
+      assertConsoleErrorDev([
+        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, ' +
+          'but encountered something with type "object" as a second argument instead. ' +
+          'This argument is reserved for future options and is currently disallowed. ' +
+          'Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.\n' +
+          '    in App (at **)',
+        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, ' +
+          'but encountered something with type "object" as a second argument instead. ' +
+          'This argument is reserved for future options and is currently disallowed. ' +
+          'It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. ' +
+          'Browsers do not perform DNS queries using CORS and setting this attribute ' +
+          'on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just ' +
+          'a single string argument, `href`.\n' +
+          '    in App (at **)',
       ]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
@@ -5571,6 +5748,181 @@ body {
     );
   });
 
+  // @gate enableSuspenseList
+  it('delays "forwards" SuspenseList rows until the css of previous rows have completed', async () => {
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <Suspense fallback="loading...">
+              <SuspenseList revealOrder="forwards">
+                <Suspense fallback="loading foo...">
+                  <BlockedOn value="foo">
+                    <link rel="stylesheet" href="foo" precedence="foo" />
+                    foo
+                  </BlockedOn>
+                </Suspense>
+                <Suspense fallback="loading bar...">bar</Suspense>
+                <BlockedOn value="bar">
+                  <Suspense fallback="loading baz...">
+                    <BlockedOn value="baz">baz</BlockedOn>
+                  </Suspense>
+                </BlockedOn>
+              </SuspenseList>
+            </Suspense>
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>loading...</body>
+      </html>,
+    );
+
+    // unblock css loading
+    await act(() => {
+      resolveText('foo');
+    });
+
+    // bar is still blocking the whole list
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="foo" />
+        </head>
+        <body>
+          {'loading...'}
+          <link as="style" href="foo" rel="preload" />
+        </body>
+      </html>,
+    );
+
+    // unblock inner loading states
+    await act(() => {
+      resolveText('bar');
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="foo" />
+        </head>
+        <body>
+          {'loading foo...'}
+          {'loading bar...'}
+          {'loading baz...'}
+          <link as="style" href="foo" rel="preload" />
+        </body>
+      </html>,
+    );
+
+    // resolve the last boundary
+    await act(() => {
+      resolveText('baz');
+    });
+
+    // still blocked on the css of the first row
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="foo" />
+        </head>
+        <body>
+          {'loading foo...'}
+          {'loading bar...'}
+          {'loading baz...'}
+          <link as="style" href="foo" rel="preload" />
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      loadStylesheets();
+    });
+    await assertLog(['load stylesheet: foo']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="foo" />
+        </head>
+        <body>
+          {'foo'}
+          {'bar'}
+          {'baz'}
+          <link as="style" href="foo" rel="preload" />
+        </body>
+      </html>,
+    );
+  });
+
+  // @gate enableSuspenseList
+  it('delays "together" SuspenseList rows until the css of previous rows have completed', async () => {
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <SuspenseList revealOrder="together">
+              <Suspense fallback="loading foo...">
+                <BlockedOn value="foo">
+                  <link rel="stylesheet" href="foo" precedence="foo" />
+                  foo
+                </BlockedOn>
+              </Suspense>
+              <Suspense fallback="loading bar...">bar</Suspense>
+            </SuspenseList>
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          {'loading foo...'}
+          {'loading bar...'}
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('foo');
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="foo" />
+        </head>
+        <body>
+          {'loading foo...'}
+          {'loading bar...'}
+          <link as="style" href="foo" rel="preload" />
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      loadStylesheets();
+    });
+    await assertLog(['load stylesheet: foo']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="foo" />
+        </head>
+        <body>
+          {'foo'}
+          {'bar'}
+          <link as="style" href="foo" rel="preload" />
+        </body>
+      </html>,
+    );
+  });
+
   describe('ReactDOM.preconnect(href, { crossOrigin })', () => {
     it('creates a preconnect resource when called', async () => {
       function App({url}) {
@@ -5587,13 +5939,15 @@ body {
         );
       }
 
-      await expect(async () => {
-        await act(() => {
-          renderToPipeableStream(<App url="foo" />).pipe(writable);
-        });
-      }).toErrorDev(
-        'ReactDOM.preconnect(): Expected the `crossOrigin` option (second argument) to be a string but encountered something with type "boolean" instead. Try removing this option or passing a string value instead.',
-      );
+      await act(() => {
+        renderToPipeableStream(<App url="foo" />).pipe(writable);
+      });
+      assertConsoleErrorDev([
+        'ReactDOM.preconnect(): Expected the `crossOrigin` option (second argument) ' +
+          'to be a string but encountered something with type "boolean" instead. ' +
+          'Try removing this option or passing a string value instead.\n' +
+          '    in App (at **)',
+      ]);
 
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
@@ -5607,11 +5961,13 @@ body {
       );
 
       const root = ReactDOMClient.hydrateRoot(document, <App url="foo" />);
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev(
-        'ReactDOM.preconnect(): Expected the `crossOrigin` option (second argument) to be a string but encountered something with type "boolean" instead. Try removing this option or passing a string value instead.',
-      );
+      await waitForAll([]);
+      assertConsoleErrorDev([
+        'ReactDOM.preconnect(): Expected the `crossOrigin` option (second argument) ' +
+          'to be a string but encountered something with type "boolean" instead. ' +
+          'Try removing this option or passing a string value instead.\n' +
+          '    in App (at **)',
+      ]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -5624,11 +5980,13 @@ body {
       );
 
       root.render(<App url="bar" />);
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev(
-        'ReactDOM.preconnect(): Expected the `crossOrigin` option (second argument) to be a string but encountered something with type "boolean" instead. Try removing this option or passing a string value instead.',
-      );
+      await waitForAll([]);
+      assertConsoleErrorDev([
+        'ReactDOM.preconnect(): Expected the `crossOrigin` option (second argument) ' +
+          'to be a string but encountered something with type "boolean" instead. ' +
+          'Try removing this option or passing a string value instead.\n' +
+          '    in App (at **)',
+      ]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -5785,15 +6143,28 @@ body {
         return <div>foo</div>;
       }
 
-      await expect(async () => {
-        await act(() => {
-          renderToPipeableStream(<App />).pipe(writable);
-        });
-      }).toErrorDev([
-        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an `options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag. The `href` argument encountered was `undefined`. The `options` argument encountered was `undefined`.',
-        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an `options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag. The `href` argument encountered was an empty string. The `options` argument encountered was `undefined`.',
-        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an `options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag. The `options` argument encountered was `null`.',
-        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an `options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag. The `as` option encountered was `undefined`.',
+      await act(() => {
+        renderToPipeableStream(<App />).pipe(writable);
+      });
+      assertConsoleErrorDev([
+        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an ' +
+          '`options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag. ' +
+          'The `href` argument encountered was `undefined`. ' +
+          'The `options` argument encountered was `undefined`.\n' +
+          '    in App (at **)',
+        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an ' +
+          '`options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag. ' +
+          'The `href` argument encountered was an empty string. ' +
+          'The `options` argument encountered was `undefined`.\n' +
+          '    in App (at **)',
+        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an ' +
+          '`options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag. ' +
+          'The `options` argument encountered was `null`.\n' +
+          '    in App (at **)',
+        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an ' +
+          '`options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag. ' +
+          'The `as` option encountered was `undefined`.\n' +
+          '    in App (at **)',
       ]);
     });
 
@@ -6041,16 +6412,30 @@ body {
         ReactDOM.preloadModule('2', {as: true});
         return <div>hello</div>;
       }
-      await expect(async () => {
-        await act(() => {
-          renderToPipeableStream(<App />).pipe(writable);
-        });
-      }).toErrorDev([
-        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. The `href` argument encountered was `undefined`',
-        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. The `href` argument encountered was something with type "function"',
-        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. The `href` argument encountered was an empty string',
-        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. The `options` argument encountered was something with type "boolean"',
-        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. The `as` option encountered was something with type "boolean"',
+      await act(() => {
+        renderToPipeableStream(<App />).pipe(writable);
+      });
+      assertConsoleErrorDev([
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, ' +
+          'an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. ' +
+          'The `href` argument encountered was `undefined`.\n' +
+          '    in App (at **)',
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, ' +
+          'an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. ' +
+          'The `href` argument encountered was something with type "function".\n' +
+          '    in App (at **)',
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, ' +
+          'an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. ' +
+          'The `href` argument encountered was an empty string.\n' +
+          '    in App (at **)',
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, ' +
+          'an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. ' +
+          'The `options` argument encountered was something with type "boolean".\n' +
+          '    in App (at **)',
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally,' +
+          ' an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. ' +
+          'The `as` option encountered was something with type "boolean".\n' +
+          '    in App (at **)',
       ]);
       expect(getMeaningfulChildren(document.body)).toEqual(
         <div id="container">
@@ -6064,14 +6449,28 @@ body {
         document.getElementById('container'),
       );
       root.render(<App />);
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev([
-        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. The `href` argument encountered was `undefined`',
-        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. The `href` argument encountered was something with type "function"',
-        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. The `href` argument encountered was an empty string',
-        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. The `options` argument encountered was something with type "boolean"',
-        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. The `as` option encountered was something with type "boolean"',
+      await waitForAll([]);
+      assertConsoleErrorDev([
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, ' +
+          'an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. ' +
+          'The `href` argument encountered was `undefined`.\n' +
+          '    in App (at **)',
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, ' +
+          'an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. ' +
+          'The `href` argument encountered was something with type "function".\n' +
+          '    in App (at **)',
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an ' +
+          '`options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. ' +
+          'The `href` argument encountered was an empty string.\n' +
+          '    in App (at **)',
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an ' +
+          '`options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. ' +
+          'The `options` argument encountered was something with type "boolean".\n' +
+          '    in App (at **)',
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an ' +
+          '`options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. ' +
+          'The `as` option encountered was something with type "boolean".\n' +
+          '    in App (at **)',
       ]);
     });
   });
@@ -6340,16 +6739,27 @@ body {
         return <div>foo</div>;
       }
 
-      await expect(async () => {
-        await act(() => {
-          renderToPipeableStream(<App />).pipe(writable);
-        });
-      }).toErrorDev([
-        'ReactDOM.preinit(): Expected the `href` argument (first) to be a non-empty string but encountered `undefined` instead',
-        'ReactDOM.preinit(): Expected the `href` argument (first) to be a non-empty string but encountered an empty string instead',
-        'ReactDOM.preinit(): Expected the `options` argument (second) to be an object with an `as` property describing the type of resource to be preinitialized but encountered `null` instead',
-        'ReactDOM.preinit(): Expected the `as` property in the `options` argument (second) to contain a valid value describing the type of resource to be preinitialized but encountered `undefined` instead. Valid values for `as` are "style" and "script".',
-        'ReactDOM.preinit(): Expected the `as` property in the `options` argument (second) to contain a valid value describing the type of resource to be preinitialized but encountered "foo" instead. Valid values for `as` are "style" and "script".',
+      await act(() => {
+        renderToPipeableStream(<App />).pipe(writable);
+      });
+      assertConsoleErrorDev([
+        'ReactDOM.preinit(): Expected the `href` argument (first) to be a non-empty string ' +
+          'but encountered `undefined` instead.\n' +
+          '    in App (at **)',
+        'ReactDOM.preinit(): Expected the `href` argument (first) to be a non-empty string ' +
+          'but encountered an empty string instead.\n' +
+          '    in App (at **)',
+        'ReactDOM.preinit(): Expected the `options` argument (second) to be an object with an `as` ' +
+          'property describing the type of resource to be preinitialized but encountered `null` instead.\n' +
+          '    in App (at **)',
+        'ReactDOM.preinit(): Expected the `as` property in the `options` argument (second) to contain ' +
+          'a valid value describing the type of resource to be preinitialized but encountered `undefined` instead. ' +
+          'Valid values for `as` are "style" and "script".\n' +
+          '    in App (at **)',
+        'ReactDOM.preinit(): Expected the `as` property in the `options` argument (second) to contain ' +
+          'a valid value describing the type of resource to be preinitialized but encountered "foo" instead. ' +
+          'Valid values for `as` are "style" and "script".\n' +
+          '    in App (at **)',
       ]);
     });
 
@@ -6621,12 +7031,14 @@ body {
         ReactDOM.preinitModule(prefix + 'warning', {as: 'style'});
         return <div>hello</div>;
       }
-      await expect(async () => {
-        await act(() => {
-          renderToPipeableStream(<App ssr={true} />).pipe(writable);
-        });
-      }).toErrorDev([
-        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property. The `as` option encountered was "style"',
+      await act(() => {
+        renderToPipeableStream(<App ssr={true} />).pipe(writable);
+      });
+      assertConsoleErrorDev([
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` ' +
+          'string and, optionally, an `options` object with a valid `as` property. ' +
+          'The `as` option encountered was "style".\n' +
+          '    in App (at **)',
       ]);
       expect(getMeaningfulChildren(document.body)).toEqual(
         <div id="container">
@@ -6649,10 +7061,12 @@ body {
       );
 
       ReactDOMClient.hydrateRoot(container, <App />);
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev([
-        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property. The `as` option encountered was "style"',
+      await waitForAll([]);
+      assertConsoleErrorDev([
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` ' +
+          'string and, optionally, an `options` object with a valid `as` property. ' +
+          'The `as` option encountered was "style".\n' +
+          '    in App (at **)',
       ]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
@@ -6704,16 +7118,30 @@ body {
         ReactDOM.preinitModule('2', {as: true});
         return <div>hello</div>;
       }
-      await expect(async () => {
-        await act(() => {
-          renderToPipeableStream(<App />).pipe(writable);
-        });
-      }).toErrorDev([
-        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property. The `href` argument encountered was `undefined`',
-        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property. The `href` argument encountered was something with type "function"',
-        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property. The `href` argument encountered was an empty string',
-        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property. The `options` argument encountered was something with type "boolean"',
-        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property. The `as` option encountered was something with type "boolean"',
+      await act(() => {
+        renderToPipeableStream(<App />).pipe(writable);
+      });
+      assertConsoleErrorDev([
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` ' +
+          'string and, optionally, an `options` object with a valid `as` property. ' +
+          'The `href` argument encountered was `undefined`.\n' +
+          '    in App (at **)',
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` ' +
+          'string and, optionally, an `options` object with a valid `as` property. ' +
+          'The `href` argument encountered was something with type "function".\n' +
+          '    in App (at **)',
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` ' +
+          'string and, optionally, an `options` object with a valid `as` property. ' +
+          'The `href` argument encountered was an empty string.\n' +
+          '    in App (at **)',
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` ' +
+          'string and, optionally, an `options` object with a valid `as` property. ' +
+          'The `options` argument encountered was something with type "boolean".\n' +
+          '    in App (at **)',
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` ' +
+          'string and, optionally, an `options` object with a valid `as` property. ' +
+          'The `as` option encountered was something with type "boolean".\n' +
+          '    in App (at **)',
       ]);
       expect(getMeaningfulChildren(document.body)).toEqual(
         <div id="container">
@@ -6725,14 +7153,28 @@ body {
         document.getElementById('container'),
       );
       root.render(<App />);
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev([
-        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property. The `href` argument encountered was `undefined`',
-        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property. The `href` argument encountered was something with type "function"',
-        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property. The `href` argument encountered was an empty string',
-        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property. The `options` argument encountered was something with type "boolean"',
-        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property. The `as` option encountered was something with type "boolean"',
+      await waitForAll([]);
+      assertConsoleErrorDev([
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` ' +
+          'string and, optionally, an `options` object with a valid `as` property. ' +
+          'The `href` argument encountered was `undefined`.\n' +
+          '    in App (at **)',
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` ' +
+          'string and, optionally, an `options` object with a valid `as` property. ' +
+          'The `href` argument encountered was something with type "function".\n' +
+          '    in App (at **)',
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` ' +
+          'string and, optionally, an `options` object with a valid `as` property. ' +
+          'The `href` argument encountered was an empty string.\n' +
+          '    in App (at **)',
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` ' +
+          'string and, optionally, an `options` object with a valid `as` property. ' +
+          'The `options` argument encountered was something with type "boolean".\n' +
+          '    in App (at **)',
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` ' +
+          'string and, optionally, an `options` object with a valid `as` property. ' +
+          'The `as` option encountered was something with type "boolean".\n' +
+          '    in App (at **)',
       ]);
     });
   });
@@ -7454,51 +7896,85 @@ body {
     });
 
     it('warns if you provide a `precedence` prop with other props that invalidate the creation of a stylesheet resource', async () => {
-      await expect(async () => {
-        await act(() => {
-          renderToPipeableStream(
-            <html>
-              <body>
-                <link rel="stylesheet" precedence="default" />
-                <link rel="stylesheet" href="" precedence="default" />
-                <link
-                  rel="stylesheet"
-                  href="foo"
-                  precedence="default"
-                  onLoad={() => {}}
-                  onError={() => {}}
-                />
-                <link
-                  rel="stylesheet"
-                  href="foo"
-                  precedence="default"
-                  onLoad={() => {}}
-                />
-                <link
-                  rel="stylesheet"
-                  href="foo"
-                  precedence="default"
-                  onError={() => {}}
-                />
-                <link
-                  rel="stylesheet"
-                  href="foo"
-                  precedence="default"
-                  disabled={false}
-                />
-              </body>
-            </html>,
-          ).pipe(writable);
-        });
-      }).toErrorDev(
+      await act(() => {
+        renderToPipeableStream(
+          <html>
+            <body>
+              <link rel="stylesheet" precedence="default" />
+              <link rel="stylesheet" href="" precedence="default" />
+              <link
+                rel="stylesheet"
+                href="foo"
+                precedence="default"
+                onLoad={() => {}}
+                onError={() => {}}
+              />
+              <link
+                rel="stylesheet"
+                href="foo"
+                precedence="default"
+                onLoad={() => {}}
+              />
+              <link
+                rel="stylesheet"
+                href="foo"
+                precedence="default"
+                onError={() => {}}
+              />
+              <link
+                rel="stylesheet"
+                href="foo"
+                precedence="default"
+                disabled={false}
+              />
+            </body>
+          </html>,
+        ).pipe(writable);
+      });
+      assertConsoleErrorDev(
         [
-          'An empty string ("") was passed to the href attribute. To fix this, either do not render the element at all or pass null to href instead of an empty string.',
-          'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and expected the `href` prop to be a non-empty string but ecountered `undefined` instead. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop ensure there is a non-empty string `href` prop as well, otherwise remove the `precedence` prop.',
-          'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and expected the `href` prop to be a non-empty string but ecountered an empty string instead. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop ensure there is a non-empty string `href` prop as well, otherwise remove the `precedence` prop.',
-          'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and `onLoad` and `onError` props. The presence of loading and error handlers indicates an intent to manage the stylesheet loading state from your from your Component code and React will not hoist or deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop remove the `onLoad` and `onError` props, otherwise remove the `precedence` prop.',
-          'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and `onLoad` prop. The presence of loading and error handlers indicates an intent to manage the stylesheet loading state from your from your Component code and React will not hoist or deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop remove the `onLoad` prop, otherwise remove the `precedence` prop.',
-          'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and `onError` prop. The presence of loading and error handlers indicates an intent to manage the stylesheet loading state from your from your Component code and React will not hoist or deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop remove the `onError` prop, otherwise remove the `precedence` prop.',
-          'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and a `disabled` prop. The presence of the `disabled` prop indicates an intent to manage the stylesheet active state from your from your Component code and React will not hoist or deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop remove the `disabled` prop, otherwise remove the `precedence` prop.',
+          'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and ' +
+            'expected the `href` prop to be a non-empty string but ecountered `undefined` instead. ' +
+            'If your intent was to have React hoist and deduplciate this stylesheet using the ' +
+            '`precedence` prop ensure there is a non-empty string `href` prop as well, ' +
+            'otherwise remove the `precedence` prop.\n' +
+            '    in link (at **)',
+          'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and ' +
+            'expected the `href` prop to be a non-empty string but ecountered an empty string instead. ' +
+            'If your intent was to have React hoist and deduplciate this stylesheet using the ' +
+            '`precedence` prop ensure there is a non-empty string `href` prop as well, ' +
+            'otherwise remove the `precedence` prop.\n' +
+            '    in link (at **)',
+          'An empty string ("") was passed to the href attribute. ' +
+            'To fix this, either do not render the element at all or ' +
+            'pass null to href instead of an empty string.\n' +
+            '    in link (at **)',
+          'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and ' +
+            '`onLoad` and `onError` props. The presence of loading and error handlers indicates ' +
+            'an intent to manage the stylesheet loading state from your from your Component code ' +
+            'and React will not hoist or deduplicate this stylesheet. ' +
+            'If your intent was to have React hoist and deduplciate this stylesheet using the ' +
+            '`precedence` prop remove the `onLoad` and `onError` props, otherwise remove the `precedence` prop.\n' +
+            '    in link (at **)',
+          'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and ' +
+            '`onLoad` prop. The presence of loading and error handlers indicates an intent to ' +
+            'manage the stylesheet loading state from your from your Component code and ' +
+            'React will not hoist or deduplicate this stylesheet. ' +
+            'If your intent was to have React hoist and deduplciate this stylesheet using the ' +
+            '`precedence` prop remove the `onLoad` prop, otherwise remove the `precedence` prop.\n' +
+            '    in link (at **)',
+          'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and `onError` prop. ' +
+            'The presence of loading and error handlers indicates an intent to manage the stylesheet loading state ' +
+            'from your from your Component code and React will not hoist or deduplicate this stylesheet. ' +
+            'If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` ' +
+            'prop remove the `onError` prop, otherwise remove the `precedence` prop.\n' +
+            '    in link (at **)',
+          'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and a `disabled` prop. ' +
+            'The presence of the `disabled` prop indicates an intent to manage the stylesheet active state from ' +
+            'your from your Component code and React will not hoist or deduplicate this stylesheet. ' +
+            'If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` ' +
+            'prop remove the `disabled` prop, otherwise remove the `precedence` prop.\n' +
+            '    in link (at **)',
         ].filter(Boolean),
       );
 
@@ -7516,10 +7992,15 @@ body {
           </body>
         </html>,
       );
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev([
-        'React encountered a <link rel="stylesheet" href="foo" ... /> with a `precedence` prop that also included the `onLoad` and `onError` props. The presence of loading and error handlers indicates an intent to manage the stylesheet loading state from your from your Component code and React will not hoist or deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop remove the `onLoad` and `onError` props, otherwise remove the `precedence` prop.',
+      await waitForAll([]);
+      assertConsoleErrorDev([
+        'React encountered a <link rel="stylesheet" href="foo" ... /> with a `precedence` ' +
+          'prop that also included the `onLoad` and `onError` props. ' +
+          'The presence of loading and error handlers indicates an intent to manage the stylesheet ' +
+          'loading state from your from your Component code and React will not hoist or deduplicate this stylesheet. ' +
+          'If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` ' +
+          'prop remove the `onLoad` and `onError` props, otherwise remove the `precedence` prop.\n' +
+          '    in body (at **)',
       ]);
     });
 
@@ -8095,21 +8576,24 @@ background-color: green;
     });
 
     it('warns if you render a <style> with an href with a space on the server', async () => {
-      await expect(async () => {
-        await act(() => {
-          renderToPipeableStream(
-            <html>
-              <body>
-                <style href="foo bar" precedence="default">
-                  style
-                </style>
-              </body>
-            </html>,
-          ).pipe(writable);
-        });
-      }).toErrorDev(
-        'React expected the `href` prop for a <style> tag opting into hoisting semantics using the `precedence` prop to not have any spaces but ecountered spaces instead. using spaces in this prop will cause hydration of this style to fail on the client. The href for the <style> where this ocurred is "foo bar".',
-      );
+      await act(() => {
+        renderToPipeableStream(
+          <html>
+            <body>
+              <style href="foo bar" precedence="default">
+                style
+              </style>
+            </body>
+          </html>,
+        ).pipe(writable);
+      });
+      assertConsoleErrorDev([
+        'React expected the `href` prop for a <style> tag opting into hoisting semantics ' +
+          'using the `precedence` prop to not have any spaces but ecountered spaces instead. ' +
+          'using spaces in this prop will cause hydration of this style to fail on the client. ' +
+          'The href for the <style> where this ocurred is "foo bar".\n' +
+          '    in style (at **)',
+      ]);
     });
   });
 

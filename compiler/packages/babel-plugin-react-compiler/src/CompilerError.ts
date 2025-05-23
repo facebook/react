@@ -6,6 +6,7 @@
  */
 
 import type {SourceLocation} from './HIR';
+import {Err, Ok, Result} from './Utils/Result';
 import {assertExhaustive} from './Utils/utils';
 
 export enum ErrorSeverity {
@@ -188,6 +189,7 @@ export class CompilerError extends Error {
   constructor(...args: Array<any>) {
     super(...args);
     this.name = 'ReactCompilerError';
+    this.details = [];
   }
 
   override get message(): string {
@@ -197,7 +199,10 @@ export class CompilerError extends Error {
   override set message(_message: string) {}
 
   override toString(): string {
-    return this.details.map(detail => detail.toString()).join('\n\n');
+    if (Array.isArray(this.details)) {
+      return this.details.map(detail => detail.toString()).join('\n\n');
+    }
+    return this.name;
   }
 
   push(options: CompilerErrorDetailOptions): CompilerErrorDetail {
@@ -218,6 +223,10 @@ export class CompilerError extends Error {
 
   hasErrors(): boolean {
     return this.details.length > 0;
+  }
+
+  asResult(): Result<void, CompilerError> {
+    return this.hasErrors() ? Err(this) : Ok(undefined);
   }
 
   /*

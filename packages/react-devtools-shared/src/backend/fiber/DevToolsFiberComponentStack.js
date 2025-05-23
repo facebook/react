@@ -43,6 +43,8 @@ export function describeFiber(
     SimpleMemoComponent,
     ForwardRef,
     ClassComponent,
+    ViewTransitionComponent,
+    ActivityComponent,
   } = workTagMap;
 
   switch (workInProgress.tag) {
@@ -57,6 +59,10 @@ export function describeFiber(
       return describeBuiltInComponentFrame('Suspense');
     case SuspenseListComponent:
       return describeBuiltInComponentFrame('SuspenseList');
+    case ViewTransitionComponent:
+      return describeBuiltInComponentFrame('ViewTransition');
+    case ActivityComponent:
+      return describeBuiltInComponentFrame('Activity');
     case FunctionComponent:
     case IndeterminateComponent:
     case SimpleMemoComponent:
@@ -150,6 +156,8 @@ export function getOwnerStackByFiberInDev(
     HostComponent,
     SuspenseComponent,
     SuspenseListComponent,
+    ViewTransitionComponent,
+    ActivityComponent,
   } = workTagMap;
   try {
     let info = '';
@@ -176,6 +184,12 @@ export function getOwnerStackByFiberInDev(
         break;
       case SuspenseListComponent:
         info += describeBuiltInComponentFrame('SuspenseList');
+        break;
+      case ViewTransitionComponent:
+        info += describeBuiltInComponentFrame('ViewTransition');
+        break;
+      case ActivityComponent:
+        info += describeBuiltInComponentFrame('Activity');
         break;
     }
 

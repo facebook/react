@@ -6,6 +6,8 @@ on:
     - cron: '0 * * * *'
   workflow_dispatch:
 
+permissions: {}
+
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
 

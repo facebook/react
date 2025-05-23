@@ -127,6 +127,10 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       }
 
       Dispatcher.useId();
+
+      if (typeof Dispatcher.useEffectEvent === 'function') {
+        Dispatcher.useEffectEvent((args: empty) => {});
+      }
     } finally {
       readHookLog = hookLog;
       hookLog = [];
@@ -367,7 +371,7 @@ function useInsertionEffect(
 
 function useEffect(
   create: () => (() => void) | void,
-  inputs: Array<mixed> | void | null,
+  deps: Array<mixed> | void | null,
 ): void {
   nextHook();
   hookLog.push({
@@ -731,30 +735,46 @@ function useHostTransitionStatus(): TransitionStatus {
   return status;
 }
 
+function useEffectEvent<Args, F: (...Array<Args>) => mixed>(callback: F): F {
+  nextHook();
+  hookLog.push({
+    displayName: null,
+    primitive: 'EffectEvent',
+    stackError: new Error(),
+    value: callback,
+    debugInfo: null,
+    dispatcherHookName: 'EffectEvent',
+  });
+
+  return callback;
+}
+
 const Dispatcher: DispatcherType = {
-  use,
   readContext,
-  useCacheRefresh,
+
+  use,
   useCallback,
   useContext,
   useEffect,
   useImperativeHandle,
-  useDebugValue,
   useLayoutEffect,
   useInsertionEffect,
   useMemo,
-  useMemoCache,
-  useOptimistic,
   useReducer,
   useRef,
   useState,
+  useDebugValue,
+  useDeferredValue,
   useTransition,
   useSyncExternalStore,
-  useDeferredValue,
   useId,
+  useHostTransitionStatus,
   useFormState,
   useActionState,
-  useHostTransitionStatus,
+  useOptimistic,
+  useMemoCache,
+  useCacheRefresh,
+  useEffectEvent,
 };
 
 // create a proxy to throw a custom error
@@ -941,6 +961,10 @@ function parseHookName(functionName: void | string): string {
 
   if (functionName.slice(startIndex).startsWith('unstable_')) {
     startIndex += 'unstable_'.length;
+  }
+
+  if (functionName.slice(startIndex).startsWith('experimental_')) {
+    startIndex += 'experimental_'.length;
   }
 
   if (functionName.slice(startIndex, startIndex + 3) === 'use') {

@@ -105,6 +105,9 @@ const COMPILER_OPTIONS: Partial<PluginOptions> = {
   panicThreshold: 'none',
   // Don't emit errors on Flow suppressions--Flow already gave a signal
   flowSuppressions: false,
+  environment: validateEnvironmentConfig({
+    validateRefAccessDuringRender: false,
+  }),
 };
 
 const rule: Rule.RuleModule = {
@@ -121,7 +124,7 @@ const rule: Rule.RuleModule = {
   },
   create(context: Rule.RuleContext) {
     // Compat with older versions of eslint
-    const sourceCode = context.sourceCode?.text ?? context.getSourceCode().text;
+    const sourceCode = context.sourceCode ?? context.getSourceCode();
     const filename = context.filename ?? context.getFilename();
     const userOpts = context.options[0] ?? {};
     if (
@@ -149,10 +152,14 @@ const rule: Rule.RuleModule = {
     }
 
     let shouldReportUnusedOptOutDirective = true;
-    const options: PluginOptions = {
-      ...parsePluginOptions(userOpts),
+    const options: PluginOptions = parsePluginOptions({
       ...COMPILER_OPTIONS,
-    };
+      ...userOpts,
+      environment: {
+        ...COMPILER_OPTIONS.environment,
+        ...userOpts.environment,
+      },
+    });
     const userLogger: Logger | null = options.logger;
     options.logger = {
       logEvent: (filename, event): void => {
@@ -180,7 +187,7 @@ const rule: Rule.RuleModule = {
               endLoc = {
                 line: event.fnLoc.start.line,
                 // Babel loc line numbers are 1-indexed
-                column: sourceCode.split(
+                column: sourceCode.text.split(
                   /\r?\n|\r|\n/g,
                   event.fnLoc.start.line,
                 )[event.fnLoc.start.line - 1].length,
@@ -234,7 +241,6 @@ const rule: Rule.RuleModule = {
       nodeLoc: BabelSourceLocation,
       suppression: string,
     ): boolean {
-      const sourceCode = context.getSourceCode();
       const comments = sourceCode.getAllComments();
       const flowSuppressionRegex = new RegExp(
         '\\$FlowFixMe\\[' + suppression + '\\]',
@@ -254,7 +260,7 @@ const rule: Rule.RuleModule = {
     if (filename.endsWith('.tsx') || filename.endsWith('.ts')) {
       try {
         const {parse: babelParse} = require('@babel/parser');
-        babelAST = babelParse(sourceCode, {
+        babelAST = babelParse(sourceCode.text, {
           filename,
           sourceType: 'unambiguous',
           plugins: ['typescript', 'jsx'],
@@ -264,7 +270,7 @@ const rule: Rule.RuleModule = {
       }
     } else {
       try {
-        babelAST = HermesParser.parse(sourceCode, {
+        babelAST = HermesParser.parse(sourceCode.text, {
           babel: true,
           enableExperimentalComponentSyntax: true,
           sourceFilename: filename,
@@ -277,7 +283,7 @@ const rule: Rule.RuleModule = {
 
     if (babelAST != null) {
       try {
-        transformFromAstSync(babelAST, sourceCode, {
+        transformFromAstSync(babelAST, sourceCode.text, {
           filename,
           highlightCode: false,
           retainLines: true,

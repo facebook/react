@@ -12,6 +12,8 @@ import type {HostDispatcher} from './shared/ReactDOMTypes';
 
 import {NoEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
+import noop from 'shared/noop';
+
 type ReactDOMInternals = {
   Events: [any, any, any, any, any, any],
   d /* ReactDOMCurrentDispatcher */: HostDispatcher,
@@ -22,8 +24,6 @@ type ReactDOMInternals = {
         componentOrElement: React$Component<any, any>,
       ) => null | Element | Text),
 };
-
-function noop() {}
 
 const DefaultDispatcher: HostDispatcher = {
   f /* flushSyncWork */: noop,

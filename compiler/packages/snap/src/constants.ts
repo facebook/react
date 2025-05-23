@@ -9,35 +9,17 @@ import path from 'path';
 
 // We assume this is run from `babel-plugin-react-compiler`
 export const PROJECT_ROOT = path.normalize(
-  path.join(process.cwd(), '..', '..'),
+  path.join(process.cwd(), '..', 'babel-plugin-react-compiler'),
 );
-export const COMPILER_PATH = path.join(
-  process.cwd(),
-  'dist',
-  'Babel',
-  'BabelPlugin.js',
+
+export const PROJECT_SRC = path.normalize(
+  path.join(PROJECT_ROOT, 'dist', 'index.js'),
 );
-export const COMPILER_INDEX_PATH = path.join(process.cwd(), 'dist', 'index');
-export const PRINT_HIR_PATH = path.join(
-  process.cwd(),
-  'dist',
-  'HIR',
-  'PrintHIR.js',
-);
-export const PRINT_REACTIVE_IR_PATH = path.join(
-  process.cwd(),
-  'dist',
-  'ReactiveScopes',
-  'PrintReactiveFunction.js',
-);
-export const PARSE_CONFIG_PRAGMA_PATH = path.join(
-  process.cwd(),
-  'dist',
-  'HIR',
-  'Environment.js',
-);
+export const PRINT_HIR_IMPORT = 'printFunctionWithOutlined';
+export const PRINT_REACTIVE_IR_IMPORT = 'printReactiveFunction';
+export const PARSE_CONFIG_PRAGMA_IMPORT = 'parseConfigPragmaForTests';
 export const FIXTURES_PATH = path.join(
-  process.cwd(),
+  PROJECT_ROOT,
   'src',
   '__tests__',
   'fixtures',
@@ -45,4 +27,4 @@ export const FIXTURES_PATH = path.join(
 );
 export const SNAPSHOT_EXTENSION = '.expect.md';
 export const FILTER_FILENAME = 'testfilter.txt';
-export const FILTER_PATH = path.join(process.cwd(), FILTER_FILENAME);
+export const FILTER_PATH = path.join(PROJECT_ROOT, FILTER_FILENAME);

@@ -407,15 +407,6 @@ describe('ReactComponent', () => {
 
     const X = undefined;
     const XElement = <X />;
-    if (gate(flags => !flags.enableOwnerStacks)) {
-      assertConsoleErrorDev(
-        [
-          'React.jsx: type is invalid -- expected a string (for built-in components) ' +
-            'or a class/function (for composite components) but got: undefined.',
-        ],
-        {withoutStack: true},
-      );
-    }
     await expect(async () => {
       await act(() => {
         root.render(XElement);
@@ -431,15 +422,6 @@ describe('ReactComponent', () => {
 
     const Y = null;
     const YElement = <Y />;
-    if (gate(flags => !flags.enableOwnerStacks)) {
-      assertConsoleErrorDev(
-        [
-          'React.jsx: type is invalid -- expected a string (for built-in components) ' +
-            'or a class/function (for composite components) but got: null.',
-        ],
-        {withoutStack: true},
-      );
-    }
     await expect(async () => {
       await act(() => {
         root.render(YElement);
@@ -451,15 +433,6 @@ describe('ReactComponent', () => {
 
     const Z = true;
     const ZElement = <Z />;
-    if (gate(flags => !flags.enableOwnerStacks)) {
-      assertConsoleErrorDev(
-        [
-          'React.jsx: type is invalid -- expected a string (for built-in components) ' +
-            'or a class/function (for composite components) but got: boolean.',
-        ],
-        {withoutStack: true},
-      );
-    }
     await expect(async () => {
       await act(() => {
         root.render(ZElement);
@@ -491,16 +464,11 @@ describe('ReactComponent', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await expect(
-      expect(async () => {
-        await act(() => {
-          root.render(<Foo />);
-        });
-      }).toErrorDev(
-        'React.jsx: type is invalid -- expected a string (for built-in components) ' +
-          'or a class/function (for composite components) but got: undefined.',
-      ),
-    ).rejects.toThrowError(
+    await expect(async () => {
+      await act(() => {
+        root.render(<Foo />);
+      });
+    }).rejects.toThrowError(
       'Element type is invalid: expected a string (for built-in components) ' +
         'or a class/function (for composite components) but got: undefined.' +
         (__DEV__
@@ -624,17 +592,16 @@ describe('ReactComponent', () => {
       }
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
-      await expect(async () => {
-        await act(() => {
-          root.render(<Foo />);
-        });
-      }).toErrorDev(
+      await act(() => {
+        root.render(<Foo />);
+      });
+      assertConsoleErrorDev([
         'Functions are not valid as a React child. This may happen if ' +
           'you return Foo instead of <Foo /> from render. ' +
           'Or maybe you meant to call this function rather than return it.\n' +
           '  <Foo>{Foo}</Foo>\n' +
           '    in Foo (at **)',
-      );
+      ]);
     });
 
     it('warns on function as a return value from a class', async () => {
@@ -644,19 +611,18 @@ describe('ReactComponent', () => {
         }
       }
       const container = document.createElement('div');
-      await expect(async () => {
-        const root = ReactDOMClient.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
 
-        await act(() => {
-          root.render(<Foo />);
-        });
-      }).toErrorDev(
+      await act(() => {
+        root.render(<Foo />);
+      });
+      assertConsoleErrorDev([
         'Functions are not valid as a React child. This may happen if ' +
           'you return Foo instead of <Foo /> from render. ' +
           'Or maybe you meant to call this function rather than return it.\n' +
           '  <Foo>{Foo}</Foo>\n' +
           '    in Foo (at **)',
-      );
+      ]);
     });
 
     it('warns on function as a child to host component', async () => {
@@ -669,21 +635,17 @@ describe('ReactComponent', () => {
       }
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
-      await expect(async () => {
-        await act(() => {
-          root.render(<Foo />);
-        });
-      }).toErrorDev(
+      await act(() => {
+        root.render(<Foo />);
+      });
+      assertConsoleErrorDev([
         'Functions are not valid as a React child. This may happen if ' +
           'you return Foo instead of <Foo /> from render. ' +
           'Or maybe you meant to call this function rather than return it.\n' +
           '  <span>{Foo}</span>\n' +
           '    in span (at **)\n' +
-          (gate(flags => flags.enableOwnerStacks)
-            ? ''
-            : '    in div (at **)\n') +
           '    in Foo (at **)',
-      );
+      ]);
     });
 
     it('does not warn for function-as-a-child that gets resolved', async () => {
@@ -724,11 +686,10 @@ describe('ReactComponent', () => {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
       let component;
-      await expect(async () => {
-        await act(() => {
-          root.render(<Foo ref={current => (component = current)} />);
-        });
-      }).toErrorDev([
+      await act(() => {
+        root.render(<Foo ref={current => (component = current)} />);
+      });
+      assertConsoleErrorDev([
         'Functions are not valid as a React child. This may happen if ' +
           'you return Foo instead of <Foo /> from render. ' +
           'Or maybe you meant to call this function rather than return it.\n' +
@@ -740,9 +701,6 @@ describe('ReactComponent', () => {
           'Or maybe you meant to call this function rather than return it.\n' +
           '  <span>{Foo}</span>\n' +
           '    in span (at **)\n' +
-          (gate(flags => flags.enableOwnerStacks)
-            ? ''
-            : '    in div (at **)\n') +
           '    in Foo (at **)',
       ]);
       await act(() => {

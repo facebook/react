@@ -198,7 +198,10 @@ describe('ReactLazy', () => {
 
     await resolveFakeImport(Foo);
 
-    await waitForAll(['Foo']);
+    await waitForAll([
+      'Foo',
+      ...(gate('alwaysThrottleRetries') ? [] : ['Foo']),
+    ]);
     expect(root).not.toMatchRenderedOutput('FooBar');
 
     await act(() => resolveFakeImport(Bar));
@@ -240,9 +243,6 @@ describe('ReactLazy', () => {
         '  }\n\n' +
         'Your code should look like: \n  ' +
         "const MyComponent = lazy(() => import('./MyComponent'))\n" +
-        (gate('enableOwnerStacks')
-          ? ''
-          : '    in Lazy (at **)\n' + '    in Suspense (at **)\n') +
         '    in App (at **)',
       'lazy: Expected the result of a dynamic import() call. ' +
         'Instead received: function Text(props) {\n' +
@@ -251,9 +251,6 @@ describe('ReactLazy', () => {
         '  }\n\n' +
         'Your code should look like: \n  ' +
         "const MyComponent = lazy(() => import('./MyComponent'))\n" +
-        (gate('enableOwnerStacks')
-          ? ''
-          : '    in Lazy (at **)\n' + '    in Suspense (at **)\n') +
         '    in App (at **)',
     ]);
     expect(root).not.toMatchRenderedOutput('Hi');
@@ -332,8 +329,8 @@ describe('ReactLazy', () => {
     await waitForAll([
       'Suspend! [LazyChildA]',
       'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [LazyChildB]'] : []),
+      // pre-warming
+      'Suspend! [LazyChildB]',
     ]);
     expect(root).not.toMatchRenderedOutput('AB');
 
@@ -345,21 +342,12 @@ describe('ReactLazy', () => {
       // we can unwrap the result synchronously if it already loaded. Like `use`.
       await waitFor([
         'A',
-
-        // When enableSiblingPrerendering is on, LazyChildB was already
-        // initialized. So it also already resolved when we called
-        // resolveFakeImport above. So it doesn't suspend again.
-        ...(gate('enableSiblingPrerendering')
-          ? ['B']
-          : ['Suspend! [LazyChildB]']),
+        // pre-warming: LazyChildB was already initialized. So it also already resolved
+        // when we called resolveFakeImport above. So it doesn't suspend again.
+        'B',
       ]);
     });
-    assertLog([
-      ...(gate('enableSiblingPrerendering') ? [] : ['A', 'B']),
-
-      'Did mount: A',
-      'Did mount: B',
-    ]);
+    assertLog(['Did mount: A', 'Did mount: B']);
     expect(root).toMatchRenderedOutput('AB');
 
     // Swap the position of A and B
@@ -721,12 +709,13 @@ describe('ReactLazy', () => {
     }
     T.defaultProps = {inner: 'Hi'};
     const LazyText = lazy(() => fakeImport(T));
-    expect(() => {
-      LazyText.defaultProps = {outer: 'Bye'};
-    }).toErrorDev(
-      'It is not supported to assign `defaultProps` to ' +
-        'a lazy component import. Either specify them where the component ' +
-        'is defined, or create a wrapping component around it.',
+    LazyText.defaultProps = {outer: 'Bye'};
+    assertConsoleErrorDev(
+      [
+        'It is not supported to assign `defaultProps` to ' +
+          'a lazy component import. Either specify them where the component ' +
+          'is defined, or create a wrapping component around it.',
+      ],
       {withoutStack: true},
     );
 
@@ -742,14 +731,14 @@ describe('ReactLazy', () => {
     await waitForAll(['Loading...']);
     expect(root).not.toMatchRenderedOutput('Hi Bye');
 
-    await expect(async () => {
-      await act(() => resolveFakeImport(T));
-      assertLog(['Hi Bye']);
-    }).toErrorDev(
+    await act(() => resolveFakeImport(T));
+    assertLog(['Hi Bye']);
+    assertConsoleErrorDev([
       'T: Support for defaultProps ' +
         'will be removed from function components in a future major ' +
-        'release. Use JavaScript default parameters instead.',
-    );
+        'release. Use JavaScript default parameters instead.\n' +
+        '    in T (at **)',
+    ]);
 
     expect(root).toMatchRenderedOutput('Hi Bye');
 
@@ -796,7 +785,7 @@ describe('ReactLazy', () => {
     );
   });
 
-  it('throws with a useful error when wrapping fragment with lazy()', async () => {
+  it('throws with a useful error when wrapping Fragment with lazy()', async () => {
     const BadLazy = lazy(() => fakeImport(React.Fragment));
 
     const root = ReactTestRenderer.create(
@@ -818,6 +807,280 @@ describe('ReactLazy', () => {
     );
     await waitForThrow(
       'Element type is invalid. Received a promise that resolves to: Fragment. ' +
+        'Lazy element type must resolve to a class or function.',
+    );
+  });
+
+  // @gate !fb
+  it('throws with a useful error when wrapping createPortal with lazy()', async () => {
+    const ReactDOM = require('react-dom');
+    const container = document.createElement('div');
+    const portal = ReactDOM.createPortal(<div />, container);
+    const BadLazy = lazy(() => fakeImport(portal));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+
+    await resolveFakeImport(portal);
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+    );
+    await waitForThrow(
+      'Element type is invalid. Received a promise that resolves to: Portal. ' +
+        'Lazy element type must resolve to a class or function.',
+    );
+  });
+
+  it('throws with a useful error when wrapping Profiler with lazy()', async () => {
+    const BadLazy = lazy(() => fakeImport(React.Profiler));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+
+    await resolveFakeImport(React.Profiler);
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+    );
+    await waitForThrow(
+      'Element type is invalid. Received a promise that resolves to: Profiler. ' +
+        'Lazy element type must resolve to a class or function.',
+    );
+  });
+
+  it('throws with a useful error when wrapping StrictMode with lazy()', async () => {
+    const BadLazy = lazy(() => fakeImport(React.StrictMode));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+
+    await resolveFakeImport(React.StrictMode);
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+    );
+    await waitForThrow(
+      'Element type is invalid. Received a promise that resolves to: StrictMode. ' +
+        'Lazy element type must resolve to a class or function.',
+    );
+  });
+
+  it('throws with a useful error when wrapping Suspense with lazy()', async () => {
+    const BadLazy = lazy(() => fakeImport(React.Suspense));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+
+    await resolveFakeImport(React.Suspense);
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+    );
+    await waitForThrow(
+      'Element type is invalid. Received a promise that resolves to: Suspense. ' +
+        'Lazy element type must resolve to a class or function.',
+    );
+  });
+
+  it('throws with a useful error when wrapping Context with lazy()', async () => {
+    const Context = React.createContext(null);
+    const BadLazy = lazy(() => fakeImport(Context));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+
+    await resolveFakeImport(Context);
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+    );
+    await waitForThrow(
+      gate('enableRenderableContext')
+        ? 'Element type is invalid. Received a promise that resolves to: Context.Provider. ' +
+            'Lazy element type must resolve to a class or function.'
+        : 'Element type is invalid. Received a promise that resolves to: Context.Consumer. ' +
+            'Lazy element type must resolve to a class or function.',
+    );
+  });
+
+  // @gate enableRenderableContext
+  it('throws with a useful error when wrapping Context.Consumer with lazy()', async () => {
+    const Context = React.createContext(null);
+    const BadLazy = lazy(() => fakeImport(Context.Consumer));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+
+    await resolveFakeImport(Context.Consumer);
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+    );
+    await waitForThrow(
+      'Element type is invalid. Received a promise that resolves to: Context.Consumer. ' +
+        'Lazy element type must resolve to a class or function.',
+    );
+  });
+
+  // @gate enableSuspenseList
+  it('throws with a useful error when wrapping SuspenseList with lazy()', async () => {
+    const BadLazy = lazy(() => fakeImport(React.unstable_SuspenseList));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+
+    await resolveFakeImport(React.unstable_SuspenseList);
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+    );
+    await waitForThrow(
+      'Element type is invalid. Received a promise that resolves to: SuspenseList. ' +
+        'Lazy element type must resolve to a class or function.',
+    );
+  });
+
+  // @gate enableViewTransition
+  it('throws with a useful error when wrapping ViewTransition with lazy()', async () => {
+    const BadLazy = lazy(() => fakeImport(React.unstable_ViewTransition));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+
+    await resolveFakeImport(React.unstable_ViewTransition);
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+    );
+    await waitForThrow(
+      'Element type is invalid. Received a promise that resolves to: ViewTransition. ' +
+        'Lazy element type must resolve to a class or function.',
+    );
+  });
+
+  // @gate enableActivity
+  it('throws with a useful error when wrapping Activity with lazy()', async () => {
+    const BadLazy = lazy(() => fakeImport(React.unstable_Activity));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+
+    await resolveFakeImport(React.unstable_Activity);
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+    );
+    await waitForThrow(
+      'Element type is invalid. Received a promise that resolves to: Activity. ' +
+        'Lazy element type must resolve to a class or function.',
+    );
+  });
+
+  // @gate enableTransitionTracing
+  it('throws with a useful error when wrapping TracingMarker with lazy()', async () => {
+    const BadLazy = lazy(() => fakeImport(React.unstable_TracingMarker));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+
+    await resolveFakeImport(React.unstable_TracingMarker);
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+    );
+    await waitForThrow(
+      'Element type is invalid. Received a promise that resolves to: TracingMarker. ' +
         'Lazy element type must resolve to a class or function.',
     );
   });
@@ -853,11 +1116,15 @@ describe('ReactLazy', () => {
     );
   });
 
-  async function verifyResolvesProps(
-    Add,
-    shouldWarnAboutFunctionDefaultProps,
-    shouldWarnAboutMemoDefaultProps,
-  ) {
+  // @gate !disableDefaultPropsExceptForClasses
+  it('resolves props for function component with defaultProps', async () => {
+    function Add(props) {
+      expect(props.innerWithDefault).toBe(42);
+      return props.inner + props.outer;
+    }
+    Add.defaultProps = {
+      innerWithDefault: 42,
+    };
     const LazyAdd = lazy(() => fakeImport(Add));
     const root = ReactTestRenderer.create(
       <Suspense fallback={<Text text="Loading..." />}>
@@ -874,18 +1141,10 @@ describe('ReactLazy', () => {
     // Mount
     await act(() => resolveFakeImport(Add));
 
-    if (shouldWarnAboutFunctionDefaultProps) {
-      assertConsoleErrorDev([
-        'Add: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.\n' +
-          '    in Add (at **)\n' +
-          '    in Suspense (at **)',
-      ]);
-    } else if (shouldWarnAboutMemoDefaultProps) {
-      assertConsoleErrorDev([
-        'Add: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.\n' +
-          '    in Suspense (at **)',
-      ]);
-    }
+    assertConsoleErrorDev([
+      'Add: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.\n' +
+        '    in Add (at **)',
+    ]);
 
     expect(root).toMatchRenderedOutput('22');
 
@@ -897,25 +1156,38 @@ describe('ReactLazy', () => {
     );
     await waitForAll([]);
     expect(root).toMatchRenderedOutput('0');
-  }
-
-  // @gate !disableDefaultPropsExceptForClasses
-  it('resolves props for function component with defaultProps', async () => {
-    function Add(props) {
-      expect(props.innerWithDefault).toBe(42);
-      return props.inner + props.outer;
-    }
-    Add.defaultProps = {
-      innerWithDefault: 42,
-    };
-    await verifyResolvesProps(Add, true);
   });
 
   it('resolves props for function component without defaultProps', async () => {
     function Add(props) {
       return props.inner + props.outer;
     }
-    await verifyResolvesProps(Add);
+    const LazyAdd = lazy(() => fakeImport(Add));
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner="2" outer="2" />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+    expect(root).not.toMatchRenderedOutput('22');
+
+    // Mount
+    await act(() => resolveFakeImport(Add));
+
+    expect(root).toMatchRenderedOutput('22');
+
+    // Update
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner={false} outer={false} />
+      </Suspense>,
+    );
+    await waitForAll([]);
+    expect(root).toMatchRenderedOutput('0');
   });
 
   it('resolves props for class component with defaultProps', async () => {
@@ -928,7 +1200,32 @@ describe('ReactLazy', () => {
     Add.defaultProps = {
       innerWithDefault: 42,
     };
-    await verifyResolvesProps(Add);
+    const LazyAdd = lazy(() => fakeImport(Add));
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner="2" outer="2" />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+    expect(root).not.toMatchRenderedOutput('22');
+
+    // Mount
+    await act(() => resolveFakeImport(Add));
+
+    expect(root).toMatchRenderedOutput('22');
+
+    // Update
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner={false} outer={false} />
+      </Suspense>,
+    );
+    await waitForAll([]);
+    expect(root).toMatchRenderedOutput('0');
   });
 
   it('resolves props for class component without defaultProps', async () => {
@@ -937,7 +1234,32 @@ describe('ReactLazy', () => {
         return this.props.inner + this.props.outer;
       }
     }
-    await verifyResolvesProps(Add);
+    const LazyAdd = lazy(() => fakeImport(Add));
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner="2" outer="2" />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+    expect(root).not.toMatchRenderedOutput('22');
+
+    // Mount
+    await act(() => resolveFakeImport(Add));
+
+    expect(root).toMatchRenderedOutput('22');
+
+    // Update
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner={false} outer={false} />
+      </Suspense>,
+    );
+    await waitForAll([]);
+    expect(root).toMatchRenderedOutput('0');
   });
 
   // @gate !disableDefaultPropsExceptForClasses
@@ -950,7 +1272,32 @@ describe('ReactLazy', () => {
     Add.defaultProps = {
       innerWithDefault: 42,
     };
-    await verifyResolvesProps(Add);
+    const LazyAdd = lazy(() => fakeImport(Add));
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner="2" outer="2" />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+    expect(root).not.toMatchRenderedOutput('22');
+
+    // Mount
+    await act(() => resolveFakeImport(Add));
+
+    expect(root).toMatchRenderedOutput('22');
+
+    // Update
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner={false} outer={false} />
+      </Suspense>,
+    );
+    await waitForAll([]);
+    expect(root).toMatchRenderedOutput('0');
   });
 
   it('resolves props for forwardRef component without defaultProps', async () => {
@@ -958,7 +1305,33 @@ describe('ReactLazy', () => {
       return props.inner + props.outer;
     });
     Add.displayName = 'Add';
-    await verifyResolvesProps(Add);
+
+    const LazyAdd = lazy(() => fakeImport(Add));
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner="2" outer="2" />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+    expect(root).not.toMatchRenderedOutput('22');
+
+    // Mount
+    await act(() => resolveFakeImport(Add));
+
+    expect(root).toMatchRenderedOutput('22');
+
+    // Update
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner={false} outer={false} />
+      </Suspense>,
+    );
+    await waitForAll([]);
+    expect(root).toMatchRenderedOutput('0');
   });
 
   // @gate !disableDefaultPropsExceptForClasses
@@ -971,7 +1344,39 @@ describe('ReactLazy', () => {
     Add.defaultProps = {
       innerWithDefault: 42,
     };
-    await verifyResolvesProps(Add, false, true);
+    const LazyAdd = lazy(() => fakeImport(Add));
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner="2" outer="2" />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+    expect(root).not.toMatchRenderedOutput('22');
+
+    // Mount
+    await act(() => resolveFakeImport(Add));
+
+    assertConsoleErrorDev(
+      [
+        'Add: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
+      ],
+      {withoutStack: true},
+    );
+
+    expect(root).toMatchRenderedOutput('22');
+
+    // Update
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner={false} outer={false} />
+      </Suspense>,
+    );
+    await waitForAll([]);
+    expect(root).toMatchRenderedOutput('0');
   });
 
   it('resolves props for outer memo component without defaultProps', async () => {
@@ -979,7 +1384,32 @@ describe('ReactLazy', () => {
       return props.inner + props.outer;
     };
     Add = React.memo(Add);
-    await verifyResolvesProps(Add);
+    const LazyAdd = lazy(() => fakeImport(Add));
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner="2" outer="2" />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+    expect(root).not.toMatchRenderedOutput('22');
+
+    // Mount
+    await act(() => resolveFakeImport(Add));
+
+    expect(root).toMatchRenderedOutput('22');
+
+    // Update
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner={false} outer={false} />
+      </Suspense>,
+    );
+    await waitForAll([]);
+    expect(root).toMatchRenderedOutput('0');
   });
 
   // @gate !disableDefaultPropsExceptForClasses
@@ -992,7 +1422,40 @@ describe('ReactLazy', () => {
     Add.defaultProps = {
       innerWithDefault: 42,
     };
-    await verifyResolvesProps(React.memo(Add), true);
+    const MemoAdd = React.memo(Add);
+    const LazyAdd = lazy(() => fakeImport(MemoAdd));
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner="2" outer="2" />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+    expect(root).not.toMatchRenderedOutput('22');
+
+    // Mount
+    await act(() => resolveFakeImport(MemoAdd));
+
+    assertConsoleErrorDev(
+      [
+        'Add: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
+      ],
+      {withoutStack: true},
+    );
+
+    expect(root).toMatchRenderedOutput('22');
+
+    // Update
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner={false} outer={false} />
+      </Suspense>,
+    );
+    await waitForAll([]);
+    expect(root).toMatchRenderedOutput('0');
   });
 
   it('resolves props for inner memo component without defaultProps', async () => {
@@ -1000,7 +1463,32 @@ describe('ReactLazy', () => {
       return props.inner + props.outer;
     };
     Add.displayName = 'Add';
-    await verifyResolvesProps(React.memo(Add));
+    const LazyAdd = lazy(() => fakeImport(Add));
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner="2" outer="2" />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+    expect(root).not.toMatchRenderedOutput('22');
+
+    // Mount
+    await act(() => resolveFakeImport(Add));
+
+    expect(root).toMatchRenderedOutput('22');
+
+    // Update
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner={false} outer={false} />
+      </Suspense>,
+    );
+    await waitForAll([]);
+    expect(root).toMatchRenderedOutput('0');
   });
 
   // @gate !disableDefaultPropsExceptForClasses
@@ -1026,12 +1514,15 @@ describe('ReactLazy', () => {
     expect(root).not.toMatchRenderedOutput('Inner default text');
 
     // Mount
-    await expect(async () => {
-      await act(() => resolveFakeImport(T));
-      assertLog(['Inner default text']);
-    }).toErrorDev([
-      'T: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
-    ]);
+    await act(() => resolveFakeImport(T));
+    assertLog(['Inner default text']);
+    assertConsoleErrorDev(
+      [
+        'T: Support for defaultProps will be removed from function components in a future major release. ' +
+          'Use JavaScript default parameters instead.',
+      ],
+      {withoutStack: true},
+    );
     expect(root).toMatchRenderedOutput('Inner default text');
 
     // Update
@@ -1063,13 +1554,15 @@ describe('ReactLazy', () => {
     await waitForAll(['Started loading', 'Loading...']);
     expect(root).not.toMatchRenderedOutput(<div>AB</div>);
 
-    await expect(async () => {
-      await act(() => resolveFakeImport(Foo));
-      assertLog(['A', 'B']);
-    }).toErrorDev(
-      (gate(flags => flags.enableOwnerStacks) ? '' : '    in Text (at **)\n') +
+    await act(() => resolveFakeImport(Foo));
+    assertLog(['A', 'B']);
+    assertConsoleErrorDev([
+      'Each child in a list should have a unique "key" prop.\n' +
+        '\n' +
+        'Check the render method of `Foo`. ' +
+        'See https://react.dev/link/warning-keys for more information.\n' +
         '    in Foo (at **)',
-    );
+    ]);
     expect(root).toMatchRenderedOutput(<div>AB</div>);
   });
 
@@ -1113,7 +1606,11 @@ describe('ReactLazy', () => {
     expect(ref.current).toBe(null);
 
     await act(() => resolveFakeImport(Foo));
-    assertLog(['Foo', ...(gate('enableSiblingPrerendering') ? ['Foo'] : [])]);
+    assertLog([
+      'Foo',
+      // pre-warming
+      'Foo',
+    ]);
 
     await act(() => resolveFakeImport(ForwardRefBar));
     assertLog(['Foo', 'forwardRef', 'Bar']);
@@ -1143,10 +1640,13 @@ describe('ReactLazy', () => {
     expect(root).not.toMatchRenderedOutput('4');
 
     // Mount
-    await expect(async () => {
-      await act(() => resolveFakeImport(Add));
-    }).toErrorDev(
-      'Unknown: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
+    await act(() => resolveFakeImport(Add));
+    assertConsoleErrorDev(
+      [
+        'Unknown: Support for defaultProps will be removed from memo components in a future major release. ' +
+          'Use JavaScript default parameters instead.',
+      ],
+      {withoutStack: true},
     );
     expect(root).toMatchRenderedOutput('4');
 
@@ -1231,12 +1731,16 @@ describe('ReactLazy', () => {
     expect(root).not.toMatchRenderedOutput('4');
 
     // Mount
-    await expect(async () => {
-      await act(() => resolveFakeImport(Add));
-    }).toErrorDev([
-      'Memo: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
-      'Unknown: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
-    ]);
+    await act(() => resolveFakeImport(Add));
+    assertConsoleErrorDev(
+      [
+        'Memo: Support for defaultProps will be removed from memo components in a future major release. ' +
+          'Use JavaScript default parameters instead.',
+        'Unknown: Support for defaultProps will be removed from memo components in a future major release. ' +
+          'Use JavaScript default parameters instead.',
+      ],
+      {withoutStack: true},
+    );
     expect(root).toMatchRenderedOutput('4');
 
     // Update
@@ -1404,17 +1908,16 @@ describe('ReactLazy', () => {
     await waitForAll([
       'Init A',
       'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Init B'] : []),
+      // pre-warming
+      'Init B',
     ]);
     expect(root).not.toMatchRenderedOutput('AB');
 
     await act(() => resolveFakeImport(ChildA));
     assertLog([
       'A',
-
-      // When enableSiblingPrerendering is on, B was already initialized.
-      ...(gate('enableSiblingPrerendering') ? ['A'] : ['Init B']),
+      // pre-warming
+      'A',
     ]);
 
     await act(() => resolveFakeImport(ChildB));

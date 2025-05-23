@@ -38,6 +38,7 @@ import {
   currentBridgeProtocol,
 } from 'react-devtools-shared/src/bridge';
 import {StrictMode} from 'react-devtools-shared/src/frontend/types';
+import {withPermissionsCheck} from 'react-devtools-shared/src/frontend/utils/withPermissionsCheck';
 
 import type {
   Element,
@@ -96,6 +97,7 @@ export default class Store extends EventEmitter<{
   componentFilters: [],
   error: [Error],
   hookSettings: [$ReadOnly<DevToolsHookSettings>],
+  hostInstanceSelected: [Element['id']],
   settingsUpdated: [$ReadOnly<DevToolsHookSettings>],
   mutated: [[Array<number>, Map<number, number>]],
   recordChangeDescriptions: [],
@@ -190,6 +192,9 @@ export default class Store extends EventEmitter<{
   _hookSettings: $ReadOnly<DevToolsHookSettings> | null = null;
   _shouldShowWarningsAndErrors: boolean = false;
 
+  // Only used in browser extension for synchronization with built-in Elements panel.
+  _lastSelectedHostInstanceElementId: Element['id'] | null = null;
+
   constructor(bridge: FrontendBridge, config?: Config) {
     super();
 
@@ -265,6 +270,7 @@ export default class Store extends EventEmitter<{
     bridge.addListener('saveToClipboard', this.onSaveToClipboard);
     bridge.addListener('hookSettings', this.onHookSettings);
     bridge.addListener('backendInitialized', this.onBackendInitialized);
+    bridge.addListener('selectElement', this.onHostInstanceSelected);
   }
 
   // This is only used in tests to avoid memory leaks.
@@ -479,6 +485,10 @@ export default class Store extends EventEmitter<{
 
   get unsupportedRendererVersionDetected(): boolean {
     return this._unsupportedRendererVersionDetected;
+  }
+
+  get lastSelectedHostInstanceElementId(): Element['id'] | null {
+    return this._lastSelectedHostInstanceElementId;
   }
 
   containsElement(id: number): boolean {
@@ -1431,6 +1441,7 @@ export default class Store extends EventEmitter<{
     bridge.removeListener('backendVersion', this.onBridgeBackendVersion);
     bridge.removeListener('bridgeProtocol', this.onBridgeProtocol);
     bridge.removeListener('saveToClipboard', this.onSaveToClipboard);
+    bridge.removeListener('selectElement', this.onHostInstanceSelected);
 
     if (this._onBridgeProtocolTimeoutID !== null) {
       clearTimeout(this._onBridgeProtocolTimeoutID);
@@ -1484,7 +1495,7 @@ export default class Store extends EventEmitter<{
   };
 
   onSaveToClipboard: (text: string) => void = text => {
-    copy(text);
+    withPermissionsCheck({permissions: ['clipboardWrite']}, () => copy(text))();
   };
 
   onBackendInitialized: () => void = () => {
@@ -1505,6 +1516,16 @@ export default class Store extends EventEmitter<{
     this._bridge.send('getBackendVersion');
     this._bridge.send('getIfHasUnsupportedRendererVersion');
     this._bridge.send('getHookSettings'); // Warm up cached hook settings
+  };
+
+  onHostInstanceSelected: (elementId: number) => void = elementId => {
+    if (this._lastSelectedHostInstanceElementId === elementId) {
+      return;
+    }
+
+    this._lastSelectedHostInstanceElementId = elementId;
+    // By the time we emit this, there is no guarantee that TreeContext is rendered.
+    this.emit('hostInstanceSelected', elementId);
   };
 
   getHookSettings: () => void = () => {

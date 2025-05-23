@@ -12,6 +12,7 @@ import {useContext, useMemo} from 'react';
 import {SettingsContext} from './SettingsContext';
 import {StoreContext} from '../context';
 import {CHANGE_LOG_URL} from 'react-devtools-shared/src/devtools/constants';
+import {isInternalFacebookBuild} from 'react-devtools-feature-flags';
 
 import styles from './SettingsShared.css';
 
@@ -34,10 +35,8 @@ export default function GeneralSettings(_: {}): React.Node {
     setDisplayDensity,
     setTheme,
     setTraceUpdatesEnabled,
-    setShowNamesWhenTracing,
     theme,
     traceUpdatesEnabled,
-    showNamesWhenTracing,
   } = useContext(SettingsContext);
 
   const {backendVersion, supportsTraceUpdates} = useContext(StoreContext);
@@ -48,6 +47,12 @@ export default function GeneralSettings(_: {}): React.Node {
 
   return (
     <div className={styles.Settings}>
+      {isInternalFacebookBuild && (
+        <div className={styles.Setting}>
+          This is an internal build of React DevTools for Meta
+        </div>
+      )}
+
       <div className={styles.Setting}>
         <div className={styles.RadioLabel}>Theme</div>
         <select
@@ -85,19 +90,6 @@ export default function GeneralSettings(_: {}): React.Node {
             />{' '}
             Highlight updates when components render.
           </label>
-          <div className={styles.Setting}>
-            <label>
-              <input
-                type="checkbox"
-                checked={showNamesWhenTracing}
-                disabled={!traceUpdatesEnabled}
-                onChange={({currentTarget}) =>
-                  setShowNamesWhenTracing(currentTarget.checked)
-                }
-              />{' '}
-              Show component names while highlighting.
-            </label>
-          </div>
         </div>
       )}
 

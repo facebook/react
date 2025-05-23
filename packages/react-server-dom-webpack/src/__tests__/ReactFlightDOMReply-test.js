@@ -23,7 +23,7 @@ let React;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 let ReactServerScheduler;
-let reactServerAct;
+let serverAct;
 
 describe('ReactFlightDOMReply', () => {
   beforeEach(() => {
@@ -31,7 +31,7 @@ describe('ReactFlightDOMReply', () => {
 
     ReactServerScheduler = require('scheduler');
     patchMessageChannel(ReactServerScheduler);
-    reactServerAct = require('internal-test-utils').act;
+    serverAct = require('internal-test-utils').serverAct;
 
     // Simulate the condition resolution
     jest.mock('react', () => require('react/react.react-server'));
@@ -47,17 +47,6 @@ describe('ReactFlightDOMReply', () => {
     __unmockReact();
     ReactServerDOMClient = require('react-server-dom-webpack/client');
   });
-
-  async function serverAct(callback) {
-    let maybePromise;
-    await reactServerAct(() => {
-      maybePromise = callback();
-      if (maybePromise && typeof maybePromise.catch === 'function') {
-        maybePromise.catch(() => {});
-      }
-    });
-    return maybePromise;
-  }
 
   // This method should exist on File but is not implemented in JSDOM
   async function arrayBuffer(file) {

@@ -29,7 +29,6 @@ import {
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {setBatchingImplementation} from './legacy-events/ReactGenericBatching';
 
-import {getInspectorDataForInstance} from './ReactNativeFiberInspector';
 import {LegacyRoot, ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
 import {
   findHostInstance_DEPRECATED,
@@ -42,7 +41,11 @@ import {
 import {getPublicInstanceFromInternalInstanceHandle} from './ReactFiberConfigFabric';
 
 // Module provided by RN:
-import {ReactFiberErrorDialog} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+import {
+  ReactFiberErrorDialog,
+  createPublicRootInstance,
+  type PublicRootInstance,
+} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import {disableLegacyMode} from 'shared/ReactFeatureFlags';
 
 if (typeof ReactFiberErrorDialog.showErrorDialog !== 'function') {
@@ -95,6 +98,9 @@ function nativeOnCaughtError(
 
   defaultOnCaughtError(error, errorInfo);
 }
+function nativeOnDefaultTransitionIndicator(): void | (() => void) {
+  // Native doesn't have a default indicator.
+}
 
 function render(
   element: Element<ElementType>,
@@ -127,10 +133,16 @@ function render(
       onRecoverableError = options.onRecoverableError;
     }
 
+    const publicRootInstance = createPublicRootInstance(containerTag);
+    const rootInstance = {
+      publicInstance: publicRootInstance,
+      containerTag,
+    };
+
     // TODO (bvaughn): If we decide to keep the wrapper component,
     // We could create a wrapper for containerTag as well to reduce special casing.
     root = createContainer(
-      containerTag,
+      rootInstance,
       concurrentRoot ? ConcurrentRoot : LegacyRoot,
       null,
       false,
@@ -139,8 +151,10 @@ function render(
       onUncaughtError,
       onCaughtError,
       onRecoverableError,
+      nativeOnDefaultTransitionIndicator,
       null,
     );
+
     roots.set(containerTag, root);
   }
   updateContainer(element, root, null, callback);
@@ -158,6 +172,9 @@ function stopSurface(containerTag: number) {
   if (root) {
     // TODO: Is it safe to reset this now or should I wait since this unmount could be deferred?
     updateContainer(null, root, null, () => {
+      // Remove the reference to the public instance to prevent memory leaks.
+      root.containerInfo.publicInstance = null;
+
       roots.delete(containerTag);
     });
   }
@@ -169,6 +186,16 @@ function createPortal(
   key: ?string = null,
 ): ReactPortal {
   return createPortalImpl(children, containerTag, null, key);
+}
+
+function getPublicInstanceFromRootTag(
+  rootTag: number,
+): PublicRootInstance | null {
+  const root = roots.get(rootTag);
+  if (root) {
+    return root.containerInfo.publicInstance;
+  }
+  return null;
 }
 
 setBatchingImplementation(batchedUpdatesImpl, discreteUpdates);
@@ -188,9 +215,6 @@ export {
   unmountComponentAtNode,
   stopSurface,
   createPortal,
-  // This export is typically undefined in production builds.
-  // See the "enableGetInspectorDataForInstanceInProduction" flag.
-  getInspectorDataForInstance,
   // The public instance has a reference to the internal instance handle.
   // This method allows it to acess the most recent shadow node for
   // the instance (it's only accessible through it).
@@ -199,6 +223,8 @@ export {
   // instance handles we use to dispatch events. This provides a way to access
   // the public instances we created from them (potentially created lazily).
   getPublicInstanceFromInternalInstanceHandle,
+  // Returns the document instance for that root tag.
+  getPublicInstanceFromRootTag,
   // DEV-only:
   isChildPublicInstance,
 };

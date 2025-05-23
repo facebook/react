@@ -303,7 +303,6 @@ module.exports = {
       ERROR,
       {isProductionUserAppCode: true},
     ],
-    'react-internal/no-to-warn-dev-within-to-throw': ERROR,
     'react-internal/warning-args': ERROR,
     'react-internal/no-production-logging': ERROR,
   },
@@ -447,10 +446,7 @@ module.exports = {
       },
     },
     {
-      files: [
-        'scripts/eslint-rules/*.js',
-        'packages/eslint-plugin-react-hooks/src/*.js',
-      ],
+      files: ['scripts/eslint-rules/*.js'],
       plugins: ['eslint-plugin'],
       rules: {
         'eslint-plugin/prefer-object-rule': ERROR,
@@ -497,9 +493,11 @@ module.exports = {
     {
       files: [
         'packages/react-devtools-extensions/**/*.js',
+        'packages/react-devtools-shared/src/devtools/views/**/*.js',
         'packages/react-devtools-shared/src/hook.js',
         'packages/react-devtools-shared/src/backend/console.js',
         'packages/react-devtools-shared/src/backend/shared/DevToolsComponentStackFrame.js',
+        'packages/react-devtools-shared/src/frontend/utils/withPermissionsCheck.js',
       ],
       globals: {
         __IS_CHROME__: 'readonly',
@@ -507,12 +505,33 @@ module.exports = {
         __IS_EDGE__: 'readonly',
         __IS_NATIVE__: 'readonly',
         __IS_INTERNAL_VERSION__: 'readonly',
+        chrome: 'readonly',
       },
     },
     {
       files: ['packages/react-devtools-shared/**/*.js'],
       globals: {
         __IS_INTERNAL_VERSION__: 'readonly',
+      },
+    },
+    {
+      files: ['packages/eslint-plugin-react-hooks/src/**/*'],
+      extends: ['plugin:@typescript-eslint/recommended'],
+      parser: '@typescript-eslint/parser',
+      plugins: ['@typescript-eslint', 'eslint-plugin'],
+      rules: {
+        '@typescript-eslint/no-explicit-any': OFF,
+        '@typescript-eslint/no-non-null-assertion': OFF,
+        '@typescript-eslint/array-type': [ERROR, {default: 'generic'}],
+
+        'es/no-optional-chaining': OFF,
+
+        'eslint-plugin/prefer-object-rule': ERROR,
+        'eslint-plugin/require-meta-fixable': [
+          ERROR,
+          {catchNoFixerButFixableProperty: true},
+        ],
+        'eslint-plugin/require-meta-has-suggestions': ERROR,
       },
     },
   ],
@@ -560,6 +579,7 @@ module.exports = {
     JSONValue: 'readonly',
     JSResourceReference: 'readonly',
     MouseEventHandler: 'readonly',
+    NavigateEvent: 'readonly',
     PropagationPhases: 'readonly',
     PropertyDescriptor: 'readonly',
     React$AbstractComponent: 'readonly',
@@ -590,6 +610,14 @@ module.exports = {
     WheelEventHandler: 'readonly',
     FinalizationRegistry: 'readonly',
     Omit: 'readonly',
+    Keyframe: 'readonly',
+    PropertyIndexedKeyframes: 'readonly',
+    KeyframeAnimationOptions: 'readonly',
+    GetAnimationsOptions: 'readonly',
+    Animatable: 'readonly',
+    ScrollTimeline: 'readonly',
+    EventListenerOptionsOrUseCapture: 'readonly',
+    FocusOptions: 'readonly',
 
     spyOnDev: 'readonly',
     spyOnDevAndProd: 'readonly',
@@ -607,5 +635,6 @@ module.exports = {
     AsyncLocalStorage: 'readonly',
     async_hooks: 'readonly',
     globalThis: 'readonly',
+    navigation: 'readonly',
   },
 };

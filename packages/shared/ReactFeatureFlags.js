@@ -37,10 +37,6 @@ export const favorSafetyOverHydrationPerf = true;
 // Need to remove didTimeout argument from Scheduler before landing
 export const disableSchedulerTimeoutInWorkLoop = false;
 
-// This will break some internal tests at Meta so we need to gate this until
-// those can be fixed.
-export const enableDeferRootSchedulingToMicrotask = true;
-
 // TODO: Land at Meta before removing.
 export const disableDefaultPropsExceptForClasses = true;
 
@@ -81,6 +77,9 @@ export const enableLegacyFBSupport = false;
 // Fix gated tests that fail with this flag enabled before turning it back on.
 export const enableYieldingBeforePassive = false;
 
+// Experiment to intentionally yield less to block high framerate animations.
+export const enableThrottledScheduling = false;
+
 export const enableLegacyCache = __EXPERIMENTAL__;
 
 export const enableAsyncIterableChildren = __EXPERIMENTAL__;
@@ -91,10 +90,21 @@ export const enablePostpone = __EXPERIMENTAL__;
 
 export const enableHalt = __EXPERIMENTAL__;
 
-/**
- * Switches the Fabric API from doing layout in commit work instead of complete work.
- */
-export const enableFabricCompleteRootInCommitPhase = false;
+export const enableViewTransition = __EXPERIMENTAL__;
+
+export const enableGestureTransition = __EXPERIMENTAL__;
+
+export const enableScrollEndPolyfill = __EXPERIMENTAL__;
+
+export const enableSuspenseyImages = false;
+
+export const enableFizzBlockingRender = __EXPERIMENTAL__; // rel="expect"
+
+export const enableSrcObject = __EXPERIMENTAL__;
+
+export const enableHydrationChangeEvent = __EXPERIMENTAL__;
+
+export const enableDefaultTransitionIndicator = __EXPERIMENTAL__;
 
 /**
  * Switches Fiber creation to a simple object instead of a constructor.
@@ -125,19 +135,15 @@ export const alwaysThrottleRetries = true;
 
 export const passChildrenWhenCloningPersistedNodes = false;
 
-export const enableServerComponentLogs = true;
-
 /**
  * Enables a new Fiber flag used in persisted mode to reduce the number
  * of cloned host components.
  */
 export const enablePersistedModeClonedFlag = false;
 
-export const enableOwnerStacks = __EXPERIMENTAL__;
-
 export const enableShallowPropDiffing = false;
 
-export const enableSiblingPrerendering = true;
+export const enableEagerAlternateStateNodeCleanup = true;
 
 /**
  * Enables an expiration time for retry lanes to avoid starvation.
@@ -153,10 +159,10 @@ export const transitionLaneExpirationMs = 5000;
  */
 export const enableInfiniteRenderLoopDetection = false;
 
-/**
- * Experimental new hook for better managing resources in effects.
- */
-export const enableUseResourceEffectHook = false;
+export const enableFastAddPropertiesInDiffing = true;
+export const enableLazyPublicInstanceInFabric = false;
+
+export const enableFragmentRefs = __EXPERIMENTAL__;
 
 // -----------------------------------------------------------------------------
 // Ready for next major.
@@ -261,6 +267,6 @@ export const enableAsyncDebugInfo = __EXPERIMENTAL__;
 export const enableUpdaterTracking = __PROFILE__;
 
 // Internal only.
-export const enableGetInspectorDataForInstanceInProduction = false;
-
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
+
+export const ownerStackLimit = 1e4;

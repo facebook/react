@@ -24,7 +24,6 @@ export function outlineFunctions(
       }
       if (
         value.kind === 'FunctionExpression' &&
-        value.loweredFunc.dependencies.length === 0 &&
         value.loweredFunc.func.context.length === 0 &&
         // TODO: handle outlining named functions
         value.loweredFunc.func.id === null &&

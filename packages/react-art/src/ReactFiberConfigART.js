@@ -302,12 +302,41 @@ export function createInstance(type, props, internalInstanceHandle) {
   return instance;
 }
 
+export function cloneMutableInstance(instance, keepChildren) {
+  return instance;
+}
+
 export function createTextInstance(
   text,
   rootContainerInstance,
   internalInstanceHandle,
 ) {
   return text;
+}
+
+export function cloneMutableTextInstance(textInstance) {
+  return textInstance;
+}
+
+export type FragmentInstanceType = null;
+
+export function createFragmentInstance(fiber): null {
+  return null;
+}
+
+export function updateFragmentInstanceFiber(fiber, instance): void {
+  // Noop
+}
+
+export function commitNewChildToFragmentInstance(
+  child,
+  fragmentInstance,
+): void {
+  // Noop
+}
+
+export function deleteChildFromFragmentInstance(child, fragmentInstance): void {
+  // Noop
 }
 
 export function finalizeInitialChildren(domElement, type, props) {
@@ -455,6 +484,85 @@ export function unhideTextInstance(textInstance, text): void {
   // Noop
 }
 
+export function applyViewTransitionName(instance, name, className) {
+  // Noop
+}
+
+export function restoreViewTransitionName(instance, props) {
+  // Noop
+}
+
+export function cancelViewTransitionName(instance, name, props) {
+  // Noop
+}
+
+export function cancelRootViewTransitionName(rootContainer) {
+  // Noop
+}
+
+export function restoreRootViewTransitionName(rootContainer) {
+  // Noop
+}
+
+export function cloneRootViewTransitionContainer(rootContainer) {
+  throw new Error('Not implemented.');
+}
+
+export function removeRootViewTransitionClone(rootContainer, clone) {
+  throw new Error('Not implemented.');
+}
+
+export type InstanceMeasurement = null;
+
+export function measureInstance(instance) {
+  return null;
+}
+
+export function measureClonedInstance(instance) {
+  return null;
+}
+
+export function wasInstanceInViewport(measurement): boolean {
+  return true;
+}
+
+export function hasInstanceChanged(oldMeasurement, newMeasurement): boolean {
+  return false;
+}
+
+export function hasInstanceAffectedParent(
+  oldMeasurement,
+  newMeasurement,
+): boolean {
+  return false;
+}
+
+export function startViewTransition() {
+  return null;
+}
+
+export type RunningViewTransition = null;
+
+export function startGestureTransition() {
+  return null;
+}
+
+export function stopViewTransition(transition: RunningViewTransition) {}
+
+export type ViewTransitionInstance = null | {name: string, ...};
+
+export function createViewTransitionInstance(
+  name: string,
+): ViewTransitionInstance {
+  return null;
+}
+
+export type GestureTimeline = null;
+
+export function getCurrentGestureOffset(provider: GestureTimeline): number {
+  throw new Error('startGestureTransition is not yet supported in react-art.');
+}
+
 export function clearContainer(container) {
   // TODO Implement this
 }
@@ -488,6 +596,14 @@ export function maySuspendCommit(type, props) {
   return false;
 }
 
+export function maySuspendCommitOnUpdate(type, oldProps, newProps) {
+  return false;
+}
+
+export function maySuspendCommitInSyncRender(type, props) {
+  return false;
+}
+
 export function preloadInstance(type, props) {
   // Return true to indicate it's already loaded
   return true;
@@ -495,7 +611,9 @@ export function preloadInstance(type, props) {
 
 export function startSuspendingCommit() {}
 
-export function suspendInstance(type, props) {}
+export function suspendInstance(instance, type, props) {}
+
+export function suspendOnActiveViewTransition(container) {}
 
 export function waitForCommitToBeReady() {
   return null;

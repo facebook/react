@@ -32,6 +32,8 @@ module.exports = {
     Reflect: 'readonly',
     globalThis: 'readonly',
     FinalizationRegistry: 'readonly',
+    ScrollTimeline: 'readonly',
+    navigation: 'readonly',
     // Vendor specific
     MSApp: 'readonly',
     __REACT_DEVTOOLS_GLOBAL_HOOK__: 'readonly',

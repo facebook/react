@@ -17,6 +17,9 @@ jest.mock('shared/ReactFeatureFlags', () => {
   // we remove the flag.
   actual.disableClientCache = __VARIANT__;
 
+  // Some value that doesn't impact existing tests
+  actual.ownerStackLimit = __VARIANT__ ? 500 : 1e4;
+
   return actual;
 });
 

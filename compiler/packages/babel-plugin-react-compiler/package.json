@@ -9,17 +9,18 @@
     "!*.tsbuildinfo"
   ],
   "scripts": {
-    "build": "rimraf dist && rollup --config --bundleConfigAsCjs",
+    "build": "rimraf dist && tsup",
     "test": "./scripts/link-react-compiler-runtime.sh && yarn snap:ci",
     "jest": "yarn build && ts-node node_modules/.bin/jest",
-    "snap": "node ../snap/dist/main.js",
+    "snap": "yarn workspace snap run snap",
     "snap:build": "yarn workspace snap run build",
     "snap:ci": "yarn snap:build && yarn snap",
     "ts:analyze-trace": "scripts/ts-analyze-trace.sh",
-    "lint": "yarn eslint src"
+    "lint": "yarn eslint src",
+    "watch": "yarn build --dts --watch"
   },
   "dependencies": {
-    "@babel/types": "^7.19.0"
+    "@babel/types": "^7.26.0"
   },
   "devDependencies": {
     "@babel/core": "^7.2.0",
@@ -49,7 +50,6 @@
     "pretty-format": "^24",
     "react": "0.0.0-experimental-4beb1fd8-20241118",
     "react-dom": "0.0.0-experimental-4beb1fd8-20241118",
-    "rimraf": "^3.0.2",
     "ts-jest": "^29.1.1",
     "ts-node": "^10.9.2",
     "zod": "^3.22.4",

@@ -14,6 +14,7 @@ import {
   HostHoistable,
   HostSingleton,
   LazyComponent,
+  ActivityComponent,
   SuspenseComponent,
   SuspenseListComponent,
   FunctionComponent,
@@ -22,6 +23,8 @@ import {
   ClassComponent,
   HostText,
 } from './ReactWorkTags';
+
+import {enableSrcObject} from 'shared/ReactFeatureFlags';
 
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import assign from 'shared/assign';
@@ -81,6 +84,8 @@ function describeFiberType(fiber: Fiber): null | string {
       return fiber.type;
     case LazyComponent:
       return 'Lazy';
+    case ActivityComponent:
+      return 'Activity';
     case SuspenseComponent:
       return 'Suspense';
     case SuspenseListComponent:
@@ -222,6 +227,8 @@ function describeValue(value: mixed, maxLength: number): string {
             (properties === '' ? '' : ',') + propName + ':' + propValue;
         }
         return '{' + properties + '}';
+      } else if (enableSrcObject && (name === 'Blob' || name === 'File')) {
+        return name + ':' + (value: any).type;
       }
       return name;
     }

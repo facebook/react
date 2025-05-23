@@ -14,6 +14,7 @@ import {
   disableLegacyMode,
   enableLegacyHidden,
   enableRenderableContext,
+  enableViewTransition,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -45,6 +46,8 @@ import {
   CacheComponent,
   TracingMarkerComponent,
   Throw,
+  ViewTransitionComponent,
+  ActivityComponent,
 } from 'react-reconciler/src/ReactWorkTags';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {REACT_STRICT_MODE_TYPE} from 'shared/ReactSymbols';
@@ -83,6 +86,8 @@ export function getComponentNameFromOwner(
 export default function getComponentNameFromFiber(fiber: Fiber): string | null {
   const {tag, type} = fiber;
   switch (tag) {
+    case ActivityComponent:
+      return 'Activity';
     case CacheComponent:
       return 'Cache';
     case ContextConsumer:
@@ -139,7 +144,12 @@ export default function getComponentNameFromFiber(fiber: Fiber): string | null {
       return 'SuspenseList';
     case TracingMarkerComponent:
       return 'TracingMarker';
+    case ViewTransitionComponent:
+      if (enableViewTransition) {
+        return 'ViewTransition';
+      }
     // The display name for these tags come from the user-provided type:
+    // Fallthrough
     case IncompleteClassComponent:
     case IncompleteFunctionComponent:
       if (disableLegacyMode) {

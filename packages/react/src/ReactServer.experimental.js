@@ -15,6 +15,9 @@ import {
   REACT_PROFILER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
+  REACT_SUSPENSE_LIST_TYPE,
+  REACT_VIEW_TRANSITION_TYPE,
+  REACT_ACTIVITY_TYPE,
 } from 'shared/ReactSymbols';
 import {
   cloneElement,
@@ -28,7 +31,6 @@ import {
   useCallback,
   useDebugValue,
   useMemo,
-  useActionState,
   getCacheForType,
 } from './ReactHooks';
 import {forwardRef} from './ReactForwardRef';
@@ -69,13 +71,15 @@ export {
   memo,
   cache,
   startTransition,
-  REACT_SUSPENSE_TYPE as unstable_SuspenseList,
   getCacheForType as unstable_getCacheForType,
   postpone as unstable_postpone,
   useId,
   useCallback,
   useDebugValue,
   useMemo,
-  useActionState,
   version,
+  // Experimental
+  REACT_SUSPENSE_LIST_TYPE as unstable_SuspenseList,
+  REACT_VIEW_TRANSITION_TYPE as unstable_ViewTransition,
+  REACT_ACTIVITY_TYPE as unstable_Activity,
 };

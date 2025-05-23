@@ -67,6 +67,21 @@ describe('ReactDOMFizzServerNode', () => {
     expect(output.result).toMatchInlineSnapshot(`"<div>hello world</div>"`);
   });
 
+  it('flush fully if piping in on onShellReady', async () => {
+    const {writable, output} = getTestWritable();
+    await act(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <div>hello world</div>,
+        {
+          onShellReady() {
+            pipe(writable);
+          },
+        },
+      );
+    });
+    expect(output.result).toMatchInlineSnapshot(`"<div>hello world</div>"`);
+  });
+
   it('should emit DOCTYPE at the root of the document', async () => {
     const {writable, output} = getTestWritable();
     await act(() => {
@@ -78,9 +93,15 @@ describe('ReactDOMFizzServerNode', () => {
       pipe(writable);
     });
     // with Float, we emit empty heads if they are elided when rendering <html>
-    expect(output.result).toMatchInlineSnapshot(
-      `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
-    );
+    if (gate(flags => flags.enableFizzBlockingRender)) {
+      expect(output.result).toMatchInlineSnapshot(
+        `"<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/></head><body>hello world<template id="«R»"></template></body></html>"`,
+      );
+    } else {
+      expect(output.result).toMatchInlineSnapshot(
+        `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
+      );
+    }
   });
 
   it('should emit bootstrap script src at the end', async () => {
@@ -97,7 +118,7 @@ describe('ReactDOMFizzServerNode', () => {
       pipe(writable);
     });
     expect(output.result).toMatchInlineSnapshot(
-      `"<link rel="preload" as="script" fetchPriority="low" href="init.js"/><link rel="modulepreload" fetchPriority="low" href="init.mjs"/><div>hello world</div><script>INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
+      `"<link rel="preload" as="script" fetchPriority="low" href="init.js"/><link rel="modulepreload" fetchPriority="low" href="init.mjs"/><div>hello world</div><script id="«R»">INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
     );
   });
 
@@ -442,9 +463,11 @@ describe('ReactDOMFizzServerNode', () => {
     await act(() => {
       ReactDOMFizzServer.renderToPipeableStream(
         <DelayContext.Provider value={client}>
-          <Suspense fallback="loading">
-            <Component />
-          </Suspense>
+          <div>
+            <Suspense fallback="loading">
+              <Component />
+            </Suspense>
+          </div>
         </DelayContext.Provider>,
       ).pipe(writable);
     });
@@ -501,16 +524,20 @@ describe('ReactDOMFizzServerNode', () => {
     await act(() => {
       ReactDOMFizzServer.renderToPipeableStream(
         <DelayContext.Provider value={client0}>
-          <Suspense fallback="loading">
-            <Component />
-          </Suspense>
+          <div>
+            <Suspense fallback="loading">
+              <Component />
+            </Suspense>
+          </div>
         </DelayContext.Provider>,
       ).pipe(writable0);
       ReactDOMFizzServer.renderToPipeableStream(
         <DelayContext.Provider value={client1}>
-          <Suspense fallback="loading">
-            <Component />
-          </Suspense>
+          <div>
+            <Suspense fallback="loading">
+              <Component />
+            </Suspense>
+          </div>
         </DelayContext.Provider>,
       ).pipe(writable1);
     });
@@ -564,7 +591,7 @@ describe('ReactDOMFizzServerNode', () => {
     const {writable, output, completed} = getTestWritable();
     await act(() => {
       ReactDOMFizzServer.renderToPipeableStream(
-        <>
+        <div>
           <DelayContext.Provider value={client}>
             <Suspense fallback="loading">
               <Component />
@@ -575,7 +602,7 @@ describe('ReactDOMFizzServerNode', () => {
               <Component />
             </Suspense>
           </DelayContext.Provider>
-        </>,
+        </div>,
       ).pipe(writable);
     });
 
