@@ -27,7 +27,7 @@ import {
   eachInstructionValueOperand,
   eachTerminalSuccessor,
 } from '../HIR/visitors';
-import {Result} from '../Utils/Result';
+import {Ok, Result} from '../Utils/Result';
 import {
   getFunctionCallSignature,
   mergeValueKinds,
@@ -38,7 +38,9 @@ import {
   Set_isSuperset,
 } from '../Utils/utils';
 import {
+  printAliasingEffect,
   printIdentifier,
+  printInstruction,
   printInstructionValue,
   printPlace,
   printSourceLocation,
@@ -137,8 +139,20 @@ export function inferMutationAliasingEffects(
   queue(fn.body.entry, initialState);
 
   const signatureCache: Map<Instruction, InstructionSignature> = new Map();
+  const effectInstructionValueCache: Map<AliasingEffect, InstructionValue> =
+    new Map();
 
+  let count = 0;
   while (queuedStates.size !== 0) {
+    count++;
+    if (count > 1000) {
+      console.log(
+        'oops infinite loop',
+        fn.id,
+        typeof fn.loc !== 'symbol' ? fn.loc?.filename : null,
+      );
+      throw new Error('infinite loop');
+    }
     for (const [blockId, block] of fn.body.blocks) {
       const incomingState = queuedStates.get(blockId);
       queuedStates.delete(blockId);
@@ -148,13 +162,14 @@ export function inferMutationAliasingEffects(
 
       statesByBlock.set(blockId, incomingState);
       const state = incomingState.clone();
-      inferBlock(state, block, signatureCache);
+      inferBlock(state, block, signatureCache, effectInstructionValueCache);
 
       for (const nextBlockId of eachTerminalSuccessor(block.terminal)) {
         queue(nextBlockId, state);
       }
     }
   }
+  return Ok([]);
 }
 
 function inferParam(
@@ -176,14 +191,27 @@ function inferBlock(
   state: InferenceState,
   block: BasicBlock,
   instructionSignatureCache: Map<Instruction, InstructionSignature>,
+  effectInstructionValueCache: Map<AliasingEffect, InstructionValue>,
 ): void {
+  for (const phi of block.phis) {
+    state.inferPhi(phi);
+  }
+
   for (const instr of block.instructions) {
     let instructionSignature = instructionSignatureCache.get(instr);
     if (instructionSignature == null) {
       instructionSignature = computeSignatureForInstruction(state.env, instr);
       instructionSignatureCache.set(instr, instructionSignature);
     }
-    const effects = applySignature(state, instructionSignature, instr);
+    // console.log(
+    //   printInstruction({...instr, effects: [...instructionSignature.effects]}),
+    // );
+    const effects = applySignature(
+      state,
+      instructionSignature,
+      instr,
+      effectInstructionValueCache,
+    );
     instr.effects = effects;
   }
 }
@@ -201,7 +229,8 @@ function applySignature(
   state: InferenceState,
   signature: InstructionSignature,
   instruction: Instruction,
-): Array<AliasingEffect> {
+  effectInstructionValueCache: Map<AliasingEffect, InstructionValue>,
+): Array<AliasingEffect> | null {
   const effects: Array<AliasingEffect> = [];
   for (const effect of signature.effects) {
     switch (effect.kind) {
@@ -213,11 +242,15 @@ function applySignature(
         break;
       }
       case 'Create': {
-        const value: InstructionValue = {
-          kind: 'ObjectExpression',
-          properties: [],
-          loc: effect.into.loc,
-        };
+        let value = effectInstructionValueCache.get(effect);
+        if (value == null) {
+          value = {
+            kind: 'ObjectExpression',
+            properties: [],
+            loc: effect.into.loc,
+          };
+          effectInstructionValueCache.set(effect, value);
+        }
         state.initialize(value, {
           kind: effect.value,
           reason: new Set([ValueReason.Other]),
@@ -225,24 +258,139 @@ function applySignature(
         state.define(effect.into, value);
         break;
       }
+      case 'CreateFrom': {
+        const kind = state.kind(effect.from).kind;
+        let value = effectInstructionValueCache.get(effect);
+        if (value == null) {
+          value = {
+            kind: 'ObjectExpression',
+            properties: [],
+            loc: effect.into.loc,
+          };
+          effectInstructionValueCache.set(effect, value);
+        }
+        state.initialize(value, {
+          kind,
+          reason: new Set([ValueReason.Other]),
+        });
+        state.define(effect.into, value);
+        break;
+      }
       case 'Capture': {
-        effects.push(effect);
+        /*
+         * Capture describes potential information flow: storing a pointer to one value
+         * within another. If the destination is not mutable, or the source value has
+         * copy-on-write semantics, then we can prune the effect
+         */
+        const intoKind = state.kind(effect.into).kind;
+        let isMutableDesination: boolean;
+        switch (intoKind) {
+          case ValueKind.Context:
+          case ValueKind.Mutable:
+          case ValueKind.MaybeFrozen: {
+            isMutableDesination = true;
+            break;
+          }
+          default: {
+            isMutableDesination = false;
+            break;
+          }
+        }
+        const fromKind = state.kind(effect.from).kind;
+        let isCopyByReferenceValue: boolean;
+        switch (fromKind) {
+          case ValueKind.Global:
+          case ValueKind.Primitive: {
+            isCopyByReferenceValue = false;
+            break;
+          }
+          default: {
+            isCopyByReferenceValue = true;
+            break;
+          }
+        }
+        if (isMutableDesination && isCopyByReferenceValue) {
+          effects.push(effect);
+        }
         break;
       }
       case 'Alias': {
-        state.alias(effect.into, effect.from);
-        effects.push(effect);
+        /*
+         * Alias represents potential pointer aliasing. If the type is a global,
+         * a primitive (copy-on-write semantics) then we can prune the effect
+         */
+        const fromKind = state.kind(effect.from).kind;
+        switch (fromKind) {
+          case ValueKind.Global:
+          case ValueKind.Primitive: {
+            let value = effectInstructionValueCache.get(effect);
+            if (value == null) {
+              value = {
+                kind: 'Primitive',
+                value: undefined,
+                loc: effect.from.loc,
+              };
+              effectInstructionValueCache.set(effect, value);
+            }
+            state.initialize(value, {kind: fromKind, reason: new Set([])});
+            state.define(effect.into, value);
+            break;
+          }
+          default: {
+            state.alias(effect.into, effect.from);
+            effects.push(effect);
+            break;
+          }
+        }
         break;
       }
-      case 'Apply':
+      case 'Apply': {
+        const values = state.values(effect.function.place);
+        if (values.length !== 1 || values[0].kind !== 'FunctionExpression') {
+          const didMutate = state.mutate(
+            'MutateTransitiveConditionally',
+            effect.function.place,
+          );
+          if (didMutate) {
+            effects.push({
+              kind: 'MutateTransitiveConditionally',
+              value: effect.function.place,
+            });
+          }
+        } else {
+          CompilerError.throwTodo({
+            reason: `Support ${effect.kind} effects`,
+            loc: instruction.loc,
+          });
+        }
+        break;
+      }
       case 'Mutate':
       case 'MutateConditionally':
       case 'MutateTransitive':
       case 'MutateTransitiveConditionally': {
-        CompilerError.throwTodo({
-          reason: `Support ${effect.kind} effects`,
-          loc: instruction.loc,
-        });
+        const didMutate = state.mutate(effect.kind, effect.value);
+        if (didMutate) {
+          switch (effect.kind) {
+            case 'Mutate': {
+              effects.push(effect);
+              break;
+            }
+            case 'MutateConditionally': {
+              effects.push({kind: 'Mutate', value: effect.value});
+              break;
+            }
+            case 'MutateTransitive': {
+              effects.push(effect);
+              break;
+            }
+            case 'MutateTransitiveConditionally': {
+              effects.push({kind: 'MutateTransitive', value: effect.value});
+              break;
+            }
+          }
+        }
+        break;
       }
       default: {
         assertExhaustive(
@@ -259,7 +407,7 @@ function applySignature(
       loc: instruction.loc,
     },
   );
-  return effects;
+  return effects.length !== 0 ? effects : null;
 }
 
 class InferenceState {
@@ -302,7 +450,7 @@ class InferenceState {
   initialize(value: InstructionValue, kind: AbstractValue): void {
     CompilerError.invariant(value.kind !== 'LoadLocal', {
       reason:
-        'Expected all top-level identifiers to be defined as variables, not values',
+        '[InferMutationAliasingEffects] Expected all top-level identifiers to be defined as variables, not values',
       description: null,
       loc: value.loc,
       suggestions: null,
@@ -313,7 +461,7 @@ class InferenceState {
   values(place: Place): Array<InstructionValue> {
     const values = this.#variables.get(place.identifier.id);
     CompilerError.invariant(values != null, {
-      reason: `[hoisting] Expected value kind to be initialized`,
+      reason: `[InferMutationAliasingEffects] Expected value kind to be initialized`,
       description: `${printPlace(place)}`,
       loc: place.loc,
       suggestions: null,
@@ -325,7 +473,7 @@ class InferenceState {
   kind(place: Place): AbstractValue {
     const values = this.#variables.get(place.identifier.id);
     CompilerError.invariant(values != null, {
-      reason: `[hoisting] Expected value kind to be initialized`,
+      reason: `[InferMutationAliasingEffects] Expected value kind to be initialized`,
       description: `${printPlace(place)}`,
       loc: place.loc,
       suggestions: null,
@@ -337,7 +485,7 @@ class InferenceState {
         mergedKind !== null ? mergeAbstractValues(mergedKind, kind) : kind;
     }
     CompilerError.invariant(mergedKind !== null, {
-      reason: `InferReferenceEffects::kind: Expected at least one value`,
+      reason: `[InferMutationAliasingEffects] Expected at least one value`,
       description: `No value found at \`${printPlace(place)}\``,
       loc: place.loc,
       suggestions: null,
@@ -349,7 +497,7 @@ class InferenceState {
   alias(place: Place, value: Place): void {
     const values = this.#variables.get(value.identifier.id);
     CompilerError.invariant(values != null, {
-      reason: `[hoisting] Expected value for identifier to be initialized`,
+      reason: `[InferMutationAliasingEffects] Expected value for identifier to be initialized`,
       description: `${printIdentifier(value.identifier)}`,
       loc: value.loc,
       suggestions: null,
@@ -360,10 +508,10 @@ class InferenceState {
   // Defines (initializing or updating) a variable with a specific kind of value.
   define(place: Place, value: InstructionValue): void {
     CompilerError.invariant(this.#values.has(value), {
-      reason: `Expected value to be initialized at '${printSourceLocation(
+      reason: `[InferMutationAliasingEffects] Expected value to be initialized at '${printSourceLocation(
         value.loc,
       )}'`,
-      description: null,
+      description: printInstructionValue(value),
       loc: value.loc,
       suggestions: null,
     });
@@ -412,6 +560,49 @@ class InferenceState {
     if (value.kind === 'FunctionExpression') {
       for (const place of value.loweredFunc.func.context) {
         this.freeze(place, reason);
+      }
+    }
+  }
+
+  mutate(
+    variant:
+      | 'Mutate'
+      | 'MutateConditionally'
+      | 'MutateTransitive'
+      | 'MutateTransitiveConditionally',
+    place: Place,
+  ): boolean {
+    // TODO: consider handling of function expressions by looking at their effects
+    const kind = this.kind(place).kind;
+    switch (variant) {
+      case 'MutateConditionally':
+      case 'MutateTransitiveConditionally': {
+        switch (kind) {
+          case ValueKind.Mutable:
+          case ValueKind.Context: {
+            return true;
+          }
+          default: {
+            return false;
+          }
+        }
+      }
+      case 'Mutate':
+      case 'MutateTransitive': {
+        switch (kind) {
+          case ValueKind.Mutable:
+          case ValueKind.Primitive:
+          case ValueKind.Context: {
+            return true;
+          }
+          default: {
+            // TODO this is an error!
+            return false;
+          }
+        }
+      }
+      default: {
+        assertExhaustive(variant, `Unexpected mutation variant ${variant}`);
       }
     }
   }
@@ -666,12 +857,6 @@ function computeSignatureForInstruction(
       });
       break;
     }
-    case 'TaggedTemplateExpression': {
-      CompilerError.throwTodo({
-        reason: `Handle TaggedTemplateExpression in new inference`,
-        loc: instr.loc,
-      });
-    }
     case 'NewExpression':
     case 'CallExpression':
     case 'MethodCall': {
@@ -705,6 +890,7 @@ function computeSignatureForInstruction(
       if (signatureEffects != null) {
         effects.push(...signatureEffects);
       } else {
+        effects.push({kind: 'Create', into: lvalue, value: ValueKind.Mutable});
         /**
          * If no signature then by default:
          * - All operands are conditionally mutated, except some instruction
@@ -719,6 +905,16 @@ function computeSignatureForInstruction(
               value: operand,
             });
           }
+          /*
+           * TODO: this should be Alias, since the function could be identity.
+           * Ie local mutation of the result could change the input.
+           * But if we emit multiple Alias calls, currently the last one will win
+           * when we update the inferencestate in applySignature. So we may need to group
+           * them here, or coalesce them in applySignature
+           *
+           * maybe make `from: Place | Array<Place>`
+           */
+          effects.push({kind: 'Capture', from: operand, into: lvalue});
           for (const other of eachInstructionValueOperand(value)) {
             if (other === operand) {
               continue;
@@ -747,6 +943,11 @@ function computeSignatureForInstruction(
     case 'PropertyLoad':
     case 'ComputedLoad': {
       effects.push({
+        kind: 'CreateFrom',
+        from: value.object,
+        into: lvalue,
+      });
+      effects.push({
         kind: 'Capture',
         from: value.object,
         into: lvalue,
@@ -772,7 +973,7 @@ function computeSignatureForInstruction(
         value: ValueKind.Primitive,
       });
       CompilerError.throwTodo({
-        reason: `Handle TaggedTemplateExpression in new inference`,
+        reason: `Handle ${value.kind} in new inference`,
         loc: instr.loc,
       });
     }
@@ -829,7 +1030,7 @@ function computeSignatureForInstruction(
       effects.push({kind: 'MutateConditionally', value: value.iterator});
       // Extracts part of the original collection into the result
       effects.push({
-        kind: 'Capture',
+        kind: 'CreateFrom',
         from: value.iterator,
         into: lvalue,
       });
@@ -869,13 +1070,25 @@ function computeSignatureForInstruction(
       // TODO check this
       effects.push({
         kind: 'Create',
+        into: value.lvalue.place,
+        // TODO: what kind here???
+        value: ValueKind.Primitive,
+      });
+      effects.push({
+        kind: 'Create',
         into: lvalue,
+        // TODO: what kind here???
         value: ValueKind.Primitive,
       });
       break;
     }
     case 'Destructure': {
       for (const patternLValue of eachInstructionValueLValue(value)) {
+        effects.push({
+          kind: 'CreateFrom',
+          from: value.value,
+          into: patternLValue,
+        });
         effects.push({
           kind: 'Capture',
           from: value.value,
@@ -922,11 +1135,19 @@ function computeSignatureForInstruction(
       effects.push({kind: 'Alias', from: value.value, into: lvalue});
       break;
     }
+    case 'LoadGlobal': {
+      effects.push({
+        kind: 'Create',
+        into: lvalue,
+        value: ValueKind.Global,
+      });
+      break;
+    }
+    case 'TaggedTemplateExpression':
     case 'BinaryExpression':
     case 'Debugger':
     case 'FinishMemoize':
     case 'JSXText':
-    case 'LoadGlobal':
     case 'MetaProperty':
     case 'Primitive':
     case 'RegExpLiteral':
@@ -1033,6 +1254,7 @@ function computeEffectsForSignature(
         }
         break;
       }
+      case 'CreateFrom':
       case 'Apply':
       case 'Mutate':
       case 'MutateTransitive':
@@ -1174,6 +1396,10 @@ export type AliasingEffect =
    * Creates a value of the given type at the given place
    */
   | {kind: 'Create'; into: Place; value: ValueKind}
+  /**
+   * Creates a new value with the same kind as the starting value.
+   */
+  | {kind: 'CreateFrom'; from: Place; into: Place}
   /**
    * Calls the function at the given place with the given arguments either captured or aliased,
    * and captures/aliases the result into the given place.

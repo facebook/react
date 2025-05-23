@@ -119,7 +119,7 @@ export function debugAliases(aliases: DisjointSet<Identifier>): void {
  *
  * This ensures that we fixpoint the mutable ranges themselves and not just the alias sets.
  */
-function canonicalize(
+export function canonicalize(
   aliases: DisjointSet<Identifier>,
 ): Map<Identifier, string> {
   const entries = new Map<Identifier, string>();
@@ -132,7 +132,7 @@ function canonicalize(
   return entries;
 }
 
-function areEqualMaps<T, U>(a: Map<T, U>, b: Map<T, U>): boolean {
+export function areEqualMaps<T, U>(a: Map<T, U>, b: Map<T, U>): boolean {
   if (a.size !== b.size) {
     return false;
   }
