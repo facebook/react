@@ -64,6 +64,13 @@ export type ReactContext<T> = {
   displayName?: string,
 };
 
+export type ReactStore<T> = {
+  $$typeof: symbol,
+  _current: T,
+  _sync: T,
+  _transition: T,
+};
+
 export type ReactPortal = {
   $$typeof: symbol | number,
   key: null | string,
@@ -141,7 +148,7 @@ export type StartTransitionOptions = {
   name?: string,
 };
 
-export type Usable<T> = Thenable<T> | ReactContext<T>;
+export type Usable<T> = Thenable<T> | ReactContext<T> | ReactStore<T>;
 
 export type ReactCustomFormAction = {
   name?: string,
