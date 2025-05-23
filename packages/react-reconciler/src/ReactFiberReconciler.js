@@ -125,6 +125,7 @@ export {
   defaultOnRecoverableError,
 } from './ReactFiberErrorLogger';
 import {getLabelForLane, TotalLanes} from 'react-reconciler/src/ReactFiberLane';
+import {registerDefaultIndicator} from './ReactFiberAsyncAction';
 
 type OpaqueRoot = FiberRoot;
 
@@ -259,7 +260,7 @@ export function createContainer(
 ): OpaqueRoot {
   const hydrate = false;
   const initialChildren = null;
-  return createFiberRoot(
+  const root = createFiberRoot(
     containerInfo,
     tag,
     hydrate,
@@ -274,6 +275,8 @@ export function createContainer(
     onDefaultTransitionIndicator,
     transitionCallbacks,
   );
+  registerDefaultIndicator(onDefaultTransitionIndicator);
+  return root;
 }
 
 export function createHydrationContainer(
@@ -322,6 +325,8 @@ export function createHydrationContainer(
     onDefaultTransitionIndicator,
     transitionCallbacks,
   );
+
+  registerDefaultIndicator(onDefaultTransitionIndicator);
 
   // TODO: Move this to FiberRoot constructor
   root.context = getContextForSubtree(null);
