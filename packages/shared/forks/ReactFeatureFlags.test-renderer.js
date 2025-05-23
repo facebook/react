@@ -62,6 +62,7 @@ export const enableInfiniteRenderLoopDetection = false;
 
 export const renameElementSymbol = true;
 export const enableShallowPropDiffing = false;
+export const enableEagerAlternateStateNodeCleanup = false;
 
 export const enableYieldingBeforePassive = true;
 
@@ -72,6 +73,7 @@ export const enableFastAddPropertiesInDiffing = true;
 export const enableLazyPublicInstanceInFabric = false;
 export const enableScrollEndPolyfill = true;
 export const enableSuspenseyImages = false;
+export const enableFizzBlockingRender = true;
 export const enableSrcObject = false;
 export const enableHydrationChangeEvent = false;
 export const enableDefaultTransitionIndicator = false;

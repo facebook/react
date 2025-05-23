@@ -72,6 +72,7 @@ import {
   enableScrollEndPolyfill,
   enableSrcObject,
   enableTrustedTypesIntegration,
+  enableViewTransition,
 } from 'shared/ReactFeatureFlags';
 import {
   mediaEventTypes,
@@ -3217,6 +3218,18 @@ export function diffHydratedProperties(
           break;
         case 'selected':
           break;
+        case 'vt-name':
+        case 'vt-update':
+        case 'vt-enter':
+        case 'vt-exit':
+        case 'vt-share':
+          if (enableViewTransition) {
+            // View Transition annotations are expected from the Server Runtime.
+            // However, if they're also specified on the client and don't match
+            // that's an error.
+            break;
+          }
+        // Fallthrough
         default:
           // Intentionally use the original name.
           // See discussion in https://github.com/facebook/react/pull/10676.
