@@ -67,6 +67,9 @@ const rule = {
               type: 'string',
             },
           },
+          requireExplicitEffectDeps: {
+            type: 'boolean',
+          }
         },
       },
     ],
@@ -90,10 +93,13 @@ const rule = {
         ? rawOptions.experimental_autoDependenciesHooks
         : [];
 
+    const requireExplicitEffectDeps: boolean = rawOptions && rawOptions.requireExplicitEffectDeps || false;
+
     const options = {
       additionalHooks,
       experimental_autoDependenciesHooks,
       enableDangerousAutofixThisMayCauseInfiniteLoops,
+      requireExplicitEffectDeps,
     };
 
     function reportProblem(problem: Rule.ReportDescriptor) {
@@ -1338,6 +1344,15 @@ const rule = {
             `Did you forget to pass a callback to the hook?`,
         });
         return;
+      }
+
+      if (!maybeNode && isEffect && options.requireExplicitEffectDeps) {
+        reportProblem({
+          node: reactiveHook,
+          message:
+            `React Hook ${reactiveHookName} always requires dependencies. ` +
+            `Please add a dependency array or an explicit \`undefined\``
+        });
       }
 
       const isAutoDepsHook =
