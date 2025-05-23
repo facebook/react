@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Wakeable} from 'shared/ReactTypes';
+import type {Wakeable, SuspenseListTailMode} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {SuspenseInstance} from './ReactFiberConfig';
 import type {Lane} from './ReactFiberLane';
@@ -41,8 +41,6 @@ export type SuspenseState = {
   // Stashed Errors that happened while attempting to hydrate this boundary.
   hydrationErrors: Array<CapturedValue<mixed>> | null,
 };
-
-export type SuspenseListTailMode = 'collapsed' | 'hidden' | void;
 
 export type SuspenseListRenderState = {
   isBackwards: boolean,
