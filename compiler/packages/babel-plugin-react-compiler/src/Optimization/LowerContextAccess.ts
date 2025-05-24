@@ -254,6 +254,7 @@ function emitSelectorFn(env: Environment, keys: Array<string>): Instruction {
     params: [obj],
     returnTypeAnnotation: null,
     returnType: makeType(),
+    returns: createTemporaryPlace(env, GeneratedSource),
     context: [],
     effects: null,
     body: {
