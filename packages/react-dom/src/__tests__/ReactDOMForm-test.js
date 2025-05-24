@@ -2281,4 +2281,54 @@ describe('ReactDOMForm', () => {
     await submit(formRef.current);
     assertLog(['stringified action']);
   });
+
+  it('form actions should retain status when nested state changes', async () => {
+    const formRef = React.createRef();
+    const textRef = React.createRef();
+    const btnRef = React.createRef();
+
+    function Status() {
+      const {pending} = useFormStatus();
+      const [counter, setCounter] = useState(0);
+      return (
+        <div>
+          <p ref={textRef}>
+            {pending ? `Pending` : null} with state: {counter}
+          </p>
+          <button
+            ref={btnRef}
+            onClick={() => setCounter(n => n + 1)}
+            type="button">
+            Increment
+          </button>
+        </div>
+      );
+    }
+
+    function App() {
+      async function action() {
+        return new Promise(resolve => {
+          // never resolves
+        });
+      }
+
+      return (
+        <form action={action} ref={formRef}>
+          <input type="submit" />
+          <Status />
+        </form>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
+
+    await submit(formRef.current);
+
+    expect(textRef.current.textContent).toBe('Pending with state: 0');
+
+    await act(() => btnRef.current.click());
+
+    expect(textRef.current.textContent).toBe('Pending with state: 1');
+  });
 });
