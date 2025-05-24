@@ -369,6 +369,7 @@ function emitOutlinedFn(
     params: [propsObj],
     returnTypeAnnotation: null,
     returnType: makeType(),
+    returns: createTemporaryPlace(env, GeneratedSource),
     context: [],
     effects: null,
     body: {
