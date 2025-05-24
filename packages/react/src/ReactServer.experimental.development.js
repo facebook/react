@@ -37,7 +37,6 @@ import {lazy} from './ReactLazy';
 import {memo} from './ReactMemo';
 import {cache} from './ReactCacheServer';
 import {startTransition} from './ReactStartTransition';
-import {postpone} from './ReactPostpone';
 import {captureOwnerStack} from './ReactOwnerStack';
 import version from 'shared/ReactVersion';
 
@@ -72,7 +71,6 @@ export {
   cache,
   startTransition,
   getCacheForType as unstable_getCacheForType,
-  postpone as unstable_postpone,
   useId,
   useCallback,
   useDebugValue,
