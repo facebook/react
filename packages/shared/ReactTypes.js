@@ -186,9 +186,18 @@ export type ReactCallSite = [
   string, // file name TODO: model nested eval locations as nested arrays
   number, // line number
   number, // column number
+  number, // enclosing line number
+  number, // enclosing column number
 ];
 
 export type ReactStackTrace = Array<ReactCallSite>;
+
+export type ReactFunctionLocation = [
+  string, // function name
+  string, // file name TODO: model nested eval locations as nested arrays
+  number, // enclosing line number
+  number, // enclosing column number
+];
 
 export type ReactComponentInfo = {
   +name: string,
@@ -280,6 +289,30 @@ export type SuspenseProps = {
   unstable_expectedLoadTime?: number,
   name?: string,
 };
+
+export type SuspenseListRevealOrder =
+  | 'forwards'
+  | 'backwards'
+  | 'together'
+  | void;
+
+export type SuspenseListTailMode = 'collapsed' | 'hidden' | void;
+
+type DirectionalSuspenseListProps = {
+  children?: ReactNodeList,
+  revealOrder: 'forwards' | 'backwards',
+  tail?: SuspenseListTailMode,
+};
+
+type NonDirectionalSuspenseListProps = {
+  children?: ReactNodeList,
+  revealOrder?: 'together' | void,
+  tail?: void,
+};
+
+export type SuspenseListProps =
+  | DirectionalSuspenseListProps
+  | NonDirectionalSuspenseListProps;
 
 export type TracingMarkerProps = {
   name: string,

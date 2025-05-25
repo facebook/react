@@ -398,8 +398,8 @@ describe('ReactLazyContextPropagation', () => {
       'Suspend! [B]',
       'Loading...',
       'B',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [B]'] : []),
+      // pre-warming
+      'Suspend! [B]',
     ]);
     expect(root).toMatchRenderedOutput('Loading...B');
 
@@ -484,8 +484,8 @@ describe('ReactLazyContextPropagation', () => {
       'Suspend! [B]',
       'Loading...',
       'B',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [B]'] : []),
+      // pre-warming
+      'Suspend! [B]',
     ]);
     expect(root).toMatchRenderedOutput('Loading...B');
 
@@ -822,8 +822,8 @@ describe('ReactLazyContextPropagation', () => {
     assertLog([
       'Suspend! [B]',
       'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [B]'] : []),
+      // pre-warming
+      'Suspend! [B]',
     ]);
     expect(root).toMatchRenderedOutput('Loading...');
 

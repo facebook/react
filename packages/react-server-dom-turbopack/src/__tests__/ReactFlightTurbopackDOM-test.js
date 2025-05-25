@@ -18,6 +18,7 @@ global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
 
 let act;
+let serverAct;
 let use;
 let clientExports;
 let clientExportsESM;
@@ -28,8 +29,6 @@ let ReactDOMClient;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 let Suspense;
-let ReactServerScheduler;
-let reactServerAct;
 let ErrorBoundary;
 
 describe('ReactFlightTurbopackDOM', () => {
@@ -39,9 +38,8 @@ describe('ReactFlightTurbopackDOM', () => {
     // condition
     jest.resetModules();
 
-    ReactServerScheduler = require('scheduler');
-    patchSetImmediate(ReactServerScheduler);
-    reactServerAct = require('internal-test-utils').act;
+    patchSetImmediate();
+    serverAct = require('internal-test-utils').serverAct;
 
     // Simulate the condition resolution
     jest.mock('react-server-dom-turbopack/server', () =>
@@ -83,17 +81,6 @@ describe('ReactFlightTurbopackDOM', () => {
       }
     };
   });
-
-  async function serverAct(callback) {
-    let maybePromise;
-    await reactServerAct(() => {
-      maybePromise = callback();
-      if (maybePromise && typeof maybePromise.catch === 'function') {
-        maybePromise.catch(() => {});
-      }
-    });
-    return maybePromise;
-  }
 
   function getTestStream() {
     const writable = new Stream.PassThrough();

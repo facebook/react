@@ -203,6 +203,8 @@ export const BuiltInPropsId = 'BuiltInProps';
 export const BuiltInArrayId = 'BuiltInArray';
 export const BuiltInSetId = 'BuiltInSet';
 export const BuiltInMapId = 'BuiltInMap';
+export const BuiltInWeakSetId = 'BuiltInWeakSet';
+export const BuiltInWeakMapId = 'BuiltInWeakMap';
 export const BuiltInFunctionId = 'BuiltInFunction';
 export const BuiltInJsxId = 'BuiltInJsx';
 export const BuiltInObjectId = 'BuiltInObject';
@@ -224,6 +226,9 @@ export const BuiltInUseTransitionId = 'BuiltInUseTransition';
 export const BuiltInStartTransitionId = 'BuiltInStartTransition';
 export const BuiltInFireId = 'BuiltInFire';
 export const BuiltInFireFunctionId = 'BuiltInFireFunction';
+
+// See getReanimatedModuleType() in Globals.ts — this is part of supporting Reanimated's ref-like types
+export const ReanimatedSharedValueId = 'ReanimatedSharedValueId';
 
 // ShapeRegistry with default definitions for built-ins.
 export const BUILTIN_SHAPES: ShapeRegistry = new Map();
@@ -759,6 +764,101 @@ addObject(BUILTIN_SHAPES, BuiltInMapId, [
       restParam: null,
       returnType: {kind: 'Poly'},
       calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+]);
+
+addObject(BUILTIN_SHAPES, BuiltInWeakSetId, [
+  [
+    /**
+     * add(value)
+     * Parameters
+     *   value: the value of the element to add to the Set object.
+     * Returns the Set object with added value.
+     */
+    'add',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Capture],
+      restParam: null,
+      returnType: {kind: 'Object', shapeId: BuiltInWeakSetId},
+      calleeEffect: Effect.Store,
+      // returnValueKind is technically dependent on the ValueKind of the set itself
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    /**
+     * setInstance.delete(value)
+     * Returns true if value was already in Set; otherwise false.
+     */
+    'delete',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Read],
+      restParam: null,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Store,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'has',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Read],
+      restParam: null,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+]);
+
+addObject(BUILTIN_SHAPES, BuiltInWeakMapId, [
+  [
+    'delete',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Read],
+      restParam: null,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Store,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'get',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Read],
+      restParam: null,
+      returnType: {kind: 'Poly'},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    'has',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Read],
+      restParam: null,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    /**
+     * Params
+     *   key: the key of the element to add to the Map object. The key may be
+     *   any JavaScript type (any primitive value or any type of JavaScript
+     *   object).
+     *   value: the value of the element to add to the Map object.
+     * Returns the Map object.
+     */
+    'set',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Capture, Effect.Capture],
+      restParam: null,
+      returnType: {kind: 'Object', shapeId: BuiltInWeakMapId},
+      calleeEffect: Effect.Store,
       returnValueKind: ValueKind.Mutable,
     }),
   ],

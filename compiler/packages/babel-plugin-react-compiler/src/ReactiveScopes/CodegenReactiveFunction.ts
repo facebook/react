@@ -1000,6 +1000,14 @@ function codegenTerminal(
           lval = codegenLValue(cx, iterableItem.value.lvalue.pattern);
           break;
         }
+        case 'StoreContext': {
+          CompilerError.throwTodo({
+            reason: 'Support non-trivial for..in inits',
+            description: null,
+            loc: terminal.init.loc,
+            suggestions: null,
+          });
+        }
         default:
           CompilerError.invariant(false, {
             reason: `Expected a StoreLocal or Destructure to be assigned to the collection`,
@@ -1091,6 +1099,14 @@ function codegenTerminal(
         case 'Destructure': {
           lval = codegenLValue(cx, iterableItem.value.lvalue.pattern);
           break;
+        }
+        case 'StoreContext': {
+          CompilerError.throwTodo({
+            reason: 'Support non-trivial for..of inits',
+            description: null,
+            loc: terminal.init.loc,
+            suggestions: null,
+          });
         }
         default:
           CompilerError.invariant(false, {
@@ -2311,9 +2327,12 @@ function codegenInstructionValue(
  * u0080 to u009F: C1 control codes
  * u00A0 to uFFFF: All non-basic Latin characters
  * https://en.wikipedia.org/wiki/List_of_Unicode_characters#Control_codes
+ *
+ * u010000 to u10FFFF: Astral plane characters
+ * https://mathiasbynens.be/notes/javascript-unicode
  */
 const STRING_REQUIRES_EXPR_CONTAINER_PATTERN =
-  /[\u{0000}-\u{001F}\u{007F}\u{0080}-\u{FFFF}]|"|\\/u;
+  /[\u{0000}-\u{001F}\u{007F}\u{0080}-\u{FFFF}\u{010000}-\u{10FFFF}]|"|\\/u;
 function codegenJsxAttribute(
   cx: Context,
   attribute: JsxAttribute,

@@ -26,8 +26,7 @@ let ReactServerDOMStaticServer;
 let ReactServerDOMClient;
 let Stream;
 let use;
-let ReactServerScheduler;
-let reactServerAct;
+let serverAct;
 
 // We test pass-through without encoding strings but it should work without it too.
 const streamOptions = {
@@ -38,9 +37,8 @@ describe('ReactFlightDOMNode', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    ReactServerScheduler = require('scheduler');
-    patchSetImmediate(ReactServerScheduler);
-    reactServerAct = require('internal-test-utils').act;
+    patchSetImmediate();
+    serverAct = require('internal-test-utils').serverAct;
 
     // Simulate the condition resolution
     jest.mock('react', () => require('react/react.react-server'));
@@ -75,17 +73,6 @@ describe('ReactFlightDOMNode', () => {
     Stream = require('stream');
     use = React.use;
   });
-
-  async function serverAct(callback) {
-    let maybePromise;
-    await reactServerAct(() => {
-      maybePromise = callback();
-      if (maybePromise && typeof maybePromise.catch === 'function') {
-        maybePromise.catch(() => {});
-      }
-    });
-    return maybePromise;
-  }
 
   function readResult(stream) {
     return new Promise((resolve, reject) => {

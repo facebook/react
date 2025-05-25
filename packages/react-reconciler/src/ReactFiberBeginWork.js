@@ -14,6 +14,9 @@ import type {
   ViewTransitionProps,
   ActivityProps,
   SuspenseProps,
+  SuspenseListProps,
+  SuspenseListRevealOrder,
+  SuspenseListTailMode,
   TracingMarkerProps,
   CacheProps,
   ProfilerProps,
@@ -26,7 +29,6 @@ import type {ActivityState} from './ReactFiberActivityComponent';
 import type {
   SuspenseState,
   SuspenseListRenderState,
-  SuspenseListTailMode,
 } from './ReactFiberSuspenseComponent';
 import type {SuspenseContext} from './ReactFiberSuspenseContext';
 import type {
@@ -36,8 +38,6 @@ import type {
   OffscreenQueue,
   OffscreenInstance,
 } from './ReactFiberOffscreenComponent';
-import type {ViewTransitionState} from './ReactFiberViewTransitionComponent';
-import {assignViewTransitionAutoName} from './ReactFiberViewTransitionComponent';
 import type {
   Cache,
   CacheComponentState,
@@ -123,7 +123,6 @@ import {
   enableViewTransition,
   enableFragmentRefs,
 } from 'shared/ReactFeatureFlags';
-import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
@@ -132,7 +131,6 @@ import {
   REACT_LAZY_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_MEMO_TYPE,
-  getIteratorFn,
 } from 'shared/ReactSymbols';
 import {setCurrentFiber} from './ReactCurrentFiber';
 import {
@@ -145,6 +143,7 @@ import {
   mountChildFibers,
   reconcileChildFibers,
   cloneChildFibers,
+  validateSuspenseListChildren,
 } from './ReactChildFiber';
 import {
   processUpdateQueue,
@@ -3224,8 +3223,6 @@ function findLastContentRow(firstChild: null | Fiber): null | Fiber {
   return lastContentRow;
 }
 
-type SuspenseListRevealOrder = 'forwards' | 'backwards' | 'together' | void;
-
 function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
   if (__DEV__) {
     if (
@@ -3304,73 +3301,6 @@ function validateTailOptions(
   }
 }
 
-function validateSuspenseListNestedChild(childSlot: mixed, index: number) {
-  if (__DEV__) {
-    const isAnArray = isArray(childSlot);
-    const isIterable =
-      !isAnArray && typeof getIteratorFn(childSlot) === 'function';
-    if (isAnArray || isIterable) {
-      const type = isAnArray ? 'array' : 'iterable';
-      console.error(
-        'A nested %s was passed to row #%s in <SuspenseList />. Wrap it in ' +
-          'an additional SuspenseList to configure its revealOrder: ' +
-          '<SuspenseList revealOrder=...> ... ' +
-          '<SuspenseList revealOrder=...>{%s}</SuspenseList> ... ' +
-          '</SuspenseList>',
-        type,
-        index,
-        type,
-      );
-      return false;
-    }
-  }
-  return true;
-}
-
-function validateSuspenseListChildren(
-  children: mixed,
-  revealOrder: SuspenseListRevealOrder,
-) {
-  if (__DEV__) {
-    if (
-      (revealOrder === 'forwards' || revealOrder === 'backwards') &&
-      children !== undefined &&
-      children !== null &&
-      children !== false
-    ) {
-      if (isArray(children)) {
-        for (let i = 0; i < children.length; i++) {
-          if (!validateSuspenseListNestedChild(children[i], i)) {
-            return;
-          }
-        }
-      } else {
-        const iteratorFn = getIteratorFn(children);
-        if (typeof iteratorFn === 'function') {
-          const childrenIterator = iteratorFn.call(children);
-          if (childrenIterator) {
-            let step = childrenIterator.next();
-            let i = 0;
-            for (; !step.done; step = childrenIterator.next()) {
-              if (!validateSuspenseListNestedChild(step.value, i)) {
-                return;
-              }
-              i++;
-            }
-          }
-        } else {
-          console.error(
-            'A single row was passed to a <SuspenseList revealOrder="%s" />. ' +
-              'This is not useful since it needs multiple rows. ' +
-              'Did you mean to pass multiple children or an array?',
-            revealOrder,
-          );
-        }
-      }
-    }
-  }
-}
-
 function initSuspenseListRenderState(
   workInProgress: Fiber,
   isBackwards: boolean,
@@ -3412,16 +3342,10 @@ function updateSuspenseListComponent(
   workInProgress: Fiber,
   renderLanes: Lanes,
 ) {
-  const nextProps = workInProgress.pendingProps;
+  const nextProps: SuspenseListProps = workInProgress.pendingProps;
   const revealOrder: SuspenseListRevealOrder = nextProps.revealOrder;
   const tailMode: SuspenseListTailMode = nextProps.tail;
   const newChildren = nextProps.children;
-
-  validateRevealOrder(revealOrder);
-  validateTailOptions(tailMode, revealOrder);
-  validateSuspenseListChildren(newChildren, revealOrder);
-
-  reconcileChildren(current, workInProgress, newChildren, renderLanes);
 
   let suspenseContext: SuspenseContext = suspenseStackCursor.current;
 
@@ -3436,6 +3360,17 @@ function updateSuspenseListComponent(
     );
     workInProgress.flags |= DidCapture;
   } else {
+    suspenseContext = setDefaultShallowSuspenseListContext(suspenseContext);
+  }
+  pushSuspenseListContext(workInProgress, suspenseContext);
+
+  validateRevealOrder(revealOrder);
+  validateTailOptions(tailMode, revealOrder);
+  validateSuspenseListChildren(newChildren, revealOrder);
+
+  reconcileChildren(current, workInProgress, newChildren, renderLanes);
+
+  if (!shouldForceFallback) {
     const didSuspendBefore =
       current !== null && (current.flags & DidCapture) !== NoFlags;
     if (didSuspendBefore) {
@@ -3448,9 +3383,7 @@ function updateSuspenseListComponent(
         renderLanes,
       );
     }
-    suspenseContext = setDefaultShallowSuspenseListContext(suspenseContext);
   }
-  pushSuspenseListContext(workInProgress, suspenseContext);
 
   if (!disableLegacyMode && (workInProgress.mode & ConcurrentMode) === NoMode) {
     // In legacy mode, SuspenseList doesn't work so we just
@@ -3538,7 +3471,6 @@ function updateViewTransition(
   renderLanes: Lanes,
 ) {
   const pendingProps: ViewTransitionProps = workInProgress.pendingProps;
-  const instance: ViewTransitionState = workInProgress.stateNode;
   if (pendingProps.name != null && pendingProps.name !== 'auto') {
     // Explicitly named boundary. We track it so that we can pair it up with another explicit
     // boundary if we get deleted.
@@ -3547,12 +3479,8 @@ function updateViewTransition(
         ? ViewTransitionNamedMount | ViewTransitionNamedStatic
         : ViewTransitionNamedStatic;
   } else {
-    // Assign an auto generated name using the useId algorthim if an explicit one is not provided.
-    // We don't need the name yet but we do it here to allow hydration state to be used.
-    // We might end up needing these to line up if we want to Transition from dehydrated fallback
-    // to client rendered content. If we don't end up using that we could just assign an incremeting
-    // counter in the commit phase instead.
-    assignViewTransitionAutoName(pendingProps, instance);
+    // The server may have used useId to auto-assign a generated name for this boundary.
+    // We push a materialization to ensure child ids line up with the server.
     if (getIsHydrating()) {
       pushMaterializedTreeId(workInProgress);
     }

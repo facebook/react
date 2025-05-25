@@ -11,6 +11,7 @@ function Component() {
       <Text value={'Lauren'} />
       <Text value={'சத்யா'} />
       <Text value={'Sathya'} />
+      <Text value={'welcome 👋'} />
     </div>
   );
 }
@@ -42,6 +43,7 @@ function Component() {
         <Text value="Lauren" />
         <Text value={"\u0B9A\u0BA4\u0BCD\u0BAF\u0BBE"} />
         <Text value="Sathya" />
+        <Text value={"welcome \uD83D\uDC4B"} />
       </div>
     );
     $[0] = t0;
@@ -74,4 +76,4 @@ export const FIXTURE_ENTRYPOINT = {
       
 ### Eval output
 (kind: ok) <div><span>
-</span><span>A	E</span><span>나은</span><span>Lauren</span><span>சத்யா</span><span>Sathya</span></div>
+</span><span>A	E</span><span>나은</span><span>Lauren</span><span>சத்யா</span><span>Sathya</span><span>welcome 👋</span></div>

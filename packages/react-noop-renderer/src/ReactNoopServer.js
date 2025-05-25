@@ -55,6 +55,7 @@ type Destination = {
   stack: Array<Segment | Instance | SuspenseInstance>,
 };
 
+type ResumableState = null;
 type RenderState = null;
 type HoistableState = null;
 type PreambleState = null;
@@ -98,7 +99,19 @@ const ReactNoopServer = ReactFizzServer({
   closeWithError(destination: Destination, error: mixed): void {},
   flushBuffered(destination: Destination): void {},
 
+  byteLengthOfChunk: null,
+
   getChildFormatContext(): null {
+    return null;
+  },
+  getSuspenseFallbackFormatContext(): null {
+    return null;
+  },
+  getSuspenseContentFormatContext(): null {
+    return null;
+  },
+
+  getViewTransitionFormatContext(): null {
     return null;
   },
 
@@ -151,7 +164,9 @@ const ReactNoopServer = ReactFizzServer({
 
   writeCompletedRoot(
     destination: Destination,
+    resumableState: ResumableState,
     renderState: RenderState,
+    isComplete: boolean,
   ): boolean {
     return true;
   },

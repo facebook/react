@@ -19,32 +19,19 @@ global.TextEncoder = require('util').TextEncoder;
 let React;
 let ReactDOMFizzServer;
 let Suspense;
-let Scheduler;
-let act;
+let serverAct;
 
 describe('ReactDOMFizzServerBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    Scheduler = require('scheduler');
-    patchMessageChannel(Scheduler);
-    act = require('internal-test-utils').act;
+    patchMessageChannel();
+    serverAct = require('internal-test-utils').serverAct;
 
     React = require('react');
     ReactDOMFizzServer = require('react-dom/server.browser');
     Suspense = React.Suspense;
   });
-
-  async function serverAct(callback) {
-    let maybePromise;
-    await act(() => {
-      maybePromise = callback();
-      if (maybePromise && typeof maybePromise.catch === 'function') {
-        maybePromise.catch(() => {});
-      }
-    });
-    return maybePromise;
-  }
 
   const theError = new Error('This is an error');
   function Throw() {
@@ -84,9 +71,15 @@ describe('ReactDOMFizzServerBrowser', () => {
       ),
     );
     const result = await readResult(stream);
-    expect(result).toMatchInlineSnapshot(
-      `"<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/></head><body>hello world<template id="«R»"></template></body></html>"`,
-    );
+    if (gate(flags => flags.enableFizzBlockingRender)) {
+      expect(result).toMatchInlineSnapshot(
+        `"<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/></head><body>hello world<template id="«R»"></template></body></html>"`,
+      );
+    } else {
+      expect(result).toMatchInlineSnapshot(
+        `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
+      );
+    }
   });
 
   it('should emit bootstrap script src at the end', async () => {
@@ -529,7 +522,15 @@ describe('ReactDOMFizzServerBrowser', () => {
 
     const result = await readResult(stream);
     expect(result).toEqual(
-      '<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/><title>foo</title></head><body>bar<template id="«R»"></template></body></html>',
+      '<!DOCTYPE html><html><head>' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<link rel="expect" href="#«R»" blocking="render"/>'
+          : '') +
+        '<title>foo</title></head><body>bar' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<template id="«R»"></template>'
+          : '') +
+        '</body></html>',
     );
   });
 

@@ -20,6 +20,13 @@ import * as cheerio from 'cheerio';
 import {queryAlgolia} from './utils/algolia';
 import assertExhaustive from './utils/assertExhaustive';
 import {convert} from 'html-to-text';
+import {measurePerformance} from './tools/runtimePerf';
+
+function calculateMean(values: number[]): string {
+  return values.length > 0
+    ? values.reduce((acc, curr) => acc + curr, 0) / values.length + 'ms'
+    : 'could not collect';
+}
 
 const server = new McpServer({
   name: 'React',
@@ -28,7 +35,7 @@ const server = new McpServer({
 
 server.tool(
   'query-react-dev-docs',
-  'Search/look up official docs from react.dev',
+  'This tool lets you search for official docs from react.dev. This always has the most up to date information on React. You can look for documentation on APIs such as <ViewTransition>, <Activity>, and hooks like useOptimistic, useSyncExternalStore, useTransition, and more. Whenever you think hard about React, use this tool to get more information before proceeding.',
   {
     query: z.string(),
   },
@@ -71,7 +78,15 @@ server.tool(
 
 server.tool(
   'compile',
-  'Compile code with React Compiler. Optionally, for debugging provide a pass name like "HIR" to see more information.',
+  `Compile code with React Compiler. This tool will return the compiled output, which is automatically memoized React components and hooks, written in JavaScript or TypeScript. You can run this tool whenever you want to check if some React code will compile successfully. You can also run this tool every time you make a suggestion to code, to see how it affects the compiled output. If the compiler returns a diagnostic message, you should read the diagnostic message and try to fix the code and run the compiler again to verify. After compiling code successfully, you should run it through the review-react-runtime to verify the compiled code is faster than the original.
+
+  <bailouts>
+  When you encounter a bailout or diagnostic message, first think and try to understand where the error is coming from. You can use tools such as puppeteer if available to browse the documentation links provided in the diagnostic, and then read that information to understand the error in more detail. You can propose fixes after doing so.
+
+  This is a non-exhaustive list of bailouts where you should take specific actions:
+  - React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved: fix this by first removing the manual memo (useMemo/useCallback) and then try compiling again. use the review-react-runtime tool to verify that the compiled code can run without crashing. if it crashes, the original code likely breaks the Rules of React and so cannot be safely compiled.
+  </bailouts>
+  `,
   {
     text: z.string(),
     passName: z.enum(['HIR', 'ReactiveFunction', 'All', '@DEBUG']).optional(),
@@ -269,6 +284,83 @@ server.tool(
       return {
         isError: true,
         content: [{type: 'text' as const, text: `Error: ${err.stack}`}],
+      };
+    }
+  },
+);
+
+server.tool(
+  'review-react-runtime',
+  `Run this tool every time you propose a performance related change to verify if your suggestion actually improves performance.
+
+  <requirements>
+  This tool has some requirements on the code input:
+  - The react code that is passed into this tool MUST contain an App functional component without arrow function.
+  - DO NOT export anything since we can't parse export syntax with this tool.
+  - Only import React from 'react' and use all hooks and imports using the React. prefix like React.useState and React.useEffect
+  </requirements>
+
+  <goals>
+  - LCP - loading speed: good ≤ 2.5 s, needs-improvement 2.5-4 s, poor > 4 s
+  - INP - input responsiveness: good ≤ 200 ms, needs-improvement 200-500 ms, poor > 500 ms
+  - CLS - visual stability: good ≤ 0.10, needs-improvement 0.10-0.25, poor > 0.25
+  - (Optional: FCP ≤ 1.8 s, TTFB ≤ 0.8 s)
+  </goals>
+
+  <evaluation>
+  Classify each metric with the thresholds above. Identify the worst category in the order poor > needs-improvement > good.
+  </evaluation>
+
+  <iterate>
+  (repeat until every metric is good or two consecutive cycles show no gain)
+  - Always run the tool once on the original code before any modification
+  - Run the tool again after making the modification, and apply one focused change based on the failing metric plus React-specific guidance:
+    - LCP: lazy-load off-screen images, inline critical CSS, preconnect, use React.lazy + Suspense for below-the-fold modules. if the user requests for it, use React Server Components for static content (Server Components).
+    - INP: wrap non-critical updates in useTransition, avoid calling setState inside useEffect.
+    - CLS: reserve space via explicit width/height or aspect-ratio, keep stable list keys, use fixed-size skeleton loaders, animate only transform/opacity, avoid inserting ads or banners without placeholders.
+  - Compare the results of your modified code compared to the original to verify that your changes have improved performance.
+  </iterate>
+  `,
+  {
+    text: z.string(),
+    iterations: z.number().optional().default(2),
+  },
+  async ({text, iterations}) => {
+    try {
+      const results = await measurePerformance(text, iterations);
+      const formattedResults = `
+# React Component Performance Results
+
+## Mean Render Time
+${calculateMean(results.renderTime)}
+
+## Mean Web Vitals
+- Cumulative Layout Shift (CLS): ${calculateMean(results.webVitals.cls)}
+- Largest Contentful Paint (LCP): ${calculateMean(results.webVitals.lcp)}
+- Interaction to Next Paint (INP): ${calculateMean(results.webVitals.inp)}
+
+## Mean React Profiler
+- Actual Duration: ${calculateMean(results.reactProfiler.actualDuration)}
+- Base Duration: ${calculateMean(results.reactProfiler.baseDuration)}
+`;
+
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: formattedResults,
+          },
+        ],
+      };
+    } catch (error) {
+      return {
+        isError: true,
+        content: [
+          {
+            type: 'text' as const,
+            text: `Error measuring performance: ${error.message}\n\n${error.stack}`,
+          },
+        ],
       };
     }
   },

@@ -20,7 +20,7 @@ export {
   OPT_OUT_DIRECTIVES,
   OPT_IN_DIRECTIVES,
   ProgramContext,
-  findDirectiveEnablingMemoization,
+  tryFindDirectiveEnablingMemoization as findDirectiveEnablingMemoization,
   findDirectiveDisablingMemoization,
   type CompilerPipelineValue,
   type Logger,
@@ -30,7 +30,6 @@ export {
 export {
   Effect,
   ValueKind,
-  parseConfigPragmaForTests,
   printHIR,
   printFunctionWithOutlined,
   validateEnvironmentConfig,
@@ -43,6 +42,7 @@ export {
   printReactiveFunction,
   printReactiveFunctionWithOutlined,
 } from './ReactiveScopes';
+export {parseConfigPragmaForTests} from './Utils/TestUtils';
 declare global {
   let __DEV__: boolean | null | undefined;
 }

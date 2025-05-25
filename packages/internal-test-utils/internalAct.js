@@ -138,6 +138,7 @@ export async function act<T>(scope: () => Thenable<T>): Thenable<T> {
           // those will also fire now, too, which is not ideal. (The public
           // version of `act` doesn't do this.) For this reason, we should try
           // to avoid using timers in our internal tests.
+          j.runAllTicks();
           j.runOnlyPendingTimers();
           // If a committing a fallback triggers another update, it might not
           // get scheduled until a microtask. So wait one more time.
@@ -194,6 +195,39 @@ export async function act<T>(scope: () => Thenable<T>): Thenable<T> {
   }
 }
 
+async function waitForTasksAndTimers(error: Error) {
+  do {
+    // Wait until end of current task/microtask.
+    await waitForMicrotasks();
+
+    // $FlowFixMe[cannot-resolve-name]: Flow doesn't know about global Jest object
+    if (jest.isEnvironmentTornDown()) {
+      error.message =
+        'The Jest environment was torn down before `act` completed. This ' +
+        'probably means you forgot to `await` an `act` call.';
+      throw error;
+    }
+
+    // $FlowFixMe[cannot-resolve-name]: Flow doesn't know about global Jest object
+    const j = jest;
+    if (j.getTimerCount() > 0) {
+      // There's a pending timer. Flush it now. We only do this in order to
+      // force Suspense fallbacks to display; the fact that it's a timer
+      // is an implementation detail. If there are other timers scheduled,
+      // those will also fire now, too, which is not ideal. (The public
+      // version of `act` doesn't do this.) For this reason, we should try
+      // to avoid using timers in our internal tests.
+      j.runAllTicks();
+      j.runOnlyPendingTimers();
+      // If a committing a fallback triggers another update, it might not
+      // get scheduled until a microtask. So wait one more time.
+      await waitForMicrotasks();
+    } else {
+      break;
+    }
+  } while (true);
+}
+
 export async function serverAct<T>(scope: () => Thenable<T>): Thenable<T> {
   // We require every `act` call to assert console logs
   // with one of the assertion helpers. Fails if not empty.
@@ -233,37 +267,17 @@ export async function serverAct<T>(scope: () => Thenable<T>): Thenable<T> {
   }
 
   try {
-    const result = await scope();
-
-    do {
-      // Wait until end of current task/microtask.
-      await waitForMicrotasks();
-
-      // $FlowFixMe[cannot-resolve-name]: Flow doesn't know about global Jest object
-      if (jest.isEnvironmentTornDown()) {
-        error.message =
-          'The Jest environment was torn down before `act` completed. This ' +
-          'probably means you forgot to `await` an `act` call.';
-        throw error;
-      }
-
-      // $FlowFixMe[cannot-resolve-name]: Flow doesn't know about global Jest object
-      const j = jest;
-      if (j.getTimerCount() > 0) {
-        // There's a pending timer. Flush it now. We only do this in order to
-        // force Suspense fallbacks to display; the fact that it's a timer
-        // is an implementation detail. If there are other timers scheduled,
-        // those will also fire now, too, which is not ideal. (The public
-        // version of `act` doesn't do this.) For this reason, we should try
-        // to avoid using timers in our internal tests.
-        j.runOnlyPendingTimers();
-        // If a committing a fallback triggers another update, it might not
-        // get scheduled until a microtask. So wait one more time.
-        await waitForMicrotasks();
-      } else {
-        break;
-      }
-    } while (true);
+    const promise = scope();
+    // $FlowFixMe[prop-missing]
+    if (promise && typeof promise.catch === 'function') {
+      // $FlowFixMe[incompatible-use]
+      promise.catch(() => {}); // Handle below
+    }
+    // See if we need to do some work to unblock the promise first.
+    await waitForTasksAndTimers(error);
+    const result = await promise;
+    // Then wait to flush the result.
+    await waitForTasksAndTimers(error);
 
     if (thrownErrors.length > 0) {
       // Rethrow any errors logged by the global error handling.

@@ -24,6 +24,10 @@ import {
 } from 'react-reconciler/src/ReactEventPriorities';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import {HostText} from 'react-reconciler/src/ReactWorkTags';
+import {
+  getInstanceFromHostFiber,
+  traverseFragmentInstance,
+} from 'react-reconciler/src/ReactFiberTreeReflection';
 
 // Modules provided by RN:
 import {
@@ -62,7 +66,6 @@ import {
 } from './ReactNativeFiberInspector';
 
 import {
-  enableFabricCompleteRootInCommitPhase,
   passChildrenWhenCloningPersistedNodes,
   enableLazyPublicInstanceInFabric,
 } from 'shared/ReactFeatureFlags';
@@ -542,19 +545,14 @@ export function finalizeContainerChildren(
   container: Container,
   newChildren: ChildSet,
 ): void {
-  if (!enableFabricCompleteRootInCommitPhase) {
-    completeRoot(container.containerTag, newChildren);
-  }
+  // Noop - children will be replaced in replaceContainerChildren
 }
 
 export function replaceContainerChildren(
   container: Container,
   newChildren: ChildSet,
 ): void {
-  // Noop - children will be replaced in finalizeContainerChildren
-  if (enableFabricCompleteRootInCommitPhase) {
-    completeRoot(container.containerTag, newChildren);
-  }
+  completeRoot(container.containerTag, newChildren);
 }
 
 export {getClosestInstanceFromNode as getInstanceFromNode};
@@ -622,30 +620,98 @@ export function waitForCommitToBeReady(): null {
   return null;
 }
 
-export type FragmentInstanceType = null;
+export type FragmentInstanceType = {
+  _fragmentFiber: Fiber,
+  _observers: null | Set<IntersectionObserver>,
+  observeUsing: (observer: IntersectionObserver) => void,
+  unobserveUsing: (observer: IntersectionObserver) => void,
+};
+
+function FragmentInstance(this: FragmentInstanceType, fragmentFiber: Fiber) {
+  this._fragmentFiber = fragmentFiber;
+  this._observers = null;
+}
+
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.observeUsing = function (
+  this: FragmentInstanceType,
+  observer: IntersectionObserver,
+): void {
+  if (this._observers === null) {
+    this._observers = new Set();
+  }
+  this._observers.add(observer);
+  traverseFragmentInstance(this._fragmentFiber, observeChild, observer);
+};
+function observeChild(child: Fiber, observer: IntersectionObserver) {
+  const instance = getInstanceFromHostFiber<Instance>(child);
+  const publicInstance = getPublicInstance(instance);
+  if (publicInstance == null) {
+    throw new Error('Expected to find a host node. This is a bug in React.');
+  }
+  // $FlowFixMe[incompatible-call] Element types are behind a flag in RN
+  observer.observe(publicInstance);
+  return false;
+}
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.unobserveUsing = function (
+  this: FragmentInstanceType,
+  observer: IntersectionObserver,
+): void {
+  if (this._observers === null || !this._observers.has(observer)) {
+    if (__DEV__) {
+      console.error(
+        'You are calling unobserveUsing() with an observer that is not being observed with this fragment ' +
+          'instance. First attach the observer with observeUsing()',
+      );
+    }
+  } else {
+    this._observers.delete(observer);
+    traverseFragmentInstance(this._fragmentFiber, unobserveChild, observer);
+  }
+};
+function unobserveChild(child: Fiber, observer: IntersectionObserver) {
+  const instance = getInstanceFromHostFiber<Instance>(child);
+  const publicInstance = getPublicInstance(instance);
+  if (publicInstance == null) {
+    throw new Error('Expected to find a host node. This is a bug in React.');
+  }
+  // $FlowFixMe[incompatible-call] Element types are behind a flag in RN
+  observer.unobserve(publicInstance);
+  return false;
+}
 
 export function createFragmentInstance(
   fragmentFiber: Fiber,
 ): FragmentInstanceType {
-  return null;
+  return new (FragmentInstance: any)(fragmentFiber);
 }
 
 export function updateFragmentInstanceFiber(
   fragmentFiber: Fiber,
   instance: FragmentInstanceType,
 ): void {
-  // Noop
+  instance._fragmentFiber = fragmentFiber;
 }
 
 export function commitNewChildToFragmentInstance(
-  child: PublicInstance,
+  childInstance: Instance,
   fragmentInstance: FragmentInstanceType,
 ): void {
-  // Noop
+  const publicInstance = getPublicInstance(childInstance);
+  if (fragmentInstance._observers !== null) {
+    if (publicInstance == null) {
+      throw new Error('Expected to find a host node. This is a bug in React.');
+    }
+    fragmentInstance._observers.forEach(observer => {
+      // $FlowFixMe[incompatible-call] Element types are behind a flag in RN
+      observer.observe(publicInstance);
+    });
+  }
 }
 
 export function deleteChildFromFragmentInstance(
-  child: PublicInstance,
+  child: Instance,
   fragmentInstance: FragmentInstanceType,
 ): void {
   // Noop

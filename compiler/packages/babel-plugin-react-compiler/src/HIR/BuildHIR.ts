@@ -70,12 +70,14 @@ import {BuiltInArrayId} from './ObjectShape';
 export function lower(
   func: NodePath<t.Function>,
   env: Environment,
+  // Bindings captured from the outer function, in case lower() is called recursively (for lambdas)
   bindings: Bindings | null = null,
   capturedRefs: Array<t.Identifier> = [],
-  // the outermost function being compiled, in case lower() is called recursively (for lambdas)
-  parent: NodePath<t.Function> | null = null,
 ): Result<HIRFunction, CompilerError> {
-  const builder = new HIRBuilder(env, parent ?? func, bindings, capturedRefs);
+  const builder = new HIRBuilder(env, {
+    bindings,
+    context: capturedRefs,
+  });
   const context: HIRFunction['context'] = [];
 
   for (const ref of capturedRefs ?? []) {
@@ -215,7 +217,7 @@ export function lower(
   return Ok({
     id,
     params,
-    fnType: parent == null ? env.fnType : 'Other',
+    fnType: bindings == null ? env.fnType : 'Other',
     returnTypeAnnotation: null, // TODO: extract the actual return type node if present
     returnType: makeType(),
     body: builder.build(),
@@ -3417,7 +3419,7 @@ function lowerFunction(
     | t.ObjectMethod
   >,
 ): LoweredFunction | null {
-  const componentScope: Scope = builder.parentFunction.scope;
+  const componentScope: Scope = builder.environment.parentFunction.scope;
   const capturedContext = gatherCapturedContext(expr, componentScope);
 
   /*
@@ -3428,13 +3430,10 @@ function lowerFunction(
    * This isn't a problem in practice because use Babel's scope analysis to
    * identify the correct references.
    */
-  const lowering = lower(
-    expr,
-    builder.environment,
-    builder.bindings,
-    [...builder.context, ...capturedContext],
-    builder.parentFunction,
-  );
+  const lowering = lower(expr, builder.environment, builder.bindings, [
+    ...builder.context,
+    ...capturedContext,
+  ]);
   let loweredFunc: HIRFunction;
   if (lowering.isErr()) {
     lowering
@@ -3456,7 +3455,7 @@ function lowerExpressionToTemporary(
   return lowerValueToTemporary(builder, value);
 }
 
-function lowerValueToTemporary(
+export function lowerValueToTemporary(
   builder: HIRBuilder,
   value: InstructionValue,
 ): Place {
@@ -3609,31 +3608,40 @@ function lowerAssignment(
 
       let temporary;
       if (builder.isContextIdentifier(lvalue)) {
-        if (kind !== InstructionKind.Reassign && !isHoistedIdentifier) {
-          if (kind === InstructionKind.Const) {
-            builder.errors.push({
-              reason: `Expected \`const\` declaration not to be reassigned`,
-              severity: ErrorSeverity.InvalidJS,
-              loc: lvalue.node.loc ?? null,
-              suggestions: null,
-            });
-          }
-          lowerValueToTemporary(builder, {
-            kind: 'DeclareContext',
-            lvalue: {
-              kind: InstructionKind.Let,
-              place: {...place},
-            },
-            loc: place.loc,
+        if (kind === InstructionKind.Const && !isHoistedIdentifier) {
+          builder.errors.push({
+            reason: `Expected \`const\` declaration not to be reassigned`,
+            severity: ErrorSeverity.InvalidJS,
+            loc: lvalue.node.loc ?? null,
+            suggestions: null,
           });
         }
 
-        temporary = lowerValueToTemporary(builder, {
-          kind: 'StoreContext',
-          lvalue: {place: {...place}, kind: InstructionKind.Reassign},
-          value,
-          loc,
-        });
+        if (
+          kind !== InstructionKind.Const &&
+          kind !== InstructionKind.Reassign &&
+          kind !== InstructionKind.Let &&
+          kind !== InstructionKind.Function
+        ) {
+          builder.errors.push({
+            reason: `Unexpected context variable kind`,
+            severity: ErrorSeverity.InvalidJS,
+            loc: lvalue.node.loc ?? null,
+            suggestions: null,
+          });
+          temporary = lowerValueToTemporary(builder, {
+            kind: 'UnsupportedNode',
+            node: lvalueNode,
+            loc: lvalueNode.loc ?? GeneratedSource,
+          });
+        } else {
+          temporary = lowerValueToTemporary(builder, {
+            kind: 'StoreContext',
+            lvalue: {place: {...place}, kind},
+            value,
+            loc,
+          });
+        }
       } else {
         const typeAnnotation = lvalue.get('typeAnnotation');
         let type: t.FlowType | t.TSType | null;

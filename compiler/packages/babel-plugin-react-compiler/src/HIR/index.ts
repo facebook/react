@@ -17,7 +17,6 @@ export {buildReactiveScopeTerminalsHIR} from './BuildReactiveScopeTerminalsHIR';
 export {computeDominatorTree, computePostDominatorTree} from './Dominator';
 export {
   Environment,
-  parseConfigPragmaForTests,
   validateEnvironmentConfig,
   type EnvironmentConfig,
   type ExternalFunction,

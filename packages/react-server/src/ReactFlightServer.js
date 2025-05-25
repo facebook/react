@@ -62,7 +62,7 @@ import type {
   ReactAsyncInfo,
   ReactTimeInfo,
   ReactStackTrace,
-  ReactCallSite,
+  ReactFunctionLocation,
   ReactErrorInfo,
   ReactErrorInfoDev,
 } from 'shared/ReactTypes';
@@ -104,6 +104,8 @@ import {resolveOwner, setCurrentOwner} from './flight/ReactFlightCurrentOwner';
 
 import {getOwnerStackByComponentInfoInDev} from 'shared/ReactComponentInfoStack';
 import {resetOwnerStackLimit} from 'shared/ReactOwnerStackReset';
+
+import noop from 'shared/noop';
 
 import {
   callComponentInDEV,
@@ -152,11 +154,27 @@ function defaultFilterStackFrame(
   );
 }
 
+// DEV-only cache of parsed and filtered stack frames.
+const stackTraceCache: WeakMap<Error, ReactStackTrace> = __DEV__
+  ? new WeakMap()
+  : (null: any);
+
 function filterStackTrace(
   request: Request,
   error: Error,
   skipFrames: number,
 ): ReactStackTrace {
+  const existing = stackTraceCache.get(error);
+  if (existing !== undefined) {
+    // Return a clone because the Flight protocol isn't yet resilient to deduping
+    // objects in the debug info. TODO: Support deduping stacks.
+    const clone = existing.slice(0);
+    for (let i = 0; i < clone.length; i++) {
+      // $FlowFixMe[invalid-tuple-arity]
+      clone[i] = clone[i].slice(0);
+    }
+    return clone;
+  }
   // Since stacks can be quite large and we pass a lot of them, we filter them out eagerly
   // to save bandwidth even in DEV. We'll also replay these stacks on the client so by
   // stripping them early we avoid that overhead. Otherwise we'd normally just rely on
@@ -183,6 +201,7 @@ function filterStackTrace(
       i--;
     }
   }
+  stackTraceCache.set(error, stack);
   return stack;
 }
 
@@ -426,9 +445,7 @@ function defaultErrorHandler(error: mixed) {
   // Don't transform to our wrapper
 }
 
-function defaultPostponeHandler(reason: string) {
-  // Noop
-}
+const defaultPostponeHandler: (reason: string) => void = noop;
 
 function RequestInstance(
   this: $FlowFixMe,
@@ -540,8 +557,6 @@ function RequestInstance(
   );
   pingedTasks.push(rootTask);
 }
-
-function noop() {}
 
 export function createRequest(
   model: ReactClientValue,
@@ -1600,6 +1615,29 @@ function renderClientElement(
 // The chunk ID we're currently rendering that we can assign debug data to.
 let debugID: null | number = null;
 
+// Approximate string length of the currently serializing row.
+// Used to power outlining heuristics.
+let serializedSize = 0;
+const MAX_ROW_SIZE = 3200;
+
+function deferTask(request: Request, task: Task): ReactJSONValue {
+  // Like outlineTask but instead the item is scheduled to be serialized
+  // after its parent in the stream.
+  const newTask = createTask(
+    request,
+    task.model, // the currently rendering element
+    task.keyPath, // unlike outlineModel this one carries along context
+    task.implicitSlot,
+    request.abortableTasks,
+    __DEV__ ? task.debugOwner : null,
+    __DEV__ ? task.debugStack : null,
+    __DEV__ ? task.debugTask : null,
+  );
+
+  pingTask(request, newTask);
+  return serializeLazyID(newTask.id);
+}
+
 function outlineTask(request: Request, task: Task): ReactJSONValue {
   const newTask = createTask(
     request,
@@ -2049,7 +2087,7 @@ function serializeServerReference(
   const bound = boundArgs === null ? null : Promise.resolve(boundArgs);
   const id = getServerReferenceId(request.bundlerConfig, serverReference);
 
-  let location: null | ReactCallSite = null;
+  let location: null | ReactFunctionLocation = null;
   if (__DEV__) {
     const error = getServerReferenceLocation(
       request.bundlerConfig,
@@ -2058,7 +2096,13 @@ function serializeServerReference(
     if (error) {
       const frames = parseStackTrace(error, 1);
       if (frames.length > 0) {
-        location = frames[0];
+        const firstFrame = frames[0];
+        location = [
+          firstFrame[0],
+          firstFrame[1],
+          firstFrame[2], // The line and col of the callsite represents the
+          firstFrame[3], // enclosing line and col of the function.
+        ];
       }
     }
   }
@@ -2068,7 +2112,7 @@ function serializeServerReference(
     bound: null | Promise<Array<any>>,
     name?: string, // DEV-only
     env?: string, // DEV-only
-    location?: ReactCallSite, // DEV-only
+    location?: ReactFunctionLocation, // DEV-only
   } =
     __DEV__ && location !== null
       ? {
@@ -2279,6 +2323,9 @@ function renderModel(
   key: string,
   value: ReactClientValue,
 ): ReactJSONValue {
+  // First time we're serializing the key, we should add it to the size.
+  serializedSize += key.length;
+
   const prevKeyPath = task.keyPath;
   const prevImplicitSlot = task.implicitSlot;
   try {
@@ -2442,6 +2489,10 @@ function renderModelDestructive(
 
         const element: ReactElement = (value: any);
 
+        if (serializedSize > MAX_ROW_SIZE) {
+          return deferTask(request, task);
+        }
+
         if (__DEV__) {
           const debugInfo: ?ReactDebugInfo = (value: any)._debugInfo;
           if (debugInfo) {
@@ -2500,6 +2551,10 @@ function renderModelDestructive(
         return newChild;
       }
       case REACT_LAZY_TYPE: {
+        if (serializedSize > MAX_ROW_SIZE) {
+          return deferTask(request, task);
+        }
+
         // Reset the task's thenable state before continuing. If there was one, it was
         // from suspending the lazy before.
         task.thenableState = null;
@@ -2811,6 +2866,7 @@ function renderModelDestructive(
         throwTaintViolation(tainted.message);
       }
     }
+    serializedSize += value.length;
     // TODO: Maybe too clever. If we support URL there's no similar trick.
     if (value[value.length - 1] === 'Z') {
       // Possibly a Date, whose toJSON automatically calls toISOString
@@ -3932,6 +3988,11 @@ function retryTask(request: Request, task: Task): void {
   const prevDebugID = debugID;
   task.status = RENDERING;
 
+  // We stash the outer parent size so we can restore it when we exit.
+  const parentSerializedSize = serializedSize;
+  // We don't reset the serialized size counter from reentry because that indicates that we
+  // are outlining a model and we actually want to include that size into the parent since
+  // it will still block the parent row. It only restores to zero at the top of the stack.
   try {
     // Track the root so we know that we have to emit this object even though it
     // already has an ID. This is needed because we might see this object twice
@@ -4043,6 +4104,7 @@ function retryTask(request: Request, task: Task): void {
     if (__DEV__) {
       debugID = prevDebugID;
     }
+    serializedSize = parentSerializedSize;
   }
 }
 
@@ -4055,9 +4117,11 @@ function tryStreamTask(request: Request, task: Task): void {
     // so that we instead outline the row to get a new debugID if needed.
     debugID = null;
   }
+  const parentSerializedSize = serializedSize;
   try {
     emitChunk(request, task, task.model);
   } finally {
+    serializedSize = parentSerializedSize;
     if (__DEV__) {
       debugID = prevDebugID;
     }
