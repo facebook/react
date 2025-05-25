@@ -7,6 +7,8 @@ on:
     paths-ignore:
       - compiler/**
 
+permissions: {}
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
@@ -147,7 +149,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -175,7 +179,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -205,7 +211,6 @@ jobs:
           path: |
             **/node_modules
           key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          fail-on-cache-miss: true
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -264,7 +269,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-and-compiler-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -306,7 +313,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-and-compiler-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -366,9 +375,16 @@ jobs:
           # TODO: Test more persistent configurations?
         ]
         shard:
-          - 1/3
-          - 2/3
-          - 3/3
+          - 1/10
+          - 2/10
+          - 3/10
+          - 4/10
+          - 5/10
+          - 6/10
+          - 7/10
+          - 8/10
+          - 9/10
+          - 10/10
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -388,7 +404,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-and-compiler-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -408,6 +426,10 @@ jobs:
   process_artifacts_combined:
     name: Process artifacts combined
     needs: [build_and_lint, runtime_node_modules_cache]
+    permissions:
+      # https://github.com/actions/attest-build-provenance
+      id-token: write
+      attestations: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -425,7 +447,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -448,6 +472,7 @@ jobs:
         # TODO: Migrate scripts to use `build` directory instead of `build2`
       - run: cp ./build.tgz ./build2.tgz
       - name: Archive build artifacts
+        id: upload_artifacts_combined
         uses: actions/upload-artifact@v4
         with:
           name: artifacts_combined
@@ -455,6 +480,17 @@ jobs:
             ./build.tgz
             ./build2.tgz
           if-no-files-found: error
+      - uses: actions/attest-build-provenance@v2
+        # We don't verify builds generated from pull requests not originating from facebook/react.
+        # However, if the PR lands, the run on `main` will generate the attestation which can then
+        # be used to download a build via scripts/release/download-experimental-build.js.
+        #
+        # Note that this means that scripts/release/download-experimental-build.js must be run with
+        # --no-verify when downloading a build from a fork.
+        if: github.event_name == 'push' && github.ref_name == 'main' || github.event.pull_request.head.repo.full_name == github.repository
+        with:
+          subject-name: artifacts_combined.zip
+          subject-digest: sha256:${{ steps.upload_artifacts_combined.outputs.artifact-digest }}
 
   check_error_codes:
     name: Search build artifacts for unminified errors
@@ -476,7 +512,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -514,7 +552,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -664,7 +704,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -719,7 +761,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -742,6 +786,9 @@ jobs:
     if: ${{ github.event_name == 'pull_request' && github.ref_name != 'main' && github.event.pull_request.base.ref == 'main' }}
     name: Run sizebot
     needs: [build_and_lint]
+    permissions:
+      # We use github.token to download the build artifact from a previous runtime_build_and_test.yml run
+      actions: read
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -766,14 +813,18 @@ jobs:
       - run: yarn --cwd scripts/release install --frozen-lockfile
         if: steps.node_modules.outputs.cache-hit != 'true'
       - name: Download artifacts for base revision
+        # The build could have been generated from a fork, so we must download the build without
+        # any verification. This is safe since we only use this for sizebot calculation and the
+        # unverified artifact is not used. Additionally this workflow runs in the pull_request
+        # trigger so only restricted permissions are available.
         run: |
-          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=$(git rev-parse ${{ github.event.pull_request.base.sha }})
+          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=$(git rev-parse ${{ github.event.pull_request.base.sha }}) ${{ (github.event.pull_request.head.repo.full_name != github.repository && '--noVerify') || ''}}
           mv ./build ./base-build
-      # TODO: The `download-experimental-build` script copies the npm
-      # packages into the `node_modules` directory. This is a historical
-      # quirk of how the release script works. Let's pretend they
-      # don't exist.
       - name: Delete extraneous files
+        # TODO: The `download-experimental-build` script copies the npm
+        # packages into the `node_modules` directory. This is a historical
+        # quirk of how the release script works. Let's pretend they
+        # don't exist.
         run: rm -rf ./base-build/node_modules
       - name: Display structure of base-build from origin/main
         run: ls -R base-build

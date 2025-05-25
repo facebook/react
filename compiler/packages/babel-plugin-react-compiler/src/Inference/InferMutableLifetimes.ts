@@ -11,7 +11,10 @@ import {
   Identifier,
   InstructionId,
   InstructionKind,
+  isArrayType,
+  isMapType,
   isRefOrRefValue,
+  isSetType,
   makeInstructionId,
   Place,
 } from '../HIR/HIR';
@@ -90,6 +93,17 @@ function inferPlace(
         infer(place, instrId);
       }
       return;
+    case Effect.ConditionallyMutateIterator: {
+      const identifier = place.identifier;
+      if (
+        !isArrayType(identifier) &&
+        !isSetType(identifier) &&
+        !isMapType(identifier)
+      ) {
+        infer(place, instrId);
+      }
+      return;
+    }
     case Effect.ConditionallyMutate:
     case Effect.Mutate: {
       infer(place, instrId);
@@ -162,9 +176,15 @@ export function inferMutableLifetimes(
       if (
         instr.value.kind === 'DeclareContext' ||
         (instr.value.kind === 'StoreContext' &&
-          instr.value.lvalue.kind !== InstructionKind.Reassign)
+          instr.value.lvalue.kind !== InstructionKind.Reassign &&
+          !contextVariableDeclarationInstructions.has(
+            instr.value.lvalue.place.identifier,
+          ))
       ) {
-        // Save declarations of context variables
+        /**
+         * Save declarations of context variables if they hasn't already been
+         * declared (due to hoisted declarations).
+         */
         contextVariableDeclarationInstructions.set(
           instr.value.lvalue.place.identifier,
           instr.id,

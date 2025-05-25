@@ -8,6 +8,8 @@ on:
       - compiler/**
       - .github/workflows/compiler_playground.yml
 
+permissions: {}
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
@@ -38,8 +40,12 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/**/yarn.lock') }}
+          key: compiler-and-playground-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        working-directory: compiler
+      - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - name: Check Playwright version
         id: playwright_version
         run: echo "playwright_version=$(npm ls @playwright/test | grep @playwright | sed 's/.*@//' | head -1)" >> "$GITHUB_OUTPUT"

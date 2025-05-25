@@ -8,7 +8,7 @@
 import {NodePath} from '@babel/traverse';
 import * as t from '@babel/types';
 import prettyFormat from 'pretty-format';
-import {Logger} from '.';
+import {Logger, ProgramContext} from '.';
 import {
   HIRFunction,
   ReactiveFunction,
@@ -103,6 +103,7 @@ import {transformFire} from '../Transform';
 import {validateNoImpureFunctionsInRender} from '../Validation/ValidateNoImpureFunctionsInRender';
 import {CompilerError} from '..';
 import {validateStaticComponents} from '../Validation/ValidateStaticComponents';
+import {validateNoFreezingKnownMutableFunctions} from '../Validation/ValidateNoFreezingKnownMutableFunctions';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -117,7 +118,7 @@ function run(
   config: EnvironmentConfig,
   fnType: ReactFunctionType,
   mode: CompilerMode,
-  useMemoCacheIdentifier: string,
+  programContext: ProgramContext,
   logger: Logger | null,
   filename: string | null,
   code: string | null,
@@ -129,10 +130,11 @@ function run(
     mode,
     config,
     contextIdentifiers,
+    func,
     logger,
     filename,
     code,
-    useMemoCacheIdentifier,
+    programContext,
   );
   env.logger?.debugLogIRs?.({
     kind: 'debug',
@@ -274,6 +276,10 @@ function runWithEnvironment(
     if (env.config.validateNoImpureFunctionsInRender) {
       validateNoImpureFunctionsInRender(hir).unwrap();
     }
+
+    if (env.config.validateNoFreezingKnownMutableFunctions) {
+      validateNoFreezingKnownMutableFunctions(hir).unwrap();
+    }
   }
 
   inferReactivePlaces(hir);
@@ -392,6 +398,11 @@ function runWithEnvironment(
 
   if (env.config.inferEffectDependencies) {
     inferEffectDependencies(hir);
+    log({
+      kind: 'hir',
+      name: 'InferEffectDependencies',
+      value: hir,
+    });
   }
 
   if (env.config.inlineJsxTransform) {
@@ -552,7 +563,7 @@ export function compileFn(
   config: EnvironmentConfig,
   fnType: ReactFunctionType,
   mode: CompilerMode,
-  useMemoCacheIdentifier: string,
+  programContext: ProgramContext,
   logger: Logger | null,
   filename: string | null,
   code: string | null,
@@ -562,7 +573,7 @@ export function compileFn(
     config,
     fnType,
     mode,
-    useMemoCacheIdentifier,
+    programContext,
     logger,
     filename,
     code,

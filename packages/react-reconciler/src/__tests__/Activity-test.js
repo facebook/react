@@ -9,7 +9,6 @@ let useLayoutEffect;
 let useEffect;
 let useInsertionEffect;
 let useMemo;
-let useRef;
 let startTransition;
 let waitForPaint;
 let waitFor;
@@ -31,7 +30,6 @@ describe('Activity', () => {
     useLayoutEffect = React.useLayoutEffect;
     useEffect = React.useEffect;
     useMemo = React.useMemo;
-    useRef = React.useRef;
     startTransition = React.startTransition;
 
     const InternalTestUtils = require('internal-test-utils');
@@ -44,30 +42,6 @@ describe('Activity', () => {
   function Text(props) {
     Scheduler.log(props.text);
     return <span prop={props.text}>{props.children}</span>;
-  }
-
-  function LoggedText({text, children}) {
-    useInsertionEffect(() => {
-      Scheduler.log(`mount insertion ${text}`);
-      return () => {
-        Scheduler.log(`unmount insertion ${text}`);
-      };
-    });
-
-    useEffect(() => {
-      Scheduler.log(`mount ${text}`);
-      return () => {
-        Scheduler.log(`unmount ${text}`);
-      };
-    });
-
-    useLayoutEffect(() => {
-      Scheduler.log(`mount layout ${text}`);
-      return () => {
-        Scheduler.log(`unmount layout ${text}`);
-      };
-    });
-    return <Text text={text}>{children}</Text>;
   }
 
   // @gate enableLegacyHidden
@@ -758,7 +732,7 @@ describe('Activity', () => {
 
     const root = ReactNoop.createRoot();
     await act(() => {
-      root.render(<Activity hidden={false} />);
+      root.render(<Activity />);
     });
     assertLog([]);
     expect(root).toMatchRenderedOutput(null);
@@ -767,7 +741,7 @@ describe('Activity', () => {
       // Partially render a component
       startTransition(() => {
         root.render(
-          <Activity hidden={false}>
+          <Activity>
             <Child />
             <Text text="Sibling" />
           </Activity>,
@@ -790,7 +764,7 @@ describe('Activity', () => {
       assertConsoleErrorDev([
         "Can't perform a React state update on a component that hasn't mounted yet. " +
           'This indicates that you have a side-effect in your render function that ' +
-          'asynchronously later calls tries to update the component. ' +
+          'asynchronously tries to update the component. ' +
           'Move this work to useEffect instead.\n' +
           '    in Child (at **)',
       ]);
@@ -1507,640 +1481,27 @@ describe('Activity', () => {
     expect(root).toMatchRenderedOutput(<span prop={2} />);
   });
 
-  describe('manual interactivity', () => {
-    // @gate enableActivity
-    it('should attach ref only for mode null', async () => {
-      let offscreenRef;
-
-      function App({mode}) {
-        offscreenRef = useRef(null);
-        return (
-          <Activity
-            mode={mode}
-            ref={ref => {
-              offscreenRef.current = ref;
-            }}>
-            <div />
-          </Activity>
-        );
-      }
-
-      const root = ReactNoop.createRoot();
-
-      await act(() => {
-        root.render(<App mode={'manual'} />);
-      });
-
-      expect(offscreenRef.current).not.toBeNull();
-
-      await act(() => {
-        root.render(<App mode={'visible'} />);
-      });
-
-      expect(offscreenRef.current).toBeNull();
-
-      await act(() => {
-        root.render(<App mode={'hidden'} />);
-      });
-
-      expect(offscreenRef.current).toBeNull();
-
-      await act(() => {
-        root.render(<App mode={'manual'} />);
-      });
-
-      expect(offscreenRef.current).not.toBeNull();
-    });
-
-    // @gate enableActivity
-    it('should lower update priority for detached Activity', async () => {
-      let updateChildState;
-      let updateHighPriorityComponentState;
-      let offscreenRef;
-
-      function Child() {
-        const [state, _stateUpdate] = useState(0);
-        updateChildState = _stateUpdate;
-        const text = 'Child ' + state;
-        return <Text text={text} />;
-      }
-
-      function HighPriorityComponent(props) {
-        const [state, _stateUpdate] = useState(0);
-        updateHighPriorityComponentState = _stateUpdate;
-        const text = 'HighPriorityComponent ' + state;
-        return (
-          <>
-            <Text text={text} />
-            {props.children}
-          </>
-        );
-      }
-
-      function App() {
-        offscreenRef = useRef(null);
-        return (
-          <>
-            <HighPriorityComponent>
-              <Activity mode={'manual'} ref={offscreenRef}>
-                <Child />
-              </Activity>
-            </HighPriorityComponent>
-          </>
-        );
-      }
-
-      const root = ReactNoop.createRoot();
-
-      await act(() => {
-        root.render(<App />);
-      });
-
-      assertLog(['HighPriorityComponent 0', 'Child 0']);
-      expect(root).toMatchRenderedOutput(
-        <>
-          <span prop="HighPriorityComponent 0" />
-          <span prop="Child 0" />
-        </>,
-      );
-
-      expect(offscreenRef.current).not.toBeNull();
-
-      // Activity is attached by default. State updates from offscreen are **not defered**.
-      await act(async () => {
-        updateChildState(1);
-        updateHighPriorityComponentState(1);
-        await waitForPaint(['HighPriorityComponent 1', 'Child 1']);
-        expect(root).toMatchRenderedOutput(
-          <>
-            <span prop="HighPriorityComponent 1" />
-            <span prop="Child 1" />
-          </>,
-        );
-      });
-
-      await act(() => {
-        offscreenRef.current.detach();
-      });
-
-      // Activity is detached. State updates from offscreen are **defered**.
-      await act(async () => {
-        updateChildState(2);
-        updateHighPriorityComponentState(2);
-        await waitForPaint(['HighPriorityComponent 2']);
-        expect(root).toMatchRenderedOutput(
-          <>
-            <span prop="HighPriorityComponent 2" />
-            <span prop="Child 1" />
-          </>,
-        );
-      });
-
-      assertLog(['Child 2']);
-      expect(root).toMatchRenderedOutput(
-        <>
-          <span prop="HighPriorityComponent 2" />
-          <span prop="Child 2" />
-        </>,
-      );
-
-      await act(() => {
-        offscreenRef.current.attach();
-      });
-
-      // Activity is attached. State updates from offscreen are **not defered**.
-      await act(async () => {
-        updateChildState(3);
-        updateHighPriorityComponentState(3);
-        await waitForPaint(['HighPriorityComponent 3', 'Child 3']);
-        expect(root).toMatchRenderedOutput(
-          <>
-            <span prop="HighPriorityComponent 3" />
-            <span prop="Child 3" />
-          </>,
-        );
-      });
-    });
-
-    // @gate enableActivity
-    it('defers detachment if called during commit', async () => {
-      let updateChildState;
-      let updateHighPriorityComponentState;
-      let offscreenRef;
-      let nextRenderTriggerDetach = false;
-      let nextRenderTriggerAttach = false;
-
-      function Child() {
-        const [state, _stateUpdate] = useState(0);
-        updateChildState = _stateUpdate;
-        const text = 'Child ' + state;
-        return <Text text={text} />;
-      }
-
-      function HighPriorityComponent(props) {
-        const [state, _stateUpdate] = useState(0);
-        updateHighPriorityComponentState = _stateUpdate;
-        const text = 'HighPriorityComponent ' + state;
-        useLayoutEffect(() => {
-          if (nextRenderTriggerDetach) {
-            _stateUpdate(state + 1);
-            updateChildState(state + 1);
-            offscreenRef.current.detach();
-            nextRenderTriggerDetach = false;
-          }
-
-          if (nextRenderTriggerAttach) {
-            offscreenRef.current.attach();
-            nextRenderTriggerAttach = false;
-          }
-        });
-        return (
-          <>
-            <Text text={text} />
-            {props.children}
-          </>
-        );
-      }
-
-      function App() {
-        offscreenRef = useRef(null);
-        return (
-          <>
-            <HighPriorityComponent>
-              <Activity mode={'manual'} ref={offscreenRef}>
-                <Child />
-              </Activity>
-            </HighPriorityComponent>
-          </>
-        );
-      }
-
-      const root = ReactNoop.createRoot();
-
-      await act(() => {
-        root.render(<App />);
-      });
-
-      assertLog(['HighPriorityComponent 0', 'Child 0']);
-
-      nextRenderTriggerDetach = true;
-
-      // Activity is attached and gets detached inside useLayoutEffect.
-      // State updates from offscreen are **defered**.
-      await act(async () => {
-        updateChildState(1);
-        updateHighPriorityComponentState(1);
-        await waitForPaint([
-          'HighPriorityComponent 1',
-          'Child 1',
-          'HighPriorityComponent 2',
-        ]);
-        expect(root).toMatchRenderedOutput(
-          <>
-            <span prop="HighPriorityComponent 2" />
-            <span prop="Child 1" />
-          </>,
-        );
-      });
-
-      assertLog(['Child 2']);
-      expect(root).toMatchRenderedOutput(
-        <>
-          <span prop="HighPriorityComponent 2" />
-          <span prop="Child 2" />
-        </>,
-      );
-
-      nextRenderTriggerAttach = true;
-
-      // Activity is detached. State updates from offscreen are **defered**.
-      // Activity is attached inside useLayoutEffect;
-      await act(async () => {
-        updateChildState(3);
-        updateHighPriorityComponentState(3);
-        await waitForPaint(['HighPriorityComponent 3', 'Child 3']);
-        expect(root).toMatchRenderedOutput(
-          <>
-            <span prop="HighPriorityComponent 3" />
-            <span prop="Child 3" />
-          </>,
-        );
-      });
-    });
-  });
-
   // @gate enableActivity
-  it('should detach ref if Activity is unmounted', async () => {
-    let offscreenRef;
-
-    function App({showOffscreen}) {
-      offscreenRef = useRef(null);
-      return showOffscreen ? (
-        <Activity
-          mode={'manual'}
-          ref={ref => {
-            offscreenRef.current = ref;
-          }}>
+  it('warns if you pass a hidden prop', async () => {
+    function App() {
+      return (
+        // eslint-disable-next-line react/jsx-boolean-value
+        <Activity hidden>
           <div />
         </Activity>
-      ) : null;
-    }
-
-    const root = ReactNoop.createRoot();
-
-    await act(() => {
-      root.render(<App showOffscreen={true} />);
-    });
-
-    expect(offscreenRef.current).not.toBeNull();
-
-    await act(() => {
-      root.render(<App showOffscreen={false} />);
-    });
-
-    expect(offscreenRef.current).toBeNull();
-
-    await act(() => {
-      root.render(<App showOffscreen={true} />);
-    });
-
-    expect(offscreenRef.current).not.toBeNull();
-  });
-
-  // @gate enableActivity
-  it('should detach ref when parent Activity is hidden', async () => {
-    let offscreenRef;
-
-    function App({mode}) {
-      offscreenRef = useRef(null);
-      return (
-        <Activity mode={mode}>
-          <Activity mode={'manual'} ref={offscreenRef}>
-            <div />
-          </Activity>
-        </Activity>
       );
     }
 
     const root = ReactNoop.createRoot();
-
     await act(() => {
-      root.render(<App mode={'hidden'} />);
+      root.render(<App show={true} step={1} />);
     });
-
-    expect(offscreenRef.current).toBeNull();
-
-    await act(() => {
-      root.render(<App mode={'visible'} />);
-    });
-
-    expect(offscreenRef.current).not.toBeNull();
-    await act(() => {
-      root.render(<App mode={'hidden'} />);
-    });
-
-    expect(offscreenRef.current).toBeNull();
-  });
-
-  // @gate enableActivity
-  it('should change _current', async () => {
-    let offscreenRef;
-    const root = ReactNoop.createRoot();
-
-    function App({children}) {
-      offscreenRef = useRef(null);
-      return (
-        <Activity mode={'manual'} ref={offscreenRef}>
-          {children}
-        </Activity>
-      );
-    }
-
-    await act(() => {
-      root.render(
-        <App>
-          <div />
-        </App>,
-      );
-    });
-
-    expect(offscreenRef.current).not.toBeNull();
-    const firstFiber = offscreenRef.current._current;
-
-    await act(() => {
-      root.render(
-        <App>
-          <span />
-        </App>,
-      );
-    });
-
-    expect(offscreenRef.current._current === firstFiber).toBeFalsy();
-  });
-
-  // @gate enableActivity
-  it('does not mount tree until attach is called', async () => {
-    let offscreenRef;
-    let spanRef;
-
-    function Child() {
-      spanRef = useRef(null);
-      useEffect(() => {
-        Scheduler.log('Mount Child');
-        return () => {
-          Scheduler.log('Unmount Child');
-        };
-      });
-      useLayoutEffect(() => {
-        Scheduler.log('Mount Layout Child');
-        return () => {
-          Scheduler.log('Unmount Layout Child');
-        };
-      });
-
-      return <span ref={spanRef}>Child</span>;
-    }
-
-    function App() {
-      return (
-        <Activity mode={'manual'} ref={el => (offscreenRef = el)}>
-          <Child />
-        </Activity>
-      );
-    }
-
-    const root = ReactNoop.createRoot();
-
-    await act(() => {
-      root.render(<App />);
-    });
-
-    expect(offscreenRef).not.toBeNull();
-    expect(spanRef.current).not.toBeNull();
-    assertLog(['Mount Layout Child', 'Mount Child']);
-
-    await act(() => {
-      offscreenRef.detach();
-    });
-
-    expect(spanRef.current).toBeNull();
-    assertLog(['Unmount Layout Child', 'Unmount Child']);
-
-    // Calling attach on already attached Activity.
-    await act(() => {
-      offscreenRef.detach();
-    });
-
-    assertLog([]);
-
-    await act(() => {
-      offscreenRef.attach();
-    });
-
-    expect(spanRef.current).not.toBeNull();
-    assertLog(['Mount Layout Child', 'Mount Child']);
-
-    // Calling attach on already attached Activity
-    offscreenRef.attach();
-
-    assertLog([]);
-  });
-
-  // @gate enableActivity
-  it('handles nested manual offscreens', async () => {
-    let outerOffscreen;
-    let innerOffscreen;
-
-    function App() {
-      return (
-        <LoggedText text={'outer'}>
-          <Activity mode={'manual'} ref={el => (outerOffscreen = el)}>
-            <LoggedText text={'middle'}>
-              <Activity mode={'manual'} ref={el => (innerOffscreen = el)}>
-                <LoggedText text={'inner'} />
-              </Activity>
-            </LoggedText>
-          </Activity>
-        </LoggedText>
-      );
-    }
-
-    const root = ReactNoop.createRoot();
-
-    await act(() => {
-      root.render(<App />);
-    });
-
-    assertLog([
-      'outer',
-      'middle',
-      'inner',
-      'mount insertion inner',
-      'mount insertion middle',
-      'mount insertion outer',
-      'mount layout inner',
-      'mount layout middle',
-      'mount layout outer',
-      'mount inner',
-      'mount middle',
-      'mount outer',
+    assertConsoleErrorDev([
+      '<Activity> doesn\'t accept a hidden prop. Use mode="hidden" instead.\n' +
+        '- <Activity hidden>\n' +
+        '+ <Activity mode="hidden">\n' +
+        '    in Activity (at **)\n' +
+        '    in App (at **)',
     ]);
-
-    expect(outerOffscreen).not.toBeNull();
-    expect(innerOffscreen).not.toBeNull();
-
-    await act(() => {
-      outerOffscreen.detach();
-    });
-
-    expect(innerOffscreen).toBeNull();
-
-    assertLog([
-      'unmount layout middle',
-      'unmount layout inner',
-      'unmount middle',
-      'unmount inner',
-    ]);
-
-    await act(() => {
-      outerOffscreen.attach();
-    });
-
-    assertLog([
-      'mount layout inner',
-      'mount layout middle',
-      'mount inner',
-      'mount middle',
-    ]);
-
-    await act(() => {
-      innerOffscreen.detach();
-    });
-
-    assertLog(['unmount layout inner', 'unmount inner']);
-
-    // Calling detach on already detached Activity.
-    await act(() => {
-      innerOffscreen.detach();
-    });
-
-    assertLog([]);
-
-    await act(() => {
-      innerOffscreen.attach();
-    });
-
-    assertLog(['mount layout inner', 'mount inner']);
-
-    await act(() => {
-      innerOffscreen.detach();
-      outerOffscreen.attach();
-    });
-
-    assertLog(['unmount layout inner', 'unmount inner']);
-
-    await act(() => {
-      root.render(null);
-    });
-
-    assertLog([
-      'unmount insertion outer',
-      'unmount layout outer',
-      'unmount insertion middle',
-      'unmount layout middle',
-      ...(gate('enableHiddenSubtreeInsertionEffectCleanup')
-        ? ['unmount insertion inner']
-        : []),
-      'unmount outer',
-      'unmount middle',
-    ]);
-  });
-
-  // @gate enableActivity
-  it('batches multiple attach and detach calls scheduled from an event handler', async () => {
-    function Child() {
-      useEffect(() => {
-        Scheduler.log('attach child');
-        return () => {
-          Scheduler.log('detach child');
-        };
-      }, []);
-      return 'child';
-    }
-
-    const offscreen = React.createRef(null);
-    function App() {
-      return (
-        <Activity ref={offscreen} mode="manual">
-          <Child />
-        </Activity>
-      );
-    }
-
-    const root = ReactNoop.createRoot();
-    await act(() => {
-      root.render(<App />);
-    });
-
-    assertLog(['attach child']);
-
-    await act(() => {
-      const instance = offscreen.current;
-      // Detach then immediately attach the instance.
-      instance.detach();
-      instance.attach();
-    });
-
-    assertLog([]);
-
-    await act(() => {
-      const instance = offscreen.current;
-      instance.detach();
-    });
-
-    assertLog(['detach child']);
-
-    await act(() => {
-      const instance = offscreen.current;
-      // Attach then immediately detach.
-      instance.attach();
-      instance.detach();
-    });
-
-    assertLog([]);
-  });
-
-  // @gate enableActivity
-  it('batches multiple attach and detach calls scheduled from an effect', async () => {
-    function Child() {
-      useEffect(() => {
-        Scheduler.log('attach child');
-        return () => {
-          Scheduler.log('detach child');
-        };
-      }, []);
-      return 'child';
-    }
-
-    function App() {
-      const offscreen = useRef(null);
-      useLayoutEffect(() => {
-        const instance = offscreen.current;
-        // Detach then immediately attach the instance.
-        instance.detach();
-        instance.attach();
-      }, []);
-      return (
-        <Activity ref={offscreen} mode="manual">
-          <Child />
-        </Activity>
-      );
-    }
-
-    const root = ReactNoop.createRoot();
-    await act(() => {
-      root.render(<App />);
-    });
-    assertLog(['attach child']);
   });
 });

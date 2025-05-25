@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 import {CompilerError} from '..';
 import {assertNonNull} from './CollectHoistablePropertyLoads';
 import {
@@ -283,6 +290,7 @@ function traverseOptionalBlock(
     );
     baseObject = {
       identifier: maybeTest.instructions[0].value.place.identifier,
+      reactive: maybeTest.instructions[0].value.place.reactive,
       path,
     };
     test = maybeTest.terminal;
@@ -384,6 +392,7 @@ function traverseOptionalBlock(
   );
   const load = {
     identifier: baseObject.identifier,
+    reactive: baseObject.reactive,
     path: [
       ...baseObject.path,
       {

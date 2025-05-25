@@ -20,17 +20,16 @@ const dynamicFlags: DynamicExportsType = (dynamicFlagsUntyped: any);
 // the exports object every time a flag is read.
 export const {
   alwaysThrottleRetries,
-  enableFabricCompleteRootInCommitPhase,
   enableHiddenSubtreeInsertionEffectCleanup,
   enableObjectFiber,
   enablePersistedModeClonedFlag,
   enableShallowPropDiffing,
-  enableUseEffectCRUDOverload,
+  enableEagerAlternateStateNodeCleanup,
   passChildrenWhenCloningPersistedNodes,
-  enableSiblingPrerendering,
   enableFastAddPropertiesInDiffing,
   enableLazyPublicInstanceInFabric,
   renameElementSymbol,
+  enableFragmentRefs,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
@@ -81,9 +80,14 @@ export const enableHydrationLaneScheduling = true;
 export const enableYieldingBeforePassive = false;
 export const enableThrottledScheduling = false;
 export const enableViewTransition = false;
-export const enableSwipeTransition = false;
+export const enableGestureTransition = false;
 export const enableScrollEndPolyfill = true;
-export const enableFragmentRefs = false;
+export const enableSuspenseyImages = false;
+export const enableFizzBlockingRender = true;
+export const enableSrcObject = false;
+export const enableHydrationChangeEvent = true;
+export const enableDefaultTransitionIndicator = false;
+export const ownerStackLimit = 1e4;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

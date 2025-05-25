@@ -21,6 +21,7 @@ let ReactDOM;
 let ReactDOMClient;
 let ReactDOMFizzServer;
 let Suspense;
+let SuspenseList;
 let textCache;
 let loadCache;
 let writable;
@@ -63,6 +64,9 @@ describe('ReactDOMFloat', () => {
     global.Node = global.window.Node;
     global.addEventListener = global.window.addEventListener;
     global.MutationObserver = global.window.MutationObserver;
+    // The Fizz runtime assumes requestAnimationFrame exists so we need to polyfill it.
+    global.requestAnimationFrame = global.window.requestAnimationFrame = cb =>
+      setTimeout(cb);
     container = document.getElementById('container');
 
     React = require('react');
@@ -71,6 +75,7 @@ describe('ReactDOMFloat', () => {
     ReactDOMFizzServer = require('react-dom/server');
     Stream = require('stream');
     Suspense = React.Suspense;
+    SuspenseList = React.unstable_SuspenseList;
     Scheduler = require('scheduler/unstable_mock');
 
     const InternalTestUtils = require('internal-test-utils');
@@ -122,6 +127,7 @@ describe('ReactDOMFloat', () => {
     buffer = '';
 
     if (!bufferedContent) {
+      jest.runAllTimers();
       return;
     }
 
@@ -230,6 +236,9 @@ describe('ReactDOMFloat', () => {
       div.innerHTML = bufferedContent;
       await insertNodesAndExecuteScripts(div, streamingContainer, CSPnonce);
     }
+    await 0;
+    // Let throttled boundaries reveal
+    jest.runAllTimers();
   }
 
   function getMeaningfulChildren(element) {
@@ -250,7 +259,10 @@ describe('ReactDOMFloat', () => {
             node.tagName !== 'TEMPLATE' &&
             node.tagName !== 'template' &&
             !node.hasAttribute('hidden') &&
-            !node.hasAttribute('aria-hidden'))
+            !node.hasAttribute('aria-hidden') &&
+            // Ignore the render blocking expect
+            (node.getAttribute('rel') !== 'expect' ||
+              node.getAttribute('blocking') !== 'render'))
         ) {
           const props = {};
           const attributes = node.attributes;
@@ -690,7 +702,18 @@ describe('ReactDOMFloat', () => {
       pipe(writable);
     });
     expect(chunks).toEqual([
-      '<!DOCTYPE html><html><head><script async="" src="foo"></script><title>foo</title></head><body>bar',
+      '<!DOCTYPE html><html><head><script async="" src="foo"></script>' +
+        (gate(flags => flags.shouldUseFizzExternalRuntime)
+          ? '<script src="react-dom/unstable_server-external-runtime" async=""></script>'
+          : '') +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<link rel="expect" href="#«R»" blocking="render"/>'
+          : '') +
+        '<title>foo</title></head>' +
+        '<body>bar' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<template id="«R»"></template>'
+          : ''),
       '</body></html>',
     ]);
   });
@@ -724,7 +747,9 @@ describe('ReactDOMFloat', () => {
     });
 
     expect(
-      Array.from(document.getElementsByTagName('script')).map(n => n.outerHTML),
+      Array.from(document.querySelectorAll('script[async]')).map(
+        n => n.outerHTML,
+      ),
     ).toEqual(['<script src="src-of-external-runtime" async=""></script>']);
   });
 
@@ -1260,9 +1285,7 @@ body {
     const suspenseInstance = boundaryTemplateInstance.previousSibling;
 
     expect(suspenseInstance.data).toEqual('$!');
-    expect(boundaryTemplateInstance.dataset.dgst).toBe(
-      'Resource failed to load',
-    );
+    expect(boundaryTemplateInstance.dataset.dgst).toBe('CSS failed to load');
 
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
@@ -1308,7 +1331,7 @@ body {
     );
     expect(errors).toEqual([
       'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
-      'Resource failed to load',
+      'CSS failed to load',
     ]);
   });
 
@@ -3606,6 +3629,7 @@ body {
     assertConsoleErrorDev([
       "Hydration failed because the server rendered HTML didn't match the client.",
     ]);
+    jest.runAllTimers();
 
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
@@ -5199,6 +5223,10 @@ body {
       </html>,
     );
     loadStylesheets();
+    // Let the styles flush and then flush the boundaries
+    await 0;
+    await 0;
+    jest.runAllTimers();
     assertLog([
       'load stylesheet: shell preinit/shell',
       'load stylesheet: shell/shell preinit',
@@ -5715,6 +5743,181 @@ body {
           <div>inner blocked fallback</div>
           <link rel="preload" href="completed inner" as="style" />
           <link rel="preload" href="in fallback inner" as="style" />
+        </body>
+      </html>,
+    );
+  });
+
+  // @gate enableSuspenseList
+  it('delays "forwards" SuspenseList rows until the css of previous rows have completed', async () => {
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <Suspense fallback="loading...">
+              <SuspenseList revealOrder="forwards">
+                <Suspense fallback="loading foo...">
+                  <BlockedOn value="foo">
+                    <link rel="stylesheet" href="foo" precedence="foo" />
+                    foo
+                  </BlockedOn>
+                </Suspense>
+                <Suspense fallback="loading bar...">bar</Suspense>
+                <BlockedOn value="bar">
+                  <Suspense fallback="loading baz...">
+                    <BlockedOn value="baz">baz</BlockedOn>
+                  </Suspense>
+                </BlockedOn>
+              </SuspenseList>
+            </Suspense>
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>loading...</body>
+      </html>,
+    );
+
+    // unblock css loading
+    await act(() => {
+      resolveText('foo');
+    });
+
+    // bar is still blocking the whole list
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="foo" />
+        </head>
+        <body>
+          {'loading...'}
+          <link as="style" href="foo" rel="preload" />
+        </body>
+      </html>,
+    );
+
+    // unblock inner loading states
+    await act(() => {
+      resolveText('bar');
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="foo" />
+        </head>
+        <body>
+          {'loading foo...'}
+          {'loading bar...'}
+          {'loading baz...'}
+          <link as="style" href="foo" rel="preload" />
+        </body>
+      </html>,
+    );
+
+    // resolve the last boundary
+    await act(() => {
+      resolveText('baz');
+    });
+
+    // still blocked on the css of the first row
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="foo" />
+        </head>
+        <body>
+          {'loading foo...'}
+          {'loading bar...'}
+          {'loading baz...'}
+          <link as="style" href="foo" rel="preload" />
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      loadStylesheets();
+    });
+    await assertLog(['load stylesheet: foo']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="foo" />
+        </head>
+        <body>
+          {'foo'}
+          {'bar'}
+          {'baz'}
+          <link as="style" href="foo" rel="preload" />
+        </body>
+      </html>,
+    );
+  });
+
+  // @gate enableSuspenseList
+  it('delays "together" SuspenseList rows until the css of previous rows have completed', async () => {
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <SuspenseList revealOrder="together">
+              <Suspense fallback="loading foo...">
+                <BlockedOn value="foo">
+                  <link rel="stylesheet" href="foo" precedence="foo" />
+                  foo
+                </BlockedOn>
+              </Suspense>
+              <Suspense fallback="loading bar...">bar</Suspense>
+            </SuspenseList>
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          {'loading foo...'}
+          {'loading bar...'}
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('foo');
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="foo" />
+        </head>
+        <body>
+          {'loading foo...'}
+          {'loading bar...'}
+          <link as="style" href="foo" rel="preload" />
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      loadStylesheets();
+    });
+    await assertLog(['load stylesheet: foo']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="foo" />
+        </head>
+        <body>
+          {'foo'}
+          {'bar'}
+          <link as="style" href="foo" rel="preload" />
         </body>
       </html>,
     );

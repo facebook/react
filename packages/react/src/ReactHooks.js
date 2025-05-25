@@ -13,16 +13,10 @@ import type {
   StartTransitionOptions,
   Usable,
   Awaited,
-  StartGesture,
 } from 'shared/ReactTypes';
 import {REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-
-import {
-  enableUseEffectCRUDOverload,
-  enableSwipeTransition,
-} from 'shared/ReactFeatureFlags';
 
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
@@ -91,11 +85,8 @@ export function useRef<T>(initialValue: T): {current: T} {
 }
 
 export function useEffect(
-  create: (() => (() => void) | void) | (() => {...} | void | null),
-  createDeps: Array<mixed> | void | null,
-  update?: ((resource: {...} | void | null) => void) | void,
-  updateDeps?: Array<mixed> | void | null,
-  destroy?: ((resource: {...} | void | null) => void) | void,
+  create: () => (() => void) | void,
+  deps: Array<mixed> | void | null,
 ): void {
   if (__DEV__) {
     if (create == null) {
@@ -106,24 +97,7 @@ export function useEffect(
   }
 
   const dispatcher = resolveDispatcher();
-  if (
-    enableUseEffectCRUDOverload &&
-    (typeof update === 'function' || typeof destroy === 'function')
-  ) {
-    // $FlowFixMe[not-a-function] This is unstable, thus optional
-    return dispatcher.useEffect(
-      create,
-      createDeps,
-      update,
-      updateDeps,
-      destroy,
-    );
-  } else if (typeof update === 'function') {
-    throw new Error(
-      'useEffect CRUD overload is not enabled in this build of React.',
-    );
-  }
-  return dispatcher.useEffect(create, createDeps);
+  return dispatcher.useEffect(create, deps);
 }
 
 export function useInsertionEffect(
@@ -264,17 +238,4 @@ export function useActionState<S, P>(
 ): [Awaited<S>, (P) => void, boolean] {
   const dispatcher = resolveDispatcher();
   return dispatcher.useActionState(action, initialState, permalink);
-}
-
-export function useSwipeTransition<T>(
-  previous: T,
-  current: T,
-  next: T,
-): [T, StartGesture] {
-  if (!enableSwipeTransition) {
-    throw new Error('Not implemented.');
-  }
-  const dispatcher = resolveDispatcher();
-  // $FlowFixMe[not-a-function] This is unstable, thus optional
-  return dispatcher.useSwipeTransition(previous, current, next);
 }

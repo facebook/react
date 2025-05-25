@@ -1,6 +1,6 @@
 {
   "name": "react-devtools-inline",
-  "version": "6.1.1",
+  "version": "6.1.2",
   "description": "Embed react-devtools within a website",
   "license": "MIT",
   "main": "./dist/backend.js",
@@ -33,7 +33,7 @@
     "@babel/preset-env": "^7.11.0",
     "@babel/preset-flow": "^7.10.4",
     "@babel/preset-react": "^7.10.4",
-    "@playwright/test": "^1.16.3",
+    "@playwright/test": "^1.51.1",
     "babel-core": "^7.0.0-bridge",
     "babel-eslint": "^9.0.0",
     "babel-loader": "^8.0.4",

@@ -25,15 +25,23 @@ import type {
   PreinitScriptOptions,
   PreinitModuleScriptOptions,
 } from 'react-dom/src/shared/ReactDOMTypes';
-import type {TransitionTypes} from 'react/src/ReactTransitionType.js';
+import type {TransitionTypes} from 'react/src/ReactTransitionType';
 
 import {NotPending} from '../shared/ReactDOMFormActions';
 
+import {setSrcObject} from './ReactDOMSrcObject';
+
 import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
+import {runWithFiberInDEV} from 'react-reconciler/src/ReactCurrentFiber';
 
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
+import {
+  isFiberContainedBy,
+  isFiberFollowing,
+  isFiberPreceding,
+} from 'react-reconciler/src/ReactFiberTreeReflection';
 
 export {
   setCurrentUpdatePriority,
@@ -43,6 +51,8 @@ export {
 import {
   precacheFiberNode,
   updateFiberProps,
+  getFiberCurrentPropsFromNode,
+  getInstanceFromNode,
   getClosestInstanceFromNode,
   getFiberFromScopeInstance,
   getInstanceFromNode as getInstanceFromNodeDOMTree,
@@ -53,7 +63,13 @@ import {
   markNodeAsHoistable,
   isOwnedInstance,
 } from './ReactDOMComponentTree';
-import {traverseFragmentInstance} from 'react-reconciler/src/ReactFiberTreeReflection';
+import {
+  traverseFragmentInstance,
+  getFragmentParentHostFiber,
+  getNextSiblingHostFiber,
+  getInstanceFromHostFiber,
+  traverseFragmentInstanceDeeply,
+} from 'react-reconciler/src/ReactFiberTreeReflection';
 
 export {detachDeletedInstance};
 import {hasRole} from './DOMAccessibilityRoles';
@@ -67,6 +83,9 @@ import {
   diffHydratedText,
   trapClickOnNonInteractiveElement,
 } from './ReactDOMComponent';
+import {hydrateInput} from './ReactDOMInput';
+import {hydrateTextarea} from './ReactDOMTextarea';
+import {hydrateSelect} from './ReactDOMSelect';
 import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
 import {
@@ -88,7 +107,10 @@ import {
   DOCUMENT_FRAGMENT_NODE,
 } from './HTMLNodeType';
 
-import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
+import {
+  flushEventReplaying,
+  retryIfBlockedOn,
+} from '../events/ReactDOMEventReplaying';
 
 import {
   enableCreateEventHandleAPI,
@@ -97,6 +119,10 @@ import {
   disableLegacyMode,
   enableMoveBefore,
   disableCommentsAsDOMContainers,
+  enableSuspenseyImages,
+  enableSrcObject,
+  enableViewTransition,
+  enableHydrationChangeEvent,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -113,6 +139,9 @@ import {requestFormReset as requestFormResetOnFiber} from 'react-reconciler/src/
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 
 export {default as rendererVersion} from 'shared/ReactVersion';
+
+import noop from 'shared/noop';
+
 export const rendererPackageName = 'react-dom';
 export const extraDevToolsConfig = null;
 
@@ -130,6 +159,11 @@ export type Props = {
     'view-transition-name'?: string,
     viewTransitionClass?: string,
     'view-transition-class'?: string,
+    margin?: string,
+    marginTop?: string,
+    'margin-top'?: string,
+    marginBottom?: string,
+    'margin-bottom'?: string,
     ...
   },
   bottom?: null | number,
@@ -138,7 +172,15 @@ export type Props = {
   top?: null | number,
   is?: string,
   size?: number,
+  value?: string,
+  defaultValue?: string,
+  checked?: boolean,
+  defaultChecked?: boolean,
   multiple?: boolean,
+  src?: string | Blob | MediaSource | MediaStream, // TODO: Response
+  srcSet?: string,
+  loading?: 'eager' | 'lazy',
+  onLoad?: (event: any) => void,
   ...
 };
 type RawProps = {
@@ -167,13 +209,20 @@ export type Container =
   | interface extends DocumentFragment {_reactRootContainer?: FiberRoot};
 export type Instance = Element;
 export type TextInstance = Text;
-export interface SuspenseInstance extends Comment {
-  _reactRetry?: () => void;
+
+declare class ActivityInterface extends Comment {}
+declare class SuspenseInterface extends Comment {
+  _reactRetry: void | (() => void);
 }
+
+export type ActivityInstance = ActivityInterface;
+export type SuspenseInstance = SuspenseInterface;
+
 type FormStateMarkerInstance = Comment;
 export type HydratableInstance =
   | Instance
   | TextInstance
+  | ActivityInstance
   | SuspenseInstance
   | FormStateMarkerInstance;
 export type PublicInstance = Element | Text;
@@ -206,17 +255,20 @@ type SelectionInformation = {
 
 const SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
 
+const ACTIVITY_START_DATA = '&';
+const ACTIVITY_END_DATA = '/&';
 const SUSPENSE_START_DATA = '$';
 const SUSPENSE_END_DATA = '/$';
 const SUSPENSE_PENDING_START_DATA = '$?';
+const SUSPENSE_QUEUED_START_DATA = '$~';
 const SUSPENSE_FALLBACK_START_DATA = '$!';
-const PREAMBLE_CONTRIBUTION_HTML = 0b001;
-const PREAMBLE_CONTRIBUTION_BODY = 0b010;
-const PREAMBLE_CONTRIBUTION_HEAD = 0b100;
+const PREAMBLE_CONTRIBUTION_HTML = 'html';
+const PREAMBLE_CONTRIBUTION_BODY = 'body';
+const PREAMBLE_CONTRIBUTION_HEAD = 'head';
 const FORM_STATE_IS_MATCHING = 'F!';
 const FORM_STATE_IS_NOT_MATCHING = 'F';
 
-const DOCUMENT_READY_STATE_COMPLETE = 'complete';
+const DOCUMENT_READY_STATE_LOADING = 'loading';
 
 const STYLE = 'style';
 
@@ -581,6 +633,27 @@ export function finalizeInitialChildren(
   }
 }
 
+export function finalizeHydratedChildren(
+  domElement: Instance,
+  type: string,
+  props: Props,
+  hostContext: HostContext,
+): boolean {
+  // TOOD: Consider unifying this with hydrateInstance.
+  if (!enableHydrationChangeEvent) {
+    return false;
+  }
+  switch (type) {
+    case 'input':
+    case 'select':
+    case 'textarea':
+    case 'img':
+      return true;
+    default:
+      return false;
+  }
+}
+
 export function shouldSetTextContent(type: string, props: Props): boolean {
   return (
     type === 'textarea' ||
@@ -763,13 +836,72 @@ export function commitMount(
       // only need to assign one. And Safari just never triggers a new load event which means this technique
       // is already a noop regardless of which properties are assigned. We should revisit if browsers update
       // this heuristic in the future.
-      if ((newProps: any).src) {
-        ((domElement: any): HTMLImageElement).src = (newProps: any).src;
-      } else if ((newProps: any).srcSet) {
+      if (newProps.src) {
+        const src = (newProps: any).src;
+        if (enableSrcObject && typeof src === 'object') {
+          // For object src, we can't just set the src again to the same blob URL because it might have
+          // already revoked if it loaded before this. However, we can create a new blob URL and set that.
+          // This is relatively cheap since the blob is already in memory but this might cause some
+          // duplicated work.
+          // TODO: We could maybe detect if load hasn't fired yet and if so reuse the URL.
+          try {
+            setSrcObject(domElement, type, src);
+            return;
+          } catch (x) {
+            // If URL.createObjectURL() errors, it was probably some other object type
+            // that should be toString:ed instead, so we just fall-through to the normal
+            // path.
+          }
+        }
+        ((domElement: any): HTMLImageElement).src = src;
+      } else if (newProps.srcSet) {
         ((domElement: any): HTMLImageElement).srcset = (newProps: any).srcSet;
       }
       return;
     }
+  }
+}
+
+export function commitHydratedInstance(
+  domElement: Instance,
+  type: string,
+  props: Props,
+  internalInstanceHandle: Object,
+): void {
+  if (!enableHydrationChangeEvent) {
+    return;
+  }
+  // This fires in the commit phase if a hydrated instance needs to do further
+  // work in the commit phase. Similar to commitMount. However, this should not
+  // do things that would've already happened such as set auto focus since that
+  // would steal focus. It's only scheduled if finalizeHydratedChildren returns
+  // true.
+  switch (type) {
+    case 'input': {
+      hydrateInput(
+        domElement,
+        props.value,
+        props.defaultValue,
+        props.checked,
+        props.defaultChecked,
+      );
+      break;
+    }
+    case 'select': {
+      hydrateSelect(
+        domElement,
+        props.value,
+        props.defaultValue,
+        props.multiple,
+      );
+      break;
+    }
+    case 'textarea':
+      hydrateTextarea(domElement, props.value, props.defaultValue);
+      break;
+    case 'img':
+      // TODO: Should we replay onLoad events?
+      break;
   }
 }
 
@@ -818,10 +950,51 @@ export function appendChild(
   }
 }
 
+function warnForReactChildrenConflict(container: Container): void {
+  if (__DEV__) {
+    if ((container: any).__reactWarnedAboutChildrenConflict) {
+      return;
+    }
+    const props = getFiberCurrentPropsFromNode(container);
+    if (props !== null) {
+      const fiber = getInstanceFromNode(container);
+      if (fiber !== null) {
+        if (
+          typeof props.children === 'string' ||
+          typeof props.children === 'number'
+        ) {
+          (container: any).__reactWarnedAboutChildrenConflict = true;
+          // Run the warning with the Fiber of the container for context of where the children are specified.
+          // We could also maybe use the Portal. The current execution context is the child being added.
+          runWithFiberInDEV(fiber, () => {
+            console.error(
+              'Cannot use a ref on a React element as a container to `createRoot` or `createPortal` ' +
+                'if that element also sets "children" text content using React. It should be a leaf with no children. ' +
+                "Otherwise it's ambiguous which children should be used.",
+            );
+          });
+        } else if (props.dangerouslySetInnerHTML != null) {
+          (container: any).__reactWarnedAboutChildrenConflict = true;
+          runWithFiberInDEV(fiber, () => {
+            console.error(
+              'Cannot use a ref on a React element as a container to `createRoot` or `createPortal` ' +
+                'if that element also sets "dangerouslySetInnerHTML" using React. It should be a leaf with no children. ' +
+                "Otherwise it's ambiguous which children should be used.",
+            );
+          });
+        }
+      }
+    }
+  }
+}
+
 export function appendChildToContainer(
   container: Container,
   child: Instance | TextInstance,
 ): void {
+  if (__DEV__) {
+    warnForReactChildrenConflict(container);
+  }
   let parentNode: DocumentFragment | Element;
   if (container.nodeType === DOCUMENT_NODE) {
     parentNode = (container: any).body;
@@ -870,7 +1043,7 @@ export function appendChildToContainer(
 export function insertBefore(
   parentInstance: Instance,
   child: Instance | TextInstance,
-  beforeChild: Instance | TextInstance | SuspenseInstance,
+  beforeChild: Instance | TextInstance | SuspenseInstance | ActivityInstance,
 ): void {
   if (supportsMoveBefore && child.parentNode !== null) {
     // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
@@ -883,8 +1056,11 @@ export function insertBefore(
 export function insertInContainerBefore(
   container: Container,
   child: Instance | TextInstance,
-  beforeChild: Instance | TextInstance | SuspenseInstance,
+  beforeChild: Instance | TextInstance | SuspenseInstance | ActivityInstance,
 ): void {
+  if (__DEV__) {
+    warnForReactChildrenConflict(container);
+  }
   let parentNode: DocumentFragment | Element;
   if (container.nodeType === DOCUMENT_NODE) {
     parentNode = (container: any).body;
@@ -944,14 +1120,14 @@ function dispatchAfterDetachedBlur(target: HTMLElement): void {
 
 export function removeChild(
   parentInstance: Instance,
-  child: Instance | TextInstance | SuspenseInstance,
+  child: Instance | TextInstance | SuspenseInstance | ActivityInstance,
 ): void {
   parentInstance.removeChild(child);
 }
 
 export function removeChildFromContainer(
   container: Container,
-  child: Instance | TextInstance | SuspenseInstance,
+  child: Instance | TextInstance | SuspenseInstance | ActivityInstance,
 ): void {
   let parentNode: DocumentFragment | Element;
   if (container.nodeType === DOCUMENT_NODE) {
@@ -969,12 +1145,11 @@ export function removeChildFromContainer(
   parentNode.removeChild(child);
 }
 
-export function clearSuspenseBoundary(
+function clearHydrationBoundary(
   parentInstance: Instance,
-  suspenseInstance: SuspenseInstance,
+  hydrationInstance: SuspenseInstance | ActivityInstance,
 ): void {
-  let node: Node = suspenseInstance;
-  let possiblePreambleContribution: number = 0;
+  let node: Node = hydrationInstance;
   // Delete all nodes within this suspense boundary.
   // There might be nested nodes so we need to keep track of how
   // deep we are and only break out when we're back on top.
@@ -984,41 +1159,11 @@ export function clearSuspenseBoundary(
     parentInstance.removeChild(node);
     if (nextNode && nextNode.nodeType === COMMENT_NODE) {
       const data = ((nextNode: any).data: string);
-      if (data === SUSPENSE_END_DATA) {
-        if (
-          // represents 3 bits where at least one bit is set (1-7)
-          possiblePreambleContribution > 0 &&
-          possiblePreambleContribution < 8
-        ) {
-          const code = possiblePreambleContribution;
-          // It's not normally possible to insert a comment immediately preceding Suspense boundary
-          // closing comment marker so we can infer that if the comment preceding starts with "1" through "7"
-          // then it is in fact a preamble contribution marker comment. We do this value test to avoid the case
-          // where the Suspense boundary is empty and the preceding comment marker is the Suspense boundary
-          // opening marker or the closing marker of an inner boundary. In those cases the first character won't
-          // have the requisite value to be interpreted as a Preamble contribution
-          const ownerDocument = parentInstance.ownerDocument;
-          if (code & PREAMBLE_CONTRIBUTION_HTML) {
-            const documentElement: Element =
-              (ownerDocument.documentElement: any);
-            releaseSingletonInstance(documentElement);
-          }
-          if (code & PREAMBLE_CONTRIBUTION_BODY) {
-            const body: Element = (ownerDocument.body: any);
-            releaseSingletonInstance(body);
-          }
-          if (code & PREAMBLE_CONTRIBUTION_HEAD) {
-            const head: Element = (ownerDocument.head: any);
-            releaseSingletonInstance(head);
-            // We need to clear the head because this is the only singleton that can have children that
-            // were part of this boundary but are not inside this boundary.
-            clearHead(head);
-          }
-        }
+      if (data === SUSPENSE_END_DATA || data === ACTIVITY_END_DATA) {
         if (depth === 0) {
           parentInstance.removeChild(nextNode);
           // Retry if any event replaying was blocked on this.
-          retryIfBlockedOn(suspenseInstance);
+          retryIfBlockedOn(hydrationInstance);
           return;
         } else {
           depth--;
@@ -1026,26 +1171,55 @@ export function clearSuspenseBoundary(
       } else if (
         data === SUSPENSE_START_DATA ||
         data === SUSPENSE_PENDING_START_DATA ||
-        data === SUSPENSE_FALLBACK_START_DATA
+        data === SUSPENSE_QUEUED_START_DATA ||
+        data === SUSPENSE_FALLBACK_START_DATA ||
+        data === ACTIVITY_START_DATA
       ) {
         depth++;
-      } else {
-        possiblePreambleContribution = data.charCodeAt(0) - 48;
+      } else if (data === PREAMBLE_CONTRIBUTION_HTML) {
+        // If a preamble contribution marker is found within the bounds of this boundary,
+        // then it contributed to the html tag and we need to reset it.
+        const ownerDocument = parentInstance.ownerDocument;
+        const documentElement: Element = (ownerDocument.documentElement: any);
+        releaseSingletonInstance(documentElement);
+      } else if (data === PREAMBLE_CONTRIBUTION_HEAD) {
+        const ownerDocument = parentInstance.ownerDocument;
+        const head: Element = (ownerDocument.head: any);
+        releaseSingletonInstance(head);
+        // We need to clear the head because this is the only singleton that can have children that
+        // were part of this boundary but are not inside this boundary.
+        clearHead(head);
+      } else if (data === PREAMBLE_CONTRIBUTION_BODY) {
+        const ownerDocument = parentInstance.ownerDocument;
+        const body: Element = (ownerDocument.body: any);
+        releaseSingletonInstance(body);
       }
-    } else {
-      possiblePreambleContribution = 0;
     }
     // $FlowFixMe[incompatible-type] we bail out when we get a null
     node = nextNode;
   } while (node);
   // TODO: Warn, we didn't find the end comment boundary.
   // Retry if any event replaying was blocked on this.
-  retryIfBlockedOn(suspenseInstance);
+  retryIfBlockedOn(hydrationInstance);
 }
 
-export function clearSuspenseBoundaryFromContainer(
-  container: Container,
+export function clearActivityBoundary(
+  parentInstance: Instance,
+  activityInstance: ActivityInstance,
+): void {
+  clearHydrationBoundary(parentInstance, activityInstance);
+}
+
+export function clearSuspenseBoundary(
+  parentInstance: Instance,
   suspenseInstance: SuspenseInstance,
+): void {
+  clearHydrationBoundary(parentInstance, suspenseInstance);
+}
+
+function clearHydrationBoundaryFromContainer(
+  container: Container,
+  hydrationInstance: SuspenseInstance | ActivityInstance,
 ): void {
   let parentNode: DocumentFragment | Element;
   if (container.nodeType === DOCUMENT_NODE) {
@@ -1060,9 +1234,81 @@ export function clearSuspenseBoundaryFromContainer(
   } else {
     parentNode = (container: any);
   }
-  clearSuspenseBoundary(parentNode, suspenseInstance);
+  clearHydrationBoundary(parentNode, hydrationInstance);
   // Retry if any event replaying was blocked on this.
   retryIfBlockedOn(container);
+}
+
+export function clearActivityBoundaryFromContainer(
+  container: Container,
+  activityInstance: ActivityInstance,
+): void {
+  clearHydrationBoundaryFromContainer(container, activityInstance);
+}
+
+export function clearSuspenseBoundaryFromContainer(
+  container: Container,
+  suspenseInstance: SuspenseInstance,
+): void {
+  clearHydrationBoundaryFromContainer(container, suspenseInstance);
+}
+
+function hideOrUnhideDehydratedBoundary(
+  suspenseInstance: SuspenseInstance | ActivityInstance,
+  isHidden: boolean,
+) {
+  let node: Node = suspenseInstance;
+  // Unhide all nodes within this suspense boundary.
+  let depth = 0;
+  do {
+    const nextNode = node.nextSibling;
+    if (node.nodeType === ELEMENT_NODE) {
+      const instance = ((node: any): HTMLElement & {_stashedDisplay?: string});
+      if (isHidden) {
+        instance._stashedDisplay = instance.style.display;
+        instance.style.display = 'none';
+      } else {
+        instance.style.display = instance._stashedDisplay || '';
+        if (instance.getAttribute('style') === '') {
+          instance.removeAttribute('style');
+        }
+      }
+    } else if (node.nodeType === TEXT_NODE) {
+      const textNode = ((node: any): Text & {_stashedText?: string});
+      if (isHidden) {
+        textNode._stashedText = textNode.nodeValue;
+        textNode.nodeValue = '';
+      } else {
+        textNode.nodeValue = textNode._stashedText || '';
+      }
+    }
+    if (nextNode && nextNode.nodeType === COMMENT_NODE) {
+      const data = ((nextNode: any).data: string);
+      if (data === SUSPENSE_END_DATA) {
+        if (depth === 0) {
+          return;
+        } else {
+          depth--;
+        }
+      } else if (
+        data === SUSPENSE_START_DATA ||
+        data === SUSPENSE_PENDING_START_DATA ||
+        data === SUSPENSE_QUEUED_START_DATA ||
+        data === SUSPENSE_FALLBACK_START_DATA
+      ) {
+        depth++;
+      }
+      // TODO: Should we hide preamble contribution in this case?
+    }
+    // $FlowFixMe[incompatible-type] we bail out when we get a null
+    node = nextNode;
+  } while (node);
+}
+
+export function hideDehydratedBoundary(
+  suspenseInstance: SuspenseInstance,
+): void {
+  hideOrUnhideDehydratedBoundary(suspenseInstance, true);
 }
 
 export function hideInstance(instance: Instance): void {
@@ -1080,6 +1326,12 @@ export function hideInstance(instance: Instance): void {
 
 export function hideTextInstance(textInstance: TextInstance): void {
   textInstance.nodeValue = '';
+}
+
+export function unhideDehydratedBoundary(
+  dehydratedInstance: SuspenseInstance | ActivityInstance,
+): void {
+  hideOrUnhideDehydratedBoundary(dehydratedInstance, false);
 }
 
 export function unhideInstance(instance: Instance, props: Props): void {
@@ -1106,6 +1358,59 @@ export function unhideTextInstance(
   textInstance.nodeValue = text;
 }
 
+function warnForBlockInsideInline(instance: HTMLElement) {
+  if (__DEV__) {
+    let nextNode = instance.firstChild;
+    outer: while (nextNode != null) {
+      let node: Node = nextNode;
+      if (
+        node.nodeType === ELEMENT_NODE &&
+        getComputedStyle((node: any)).display === 'block'
+      ) {
+        console.error(
+          "You're about to start a <ViewTransition> around a display: inline " +
+            'element <%s>, which itself has a display: block element <%s> inside it. ' +
+            'This might trigger a bug in Safari which causes the View Transition to ' +
+            'be skipped with a duplicate name error.\n' +
+            'https://bugs.webkit.org/show_bug.cgi?id=290923',
+          instance.tagName.toLocaleLowerCase(),
+          (node: any).tagName.toLocaleLowerCase(),
+        );
+        break;
+      }
+      if (node.firstChild != null) {
+        nextNode = node.firstChild;
+        continue;
+      }
+      if (node === instance) {
+        break;
+      }
+      while (node.nextSibling == null) {
+        if (node.parentNode == null || node.parentNode === instance) {
+          break;
+        }
+        node = node.parentNode;
+      }
+      nextNode = node.nextSibling;
+    }
+  }
+}
+
+function countClientRects(rects: Array<ClientRect>): number {
+  if (rects.length === 1) {
+    return 1;
+  }
+  // Count non-zero rects.
+  let count = 0;
+  for (let i = 0; i < rects.length; i++) {
+    const rect = rects[i];
+    if (rect.width > 0 && rect.height > 0) {
+      count++;
+    }
+  }
+  return count;
+}
+
 export function applyViewTransitionName(
   instance: Instance,
   name: string,
@@ -1118,6 +1423,34 @@ export function applyViewTransitionName(
     // $FlowFixMe[prop-missing]
     instance.style.viewTransitionClass = className;
   }
+  const computedStyle = getComputedStyle(instance);
+  if (computedStyle.display === 'inline') {
+    // WebKit has a bug where assigning a name to display: inline elements errors
+    // if they have display: block children. We try to work around this bug in the
+    // simple case by converting it automatically to display: inline-block.
+    // https://bugs.webkit.org/show_bug.cgi?id=290923
+    const rects = instance.getClientRects();
+    if (countClientRects(rects) === 1) {
+      // If the instance has a single client rect, that means that it can be
+      // expressed as a display: inline-block or block.
+      // This will cause layout thrash but we live with it since inline view transitions
+      // are unusual.
+      const style = instance.style;
+      // If there's literally only one rect, then it's likely on a single line like an
+      // inline-block. If it's multiple rects but all but one of them are empty it's
+      // likely because it's a single block that caused a line break.
+      style.display = rects.length === 1 ? 'inline-block' : 'block';
+      // Margin doesn't apply to inline so should be zero. However, padding top/bottom
+      // applies to inline-block positioning which we can offset by setting the margin
+      // to the negative padding to get it back into original position.
+      style.marginTop = '-' + computedStyle.paddingTop;
+      style.marginBottom = '-' + computedStyle.paddingBottom;
+    } else {
+      // This case cannot be easily fixed if it has blocks but it's also fine if
+      // it doesn't have blocks. So we only warn in DEV about this being an issue.
+      warnForBlockInsideInline(instance);
+    }
+  }
 }
 
 export function restoreViewTransitionName(
@@ -1125,6 +1458,7 @@ export function restoreViewTransitionName(
   props: Props,
 ): void {
   instance = ((instance: any): HTMLElement);
+  const style = instance.style;
   const styleProp = props[STYLE];
   const viewTransitionName =
     styleProp != null
@@ -1135,7 +1469,7 @@ export function restoreViewTransitionName(
           : null
       : null;
   // $FlowFixMe[prop-missing]
-  instance.style.viewTransitionName =
+  style.viewTransitionName =
     viewTransitionName == null || typeof viewTransitionName === 'boolean'
       ? ''
       : // The value would've errored already if it wasn't safe.
@@ -1150,12 +1484,39 @@ export function restoreViewTransitionName(
           : null
       : null;
   // $FlowFixMe[prop-missing]
-  instance.style.viewTransitionClass =
+  style.viewTransitionClass =
     viewTransitionClass == null || typeof viewTransitionClass === 'boolean'
       ? ''
       : // The value would've errored already if it wasn't safe.
         // eslint-disable-next-line react-internal/safe-string-coercion
         ('' + viewTransitionClass).trim();
+  if (style.display === 'inline-block') {
+    // We might have overridden the style. Reset it to what it should be.
+    if (styleProp == null) {
+      style.display = style.margin = '';
+    } else {
+      const display = styleProp.display;
+      style.display =
+        display == null || typeof display === 'boolean' ? '' : display;
+      const margin = styleProp.margin;
+      if (margin != null) {
+        style.margin = margin;
+      } else {
+        const marginTop = styleProp.hasOwnProperty('marginTop')
+          ? styleProp.marginTop
+          : styleProp['margin-top'];
+        style.marginTop =
+          marginTop == null || typeof marginTop === 'boolean' ? '' : marginTop;
+        const marginBottom = styleProp.hasOwnProperty('marginBottom')
+          ? styleProp.marginBottom
+          : styleProp['margin-bottom'];
+        style.marginBottom =
+          marginBottom == null || typeof marginBottom === 'boolean'
+            ? ''
+            : marginBottom;
+      }
+    }
+  }
 }
 
 export function cancelViewTransitionName(
@@ -1188,6 +1549,19 @@ export function cancelRootViewTransitionName(rootContainer: Container): void {
     rootContainer.nodeType === DOCUMENT_NODE
       ? (rootContainer: any).documentElement
       : rootContainer.ownerDocument.documentElement;
+
+  if (
+    !disableCommentsAsDOMContainers &&
+    rootContainer.nodeType === COMMENT_NODE
+  ) {
+    if (__DEV__) {
+      console.warn(
+        'Cannot cancel root view transition on a comment node. All view transitions will be globally scoped.',
+      );
+    }
+    return;
+  }
+
   if (
     documentElement !== null &&
     // $FlowFixMe[prop-missing]
@@ -1232,8 +1606,16 @@ export function restoreRootViewTransitionName(rootContainer: Container): void {
     // clone the whole document outside of the React too.
     containerInstance = (rootContainer: any);
   }
-  // $FlowFixMe[prop-missing]
-  if (containerInstance.style.viewTransitionName === 'root') {
+  if (
+    !disableCommentsAsDOMContainers &&
+    containerInstance.nodeType === COMMENT_NODE
+  ) {
+    return;
+  }
+  if (
+    // $FlowFixMe[prop-missing]
+    containerInstance.style.viewTransitionName === 'root'
+  ) {
     // If we moved the root view transition name to the container in a gesture
     // we need to restore it now.
     containerInstance.style.viewTransitionName = '';
@@ -1347,6 +1729,13 @@ export function cloneRootViewTransitionContainer(
     containerInstance = (rootContainer: any).body;
   } else if (rootContainer.nodeName === 'HTML') {
     containerInstance = (rootContainer.ownerDocument.body: any);
+  } else if (
+    !disableCommentsAsDOMContainers &&
+    rootContainer.nodeType === COMMENT_NODE
+  ) {
+    throw new Error(
+      'Cannot use a startGestureTransition() with a comment node root.',
+    );
   } else {
     // If the container is not the whole document, then we ideally should probably
     // clone the whole document outside of the React too.
@@ -1355,7 +1744,9 @@ export function cloneRootViewTransitionContainer(
 
   const containerParent = containerInstance.parentNode;
   if (containerParent === null) {
-    throw new Error('Cannot use a useSwipeTransition() in a detached root.');
+    throw new Error(
+      'Cannot use a startGestureTransition() on a detached root.',
+    );
   }
 
   const clone: HTMLElement = containerInstance.cloneNode(false);
@@ -1461,7 +1852,9 @@ export function removeRootViewTransitionClone(
   }
   const containerParent = containerInstance.parentNode;
   if (containerParent === null) {
-    throw new Error('Cannot use a useSwipeTransition() in a detached root.');
+    throw new Error(
+      'Cannot use a startGestureTransition() on a detached root.',
+    );
   }
   // We assume that the clone is still within the same parent.
   containerParent.removeChild(clone);
@@ -1669,6 +2062,12 @@ function customizeViewTransitionError(
   return error;
 }
 
+/** @noinline */
+function forceLayout(ownerDocument: Document) {
+  // This function exists to trick minifiers to not remove this unused member expression.
+  return (ownerDocument.documentElement: any).clientHeight;
+}
+
 export function startViewTransition(
   rootContainer: Container,
   transitionTypes: null | TransitionTypes,
@@ -1678,7 +2077,7 @@ export function startViewTransition(
   spawnedWorkCallback: () => void,
   passiveCallback: () => mixed,
   errorCallback: mixed => void,
-): boolean {
+): null | RunningViewTransition {
   const ownerDocument: Document =
     rootContainer.nodeType === DOCUMENT_NODE
       ? (rootContainer: any)
@@ -1698,8 +2097,7 @@ export function startViewTransition(
         mutationCallback();
         if (previousFontLoadingStatus === 'loaded') {
           // Force layout calculation to trigger font loading.
-          // eslint-disable-next-line ft-flow/no-unused-expressions
-          (ownerDocument.documentElement: any).clientHeight;
+          forceLayout(ownerDocument);
           if (
             // $FlowFixMe[prop-missing]
             ownerDocument.fonts.status === 'loading'
@@ -1743,6 +2141,12 @@ export function startViewTransition(
         }
       } finally {
         // Continue the reset of the work.
+        // If the error happened in the snapshot phase before the update callback
+        // was invoked, then we need to first finish the mutation and layout phases.
+        // If they're already invoked it's still safe to call them due the status check.
+        mutationCallback();
+        layoutCallback();
+        // Skip afterMutationCallback() since we're not animating.
         spawnedWorkCallback();
       }
     };
@@ -1756,7 +2160,7 @@ export function startViewTransition(
       }
       passiveCallback();
     });
-    return true;
+    return transition;
   } catch (x) {
     // We use the error as feature detection.
     // The only thing that should throw is if startViewTransition is missing
@@ -1764,11 +2168,17 @@ export function startViewTransition(
     // I.e. it's before the View Transitions v2 spec. We only support View
     // Transitions v2 otherwise we fallback to not animating to ensure that
     // we're not animating with the wrong animation mapped.
-    return false;
+    // Flush remaining work synchronously.
+    mutationCallback();
+    layoutCallback();
+    // Skip afterMutationCallback(). We don't need it since we're not animating.
+    spawnedWorkCallback();
+    // Skip passiveCallback(). Spawned work will schedule a task.
+    return null;
   }
 }
 
-export type RunningGestureTransition = {
+export type RunningViewTransition = {
   skipTransition(): void,
   ...
 };
@@ -1862,6 +2272,7 @@ function animateGesture(
     // keyframe. Otherwise it applies to every keyframe.
     moveOldFrameIntoViewport(keyframes[0]);
   }
+  // TODO: Reverse the reverse if the original direction is reverse.
   const reverse = rangeStart > rangeEnd;
   targetElement.animate(keyframes, {
     pseudoElement: pseudoElement,
@@ -1872,7 +2283,7 @@ function animateGesture(
     // from scroll bouncing.
     easing: 'linear',
     // We fill in both direction for overscroll.
-    fill: 'both',
+    fill: 'both', // TODO: Should we preserve the fill instead?
     // We play all gestures in reverse, except if we're in reverse direction
     // in which case we need to play it in reverse of the reverse.
     direction: reverse ? 'normal' : 'reverse',
@@ -1892,12 +2303,16 @@ export function startGestureTransition(
   mutationCallback: () => void,
   animateCallback: () => void,
   errorCallback: mixed => void,
-): null | RunningGestureTransition {
+): null | RunningViewTransition {
   const ownerDocument: Document =
     rootContainer.nodeType === DOCUMENT_NODE
       ? (rootContainer: any)
       : rootContainer.ownerDocument;
   try {
+    // Force layout before we start the Transition. This works around a bug in Safari
+    // if one of the clones end up being a stylesheet that isn't loaded or uncached.
+    // https://bugs.webkit.org/show_bug.cgi?id=290146
+    forceLayout(ownerDocument);
     // $FlowFixMe[prop-missing]
     const transition = ownerDocument.startViewTransition({
       update: mutationCallback,
@@ -1913,18 +2328,33 @@ export function startGestureTransition(
       // up if they exist later.
       const foundGroups: Set<string> = new Set();
       const foundNews: Set<string> = new Set();
+      // Collect the longest duration of any view-transition animation including delay.
+      let longestDuration = 0;
       for (let i = 0; i < animations.length; i++) {
+        const effect: KeyframeEffect = (animations[i].effect: any);
         // $FlowFixMe
-        const pseudoElement: ?string = animations[i].effect.pseudoElement;
+        const pseudoElement: ?string = effect.pseudoElement;
         if (pseudoElement == null) {
-        } else if (pseudoElement.startsWith('::view-transition-group')) {
-          foundGroups.add(pseudoElement.slice(23));
-        } else if (pseudoElement.startsWith('::view-transition-new')) {
-          // TODO: This is not really a sufficient detection because if the new
-          // pseudo element might exist but have animations disabled on it.
-          foundNews.add(pseudoElement.slice(21));
+        } else if (pseudoElement.startsWith('::view-transition')) {
+          const timing = effect.getTiming();
+          const duration =
+            typeof timing.duration === 'number' ? timing.duration : 0;
+          // TODO: Consider interation count higher than 1.
+          const durationWithDelay = timing.delay + duration;
+          if (durationWithDelay > longestDuration) {
+            longestDuration = durationWithDelay;
+          }
+          if (pseudoElement.startsWith('::view-transition-group')) {
+            foundGroups.add(pseudoElement.slice(23));
+          } else if (pseudoElement.startsWith('::view-transition-new')) {
+            // TODO: This is not really a sufficient detection because if the new
+            // pseudo element might exist but have animations disabled on it.
+            foundNews.add(pseudoElement.slice(21));
+          }
         }
       }
+      const durationToRangeMultipler =
+        (rangeEnd - rangeStart) / longestDuration;
       for (let i = 0; i < animations.length; i++) {
         const anim = animations[i];
         if (anim.playState !== 'running') {
@@ -1964,14 +2394,33 @@ export function startGestureTransition(
             }
             // TODO: If this has only an old state and no new state,
           }
+          // Adjust the range based on how long the animation would've ran as time based.
+          // Since we're running animations in reverse from how they normally would run,
+          // therefore the timing is from the rangeEnd to the start.
+          const timing = effect.getTiming();
+          const duration =
+            typeof timing.duration === 'number' ? timing.duration : 0;
+          let adjustedRangeStart =
+            rangeEnd - (duration + timing.delay) * durationToRangeMultipler;
+          let adjustedRangeEnd =
+            rangeEnd - timing.delay * durationToRangeMultipler;
+          if (
+            timing.direction === 'reverse' ||
+            timing.direction === 'alternate-reverse'
+          ) {
+            // This animation was originally in reverse so we have to play it in flipped range.
+            const temp = adjustedRangeStart;
+            adjustedRangeStart = adjustedRangeEnd;
+            adjustedRangeEnd = temp;
+          }
           animateGesture(
             effect.getKeyframes(),
             // $FlowFixMe: Always documentElement atm.
             effect.target,
             pseudoElement,
             timeline,
-            rangeStart,
-            rangeEnd,
+            adjustedRangeStart,
+            adjustedRangeEnd,
             isGeneratedGroupAnim,
             isExitGroupAnim,
           );
@@ -2033,7 +2482,13 @@ export function startGestureTransition(
         }
       } finally {
         // Continue the reset of the work.
-        readyCallback();
+        // If the error happened in the snapshot phase before the update callback
+        // was invoked, then we need to first finish the mutation and layout phases.
+        // If they're already invoked it's still safe to call them due the status check.
+        mutationCallback();
+        // Skip readyCallback() and go straight to animateCallbck() since we're not animating.
+        // animateCallback() is still required to restore states.
+        animateCallback();
       }
     };
     transition.ready.then(readyForAnimations, handleError);
@@ -2060,13 +2515,14 @@ export function startGestureTransition(
   }
 }
 
-export function stopGestureTransition(transition: RunningGestureTransition) {
+export function stopViewTransition(transition: RunningViewTransition) {
   transition.skipTransition();
 }
 
 interface ViewTransitionPseudoElementType extends Animatable {
   _scope: HTMLElement;
   _selector: string;
+  getComputedStyle(): CSSStyleDeclaration;
 }
 
 function ViewTransitionPseudoElement(
@@ -2120,6 +2576,14 @@ ViewTransitionPseudoElement.prototype.getAnimations = function (
   }
   return result;
 };
+// $FlowFixMe[prop-missing]
+ViewTransitionPseudoElement.prototype.getComputedStyle = function (
+  this: ViewTransitionPseudoElementType,
+): CSSStyleDeclaration {
+  const scope = this._scope;
+  const selector = this._selector;
+  return getComputedStyle(scope, selector);
+};
 
 export function createViewTransitionInstance(
   name: string,
@@ -2145,69 +2609,10 @@ export function getCurrentGestureOffset(provider: GestureTimeline): number {
   return typeof time === 'number' ? time : time.value;
 }
 
-export function subscribeToGestureDirection(
-  provider: GestureTimeline,
-  currentOffset: number,
-  directionCallback: (direction: boolean) => void,
-): () => void {
-  if (
-    typeof ScrollTimeline === 'function' &&
-    provider instanceof ScrollTimeline
-  ) {
-    // For ScrollTimeline we optimize to only update the current time on scroll events.
-    const element = provider.source;
-    const scrollCallback = () => {
-      const newTime = provider.currentTime;
-      if (newTime !== null) {
-        const newValue = typeof newTime === 'number' ? newTime : newTime.value;
-        if (newValue !== currentOffset) {
-          directionCallback(newValue > currentOffset);
-        }
-      }
-    };
-    element.addEventListener('scroll', scrollCallback, false);
-    return () => {
-      element.removeEventListener('scroll', scrollCallback, false);
-    };
-  } else {
-    // For other AnimationTimelines, such as DocumentTimeline, we just update every rAF.
-    // TODO: Optimize ViewTimeline using an IntersectionObserver if it becomes common.
-    const rafCallback = () => {
-      const newTime = provider.currentTime;
-      if (newTime !== null) {
-        const newValue = typeof newTime === 'number' ? newTime : newTime.value;
-        if (newValue !== currentOffset) {
-          directionCallback(newValue > currentOffset);
-        }
-      }
-      callbackID = requestAnimationFrame(rafCallback);
-    };
-    let callbackID = requestAnimationFrame(rafCallback);
-    return () => {
-      cancelAnimationFrame(callbackID);
-    };
-  }
-}
-
-type EventListenerOptionsOrUseCapture =
-  | boolean
-  | {
-      capture?: boolean,
-      once?: boolean,
-      passive?: boolean,
-      signal?: AbortSignal,
-      ...
-    };
-
 type StoredEventListener = {
   type: string,
   listener: EventListener,
   optionsOrUseCapture: void | EventListenerOptionsOrUseCapture,
-};
-
-type FocusOptions = {
-  preventScroll?: boolean,
-  focusVisible?: boolean,
 };
 
 export type FragmentInstanceType = {
@@ -2224,12 +2629,17 @@ export type FragmentInstanceType = {
     listener: EventListener,
     optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
   ): void,
+  dispatchEvent(event: Event): boolean,
   focus(focusOptions?: FocusOptions): void,
   focusLast(focusOptions?: FocusOptions): void,
   blur(): void,
   observeUsing(observer: IntersectionObserver | ResizeObserver): void,
   unobserveUsing(observer: IntersectionObserver | ResizeObserver): void,
   getClientRects(): Array<DOMRect>,
+  getRootNode(getRootNodeOptions?: {
+    composed: boolean,
+  }): Document | ShadowRoot | FragmentInstanceType,
+  compareDocumentPosition(otherNode: Instance): number,
 };
 
 function FragmentInstance(this: FragmentInstanceType, fragmentFiber: Fiber) {
@@ -2267,12 +2677,13 @@ FragmentInstance.prototype.addEventListener = function (
   this._eventListeners = listeners;
 };
 function addEventListenerToChild(
-  child: Instance,
+  child: Fiber,
   type: string,
   listener: EventListener,
   optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
 ): boolean {
-  child.addEventListener(type, listener, optionsOrUseCapture);
+  const instance = getInstanceFromHostFiber<Instance>(child);
+  instance.addEventListener(type, listener, optionsOrUseCapture);
   return false;
 }
 // $FlowFixMe[prop-missing]
@@ -2306,43 +2717,89 @@ FragmentInstance.prototype.removeEventListener = function (
   }
 };
 function removeEventListenerFromChild(
-  child: Instance,
+  child: Fiber,
   type: string,
   listener: EventListener,
   optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
 ): boolean {
-  child.removeEventListener(type, listener, optionsOrUseCapture);
+  const instance = getInstanceFromHostFiber<Instance>(child);
+  instance.removeEventListener(type, listener, optionsOrUseCapture);
   return false;
 }
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.dispatchEvent = function (
+  this: FragmentInstanceType,
+  event: Event,
+): boolean {
+  const parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
+  if (parentHostFiber === null) {
+    return true;
+  }
+  const parentHostInstance =
+    getInstanceFromHostFiber<Instance>(parentHostFiber);
+  const eventListeners = this._eventListeners;
+  if (
+    (eventListeners !== null && eventListeners.length > 0) ||
+    !event.bubbles
+  ) {
+    const temp = document.createTextNode('');
+    if (eventListeners) {
+      for (let i = 0; i < eventListeners.length; i++) {
+        const {type, listener, optionsOrUseCapture} = eventListeners[i];
+        temp.addEventListener(type, listener, optionsOrUseCapture);
+      }
+    }
+    parentHostInstance.appendChild(temp);
+    const cancelable = temp.dispatchEvent(event);
+    if (eventListeners) {
+      for (let i = 0; i < eventListeners.length; i++) {
+        const {type, listener, optionsOrUseCapture} = eventListeners[i];
+        temp.removeEventListener(type, listener, optionsOrUseCapture);
+      }
+    }
+    parentHostInstance.removeChild(temp);
+    return cancelable;
+  } else {
+    return parentHostInstance.dispatchEvent(event);
+  }
+};
 // $FlowFixMe[prop-missing]
 FragmentInstance.prototype.focus = function (
   this: FragmentInstanceType,
   focusOptions?: FocusOptions,
 ): void {
-  traverseFragmentInstance(
+  traverseFragmentInstanceDeeply(
     this._fragmentFiber,
-    setFocusIfFocusable,
+    setFocusOnFiberIfFocusable,
     focusOptions,
   );
 };
+function setFocusOnFiberIfFocusable(
+  fiber: Fiber,
+  focusOptions?: FocusOptions,
+): boolean {
+  const instance = getInstanceFromHostFiber<Instance>(fiber);
+  return setFocusIfFocusable(instance, focusOptions);
+}
 // $FlowFixMe[prop-missing]
 FragmentInstance.prototype.focusLast = function (
   this: FragmentInstanceType,
   focusOptions?: FocusOptions,
-) {
-  const children: Array<Instance> = [];
-  traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
+): void {
+  const children: Array<Fiber> = [];
+  traverseFragmentInstanceDeeply(
+    this._fragmentFiber,
+    collectChildren,
+    children,
+  );
   for (let i = children.length - 1; i >= 0; i--) {
     const child = children[i];
-    if (setFocusIfFocusable(child, focusOptions)) {
+    if (setFocusOnFiberIfFocusable(child, focusOptions)) {
       break;
     }
   }
 };
-function collectChildren(
-  child: Instance,
-  collection: Array<Instance>,
-): boolean {
+function collectChildren(child: Fiber, collection: Array<Fiber>): boolean {
   collection.push(child);
   return false;
 }
@@ -2355,12 +2812,13 @@ FragmentInstance.prototype.blur = function (this: FragmentInstanceType): void {
     blurActiveElementWithinFragment,
   );
 };
-function blurActiveElementWithinFragment(child: Instance): boolean {
+function blurActiveElementWithinFragment(child: Fiber): boolean {
   // TODO: We can get the activeElement from the parent outside of the loop when we have a reference.
-  const ownerDocument = child.ownerDocument;
-  if (child === ownerDocument.activeElement) {
+  const instance = getInstanceFromHostFiber<Instance>(child);
+  const ownerDocument = instance.ownerDocument;
+  if (instance === ownerDocument.activeElement) {
     // $FlowFixMe[prop-missing]
-    child.blur();
+    instance.blur();
     return true;
   }
   return false;
@@ -2377,10 +2835,11 @@ FragmentInstance.prototype.observeUsing = function (
   traverseFragmentInstance(this._fragmentFiber, observeChild, observer);
 };
 function observeChild(
-  child: Instance,
+  child: Fiber,
   observer: IntersectionObserver | ResizeObserver,
 ) {
-  observer.observe(child);
+  const instance = getInstanceFromHostFiber<Instance>(child);
+  observer.observe(instance);
   return false;
 }
 // $FlowFixMe[prop-missing]
@@ -2401,10 +2860,11 @@ FragmentInstance.prototype.unobserveUsing = function (
   }
 };
 function unobserveChild(
-  child: Instance,
+  child: Fiber,
   observer: IntersectionObserver | ResizeObserver,
 ) {
-  observer.unobserve(child);
+  const instance = getInstanceFromHostFiber<Instance>(child);
+  observer.unobserve(instance);
   return false;
 }
 // $FlowFixMe[prop-missing]
@@ -2415,9 +2875,153 @@ FragmentInstance.prototype.getClientRects = function (
   traverseFragmentInstance(this._fragmentFiber, collectClientRects, rects);
   return rects;
 };
-function collectClientRects(child: Instance, rects: Array<DOMRect>): boolean {
+function collectClientRects(child: Fiber, rects: Array<DOMRect>): boolean {
+  const instance = getInstanceFromHostFiber<Instance>(child);
   // $FlowFixMe[method-unbinding]
-  rects.push.apply(rects, child.getClientRects());
+  rects.push.apply(rects, instance.getClientRects());
+  return false;
+}
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.getRootNode = function (
+  this: FragmentInstanceType,
+  getRootNodeOptions?: {composed: boolean},
+): Document | ShadowRoot | FragmentInstanceType {
+  const parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
+  if (parentHostFiber === null) {
+    return this;
+  }
+  const parentHostInstance =
+    getInstanceFromHostFiber<Instance>(parentHostFiber);
+  const rootNode =
+    // $FlowFixMe[incompatible-cast] Flow expects Node
+    (parentHostInstance.getRootNode(getRootNodeOptions): Document | ShadowRoot);
+  return rootNode;
+};
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.compareDocumentPosition = function (
+  this: FragmentInstanceType,
+  otherNode: Instance,
+): number {
+  const parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
+  if (parentHostFiber === null) {
+    return Node.DOCUMENT_POSITION_DISCONNECTED;
+  }
+  const children: Array<Fiber> = [];
+  traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
+
+  let result = Node.DOCUMENT_POSITION_DISCONNECTED;
+  if (children.length === 0) {
+    // If the fragment has no children, we can use the parent and
+    // siblings to determine a position.
+    const parentHostInstance =
+      getInstanceFromHostFiber<Instance>(parentHostFiber);
+    const parentResult = parentHostInstance.compareDocumentPosition(otherNode);
+    result = parentResult;
+    if (parentHostInstance === otherNode) {
+      result = Node.DOCUMENT_POSITION_CONTAINS;
+    } else {
+      if (parentResult & Node.DOCUMENT_POSITION_CONTAINED_BY) {
+        // otherNode is one of the fragment's siblings. Use the next
+        // sibling to determine if its preceding or following.
+        const nextSiblingFiber = getNextSiblingHostFiber(this._fragmentFiber);
+        if (nextSiblingFiber === null) {
+          result = Node.DOCUMENT_POSITION_PRECEDING;
+        } else {
+          const nextSiblingInstance =
+            getInstanceFromHostFiber<Instance>(nextSiblingFiber);
+          const nextSiblingResult =
+            nextSiblingInstance.compareDocumentPosition(otherNode);
+          if (
+            nextSiblingResult === 0 ||
+            nextSiblingResult & Node.DOCUMENT_POSITION_FOLLOWING
+          ) {
+            result = Node.DOCUMENT_POSITION_FOLLOWING;
+          } else {
+            result = Node.DOCUMENT_POSITION_PRECEDING;
+          }
+        }
+      }
+    }
+
+    result |= Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC;
+    return result;
+  }
+
+  const firstElement = getInstanceFromHostFiber<Instance>(children[0]);
+  const lastElement = getInstanceFromHostFiber<Instance>(
+    children[children.length - 1],
+  );
+  const firstResult = firstElement.compareDocumentPosition(otherNode);
+  const lastResult = lastElement.compareDocumentPosition(otherNode);
+  if (
+    (firstResult & Node.DOCUMENT_POSITION_FOLLOWING &&
+      lastResult & Node.DOCUMENT_POSITION_PRECEDING) ||
+    otherNode === firstElement ||
+    otherNode === lastElement
+  ) {
+    result = Node.DOCUMENT_POSITION_CONTAINED_BY;
+  } else {
+    result = firstResult;
+  }
+
+  if (
+    result & Node.DOCUMENT_POSITION_DISCONNECTED ||
+    result & Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC
+  ) {
+    return result;
+  }
+
+  // Now that we have the result from the DOM API, we double check it matches
+  // the state of the React tree. If it doesn't, we have a case of portaled or
+  // otherwise injected elements and we return DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC.
+  const documentPositionMatchesFiberPosition =
+    validateDocumentPositionWithFiberTree(
+      result,
+      this._fragmentFiber,
+      children[0],
+      children[children.length - 1],
+      otherNode,
+    );
+  if (documentPositionMatchesFiberPosition) {
+    return result;
+  }
+  return Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC;
+};
+
+function validateDocumentPositionWithFiberTree(
+  documentPosition: number,
+  fragmentFiber: Fiber,
+  precedingBoundaryFiber: Fiber,
+  followingBoundaryFiber: Fiber,
+  otherNode: Instance,
+): boolean {
+  const otherFiber = getClosestInstanceFromNode(otherNode);
+  if (documentPosition & Node.DOCUMENT_POSITION_CONTAINED_BY) {
+    return !!otherFiber && isFiberContainedBy(fragmentFiber, otherFiber);
+  }
+  if (documentPosition & Node.DOCUMENT_POSITION_CONTAINS) {
+    if (otherFiber === null) {
+      // otherFiber could be null if its the document or body element
+      const ownerDocument = otherNode.ownerDocument;
+      return otherNode === ownerDocument || otherNode === ownerDocument.body;
+    }
+    return isFiberContainedBy(otherFiber, fragmentFiber);
+  }
+  if (documentPosition & Node.DOCUMENT_POSITION_PRECEDING) {
+    return (
+      !!otherFiber &&
+      (otherFiber === precedingBoundaryFiber ||
+        isFiberPreceding(precedingBoundaryFiber, otherFiber))
+    );
+  }
+  if (documentPosition & Node.DOCUMENT_POSITION_FOLLOWING) {
+    return (
+      !!otherFiber &&
+      (otherFiber === followingBoundaryFiber ||
+        isFiberFollowing(followingBoundaryFiber, otherFiber))
+    );
+  }
+
   return false;
 }
 
@@ -2469,19 +3073,19 @@ export function updateFragmentInstanceFiber(
 }
 
 export function commitNewChildToFragmentInstance(
-  childElement: Instance,
+  childInstance: Instance,
   fragmentInstance: FragmentInstanceType,
 ): void {
   const eventListeners = fragmentInstance._eventListeners;
   if (eventListeners !== null) {
     for (let i = 0; i < eventListeners.length; i++) {
       const {type, listener, optionsOrUseCapture} = eventListeners[i];
-      childElement.addEventListener(type, listener, optionsOrUseCapture);
+      childInstance.addEventListener(type, listener, optionsOrUseCapture);
     }
   }
   if (fragmentInstance._observers !== null) {
     fragmentInstance._observers.forEach(observer => {
-      observer.observe(childElement);
+      observer.observe(childInstance);
     });
   }
 }
@@ -2782,10 +3386,10 @@ export function canHydrateTextInstance(
   return ((instance: any): TextInstance);
 }
 
-export function canHydrateSuspenseInstance(
+function canHydrateHydrationBoundary(
   instance: HydratableInstance,
   inRootOrSingleton: boolean,
-): null | SuspenseInstance {
+): null | SuspenseInstance | ActivityInstance {
   while (instance.nodeType !== COMMENT_NODE) {
     if (!inRootOrSingleton) {
       return null;
@@ -2796,12 +3400,49 @@ export function canHydrateSuspenseInstance(
     }
     instance = nextInstance;
   }
-  // This has now been refined to a suspense node.
-  return ((instance: any): SuspenseInstance);
+  // This has now been refined to a hydration boundary node.
+  return (instance: any);
+}
+
+export function canHydrateActivityInstance(
+  instance: HydratableInstance,
+  inRootOrSingleton: boolean,
+): null | ActivityInstance {
+  const hydratableInstance = canHydrateHydrationBoundary(
+    instance,
+    inRootOrSingleton,
+  );
+  if (
+    hydratableInstance !== null &&
+    hydratableInstance.data === ACTIVITY_START_DATA
+  ) {
+    return (hydratableInstance: any);
+  }
+  return null;
+}
+
+export function canHydrateSuspenseInstance(
+  instance: HydratableInstance,
+  inRootOrSingleton: boolean,
+): null | SuspenseInstance {
+  const hydratableInstance = canHydrateHydrationBoundary(
+    instance,
+    inRootOrSingleton,
+  );
+  if (
+    hydratableInstance !== null &&
+    hydratableInstance.data !== ACTIVITY_START_DATA
+  ) {
+    return (hydratableInstance: any);
+  }
+  return null;
 }
 
 export function isSuspenseInstancePending(instance: SuspenseInstance): boolean {
-  return instance.data === SUSPENSE_PENDING_START_DATA;
+  return (
+    instance.data === SUSPENSE_PENDING_START_DATA ||
+    instance.data === SUSPENSE_QUEUED_START_DATA
+  );
 }
 
 export function isSuspenseInstanceFallback(
@@ -2810,7 +3451,7 @@ export function isSuspenseInstanceFallback(
   return (
     instance.data === SUSPENSE_FALLBACK_START_DATA ||
     (instance.data === SUSPENSE_PENDING_START_DATA &&
-      instance.ownerDocument.readyState === DOCUMENT_READY_STATE_COMPLETE)
+      instance.ownerDocument.readyState !== DOCUMENT_READY_STATE_LOADING)
   );
 }
 
@@ -2853,7 +3494,11 @@ export function registerSuspenseInstanceRetry(
   callback: () => void,
 ) {
   const ownerDocument = instance.ownerDocument;
-  if (
+  if (instance.data === SUSPENSE_QUEUED_START_DATA) {
+    // The Fizz runtime has already queued this boundary for reveal. We wait for it
+    // to be revealed and then retries.
+    instance._reactRetry = callback;
+  } else if (
     // The Fizz runtime must have put this boundary into client render or complete
     // state after the render finished but before it committed. We need to call the
     // callback now rather than wait
@@ -2861,7 +3506,7 @@ export function registerSuspenseInstanceRetry(
     // The boundary is still in pending status but the document has finished loading
     // before we could register the event handler that would have scheduled the retry
     // on load so we call teh callback now.
-    ownerDocument.readyState === DOCUMENT_READY_STATE_COMPLETE
+    ownerDocument.readyState !== DOCUMENT_READY_STATE_LOADING
   ) {
     callback();
   } else {
@@ -2916,17 +3561,19 @@ function getNextHydratable(node: ?Node) {
       break;
     }
     if (nodeType === COMMENT_NODE) {
-      const nodeData = (node: any).data;
+      const data = (node: any).data;
       if (
-        nodeData === SUSPENSE_START_DATA ||
-        nodeData === SUSPENSE_FALLBACK_START_DATA ||
-        nodeData === SUSPENSE_PENDING_START_DATA ||
-        nodeData === FORM_STATE_IS_MATCHING ||
-        nodeData === FORM_STATE_IS_NOT_MATCHING
+        data === SUSPENSE_START_DATA ||
+        data === SUSPENSE_FALLBACK_START_DATA ||
+        data === SUSPENSE_PENDING_START_DATA ||
+        data === SUSPENSE_QUEUED_START_DATA ||
+        data === ACTIVITY_START_DATA ||
+        data === FORM_STATE_IS_MATCHING ||
+        data === FORM_STATE_IS_NOT_MATCHING
       ) {
         break;
       }
-      if (nodeData === SUSPENSE_END_DATA) {
+      if (data === SUSPENSE_END_DATA || data === ACTIVITY_END_DATA) {
         return null;
       }
     }
@@ -2963,6 +3610,12 @@ export function getFirstHydratableChildWithinContainer(
     }
   }
   return getNextHydratable(parentElement.firstChild);
+}
+
+export function getFirstHydratableChildWithinActivityInstance(
+  parentInstance: ActivityInstance,
+): null | HydratableInstance {
+  return getNextHydratable(parentInstance.nextSibling);
 }
 
 export function getFirstHydratableChildWithinSuspenseInstance(
@@ -3016,6 +3669,12 @@ export function describeHydratableInstanceForDevWarnings(
       props: getPropsFromElement((instance: any)),
     };
   } else if (instance.nodeType === COMMENT_NODE) {
+    if (instance.data === ACTIVITY_START_DATA) {
+      return {
+        type: 'Activity',
+        props: {},
+      };
+    }
     return {
       type: 'Suspense',
       props: {},
@@ -3107,6 +3766,13 @@ export function diffHydratedTextForDevWarnings(
   return null;
 }
 
+export function hydrateActivityInstance(
+  activityInstance: ActivityInstance,
+  internalInstanceHandle: Object,
+) {
+  precacheFiberNode(internalInstanceHandle, activityInstance);
+}
+
 export function hydrateSuspenseInstance(
   suspenseInstance: SuspenseInstance,
   internalInstanceHandle: Object,
@@ -3114,10 +3780,10 @@ export function hydrateSuspenseInstance(
   precacheFiberNode(internalInstanceHandle, suspenseInstance);
 }
 
-export function getNextHydratableInstanceAfterSuspenseInstance(
-  suspenseInstance: SuspenseInstance,
+function getNextHydratableInstanceAfterHydrationBoundary(
+  hydrationInstance: SuspenseInstance | ActivityInstance,
 ): null | HydratableInstance {
-  let node = suspenseInstance.nextSibling;
+  let node = hydrationInstance.nextSibling;
   // Skip past all nodes within this suspense boundary.
   // There might be nested nodes so we need to keep track of how
   // deep we are and only break out when we're back on top.
@@ -3125,7 +3791,7 @@ export function getNextHydratableInstanceAfterSuspenseInstance(
   while (node) {
     if (node.nodeType === COMMENT_NODE) {
       const data = ((node: any).data: string);
-      if (data === SUSPENSE_END_DATA) {
+      if (data === SUSPENSE_END_DATA || data === ACTIVITY_END_DATA) {
         if (depth === 0) {
           return getNextHydratableSibling((node: any));
         } else {
@@ -3134,7 +3800,9 @@ export function getNextHydratableInstanceAfterSuspenseInstance(
       } else if (
         data === SUSPENSE_START_DATA ||
         data === SUSPENSE_FALLBACK_START_DATA ||
-        data === SUSPENSE_PENDING_START_DATA
+        data === SUSPENSE_PENDING_START_DATA ||
+        data === SUSPENSE_QUEUED_START_DATA ||
+        data === ACTIVITY_START_DATA
       ) {
         depth++;
       }
@@ -3145,12 +3813,24 @@ export function getNextHydratableInstanceAfterSuspenseInstance(
   return null;
 }
 
+export function getNextHydratableInstanceAfterActivityInstance(
+  activityInstance: ActivityInstance,
+): null | HydratableInstance {
+  return getNextHydratableInstanceAfterHydrationBoundary(activityInstance);
+}
+
+export function getNextHydratableInstanceAfterSuspenseInstance(
+  suspenseInstance: SuspenseInstance,
+): null | HydratableInstance {
+  return getNextHydratableInstanceAfterHydrationBoundary(suspenseInstance);
+}
+
 // Returns the SuspenseInstance if this node is a direct child of a
 // SuspenseInstance. I.e. if its previous sibling is a Comment with
 // SUSPENSE_x_START_DATA. Otherwise, null.
-export function getParentSuspenseInstance(
+export function getParentHydrationBoundary(
   targetInstance: Node,
-): null | SuspenseInstance {
+): null | SuspenseInstance | ActivityInstance {
   let node = targetInstance.previousSibling;
   // Skip past all nodes within this suspense boundary.
   // There might be nested nodes so we need to keep track of how
@@ -3162,14 +3842,16 @@ export function getParentSuspenseInstance(
       if (
         data === SUSPENSE_START_DATA ||
         data === SUSPENSE_FALLBACK_START_DATA ||
-        data === SUSPENSE_PENDING_START_DATA
+        data === SUSPENSE_PENDING_START_DATA ||
+        data === SUSPENSE_QUEUED_START_DATA ||
+        data === ACTIVITY_START_DATA
       ) {
         if (depth === 0) {
-          return ((node: any): SuspenseInstance);
+          return ((node: any): SuspenseInstance | ActivityInstance);
         } else {
           depth--;
         }
-      } else if (data === SUSPENSE_END_DATA) {
+      } else if (data === SUSPENSE_END_DATA || data === ACTIVITY_END_DATA) {
         depth++;
       }
     }
@@ -3183,11 +3865,24 @@ export function commitHydratedContainer(container: Container): void {
   retryIfBlockedOn(container);
 }
 
+export function commitHydratedActivityInstance(
+  activityInstance: ActivityInstance,
+): void {
+  // Retry if any event replaying was blocked on this.
+  retryIfBlockedOn(activityInstance);
+}
+
 export function commitHydratedSuspenseInstance(
   suspenseInstance: SuspenseInstance,
 ): void {
   // Retry if any event replaying was blocked on this.
   retryIfBlockedOn(suspenseInstance);
+}
+
+export function flushHydrationEvents(): void {
+  if (enableHydrationChangeEvent) {
+    flushEventReplaying();
+  }
 }
 
 export function shouldDeleteUnhydratedTailInstances(
@@ -4891,6 +5586,36 @@ export function isHostHoistableType(
 }
 
 export function maySuspendCommit(type: Type, props: Props): boolean {
+  if (!enableSuspenseyImages && !enableViewTransition) {
+    return false;
+  }
+  // Suspensey images are the default, unless you opt-out of with either
+  // loading="lazy" or onLoad={...} which implies you're ok waiting.
+  return (
+    type === 'img' &&
+    props.src != null &&
+    props.src !== '' &&
+    props.onLoad == null &&
+    props.loading !== 'lazy'
+  );
+}
+
+export function maySuspendCommitOnUpdate(
+  type: Type,
+  oldProps: Props,
+  newProps: Props,
+): boolean {
+  return (
+    maySuspendCommit(type, newProps) &&
+    (newProps.src !== oldProps.src || newProps.srcSet !== oldProps.srcSet)
+  );
+}
+
+export function maySuspendCommitInSyncRender(
+  type: Type,
+  props: Props,
+): boolean {
+  // TODO: Allow sync lanes to suspend too with an opt-in.
   return false;
 }
 
@@ -4901,8 +5626,17 @@ export function mayResourceSuspendCommit(resource: Resource): boolean {
   );
 }
 
-export function preloadInstance(type: Type, props: Props): boolean {
-  return true;
+export function preloadInstance(
+  instance: Instance,
+  type: Type,
+  props: Props,
+): boolean {
+  // We don't need to preload Suspensey images because the browser will
+  // load them early once we set the src.
+  // If we return true here, we'll still get a suspendInstance call in the
+  // pre-commit phase to determine if we still need to decode the image or
+  // if was dropped from cache. This just avoids rendering Suspense fallback.
+  return !!(instance: any).complete;
 }
 
 export function preloadResource(resource: Resource): boolean {
@@ -4925,22 +5659,50 @@ type SuspendedState = {
 };
 let suspendedState: null | SuspendedState = null;
 
-// We use a noop function when we begin suspending because if possible we want the
-// waitfor step to finish synchronously. If it doesn't we'll return a function to
-// provide the actual unsuspend function and that will get completed when the count
-// hits zero or it will get cancelled if the root starts new work.
-function noop() {}
-
 export function startSuspendingCommit(): void {
   suspendedState = {
     stylesheets: null,
     count: 0,
+    // We use a noop function when we begin suspending because if possible we want the
+    // waitfor step to finish synchronously. If it doesn't we'll return a function to
+    // provide the actual unsuspend function and that will get completed when the count
+    // hits zero or it will get cancelled if the root starts new work.
     unsuspend: noop,
   };
 }
 
-export function suspendInstance(type: Type, props: Props): void {
-  return;
+const SUSPENSEY_IMAGE_TIMEOUT = 500;
+
+export function suspendInstance(
+  instance: Instance,
+  type: Type,
+  props: Props,
+): void {
+  if (!enableSuspenseyImages && !enableViewTransition) {
+    return;
+  }
+  if (suspendedState === null) {
+    throw new Error(
+      'Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug.',
+    );
+  }
+  const state = suspendedState;
+  if (
+    // $FlowFixMe[prop-missing]
+    typeof instance.decode === 'function' &&
+    typeof setTimeout === 'function'
+  ) {
+    // If this browser supports decode() API, we use it to suspend waiting on the image.
+    // The loading should have already started at this point, so it should be enough to
+    // just call decode() which should also wait for the data to finish loading.
+    state.count++;
+    const ping = onUnsuspend.bind(state);
+    Promise.race([
+      // $FlowFixMe[prop-missing]
+      instance.decode(),
+      new Promise(resolve => setTimeout(resolve, SUSPENSEY_IMAGE_TIMEOUT)),
+    ]).then(ping, ping);
+  }
 }
 
 export function suspendResource(

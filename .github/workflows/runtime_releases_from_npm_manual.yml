@@ -31,11 +31,12 @@ on:
         type: boolean
         default: false
 
+permissions: {}
+
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
   # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#cache-segment-restore-timeout
   SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
-  GH_TOKEN: ${{ github.token }}
   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
 jobs:
@@ -77,7 +78,9 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - run: yarn --cwd scripts/release install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - run: cp ./scripts/release/ci-npmrc ~/.npmrc
       - if: '${{ inputs.only_packages }}'
         name: 'Prepare ${{ inputs.only_packages }} from NPM'

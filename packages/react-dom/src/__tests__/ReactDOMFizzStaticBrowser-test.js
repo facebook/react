@@ -29,24 +29,27 @@ let ReactDOM;
 let ReactDOMFizzServer;
 let ReactDOMFizzStatic;
 let Suspense;
+let SuspenseList;
 let container;
-let Scheduler;
-let act;
+let serverAct;
 
 describe('ReactDOMFizzStaticBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
     JSDOM = require('jsdom').JSDOM;
 
-    Scheduler = require('scheduler');
-    patchMessageChannel(Scheduler);
-    act = require('internal-test-utils').act;
+    // We need the mocked version of setTimeout inside the document.
+    window.setTimeout = setTimeout;
+
+    patchMessageChannel();
+    serverAct = require('internal-test-utils').serverAct;
 
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMFizzServer = require('react-dom/server.browser');
     ReactDOMFizzStatic = require('react-dom/static.browser');
     Suspense = React.Suspense;
+    SuspenseList = React.unstable_SuspenseList;
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -57,17 +60,6 @@ describe('ReactDOMFizzStaticBrowser', () => {
     }
     document.body.removeChild(container);
   });
-
-  async function serverAct(callback) {
-    let maybePromise;
-    await act(() => {
-      maybePromise = callback();
-      if (maybePromise && typeof maybePromise.catch === 'function') {
-        maybePromise.catch(() => {});
-      }
-    });
-    return maybePromise;
-  }
 
   const theError = new Error('This is an error');
   function Throw() {
@@ -133,13 +125,18 @@ describe('ReactDOMFizzStaticBrowser', () => {
     const temp = document.createElement('div');
     temp.innerHTML = result;
     await insertNodesAndExecuteScripts(temp, container, null);
+    jest.runAllTimers();
   }
 
   async function readIntoNewDocument(stream) {
     const content = await readContent(stream);
-    const jsdom = new JSDOM(content, {
-      runScripts: 'dangerously',
-    });
+    const jsdom = new JSDOM(
+      // The Fizz runtime assumes requestAnimationFrame exists so we need to polyfill it.
+      '<script>window.requestAnimationFrame = setTimeout;</script>' + content,
+      {
+        runScripts: 'dangerously',
+      },
+    );
     const originalWindow = global.window;
     const originalDocument = global.document;
     const originalNavigator = global.navigator;
@@ -167,6 +164,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     const temp = document.createElement('div');
     temp.innerHTML = content;
     await insertNodesAndExecuteScripts(temp, document.body, null);
+    jest.runAllTimers();
   }
 
   it('should call prerender', async () => {
@@ -186,9 +184,15 @@ describe('ReactDOMFizzStaticBrowser', () => {
       ),
     );
     const prelude = await readContent(result.prelude);
-    expect(prelude).toMatchInlineSnapshot(
-      `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
-    );
+    if (gate(flags => flags.enableFizzBlockingRender)) {
+      expect(prelude).toMatchInlineSnapshot(
+        `"<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/></head><body>hello world<template id="«R»"></template></body></html>"`,
+      );
+    } else {
+      expect(prelude).toMatchInlineSnapshot(
+        `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
+      );
+    }
   });
 
   it('should emit bootstrap script src at the end', async () => {
@@ -201,7 +205,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     );
     const prelude = await readContent(result.prelude);
     expect(prelude).toMatchInlineSnapshot(
-      `"<link rel="preload" as="script" fetchPriority="low" href="init.js"/><link rel="modulepreload" fetchPriority="low" href="init.mjs"/><div>hello world</div><script>INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
+      `"<link rel="preload" as="script" fetchPriority="low" href="init.js"/><link rel="modulepreload" fetchPriority="low" href="init.mjs"/><div>hello world</div><script id="«R»">INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
     );
   });
 
@@ -980,6 +984,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     // Wait for the instruction microtasks to flush.
     await 0;
     await 0;
+    jest.runAllTimers();
 
     expect(getVisibleChildren(container)).toEqual([
       <link href="example.com" rel="preconnect" />,
@@ -1428,7 +1433,15 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(await readContent(content)).toBe(
       '<!DOCTYPE html><html lang="en"><head>' +
         '<link rel="stylesheet" href="my-style" data-precedence="high"/>' +
-        '</head><body>Hello</body></html>',
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<link rel="expect" href="#«R»" blocking="render"/>'
+          : '') +
+        '</head>' +
+        '<body>Hello' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<template id="«R»"></template>'
+          : '') +
+        '</body></html>',
     );
   });
 
@@ -1474,7 +1487,8 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(await readContent(content)).toBe(
       '<!DOCTYPE html><html lang="en"><head>' +
         '<link rel="stylesheet" href="my-style" data-precedence="high"/>' +
-        '</head><body>Hello</body></html>',
+        '<link rel="expect" href="#«R»" blocking="render"/></head>' +
+        '<body>Hello<template id="«R»"></template></body></html>',
     );
   });
 
@@ -1525,7 +1539,8 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(await readContent(content)).toBe(
       '<!DOCTYPE html><html><head>' +
         '<link rel="stylesheet" href="my-style" data-precedence="high"/>' +
-        '</head><body><div>Hello</div></body></html>',
+        '<link rel="expect" href="#«R»" blocking="render"/></head>' +
+        '<body><div>Hello</div><template id="«R»"></template></body></html>',
     );
   });
 
@@ -1607,7 +1622,8 @@ describe('ReactDOMFizzStaticBrowser', () => {
     let result = decoder.decode(value, {stream: true});
 
     expect(result).toBe(
-      '<!DOCTYPE html><html><head></head><body>hello<!--$?--><template id="B:1"></template><!--/$-->',
+      '<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/></head>' +
+        '<body>hello<!--$?--><template id="B:1"></template><!--/$--><script id="«R»">requestAnimationFrame(function(){$RT=performance.now()});</script>',
     );
 
     await 1;
@@ -1626,12 +1642,14 @@ describe('ReactDOMFizzStaticBrowser', () => {
     // We are mostly just trying to assert that no preload for our stylesheet was emitted
     // prior to sending the segment the stylesheet was for. This test is asserting this
     // because the boundary complete instruction is sent when we are writing the
-    const instructionIndex = result.indexOf('$RC');
+    const instructionIndex = result.indexOf('$RX');
     expect(instructionIndex > -1).toBe(true);
-    const slice = result.slice(0, instructionIndex + '$RC'.length);
+    const slice = result.slice(0, instructionIndex + '$RX'.length);
 
     expect(slice).toBe(
-      '<!DOCTYPE html><html><head></head><body>hello<!--$?--><template id="B:1"></template><!--/$--><div hidden id="S:1">world<!-- --></div><script>$RC',
+      '<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/></head>' +
+        '<body>hello<!--$?--><template id="B:1"></template><!--/$--><script id="«R»">requestAnimationFrame(function(){$RT=performance.now()});</script>' +
+        '<div hidden id="S:1">world<!-- --></div><script>$RX',
     );
   });
 
@@ -2211,6 +2229,91 @@ describe('ReactDOMFizzStaticBrowser', () => {
         <head />
         <body data-x="">Hello</body>
       </html>,
+    );
+  });
+
+  // @gate enableHalt && enableSuspenseList
+  it('can resume a partially prerendered SuspenseList', async () => {
+    const errors = [];
+
+    let resolveA;
+    const promiseA = new Promise(r => (resolveA = r));
+    let resolveB;
+    const promiseB = new Promise(r => (resolveB = r));
+
+    async function ComponentA() {
+      await promiseA;
+      return 'A';
+    }
+
+    async function ComponentB() {
+      await promiseB;
+      return 'B';
+    }
+
+    function App() {
+      return (
+        <div>
+          <SuspenseList revealOrder="forwards">
+            <Suspense fallback="Loading A">
+              <ComponentA />
+            </Suspense>
+            <Suspense fallback="Loading B">
+              <ComponentB />
+            </Suspense>
+            <Suspense fallback="Loading C">C</Suspense>
+            <Suspense fallback="Loading D">D</Suspense>
+          </SuspenseList>
+        </div>
+      );
+    }
+
+    const controller = new AbortController();
+    const pendingResult = serverAct(() =>
+      ReactDOMFizzStatic.prerender(<App />, {
+        signal: controller.signal,
+        onError(x) {
+          errors.push(x.message);
+        },
+      }),
+    );
+
+    await serverAct(() => {
+      controller.abort();
+    });
+
+    const prerendered = await pendingResult;
+
+    const postponedState = JSON.stringify(prerendered.postponed);
+
+    await readIntoContainer(prerendered.prelude);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        {'Loading A'}
+        {'Loading B'}
+        {'Loading C'}
+        {'Loading D'}
+      </div>,
+    );
+
+    expect(prerendered.postponed).not.toBe(null);
+
+    await resolveA();
+    await resolveB();
+
+    const dynamic = await serverAct(() =>
+      ReactDOMFizzServer.resume(<App />, JSON.parse(postponedState)),
+    );
+
+    await readIntoContainer(dynamic);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        {'A'}
+        {'B'}
+        {'C'}
+        {'D'}
+      </div>,
     );
   });
 });

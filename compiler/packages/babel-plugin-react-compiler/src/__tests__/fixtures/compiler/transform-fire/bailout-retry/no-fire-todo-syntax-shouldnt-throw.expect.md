@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enableFire @panicThreshold(none)
+// @enableFire @panicThreshold:"none"
 import {fire} from 'react';
 
 /**
@@ -43,8 +43,7 @@ function FireComponent(props) {
 ## Code
 
 ```javascript
-import { useFire } from "react/compiler-runtime";
-import { c as _c } from "react/compiler-runtime"; // @enableFire @panicThreshold(none)
+import { c as _c, useFire } from "react/compiler-runtime"; // @enableFire @panicThreshold:"none"
 import { fire } from "react";
 
 /**

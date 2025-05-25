@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 import {NodePath} from '@babel/core';
 import * as t from '@babel/types';
 
@@ -11,6 +18,7 @@ import {
 import {getOrInsertWith} from '../Utils/utils';
 import {Environment} from '../HIR';
 import {DEFAULT_EXPORT} from '../HIR/Environment';
+import {CompileProgramMetadata} from './Program';
 
 function throwInvalidReact(
   options: Omit<CompilerErrorDetailOptions, 'severity'>,
@@ -36,12 +44,16 @@ function assertValidEffectImportReference(
     const parent = path.parentPath;
     if (parent != null && parent.isCallExpression()) {
       const args = parent.get('arguments');
+      const maybeCalleeLoc = path.node.loc;
+      const hasInferredEffect =
+        maybeCalleeLoc != null &&
+        context.inferredEffectLocations.has(maybeCalleeLoc);
       /**
        * Only error on untransformed references of the form `useMyEffect(...)`
        * or `moduleNamespace.useMyEffect(...)`, with matching argument counts.
        * TODO: do we also want a mode to also hard error on non-call references?
        */
-      if (args.length === numArgs) {
+      if (args.length === numArgs && !hasInferredEffect) {
         const maybeErrorDiagnostic = matchCompilerDiagnostic(
           path,
           context.transformErrors,
@@ -97,7 +109,7 @@ export default function validateNoUntransformedReferences(
   filename: string | null,
   logger: Logger | null,
   env: EnvironmentConfig,
-  transformErrors: Array<{fn: NodePath<t.Node>; error: CompilerError}>,
+  compileResult: CompileProgramMetadata | null,
 ): void {
   const moduleLoadChecks = new Map<
     string,
@@ -126,7 +138,7 @@ export default function validateNoUntransformedReferences(
     }
   }
   if (moduleLoadChecks.size > 0) {
-    transformProgram(path, moduleLoadChecks, filename, logger, transformErrors);
+    transformProgram(path, moduleLoadChecks, filename, logger, compileResult);
   }
 }
 
@@ -136,6 +148,7 @@ type TraversalState = {
   logger: Logger | null;
   filename: string | null;
   transformErrors: Array<{fn: NodePath<t.Node>; error: CompilerError}>;
+  inferredEffectLocations: Set<t.SourceLocation>;
 };
 type CheckInvalidReferenceFn = (
   paths: Array<NodePath<t.Node>>,
@@ -223,14 +236,16 @@ function transformProgram(
   moduleLoadChecks: Map<string, Map<string, CheckInvalidReferenceFn>>,
   filename: string | null,
   logger: Logger | null,
-  transformErrors: Array<{fn: NodePath<t.Node>; error: CompilerError}>,
+  compileResult: CompileProgramMetadata | null,
 ): void {
   const traversalState: TraversalState = {
     shouldInvalidateScopes: true,
     program: path,
     filename,
     logger,
-    transformErrors,
+    transformErrors: compileResult?.retryErrors ?? [],
+    inferredEffectLocations:
+      compileResult?.inferredEffectLocations ?? new Set(),
   };
   path.traverse({
     ImportDeclaration(path: NodePath<t.ImportDeclaration>) {

@@ -1,4 +1,4 @@
-// @enableEmitInstrumentForget @compilationMode(annotation)
+// @enableEmitInstrumentForget @compilationMode:"annotation"
 
 function Bar(props) {
   'use forget';

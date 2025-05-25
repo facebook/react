@@ -12,7 +12,7 @@ import * as readline from 'readline';
 import ts from 'typescript';
 import yargs from 'yargs';
 import {hideBin} from 'yargs/helpers';
-import {FILTER_PATH} from './constants';
+import {FILTER_PATH, PROJECT_ROOT} from './constants';
 import {TestFilter, getFixtures, readTestFilter} from './fixture-utils';
 import {TestResult, TestResults, report, update} from './reporter';
 import {
@@ -22,6 +22,7 @@ import {
   watchSrc,
 } from './runner-watch';
 import * as runnerWorker from './runner-worker';
+import {execSync} from 'child_process';
 
 const WORKER_PATH = require.resolve('./runner-worker.js');
 const NUM_WORKERS = cpus().length - 1;
@@ -205,23 +206,29 @@ export async function main(opts: RunnerOptions): Promise<void> {
     const tsWatch: ts.WatchOfConfigFile<ts.SemanticDiagnosticsBuilderProgram> =
       watchSrc(
         () => {},
-        async (compileSuccess: boolean) => {
-          let isSuccess = compileSuccess;
-          if (compileSuccess) {
-            const testFilter = opts.filter ? await readTestFilter() : null;
-            const results = await runFixtures(worker, testFilter, 0);
-            if (opts.update) {
-              update(results);
-            } else {
-              const testSuccess = report(results);
-              isSuccess &&= testSuccess;
-            }
-          } else {
+        async (isTypecheckSuccess: boolean) => {
+          let isSuccess = false;
+          if (!isTypecheckSuccess) {
             console.error(
-              'Found errors in Forget source code, skipping test fixtures.',
+              'Found typescript errors in Forget source code, skipping test fixtures.',
             );
+          } else {
+            try {
+              execSync('yarn build', {cwd: PROJECT_ROOT});
+              console.log('Built compiler successfully with tsup');
+              const testFilter = opts.filter ? await readTestFilter() : null;
+              const results = await runFixtures(worker, testFilter, 0);
+              if (opts.update) {
+                update(results);
+                isSuccess = true;
+              } else {
+                isSuccess = report(results);
+              }
+            } catch (e) {
+              console.warn('Failed to build compiler with tsup:', e);
+            }
           }
-          tsWatch.close();
+          tsWatch?.close();
           await worker.end();
           process.exit(isSuccess ? 0 : 1);
         },

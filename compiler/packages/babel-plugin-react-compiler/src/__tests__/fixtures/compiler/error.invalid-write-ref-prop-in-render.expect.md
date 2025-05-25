@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @validateRefAccessDuringRender @compilationMode(infer)
+// @validateRefAccessDuringRender @compilationMode:"infer"
 function Component(props) {
   const ref = props.ref;
   ref.current = true;

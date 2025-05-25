@@ -7,40 +7,14 @@
  * @flow
  */
 
-import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ViewTransitionClass, ViewTransitionProps} from 'shared/ReactTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {ViewTransitionInstance, Instance} from './ReactFiberConfig';
 
 import {
-  getWorkInProgressRoot,
+  getCommittingRoot,
   getPendingTransitionTypes,
 } from './ReactFiberWorkLoop';
-
-import {getIsHydrating} from './ReactFiberHydrationContext';
-
-import {getTreeId} from './ReactFiberTreeContext';
-
-export type ViewTransitionClassPerType = {
-  [transitionType: 'default' | string]: 'none' | string,
-};
-
-export type ViewTransitionClass = 'none' | string | ViewTransitionClassPerType;
-
-export type ViewTransitionProps = {
-  name?: string,
-  children?: ReactNodeList,
-  className?: ViewTransitionClass,
-  enter?: ViewTransitionClass,
-  exit?: ViewTransitionClass,
-  layout?: ViewTransitionClass,
-  share?: ViewTransitionClass,
-  update?: ViewTransitionClass,
-  onEnter?: (instance: ViewTransitionInstance, types: Array<string>) => void,
-  onExit?: (instance: ViewTransitionInstance, types: Array<string>) => void,
-  onLayout?: (instance: ViewTransitionInstance, types: Array<string>) => void,
-  onShare?: (instance: ViewTransitionInstance, types: Array<string>) => void,
-  onUpdate?: (instance: ViewTransitionInstance, types: Array<string>) => void,
-};
 
 export type ViewTransitionState = {
   autoName: null | string, // the view-transition-name to use when an explicit one is not specified
@@ -51,36 +25,6 @@ export type ViewTransitionState = {
 
 let globalClientIdCounter: number = 0;
 
-export function assignViewTransitionAutoName(
-  props: ViewTransitionProps,
-  instance: ViewTransitionState,
-): string {
-  if (instance.autoName !== null) {
-    return instance.autoName;
-  }
-
-  const root = ((getWorkInProgressRoot(): any): FiberRoot);
-  const identifierPrefix = root.identifierPrefix;
-
-  let name;
-  if (getIsHydrating()) {
-    const treeId = getTreeId();
-    // Use a captial R prefix for server-generated ids.
-    name = '\u00AB' + identifierPrefix + 'T' + treeId + '\u00BB';
-  } else {
-    // Use a lowercase r prefix for client-generated ids.
-    const globalClientId = globalClientIdCounter++;
-    name =
-      '\u00AB' +
-      identifierPrefix +
-      't' +
-      globalClientId.toString(32) +
-      '\u00BB';
-  }
-  instance.autoName = name;
-  return name;
-}
-
 export function getViewTransitionName(
   props: ViewTransitionProps,
   instance: ViewTransitionState,
@@ -88,8 +32,18 @@ export function getViewTransitionName(
   if (props.name != null && props.name !== 'auto') {
     return props.name;
   }
-  // We should have assigned a name by now.
-  return (instance.autoName: any);
+  if (instance.autoName !== null) {
+    return instance.autoName;
+  }
+
+  // We assume we always call this in the commit phase.
+  const root = ((getCommittingRoot(): any): FiberRoot);
+  const identifierPrefix = root.identifierPrefix;
+  const globalClientId = globalClientIdCounter++;
+  const name =
+    '\u00AB' + identifierPrefix + 't' + globalClientId.toString(32) + '\u00BB';
+  instance.autoName = name;
+  return name;
 }
 
 function getClassNameByType(classByType: ?ViewTransitionClass): ?string {
@@ -129,13 +83,10 @@ export function getViewTransitionClassName(
   const className: ?string = getClassNameByType(defaultClass);
   const eventClassName: ?string = getClassNameByType(eventClass);
   if (eventClassName == null) {
-    return className;
+    return className === 'auto' ? null : className;
   }
-  if (eventClassName === 'none') {
-    return eventClassName;
-  }
-  if (className != null && className !== 'none') {
-    return className + ' ' + eventClassName;
+  if (eventClassName === 'auto') {
+    return null;
   }
   return eventClassName;
 }

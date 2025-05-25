@@ -19,6 +19,7 @@ function shim(...args: any): empty {
 }
 
 // Hydration (when unsupported)
+export type ActivityInstance = mixed;
 export type SuspenseInstance = mixed;
 export const supportsHydration = false;
 export const isSuspenseInstancePending = shim;
@@ -31,19 +32,31 @@ export const getNextHydratableSibling = shim;
 export const getNextHydratableSiblingAfterSingleton = shim;
 export const getFirstHydratableChild = shim;
 export const getFirstHydratableChildWithinContainer = shim;
+export const getFirstHydratableChildWithinActivityInstance = shim;
 export const getFirstHydratableChildWithinSuspenseInstance = shim;
 export const getFirstHydratableChildWithinSingleton = shim;
 export const canHydrateInstance = shim;
 export const canHydrateTextInstance = shim;
+export const canHydrateActivityInstance = shim;
 export const canHydrateSuspenseInstance = shim;
 export const hydrateInstance = shim;
 export const hydrateTextInstance = shim;
+export const hydrateActivityInstance = shim;
 export const hydrateSuspenseInstance = shim;
+export const getNextHydratableInstanceAfterActivityInstance = shim;
 export const getNextHydratableInstanceAfterSuspenseInstance = shim;
+export const finalizeHydratedChildren = shim;
+export const commitHydratedInstance = shim;
 export const commitHydratedContainer = shim;
+export const commitHydratedActivityInstance = shim;
 export const commitHydratedSuspenseInstance = shim;
+export const flushHydrationEvents = shim;
+export const clearActivityBoundary = shim;
 export const clearSuspenseBoundary = shim;
+export const clearActivityBoundaryFromContainer = shim;
 export const clearSuspenseBoundaryFromContainer = shim;
+export const hideDehydratedBoundary = shim;
+export const unhideDehydratedBoundary = shim;
 export const shouldDeleteUnhydratedTailInstances = shim;
 export const diffHydratedPropsForDevWarnings = shim;
 export const diffHydratedTextForDevWarnings = shim;

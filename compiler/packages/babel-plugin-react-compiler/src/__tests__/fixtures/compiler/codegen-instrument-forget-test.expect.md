@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enableEmitInstrumentForget @compilationMode(annotation)
+// @enableEmitInstrumentForget @compilationMode:"annotation"
 
 function Bar(props) {
   'use forget';
@@ -23,8 +23,8 @@ function Foo(props) {
 ## Code
 
 ```javascript
-import { useRenderCounter, shouldInstrument } from "react-compiler-runtime";
-import { c as _c } from "react/compiler-runtime"; // @enableEmitInstrumentForget @compilationMode(annotation)
+import { shouldInstrument, useRenderCounter } from "react-compiler-runtime";
+import { c as _c } from "react/compiler-runtime"; // @enableEmitInstrumentForget @compilationMode:"annotation"
 
 function Bar(props) {
   "use forget";

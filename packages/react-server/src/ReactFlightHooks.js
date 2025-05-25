@@ -17,10 +17,7 @@ import {
 } from 'shared/ReactSymbols';
 import {createThenableState, trackUsedThenable} from './ReactFlightThenable';
 import {isClientReference} from './ReactFlightServerConfig';
-import {
-  enableUseEffectEventHook,
-  enableSwipeTransition,
-} from 'shared/ReactFeatureFlags';
+import {enableUseEffectEventHook} from 'shared/ReactFeatureFlags';
 
 let currentRequest = null;
 let thenableIndexCounter = 0;
@@ -102,9 +99,6 @@ export const HooksDispatcher: Dispatcher = {
 if (enableUseEffectEventHook) {
   HooksDispatcher.useEffectEvent = (unsupportedHook: any);
 }
-if (enableSwipeTransition) {
-  HooksDispatcher.useSwipeTransition = (unsupportedHook: any);
-}
 
 function unsupportedHook(): void {
   throw new Error('This Hook is not supported in Server Components.');
@@ -126,7 +120,13 @@ function useId(): string {
   }
   const id = currentRequest.identifierCount++;
   // use 'S' for Flight components to distinguish from 'R' and 'r' in Fizz/Client
-  return ':' + currentRequest.identifierPrefix + 'S' + id.toString(32) + ':';
+  return (
+    '\u00AB' +
+    currentRequest.identifierPrefix +
+    'S' +
+    id.toString(32) +
+    '\u00BB'
+  );
 }
 
 function use<T>(usable: Usable<T>): T {

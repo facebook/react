@@ -10,7 +10,7 @@ import * as t from '@babel/types';
 import {CompilerError, CompilerErrorDetailOptions} from '../CompilerError';
 import {assertExhaustive} from '../Utils/utils';
 import {Environment, ReactFunctionType} from './Environment';
-import {HookKind} from './ObjectShape';
+import type {HookKind} from './ObjectShape';
 import {Type, makeType} from './Types';
 import {z} from 'zod';
 
@@ -746,6 +746,27 @@ export enum InstructionKind {
   Function = 'Function',
 }
 
+export function convertHoistedLValueKind(
+  kind: InstructionKind,
+): InstructionKind | null {
+  switch (kind) {
+    case InstructionKind.HoistedLet:
+      return InstructionKind.Let;
+    case InstructionKind.HoistedConst:
+      return InstructionKind.Const;
+    case InstructionKind.HoistedFunction:
+      return InstructionKind.Function;
+    case InstructionKind.Let:
+    case InstructionKind.Const:
+    case InstructionKind.Function:
+    case InstructionKind.Reassign:
+    case InstructionKind.Catch:
+      return null;
+    default:
+      assertExhaustive(kind, 'Unexpected lvalue kind');
+  }
+}
+
 function _staticInvariantInstructionValueHasLocation(
   value: InstructionValue,
 ): SourceLocation {
@@ -829,6 +850,13 @@ export type CallExpression = {
   typeArguments?: Array<t.FlowType>;
 };
 
+export type NewExpression = {
+  kind: 'NewExpression';
+  callee: Place;
+  args: Array<Place | SpreadPattern>;
+  loc: SourceLocation;
+};
+
 export type LoadLocal = {
   kind: 'LoadLocal';
   place: Place;
@@ -873,8 +901,20 @@ export type InstructionValue =
   | StoreLocal
   | {
       kind: 'StoreContext';
+      /**
+       * StoreContext kinds:
+       * Reassign: context variable reassignment in source
+       * Const:    const declaration + assignment in source
+       *           ('const' context vars are ones whose declarations are hoisted)
+       * Let:      let declaration + assignment in source
+       * Function: function declaration in source (similar to `const`)
+       */
       lvalue: {
-        kind: InstructionKind.Reassign;
+        kind:
+          | InstructionKind.Reassign
+          | InstructionKind.Const
+          | InstructionKind.Let
+          | InstructionKind.Function;
         place: Place;
       };
       value: Place;
@@ -894,12 +934,7 @@ export type InstructionValue =
       right: Place;
       loc: SourceLocation;
     }
-  | {
-      kind: 'NewExpression';
-      callee: Place;
-      args: Array<Place | SpreadPattern>;
-      loc: SourceLocation;
-    }
+  | NewExpression
   | CallExpression
   | MethodCall
   | {
@@ -908,13 +943,21 @@ export type InstructionValue =
       value: Place;
       loc: SourceLocation;
     }
-  | {
+  | ({
       kind: 'TypeCastExpression';
       value: Place;
-      typeAnnotation: t.FlowType | t.TSType;
       type: Type;
       loc: SourceLocation;
-    }
+    } & (
+      | {
+          typeAnnotation: t.FlowType;
+          typeAnnotationKind: 'cast';
+        }
+      | {
+          typeAnnotation: t.TSType;
+          typeAnnotationKind: 'as' | 'satisfies';
+        }
+    ))
   | JsxExpression
   | {
       kind: 'ObjectExpression';
@@ -1165,18 +1208,21 @@ export type VariableBinding =
   // bindings declard outside the current component/hook
   | NonLocalBinding;
 
+// `import {bar as baz} from 'foo'`: name=baz, module=foo, imported=bar
+export type NonLocalImportSpecifier = {
+  kind: 'ImportSpecifier';
+  name: string;
+  module: string;
+  imported: string;
+};
+
 export type NonLocalBinding =
   // `import Foo from 'foo'`: name=Foo, module=foo
   | {kind: 'ImportDefault'; name: string; module: string}
   // `import * as Foo from 'foo'`: name=Foo, module=foo
   | {kind: 'ImportNamespace'; name: string; module: string}
-  // `import {bar as baz} from 'foo'`: name=baz, module=foo, imported=bar
-  | {
-      kind: 'ImportSpecifier';
-      name: string;
-      module: string;
-      imported: string;
-    }
+  // `import {bar as baz} from 'foo'`
+  | NonLocalImportSpecifier
   // let, const, function, etc declared in the module but outside the current component/hook
   | {kind: 'ModuleLocal'; name: string}
   // an unresolved binding
@@ -1394,6 +1440,7 @@ export enum Effect {
   Read = 'read',
   // This reference reads and stores the value
   Capture = 'capture',
+  ConditionallyMutateIterator = 'mutate-iterator?',
   /*
    * This reference *may* write to (mutate) the value. This covers two similar cases:
    * - The compiler is being conservative and assuming that a value *may* be mutated
@@ -1412,11 +1459,11 @@ export enum Effect {
   // This reference may alias to (mutate) the value
   Store = 'store',
 }
-
 export const EffectSchema = z.enum([
   Effect.Read,
   Effect.Mutate,
   Effect.ConditionallyMutate,
+  Effect.ConditionallyMutateIterator,
   Effect.Capture,
   Effect.Store,
   Effect.Freeze,
@@ -1430,6 +1477,7 @@ export function isMutableEffect(
     case Effect.Capture:
     case Effect.Store:
     case Effect.ConditionallyMutate:
+    case Effect.ConditionallyMutateIterator:
     case Effect.Mutate: {
       return true;
     }
@@ -1520,6 +1568,18 @@ export type DependencyPathEntry = {
 export type DependencyPath = Array<DependencyPathEntry>;
 export type ReactiveScopeDependency = {
   identifier: Identifier;
+  /**
+   * Reflects whether the base identifier is reactive. Note that some reactive
+   * objects may have non-reactive properties, but we do not currently track
+   * this.
+   *
+   * ```js
+   * // Technically, result[0] is reactive and result[1] is not.
+   * // Currently, both dependencies would be marked as reactive.
+   * const result = useState();
+   * ```
+   */
+  reactive: boolean;
   path: DependencyPath;
 };
 
@@ -1649,6 +1709,14 @@ export function isArrayType(id: Identifier): boolean {
   return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInArray';
 }
 
+export function isMapType(id: Identifier): boolean {
+  return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInMap';
+}
+
+export function isSetType(id: Identifier): boolean {
+  return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInSet';
+}
+
 export function isPropsType(id: Identifier): boolean {
   return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInProps';
 }
@@ -1667,6 +1735,18 @@ export function isUseStateType(id: Identifier): boolean {
 
 export function isRefOrRefValue(id: Identifier): boolean {
   return isUseRefType(id) || isRefValueType(id);
+}
+
+/*
+ * Returns true if the type is a Ref or a custom user type that acts like a ref when it
+ * shouldn't. For now the only other case of this is Reanimated's shared values.
+ */
+export function isRefOrRefLikeMutableType(type: Type): boolean {
+  return (
+    type.kind === 'Object' &&
+    (type.shapeId === 'BuiltInUseRefId' ||
+      type.shapeId == 'ReanimatedSharedValueId')
+  );
 }
 
 export function isSetStateType(id: Identifier): boolean {
@@ -1699,6 +1779,12 @@ export function isDispatcherType(id: Identifier): boolean {
   return id.type.kind === 'Function' && id.type.shapeId === 'BuiltInDispatch';
 }
 
+export function isFireFunctionType(id: Identifier): boolean {
+  return (
+    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInFireFunction'
+  );
+}
+
 export function isStableType(id: Identifier): boolean {
   return (
     isSetStateType(id) ||
@@ -1707,6 +1793,40 @@ export function isStableType(id: Identifier): boolean {
     isUseRefType(id) ||
     isStartTransitionType(id)
   );
+}
+
+export function isStableTypeContainer(id: Identifier): boolean {
+  const type_ = id.type;
+  if (type_.kind !== 'Object') {
+    return false;
+  }
+  return (
+    isUseStateType(id) || // setState
+    type_.shapeId === 'BuiltInUseActionState' || // setActionState
+    isUseReducerType(id) || // dispatcher
+    type_.shapeId === 'BuiltInUseTransition' // startTransition
+  );
+}
+
+export function evaluatesToStableTypeOrContainer(
+  env: Environment,
+  {value}: Instruction,
+): boolean {
+  if (value.kind === 'CallExpression' || value.kind === 'MethodCall') {
+    const callee =
+      value.kind === 'CallExpression' ? value.callee : value.property;
+
+    const calleeHookKind = getHookKind(env, callee.identifier);
+    switch (calleeHookKind) {
+      case 'useState':
+      case 'useReducer':
+      case 'useActionState':
+      case 'useRef':
+      case 'useTransition':
+        return true;
+    }
+  }
+  return false;
 }
 
 export function isUseEffectHookType(id: Identifier): boolean {

@@ -412,7 +412,7 @@ describe('ReactInteractionTracing', () => {
           {navigate ? (
             <Suspense
               fallback={<Text text="Loading..." />}
-              unstable_name="suspense page">
+              name="suspense page">
               <AsyncText text="Page Two" />
             </Suspense>
           ) : (
@@ -442,7 +442,9 @@ describe('ReactInteractionTracing', () => {
       await waitForAll([
         'Suspend [Page Two]',
         'Loading...',
-        ...(gate('enableSiblingPrerendering') ? ['Suspend [Page Two]'] : []),
+        // pre-warming
+        'Suspend [Page Two]',
+        // end pre-warming
         'onTransitionStart(page transition, 1000)',
         'onTransitionProgress(page transition, 1000, 2000, [suspense page])',
       ]);
@@ -498,14 +500,14 @@ describe('ReactInteractionTracing', () => {
             <>
               {showText ? (
                 <Suspense
-                  unstable_name="show text"
+                  name="show text"
                   fallback={<Text text="Show Text Loading..." />}>
                   <AsyncText text="Show Text" />
                 </Suspense>
               ) : null}
               <Suspense
                 fallback={<Text text="Loading..." />}
-                unstable_name="suspense page">
+                name="suspense page">
                 <AsyncText text="Page Two" />
               </Suspense>
             </>
@@ -533,7 +535,9 @@ describe('ReactInteractionTracing', () => {
       await waitForAll([
         'Suspend [Page Two]',
         'Loading...',
-        ...(gate('enableSiblingPrerendering') ? ['Suspend [Page Two]'] : []),
+        // pre-warming
+        'Suspend [Page Two]',
+        // end pre-warming
         'onTransitionStart(page transition, 1000)',
         'onTransitionProgress(page transition, 1000, 1000, [suspense page])',
       ]);
@@ -552,7 +556,9 @@ describe('ReactInteractionTracing', () => {
         'Suspend [Show Text]',
         'Show Text Loading...',
         'Page Two',
-        ...(gate('enableSiblingPrerendering') ? ['Suspend [Show Text]'] : []),
+        // pre-warming
+        'Suspend [Show Text]',
+        // end pre-warming
         'onTransitionStart(text transition, 2000)',
         'onTransitionProgress(text transition, 2000, 2000, [show text])',
       ]);
@@ -605,14 +611,14 @@ describe('ReactInteractionTracing', () => {
             <>
               {showText ? (
                 <Suspense
-                  unstable_name="show text"
+                  name="show text"
                   fallback={<Text text="Show Text Loading..." />}>
                   <AsyncText text="Show Text" />
                 </Suspense>
               ) : null}
               <Suspense
                 fallback={<Text text="Loading..." />}
-                unstable_name="suspense page">
+                name="suspense page">
                 <AsyncText text="Page Two" />
               </Suspense>
             </>
@@ -642,7 +648,9 @@ describe('ReactInteractionTracing', () => {
       await waitForAll([
         'Suspend [Page Two]',
         'Loading...',
-        ...(gate('enableSiblingPrerendering') ? ['Suspend [Page Two]'] : []),
+        // pre-warming
+        'Suspend [Page Two]',
+        // end pre-warming
         'onTransitionStart(page transition, 1000)',
         'onTransitionProgress(page transition, 1000, 2000, [suspense page])',
       ]);
@@ -656,9 +664,10 @@ describe('ReactInteractionTracing', () => {
         'Show Text Loading...',
         'Suspend [Page Two]',
         'Loading...',
-        ...(gate('enableSiblingPrerendering')
-          ? ['Suspend [Show Text]', 'Suspend [Page Two]']
-          : []),
+        // pre-warming
+        'Suspend [Show Text]',
+        'Suspend [Page Two]',
+        // end pre-warming
         'onTransitionStart(show text, 2000)',
         'onTransitionProgress(show text, 2000, 2000, [show text])',
       ]);
@@ -719,16 +728,16 @@ describe('ReactInteractionTracing', () => {
             <>
               <Suspense
                 fallback={<Text text="Loading..." />}
-                unstable_name="suspense page">
+                name="suspense page">
                 <AsyncText text="Page Two" />
                 <Suspense
-                  unstable_name="show text one"
+                  name="show text one"
                   fallback={<Text text="Show Text One Loading..." />}>
                   <AsyncText text="Show Text One" />
                 </Suspense>
                 <div>
                   <Suspense
-                    unstable_name="show text two"
+                    name="show text two"
                     fallback={<Text text="Show Text Two Loading..." />}>
                     <AsyncText text="Show Text Two" />
                   </Suspense>
@@ -761,15 +770,13 @@ describe('ReactInteractionTracing', () => {
       await waitForAll([
         'Suspend [Page Two]',
         'Loading...',
-        ...(gate('enableSiblingPrerendering')
-          ? [
-              'Suspend [Page Two]',
-              'Suspend [Show Text One]',
-              'Show Text One Loading...',
-              'Suspend [Show Text Two]',
-              'Show Text Two Loading...',
-            ]
-          : []),
+        // pre-warming
+        'Suspend [Page Two]',
+        'Suspend [Show Text One]',
+        'Show Text One Loading...',
+        'Suspend [Show Text Two]',
+        'Show Text Two Loading...',
+        // end pre-warming
         'onTransitionStart(page transition, 1000)',
         'onTransitionProgress(page transition, 1000, 2000, [suspense page])',
       ]);
@@ -784,9 +791,10 @@ describe('ReactInteractionTracing', () => {
         'Show Text One Loading...',
         'Suspend [Show Text Two]',
         'Show Text Two Loading...',
-        ...(gate('enableSiblingPrerendering')
-          ? ['Suspend [Show Text One]', 'Suspend [Show Text Two]']
-          : []),
+        // pre-warming
+        'Suspend [Show Text One]',
+        'Suspend [Show Text Two]',
+        // end pre-warming
         'onTransitionProgress(page transition, 1000, 3000, [show text one, show text two])',
       ]);
 
@@ -848,12 +856,12 @@ describe('ReactInteractionTracing', () => {
             <>
               <Suspense
                 fallback={<Text text="Loading..." />}
-                unstable_name="suspense page">
+                name="suspense page">
                 <AsyncText text="Page Two" />
                 {/* showTextOne is entangled with navigate */}
                 {showTextOne ? (
                   <Suspense
-                    unstable_name="show text one"
+                    name="show text one"
                     fallback={<Text text="Show Text One Loading..." />}>
                     <AsyncText text="Show Text One" />
                   </Suspense>
@@ -865,7 +873,7 @@ describe('ReactInteractionTracing', () => {
                  from completing */}
                 {showTextTwo ? (
                   <Suspense
-                    unstable_name="show text two"
+                    name="show text two"
                     fallback={<Text text="Show Text Two Loading..." />}>
                     <AsyncText text="Show Text Two" />
                   </Suspense>
@@ -899,15 +907,13 @@ describe('ReactInteractionTracing', () => {
       await waitForAll([
         'Suspend [Page Two]',
         'Loading...',
-        ...(gate('enableSiblingPrerendering')
-          ? [
-              'Suspend [Page Two]',
-              'Suspend [Show Text One]',
-              'Show Text One Loading...',
-              'Suspend [Show Text]',
-              'Show Text Loading...',
-            ]
-          : []),
+        // pre-warming
+        'Suspend [Page Two]',
+        'Suspend [Show Text One]',
+        'Show Text One Loading...',
+        'Suspend [Show Text]',
+        'Show Text Loading...',
+        // end pre-warming
         'onTransitionStart(navigate, 1000)',
         'onTransitionStart(show text one, 1000)',
         'onTransitionProgress(navigate, 1000, 2000, [suspense page])',
@@ -923,9 +929,10 @@ describe('ReactInteractionTracing', () => {
         'Show Text One Loading...',
         'Suspend [Show Text]',
         'Show Text Loading...',
-        ...(gate('enableSiblingPrerendering')
-          ? ['Suspend [Show Text One]', 'Suspend [Show Text]']
-          : []),
+        // pre-warming
+        'Suspend [Show Text One]',
+        'Suspend [Show Text]',
+        // end pre-warming
         'onTransitionProgress(navigate, 1000, 3000, [show text one, <null>])',
         'onTransitionProgress(show text one, 1000, 3000, [show text one, <null>])',
       ]);
@@ -942,13 +949,11 @@ describe('ReactInteractionTracing', () => {
         'Show Text Loading...',
         'Suspend [Show Text Two]',
         'Show Text Two Loading...',
-        ...(gate('enableSiblingPrerendering')
-          ? [
-              'Suspend [Show Text One]',
-              'Suspend [Show Text]',
-              'Suspend [Show Text Two]',
-            ]
-          : []),
+        // pre-warming
+        'Suspend [Show Text One]',
+        'Suspend [Show Text]',
+        'Suspend [Show Text Two]',
+        // end pre-warming
         'onTransitionStart(show text two, 3000)',
         'onTransitionProgress(show text two, 3000, 4000, [show text two])',
       ]);
@@ -1115,13 +1120,13 @@ describe('ReactInteractionTracing', () => {
           {navigate ? (
             <Suspense
               fallback={<Text text="Loading..." />}
-              unstable_name="suspense page">
+              name="suspense page">
               <AsyncText text="Page Two" />
               <React.unstable_TracingMarker name="sync marker" />
               <React.unstable_TracingMarker name="async marker">
                 <Suspense
                   fallback={<Text text="Loading..." />}
-                  unstable_name="marker suspense">
+                  name="marker suspense">
                   <AsyncText text="Marker Text" />
                 </Suspense>
               </React.unstable_TracingMarker>
@@ -1153,9 +1158,11 @@ describe('ReactInteractionTracing', () => {
       await waitForAll([
         'Suspend [Page Two]',
         'Loading...',
-        ...(gate('enableSiblingPrerendering')
-          ? ['Suspend [Page Two]', 'Suspend [Marker Text]', 'Loading...']
-          : []),
+        // pre-warming
+        'Suspend [Page Two]',
+        'Suspend [Marker Text]',
+        'Loading...',
+        // end pre-warming
         'onTransitionStart(page transition, 1000)',
       ]);
 
@@ -1167,7 +1174,9 @@ describe('ReactInteractionTracing', () => {
         'Page Two',
         'Suspend [Marker Text]',
         'Loading...',
-        ...(gate('enableSiblingPrerendering') ? ['Suspend [Marker Text]'] : []),
+        // pre-warming
+        'Suspend [Marker Text]',
+        // end pre-warming
         'onMarkerProgress(page transition, async marker, 1000, 3000, [marker suspense])',
         'onMarkerComplete(page transition, sync marker, 1000, 3000)',
       ]);
@@ -1226,20 +1235,18 @@ describe('ReactInteractionTracing', () => {
         <div>
           {navigate ? (
             <React.unstable_TracingMarker name="outer marker">
-              <Suspense
-                fallback={<Text text="Outer..." />}
-                unstable_name="outer">
+              <Suspense fallback={<Text text="Outer..." />} name="outer">
                 <AsyncText text="Outer Text" />
                 <Suspense
                   fallback={<Text text="Inner One..." />}
-                  unstable_name="inner one">
+                  name="inner one">
                   <React.unstable_TracingMarker name="marker one">
                     <AsyncText text="Inner Text One" />
                   </React.unstable_TracingMarker>
                 </Suspense>
                 <Suspense
                   fallback={<Text text="Inner Two..." />}
-                  unstable_name="inner two">
+                  name="inner two">
                   <React.unstable_TracingMarker name="marker two">
                     <AsyncText text="Inner Text Two" />
                   </React.unstable_TracingMarker>
@@ -1273,15 +1280,13 @@ describe('ReactInteractionTracing', () => {
       await waitForAll([
         'Suspend [Outer Text]',
         'Outer...',
-        ...(gate('enableSiblingPrerendering')
-          ? [
-              'Suspend [Outer Text]',
-              'Suspend [Inner Text One]',
-              'Inner One...',
-              'Suspend [Inner Text Two]',
-              'Inner Two...',
-            ]
-          : []),
+        // pre-warming
+        'Suspend [Outer Text]',
+        'Suspend [Inner Text One]',
+        'Inner One...',
+        'Suspend [Inner Text Two]',
+        'Inner Two...',
+        // end pre-warming
         'onTransitionStart(page transition, 1000)',
         'onMarkerProgress(page transition, outer marker, 1000, 2000, [outer])',
       ]);
@@ -1299,9 +1304,9 @@ describe('ReactInteractionTracing', () => {
         'Suspend [Inner Text One]',
         'Inner One...',
         'Inner Text Two',
-        ...(gate('enableSiblingPrerendering')
-          ? ['Suspend [Inner Text One]']
-          : []),
+        // pre-warming
+        'Suspend [Inner Text One]',
+        // end pre-warming
         'onMarkerProgress(page transition, outer marker, 1000, 4000, [inner one])',
         'onMarkerComplete(page transition, marker two, 1000, 4000)',
       ]);
@@ -1488,21 +1493,21 @@ describe('ReactInteractionTracing', () => {
               {showMarker ? (
                 <React.unstable_TracingMarker name="marker one">
                   <Suspense
-                    unstable_name="suspense page"
+                    name="suspense page"
                     fallback={<Text text="Loading..." />}>
                     <AsyncText text="Page Two" />
                   </Suspense>
                 </React.unstable_TracingMarker>
               ) : (
                 <Suspense
-                  unstable_name="suspense page"
+                  name="suspense page"
                   fallback={<Text text="Loading..." />}>
                   <AsyncText text="Page Two" />
                 </Suspense>
               )}
               <React.unstable_TracingMarker name="sibling">
                 <Suspense
-                  unstable_name="suspense sibling"
+                  name="suspense sibling"
                   fallback={<Text text="Sibling Loading..." />}>
                   <AsyncText text="Sibling Text" />
                 </Suspense>
@@ -1537,9 +1542,10 @@ describe('ReactInteractionTracing', () => {
         'Loading...',
         'Suspend [Sibling Text]',
         'Sibling Loading...',
-        ...(gate('enableSiblingPrerendering')
-          ? ['Suspend [Page Two]', 'Suspend [Sibling Text]']
-          : []),
+        // pre-warming
+        'Suspend [Page Two]',
+        'Suspend [Sibling Text]',
+        // end pre-warming
         'onTransitionStart(transition one, 1000)',
         'onMarkerProgress(transition one, parent, 1000, 2000, [suspense page, suspense sibling])',
         'onMarkerProgress(transition one, marker one, 1000, 2000, [suspense page])',
@@ -1555,9 +1561,10 @@ describe('ReactInteractionTracing', () => {
         'Loading...',
         'Suspend [Sibling Text]',
         'Sibling Loading...',
-        ...(gate('enableSiblingPrerendering')
-          ? ['Suspend [Page Two]', 'Suspend [Sibling Text]']
-          : []),
+        // pre-warming
+        'Suspend [Page Two]',
+        'Suspend [Sibling Text]',
+        // end pre-warming
         'onMarkerProgress(transition one, parent, 1000, 3000, [suspense sibling])',
         'onMarkerIncomplete(transition one, marker one, 1000, [{endTime: 3000, name: marker one, type: marker}, {endTime: 3000, name: suspense page, type: suspense}])',
         'onMarkerIncomplete(transition one, parent, 1000, [{endTime: 3000, name: marker one, type: marker}, {endTime: 3000, name: suspense page, type: suspense}])',
@@ -1571,9 +1578,9 @@ describe('ReactInteractionTracing', () => {
         'Loading...',
         'Suspend [Sibling Text]',
         'Sibling Loading...',
-        ...(gate('enableSiblingPrerendering')
-          ? ['Suspend [Page Two]', 'Suspend [Sibling Text]']
-          : []),
+        // pre-warming
+        'Suspend [Page Two]',
+        'Suspend [Sibling Text]',
       ]);
     });
 
@@ -1652,7 +1659,7 @@ describe('ReactInteractionTracing', () => {
                 <div>
                   <React.unstable_TracingMarker name="one">
                     <Suspense
-                      unstable_name="suspense one"
+                      name="suspense one"
                       fallback={<Text text="Loading One..." />}>
                       <AsyncText text="Page One" />
                     </Suspense>
@@ -1661,7 +1668,7 @@ describe('ReactInteractionTracing', () => {
               ) : null}
               <React.unstable_TracingMarker name="two">
                 <Suspense
-                  unstable_name="suspense two"
+                  name="suspense two"
                   fallback={<Text text="Loading Two..." />}>
                   <AsyncText text="Page Two" />
                 </Suspense>
@@ -1695,9 +1702,10 @@ describe('ReactInteractionTracing', () => {
         'Loading One...',
         'Suspend [Page Two]',
         'Loading Two...',
-        ...(gate('enableSiblingPrerendering')
-          ? ['Suspend [Page One]', 'Suspend [Page Two]']
-          : []),
+        // pre-warming
+        'Suspend [Page One]',
+        'Suspend [Page Two]',
+        // end pre-warming
         'onTransitionStart(transition, 1000)',
         'onMarkerProgress(transition, parent, 1000, 2000, [suspense one, suspense two])',
         'onMarkerProgress(transition, one, 1000, 2000, [suspense one])',
@@ -1711,7 +1719,9 @@ describe('ReactInteractionTracing', () => {
       await waitForAll([
         'Suspend [Page Two]',
         'Loading Two...',
-        ...(gate('enableSiblingPrerendering') ? ['Suspend [Page Two]'] : []),
+        // pre-warming
+        'Suspend [Page Two]',
+        // end pre-warming
         'onMarkerProgress(transition, parent, 1000, 3000, [suspense two])',
         'onMarkerIncomplete(transition, one, 1000, [{endTime: 3000, name: one, type: marker}, {endTime: 3000, name: suspense one, type: suspense}])',
         'onMarkerIncomplete(transition, parent, 1000, [{endTime: 3000, name: one, type: marker}, {endTime: 3000, name: suspense one, type: suspense}])',
@@ -1788,12 +1798,12 @@ describe('ReactInteractionTracing', () => {
               <React.unstable_TracingMarker name="one">
                 {!deleteOne ? (
                   <Suspense
-                    unstable_name="suspense one"
+                    name="suspense one"
                     fallback={<Text text="Loading One..." />}>
                     <AsyncText text="Page One" />
                     <React.unstable_TracingMarker name="page one" />
                     <Suspense
-                      unstable_name="suspense child"
+                      name="suspense child"
                       fallback={<Text text="Loading Child..." />}>
                       <React.unstable_TracingMarker name="child" />
                       <AsyncText text="Child" />
@@ -1803,7 +1813,7 @@ describe('ReactInteractionTracing', () => {
               </React.unstable_TracingMarker>
               <React.unstable_TracingMarker name="two">
                 <Suspense
-                  unstable_name="suspense two"
+                  name="suspense two"
                   fallback={<Text text="Loading Two..." />}>
                   <AsyncText text="Page Two" />
                 </Suspense>
@@ -1838,14 +1848,12 @@ describe('ReactInteractionTracing', () => {
         'Loading One...',
         'Suspend [Page Two]',
         'Loading Two...',
-        ...(gate('enableSiblingPrerendering')
-          ? [
-              'Suspend [Page One]',
-              'Suspend [Child]',
-              'Loading Child...',
-              'Suspend [Page Two]',
-            ]
-          : []),
+        // pre-warming
+        'Suspend [Page One]',
+        'Suspend [Child]',
+        'Loading Child...',
+        'Suspend [Page Two]',
+        // end pre-warming
         'onTransitionStart(transition, 1000)',
         'onMarkerProgress(transition, parent, 1000, 2000, [suspense one, suspense two])',
         'onMarkerProgress(transition, one, 1000, 2000, [suspense one])',
@@ -1860,7 +1868,9 @@ describe('ReactInteractionTracing', () => {
         'Page One',
         'Suspend [Child]',
         'Loading Child...',
-        ...(gate('enableSiblingPrerendering') ? ['Suspend [Child]'] : []),
+        // pre-warming
+        'Suspend [Child]',
+        // end pre-warming
         'onMarkerProgress(transition, parent, 1000, 3000, [suspense two, suspense child])',
         'onMarkerProgress(transition, one, 1000, 3000, [suspense child])',
         'onMarkerComplete(transition, page one, 1000, 3000)',
@@ -1873,7 +1883,10 @@ describe('ReactInteractionTracing', () => {
       await waitForAll([
         'Suspend [Page Two]',
         'Loading Two...',
-        ...(gate('enableSiblingPrerendering') ? ['Suspend [Page Two]'] : []),
+        // pre-warming
+        'Suspend [Page Two]',
+        // end pre-warming
+
         // "suspense one" has unsuspended so shouldn't be included
         // tracing marker "page one" has completed so shouldn't be included
         // all children of "suspense child" haven't yet been rendered so shouldn't be included
@@ -1948,11 +1961,11 @@ describe('ReactInteractionTracing', () => {
       return (
         <React.unstable_TracingMarker name="parent">
           {show ? (
-            <Suspense unstable_name="appended child">
+            <Suspense name="appended child">
               <AsyncText text="Appended child" />
             </Suspense>
           ) : null}
-          <Suspense unstable_name="child">
+          <Suspense name="child">
             <AsyncText text="Child" />
           </Suspense>
         </React.unstable_TracingMarker>
@@ -1971,7 +1984,9 @@ describe('ReactInteractionTracing', () => {
 
       await waitForAll([
         'Suspend [Child]',
-        ...(gate('enableSiblingPrerendering') ? ['Suspend [Child]'] : []),
+        // pre-warming
+        'Suspend [Child]',
+        // end pre-warming
         'onTransitionStart(transition, 0)',
         'onMarkerProgress(transition, parent, 0, 1000, [child])',
         'onTransitionProgress(transition, 0, 1000, [child])',
@@ -1985,9 +2000,9 @@ describe('ReactInteractionTracing', () => {
       await waitForAll([
         'Suspend [Appended child]',
         'Suspend [Child]',
-        ...(gate('enableSiblingPrerendering')
-          ? ['Suspend [Appended child]', 'Suspend [Child]']
-          : []),
+        // pre-warming
+        'Suspend [Appended child]',
+        'Suspend [Child]',
       ]);
 
       // This deleted child isn't part of the transition so we
@@ -1997,7 +2012,8 @@ describe('ReactInteractionTracing', () => {
       await advanceTimers(1000);
       await waitForAll([
         'Suspend [Child]',
-        ...(gate('enableSiblingPrerendering') ? ['Suspend [Child]'] : []),
+        // pre-warming
+        'Suspend [Child]',
       ]);
 
       await resolveText('Child');
@@ -2068,13 +2084,13 @@ describe('ReactInteractionTracing', () => {
           {show ? (
             <React.unstable_TracingMarker name="appended child">
               {showSuspense ? (
-                <Suspense unstable_name="appended child">
+                <Suspense name="appended child">
                   <AsyncText text="Appended child" />
                 </Suspense>
               ) : null}
             </React.unstable_TracingMarker>
           ) : null}
-          <Suspense unstable_name="child">
+          <Suspense name="child">
             <AsyncText text="Child" />
           </Suspense>
         </React.unstable_TracingMarker>
@@ -2099,7 +2115,9 @@ describe('ReactInteractionTracing', () => {
 
     assertLog([
       'Suspend [Child]',
-      ...(gate('enableSiblingPrerendering') ? ['Suspend [Child]'] : []),
+      // pre-warming
+      'Suspend [Child]',
+      // end pre-warming
       'onTransitionStart(transition one, 0)',
       'onMarkerProgress(transition one, parent, 0, 1000, [child])',
       'onTransitionProgress(transition one, 0, 1000, [child])',
@@ -2120,9 +2138,10 @@ describe('ReactInteractionTracing', () => {
     assertLog([
       'Suspend [Appended child]',
       'Suspend [Child]',
-      ...(gate('enableSiblingPrerendering')
-        ? ['Suspend [Appended child]', 'Suspend [Child]']
-        : []),
+      // pre-warming
+      'Suspend [Appended child]',
+      'Suspend [Child]',
+      // end pre-warming
       'onTransitionStart(transition two, 1000)',
       'onMarkerProgress(transition two, appended child, 1000, 2000, [appended child])',
       'onTransitionProgress(transition two, 1000, 2000, [appended child])',
@@ -2136,7 +2155,9 @@ describe('ReactInteractionTracing', () => {
 
     assertLog([
       'Suspend [Child]',
-      ...(gate('enableSiblingPrerendering') ? ['Suspend [Child]'] : []),
+      // pre-warming
+      'Suspend [Child]',
+      // end pre-warming
       'onMarkerProgress(transition two, appended child, 1000, 3000, [])',
       'onMarkerIncomplete(transition two, appended child, 1000, [{endTime: 3000, name: appended child, type: suspense}])',
     ]);
@@ -2293,20 +2314,11 @@ describe('ReactInteractionTracing', () => {
     assertLog([
       'Suspend [Text]',
       'Loading...',
-
-      ...(gate('enableSiblingPrerendering')
-        ? [
-            'Suspend [Text]',
-            'onTransitionStart(transition, 0)',
-
-            'Suspend [Hidden Text]',
-            'Hidden Loading...',
-          ]
-        : [
-            'Suspend [Hidden Text]',
-            'Hidden Loading...',
-            'onTransitionStart(transition, 0)',
-          ]),
+      // pre-warming
+      'Suspend [Text]',
+      'onTransitionStart(transition, 0)',
+      'Suspend [Hidden Text]',
+      'Hidden Loading...',
     ]);
 
     await act(() => {
@@ -2349,9 +2361,7 @@ describe('ReactInteractionTracing', () => {
 
     function App() {
       return (
-        <Suspense
-          fallback={<Text text="Loading..." />}
-          unstable_name="suspense page">
+        <Suspense fallback={<Text text="Loading..." />} name="suspense page">
           <AsyncText text="Page Two" />
         </Suspense>
       );
@@ -2372,7 +2382,9 @@ describe('ReactInteractionTracing', () => {
     assertLog([
       'Suspend [Page Two]',
       'Loading...',
-      ...(gate('enableSiblingPrerendering') ? ['Suspend [Page Two]'] : []),
+      // pre-warming
+      'Suspend [Page Two]',
+      // end pre-warming
       'onTransitionStart(page transition, 0)',
       'onTransitionProgress(page transition, 0, 1000, [suspense page])',
     ]);
@@ -2416,12 +2428,10 @@ describe('ReactInteractionTracing', () => {
       });
       return (
         <>
-          <Suspense unstable_name="one" fallback={<Text text="Loading..." />}>
+          <Suspense name="one" fallback={<Text text="Loading..." />}>
             <AsyncText text="Text" />
           </Suspense>
-          <Suspense
-            unstable_name="two"
-            fallback={<Text text="Loading Two..." />}>
+          <Suspense name="two" fallback={<Text text="Loading Two..." />}>
             <AsyncText text="Text Two" />
           </Suspense>
         </>
@@ -2446,10 +2456,13 @@ describe('ReactInteractionTracing', () => {
       'Text',
       'Suspend [Text Two]',
       'Loading Two...',
-      ...(gate('enableSiblingPrerendering') ? ['Suspend [Text Two]'] : []),
+      // pre-warming
+      'Suspend [Text Two]',
+      // end pre-warming
       'onTransitionStart(transition, 0)',
       'onTransitionProgress(transition, 0, 1000, [two])',
-      ...(gate('enableSiblingPrerendering') ? ['Suspend [Text Two]'] : []),
+      // pre-warming
+      'Suspend [Text Two]',
     ]);
 
     await act(() => {
@@ -2490,9 +2503,7 @@ describe('ReactInteractionTracing', () => {
     function App({name}) {
       return (
         <>
-          <Suspense
-            unstable_name={name}
-            fallback={<Text text={`Loading ${name}...`} />}>
+          <Suspense name={name} fallback={<Text text={`Loading ${name}...`} />}>
             <AsyncText text={`Text ${name}`} />
           </Suspense>
         </>
@@ -2523,9 +2534,10 @@ describe('ReactInteractionTracing', () => {
       'Loading one...',
       'Suspend [Text two]',
       'Loading two...',
-      ...(gate('enableSiblingPrerendering')
-        ? ['Suspend [Text one]', 'Suspend [Text two]']
-        : []),
+      // pre-warming
+      'Suspend [Text one]',
+      'Suspend [Text two]',
+      // end pre-warming
       'onTransitionStart(transition one, 0) /root one/',
       'onTransitionProgress(transition one, 0, 1000, [one]) /root one/',
       'onTransitionStart(transition two, 0) /root two/',

@@ -315,7 +315,7 @@ describe('ReactFlight', () => {
       expect(getDebugInfo(greeting)).toEqual(
         __DEV__
           ? [
-              {time: 11},
+              {time: 12},
               {
                 name: 'Greeting',
                 env: 'Server',
@@ -327,7 +327,7 @@ describe('ReactFlight', () => {
                   lastName: 'Smith',
                 },
               },
-              {time: 12},
+              {time: 13},
             ]
           : undefined,
       );
@@ -359,7 +359,7 @@ describe('ReactFlight', () => {
       expect(getDebugInfo(promise)).toEqual(
         __DEV__
           ? [
-              {time: 11},
+              {time: 12},
               {
                 name: 'Greeting',
                 env: 'Server',
@@ -371,7 +371,7 @@ describe('ReactFlight', () => {
                   lastName: 'Smith',
                 },
               },
-              {time: 12},
+              {time: 13},
             ]
           : undefined,
       );
@@ -1957,8 +1957,8 @@ describe('ReactFlight', () => {
       });
       expect(ReactNoop).toMatchRenderedOutput(
         <>
-          <div prop=":S1:" />
-          <div prop=":S2:" />
+          <div prop="«S1»" />
+          <div prop="«S2»" />
         </>,
       );
     });
@@ -1981,8 +1981,8 @@ describe('ReactFlight', () => {
       });
       expect(ReactNoop).toMatchRenderedOutput(
         <>
-          <div prop=":fooS1:" />
-          <div prop=":fooS2:" />
+          <div prop="«fooS1»" />
+          <div prop="«fooS2»" />
         </>,
       );
     });
@@ -2021,8 +2021,8 @@ describe('ReactFlight', () => {
       assertLog(['ClientDoubler']);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
-          <div prop=":S1:">:S1:</div>
-          <div prop=":S1:">:S1:</div>
+          <div prop="«S1»">«S1»</div>
+          <div prop="«S1»">«S1»</div>
         </>,
       );
     });
@@ -2807,7 +2807,7 @@ describe('ReactFlight', () => {
       expect(getDebugInfo(promise)).toEqual(
         __DEV__
           ? [
-              {time: 18},
+              {time: 20},
               {
                 name: 'ServerComponent',
                 env: 'Server',
@@ -2818,7 +2818,7 @@ describe('ReactFlight', () => {
                   transport: expect.arrayContaining([]),
                 },
               },
-              {time: 19},
+              {time: 21},
             ]
           : undefined,
       );
@@ -2829,7 +2829,7 @@ describe('ReactFlight', () => {
       expect(getDebugInfo(thirdPartyChildren[0])).toEqual(
         __DEV__
           ? [
-              {time: 13},
+              {time: 14},
               {
                 name: 'ThirdPartyComponent',
                 env: 'third-party',
@@ -2838,15 +2838,15 @@ describe('ReactFlight', () => {
                 stack: '    in Object.<anonymous> (at **)',
                 props: {},
               },
-              {time: 14},
-              {time: 21}, // This last one is when the promise resolved into the first party.
+              {time: 15},
+              {time: 23}, // This last one is when the promise resolved into the first party.
             ]
           : undefined,
       );
       expect(getDebugInfo(thirdPartyChildren[1])).toEqual(
         __DEV__
           ? [
-              {time: 15},
+              {time: 16},
               {
                 name: 'ThirdPartyLazyComponent',
                 env: 'third-party',
@@ -2855,14 +2855,14 @@ describe('ReactFlight', () => {
                 stack: '    in myLazy (at **)\n    in lazyInitializer (at **)',
                 props: {},
               },
-              {time: 16},
+              {time: 17},
             ]
           : undefined,
       );
       expect(getDebugInfo(thirdPartyChildren[2])).toEqual(
         __DEV__
           ? [
-              {time: 11},
+              {time: 12},
               {
                 name: 'ThirdPartyFragmentComponent',
                 env: 'third-party',
@@ -2871,7 +2871,7 @@ describe('ReactFlight', () => {
                 stack: '    in Object.<anonymous> (at **)',
                 props: {},
               },
-              {time: 12},
+              {time: 13},
             ]
           : undefined,
       );
@@ -2936,7 +2936,7 @@ describe('ReactFlight', () => {
       expect(getDebugInfo(promise)).toEqual(
         __DEV__
           ? [
-              {time: 14},
+              {time: 16},
               {
                 name: 'ServerComponent',
                 env: 'Server',
@@ -2947,7 +2947,7 @@ describe('ReactFlight', () => {
                   transport: expect.arrayContaining([]),
                 },
               },
-              {time: 15},
+              {time: 17},
             ]
           : undefined,
       );
@@ -2956,7 +2956,7 @@ describe('ReactFlight', () => {
       expect(getDebugInfo(thirdPartyFragment)).toEqual(
         __DEV__
           ? [
-              {time: 16},
+              {time: 18},
               {
                 name: 'Keyed',
                 env: 'Server',
@@ -2967,7 +2967,7 @@ describe('ReactFlight', () => {
                   children: {},
                 },
               },
-              {time: 17},
+              {time: 19},
             ]
           : undefined,
       );
@@ -2975,7 +2975,7 @@ describe('ReactFlight', () => {
       expect(getDebugInfo(thirdPartyFragment.props.children)).toEqual(
         __DEV__
           ? [
-              {time: 11},
+              {time: 12},
               {
                 name: 'ThirdPartyAsyncIterableComponent',
                 env: 'third-party',
@@ -2984,7 +2984,7 @@ describe('ReactFlight', () => {
                 stack: '    in Object.<anonymous> (at **)',
                 props: {},
               },
-              {time: 12},
+              {time: 13},
             ]
           : undefined,
       );
@@ -3132,7 +3132,7 @@ describe('ReactFlight', () => {
       expect(getDebugInfo(greeting)).toEqual(
         __DEV__
           ? [
-              {time: 11},
+              {time: 12},
               {
                 name: 'Component',
                 env: 'A',
@@ -3144,7 +3144,7 @@ describe('ReactFlight', () => {
               {
                 env: 'B',
               },
-              {time: 12},
+              {time: 13},
             ]
           : undefined,
       );
@@ -3332,9 +3332,9 @@ describe('ReactFlight', () => {
           },
         };
         expect(getDebugInfo(greeting)).toEqual([
-          {time: 11},
-          greetInfo,
           {time: 12},
+          greetInfo,
+          {time: 13},
           {
             name: 'Container',
             env: 'Server',
@@ -3350,7 +3350,7 @@ describe('ReactFlight', () => {
               }),
             },
           },
-          {time: 13},
+          {time: 14},
         ]);
         // The owner that created the span was the outer server component.
         // We expect the debug info to be referentially equal to the owner.

@@ -8,7 +8,7 @@
  */
 
 import type {InspectorData, TouchedViewDataAtPoint} from './ReactNativeTypes';
-import type {TransitionTypes} from 'react/src/ReactTransitionType.js';
+import type {TransitionTypes} from 'react/src/ReactTransitionType';
 
 // Modules provided by RN:
 import {
@@ -653,11 +653,16 @@ export function startViewTransition(
   spawnedWorkCallback: () => void,
   passiveCallback: () => mixed,
   errorCallback: mixed => void,
-): boolean {
-  return false;
+): null | RunningViewTransition {
+  mutationCallback();
+  layoutCallback();
+  // Skip afterMutationCallback(). We don't need it since we're not animating.
+  spawnedWorkCallback();
+  // Skip passiveCallback(). Spawned work will schedule a task.
+  return null;
 }
 
-export type RunningGestureTransition = null;
+export type RunningViewTransition = null;
 
 export function startGestureTransition(
   rootContainer: Container,
@@ -668,13 +673,13 @@ export function startGestureTransition(
   mutationCallback: () => void,
   animateCallback: () => void,
   errorCallback: mixed => void,
-): RunningGestureTransition {
+): null | RunningViewTransition {
   mutationCallback();
   animateCallback();
   return null;
 }
 
-export function stopGestureTransition(transition: RunningGestureTransition) {}
+export function stopViewTransition(transition: RunningViewTransition) {}
 
 export type ViewTransitionInstance = null | {name: string, ...};
 
@@ -687,15 +692,9 @@ export function createViewTransitionInstance(
 export type GestureTimeline = null;
 
 export function getCurrentGestureOffset(provider: GestureTimeline): number {
-  throw new Error('useSwipeTransition is not yet supported in React Native.');
-}
-
-export function subscribeToGestureDirection(
-  provider: GestureTimeline,
-  currentOffset: number,
-  directionCallback: (direction: boolean) => void,
-): () => void {
-  throw new Error('useSwipeTransition is not yet supported in React Native.');
+  throw new Error(
+    'startGestureTransition is not yet supported in React Native.',
+  );
 }
 
 export function clearContainer(container: Container): void {
@@ -736,14 +735,37 @@ export function maySuspendCommit(type: Type, props: Props): boolean {
   return false;
 }
 
-export function preloadInstance(type: Type, props: Props): boolean {
+export function maySuspendCommitOnUpdate(
+  type: Type,
+  oldProps: Props,
+  newProps: Props,
+): boolean {
+  return false;
+}
+
+export function maySuspendCommitInSyncRender(
+  type: Type,
+  props: Props,
+): boolean {
+  return false;
+}
+
+export function preloadInstance(
+  instance: Instance,
+  type: Type,
+  props: Props,
+): boolean {
   // Return false to indicate it's already loaded
   return true;
 }
 
 export function startSuspendingCommit(): void {}
 
-export function suspendInstance(type: Type, props: Props): void {}
+export function suspendInstance(
+  instance: Instance,
+  type: Type,
+  props: Props,
+): void {}
 
 export function suspendOnActiveViewTransition(container: Container): void {}
 

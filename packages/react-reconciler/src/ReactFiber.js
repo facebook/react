@@ -8,21 +8,25 @@
  */
 
 import type {ReactElement} from 'shared/ReactElementType';
-import type {ReactFragment, ReactPortal, ReactScope} from 'shared/ReactTypes';
+import type {
+  ReactFragment,
+  ReactPortal,
+  ReactScope,
+  ViewTransitionProps,
+  ActivityProps,
+} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Lanes} from './ReactFiberLane';
-import type {SuspenseInstance} from './ReactFiberConfig';
+import type {ActivityInstance, SuspenseInstance} from './ReactFiberConfig';
 import type {
+  LegacyHiddenProps,
   OffscreenProps,
   OffscreenInstance,
-} from './ReactFiberActivityComponent';
-import type {
-  ViewTransitionProps,
-  ViewTransitionState,
-} from './ReactFiberViewTransitionComponent';
+} from './ReactFiberOffscreenComponent';
+import type {ViewTransitionState} from './ReactFiberViewTransitionComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 
 import {
@@ -41,6 +45,7 @@ import {
   disableLegacyMode,
   enableObjectFiber,
   enableViewTransition,
+  enableSuspenseyImages,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
@@ -73,7 +78,7 @@ import {
   ViewTransitionComponent,
   ActivityComponent,
 } from './ReactWorkTags';
-import {OffscreenVisible} from './ReactFiberActivityComponent';
+import {OffscreenVisible} from './ReactFiberOffscreenComponent';
 import {getComponentNameFromOwner} from 'react-reconciler/src/getComponentNameFromFiber';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {
@@ -89,6 +94,7 @@ import {
   StrictLegacyMode,
   StrictEffectsMode,
   NoStrictPassiveEffectsMode,
+  SuspenseyImagesMode,
 } from './ReactTypeOfMode';
 import {
   REACT_FORWARD_REF_TYPE,
@@ -110,10 +116,6 @@ import {
   REACT_ACTIVITY_TYPE,
 } from 'shared/ReactSymbols';
 import {TransitionTracingMarker} from './ReactFiberTracingMarkerComponent';
-import {
-  detachOffscreenInstance,
-  attachOffscreenInstance,
-} from './ReactFiberCommitWork';
 import {getHostContext} from './ReactFiberHostContext';
 import type {ReactComponentInfo} from '../../shared/ReactTypes';
 import isArray from 'shared/isArray';
@@ -854,19 +856,15 @@ export function createFiberFromOffscreen(
   fiber.lanes = lanes;
   const primaryChildInstance: OffscreenInstance = {
     _visibility: OffscreenVisible,
-    _pendingVisibility: OffscreenVisible,
     _pendingMarkers: null,
     _retryCache: null,
     _transitions: null,
-    _current: null,
-    detach: () => detachOffscreenInstance(primaryChildInstance),
-    attach: () => attachOffscreenInstance(primaryChildInstance),
   };
   fiber.stateNode = primaryChildInstance;
   return fiber;
 }
 export function createFiberFromActivity(
-  pendingProps: OffscreenProps,
+  pendingProps: ActivityProps,
   mode: TypeOfMode,
   lanes: Lanes,
   key: null | string,
@@ -883,6 +881,11 @@ export function createFiberFromViewTransition(
   lanes: Lanes,
   key: null | string,
 ): Fiber {
+  if (!enableSuspenseyImages) {
+    // Render a ViewTransition component opts into SuspenseyImages mode even
+    // when the flag is off.
+    mode |= SuspenseyImagesMode;
+  }
   const fiber = createFiber(ViewTransitionComponent, pendingProps, key, mode);
   fiber.elementType = REACT_VIEW_TRANSITION_TYPE;
   fiber.lanes = lanes;
@@ -897,7 +900,7 @@ export function createFiberFromViewTransition(
 }
 
 export function createFiberFromLegacyHidden(
-  pendingProps: OffscreenProps,
+  pendingProps: LegacyHiddenProps,
   mode: TypeOfMode,
   lanes: Lanes,
   key: null | string,
@@ -909,13 +912,9 @@ export function createFiberFromLegacyHidden(
   // the offscreen implementation, which depends on a state node
   const instance: OffscreenInstance = {
     _visibility: OffscreenVisible,
-    _pendingVisibility: OffscreenVisible,
     _pendingMarkers: null,
     _transitions: null,
     _retryCache: null,
-    _current: null,
-    detach: () => detachOffscreenInstance(instance),
-    attach: () => attachOffscreenInstance(instance),
   };
   fiber.stateNode = instance;
   return fiber;
@@ -952,7 +951,7 @@ export function createFiberFromText(
 }
 
 export function createFiberFromDehydratedFragment(
-  dehydratedNode: SuspenseInstance,
+  dehydratedNode: SuspenseInstance | ActivityInstance,
 ): Fiber {
   const fiber = createFiber(DehydratedFragment, null, null, NoMode);
   fiber.stateNode = dehydratedNode;

@@ -14,9 +14,9 @@ function useFoo(props) {
 
 ```javascript
 import {
-  useRenderCounter,
-  shouldInstrument,
   makeReadOnly,
+  shouldInstrument,
+  useRenderCounter,
 } from "react-compiler-runtime";
 import { c as _c } from "react/compiler-runtime"; // @enableEmitFreeze @enableEmitInstrumentForget
 

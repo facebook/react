@@ -6,10 +6,7 @@
  */
 
 import {Monaco} from '@monaco-editor/react';
-import {
-  CompilerErrorDetail,
-  ErrorSeverity,
-} from 'babel-plugin-react-compiler/src';
+import {CompilerErrorDetail, ErrorSeverity} from 'babel-plugin-react-compiler';
 import {MarkerSeverity, type editor} from 'monaco-editor';
 
 function mapReactCompilerSeverityToMonaco(
@@ -54,7 +51,7 @@ export function renderReactCompilerMarkers({
   model,
   details,
 }: ReactCompilerMarkerConfig): void {
-  let markers = [];
+  const markers: Array<editor.IMarkerData> = [];
   for (const detail of details) {
     const marker = mapReactCompilerDiagnosticToMonacoMarker(detail, monaco);
     if (marker == null) {

@@ -13,9 +13,12 @@ import type {
   RejectedThenable,
 } from 'shared/ReactTypes';
 import type {Lane} from './ReactFiberLane';
-import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
+import type {Transition} from 'react/src/ReactStartTransition';
 
-import {requestTransitionLane} from './ReactFiberRootScheduler';
+import {
+  requestTransitionLane,
+  ensureScheduleIsScheduled,
+} from './ReactFiberRootScheduler';
 import {NoLane} from './ReactFiberLane';
 import {
   hasScheduledTransitionWork,
@@ -24,7 +27,12 @@ import {
 import {
   enableComponentPerformanceTrack,
   enableProfilerTimer,
+  enableDefaultTransitionIndicator,
 } from 'shared/ReactFeatureFlags';
+import {clearEntangledAsyncTransitionTypes} from './ReactFiberTransitionTypes';
+
+import noop from 'shared/noop';
+import reportGlobalError from 'shared/reportGlobalError';
 
 // If there are multiple, concurrent async actions, they are entangled. All
 // transition updates that occur while the async action is still in progress
@@ -45,8 +53,23 @@ let currentEntangledLane: Lane = NoLane;
 // until the async action scope has completed.
 let currentEntangledActionThenable: Thenable<void> | null = null;
 
+// Track the default indicator for every root. undefined means we haven't
+// had any roots registered yet. null means there's more than one callback.
+// If there's more than one callback we bailout to not supporting isomorphic
+// default indicators.
+let isomorphicDefaultTransitionIndicator:
+  | void
+  | null
+  | (() => void | (() => void)) = undefined;
+// The clean up function for the currently running indicator.
+let pendingIsomorphicIndicator: null | (() => void) = null;
+// The number of roots that have pending Transitions that depend on the
+// started isomorphic indicator.
+let pendingEntangledRoots: number = 0;
+let needsIsomorphicIndicator: boolean = false;
+
 export function entangleAsyncAction<S>(
-  transition: BatchConfigTransition,
+  transition: Transition,
   thenable: Thenable<S>,
 ): Thenable<S> {
   // `thenable` is the return value of the async action scope function. Create
@@ -65,6 +88,12 @@ export function entangleAsyncAction<S>(
       },
     };
     currentEntangledActionThenable = entangledThenable;
+    if (enableDefaultTransitionIndicator) {
+      needsIsomorphicIndicator = true;
+      // We'll check if we need a default indicator in a microtask. Ensure
+      // we have this scheduled even if no root is scheduled.
+      ensureScheduleIsScheduled();
+    }
   }
   currentEntangledPendingCount++;
   thenable.then(pingEngtangledActionScope, pingEngtangledActionScope);
@@ -84,6 +113,10 @@ function pingEngtangledActionScope() {
         clearAsyncTransitionTimer();
       }
     }
+    clearEntangledAsyncTransitionTypes();
+    if (pendingEntangledRoots === 0) {
+      stopIsomorphicDefaultIndicator();
+    }
     if (currentEntangledListeners !== null) {
       // All the actions have finished. Close the entangled async action scope
       // and notify all the listeners.
@@ -96,6 +129,7 @@ function pingEngtangledActionScope() {
       currentEntangledListeners = null;
       currentEntangledLane = NoLane;
       currentEntangledActionThenable = null;
+      needsIsomorphicIndicator = false;
       for (let i = 0; i < listeners.length; i++) {
         const listener = listeners[i];
         listener();
@@ -158,4 +192,72 @@ export function peekEntangledActionLane(): Lane {
 
 export function peekEntangledActionThenable(): Thenable<void> | null {
   return currentEntangledActionThenable;
+}
+
+export function registerDefaultIndicator(
+  onDefaultTransitionIndicator: () => void | (() => void),
+): void {
+  if (!enableDefaultTransitionIndicator) {
+    return;
+  }
+  if (isomorphicDefaultTransitionIndicator === undefined) {
+    isomorphicDefaultTransitionIndicator = onDefaultTransitionIndicator;
+  } else if (
+    isomorphicDefaultTransitionIndicator !== onDefaultTransitionIndicator
+  ) {
+    isomorphicDefaultTransitionIndicator = null;
+    // Stop any on-going indicator since it's now ambiguous.
+    stopIsomorphicDefaultIndicator();
+  }
+}
+
+export function startIsomorphicDefaultIndicatorIfNeeded() {
+  if (!enableDefaultTransitionIndicator) {
+    return;
+  }
+  if (!needsIsomorphicIndicator) {
+    return;
+  }
+  if (
+    isomorphicDefaultTransitionIndicator != null &&
+    pendingIsomorphicIndicator === null
+  ) {
+    try {
+      pendingIsomorphicIndicator =
+        isomorphicDefaultTransitionIndicator() || noop;
+    } catch (x) {
+      pendingIsomorphicIndicator = noop;
+      reportGlobalError(x);
+    }
+  }
+}
+
+function stopIsomorphicDefaultIndicator() {
+  if (!enableDefaultTransitionIndicator) {
+    return;
+  }
+  if (pendingIsomorphicIndicator !== null) {
+    const cleanup = pendingIsomorphicIndicator;
+    pendingIsomorphicIndicator = null;
+    cleanup();
+  }
+}
+
+function releaseIsomorphicIndicator() {
+  if (--pendingEntangledRoots === 0) {
+    stopIsomorphicDefaultIndicator();
+  }
+}
+
+export function hasOngoingIsomorphicIndicator(): boolean {
+  return pendingIsomorphicIndicator !== null;
+}
+
+export function retainIsomorphicIndicator(): () => void {
+  pendingEntangledRoots++;
+  return releaseIsomorphicIndicator;
+}
+
+export function markIsomorphicIndicatorHandled(): void {
+  needsIsomorphicIndicator = false;
 }

@@ -127,7 +127,7 @@ describe('ReactDOMServerHydration', () => {
       if (gate(flags => flags.favorSafetyOverHydrationPerf)) {
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
-            "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+            "Caught [Hydration failed because the server rendered text didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
           - A server/client branch \`if (typeof window !== 'undefined')\`.
           - Variable input such as \`Date.now()\` or \`Math.random()\` which changes each time it's called.
@@ -196,7 +196,7 @@ describe('ReactDOMServerHydration', () => {
       if (gate(flags => flags.favorSafetyOverHydrationPerf)) {
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
-            "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+            "Caught [Hydration failed because the server rendered text didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
           - A server/client branch \`if (typeof window !== 'undefined')\`.
           - Variable input such as \`Date.now()\` or \`Math.random()\` which changes each time it's called.
@@ -743,7 +743,7 @@ describe('ReactDOMServerHydration', () => {
         if (gate(flags => flags.favorSafetyOverHydrationPerf)) {
           expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             [
-              "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+              "Caught [Hydration failed because the server rendered text didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
             - A server/client branch \`if (typeof window !== 'undefined')\`.
             - Variable input such as \`Date.now()\` or \`Math.random()\` which changes each time it's called.
