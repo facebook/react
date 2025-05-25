@@ -7,6 +7,8 @@
  * @flow
  */
 
+const defaultTransitionIndicatorDelay = 100;
+
 export function defaultOnDefaultTransitionIndicator(): void | (() => void) {
   if (typeof navigation !== 'object') {
     // If the Navigation API is not available, then this is a noop.
@@ -15,6 +17,10 @@ export function defaultOnDefaultTransitionIndicator(): void | (() => void) {
 
   let isCancelled = false;
   let pendingResolve: null | (() => void) = null;
+
+  const scheduledAt = performance.now();
+  // Delay the start a bit in case this is a fast Transition.
+  setTimeout(startFakeNavigation, defaultTransitionIndicatorDelay);
 
   function handleNavigate(event: NavigateEvent) {
     if (event.canIntercept && event.info === 'react-transition') {
@@ -29,6 +35,7 @@ export function defaultOnDefaultTransitionIndicator(): void | (() => void) {
   }
 
   function handleNavigateComplete() {
+    const wasRunning = pendingResolve !== null;
     if (pendingResolve !== null) {
       // If this was not our navigation completing, we were probably cancelled.
       // We'll start a new one below.
@@ -38,7 +45,18 @@ export function defaultOnDefaultTransitionIndicator(): void | (() => void) {
     if (!isCancelled) {
       // Some other navigation completed but we should still be running.
       // Start another fake one to keep the loading indicator going.
-      startFakeNavigation();
+      if (wasRunning) {
+        // Restart sync to make it not janky if it was already running
+        startFakeNavigation();
+      } else {
+        // Since it hasn't started yet, we want to delay it up to a bit.
+        // There needs to be an async gap to work around https://issues.chromium.org/u/1/issues/419746417.
+        const fakeNavigationDelay = Math.max(
+          0,
+          defaultTransitionIndicatorDelay - (performance.now() - scheduledAt),
+        );
+        setTimeout(startFakeNavigation, fakeNavigationDelay);
+      }
     }
   }
 
@@ -69,9 +87,6 @@ export function defaultOnDefaultTransitionIndicator(): void | (() => void) {
       });
     }
   }
-
-  // Delay the start a bit in case this is a fast navigation.
-  setTimeout(startFakeNavigation, 100);
 
   return function () {
     isCancelled = true;

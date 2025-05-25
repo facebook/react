@@ -5,7 +5,7 @@ import Container from './Container.js';
 
 export function Navigate() {
   /** Repro for https://issues.chromium.org/u/1/issues/419746417 */
-  function triggerChromeCrash() {
+  function provokeChromeCrash() {
     React.startTransition(async () => {
       console.log('Default transition triggered');
 
@@ -34,7 +34,7 @@ export function Navigate() {
   return (
     <Container>
       <h2>Navigation fixture</h2>
-      <button onClick={triggerChromeCrash}>Trigger Chrome Crash</button>
+      <button onClick={provokeChromeCrash}>Provoke Chrome Crash (fixed)</button>
     </Container>
   );
 }
