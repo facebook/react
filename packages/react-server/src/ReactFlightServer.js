@@ -81,6 +81,7 @@ import {
   requestStorage,
   createHints,
   initAsyncDebugInfo,
+  getCurrentAsyncSequence,
   parseStackTrace,
   supportsComponentStorage,
   componentStorage,
