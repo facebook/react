@@ -68,7 +68,6 @@ export type PreinitStyleOptions = {
   crossOrigin?: ?CrossOriginEnum,
   integrity?: ?string,
   fetchPriority?: ?string,
-  nonce?: ?string,
 };
 export type PreinitScriptOptions = {
   crossOrigin?: ?CrossOriginEnum,

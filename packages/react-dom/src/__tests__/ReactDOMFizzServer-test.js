@@ -10294,6 +10294,7 @@ describe('ReactDOMFizzServer', () => {
             precedence="default"
             nonce={CSPnonce}>{`.bar { background-color: blue; }`}</style>
         </>,
+        {nonce: {style: CSPnonce}},
       );
       pipe(writable);
     });
@@ -10329,11 +10330,12 @@ describe('ReactDOMFizzServer', () => {
             precedence="default"
             nonce={`${CSPnonce}${CSPnonce}`}>{`.bar { background-color: blue; }`}</style>
         </>,
+        {nonce: {style: CSPnonce}},
       );
       pipe(writable);
     });
     assertConsoleErrorDev([
-      "React encountered a hoistable style tag with nonce. It doesn't match the previously encountered nonce. They have to be the same",
+      "React encountered a hoistable style tag with nonce. It doesn't match the previously encountered nonce. They have to be the same.",
     ]);
     expect(getVisibleChildren(document)).toEqual(
       <html>

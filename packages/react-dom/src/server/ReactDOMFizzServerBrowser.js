@@ -43,7 +43,12 @@ ensureCorrectIsomorphicReactVersion();
 type Options = {
   identifierPrefix?: string,
   namespaceURI?: string,
-  nonce?: string,
+  nonce?:
+    | string
+    | {
+        script?: string,
+        style?: string,
+      },
   bootstrapScriptContent?: string,
   bootstrapScripts?: Array<string | BootstrapScriptDescriptor>,
   bootstrapModules?: Array<string | BootstrapScriptDescriptor>,

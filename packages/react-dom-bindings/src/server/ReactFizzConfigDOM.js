@@ -147,6 +147,8 @@ export type RenderState = {
   // inline script streaming format, unused if using external runtime / data
   startInlineScript: PrecomputedChunk,
 
+  startInlineStyle: PrecomputedChunk,
+
   // the preamble must always flush before resuming, so all these chunks must
   // be null or empty when resuming.
 
@@ -307,6 +309,8 @@ const scriptIntegirty = stringToPrecomputedChunk(' integrity="');
 const scriptCrossOrigin = stringToPrecomputedChunk(' crossorigin="');
 const endAsyncScript = stringToPrecomputedChunk(' async=""></script>');
 
+const startInlineStyle = stringToPrecomputedChunk('<style');
+
 /**
  * This escaping function is designed to work with with inline scripts where the entire
  * contents are escaped. Because we know we are escaping the entire script we can avoid for instance
@@ -365,17 +369,31 @@ if (__DEV__) {
 // is set, the server will send instructions via data attributes (instead of inline scripts)
 export function createRenderState(
   resumableState: ResumableState,
-  nonce: string | void,
+  nonce:
+    | string
+    | {
+        script?: string,
+        style?: string,
+      }
+    | void,
   externalRuntimeConfig: string | BootstrapScriptDescriptor | void,
   importMap: ImportMap | void,
   onHeaders: void | ((headers: HeadersDescriptor) => void),
   maxHeadersLength: void | number,
 ): RenderState {
+  const nonceScript = typeof nonce === 'string' ? nonce : nonce && nonce.script;
   const inlineScriptWithNonce =
-    nonce === undefined
+    nonceScript === undefined
       ? startInlineScript
       : stringToPrecomputedChunk(
-          '<script nonce="' + escapeTextForBrowser(nonce) + '"',
+          '<script nonce="' + escapeTextForBrowser(nonceScript) + '"',
+        );
+  const nonceStyle = nonce && nonce.style;
+  const inlineStyleWithNonce =
+    nonceStyle === undefined
+      ? startInlineStyle
+      : stringToPrecomputedChunk(
+          '<style nonce="' + escapeTextForBrowser(nonceStyle) + '"',
         );
   const idPrefix = resumableState.idPrefix;
 
@@ -403,7 +421,7 @@ export function createRenderState(
           src: externalRuntimeConfig,
           async: true,
           integrity: undefined,
-          nonce: nonce,
+          nonce: nonceScript,
         });
       } else {
         externalRuntimeScript = {
@@ -414,7 +432,7 @@ export function createRenderState(
           src: externalRuntimeConfig.src,
           async: true,
           integrity: externalRuntimeConfig.integrity,
-          nonce: nonce,
+          nonce: nonceScript,
         });
       }
     }
@@ -459,6 +477,7 @@ export function createRenderState(
     segmentPrefix: stringToPrecomputedChunk(idPrefix + 'S:'),
     boundaryPrefix: stringToPrecomputedChunk(idPrefix + 'B:'),
     startInlineScript: inlineScriptWithNonce,
+    startInlineStyle: inlineStyleWithNonce,
     preamble: createPreambleState(),
 
     externalRuntimeScript: externalRuntimeScript,
@@ -500,7 +519,10 @@ export function createRenderState(
       moduleScripts: new Map(),
     },
 
-    nonce,
+    nonce: {
+      script: nonceScript,
+      style: nonceStyle,
+    },
     // like a module global for currently rendering boundary
     hoistableState: null,
     stylesToHoist: false,
@@ -539,10 +561,10 @@ export function createRenderState(
         stringToChunk(escapeTextForBrowser(src)),
         attributeEnd,
       );
-      if (nonce) {
+      if (nonceScript) {
         bootstrapChunks.push(
           scriptNonce,
-          stringToChunk(escapeTextForBrowser(nonce)),
+          stringToChunk(escapeTextForBrowser(nonceScript)),
           attributeEnd,
         );
       }
@@ -571,7 +593,7 @@ export function createRenderState(
       const props: PreloadModuleProps = ({
         rel: 'modulepreload',
         fetchPriority: 'low',
-        nonce,
+        nonce: nonceScript,
       }: any);
       if (typeof scriptConfig === 'string') {
         props.href = src = scriptConfig;
@@ -596,10 +618,10 @@ export function createRenderState(
         stringToChunk(escapeTextForBrowser(src)),
         attributeEnd,
       );
-      if (nonce) {
+      if (nonceScript) {
         bootstrapChunks.push(
           scriptNonce,
-          stringToChunk(escapeTextForBrowser(nonce)),
+          stringToChunk(escapeTextForBrowser(nonceScript)),
           attributeEnd,
         );
       }
@@ -2882,11 +2904,11 @@ function pushLink(
         // to create a StyleQueue
         if (!styleQueue) {
           styleQueue = {
+            start: renderState.startInlineStyle,
             precedence: stringToChunk(escapeTextForBrowser(precedence)),
             rules: ([]: Array<Chunk | PrecomputedChunk>),
             hrefs: ([]: Array<Chunk | PrecomputedChunk>),
             sheets: (new Map(): Map<string, StylesheetResource>),
-            nonce: props.nonce,
           };
           renderState.styles.set(precedence, styleQueue);
         }
@@ -3091,21 +3113,29 @@ function pushStyle(
       // This is the first time we've encountered this precedence we need
       // to create a StyleQueue.
       styleQueue = {
+        start: renderState.startInlineStyle,
         precedence: stringToChunk(escapeTextForBrowser(precedence)),
-        rules: pushStyleContents(([]: Array<Chunk | PrecomputedChunk>), props),
-        hrefs: [stringToChunk(escapeTextForBrowser(href))],
+        rules: ([]: Array<Chunk | PrecomputedChunk>),
+        hrefs: ([]: Array<Chunk | PrecomputedChunk>),
         sheets: (new Map(): Map<string, StylesheetResource>),
-        nonce: nonce,
       };
       renderState.styles.set(precedence, styleQueue);
-    } else if (nonce === styleQueue.nonce) {
-      // We have seen this precedence before and need to track this href
+    }
+
+    const nonceStyle = renderState.nonce.style;
+    if (nonceStyle ? nonceStyle === nonce : !nonce) {
       styleQueue.hrefs.push(stringToChunk(escapeTextForBrowser(href)));
       pushStyleContents(styleQueue.rules, props);
     } else if (__DEV__) {
-      console.error(
-        "React encountered a hoistable style tag with nonce. It doesn't match the previously encountered nonce. They have to be the same",
-      );
+      if (nonceStyle) {
+        console.error(
+          "React encountered a hoistable style tag with nonce. It doesn't match the previously encountered nonce. They have to be the same.",
+        );
+      } else {
+        console.error(
+          'React encountered a hoistable style tag with nonce. The nonce was not passed to the render call though.',
+        );
+      }
     }
   }
   if (styleQueue) {
@@ -3198,7 +3228,7 @@ function pushStyleImpl(
 function pushStyleContents(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
-): Array<Chunk | PrecomputedChunk> {
+): void {
   let children = null;
   let innerHTML = null;
   for (const propKey in props) {
@@ -3232,7 +3262,7 @@ function pushStyleContents(
     target.push(stringToChunk(escapeStyleTextContent(child)));
   }
   pushInnerHTML(target, innerHTML, children);
-  return target;
+  return;
 }
 
 function pushImg(
@@ -5155,11 +5185,10 @@ function escapeJSObjectForInstructionScripts(input: Object): string {
 }
 
 const lateStyleTagResourceOpen1 = stringToPrecomputedChunk(
-  '<style media="not all" data-precedence="',
+  ' media="not all" data-precedence="',
 );
-const lateStyleTagResourceOpen2 = stringToPrecomputedChunk('" nonce="');
-const lateStyleTagResourceOpen3 = stringToPrecomputedChunk('" data-href="');
-const lateStyleTagResourceOpen4 = stringToPrecomputedChunk('">');
+const lateStyleTagResourceOpen2 = stringToPrecomputedChunk('" data-href="');
+const lateStyleTagResourceOpen3 = stringToPrecomputedChunk('">');
 const lateStyleTagTemplateClose = stringToPrecomputedChunk('</style>');
 
 // Tracks whether the boundary currently flushing is flushign style tags or has any
@@ -5175,7 +5204,6 @@ function flushStyleTagsLateForBoundary(
 ) {
   const rules = styleQueue.rules;
   const hrefs = styleQueue.hrefs;
-  const nonce = styleQueue.nonce;
   if (__DEV__) {
     if (rules.length > 0 && hrefs.length === 0) {
       console.error(
@@ -5185,19 +5213,16 @@ function flushStyleTagsLateForBoundary(
   }
   let i = 0;
   if (hrefs.length) {
+    writeChunk(this, styleQueue.start);
     writeChunk(this, lateStyleTagResourceOpen1);
     writeChunk(this, styleQueue.precedence);
-    if (nonce) {
-      writeChunk(this, lateStyleTagResourceOpen2);
-      writeChunk(this, stringToChunk(escapeTextForBrowser(nonce)));
-    }
-    writeChunk(this, lateStyleTagResourceOpen3);
+    writeChunk(this, lateStyleTagResourceOpen2);
     for (; i < hrefs.length - 1; i++) {
       writeChunk(this, hrefs[i]);
       writeChunk(this, spaceSeparator);
     }
     writeChunk(this, hrefs[i]);
-    writeChunk(this, lateStyleTagResourceOpen4);
+    writeChunk(this, lateStyleTagResourceOpen3);
     for (i = 0; i < rules.length; i++) {
       writeChunk(this, rules[i]);
     }
@@ -5281,13 +5306,10 @@ function flushStyleInPreamble(
   stylesheet.state = PREAMBLE;
 }
 
-const styleTagResourceOpen1 = stringToPrecomputedChunk(
-  '<style data-precedence="',
-);
-const styleTagResourceOpen2 = stringToPrecomputedChunk('" nonce="');
-const styleTagResourceOpen3 = stringToPrecomputedChunk('" data-href="');
+const styleTagResourceOpen1 = stringToPrecomputedChunk(' data-precedence="');
+const styleTagResourceOpen2 = stringToPrecomputedChunk('" data-href="');
 const spaceSeparator = stringToPrecomputedChunk(' ');
-const styleTagResourceOpen4 = stringToPrecomputedChunk('">');
+const styleTagResourceOpen3 = stringToPrecomputedChunk('">');
 
 const styleTagResourceClose = stringToPrecomputedChunk('</style>');
 
@@ -5302,27 +5324,23 @@ function flushStylesInPreamble(
 
   const rules = styleQueue.rules;
   const hrefs = styleQueue.hrefs;
-  const nonce = styleQueue.nonce;
   // If we don't emit any stylesheets at this precedence we still need to maintain the precedence
   // order so even if there are no rules for style tags at this precedence we emit an empty style
   // tag with the data-precedence attribute
   if (!hasStylesheets || hrefs.length) {
+    writeChunk(this, styleQueue.start);
     writeChunk(this, styleTagResourceOpen1);
     writeChunk(this, styleQueue.precedence);
-    if (nonce) {
-      writeChunk(this, styleTagResourceOpen2);
-      writeChunk(this, stringToChunk(escapeTextForBrowser(nonce)));
-    }
     let i = 0;
     if (hrefs.length) {
-      writeChunk(this, styleTagResourceOpen3);
+      writeChunk(this, styleTagResourceOpen2);
       for (; i < hrefs.length - 1; i++) {
         writeChunk(this, hrefs[i]);
         writeChunk(this, spaceSeparator);
       }
       writeChunk(this, hrefs[i]);
     }
-    writeChunk(this, styleTagResourceOpen4);
+    writeChunk(this, styleTagResourceOpen3);
     for (i = 0; i < rules.length; i++) {
       writeChunk(this, rules[i]);
     }
@@ -6076,11 +6094,11 @@ export type HoistableState = {
 };
 
 export type StyleQueue = {
+  start: PrecomputedChunk,
   precedence: Chunk | PrecomputedChunk,
   rules: Array<Chunk | PrecomputedChunk>,
   hrefs: Array<Chunk | PrecomputedChunk>,
   sheets: Map<string, StylesheetResource>,
-  nonce: ?string,
 };
 
 export function createHoistableState(): HoistableState {
@@ -6528,11 +6546,11 @@ function preinitStyle(
       // to create a StyleQueue
       if (!styleQueue) {
         styleQueue = {
+          start: renderState.startInlineStyle,
           precedence: stringToChunk(escapeTextForBrowser(precedence)),
           rules: ([]: Array<Chunk | PrecomputedChunk>),
           hrefs: ([]: Array<Chunk | PrecomputedChunk>),
           sheets: (new Map(): Map<string, StylesheetResource>),
-          nonce: options ? options.nonce : undefined,
         };
         renderState.styles.set(precedence, styleQueue);
       }

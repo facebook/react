@@ -8624,6 +8624,7 @@ background-color: green;
               </Suspense>
             </body>
           </html>,
+          {nonce: {style: nonce}},
         ).pipe(writable);
       });
 
