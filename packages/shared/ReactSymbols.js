@@ -25,6 +25,7 @@ export const REACT_PROFILER_TYPE: symbol = Symbol.for('react.profiler');
 export const REACT_PROVIDER_TYPE: symbol = Symbol.for('react.provider'); // TODO: Delete with enableRenderableContext
 export const REACT_CONSUMER_TYPE: symbol = Symbol.for('react.consumer');
 export const REACT_CONTEXT_TYPE: symbol = Symbol.for('react.context');
+export const REACT_SERVER_CONTEXT_TYPE: symbol = Symbol.for('react.server_context');
 export const REACT_FORWARD_REF_TYPE: symbol = Symbol.for('react.forward_ref');
 export const REACT_SUSPENSE_TYPE: symbol = Symbol.for('react.suspense');
 export const REACT_SUSPENSE_LIST_TYPE: symbol = Symbol.for(
