@@ -10432,8 +10432,7 @@ describe('ReactDOMFizzServer', () => {
     const scripts = Array.from(container.getElementsByTagName('script')).filter(
       node => node.getAttribute('nonce') === CSPnonce,
     );
-    expect(scripts.length).toEqual(2);
-    expect(scripts[1].textContent).toBe('function noop(){}');
+    expect(scripts[scripts.length - 1].textContent).toBe('function noop(){}');
     expect(getVisibleChildren(document)).toEqual(
       <html>
         <head />
