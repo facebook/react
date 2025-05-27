@@ -23,12 +23,14 @@ export async function parseReactComponentTree(url: string): Promise<string> {
       const componentTree = await localhostPage.evaluate(() => {
         return (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__.rendererInterfaces
           .get(1)
-          .getComponentTree();
+          .__internal_only_getComponentTree();
       });
 
       return componentTree;
     } else {
-      throw new Error('Localhost page not found');
+      throw new Error(
+        `Could not open the page at ${url}. Is your server running?`,
+      );
     }
   } catch (error) {
     throw new Error('Failed extract component tree' + error);

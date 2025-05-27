@@ -72,6 +72,7 @@ module.exports = {
       __IS_CHROME__: false,
       __IS_EDGE__: false,
       __IS_NATIVE__: true,
+      __IS_INTERNAL_MCP_BUILD__: false,
       'process.env.DEVTOOLS_PACKAGE': `"react-devtools-core"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,

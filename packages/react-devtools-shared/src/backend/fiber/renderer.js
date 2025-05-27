@@ -5859,77 +5859,75 @@ export function attach(
     return unresolvedSource;
   }
 
-  function internal_only_getComponentTree(): string {
-    let treeString = '';
+  if (__IS_INTERNAL_MCP_BUILD__) {
+    function __internal_only_getComponentTree(): string {
+      let treeString = '';
 
-    function buildTreeString(
-      instance: DevToolsInstance,
-      prefix: string = '',
-      isLastChild: boolean = true,
-    ): void {
-      if (!instance) return;
+      function buildTreeString(
+        instance: DevToolsInstance,
+        prefix: string = '',
+        isLastChild: boolean = true,
+      ): void {
+        if (!instance) return;
 
-      const name =
-        (instance.kind !== VIRTUAL_INSTANCE
-          ? getDisplayNameForFiber(instance.data)
-          : instance.data.name) || 'Unknown';
+        const name =
+          (instance.kind !== VIRTUAL_INSTANCE
+            ? getDisplayNameForFiber(instance.data)
+            : instance.data.name) || 'Unknown';
 
-      const id = instance.id !== undefined ? instance.id : 'unknown';
+        const id = instance.id !== undefined ? instance.id : 'unknown';
 
-      if (name !== 'createRoot()') {
-        treeString +=
-          prefix +
-          (isLastChild ? '└── ' : '├── ') +
-          name +
-          ' (id: ' +
-          id +
-          ')\n';
-      }
+        if (name !== 'createRoot()') {
+          treeString +=
+            prefix +
+            (isLastChild ? '└── ' : '├── ') +
+            name +
+            ' (id: ' +
+            id +
+            ')\n';
+        }
 
-      const childPrefix = prefix + (isLastChild ? '    ' : '│   ');
+        const childPrefix = prefix + (isLastChild ? '    ' : '│   ');
 
-      let childCount = 0;
-      let tempChild = instance.firstChild;
-      while (tempChild !== null) {
-        childCount++;
-        tempChild = tempChild.nextSibling;
-      }
+        let childCount = 0;
+        let tempChild = instance.firstChild;
+        while (tempChild !== null) {
+          childCount++;
+          tempChild = tempChild.nextSibling;
+        }
 
-      let child = instance.firstChild;
-      let currentChildIndex = 0;
+        let child = instance.firstChild;
+        let currentChildIndex = 0;
 
-      while (child !== null) {
-        currentChildIndex++;
-        const isLastSibling = currentChildIndex === childCount;
-        buildTreeString(child, childPrefix, isLastSibling);
-        child = child.nextSibling;
-      }
-    }
-
-    const rootInstances: Array<DevToolsInstance> = [];
-    idToDevToolsInstanceMap.forEach(instance => {
-      if (
-        instance.parent === null ||
-        (instance.parent.kind === FILTERED_FIBER_INSTANCE &&
-          instance.parent.parent === null)
-      ) {
-        rootInstances.push(instance);
-      }
-    });
-
-    if (rootInstances.length > 0) {
-      for (let i = 0; i < rootInstances.length; i++) {
-        const isLast = i === rootInstances.length - 1;
-        buildTreeString(rootInstances[i], '', isLast);
-        if (!isLast) {
-          treeString += '\n';
+        while (child !== null) {
+          currentChildIndex++;
+          const isLastSibling = currentChildIndex === childCount;
+          buildTreeString(child, childPrefix, isLastSibling);
+          child = child.nextSibling;
         }
       }
-    } else {
-      treeString = 'No component tree found.';
-    }
 
-    return treeString;
+      const rootInstances: Array<DevToolsInstance> = [];
+      idToDevToolsInstanceMap.forEach(instance => {
+        if (instance.parent === null || instance.parent.parent === null) {
+          rootInstances.push(instance);
+        }
+      });
+
+      if (rootInstances.length > 0) {
+        for (let i = 0; i < rootInstances.length; i++) {
+          const isLast = i === rootInstances.length - 1;
+          buildTreeString(rootInstances[i], '', isLast);
+          if (!isLast) {
+            treeString += '\n';
+          }
+        }
+      } else {
+        treeString = 'No component tree found.';
+      }
+
+      return treeString;
+    }
   }
 
   return {
@@ -5946,7 +5944,7 @@ export function attach(
     getNearestMountedDOMNode,
     getElementIDForHostInstance,
     getInstanceAndStyle,
-    ...(__IS_INTERNAL__ && {internal_only_getComponentTree}),
+    ...(__IS_INTERNAL_MCP_BUILD__ && {__internal_only_getComponentTree}),
     getOwnersList,
     getPathForElement,
     getProfilingData,

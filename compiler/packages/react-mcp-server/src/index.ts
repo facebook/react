@@ -386,6 +386,8 @@ server.tool(
     url: z.string().optional().default('http://localhost:3000'),
   },
   async ({url}) => {
+
+    try {
     const componentTree = await parseReactComponentTree(url);
 
     return {
@@ -396,6 +398,7 @@ server.tool(
         },
       ],
     };
+    }
   },
 );
 

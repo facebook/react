@@ -505,7 +505,7 @@ module.exports = {
         __IS_FIREFOX__: 'readonly',
         __IS_EDGE__: 'readonly',
         __IS_NATIVE__: 'readonly',
-        __IS_INTERNAL__: 'readonly',
+        __IS_INTERNAL_MCP_BUILD__: 'readonly',
         __IS_INTERNAL_VERSION__: 'readonly',
         chrome: 'readonly',
       },
