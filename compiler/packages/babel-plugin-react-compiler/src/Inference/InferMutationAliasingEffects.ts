@@ -998,6 +998,9 @@ function computeSignatureForInstruction(
         into: lvalue,
         value: ValueKind.Mutable,
       });
+      if (value.loweredFunc.func.aliasingEffects != null) {
+        effects.push(...value.loweredFunc.func.aliasingEffects);
+      }
       break;
     }
     case 'GetIterator': {
