@@ -26,6 +26,12 @@ import {
   eachInstructionValueOperand,
 } from '../HIR/visitors';
 import {Iterable_some} from '../Utils/utils';
+import {
+  AliasingEffect,
+  inferMutationAliasingEffects,
+} from './InferMutationAliasingEffects';
+import {inferMutationAliasingFunctionEffects} from './InferMutationAliasingFunctionEffects';
+import {inferMutationAliasingRanges} from './InferMutationAliasingRanges';
 
 export default function analyseFunctions(func: HIRFunction): void {
   for (const [_, block] of func.body.blocks) {
@@ -33,8 +39,13 @@ export default function analyseFunctions(func: HIRFunction): void {
       switch (instr.value.kind) {
         case 'ObjectMethod':
         case 'FunctionExpression': {
-          const aliases = lower(instr.value.loweredFunc.func);
-          infer(instr.value.loweredFunc, aliases);
+          if (!func.env.config.enableNewMutationAliasingModel) {
+            const aliases = lower(instr.value.loweredFunc.func);
+            infer(instr.value.loweredFunc, aliases);
+          } else {
+            lowerWithMutationAliasing(instr.value.loweredFunc.func);
+            infer(instr.value.loweredFunc, new DisjointSet());
+          }
 
           /**
            * Reset mutable range for outer inferReferenceEffects
@@ -51,6 +62,22 @@ export default function analyseFunctions(func: HIRFunction): void {
   }
 }
 
+function lowerWithMutationAliasing(fn: HIRFunction): void {
+  analyseFunctions(fn);
+  inferMutationAliasingEffects(fn, {isFunctionExpression: true});
+  deadCodeElimination(fn);
+  inferMutationAliasingRanges(fn);
+  rewriteInstructionKindsBasedOnReassignment(fn);
+  inferReactiveScopeVariables(fn);
+  fn.env.logger?.debugLogIRs?.({
+    kind: 'hir',
+    name: 'AnalyseFunction (inner)',
+    value: fn,
+  });
+  const effects = inferMutationAliasingFunctionEffects(fn);
+  fn.aliasingEffects = effects;
+}
+
 function lower(func: HIRFunction): DisjointSet<Identifier> {
   analyseFunctions(func);
   inferReferenceEffects(func, {isFunctionExpression: true});
@@ -64,7 +91,7 @@ function lower(func: HIRFunction): DisjointSet<Identifier> {
     value: func,
   });
   inferAliasesForCapturing(func, aliases);
-  return aliases;
+  return aliases ?? new DisjointSet();
 }
 
 /**
