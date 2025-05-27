@@ -38,9 +38,7 @@ import {
   Set_isSuperset,
 } from '../Utils/utils';
 import {
-  printAliasingEffect,
   printIdentifier,
-  printInstruction,
   printInstructionValue,
   printPlace,
   printSourceLocation,
@@ -51,7 +49,7 @@ export function inferMutationAliasingEffects(
   {isFunctionExpression}: {isFunctionExpression: boolean} = {
     isFunctionExpression: false,
   },
-): Result<Array<AliasingEffect>, CompilerError> {
+): Result<void, CompilerError> {
   const initialState = InferenceState.empty(fn.env, isFunctionExpression);
 
   // Map of blocks to the last (merged) incoming state that was processed
@@ -169,7 +167,7 @@ export function inferMutationAliasingEffects(
       }
     }
   }
-  return Ok([]);
+  return Ok(undefined);
 }
 
 function inferParam(
@@ -203,9 +201,11 @@ function inferBlock(
       instructionSignature = computeSignatureForInstruction(state.env, instr);
       instructionSignatureCache.set(instr, instructionSignature);
     }
-    // console.log(
-    //   printInstruction({...instr, effects: [...instructionSignature.effects]}),
-    // );
+    /*
+     * console.log(
+     *   printInstruction({...instr, effects: [...instructionSignature.effects]}),
+     * );
+     */
     const effects = applySignature(
       state,
       instructionSignature,
@@ -304,6 +304,14 @@ function applySignature(
             isCopyByReferenceValue = false;
             break;
           }
+          case ValueKind.Frozen: {
+            /*
+             * TODO: add a separate "ImmutableAlias" effect to downgrade to, that doesn't impact mutable ranges
+             * We want to remember that the data flow occurred for PruneNonEscapingScopes
+             */
+            isCopyByReferenceValue = false;
+            break;
+          }
           default: {
             isCopyByReferenceValue = true;
             break;
@@ -321,6 +329,12 @@ function applySignature(
          */
         const fromKind = state.kind(effect.from).kind;
         switch (fromKind) {
+          /*
+           * TODO: add a separate "ImmutableAlias" effect to downgrade to, that doesn't impact mutable ranges
+           * We want to remember that the data flow occurred for PruneNonEscapingScopes
+           * (use this to replace the ValueKind.Frozen case)
+           */
+          case ValueKind.Frozen:
           case ValueKind.Global:
           case ValueKind.Primitive: {
             let value = effectInstructionValueCache.get(effect);
@@ -1184,8 +1198,8 @@ function computeEffectsForSignature(
   }
   // Build substitutions
   const substitutions: Map<IdentifierId, Array<Place>> = new Map();
-  substitutions.set(signature.receiver.identifier.id, [receiver]);
-  substitutions.set(signature.returns.identifier.id, [lvalue]);
+  substitutions.set(signature.receiver, [receiver]);
+  substitutions.set(signature.returns, [lvalue]);
   const params = signature.params;
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -1194,14 +1208,10 @@ function computeEffectsForSignature(
         return null;
       }
       const place = arg.kind === 'Identifier' ? arg : arg.place;
-      getOrInsertWith(
-        substitutions,
-        signature.rest.identifier.id,
-        () => [],
-      ).push(place);
+      getOrInsertWith(substitutions, signature.rest, () => []).push(place);
     } else {
       const param = params[i];
-      substitutions.set(param.identifier.id, [arg]);
+      substitutions.set(param, [arg]);
     }
   }
 
@@ -1414,10 +1424,10 @@ export type AliasingEffect =
     };
 
 export type AliasingSignature = {
-  receiver: Place;
-  params: Array<Place>;
-  rest: Place | null;
-  returns: Place;
+  receiver: IdentifierId;
+  params: Array<IdentifierId>;
+  rest: IdentifierId | null;
+  returns: IdentifierId;
   effects: Array<AliasingEffect>;
 };
 
