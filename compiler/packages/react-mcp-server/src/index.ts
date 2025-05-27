@@ -386,18 +386,22 @@ server.tool(
     url: z.string().optional().default('http://localhost:3000'),
   },
   async ({url}) => {
-
     try {
-    const componentTree = await parseReactComponentTree(url);
+      const componentTree = await parseReactComponentTree(url);
 
-    return {
-      content: [
-        {
-          type: 'text' as const,
-          text: componentTree,
-        },
-      ],
-    };
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: componentTree,
+          },
+        ],
+      };
+    } catch (err) {
+      return {
+        isError: true,
+        content: [{type: 'text' as const, text: `Error: ${err.stack}`}],
+      };
     }
   },
 );
