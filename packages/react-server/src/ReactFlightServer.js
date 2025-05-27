@@ -59,6 +59,7 @@ import type {
   ReactDebugInfo,
   ReactComponentInfo,
   ReactEnvironmentInfo,
+  ReactIOInfo,
   ReactAsyncInfo,
   ReactTimeInfo,
   ReactStackTrace,
@@ -3336,6 +3337,43 @@ function outlineComponentInfo(
   request.writtenObjects.set(componentInfo, serializeByValueID(id));
 }
 
+function outlineIOInfo(request: Request, ioInfo: ReactIOInfo): void {
+  if (!__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'outlineIOInfo should never be called in production mode. This is a bug in React.',
+    );
+  }
+
+  if (request.writtenObjects.has(ioInfo)) {
+    // Already written
+    return;
+  }
+
+  // Limit the number of objects we write to prevent emitting giant props objects.
+  let objectLimit = 10;
+  if (ioInfo.stack != null) {
+    // Ensure we have enough object limit to encode the stack trace.
+    objectLimit += ioInfo.stack.length;
+  }
+
+  // We use the console encoding so that we can dedupe objects but don't necessarily
+  // use the full serialization that requires a task.
+  const counter = {objectLimit};
+
+  // We can't serialize the ConsoleTask/Error objects so we need to omit them before serializing.
+  const relativeStartTimestamp = ioInfo.start - request.timeOrigin;
+  const relativeEndTimestamp = ioInfo.end - request.timeOrigin;
+  const debugIOInfo: Omit<ReactIOInfo, 'debugTask' | 'debugStack'> = {
+    start: relativeStartTimestamp,
+    end: relativeEndTimestamp,
+    stack: ioInfo.stack,
+  };
+  const id = outlineConsoleValue(request, counter, debugIOInfo);
+  request.writtenObjects.set(ioInfo, serializeByValueID(id));
+}
+
 function emitTypedArrayChunk(
   request: Request,
   id: number,
@@ -3843,8 +3881,22 @@ function forwardDebugInfo(
         // If we had a smarter way to dedupe we might not have to do this if there ends up
         // being no references to this as an owner.
         outlineComponentInfo(request, (debugInfo[i]: any));
+        // Emit a reference to the outlined one.
+        emitDebugChunk(request, id, debugInfo[i]);
+      } else if (debugInfo[i].awaited) {
+        const ioInfo = debugInfo[i].awaited;
+        // Outline the IO info in case the same I/O is awaited in more than one place.
+        outlineIOInfo(request, ioInfo);
+        // We can't serialize the ConsoleTask/Error objects so we need to omit them before serializing.
+        const debugAsyncInfo: Omit<ReactAsyncInfo, 'debugTask' | 'debugStack'> =
+          {
+            awaited: ioInfo,
+            stack: debugInfo[i].stack,
+          };
+        emitDebugChunk(request, id, debugAsyncInfo);
+      } else {
+        emitDebugChunk(request, id, debugInfo[i]);
       }
-      emitDebugChunk(request, id, debugInfo[i]);
     }
   }
 }
