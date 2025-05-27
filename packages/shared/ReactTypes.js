@@ -229,12 +229,22 @@ export type ReactErrorInfoDev = {
 
 export type ReactErrorInfo = ReactErrorInfoProd | ReactErrorInfoDev;
 
-export type ReactAsyncInfo = {
-  +type: string,
+// The point where the Async Info started which might not be the same place it was awaited.
+export type ReactIOInfo = {
+  +start: number, // the start time
+  +end: number, // the end time (this might be different from the time the await was unblocked)
+  +stack?: null | ReactStackTrace,
   // Stashed Data for the Specific Execution Environment. Not part of the transport protocol
   +debugStack?: null | Error,
   +debugTask?: null | ConsoleTask,
+};
+
+export type ReactAsyncInfo = {
+  +awaited: ReactIOInfo,
   +stack?: null | ReactStackTrace,
+  // Stashed Data for the Specific Execution Environment. Not part of the transport protocol
+  +debugStack?: null | Error,
+  +debugTask?: null | ConsoleTask,
 };
 
 export type ReactTimeInfo = {
