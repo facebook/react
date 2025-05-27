@@ -34,6 +34,7 @@ export const {
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
   enableFastAddPropertiesInDiffing,
+  enableViewTransition,
   enableComponentPerformanceTrack,
   enableScrollEndPolyfill,
   enableFragmentRefs,
@@ -117,7 +118,6 @@ export const enableFizzBlockingRender = true;
 export const enableSrcObject = false;
 export const enableHydrationChangeEvent = false;
 export const enableDefaultTransitionIndicator = false;
-export const enableViewTransition = true;
 
 export const ownerStackLimit = 1e4;
 
