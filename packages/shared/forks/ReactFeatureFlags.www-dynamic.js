@@ -36,7 +36,6 @@ export const enableInfiniteRenderLoopDetection = __VARIANT__;
 
 export const enableFastAddPropertiesInDiffing = __VARIANT__;
 export const enableLazyPublicInstanceInFabric = false;
-export const enableViewTransition = __VARIANT__;
 export const enableComponentPerformanceTrack = __VARIANT__;
 export const enableScrollEndPolyfill = __VARIANT__;
 export const enableFragmentRefs = __VARIANT__;
