@@ -56247,9 +56247,12 @@ function tryFindDirectiveEnablingMemoization(directives, opts) {
         return Err(dynamicGating.unwrapErr());
     }
 }
-function findDirectiveDisablingMemoization(directives) {
-    var _a;
-    return ((_a = directives.find(directive => OPT_OUT_DIRECTIVES.has(directive.value.value))) !== null && _a !== void 0 ? _a : null);
+function findDirectiveDisablingMemoization(directives, { customOptOutDirectives }) {
+    var _a, _b;
+    if (customOptOutDirectives != null) {
+        return ((_a = directives.find(directive => customOptOutDirectives.indexOf(directive.value.value) !== -1)) !== null && _a !== void 0 ? _a : null);
+    }
+    return ((_b = directives.find(directive => OPT_OUT_DIRECTIVES.has(directive.value.value))) !== null && _b !== void 0 ? _b : null);
 }
 function findDirectivesDynamicGating(directives, opts) {
     var _a, _b;
@@ -56461,7 +56464,8 @@ function compileProgram(program, pass) {
         filename: pass.filename,
         code: pass.code,
         suppressions,
-        hasModuleScopeOptOut: findDirectiveDisablingMemoization(program.node.directives) != null,
+        hasModuleScopeOptOut: findDirectiveDisablingMemoization(program.node.directives, pass.opts) !=
+            null,
     });
     const queue = findFunctionsToCompile(program, pass, programContext);
     const compiledFns = [];
@@ -56552,7 +56556,7 @@ function processFn(fn, fnType, programContext) {
         }
         directives = {
             optIn: optIn.unwrapOr(null),
-            optOut: findDirectiveDisablingMemoization(fn.node.body.directives),
+            optOut: findDirectiveDisablingMemoization(fn.node.body.directives, programContext.opts),
         };
     }
     let compiledFn;
@@ -57223,6 +57227,9 @@ zod.z.enum([
 const DynamicGatingOptionsSchema = zod.z.object({
     source: zod.z.string(),
 });
+const CustomOptOutDirectiveSchema = zod.z
+    .nullable(zod.z.array(zod.z.string()))
+    .default(null);
 const CompilerReactTargetSchema = zod.z.union([
     zod.z.literal('17'),
     zod.z.literal('18'),
@@ -57253,6 +57260,7 @@ const defaultOptions = {
         return filename.indexOf('node_modules') === -1;
     },
     enableReanimatedCheck: true,
+    customOptOutDirectives: null,
     target: '19',
 };
 function parsePluginOptions(obj) {
@@ -57309,6 +57317,21 @@ function parsePluginOptions(obj) {
                                 suggestions: null,
                             });
                         }
+                    }
+                    break;
+                }
+                case 'customOptOutDirectives': {
+                    const result = CustomOptOutDirectiveSchema.safeParse(value);
+                    if (result.success) {
+                        parsedOptions[key] = result.data;
+                    }
+                    else {
+                        CompilerError.throwInvalidConfig({
+                            reason: 'Could not parse custom opt out directives. Update React Compiler config to fix the error',
+                            description: `${zodValidationError.fromZodError(result.error)}`,
+                            loc: null,
+                            suggestions: null,
+                        });
                     }
                     break;
                 }
