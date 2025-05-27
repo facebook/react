@@ -104,6 +104,7 @@ import {validateNoImpureFunctionsInRender} from '../Validation/ValidateNoImpureF
 import {CompilerError} from '..';
 import {validateStaticComponents} from '../Validation/ValidateStaticComponents';
 import {validateNoFreezingKnownMutableFunctions} from '../Validation/ValidateNoFreezingKnownMutableFunctions';
+import { typecheck } from '../TypeInference/Flood/Typecheck';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -199,6 +200,8 @@ function runWithEnvironment(
 
   constantPropagation(hir);
   log({kind: 'hir', name: 'ConstantPropagation', value: hir});
+
+  typecheck(hir);
 
   inferTypes(hir);
   log({kind: 'hir', name: 'InferTypes', value: hir});
