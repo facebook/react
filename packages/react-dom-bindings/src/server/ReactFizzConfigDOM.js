@@ -135,6 +135,13 @@ const SentMarkShellTime /*                */ = 0b001000000;
 const NeedUpgradeToViewTransitions /*     */ = 0b010000000;
 const SentUpgradeToViewTransitions /*     */ = 0b100000000;
 
+type NonceOption =
+  | string
+  | {
+      script?: string,
+      style?: string,
+    };
+
 // Per request, global state that is not contextual to the rendering subtree.
 // This cannot be resumed and therefore should only contain things that are
 // temporary working state or are never used in the prerender pass.
@@ -393,7 +400,8 @@ export function createRenderState(
       : stringToPrecomputedChunk(
           '<script nonce="' + escapeTextForBrowser(nonceScript) + '"',
         );
-  const nonceStyle = typeof nonce === 'string' ? undefined : nonce && nonce.style;
+  const nonceStyle =
+    typeof nonce === 'string' ? undefined : nonce && nonce.style;
   const inlineStyleWithNonce =
     nonceStyle === undefined
       ? startInlineStyle
@@ -654,7 +662,7 @@ export function createRenderState(
 
 export function resumeRenderState(
   resumableState: ResumableState,
-  nonce: string | void,
+  nonce: NonceOption | void,
 ): RenderState {
   return createRenderState(
     resumableState,
