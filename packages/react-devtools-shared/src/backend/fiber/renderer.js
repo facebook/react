@@ -5113,151 +5113,6 @@ export function attach(
   let rootToCommitProfilingMetadataMap: CommitProfilingMetadataMap | null =
     null;
 
-  function printPerformanceData(profilingData: ProfilingDataBackend): void {
-    if (
-      !profilingData ||
-      !profilingData.dataForRoots ||
-      profilingData.dataForRoots.length === 0
-    ) {
-      console.log('No profiling data available');
-      return;
-    }
-
-    console.group('React Performance Data');
-
-    profilingData.dataForRoots.forEach(rootData => {
-      const {commitData, displayName, initialTreeBaseDurations} = rootData;
-
-      console.group(`Root: ${displayName}`);
-
-      // Print overall stats
-      const totalCommits = commitData.length;
-      const totalCommitDuration = commitData.reduce(
-        (sum, commit) => sum + commit.duration,
-        0,
-      );
-      const avgCommitDuration = totalCommitDuration / totalCommits;
-
-      console.log(`Total commits: ${totalCommits}`);
-      console.log(`Average commit duration: ${avgCommitDuration.toFixed(2)}ms`);
-
-      // Find slow components (components that took a long time to render)
-      const componentDurations = new Map();
-
-      commitData.forEach(commit => {
-        if (commit.fiberActualDurations) {
-          commit.fiberActualDurations.forEach(([fiberID, duration]) => {
-            if (!componentDurations.has(fiberID)) {
-              componentDurations.set(fiberID, []);
-            }
-            componentDurations.get(fiberID).push(duration);
-          });
-        }
-      });
-
-      // Calculate average render times for each component
-      const averageComponentDurations = new Map();
-      componentDurations.forEach((durations, fiberID) => {
-        const total = durations.reduce((sum, duration) => sum + duration, 0);
-        const average = total / durations.length;
-        averageComponentDurations.set(fiberID, {
-          average,
-          count: durations.length,
-          total,
-        });
-      });
-
-      // Sort components by average render time (descending)
-      const sortedComponents = Array.from(
-        averageComponentDurations.entries(),
-      ).sort((a, b) => b[1].average - a[1].average);
-
-      // Print the top 10 slowest components
-      console.group('Top 10 slowest components (by average render time)');
-      sortedComponents
-        .slice(0, 10)
-        .forEach(([fiberID, {average, count, total}]) => {
-          // Try to find component name from snapshots
-          let componentName = `FiberID: ${fiberID}`;
-          if (rootData.snapshots) {
-            const snapshot = rootData.snapshots.find(
-              snap => snap[0] === fiberID,
-            );
-            if (snapshot && snapshot[1] && snapshot[1].displayName) {
-              componentName = snapshot[1].displayName;
-            }
-          }
-
-          console.log(
-            `${componentName}: ${average.toFixed(2)}ms avg (${count} renders, ${total.toFixed(2)}ms total)`,
-          );
-        });
-      console.groupEnd();
-
-      // Print components with most renders
-      const sortedByRenderCount = Array.from(
-        averageComponentDurations.entries(),
-      ).sort((a, b) => b[1].count - a[1].count);
-
-      console.group('Top 10 most frequently rendered components');
-      sortedByRenderCount
-        .slice(0, 10)
-        .forEach(([fiberID, {average, count, total}]) => {
-          // Try to find component name from snapshots
-          let componentName = `FiberID: ${fiberID}`;
-          if (rootData.snapshots) {
-            const snapshot = rootData.snapshots.find(
-              snap => snap[0] === fiberID,
-            );
-            if (snapshot && snapshot[1] && snapshot[1].displayName) {
-              componentName = snapshot[1].displayName;
-            }
-          }
-
-          console.log(
-            `${componentName}: ${count} renders (${average.toFixed(2)}ms avg, ${total.toFixed(2)}ms total)`,
-          );
-        });
-      console.groupEnd();
-
-      // Print effect durations if available
-      const effectDurations = commitData
-        .filter(commit => commit.effectDuration !== null)
-        .map(commit => commit.effectDuration);
-
-      const passiveEffectDurations = commitData
-        .filter(commit => commit.passiveEffectDuration !== null)
-        .map(commit => commit.passiveEffectDuration);
-
-      if (effectDurations.length > 0) {
-        const totalEffectDuration = effectDurations.reduce(
-          (sum, duration) => sum + duration,
-          0,
-        );
-        const avgEffectDuration = totalEffectDuration / effectDurations.length;
-        console.log(
-          `Average effect duration: ${avgEffectDuration.toFixed(2)}ms`,
-        );
-      }
-
-      if (passiveEffectDurations.length > 0) {
-        const totalPassiveEffectDuration = passiveEffectDurations.reduce(
-          (sum, duration) => sum + duration,
-          0,
-        );
-        const avgPassiveEffectDuration =
-          totalPassiveEffectDuration / passiveEffectDurations.length;
-        console.log(
-          `Average passive effect duration: ${avgPassiveEffectDuration.toFixed(2)}ms`,
-        );
-      }
-
-      console.groupEnd(); // Root group
-    });
-
-    console.groupEnd(); // React Performance Data group
-  }
-
   function getProfilingData(): ProfilingDataBackend {
     const dataForRoots: Array<ProfilingDataForRootBackend> = [];
 
@@ -5371,16 +5226,11 @@ export function attach(
       }
     }
 
-    const profilingData = {
+    return {
       dataForRoots,
       rendererID,
-      timelineData: getTimelineData?.() || null,
+      timelineData,
     };
-
-    // Print the performance data to help with debugging
-    printPerformanceData(profilingData);
-
-    return profilingData;
   }
 
   function snapshotTreeBaseDurations(
