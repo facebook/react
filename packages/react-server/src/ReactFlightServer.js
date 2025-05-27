@@ -358,6 +358,7 @@ type Task = {
   implicitSlot: boolean, // true if the root server component of this sequence had a null key
   thenableState: ThenableState | null,
   timed: boolean, // Profiling-only. Whether we need to track the completion time of this task.
+  time: number, // Profiling-only. The last time stamp emitted for this task.
   environmentName: string, // DEV-only. Used to track if the environment for this task changed.
   debugOwner: null | ReactComponentInfo, // DEV-only
   debugStack: null | Error, // DEV-only
@@ -531,6 +532,7 @@ function RequestInstance(
     this.didWarnForKey = null;
   }
 
+  let timeOrigin: number;
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     // We start by serializing the time origin. Any future timestamps will be
     // emitted relatively to this origin. Instead of using performance.timeOrigin
@@ -538,13 +540,15 @@ function RequestInstance(
     // This avoids leaking unnecessary information like how long the server has
     // been running and allows for more compact representation of each timestamp.
     // The time origin is stored as an offset in the time space of this environment.
-    const timeOrigin = (this.timeOrigin = performance.now());
+    timeOrigin = this.timeOrigin = performance.now();
     emitTimeOriginChunk(
       this,
       timeOrigin +
         // $FlowFixMe[prop-missing]
         performance.timeOrigin,
     );
+  } else {
+    timeOrigin = 0;
   }
 
   const rootTask = createTask(
@@ -553,6 +557,7 @@ function RequestInstance(
     null,
     false,
     abortSet,
+    timeOrigin,
     null,
     null,
     null,
@@ -644,6 +649,7 @@ function serializeThenable(
     task.keyPath, // the server component sequence continues through Promise-as-a-child.
     task.implicitSlot,
     request.abortableTasks,
+    enableProfilerTimer && enableComponentPerformanceTrack ? task.time : 0,
     __DEV__ ? task.debugOwner : null,
     __DEV__ ? task.debugStack : null,
     __DEV__ ? task.debugTask : null,
@@ -764,6 +770,7 @@ function serializeReadableStream(
     task.keyPath,
     task.implicitSlot,
     request.abortableTasks,
+    enableProfilerTimer && enableComponentPerformanceTrack ? task.time : 0,
     __DEV__ ? task.debugOwner : null,
     __DEV__ ? task.debugStack : null,
     __DEV__ ? task.debugTask : null,
@@ -855,6 +862,7 @@ function serializeAsyncIterable(
     task.keyPath,
     task.implicitSlot,
     request.abortableTasks,
+    enableProfilerTimer && enableComponentPerformanceTrack ? task.time : 0,
     __DEV__ ? task.debugOwner : null,
     __DEV__ ? task.debugStack : null,
     __DEV__ ? task.debugTask : null,
@@ -1280,7 +1288,11 @@ function renderFunctionComponent<Props>(
       // Track when we started rendering this component.
       if (enableProfilerTimer && enableComponentPerformanceTrack) {
         task.timed = true;
-        emitTimingChunk(request, componentDebugID, performance.now());
+        emitTimingChunk(
+          request,
+          componentDebugID,
+          (task.time = performance.now()),
+        );
       }
 
       emitDebugChunk(request, componentDebugID, componentDebugInfo);
@@ -1631,6 +1643,7 @@ function deferTask(request: Request, task: Task): ReactJSONValue {
     task.keyPath, // unlike outlineModel this one carries along context
     task.implicitSlot,
     request.abortableTasks,
+    enableProfilerTimer && enableComponentPerformanceTrack ? task.time : 0,
     __DEV__ ? task.debugOwner : null,
     __DEV__ ? task.debugStack : null,
     __DEV__ ? task.debugTask : null,
@@ -1647,6 +1660,7 @@ function outlineTask(request: Request, task: Task): ReactJSONValue {
     task.keyPath, // unlike outlineModel this one carries along context
     task.implicitSlot,
     request.abortableTasks,
+    enableProfilerTimer && enableComponentPerformanceTrack ? task.time : 0,
     __DEV__ ? task.debugOwner : null,
     __DEV__ ? task.debugStack : null,
     __DEV__ ? task.debugTask : null,
@@ -1839,6 +1853,7 @@ function createTask(
   keyPath: null | string,
   implicitSlot: boolean,
   abortSet: Set<Task>,
+  lastTimestamp: number, // Profiling-only
   debugOwner: null | ReactComponentInfo, // DEV-only
   debugStack: null | Error, // DEV-only
   debugTask: null | ConsoleTask, // DEV-only
@@ -1914,10 +1929,16 @@ function createTask(
     thenableState: null,
   }: Omit<
     Task,
-    'timed' | 'environmentName' | 'debugOwner' | 'debugStack' | 'debugTask',
+    | 'timed'
+    | 'time'
+    | 'environmentName'
+    | 'debugOwner'
+    | 'debugStack'
+    | 'debugTask',
   >): any);
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     task.timed = false;
+    task.time = lastTimestamp;
   }
   if (__DEV__) {
     task.environmentName = request.environmentName();
@@ -2064,6 +2085,9 @@ function outlineModel(request: Request, value: ReactClientValue): number {
     null, // The way we use outlining is for reusing an object.
     false, // It makes no sense for that use case to be contextual.
     request.abortableTasks,
+    enableProfilerTimer && enableComponentPerformanceTrack
+      ? performance.now() // TODO: This should really inherit the time from the task.
+      : 0,
     null, // TODO: Currently we don't associate any debug information with
     null, // this object on the server. If it ends up erroring, it won't
     null, // have any context on the server but can on the client.
@@ -2244,6 +2268,9 @@ function serializeBlob(request: Request, blob: Blob): string {
     null,
     false,
     request.abortableTasks,
+    enableProfilerTimer && enableComponentPerformanceTrack
+      ? performance.now() // TODO: This should really inherit the time from the task.
+      : 0,
     null, // TODO: Currently we don't associate any debug information with
     null, // this object on the server. If it ends up erroring, it won't
     null, // have any context on the server but can on the client.
@@ -2376,6 +2403,9 @@ function renderModel(
           task.keyPath,
           task.implicitSlot,
           request.abortableTasks,
+          enableProfilerTimer && enableComponentPerformanceTrack
+            ? task.time
+            : 0,
           __DEV__ ? task.debugOwner : null,
           __DEV__ ? task.debugStack : null,
           __DEV__ ? task.debugTask : null,
@@ -4009,7 +4039,7 @@ function emitChunk(
 function erroredTask(request: Request, task: Task, error: mixed): void {
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     if (task.timed) {
-      emitTimingChunk(request, task.id, performance.now());
+      emitTimingChunk(request, task.id, (task.time = performance.now()));
     }
   }
   task.status = ERRORED;
@@ -4092,7 +4122,7 @@ function retryTask(request: Request, task: Task): void {
     // We've finished rendering. Log the end time.
     if (enableProfilerTimer && enableComponentPerformanceTrack) {
       if (task.timed) {
-        emitTimingChunk(request, task.id, performance.now());
+        emitTimingChunk(request, task.id, (task.time = performance.now()));
       }
     }
 
@@ -4217,7 +4247,7 @@ function abortTask(task: Task, request: Request, errorId: number): void {
   // Track when we aborted this task as its end time.
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     if (task.timed) {
-      emitTimingChunk(request, task.id, performance.now());
+      emitTimingChunk(request, task.id, (task.time = performance.now()));
     }
   }
   // Instead of emitting an error per task.id, we emit a model that only
