@@ -108,7 +108,7 @@ __DEV__ &&
         case REACT_ACTIVITY_TYPE:
           return "Activity";
         case REACT_VIEW_TRANSITION_TYPE:
-          if (enableViewTransition) return "ViewTransition";
+          return "ViewTransition";
         case REACT_TRACING_MARKER_TYPE:
           if (enableTransitionTracing) return "TracingMarker";
       }
@@ -604,9 +604,8 @@ __DEV__ &&
     function startTransition(scope, options) {
       var prevTransition = ReactSharedInternals.T,
         currentTransition = {};
-      enableViewTransition &&
-        (currentTransition.types =
-          null !== prevTransition ? prevTransition.types : null);
+      currentTransition.types =
+        null !== prevTransition ? prevTransition.types : null;
       enableTransitionTracing &&
         ((currentTransition.name =
           void 0 !== options && void 0 !== options.name ? options.name : null),
@@ -647,21 +646,18 @@ __DEV__ &&
       }
     }
     function addTransitionType(type) {
-      if (enableViewTransition) {
-        var transition = ReactSharedInternals.T;
-        if (null !== transition) {
-          var transitionTypes = transition.types;
-          null === transitionTypes
-            ? (transition.types = [type])
-            : -1 === transitionTypes.indexOf(type) &&
-              transitionTypes.push(type);
-        } else
-          0 === ReactSharedInternals.asyncTransitions &&
-            console.error(
-              "addTransitionType can only be called inside a `startTransition()` callback. It must be associated with a specific Transition."
-            ),
-            startTransition(addTransitionType.bind(null, type));
-      }
+      var transition = ReactSharedInternals.T;
+      if (null !== transition) {
+        var transitionTypes = transition.types;
+        null === transitionTypes
+          ? (transition.types = [type])
+          : -1 === transitionTypes.indexOf(type) && transitionTypes.push(type);
+      } else
+        0 === ReactSharedInternals.asyncTransitions &&
+          console.error(
+            "addTransitionType can only be called inside a `startTransition()` callback. It must be associated with a specific Transition."
+          ),
+          startTransition(addTransitionType.bind(null, type));
     }
     function enqueueTask(task) {
       if (null === enqueueTaskImpl)
@@ -754,13 +750,12 @@ __DEV__ &&
       disableDefaultPropsExceptForClasses =
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
-      enableViewTransition = dynamicFeatureFlags.enableViewTransition;
-    dynamicFeatureFlags = Symbol.for("react.element");
-    var REACT_ELEMENT_TYPE = renameElementSymbol
+      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing;
+    dynamicFeatureFlags = dynamicFeatureFlags.renameElementSymbol;
+    var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
+      REACT_ELEMENT_TYPE = dynamicFeatureFlags
         ? Symbol.for("react.transitional.element")
-        : dynamicFeatureFlags,
+        : REACT_LEGACY_ELEMENT_TYPE,
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -773,9 +768,9 @@ __DEV__ &&
       REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"),
       REACT_MEMO_TYPE = Symbol.for("react.memo"),
       REACT_LAZY_TYPE = Symbol.for("react.lazy");
-    renameElementSymbol = Symbol.for("react.scope");
+    dynamicFeatureFlags = Symbol.for("react.scope");
     var REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
-    dynamicFeatureFlags = Symbol.for("react.legacy_hidden");
+    REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.legacy_hidden");
     var REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
       REACT_VIEW_TRANSITION_TYPE = Symbol.for("react.view_transition"),
       MAYBE_ITERATOR_SYMBOL = Symbol.iterator,
@@ -1438,8 +1433,8 @@ __DEV__ &&
     };
     exports.startTransition = startTransition;
     exports.unstable_Activity = REACT_ACTIVITY_TYPE;
-    exports.unstable_LegacyHidden = dynamicFeatureFlags;
-    exports.unstable_Scope = renameElementSymbol;
+    exports.unstable_LegacyHidden = REACT_LEGACY_ELEMENT_TYPE;
+    exports.unstable_Scope = dynamicFeatureFlags;
     exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
     exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
     exports.unstable_ViewTransition = REACT_VIEW_TRANSITION_TYPE;
@@ -1537,7 +1532,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.2.0-www-modern-c0464aed-20250523";
+    exports.version = "19.2.0-www-modern-f702620c-20250527";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

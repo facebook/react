@@ -92,7 +92,7 @@ __DEV__ &&
         case REACT_SUSPENSE_LIST_TYPE:
           return "SuspenseList";
         case REACT_VIEW_TRANSITION_TYPE:
-          if (enableViewTransition) return "ViewTransition";
+          return "ViewTransition";
       }
       if ("object" === typeof type)
         switch (type.$$typeof) {
@@ -851,7 +851,7 @@ __DEV__ &&
       return parentContext.insertionMode >= HTML_TABLE_MODE ||
         parentContext.insertionMode < HTML_MODE
         ? createFormatContext(HTML_MODE, null, subtreeScope, null)
-        : (enableViewTransition && null !== parentContext.viewTransition) ||
+        : null !== parentContext.viewTransition ||
             parentContext.tagScope !== subtreeScope
           ? createFormatContext(
               parentContext.insertionMode,
@@ -898,25 +898,24 @@ __DEV__ &&
       return resumableState + "\u00bb";
     }
     function pushViewTransitionAttributes(target, formatContext) {
-      enableViewTransition &&
-        ((formatContext = formatContext.viewTransition),
-        null !== formatContext &&
-          ("auto" !== formatContext.name &&
-            (pushStringAttribute(
-              target,
-              "vt-name",
-              0 === formatContext.nameIdx
-                ? formatContext.name
-                : formatContext.name + "_" + formatContext.nameIdx
-            ),
-            formatContext.nameIdx++),
-          pushStringAttribute(target, "vt-update", formatContext.update),
-          "none" !== formatContext.enter &&
-            pushStringAttribute(target, "vt-enter", formatContext.enter),
-          "none" !== formatContext.exit &&
-            pushStringAttribute(target, "vt-exit", formatContext.exit),
-          "none" !== formatContext.share &&
-            pushStringAttribute(target, "vt-share", formatContext.share)));
+      formatContext = formatContext.viewTransition;
+      null !== formatContext &&
+        ("auto" !== formatContext.name &&
+          (pushStringAttribute(
+            target,
+            "vt-name",
+            0 === formatContext.nameIdx
+              ? formatContext.name
+              : formatContext.name + "_" + formatContext.nameIdx
+          ),
+          formatContext.nameIdx++),
+        pushStringAttribute(target, "vt-update", formatContext.update),
+        "none" !== formatContext.enter &&
+          pushStringAttribute(target, "vt-enter", formatContext.enter),
+        "none" !== formatContext.exit &&
+          pushStringAttribute(target, "vt-exit", formatContext.exit),
+        "none" !== formatContext.share &&
+          pushStringAttribute(target, "vt-share", formatContext.share));
     }
     function pushStyleAttribute(target, style) {
       if ("object" !== typeof style)
@@ -3765,7 +3764,7 @@ __DEV__ &&
         case REACT_ACTIVITY_TYPE:
           return "Activity";
         case REACT_VIEW_TRANSITION_TYPE:
-          if (enableViewTransition) return "ViewTransition";
+          return "ViewTransition";
         case REACT_TRACING_MARKER_TYPE:
           if (enableTransitionTracing) return "TracingMarker";
       }
@@ -4524,8 +4523,7 @@ __DEV__ &&
         case REACT_SUSPENSE_TYPE:
           return describeBuiltInComponentFrame("Suspense");
         case REACT_VIEW_TRANSITION_TYPE:
-          if (enableViewTransition)
-            return describeBuiltInComponentFrame("ViewTransition");
+          return describeBuiltInComponentFrame("ViewTransition");
       }
       return "";
     }
@@ -5970,28 +5968,26 @@ __DEV__ &&
             }
             return;
           case REACT_VIEW_TRANSITION_TYPE:
-            if (enableViewTransition) {
-              var prevContext$jscomp$0 = task.formatContext,
-                prevKeyPath$jscomp$4 = task.keyPath;
-              var resumableState$jscomp$0 = request.resumableState;
-              if (null == props.name || "auto" === props.name) {
-                var treeId = getTreeId(task.treeContext);
-                makeId(resumableState$jscomp$0, treeId, 0);
-              }
-              task.formatContext = prevContext$jscomp$0;
-              task.keyPath = keyPath;
-              if (null != props.name && "auto" !== props.name)
-                renderNodeDestructive(request, task, props.children, -1);
-              else {
-                var prevTreeContext = task.treeContext;
-                task.treeContext = pushTreeContext(prevTreeContext, 1, 0);
-                renderNode(request, task, props.children, -1);
-                task.treeContext = prevTreeContext;
-              }
-              task.formatContext = prevContext$jscomp$0;
-              task.keyPath = prevKeyPath$jscomp$4;
-              return;
+            var prevContext$jscomp$0 = task.formatContext,
+              prevKeyPath$jscomp$4 = task.keyPath;
+            var resumableState$jscomp$0 = request.resumableState;
+            if (null == props.name || "auto" === props.name) {
+              var treeId = getTreeId(task.treeContext);
+              makeId(resumableState$jscomp$0, treeId, 0);
             }
+            task.formatContext = prevContext$jscomp$0;
+            task.keyPath = keyPath;
+            if (null != props.name && "auto" !== props.name)
+              renderNodeDestructive(request, task, props.children, -1);
+            else {
+              var prevTreeContext = task.treeContext;
+              task.treeContext = pushTreeContext(prevTreeContext, 1, 0);
+              renderNode(request, task, props.children, -1);
+              task.treeContext = prevTreeContext;
+            }
+            task.formatContext = prevContext$jscomp$0;
+            task.keyPath = prevKeyPath$jscomp$4;
+            return;
           case REACT_SCOPE_TYPE:
             var _prevKeyPath5 = task.keyPath;
             task.keyPath = keyPath;
@@ -7912,9 +7908,8 @@ __DEV__ &&
       boundary = boundary.contentState;
       var requiresStyleInsertion = request.stylesToHoist,
         requiresViewTransitions =
-          enableViewTransition &&
           (completedSegments.instructions & NeedUpgradeToViewTransitions) !==
-            NothingSent;
+          NothingSent;
       request.stylesToHoist = !1;
       var scriptFormat =
         completedSegments.streamingFormat === ScriptStreamingFormat;
@@ -8562,7 +8557,6 @@ __DEV__ &&
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
-      enableViewTransition = dynamicFeatureFlags.enableViewTransition,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_ELEMENT_TYPE = renameElementSymbol
         ? Symbol.for("react.transitional.element")
@@ -10049,5 +10043,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.2.0-www-modern-c0464aed-20250523";
+    exports.version = "19.2.0-www-modern-f702620c-20250527";
   })();

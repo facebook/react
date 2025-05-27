@@ -82,7 +82,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   retryLaneExpirationMs = dynamicFeatureFlags.retryLaneExpirationMs,
   syncLaneExpirationMs = dynamicFeatureFlags.syncLaneExpirationMs,
   transitionLaneExpirationMs = dynamicFeatureFlags.transitionLaneExpirationMs,
-  enableViewTransition = dynamicFeatureFlags.enableViewTransition,
   enableFragmentRefs = dynamicFeatureFlags.enableFragmentRefs;
 function isFiberSuspenseAndTimedOut(fiber) {
   var memoizedState = fiber.memoizedState;
@@ -156,7 +155,7 @@ function getComponentNameFromType(type) {
     case REACT_ACTIVITY_TYPE:
       return "Activity";
     case REACT_VIEW_TRANSITION_TYPE:
-      if (enableViewTransition) return "ViewTransition";
+      return "ViewTransition";
     case REACT_TRACING_MARKER_TYPE:
       if (enableTransitionTracing) return "TracingMarker";
   }
@@ -993,8 +992,7 @@ function describeFiber(fiber) {
     case 31:
       return describeBuiltInComponentFrame("Activity");
     case 30:
-      if (enableViewTransition)
-        return describeBuiltInComponentFrame("ViewTransition");
+      return describeBuiltInComponentFrame("ViewTransition");
     default:
       return "";
   }
@@ -1285,7 +1283,7 @@ function releaseCache(cache) {
     });
 }
 function queueTransitionTypes(root, transitionTypes) {
-  if (enableViewTransition && 0 !== (root.pendingLanes & 4194048)) {
+  if (0 !== (root.pendingLanes & 4194048)) {
     var queued = root.transitionTypes;
     null === queued && (queued = root.transitionTypes = []);
     for (root = 0; root < transitionTypes.length; root++) {
@@ -1562,23 +1560,19 @@ ReactSharedInternals.S = function (transition, returnValue) {
     null !== returnValue &&
     "function" === typeof returnValue.then &&
     entangleAsyncAction(transition, returnValue);
-  if (enableViewTransition) {
-    if (null !== entangledTransitionTypes)
-      for (var root = firstScheduledRoot; null !== root; )
-        queueTransitionTypes(root, entangledTransitionTypes),
-          (root = root.next);
-    root = transition.types;
-    if (null !== root) {
-      for (var root$17 = firstScheduledRoot; null !== root$17; )
-        queueTransitionTypes(root$17, root), (root$17 = root$17.next);
-      if (0 !== currentEntangledLane && enableViewTransition) {
-        root$17 = entangledTransitionTypes;
-        null === root$17 && (root$17 = entangledTransitionTypes = []);
-        for (var i = 0; i < root.length; i++) {
-          var transitionType = root[i];
-          -1 === root$17.indexOf(transitionType) &&
-            root$17.push(transitionType);
-        }
+  if (null !== entangledTransitionTypes)
+    for (var root = firstScheduledRoot; null !== root; )
+      queueTransitionTypes(root, entangledTransitionTypes), (root = root.next);
+  root = transition.types;
+  if (null !== root) {
+    for (var root$17 = firstScheduledRoot; null !== root$17; )
+      queueTransitionTypes(root$17, root), (root$17 = root$17.next);
+    if (0 !== currentEntangledLane) {
+      root$17 = entangledTransitionTypes;
+      null === root$17 && (root$17 = entangledTransitionTypes = []);
+      for (var i = 0; i < root.length; i++) {
+        var transitionType = root[i];
+        -1 === root$17.indexOf(transitionType) && root$17.push(transitionType);
       }
     }
   }
@@ -3341,9 +3335,8 @@ function runActionStateAction(actionQueue, node) {
   if (node.isTransition) {
     var prevTransition = ReactSharedInternals.T,
       currentTransition = {};
-    enableViewTransition &&
-      (currentTransition.types =
-        null !== prevTransition ? prevTransition.types : null);
+    currentTransition.types =
+      null !== prevTransition ? prevTransition.types : null;
     enableTransitionTracing &&
       ((currentTransition.name = null), (currentTransition.startTime = -1));
     ReactSharedInternals.T = currentTransition;
@@ -3672,9 +3665,8 @@ function startTransition(
     0 !== previousPriority && 8 > previousPriority ? previousPriority : 8;
   var prevTransition = ReactSharedInternals.T,
     currentTransition = {};
-  enableViewTransition &&
-    (currentTransition.types =
-      null !== prevTransition ? prevTransition.types : null);
+  currentTransition.types =
+    null !== prevTransition ? prevTransition.types : null;
   enableTransitionTracing &&
     ((currentTransition.name =
       void 0 !== options && void 0 !== options.name ? options.name : null),
@@ -6266,24 +6258,17 @@ function beginWork(current, workInProgress, renderLanes) {
         );
       break;
     case 30:
-      if (enableViewTransition)
-        return (
-          (props = workInProgress.pendingProps),
-          null != props.name &&
-            "auto" !== props.name &&
-            (workInProgress.flags |= null === current ? 18882560 : 18874368),
-          null !== current && current.memoizedProps.name !== props.name
-            ? (workInProgress.flags |= 4194816)
-            : markRef(current, workInProgress),
-          reconcileChildren(
-            current,
-            workInProgress,
-            props.children,
-            renderLanes
-          ),
-          workInProgress.child
-        );
-      break;
+      return (
+        (props = workInProgress.pendingProps),
+        null != props.name &&
+          "auto" !== props.name &&
+          (workInProgress.flags |= null === current ? 18882560 : 18874368),
+        null !== current && current.memoizedProps.name !== props.name
+          ? (workInProgress.flags |= 4194816)
+          : markRef(current, workInProgress),
+        reconcileChildren(current, workInProgress, props.children, renderLanes),
+        workInProgress.child
+      );
     case 29:
       throw workInProgress.pendingProps;
   }
@@ -6508,7 +6493,7 @@ function completeWork(current, workInProgress, renderLanes) {
           if (null === workInProgress.stateNode)
             throw Error(formatProdErrorMessage(166));
           bubbleProperties(workInProgress);
-          enableViewTransition && (workInProgress.subtreeFlags &= -33554433);
+          workInProgress.subtreeFlags &= -33554433;
           return null;
         }
         switch (renderLanes) {
@@ -6563,7 +6548,7 @@ function completeWork(current, workInProgress, renderLanes) {
         workInProgress.stateNode = current;
       }
       bubbleProperties(workInProgress);
-      enableViewTransition && (workInProgress.subtreeFlags &= -33554433);
+      workInProgress.subtreeFlags &= -33554433;
       workInProgress.flags &= -16777217;
       return null;
     case 6:
@@ -6831,9 +6816,8 @@ function completeWork(current, workInProgress, renderLanes) {
       );
     case 30:
       return (
-        enableViewTransition &&
-          ((workInProgress.flags |= 33554432),
-          bubbleProperties(workInProgress)),
+        (workInProgress.flags |= 33554432),
+        bubbleProperties(workInProgress),
         null
       );
   }
@@ -7076,15 +7060,11 @@ function safelyAttachRef(current, nearestMountedAncestor) {
           var instanceToUse = current.stateNode;
           break;
         case 30:
-          if (enableViewTransition) {
-            var instance = current.stateNode,
-              name = getViewTransitionName(current.memoizedProps, instance);
-            if (null === instance.ref || instance.ref.name !== name)
-              instance.ref = null;
-            instanceToUse = instance.ref;
-            break;
-          }
-          instanceToUse = current.stateNode;
+          var instance = current.stateNode,
+            name = getViewTransitionName(current.memoizedProps, instance);
+          if (null === instance.ref || instance.ref.name !== name)
+            instance.ref = null;
+          instanceToUse = instance.ref;
           break;
         case 7:
           if (enableFragmentRefs) {
@@ -7148,13 +7128,9 @@ function commitProfilerPostCommit(
 }
 var viewTransitionMutationContext = !1;
 function pushMutationContext() {
-  if (!enableViewTransition) return !1;
   var prev = viewTransitionMutationContext;
   viewTransitionMutationContext = !1;
   return prev;
-}
-function trackHostMutation() {
-  enableViewTransition && (viewTransitionMutationContext = !0);
 }
 function isHostParent(fiber) {
   return 5 === fiber.tag || 3 === fiber.tag || 4 === fiber.tag;
@@ -7186,7 +7162,7 @@ function insertOrAppendPlacementNodeIntoContainer(node, before, parent) {
       if (node === before) throw Error(formatProdErrorMessage(218));
       node.injectBefore(before);
     } else node.parentNode === parent && node.eject(), node.inject(parent);
-    trackHostMutation();
+    viewTransitionMutationContext = !0;
   } else if (4 !== tag && ((node = node.child), null !== node))
     for (
       insertOrAppendPlacementNodeIntoContainer(node, before, parent),
@@ -7205,7 +7181,7 @@ function insertOrAppendPlacementNode(node, before, parent) {
       if (node === before) throw Error(formatProdErrorMessage(218));
       node.injectBefore(before);
     } else node.parentNode === parent && node.eject(), node.inject(parent);
-    trackHostMutation();
+    viewTransitionMutationContext = !0;
   } else if (4 !== tag && ((node = node.child), null !== node))
     for (
       insertOrAppendPlacementNode(node, before, parent), node = node.sibling;
@@ -7378,8 +7354,7 @@ var offscreenSubtreeIsHidden = !1,
 function commitBeforeMutationEffects(root, firstChild, committedLanes) {
   focusedInstanceHandle = null;
   shouldFireAfterActiveInstanceBlur = !1;
-  root =
-    enableViewTransition && (committedLanes & 335544064) === committedLanes;
+  root = (committedLanes & 335544064) === committedLanes;
   nextEffect = firstChild;
   for (firstChild = root ? 9270 : 9236; null !== nextEffect; ) {
     committedLanes = nextEffect;
@@ -7391,15 +7366,11 @@ function commitBeforeMutationEffects(root, firstChild, committedLanes) {
           (shouldFireAfterActiveInstanceBlur = !0);
         root && commitExitViewTransitions(deletion);
       }
-    if (
-      enableViewTransition &&
-      null === committedLanes.alternate &&
-      0 !== (committedLanes.flags & 2)
-    )
+    if (null === committedLanes.alternate && 0 !== (committedLanes.flags & 2))
       root && trackEnterViewTransitions(committedLanes),
         commitBeforeMutationEffects_complete(root);
     else {
-      if (enableViewTransition && 22 === committedLanes.tag)
+      if (22 === committedLanes.tag)
         if (
           ((deletions = committedLanes.alternate),
           null !== committedLanes.memoizedState)
@@ -7504,26 +7475,24 @@ function commitBeforeMutationEffects_complete(
       case 17:
         break;
       case 30:
-        if (enableViewTransition) {
-          isViewTransitionEligible &&
-            null !== current &&
-            ((isViewTransitionEligible = getViewTransitionName(
-              current.memoizedProps,
-              current.stateNode
-            )),
-            (flags = fiber.memoizedProps),
-            (flags = getViewTransitionClassName(flags.default, flags.update)),
-            "none" !== flags &&
-              ((JSCompiler_temp = current.memoizedState = []),
-              applyViewTransitionToHostInstancesRecursive(
-                current.child,
-                isViewTransitionEligible,
-                flags,
-                JSCompiler_temp,
-                !0
-              )));
-          break;
-        }
+        isViewTransitionEligible &&
+          null !== current &&
+          ((isViewTransitionEligible = getViewTransitionName(
+            current.memoizedProps,
+            current.stateNode
+          )),
+          (flags = fiber.memoizedProps),
+          (flags = getViewTransitionClassName(flags.default, flags.update)),
+          "none" !== flags &&
+            ((JSCompiler_temp = current.memoizedState = []),
+            applyViewTransitionToHostInstancesRecursive(
+              current.child,
+              isViewTransitionEligible,
+              flags,
+              JSCompiler_temp,
+              !0
+            )));
+        break;
       default:
         if (0 !== (flags & 1024)) throw Error(formatProdErrorMessage(163));
     }
@@ -7649,9 +7618,8 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
       }
       break;
     case 30:
-      enableViewTransition &&
-        (recursivelyTraverseLayoutEffects(finishedRoot, finishedWork),
-        flags & 512 && safelyAttachRef(finishedWork, finishedWork.return));
+      recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
+      flags & 512 && safelyAttachRef(finishedWork, finishedWork.return);
       break;
     case 7:
       enableFragmentRefs &&
@@ -7904,7 +7872,7 @@ function commitDeletionEffectsOnFiber(
             var child = deletedFiber.stateNode;
             destroyEventListeners(child);
             child.eject();
-            trackHostMutation();
+            viewTransitionMutationContext = !0;
           } catch (error) {
             captureCommitPhaseError(
               deletedFiber,
@@ -7917,7 +7885,7 @@ function commitDeletionEffectsOnFiber(
             var child$jscomp$0 = deletedFiber.stateNode;
             destroyEventListeners(child$jscomp$0);
             child$jscomp$0.eject();
-            trackHostMutation();
+            viewTransitionMutationContext = !0;
           } catch (error) {
             captureCommitPhaseError(
               deletedFiber,
@@ -8002,15 +7970,13 @@ function commitDeletionEffectsOnFiber(
       offscreenSubtreeWasHidden = child;
       break;
     case 30:
-      if (enableViewTransition) {
-        safelyDetachRef(deletedFiber, nearestMountedAncestor);
-        recursivelyTraverseDeletionEffects(
-          finishedRoot,
-          nearestMountedAncestor,
-          deletedFiber
-        );
-        break;
-      }
+      safelyDetachRef(deletedFiber, nearestMountedAncestor);
+      recursivelyTraverseDeletionEffects(
+        finishedRoot,
+        nearestMountedAncestor,
+        deletedFiber
+      );
+      break;
     case 7:
       if (enableFragmentRefs) {
         offscreenSubtreeWasHidden ||
@@ -8138,7 +8104,7 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
           safelyDetachRef(current, current.return));
       if (finishedWork.flags & 32)
         try {
-          trackHostMutation();
+          viewTransitionMutationContext = !0;
         } catch (error) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
@@ -8160,23 +8126,23 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
         if (null === finishedWork.stateNode)
           throw Error(formatProdErrorMessage(162));
         try {
-          trackHostMutation();
+          viewTransitionMutationContext = !0;
         } catch (error) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
       }
       break;
     case 3:
-      enableViewTransition && (viewTransitionMutationContext = !1);
+      viewTransitionMutationContext = !1;
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
-      enableViewTransition && (viewTransitionMutationContext = !1);
+      viewTransitionMutationContext = !1;
       break;
     case 4:
       flags = pushMutationContext();
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
-      enableViewTransition && (viewTransitionMutationContext = flags);
+      viewTransitionMutationContext = flags;
       break;
     case 12:
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
@@ -8270,7 +8236,7 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
             if (null === current) {
               lanes = root;
               try {
-                trackHostMutation();
+                viewTransitionMutationContext = !0;
               } catch (error) {
                 captureCommitPhaseError(lanes, lanes.return, error);
               }
@@ -8323,24 +8289,22 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
           attachSuspenseRetryListeners(finishedWork, flags)));
       break;
     case 30:
-      enableViewTransition &&
-        (flags & 512 &&
-          (offscreenSubtreeWasHidden ||
-            null === current ||
-            safelyDetachRef(current, current.return)),
-        (flags = pushMutationContext()),
-        (isShowingFallback =
-          enableViewTransition && (lanes & 335544064) === lanes),
-        (props = finishedWork.memoizedProps),
-        isShowingFallback &&
-          "none" !== getViewTransitionClassName(props.default, props.update),
-        recursivelyTraverseMutationEffects(root, finishedWork, lanes),
-        commitReconciliationEffects(finishedWork),
-        isShowingFallback &&
-          null !== current &&
-          viewTransitionMutationContext &&
-          (finishedWork.flags |= 4),
-        enableViewTransition && (viewTransitionMutationContext = flags));
+      flags & 512 &&
+        (offscreenSubtreeWasHidden ||
+          null === current ||
+          safelyDetachRef(current, current.return));
+      flags = pushMutationContext();
+      isShowingFallback = (lanes & 335544064) === lanes;
+      props = finishedWork.memoizedProps;
+      isShowingFallback &&
+        "none" !== getViewTransitionClassName(props.default, props.update);
+      recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+      commitReconciliationEffects(finishedWork);
+      isShowingFallback &&
+        null !== current &&
+        viewTransitionMutationContext &&
+        (finishedWork.flags |= 4);
+      viewTransitionMutationContext = flags;
       break;
     case 21:
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
@@ -8454,8 +8418,7 @@ function recursivelyTraverseDisappearLayoutEffects(parentFiber) {
           recursivelyTraverseDisappearLayoutEffects(finishedWork);
         break;
       case 30:
-        enableViewTransition &&
-          safelyDetachRef(finishedWork, finishedWork.return);
+        safelyDetachRef(finishedWork, finishedWork.return);
         recursivelyTraverseDisappearLayoutEffects(finishedWork);
         break;
       case 7:
@@ -8566,13 +8529,12 @@ function recursivelyTraverseReappearLayoutEffects(
         safelyAttachRef(finishedWork, finishedWork.return);
         break;
       case 30:
-        enableViewTransition &&
-          (recursivelyTraverseReappearLayoutEffects(
-            finishedRoot,
-            finishedWork,
-            includeWorkInProgressEffects
-          ),
-          safelyAttachRef(finishedWork, finishedWork.return));
+        recursivelyTraverseReappearLayoutEffects(
+          finishedRoot,
+          finishedWork,
+          includeWorkInProgressEffects
+        );
+        safelyAttachRef(finishedWork, finishedWork.return);
         break;
       case 7:
         enableFragmentRefs &&
@@ -8665,9 +8627,7 @@ function recursivelyTraversePassiveMountEffects(
 ) {
   if (
     parentFiber.subtreeFlags &
-    (enableViewTransition && (committedLanes & 335544064) === committedLanes
-      ? 10262
-      : 10256)
+    ((committedLanes & 335544064) === committedLanes ? 10262 : 10256)
   )
     for (parentFiber = parentFiber.child; null !== parentFiber; )
       commitPassiveMountOnFiber(
@@ -8684,9 +8644,8 @@ function commitPassiveMountOnFiber(
   committedLanes,
   committedTransitions
 ) {
-  var isViewTransitionEligible = enableViewTransition
-    ? (committedLanes & 335544064) === committedLanes
-    : !1;
+  var isViewTransitionEligible =
+    (committedLanes & 335544064) === committedLanes;
   isViewTransitionEligible &&
     null === finishedWork.alternate &&
     null !== finishedWork.return &&
@@ -8885,15 +8844,13 @@ function commitPassiveMountOnFiber(
         commitCachePassiveMountEffect(finishedWork.alternate, finishedWork);
       break;
     case 30:
-      if (enableViewTransition) {
-        recursivelyTraversePassiveMountEffects(
-          finishedRoot,
-          finishedWork,
-          committedLanes,
-          committedTransitions
-        );
-        break;
-      }
+      recursivelyTraversePassiveMountEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions
+      );
+      break;
     case 25:
       if (enableTransitionTracing) {
         recursivelyTraversePassiveMountEffects(
@@ -9090,21 +9047,19 @@ function accumulateSuspenseyCommitOnFiber(fiber) {
       }
       break;
     case 30:
-      if (enableViewTransition) {
-        if (
-          0 !== (fiber.flags & suspenseyCommitFlag) &&
-          ((current = fiber.memoizedProps.name),
-          null != current && "auto" !== current)
-        ) {
-          var state = fiber.stateNode;
-          state.paired = null;
-          null === appearingViewTransitions &&
-            (appearingViewTransitions = new Map());
-          appearingViewTransitions.set(current, state);
-        }
-        recursivelyAccumulateSuspenseyCommit(fiber);
-        break;
+      if (
+        0 !== (fiber.flags & suspenseyCommitFlag) &&
+        ((current = fiber.memoizedProps.name),
+        null != current && "auto" !== current)
+      ) {
+        var state = fiber.stateNode;
+        state.paired = null;
+        null === appearingViewTransitions &&
+          (appearingViewTransitions = new Map());
+        appearingViewTransitions.set(current, state);
       }
+      recursivelyAccumulateSuspenseyCommit(fiber);
+      break;
     default:
       recursivelyAccumulateSuspenseyCommit(fiber);
   }
@@ -9432,7 +9387,7 @@ function requestDeferredLane() {
   return workInProgressDeferredLane;
 }
 function scheduleViewTransitionEvent(fiber, callback) {
-  if (enableViewTransition && null != callback) {
+  if (null != callback) {
     var state = fiber.stateNode,
       instance = state.ref;
     null === instance &&
@@ -9656,7 +9611,7 @@ function commitRootWhenReady(
   root.timeoutHandle = -1;
   var subtreeFlags = finishedWork.subtreeFlags;
   if (
-    (enableViewTransition && (lanes & 335544064) === lanes) ||
+    (lanes & 335544064) === lanes ||
     subtreeFlags & 8192 ||
     16785408 === (subtreeFlags & 16785408)
   )
@@ -10240,13 +10195,11 @@ function commitRoot(
     pendingPassiveTransitions = transitions;
     pendingRecoverableErrors = recoverableErrors;
     pendingDidIncludeRenderPhaseUpdate = didIncludeRenderPhaseUpdate;
-    enableViewTransition
-      ? ((pendingViewTransitionEvents = null),
-        (lanes & 335544064) === lanes
-          ? ((pendingTransitionTypes = claimQueuedTransitionTypes(root)),
-            (recoverableErrors = 10262))
-          : ((pendingTransitionTypes = null), (recoverableErrors = 10256)))
-      : (recoverableErrors = 10256);
+    pendingViewTransitionEvents = null;
+    (lanes & 335544064) === lanes
+      ? ((pendingTransitionTypes = claimQueuedTransitionTypes(root)),
+        (recoverableErrors = 10262))
+      : ((pendingTransitionTypes = null), (recoverableErrors = 10256));
     0 !== (finishedWork.subtreeFlags & recoverableErrors) ||
     0 !== (finishedWork.flags & recoverableErrors)
       ? ((root.callbackNode = null),
@@ -10275,8 +10228,7 @@ function commitRoot(
     }
     root = shouldStartViewTransition;
     pendingEffectsStatus = 1;
-    (enableViewTransition && root) ||
-      (flushMutationEffects(), flushLayoutEffects(), flushSpawnedWork());
+    root || (flushMutationEffects(), flushLayoutEffects(), flushSpawnedWork());
   }
 }
 function flushMutationEffects() {
@@ -10338,8 +10290,7 @@ function flushSpawnedWork() {
       lanes = pendingEffectsLanes,
       recoverableErrors = pendingRecoverableErrors,
       didIncludeRenderPhaseUpdate = pendingDidIncludeRenderPhaseUpdate,
-      passiveSubtreeMask =
-        enableViewTransition && (lanes & 335544064) === lanes ? 10262 : 10256;
+      passiveSubtreeMask = (lanes & 335544064) === lanes ? 10262 : 10256;
     0 !== (finishedWork.subtreeFlags & passiveSubtreeMask) ||
     0 !== (finishedWork.flags & passiveSubtreeMask)
       ? (pendingEffectsStatus = 5)
@@ -10380,13 +10331,10 @@ function flushSpawnedWork() {
           (currentUpdatePriority = passiveSubtreeMask);
       }
     }
-    if (
-      enableViewTransition &&
-      ((recoverableErrors = pendingViewTransitionEvents),
-      (onRecoverableError = pendingTransitionTypes),
-      (pendingTransitionTypes = null),
-      null !== recoverableErrors)
-    )
+    recoverableErrors = pendingViewTransitionEvents;
+    onRecoverableError = pendingTransitionTypes;
+    pendingTransitionTypes = null;
+    if (null !== recoverableErrors)
       for (
         pendingViewTransitionEvents = null,
           null === onRecoverableError && (onRecoverableError = []),
@@ -10807,20 +10755,19 @@ function createFiberFromTypeAndProps(
           type
         );
       case REACT_VIEW_TRANSITION_TYPE:
-        if (enableViewTransition)
-          return (
-            (type = mode | 32),
-            (type = createFiber(30, pendingProps, key, type)),
-            (type.elementType = REACT_VIEW_TRANSITION_TYPE),
-            (type.lanes = lanes),
-            (type.stateNode = {
-              autoName: null,
-              paired: null,
-              clones: null,
-              ref: null
-            }),
-            type
-          );
+        return (
+          (type = mode | 32),
+          (type = createFiber(30, pendingProps, key, type)),
+          (type.elementType = REACT_VIEW_TRANSITION_TYPE),
+          (type.lanes = lanes),
+          (type.stateNode = {
+            autoName: null,
+            paired: null,
+            clones: null,
+            ref: null
+          }),
+          type
+        );
       case REACT_SCOPE_TYPE:
         return (
           (key = createFiber(21, pendingProps, key, mode)),
@@ -10951,7 +10898,7 @@ function FiberRootNode(
   this.pooledCacheLanes = 0;
   this.hydrationCallbacks = null;
   this.formState = formState;
-  enableViewTransition && (this.transitionTypes = null);
+  this.transitionTypes = null;
   this.incompleteTransitions = new Map();
   enableTransitionTracing &&
     ((this.transitionCallbacks = null),
@@ -11102,24 +11049,24 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1597 = {
+var internals$jscomp$inline_1604 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-c0464aed-20250523",
+  version: "19.2.0-www-modern-f702620c-20250527",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-c0464aed-20250523"
+  reconcilerVersion: "19.2.0-www-modern-f702620c-20250527"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1598 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1605 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1598.isDisabled &&
-    hook$jscomp$inline_1598.supportsFiber
+    !hook$jscomp$inline_1605.isDisabled &&
+    hook$jscomp$inline_1605.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1598.inject(
-        internals$jscomp$inline_1597
+      (rendererID = hook$jscomp$inline_1605.inject(
+        internals$jscomp$inline_1604
       )),
-        (injectedHook = hook$jscomp$inline_1598);
+        (injectedHook = hook$jscomp$inline_1605);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -11133,4 +11080,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.2.0-www-modern-c0464aed-20250523";
+exports.version = "19.2.0-www-modern-f702620c-20250527";

@@ -34,7 +34,7 @@ __DEV__ &&
         case REACT_ACTIVITY_TYPE:
           return "Activity";
         case REACT_VIEW_TRANSITION_TYPE:
-          if (enableViewTransition) return "ViewTransition";
+          return "ViewTransition";
         case REACT_TRACING_MARKER_TYPE:
           if (enableTransitionTracing) return "TracingMarker";
       }
@@ -308,13 +308,12 @@ __DEV__ &&
       disableDefaultPropsExceptForClasses =
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
-      enableViewTransition = dynamicFeatureFlags.enableViewTransition;
-    dynamicFeatureFlags = Symbol.for("react.element");
-    var REACT_ELEMENT_TYPE = renameElementSymbol
+      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing;
+    dynamicFeatureFlags = dynamicFeatureFlags.renameElementSymbol;
+    var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
+      REACT_ELEMENT_TYPE = dynamicFeatureFlags
         ? Symbol.for("react.transitional.element")
-        : dynamicFeatureFlags,
+        : REACT_LEGACY_ELEMENT_TYPE,
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),

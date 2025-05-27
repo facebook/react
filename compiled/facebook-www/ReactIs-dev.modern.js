@@ -48,13 +48,12 @@ __DEV__ &&
     }
     var dynamicFeatureFlags = require("ReactFeatureFlags"),
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
-      enableViewTransition = dynamicFeatureFlags.enableViewTransition;
-    dynamicFeatureFlags = Symbol.for("react.element");
-    var REACT_ELEMENT_TYPE = renameElementSymbol
+      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing;
+    dynamicFeatureFlags = dynamicFeatureFlags.renameElementSymbol;
+    var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
+      REACT_ELEMENT_TYPE = dynamicFeatureFlags
         ? Symbol.for("react.transitional.element")
-        : dynamicFeatureFlags,
+        : REACT_LEGACY_ELEMENT_TYPE,
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -143,7 +142,7 @@ __DEV__ &&
         type === REACT_LEGACY_HIDDEN_TYPE ||
         type === REACT_SCOPE_TYPE ||
         (enableTransitionTracing && type === REACT_TRACING_MARKER_TYPE) ||
-        (enableViewTransition && type === REACT_VIEW_TRANSITION_TYPE) ||
+        type === REACT_VIEW_TRANSITION_TYPE ||
         ("object" === typeof type &&
           null !== type &&
           (type.$$typeof === REACT_LAZY_TYPE ||

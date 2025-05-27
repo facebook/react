@@ -21,7 +21,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
-  enableViewTransition = dynamicFeatureFlags.enableViewTransition,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_ELEMENT_TYPE = renameElementSymbol
     ? Symbol.for("react.transitional.element")
@@ -361,9 +360,8 @@ var reportGlobalError =
 function startTransition(scope, options) {
   var prevTransition = ReactSharedInternals.T,
     currentTransition = {};
-  enableViewTransition &&
-    (currentTransition.types =
-      null !== prevTransition ? prevTransition.types : null);
+  currentTransition.types =
+    null !== prevTransition ? prevTransition.types : null;
   enableTransitionTracing &&
     ((currentTransition.name =
       void 0 !== options && void 0 !== options.name ? options.name : null),
@@ -388,15 +386,13 @@ function startTransition(scope, options) {
   }
 }
 function addTransitionType(type) {
-  if (enableViewTransition) {
-    var transition = ReactSharedInternals.T;
-    if (null !== transition) {
-      var transitionTypes = transition.types;
-      null === transitionTypes
-        ? (transition.types = [type])
-        : -1 === transitionTypes.indexOf(type) && transitionTypes.push(type);
-    } else startTransition(addTransitionType.bind(null, type));
-  }
+  var transition = ReactSharedInternals.T;
+  if (null !== transition) {
+    var transitionTypes = transition.types;
+    null === transitionTypes
+      ? (transition.types = [type])
+      : -1 === transitionTypes.indexOf(type) && transitionTypes.push(type);
+  } else startTransition(addTransitionType.bind(null, type));
 }
 var ReactCompilerRuntime = { __proto__: null, c: useMemoCache };
 exports.Children = {
@@ -639,7 +635,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.2.0-www-classic-c0464aed-20250523";
+exports.version = "19.2.0-www-classic-f702620c-20250527";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

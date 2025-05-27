@@ -58,7 +58,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
-  enableViewTransition = dynamicFeatureFlags.enableViewTransition,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_ELEMENT_TYPE = renameElementSymbol
     ? Symbol.for("react.transitional.element")
@@ -404,7 +403,7 @@ function getChildFormatContext(parentContext, type, props) {
   }
   return 6 <= parentContext.insertionMode || 2 > parentContext.insertionMode
     ? createFormatContext(2, null, subtreeScope, null)
-    : (enableViewTransition && null !== parentContext.viewTransition) ||
+    : null !== parentContext.viewTransition ||
         parentContext.tagScope !== subtreeScope
       ? createFormatContext(
           parentContext.insertionMode,
@@ -450,25 +449,24 @@ function makeId(resumableState, treeId, localId) {
   return resumableState + "\u00bb";
 }
 function pushViewTransitionAttributes(target, formatContext) {
-  enableViewTransition &&
-    ((formatContext = formatContext.viewTransition),
-    null !== formatContext &&
-      ("auto" !== formatContext.name &&
-        (pushStringAttribute(
-          target,
-          "vt-name",
-          0 === formatContext.nameIdx
-            ? formatContext.name
-            : formatContext.name + "_" + formatContext.nameIdx
-        ),
-        formatContext.nameIdx++),
-      pushStringAttribute(target, "vt-update", formatContext.update),
-      "none" !== formatContext.enter &&
-        pushStringAttribute(target, "vt-enter", formatContext.enter),
-      "none" !== formatContext.exit &&
-        pushStringAttribute(target, "vt-exit", formatContext.exit),
-      "none" !== formatContext.share &&
-        pushStringAttribute(target, "vt-share", formatContext.share)));
+  formatContext = formatContext.viewTransition;
+  null !== formatContext &&
+    ("auto" !== formatContext.name &&
+      (pushStringAttribute(
+        target,
+        "vt-name",
+        0 === formatContext.nameIdx
+          ? formatContext.name
+          : formatContext.name + "_" + formatContext.nameIdx
+      ),
+      formatContext.nameIdx++),
+    pushStringAttribute(target, "vt-update", formatContext.update),
+    "none" !== formatContext.enter &&
+      pushStringAttribute(target, "vt-enter", formatContext.enter),
+    "none" !== formatContext.exit &&
+      pushStringAttribute(target, "vt-exit", formatContext.exit),
+    "none" !== formatContext.share &&
+      pushStringAttribute(target, "vt-share", formatContext.share));
 }
 var styleNameCache = new Map();
 function pushStyleAttribute(target, style) {
@@ -3087,7 +3085,7 @@ function getComponentNameFromType(type) {
     case REACT_ACTIVITY_TYPE:
       return "Activity";
     case REACT_VIEW_TRANSITION_TYPE:
-      if (enableViewTransition) return "ViewTransition";
+      return "ViewTransition";
     case REACT_TRACING_MARKER_TYPE:
       if (enableTransitionTracing) return "TracingMarker";
   }
@@ -3780,8 +3778,7 @@ function describeComponentStackByType(type) {
     case REACT_SUSPENSE_TYPE:
       return describeBuiltInComponentFrame("Suspense");
     case REACT_VIEW_TRANSITION_TYPE:
-      if (enableViewTransition)
-        return describeBuiltInComponentFrame("ViewTransition");
+      return describeBuiltInComponentFrame("ViewTransition");
   }
   return "";
 }
@@ -4646,25 +4643,23 @@ function renderElement(request, task, keyPath, type, props, ref) {
         }
         return;
       case REACT_VIEW_TRANSITION_TYPE:
-        if (enableViewTransition) {
-          type = task.formatContext;
-          newProps = task.keyPath;
-          defaultProps = request.resumableState;
-          if (null == props.name || "auto" === props.name)
-            (initialState = getTreeId(task.treeContext)),
-              makeId(defaultProps, initialState, 0);
-          task.formatContext = type;
-          task.keyPath = keyPath;
-          null != props.name && "auto" !== props.name
-            ? renderNodeDestructive(request, task, props.children, -1)
-            : ((keyPath = task.treeContext),
-              (task.treeContext = pushTreeContext(keyPath, 1, 0)),
-              renderNode(request, task, props.children, -1),
-              (task.treeContext = keyPath));
-          task.formatContext = type;
-          task.keyPath = newProps;
-          return;
-        }
+        type = task.formatContext;
+        newProps = task.keyPath;
+        defaultProps = request.resumableState;
+        if (null == props.name || "auto" === props.name)
+          (initialState = getTreeId(task.treeContext)),
+            makeId(defaultProps, initialState, 0);
+        task.formatContext = type;
+        task.keyPath = keyPath;
+        null != props.name && "auto" !== props.name
+          ? renderNodeDestructive(request, task, props.children, -1)
+          : ((keyPath = task.treeContext),
+            (task.treeContext = pushTreeContext(keyPath, 1, 0)),
+            renderNode(request, task, props.children, -1),
+            (task.treeContext = keyPath));
+        task.formatContext = type;
+        task.keyPath = newProps;
+        return;
       case REACT_SCOPE_TYPE:
         type = task.keyPath;
         task.keyPath = keyPath;
@@ -6180,8 +6175,7 @@ function flushCompletedBoundary(request, destination, boundary) {
   i = boundary.rootSegmentID;
   boundary = boundary.contentState;
   var requiresStyleInsertion = request.stylesToHoist,
-    requiresViewTransitions =
-      enableViewTransition && 0 !== (completedSegments.instructions & 128);
+    requiresViewTransitions = 0 !== (completedSegments.instructions & 128);
   request.stylesToHoist = !1;
   var scriptFormat = 0 === completedSegments.streamingFormat;
   scriptFormat
@@ -6706,4 +6700,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.2.0-www-modern-c0464aed-20250523";
+exports.version = "19.2.0-www-modern-f702620c-20250527";
