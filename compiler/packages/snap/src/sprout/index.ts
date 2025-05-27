@@ -42,6 +42,7 @@ export function runSprout(
     (globalThis as any).__SNAP_EVALUATOR_MODE = undefined;
   }
   if (forgetResult.kind === 'UnexpectedError') {
+    console.log(forgetCode);
     return makeError('Unexpected error in Forget runner', forgetResult.value);
   }
   if (originalCode.indexOf('@disableNonForgetInSprout') === -1) {

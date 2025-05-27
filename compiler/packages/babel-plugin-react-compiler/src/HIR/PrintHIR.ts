@@ -75,9 +75,9 @@ export function printFunction(fn: HIRFunction): string {
   if (definition.length !== 0) {
     output.push(definition);
   }
-  output.push(printType(fn.returnType));
-  output.push(printHIR(fn.body));
+  output.push(`: ${printType(fn.returnType)} @ ${printPlace(fn.returns)}`);
   output.push(...fn.directives);
+  output.push(printHIR(fn.body));
   return output.join('\n');
 }
 

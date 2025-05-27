@@ -287,6 +287,7 @@ export type HIRFunction = {
   generator: boolean;
   async: boolean;
   directives: Array<string>;
+  aliasingEffects?: Array<AliasingEffect> | null;
 };
 
 export type FunctionEffect =
