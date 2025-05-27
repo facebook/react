@@ -78,6 +78,7 @@ module.exports = {
       __IS_FIREFOX__: IS_FIREFOX,
       __IS_EDGE__: IS_EDGE,
       __IS_NATIVE__: false,
+      __IS_INTERNAL_MCP_BUILD__: false,
     }),
     new Webpack.SourceMapDevToolPlugin({
       filename: '[file].map',
