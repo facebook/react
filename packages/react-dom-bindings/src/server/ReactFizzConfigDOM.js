@@ -3136,19 +3136,23 @@ function pushStyle(
     }
 
     const nonceStyle = renderState.nonce.style;
-    if (nonceStyle ? nonceStyle === nonce : !nonce) {
+    if (!nonceStyle || nonceStyle === nonce) {
+      if (__DEV__) {
+        if (!nonceStyle && nonce) {
+          console.error(
+            'React encountered a hoistable style tag with "%s" nonce. The nonce was not passed to the render call though.',
+            nonce,
+          );
+        }
+      }
       styleQueue.hrefs.push(stringToChunk(escapeTextForBrowser(href)));
       pushStyleContents(styleQueue.rules, props);
     } else if (__DEV__) {
-      if (nonceStyle) {
-        console.error(
-          "React encountered a hoistable style tag with nonce. It doesn't match the previously encountered nonce. They have to be the same.",
-        );
-      } else {
-        console.error(
-          'React encountered a hoistable style tag with nonce. The nonce was not passed to the render call though.',
-        );
-      }
+      console.error(
+        'React encountered a hoistable style tag with "%s" nonce. It doesn\'t match the "%s" nonce passed to the render call. They have to be the same.',
+        nonce,
+        nonceStyle,
+      );
     }
   }
   if (styleQueue) {

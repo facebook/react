@@ -10335,7 +10335,7 @@ describe('ReactDOMFizzServer', () => {
       pipe(writable);
     });
     assertConsoleErrorDev([
-      "React encountered a hoistable style tag with nonce. It doesn't match the previously encountered nonce. They have to be the same.",
+      'React encountered a hoistable style tag with "R4nd0mR4nd0m" nonce. It doesn\'t match the "R4nd0m" nonce passed to the render call. They have to be the same.',
     ]);
     expect(getVisibleChildren(document)).toEqual(
       <html>
@@ -10346,6 +10346,35 @@ describe('ReactDOMFizzServer', () => {
               data-precedence="default"
               data-href="foo"
               nonce={CSPnonce}>{`.foo { color: hotpink; }`}</style>
+          </div>
+        </body>
+      </html>,
+    );
+  });
+
+  it("should render styles without nonce when render call doesn't receive nonce", async () => {
+    await act(() => {
+      const {pipe} = renderToPipeableStream(
+        <>
+          <style
+            href="foo"
+            precedence="default"
+            nonce="R4nd0m">{`.foo { color: hotpink; }`}</style>
+        </>,
+      );
+      pipe(writable);
+    });
+    assertConsoleErrorDev([
+      'React encountered a hoistable style tag with "R4nd0m" nonce. The nonce was not passed to the render call though.',
+    ]);
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div id="container">
+            <style
+              data-precedence="default"
+              data-href="foo">{`.foo { color: hotpink; }`}</style>
           </div>
         </body>
       </html>,
