@@ -77,6 +77,10 @@ export type RenderState = {
     scripts: Map<string, Resource>,
     moduleScripts: Map<string, Resource>,
   },
+  nonce: {
+    script: string | void,
+    style: string | void,
+  },
   stylesToHoist: boolean,
   // This is an extra field for the legacy renderer
   generateStaticMarkup: boolean,
@@ -120,6 +124,7 @@ export function createRenderState(
     scripts: renderState.scripts,
     bulkPreloads: renderState.bulkPreloads,
     preloads: renderState.preloads,
+    nonce: renderState.nonce,
     stylesToHoist: renderState.stylesToHoist,
 
     // This is an extra field for the legacy renderer

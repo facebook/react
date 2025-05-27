@@ -211,6 +211,11 @@ export type RenderState = {
     moduleScripts: Map<string, Resource>,
   },
 
+  nonce: {
+    script: string | void,
+    style: string | void,
+  },
+
   // Module-global-like reference for flushing/hoisting state of style resources
   // We need to track whether the current request has flushed any style resources
   // without sending an instruction to hoist them. we do that here
@@ -388,7 +393,7 @@ export function createRenderState(
       : stringToPrecomputedChunk(
           '<script nonce="' + escapeTextForBrowser(nonceScript) + '"',
         );
-  const nonceStyle = nonce && nonce.style;
+  const nonceStyle = typeof nonce === 'string' ? undefined : nonce && nonce.style;
   const inlineStyleWithNonce =
     nonceStyle === undefined
       ? startInlineStyle
