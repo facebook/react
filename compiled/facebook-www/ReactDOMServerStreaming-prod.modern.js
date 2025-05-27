@@ -43,6 +43,7 @@ var React = require("react"),
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
+  enableViewTransition = dynamicFeatureFlags.enableViewTransition,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_ELEMENT_TYPE = renameElementSymbol
     ? Symbol.for("react.transitional.element")
@@ -369,7 +370,7 @@ function getChildFormatContext(parentContext, type, props) {
   }
   return 6 <= parentContext.insertionMode || 2 > parentContext.insertionMode
     ? createFormatContext(2, null, subtreeScope, null)
-    : null !== parentContext.viewTransition ||
+    : (enableViewTransition && null !== parentContext.viewTransition) ||
         parentContext.tagScope !== subtreeScope
       ? createFormatContext(
           parentContext.insertionMode,
@@ -424,24 +425,25 @@ function pushSegmentFinale(target, renderState, lastPushedText, textEmbedded) {
   lastPushedText && textEmbedded && target.push("\x3c!-- --\x3e");
 }
 function pushViewTransitionAttributes(target, formatContext) {
-  formatContext = formatContext.viewTransition;
-  null !== formatContext &&
-    ("auto" !== formatContext.name &&
-      (pushStringAttribute(
-        target,
-        "vt-name",
-        0 === formatContext.nameIdx
-          ? formatContext.name
-          : formatContext.name + "_" + formatContext.nameIdx
-      ),
-      formatContext.nameIdx++),
-    pushStringAttribute(target, "vt-update", formatContext.update),
-    "none" !== formatContext.enter &&
-      pushStringAttribute(target, "vt-enter", formatContext.enter),
-    "none" !== formatContext.exit &&
-      pushStringAttribute(target, "vt-exit", formatContext.exit),
-    "none" !== formatContext.share &&
-      pushStringAttribute(target, "vt-share", formatContext.share));
+  enableViewTransition &&
+    ((formatContext = formatContext.viewTransition),
+    null !== formatContext &&
+      ("auto" !== formatContext.name &&
+        (pushStringAttribute(
+          target,
+          "vt-name",
+          0 === formatContext.nameIdx
+            ? formatContext.name
+            : formatContext.name + "_" + formatContext.nameIdx
+        ),
+        formatContext.nameIdx++),
+      pushStringAttribute(target, "vt-update", formatContext.update),
+      "none" !== formatContext.enter &&
+        pushStringAttribute(target, "vt-enter", formatContext.enter),
+      "none" !== formatContext.exit &&
+        pushStringAttribute(target, "vt-exit", formatContext.exit),
+      "none" !== formatContext.share &&
+        pushStringAttribute(target, "vt-share", formatContext.share)));
 }
 var styleNameCache = new Map();
 function pushStyleAttribute(target, style) {
@@ -2933,7 +2935,7 @@ function getComponentNameFromType(type) {
     case REACT_ACTIVITY_TYPE:
       return "Activity";
     case REACT_VIEW_TRANSITION_TYPE:
-      return "ViewTransition";
+      if (enableViewTransition) return "ViewTransition";
     case REACT_TRACING_MARKER_TYPE:
       if (enableTransitionTracing) return "TracingMarker";
   }
@@ -3655,7 +3657,8 @@ function describeComponentStackByType(type) {
     case REACT_SUSPENSE_TYPE:
       return describeBuiltInComponentFrame("Suspense");
     case REACT_VIEW_TRANSITION_TYPE:
-      return describeBuiltInComponentFrame("ViewTransition");
+      if (enableViewTransition)
+        return describeBuiltInComponentFrame("ViewTransition");
   }
   return "";
 }
@@ -4547,74 +4550,76 @@ function renderElement(request, task, keyPath, type, props, ref) {
         }
         return;
       case REACT_VIEW_TRANSITION_TYPE:
-        var prevContext$jscomp$0 = task.formatContext,
-          prevKeyPath$jscomp$4 = task.keyPath;
-        var resumableState$jscomp$0 = request.resumableState;
-        if (null != props.name && "auto" !== props.name)
-          var JSCompiler_inline_result$jscomp$2 = props.name;
-        else {
-          var treeId = getTreeId(task.treeContext);
-          JSCompiler_inline_result$jscomp$2 = makeId(
-            resumableState$jscomp$0,
-            treeId,
-            0
+        if (enableViewTransition) {
+          var prevContext$jscomp$0 = task.formatContext,
+            prevKeyPath$jscomp$4 = task.keyPath;
+          var resumableState$jscomp$0 = request.resumableState;
+          if (null != props.name && "auto" !== props.name)
+            var JSCompiler_inline_result$jscomp$2 = props.name;
+          else {
+            var treeId = getTreeId(task.treeContext);
+            JSCompiler_inline_result$jscomp$2 = makeId(
+              resumableState$jscomp$0,
+              treeId,
+              0
+            );
+          }
+          var autoName = JSCompiler_inline_result$jscomp$2,
+            resumableState$jscomp$1 = request.resumableState,
+            update = getViewTransitionClassName(props.default, props.update),
+            enter = getViewTransitionClassName(props.default, props.enter),
+            exit = getViewTransitionClassName(props.default, props.exit),
+            share = getViewTransitionClassName(props.default, props.share),
+            name = props.name;
+          null == update && (update = "auto");
+          null == enter && (enter = "auto");
+          null == exit && (exit = "auto");
+          if (null == name) {
+            var parentViewTransition = prevContext$jscomp$0.viewTransition;
+            null !== parentViewTransition
+              ? ((name = parentViewTransition.name),
+                (share = parentViewTransition.share))
+              : ((name = "auto"), (share = "none"));
+          } else
+            null == share && (share = "auto"),
+              prevContext$jscomp$0.tagScope & 4 &&
+                (resumableState$jscomp$1.instructions |= 128);
+          prevContext$jscomp$0.tagScope & 8
+            ? (resumableState$jscomp$1.instructions |= 128)
+            : (exit = "none");
+          prevContext$jscomp$0.tagScope & 16
+            ? (resumableState$jscomp$1.instructions |= 128)
+            : (enter = "none");
+          var viewTransition = {
+              update: update,
+              enter: enter,
+              exit: exit,
+              share: share,
+              name: name,
+              autoName: autoName,
+              nameIdx: 0
+            },
+            subtreeScope = prevContext$jscomp$0.tagScope & -25;
+          var JSCompiler_inline_result$jscomp$3 = createFormatContext(
+            prevContext$jscomp$0.insertionMode,
+            prevContext$jscomp$0.selectedValue,
+            "none" !== update ? subtreeScope | 32 : subtreeScope & -33,
+            viewTransition
           );
+          task.formatContext = JSCompiler_inline_result$jscomp$3;
+          task.keyPath = keyPath;
+          if (null != props.name && "auto" !== props.name)
+            renderNodeDestructive(request, task, props.children, -1);
+          else {
+            var prevTreeContext = task.treeContext;
+            task.treeContext = pushTreeContext(prevTreeContext, 1, 0);
+            renderNode(request, task, props.children, -1);
+            task.treeContext = prevTreeContext;
+          }
+          task.formatContext = prevContext$jscomp$0;
+          task.keyPath = prevKeyPath$jscomp$4;
+          return;
         }
-        var autoName = JSCompiler_inline_result$jscomp$2,
-          resumableState$jscomp$1 = request.resumableState,
-          update = getViewTransitionClassName(props.default, props.update),
-          enter = getViewTransitionClassName(props.default, props.enter),
-          exit = getViewTransitionClassName(props.default, props.exit),
-          share = getViewTransitionClassName(props.default, props.share),
-          name = props.name;
-        null == update && (update = "auto");
-        null == enter && (enter = "auto");
-        null == exit && (exit = "auto");
-        if (null == name) {
-          var parentViewTransition = prevContext$jscomp$0.viewTransition;
-          null !== parentViewTransition
-            ? ((name = parentViewTransition.name),
-              (share = parentViewTransition.share))
-            : ((name = "auto"), (share = "none"));
-        } else
-          null == share && (share = "auto"),
-            prevContext$jscomp$0.tagScope & 4 &&
-              (resumableState$jscomp$1.instructions |= 128);
-        prevContext$jscomp$0.tagScope & 8
-          ? (resumableState$jscomp$1.instructions |= 128)
-          : (exit = "none");
-        prevContext$jscomp$0.tagScope & 16
-          ? (resumableState$jscomp$1.instructions |= 128)
-          : (enter = "none");
-        var viewTransition = {
-            update: update,
-            enter: enter,
-            exit: exit,
-            share: share,
-            name: name,
-            autoName: autoName,
-            nameIdx: 0
-          },
-          subtreeScope = prevContext$jscomp$0.tagScope & -25;
-        var JSCompiler_inline_result$jscomp$3 = createFormatContext(
-          prevContext$jscomp$0.insertionMode,
-          prevContext$jscomp$0.selectedValue,
-          "none" !== update ? subtreeScope | 32 : subtreeScope & -33,
-          viewTransition
-        );
-        task.formatContext = JSCompiler_inline_result$jscomp$3;
-        task.keyPath = keyPath;
-        if (null != props.name && "auto" !== props.name)
-          renderNodeDestructive(request, task, props.children, -1);
-        else {
-          var prevTreeContext = task.treeContext;
-          task.treeContext = pushTreeContext(prevTreeContext, 1, 0);
-          renderNode(request, task, props.children, -1);
-          task.treeContext = prevTreeContext;
-        }
-        task.formatContext = prevContext$jscomp$0;
-        task.keyPath = prevKeyPath$jscomp$4;
-        return;
       case REACT_SCOPE_TYPE:
         var prevKeyPath$46 = task.keyPath;
         task.keyPath = keyPath;
@@ -5982,7 +5987,8 @@ function flushCompletedBoundary(request, destination, boundary) {
   i = boundary.rootSegmentID;
   boundary = boundary.contentState;
   var requiresStyleInsertion = request.stylesToHoist,
-    requiresViewTransitions = 0 !== (completedSegments.instructions & 128);
+    requiresViewTransitions =
+      enableViewTransition && 0 !== (completedSegments.instructions & 128);
   request.stylesToHoist = !1;
   var scriptFormat = 0 === completedSegments.streamingFormat;
   scriptFormat
