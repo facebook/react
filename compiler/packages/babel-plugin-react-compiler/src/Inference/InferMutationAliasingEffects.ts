@@ -38,7 +38,9 @@ import {
   Set_isSuperset,
 } from '../Utils/utils';
 import {
+  printAliasingEffect,
   printIdentifier,
+  printInstruction,
   printInstructionValue,
   printPlace,
   printSourceLocation,
@@ -258,6 +260,23 @@ function applySignature(
         state.define(effect.into, value);
         break;
       }
+      case 'ImmutableCapture': {
+        let value = effectInstructionValueCache.get(effect);
+        if (value == null) {
+          value = {
+            kind: 'ObjectExpression',
+            properties: [],
+            loc: effect.into.loc,
+          };
+          effectInstructionValueCache.set(effect, value);
+        }
+        state.initialize(value, {
+          kind: ValueKind.Frozen,
+          reason: new Set([ValueReason.Other]),
+        });
+        state.define(effect.into, value);
+        break;
+      }
       case 'CreateFrom': {
         const kind = state.kind(effect.from).kind;
         let value = effectInstructionValueCache.get(effect);
@@ -274,6 +293,29 @@ function applySignature(
           reason: new Set([ValueReason.Other]),
         });
         state.define(effect.into, value);
+        switch (kind) {
+          case ValueKind.Primitive:
+          case ValueKind.Global: {
+            // no need to track this data flow
+            break;
+          }
+          case ValueKind.Frozen: {
+            effects.push({
+              kind: 'ImmutableCapture',
+              from: effect.from,
+              into: effect.into,
+            });
+            break;
+          }
+          default: {
+            // TODO: should this be Alias??
+            effects.push({
+              kind: 'Capture',
+              from: effect.from,
+              into: effect.into,
+            });
+          }
+        }
         break;
       }
       case 'Capture': {
@@ -297,27 +339,28 @@ function applySignature(
           }
         }
         const fromKind = state.kind(effect.from).kind;
-        let isCopyByReferenceValue: boolean;
+        let isMutableReferenceType: boolean;
         switch (fromKind) {
           case ValueKind.Global:
           case ValueKind.Primitive: {
-            isCopyByReferenceValue = false;
+            isMutableReferenceType = false;
             break;
           }
           case ValueKind.Frozen: {
-            /*
-             * TODO: add a separate "ImmutableAlias" effect to downgrade to, that doesn't impact mutable ranges
-             * We want to remember that the data flow occurred for PruneNonEscapingScopes
-             */
-            isCopyByReferenceValue = false;
+            isMutableReferenceType = false;
+            effects.push({
+              kind: 'ImmutableCapture',
+              from: effect.from,
+              into: effect.into,
+            });
             break;
           }
           default: {
-            isCopyByReferenceValue = true;
+            isMutableReferenceType = true;
             break;
           }
         }
-        if (isMutableDesination && isCopyByReferenceValue) {
+        if (isMutableDesination && isMutableReferenceType) {
           effects.push(effect);
         }
         break;
@@ -329,12 +372,25 @@ function applySignature(
          */
         const fromKind = state.kind(effect.from).kind;
         switch (fromKind) {
-          /*
-           * TODO: add a separate "ImmutableAlias" effect to downgrade to, that doesn't impact mutable ranges
-           * We want to remember that the data flow occurred for PruneNonEscapingScopes
-           * (use this to replace the ValueKind.Frozen case)
-           */
-          case ValueKind.Frozen:
+          case ValueKind.Frozen: {
+            effects.push({
+              kind: 'ImmutableCapture',
+              from: effect.from,
+              into: effect.into,
+            });
+            let value = effectInstructionValueCache.get(effect);
+            if (value == null) {
+              value = {
+                kind: 'Primitive',
+                value: undefined,
+                loc: effect.from.loc,
+              };
+              effectInstructionValueCache.set(effect, value);
+            }
+            state.initialize(value, {kind: fromKind, reason: new Set([])});
+            state.define(effect.into, value);
+            break;
+          }
           case ValueKind.Global:
           case ValueKind.Primitive: {
             let value = effectInstructionValueCache.get(effect);
@@ -385,24 +441,7 @@ function applySignature(
       case 'MutateTransitiveConditionally': {
         const didMutate = state.mutate(effect.kind, effect.value);
         if (didMutate) {
-          switch (effect.kind) {
-            case 'Mutate': {
-              effects.push(effect);
-              break;
-            }
-            case 'MutateConditionally': {
-              effects.push({kind: 'Mutate', value: effect.value});
-              break;
-            }
-            case 'MutateTransitive': {
-              effects.push(effect);
-              break;
-            }
-            case 'MutateTransitiveConditionally': {
-              effects.push({kind: 'MutateTransitive', value: effect.value});
-              break;
-            }
-          }
+          effects.push(effect);
         }
         break;
       }
@@ -414,13 +453,19 @@ function applySignature(
       }
     }
   }
-  CompilerError.invariant(
-    state.isDefined(instruction.lvalue) && state.kind(instruction.lvalue),
-    {
+  if (
+    !(state.isDefined(instruction.lvalue) && state.kind(instruction.lvalue))
+  ) {
+    console.log(printInstruction(instruction));
+    console.log('input effects');
+    console.log(signature.effects.map(printAliasingEffect).join('\n'));
+    console.log('refined effects');
+    console.log(effects.map(printAliasingEffect).join('\n'));
+    CompilerError.invariant(false, {
       reason: `Expected instruction lvalue to be initialized`,
       loc: instruction.loc,
-    },
-  );
+    });
+  }
   return effects.length !== 0 ? effects : null;
 }
 
@@ -961,11 +1006,6 @@ function computeSignatureForInstruction(
         from: value.object,
         into: lvalue,
       });
-      effects.push({
-        kind: 'Capture',
-        from: value.object,
-        into: lvalue,
-      });
       break;
     }
     case 'PropertyStore':
@@ -1103,11 +1143,6 @@ function computeSignatureForInstruction(
       for (const patternLValue of eachInstructionValueLValue(value)) {
         effects.push({
           kind: 'CreateFrom',
-          from: value.value,
-          into: patternLValue,
-        });
-        effects.push({
-          kind: 'Capture',
           from: value.value,
           into: patternLValue,
         });
@@ -1267,6 +1302,7 @@ function computeEffectsForSignature(
         }
         break;
       }
+      case 'ImmutableCapture':
       case 'CreateFrom':
       case 'Apply':
       case 'Mutate':
@@ -1413,6 +1449,10 @@ export type AliasingEffect =
    * Creates a new value with the same kind as the starting value.
    */
   | {kind: 'CreateFrom'; from: Place; into: Place}
+  /**
+   * Immutable data flow, used for escape analysis. Does not influence mutable range analysis:
+   */
+  | {kind: 'ImmutableCapture'; from: Place; into: Place}
   /**
    * Calls the function at the given place with the given arguments either captured or aliased,
    * and captures/aliases the result into the given place.

@@ -376,12 +376,12 @@ export function findDisjointMutableValues(
       } else {
         for (const operand of eachInstructionOperand(instr)) {
           if (
-            isMutable(instr, operand)
+            isMutable(instr, operand) &&
             /*
              * exclude global variables from being added to scopes, we can't recreate them!
              * TODO: improve handling of module-scoped variables and globals
              */
-            // && operand.identifier.mutableRange.start > 0
+            operand.identifier.mutableRange.start > 0
           ) {
             if (
               instr.value.kind === 'FunctionExpression' ||

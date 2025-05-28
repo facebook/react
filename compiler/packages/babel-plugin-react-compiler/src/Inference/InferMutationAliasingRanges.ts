@@ -54,7 +54,10 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
           effect.kind === 'Capture'
         ) {
           captures.union([effect.from.identifier, effect.into.identifier]);
-        } else if (effect.kind === 'MutateTransitive') {
+        } else if (
+          effect.kind === 'MutateTransitive' ||
+          effect.kind === 'MutateTransitiveConditionally'
+        ) {
           const value = effect.value;
           value.identifier.mutableRange.end = makeInstructionId(instr.id + 1);
         }
@@ -83,7 +86,10 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
       for (const effect of instr.effects) {
         if (effect.kind === 'Alias' || effect.kind === 'CreateFrom') {
           aliases.union([effect.from.identifier, effect.into.identifier]);
-        } else if (effect.kind === 'Mutate') {
+        } else if (
+          effect.kind === 'Mutate' ||
+          effect.kind === 'MutateConditionally'
+        ) {
           const value = effect.value;
           value.identifier.mutableRange.end = makeInstructionId(instr.id + 1);
         }
@@ -94,7 +100,10 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
 
   /**
    * Part 3
-   * Add legacy operand-specific effects based on instruction effects and mutable ranges
+   * Add legacy operand-specific effects based on instruction effects and mutable ranges.
+   * Also fixes up operand mutable ranges, making sure that start is non-zero if the value
+   * is mutated (depended on by later passes like InferReactiveScopeVariables which uses this
+   * to filter spurious mutations of globals, which we now guard against more precisely)
    */
   for (const block of fn.body.blocks.values()) {
     for (const phi of block.phis) {
@@ -134,6 +143,10 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
               operandEffects.set(effect.from.identifier.id, Effect.Read);
               operandEffects.set(effect.into.identifier.id, Effect.Store);
             }
+            break;
+          }
+          case 'ImmutableCapture': {
+            operandEffects.set(effect.from.identifier.id, Effect.Read);
             break;
           }
           case 'Create': {
@@ -178,6 +191,12 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
         lvalue.effect = effect;
       }
       for (const operand of eachInstructionValueOperand(instr.value)) {
+        if (
+          operand.identifier.mutableRange.end > instr.id &&
+          operand.identifier.mutableRange.start === 0
+        ) {
+          operand.identifier.mutableRange.start = instr.id;
+        }
         const effect = operandEffects.get(operand.identifier.id) ?? Effect.Read;
         operand.effect = effect;
       }

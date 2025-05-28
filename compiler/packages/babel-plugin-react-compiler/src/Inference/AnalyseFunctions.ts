@@ -14,6 +14,7 @@ import {
   Place,
   isRefOrRefValue,
   makeInstructionId,
+  printFunction,
 } from '../HIR';
 import {deadCodeElimination} from '../Optimization';
 import {inferReactiveScopeVariables} from '../ReactiveScopes';
@@ -26,10 +27,7 @@ import {
   eachInstructionValueOperand,
 } from '../HIR/visitors';
 import {Iterable_some} from '../Utils/utils';
-import {
-  AliasingEffect,
-  inferMutationAliasingEffects,
-} from './InferMutationAliasingEffects';
+import {inferMutationAliasingEffects} from './InferMutationAliasingEffects';
 import {inferMutationAliasingFunctionEffects} from './InferMutationAliasingFunctionEffects';
 import {inferMutationAliasingRanges} from './InferMutationAliasingRanges';
 
@@ -44,7 +42,6 @@ export default function analyseFunctions(func: HIRFunction): void {
             infer(instr.value.loweredFunc, aliases);
           } else {
             lowerWithMutationAliasing(instr.value.loweredFunc.func);
-            infer(instr.value.loweredFunc, new DisjointSet());
           }
 
           /**

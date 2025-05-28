@@ -949,10 +949,13 @@ function getFunctionName(
 export function printAliasingEffect(effect: AliasingEffect): string {
   switch (effect.kind) {
     case 'Alias': {
-      return `Alias ${printPlaceForAliasEffect(effect.from)} -> ${printPlaceForAliasEffect(effect.into)}`;
+      return `Alias ${printPlaceForAliasEffect(effect.into)} = ${printPlaceForAliasEffect(effect.from)}`;
     }
     case 'Capture': {
-      return `Capture ${printPlaceForAliasEffect(effect.from)} -> ${printPlaceForAliasEffect(effect.into)}`;
+      return `Capture ${printPlaceForAliasEffect(effect.into)} <- ${printPlaceForAliasEffect(effect.from)}`;
+    }
+    case 'ImmutableCapture': {
+      return `ImmutableCapture ${printPlaceForAliasEffect(effect.into)} <- ${printPlaceForAliasEffect(effect.from)}`;
     }
     case 'Create': {
       return `Create ${printPlaceForAliasEffect(effect.into)} = ${effect.value}`;
