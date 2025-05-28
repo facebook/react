@@ -20,37 +20,42 @@ function Component({a, b, c}) {
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @enableNewMutationAliasingModel
 function Component(t0) {
-  const $ = _c(8);
+  const $ = _c(9);
   const { a, b, c } = t0;
   let t1;
-  let x;
-  if ($[0] !== a || $[1] !== b || $[2] !== c) {
-    x = [a, b];
-    t1 = () => {
+  if ($[0] !== a || $[1] !== b) {
+    t1 = [a, b];
+    $[0] = a;
+    $[1] = b;
+    $[2] = t1;
+  } else {
+    t1 = $[2];
+  }
+  const x = t1;
+  let t2;
+  if ($[3] !== c || $[4] !== x) {
+    t2 = () => {
       maybeMutate(x);
 
       console.log(c);
     };
-    $[0] = a;
-    $[1] = b;
-    $[2] = c;
-    $[3] = t1;
+    $[3] = c;
     $[4] = x;
+    $[5] = t2;
   } else {
-    t1 = $[3];
-    x = $[4];
+    t2 = $[5];
   }
-  const f = t1;
-  let t2;
-  if ($[5] !== f || $[6] !== x) {
-    t2 = <Foo onClick={f} value={x} />;
-    $[5] = f;
-    $[6] = x;
-    $[7] = t2;
+  const f = t2;
+  let t3;
+  if ($[6] !== f || $[7] !== x) {
+    t3 = <Foo onClick={f} value={x} />;
+    $[6] = f;
+    $[7] = x;
+    $[8] = t3;
   } else {
-    t2 = $[7];
+    t3 = $[8];
   }
-  return t2;
+  return t3;
 }
 
 ```
