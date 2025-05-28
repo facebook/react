@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bbf14b52fe98eec6deaaf3ff817a1981>>
+ * @generated SignedSource<<6f8e6211aeea09a635fe2a7935005772>>
  */
 
 /*
@@ -17746,7 +17746,7 @@ function defaultOnDefaultTransitionIndicator() {
   }
   function handleNavigateComplete() {
     null !== pendingResolve && (pendingResolve(), (pendingResolve = null));
-    isCancelled || startFakeNavigation();
+    isCancelled || setTimeout(startFakeNavigation, 20);
   }
   function startFakeNavigation() {
     if (!isCancelled && !navigation.transition) {
@@ -17819,14 +17819,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2121 = React.version;
 if (
-  "19.2.0-native-fb-f9ae0a4c-20250527" !==
+  "19.2.0-native-fb-5717f193-20250528" !==
   isomorphicReactPackageVersion$jscomp$inline_2121
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2121,
-      "19.2.0-native-fb-f9ae0a4c-20250527"
+      "19.2.0-native-fb-5717f193-20250528"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17848,10 +17848,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2128 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-f9ae0a4c-20250527",
+  version: "19.2.0-native-fb-5717f193-20250528",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-f9ae0a4c-20250527",
+  reconcilerVersion: "19.2.0-native-fb-5717f193-20250528",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$313 = 0;
@@ -18117,7 +18117,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-native-fb-f9ae0a4c-20250527";
+exports.version = "19.2.0-native-fb-5717f193-20250528";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

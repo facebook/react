@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a65e0b89d59064cdf8788951a00c3190>>
+ * @generated SignedSource<<bcf508f999046113b27ef473dd2e7074>>
  */
 
 /*
@@ -17731,7 +17731,7 @@ function defaultOnDefaultTransitionIndicator() {
   }
   function handleNavigateComplete() {
     null !== pendingResolve && (pendingResolve(), (pendingResolve = null));
-    isCancelled || startFakeNavigation();
+    isCancelled || setTimeout(startFakeNavigation, 20);
   }
   function startFakeNavigation() {
     if (!isCancelled && !navigation.transition) {
@@ -17804,14 +17804,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2120 = React.version;
 if (
-  "19.2.0-native-fb-f9ae0a4c-20250527" !==
+  "19.2.0-native-fb-5717f193-20250528" !==
   isomorphicReactPackageVersion$jscomp$inline_2120
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2120,
-      "19.2.0-native-fb-f9ae0a4c-20250527"
+      "19.2.0-native-fb-5717f193-20250528"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17833,10 +17833,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2127 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-f9ae0a4c-20250527",
+  version: "19.2.0-native-fb-5717f193-20250528",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-f9ae0a4c-20250527",
+  reconcilerVersion: "19.2.0-native-fb-5717f193-20250528",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$313 = 0;
@@ -17949,4 +17949,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.2.0-native-fb-f9ae0a4c-20250527";
+exports.version = "19.2.0-native-fb-5717f193-20250528";
