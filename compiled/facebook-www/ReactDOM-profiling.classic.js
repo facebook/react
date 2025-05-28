@@ -21548,14 +21548,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2327 = React.version;
 if (
-  "19.2.0-www-classic-283f87f0-20250527" !==
+  "19.2.0-www-classic-5717f193-20250528" !==
   isomorphicReactPackageVersion$jscomp$inline_2327
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2327,
-      "19.2.0-www-classic-283f87f0-20250527"
+      "19.2.0-www-classic-5717f193-20250528"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -21573,10 +21573,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2329 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-283f87f0-20250527",
+  version: "19.2.0-www-classic-5717f193-20250528",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-283f87f0-20250527"
+  reconcilerVersion: "19.2.0-www-classic-5717f193-20250528"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2329.getLaneLabelMap = getLaneLabelMap),
@@ -21610,7 +21610,7 @@ function defaultOnDefaultTransitionIndicator() {
   }
   function handleNavigateComplete() {
     null !== pendingResolve && (pendingResolve(), (pendingResolve = null));
-    isCancelled || startFakeNavigation();
+    isCancelled || setTimeout(startFakeNavigation, 20);
   }
   function startFakeNavigation() {
     if (!isCancelled && !navigation.transition) {
@@ -21991,7 +21991,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-classic-283f87f0-20250527";
+exports.version = "19.2.0-www-classic-5717f193-20250528";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

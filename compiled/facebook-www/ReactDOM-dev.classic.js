@@ -27348,7 +27348,7 @@ __DEV__ &&
       }
       function handleNavigateComplete() {
         null !== pendingResolve && (pendingResolve(), (pendingResolve = null));
-        isCancelled || startFakeNavigation();
+        isCancelled || setTimeout(startFakeNavigation, 20);
       }
       function startFakeNavigation() {
         if (!isCancelled && !navigation.transition) {
@@ -31452,11 +31452,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-www-classic-283f87f0-20250527" !== isomorphicReactPackageVersion)
+      if ("19.2.0-www-classic-5717f193-20250528" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-www-classic-283f87f0-20250527\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-www-classic-5717f193-20250528\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -31499,10 +31499,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-www-classic-283f87f0-20250527",
+          version: "19.2.0-www-classic-5717f193-20250528",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-www-classic-283f87f0-20250527"
+          reconcilerVersion: "19.2.0-www-classic-5717f193-20250528"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -32102,7 +32102,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-www-classic-283f87f0-20250527";
+    exports.version = "19.2.0-www-classic-5717f193-20250528";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
