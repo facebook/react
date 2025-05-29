@@ -920,15 +920,19 @@ function computeSignatureForInstruction(
     case 'CallExpression':
     case 'MethodCall': {
       let callee;
+      let receiver;
       let mutatesCallee = false;
       if (value.kind === 'NewExpression') {
         callee = value.callee;
+        receiver = value.callee;
         mutatesCallee = false;
       } else if (value.kind === 'CallExpression') {
         callee = value.callee;
+        receiver = value.callee;
         mutatesCallee = true;
       } else if (value.kind === 'MethodCall') {
         callee = value.property;
+        receiver = value.receiver;
         mutatesCallee = false;
       } else {
         assertExhaustive(
@@ -942,11 +946,11 @@ function computeSignatureForInstruction(
           ? computeEffectsForSignature(
               signature.aliasing,
               lvalue,
-              callee,
+              receiver,
               value.args,
             )
           : null;
-      if (signatureEffects != null) {
+      if (signatureEffects != null && signature?.aliasing != null) {
         effects.push(...signatureEffects);
       } else {
         effects.push({kind: 'Create', into: lvalue, value: ValueKind.Mutable});
@@ -1292,23 +1296,16 @@ function computeEffectsForSignature(
   const effects: Array<AliasingEffect> = [];
   for (const effect of signature.effects) {
     switch (effect.kind) {
-      case 'Alias': {
-        const from = substitutions.get(effect.from.identifier.id) ?? [];
-        const to = substitutions.get(effect.into.identifier.id) ?? [];
-        for (const fromId of from) {
-          for (const toId of to) {
-            effects.push({kind: 'Alias', from: fromId, into: toId});
-          }
-        }
-        break;
-      }
+      case 'ImmutableCapture':
+      case 'Alias':
+      case 'CreateFrom':
       case 'Capture': {
         const from = substitutions.get(effect.from.identifier.id) ?? [];
         const to = substitutions.get(effect.into.identifier.id) ?? [];
         for (const fromId of from) {
           for (const toId of to) {
             effects.push({
-              kind: 'Capture',
+              kind: effect.kind,
               from: fromId,
               into: toId,
             });
@@ -1316,10 +1313,13 @@ function computeEffectsForSignature(
         }
         break;
       }
+      case 'Mutate':
+      case 'MutateTransitive':
+      case 'MutateTransitiveConditionally':
       case 'MutateConditionally': {
         const values = substitutions.get(effect.value.identifier.id) ?? [];
         for (const id of values) {
-          effects.push({kind: 'MutateConditionally', value: id});
+          effects.push({kind: effect.kind, value: id});
         }
         break;
       }
@@ -1337,14 +1337,9 @@ function computeEffectsForSignature(
         }
         break;
       }
-      case 'ImmutableCapture':
-      case 'CreateFrom':
-      case 'Apply':
-      case 'Mutate':
-      case 'MutateTransitive':
-      case 'MutateTransitiveConditionally': {
+      case 'Apply': {
         CompilerError.throwTodo({
-          reason: 'Handle other types for function declarations',
+          reason: `Handle ${effect.kind} effects for function declarations`,
           loc: lvalue.loc,
         });
       }
