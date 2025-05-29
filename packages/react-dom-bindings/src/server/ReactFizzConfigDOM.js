@@ -309,6 +309,8 @@ export type ResumableState = {
   },
 };
 
+let currentlyFlushingRenderState: RenderState | null = null;
+
 const dataElementQuotedEnd = stringToPrecomputedChunk('"></template>');
 
 const startInlineScript = stringToPrecomputedChunk('<script');
@@ -2917,7 +2919,6 @@ function pushLink(
         // to create a StyleQueue
         if (!styleQueue) {
           styleQueue = {
-            start: renderState.startInlineStyle,
             precedence: stringToChunk(escapeTextForBrowser(precedence)),
             rules: ([]: Array<Chunk | PrecomputedChunk>),
             hrefs: ([]: Array<Chunk | PrecomputedChunk>),
@@ -3126,7 +3127,6 @@ function pushStyle(
       // This is the first time we've encountered this precedence we need
       // to create a StyleQueue.
       styleQueue = {
-        start: renderState.startInlineStyle,
         precedence: stringToChunk(escapeTextForBrowser(precedence)),
         rules: ([]: Array<Chunk | PrecomputedChunk>),
         hrefs: ([]: Array<Chunk | PrecomputedChunk>),
@@ -5232,7 +5232,7 @@ function flushStyleTagsLateForBoundary(
   }
   let i = 0;
   if (hrefs.length) {
-    writeChunk(this, styleQueue.start);
+    writeChunk(this, ((currentlyFlushingRenderState: any): RenderState).startInlineStyle);
     writeChunk(this, lateStyleTagResourceOpen1);
     writeChunk(this, styleQueue.precedence);
     writeChunk(this, lateStyleTagResourceOpen2);
@@ -5282,7 +5282,9 @@ export function writeHoistablesForBoundary(
   destinationHasCapacity = true;
 
   // Flush style tags for each precedence this boundary depends on
+  currentlyFlushingRenderState = renderState;
   hoistableState.styles.forEach(flushStyleTagsLateForBoundary, destination);
+  currentlyFlushingRenderState = null;
 
   // Determine if this boundary has stylesheets that need to be awaited upon completion
   hoistableState.stylesheets.forEach(hasStylesToHoist);
@@ -5347,7 +5349,7 @@ function flushStylesInPreamble(
   // order so even if there are no rules for style tags at this precedence we emit an empty style
   // tag with the data-precedence attribute
   if (!hasStylesheets || hrefs.length) {
-    writeChunk(this, styleQueue.start);
+    writeChunk(this, ((currentlyFlushingRenderState: any): RenderState).startInlineStyle);
     writeChunk(this, styleTagResourceOpen1);
     writeChunk(this, styleQueue.precedence);
     let i = 0;
@@ -5522,7 +5524,9 @@ export function writePreambleStart(
   renderState.highImagePreloads.clear();
 
   // Flush unblocked stylesheets by precedence
+  currentlyFlushingRenderState = renderState;
   renderState.styles.forEach(flushStylesInPreamble, destination);
+  currentlyFlushingRenderState = null;
 
   const importMapChunks = renderState.importMapChunks;
   for (i = 0; i < importMapChunks.length; i++) {
@@ -6113,7 +6117,6 @@ export type HoistableState = {
 };
 
 export type StyleQueue = {
-  start: PrecomputedChunk,
   precedence: Chunk | PrecomputedChunk,
   rules: Array<Chunk | PrecomputedChunk>,
   hrefs: Array<Chunk | PrecomputedChunk>,
@@ -6565,7 +6568,6 @@ function preinitStyle(
       // to create a StyleQueue
       if (!styleQueue) {
         styleQueue = {
-          start: renderState.startInlineStyle,
           precedence: stringToChunk(escapeTextForBrowser(precedence)),
           rules: ([]: Array<Chunk | PrecomputedChunk>),
           hrefs: ([]: Array<Chunk | PrecomputedChunk>),
