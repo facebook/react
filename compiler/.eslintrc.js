@@ -17,7 +17,7 @@ module.exports = {
   extends: ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
   rules: {
     /*
-     * We prefer using const where variables are not reassigned, but occassional mistakes
+     * We prefer using const where variables are not reassigned, but occasional mistakes
      * aren't a major issue
      */
     "prefer-const": "off",
