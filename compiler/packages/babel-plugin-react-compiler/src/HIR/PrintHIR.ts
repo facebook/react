@@ -36,7 +36,6 @@ import type {
 } from './HIR';
 import {GotoVariant, InstructionKind} from './HIR';
 import {
-  AliasedPlace,
   AliasingEffect,
   AliasingSignature,
 } from '../Inference/InferMutationAliasingEffects';
@@ -965,10 +964,27 @@ export function printAliasingEffect(effect: AliasingEffect): string {
       return `Create ${printPlaceForAliasEffect(effect.into)} = kindOf(${printPlaceForAliasEffect(effect.from)})`;
     }
     case 'Apply': {
-      const params = effect.params.map(printAliasedPlace).join(', ');
-      const rest = effect.rest != null ? printAliasedPlace(effect.rest) : '';
-      const returns = printAliasedPlace(effect.returns);
-      return `Apply ${returns} = ${printAliasedPlace(effect.function)} as ${effect.receiver} ( ${params} ${params.length !== 0 && rest !== '' ? ', ...' : ''}${rest})`;
+      const receiverCallee =
+        effect.receiver.identifier.id === effect.function.identifier.id
+          ? printPlaceForAliasEffect(effect.receiver)
+          : `${printPlaceForAliasEffect(effect.receiver)}.${printPlaceForAliasEffect(effect.function)}`;
+      const args = effect.args
+        .map(arg => {
+          if (arg.kind === 'Identifier') {
+            return printPlaceForAliasEffect(arg);
+          }
+          return `...${printPlaceForAliasEffect(arg.place)}`;
+        })
+        .join(', ');
+      let signature = '';
+      if (effect.signature != null) {
+        if (effect.signature.aliasing != null) {
+          signature = printAliasingSignature(effect.signature.aliasing);
+        } else {
+          signature = JSON.stringify(effect.signature, null, 2);
+        }
+      }
+      return `Apply ${printPlaceForAliasEffect(effect.into)} = ${receiverCallee}(${args})${signature != '' ? '\n     ' : ''}${signature}`;
     }
     case 'Freeze': {
       return `Freeze ${printPlaceForAliasEffect(effect.value)} ${effect.reason}`;
@@ -987,10 +1003,6 @@ export function printAliasingEffect(effect: AliasingEffect): string {
 
 function printPlaceForAliasEffect(place: Place): string {
   return printIdentifier(place.identifier);
-}
-
-function printAliasedPlace(place: AliasedPlace): string {
-  return place.kind + ' ' + printPlaceForAliasEffect(place.place);
 }
 
 export function printAliasingSignature(signature: AliasingSignature): string {

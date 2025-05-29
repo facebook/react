@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import {CompilerError} from '..';
 import {
   Effect,
   HIRFunction,
@@ -181,11 +182,10 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
             break;
           }
           case 'Apply': {
-            operandEffects.set(
-              effect.function.place.identifier.id,
-              Effect.ConditionallyMutate,
-            );
-            break;
+            CompilerError.invariant(false, {
+              reason: `[AnalyzeFunctions] Expected Apply effects to be replaced with more precise effects`,
+              loc: effect.function.loc,
+            });
           }
           case 'MutateTransitive':
           case 'MutateConditionally':
