@@ -10335,7 +10335,7 @@ describe('ReactDOMFizzServer', () => {
       pipe(writable);
     });
     assertConsoleErrorDev([
-      'React encountered a hoistable style tag with "R4nd0mR4nd0m" nonce. It doesn\'t match the "R4nd0m" nonce passed to the render call. They have to be the same.',
+      'React encountered a style tag with `precedence` "default" and `nonce` "R4nd0mR4nd0m". When React manages style rules using `precedence` it will only include rules if the nonce matches the style nonce "R4nd0m" that was included with this render.',
     ]);
     expect(getVisibleChildren(document)).toEqual(
       <html>
@@ -10365,7 +10365,7 @@ describe('ReactDOMFizzServer', () => {
       pipe(writable);
     });
     assertConsoleErrorDev([
-      'React encountered a hoistable style tag with "R4nd0m" nonce. The nonce was not passed to the render call though.',
+      'React encountered a style tag with `precedence` "default" and `nonce` "R4nd0m". When React manages style rules using `precedence` it will only include a nonce attributes if you also provide the same style nonce value as a render option.',
     ]);
     expect(getVisibleChildren(document)).toEqual(
       <html>
@@ -10396,7 +10396,7 @@ describe('ReactDOMFizzServer', () => {
       pipe(writable);
     });
     assertConsoleErrorDev([
-      'React encountered a hoistable style tag with "R4nd0m" nonce. The nonce was not passed to the render call though.',
+      'React encountered a style tag with `precedence` "default" and `nonce` "R4nd0m". When React manages style rules using `precedence` it will only include a nonce attributes if you also provide the same style nonce value as a render option.',
     ]);
     expect(getVisibleChildren(document)).toEqual(
       <html>

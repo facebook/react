@@ -3140,7 +3140,8 @@ function pushStyle(
       if (__DEV__) {
         if (!nonceStyle && nonce) {
           console.error(
-            'React encountered a hoistable style tag with "%s" nonce. The nonce was not passed to the render call though.',
+            'React encountered a style tag with `precedence` "%s" and `nonce` "%s". When React manages style rules using `precedence` it will only include a nonce attributes if you also provide the same style nonce value as a render option.',
+            precedence,
             nonce,
           );
         }
@@ -3149,7 +3150,8 @@ function pushStyle(
       pushStyleContents(styleQueue.rules, props);
     } else if (__DEV__) {
       console.error(
-        'React encountered a hoistable style tag with "%s" nonce. It doesn\'t match the "%s" nonce passed to the render call. They have to be the same.',
+        'React encountered a style tag with `precedence` "%s" and `nonce` "%s". When React manages style rules using `precedence` it will only include rules if the nonce matches the style nonce "%s" that was included with this render.',
+        precedence,
         nonce,
         nonceStyle,
       );
