@@ -5232,7 +5232,10 @@ function flushStyleTagsLateForBoundary(
   }
   let i = 0;
   if (hrefs.length) {
-    writeChunk(this, ((currentlyFlushingRenderState: any): RenderState).startInlineStyle);
+    writeChunk(
+      this,
+      ((currentlyFlushingRenderState: any): RenderState).startInlineStyle,
+    );
     writeChunk(this, lateStyleTagResourceOpen1);
     writeChunk(this, styleQueue.precedence);
     writeChunk(this, lateStyleTagResourceOpen2);
@@ -5349,7 +5352,10 @@ function flushStylesInPreamble(
   // order so even if there are no rules for style tags at this precedence we emit an empty style
   // tag with the data-precedence attribute
   if (!hasStylesheets || hrefs.length) {
-    writeChunk(this, ((currentlyFlushingRenderState: any): RenderState).startInlineStyle);
+    writeChunk(
+      this,
+      ((currentlyFlushingRenderState: any): RenderState).startInlineStyle,
+    );
     writeChunk(this, styleTagResourceOpen1);
     writeChunk(this, styleQueue.precedence);
     let i = 0;
