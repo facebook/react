@@ -46,6 +46,7 @@ import {
   printSourceLocation,
 } from '../HIR/PrintHIR';
 import {FunctionSignature} from '../HIR/ObjectShape';
+import {getWriteErrorReason} from './InferFunctionEffects';
 
 export function inferMutationAliasingEffects(
   fn: HIRFunction,
@@ -435,11 +436,11 @@ function applySignature(
       case 'Apply': {
         const values = state.values(effect.function.place);
         if (values.length !== 1 || values[0].kind !== 'FunctionExpression') {
-          const didMutate = state.mutate(
+          const mutationKind = state.mutate(
             'MutateTransitiveConditionally',
             effect.function.place,
           );
-          if (didMutate) {
+          if (mutationKind === 'mutate') {
             effects.push({
               kind: 'MutateTransitiveConditionally',
               value: effect.function.place,
@@ -457,9 +458,29 @@ function applySignature(
       case 'MutateConditionally':
       case 'MutateTransitive':
       case 'MutateTransitiveConditionally': {
-        const didMutate = state.mutate(effect.kind, effect.value);
-        if (didMutate) {
+        const mutationKind = state.mutate(effect.kind, effect.value);
+        if (mutationKind === 'mutate') {
           effects.push(effect);
+        } else if (
+          mutationKind !== 'none' &&
+          (effect.kind === 'Mutate' || effect.kind === 'MutateTransitive')
+        ) {
+          const value = state.kind(effect.value);
+          const reason = getWriteErrorReason({
+            kind: value.kind,
+            reason: value.reason,
+            context: new Set(),
+          });
+          CompilerError.throwInvalidReact({
+            reason,
+            description:
+              effect.value.identifier.name !== null &&
+              effect.value.identifier.name.kind === 'named'
+                ? `Found mutation of \`${effect.value.identifier.name}\``
+                : null,
+            loc: effect.value.loc,
+            suggestions: null,
+          });
         }
         break;
       }
@@ -663,7 +684,7 @@ class InferenceState {
       | 'MutateTransitive'
       | 'MutateTransitiveConditionally',
     place: Place,
-  ): boolean {
+  ): 'none' | 'mutate' | 'mutate-frozen' | 'mutate-global' {
     // TODO: consider handling of function expressions by looking at their effects
     const kind = this.kind(place).kind;
     switch (variant) {
@@ -672,10 +693,10 @@ class InferenceState {
         switch (kind) {
           case ValueKind.Mutable:
           case ValueKind.Context: {
-            return true;
+            return 'mutate';
           }
           default: {
-            return false;
+            return 'none';
           }
         }
       }
@@ -684,15 +705,23 @@ class InferenceState {
         switch (kind) {
           case ValueKind.Mutable:
           case ValueKind.Context: {
-            return true;
+            return 'mutate';
           }
           case ValueKind.Primitive: {
             // technically an error, but it's not React specific
-            return false;
+            return 'none';
+          }
+          case ValueKind.Frozen: {
+            return 'mutate-frozen';
+          }
+          case ValueKind.Global: {
+            return 'mutate-global';
+          }
+          case ValueKind.MaybeFrozen: {
+            return 'none';
           }
           default: {
-            // TODO this is an error!
-            return false;
+            assertExhaustive(kind, `Unexpected kind ${kind}`);
           }
         }
       }
@@ -1082,10 +1111,23 @@ function computeSignatureForInstruction(
     }
     case 'ObjectMethod':
     case 'FunctionExpression': {
+      /*
+       * We consider the function frozen if it has no potential mutations of its context
+       * variables.
+       * TODO: this may lose some precision relative to InferReferenceEffects, where we
+       * decide the valuekind of the function based on the actual state of the context
+       * vars. Maybe a `CreateFunction captures=[...] into=place` effect or similar to
+       * express the logic
+       */
+      const kind = value.loweredFunc.func.context.some(
+        operand => operand.effect === Effect.Capture,
+      )
+        ? ValueKind.Mutable
+        : ValueKind.Frozen;
       effects.push({
         kind: 'Create',
         into: lvalue,
-        value: ValueKind.Mutable,
+        value: kind,
       });
       /**
        * We've already analyzed the function expression in AnalyzeFunctions. There, we assign
@@ -1372,11 +1414,16 @@ function computeEffectsForLegacySignature(
         break;
       }
       case Effect.ConditionallyMutateIterator: {
-        // We don't currently use this effect in any signatures
-        CompilerError.throwTodo({
-          reason: `Unexpected ${effect} effect in a legacy function signature`,
-          loc: place.loc,
+        effects.push({
+          kind: 'Capture',
+          from: place,
+          into: lvalue,
         });
+        effects.push({
+          kind: 'MutateTransitiveConditionally',
+          value: place,
+        });
+        break;
       }
       case Effect.Freeze: {
         effects.push({
