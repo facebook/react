@@ -436,6 +436,36 @@ describe('ReactDOMTextarea', () => {
     }
   });
 
+  it('does not update defaultValue on input event', async () => {
+    const setUntrackedValue = Object.getOwnPropertyDescriptor(
+      HTMLTextAreaElement.prototype,
+      'value',
+    ).set;
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    document.body.appendChild(container);
+
+    try {
+      const node = await renderTextarea(
+        <textarea value="foo" onChange={emptyFunction} />,
+        container,
+        root,
+      );
+
+      setUntrackedValue.call(node, 'bar');
+      node.dispatchEvent(
+        new Event('input', {bubbles: true, cancelable: false}),
+      );
+
+      if (ReactFeatureFlags.disableInputAttributeSyncing) {
+        expect(node.defaultValue).toBe('foo');
+      }
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
+
   if (ReactFeatureFlags.disableTextareaChildren) {
     it('should ignore children content', async () => {
       const container = document.createElement('div');
