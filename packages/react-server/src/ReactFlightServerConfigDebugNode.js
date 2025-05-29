@@ -41,23 +41,26 @@ export function initAsyncDebugInfo(): void {
               // We don't track awaits on things that started outside our tracked scope.
               return;
             }
+            const current = pendingOperations.get(currentAsyncId);
             // If the thing we're waiting on is another Await we still track that sequence
             // so that we can later pick the best stack trace in user space.
             node = ({
               tag: AWAIT_NODE,
               stack: new Error(),
               timestamp: -1.1, // The end time will be set when the Promise resolves.
-              trigger: trigger,
+              awaited: trigger, // The thing we're awaiting on. Might get overrriden when we resolve.
+              previous: current === undefined ? null : current, // The path that led us here.
             }: AwaitNode);
           } else {
             node = ({
               tag: PROMISE_NODE,
-              stack: null,
-              timestamp: -1.1,
-              trigger:
+              stack: new Error(),
+              timestamp: performance.now(),
+              awaited:
                 trigger === undefined
-                  ? null // It might get set when we resolve.
+                  ? null // It might get overridden when we resolve.
                   : trigger,
+              previous: null,
             }: PromiseNode);
           }
         } else if (type !== 'Microtask' && type !== 'TickObject') {
@@ -67,7 +70,8 @@ export function initAsyncDebugInfo(): void {
               tag: IO_NODE,
               stack: new Error(),
               timestamp: performance.now(),
-              trigger: null,
+              awaited: null,
+              previous: null,
             }: IONode);
           } else if (trigger.tag === AWAIT_NODE) {
             // We have begun a new I/O sequence after the await.
@@ -75,7 +79,8 @@ export function initAsyncDebugInfo(): void {
               tag: IO_NODE,
               stack: new Error(),
               timestamp: performance.now(),
-              trigger: trigger,
+              awaited: null,
+              previous: trigger,
             }: IONode);
           } else {
             // Otherwise, this is just a continuation of the same I/O sequence.
@@ -100,19 +105,17 @@ export function initAsyncDebugInfo(): void {
               'A Promise should never be an IO_NODE. This is a bug in React.',
             );
           }
+          if (resolvedNode.tag === AWAIT_NODE) {
+            // Log the end time when we resolved the await.
+            resolvedNode.timestamp = performance.now();
+          }
           const currentAsyncId = executionAsyncId();
           if (asyncId !== currentAsyncId) {
             // If the promise was not resolved by itself, then that means that
             // the trigger that we originally stored wasn't actually the dependency.
             // Instead, the current execution context is what ultimately unblocked it.
-            const trigger = pendingOperations.get(currentAsyncId);
-            if (trigger !== undefined) {
-              resolvedNode.trigger = trigger;
-              // Log the end time when we resolved the await or Promise.
-              resolvedNode.timestamp = performance.now();
-            } else {
-              resolvedNode.trigger = null;
-            }
+            const awaited = pendingOperations.get(currentAsyncId);
+            resolvedNode.awaited = awaited === undefined ? null : awaited;
           }
         }
       },
