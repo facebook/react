@@ -45,6 +45,7 @@ import {
   printPlace,
   printSourceLocation,
 } from '../HIR/PrintHIR';
+import {FunctionSignature} from '../HIR/ObjectShape';
 
 export function inferMutationAliasingEffects(
   fn: HIRFunction,
@@ -233,6 +234,18 @@ function applySignature(
   instruction: Instruction,
   effectInstructionValueCache: Map<AliasingEffect, InstructionValue>,
 ): Array<AliasingEffect> | null {
+  /*
+   * TODO: this should look for FunctionExpression instructions, and check for any
+   * obviously invalid effects. for example, a known mutation of props is always
+   * invalid even if the function might not be called
+   */
+
+  /*
+   * Track which values we've already aliased once, so that we can switch to
+   * appendAlias() for subsequent aliases into the same value
+   */
+  const aliased = new Set<IdentifierId>();
+
   const effects: Array<AliasingEffect> = [];
   for (const effect of signature.effects) {
     switch (effect.kind) {
@@ -407,7 +420,12 @@ function applySignature(
             break;
           }
           default: {
-            state.alias(effect.into, effect.from);
+            if (aliased.has(effect.into.identifier.id)) {
+              state.appendAlias(effect.into, effect.from);
+            } else {
+              aliased.add(effect.into.identifier.id);
+              state.alias(effect.into, effect.from);
+            }
             effects.push(effect);
             break;
           }
@@ -564,6 +582,21 @@ class InferenceState {
     this.#variables.set(place.identifier.id, new Set(values));
   }
 
+  appendAlias(place: Place, value: Place): void {
+    const values = this.#variables.get(value.identifier.id);
+    CompilerError.invariant(values != null, {
+      reason: `[InferMutationAliasingEffects] Expected value for identifier to be initialized`,
+      description: `${printIdentifier(value.identifier)}`,
+      loc: value.loc,
+      suggestions: null,
+    });
+    const prevValues = this.values(place);
+    this.#variables.set(
+      place.identifier.id,
+      new Set([...prevValues, ...values]),
+    );
+  }
+
   // Defines (initializing or updating) a variable with a specific kind of value.
   define(place: Place, value: InstructionValue): void {
     CompilerError.invariant(this.#values.has(value), {
@@ -650,9 +683,12 @@ class InferenceState {
       case 'MutateTransitive': {
         switch (kind) {
           case ValueKind.Mutable:
-          case ValueKind.Primitive:
           case ValueKind.Context: {
             return true;
+          }
+          case ValueKind.Primitive: {
+            // technically an error, but it's not React specific
+            return false;
           }
           default: {
             // TODO this is an error!
@@ -952,6 +988,15 @@ function computeSignatureForInstruction(
           : null;
       if (signatureEffects != null && signature?.aliasing != null) {
         effects.push(...signatureEffects);
+      } else if (signature != null) {
+        effects.push(
+          ...computeEffectsForLegacySignature(
+            signature,
+            lvalue,
+            receiver,
+            value.args,
+          ),
+        );
       } else {
         effects.push({kind: 'Create', into: lvalue, value: ValueKind.Mutable});
         /**
@@ -1054,10 +1099,13 @@ function computeSignatureForInstruction(
        *
        * ```
        * const a = {};
-       * // We don't want to consider a as mutating here either, this just declares the function
+       *
+       * // We don't want to consider a as mutating here, this just declares the function
        * const f = () => { maybeMutate(a) };
+       *
        * // We don't want to consider a as mutating here either, it can't possibly call f yet
        * const x = [f];
+       *
        * // Here we have to assume that f can be called (transitively), and have to consider a
        * // as mutating
        * callAllFunctionInArray(x);
@@ -1067,6 +1115,12 @@ function computeSignatureForInstruction(
        * Capture effect. If the resulting function is transitively mutated, this will mean
        * that those operands are also considered mutated. If the function is never called,
        * they won't be!
+       *
+       * This relies on the rule that:
+       * Capture a -> b and MutateTransitive(b) => Mutate(a)
+       *
+       * Substituting:
+       * Capture contextvar -> function and MutateTransitive(function) => Mutate(contextvar)
        *
        * Note that if the type of the context variables are frozen, global, or primitive, the
        * Capture will either get pruned or downgraded to an ImmutableCapture.
@@ -1257,6 +1311,122 @@ function computeSignatureForInstruction(
   return {
     effects,
   };
+}
+
+/**
+ * Creates a set of aliasing effects given a legacy FunctionSignature. This makes all of the
+ * old implicit behaviors from the signatures and InferReferenceEffects explicit, see comments
+ * in the body for details.
+ *
+ * The goal of this method is to make it easier to migrate incrementally to the new system,
+ * so we don't have to immediately write new signatures for all the methods to get expected
+ * compilation output.
+ */
+function computeEffectsForLegacySignature(
+  signature: FunctionSignature,
+  lvalue: Place,
+  receiver: Place,
+  args: Array<Place | SpreadPattern>,
+): Array<AliasingEffect> {
+  const effects: Array<AliasingEffect> = [];
+  effects.push({
+    kind: 'Create',
+    into: lvalue,
+    value: signature.returnValueKind,
+  });
+  /*
+   * InferReferenceEffects and FunctionSignature have an implicit assumption that the receiver
+   * is captured into the return value. Consider for example the signature for Array.proto.pop:
+   * the calleeEffect is Store, since it's a known mutation but non-transitive. But the return
+   * of the pop() captures from the receiver! This isn't specified explicitly. So we add this
+   * here, and rely on applySignature() to downgrade this to ImmutableCapture (or prune) if
+   * the type doesn't actually need to be captured based on the input and return type.
+   */
+  effects.push({
+    kind: 'Capture',
+    from: receiver,
+    into: lvalue,
+  });
+  const stores: Array<Place> = [];
+  const captures: Array<Place> = [];
+  const returnValueReason = signature.returnValueReason ?? ValueReason.Other;
+  function visit(place: Place, effect: Effect): void {
+    switch (effect) {
+      case Effect.Store: {
+        effects.push({
+          kind: 'Mutate',
+          value: place,
+        });
+        stores.push(place);
+        break;
+      }
+      case Effect.Capture: {
+        captures.push(place);
+        break;
+      }
+      case Effect.ConditionallyMutate: {
+        effects.push({
+          kind: 'MutateTransitiveConditionally',
+          value: place,
+        });
+        break;
+      }
+      case Effect.ConditionallyMutateIterator: {
+        // We don't currently use this effect in any signatures
+        CompilerError.throwTodo({
+          reason: `Unexpected ${effect} effect in a legacy function signature`,
+          loc: place.loc,
+        });
+      }
+      case Effect.Freeze: {
+        effects.push({
+          kind: 'Freeze',
+          value: place,
+          reason: returnValueReason,
+        });
+        break;
+      }
+      case Effect.Mutate: {
+        effects.push({kind: 'MutateTransitive', value: place});
+        break;
+      }
+      case Effect.Read: {
+        effects.push({
+          kind: 'ImmutableCapture',
+          from: place,
+          into: lvalue,
+        });
+        break;
+      }
+    }
+  }
+
+  visit(receiver, signature.calleeEffect);
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    const place = arg.kind === 'Identifier' ? arg : arg.place;
+    const effect =
+      arg.kind === 'Identifier' && i < signature.positionalParams.length
+        ? signature.positionalParams[i]!
+        : (signature.restParam ?? Effect.ConditionallyMutate);
+    visit(place, effect);
+  }
+  if (captures.length !== 0) {
+    if (stores.length === 0) {
+      // If no stores, then capture into the return value
+      for (const capture of captures) {
+        effects.push({kind: 'Capture', from: capture, into: lvalue});
+      }
+    } else {
+      // Else capture into the stores
+      for (const capture of captures) {
+        for (const store of stores) {
+          effects.push({kind: 'Capture', from: capture, into: store});
+        }
+      }
+    }
+  }
+  return effects;
 }
 
 function computeEffectsForSignature(
