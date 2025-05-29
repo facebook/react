@@ -11,7 +11,7 @@ import isArray from 'shared/isArray';
 
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 import {getToStringValue, toString} from './ToStringValue';
-import {disableTextareaChildren} from 'shared/ReactFeatureFlags';
+import {disableTextareaChildren, disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
 
 import {track, trackHydrated} from './inputValueTracking';
 import {queueChangeEvent} from '../events/ReactDOMEventReplaying';
@@ -75,18 +75,21 @@ export function updateTextarea(
     if (newValue !== node.value) {
       node.value = newValue;
     }
-    // TOOO: This should respect disableInputAttributeSyncing flag.
-    if (defaultValue == null) {
-      if (node.defaultValue !== newValue) {
-        node.defaultValue = newValue;
+    if (!disableInputAttributeSyncing) {
+      if (defaultValue == null) {
+        if (node.defaultValue !== newValue) {
+          node.defaultValue = newValue;
+        }
+        return;
       }
-      return;
     }
   }
   if (defaultValue != null) {
     node.defaultValue = toString(getToStringValue(defaultValue));
   } else {
-    node.defaultValue = '';
+    if (!disableInputAttributeSyncing) {
+      node.defaultValue = '';
+    }
   }
 }
 
