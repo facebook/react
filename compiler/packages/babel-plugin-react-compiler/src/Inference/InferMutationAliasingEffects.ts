@@ -986,7 +986,7 @@ function computeSignatureForInstruction(
               value.args,
             )
           : null;
-      if (signatureEffects != null && signature?.aliasing != null) {
+      if (signatureEffects != null) {
         effects.push(...signatureEffects);
       } else if (signature != null) {
         effects.push(
