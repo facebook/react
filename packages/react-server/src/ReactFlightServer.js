@@ -69,6 +69,11 @@ import type {
 } from 'shared/ReactTypes';
 import type {ReactElement} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
+import type {
+  AsyncSequence,
+  IONode,
+  PromiseNode,
+} from './ReactFlightAsyncSequence';
 
 import {
   resolveClientReferenceMetadata,
@@ -141,6 +146,8 @@ import getPrototypeOf from 'shared/getPrototypeOf';
 import binaryToComparableString from 'shared/binaryToComparableString';
 
 import {SuspenseException, getSuspendedThenable} from './ReactFlightThenable';
+
+import {IO_NODE, PROMISE_NODE, AWAIT_NODE} from './ReactFlightAsyncSequence';
 
 // DEV-only set containing internal objects that should not be limited and turned into getters.
 const doNotLimit: WeakSet<Reference> = __DEV__ ? new WeakSet() : (null: any);
@@ -1830,10 +1837,102 @@ function renderElement(
   return renderClientElement(request, task, type, key, props, validated);
 }
 
+function visitAsyncNode(
+  request: Request,
+  task: Task,
+  node: AsyncSequence,
+  cutOff: number,
+  visited: Set<AsyncSequence>,
+): null | PromiseNode | IONode {
+  if (visited.has(node)) {
+    // It's possible to visit them same node twice when it's part of both an "awaited" path
+    // and a "previous" path. This also gracefully handles cycles which would be a bug.
+    return null;
+  }
+  visited.add(node);
+  // First visit anything that blocked this sequence to start in the first place.
+  if (node.previous !== null) {
+    // We ignore the return value here because if it wasn't awaited, then we don't log it.
+    visitAsyncNode(request, task, node.previous, cutOff, visited);
+  }
+  switch (node.tag) {
+    case IO_NODE: {
+      return node;
+    }
+    case PROMISE_NODE: {
+      const awaited = node.awaited;
+      if (awaited !== null) {
+        const ioNode = visitAsyncNode(request, task, awaited, cutOff, visited);
+        if (ioNode !== null) {
+          // This Promise was blocked on I/O. That's a signal that this Promise is interesting to log.
+          // We don't log it yet though. We return it to be logged by the point where it's awaited.
+          // This type might be another PromiseNode but we don't actually expect that, because those
+          // would have to be awaited and then this would have an AwaitNode between.
+          // TODO: Consider whether this stack was in user space or not.
+          return node;
+        }
+      }
+      return null;
+    }
+    case AWAIT_NODE: {
+      const awaited = node.awaited;
+      if (awaited !== null) {
+        const ioNode = visitAsyncNode(request, task, awaited, cutOff, visited);
+        if (ioNode !== null) {
+          // Outline the IO node.
+          emitIOChunk(request, ioNode);
+          // Then emit a reference to us awaiting it in the current task.
+          request.pendingChunks++;
+          emitDebugChunk(request, task.id, {
+            awaited: ((ioNode: any): ReactIOInfo), // This is deduped by this reference.
+            stack: filterStackTrace(request, node.stack, 1),
+          });
+        }
+      }
+      // If we had awaited anything we would have written it now.
+      return null;
+    }
+    default: {
+      // eslint-disable-next-line react-internal/prod-error-codes
+      throw new Error('Unknown AsyncSequence tag. This is a bug in React.');
+    }
+  }
+}
+
+function emitAsyncSequence(
+  request: Request,
+  task: Task,
+  node: AsyncSequence,
+  cutOff: number,
+): void {
+  const visited: Set<AsyncSequence> = new Set();
+  const awaitedNode = visitAsyncNode(request, task, node, cutOff, visited);
+  if (awaitedNode !== null) {
+    // Nothing in user space (unfiltered stack) awaited this.
+    if (awaitedNode.end < 0) {
+      // If this was I/O directly without a Promise, then it means that some custom Thenable
+      // called our ping directly and not from a native .then(). We use the current ping time
+      // as the end time and treat it as an await with no stack.
+      // TODO: If this I/O is recurring then we really should have different entries for
+      // each occurrence. Right now we'll only track the first time it is invoked.
+      awaitedNode.end = performance.now();
+    }
+    emitIOChunk(request, awaitedNode);
+    request.pendingChunks++;
+    emitDebugChunk(request, task.id, {
+      awaited: ((awaitedNode: any): ReactIOInfo), // This is deduped by this reference.
+    });
+  }
+}
+
 function pingTask(request: Request, task: Task): void {
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     // If this was async we need to emit the time when it completes.
     task.timed = true;
+    const sequence = getCurrentAsyncSequence();
+    if (sequence !== null) {
+      emitAsyncSequence(request, task, sequence, task.time);
+    }
   }
   const pingedTasks = request.pingedTasks;
   pingedTasks.push(task);
@@ -3402,6 +3501,45 @@ function outlineIOInfo(request: Request, ioInfo: ReactIOInfo): void {
   };
   const id = outlineConsoleValue(request, counter, debugIOInfo);
   request.writtenObjects.set(ioInfo, serializeByValueID(id));
+}
+
+function emitIOChunk(request: Request, ioNode: IONode | PromiseNode): void {
+  if (!__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'outlineIOInfo should never be called in production mode. This is a bug in React.',
+    );
+  }
+
+  if (request.writtenObjects.has(ioNode)) {
+    // Already written
+    return;
+  }
+
+  // Limit the number of objects we write to prevent emitting giant props objects.
+  let objectLimit = 10;
+  let stack = null;
+  if (ioNode.stack !== null) {
+    stack = filterStackTrace(request, ioNode.stack, 1);
+    // Ensure we have enough object limit to encode the stack trace.
+    objectLimit += stack.length;
+  }
+
+  // We use the console encoding so that we can dedupe objects but don't necessarily
+  // use the full serialization that requires a task.
+  const counter = {objectLimit};
+
+  // We can't serialize the ConsoleTask/Error objects so we need to omit them before serializing.
+  const relativeStartTimestamp = ioNode.start - request.timeOrigin;
+  const relativeEndTimestamp = ioNode.end - request.timeOrigin;
+  const debugIOInfo: Omit<ReactIOInfo, 'debugTask' | 'debugStack'> = {
+    start: relativeStartTimestamp,
+    end: relativeEndTimestamp,
+    stack: stack,
+  };
+  const id = outlineConsoleValue(request, counter, debugIOInfo);
+  request.writtenObjects.set(ioNode, serializeByValueID(id));
 }
 
 function emitTypedArrayChunk(
