@@ -47,6 +47,7 @@ import {
 } from '../HIR/PrintHIR';
 import {FunctionSignature} from '../HIR/ObjectShape';
 import {getWriteErrorReason} from './InferFunctionEffects';
+import prettyFormat from 'pretty-format';
 
 export function inferMutationAliasingEffects(
   fn: HIRFunction,
@@ -235,237 +236,28 @@ function applySignature(
   instruction: Instruction,
   effectInstructionValueCache: Map<AliasingEffect, InstructionValue>,
 ): Array<AliasingEffect> | null {
-  /*
-   * TODO: this should look for FunctionExpression instructions, and check for any
-   * obviously invalid effects. for example, a known mutation of props is always
-   * invalid even if the function might not be called
+  /**
+   * For function instructions, eagerly validate that they aren't mutating
+   * a known-frozen value.
+   *
+   * TODO: make sure we're also validating against global mutations somewhere, but
+   * account for this being allowed in effects/event handlers.
    */
-
-  /*
-   * Track which values we've already aliased once, so that we can switch to
-   * appendAlias() for subsequent aliases into the same value
-   */
-  const aliased = new Set<IdentifierId>();
-
-  const effects: Array<AliasingEffect> = [];
-  for (const effect of signature.effects) {
-    switch (effect.kind) {
-      case 'Freeze': {
-        const didFreeze = state.freeze(effect.value, effect.reason);
-        if (didFreeze) {
-          effects.push(effect);
-        }
-        break;
-      }
-      case 'Create': {
-        let value = effectInstructionValueCache.get(effect);
-        if (value == null) {
-          value = {
-            kind: 'ObjectExpression',
-            properties: [],
-            loc: effect.into.loc,
-          };
-          effectInstructionValueCache.set(effect, value);
-        }
-        state.initialize(value, {
-          kind: effect.value,
-          reason: new Set([ValueReason.Other]),
-        });
-        state.define(effect.into, value);
-        break;
-      }
-      case 'ImmutableCapture': {
-        let value = effectInstructionValueCache.get(effect);
-        if (value == null) {
-          value = {
-            kind: 'ObjectExpression',
-            properties: [],
-            loc: effect.into.loc,
-          };
-          effectInstructionValueCache.set(effect, value);
-        }
-        state.initialize(value, {
-          kind: ValueKind.Frozen,
-          reason: new Set([ValueReason.Other]),
-        });
-        state.define(effect.into, value);
-        break;
-      }
-      case 'CreateFrom': {
-        const kind = state.kind(effect.from).kind;
-        let value = effectInstructionValueCache.get(effect);
-        if (value == null) {
-          value = {
-            kind: 'ObjectExpression',
-            properties: [],
-            loc: effect.into.loc,
-          };
-          effectInstructionValueCache.set(effect, value);
-        }
-        state.initialize(value, {
-          kind,
-          reason: new Set([ValueReason.Other]),
-        });
-        state.define(effect.into, value);
-        switch (kind) {
-          case ValueKind.Primitive:
-          case ValueKind.Global: {
-            // no need to track this data flow
-            break;
+  if (
+    instruction.value.kind === 'FunctionExpression' ||
+    instruction.value.kind === 'ObjectMethod'
+  ) {
+    const aliasingEffects =
+      instruction.value.loweredFunc.func.aliasingEffects ?? [];
+    for (const effect of aliasingEffects) {
+      if (effect.kind === 'Mutate' || effect.kind === 'MutateTransitive') {
+        const value = state.kind(effect.value);
+        if (value.kind === ValueKind.Frozen) {
+          if (DEBUG) {
+            console.log(printInstruction(instruction));
+            console.log(printAliasingEffect(effect));
+            console.log(prettyFormat(state.debugAbstractValue(value)));
           }
-          case ValueKind.Frozen: {
-            effects.push({
-              kind: 'ImmutableCapture',
-              from: effect.from,
-              into: effect.into,
-            });
-            break;
-          }
-          default: {
-            // TODO: should this be Alias??
-            effects.push({
-              kind: 'Capture',
-              from: effect.from,
-              into: effect.into,
-            });
-          }
-        }
-        break;
-      }
-      case 'Capture': {
-        /*
-         * Capture describes potential information flow: storing a pointer to one value
-         * within another. If the destination is not mutable, or the source value has
-         * copy-on-write semantics, then we can prune the effect
-         */
-        const intoKind = state.kind(effect.into).kind;
-        let isMutableDesination: boolean;
-        switch (intoKind) {
-          case ValueKind.Context:
-          case ValueKind.Mutable:
-          case ValueKind.MaybeFrozen: {
-            isMutableDesination = true;
-            break;
-          }
-          default: {
-            isMutableDesination = false;
-            break;
-          }
-        }
-        const fromKind = state.kind(effect.from).kind;
-        let isMutableReferenceType: boolean;
-        switch (fromKind) {
-          case ValueKind.Global:
-          case ValueKind.Primitive: {
-            isMutableReferenceType = false;
-            break;
-          }
-          case ValueKind.Frozen: {
-            isMutableReferenceType = false;
-            effects.push({
-              kind: 'ImmutableCapture',
-              from: effect.from,
-              into: effect.into,
-            });
-            break;
-          }
-          default: {
-            isMutableReferenceType = true;
-            break;
-          }
-        }
-        if (isMutableDesination && isMutableReferenceType) {
-          effects.push(effect);
-        }
-        break;
-      }
-      case 'Alias': {
-        /*
-         * Alias represents potential pointer aliasing. If the type is a global,
-         * a primitive (copy-on-write semantics) then we can prune the effect
-         */
-        const fromKind = state.kind(effect.from).kind;
-        switch (fromKind) {
-          case ValueKind.Frozen: {
-            effects.push({
-              kind: 'ImmutableCapture',
-              from: effect.from,
-              into: effect.into,
-            });
-            let value = effectInstructionValueCache.get(effect);
-            if (value == null) {
-              value = {
-                kind: 'Primitive',
-                value: undefined,
-                loc: effect.from.loc,
-              };
-              effectInstructionValueCache.set(effect, value);
-            }
-            state.initialize(value, {kind: fromKind, reason: new Set([])});
-            state.define(effect.into, value);
-            break;
-          }
-          case ValueKind.Global:
-          case ValueKind.Primitive: {
-            let value = effectInstructionValueCache.get(effect);
-            if (value == null) {
-              value = {
-                kind: 'Primitive',
-                value: undefined,
-                loc: effect.from.loc,
-              };
-              effectInstructionValueCache.set(effect, value);
-            }
-            state.initialize(value, {kind: fromKind, reason: new Set([])});
-            state.define(effect.into, value);
-            break;
-          }
-          default: {
-            if (aliased.has(effect.into.identifier.id)) {
-              state.appendAlias(effect.into, effect.from);
-            } else {
-              aliased.add(effect.into.identifier.id);
-              state.alias(effect.into, effect.from);
-            }
-            effects.push(effect);
-            break;
-          }
-        }
-        break;
-      }
-      case 'Apply': {
-        const values = state.values(effect.function.place);
-        if (values.length !== 1 || values[0].kind !== 'FunctionExpression') {
-          const mutationKind = state.mutate(
-            'MutateTransitiveConditionally',
-            effect.function.place,
-          );
-          if (mutationKind === 'mutate') {
-            effects.push({
-              kind: 'MutateTransitiveConditionally',
-              value: effect.function.place,
-            });
-          }
-        } else {
-          CompilerError.throwTodo({
-            reason: `Support ${effect.kind} effects`,
-            loc: instruction.loc,
-          });
-        }
-        break;
-      }
-      case 'Mutate':
-      case 'MutateConditionally':
-      case 'MutateTransitive':
-      case 'MutateTransitiveConditionally': {
-        const mutationKind = state.mutate(effect.kind, effect.value);
-        if (mutationKind === 'mutate') {
-          effects.push(effect);
-        } else if (
-          mutationKind !== 'none' &&
-          (effect.kind === 'Mutate' || effect.kind === 'MutateTransitive')
-        ) {
-          const value = state.kind(effect.value);
           const reason = getWriteErrorReason({
             kind: value.kind,
             reason: value.reason,
@@ -482,24 +274,40 @@ function applySignature(
             suggestions: null,
           });
         }
-        break;
-      }
-      default: {
-        assertExhaustive(
-          effect,
-          `Unexpected effect kind '${(effect as any).kind as any}'`,
-        );
       }
     }
   }
-  if (
-    !(state.isDefined(instruction.lvalue) && state.kind(instruction.lvalue))
-  ) {
+
+  /*
+   * Track which values we've already aliased once, so that we can switch to
+   * appendAlias() for subsequent aliases into the same value
+   */
+  const aliased = new Set<IdentifierId>();
+
+  const effects: Array<AliasingEffect> = [];
+  for (const effect of signature.effects) {
+    applyEffect(
+      state,
+      effect,
+      instruction,
+      effectInstructionValueCache,
+      aliased,
+      effects,
+    );
+  }
+  if (DEBUG) {
     console.log(printInstruction(instruction));
     console.log('input effects');
     console.log(signature.effects.map(printAliasingEffect).join('\n'));
     console.log('refined effects');
     console.log(effects.map(printAliasingEffect).join('\n'));
+    console.log(
+      prettyFormat(state.debugAbstractValue(state.kind(instruction.lvalue))),
+    );
+  }
+  if (
+    !(state.isDefined(instruction.lvalue) && state.kind(instruction.lvalue))
+  ) {
     CompilerError.invariant(false, {
       reason: `Expected instruction lvalue to be initialized`,
       loc: instruction.loc,
@@ -507,6 +315,262 @@ function applySignature(
   }
   return effects.length !== 0 ? effects : null;
 }
+
+function applyEffect(
+  state: InferenceState,
+  effect: AliasingEffect,
+  instruction: Instruction,
+  effectInstructionValueCache: Map<AliasingEffect, InstructionValue>,
+  aliased: Set<IdentifierId>,
+  effects: Array<AliasingEffect>,
+): void {
+  switch (effect.kind) {
+    case 'Freeze': {
+      const didFreeze = state.freeze(effect.value, effect.reason);
+      if (didFreeze) {
+        effects.push(effect);
+      }
+      break;
+    }
+    case 'Create': {
+      let value = effectInstructionValueCache.get(effect);
+      if (value == null) {
+        value = {
+          kind: 'ObjectExpression',
+          properties: [],
+          loc: effect.into.loc,
+        };
+        effectInstructionValueCache.set(effect, value);
+      }
+      state.initialize(value, {
+        kind: effect.value,
+        reason: new Set([ValueReason.Other]),
+      });
+      state.define(effect.into, value);
+      break;
+    }
+    case 'ImmutableCapture': {
+      const kind = state.kind(effect.from).kind;
+      switch (kind) {
+        case ValueKind.Global:
+        case ValueKind.Primitive: {
+          // no-op: we don't need to track data flow for copy types
+          break;
+        }
+        default: {
+          effects.push(effect);
+        }
+      }
+      break;
+    }
+    case 'CreateFrom': {
+      const kind = state.kind(effect.from).kind;
+      let value = effectInstructionValueCache.get(effect);
+      if (value == null) {
+        value = {
+          kind: 'ObjectExpression',
+          properties: [],
+          loc: effect.into.loc,
+        };
+        effectInstructionValueCache.set(effect, value);
+      }
+      state.initialize(value, {
+        kind,
+        reason: new Set([ValueReason.Other]),
+      });
+      state.define(effect.into, value);
+      switch (kind) {
+        case ValueKind.Primitive:
+        case ValueKind.Global: {
+          // no need to track this data flow
+          break;
+        }
+        case ValueKind.Frozen: {
+          effects.push({
+            kind: 'ImmutableCapture',
+            from: effect.from,
+            into: effect.into,
+          });
+          break;
+        }
+        default: {
+          // TODO: should this be Alias??
+          effects.push({
+            kind: 'Capture',
+            from: effect.from,
+            into: effect.into,
+          });
+        }
+      }
+      break;
+    }
+    case 'Capture': {
+      /*
+       * Capture describes potential information flow: storing a pointer to one value
+       * within another. If the destination is not mutable, or the source value has
+       * copy-on-write semantics, then we can prune the effect
+       */
+      const intoKind = state.kind(effect.into).kind;
+      let isMutableDesination: boolean;
+      switch (intoKind) {
+        case ValueKind.Context:
+        case ValueKind.Mutable:
+        case ValueKind.MaybeFrozen: {
+          isMutableDesination = true;
+          break;
+        }
+        default: {
+          isMutableDesination = false;
+          break;
+        }
+      }
+      const fromKind = state.kind(effect.from).kind;
+      let isMutableReferenceType: boolean;
+      switch (fromKind) {
+        case ValueKind.Global:
+        case ValueKind.Primitive: {
+          isMutableReferenceType = false;
+          break;
+        }
+        case ValueKind.Frozen: {
+          isMutableReferenceType = false;
+          effects.push({
+            kind: 'ImmutableCapture',
+            from: effect.from,
+            into: effect.into,
+          });
+          break;
+        }
+        default: {
+          isMutableReferenceType = true;
+          break;
+        }
+      }
+      if (isMutableDesination && isMutableReferenceType) {
+        effects.push(effect);
+      }
+      break;
+    }
+    case 'Alias': {
+      /*
+       * Alias represents potential pointer aliasing. If the type is a global,
+       * a primitive (copy-on-write semantics) then we can prune the effect
+       */
+      const fromKind = state.kind(effect.from).kind;
+      switch (fromKind) {
+        case ValueKind.Frozen: {
+          effects.push({
+            kind: 'ImmutableCapture',
+            from: effect.from,
+            into: effect.into,
+          });
+          let value = effectInstructionValueCache.get(effect);
+          if (value == null) {
+            value = {
+              kind: 'Primitive',
+              value: undefined,
+              loc: effect.from.loc,
+            };
+            effectInstructionValueCache.set(effect, value);
+          }
+          state.initialize(value, {kind: fromKind, reason: new Set([])});
+          state.define(effect.into, value);
+          break;
+        }
+        case ValueKind.Global:
+        case ValueKind.Primitive: {
+          let value = effectInstructionValueCache.get(effect);
+          if (value == null) {
+            value = {
+              kind: 'Primitive',
+              value: undefined,
+              loc: effect.from.loc,
+            };
+            effectInstructionValueCache.set(effect, value);
+          }
+          state.initialize(value, {kind: fromKind, reason: new Set([])});
+          state.define(effect.into, value);
+          break;
+        }
+        default: {
+          if (aliased.has(effect.into.identifier.id)) {
+            state.appendAlias(effect.into, effect.from);
+          } else {
+            aliased.add(effect.into.identifier.id);
+            state.alias(effect.into, effect.from);
+          }
+          effects.push(effect);
+          break;
+        }
+      }
+      break;
+    }
+    case 'Apply': {
+      const values = state.values(effect.function.place);
+      if (values.length !== 1 || values[0].kind !== 'FunctionExpression') {
+        const mutationKind = state.mutate(
+          'MutateTransitiveConditionally',
+          effect.function.place,
+        );
+        if (mutationKind === 'mutate') {
+          effects.push({
+            kind: 'MutateTransitiveConditionally',
+            value: effect.function.place,
+          });
+        }
+      } else {
+        CompilerError.throwTodo({
+          reason: `Support ${effect.kind} effects`,
+          loc: instruction.loc,
+        });
+      }
+      break;
+    }
+    case 'Mutate':
+    case 'MutateConditionally':
+    case 'MutateTransitive':
+    case 'MutateTransitiveConditionally': {
+      const mutationKind = state.mutate(effect.kind, effect.value);
+      if (mutationKind === 'mutate') {
+        effects.push(effect);
+      } else if (
+        mutationKind !== 'none' &&
+        (effect.kind === 'Mutate' || effect.kind === 'MutateTransitive')
+      ) {
+        const value = state.kind(effect.value);
+        if (DEBUG) {
+          console.log(printInstruction(instruction));
+          console.log(printAliasingEffect(effect));
+          console.log(prettyFormat(state.debugAbstractValue(value)));
+        }
+        const reason = getWriteErrorReason({
+          kind: value.kind,
+          reason: value.reason,
+          context: new Set(),
+        });
+        CompilerError.throwInvalidReact({
+          reason,
+          description:
+            effect.value.identifier.name !== null &&
+            effect.value.identifier.name.kind === 'named'
+              ? `Found mutation of \`${effect.value.identifier.name}\``
+              : null,
+          loc: effect.value.loc,
+          suggestions: null,
+        });
+      }
+      break;
+    }
+    default: {
+      assertExhaustive(
+        effect,
+        `Unexpected effect kind '${(effect as any).kind as any}'`,
+      );
+    }
+  }
+}
+
+const DEBUG = false;
 
 class InferenceState {
   env: Environment;
@@ -1015,6 +1079,14 @@ function computeSignatureForInstruction(
               value.args,
             )
           : null;
+      /*
+       * TODO: we need to know the kinds of the receiver/operands in order to replicate
+       * legacy function behaviors. In particular things like mutableOnlyIfOperandsAreMutable.
+       * we could add alias signatures for all of these, but it is also very reasonable to
+       * emit an Apply effect here — including the signature! — and then let applySignature
+       * do the work of interpreting the signature. It would mean applySignature has to recurse,
+       * but that actually feels inevitable. We already had an Apply effect anyway!
+       */
       if (signatureEffects != null) {
         effects.push(...signatureEffects);
       } else if (signature != null) {
@@ -1391,7 +1463,8 @@ function computeEffectsForLegacySignature(
   });
   const stores: Array<Place> = [];
   const captures: Array<Place> = [];
-  const returnValueReason = signature.returnValueReason ?? ValueReason.Other;
+  const returnValueReason =
+    signature.returnValueReason ?? ValueReason.KnownReturnSignature;
   function visit(place: Place, effect: Effect): void {
     switch (effect) {
       case Effect.Store: {
