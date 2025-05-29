@@ -2454,7 +2454,8 @@ __DEV__ &&
               );
           }
           var precedence$jscomp$0 = props.precedence,
-            href$jscomp$0 = props.href;
+            href$jscomp$0 = props.href,
+            nonce = props.nonce;
           if (
             4 === formatContext.insertionMode ||
             noscriptTagInScope$jscomp$2 ||
@@ -2523,47 +2524,64 @@ __DEV__ &&
                   'React encountered a hoistable style tag for the same href as a preload: "%s". When using a style tag to inline styles you should not also preload it as a stylsheet.',
                   href$jscomp$0
                 );
-              styleQueue$jscomp$0
-                ? styleQueue$jscomp$0.hrefs.push(
-                    escapeTextForBrowser(href$jscomp$0)
-                  )
-                : ((styleQueue$jscomp$0 = {
-                    precedence: escapeTextForBrowser(precedence$jscomp$0),
-                    rules: [],
-                    hrefs: [escapeTextForBrowser(href$jscomp$0)],
-                    sheets: new Map()
-                  }),
-                  renderState.styles.set(
+              styleQueue$jscomp$0 ||
+                ((styleQueue$jscomp$0 = {
+                  precedence: escapeTextForBrowser(precedence$jscomp$0),
+                  rules: [],
+                  hrefs: [],
+                  sheets: new Map()
+                }),
+                renderState.styles.set(
+                  precedence$jscomp$0,
+                  styleQueue$jscomp$0
+                ));
+              var nonceStyle = renderState.nonce.style;
+              if (nonceStyle && nonceStyle !== nonce)
+                console.error(
+                  'React encountered a style tag with `precedence` "%s" and `nonce` "%s". When React manages style rules using `precedence` it will only include rules if the nonce matches the style nonce "%s" that was included with this render.',
+                  precedence$jscomp$0,
+                  nonce,
+                  nonceStyle
+                );
+              else {
+                !nonceStyle &&
+                  nonce &&
+                  console.error(
+                    'React encountered a style tag with `precedence` "%s" and `nonce` "%s". When React manages style rules using `precedence` it will only include a nonce attributes if you also provide the same style nonce value as a render option.',
                     precedence$jscomp$0,
-                    styleQueue$jscomp$0
-                  ));
-              var target = styleQueue$jscomp$0.rules,
-                children$jscomp$9 = null,
-                innerHTML$jscomp$6 = null,
-                propKey$jscomp$9;
-              for (propKey$jscomp$9 in props)
-                if (hasOwnProperty.call(props, propKey$jscomp$9)) {
-                  var propValue$jscomp$9 = props[propKey$jscomp$9];
-                  if (null != propValue$jscomp$9)
-                    switch (propKey$jscomp$9) {
-                      case "children":
-                        children$jscomp$9 = propValue$jscomp$9;
-                        break;
-                      case "dangerouslySetInnerHTML":
-                        innerHTML$jscomp$6 = propValue$jscomp$9;
-                    }
-                }
-              var child$jscomp$2 = Array.isArray(children$jscomp$9)
-                ? 2 > children$jscomp$9.length
-                  ? children$jscomp$9[0]
-                  : null
-                : children$jscomp$9;
-              "function" !== typeof child$jscomp$2 &&
-                "symbol" !== typeof child$jscomp$2 &&
-                null !== child$jscomp$2 &&
-                void 0 !== child$jscomp$2 &&
-                target.push(escapeStyleTextContent(child$jscomp$2));
-              pushInnerHTML(target, innerHTML$jscomp$6, children$jscomp$9);
+                    nonce
+                  );
+                styleQueue$jscomp$0.hrefs.push(
+                  escapeTextForBrowser(href$jscomp$0)
+                );
+                var target = styleQueue$jscomp$0.rules,
+                  children$jscomp$9 = null,
+                  innerHTML$jscomp$6 = null,
+                  propKey$jscomp$9;
+                for (propKey$jscomp$9 in props)
+                  if (hasOwnProperty.call(props, propKey$jscomp$9)) {
+                    var propValue$jscomp$9 = props[propKey$jscomp$9];
+                    if (null != propValue$jscomp$9)
+                      switch (propKey$jscomp$9) {
+                        case "children":
+                          children$jscomp$9 = propValue$jscomp$9;
+                          break;
+                        case "dangerouslySetInnerHTML":
+                          innerHTML$jscomp$6 = propValue$jscomp$9;
+                      }
+                  }
+                var child$jscomp$2 = Array.isArray(children$jscomp$9)
+                  ? 2 > children$jscomp$9.length
+                    ? children$jscomp$9[0]
+                    : null
+                  : children$jscomp$9;
+                "function" !== typeof child$jscomp$2 &&
+                  "symbol" !== typeof child$jscomp$2 &&
+                  null !== child$jscomp$2 &&
+                  void 0 !== child$jscomp$2 &&
+                  target.push(escapeStyleTextContent(child$jscomp$2));
+                pushInnerHTML(target, innerHTML$jscomp$6, children$jscomp$9);
+              }
             }
             styleQueue$jscomp$0 &&
               hoistableState &&
@@ -3084,7 +3102,8 @@ __DEV__ &&
         );
       var i = 0;
       if (hrefs.length) {
-        this.buffer += '<style media="not all" data-precedence="';
+        this.buffer += currentlyFlushingRenderState.startInlineStyle;
+        this.buffer += ' media="not all" data-precedence="';
         this.buffer += styleQueue.precedence;
         for (this.buffer += '" data-href="'; i < hrefs.length - 1; i++)
           (this.buffer += hrefs[i]), (this.buffer += spaceSeparator);
@@ -3109,7 +3128,9 @@ __DEV__ &&
     ) {
       currentlyRenderingBoundaryHasStylesToHoist = !1;
       destinationHasCapacity = !0;
+      currentlyFlushingRenderState = renderState;
       hoistableState.styles.forEach(flushStyleTagsLateForBoundary, destination);
+      currentlyFlushingRenderState = null;
       hoistableState.stylesheets.forEach(hasStylesToHoist);
       currentlyRenderingBoundaryHasStylesToHoist &&
         (renderState.stylesToHoist = !0);
@@ -3133,7 +3154,8 @@ __DEV__ &&
       var rules = styleQueue.rules,
         hrefs = styleQueue.hrefs;
       if (!hasStylesheets || hrefs.length) {
-        this.buffer += '<style data-precedence="';
+        this.buffer += currentlyFlushingRenderState.startInlineStyle;
+        this.buffer += ' data-precedence="';
         this.buffer += styleQueue.precedence;
         styleQueue = 0;
         if (hrefs.length) {
@@ -7647,7 +7669,9 @@ __DEV__ &&
             renderState.fontPreloads.clear();
             renderState.highImagePreloads.forEach(flushResource, destination);
             renderState.highImagePreloads.clear();
+            currentlyFlushingRenderState = renderState;
             renderState.styles.forEach(flushStylesInPreamble, destination);
+            currentlyFlushingRenderState = null;
             var importMapChunks = renderState.importMapChunks;
             for (
               i$jscomp$0 = 0;
@@ -9082,7 +9106,8 @@ __DEV__ &&
     var EXISTS = null,
       PRELOAD_NO_CREDS = [];
     Object.freeze(PRELOAD_NO_CREDS);
-    var scriptRegex = /(<\/|<)(s)(cript)/gi;
+    var currentlyFlushingRenderState = null,
+      scriptRegex = /(<\/|<)(s)(cript)/gi;
     var didWarnForNewBooleanPropsWithEmptyValue = {};
     var styleNameCache = new Map(),
       styleAttributeStart = ' style="',
@@ -9713,6 +9738,7 @@ __DEV__ &&
         segmentPrefix: idPrefix + "S:",
         boundaryPrefix: idPrefix + "B:",
         startInlineScript: "<script",
+        startInlineStyle: "<style",
         preamble: createPreambleState(),
         externalRuntimeScript: externalRuntimeScript,
         bootstrapChunks: streamingFormat,
@@ -9742,7 +9768,7 @@ __DEV__ &&
           scripts: new Map(),
           moduleScripts: new Map()
         },
-        nonce: void 0,
+        nonce: { script: void 0, style: void 0 },
         hoistableState: null,
         stylesToHoist: !1
       };
