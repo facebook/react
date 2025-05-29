@@ -7,10 +7,20 @@
 
 import {CompilerError} from '../CompilerError';
 import {AliasingSignature} from '../Inference/InferMutationAliasingEffects';
-import {Effect, ValueKind, ValueReason} from './HIR';
+import {
+  Effect,
+  GeneratedSource,
+  makeDeclarationId,
+  makeIdentifierId,
+  makeInstructionId,
+  Place,
+  ValueKind,
+  ValueReason,
+} from './HIR';
 import {
   BuiltInType,
   FunctionType,
+  makeType,
   ObjectType,
   PolyType,
   PrimitiveType,
@@ -305,6 +315,28 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
       returnType: PRIMITIVE_TYPE,
       calleeEffect: Effect.Store,
       returnValueKind: ValueKind.Primitive,
+      aliasing: {
+        receiver: makeIdentifierId(0),
+        params: [],
+        rest: makeIdentifierId(1),
+        returns: makeIdentifierId(2),
+        effects: [
+          // Push directly mutates the array itself
+          {kind: 'Mutate', value: signatureArgument(0)},
+          // The arguments are captured into the array
+          {
+            kind: 'Capture',
+            from: signatureArgument(1),
+            into: signatureArgument(0),
+          },
+          // Returns the new length, a primitive
+          {
+            kind: 'Create',
+            into: signatureArgument(2),
+            value: ValueKind.Primitive,
+          },
+        ],
+      },
     }),
   ],
   [
@@ -1173,3 +1205,22 @@ export const DefaultNonmutatingHook = addHook(
   },
   'DefaultNonmutatingHook',
 );
+
+export function signatureArgument(id: number): Place {
+  const place: Place = {
+    kind: 'Identifier',
+    effect: Effect.Unknown,
+    loc: GeneratedSource,
+    reactive: false,
+    identifier: {
+      declarationId: makeDeclarationId(id),
+      id: makeIdentifierId(id),
+      loc: GeneratedSource,
+      mutableRange: {start: makeInstructionId(0), end: makeInstructionId(0)},
+      name: null,
+      scope: null,
+      type: makeType(),
+    },
+  };
+  return place;
+}
