@@ -14,15 +14,17 @@ export const AWAIT_NODE = 2;
 export type IONode = {
   tag: 0,
   stack: Error, // callsite that spawned the I/O
-  timestamp: number, // start time when the first part of the I/O sequence started
+  start: number, // start time when the first part of the I/O sequence started
+  end: number, // we typically don't use this. only when there's no promise intermediate.
   awaited: null, // I/O is only blocked on external.
   previous: null | AwaitNode, // the preceeding await that spawned this new work
 };
 
 export type PromiseNode = {
   tag: 1,
-  stack: Error, // callsite that created the Promise. Only used if the I/O callsite is not in user space.
-  timestamp: number, // start time of the promise. Only used if the I/O was not relevant.
+  stack: Error, // callsite that created the Promise
+  start: number, // start time when the Promise was created
+  end: number, // end time when the Promise was resolved.
   awaited: null | AsyncSequence, // the thing that ended up resolving this promise
   previous: null, // where we created the promise is not interesting since creating it doesn't mean waiting.
 };
@@ -30,7 +32,8 @@ export type PromiseNode = {
 export type AwaitNode = {
   tag: 2,
   stack: Error, // callsite that awaited (using await, .then(), Promise.all(), ...)
-  timestamp: number, // the end time of the preceeding I/O operation (or -1.1 before it ends)
+  start: -1.1, // not used. We use the timing of the awaited promise.
+  end: -1.1, // not used.
   awaited: null | AsyncSequence, // the promise we were waiting on
   previous: null | AsyncSequence, // the sequence that was blocking us from awaiting in the first place
 };

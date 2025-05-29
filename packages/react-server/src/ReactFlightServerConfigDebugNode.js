@@ -47,7 +47,8 @@ export function initAsyncDebugInfo(): void {
             node = ({
               tag: AWAIT_NODE,
               stack: new Error(),
-              timestamp: -1.1, // The end time will be set when the Promise resolves.
+              start: -1.1,
+              end: -1.1,
               awaited: trigger, // The thing we're awaiting on. Might get overrriden when we resolve.
               previous: current === undefined ? null : current, // The path that led us here.
             }: AwaitNode);
@@ -55,7 +56,8 @@ export function initAsyncDebugInfo(): void {
             node = ({
               tag: PROMISE_NODE,
               stack: new Error(),
-              timestamp: performance.now(),
+              start: performance.now(),
+              end: -1.1, // Set when we resolve.
               awaited:
                 trigger === undefined
                   ? null // It might get overridden when we resolve.
@@ -68,8 +70,9 @@ export function initAsyncDebugInfo(): void {
             // We have begun a new I/O sequence.
             node = ({
               tag: IO_NODE,
-              stack: new Error(),
-              timestamp: performance.now(),
+              stack: new Error(), // This is only used if no native promises are used.
+              start: performance.now(),
+              end: -1.1, // Only set when pinged.
               awaited: null,
               previous: null,
             }: IONode);
@@ -78,7 +81,8 @@ export function initAsyncDebugInfo(): void {
             node = ({
               tag: IO_NODE,
               stack: new Error(),
-              timestamp: performance.now(),
+              start: performance.now(),
+              end: -1.1, // Only set when pinged.
               awaited: null,
               previous: trigger,
             }: IONode);
@@ -105,9 +109,9 @@ export function initAsyncDebugInfo(): void {
               'A Promise should never be an IO_NODE. This is a bug in React.',
             );
           }
-          if (resolvedNode.tag === AWAIT_NODE) {
-            // Log the end time when we resolved the await.
-            resolvedNode.timestamp = performance.now();
+          if (resolvedNode.tag === PROMISE_NODE) {
+            // Log the end time when we resolved the promise.
+            resolvedNode.end = performance.now();
           }
           const currentAsyncId = executionAsyncId();
           if (asyncId !== currentAsyncId) {
