@@ -84,8 +84,10 @@ function lowerWithMutationAliasing(fn: HIRFunction): void {
         break;
       }
       case 'Apply': {
-        capturedOrMutated.add(effect.function.place.identifier.id);
-        break;
+        CompilerError.invariant(false, {
+          reason: `[AnalyzeFunctions] Expected Apply effects to be replaced with more precise effects`,
+          loc: effect.function.loc,
+        });
       }
       case 'Mutate':
       case 'MutateConditionally':

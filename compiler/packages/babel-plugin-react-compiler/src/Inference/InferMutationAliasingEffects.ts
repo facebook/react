@@ -30,6 +30,7 @@ import {
 import {Ok, Result} from '../Utils/Result';
 import {
   getFunctionCallSignature,
+  isKnownMutableEffect,
   mergeValueKinds,
 } from './InferReferenceEffects';
 import {
@@ -284,6 +285,10 @@ function applySignature(
    */
   const aliased = new Set<IdentifierId>();
 
+  if (DEBUG) {
+    console.log(printInstruction(instruction));
+  }
+
   const effects: Array<AliasingEffect> = [];
   for (const effect of signature.effects) {
     applyEffect(
@@ -296,11 +301,6 @@ function applySignature(
     );
   }
   if (DEBUG) {
-    console.log(printInstruction(instruction));
-    console.log('input effects');
-    console.log(signature.effects.map(printAliasingEffect).join('\n'));
-    console.log('refined effects');
-    console.log(effects.map(printAliasingEffect).join('\n'));
     console.log(
       prettyFormat(state.debugAbstractValue(state.kind(instruction.lvalue))),
     );
@@ -324,6 +324,9 @@ function applyEffect(
   aliased: Set<IdentifierId>,
   effects: Array<AliasingEffect>,
 ): void {
+  if (DEBUG) {
+    console.log(printAliasingEffect(effect));
+  }
   switch (effect.kind) {
     case 'Freeze': {
       const didFreeze = state.freeze(effect.value, effect.reason);
@@ -506,23 +509,116 @@ function applyEffect(
       break;
     }
     case 'Apply': {
-      const values = state.values(effect.function.place);
-      if (values.length !== 1 || values[0].kind !== 'FunctionExpression') {
-        const mutationKind = state.mutate(
-          'MutateTransitiveConditionally',
-          effect.function.place,
+      const signatureEffects =
+        effect.signature?.aliasing != null
+          ? computeEffectsForSignature(
+              effect.signature.aliasing,
+              effect.into,
+              effect.receiver,
+              effect.args,
+            )
+          : null;
+      if (signatureEffects != null) {
+        for (const signatureEffect of signatureEffects) {
+          applyEffect(
+            state,
+            signatureEffect,
+            instruction,
+            effectInstructionValueCache,
+            aliased,
+            effects,
+          );
+        }
+      } else if (effect.signature != null) {
+        const legacyEffects = computeEffectsForLegacySignature(
+          state,
+          effect.signature,
+          effect.into,
+          effect.receiver,
+          effect.args,
         );
-        if (mutationKind === 'mutate') {
-          effects.push({
-            kind: 'MutateTransitiveConditionally',
-            value: effect.function.place,
-          });
+        for (const legacyEffect of legacyEffects) {
+          applyEffect(
+            state,
+            legacyEffect,
+            instruction,
+            effectInstructionValueCache,
+            aliased,
+            effects,
+          );
         }
       } else {
-        CompilerError.throwTodo({
-          reason: `Support ${effect.kind} effects`,
-          loc: instruction.loc,
-        });
+        applyEffect(
+          state,
+          {
+            kind: 'Create',
+            into: effect.into,
+            value: ValueKind.Mutable,
+          },
+          instruction,
+          effectInstructionValueCache,
+          aliased,
+          effects,
+        );
+        /*
+         * If no signature then by default:
+         * - All operands are conditionally mutated, except some instruction
+         *   variants are assumed to not mutate the callee (such as `new`)
+         * - All operands are captured into (but not directly aliased as)
+         *   every other argument.
+         */
+        for (const arg of [effect.function, ...effect.args]) {
+          const operand = arg.kind === 'Identifier' ? arg : arg.place;
+          if (operand !== effect.function || effect.mutatesFunction) {
+            applyEffect(
+              state,
+              {
+                kind: 'MutateTransitiveConditionally',
+                value: operand,
+              },
+              instruction,
+              effectInstructionValueCache,
+              aliased,
+              effects,
+            );
+          }
+          /*
+           * TODO: this should be Alias, since the function could be identity.
+           * Ie local mutation of the result could change the input.
+           * But if we emit multiple Alias calls, currently the last one will win
+           * when we update the inferencestate in applySignature. So we may need to group
+           * them here, or coalesce them in applySignature
+           *
+           * maybe make `from: Place | Array<Place>`
+           */
+          applyEffect(
+            state,
+            {kind: 'Capture', from: operand, into: effect.into},
+            instruction,
+            effectInstructionValueCache,
+            aliased,
+            effects,
+          );
+          for (const otherArg of [effect.function, ...effect.args]) {
+            const other =
+              otherArg.kind === 'Identifier' ? otherArg : otherArg.place;
+            if (other === arg) {
+              continue;
+            }
+            applyEffect(
+              state,
+              {
+                kind: 'Capture',
+                from: operand,
+                into: other,
+              },
+              instruction,
+              effectInstructionValueCache,
+              aliased,
+              effects,
+            );
+          }
+        }
       }
       break;
     }
@@ -1050,7 +1146,7 @@ function computeSignatureForInstruction(
     case 'MethodCall': {
       let callee;
       let receiver;
-      let mutatesCallee = false;
+      let mutatesCallee;
       if (value.kind === 'NewExpression') {
         callee = value.callee;
         receiver = value.callee;
@@ -1070,72 +1166,15 @@ function computeSignatureForInstruction(
         );
       }
       const signature = getFunctionCallSignature(env, callee.identifier.type);
-      const signatureEffects =
-        signature != null && signature.aliasing != null
-          ? computeEffectsForSignature(
-              signature.aliasing,
-              lvalue,
-              receiver,
-              value.args,
-            )
-          : null;
-      /*
-       * TODO: we need to know the kinds of the receiver/operands in order to replicate
-       * legacy function behaviors. In particular things like mutableOnlyIfOperandsAreMutable.
-       * we could add alias signatures for all of these, but it is also very reasonable to
-       * emit an Apply effect here — including the signature! — and then let applySignature
-       * do the work of interpreting the signature. It would mean applySignature has to recurse,
-       * but that actually feels inevitable. We already had an Apply effect anyway!
-       */
-      if (signatureEffects != null) {
-        effects.push(...signatureEffects);
-      } else if (signature != null) {
-        effects.push(
-          ...computeEffectsForLegacySignature(
-            signature,
-            lvalue,
-            receiver,
-            value.args,
-          ),
-        );
-      } else {
-        effects.push({kind: 'Create', into: lvalue, value: ValueKind.Mutable});
-        /**
-         * If no signature then by default:
-         * - All operands are conditionally mutated, except some instruction
-         *   variants are assumed to not mutate the callee (such as `new`)
-         * - All operands are captured into (but not directly aliased as)
-         *   every other argument.
-         */
-        for (const operand of eachInstructionValueOperand(value)) {
-          if (operand !== callee || mutatesCallee) {
-            effects.push({
-              kind: 'MutateTransitiveConditionally',
-              value: operand,
-            });
-          }
-          /*
-           * TODO: this should be Alias, since the function could be identity.
-           * Ie local mutation of the result could change the input.
-           * But if we emit multiple Alias calls, currently the last one will win
-           * when we update the inferencestate in applySignature. So we may need to group
-           * them here, or coalesce them in applySignature
-           *
-           * maybe make `from: Place | Array<Place>`
-           */
-          effects.push({kind: 'Capture', from: operand, into: lvalue});
-          for (const other of eachInstructionValueOperand(value)) {
-            if (other === operand) {
-              continue;
-            }
-            effects.push({
-              kind: 'Capture',
-              from: operand,
-              into: other,
-            });
-          }
-        }
-      }
+      effects.push({
+        kind: 'Apply',
+        receiver,
+        function: callee,
+        mutatesFunction: mutatesCallee,
+        args: value.args,
+        into: lvalue,
+        signature,
+      });
       break;
     }
     case 'PropertyDelete':
@@ -1437,6 +1476,7 @@ function computeSignatureForInstruction(
  * compilation output.
  */
 function computeEffectsForLegacySignature(
+  state: InferenceState,
   signature: FunctionSignature,
   lvalue: Place,
   receiver: Place,
@@ -1447,19 +1487,6 @@ function computeEffectsForLegacySignature(
     kind: 'Create',
     into: lvalue,
     value: signature.returnValueKind,
-  });
-  /*
-   * InferReferenceEffects and FunctionSignature have an implicit assumption that the receiver
-   * is captured into the return value. Consider for example the signature for Array.proto.pop:
-   * the calleeEffect is Store, since it's a known mutation but non-transitive. But the return
-   * of the pop() captures from the receiver! This isn't specified explicitly. So we add this
-   * here, and rely on applySignature() to downgrade this to ImmutableCapture (or prune) if
-   * the type doesn't actually need to be captured based on the input and return type.
-   */
-  effects.push({
-    kind: 'Capture',
-    from: receiver,
-    into: lvalue,
   });
   const stores: Array<Place> = [];
   const captures: Array<Place> = [];
@@ -1521,6 +1548,41 @@ function computeEffectsForLegacySignature(
     }
   }
 
+  if (
+    signature.mutableOnlyIfOperandsAreMutable &&
+    areArgumentsImmutableAndNonMutating(state, args)
+  ) {
+    effects.push({
+      kind: 'Capture',
+      from: receiver,
+      into: lvalue,
+    });
+    for (const arg of args) {
+      const place = arg.kind === 'Identifier' ? arg : arg.place;
+      effects.push({
+        kind: 'ImmutableCapture',
+        from: place,
+        into: lvalue,
+      });
+    }
+    return effects;
+  }
+
+  if (signature.calleeEffect !== Effect.Capture) {
+    /*
+     * InferReferenceEffects and FunctionSignature have an implicit assumption that the receiver
+     * is captured into the return value. Consider for example the signature for Array.proto.pop:
+     * the calleeEffect is Store, since it's a known mutation but non-transitive. But the return
+     * of the pop() captures from the receiver! This isn't specified explicitly. So we add this
+     * here, and rely on applySignature() to downgrade this to ImmutableCapture (or prune) if
+     * the type doesn't actually need to be captured based on the input and return type.
+     */
+    effects.push({
+      kind: 'Capture',
+      from: receiver,
+      into: lvalue,
+    });
+  }
   visit(receiver, signature.calleeEffect);
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -1547,6 +1609,66 @@ function computeEffectsForLegacySignature(
     }
   }
   return effects;
+}
+
+/**
+ * Returns true if all of the arguments are both non-mutable (immutable or frozen)
+ * _and_ are not functions which might mutate their arguments. Note that function
+ * expressions count as frozen so long as they do not mutate free variables: this
+ * function checks that such functions also don't mutate their inputs.
+ */
+function areArgumentsImmutableAndNonMutating(
+  state: InferenceState,
+  args: Array<Place | SpreadPattern>,
+): boolean {
+  for (const arg of args) {
+    if (arg.kind === 'Identifier' && arg.identifier.type.kind === 'Function') {
+      const fnShape = state.env.getFunctionSignature(arg.identifier.type);
+      if (fnShape != null) {
+        return (
+          !fnShape.positionalParams.some(isKnownMutableEffect) &&
+          (fnShape.restParam == null ||
+            !isKnownMutableEffect(fnShape.restParam))
+        );
+      }
+    }
+    const place = arg.kind === 'Identifier' ? arg : arg.place;
+
+    const kind = state.kind(place).kind;
+    switch (kind) {
+      case ValueKind.Primitive:
+      case ValueKind.Frozen: {
+        /*
+         * Only immutable values, or frozen lambdas are allowed.
+         * A lambda may appear frozen even if it may mutate its inputs,
+         * so we have a second check even for frozen value types
+         */
+        break;
+      }
+      default: {
+        /**
+         * Globals, module locals, and other locally defined functions may
+         * mutate their arguments.
+         */
+        return false;
+      }
+    }
+    const values = state.values(place);
+    for (const value of values) {
+      if (
+        value.kind === 'FunctionExpression' &&
+        value.loweredFunc.func.params.some(param => {
+          const place = param.kind === 'Identifier' ? param : param.place;
+          const range = place.identifier.mutableRange;
+          return range.end > range.start + 1;
+        })
+      ) {
+        // This is a function which may mutate its inputs
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 function computeEffectsForSignature(
@@ -1779,11 +1901,12 @@ export type AliasingEffect =
    */
   | {
       kind: 'Apply';
-      function: AliasedPlace;
-      receiver: AliasedPlace;
-      params: Array<AliasedPlace>;
-      rest: AliasedPlace | null;
-      returns: AliasedPlace;
+      receiver: Place;
+      function: Place;
+      mutatesFunction: boolean;
+      args: Array<Place | SpreadPattern>;
+      into: Place;
+      signature: FunctionSignature | null;
     };
 
 export type AliasingSignature = {
