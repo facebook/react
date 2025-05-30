@@ -1726,7 +1726,7 @@ function codegenInstructionValue(
     }
     case 'UnaryExpression': {
       value = t.unaryExpression(
-        instrValue.operator as 'throw', // todo
+        instrValue.operator,
         codegenPlaceToExpression(cx, instrValue.value),
       );
       break;
@@ -2582,7 +2582,13 @@ function codegenValue(
   value: boolean | number | string | null | undefined,
 ): t.Expression {
   if (typeof value === 'number') {
-    return t.numericLiteral(value);
+    if (value < 0) {
+      // Babel compact mode produces invalid JS for negative numbers
+      // See https://codesandbox.io/p/devbox/5d47fr
+      return t.unaryExpression('-', t.numericLiteral(-value), false);
+    } else {
+      return t.numericLiteral(value);
+    }
   } else if (typeof value === 'boolean') {
     return t.booleanLiteral(value);
   } else if (typeof value === 'string') {
