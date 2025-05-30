@@ -17,7 +17,7 @@ import {inferMutableLifetimes} from './InferMutableLifetimes';
 import {inferMutableRangesForAlias} from './InferMutableRangesForAlias';
 import {inferMutableRangesForComutation} from './InferMutableRangesForComutation';
 import {inferTryCatchAliases} from './InferTryCatchAliases';
-import {printIdentifier, printMutableRange} from '../HIR/PrintHIR';
+import {printIdentifier} from '../HIR/PrintHIR';
 
 export function inferMutableRanges(ir: HIRFunction): DisjointSet<Identifier> {
   // Infer mutable ranges for non fields
@@ -105,7 +105,8 @@ export function debugAliases(aliases: DisjointSet<Identifier>): void {
         .buildSets()
         .map(set =>
           [...set].map(
-            ident => printIdentifier(ident) + printMutableRange(ident),
+            ident =>
+              `${printIdentifier(ident)}:${ident.mutableRange.start}:${ident.mutableRange.end}`,
           ),
         ),
     ),

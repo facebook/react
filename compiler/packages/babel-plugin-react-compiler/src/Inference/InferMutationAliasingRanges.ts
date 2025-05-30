@@ -21,6 +21,9 @@ import DisjointSet from '../Utils/DisjointSet';
 import {assertExhaustive} from '../Utils/utils';
 import {inferMutableRangesForAlias} from './InferMutableRangesForAlias';
 
+/**
+ * Infers mutable ranges for all values.
+ */
 export function inferMutationAliasingRanges(fn: HIRFunction): void {
   /**
    * Part 1
@@ -64,6 +67,24 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
       }
     }
   }
+  /**
+   * TODO: this will incorrectly mark values as mutated in the following case:
+   * 1. Create value x
+   * 2. Create value y
+   * 3. Transitively mutate y
+   * 4. Capture x -> y
+   *
+   * We will put these all into one alias set in captures, and then InferMutableRangesForAlias
+   * will look at all identifiers in the set that start before the mutation. Thus it will see
+   * that x is created before the mutation, and consider it mutated. But the capture doesn't
+   * occur until after the mutation!
+   *
+   * The fix is to use a graph to precisely describe what is captured where at each instruction,
+   * so that on a transitive mutation we can iterate all the captured values and mark them.
+   *
+   * This then needs a fixpoint: although we would track captures for phi operands, the operands'
+   * own capture values won't be populated until we do a fixpoint.
+   */
   inferMutableRangesForAlias(fn, captures);
 
   /**
@@ -71,6 +92,9 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
    * Infer ranges for local (non-transitive) mutations. We build a disjoint set
    * that only tracks direct value aliasing, and look only at local mutations
    * to extend ranges
+   *
+   * TODO: similar design to the above todo for captures, use a directed graph instead of disjoint union,
+   * with fixpoint.
    */
   const aliases = new DisjointSet<Identifier>();
   for (const block of fn.body.blocks.values()) {
