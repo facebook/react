@@ -96,6 +96,7 @@ function lowerWithMutationAliasing(fn: HIRFunction): void {
         capturedOrMutated.add(effect.value.identifier.id);
         break;
       }
+      case 'CreateFunction':
       case 'Create':
       case 'Freeze':
       case 'ImmutableCapture': {
