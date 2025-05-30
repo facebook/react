@@ -1852,7 +1852,8 @@ function visitAsyncNode(
   visited.add(node);
   // First visit anything that blocked this sequence to start in the first place.
   if (node.previous !== null) {
-    // We ignore the return value here because if it wasn't awaited, then we don't log it.
+    // We ignore the return value here because if it wasn't awaited in user space, then we don't log it.
+    // TODO: This means that some I/O can get lost that was still blocking the sequence.
     visitAsyncNode(request, task, node.previous, cutOff, visited);
   }
   switch (node.tag) {
@@ -1873,9 +1874,19 @@ function visitAsyncNode(
         if (ioNode !== null) {
           // This Promise was blocked on I/O. That's a signal that this Promise is interesting to log.
           // We don't log it yet though. We return it to be logged by the point where it's awaited.
-          // This type might be another PromiseNode but we don't actually expect that, because those
-          // would have to be awaited and then this would have an AwaitNode between.
-          // TODO: Consider whether this stack was in user space or not.
+          // The ioNode might be another PromiseNode in the case where none of the AwaitNode had
+          // unfiltered stacks.
+          if (filterStackTrace(request, node.stack, 1).length === 0) {
+            // Typically we assume that the outer most Promise that was awaited in user space has the
+            // most actionable stack trace for the start of the operation. However, if this Promise
+            // Promise was created inside only third party code, then try to use the inner node instead.
+            // This could happen if you pass a first party Promise into a third party to be awaited there.
+            if (ioNode.end < 0) {
+              // If we haven't defined an end time, use the resolve of the outer Promise.
+              ioNode.end = node.end;
+            }
+            return ioNode;
+          }
           return node;
         }
       }
