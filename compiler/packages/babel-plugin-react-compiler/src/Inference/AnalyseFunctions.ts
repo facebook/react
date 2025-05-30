@@ -10,11 +10,11 @@ import {
   Effect,
   HIRFunction,
   Identifier,
+  IdentifierId,
   LoweredFunction,
   Place,
   isRefOrRefValue,
   makeInstructionId,
-  printFunction,
 } from '../HIR';
 import {deadCodeElimination} from '../Optimization';
 import {inferReactiveScopeVariables} from '../ReactiveScopes';
@@ -26,7 +26,7 @@ import {
   eachInstructionLValue,
   eachInstructionValueOperand,
 } from '../HIR/visitors';
-import {Iterable_some} from '../Utils/utils';
+import {assertExhaustive, Iterable_some} from '../Utils/utils';
 import {inferMutationAliasingEffects} from './InferMutationAliasingEffects';
 import {inferMutationAliasingFunctionEffects} from './InferMutationAliasingFunctionEffects';
 import {inferMutationAliasingRanges} from './InferMutationAliasingRanges';
@@ -73,6 +73,49 @@ function lowerWithMutationAliasing(fn: HIRFunction): void {
   });
   const effects = inferMutationAliasingFunctionEffects(fn);
   fn.aliasingEffects = effects;
+
+  const capturedOrMutated = new Set<IdentifierId>();
+  for (const effect of effects ?? []) {
+    switch (effect.kind) {
+      case 'Alias':
+      case 'Capture':
+      case 'CreateFrom': {
+        capturedOrMutated.add(effect.from.identifier.id);
+        break;
+      }
+      case 'Apply': {
+        capturedOrMutated.add(effect.function.place.identifier.id);
+        break;
+      }
+      case 'Mutate':
+      case 'MutateConditionally':
+      case 'MutateTransitive':
+      case 'MutateTransitiveConditionally': {
+        capturedOrMutated.add(effect.value.identifier.id);
+        break;
+      }
+      case 'Create':
+      case 'Freeze':
+      case 'ImmutableCapture': {
+        // no-op
+        break;
+      }
+      default: {
+        assertExhaustive(
+          effect,
+          `Unexpected effect kind ${(effect as any).kind}`,
+        );
+      }
+    }
+  }
+
+  for (const operand of fn.context) {
+    if (capturedOrMutated.has(operand.identifier.id)) {
+      operand.effect = Effect.Capture;
+    } else {
+      operand.effect = Effect.Read;
+    }
+  }
 }
 
 function lower(func: HIRFunction): DisjointSet<Identifier> {
