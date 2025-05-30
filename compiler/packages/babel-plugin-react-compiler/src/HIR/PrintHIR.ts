@@ -71,6 +71,8 @@ export function printFunction(fn: HIRFunction): string {
         })
         .join(', ') +
       ')';
+  } else {
+    definition += '()';
   }
   if (definition.length !== 0) {
     output.push(definition);
@@ -573,8 +575,11 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
             }
           })
           .join(', ') ?? '';
-      const type = printType(instrValue.loweredFunc.func.returnType).trim();
-      value = `${kind} ${name} @context[${context}] @effects[${effects}]${type !== '' ? ` return${type}` : ''}:\n${fn}`;
+      const aliasingEffects =
+        instrValue.loweredFunc.func.aliasingEffects
+          ?.map(printAliasingEffect)
+          ?.join(', ') ?? '';
+      value = `${kind} ${name} @context[${context}] @effects[${effects}] @aliasingEffects=[${aliasingEffects}]\n${fn}`;
       break;
     }
     case 'TaggedTemplateExpression': {
