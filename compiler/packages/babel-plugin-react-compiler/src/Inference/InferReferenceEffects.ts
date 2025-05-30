@@ -264,7 +264,7 @@ class InferenceState {
   #values: Map<InstructionValue, AbstractValue>;
   /*
    * The set of values pointed to by each identifier. This is a set
-   * to accomodate phi points (where a variable may have different
+   * to accommodate phi points (where a variable may have different
    * values from different control flow paths).
    */
   #variables: Map<IdentifierId, Set<InstructionValue>>;

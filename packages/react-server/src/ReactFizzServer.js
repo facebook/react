@@ -2023,7 +2023,7 @@ function renderSuspenseList(
         prepareToUseThenableState(prevThenableState);
 
         // We need to know how many total rows are in this set, so that we
-        // can allocate enough id slots to acommodate them. So we must exhaust
+        // can allocate enough id slots to accommodate them. So we must exhaust
         // the iterator before we start recursively rendering the rows.
         // TODO: This is not great but I think it's inherent to the id
         // generation algorithm.
@@ -3385,7 +3385,7 @@ function retryNode(request: Request, task: Task): void {
           validateIterable(task, node, childIndex, iterator, iteratorFn);
         }
         // We need to know how many total children are in this set, so that we
-        // can allocate enough id slots to acommodate them. So we must exhaust
+        // can allocate enough id slots to accommodate them. So we must exhaust
         // the iterator before we start recursively rendering the children.
         // TODO: This is not great but I think it's inherent to the id
         // generation algorithm.
@@ -3423,7 +3423,7 @@ function retryNode(request: Request, task: Task): void {
         prepareToUseThenableState(prevThenableState);
 
         // We need to know how many total children are in this set, so that we
-        // can allocate enough id slots to acommodate them. So we must exhaust
+        // can allocate enough id slots to accommodate them. So we must exhaust
         // the iterator before we start recursively rendering the children.
         // TODO: This is not great but I think it's inherent to the id
         // generation algorithm.
