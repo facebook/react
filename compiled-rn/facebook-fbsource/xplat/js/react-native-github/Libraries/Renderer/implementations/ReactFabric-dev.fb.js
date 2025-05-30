@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d4c8b5a14abf7c4df092ecffe30b60b9>>
+ * @generated SignedSource<<e3c0e28f16c9ef8fa05f4fbaafc31576>>
  */
 
 "use strict";
@@ -1274,11 +1274,12 @@ __DEV__ &&
             validAttributes
           );
         for (; i < nextProp.length; i++)
-          updatePayload = addNestedProperty(
-            updatePayload,
-            nextProp[i],
-            validAttributes
-          );
+          (prevProp = nextProp[i]) &&
+            (updatePayload = addNestedProperty(
+              updatePayload,
+              prevProp,
+              validAttributes
+            ));
         return updatePayload;
       }
       return isArrayImpl(prevProp)
@@ -1294,25 +1295,6 @@ __DEV__ &&
             ReactNativePrivateInterface.flattenStyle(nextProp),
             validAttributes
           );
-    }
-    function addNestedProperty(updatePayload, nextProp, validAttributes) {
-      if (!nextProp) return updatePayload;
-      if (enableFastAddPropertiesInDiffing)
-        return fastAddProperties(updatePayload, nextProp, validAttributes);
-      if (!isArrayImpl(nextProp))
-        return diffProperties(
-          updatePayload,
-          emptyObject$1,
-          nextProp,
-          validAttributes
-        );
-      for (var i = 0; i < nextProp.length; i++)
-        updatePayload = addNestedProperty(
-          updatePayload,
-          nextProp[i],
-          validAttributes
-        );
-      return updatePayload;
     }
     function clearNestedProperty(updatePayload, prevProp, validAttributes) {
       if (!prevProp) return updatePayload;
@@ -1364,15 +1346,14 @@ __DEV__ &&
                   (updatePayload[propKey] = attributeConfig);
             }
           else if (prevProp !== nextProp)
-            if ("object" !== typeof attributeConfig) {
-              if (enableShallowPropDiffing || defaultDiffer(prevProp, nextProp))
-                (updatePayload || (updatePayload = {}))[propKey] = nextProp;
-            } else if (
+            if ("object" !== typeof attributeConfig)
+              defaultDiffer(prevProp, nextProp) &&
+                ((updatePayload || (updatePayload = {}))[propKey] = nextProp);
+            else if (
               "function" === typeof attributeConfig.diff ||
               "function" === typeof attributeConfig.process
             ) {
               if (
-                enableShallowPropDiffing ||
                 void 0 === prevProp ||
                 ("function" === typeof attributeConfig.diff
                   ? attributeConfig.diff(prevProp, nextProp)
@@ -1422,10 +1403,10 @@ __DEV__ &&
                   )))));
       return updatePayload;
     }
-    function fastAddProperties(payload, props, validAttributes) {
+    function addNestedProperty(payload, props, validAttributes) {
       if (isArrayImpl(props)) {
         for (var i = 0; i < props.length; i++)
-          payload = fastAddProperties(payload, props[i], validAttributes);
+          payload = addNestedProperty(payload, props[i], validAttributes);
         return payload;
       }
       for (i in props) {
@@ -1447,7 +1428,7 @@ __DEV__ &&
                     (newValue = prop);
           void 0 !== newValue
             ? (payload || (payload = {}), (payload[i] = newValue))
-            : (payload = fastAddProperties(payload, prop, attributeConfig));
+            : (payload = addNestedProperty(payload, prop, attributeConfig));
         }
       }
       return payload;
@@ -9644,7 +9625,7 @@ __DEV__ &&
                 ReactNativePrivateInterface.deepFreezeAndThrowOnMutationInDev(
                   newProps[keepChildren]
                 );
-            keepChildren = fastAddProperties(
+            keepChildren = addNestedProperty(
               null,
               newProps,
               _type2.validAttributes
@@ -14663,7 +14644,7 @@ __DEV__ &&
     }
     function cloneHiddenInstance(instance) {
       var node = instance.node;
-      var updatePayload = fastAddProperties(
+      var updatePayload = addNestedProperty(
         null,
         { style: { display: "none" } },
         instance.canonical.viewConfig.validAttributes
@@ -14784,13 +14765,10 @@ __DEV__ &&
       enableObjectFiber = dynamicFlagsUntyped.enableObjectFiber,
       enablePersistedModeClonedFlag =
         dynamicFlagsUntyped.enablePersistedModeClonedFlag,
-      enableShallowPropDiffing = dynamicFlagsUntyped.enableShallowPropDiffing,
       enableEagerAlternateStateNodeCleanup =
         dynamicFlagsUntyped.enableEagerAlternateStateNodeCleanup,
       passChildrenWhenCloningPersistedNodes =
         dynamicFlagsUntyped.passChildrenWhenCloningPersistedNodes,
-      enableFastAddPropertiesInDiffing =
-        dynamicFlagsUntyped.enableFastAddPropertiesInDiffing,
       enableLazyPublicInstanceInFabric =
         dynamicFlagsUntyped.enableLazyPublicInstanceInFabric,
       renameElementSymbol = dynamicFlagsUntyped.renameElementSymbol,
@@ -17572,10 +17550,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-5717f193-20250528",
+        version: "19.2.0-native-fb-8b55eb4e-20250530",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-5717f193-20250528"
+        reconcilerVersion: "19.2.0-native-fb-8b55eb4e-20250530"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

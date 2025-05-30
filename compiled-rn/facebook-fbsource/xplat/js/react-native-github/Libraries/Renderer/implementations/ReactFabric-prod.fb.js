@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7a8d091e9d2dca2b28e55df00edb5bce>>
+ * @generated SignedSource<<d604df3f93f3513010859506d3fcc87a>>
  */
 
 "use strict";
@@ -25,13 +25,10 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
   enableObjectFiber = dynamicFlagsUntyped.enableObjectFiber,
   enablePersistedModeClonedFlag =
     dynamicFlagsUntyped.enablePersistedModeClonedFlag,
-  enableShallowPropDiffing = dynamicFlagsUntyped.enableShallowPropDiffing,
   enableEagerAlternateStateNodeCleanup =
     dynamicFlagsUntyped.enableEagerAlternateStateNodeCleanup,
   passChildrenWhenCloningPersistedNodes =
     dynamicFlagsUntyped.passChildrenWhenCloningPersistedNodes,
-  enableFastAddPropertiesInDiffing =
-    dynamicFlagsUntyped.enableFastAddPropertiesInDiffing,
   enableLazyPublicInstanceInFabric =
     dynamicFlagsUntyped.enableLazyPublicInstanceInFabric,
   renameElementSymbol = dynamicFlagsUntyped.renameElementSymbol,
@@ -1401,11 +1398,12 @@ function diffNestedProperty(
         validAttributes
       );
     for (; i < nextProp.length; i++)
-      updatePayload = addNestedProperty(
-        updatePayload,
-        nextProp[i],
-        validAttributes
-      );
+      (prevProp = nextProp[i]) &&
+        (updatePayload = addNestedProperty(
+          updatePayload,
+          prevProp,
+          validAttributes
+        ));
     return updatePayload;
   }
   return isArrayImpl(prevProp)
@@ -1421,25 +1419,6 @@ function diffNestedProperty(
         ReactNativePrivateInterface.flattenStyle(nextProp),
         validAttributes
       );
-}
-function addNestedProperty(updatePayload, nextProp, validAttributes) {
-  if (!nextProp) return updatePayload;
-  if (enableFastAddPropertiesInDiffing)
-    return fastAddProperties(updatePayload, nextProp, validAttributes);
-  if (!isArrayImpl(nextProp))
-    return diffProperties(
-      updatePayload,
-      emptyObject,
-      nextProp,
-      validAttributes
-    );
-  for (var i = 0; i < nextProp.length; i++)
-    updatePayload = addNestedProperty(
-      updatePayload,
-      nextProp[i],
-      validAttributes
-    );
-  return updatePayload;
 }
 function clearNestedProperty(updatePayload, prevProp, validAttributes) {
   if (!prevProp) return updatePayload;
@@ -1485,15 +1464,14 @@ function diffProperties(updatePayload, prevProps, nextProps, validAttributes) {
               (updatePayload[propKey] = attributeConfig);
         }
       else if (prevProp !== nextProp)
-        if ("object" !== typeof attributeConfig) {
-          if (enableShallowPropDiffing || defaultDiffer(prevProp, nextProp))
-            (updatePayload || (updatePayload = {}))[propKey] = nextProp;
-        } else if (
+        if ("object" !== typeof attributeConfig)
+          defaultDiffer(prevProp, nextProp) &&
+            ((updatePayload || (updatePayload = {}))[propKey] = nextProp);
+        else if (
           "function" === typeof attributeConfig.diff ||
           "function" === typeof attributeConfig.process
         ) {
           if (
-            enableShallowPropDiffing ||
             void 0 === prevProp ||
             ("function" === typeof attributeConfig.diff
               ? attributeConfig.diff(prevProp, nextProp)
@@ -1543,10 +1521,10 @@ function diffProperties(updatePayload, prevProps, nextProps, validAttributes) {
               )))));
   return updatePayload;
 }
-function fastAddProperties(payload, props, validAttributes) {
+function addNestedProperty(payload, props, validAttributes) {
   if (isArrayImpl(props)) {
     for (var i = 0; i < props.length; i++)
-      payload = fastAddProperties(payload, props[i], validAttributes);
+      payload = addNestedProperty(payload, props[i], validAttributes);
     return payload;
   }
   for (i in props) {
@@ -1567,7 +1545,7 @@ function fastAddProperties(payload, props, validAttributes) {
               : "function" === typeof attributeConfig.diff && (newValue = prop);
       void 0 !== newValue
         ? (payload || (payload = {}), (payload[i] = newValue))
-        : (payload = fastAddProperties(payload, prop, attributeConfig));
+        : (payload = addNestedProperty(payload, prop, attributeConfig));
     }
   }
   return payload;
@@ -7603,7 +7581,7 @@ function completeWork(current, workInProgress, renderLanes) {
         current = nextReactTag;
         nextReactTag += 2;
         type = getViewConfigForType(type);
-        oldProps = fastAddProperties(null, newProps, type.validAttributes);
+        oldProps = addNestedProperty(null, newProps, type.validAttributes);
         oldProps = createNode(
           current,
           type.uiViewClassName,
@@ -11127,7 +11105,7 @@ var scheduleTimeout = setTimeout,
   cancelTimeout = clearTimeout;
 function cloneHiddenInstance(instance) {
   var node = instance.node;
-  var JSCompiler_inline_result = fastAddProperties(
+  var JSCompiler_inline_result = addNestedProperty(
     null,
     { style: { display: "none" } },
     instance.canonical.viewConfig.validAttributes
@@ -11275,26 +11253,26 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1262 = {
+  internals$jscomp$inline_1263 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-5717f193-20250528",
+    version: "19.2.0-native-fb-8b55eb4e-20250530",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-5717f193-20250528"
+    reconcilerVersion: "19.2.0-native-fb-8b55eb4e-20250530"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1262.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1263.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1585 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1586 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1585.isDisabled &&
-    hook$jscomp$inline_1585.supportsFiber
+    !hook$jscomp$inline_1586.isDisabled &&
+    hook$jscomp$inline_1586.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1585.inject(
-        internals$jscomp$inline_1262
+      (rendererID = hook$jscomp$inline_1586.inject(
+        internals$jscomp$inline_1263
       )),
-        (injectedHook = hook$jscomp$inline_1585);
+        (injectedHook = hook$jscomp$inline_1586);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
