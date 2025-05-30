@@ -3708,6 +3708,8 @@ function flushSpawnedWork(): void {
     pendingEffectsStatus = NO_PENDING_EFFECTS;
     pendingEffectsRoot = (null: any); // Clear for GC purposes.
     pendingFinishedWork = (null: any); // Clear for GC purposes.
+    // Keep lanes in sync with the cleared root to avoid inconsistent state.
+    pendingEffectsLanes = NoLanes;
     // There were no passive effects, so we can immediately release the cache
     // pool for this render.
     releaseRootPooledCache(root, root.pendingLanes);
