@@ -310,6 +310,9 @@ function applySignature(
     console.log(
       prettyFormat(state.debugAbstractValue(state.kind(instruction.lvalue))),
     );
+    console.log(
+      effects.map(effect => `  ${printAliasingEffect(effect)}`).join('\n'),
+    );
   }
   if (
     !(state.isDefined(instruction.lvalue) && state.kind(instruction.lvalue))
@@ -403,8 +406,8 @@ function applyEffect(
           break;
         }
         default: {
-          // TODO: should this be Alias??
           effects.push({
+            // OK: recording information flow
             kind: 'Alias',
             from: effect.from,
             into: effect.into,
@@ -446,6 +449,7 @@ function applyEffect(
       }
       break;
     }
+    case 'Alias':
     case 'Capture': {
       /*
        * Capture describes potential information flow: storing a pointer to one value
@@ -493,7 +497,7 @@ function applyEffect(
       }
       break;
     }
-    case 'Alias': {
+    case 'Assign': {
       /*
        * Alias represents potential pointer aliasing. If the type is a global,
        * a primitive (copy-on-write semantics) then we can prune the effect
@@ -549,12 +553,6 @@ function applyEffect(
     }
     case 'Apply': {
       const functionValues = state.values(effect.function);
-      console.log('function is ' + printPlace(effect.function));
-      console.log(
-        functionValues.length +
-          ' ' +
-          functionValues.map(v => v.kind).join(', '),
-      );
       if (
         functionValues.length === 1 &&
         functionValues[0].kind === 'FunctionExpression'
@@ -567,15 +565,18 @@ function applyEffect(
           state.env,
           functionValues[0],
         );
-        console.log(
-          `constructed alias signature:\n${printAliasingSignature(signature)}`,
-        );
+        if (DEBUG) {
+          console.log(
+            `constructed alias signature:\n${printAliasingSignature(signature)}`,
+          );
+        }
         const signatureEffects = computeEffectsForSignature(
           state.env,
           signature,
           effect.into,
           effect.receiver,
           effect.args,
+          functionValues[0].loweredFunc.func.context,
         );
         if (signatureEffects != null) {
           if (DEBUG) {
@@ -680,17 +681,9 @@ function applyEffect(
               effects,
             );
           }
-          /*
-           * TODO: this should be Alias, since the function could be identity.
-           * Ie local mutation of the result could change the input.
-           * But if we emit multiple Alias calls, currently the last one will win
-           * when we update the inferencestate in applySignature. So we may need to group
-           * them here, or coalesce them in applySignature
-           *
-           * maybe make `from: Place | Array<Place>`
-           */
           applyEffect(
             state,
+            // OK: recording information flow
             {kind: 'Alias', from: operand, into: effect.into},
             instruction,
             effectInstructionValueCache,
@@ -713,6 +706,10 @@ function applyEffect(
             applyEffect(
               state,
               {
+                /*
+                 * OK: a function might store one operand into another,
+                 * but it can't force one to alias another
+                 */
                 kind: 'Capture',
                 from: operand,
                 into: other,
@@ -1310,7 +1307,8 @@ function computeSignatureForInstruction(
         from: value.value,
         into: value.object,
       });
-      effects.push({kind: 'Alias', from: value.value, into: lvalue});
+      // OK: lvalues are assigned to
+      effects.push({kind: 'Assign', from: value.value, into: lvalue});
       break;
     }
     case 'PostfixUpdate':
@@ -1479,34 +1477,34 @@ function computeSignatureForInstruction(
           into: patternLValue,
         });
       }
-      effects.push({kind: 'Alias', from: value.value, into: lvalue});
+      effects.push({kind: 'Assign', from: value.value, into: lvalue});
       break;
     }
     case 'LoadContext': {
-      effects.push({kind: 'Alias', from: value.place, into: lvalue});
+      effects.push({kind: 'Assign', from: value.place, into: lvalue});
       break;
     }
     case 'StoreContext': {
       effects.push({kind: 'Mutate', value: value.lvalue.place});
       effects.push({
-        kind: 'Alias',
+        kind: 'Assign',
         from: value.value,
         into: value.lvalue.place,
       });
-      effects.push({kind: 'Alias', from: value.value, into: lvalue});
+      effects.push({kind: 'Assign', from: value.value, into: lvalue});
       break;
     }
     case 'LoadLocal': {
-      effects.push({kind: 'Alias', from: value.place, into: lvalue});
+      effects.push({kind: 'Assign', from: value.place, into: lvalue});
       break;
     }
     case 'StoreLocal': {
       effects.push({
-        kind: 'Alias',
+        kind: 'Assign',
         from: value.value,
         into: value.lvalue.place,
       });
-      effects.push({kind: 'Alias', from: value.value, into: lvalue});
+      effects.push({kind: 'Assign', from: value.value, into: lvalue});
       break;
     }
     case 'StoreGlobal': {
@@ -1516,7 +1514,7 @@ function computeSignatureForInstruction(
       });
     }
     case 'TypeCastExpression': {
-      effects.push({kind: 'Alias', from: value.value, into: lvalue});
+      effects.push({kind: 'Assign', from: value.value, into: lvalue});
       break;
     }
     case 'LoadGlobal': {
@@ -1772,6 +1770,8 @@ function computeEffectsForSignature(
   lvalue: Place,
   receiver: Place,
   args: Array<Place | SpreadPattern | Hole>,
+  // Used for signatures constructed dynamically which reference context variables
+  context: Array<Place> = [],
 ): Array<AliasingEffect> | null {
   if (
     // Not enough args
@@ -1816,6 +1816,15 @@ function computeEffectsForSignature(
     }
   }
 
+  /*
+   * Signatures constructed dynamically from function expressions will reference values
+   * other than their receiver/args/etc. We populate the substitution table with these
+   * values so that we can still exit for unpopulated substitutions
+   */
+  for (const operand of context) {
+    substitutions.set(operand.identifier.id, [operand]);
+  }
+
   const effects: Array<AliasingEffect> = [];
   for (const signatureTemporary of signature.temporaries) {
     const temp = createTemporaryPlace(env, receiver.loc);
@@ -1825,6 +1834,7 @@ function computeEffectsForSignature(
   // Apply substitutions
   for (const effect of signature.effects) {
     switch (effect.kind) {
+      case 'Assign':
       case 'ImmutableCapture':
       case 'Alias':
       case 'CreateFrom':
@@ -2068,18 +2078,32 @@ export type AliasingEffect =
    */
   | {kind: 'MutateTransitiveConditionally'; value: Place}
   /**
-   * Records indirect aliasing from flow from `from` to `into`. Local mutation (Mutate vs MutateTransitive)
-   * of `into` will *not* affect `from`.
+   * Records information flow from `from` to `into` in cases where local mutation of the destination
+   * will *not* mutate the source:
    *
-   * Example: `x[0] = y[1]`. Information from y (from) is aliased into x (into), but there is not a
-   * direct aliasing of y as x.
+   * - Capture a -> b and Mutate(b) X=> (does not imply) Mutate(a)
+   * - Capture a -> b and MutateTransitive(b) => (does imply) Mutate(a)
+   *
+   * Example: `array.push(item)`. Information from item is captured into array, but there is not a
+   * direct aliasing, and local mutations of array will not modify item.
    */
   | {kind: 'Capture'; from: Place; into: Place}
   /**
-   * Records direct aliasing of `from` as `into`. Local mutation (Mutate vs MutateTransitive)
-   * of `into` *will* affect `from`.
+   * Records information flow from `from` to `into` in cases where local mutation of the destination
+   * *will* mutate the source:
+   *
+   * - Alias a -> b and Mutate(b) => (does imply) Mutate(a)
+   * - Alias a -> b and MutateTransitive(b) => (does imply) Mutate(a)
+   *
+   * Example: `c = identity(a)`. We don't know what `identity()` returns so we can't use Assign.
+   * But we have to assume that it _could_ be returning its input, such that a local mutation of
+   * c could be mutating a.
    */
   | {kind: 'Alias'; from: Place; into: Place}
+  /**
+   * Records direct assignment: `into = from`.
+   */
+  | {kind: 'Assign'; from: Place; into: Place}
   /**
    * Creates a value of the given type at the given place
    */
