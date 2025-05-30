@@ -1879,13 +1879,19 @@ function visitAsyncNode(
       if (awaited !== null) {
         const ioNode = visitAsyncNode(request, task, awaited, cutOff, visited);
         if (ioNode !== null) {
+          const stack = filterStackTrace(request, node.stack, 1);
+          if (stack.length === 0) {
+            // If this await was fully filtered out, then it was inside third party code
+            // such as in an external library. We return the I/O node and try another await.
+            return ioNode;
+          }
           // Outline the IO node.
           emitIOChunk(request, ioNode);
           // Then emit a reference to us awaiting it in the current task.
           request.pendingChunks++;
           emitDebugChunk(request, task.id, {
             awaited: ((ioNode: any): ReactIOInfo), // This is deduped by this reference.
-            stack: filterStackTrace(request, node.stack, 1),
+            stack: stack,
           });
         }
       }
