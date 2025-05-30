@@ -519,6 +519,9 @@ function applyEffect(
             )
           : null;
       if (signatureEffects != null) {
+        if (DEBUG) {
+          console.log('apply aliasing signature effects');
+        }
         for (const signatureEffect of signatureEffects) {
           applyEffect(
             state,
@@ -530,6 +533,9 @@ function applyEffect(
           );
         }
       } else if (effect.signature != null) {
+        if (DEBUG) {
+          console.log('apply legacy signature effects');
+        }
         const legacyEffects = computeEffectsForLegacySignature(
           state,
           effect.signature,
@@ -548,6 +554,9 @@ function applyEffect(
           );
         }
       } else {
+        if (DEBUG) {
+          console.log('default effects');
+        }
         applyEffect(
           state,
           {
@@ -567,7 +576,7 @@ function applyEffect(
          * - All operands are captured into (but not directly aliased as)
          *   every other argument.
          */
-        for (const arg of [effect.function, ...effect.args]) {
+        for (const arg of [effect.receiver, effect.function, ...effect.args]) {
           const operand = arg.kind === 'Identifier' ? arg : arg.place;
           if (operand !== effect.function || effect.mutatesFunction) {
             applyEffect(
@@ -599,7 +608,11 @@ function applyEffect(
             aliased,
             effects,
           );
-          for (const otherArg of [effect.function, ...effect.args]) {
+          for (const otherArg of [
+            effect.receiver,
+            effect.function,
+            ...effect.args,
+          ]) {
             const other =
               otherArg.kind === 'Identifier' ? otherArg : otherArg.place;
             if (other === arg) {
