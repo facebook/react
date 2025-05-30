@@ -38,6 +38,7 @@ import {GotoVariant, InstructionKind} from './HIR';
 import {
   AliasedPlace,
   AliasingEffect,
+  AliasingSignature,
 } from '../Inference/InferMutationAliasingEffects';
 
 export type Options = {
@@ -990,4 +991,22 @@ function printPlaceForAliasEffect(place: Place): string {
 
 function printAliasedPlace(place: AliasedPlace): string {
   return place.kind + ' ' + printPlaceForAliasEffect(place.place);
+}
+
+export function printAliasingSignature(signature: AliasingSignature): string {
+  const tokens: Array<string> = ['function '];
+  tokens.push('(');
+  tokens.push('this=$' + String(signature.receiver));
+  for (const param of signature.params) {
+    tokens.push(', $' + String(param));
+  }
+  if (signature.rest != null) {
+    tokens.push(`, ...$${String(signature.rest)}`);
+  }
+  tokens.push('): ');
+  tokens.push('$' + String(signature.returns) + ':');
+  for (const effect of signature.effects) {
+    tokens.push('\n  ' + printAliasingEffect(effect));
+  }
+  return tokens.join('');
 }
