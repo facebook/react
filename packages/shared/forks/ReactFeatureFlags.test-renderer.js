@@ -61,7 +61,6 @@ export const disableClientCache = true;
 export const enableInfiniteRenderLoopDetection = false;
 
 export const renameElementSymbol = true;
-export const enableShallowPropDiffing = false;
 export const enableEagerAlternateStateNodeCleanup = false;
 
 export const enableYieldingBeforePassive = true;
@@ -69,7 +68,6 @@ export const enableYieldingBeforePassive = true;
 export const enableThrottledScheduling = false;
 export const enableViewTransition = false;
 export const enableGestureTransition = false;
-export const enableFastAddPropertiesInDiffing = true;
 export const enableLazyPublicInstanceInFabric = false;
 export const enableScrollEndPolyfill = true;
 export const enableSuspenseyImages = false;
