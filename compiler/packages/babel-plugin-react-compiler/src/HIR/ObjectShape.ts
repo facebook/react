@@ -192,6 +192,7 @@ export type FunctionSignature = {
   canonicalName?: string;
 
   aliasing?: AliasingSignature | null;
+  todo_aliasing?: AliasingSignature | null;
 };
 
 /*
@@ -320,6 +321,7 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
         params: [],
         rest: makeIdentifierId(1),
         returns: makeIdentifierId(2),
+        temporaries: [],
         effects: [
           // Push directly mutates the array itself
           {kind: 'Mutate', value: signatureArgument(0)},
@@ -367,7 +369,59 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
       returnValueKind: ValueKind.Mutable,
       noAlias: true,
       mutableOnlyIfOperandsAreMutable: true,
-      aliasing: null,
+      aliasing: {
+        receiver: makeIdentifierId(0),
+        params: [makeIdentifierId(1)],
+        rest: null,
+        returns: makeIdentifierId(2),
+        temporaries: [
+          // Temporary representing captured items of the receiver
+          signatureArgument(3),
+          // Temporary representing the result of the callback
+          signatureArgument(4),
+          /*
+           * Undefined `this` arg to the callback. Note the signature does not
+           * support passing an explicit thisArg second param
+           */
+          signatureArgument(5),
+        ],
+        effects: [
+          // Map creates a new mutable array
+          {
+            kind: 'Create',
+            into: signatureArgument(2),
+            value: ValueKind.Mutable,
+          },
+          // The first arg to the callback is an item extracted from the receiver array
+          {
+            kind: 'CreateFrom',
+            from: signatureArgument(0),
+            into: signatureArgument(3),
+          },
+          // The undefined this for the callback
+          {
+            kind: 'Create',
+            into: signatureArgument(5),
+            value: ValueKind.Primitive,
+          },
+          // calls the callback, returning the result into a temporary
+          {
+            kind: 'Apply',
+            receiver: signatureArgument(5),
+            args: [signatureArgument(3), {kind: 'Hole'}, signatureArgument(0)],
+            function: signatureArgument(1),
+            into: signatureArgument(4),
+            signature: null,
+            mutatesFunction: false,
+          },
+          // captures the result of the callback into the return array
+          {
+            kind: 'Capture',
+            from: signatureArgument(4),
+            into: signatureArgument(2),
+          },
+        ],
+      },
     }),
   ],
   [

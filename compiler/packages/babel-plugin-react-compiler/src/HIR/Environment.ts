@@ -246,7 +246,7 @@ export const EnvironmentConfigSchema = z.object({
   /**
    * Enable a new model for mutability and aliasing inference
    */
-  enableNewMutationAliasingModel: z.boolean().default(false),
+  enableNewMutationAliasingModel: z.boolean().default(true),
 
   /**
    * Enables inference of optional dependency chains. Without this flag

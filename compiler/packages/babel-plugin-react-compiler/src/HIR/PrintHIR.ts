@@ -972,6 +972,8 @@ export function printAliasingEffect(effect: AliasingEffect): string {
         .map(arg => {
           if (arg.kind === 'Identifier') {
             return printPlaceForAliasEffect(arg);
+          } else if (arg.kind === 'Hole') {
+            return ' ';
           }
           return `...${printPlaceForAliasEffect(arg.place)}`;
         })
@@ -985,6 +987,9 @@ export function printAliasingEffect(effect: AliasingEffect): string {
         }
       }
       return `Apply ${printPlaceForAliasEffect(effect.into)} = ${receiverCallee}(${args})${signature != '' ? '\n     ' : ''}${signature}`;
+    }
+    case 'CreateFunction': {
+      return `Function ${printPlaceForAliasEffect(effect.into)} = Function captures=[${effect.captures.map(printPlaceForAliasEffect).join(', ')}]`;
     }
     case 'Freeze': {
       return `Freeze ${printPlaceForAliasEffect(effect.value)} ${effect.reason}`;
@@ -1007,6 +1012,13 @@ function printPlaceForAliasEffect(place: Place): string {
 
 export function printAliasingSignature(signature: AliasingSignature): string {
   const tokens: Array<string> = ['function '];
+  if (signature.temporaries.length !== 0) {
+    tokens.push('<');
+    tokens.push(
+      signature.temporaries.map(temp => `$${temp.identifier.id}`).join(', '),
+    );
+    tokens.push('>');
+  }
   tokens.push('(');
   tokens.push('this=$' + String(signature.receiver));
   for (const param of signature.params) {

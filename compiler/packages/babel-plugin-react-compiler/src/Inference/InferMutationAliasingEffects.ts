@@ -10,13 +10,17 @@ import {
   BasicBlock,
   BlockId,
   Environment,
+  FunctionExpression,
   HIRFunction,
+  Hole,
   IdentifierId,
   Instruction,
   InstructionValue,
   isArrayType,
   isMapType,
   isSetType,
+  makeIdentifierId,
+  ObjectMethod,
   Phi,
   Place,
   SpreadPattern,
@@ -40,6 +44,7 @@ import {
 } from '../Utils/utils';
 import {
   printAliasingEffect,
+  printAliasingSignature,
   printIdentifier,
   printInstruction,
   printInstructionValue,
@@ -49,6 +54,7 @@ import {
 import {FunctionSignature} from '../HIR/ObjectShape';
 import {getWriteErrorReason} from './InferFunctionEffects';
 import prettyFormat from 'pretty-format';
+import {createTemporaryPlace} from '../HIR/HIRBuilder';
 
 export function inferMutationAliasingEffects(
   fn: HIRFunction,
@@ -399,11 +405,44 @@ function applyEffect(
         default: {
           // TODO: should this be Alias??
           effects.push({
-            kind: 'Capture',
+            kind: 'Alias',
             from: effect.from,
             into: effect.into,
           });
         }
+      }
+      break;
+    }
+    case 'CreateFunction': {
+      const isMutable = effect.captures.some(capture => {
+        switch (state.kind(capture).kind) {
+          case ValueKind.Context:
+          case ValueKind.Mutable: {
+            return true;
+          }
+          default: {
+            return false;
+          }
+        }
+      });
+      state.initialize(effect.function, {
+        kind: isMutable ? ValueKind.Mutable : ValueKind.Frozen,
+        reason: new Set([]),
+      });
+      state.define(effect.into, effect.function);
+      for (const capture of effect.captures) {
+        applyEffect(
+          state,
+          {
+            kind: 'Capture',
+            from: capture,
+            into: effect.into,
+          },
+          instruction,
+          effectInstructionValueCache,
+          aliased,
+          effects,
+        );
       }
       break;
     }
@@ -509,9 +548,56 @@ function applyEffect(
       break;
     }
     case 'Apply': {
+      const functionValues = state.values(effect.function);
+      console.log('function is ' + printPlace(effect.function));
+      console.log(
+        functionValues.length +
+          ' ' +
+          functionValues.map(v => v.kind).join(', '),
+      );
+      if (
+        functionValues.length === 1 &&
+        functionValues[0].kind === 'FunctionExpression'
+      ) {
+        /*
+         * We're calling a locally declared function, we already know it's effects!
+         * We just have to substitute in the args for the params
+         */
+        const signature = buildSignatureFromFunctionExpression(
+          state.env,
+          functionValues[0],
+        );
+        console.log(
+          `constructed alias signature:\n${printAliasingSignature(signature)}`,
+        );
+        const signatureEffects = computeEffectsForSignature(
+          state.env,
+          signature,
+          effect.into,
+          effect.receiver,
+          effect.args,
+        );
+        if (signatureEffects != null) {
+          if (DEBUG) {
+            console.log('apply function expression effects');
+          }
+          for (const signatureEffect of signatureEffects) {
+            applyEffect(
+              state,
+              signatureEffect,
+              instruction,
+              effectInstructionValueCache,
+              aliased,
+              effects,
+            );
+          }
+          break;
+        }
+      }
       const signatureEffects =
         effect.signature?.aliasing != null
           ? computeEffectsForSignature(
+              state.env,
               effect.signature.aliasing,
               effect.into,
               effect.receiver,
@@ -577,6 +663,9 @@ function applyEffect(
          *   every other argument.
          */
         for (const arg of [effect.receiver, effect.function, ...effect.args]) {
+          if (arg.kind === 'Hole') {
+            continue;
+          }
           const operand = arg.kind === 'Identifier' ? arg : arg.place;
           if (operand !== effect.function || effect.mutatesFunction) {
             applyEffect(
@@ -602,7 +691,7 @@ function applyEffect(
            */
           applyEffect(
             state,
-            {kind: 'Capture', from: operand, into: effect.into},
+            {kind: 'Alias', from: operand, into: effect.into},
             instruction,
             effectInstructionValueCache,
             aliased,
@@ -613,6 +702,9 @@ function applyEffect(
             effect.function,
             ...effect.args,
           ]) {
+            if (otherArg.kind === 'Hole') {
+              continue;
+            }
             const other =
               otherArg.kind === 'Identifier' ? otherArg : otherArg.place;
             if (other === arg) {
@@ -679,7 +771,7 @@ function applyEffect(
   }
 }
 
-const DEBUG = false;
+const DEBUG = true;
 
 class InferenceState {
   env: Environment;
@@ -1235,24 +1327,6 @@ function computeSignatureForInstruction(
     }
     case 'ObjectMethod':
     case 'FunctionExpression': {
-      /*
-       * We consider the function frozen if it has no potential mutations of its context
-       * variables.
-       * TODO: this may lose some precision relative to InferReferenceEffects, where we
-       * decide the valuekind of the function based on the actual state of the context
-       * vars. Maybe a `CreateFunction captures=[...] into=place` effect or similar to
-       * express the logic
-       */
-      const kind = value.loweredFunc.func.context.some(
-        operand => operand.effect === Effect.Capture,
-      )
-        ? ValueKind.Mutable
-        : ValueKind.Frozen;
-      effects.push({
-        kind: 'Create',
-        into: lvalue,
-        value: kind,
-      });
       /**
        * We've already analyzed the function expression in AnalyzeFunctions. There, we assign
        * a Capture effect to any context variable that appears (locally) to be aliased and/or
@@ -1291,15 +1365,14 @@ function computeSignatureForInstruction(
        * Note that if the type of the context variables are frozen, global, or primitive, the
        * Capture will either get pruned or downgraded to an ImmutableCapture.
        */
-      for (const operand of value.loweredFunc.func.context) {
-        if (operand.effect === Effect.Capture) {
-          effects.push({
-            kind: 'Capture',
-            from: operand,
-            into: lvalue,
-          });
-        }
-      }
+      effects.push({
+        kind: 'CreateFunction',
+        into: lvalue,
+        function: value,
+        captures: value.loweredFunc.func.context.filter(
+          operand => operand.effect === Effect.Capture,
+        ),
+      });
       break;
     }
     case 'GetIterator': {
@@ -1493,7 +1566,7 @@ function computeEffectsForLegacySignature(
   signature: FunctionSignature,
   lvalue: Place,
   receiver: Place,
-  args: Array<Place | SpreadPattern>,
+  args: Array<Place | SpreadPattern | Hole>,
 ): Array<AliasingEffect> {
   const effects: Array<AliasingEffect> = [];
   effects.push({
@@ -1566,11 +1639,14 @@ function computeEffectsForLegacySignature(
     areArgumentsImmutableAndNonMutating(state, args)
   ) {
     effects.push({
-      kind: 'Capture',
+      kind: 'Alias',
       from: receiver,
       into: lvalue,
     });
     for (const arg of args) {
+      if (arg.kind === 'Hole') {
+        continue;
+      }
       const place = arg.kind === 'Identifier' ? arg : arg.place;
       effects.push({
         kind: 'ImmutableCapture',
@@ -1591,7 +1667,7 @@ function computeEffectsForLegacySignature(
      * the type doesn't actually need to be captured based on the input and return type.
      */
     effects.push({
-      kind: 'Capture',
+      kind: 'Alias',
       from: receiver,
       into: lvalue,
     });
@@ -1599,6 +1675,9 @@ function computeEffectsForLegacySignature(
   visit(receiver, signature.calleeEffect);
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
+    if (arg.kind === 'Hole') {
+      continue;
+    }
     const place = arg.kind === 'Identifier' ? arg : arg.place;
     const effect =
       arg.kind === 'Identifier' && i < signature.positionalParams.length
@@ -1610,7 +1689,7 @@ function computeEffectsForLegacySignature(
     if (stores.length === 0) {
       // If no stores, then capture into the return value
       for (const capture of captures) {
-        effects.push({kind: 'Capture', from: capture, into: lvalue});
+        effects.push({kind: 'Alias', from: capture, into: lvalue});
       }
     } else {
       // Else capture into the stores
@@ -1632,9 +1711,12 @@ function computeEffectsForLegacySignature(
  */
 function areArgumentsImmutableAndNonMutating(
   state: InferenceState,
-  args: Array<Place | SpreadPattern>,
+  args: Array<Place | SpreadPattern | Hole>,
 ): boolean {
   for (const arg of args) {
+    if (arg.kind === 'Hole') {
+      continue;
+    }
     if (arg.kind === 'Identifier' && arg.identifier.type.kind === 'Function') {
       const fnShape = state.env.getFunctionSignature(arg.identifier.type);
       if (fnShape != null) {
@@ -1685,10 +1767,11 @@ function areArgumentsImmutableAndNonMutating(
 }
 
 function computeEffectsForSignature(
+  env: Environment,
   signature: AliasingSignature,
   lvalue: Place,
   receiver: Place,
-  args: Array<Place | SpreadPattern>,
+  args: Array<Place | SpreadPattern | Hole>,
 ): Array<AliasingEffect> | null {
   if (
     // Not enough args
@@ -1696,6 +1779,17 @@ function computeEffectsForSignature(
     // Too many args and there is no rest param to hold them
     (args.length > signature.params.length && signature.rest == null)
   ) {
+    if (DEBUG) {
+      if (signature.params.length > args.length) {
+        console.log(
+          `not enough args: ${args.length} args for ${signature.params.length} params`,
+        );
+      } else {
+        console.log(
+          `too many args: ${args.length} args for ${signature.params.length} params, with no rest param`,
+        );
+      }
+    }
     return null;
   }
   // Build substitutions
@@ -1705,8 +1799,13 @@ function computeEffectsForSignature(
   const params = signature.params;
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    if (params == null || i >= params.length || arg.kind === 'Spread') {
+    if (arg.kind === 'Hole') {
+      continue;
+    } else if (params == null || i >= params.length || arg.kind === 'Spread') {
       if (signature.rest == null) {
+        if (DEBUG) {
+          console.log(`no rest value to hold param`);
+        }
         return null;
       }
       const place = arg.kind === 'Identifier' ? arg : arg.place;
@@ -1717,8 +1816,13 @@ function computeEffectsForSignature(
     }
   }
 
-  // Apply substitutions
   const effects: Array<AliasingEffect> = [];
+  for (const signatureTemporary of signature.temporaries) {
+    const temp = createTemporaryPlace(env, receiver.loc);
+    substitutions.set(signatureTemporary.identifier.id, [temp]);
+  }
+
+  // Apply substitutions
   for (const effect of signature.effects) {
     switch (effect.kind) {
       case 'ImmutableCapture':
@@ -1763,9 +1867,66 @@ function computeEffectsForSignature(
         break;
       }
       case 'Apply': {
+        const applyReceiver = substitutions.get(effect.receiver.identifier.id);
+        if (applyReceiver == null || applyReceiver.length !== 1) {
+          if (DEBUG) {
+            console.log(`too many substitutions for receiver`);
+          }
+          return null;
+        }
+        const applyFunction = substitutions.get(effect.function.identifier.id);
+        if (applyFunction == null || applyFunction.length !== 1) {
+          if (DEBUG) {
+            console.log(`too many substitutions for function`);
+          }
+          return null;
+        }
+        const applyInto = substitutions.get(effect.into.identifier.id);
+        if (applyInto == null || applyInto.length !== 1) {
+          if (DEBUG) {
+            console.log(`too many substitutions for into`);
+          }
+          return null;
+        }
+        const applyArgs: Array<Place | SpreadPattern | Hole> = [];
+        for (const arg of effect.args) {
+          if (arg.kind === 'Hole') {
+            applyArgs.push(arg);
+          } else if (arg.kind === 'Identifier') {
+            const applyArg = substitutions.get(arg.identifier.id);
+            if (applyArg == null || applyArg.length !== 1) {
+              if (DEBUG) {
+                console.log(`too many substitutions for arg`);
+              }
+              return null;
+            }
+            applyArgs.push(applyArg[0]);
+          } else {
+            const applyArg = substitutions.get(arg.place.identifier.id);
+            if (applyArg == null || applyArg.length !== 1) {
+              if (DEBUG) {
+                console.log(`too many substitutions for arg`);
+              }
+              return null;
+            }
+            applyArgs.push({kind: 'Spread', place: applyArg[0]});
+          }
+        }
+        effects.push({
+          kind: 'Apply',
+          mutatesFunction: effect.mutatesFunction,
+          receiver: applyReceiver[0],
+          args: applyArgs,
+          function: applyFunction[0],
+          into: applyInto[0],
+          signature: effect.signature,
+        });
+        break;
+      }
+      case 'CreateFunction': {
         CompilerError.throwTodo({
-          reason: `Handle ${effect.kind} effects for function declarations`,
-          loc: lvalue.loc,
+          reason: `Support CreateFrom effects in signatures`,
+          loc: receiver.loc,
         });
       }
       default: {
@@ -1777,6 +1938,29 @@ function computeEffectsForSignature(
     }
   }
   return effects;
+}
+
+function buildSignatureFromFunctionExpression(
+  env: Environment,
+  fn: FunctionExpression,
+): AliasingSignature {
+  let rest: IdentifierId | null = null;
+  const params: Array<IdentifierId> = [];
+  for (const param of fn.loweredFunc.func.params) {
+    if (param.kind === 'Identifier') {
+      params.push(param.identifier.id);
+    } else {
+      rest = param.place.identifier.id;
+    }
+  }
+  return {
+    receiver: makeIdentifierId(0),
+    params,
+    rest: rest ?? createTemporaryPlace(env, fn.loc).identifier.id,
+    returns: fn.loweredFunc.func.returns.identifier.id,
+    effects: fn.loweredFunc.func.aliasingEffects ?? [],
+    temporaries: [],
+  };
 }
 
 /*
@@ -1917,17 +2101,30 @@ export type AliasingEffect =
       receiver: Place;
       function: Place;
       mutatesFunction: boolean;
-      args: Array<Place | SpreadPattern>;
+      args: Array<Place | SpreadPattern | Hole>;
       into: Place;
       signature: FunctionSignature | null;
+    }
+  /**
+   * Constructs a function value with the given captures. The mutability of the function
+   * will be determined by the mutability of the capture values when evaluated.
+   */
+  | {
+      kind: 'CreateFunction';
+      captures: Array<Place>;
+      function: FunctionExpression | ObjectMethod;
+      into: Place;
     };
+
+export type AliasingSignatureEffect = AliasingEffect;
 
 export type AliasingSignature = {
   receiver: IdentifierId;
   params: Array<IdentifierId>;
   rest: IdentifierId | null;
   returns: IdentifierId;
-  effects: Array<AliasingEffect>;
+  effects: Array<AliasingSignatureEffect>;
+  temporaries: Array<Place>;
 };
 
 export type AbstractValue = {
