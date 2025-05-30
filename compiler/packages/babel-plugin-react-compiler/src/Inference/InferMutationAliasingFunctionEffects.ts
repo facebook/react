@@ -5,7 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {HIRFunction, IdentifierId, Place, ScopeId} from '../HIR';
+import {
+  HIRFunction,
+  IdentifierId,
+  isPrimitiveType,
+  Place,
+  ScopeId,
+  ValueKind,
+} from '../HIR';
 import {getOrInsertDefault} from '../Utils/utils';
 import {AliasingEffect} from './InferMutationAliasingEffects';
 
@@ -59,7 +66,7 @@ export function inferMutationAliasingFunctionEffects(
    * the value is used. Eg capturing an alias => capture. See joinEffects() helper.
    */
   type AliasedIdentifier = {
-    kind: 'Capture' | 'Alias' | 'CreateFrom';
+    kind: AliasingKind;
     place: Place;
   };
   const dataFlow = new Map<IdentifierId, Array<AliasedIdentifier>>();
@@ -101,6 +108,7 @@ export function inferMutationAliasingFunctionEffects(
       if (instr.effects == null) continue;
       for (const effect of instr.effects) {
         if (
+          effect.kind === 'Assign' ||
           effect.kind === 'Capture' ||
           effect.kind === 'Alias' ||
           effect.kind === 'CreateFrom'
@@ -188,6 +196,7 @@ export function inferMutationAliasingFunctionEffects(
     }
   }
   // Create aliasing effects based on observed data flow
+  let hasReturn = false;
   for (const [into, from] of dataFlow) {
     const input = tracked.get(into);
     if (input == null) {
@@ -196,7 +205,23 @@ export function inferMutationAliasingFunctionEffects(
     for (const aliased of from) {
       const effect = {kind: aliased.kind, from: aliased.place, into: input};
       effects.push(effect);
+      if (
+        into === fn.returns.identifier.id &&
+        (aliased.kind === 'Assign' || aliased.kind === 'CreateFrom')
+      ) {
+        hasReturn = true;
+      }
     }
+  }
+  // TODO: more precise return effect inference
+  if (!hasReturn) {
+    effects.push({
+      kind: 'Create',
+      into: fn.returns,
+      value: isPrimitiveType(fn.returns.identifier)
+        ? ValueKind.Primitive
+        : ValueKind.Mutable,
+    });
   }
 
   return effects;
@@ -208,13 +233,15 @@ enum MutationKind {
   Definite = 2,
 }
 
-type AliasingKind = 'Alias' | 'Capture' | 'CreateFrom';
+type AliasingKind = 'Alias' | 'Capture' | 'CreateFrom' | 'Assign';
 function joinEffects(
   effect1: AliasingKind,
   effect2: AliasingKind,
 ): AliasingKind {
   if (effect1 === 'Capture' || effect2 === 'Capture') {
     return 'Capture';
+  } else if (effect1 === 'Assign' || effect2 === 'Assign') {
+    return 'Assign';
   } else {
     return 'Alias';
   }
