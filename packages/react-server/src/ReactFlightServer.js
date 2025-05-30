@@ -1860,6 +1860,13 @@ function visitAsyncNode(
       return node;
     }
     case PROMISE_NODE: {
+      if (node.end < cutOff) {
+        // This was already resolved when we started this sequence. It must have been
+        // part of a different component.
+        // TODO: Think of some other way to exclude irrelevant data since if we awaited
+        // a cached promise, we should still log this component as being dependent on that data.
+        return null;
+      }
       const awaited = node.awaited;
       if (awaited !== null) {
         const ioNode = visitAsyncNode(request, task, awaited, cutOff, visited);
