@@ -22,22 +22,28 @@ function ReactiveRefInEffect(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @enableNewMutationAliasingModel
 function ReactiveRefInEffect(props) {
-  const $ = _c(2);
+  const $ = _c(4);
   const ref1 = useRef("initial value");
   const ref2 = useRef("initial value");
   let ref;
-  if (props.foo) {
-    ref = ref1;
+  if ($[0] !== props.foo) {
+    if (props.foo) {
+      ref = ref1;
+    } else {
+      ref = ref2;
+    }
+    $[0] = props.foo;
+    $[1] = ref;
   } else {
-    ref = ref2;
+    ref = $[1];
   }
   let t0;
-  if ($[0] !== ref) {
+  if ($[2] !== ref) {
     t0 = () => print(ref);
-    $[0] = ref;
-    $[1] = t0;
+    $[2] = ref;
+    $[3] = t0;
   } else {
-    t0 = $[1];
+    t0 = $[3];
   }
   useEffect(t0);
 }

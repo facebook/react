@@ -15,6 +15,7 @@ import {
   Hole,
   IdentifierId,
   Instruction,
+  InstructionKind,
   InstructionValue,
   isArrayType,
   isMapType,
@@ -768,7 +769,7 @@ function applyEffect(
   }
 }
 
-const DEBUG = true;
+const DEBUG = false;
 
 class InferenceState {
   env: Environment;
@@ -1452,7 +1453,21 @@ function computeSignatureForInstruction(
       }
       break;
     }
-    case 'DeclareContext':
+    case 'DeclareContext': {
+      // Context variables are conceptually like mutable boxes
+      effects.push({
+        kind: 'Create',
+        into: value.lvalue.place,
+        value: ValueKind.Mutable,
+      });
+      effects.push({
+        kind: 'Create',
+        into: lvalue,
+        // The result can't be referenced so this value doesn't matter
+        value: ValueKind.Primitive,
+      });
+      break;
+    }
     case 'DeclareLocal': {
       // TODO check this
       effects.push({
@@ -1481,13 +1496,25 @@ function computeSignatureForInstruction(
       break;
     }
     case 'LoadContext': {
+      // We load from the context
       effects.push({kind: 'Assign', from: value.place, into: lvalue});
       break;
     }
     case 'StoreContext': {
-      effects.push({kind: 'Mutate', value: value.lvalue.place});
+      // We're storing into the conceptual box
+      if (value.lvalue.kind === InstructionKind.Reassign) {
+        effects.push({kind: 'Mutate', value: value.lvalue.place});
+      } else {
+        // Context variables are conceptually like mutable boxes
+        effects.push({
+          kind: 'Create',
+          into: value.lvalue.place,
+          value: ValueKind.Mutable,
+        });
+      }
+      // Which aliases the value
       effects.push({
-        kind: 'Assign',
+        kind: 'Alias',
         from: value.value,
         into: value.lvalue.place,
       });
