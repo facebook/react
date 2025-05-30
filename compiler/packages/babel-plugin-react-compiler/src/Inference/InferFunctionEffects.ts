@@ -342,7 +342,7 @@ function isEffectSafeOutsideRender(effect: FunctionEffect): boolean {
   return effect.kind === 'GlobalMutation';
 }
 
-function getWriteErrorReason(abstractValue: AbstractValue): string {
+export function getWriteErrorReason(abstractValue: AbstractValue): string {
   if (abstractValue.reason.has(ValueReason.Global)) {
     return 'Writing to a variable defined outside a component or hook is not allowed. Consider using an effect';
   } else if (abstractValue.reason.has(ValueReason.JsxCaptured)) {
