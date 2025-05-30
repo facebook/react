@@ -8595,6 +8595,86 @@ background-color: green;
           '    in style (at **)',
       ]);
     });
+
+    it('can emit styles with nonce', async () => {
+      const nonce = 'R4nD0m';
+      const fooCss = '.foo { color: hotpink; }';
+      const barCss = '.bar { background-color: blue; }';
+      const bazCss = '.baz { border: 1px solid black; }';
+      await act(() => {
+        renderToPipeableStream(
+          <html>
+            <body>
+              <Suspense>
+                <BlockedOn value="first">
+                  <div>first</div>
+                  <style href="foo" precedence="default" nonce={nonce}>
+                    {fooCss}
+                  </style>
+                  <style href="bar" precedence="default" nonce={nonce}>
+                    {barCss}
+                  </style>
+                  <BlockedOn value="second">
+                    <div>second</div>
+                    <style href="baz" precedence="default" nonce={nonce}>
+                      {bazCss}
+                    </style>
+                  </BlockedOn>
+                </BlockedOn>
+              </Suspense>
+            </body>
+          </html>,
+          {nonce: {style: nonce}},
+        ).pipe(writable);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body />
+        </html>,
+      );
+
+      await act(() => {
+        resolveText('first');
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>
+            <style
+              data-href="foo bar"
+              data-precedence="default"
+              media="not all"
+              nonce={nonce}>
+              {`${fooCss}${barCss}`}
+            </style>
+          </body>
+        </html>,
+      );
+
+      await act(() => {
+        resolveText('second');
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <style data-href="foo bar" data-precedence="default" nonce={nonce}>
+              {`${fooCss}${barCss}`}
+            </style>
+            <style data-href="baz" data-precedence="default" nonce={nonce}>
+              {bazCss}
+            </style>
+          </head>
+          <body>
+            <div>first</div>
+            <div>second</div>
+          </body>
+        </html>,
+      );
+    });
   });
 
   describe('Script Resources', () => {

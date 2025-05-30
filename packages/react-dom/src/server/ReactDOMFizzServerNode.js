@@ -56,10 +56,17 @@ function createCancelHandler(request: Request, reason: string) {
   };
 }
 
+type NonceOption =
+  | string
+  | {
+      script?: string,
+      style?: string,
+    };
+
 type Options = {
   identifierPrefix?: string,
   namespaceURI?: string,
-  nonce?: string,
+  nonce?: NonceOption,
   bootstrapScriptContent?: string,
   bootstrapScripts?: Array<string | BootstrapScriptDescriptor>,
   bootstrapModules?: Array<string | BootstrapScriptDescriptor>,
@@ -77,7 +84,7 @@ type Options = {
 };
 
 type ResumeOptions = {
-  nonce?: string,
+  nonce?: NonceOption,
   onShellReady?: () => void,
   onShellError?: (error: mixed) => void,
   onAllReady?: () => void,
