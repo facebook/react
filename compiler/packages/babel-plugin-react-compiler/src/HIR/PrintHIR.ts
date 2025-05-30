@@ -948,6 +948,9 @@ function getFunctionName(
 
 export function printAliasingEffect(effect: AliasingEffect): string {
   switch (effect.kind) {
+    case 'Assign': {
+      return `Assign ${printPlaceForAliasEffect(effect.into)} = ${printPlaceForAliasEffect(effect.from)}`;
+    }
     case 'Alias': {
       return `Alias ${printPlaceForAliasEffect(effect.into)} = ${printPlaceForAliasEffect(effect.from)}`;
     }
@@ -962,6 +965,9 @@ export function printAliasingEffect(effect: AliasingEffect): string {
     }
     case 'CreateFrom': {
       return `Create ${printPlaceForAliasEffect(effect.into)} = kindOf(${printPlaceForAliasEffect(effect.from)})`;
+    }
+    case 'CreateFunction': {
+      return `Function ${printPlaceForAliasEffect(effect.into)} = Function captures=[${effect.captures.map(printPlaceForAliasEffect).join(', ')}]`;
     }
     case 'Apply': {
       const receiverCallee =
@@ -987,9 +993,6 @@ export function printAliasingEffect(effect: AliasingEffect): string {
         }
       }
       return `Apply ${printPlaceForAliasEffect(effect.into)} = ${receiverCallee}(${args})${signature != '' ? '\n     ' : ''}${signature}`;
-    }
-    case 'CreateFunction': {
-      return `Function ${printPlaceForAliasEffect(effect.into)} = Function captures=[${effect.captures.map(printPlaceForAliasEffect).join(', ')}]`;
     }
     case 'Freeze': {
       return `Freeze ${printPlaceForAliasEffect(effect.value)} ${effect.reason}`;

@@ -53,6 +53,7 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
       if (instr.effects == null) continue;
       for (const effect of instr.effects) {
         if (
+          effect.kind === 'Assign' ||
           effect.kind === 'Alias' ||
           effect.kind === 'CreateFrom' ||
           effect.kind === 'Capture'
@@ -109,7 +110,11 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
     for (const instr of block.instructions) {
       if (instr.effects == null) continue;
       for (const effect of instr.effects) {
-        if (effect.kind === 'Alias' || effect.kind === 'CreateFrom') {
+        if (
+          effect.kind === 'Assign' ||
+          effect.kind === 'Alias' ||
+          effect.kind === 'CreateFrom'
+        ) {
           aliases.union([effect.from.identifier, effect.into.identifier]);
         } else if (
           effect.kind === 'Mutate' ||
@@ -156,6 +161,7 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
       const operandEffects = new Map<IdentifierId, Effect>();
       for (const effect of instr.effects) {
         switch (effect.kind) {
+          case 'Assign':
           case 'Alias':
           case 'Capture':
           case 'CreateFrom': {

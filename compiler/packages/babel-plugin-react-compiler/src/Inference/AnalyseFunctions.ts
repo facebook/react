@@ -77,6 +77,7 @@ function lowerWithMutationAliasing(fn: HIRFunction): void {
   const capturedOrMutated = new Set<IdentifierId>();
   for (const effect of effects ?? []) {
     switch (effect.kind) {
+      case 'Assign':
       case 'Alias':
       case 'Capture':
       case 'CreateFrom': {
