@@ -40,10 +40,17 @@ import {
 import {ensureCorrectIsomorphicReactVersion} from '../shared/ensureCorrectIsomorphicReactVersion';
 ensureCorrectIsomorphicReactVersion();
 
+type NonceOption =
+  | string
+  | {
+      script?: string,
+      style?: string,
+    };
+
 type Options = {
   identifierPrefix?: string,
   namespaceURI?: string,
-  nonce?: string,
+  nonce?: NonceOption,
   bootstrapScriptContent?: string,
   bootstrapScripts?: Array<string | BootstrapScriptDescriptor>,
   bootstrapModules?: Array<string | BootstrapScriptDescriptor>,
@@ -59,7 +66,7 @@ type Options = {
 };
 
 type ResumeOptions = {
-  nonce?: string,
+  nonce?: NonceOption,
   signal?: AbortSignal,
   onError?: (error: mixed) => ?string,
   onPostpone?: (reason: string) => void,
