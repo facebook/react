@@ -174,6 +174,7 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
             operandEffects.set(effect.from.identifier.id, Effect.Read);
             break;
           }
+          case 'CreateFunction':
           case 'Create': {
             break;
           }
