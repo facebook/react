@@ -3496,6 +3496,7 @@ function outlineComponentInfo(
 function emitIOInfoChunk(
   request: Request,
   id: number,
+  name: string,
   start: number,
   end: number,
   stack: ?ReactStackTrace,
@@ -3532,6 +3533,7 @@ function emitIOInfoChunk(
   const relativeStartTimestamp = start - request.timeOrigin;
   const relativeEndTimestamp = end - request.timeOrigin;
   const debugIOInfo: Omit<ReactIOInfo, 'debugTask' | 'debugStack'> = {
+    name: name,
     start: relativeStartTimestamp,
     end: relativeEndTimestamp,
     stack: stack,
@@ -3551,7 +3553,14 @@ function outlineIOInfo(request: Request, ioInfo: ReactIOInfo): void {
   // We can't serialize the ConsoleTask/Error objects so we need to omit them before serializing.
   request.pendingChunks++;
   const id = request.nextChunkId++;
-  emitIOInfoChunk(request, id, ioInfo.start, ioInfo.end, ioInfo.stack);
+  emitIOInfoChunk(
+    request,
+    id,
+    ioInfo.name,
+    ioInfo.start,
+    ioInfo.end,
+    ioInfo.stack,
+  );
   request.writtenObjects.set(ioInfo, serializeByValueID(id));
 }
 
@@ -3566,12 +3575,14 @@ function serializeIONode(
   }
 
   let stack = null;
+  let name = '';
   if (ioNode.stack !== null) {
     stack = filterStackTrace(request, ioNode.stack, 1);
+    name = '';
   }
   request.pendingChunks++;
   const id = request.nextChunkId++;
-  emitIOInfoChunk(request, id, ioNode.start, ioNode.end, stack);
+  emitIOInfoChunk(request, id, name, ioNode.start, ioNode.end, stack);
   const ref = serializeByValueID(id);
   request.writtenObjects.set(ioNode, ref);
   return ref;

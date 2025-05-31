@@ -231,6 +231,7 @@ export type ReactErrorInfo = ReactErrorInfoProd | ReactErrorInfoDev;
 
 // The point where the Async Info started which might not be the same place it was awaited.
 export type ReactIOInfo = {
+  +name: string, // the name of the async function being called (e.g. "fetch")
   +start: number, // the start time
   +end: number, // the end time (this might be different from the time the await was unblocked)
   +stack?: null | ReactStackTrace,
