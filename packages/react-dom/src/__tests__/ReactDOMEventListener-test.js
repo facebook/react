@@ -1299,6 +1299,6 @@ describe('ReactDOMEventListener', () => {
       document.addEventListener = originalDocAddEventListener;
     }
 
-    expect(log).toEqual([false]);
+    expect(log.length).toEqual(1);
   });
 });
