@@ -65,7 +65,11 @@ export function initAsyncDebugInfo(): void {
               previous: null,
             }: PromiseNode);
           }
-        } else if (type !== 'Microtask' && type !== 'TickObject') {
+        } else if (
+          type !== 'Microtask' &&
+          type !== 'TickObject' &&
+          type !== 'Immediate'
+        ) {
           if (trigger === undefined) {
             // We have begun a new I/O sequence.
             node = ({
