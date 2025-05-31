@@ -8,13 +8,14 @@
  */
 
 import type {ViewTransitionClass, ViewTransitionProps} from 'shared/ReactTypes';
-import type {FiberRoot} from './ReactInternalTypes';
+import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {ViewTransitionInstance, Instance} from './ReactFiberConfig';
 
 import {
   getCommittingRoot,
   getPendingTransitionTypes,
 } from './ReactFiberWorkLoop';
+import {getComponentNameFromOwner} from './getComponentNameFromFiber';
 
 export type ViewTransitionState = {
   autoName: null | string, // the view-transition-name to use when an explicit one is not specified
@@ -25,10 +26,10 @@ export type ViewTransitionState = {
 
 let globalClientIdCounter: number = 0;
 
-export function getViewTransitionName(
-  props: ViewTransitionProps,
-  instance: ViewTransitionState,
-): string {
+export function getViewTransitionName(viewTransitionFiber: Fiber): string {
+  const props: ViewTransitionProps = viewTransitionFiber.memoizedProps;
+  const instance: ViewTransitionState = viewTransitionFiber.stateNode;
+
   if (props.name != null && props.name !== 'auto') {
     return props.name;
   }
@@ -40,10 +41,47 @@ export function getViewTransitionName(
   const root = ((getCommittingRoot(): any): FiberRoot);
   const identifierPrefix = root.identifierPrefix;
   const globalClientId = globalClientIdCounter++;
-  const name =
-    '\u00AB' + identifierPrefix + 't' + globalClientId.toString(32) + '\u00BB';
+  let name = '';
+  if (__DEV__) {
+    let owner = '';
+    if (viewTransitionFiber._debugOwner) {
+      const componentName = getComponentNameFromOwner(
+        viewTransitionFiber._debugOwner,
+      );
+      if (componentName) {
+        owner = formatOwnerNameDEV(componentName);
+      } else {
+        owner = 'UnnamedOwner';
+      }
+    } else {
+      owner = 'UnknownOwner';
+    }
+    name =
+      '\u00AB' +
+      identifierPrefix +
+      't' +
+      globalClientId.toString(32) +
+      '_' +
+      owner +
+      '_' +
+      '\u00BB';
+  } else {
+    name =
+      '\u00AB' +
+      identifierPrefix +
+      't' +
+      globalClientId.toString(32) +
+      '\u00BB';
+  }
   instance.autoName = name;
   return name;
+}
+
+function formatOwnerNameDEV(ownerName: string): string {
+  // Strip to 16 characters and replace invalid characters.
+  // We don't need to replace invalid first characters or forbidden values
+  // because result will be prefixed.
+  return ownerName.slice(0, 16).replace(/[^a-zA-Z0-9_-]/g, '\u2733');
 }
 
 function getClassNameByType(classByType: ?ViewTransitionClass): ?string {
