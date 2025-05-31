@@ -196,13 +196,8 @@ export function cloneUpdateQueue<State>(
   const queue: UpdateQueue<State> = (workInProgress.updateQueue: any);
   const currentQueue: UpdateQueue<State> = (current.updateQueue: any);
   if (queue === currentQueue) {
-    const clone: UpdateQueue<State> = {
-      baseState: currentQueue.baseState,
-      firstBaseUpdate: currentQueue.firstBaseUpdate,
-      lastBaseUpdate: currentQueue.lastBaseUpdate,
-      shared: currentQueue.shared,
-      callbacks: null,
-    };
+    const clone: UpdateQueue<State> = assign({}, currentQueue);
+    clone.callbacks = null;
     workInProgress.updateQueue = clone;
   }
 }
