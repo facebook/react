@@ -67,9 +67,39 @@ const rule = {
               type: 'string',
             },
           },
+          stableValueHooks: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: {
+                  type: 'string',
+                  propertiesOrIndexes: {
+                    oneOf: [
+                      {
+                        type: 'null',
+                      },
+                      {
+                        type: 'array',
+                        items: {
+                          type: 'string',
+                        },
+                      },
+                      {
+                        type: 'array',
+                        items: {
+                          type: 'number',
+                        },
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          },
           requireExplicitEffectDeps: {
             type: 'boolean',
-          }
+          },
         },
       },
     ],
@@ -93,13 +123,23 @@ const rule = {
         ? rawOptions.experimental_autoDependenciesHooks
         : [];
 
-    const requireExplicitEffectDeps: boolean = rawOptions && rawOptions.requireExplicitEffectDeps || false;
+    const requireExplicitEffectDeps: boolean =
+      (rawOptions && rawOptions.requireExplicitEffectDeps) || false;
+
+    const stableValueHooks: Map<string, null | Array<number> | Array<string>> =
+      new Map();
+    if (rawOptions && rawOptions.stableValueHooks) {
+      for (const config of rawOptions.stableValueHooks) {
+        stableValueHooks.set(config.name, config.propertiesOrIndexes);
+      }
+    }
 
     const options = {
       additionalHooks,
       experimental_autoDependenciesHooks,
       enableDangerousAutofixThisMayCauseInfiniteLoops,
       requireExplicitEffectDeps,
+      stableValueHooks,
     };
 
     function reportProblem(problem: Rule.ReportDescriptor) {
@@ -391,6 +431,54 @@ const rule = {
               // Setter is stable.
               return true;
             }
+          }
+        } else if (options.stableValueHooks.has(name)) {
+          const config = options.stableValueHooks.get(name);
+          if (config == null) {
+            // No properties or indexes were provided, so the whole value is stable
+            return id.type === 'Identifier';
+          } else {
+            /* An array of properties or indexes was provided.
+             * We need to check if this variable is a destructured property or index
+             * from the hook's return value.
+             */
+            if (id.type === 'ArrayPattern') {
+              // Find the index for the identifier we're checking
+              const identifierIndex = id.elements.findIndex(
+                el => el === resolved.identifiers[0],
+              );
+
+              if (identifierIndex !== -1) {
+                // Check if this index is in the configured list of stable indexes
+                return (
+                  config.some(
+                    idx => idx === identifierIndex,
+                  )
+                );
+              }
+            } else if (id.type === 'ObjectPattern') {
+              // Find the destructured property for the identifier we're checking
+              for (const property of id.properties) {
+                if (
+                  property.type === 'Property' &&
+                  property.value.type === 'Identifier' &&
+                  property.value === resolved.identifiers[0] &&
+                  property.key.type === 'Identifier' &&
+                  'name' in property.key
+                ) {
+                  // Check if this property name is in the configured list of stable properties
+                  return (
+                    config.some(prop => {
+                      if ('name' in property.key) {
+                        return prop === property.key.name;
+                      }
+                      return false;
+                    })
+                  );
+                }
+              }
+            }
+            return false;
           }
         }
         // By default assume it's dynamic.
@@ -1351,7 +1439,7 @@ const rule = {
           node: reactiveHook,
           message:
             `React Hook ${reactiveHookName} always requires dependencies. ` +
-            `Please add a dependency array or an explicit \`undefined\``
+            `Please add a dependency array or an explicit \`undefined\``,
         });
       }
 
