@@ -15,7 +15,7 @@ import type {
 } from './ReactFlightAsyncSequence';
 
 import {IO_NODE, PROMISE_NODE, AWAIT_NODE} from './ReactFlightAsyncSequence';
-import {createAsyncHook, executionAsyncId} from './ReactFlightServerConfig';
+import {createHook, executionAsyncId} from 'async_hooks';
 import {enableAsyncDebugInfo} from 'shared/ReactFeatureFlags';
 
 const pendingOperations: Map<number, AsyncSequence> =
@@ -28,7 +28,7 @@ const pendingOperations: Map<number, AsyncSequence> =
 // but given that typically this is just a live server, it doesn't really matter.
 export function initAsyncDebugInfo(): void {
   if (__DEV__ && enableAsyncDebugInfo) {
-    createAsyncHook({
+    createHook({
       init(asyncId: number, type: string, triggerAsyncId: number): void {
         const trigger = pendingOperations.get(triggerAsyncId);
         let node: AsyncSequence;
