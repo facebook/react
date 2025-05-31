@@ -76,3 +76,14 @@ To help you get your feet wet and get you familiar with our contribution process
 ### License
 
 React is [MIT licensed](./LICENSE).
+
+## Translations
+
+* [Arabic / العربية](https://github.com/iLihiS/react/blob/main/i18n/README.ar.md)
+* [Chinese / 中文](https://github.com/iLihiS/react/blob/main/i18n/README.zh.md)
+* [English](https://github.com/iLihiS/react/blob/main/i18n/README.en.md)
+* [Hebrew / עברית](https://github.com/iLihiS/react/blob/main/i18n/README.he.md)
+* [Japanese / 日本語](https://github.com/iLihiS/react/blob/main/i18n/README.ja.md)
+* [Portuguese / Português](https://github.com/iLihiS/react/blob/main/i18n/README.pt.md)
+* [Russian / Русский](https://github.com/iLihiS/react/blob/main/i18n/README.ru.md)
+* [Spanish / Español](https://github.com/iLihiS/react/blob/main/i18n/README.sp.md)
