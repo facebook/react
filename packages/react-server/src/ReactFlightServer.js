@@ -1905,7 +1905,7 @@ function visitAsyncNode(
             return ioNode;
           }
           // Outline the IO node.
-          emitIOChunk(request, ioNode);
+          serializeIONode(request, ioNode);
           // Then emit a reference to us awaiting it in the current task.
           request.pendingChunks++;
           emitDebugChunk(request, task.id, {
@@ -1942,7 +1942,7 @@ function emitAsyncSequence(
       // each occurrence. Right now we'll only track the first time it is invoked.
       awaitedNode.end = performance.now();
     }
-    emitIOChunk(request, awaitedNode);
+    serializeIONode(request, awaitedNode);
     request.pendingChunks++;
     emitDebugChunk(request, task.id, {
       awaited: ((awaitedNode: any): ReactIOInfo), // This is deduped by this reference.
@@ -3493,80 +3493,88 @@ function outlineComponentInfo(
   request.writtenObjects.set(componentInfo, serializeByValueID(id));
 }
 
-function outlineIOInfo(request: Request, ioInfo: ReactIOInfo): void {
+function emitIOInfoChunk(
+  request: Request,
+  id: number,
+  start: number,
+  end: number,
+  stack: ?ReactStackTrace,
+): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
     // eslint-disable-next-line react-internal/prod-error-codes
     throw new Error(
-      'outlineIOInfo should never be called in production mode. This is a bug in React.',
+      'emitIOInfoChunk should never be called in production mode. This is a bug in React.',
     );
   }
 
-  if (request.writtenObjects.has(ioInfo)) {
-    // Already written
-    return;
-  }
-
-  // Limit the number of objects we write to prevent emitting giant props objects.
   let objectLimit = 10;
-  if (ioInfo.stack != null) {
-    // Ensure we have enough object limit to encode the stack trace.
-    objectLimit += ioInfo.stack.length;
-  }
-
-  // We use the console encoding so that we can dedupe objects but don't necessarily
-  // use the full serialization that requires a task.
-  const counter = {objectLimit};
-
-  // We can't serialize the ConsoleTask/Error objects so we need to omit them before serializing.
-  const relativeStartTimestamp = ioInfo.start - request.timeOrigin;
-  const relativeEndTimestamp = ioInfo.end - request.timeOrigin;
-  const debugIOInfo: Omit<ReactIOInfo, 'debugTask' | 'debugStack'> = {
-    start: relativeStartTimestamp,
-    end: relativeEndTimestamp,
-    stack: ioInfo.stack,
-  };
-  const id = outlineConsoleValue(request, counter, debugIOInfo);
-  request.writtenObjects.set(ioInfo, serializeByValueID(id));
-}
-
-function emitIOChunk(request: Request, ioNode: IONode | PromiseNode): void {
-  if (!__DEV__) {
-    // These errors should never make it into a build so we don't need to encode them in codes.json
-    // eslint-disable-next-line react-internal/prod-error-codes
-    throw new Error(
-      'outlineIOInfo should never be called in production mode. This is a bug in React.',
-    );
-  }
-
-  if (request.writtenObjects.has(ioNode)) {
-    // Already written
-    return;
-  }
-
-  // Limit the number of objects we write to prevent emitting giant props objects.
-  let objectLimit = 10;
-  let stack = null;
-  if (ioNode.stack !== null) {
-    stack = filterStackTrace(request, ioNode.stack, 1);
-    // Ensure we have enough object limit to encode the stack trace.
+  if (stack) {
     objectLimit += stack.length;
   }
-
-  // We use the console encoding so that we can dedupe objects but don't necessarily
-  // use the full serialization that requires a task.
   const counter = {objectLimit};
+  function replacer(
+    this:
+      | {+[key: string | number]: ReactClientValue}
+      | $ReadOnlyArray<ReactClientValue>,
+    parentPropertyName: string,
+    value: ReactClientValue,
+  ): ReactJSONValue {
+    return renderConsoleValue(
+      request,
+      counter,
+      this,
+      parentPropertyName,
+      value,
+    );
+  }
 
-  // We can't serialize the ConsoleTask/Error objects so we need to omit them before serializing.
-  const relativeStartTimestamp = ioNode.start - request.timeOrigin;
-  const relativeEndTimestamp = ioNode.end - request.timeOrigin;
+  const relativeStartTimestamp = start - request.timeOrigin;
+  const relativeEndTimestamp = end - request.timeOrigin;
   const debugIOInfo: Omit<ReactIOInfo, 'debugTask' | 'debugStack'> = {
     start: relativeStartTimestamp,
     end: relativeEndTimestamp,
     stack: stack,
   };
-  const id = outlineConsoleValue(request, counter, debugIOInfo);
-  request.writtenObjects.set(ioNode, serializeByValueID(id));
+  // $FlowFixMe[incompatible-type] stringify can return null
+  const json: string = stringify(debugIOInfo, replacer);
+  const row = id.toString(16) + ':J' + json + '\n';
+  const processedChunk = stringToChunk(row);
+  request.completedRegularChunks.push(processedChunk);
+}
+
+function outlineIOInfo(request: Request, ioInfo: ReactIOInfo): void {
+  if (request.writtenObjects.has(ioInfo)) {
+    // Already written
+    return;
+  }
+  // We can't serialize the ConsoleTask/Error objects so we need to omit them before serializing.
+  request.pendingChunks++;
+  const id = request.nextChunkId++;
+  emitIOInfoChunk(request, id, ioInfo.start, ioInfo.end, ioInfo.stack);
+  request.writtenObjects.set(ioInfo, serializeByValueID(id));
+}
+
+function serializeIONode(
+  request: Request,
+  ioNode: IONode | PromiseNode,
+): string {
+  const existingRef = request.writtenObjects.get(ioNode);
+  if (existingRef !== undefined) {
+    // Already written
+    return existingRef;
+  }
+
+  let stack = null;
+  if (ioNode.stack !== null) {
+    stack = filterStackTrace(request, ioNode.stack, 1);
+  }
+  request.pendingChunks++;
+  const id = request.nextChunkId++;
+  emitIOInfoChunk(request, id, ioNode.start, ioNode.end, stack);
+  const ref = serializeByValueID(id);
+  request.writtenObjects.set(ioNode, ref);
+  return ref;
 }
 
 function emitTypedArrayChunk(

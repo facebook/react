@@ -47,6 +47,7 @@ import {
   enablePostpone,
   enableProfilerTimer,
   enableComponentPerformanceTrack,
+  enableAsyncDebugInfo,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -2740,6 +2741,37 @@ function resolveConsoleEntry(
   );
 }
 
+function resolveIOInfo(
+  response: Response,
+  id: number,
+  model: UninitializedModel,
+): void {
+  const chunks = response._chunks;
+  let chunk = chunks.get(id);
+  if (!chunk) {
+    chunk = createResolvedModelChunk(response, model);
+    chunks.set(id, chunk);
+    initializeModelChunk(chunk);
+  } else {
+    resolveModelChunk(chunk, model);
+    if (chunk.status === RESOLVED_MODEL) {
+      initializeModelChunk(chunk);
+    }
+  }
+  if (chunk.status === INITIALIZED) {
+    // TODO: Log.
+  } else {
+    chunk.then(
+      v => {
+        // TODO: Log.
+      },
+      e => {
+        // Ignore debug info errors for now. Unnecessary noise.
+      },
+    );
+  }
+}
+
 function mergeBuffer(
   buffer: Array<Uint8Array>,
   lastChunk: Uint8Array,
@@ -2844,7 +2876,7 @@ function flushComponentPerformance(
 
   // First find the start time of the first component to know if it was running
   // in parallel with the previous.
-  const debugInfo = root._debugInfo;
+  const debugInfo = __DEV__ && root._debugInfo;
   if (debugInfo) {
     for (let i = 1; i < debugInfo.length; i++) {
       const info = debugInfo[i];
@@ -3097,6 +3129,17 @@ function processFullStringRow(
             },
           );
         }
+        return;
+      }
+      // Fallthrough to share the error with Console entries.
+    }
+    case 74 /* "J" */: {
+      if (
+        enableProfilerTimer &&
+        enableComponentPerformanceTrack &&
+        enableAsyncDebugInfo
+      ) {
+        resolveIOInfo(response, id, row);
         return;
       }
       // Fallthrough to share the error with Console entries.
