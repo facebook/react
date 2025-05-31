@@ -149,7 +149,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
     expect(await result).toBe('hi');
     getDebugInfo(result);
     /*
-    if (__DEV__ && gate(flags => flags.enableComponentPerformanceTrack)) {
+    if (__DEV__ && gate(flags => flags.enableComponentPerformanceTrack && flags.enableAsyncDebugInfo)) {
       expect(getDebugInfo(result)).toMatchInlineSnapshot(`
         [
           {
@@ -307,7 +307,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
     expect(await result).toBe('hi');
     getDebugInfo(result);
     /*
-    if (__DEV__ && gate(flags => flags.enableComponentPerformanceTrack)) {
+    if (__DEV__ && gate(flags => flags.enableComponentPerformanceTrack && flags.enableAsyncDebugInfo)) {
       expect().toMatchInlineSnapshot(`
         [
           {
