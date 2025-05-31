@@ -1484,6 +1484,143 @@ const tests = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const stableValue = useStableValue();
+          useEffect(() => {
+            console.log(stableValue);
+          }, []); // No need to include stableValue as a dependency
+        }
+      `,
+      options: [
+        {
+          stableValueHooks: [
+            {name: 'useStableValue', propertiesOrIndexes: null},
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const { stableProp } = usePartiallyStableValue();
+          useEffect(() => {
+            console.log(stableProp); // stableProp is stable, no need to include as dependency
+          }, []); 
+        }
+      `,
+      options: [
+        {
+          stableValueHooks: [
+            {
+              name: 'usePartiallyStableValue',
+              propertiesOrIndexes: ['stableProp'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const [stableItem] = useArrayWithStableItems();
+          useEffect(() => {
+            console.log(stableItem); // stableItem is stable, no need to include as dependency
+          }, []); 
+        }
+      `,
+      options: [
+        {
+          stableValueHooks: [
+            {
+              name: 'useArrayWithStableItems',
+              propertiesOrIndexes: [0],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const { prop1, prop2 } = useMultipleStableProps();
+          useEffect(() => {
+            console.log(prop1, prop2); // prop1 and prop2 are stable
+          }, []); 
+        }
+      `,
+      options: [
+        {
+          stableValueHooks: [
+            {
+              name: 'useMultipleStableProps',
+              propertiesOrIndexes: ['prop1', 'prop2'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const [item1, , item3] = useArrayWithMultipleStableItems();
+          useEffect(() => {
+            console.log(item1, item3); // item1 and item3 are stable
+          }, []); 
+        }
+      `,
+      options: [
+        {
+          stableValueHooks: [
+            {
+              name: 'useArrayWithMultipleStableItems',
+              propertiesOrIndexes: [0, 2],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const { stableProp, unstableProp } = useMixedStability();
+          useEffect(() => {
+            console.log(stableProp, unstableProp);
+          }, [unstableProp]); // Only unstableProp needs to be included
+        }
+      `,
+      options: [
+        {
+          stableValueHooks: [
+            {
+              name: 'useMixedStability',
+              propertiesOrIndexes: ['stableProp'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const [stableItem, unstableItem] = useArrayWithStableItems();
+          useEffect(() => {
+            console.log(stableItem, unstableItem);
+          }, [stableItem, unstableItem]); // Including stableItem is allowed
+        }
+      `,
+      options: [
+        {
+          stableValueHooks: [
+            {
+              name: 'useArrayWithStableItems',
+              propertiesOrIndexes: [0],
+            },
+          ],
+        },
+      ],
+    },
   ],
   invalid: [
     {
@@ -7717,6 +7854,126 @@ const tests = {
         {
           message:
             'React Hook useCallback received a function whose dependencies are unknown. Pass an inline function instead.',
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const [stableItem, unstableItem] = useArrayWithStableItems();
+          useEffect(() => {
+            console.log(stableItem, unstableItem);
+          }, []);
+        }
+      `,
+      options: [
+        {
+          stableValueHooks: [
+            {
+              name: 'useArrayWithStableItems',
+              propertiesOrIndexes: [0],
+            },
+          ],
+        },
+      ],
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'unstableItem'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [unstableItem]',
+              output: normalizeIndent`
+                function MyComponent() {
+                  const [stableItem, unstableItem] = useArrayWithStableItems();
+                  useEffect(() => {
+                    console.log(stableItem, unstableItem);
+                  }, [unstableItem]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const [stableItem, unstableItem] = useArrayWithStableItems();
+          useEffect(() => {
+            console.log(stableItem, unstableItem);
+          }, []); // Missing unstableItem as dependency
+        }
+      `,
+      options: [
+        {
+          stableValueHooks: [
+            {
+              name: 'useArrayWithStableItems',
+              propertiesOrIndexes: [0],
+            },
+          ],
+        },
+      ],
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'unstableItem'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [unstableItem]',
+              output: normalizeIndent`
+                function MyComponent() {
+                  const [stableItem, unstableItem] = useArrayWithStableItems();
+                  useEffect(() => {
+                    console.log(stableItem, unstableItem);
+                  }, [unstableItem]); // Missing unstableItem as dependency
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const { stableProp, unstableProp1, unstableProp2 } = useMixedStability();
+          useEffect(() => {
+            console.log(stableProp, unstableProp1, unstableProp2);
+          }, [unstableProp1]); // Missing unstableProp2 as dependency
+        }
+      `,
+      options: [
+        {
+          stableValueHooks: [
+            {
+              name: 'useMixedStability',
+              propertiesOrIndexes: ['stableProp'],
+            },
+          ],
+        },
+      ],
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'unstableProp2'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [unstableProp1, unstableProp2]',
+              output: normalizeIndent`
+                function MyComponent() {
+                  const { stableProp, unstableProp1, unstableProp2 } = useMixedStability();
+                  useEffect(() => {
+                    console.log(stableProp, unstableProp1, unstableProp2);
+                  }, [unstableProp1, unstableProp2]); // Missing unstableProp2 as dependency
+                }
+              `,
+            },
+          ],
         },
       ],
     },
