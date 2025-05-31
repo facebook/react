@@ -33,7 +33,7 @@ export opaque type ClientReference<T> = {
   name: string,
 };
 
-// The reason this function needs to defined here in this file instead of just
+// The reason this function needs to be defined here in this file instead of just
 // being exported directly from the WebpackDestination... file is because the
 // ClientReferenceMetadata is opaque and we can't unwrap it there.
 // This should get inlined and we could also just implement an unwrapping function
@@ -43,18 +43,19 @@ export function prepareDestinationForModule(
   moduleLoading: ModuleLoading,
   nonce: ?string,
   metadata: ClientReferenceMetadata,
-) {
-  prepareDestinationForModuleImpl(moduleLoading, metadata[0], nonce);
+): void {
+  const [modulePath] = metadata; // Destructure for clarity
+  prepareDestinationForModuleImpl(moduleLoading, modulePath, nonce);
 }
 
 export function resolveClientReference<T>(
   bundlerConfig: ServerConsumerModuleMap,
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
-  const baseURL = bundlerConfig;
+  const [modulePath, exportName] = metadata; // Destructure for clarity
   return {
-    specifier: baseURL + metadata[0],
-    name: metadata[1],
+    specifier: bundlerConfig + modulePath,
+    name: exportName,
   };
 }
 
@@ -66,11 +67,13 @@ export function resolveServerReference<T>(
   const idx = id.lastIndexOf('#');
   const exportName = id.slice(idx + 1);
   const fullURL = id.slice(0, idx);
+
   if (!fullURL.startsWith(baseURL)) {
     throw new Error(
       'Attempted to load a Server Reference outside the hosted root.',
     );
   }
+
   return {specifier: fullURL, name: exportName};
 }
 
@@ -79,42 +82,40 @@ const asyncModuleCache: Map<string, Thenable<any>> = new Map();
 export function preloadModule<T>(
   metadata: ClientReference<T>,
 ): null | Thenable<any> {
-  const existingPromise = asyncModuleCache.get(metadata.specifier);
+  const {specifier} = metadata; // Extract `specifier` for clarity
+  const existingPromise = asyncModuleCache.get(specifier);
+
   if (existingPromise) {
-    if (existingPromise.status === 'fulfilled') {
-      return null;
-    }
-    return existingPromise;
-  } else {
-    // $FlowFixMe[unsupported-syntax]
-    const modulePromise: Thenable<T> = import(metadata.specifier);
-    modulePromise.then(
-      value => {
-        const fulfilledThenable: FulfilledThenable<mixed> =
-          (modulePromise: any);
-        fulfilledThenable.status = 'fulfilled';
-        fulfilledThenable.value = value;
-      },
-      reason => {
-        const rejectedThenable: RejectedThenable<mixed> = (modulePromise: any);
-        rejectedThenable.status = 'rejected';
-        rejectedThenable.reason = reason;
-      },
-    );
-    asyncModuleCache.set(metadata.specifier, modulePromise);
-    return modulePromise;
+    return existingPromise.status === 'fulfilled' ? null : existingPromise;
   }
+
+  // $FlowFixMe[unsupported-syntax]
+  const modulePromise: Thenable<T> = import(specifier);
+
+  modulePromise.then(
+    value => {
+      const fulfilledThenable: FulfilledThenable<mixed> = (modulePromise: any);
+      fulfilledThenable.status = 'fulfilled';
+      fulfilledThenable.value = value;
+    },
+    reason => {
+      const rejectedThenable: RejectedThenable<mixed> = (modulePromise: any);
+      rejectedThenable.status = 'rejected';
+      rejectedThenable.reason = reason;
+    },
+  );
+
+  asyncModuleCache.set(specifier, modulePromise);
+  return modulePromise;
 }
 
 export function requireModule<T>(metadata: ClientReference<T>): T {
-  let moduleExports;
-  // We assume that preloadModule has been called before, which
-  // should have added something to the module cache.
-  const promise: any = asyncModuleCache.get(metadata.specifier);
-  if (promise.status === 'fulfilled') {
-    moduleExports = promise.value;
-  } else {
-    throw promise.reason;
+  const {specifier, name} = metadata; // Destructure for clarity
+  const promise: any = asyncModuleCache.get(specifier);
+
+  if (promise?.status === 'fulfilled') {
+    return promise.value[name];
   }
-  return moduleExports[metadata.name];
+
+  throw promise?.reason || new Error(`Module ${specifier} is not preloaded.`);
 }
