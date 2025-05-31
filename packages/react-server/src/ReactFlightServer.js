@@ -164,33 +164,18 @@ function defaultFilterStackFrame(
   );
 }
 
-// DEV-only cache of parsed and filtered stack frames.
-const stackTraceCache: WeakMap<Error, ReactStackTrace> = __DEV__
-  ? new WeakMap()
-  : (null: any);
-
 function filterStackTrace(
   request: Request,
   error: Error,
   skipFrames: number,
 ): ReactStackTrace {
-  const existing = stackTraceCache.get(error);
-  if (existing !== undefined) {
-    // Return a clone because the Flight protocol isn't yet resilient to deduping
-    // objects in the debug info. TODO: Support deduping stacks.
-    const clone = existing.slice(0);
-    for (let i = 0; i < clone.length; i++) {
-      // $FlowFixMe[invalid-tuple-arity]
-      clone[i] = clone[i].slice(0);
-    }
-    return clone;
-  }
   // Since stacks can be quite large and we pass a lot of them, we filter them out eagerly
   // to save bandwidth even in DEV. We'll also replay these stacks on the client so by
   // stripping them early we avoid that overhead. Otherwise we'd normally just rely on
   // the DevTools or framework's ignore lists to filter them out.
   const filterStackFrame = request.filterStackFrame;
   const stack = parseStackTrace(error, skipFrames);
+  const filteredStack = [];
   for (let i = 0; i < stack.length; i++) {
     const callsite = stack[i];
     const functionName = callsite[0];
@@ -203,16 +188,18 @@ function filterStackTrace(
       const envIdx = url.indexOf('/', 12);
       const suffixIdx = url.lastIndexOf('?');
       if (envIdx > -1 && suffixIdx > -1) {
-        url = callsite[1] = url.slice(envIdx + 1, suffixIdx);
+        url = url.slice(envIdx + 1, suffixIdx);
       }
     }
-    if (!filterStackFrame(url, functionName)) {
-      stack.splice(i, 1);
-      i--;
+    if (filterStackFrame(url, functionName)) {
+      // Use a clone because the Flight protocol isn't yet resilient to deduping
+      // objects in the debug info. TODO: Support deduping stacks.
+      const clone = callsite.slice(0);
+      clone[1] = url;
+      filteredStack.push(clone);
     }
   }
-  stackTraceCache.set(error, stack);
-  return stack;
+  return filteredStack;
 }
 
 initAsyncDebugInfo();
