@@ -4762,6 +4762,27 @@ function abortTask(task: Task, request: Request, error: mixed): void {
   }
 }
 
+function abortTaskDEV(task: Task, request: Request, error: mixed): void {
+  if (__DEV__) {
+    const prevTaskInDEV = currentTaskInDEV;
+    const prevGetCurrentStackImpl = ReactSharedInternals.getCurrentStack;
+    setCurrentTaskInDEV(task);
+    ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
+    try {
+      abortTask(task, request, error);
+    } finally {
+      setCurrentTaskInDEV(prevTaskInDEV);
+      ReactSharedInternals.getCurrentStack = prevGetCurrentStackImpl;
+    }
+  } else {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'abortTaskDEV should never be called in production mode. This is a bug in React.',
+    );
+  }
+}
+
 function safelyEmitEarlyPreloads(
   request: Request,
   shellComplete: boolean,
@@ -6111,7 +6132,11 @@ export function abort(request: Request, reason: mixed): void {
       // This error isn't necessarily fatal in this case but we need to stash it
       // so we can use it to abort any pending work
       request.fatalError = error;
-      abortableTasks.forEach(task => abortTask(task, request, error));
+      if (__DEV__) {
+        abortableTasks.forEach(task => abortTaskDEV(task, request, error));
+      } else {
+        abortableTasks.forEach(task => abortTask(task, request, error));
+      }
       abortableTasks.clear();
     }
     if (request.destination !== null) {
