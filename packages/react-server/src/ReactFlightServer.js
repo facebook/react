@@ -19,6 +19,7 @@ import {
   enableTaint,
   enableProfilerTimer,
   enableComponentPerformanceTrack,
+  enableAsyncDebugInfo,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -1953,9 +1954,11 @@ function pingTask(request: Request, task: Task): void {
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     // If this was async we need to emit the time when it completes.
     task.timed = true;
-    const sequence = getCurrentAsyncSequence();
-    if (sequence !== null) {
-      emitAsyncSequence(request, task, sequence, task.time);
+    if (enableAsyncDebugInfo) {
+      const sequence = getCurrentAsyncSequence();
+      if (sequence !== null) {
+        emitAsyncSequence(request, task, sequence, task.time);
+      }
     }
   }
   const pingedTasks = request.pingedTasks;
