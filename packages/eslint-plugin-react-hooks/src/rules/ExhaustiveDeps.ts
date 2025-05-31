@@ -16,10 +16,10 @@ import type {
   Identifier,
   Node,
   Pattern,
-  PrivateIdentifier,
   Super,
-  VariableDeclarator,
 } from 'estree';
+
+import {isStableHookValue} from '../utils/stableHooks';
 
 type DeclaredDependency = {
   key: string;
@@ -283,206 +283,16 @@ const rule = {
 
       const isArray = Array.isArray;
 
-      // Next we'll define a few helpers that helps us
-      // tell if some values don't have to be declared as deps.
-
-      // Some are known to be stable based on Hook calls.
-      // const [state, setState] = useState() / React.useState()
-      //               ^^^ true for this reference
-      // const [state, dispatch] = useReducer() / React.useReducer()
-      //               ^^^ true for this reference
-      // const [state, dispatch] = useActionState() / React.useActionState()
-      //               ^^^ true for this reference
-      // const ref = useRef()
-      //       ^^^ true for this reference
-      // const onStuff = useEffectEvent(() => {})
-      //       ^^^ true for this reference
-      // False for everything else.
+      // This helper function helps us determine if a variable is stable and can therefore
+      // be omitted from the dependency array.
       function isStableKnownHookValue(resolved: Scope.Variable): boolean {
-        if (!isArray(resolved.defs)) {
-          return false;
-        }
-        const def = resolved.defs[0];
-        if (def == null) {
-          return false;
-        }
-        // Look for `let stuff = ...`
-        const defNode: VariableDeclarator = def.node;
-        if (defNode.type !== 'VariableDeclarator') {
-          return false;
-        }
-        let init = defNode.init;
-        if (init == null) {
-          return false;
-        }
-        while (init.type === 'TSAsExpression' || init.type === 'AsExpression') {
-          init = init.expression;
-        }
-        // Detect primitive constants
-        // const foo = 42
-        let declaration = defNode.parent;
-        if (declaration == null && componentScope != null) {
-          // This might happen if variable is declared after the callback.
-          // In that case ESLint won't set up .parent refs.
-          // So we'll set them up manually.
-          fastFindReferenceWithParent(componentScope.block, def.node.id);
-          declaration = def.node.parent;
-          if (declaration == null) {
-            return false;
-          }
-        }
-        if (
-          declaration != null &&
-          'kind' in declaration &&
-          declaration.kind === 'const' &&
-          init.type === 'Literal' &&
-          (typeof init.value === 'string' ||
-            typeof init.value === 'number' ||
-            init.value === null)
-        ) {
-          // Definitely stable
-          return true;
-        }
-        // Detect known Hook calls
-        // const [_, setState] = useState()
-        if (init.type !== 'CallExpression') {
-          return false;
-        }
-        let callee: Expression | PrivateIdentifier | Super = init.callee;
-        // Step into `= React.something` initializer.
-        if (
-          callee.type === 'MemberExpression' &&
-          'name' in callee.object &&
-          callee.object.name === 'React' &&
-          callee.property != null &&
-          !callee.computed
-        ) {
-          callee = callee.property;
-        }
-        if (callee.type !== 'Identifier') {
-          return false;
-        }
-        const definitionNode: VariableDeclarator = def.node;
-        const id = definitionNode.id;
-        const {name} = callee;
-        if (name === 'useRef' && id.type === 'Identifier') {
-          // useRef() return value is stable.
-          return true;
-        } else if (
-          isUseEffectEventIdentifier(callee) &&
-          id.type === 'Identifier'
-        ) {
-          for (const ref of resolved.references) {
-            // @ts-expect-error These types are not compatible (Reference and Identifier)
-            if (ref !== id) {
-              useEffectEventVariables.add(ref.identifier);
-            }
-          }
-          // useEffectEvent() return value is always unstable.
-          return true;
-        } else if (
-          name === 'useState' ||
-          name === 'useReducer' ||
-          name === 'useActionState'
-        ) {
-          // Only consider second value in initializing tuple stable.
-          if (
-            id.type === 'ArrayPattern' &&
-            id.elements.length === 2 &&
-            isArray(resolved.identifiers)
-          ) {
-            // Is second tuple value the same reference we're checking?
-            if (id.elements[1] === resolved.identifiers[0]) {
-              if (name === 'useState') {
-                const references = resolved.references;
-                let writeCount = 0;
-                for (const reference of references) {
-                  if (reference.isWrite()) {
-                    writeCount++;
-                  }
-                  if (writeCount > 1) {
-                    return false;
-                  }
-                  setStateCallSites.set(reference.identifier, id.elements[0]);
-                }
-              }
-              // Setter is stable.
-              return true;
-            } else if (id.elements[0] === resolved.identifiers[0]) {
-              if (name === 'useState') {
-                const references = resolved.references;
-                for (const reference of references) {
-                  stateVariables.add(reference.identifier);
-                }
-              }
-              // State variable itself is dynamic.
-              return false;
-            }
-          }
-        } else if (name === 'useTransition') {
-          // Only consider second value in initializing tuple stable.
-          if (
-            id.type === 'ArrayPattern' &&
-            id.elements.length === 2 &&
-            Array.isArray(resolved.identifiers)
-          ) {
-            // Is second tuple value the same reference we're checking?
-            if (id.elements[1] === resolved.identifiers[0]) {
-              // Setter is stable.
-              return true;
-            }
-          }
-        } else if (options.stableValueHooks.has(name)) {
-          const config = options.stableValueHooks.get(name);
-          if (config == null) {
-            // No properties or indexes were provided, so the whole value is stable
-            return id.type === 'Identifier';
-          } else {
-            /* An array of properties or indexes was provided.
-             * We need to check if this variable is a destructured property or index
-             * from the hook's return value.
-             */
-            if (id.type === 'ArrayPattern') {
-              // Find the index for the identifier we're checking
-              const identifierIndex = id.elements.findIndex(
-                el => el === resolved.identifiers[0],
-              );
-
-              if (identifierIndex !== -1) {
-                // Check if this index is in the configured list of stable indexes
-                return (
-                  config.some(
-                    idx => idx === identifierIndex,
-                  )
-                );
-              }
-            } else if (id.type === 'ObjectPattern') {
-              // Find the destructured property for the identifier we're checking
-              for (const property of id.properties) {
-                if (
-                  property.type === 'Property' &&
-                  property.value.type === 'Identifier' &&
-                  property.value === resolved.identifiers[0] &&
-                  property.key.type === 'Identifier' &&
-                  'name' in property.key
-                ) {
-                  // Check if this property name is in the configured list of stable properties
-                  return (
-                    config.some(prop => {
-                      if ('name' in property.key) {
-                        return prop === property.key.name;
-                      }
-                      return false;
-                    })
-                  );
-                }
-              }
-            }
-            return false;
-          }
-        }
-        // By default assume it's dynamic.
-        return false;
+        return isStableHookValue(
+          resolved,
+          options.stableValueHooks,
+          setStateCallSites,
+          stateVariables,
+          useEffectEventVariables,
+        );
       }
 
       // Some are just functions that don't reference anything dynamic.
@@ -2203,12 +2013,7 @@ function isAncestorNodeOf(a: Node, b: Node): boolean {
   );
 }
 
-function isUseEffectEventIdentifier(node: Node): boolean {
-  if (__EXPERIMENTAL__) {
-    return node.type === 'Identifier' && node.name === 'useEffectEvent';
-  }
-  return false;
-}
+// This function is now imported from stableHooks.ts
 
 function getUnknownDependenciesMessage(reactiveHookName: string): string {
   return (
