@@ -30,7 +30,7 @@ import {
   createTemporaryReference,
   registerTemporaryReference,
 } from './ReactFlightServerTemporaryReferences';
-import {ASYNC_ITERATOR} from 'shared/ReactSymbols';
+import {ASYNC_ITERATOR, getIteratorFn} from 'shared/ReactSymbols';
 
 import hasOwnProperty from 'shared/hasOwnProperty';
 
@@ -383,6 +383,13 @@ function loadServerReference<T>(
   return (null: any);
 }
 
+/** This variable is used by `reviveModel` as an equivalent of an out-param, because JS doesn't have those.
+ * If we didn't use an out-param form, we'd have to allocate a `[revivedValue, shouldSkipReference]` tuple for each value we visit.
+ * It's safe to make this a module-level variable, because `reviveModel` traverses the object synchronously,
+ * so there's no possibility for a concurrent call to `reviveModel` to modify the value before the caller can read it.
+ */
+let shouldParentSkipTemporaryReference = false;
+
 function reviveModel(
   response: Response,
   parentObj: any,
@@ -390,28 +397,70 @@ function reviveModel(
   value: JSONValue,
   reference: void | string,
 ): any {
-  if (typeof value === 'string') {
-    // We can't use .bind here because we need the "this" value.
-    return parseModelString(response, parentObj, parentKey, value, reference);
+  const temporaryReferences = response._temporaryReferences;
+  if (temporaryReferences !== undefined) {
+    // The default is false, i.e. we see no reason for the parent to bail out.
+    // We might find out that we have to bail out by parsing the value or traversing child values.
+    shouldParentSkipTemporaryReference = false;
   }
-  if (typeof value === 'object' && value !== null) {
+
+  if (typeof value === 'string') {
+    const parsedValue = parseModelString(
+      response,
+      parentObj,
+      parentKey,
+      value,
+      reference,
+    );
+
     if (
-      reference !== undefined &&
-      response._temporaryReferences !== undefined
+      temporaryReferences !== undefined &&
+      typeof parsedValue === 'object' &&
+      parsedValue !== null
     ) {
-      // Store this object's reference in case it's returned later.
-      registerTemporaryReference(
-        response._temporaryReferences,
-        value,
-        reference,
-      );
+      // We can't return things like one-shot iterators back to the client as part of a temporary reference,
+      // because they have already been consumed when serializing.
+      if (wasClientValueConsumedBySerialization(parsedValue)) {
+        shouldParentSkipTemporaryReference = true;
+      }
     }
+
+    return parsedValue;
+  }
+
+  if (typeof value === 'object' && value !== null) {
+    // Assume we should register a temporary reference (if enabled/possible).
+    // We might find out that we shouldn't by traversing the children --
+    // if a child object is unreferenceable, then so are we.
+    // (Otherwise, we might return this object as a reference in the reponse,
+    //  and effectively overwrite an un-referenceable child)
+    let shouldCurrentObjectSkipTemporaryReference = false;
+
     if (Array.isArray(value)) {
       for (let i = 0; i < value.length; i++) {
         const childRef =
           reference !== undefined ? reference + ':' + i : undefined;
+
+        const childValue = reviveModel(
+          response,
+          value,
+          '' + i,
+          value[i],
+          childRef,
+        );
+        const didChildSkipTemporaryReference =
+          shouldParentSkipTemporaryReference;
+
         // $FlowFixMe[cannot-write]
-        value[i] = reviveModel(response, value, '' + i, value[i], childRef);
+        value[i] = childValue;
+
+        if (
+          temporaryReferences !== undefined &&
+          !shouldCurrentObjectSkipTemporaryReference &&
+          didChildSkipTemporaryReference
+        ) {
+          shouldCurrentObjectSkipTemporaryReference = true;
+        }
       }
     } else {
       for (const key in value) {
@@ -420,16 +469,28 @@ function reviveModel(
             reference !== undefined && key.indexOf(':') === -1
               ? reference + ':' + key
               : undefined;
-          const newValue = reviveModel(
+
+          const childValue = reviveModel(
             response,
             value,
             key,
             value[key],
             childRef,
           );
-          if (newValue !== undefined) {
+          const didChildSkipTemporaryReference =
+            shouldParentSkipTemporaryReference;
+
+          if (childValue !== undefined) {
             // $FlowFixMe[cannot-write]
-            value[key] = newValue;
+            value[key] = childValue;
+
+            if (
+              temporaryReferences !== undefined &&
+              !shouldCurrentObjectSkipTemporaryReference &&
+              didChildSkipTemporaryReference
+            ) {
+              shouldCurrentObjectSkipTemporaryReference = true;
+            }
           } else {
             // $FlowFixMe[cannot-write]
             delete value[key];
@@ -437,8 +498,53 @@ function reviveModel(
         }
       }
     }
+
+    if (temporaryReferences !== undefined) {
+      if (shouldCurrentObjectSkipTemporaryReference) {
+        // One of our children bailed us out from setting a temporary reference, so our parent should bail out as well.
+        shouldParentSkipTemporaryReference = true;
+      } else {
+        if (reference !== undefined) {
+          // Store this object's reference in case it's returned later.
+          registerTemporaryReference(temporaryReferences, value, reference);
+        }
+        // We want to set this to false even if we don't have a reference --
+        // we might e.g. be under an object property containing ':' (which currently means we don't get a reference)
+        // but that doesn't mean we should bail the parent out from creating a temporary reference of its own.
+        shouldParentSkipTemporaryReference = false;
+      }
+    }
   }
+
   return value;
+}
+
+function wasClientValueConsumedBySerialization(value: Object): boolean {
+  // TODO: ReadableStream is not available in old Node. Remove the typeof check later.
+  if (typeof ReadableStream === 'function' && value instanceof ReadableStream) {
+    return true;
+  }
+
+  const iteratorFn = getIteratorFn(value);
+  if (iteratorFn) {
+    const iterator = iteratorFn.call(value);
+    if (iterator === value) {
+      // Iterator, not Iterable
+      return true;
+    }
+  }
+
+  const getAsyncIterator: void | (() => $AsyncIterator<any, any, any>) =
+    (value: any)[ASYNC_ITERATOR];
+  if (typeof getAsyncIterator === 'function') {
+    const iterator = getAsyncIterator.call(value);
+    if (iterator === value) {
+      // Generators/Iterators are Iterables but they're also their own iterator functions.
+      return true;
+    }
+  }
+
+  return false;
 }
 
 let initializingChunk: ResolvedModelChunk<any> = (null: any);
