@@ -47,8 +47,8 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
     if (
       // Can only merge blocks with a single predecessor
       block.preds.size !== 1 ||
-      // Value blocks cannot merge
-      block.kind !== 'block' ||
+      // Loop blocks cannot merge
+      (block.kind !== 'block' && block.kind !== 'value') ||
       // Merging across fallthroughs could move the predecessor out of its block scope
       fallthroughBlocks.has(block.id)
     ) {
@@ -63,7 +63,13 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
       loc: null,
       suggestions: null,
     });
-    if (predecessor.terminal.kind !== 'goto' || predecessor.kind !== 'block') {
+
+    const predecessorValueWithNoInstructions =
+      predecessor.kind === 'value' && predecessor.instructions.length === 0;
+    if (
+      predecessor.terminal.kind !== 'goto' ||
+      (predecessor.kind !== 'block' && !predecessorValueWithNoInstructions)
+    ) {
       /*
        * The predecessor is not guaranteed to transfer control to this block,
        * they aren't consecutive.
