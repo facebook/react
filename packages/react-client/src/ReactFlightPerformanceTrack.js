@@ -9,7 +9,7 @@
 
 /* eslint-disable react-internal/no-production-logging */
 
-import type {ReactComponentInfo} from 'shared/ReactTypes';
+import type {ReactComponentInfo, ReactIOInfo} from 'shared/ReactTypes';
 
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 
@@ -18,6 +18,7 @@ const supportsUserTiming =
   typeof console !== 'undefined' &&
   typeof console.timeStamp === 'function';
 
+const IO_TRACK = 'Server Requests ⚛';
 const COMPONENTS_TRACK = 'Server Components ⚛';
 
 export function markAllTracksInOrder() {
@@ -25,6 +26,14 @@ export function markAllTracksInOrder() {
     // Ensure we create the Server Component track groups earlier than the Client Scheduler
     // and Client Components. We can always add the 0 time slot even if it's in the past.
     // That's still considered for ordering.
+    console.timeStamp(
+      'Server Requests Track',
+      0.001,
+      0.001,
+      IO_TRACK,
+      undefined,
+      'primary-light',
+    );
     console.timeStamp(
       'Server Components Track',
       0.001,
@@ -192,6 +201,40 @@ export function logDedupedComponentRender(
         trackNames[trackIdx],
         COMPONENTS_TRACK,
         'tertiary-light',
+      );
+    }
+  }
+}
+
+export function logIOInfo(ioInfo: ReactIOInfo): void {
+  const startTime = ioInfo.start;
+  const endTime = ioInfo.end;
+  if (supportsUserTiming && endTime >= 0) {
+    const name = ioInfo.name;
+    const debugTask = ioInfo.debugTask;
+    // TODO: Add more built-in color assignment.
+    const color = name === 'fetch' ? 'primary-light' : 'secondary-light';
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          name,
+          startTime < 0 ? 0 : startTime,
+          endTime,
+          IO_TRACK,
+          undefined,
+          color,
+        ),
+      );
+    } else {
+      console.timeStamp(
+        name,
+        startTime < 0 ? 0 : startTime,
+        endTime,
+        IO_TRACK,
+        undefined,
+        color,
       );
     }
   }
