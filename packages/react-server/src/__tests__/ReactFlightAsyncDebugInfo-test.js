@@ -1,12 +1,3 @@
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @emails react-core
- */
-
 'use strict';
 
 const path = require('path');
@@ -147,9 +138,13 @@ describe('ReactFlightAsyncDebugInfo', () => {
     stream.pipe(readable);
 
     expect(await result).toBe('hi');
-    getDebugInfo(result);
-    /*
-    if (__DEV__ && gate(flags => flags.enableComponentPerformanceTrack && flags.enableAsyncDebugInfo)) {
+    if (
+      __DEV__ &&
+      gate(
+        flags =>
+          flags.enableComponentPerformanceTrack && flags.enableAsyncDebugInfo,
+      )
+    ) {
       expect(getDebugInfo(result)).toMatchInlineSnapshot(`
         [
           {
@@ -165,9 +160,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                139,
+                130,
                 109,
-                126,
+                117,
                 50,
               ],
             ],
@@ -179,25 +174,25 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "delay",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  121,
+                  112,
                   12,
-                  120,
+                  111,
                   3,
                 ],
                 [
                   "getData",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  128,
+                  119,
                   13,
-                  127,
+                  118,
                   5,
                 ],
                 [
                   "Component",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  135,
+                  126,
                   26,
-                  134,
+                  125,
                   5,
                 ],
               ],
@@ -207,17 +202,17 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "getData",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                128,
+                119,
                 13,
-                127,
+                118,
                 5,
               ],
               [
                 "Component",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                135,
+                126,
                 26,
-                134,
+                125,
                 5,
               ],
             ],
@@ -229,25 +224,25 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "delay",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  121,
+                  112,
                   12,
-                  120,
+                  111,
                   3,
                 ],
                 [
                   "getData",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  129,
+                  120,
                   21,
-                  127,
+                  118,
                   5,
                 ],
                 [
                   "Component",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  135,
+                  126,
                   20,
-                  134,
+                  125,
                   5,
                 ],
               ],
@@ -257,17 +252,17 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "getData",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                130,
+                121,
                 21,
-                127,
+                118,
                 5,
               ],
               [
                 "Component",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                135,
+                126,
                 20,
-                134,
+                125,
                 5,
               ],
             ],
@@ -278,7 +273,6 @@ describe('ReactFlightAsyncDebugInfo', () => {
         ]
       `);
     }
-    */
   });
 
   it('can track the start of I/O when no native promise is used', async () => {
@@ -305,10 +299,14 @@ describe('ReactFlightAsyncDebugInfo', () => {
     stream.pipe(readable);
 
     expect(await result).toBe('hi');
-    getDebugInfo(result);
-    /*
-    if (__DEV__ && gate(flags => flags.enableComponentPerformanceTrack && flags.enableAsyncDebugInfo)) {
-      expect().toMatchInlineSnapshot(`
+    if (
+      __DEV__ &&
+      gate(
+        flags =>
+          flags.enableComponentPerformanceTrack && flags.enableAsyncDebugInfo,
+      )
+    ) {
+      expect(getDebugInfo(result)).toMatchInlineSnapshot(`
         [
           {
             "time": 0,
@@ -323,10 +321,10 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                171,
+                291,
                 109,
-                158,
-                152,
+                278,
+                67,
               ],
             ],
           },
@@ -337,9 +335,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "Component",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  161,
+                  281,
                   7,
-                  159,
+                  279,
                   5,
                 ],
               ],
@@ -352,6 +350,5 @@ describe('ReactFlightAsyncDebugInfo', () => {
         ]
       `);
     }
-    */
   });
 });
