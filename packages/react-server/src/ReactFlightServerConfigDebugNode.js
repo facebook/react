@@ -138,6 +138,9 @@ export function initAsyncDebugInfo(): void {
 }
 
 export function getCurrentAsyncSequence(): null | AsyncSequence {
+  if (!__DEV__ || !enableAsyncDebugInfo) {
+    return null;
+  }
   const currentNode = pendingOperations.get(executionAsyncId());
   if (currentNode === undefined) {
     // Nothing that we tracked led to the resolution of this execution context.
