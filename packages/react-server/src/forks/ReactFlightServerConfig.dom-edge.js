@@ -37,6 +37,6 @@ export const createAsyncHook: HookCallbacks => AsyncHook =
 export const executionAsyncId: () => number =
   typeof async_hooks === 'object' ? async_hooks.executionAsyncId : (null: any);
 
-export * from '../ReactFlightServerConfigDebugNode';
+export * from '../ReactFlightServerConfigDebugNoop';
 
 export * from '../ReactFlightStackConfigV8';
