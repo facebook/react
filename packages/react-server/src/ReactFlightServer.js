@@ -15,7 +15,6 @@ import type {TemporaryReferenceSet} from './ReactFlightServerTemporaryReferences
 
 import {
   enablePostpone,
-  enableHalt,
   enableTaint,
   enableProfilerTimer,
   enableComponentPerformanceTrack,
@@ -671,7 +670,7 @@ function serializeThenable(
         // We can no longer accept any resolved values
         request.abortableTasks.delete(newTask);
         newTask.status = ABORTED;
-        if (enableHalt && request.type === PRERENDER) {
+        if (request.type === PRERENDER) {
           request.pendingChunks--;
         } else {
           const errorId: number = (request.fatalError: any);
@@ -819,7 +818,7 @@ function serializeReadableStream(
     }
     aborted = true;
     request.abortListeners.delete(abortStream);
-    if (enableHalt && request.type === PRERENDER) {
+    if (request.type === PRERENDER) {
       request.pendingChunks--;
     } else {
       erroredTask(request, streamTask, reason);
@@ -945,7 +944,7 @@ function serializeAsyncIterable(
     }
     aborted = true;
     request.abortListeners.delete(abortIterable);
-    if (enableHalt && request.type === PRERENDER) {
+    if (request.type === PRERENDER) {
       request.pendingChunks--;
     } else {
       erroredTask(request, streamTask, reason);
@@ -2284,7 +2283,7 @@ function serializeBlob(request: Request, blob: Blob): string {
     }
     aborted = true;
     request.abortListeners.delete(abortBlob);
-    if (enableHalt && request.type === PRERENDER) {
+    if (request.type === PRERENDER) {
       request.pendingChunks--;
     } else {
       erroredTask(request, newTask, reason);
@@ -2342,7 +2341,7 @@ function renderModel(
 
     if (request.status === ABORTING) {
       task.status = ABORTED;
-      if (enableHalt && request.type === PRERENDER) {
+      if (request.type === PRERENDER) {
         // This will create a new task and refer to it in this slot
         // the new task won't be retried because we are aborting
         return outlineHaltedTask(request, task, wasReactNode);
@@ -4066,7 +4065,7 @@ function retryTask(request: Request, task: Task): void {
     if (request.status === ABORTING) {
       request.abortableTasks.delete(task);
       task.status = ABORTED;
-      if (enableHalt && request.type === PRERENDER) {
+      if (request.type === PRERENDER) {
         // When aborting a prerener with halt semantics we don't emit
         // anything into the slot for a task that aborts, it remains unresolved
         request.pendingChunks--;
@@ -4346,7 +4345,7 @@ export function abort(request: Request, reason: mixed): void {
     }
     const abortableTasks = request.abortableTasks;
     if (abortableTasks.size > 0) {
-      if (enableHalt && request.type === PRERENDER) {
+      if (request.type === PRERENDER) {
         // When prerendering with halt semantics we simply halt the task
         // and leave the reference unfulfilled.
         abortableTasks.forEach(task => haltTask(task, request));
