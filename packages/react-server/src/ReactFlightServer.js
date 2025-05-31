@@ -165,6 +165,50 @@ function defaultFilterStackFrame(
   );
 }
 
+function devirtualizeURL(url: string): string {
+  if (url.startsWith('rsc://React/')) {
+    // This callsite is a virtual fake callsite that came from another Flight client.
+    // We need to reverse it back into the original location by stripping its prefix
+    // and suffix. We don't need the environment name because it's available on the
+    // parent object that will contain the stack.
+    const envIdx = url.indexOf('/', 12);
+    const suffixIdx = url.lastIndexOf('?');
+    if (envIdx > -1 && suffixIdx > -1) {
+      return url.slice(envIdx + 1, suffixIdx);
+    }
+  }
+  return url;
+}
+
+function findCalledFunctionNameFromStackTrace(
+  request: Request,
+  stack: ReactStackTrace,
+): string {
+  // Gets the name of the first function called from first party code.
+  let bestMatch = '';
+  const filterStackFrame = request.filterStackFrame;
+  for (let i = 0; i < stack.length; i++) {
+    const callsite = stack[i];
+    const functionName = callsite[0];
+    const url = devirtualizeURL(callsite[1]);
+    if (filterStackFrame(url, functionName)) {
+      if (bestMatch === '') {
+        // If we had no good stack frames for internal calls, just use the last
+        // first party function name.
+        return functionName;
+      }
+      return bestMatch;
+    } else if (functionName === 'new Promise') {
+      // Ignore Promise constructors.
+    } else if (url === 'node:internal/async_hooks') {
+      // Ignore the stack frames from the async hooks themselves.
+    } else {
+      bestMatch = functionName;
+    }
+  }
+  return '';
+}
+
 function filterStackTrace(
   request: Request,
   stack: ReactStackTrace,
@@ -178,18 +222,7 @@ function filterStackTrace(
   for (let i = 0; i < stack.length; i++) {
     const callsite = stack[i];
     const functionName = callsite[0];
-    let url = callsite[1];
-    if (url.startsWith('rsc://React/')) {
-      // This callsite is a virtual fake callsite that came from another Flight client.
-      // We need to reverse it back into the original location by stripping its prefix
-      // and suffix. We don't need the environment name because it's available on the
-      // parent object that will contain the stack.
-      const envIdx = url.indexOf('/', 12);
-      const suffixIdx = url.lastIndexOf('?');
-      if (envIdx > -1 && suffixIdx > -1) {
-        url = url.slice(envIdx + 1, suffixIdx);
-      }
-    }
+    const url = devirtualizeURL(callsite[1]);
     if (filterStackFrame(url, functionName)) {
       // Use a clone because the Flight protocol isn't yet resilient to deduping
       // objects in the debug info. TODO: Support deduping stacks.
@@ -3568,9 +3601,18 @@ function serializeIONode(
   let stack = null;
   let name = '';
   if (ioNode.stack !== null) {
-    stack = filterStackTrace(request, parseStackTrace(ioNode.stack, 1));
-    name = '';
+    const fullStack = parseStackTrace(ioNode.stack, 1);
+    stack = filterStackTrace(request, fullStack);
+    name = findCalledFunctionNameFromStackTrace(request, fullStack);
+    // The name can include the object that this was called on but sometimes that's
+    // just unnecessary context.
+    if (name.startsWith('Window.')) {
+      name = name.slice(7);
+    } else if (name.startsWith('<anonymous>.')) {
+      name = name.slice(7);
+    }
   }
+
   request.pendingChunks++;
   const id = request.nextChunkId++;
   emitIOInfoChunk(request, id, name, ioNode.start, ioNode.end, stack);

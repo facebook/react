@@ -170,6 +170,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
           {
             "awaited": {
               "end": 0,
+              "name": "delay",
               "stack": [
                 [
                   "delay",
@@ -220,6 +221,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
           {
             "awaited": {
               "end": 0,
+              "name": "delay",
               "stack": [
                 [
                   "delay",
@@ -321,9 +323,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                291,
+                293,
                 109,
-                278,
+                280,
                 67,
               ],
             ],
@@ -331,13 +333,14 @@ describe('ReactFlightAsyncDebugInfo', () => {
           {
             "awaited": {
               "end": 0,
+              "name": "setTimeout",
               "stack": [
                 [
                   "Component",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  281,
+                  283,
                   7,
-                  279,
+                  281,
                   5,
                 ],
               ],
