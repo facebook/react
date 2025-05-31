@@ -1136,9 +1136,8 @@ function createChildReconciler(
 
     let knownKeys: Set<string> | null = null;
 
-    let resultingFirstChild: Fiber | null = null;
-    let previousNewFiber: Fiber | null = null;
-
+    const sentinel: Fiber = ({sibling: null} as any);
+    let previousNewFiber: Fiber = sentinel;
     let oldFiber = currentFirstChild;
     let lastPlacedIndex = 0;
     let newIdx = 0;
@@ -1184,16 +1183,7 @@ function createChildReconciler(
         }
       }
       lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
-      if (previousNewFiber === null) {
-        // TODO: Move out of the loop. This only happens for the first run.
-        resultingFirstChild = newFiber;
-      } else {
-        // TODO: Defer siblings if we're not at the right index for this slot.
-        // I.e. if we had null values before, then we want to defer this
-        // for each null value. However, we also don't want to call updateSlot
-        // with the previous one.
-        previousNewFiber.sibling = newFiber;
-      }
+      previousNewFiber.sibling = newFiber;
       previousNewFiber = newFiber;
       oldFiber = nextOldFiber;
     }
@@ -1205,7 +1195,7 @@ function createChildReconciler(
         const numberOfForks = newIdx;
         pushTreeFork(returnFiber, numberOfForks);
       }
-      return resultingFirstChild;
+      return sentinel.sibling;
     }
 
     if (oldFiber === null) {
@@ -1224,20 +1214,15 @@ function createChildReconciler(
             knownKeys,
           );
         }
-        lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
-        if (previousNewFiber === null) {
-          // TODO: Move out of the loop. This only happens for the first run.
-          resultingFirstChild = newFiber;
-        } else {
-          previousNewFiber.sibling = newFiber;
-        }
+        lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);       
+        previousNewFiber.sibling = newFiber;
         previousNewFiber = newFiber;
       }
       if (getIsHydrating()) {
         const numberOfForks = newIdx;
         pushTreeFork(returnFiber, numberOfForks);
       }
-      return resultingFirstChild;
+      return sentinel.sibling;
     }
 
     // Add all children to a key map for quick lookups.
@@ -1273,11 +1258,7 @@ function createChildReconciler(
           }
         }
         lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
-        if (previousNewFiber === null) {
-          resultingFirstChild = newFiber;
-        } else {
-          previousNewFiber.sibling = newFiber;
-        }
+        previousNewFiber.sibling = newFiber;
         previousNewFiber = newFiber;
       }
     }
@@ -1292,7 +1273,7 @@ function createChildReconciler(
       const numberOfForks = newIdx;
       pushTreeFork(returnFiber, numberOfForks);
     }
-    return resultingFirstChild;
+    return sentinel.sibling;
   }
 
   function reconcileChildrenIteratable(
@@ -1427,8 +1408,8 @@ function createChildReconciler(
       throw new Error('An iterable object provided no iterator.');
     }
 
-    let resultingFirstChild: Fiber | null = null;
-    let previousNewFiber: Fiber | null = null;
+    const sentinel: Fiber = ({sibling: null} as any);
+    let previousNewFiber: Fiber = sentinel;
 
     let oldFiber = currentFirstChild;
     let lastPlacedIndex = 0;
@@ -1477,17 +1458,8 @@ function createChildReconciler(
           deleteChild(returnFiber, oldFiber);
         }
       }
+      previousNewFiber.sibling = newFiber;
       lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
-      if (previousNewFiber === null) {
-        // TODO: Move out of the loop. This only happens for the first run.
-        resultingFirstChild = newFiber;
-      } else {
-        // TODO: Defer siblings if we're not at the right index for this slot.
-        // I.e. if we had null values before, then we want to defer this
-        // for each null value. However, we also don't want to call updateSlot
-        // with the previous one.
-        previousNewFiber.sibling = newFiber;
-      }
       previousNewFiber = newFiber;
       oldFiber = nextOldFiber;
     }
@@ -1499,7 +1471,7 @@ function createChildReconciler(
         const numberOfForks = newIdx;
         pushTreeFork(returnFiber, numberOfForks);
       }
-      return resultingFirstChild;
+      return sentinel.sibling;
     }
 
     if (oldFiber === null) {
@@ -1519,19 +1491,14 @@ function createChildReconciler(
           );
         }
         lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
-        if (previousNewFiber === null) {
-          // TODO: Move out of the loop. This only happens for the first run.
-          resultingFirstChild = newFiber;
-        } else {
-          previousNewFiber.sibling = newFiber;
-        }
+        previousNewFiber.sibling = newFiber;
         previousNewFiber = newFiber;
       }
       if (getIsHydrating()) {
         const numberOfForks = newIdx;
         pushTreeFork(returnFiber, numberOfForks);
       }
-      return resultingFirstChild;
+      return sentinel.sibling;
     }
 
     // Add all children to a key map for quick lookups.
@@ -1567,11 +1534,7 @@ function createChildReconciler(
           }
         }
         lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
-        if (previousNewFiber === null) {
-          resultingFirstChild = newFiber;
-        } else {
-          previousNewFiber.sibling = newFiber;
-        }
+        previousNewFiber.sibling = newFiber;
         previousNewFiber = newFiber;
       }
     }
@@ -1586,7 +1549,7 @@ function createChildReconciler(
       const numberOfForks = newIdx;
       pushTreeFork(returnFiber, numberOfForks);
     }
-    return resultingFirstChild;
+    return sentinel.sibling;
   }
 
   function reconcileSingleTextNode(
