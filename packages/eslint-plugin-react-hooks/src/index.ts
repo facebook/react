@@ -9,18 +9,21 @@ import type {ESLint, Linter, Rule} from 'eslint';
 import ExhaustiveDeps from './rules/ExhaustiveDeps';
 import ReactCompiler from './rules/ReactCompiler';
 import RulesOfHooks from './rules/RulesOfHooks';
+import VerifyStableValueHooks from './rules/VerifyStableValueHooks';
 
 // All rules
 const rules = {
   'exhaustive-deps': ExhaustiveDeps,
   'react-compiler': ReactCompiler,
   'rules-of-hooks': RulesOfHooks,
+  'verify-stable-value-hooks': VerifyStableValueHooks,
 } satisfies Record<string, Rule.RuleModule>;
 
 // Config rules
 const configRules = {
   'react-hooks/rules-of-hooks': 'error',
   'react-hooks/exhaustive-deps': 'warn',
+  'react-hooks/verify-stable-value-hooks': 'warn',
 } satisfies Linter.RulesRecord;
 
 // Flat config
