@@ -3627,7 +3627,7 @@ function serializeIONode(
       name = name.slice(7);
     }
   }
-  const owner = null; // TODO
+  const owner = ioNode.owner;
   // Ensure the owner is already outlined.
   if (owner != null) {
     outlineComponentInfo(request, owner);

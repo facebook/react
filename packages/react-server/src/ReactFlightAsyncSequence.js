@@ -7,12 +7,15 @@
  * @flow
  */
 
+import type {ReactComponentInfo} from 'shared/ReactTypes';
+
 export const IO_NODE = 0;
 export const PROMISE_NODE = 1;
 export const AWAIT_NODE = 2;
 
 export type IONode = {
   tag: 0,
+  owner: null | ReactComponentInfo,
   stack: Error, // callsite that spawned the I/O
   start: number, // start time when the first part of the I/O sequence started
   end: number, // we typically don't use this. only when there's no promise intermediate.
@@ -22,6 +25,7 @@ export type IONode = {
 
 export type PromiseNode = {
   tag: 1,
+  owner: null | ReactComponentInfo,
   stack: Error, // callsite that created the Promise
   start: number, // start time when the Promise was created
   end: number, // end time when the Promise was resolved.
@@ -31,6 +35,7 @@ export type PromiseNode = {
 
 export type AwaitNode = {
   tag: 2,
+  owner: null | ReactComponentInfo,
   stack: Error, // callsite that awaited (using await, .then(), Promise.all(), ...)
   start: -1.1, // not used. We use the timing of the awaited promise.
   end: -1.1, // not used.
