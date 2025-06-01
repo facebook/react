@@ -2769,7 +2769,7 @@ function initializeIOInfo(response: Response, ioInfo: ReactIOInfo): void {
   // $FlowFixMe[cannot-write]
   ioInfo.end += response._timeOrigin;
 
-  logIOInfo(ioInfo);
+  logIOInfo(ioInfo, response._rootEnvironmentName);
 }
 
 function resolveIOInfo(

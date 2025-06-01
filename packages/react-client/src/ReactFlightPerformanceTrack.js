@@ -224,11 +224,15 @@ function getIOColor(
   }
 }
 
-export function logIOInfo(ioInfo: ReactIOInfo): void {
+export function logIOInfo(ioInfo: ReactIOInfo, rootEnv: string): void {
   const startTime = ioInfo.start;
   const endTime = ioInfo.end;
   if (supportsUserTiming && endTime >= 0) {
     const name = ioInfo.name;
+    const env = ioInfo.env;
+    const isPrimaryEnv = env === rootEnv;
+    const entryName =
+      isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']';
     const debugTask = ioInfo.debugTask;
     const color = getIOColor(name);
     if (__DEV__ && debugTask) {
@@ -236,7 +240,7 @@ export function logIOInfo(ioInfo: ReactIOInfo): void {
         // $FlowFixMe[method-unbinding]
         console.timeStamp.bind(
           console,
-          name,
+          entryName,
           startTime < 0 ? 0 : startTime,
           endTime,
           IO_TRACK,
@@ -246,7 +250,7 @@ export function logIOInfo(ioInfo: ReactIOInfo): void {
       );
     } else {
       console.timeStamp(
-        name,
+        entryName,
         startTime < 0 ? 0 : startTime,
         endTime,
         IO_TRACK,
