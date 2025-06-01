@@ -2758,9 +2758,7 @@ function resolveConsoleEntry(
 
 function initializeIOInfo(response: Response, ioInfo: ReactIOInfo): void {
   const env =
-    // TODO: Pass env through I/O info.
-    // ioInfo.env !== undefined ? ioInfo.env :
-    response._rootEnvironmentName;
+    ioInfo.env === undefined ? response._rootEnvironmentName : ioInfo.env;
   if (ioInfo.stack !== undefined) {
     initializeFakeTask(response, ioInfo, env);
     initializeFakeStack(response, ioInfo);

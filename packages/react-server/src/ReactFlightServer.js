@@ -1930,10 +1930,14 @@ function visitAsyncNode(
           }
           // Outline the IO node.
           serializeIONode(request, ioNode);
+          // We log the environment at the time when the last promise pigned ping which may
+          // be later than what the environment was when we actually started awaiting.
+          const env = (0, request.environmentName)();
           // Then emit a reference to us awaiting it in the current task.
           request.pendingChunks++;
           emitDebugChunk(request, task.id, {
             awaited: ((ioNode: any): ReactIOInfo), // This is deduped by this reference.
+            env: env,
             owner: node.owner,
             stack: stack,
           });
@@ -1969,8 +1973,12 @@ function emitAsyncSequence(
     }
     serializeIONode(request, awaitedNode);
     request.pendingChunks++;
+    // We log the environment at the time when we ping which may be later than what the
+    // environment was when we actually started awaiting.
+    const env = (0, request.environmentName)();
     emitDebugChunk(request, task.id, {
       awaited: ((awaitedNode: any): ReactIOInfo), // This is deduped by this reference.
+      env: env,
     });
   }
 }
@@ -3524,6 +3532,7 @@ function emitIOInfoChunk(
   name: string,
   start: number,
   end: number,
+  env: ?string,
   owner: ?ReactComponentInfo,
   stack: ?ReactStackTrace,
 ): void {
@@ -3563,6 +3572,10 @@ function emitIOInfoChunk(
     start: relativeStartTimestamp,
     end: relativeEndTimestamp,
   };
+  if (env != null) {
+    // $FlowFixMe[cannot-write]
+    debugIOInfo.env = env;
+  }
   if (stack != null) {
     // $FlowFixMe[cannot-write]
     debugIOInfo.stack = stack;
@@ -3597,6 +3610,7 @@ function outlineIOInfo(request: Request, ioInfo: ReactIOInfo): void {
     ioInfo.name,
     ioInfo.start,
     ioInfo.end,
+    ioInfo.env,
     owner,
     ioInfo.stack,
   );
@@ -3633,9 +3647,22 @@ function serializeIONode(
     outlineComponentInfo(request, owner);
   }
 
+  // We log the environment at the time when we serialize the I/O node.
+  // The environment name may have changed from when the I/O was actually started.
+  const env = (0, request.environmentName)();
+
   request.pendingChunks++;
   const id = request.nextChunkId++;
-  emitIOInfoChunk(request, id, name, ioNode.start, ioNode.end, owner, stack);
+  emitIOInfoChunk(
+    request,
+    id,
+    name,
+    ioNode.start,
+    ioNode.end,
+    env,
+    owner,
+    stack,
+  );
   const ref = serializeByValueID(id);
   request.writtenObjects.set(ioNode, ref);
   return ref;
@@ -4161,6 +4188,7 @@ function forwardDebugInfo(
         const debugAsyncInfo: Omit<ReactAsyncInfo, 'debugTask' | 'debugStack'> =
           {
             awaited: ioInfo,
+            env: debugInfo[i].env,
             owner: debugInfo[i].owner,
             stack: debugInfo[i].stack,
           };

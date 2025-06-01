@@ -173,6 +173,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
           {
             "awaited": {
               "end": 0,
+              "env": "Server",
               "name": "delay",
               "owner": {
                 "env": "Server",
@@ -219,6 +220,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
               ],
               "start": 0,
             },
+            "env": "Server",
             "owner": {
               "env": "Server",
               "key": null,
@@ -258,6 +260,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
           {
             "awaited": {
               "end": 0,
+              "env": "Server",
               "name": "delay",
               "owner": {
                 "env": "Server",
@@ -304,6 +307,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
               ],
               "start": 0,
             },
+            "env": "Server",
             "owner": {
               "env": "Server",
               "key": null,
@@ -394,9 +398,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                364,
+                368,
                 109,
-                351,
+                355,
                 67,
               ],
             ],
@@ -404,6 +408,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
           {
             "awaited": {
               "end": 0,
+              "env": "Server",
               "name": "setTimeout",
               "owner": {
                 "env": "Server",
@@ -415,9 +420,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
                   [
                     "Object.<anonymous>",
                     "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                    364,
+                    368,
                     109,
-                    351,
+                    355,
                     67,
                   ],
                 ],
@@ -426,14 +431,15 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "Component",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  354,
+                  358,
                   7,
-                  352,
+                  356,
                   5,
                 ],
               ],
               "start": 0,
             },
+            "env": "Server",
           },
           {
             "time": 0,
