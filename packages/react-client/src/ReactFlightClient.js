@@ -13,6 +13,7 @@ import type {
   ReactComponentInfo,
   ReactEnvironmentInfo,
   ReactAsyncInfo,
+  ReactIOInfo,
   ReactTimeInfo,
   ReactStackTrace,
   ReactFunctionLocation,
@@ -671,6 +672,14 @@ function nullRefGetter() {
   if (__DEV__) {
     return null;
   }
+}
+
+function getIOInfoTaskName(ioInfo: ReactIOInfo): string {
+  return ''; // TODO
+}
+
+function getAsyncInfoTaskName(asyncInfo: ReactAsyncInfo): string {
+  return 'await'; // We could be smarter about this and give it a name like `then` or `Promise.all`.
 }
 
 function getServerComponentTaskName(componentInfo: ReactComponentInfo): string {
@@ -2448,13 +2457,12 @@ function getRootTask(
 
 function initializeFakeTask(
   response: Response,
-  debugInfo: ReactComponentInfo | ReactAsyncInfo,
+  debugInfo: ReactComponentInfo | ReactAsyncInfo | ReactIOInfo,
   childEnvironmentName: string,
 ): null | ConsoleTask {
   if (!supportsCreateTask) {
     return null;
   }
-  const componentInfo: ReactComponentInfo = (debugInfo: any); // Refined
   if (debugInfo.stack == null) {
     // If this is an error, we should've really already initialized the task.
     // If it's null, we can't initialize a task.
@@ -2462,16 +2470,14 @@ function initializeFakeTask(
   }
   const stack = debugInfo.stack;
   const env: string =
-    componentInfo.env == null
-      ? response._rootEnvironmentName
-      : componentInfo.env;
+    debugInfo.env == null ? response._rootEnvironmentName : debugInfo.env;
   if (env !== childEnvironmentName) {
     // This is the boundary between two environments so we'll annotate the task name.
     // That is unusual so we don't cache it.
     const ownerTask =
-      componentInfo.owner == null
+      debugInfo.owner == null
         ? null
-        : initializeFakeTask(response, componentInfo.owner, env);
+        : initializeFakeTask(response, debugInfo.owner, env);
     return buildFakeTask(
       response,
       ownerTask,
@@ -2480,20 +2486,27 @@ function initializeFakeTask(
       env,
     );
   } else {
-    const cachedEntry = componentInfo.debugTask;
+    const cachedEntry = debugInfo.debugTask;
     if (cachedEntry !== undefined) {
       return cachedEntry;
     }
     const ownerTask =
-      componentInfo.owner == null
+      debugInfo.owner == null
         ? null
-        : initializeFakeTask(response, componentInfo.owner, env);
+        : initializeFakeTask(response, debugInfo.owner, env);
+    // Some unfortunate pattern matching to refine the type.
+    const taskName =
+      debugInfo.key !== undefined
+        ? getServerComponentTaskName(((debugInfo: any): ReactComponentInfo))
+        : debugInfo.name !== undefined
+          ? getIOInfoTaskName(((debugInfo: any): ReactIOInfo))
+          : getAsyncInfoTaskName(((debugInfo: any): ReactAsyncInfo));
     // $FlowFixMe[cannot-write]: We consider this part of initialization.
-    return (componentInfo.debugTask = buildFakeTask(
+    return (debugInfo.debugTask = buildFakeTask(
       response,
       ownerTask,
       stack,
-      getServerComponentTaskName(componentInfo),
+      taskName,
       env,
     ));
   }
@@ -2556,7 +2569,7 @@ function fakeJSXCallSite() {
 
 function initializeFakeStack(
   response: Response,
-  debugInfo: ReactComponentInfo | ReactAsyncInfo,
+  debugInfo: ReactComponentInfo | ReactAsyncInfo | ReactIOInfo,
 ): void {
   const cachedEntry = debugInfo.debugStack;
   if (cachedEntry !== undefined) {
@@ -2741,6 +2754,23 @@ function resolveConsoleEntry(
   );
 }
 
+function initializeIOInfo(response: Response, ioInfo: ReactIOInfo): void {
+  const env =
+    // TODO: Pass env through I/O info.
+    // ioInfo.env !== undefined ? ioInfo.env :
+    response._rootEnvironmentName;
+  if (ioInfo.stack !== undefined) {
+    initializeFakeTask(response, ioInfo, env);
+    initializeFakeStack(response, ioInfo);
+  }
+  // TODO: Initialize owner.
+  // Adjust the time to the current environment's time space.
+  // $FlowFixMe[cannot-write]
+  ioInfo.start += response._timeOrigin;
+  // $FlowFixMe[cannot-write]
+  ioInfo.end += response._timeOrigin;
+}
+
 function resolveIOInfo(
   response: Response,
   id: number,
@@ -2759,11 +2789,11 @@ function resolveIOInfo(
     }
   }
   if (chunk.status === INITIALIZED) {
-    // TODO: Log.
+    initializeIOInfo(response, chunk.value);
   } else {
     chunk.then(
       v => {
-        // TODO: Log.
+        initializeIOInfo(response, v);
       },
       e => {
         // Ignore debug info errors for now. Unnecessary noise.
