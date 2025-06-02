@@ -813,7 +813,13 @@ function createElement(
         console,
         getTaskName(type),
       );
-      const callStack = buildFakeCallStack(response, stack, env, createTaskFn);
+      const callStack = buildFakeCallStack(
+        response,
+        stack,
+        env,
+        false,
+        createTaskFn,
+      );
       // This owner should ideally have already been initialized to avoid getting
       // user stack frames on the stack.
       const ownerTask =
@@ -2134,6 +2140,7 @@ function resolveErrorDev(
     response,
     stack,
     env,
+    false,
     // $FlowFixMe[incompatible-use]
     Error.bind(
       null,
@@ -2196,6 +2203,7 @@ function resolvePostponeDev(
     response,
     stack,
     env,
+    false,
     // $FlowFixMe[incompatible-use]
     Error.bind(null, reason || ''),
   );
@@ -2404,12 +2412,17 @@ function buildFakeCallStack<T>(
   response: Response,
   stack: ReactStackTrace,
   environmentName: string,
+  useEnclosingLine: boolean,
   innerCall: () => T,
 ): () => T {
   let callStack = innerCall;
   for (let i = 0; i < stack.length; i++) {
     const frame = stack[i];
-    const frameKey = frame.join('-') + '-' + environmentName;
+    const frameKey =
+      frame.join('-') +
+      '-' +
+      environmentName +
+      (useEnclosingLine ? '-e' : '-n');
     let fn = fakeFunctionCache.get(frameKey);
     if (fn === undefined) {
       const [name, filename, line, col, enclosingLine, enclosingCol] = frame;
@@ -2423,8 +2436,8 @@ function buildFakeCallStack<T>(
         sourceMap,
         line,
         col,
-        enclosingLine,
-        enclosingCol,
+        useEnclosingLine ? line : enclosingLine,
+        useEnclosingLine ? col : enclosingCol,
         environmentName,
       );
       // TODO: This cache should technically live on the response since the _debugFindSourceMapURL
@@ -2470,6 +2483,15 @@ function initializeFakeTask(
     // If it's null, we can't initialize a task.
     return null;
   }
+
+  // Workaround for a bug where Chrome Performance tracking uses the enclosing line/column
+  // instead of the callsite. For ReactAsyncInfo/ReactIOInfo, the only thing we're going
+  // to use the fake task for is the Performance tracking so we encode the enclosing line/
+  // column at the callsite to get a better line number. We could do this for Components too
+  // but we're going to use those for other things too like console logs and it's not worth
+  // duplicating. If this bug is every fixed in Chrome, this should be set to false.
+  const useEnclosingLine = debugInfo.key === undefined;
+
   const stack = debugInfo.stack;
   const env: string =
     debugInfo.env == null ? response._rootEnvironmentName : debugInfo.env;
@@ -2486,6 +2508,7 @@ function initializeFakeTask(
       stack,
       '"use ' + childEnvironmentName.toLowerCase() + '"',
       env,
+      useEnclosingLine,
     );
   } else {
     const cachedEntry = debugInfo.debugTask;
@@ -2510,6 +2533,7 @@ function initializeFakeTask(
       stack,
       taskName,
       env,
+      useEnclosingLine,
     ));
   }
 }
@@ -2520,9 +2544,16 @@ function buildFakeTask(
   stack: ReactStackTrace,
   taskName: string,
   env: string,
+  useEnclosingLine: boolean,
 ): ConsoleTask {
   const createTaskFn = (console: any).createTask.bind(console, taskName);
-  const callStack = buildFakeCallStack(response, stack, env, createTaskFn);
+  const callStack = buildFakeCallStack(
+    response,
+    stack,
+    env,
+    useEnclosingLine,
+    createTaskFn,
+  );
   if (ownerTask === null) {
     const rootTask = getRootTask(response, env);
     if (rootTask != null) {
@@ -2545,6 +2576,7 @@ const createFakeJSXCallStack = {
       response,
       stack,
       environmentName,
+      false,
       fakeJSXCallSite,
     );
     return callStackForError();
@@ -2681,6 +2713,7 @@ const replayConsoleWithCallStack = {
         response,
         stackTrace,
         env,
+        false,
         bindToConsole(methodName, args, env),
       );
       if (owner != null) {
