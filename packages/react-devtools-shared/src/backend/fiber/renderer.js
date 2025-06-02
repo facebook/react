@@ -5859,7 +5859,11 @@ export function attach(
     return unresolvedSource;
   }
 
-  const internalMcpFunctions = {};
+  type InternalMcpFunctions = {
+    __internal_only_getComponentTree?: Function,
+  };
+
+  const internalMcpFunctions: InternalMcpFunctions = {};
   if (__IS_INTERNAL_MCP_BUILD__) {
     // eslint-disable-next-line no-inner-declarations
     function __internal_only_getComponentTree(): string {
