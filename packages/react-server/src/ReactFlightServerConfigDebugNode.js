@@ -49,8 +49,8 @@ export function initAsyncDebugInfo(): void {
               tag: AWAIT_NODE,
               owner: resolveOwner(),
               stack: new Error(),
-              start: -1.1,
-              end: -1.1,
+              start: performance.now(),
+              end: -1.1, // set when resolved.
               awaited: trigger, // The thing we're awaiting on. Might get overrriden when we resolve.
               previous: current === undefined ? null : current, // The path that led us here.
             }: AwaitNode);
@@ -118,10 +118,8 @@ export function initAsyncDebugInfo(): void {
               'A Promise should never be an IO_NODE. This is a bug in React.',
             );
           }
-          if (resolvedNode.tag === PROMISE_NODE) {
-            // Log the end time when we resolved the promise.
-            resolvedNode.end = performance.now();
-          }
+          // Log the end time when we resolved the promise.
+          resolvedNode.end = performance.now();
           const currentAsyncId = executionAsyncId();
           if (asyncId !== currentAsyncId) {
             // If the promise was not resolved by itself, then that means that
