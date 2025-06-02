@@ -1934,7 +1934,7 @@ function visitAsyncNode(
           request.pendingChunks++;
           emitDebugChunk(request, task.id, {
             awaited: ((ioNode: any): ReactIOInfo), // This is deduped by this reference.
-            owner: ioNode.owner,
+            owner: node.owner,
             stack: stack,
           });
         }
