@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<b01d3694ad5cd6e8f76294ede771ea82>>
+ * @generated SignedSource<<71c7df11ea319bb2a5f453c3e0f565e1>>
  */
 
 'use strict';
@@ -44741,7 +44741,12 @@ function codegenLValue(cx, pattern) {
 }
 function codegenValue(cx, loc, value) {
     if (typeof value === 'number') {
-        return libExports$1.numericLiteral(value);
+        if (value < 0) {
+            return libExports$1.unaryExpression('-', libExports$1.numericLiteral(-value), false);
+        }
+        else {
+            return libExports$1.numericLiteral(value);
+        }
     }
     else if (typeof value === 'boolean') {
         return libExports$1.booleanLiteral(value);

@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<875ae41d0a179807443a1ce4399fc24b>>
+ * @generated SignedSource<<e7cb161d63be58a8a3e8ddc5ea4328fa>>
  */
 
 'use strict';
@@ -44962,7 +44962,12 @@ function codegenLValue(cx, pattern) {
 }
 function codegenValue(cx, loc, value) {
     if (typeof value === 'number') {
-        return libExports$1.numericLiteral(value);
+        if (value < 0) {
+            return libExports$1.unaryExpression('-', libExports$1.numericLiteral(-value), false);
+        }
+        else {
+            return libExports$1.numericLiteral(value);
+        }
     }
     else if (typeof value === 'boolean') {
         return libExports$1.booleanLiteral(value);
