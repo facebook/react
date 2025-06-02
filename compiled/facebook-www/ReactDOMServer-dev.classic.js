@@ -8575,7 +8575,17 @@ __DEV__ &&
                 : reason;
           request.fatalError = error;
           abortableTasks.forEach(function (task) {
-            return abortTask(task, request, error);
+            var prevTaskInDEV = currentTaskInDEV,
+              prevGetCurrentStackImpl = ReactSharedInternals.getCurrentStack;
+            currentTaskInDEV = task;
+            ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
+            try {
+              abortTask(task, request, error);
+            } finally {
+              (currentTaskInDEV = prevTaskInDEV),
+                (ReactSharedInternals.getCurrentStack =
+                  prevGetCurrentStackImpl);
+            }
           });
           abortableTasks.clear();
         }
@@ -10148,5 +10158,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.2.0-www-classic-526dd340-20250602";
+    exports.version = "19.2.0-www-classic-4a1f2907-20250602";
   })();

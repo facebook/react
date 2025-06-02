@@ -8005,7 +8005,17 @@ __DEV__ &&
                 : reason;
           request.fatalError = error;
           abortableTasks.forEach(function (task) {
-            return abortTask(task, request, error);
+            var prevTaskInDEV = currentTaskInDEV,
+              prevGetCurrentStackImpl = ReactSharedInternals.getCurrentStack;
+            currentTaskInDEV = task;
+            ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
+            try {
+              abortTask(task, request, error);
+            } finally {
+              (currentTaskInDEV = prevTaskInDEV),
+                (ReactSharedInternals.getCurrentStack =
+                  prevGetCurrentStackImpl);
+            }
           });
           abortableTasks.clear();
         }
