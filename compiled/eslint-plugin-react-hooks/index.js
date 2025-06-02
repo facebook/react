@@ -44961,7 +44961,12 @@ function codegenLValue(cx, pattern) {
 }
 function codegenValue(cx, loc, value) {
     if (typeof value === 'number') {
-        return libExports$1.numericLiteral(value);
+        if (value < 0) {
+            return libExports$1.unaryExpression('-', libExports$1.numericLiteral(-value), false);
+        }
+        else {
+            return libExports$1.numericLiteral(value);
+        }
     }
     else if (typeof value === 'boolean') {
         return libExports$1.booleanLiteral(value);
