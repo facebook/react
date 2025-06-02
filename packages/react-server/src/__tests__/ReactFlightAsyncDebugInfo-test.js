@@ -466,4 +466,61 @@ describe('ReactFlightAsyncDebugInfo', () => {
       `);
     }
   });
+
+  it('can ingores the start of I/O when immediately resolved non-native promise is awaited', async () => {
+    async function Component() {
+      return await {
+        then(callback) {
+          callback('hi');
+        },
+      };
+    }
+
+    const stream = ReactServerDOMServer.renderToPipeableStream(<Component />);
+
+    const readable = new Stream.PassThrough(streamOptions);
+
+    const result = ReactServerDOMClient.createFromNodeStream(readable, {
+      moduleMap: {},
+      moduleLoading: {},
+    });
+    stream.pipe(readable);
+
+    expect(await result).toBe('hi');
+    if (
+      __DEV__ &&
+      gate(
+        flags =>
+          flags.enableComponentPerformanceTrack && flags.enableAsyncDebugInfo,
+      )
+    ) {
+      expect(getDebugInfo(result)).toMatchInlineSnapshot(`
+        [
+          {
+            "time": 0,
+          },
+          {
+            "env": "Server",
+            "key": null,
+            "name": "Component",
+            "owner": null,
+            "props": {},
+            "stack": [
+              [
+                "Object.<anonymous>",
+                "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                479,
+                109,
+                470,
+                94,
+              ],
+            ],
+          },
+          {
+            "time": 0,
+          },
+        ]
+      `);
+    }
+  });
 });
