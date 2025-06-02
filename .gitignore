@@ -38,3 +38,15 @@ packages/react-devtools-inline/dist
 packages/react-devtools-shell/dist
 packages/react-devtools-timeline/dist
 
+# macOS system files
+.DS_Store
+
+# VSCode IDE settings
+.vscode/
+
+# dotenv files
+.env
+.env.local
+
+# Node.js logs
+npm-debug.log*
