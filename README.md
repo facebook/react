@@ -76,3 +76,6 @@ To help you get your feet wet and get you familiar with our contribution process
 ### License
 
 React is [MIT licensed](./LICENSE).
+## Getting Started
+
+This project is awesome. Follow these steps to run it locally...
