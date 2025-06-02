@@ -27,13 +27,13 @@
 //
 // `DANGER_GITHUB_API_TOKEN=[ENV_ABOVE] yarn danger pr https://github.com/facebook/react/pull/11865
 
-const {markdown, danger, warn} = require('danger');
-const {promisify} = require('util');
+const { markdown, danger, warn } = require('danger');
+const { promisify } = require('util');
 const glob = promisify(require('glob'));
 const gzipSize = require('gzip-size');
-const {writeFileSync} = require('fs');
+const { writeFileSync } = require('fs');
 
-const {readFileSync, statSync} = require('fs');
+const { readFileSync, statSync } = require('fs');
 
 const BASE_DIR = 'base-build';
 const HEAD_DIR = 'build';
@@ -57,7 +57,7 @@ const kilobyteFormatter = new Intl.NumberFormat('en', {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
-
+//this is the text pr fo the project purpose
 function kbs(bytes) {
   return kilobyteFormatter.format(bytes / 1000);
 }
@@ -118,8 +118,8 @@ function row(result, baseSha, headSha) {
   } catch {
     warn(
       "Failed to read build artifacts. It's possible a build configuration " +
-        'has changed upstream. Try pulling the latest changes from the ' +
-        'main branch.'
+      'has changed upstream. Try pulling the latest changes from the ' +
+      'main branch.'
     );
     return;
   }
@@ -138,7 +138,7 @@ function row(result, baseSha, headSha) {
   const resultsMap = new Map();
 
   // Find all the head (current) artifacts paths.
-  const headArtifactPaths = await glob('**/*.js', {cwd: 'build'});
+  const headArtifactPaths = await glob('**/*.js', { cwd: 'build' });
   for (const artifactPath of headArtifactPaths) {
     try {
       // This will throw if there's no matching base artifact
@@ -175,7 +175,7 @@ function row(result, baseSha, headSha) {
   }
 
   // Check for base artifacts that were deleted in the head.
-  const baseArtifactPaths = await glob('**/*.js', {cwd: 'base-build'});
+  const baseArtifactPaths = await glob('**/*.js', { cwd: 'base-build' });
   for (const artifactPath of baseArtifactPaths) {
     if (!resultsMap.has(artifactPath)) {
       const baseSize = statSync(BASE_DIR + '/' + artifactPath).size;
@@ -203,8 +203,8 @@ function row(result, baseSha, headSha) {
     if (result === undefined) {
       throw new Error(
         'Missing expected bundle. If this was an intentional change to the ' +
-          'build configuration, update Dangerfile.js accordingly: ' +
-          artifactPath
+        'build configuration, update Dangerfile.js accordingly: ' +
+        artifactPath
       );
     }
     criticalResults.push(row(result, baseSha, headSha));
@@ -244,9 +244,8 @@ Comparing: ${baseSha}...${headSha}
 
 ## Critical size changes
 
-Includes critical production bundles, as well as any change greater than ${
-    CRITICAL_THRESHOLD * 100
-  }%:
+Includes critical production bundles, as well as any change greater than ${CRITICAL_THRESHOLD * 100
+    }%:
 
 ${header}
 ${criticalResults.join('\n')}
@@ -255,17 +254,16 @@ ${criticalResults.join('\n')}
 
 Includes any change greater than ${SIGNIFICANCE_THRESHOLD * 100}%:
 
-${
-  significantResults.length > 0
-    ? `
+${significantResults.length > 0
+      ? `
 <details>
 <summary>Expand to show</summary>
 ${header}
 ${significantResults.join('\n')}
 </details>
 `
-    : '(No significant changes)'
-}
+      : '(No significant changes)'
+    }
 `;
 
   // GitHub comments are limited to 65536 characters.
@@ -274,7 +272,7 @@ ${significantResults.join('\n')}
     writeFileSync('sizebot-message.md', message);
     markdown(
       'The size diff is too large to display in a single comment. ' +
-        `The GitHub action for this pull request contains an artifact called 'sizebot-message.md' with the full message.`
+      `The GitHub action for this pull request contains an artifact called 'sizebot-message.md' with the full message.`
     );
   } else {
     markdown(message);
