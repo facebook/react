@@ -175,9 +175,13 @@ export function logDedupedComponentRender(
   trackIdx: number,
   startTime: number,
   endTime: number,
+  rootEnv: string,
 ): void {
   if (supportsUserTiming && endTime >= 0 && trackIdx < 10) {
+    const env = componentInfo.env;
     const name = componentInfo.name;
+    const isPrimaryEnv = env === rootEnv;
+    const color = isPrimaryEnv ? 'primary-light' : 'secondary-light';
     const entryName = name + ' [deduped]';
     const debugTask = componentInfo.debugTask;
     if (__DEV__ && debugTask) {
@@ -190,7 +194,7 @@ export function logDedupedComponentRender(
           endTime,
           trackNames[trackIdx],
           COMPONENTS_TRACK,
-          'tertiary-light',
+          color,
         ),
       );
     } else {
@@ -200,9 +204,23 @@ export function logDedupedComponentRender(
         endTime,
         trackNames[trackIdx],
         COMPONENTS_TRACK,
-        'tertiary-light',
+        color,
       );
     }
+  }
+}
+
+function getIOColor(
+  functionName: string,
+): 'tertiary-light' | 'tertiary' | 'tertiary-dark' {
+  // Add some color variation to be able to distinguish various sources.
+  switch (functionName.charCodeAt(0) % 3) {
+    case 0:
+      return 'tertiary-light';
+    case 1:
+      return 'tertiary';
+    default:
+      return 'tertiary-dark';
   }
 }
 
@@ -212,8 +230,7 @@ export function logIOInfo(ioInfo: ReactIOInfo): void {
   if (supportsUserTiming && endTime >= 0) {
     const name = ioInfo.name;
     const debugTask = ioInfo.debugTask;
-    // TODO: Add more built-in color assignment.
-    const color = name === 'fetch' ? 'primary-light' : 'secondary-light';
+    const color = getIOColor(name);
     if (__DEV__ && debugTask) {
       debugTask.run(
         // $FlowFixMe[method-unbinding]

@@ -2893,6 +2893,7 @@ function flushComponentPerformance(
         trackIdx,
         parentEndTime,
         previousEndTime,
+        response._rootEnvironmentName,
       );
     }
     // Since we didn't bump the track this time, we just return the same track.
