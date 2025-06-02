@@ -79,6 +79,7 @@ import {
   logDedupedComponentRender,
   logComponentErrored,
   logIOInfo,
+  logComponentAwait,
 } from './ReactFlightPerformanceTrack';
 
 import {
@@ -680,7 +681,7 @@ function getIOInfoTaskName(ioInfo: ReactIOInfo): string {
 }
 
 function getAsyncInfoTaskName(asyncInfo: ReactAsyncInfo): string {
-  return 'await'; // We could be smarter about this and give it a name like `then` or `Promise.all`.
+  return 'await ' + getIOInfoTaskName(asyncInfo.awaited);
 }
 
 function getServerComponentTaskName(componentInfo: ReactComponentInfo): string {
@@ -2971,9 +2972,12 @@ function flushComponentPerformance(
     for (let i = debugInfo.length - 1; i >= 0; i--) {
       const info = debugInfo[i];
       if (typeof info.time === 'number') {
-        endTime = info.time;
-        if (endTime > childrenEndTime) {
-          childrenEndTime = endTime;
+        if (info.time > childrenEndTime) {
+          childrenEndTime = info.time;
+        }
+        if (endTime === 0) {
+          // Last timestamp is the end of the last component.
+          endTime = info.time;
         }
       }
       if (typeof info.name === 'string' && i > 0) {
@@ -3011,8 +3015,29 @@ function flushComponentPerformance(
           }
           // Track the root most component of the result for deduping logging.
           result.component = componentInfo;
+          // Set the end time of the previous component to the start of the previous.
+          endTime = startTime;
         }
         isLastComponent = false;
+      } else if (info.awaited && i > 0 && i < debugInfo.length - 2) {
+        // $FlowFixMe: Refined.
+        const asyncInfo: ReactAsyncInfo = info;
+        const startTimeInfo = debugInfo[i - 1];
+        const endTimeInfo = debugInfo[i + 1];
+        if (
+          typeof startTimeInfo.time === 'number' &&
+          typeof endTimeInfo.time === 'number'
+        ) {
+          const awaitStartTime = startTimeInfo.time;
+          const awaitEndTime = endTimeInfo.time;
+          logComponentAwait(
+            asyncInfo,
+            trackIdx,
+            awaitStartTime,
+            awaitEndTime,
+            response._rootEnvironmentName,
+          );
+        }
       }
     }
   }
