@@ -1971,6 +1971,9 @@ function visitAsyncNode(
               match = ioNode;
             } else {
               // Outline the IO node.
+              if (ioNode.end < 0) {
+                ioNode.end = endTime;
+              }
               serializeIONode(request, ioNode);
               // We log the environment at the time when the last promise pigned ping which may
               // be later than what the environment was when we actually started awaiting.
