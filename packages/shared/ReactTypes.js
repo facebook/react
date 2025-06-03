@@ -308,6 +308,7 @@ export type SuspenseProps = {
 export type SuspenseListRevealOrder =
   | 'forwards'
   | 'backwards'
+  | 'unstable_legacy-backwards'
   | 'together'
   | 'independent'
   | void;
@@ -326,7 +327,7 @@ type DirectionalSuspenseListProps = {
   // Directional SuspenseList are defined by an array of children or multiple slots to JSX
   // It does not allow a single element child.
   children?: Iterable<SuspenseListRow> | AsyncIterable<SuspenseListRow>, // Note: AsyncIterable is experimental.
-  revealOrder: 'forwards' | 'backwards',
+  revealOrder: 'forwards' | 'backwards' | 'unstable_legacy-backwards',
   tail?: SuspenseListTailMode,
 };
 

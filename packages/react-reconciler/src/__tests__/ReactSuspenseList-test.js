@@ -166,7 +166,7 @@ describe('ReactSuspenseList', () => {
   it('warns if a single fragment is passed to a "backwards" list', async () => {
     function Foo() {
       return (
-        <SuspenseList revealOrder="backwards">
+        <SuspenseList revealOrder="unstable_legacy-backwards">
           <>{[]}</>
         </SuspenseList>
       );
@@ -176,7 +176,7 @@ describe('ReactSuspenseList', () => {
       ReactNoop.render(<Foo />);
     });
     assertConsoleErrorDev([
-      'A single row was passed to a <SuspenseList revealOrder="backwards" />. ' +
+      'A single row was passed to a <SuspenseList revealOrder="unstable_legacy-backwards" />. ' +
         'This is not useful since it needs multiple rows. ' +
         'Did you mean to pass multiple children or an array?' +
         '\n    in SuspenseList (at **)' +
@@ -1035,7 +1035,7 @@ describe('ReactSuspenseList', () => {
 
     function Foo() {
       return (
-        <SuspenseList revealOrder="backwards">
+        <SuspenseList revealOrder="unstable_legacy-backwards">
           <Suspense fallback={<Text text="Loading A" />}>
             <A />
           </Suspense>
@@ -1294,7 +1294,7 @@ describe('ReactSuspenseList', () => {
 
     function Foo({items}) {
       return (
-        <SuspenseList revealOrder="backwards">
+        <SuspenseList revealOrder="unstable_legacy-backwards">
           {items.map(([key, Component]) => (
             <Suspense key={key} fallback={<Text text={'Loading ' + key} />}>
               <Component />
@@ -1868,7 +1868,7 @@ describe('ReactSuspenseList', () => {
 
     function Foo({items}) {
       return (
-        <SuspenseList revealOrder="backwards" tail="collapsed">
+        <SuspenseList revealOrder="unstable_legacy-backwards" tail="collapsed">
           {items.map(([key, Component]) => (
             <Suspense key={key} fallback={<Text text={'Loading ' + key} />}>
               <Component />

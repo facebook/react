@@ -650,7 +650,7 @@ describe('ReactDOMFizzSuspenseList', () => {
   });
 
   // @gate enableSuspenseList
-  it('displays each items in "backwards" order', async () => {
+  it('displays each items in "backwards" order in legacy mode', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
     const C = createAsyncText('C');
@@ -658,7 +658,7 @@ describe('ReactDOMFizzSuspenseList', () => {
     function Foo() {
       return (
         <div>
-          <SuspenseList revealOrder="backwards">
+          <SuspenseList revealOrder="unstable_legacy-backwards">
             <Suspense fallback={<Text text="Loading A" />}>
               <A />
             </Suspense>
@@ -730,7 +730,7 @@ describe('ReactDOMFizzSuspenseList', () => {
       return (
         <div>
           <SuspenseList revealOrder="forwards">
-            <SuspenseList revealOrder="backwards">
+            <SuspenseList revealOrder="unstable_legacy-backwards">
               <Suspense fallback={<Text text="Loading A" />}>
                 <A />
               </Suspense>

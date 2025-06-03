@@ -3229,6 +3229,7 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
       revealOrder !== undefined &&
       revealOrder !== 'forwards' &&
       revealOrder !== 'backwards' &&
+      revealOrder !== 'unstable_legacy-backwards' &&
       revealOrder !== 'together' &&
       revealOrder !== 'independent' &&
       !didWarnAboutRevealOrder[revealOrder]
@@ -3290,7 +3291,11 @@ function validateTailOptions(
             'Did you mean "collapsed" or "hidden"?',
           tailMode,
         );
-      } else if (revealOrder !== 'forwards' && revealOrder !== 'backwards') {
+      } else if (
+        revealOrder !== 'forwards' &&
+        revealOrder !== 'backwards' &&
+        revealOrder !== 'unstable_legacy-backwards'
+      ) {
         didWarnAboutTailOptions[tailMode] = true;
         console.error(
           '<SuspenseList tail="%s" /> is only valid if revealOrder is ' +
@@ -3416,7 +3421,8 @@ function updateSuspenseListComponent(
         );
         break;
       }
-      case 'backwards': {
+      case 'backwards':
+      case 'unstable_legacy-backwards': {
         // We're going to find the first row that has existing content.
         // At the same time we're going to reverse the list of everything
         // we pass in the meantime. That's going to be our tail in reverse

@@ -79,6 +79,7 @@ export function findFirstSuspended(row: Fiber): null | Fiber {
       // keep track of whether it suspended or not.
       (node.memoizedProps.revealOrder === 'forwards' ||
         node.memoizedProps.revealOrder === 'backwards' ||
+        node.memoizedProps.revealOrder === 'unstable_legacy-backwards' ||
         node.memoizedProps.revealOrder === 'together')
     ) {
       const didSuspend = (node.flags & DidCapture) !== NoFlags;
