@@ -19,6 +19,7 @@ import {
   enableTaint,
   enableProfilerTimer,
   enableComponentPerformanceTrack,
+  enableAsyncDebugInfo,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -59,15 +60,22 @@ import type {
   ReactDebugInfo,
   ReactComponentInfo,
   ReactEnvironmentInfo,
+  ReactIOInfo,
   ReactAsyncInfo,
   ReactTimeInfo,
   ReactStackTrace,
+  ReactCallSite,
   ReactFunctionLocation,
   ReactErrorInfo,
   ReactErrorInfoDev,
 } from 'shared/ReactTypes';
 import type {ReactElement} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
+import type {
+  AsyncSequence,
+  IONode,
+  PromiseNode,
+} from './ReactFlightAsyncSequence';
 
 import {
   resolveClientReferenceMetadata,
@@ -81,6 +89,7 @@ import {
   requestStorage,
   createHints,
   initAsyncDebugInfo,
+  getCurrentAsyncSequence,
   parseStackTrace,
   supportsComponentStorage,
   componentStorage,
@@ -140,6 +149,8 @@ import binaryToComparableString from 'shared/binaryToComparableString';
 
 import {SuspenseException, getSuspendedThenable} from './ReactFlightThenable';
 
+import {IO_NODE, PROMISE_NODE, AWAIT_NODE} from './ReactFlightAsyncSequence';
+
 // DEV-only set containing internal objects that should not be limited and turned into getters.
 const doNotLimit: WeakSet<Reference> = __DEV__ ? new WeakSet() : (null: any);
 
@@ -154,55 +165,73 @@ function defaultFilterStackFrame(
   );
 }
 
-// DEV-only cache of parsed and filtered stack frames.
-const stackTraceCache: WeakMap<Error, ReactStackTrace> = __DEV__
-  ? new WeakMap()
-  : (null: any);
+function devirtualizeURL(url: string): string {
+  if (url.startsWith('rsc://React/')) {
+    // This callsite is a virtual fake callsite that came from another Flight client.
+    // We need to reverse it back into the original location by stripping its prefix
+    // and suffix. We don't need the environment name because it's available on the
+    // parent object that will contain the stack.
+    const envIdx = url.indexOf('/', 12);
+    const suffixIdx = url.lastIndexOf('?');
+    if (envIdx > -1 && suffixIdx > -1) {
+      return url.slice(envIdx + 1, suffixIdx);
+    }
+  }
+  return url;
+}
+
+function findCalledFunctionNameFromStackTrace(
+  request: Request,
+  stack: ReactStackTrace,
+): string {
+  // Gets the name of the first function called from first party code.
+  let bestMatch = '';
+  const filterStackFrame = request.filterStackFrame;
+  for (let i = 0; i < stack.length; i++) {
+    const callsite = stack[i];
+    const functionName = callsite[0];
+    const url = devirtualizeURL(callsite[1]);
+    if (filterStackFrame(url, functionName)) {
+      if (bestMatch === '') {
+        // If we had no good stack frames for internal calls, just use the last
+        // first party function name.
+        return functionName;
+      }
+      return bestMatch;
+    } else if (functionName === 'new Promise') {
+      // Ignore Promise constructors.
+    } else if (url === 'node:internal/async_hooks') {
+      // Ignore the stack frames from the async hooks themselves.
+    } else {
+      bestMatch = functionName;
+    }
+  }
+  return '';
+}
 
 function filterStackTrace(
   request: Request,
-  error: Error,
-  skipFrames: number,
+  stack: ReactStackTrace,
 ): ReactStackTrace {
-  const existing = stackTraceCache.get(error);
-  if (existing !== undefined) {
-    // Return a clone because the Flight protocol isn't yet resilient to deduping
-    // objects in the debug info. TODO: Support deduping stacks.
-    const clone = existing.slice(0);
-    for (let i = 0; i < clone.length; i++) {
-      // $FlowFixMe[invalid-tuple-arity]
-      clone[i] = clone[i].slice(0);
-    }
-    return clone;
-  }
   // Since stacks can be quite large and we pass a lot of them, we filter them out eagerly
   // to save bandwidth even in DEV. We'll also replay these stacks on the client so by
   // stripping them early we avoid that overhead. Otherwise we'd normally just rely on
   // the DevTools or framework's ignore lists to filter them out.
   const filterStackFrame = request.filterStackFrame;
-  const stack = parseStackTrace(error, skipFrames);
+  const filteredStack: ReactStackTrace = [];
   for (let i = 0; i < stack.length; i++) {
     const callsite = stack[i];
     const functionName = callsite[0];
-    let url = callsite[1];
-    if (url.startsWith('rsc://React/')) {
-      // This callsite is a virtual fake callsite that came from another Flight client.
-      // We need to reverse it back into the original location by stripping its prefix
-      // and suffix. We don't need the environment name because it's available on the
-      // parent object that will contain the stack.
-      const envIdx = url.indexOf('/', 12);
-      const suffixIdx = url.lastIndexOf('?');
-      if (envIdx > -1 && suffixIdx > -1) {
-        url = callsite[1] = url.slice(envIdx + 1, suffixIdx);
-      }
-    }
-    if (!filterStackFrame(url, functionName)) {
-      stack.splice(i, 1);
-      i--;
+    const url = devirtualizeURL(callsite[1]);
+    if (filterStackFrame(url, functionName)) {
+      // Use a clone because the Flight protocol isn't yet resilient to deduping
+      // objects in the debug info. TODO: Support deduping stacks.
+      const clone: ReactCallSite = (callsite.slice(0): any);
+      clone[1] = url;
+      filteredStack.push(clone);
     }
   }
-  stackTraceCache.set(error, stack);
-  return stack;
+  return filteredStack;
 }
 
 initAsyncDebugInfo();
@@ -230,8 +259,7 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
         // one stack frame but keeping it simple for now and include all frames.
         const stack = filterStackTrace(
           request,
-          new Error('react-stack-top-frame'),
-          1,
+          parseStackTrace(new Error('react-stack-top-frame'), 1),
         );
         request.pendingChunks++;
         const owner: null | ReactComponentInfo = resolveOwner();
@@ -356,6 +384,7 @@ type Task = {
   implicitSlot: boolean, // true if the root server component of this sequence had a null key
   thenableState: ThenableState | null,
   timed: boolean, // Profiling-only. Whether we need to track the completion time of this task.
+  time: number, // Profiling-only. The last time stamp emitted for this task.
   environmentName: string, // DEV-only. Used to track if the environment for this task changed.
   debugOwner: null | ReactComponentInfo, // DEV-only
   debugStack: null | Error, // DEV-only
@@ -529,6 +558,7 @@ function RequestInstance(
     this.didWarnForKey = null;
   }
 
+  let timeOrigin: number;
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     // We start by serializing the time origin. Any future timestamps will be
     // emitted relatively to this origin. Instead of using performance.timeOrigin
@@ -536,13 +566,15 @@ function RequestInstance(
     // This avoids leaking unnecessary information like how long the server has
     // been running and allows for more compact representation of each timestamp.
     // The time origin is stored as an offset in the time space of this environment.
-    const timeOrigin = (this.timeOrigin = performance.now());
+    timeOrigin = this.timeOrigin = performance.now();
     emitTimeOriginChunk(
       this,
       timeOrigin +
         // $FlowFixMe[prop-missing]
         performance.timeOrigin,
     );
+  } else {
+    timeOrigin = 0;
   }
 
   const rootTask = createTask(
@@ -551,6 +583,7 @@ function RequestInstance(
     null,
     false,
     abortSet,
+    timeOrigin,
     null,
     null,
     null,
@@ -642,6 +675,7 @@ function serializeThenable(
     task.keyPath, // the server component sequence continues through Promise-as-a-child.
     task.implicitSlot,
     request.abortableTasks,
+    enableProfilerTimer && enableComponentPerformanceTrack ? task.time : 0,
     __DEV__ ? task.debugOwner : null,
     __DEV__ ? task.debugStack : null,
     __DEV__ ? task.debugTask : null,
@@ -762,6 +796,7 @@ function serializeReadableStream(
     task.keyPath,
     task.implicitSlot,
     request.abortableTasks,
+    enableProfilerTimer && enableComponentPerformanceTrack ? task.time : 0,
     __DEV__ ? task.debugOwner : null,
     __DEV__ ? task.debugStack : null,
     __DEV__ ? task.debugTask : null,
@@ -853,6 +888,7 @@ function serializeAsyncIterable(
     task.keyPath,
     task.implicitSlot,
     request.abortableTasks,
+    enableProfilerTimer && enableComponentPerformanceTrack ? task.time : 0,
     __DEV__ ? task.debugOwner : null,
     __DEV__ ? task.debugStack : null,
     __DEV__ ? task.debugTask : null,
@@ -1060,7 +1096,7 @@ function callWithDebugContextInDEV<A, T>(
   componentDebugInfo.stack =
     task.debugStack === null
       ? null
-      : filterStackTrace(request, task.debugStack, 1);
+      : filterStackTrace(request, parseStackTrace(task.debugStack, 1));
   // $FlowFixMe[cannot-write]
   componentDebugInfo.debugStack = task.debugStack;
   // $FlowFixMe[cannot-write]
@@ -1261,7 +1297,7 @@ function renderFunctionComponent<Props>(
       componentDebugInfo.stack =
         task.debugStack === null
           ? null
-          : filterStackTrace(request, task.debugStack, 1);
+          : filterStackTrace(request, parseStackTrace(task.debugStack, 1));
       // $FlowFixMe[cannot-write]
       componentDebugInfo.props = props;
       // $FlowFixMe[cannot-write]
@@ -1278,7 +1314,11 @@ function renderFunctionComponent<Props>(
       // Track when we started rendering this component.
       if (enableProfilerTimer && enableComponentPerformanceTrack) {
         task.timed = true;
-        emitTimingChunk(request, componentDebugID, performance.now());
+        emitTimingChunk(
+          request,
+          componentDebugID,
+          (task.time = performance.now()),
+        );
       }
 
       emitDebugChunk(request, componentDebugID, componentDebugInfo);
@@ -1593,7 +1633,7 @@ function renderClientElement(
         task.debugOwner,
         task.debugStack === null
           ? null
-          : filterStackTrace(request, task.debugStack, 1),
+          : filterStackTrace(request, parseStackTrace(task.debugStack, 1)),
         validated,
       ]
     : [REACT_ELEMENT_TYPE, type, key, props];
@@ -1629,6 +1669,7 @@ function deferTask(request: Request, task: Task): ReactJSONValue {
     task.keyPath, // unlike outlineModel this one carries along context
     task.implicitSlot,
     request.abortableTasks,
+    enableProfilerTimer && enableComponentPerformanceTrack ? task.time : 0,
     __DEV__ ? task.debugOwner : null,
     __DEV__ ? task.debugStack : null,
     __DEV__ ? task.debugTask : null,
@@ -1645,6 +1686,7 @@ function outlineTask(request: Request, task: Task): ReactJSONValue {
     task.keyPath, // unlike outlineModel this one carries along context
     task.implicitSlot,
     request.abortableTasks,
+    enableProfilerTimer && enableComponentPerformanceTrack ? task.time : 0,
     __DEV__ ? task.debugOwner : null,
     __DEV__ ? task.debugStack : null,
     __DEV__ ? task.debugTask : null,
@@ -1724,7 +1766,7 @@ function renderElement(
         stack:
           task.debugStack === null
             ? null
-            : filterStackTrace(request, task.debugStack, 1),
+            : filterStackTrace(request, parseStackTrace(task.debugStack, 1)),
         props: props,
         debugStack: task.debugStack,
         debugTask: task.debugTask,
@@ -1814,10 +1856,134 @@ function renderElement(
   return renderClientElement(request, task, type, key, props, validated);
 }
 
+function visitAsyncNode(
+  request: Request,
+  task: Task,
+  node: AsyncSequence,
+  cutOff: number,
+  visited: Set<AsyncSequence>,
+): null | PromiseNode | IONode {
+  if (visited.has(node)) {
+    // It's possible to visit them same node twice when it's part of both an "awaited" path
+    // and a "previous" path. This also gracefully handles cycles which would be a bug.
+    return null;
+  }
+  visited.add(node);
+  // First visit anything that blocked this sequence to start in the first place.
+  if (node.previous !== null) {
+    // We ignore the return value here because if it wasn't awaited in user space, then we don't log it.
+    // TODO: This means that some I/O can get lost that was still blocking the sequence.
+    visitAsyncNode(request, task, node.previous, cutOff, visited);
+  }
+  switch (node.tag) {
+    case IO_NODE: {
+      return node;
+    }
+    case PROMISE_NODE: {
+      if (node.end < cutOff) {
+        // This was already resolved when we started this sequence. It must have been
+        // part of a different component.
+        // TODO: Think of some other way to exclude irrelevant data since if we awaited
+        // a cached promise, we should still log this component as being dependent on that data.
+        return null;
+      }
+      const awaited = node.awaited;
+      if (awaited !== null) {
+        const ioNode = visitAsyncNode(request, task, awaited, cutOff, visited);
+        if (ioNode !== null) {
+          // This Promise was blocked on I/O. That's a signal that this Promise is interesting to log.
+          // We don't log it yet though. We return it to be logged by the point where it's awaited.
+          // The ioNode might be another PromiseNode in the case where none of the AwaitNode had
+          // unfiltered stacks.
+          if (
+            filterStackTrace(request, parseStackTrace(node.stack, 1)).length ===
+            0
+          ) {
+            // Typically we assume that the outer most Promise that was awaited in user space has the
+            // most actionable stack trace for the start of the operation. However, if this Promise
+            // was created inside only third party code, then try to use the inner node instead.
+            // This could happen if you pass a first party Promise into a third party to be awaited there.
+            if (ioNode.end < 0) {
+              // If we haven't defined an end time, use the resolve of the outer Promise.
+              ioNode.end = node.end;
+            }
+            return ioNode;
+          }
+          return node;
+        }
+      }
+      return null;
+    }
+    case AWAIT_NODE: {
+      const awaited = node.awaited;
+      if (awaited !== null) {
+        const ioNode = visitAsyncNode(request, task, awaited, cutOff, visited);
+        if (ioNode !== null) {
+          const stack = filterStackTrace(
+            request,
+            parseStackTrace(node.stack, 1),
+          );
+          if (stack.length === 0) {
+            // If this await was fully filtered out, then it was inside third party code
+            // such as in an external library. We return the I/O node and try another await.
+            return ioNode;
+          }
+          // Outline the IO node.
+          serializeIONode(request, ioNode);
+          // Then emit a reference to us awaiting it in the current task.
+          request.pendingChunks++;
+          emitDebugChunk(request, task.id, {
+            awaited: ((ioNode: any): ReactIOInfo), // This is deduped by this reference.
+            stack: stack,
+          });
+        }
+      }
+      // If we had awaited anything we would have written it now.
+      return null;
+    }
+    default: {
+      // eslint-disable-next-line react-internal/prod-error-codes
+      throw new Error('Unknown AsyncSequence tag. This is a bug in React.');
+    }
+  }
+}
+
+function emitAsyncSequence(
+  request: Request,
+  task: Task,
+  node: AsyncSequence,
+  cutOff: number,
+): void {
+  const visited: Set<AsyncSequence> = new Set();
+  const awaitedNode = visitAsyncNode(request, task, node, cutOff, visited);
+  if (awaitedNode !== null) {
+    // Nothing in user space (unfiltered stack) awaited this.
+    if (awaitedNode.end < 0) {
+      // If this was I/O directly without a Promise, then it means that some custom Thenable
+      // called our ping directly and not from a native .then(). We use the current ping time
+      // as the end time and treat it as an await with no stack.
+      // TODO: If this I/O is recurring then we really should have different entries for
+      // each occurrence. Right now we'll only track the first time it is invoked.
+      awaitedNode.end = performance.now();
+    }
+    serializeIONode(request, awaitedNode);
+    request.pendingChunks++;
+    emitDebugChunk(request, task.id, {
+      awaited: ((awaitedNode: any): ReactIOInfo), // This is deduped by this reference.
+    });
+  }
+}
+
 function pingTask(request: Request, task: Task): void {
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     // If this was async we need to emit the time when it completes.
     task.timed = true;
+    if (enableAsyncDebugInfo) {
+      const sequence = getCurrentAsyncSequence();
+      if (sequence !== null) {
+        emitAsyncSequence(request, task, sequence, task.time);
+      }
+    }
   }
   const pingedTasks = request.pingedTasks;
   pingedTasks.push(task);
@@ -1837,6 +2003,7 @@ function createTask(
   keyPath: null | string,
   implicitSlot: boolean,
   abortSet: Set<Task>,
+  lastTimestamp: number, // Profiling-only
   debugOwner: null | ReactComponentInfo, // DEV-only
   debugStack: null | Error, // DEV-only
   debugTask: null | ConsoleTask, // DEV-only
@@ -1912,10 +2079,16 @@ function createTask(
     thenableState: null,
   }: Omit<
     Task,
-    'timed' | 'environmentName' | 'debugOwner' | 'debugStack' | 'debugTask',
+    | 'timed'
+    | 'time'
+    | 'environmentName'
+    | 'debugOwner'
+    | 'debugStack'
+    | 'debugTask',
   >): any);
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     task.timed = false;
+    task.time = lastTimestamp;
   }
   if (__DEV__) {
     task.environmentName = request.environmentName();
@@ -2062,6 +2235,9 @@ function outlineModel(request: Request, value: ReactClientValue): number {
     null, // The way we use outlining is for reusing an object.
     false, // It makes no sense for that use case to be contextual.
     request.abortableTasks,
+    enableProfilerTimer && enableComponentPerformanceTrack
+      ? performance.now() // TODO: This should really inherit the time from the task.
+      : 0,
     null, // TODO: Currently we don't associate any debug information with
     null, // this object on the server. If it ends up erroring, it won't
     null, // have any context on the server but can on the client.
@@ -2242,6 +2418,9 @@ function serializeBlob(request: Request, blob: Blob): string {
     null,
     false,
     request.abortableTasks,
+    enableProfilerTimer && enableComponentPerformanceTrack
+      ? performance.now() // TODO: This should really inherit the time from the task.
+      : 0,
     null, // TODO: Currently we don't associate any debug information with
     null, // this object on the server. If it ends up erroring, it won't
     null, // have any context on the server but can on the client.
@@ -2374,6 +2553,9 @@ function renderModel(
           task.keyPath,
           task.implicitSlot,
           request.abortableTasks,
+          enableProfilerTimer && enableComponentPerformanceTrack
+            ? task.time
+            : 0,
           __DEV__ ? task.debugOwner : null,
           __DEV__ ? task.debugStack : null,
           __DEV__ ? task.debugTask : null,
@@ -3114,7 +3296,7 @@ function emitPostponeChunk(
     try {
       // eslint-disable-next-line react-internal/safe-string-coercion
       reason = String(postponeInstance.message);
-      stack = filterStackTrace(request, postponeInstance, 0);
+      stack = filterStackTrace(request, parseStackTrace(postponeInstance, 0));
     } catch (x) {
       stack = [];
     }
@@ -3137,7 +3319,7 @@ function serializeErrorValue(request: Request, error: Error): string {
       name = error.name;
       // eslint-disable-next-line react-internal/safe-string-coercion
       message = String(error.message);
-      stack = filterStackTrace(request, error, 0);
+      stack = filterStackTrace(request, parseStackTrace(error, 0));
       const errorEnv = (error: any).environmentName;
       if (typeof errorEnv === 'string') {
         // This probably came from another FlightClient as a pass through.
@@ -3176,7 +3358,7 @@ function emitErrorChunk(
         name = error.name;
         // eslint-disable-next-line react-internal/safe-string-coercion
         message = String(error.message);
-        stack = filterStackTrace(request, error, 0);
+        stack = filterStackTrace(request, parseStackTrace(error, 0));
         const errorEnv = (error: any).environmentName;
         if (typeof errorEnv === 'string') {
           // This probably came from another FlightClient as a pass through.
@@ -3335,6 +3517,110 @@ function outlineComponentInfo(
   request.writtenObjects.set(componentInfo, serializeByValueID(id));
 }
 
+function emitIOInfoChunk(
+  request: Request,
+  id: number,
+  name: string,
+  start: number,
+  end: number,
+  stack: ?ReactStackTrace,
+): void {
+  if (!__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'emitIOInfoChunk should never be called in production mode. This is a bug in React.',
+    );
+  }
+
+  let objectLimit = 10;
+  if (stack) {
+    objectLimit += stack.length;
+  }
+  const counter = {objectLimit};
+  function replacer(
+    this:
+      | {+[key: string | number]: ReactClientValue}
+      | $ReadOnlyArray<ReactClientValue>,
+    parentPropertyName: string,
+    value: ReactClientValue,
+  ): ReactJSONValue {
+    return renderConsoleValue(
+      request,
+      counter,
+      this,
+      parentPropertyName,
+      value,
+    );
+  }
+
+  const relativeStartTimestamp = start - request.timeOrigin;
+  const relativeEndTimestamp = end - request.timeOrigin;
+  const debugIOInfo: Omit<ReactIOInfo, 'debugTask' | 'debugStack'> = {
+    name: name,
+    start: relativeStartTimestamp,
+    end: relativeEndTimestamp,
+    stack: stack,
+  };
+  // $FlowFixMe[incompatible-type] stringify can return null
+  const json: string = stringify(debugIOInfo, replacer);
+  const row = id.toString(16) + ':J' + json + '\n';
+  const processedChunk = stringToChunk(row);
+  request.completedRegularChunks.push(processedChunk);
+}
+
+function outlineIOInfo(request: Request, ioInfo: ReactIOInfo): void {
+  if (request.writtenObjects.has(ioInfo)) {
+    // Already written
+    return;
+  }
+  // We can't serialize the ConsoleTask/Error objects so we need to omit them before serializing.
+  request.pendingChunks++;
+  const id = request.nextChunkId++;
+  emitIOInfoChunk(
+    request,
+    id,
+    ioInfo.name,
+    ioInfo.start,
+    ioInfo.end,
+    ioInfo.stack,
+  );
+  request.writtenObjects.set(ioInfo, serializeByValueID(id));
+}
+
+function serializeIONode(
+  request: Request,
+  ioNode: IONode | PromiseNode,
+): string {
+  const existingRef = request.writtenObjects.get(ioNode);
+  if (existingRef !== undefined) {
+    // Already written
+    return existingRef;
+  }
+
+  let stack = null;
+  let name = '';
+  if (ioNode.stack !== null) {
+    const fullStack = parseStackTrace(ioNode.stack, 1);
+    stack = filterStackTrace(request, fullStack);
+    name = findCalledFunctionNameFromStackTrace(request, fullStack);
+    // The name can include the object that this was called on but sometimes that's
+    // just unnecessary context.
+    if (name.startsWith('Window.')) {
+      name = name.slice(7);
+    } else if (name.startsWith('<anonymous>.')) {
+      name = name.slice(7);
+    }
+  }
+
+  request.pendingChunks++;
+  const id = request.nextChunkId++;
+  emitIOInfoChunk(request, id, name, ioNode.start, ioNode.end, stack);
+  const ref = serializeByValueID(id);
+  request.writtenObjects.set(ioNode, ref);
+  return ref;
+}
+
 function emitTypedArrayChunk(
   request: Request,
   id: number,
@@ -3470,7 +3756,10 @@ function renderConsoleValue(
         let debugStack: null | ReactStackTrace = null;
         if (element._debugStack != null) {
           // Outline the debug stack so that it doesn't get cut off.
-          debugStack = filterStackTrace(request, element._debugStack, 1);
+          debugStack = filterStackTrace(
+            request,
+            parseStackTrace(element._debugStack, 1),
+          );
           doNotLimit.add(debugStack);
           for (let i = 0; i < debugStack.length; i++) {
             doNotLimit.add(debugStack[i]);
@@ -3842,8 +4131,22 @@ function forwardDebugInfo(
         // If we had a smarter way to dedupe we might not have to do this if there ends up
         // being no references to this as an owner.
         outlineComponentInfo(request, (debugInfo[i]: any));
+        // Emit a reference to the outlined one.
+        emitDebugChunk(request, id, debugInfo[i]);
+      } else if (debugInfo[i].awaited) {
+        const ioInfo = debugInfo[i].awaited;
+        // Outline the IO info in case the same I/O is awaited in more than one place.
+        outlineIOInfo(request, ioInfo);
+        // We can't serialize the ConsoleTask/Error objects so we need to omit them before serializing.
+        const debugAsyncInfo: Omit<ReactAsyncInfo, 'debugTask' | 'debugStack'> =
+          {
+            awaited: ioInfo,
+            stack: debugInfo[i].stack,
+          };
+        emitDebugChunk(request, id, debugAsyncInfo);
+      } else {
+        emitDebugChunk(request, id, debugInfo[i]);
       }
-      emitDebugChunk(request, id, debugInfo[i]);
     }
   }
 }
@@ -3956,7 +4259,7 @@ function emitChunk(
 function erroredTask(request: Request, task: Task, error: mixed): void {
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     if (task.timed) {
-      emitTimingChunk(request, task.id, performance.now());
+      emitTimingChunk(request, task.id, (task.time = performance.now()));
     }
   }
   task.status = ERRORED;
@@ -4039,7 +4342,7 @@ function retryTask(request: Request, task: Task): void {
     // We've finished rendering. Log the end time.
     if (enableProfilerTimer && enableComponentPerformanceTrack) {
       if (task.timed) {
-        emitTimingChunk(request, task.id, performance.now());
+        emitTimingChunk(request, task.id, (task.time = performance.now()));
       }
     }
 
@@ -4164,7 +4467,7 @@ function abortTask(task: Task, request: Request, errorId: number): void {
   // Track when we aborted this task as its end time.
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     if (task.timed) {
-      emitTimingChunk(request, task.id, performance.now());
+      emitTimingChunk(request, task.id, (task.time = performance.now()));
     }
   }
   // Instead of emitting an error per task.id, we emit a model that only
