@@ -234,6 +234,7 @@ export type ReactIOInfo = {
   +name: string, // the name of the async function being called (e.g. "fetch")
   +start: number, // the start time
   +end: number, // the end time (this might be different from the time the await was unblocked)
+  +env?: string, // the environment where this I/O was spawned.
   +owner?: null | ReactComponentInfo,
   +stack?: null | ReactStackTrace,
   // Stashed Data for the Specific Execution Environment. Not part of the transport protocol
@@ -243,6 +244,7 @@ export type ReactIOInfo = {
 
 export type ReactAsyncInfo = {
   +awaited: ReactIOInfo,
+  +env?: string, // the environment where this was awaited. This might not be the same as where it was spawned.
   +owner?: null | ReactComponentInfo,
   +stack?: null | ReactStackTrace,
   // Stashed Data for the Specific Execution Environment. Not part of the transport protocol
