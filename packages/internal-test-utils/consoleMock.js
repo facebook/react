@@ -395,7 +395,6 @@ export function createLogAssertion(
         }
 
         // Main logic to check if log is expected, with the component stack.
-        // Also normalize stack traces in expectedMessage for robust matching
         const normalizedExpectedMessage = normalizeStackTrace(expectedMessage);
 
         if (
@@ -427,7 +426,6 @@ export function createLogAssertion(
               const message = Array.isArray(messageOrTuple)
                 ? messageOrTuple[0]
                 : messageOrTuple;
-              // Normalize stack traces for diff output as well
               return normalizeStackTrace(message.replace('\n', ' '));
             })
             .join('\n'),
