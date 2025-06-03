@@ -71,6 +71,7 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
     kind: MutationKind;
     place: Place;
   }> = [];
+  const catchHandlers = new Map<BlockId, Place>();
 
   let index = 0;
 
@@ -154,6 +155,24 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
     }
     if (block.terminal.kind === 'return') {
       state.assign(index++, block.terminal.value, fn.returns);
+    }
+
+    /**
+     * TODO: add effects to terminals so that these can be emitted by the equivalent
+     * logic in InferMutationAliasingEffects
+     */
+    if (
+      block.terminal.kind === 'try' &&
+      block.terminal.handlerBinding != null
+    ) {
+      catchHandlers.set(block.terminal.handler, block.terminal.handlerBinding);
+    } else if (block.terminal.kind === 'maybe-throw') {
+      const handlerParam = catchHandlers.get(block.terminal.handler);
+      if (handlerParam != null) {
+        for (const instr of block.instructions) {
+          state.assign(index++, instr.lvalue, handlerParam);
+        }
+      }
     }
   }
 
