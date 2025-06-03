@@ -2,6 +2,7 @@
 import clientReferences from 'virtual:vite-rsc/client-references';
 
 export function loadModule(id: string) {
+  id = id.slice("client:".length);
   if (import.meta.env.DEV) {
     // @ts-ignore
     return __vite_rsc_raw_import__(/* @vite-ignore */ id);

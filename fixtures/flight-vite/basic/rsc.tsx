@@ -6,11 +6,38 @@ import assetsManifest from 'virtual:vite-rsc/assets-manifest';
 export {assetsManifest};
 
 export function loadModule(id: string) {
+  id = id.slice("server:".length);
   if (import.meta.env.DEV) {
     return import(/* @vite-ignore */ id);
   } else {
     return serverReferences[id]();
   }
+}
+
+// @ts-ignore
+import * as ReactServer from 'react-server-dom-vite/server.edge';
+
+export function loadModuleClient(id: string) {
+  if (id.startsWith("client:")) {
+    id = id.slice("client:".length);
+    // TODO: likely there's no legitimate way to load the original module properly.
+    // for now, we use proxy to generate `registerClientReference` on the fly.
+    // https://github.com/hi-ogawa/vite-plugins/pull/906
+    const proxy = new Proxy({} as any, {
+      get(target, name, _receiver) {
+        if (name === 'then') return;
+        return (target[name] ??= ReactServer.registerClientReference(
+          () => {
+            throw new Error("client reference shouldn't be called on server");
+          },
+          id,
+          name
+        ));
+      },
+    })
+    return Promise.resolve(proxy);
+  }
+  return loadModule(id);
 }
 
 export async function importSsr<T>(): Promise<T> {

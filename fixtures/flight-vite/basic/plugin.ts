@@ -82,6 +82,7 @@ export default function vitePluginRsc(rscOptions: {
                   'react/jsx-runtime',
                   'react/jsx-dev-runtime',
                   'react-server-dom-vite/server.edge',
+                  'react-server-dom-vite/client.edge',
                 ],
               },
               build: {

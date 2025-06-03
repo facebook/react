@@ -188,3 +188,11 @@ test('css server hmr @dev', async ({page}) => {
     'rgb(0, 100, 200)',
   );
 });
+
+test("test serialization @js", async ({ page }) => {
+  await page.goto("./");
+  await waitForHydration(page);
+  await expect(page.getByTestId("serialization")).toHaveText("?");
+  await page.getByTestId("serialization").click();
+  await expect(page.getByTestId("serialization")).toHaveText("ok");
+});

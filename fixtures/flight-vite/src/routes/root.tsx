@@ -11,6 +11,7 @@ import {
   TestUseActionState,
 } from './action-from-client/client';
 import './root.css';
+import { TestSerializationServer } from './serialization/server';
 
 export function Root(props: {url: URL}) {
   return (
@@ -39,6 +40,7 @@ export function Root(props: {url: URL}) {
         <TestActionFromClient />
         <TestUseActionState />
         <TestTemporaryReference />
+        <TestSerializationServer />
       </body>
     </html>
   );

@@ -57,8 +57,14 @@ type EncodeFormActionCallback = <A>(
   args: Promise<A>,
 ) => ReactCustomFormAction;
 
-export type Options = {
+type ServerConsumerManifest = {
+  moduleMap?: {},
   moduleLoading?: ModuleLoading,
+  serverModuleMap?: {},
+}
+
+export type Options = {
+  serverConsumerManifest: ServerConsumerManifest,
   nonce?: string,
   encodeFormAction?: EncodeFormActionCallback,
   temporaryReferences?: TemporaryReferenceSet,
@@ -69,9 +75,9 @@ export type Options = {
 
 function createResponseFromOptions(options?: Options) {
   return createResponse(
-    null, // bundlerConfig
-    null, // serverReferenceConfig
-    options && options.moduleLoading ? options.moduleLoading : null,
+    options.serverConsumerManifest.moduleMap,
+    options.serverConsumerManifest.serverModuleMap,
+    options.serverConsumerManifest.moduleLoading,
     noServerCall,
     options ? options.encodeFormAction : undefined,
     options && typeof options.nonce === 'string' ? options.nonce : undefined,

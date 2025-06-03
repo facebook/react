@@ -1,11 +1,14 @@
 // @ts-ignore
 import * as ReactServer from 'react-server-dom-vite/server.edge';
+// @ts-ignore
+import * as ReactClient from 'react-server-dom-vite/client.edge';
 import type React from 'react';
 import type {ReactFormState} from 'react-dom/client';
 import {Root} from './routes/root';
-import {importSsr, loadModule, Resources} from '../basic/rsc';
+import {importSsr, loadModule, loadModuleClient, Resources} from '../basic/rsc';
 
 ReactServer.setPreloadModule(loadModule);
+ReactClient.setPreloadModule(loadModuleClient)
 
 export type RscPayload = {
   root: React.ReactNode;

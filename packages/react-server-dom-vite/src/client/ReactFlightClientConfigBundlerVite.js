@@ -43,7 +43,9 @@ export function resolveClientReference<T>(
   bundlerConfig: ServerConsumerModuleMap,
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
-  return [metadata[ID], metadata[NAME], null];
+  // TODO: for now quick tagging for server consumer to differentiate
+  // server and client references to deserialize them on server.
+  return ['client:' + metadata[ID], metadata[NAME], null];
 }
 
 export function resolveServerReference<T>(
@@ -53,7 +55,7 @@ export function resolveServerReference<T>(
   const idx = ref.lastIndexOf('#');
   const id = ref.slice(0, idx);
   const name = ref.slice(idx + 1);
-  return [id, name, null];
+  return ['server:' + id, name, null];
 }
 
 const asyncModuleCache: Map<string, Thenable<any>> = new Map();
