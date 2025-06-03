@@ -115,6 +115,14 @@ export class CompilerErrorDetail {
 export class CompilerError extends Error {
   details: Array<CompilerErrorDetail> = [];
 
+  static from(details: Array<CompilerErrorDetailOptions>): CompilerError {
+    const error = new CompilerError();
+    for (const detail of details) {
+      error.push(detail);
+    }
+    return error;
+  }
+
   static invariant(
     condition: unknown,
     options: Omit<CompilerErrorDetailOptions, 'severity'>,

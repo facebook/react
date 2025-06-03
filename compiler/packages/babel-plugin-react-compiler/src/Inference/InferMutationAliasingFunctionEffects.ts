@@ -5,14 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
-  HIRFunction,
-  IdentifierId,
-  isPrimitiveType,
-  Place,
-  ScopeId,
-  ValueKind,
-} from '../HIR';
+import {HIRFunction, IdentifierId, Place, ScopeId, ValueKind} from '../HIR';
 import {getOrInsertDefault} from '../Utils/utils';
 import {AliasingEffect} from './InferMutationAliasingEffects';
 
@@ -27,35 +20,6 @@ export function inferMutationAliasingFunctionEffects(
    */
   const tracked = new Map<IdentifierId, Place>();
   tracked.set(fn.returns.identifier.id, fn.returns);
-
-  /**
-   * For each reactive scope we track whether there are known/conditional local and transitive
-   * mutations. This is used to recover precise mutation effects for each of the params and
-   * context variables.
-   */
-  const trackedScopes = new Map<
-    ScopeId,
-    {local: MutationKind; transitive: MutationKind}
-  >();
-  for (const operand of fn.context) {
-    tracked.set(operand.identifier.id, operand);
-    if (operand.identifier.scope != null) {
-      getOrInsertDefault(trackedScopes, operand.identifier.scope.id, {
-        local: MutationKind.None,
-        transitive: MutationKind.None,
-      });
-    }
-  }
-  for (const param of fn.params) {
-    const place = param.kind === 'Identifier' ? param : param.place;
-    tracked.set(place.identifier.id, place);
-    if (place.identifier.scope != null) {
-      getOrInsertDefault(trackedScopes, place.identifier.scope.id, {
-        local: MutationKind.None,
-        transitive: MutationKind.None,
-      });
-    }
-  }
 
   /**
    * Track capturing/aliasing of context vars and params into each other and into the return.
@@ -132,36 +96,10 @@ export function inferMutationAliasingFunctionEffects(
             }
           }
         } else if (
-          effect.kind === 'Mutate' &&
-          effect.value.identifier.scope != null &&
-          trackedScopes.has(effect.value.identifier.scope.id)
+          effect.kind === 'MutateFrozen' ||
+          effect.kind === 'MutateGlobal'
         ) {
-          const scope = trackedScopes.get(effect.value.identifier.scope.id)!;
-          scope.local = MutationKind.Definite;
-        } else if (
-          effect.kind === 'MutateConditionally' &&
-          effect.value.identifier.scope != null &&
-          trackedScopes.has(effect.value.identifier.scope.id)
-        ) {
-          const scope = trackedScopes.get(effect.value.identifier.scope.id)!;
-          scope.local = Math.max(MutationKind.Conditional, scope.local);
-        } else if (
-          effect.kind === 'MutateTransitive' &&
-          effect.value.identifier.scope != null &&
-          trackedScopes.has(effect.value.identifier.scope.id)
-        ) {
-          const scope = trackedScopes.get(effect.value.identifier.scope.id)!;
-          scope.transitive = MutationKind.Definite;
-        } else if (
-          effect.kind === 'MutateTransitiveConditionally' &&
-          effect.value.identifier.scope != null &&
-          trackedScopes.has(effect.value.identifier.scope.id)
-        ) {
-          const scope = trackedScopes.get(effect.value.identifier.scope.id)!;
-          scope.transitive = Math.max(
-            MutationKind.Conditional,
-            scope.transitive,
-          );
+          effects.push(effect);
         }
       }
     }
@@ -175,26 +113,6 @@ export function inferMutationAliasingFunctionEffects(
     }
   }
 
-  // Create mutation effects based on observed mutation types
-  for (const value of tracked.values()) {
-    if (
-      value.identifier.id === fn.returns.identifier.id ||
-      value.identifier.scope == null
-    ) {
-      continue;
-    }
-    const scope = trackedScopes.get(value.identifier.scope.id)!;
-    if (scope.local === MutationKind.Definite) {
-      effects.push({kind: 'Mutate', value});
-    } else if (scope.local === MutationKind.Conditional) {
-      effects.push({kind: 'MutateConditionally', value});
-    }
-    if (scope.transitive === MutationKind.Definite) {
-      effects.push({kind: 'MutateTransitive', value});
-    } else if (scope.transitive === MutationKind.Conditional) {
-      effects.push({kind: 'MutateTransitiveConditionally', value});
-    }
-  }
   // Create aliasing effects based on observed data flow
   let hasReturn = false;
   for (const [into, from] of dataFlow) {
@@ -218,16 +136,17 @@ export function inferMutationAliasingFunctionEffects(
     effects.push({
       kind: 'Create',
       into: fn.returns,
-      value: isPrimitiveType(fn.returns.identifier)
-        ? ValueKind.Primitive
-        : ValueKind.Mutable,
+      value:
+        fn.returnType.kind === 'Primitive'
+          ? ValueKind.Primitive
+          : ValueKind.Mutable,
     });
   }
 
   return effects;
 }
 
-enum MutationKind {
+export enum MutationKind {
   None = 0,
   Conditional = 1,
   Definite = 2,
