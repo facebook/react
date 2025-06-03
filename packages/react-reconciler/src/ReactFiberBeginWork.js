@@ -337,7 +337,7 @@ if (__DEV__) {
   didWarnAboutContextTypes = ({}: {[string]: boolean});
   didWarnAboutGetDerivedStateOnFunctionComponent = ({}: {[string]: boolean});
   didWarnAboutReassigningProps = false;
-  didWarnAboutRevealOrder = ({}: {[empty]: boolean});
+  didWarnAboutRevealOrder = ({}: {[string]: boolean});
   didWarnAboutTailOptions = ({}: {[string]: boolean});
   didWarnAboutDefaultPropsOnFunctionComponent = ({}: {[string]: boolean});
   didWarnAboutClassNameOnViewTransition = ({}: {[string]: boolean});
@@ -3225,17 +3225,23 @@ function findLastContentRow(firstChild: null | Fiber): null | Fiber {
 
 function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
   if (__DEV__) {
+    const cacheKey = revealOrder == null ? 'null' : revealOrder;
     if (
-      revealOrder !== undefined &&
       revealOrder !== 'forwards' &&
       revealOrder !== 'backwards' &&
       revealOrder !== 'unstable_legacy-backwards' &&
       revealOrder !== 'together' &&
       revealOrder !== 'independent' &&
-      !didWarnAboutRevealOrder[revealOrder]
+      !didWarnAboutRevealOrder[cacheKey]
     ) {
-      didWarnAboutRevealOrder[revealOrder] = true;
-      if (typeof revealOrder === 'string') {
+      didWarnAboutRevealOrder[cacheKey] = true;
+      if (revealOrder == null) {
+        console.error(
+          'The default for the <SuspenseList revealOrder="..."> prop is changing. ' +
+            'To be future compatible you must explictly specify either ' +
+            '"independent" (the current default), "together", "forwards" or "legacy_unstable-backwards".',
+        );
+      } else if (typeof revealOrder === 'string') {
         switch (revealOrder.toLowerCase()) {
           case 'together':
           case 'forwards':

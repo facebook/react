@@ -218,7 +218,7 @@ describe('ReactSuspenseList', () => {
   });
 
   // @gate enableSuspenseList
-  it('shows content independently by default', async () => {
+  it('warns if no revealOrder is specified', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
     const C = createAsyncText('C');
@@ -252,6 +252,14 @@ describe('ReactSuspenseList', () => {
       // pre-warming
       'Suspend! [B]',
       'Suspend! [C]',
+    ]);
+
+    assertConsoleErrorDev([
+      'The default for the <SuspenseList revealOrder="..."> prop is changing. ' +
+        'To be future compatible you must explictly specify either ' +
+        '"independent" (the current default), "together", "forwards" or "legacy_unstable-backwards".' +
+        '\n    in SuspenseList (at **)' +
+        '\n    in Foo (at **)',
     ]);
 
     expect(ReactNoop).toMatchRenderedOutput(

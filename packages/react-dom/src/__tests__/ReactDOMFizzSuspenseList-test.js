@@ -516,7 +516,7 @@ describe('ReactDOMFizzSuspenseList', () => {
   });
 
   // @gate enableSuspenseList
-  it('displays all "together" in nested SuspenseLists where the inner is default', async () => {
+  it('displays all "together" in nested SuspenseLists where the inner is "independent"', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
     const C = createAsyncText('C');
@@ -528,7 +528,7 @@ describe('ReactDOMFizzSuspenseList', () => {
             <Suspense fallback={<Text text="Loading A" />}>
               <A />
             </Suspense>
-            <SuspenseList>
+            <SuspenseList revealOrder="independent">
               <Suspense fallback={<Text text="Loading B" />}>
                 <B />
               </Suspense>
