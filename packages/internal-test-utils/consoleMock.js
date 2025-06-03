@@ -156,7 +156,8 @@ function normalizeCodeLocInfo(str) {
   //  at Component (/path/filename.js:123:45)
   // React format:
   //    in Component (at filename.js:123)
-  return str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function (m, name) {
+  return str.replace(/\n +(?:at|in) ([^(\n]+)[^\n]*/g, function (m, name) {
+    name = name.trim();
     if (name.endsWith('.render')) {
       // Class components will have the `render` method as part of their stack trace.
       // We strip that out in our normalization to make it look more like component stacks.
@@ -165,6 +166,18 @@ function normalizeCodeLocInfo(str) {
     name = name.replace(/.*\/([^\/]+):\d+:\d+/, '**/$1:**:**');
     return '\n    in ' + name + ' (at **)';
   });
+}
+
+function normalizeStackTrace(str) {
+  if (typeof str !== 'string') {
+    return str;
+  }
+  // Replace only the file path and line/column numbers, keep the rest.
+  // Matches: "    in ComponentName (at /path/to/file.js:123:45)"
+  return str.replace(
+    /^\s+in ([^(]+) \(at .*\/([^\/]+):\d+:\d+\)$/gm,
+    '    in $1 (at **/$2:**:**)',
+  );
 }
 
 function normalizeComponentStack(entry) {
@@ -346,7 +359,9 @@ export function createLogAssertion(
           );
         }
 
-        const normalizedMessage = normalizeCodeLocInfo(message);
+        const normalizedMessage = normalizeStackTrace(
+          normalizeCodeLocInfo(message),
+        );
         receivedLogs.push(normalizedMessage);
 
         // Check the number of %s interpolations.
@@ -380,9 +395,12 @@ export function createLogAssertion(
         }
 
         // Main logic to check if log is expected, with the component stack.
+        // Also normalize stack traces in expectedMessage for robust matching
+        const normalizedExpectedMessage = normalizeStackTrace(expectedMessage);
+
         if (
-          normalizedMessage === expectedMessage ||
-          normalizedMessage.includes(expectedMessage)
+          normalizedMessage === normalizedExpectedMessage ||
+          normalizedMessage.includes(normalizedExpectedMessage)
         ) {
           if (isLikelyAComponentStack(normalizedMessage)) {
             if (expectedWithoutStack === true) {
@@ -409,7 +427,8 @@ export function createLogAssertion(
               const message = Array.isArray(messageOrTuple)
                 ? messageOrTuple[0]
                 : messageOrTuple;
-              return message.replace('\n', ' ');
+              // Normalize stack traces for diff output as well
+              return normalizeStackTrace(message.replace('\n', ' '));
             })
             .join('\n'),
           receivedLogs.map(message => message.replace('\n', ' ')).join('\n'),
