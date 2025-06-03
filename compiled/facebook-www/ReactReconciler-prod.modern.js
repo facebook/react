@@ -2743,7 +2743,13 @@ module.exports = function ($$$config) {
             isSuspenseInstanceFallback(state))
         )
           return node;
-      } else if (19 === node.tag && void 0 !== node.memoizedProps.revealOrder) {
+      } else if (
+        19 === node.tag &&
+        ("forwards" === node.memoizedProps.revealOrder ||
+          "backwards" === node.memoizedProps.revealOrder ||
+          "unstable_legacy-backwards" === node.memoizedProps.revealOrder ||
+          "together" === node.memoizedProps.revealOrder)
+      ) {
         if (0 !== (node.flags & 128)) return node;
       } else if (null !== node.child) {
         node.child.return = node;
@@ -5435,6 +5441,7 @@ module.exports = function ($$$config) {
         );
         break;
       case "backwards":
+      case "unstable_legacy-backwards":
         renderLanes = null;
         revealOrder = workInProgress.child;
         for (workInProgress.child = null; null !== revealOrder; ) {
@@ -13852,7 +13859,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-modern-1ae0a845-20250603"
+      reconcilerVersion: "19.2.0-www-modern-d742611c-20250603"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

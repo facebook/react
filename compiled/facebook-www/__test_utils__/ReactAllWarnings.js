@@ -10,8 +10,8 @@
  */
 
 export default [
-  "\"%s\" is not a supported revealOrder on <SuspenseList />. Did you mean \"together\", \"forwards\" or \"backwards\"?",
-  "\"%s\" is not a supported value for tail on <SuspenseList />. Did you mean \"collapsed\" or \"hidden\"?",
+  "\"%s\" is not a supported revealOrder on <SuspenseList />. Did you mean \"independent\", \"together\", \"forwards\" or \"backwards\"?",
+  "\"%s\" is not a supported value for tail on <SuspenseList />. Did you mean \"visible\", \"collapsed\" or \"hidden\"?",
   "\"%s\" is not a valid value for revealOrder on <SuspenseList />. React uses the -s suffix in the spelling. Use \"%ss\" instead.",
   "\"%s\" is not a valid value for revealOrder on <SuspenseList />. Use lowercase \"%s\" instead.",
   "%o\n\n%s\n\n%s\n",
@@ -33,7 +33,7 @@ export default [
   "%s is an async Client Component. Only Server Components can be async at the moment. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server.",
   "%s is deprecated in StrictMode. %s was passed an instance of %s which is inside StrictMode. Instead, add a ref directly to the element you want to reference. Learn more about using refs safely here: https://react.dev/link/strict-mode-find-node",
   "%s is deprecated in StrictMode. %s was passed an instance of %s which renders StrictMode children. Instead, add a ref directly to the element you want to reference. Learn more about using refs safely here: https://react.dev/link/strict-mode-find-node",
-  "%s is not a supported value for revealOrder on <SuspenseList />. Did you mean \"together\", \"forwards\" or \"backwards\"?",
+  "%s is not a supported value for revealOrder on <SuspenseList />. Did you mean \"independent\", \"together\", \"forwards\" or \"backwards\"?",
   "%s must not return anything besides a function, which is used for clean-up.%s",
   "%s objects cannot be rendered as text children. Try formatting it using toString().%s",
   "%s received a final argument during this render, but not during the previous render. Even though the final argument is optional, its type cannot change between renders.",
@@ -293,6 +293,8 @@ export default [
   "The `style` prop expects a mapping from style properties to values, not a string. For example, style={{marginRight: spacing + 'em'}} when using JSX.",
   "The `value` prop is required for the `<Context.Provider>`. Did you misspell it or forget to pass it?",
   "The current testing environment is not configured to support act(...)",
+  "The default for the <SuspenseList revealOrder=\"...\"> prop is changing. To be future compatible you must explictly specify either \"independent\" (the current default), \"together\", \"forwards\" or \"legacy_unstable-backwards\".",
+  "The default for the <SuspenseList tail=\"...\"> prop is changing. To be future compatible you must explictly specify either \"visible\" (the current default), \"collapsed\" or \"hidden\".",
   "The existing <ViewTransition name=%s> duplicate has this stack trace.",
   "The final argument passed to %s changed size between renders. The order and size of this array must remain constant.\n\nPrevious: %s\nIncoming: %s",
   "The installed version of React DevTools is too old and will not work with the current version of React. Please update React DevTools. https://react.dev/link/react-devtools",
@@ -303,6 +305,7 @@ export default [
   "The provided `%s` option is an unsupported type %s. This value must be coerced to a string before using it here.",
   "The provided `%s` prop is an unsupported type %s. This value must be coerced to a string before using it here.",
   "The provided key is an unsupported type %s. This value must be coerced to a string before using it here.",
+  "The rendering order of <SuspenseList revealOrder=\"backwards\"> is changing. To be future compatible you must specify revealOrder=\"legacy_unstable-backwards\" instead.",
   "The result of getServerSnapshot should be cached to avoid an infinite loop",
   "The result of getSnapshot should be cached to avoid an infinite loop",
   "The seed argument is not enabled outside experimental channels.",

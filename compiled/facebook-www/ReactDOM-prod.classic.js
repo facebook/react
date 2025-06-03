@@ -3896,7 +3896,13 @@ function findFirstSuspended(row) {
           isSuspenseInstanceFallback(state))
       )
         return node;
-    } else if (19 === node.tag && void 0 !== node.memoizedProps.revealOrder) {
+    } else if (
+      19 === node.tag &&
+      ("forwards" === node.memoizedProps.revealOrder ||
+        "backwards" === node.memoizedProps.revealOrder ||
+        "unstable_legacy-backwards" === node.memoizedProps.revealOrder ||
+        "together" === node.memoizedProps.revealOrder)
+    ) {
       if (0 !== (node.flags & 128)) return node;
     } else if (null !== node.child) {
       node.child.return = node;
@@ -7045,6 +7051,7 @@ function updateSuspenseListComponent(current, workInProgress, renderLanes) {
       );
       break;
     case "backwards":
+    case "unstable_legacy-backwards":
       renderLanes = null;
       revealOrder = workInProgress.child;
       for (workInProgress.child = null; null !== revealOrder; ) {
@@ -19566,14 +19573,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2083 = React.version;
 if (
-  "19.2.0-www-classic-1ae0a845-20250603" !==
+  "19.2.0-www-classic-d742611c-20250603" !==
   isomorphicReactPackageVersion$jscomp$inline_2083
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2083,
-      "19.2.0-www-classic-1ae0a845-20250603"
+      "19.2.0-www-classic-d742611c-20250603"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -19591,10 +19598,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2696 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-1ae0a845-20250603",
+  version: "19.2.0-www-classic-d742611c-20250603",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-1ae0a845-20250603"
+  reconcilerVersion: "19.2.0-www-classic-d742611c-20250603"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2697 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -20006,4 +20013,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-classic-1ae0a845-20250603";
+exports.version = "19.2.0-www-classic-d742611c-20250603";

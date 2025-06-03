@@ -4201,7 +4201,11 @@ function renderSuspenseListRows(request, task, keyPath, rows, revealOrder) {
     var resumeSlots = task.replay.slots;
     if (null !== resumeSlots && "object" === typeof resumeSlots)
       for (var n = 0; n < keyPath; n++) {
-        var i = "backwards" !== revealOrder ? n : keyPath - 1 - n,
+        var i =
+            "backwards" !== revealOrder &&
+            "unstable_legacy-backwards" !== revealOrder
+              ? n
+              : keyPath - 1 - n,
           node = rows[i];
         task.row = previousSuspenseListRow = createSuspenseListRow(
           previousSuspenseListRow
@@ -4218,7 +4222,8 @@ function renderSuspenseListRows(request, task, keyPath, rows, revealOrder) {
     else
       for (resumeSlots = 0; resumeSlots < keyPath; resumeSlots++)
         (n =
-          "backwards" !== revealOrder
+          "backwards" !== revealOrder &&
+          "unstable_legacy-backwards" !== revealOrder
             ? resumeSlots
             : keyPath - 1 - resumeSlots),
           (i = rows[n]),
@@ -4228,7 +4233,10 @@ function renderSuspenseListRows(request, task, keyPath, rows, revealOrder) {
           renderNode(request, task, i, n),
           0 === --previousSuspenseListRow.pendingTasks &&
             finishSuspenseListRow(request, previousSuspenseListRow);
-  } else if ("backwards" !== revealOrder)
+  } else if (
+    "backwards" !== revealOrder &&
+    "unstable_legacy-backwards" !== revealOrder
+  )
     for (revealOrder = 0; revealOrder < keyPath; revealOrder++)
       (resumeSlots = rows[revealOrder]),
         (task.row = previousSuspenseListRow =
@@ -4711,7 +4719,11 @@ function renderElement(request, task, keyPath, type, props, ref) {
         a: {
           var children$jscomp$0 = props.children,
             revealOrder = props.revealOrder;
-          if ("forwards" === revealOrder || "backwards" === revealOrder) {
+          if (
+            "forwards" === revealOrder ||
+            "backwards" === revealOrder ||
+            "unstable_legacy-backwards" === revealOrder
+          ) {
             if (isArrayImpl(children$jscomp$0)) {
               renderSuspenseListRows(
                 request,
@@ -6859,4 +6871,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.2.0-www-classic-1ae0a845-20250603";
+exports.version = "19.2.0-www-classic-d742611c-20250603";
