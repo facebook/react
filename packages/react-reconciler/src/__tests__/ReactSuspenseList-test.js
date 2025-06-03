@@ -1040,6 +1040,85 @@ describe('ReactSuspenseList', () => {
   });
 
   // @gate enableSuspenseList
+  it('warns if revealOrder="backwards" is specified', async () => {
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
+
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="backwards" tail="visible">
+          <Suspense fallback={<Text text="Loading A" />}>
+            <A />
+          </Suspense>
+          <Suspense fallback={<Text text="Loading B" />}>
+            <B />
+          </Suspense>
+          <Suspense fallback={<Text text="Loading C" />}>
+            <C />
+          </Suspense>
+        </SuspenseList>
+      );
+    }
+
+    await A.resolve();
+
+    ReactNoop.render(<Foo />);
+
+    await waitForAll([
+      'Suspend! [C]',
+      'Loading C',
+      'Loading B',
+      'Loading A',
+      // pre-warming
+      'Suspend! [C]',
+    ]);
+
+    assertConsoleErrorDev([
+      'The rendering order of <SuspenseList revealOrder="backwards"> is changing. ' +
+        'To be future compatible you must specify ' +
+        'revealOrder="legacy_unstable-backwards" instead.' +
+        '\n    in SuspenseList (at **)' +
+        '\n    in Foo (at **)',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>Loading A</span>
+        <span>Loading B</span>
+        <span>Loading C</span>
+      </>,
+    );
+
+    await act(() => C.resolve());
+    assertLog([
+      'C',
+      'Suspend! [B]',
+      // pre-warming
+      'Suspend! [B]',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>Loading A</span>
+        <span>Loading B</span>
+        <span>C</span>
+      </>,
+    );
+
+    await act(() => B.resolve());
+    assertLog(['B', 'A']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </>,
+    );
+  });
+
+  // @gate enableSuspenseList
   it('displays each items in "backwards" order', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');

@@ -3228,7 +3228,6 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
     const cacheKey = revealOrder == null ? 'null' : revealOrder;
     if (
       revealOrder !== 'forwards' &&
-      revealOrder !== 'backwards' &&
       revealOrder !== 'unstable_legacy-backwards' &&
       revealOrder !== 'together' &&
       revealOrder !== 'independent' &&
@@ -3240,6 +3239,11 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
           'The default for the <SuspenseList revealOrder="..."> prop is changing. ' +
             'To be future compatible you must explictly specify either ' +
             '"independent" (the current default), "together", "forwards" or "legacy_unstable-backwards".',
+        );
+      } else if (revealOrder === 'backwards') {
+        console.error(
+          'The rendering order of <SuspenseList revealOrder="backwards"> is changing. ' +
+            'To be future compatible you must specify revealOrder="legacy_unstable-backwards" instead.',
         );
       } else if (typeof revealOrder === 'string') {
         switch (revealOrder.toLowerCase()) {
