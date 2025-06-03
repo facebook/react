@@ -9,7 +9,11 @@
 
 /* eslint-disable react-internal/no-production-logging */
 
-import type {ReactComponentInfo, ReactIOInfo} from 'shared/ReactTypes';
+import type {
+  ReactComponentInfo,
+  ReactIOInfo,
+  ReactAsyncInfo,
+} from 'shared/ReactTypes';
 
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 
@@ -221,6 +225,48 @@ function getIOColor(
       return 'tertiary';
     default:
       return 'tertiary-dark';
+  }
+}
+
+export function logComponentAwait(
+  asyncInfo: ReactAsyncInfo,
+  trackIdx: number,
+  startTime: number,
+  endTime: number,
+  rootEnv: string,
+): void {
+  if (supportsUserTiming && endTime > 0) {
+    const env = asyncInfo.env;
+    const name = asyncInfo.awaited.name;
+    const isPrimaryEnv = env === rootEnv;
+    const color = getIOColor(name);
+    const entryName =
+      'await ' +
+      (isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']');
+    const debugTask = asyncInfo.debugTask;
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          entryName,
+          startTime < 0 ? 0 : startTime,
+          endTime,
+          trackNames[trackIdx],
+          COMPONENTS_TRACK,
+          color,
+        ),
+      );
+    } else {
+      console.timeStamp(
+        entryName,
+        startTime < 0 ? 0 : startTime,
+        endTime,
+        trackNames[trackIdx],
+        COMPONENTS_TRACK,
+        color,
+      );
+    }
   }
 }
 
