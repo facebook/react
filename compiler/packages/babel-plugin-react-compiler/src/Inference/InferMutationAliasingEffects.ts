@@ -5,7 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, Effect, ValueKind} from '..';
+import {
+  CompilerError,
+  CompilerErrorDetailOptions,
+  Effect,
+  ErrorSeverity,
+  ValueKind,
+} from '..';
 import {
   BasicBlock,
   BlockId,
@@ -214,11 +220,6 @@ function inferBlock(
       instructionSignature = computeSignatureForInstruction(state.env, instr);
       instructionSignatureCache.set(instr, instructionSignature);
     }
-    /*
-     * console.log(
-     *   printInstruction({...instr, effects: [...instructionSignature.effects]}),
-     * );
-     */
     const effects = applySignature(
       state,
       instructionSignature,
@@ -244,6 +245,7 @@ function applySignature(
   instruction: Instruction,
   effectInstructionValueCache: Map<AliasingEffect, InstructionValue>,
 ): Array<AliasingEffect> | null {
+  const effects: Array<AliasingEffect> = [];
   /**
    * For function instructions, eagerly validate that they aren't mutating
    * a known-frozen value.
@@ -260,27 +262,33 @@ function applySignature(
     for (const effect of aliasingEffects) {
       if (effect.kind === 'Mutate' || effect.kind === 'MutateTransitive') {
         const value = state.kind(effect.value);
-        if (value.kind === ValueKind.Frozen) {
-          if (DEBUG) {
-            console.log(printInstruction(instruction));
-            console.log(printAliasingEffect(effect));
-            console.log(prettyFormat(state.debugAbstractValue(value)));
+        switch (value.kind) {
+          case ValueKind.Global:
+          case ValueKind.Frozen: {
+            const reason = getWriteErrorReason({
+              kind: value.kind,
+              reason: value.reason,
+              context: new Set(),
+            });
+            effects.push({
+              kind:
+                value.kind === ValueKind.Frozen
+                  ? 'MutateFrozen'
+                  : 'MutateGlobal',
+              place: effect.value,
+              error: {
+                severity: ErrorSeverity.InvalidReact,
+                reason,
+                description:
+                  effect.value.identifier.name !== null &&
+                  effect.value.identifier.name.kind === 'named'
+                    ? `Found mutation of \`${effect.value.identifier.name}\``
+                    : null,
+                loc: effect.value.loc,
+                suggestions: null,
+              },
+            });
           }
-          const reason = getWriteErrorReason({
-            kind: value.kind,
-            reason: value.reason,
-            context: new Set(),
-          });
-          CompilerError.throwInvalidReact({
-            reason,
-            description:
-              effect.value.identifier.name !== null &&
-              effect.value.identifier.name.kind === 'named'
-                ? `Found mutation of \`${effect.value.identifier.name}\``
-                : null,
-            loc: effect.value.loc,
-            suggestions: null,
-          });
         }
       }
     }
@@ -296,7 +304,6 @@ function applySignature(
     console.log(printInstruction(instruction));
   }
 
-  const effects: Array<AliasingEffect> = [];
   for (const effect of signature.effects) {
     applyEffect(
       state,
@@ -429,6 +436,19 @@ function applyEffect(
           }
         }
       });
+      for (const operand of effect.function.loweredFunc.func.context) {
+        if (operand.effect !== Effect.Capture) {
+          continue;
+        }
+        const kind = state.kind(operand).kind;
+        if (
+          kind === ValueKind.Primitive ||
+          kind == ValueKind.Frozen ||
+          kind == ValueKind.Global
+        ) {
+          operand.effect = Effect.Read;
+        }
+      }
       state.initialize(effect.function, {
         kind: isMutable ? ValueKind.Mutable : ValueKind.Frozen,
         reason: new Set([]),
@@ -742,22 +762,34 @@ function applyEffect(
           console.log(printAliasingEffect(effect));
           console.log(prettyFormat(state.debugAbstractValue(value)));
         }
+
         const reason = getWriteErrorReason({
           kind: value.kind,
           reason: value.reason,
           context: new Set(),
         });
-        CompilerError.throwInvalidReact({
-          reason,
-          description:
-            effect.value.identifier.name !== null &&
-            effect.value.identifier.name.kind === 'named'
-              ? `Found mutation of \`${effect.value.identifier.name}\``
-              : null,
-          loc: effect.value.loc,
-          suggestions: null,
+        effects.push({
+          kind:
+            value.kind === ValueKind.Frozen ? 'MutateFrozen' : 'MutateGlobal',
+          place: effect.value,
+          error: {
+            severity: ErrorSeverity.InvalidReact,
+            reason,
+            description:
+              effect.value.identifier.name !== null &&
+              effect.value.identifier.name.kind === 'named'
+                ? `Found mutation of \`${effect.value.identifier.name}\``
+                : null,
+            loc: effect.value.loc,
+            suggestions: null,
+          },
         });
       }
+      break;
+    }
+    case 'MutateFrozen':
+    case 'MutateGlobal': {
+      effects.push(effect);
       break;
     }
     default: {
@@ -933,7 +965,11 @@ class InferenceState {
       kind: ValueKind.Frozen,
       reason: new Set([reason]),
     });
-    if (value.kind === 'FunctionExpression') {
+    if (
+      value.kind === 'FunctionExpression' &&
+      (this.env.config.enablePreserveExistingMemoizationGuarantees ||
+        this.env.config.enableTransitivelyFreezeFunctionExpressions)
+    ) {
       for (const place of value.loweredFunc.func.context) {
         this.freeze(place, reason);
       }
@@ -1552,15 +1588,31 @@ function computeSignatureForInstruction(
       });
       break;
     }
+    case 'StartMemoize':
+    case 'FinishMemoize': {
+      if (env.config.enablePreserveExistingMemoizationGuarantees) {
+        for (const operand of eachInstructionValueOperand(value)) {
+          effects.push({
+            kind: 'Freeze',
+            value: operand,
+            reason: ValueReason.Other,
+          });
+        }
+      }
+      effects.push({
+        kind: 'Create',
+        into: lvalue,
+        value: ValueKind.Primitive,
+      });
+      break;
+    }
     case 'TaggedTemplateExpression':
     case 'BinaryExpression':
     case 'Debugger':
-    case 'FinishMemoize':
     case 'JSXText':
     case 'MetaProperty':
     case 'Primitive':
     case 'RegExpLiteral':
-    case 'StartMemoize':
     case 'TemplateLiteral':
     case 'UnaryExpression':
     case 'UnsupportedNode': {
@@ -1879,6 +1931,14 @@ function computeEffectsForSignature(
         }
         break;
       }
+      case 'MutateFrozen':
+      case 'MutateGlobal': {
+        const values = substitutions.get(effect.place.identifier.id) ?? [];
+        for (const value of values) {
+          effects.push({kind: effect.kind, place: value, error: effect.error});
+        }
+        break;
+      }
       case 'Mutate':
       case 'MutateTransitive':
       case 'MutateTransitiveConditionally':
@@ -2165,6 +2225,18 @@ export type AliasingEffect =
       captures: Array<Place>;
       function: FunctionExpression | ObjectMethod;
       into: Place;
+    }
+  /**
+   * Mutation of a value known to be immutable
+   */
+  | {kind: 'MutateFrozen'; place: Place; error: CompilerErrorDetailOptions}
+  /**
+   * Mutation of a global
+   */
+  | {
+      kind: 'MutateGlobal';
+      place: Place;
+      error: CompilerErrorDetailOptions;
     };
 
 export type AliasingSignatureEffect = AliasingEffect;
