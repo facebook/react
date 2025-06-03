@@ -179,6 +179,7 @@ export function lower(
       loc: GeneratedSource,
       value: lowerExpressionToTemporary(builder, body),
       id: makeInstructionId(0),
+      effects: null,
     };
     builder.terminateWithContinuation(terminal, fallthrough);
   } else if (body.isBlockStatement()) {
@@ -208,6 +209,7 @@ export function lower(
         loc: GeneratedSource,
       }),
       id: makeInstructionId(0),
+      effects: null,
     },
     null,
   );
@@ -287,6 +289,7 @@ function lowerStatement(
         loc: stmt.node.loc ?? GeneratedSource,
         value,
         id: makeInstructionId(0),
+        effects: null,
       };
       builder.terminate(terminal, 'block');
       return;

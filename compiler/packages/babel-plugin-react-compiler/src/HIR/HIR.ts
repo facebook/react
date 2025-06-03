@@ -457,6 +457,7 @@ export type ReturnTerminal = {
   value: Place;
   id: InstructionId;
   fallthrough?: never;
+  effects: Array<AliasingEffect> | null;
 };
 
 export type GotoTerminal = {
@@ -617,6 +618,7 @@ export type MaybeThrowTerminal = {
   id: InstructionId;
   loc: SourceLocation;
   fallthrough?: never;
+  effects: Array<AliasingEffect> | null;
 };
 
 export type ReactiveScopeTerminal = {
