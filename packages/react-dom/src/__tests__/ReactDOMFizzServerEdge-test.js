@@ -73,7 +73,7 @@ describe('ReactDOMFizzServerEdge', () => {
 
     if (gate(flags => flags.enableFizzBlockingRender)) {
       expect(result).toMatchInlineSnapshot(
-        `"<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/></head><body><main>hello</main><template id="«R»"></template></body></html>"`,
+        `"<!DOCTYPE html><html><head><link rel="expect" href="#_R_" blocking="render"/></head><body><main>hello</main><template id="_R_"></template></body></html>"`,
       );
     } else {
       expect(result).toMatchInlineSnapshot(

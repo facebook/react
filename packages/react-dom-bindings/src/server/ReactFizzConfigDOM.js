@@ -1082,7 +1082,7 @@ export function makeId(
 ): string {
   const idPrefix = resumableState.idPrefix;
 
-  let id = '\u00AB' + idPrefix + 'R' + treeId;
+  let id = '_' + idPrefix + 'R_' + treeId;
 
   // Unless this is the first id at this level, append a number at the end
   // that represents the position of this useId hook among all the useId
@@ -1091,7 +1091,7 @@ export function makeId(
     id += 'H' + localId.toString(32);
   }
 
-  return id + '\u00BB';
+  return id + '_';
 }
 
 function encodeHTMLTextNode(text: string): string {
@@ -5415,7 +5415,7 @@ function writeBlockingRenderInstruction(
 ): void {
   if (enableFizzBlockingRender) {
     const idPrefix = resumableState.idPrefix;
-    const shellId = '\u00AB' + idPrefix + 'R\u00BB';
+    const shellId = '_' + idPrefix + 'R_';
     writeChunk(destination, blockingRenderChunkStart);
     writeChunk(destination, stringToChunk(escapeTextForBrowser(shellId)));
     writeChunk(destination, blockingRenderChunkEnd);
@@ -5433,7 +5433,7 @@ function writeCompletedShellIdAttribute(
   }
   resumableState.instructions |= SentCompletedShellId;
   const idPrefix = resumableState.idPrefix;
-  const shellId = '\u00AB' + idPrefix + 'R\u00BB';
+  const shellId = '_' + idPrefix + 'R_';
   writeChunk(destination, completedShellIdAttributeStart);
   writeChunk(destination, stringToChunk(escapeTextForBrowser(shellId)));
   writeChunk(destination, attributeEnd);
@@ -5448,7 +5448,7 @@ function pushCompletedShellIdAttribute(
   }
   resumableState.instructions |= SentCompletedShellId;
   const idPrefix = resumableState.idPrefix;
-  const shellId = '\u00AB' + idPrefix + 'R\u00BB';
+  const shellId = '_' + idPrefix + 'R_';
   target.push(
     completedShellIdAttributeStart,
     stringToChunk(escapeTextForBrowser(shellId)),
