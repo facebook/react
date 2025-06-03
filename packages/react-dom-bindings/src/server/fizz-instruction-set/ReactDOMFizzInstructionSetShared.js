@@ -111,7 +111,7 @@ export function revealCompletedBoundariesWithViewTransitions(
       // TODO: We don't have a prefix to pick from here but maybe we don't need it
       // since it's only applicable temporarily during this specific animation.
       const idPrefix = '';
-      name = '\u00AB' + idPrefix + 'T' + autoNameIdx++ + '\u00BB';
+      name = '_' + idPrefix + 'T_' + autoNameIdx++ + '_';
     }
     elementStyle['viewTransitionName'] = name;
     shouldStartViewTransition = true;
