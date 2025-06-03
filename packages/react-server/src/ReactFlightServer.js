@@ -1880,7 +1880,7 @@ function visitAsyncNode(
           if (filterStackTrace(request, node.stack, 1).length === 0) {
             // Typically we assume that the outer most Promise that was awaited in user space has the
             // most actionable stack trace for the start of the operation. However, if this Promise
-            // Promise was created inside only third party code, then try to use the inner node instead.
+            // was created inside only third party code, then try to use the inner node instead.
             // This could happen if you pass a first party Promise into a third party to be awaited there.
             if (ioNode.end < 0) {
               // If we haven't defined an end time, use the resolve of the outer Promise.
