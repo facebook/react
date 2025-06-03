@@ -78,6 +78,7 @@ import {
   logComponentRender,
   logDedupedComponentRender,
   logComponentErrored,
+  logIOInfo,
 } from './ReactFlightPerformanceTrack';
 
 import {
@@ -2769,6 +2770,8 @@ function initializeIOInfo(response: Response, ioInfo: ReactIOInfo): void {
   ioInfo.start += response._timeOrigin;
   // $FlowFixMe[cannot-write]
   ioInfo.end += response._timeOrigin;
+
+  logIOInfo(ioInfo);
 }
 
 function resolveIOInfo(
@@ -2890,6 +2893,7 @@ function flushComponentPerformance(
         trackIdx,
         parentEndTime,
         previousEndTime,
+        response._rootEnvironmentName,
       );
     }
     // Since we didn't bump the track this time, we just return the same track.
