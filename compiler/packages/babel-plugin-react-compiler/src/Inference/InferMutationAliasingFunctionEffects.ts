@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {HIRFunction, IdentifierId, Place, ScopeId, ValueKind} from '../HIR';
+import {HIRFunction, IdentifierId, Place, ValueKind} from '../HIR';
 import {getOrInsertDefault} from '../Utils/utils';
 import {AliasingEffect} from './InferMutationAliasingEffects';
 
