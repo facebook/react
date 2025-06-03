@@ -675,7 +675,7 @@ function nullRefGetter() {
 }
 
 function getIOInfoTaskName(ioInfo: ReactIOInfo): string {
-  return ''; // TODO
+  return ioInfo.name || 'unknown';
 }
 
 function getAsyncInfoTaskName(asyncInfo: ReactAsyncInfo): string {

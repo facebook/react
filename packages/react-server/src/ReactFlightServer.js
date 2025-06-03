@@ -64,6 +64,7 @@ import type {
   ReactAsyncInfo,
   ReactTimeInfo,
   ReactStackTrace,
+  ReactCallSite,
   ReactFunctionLocation,
   ReactErrorInfo,
   ReactErrorInfoDev,
@@ -164,55 +165,73 @@ function defaultFilterStackFrame(
   );
 }
 
-// DEV-only cache of parsed and filtered stack frames.
-const stackTraceCache: WeakMap<Error, ReactStackTrace> = __DEV__
-  ? new WeakMap()
-  : (null: any);
+function devirtualizeURL(url: string): string {
+  if (url.startsWith('rsc://React/')) {
+    // This callsite is a virtual fake callsite that came from another Flight client.
+    // We need to reverse it back into the original location by stripping its prefix
+    // and suffix. We don't need the environment name because it's available on the
+    // parent object that will contain the stack.
+    const envIdx = url.indexOf('/', 12);
+    const suffixIdx = url.lastIndexOf('?');
+    if (envIdx > -1 && suffixIdx > -1) {
+      return url.slice(envIdx + 1, suffixIdx);
+    }
+  }
+  return url;
+}
+
+function findCalledFunctionNameFromStackTrace(
+  request: Request,
+  stack: ReactStackTrace,
+): string {
+  // Gets the name of the first function called from first party code.
+  let bestMatch = '';
+  const filterStackFrame = request.filterStackFrame;
+  for (let i = 0; i < stack.length; i++) {
+    const callsite = stack[i];
+    const functionName = callsite[0];
+    const url = devirtualizeURL(callsite[1]);
+    if (filterStackFrame(url, functionName)) {
+      if (bestMatch === '') {
+        // If we had no good stack frames for internal calls, just use the last
+        // first party function name.
+        return functionName;
+      }
+      return bestMatch;
+    } else if (functionName === 'new Promise') {
+      // Ignore Promise constructors.
+    } else if (url === 'node:internal/async_hooks') {
+      // Ignore the stack frames from the async hooks themselves.
+    } else {
+      bestMatch = functionName;
+    }
+  }
+  return '';
+}
 
 function filterStackTrace(
   request: Request,
-  error: Error,
-  skipFrames: number,
+  stack: ReactStackTrace,
 ): ReactStackTrace {
-  const existing = stackTraceCache.get(error);
-  if (existing !== undefined) {
-    // Return a clone because the Flight protocol isn't yet resilient to deduping
-    // objects in the debug info. TODO: Support deduping stacks.
-    const clone = existing.slice(0);
-    for (let i = 0; i < clone.length; i++) {
-      // $FlowFixMe[invalid-tuple-arity]
-      clone[i] = clone[i].slice(0);
-    }
-    return clone;
-  }
   // Since stacks can be quite large and we pass a lot of them, we filter them out eagerly
   // to save bandwidth even in DEV. We'll also replay these stacks on the client so by
   // stripping them early we avoid that overhead. Otherwise we'd normally just rely on
   // the DevTools or framework's ignore lists to filter them out.
   const filterStackFrame = request.filterStackFrame;
-  const stack = parseStackTrace(error, skipFrames);
+  const filteredStack: ReactStackTrace = [];
   for (let i = 0; i < stack.length; i++) {
     const callsite = stack[i];
     const functionName = callsite[0];
-    let url = callsite[1];
-    if (url.startsWith('rsc://React/')) {
-      // This callsite is a virtual fake callsite that came from another Flight client.
-      // We need to reverse it back into the original location by stripping its prefix
-      // and suffix. We don't need the environment name because it's available on the
-      // parent object that will contain the stack.
-      const envIdx = url.indexOf('/', 12);
-      const suffixIdx = url.lastIndexOf('?');
-      if (envIdx > -1 && suffixIdx > -1) {
-        url = callsite[1] = url.slice(envIdx + 1, suffixIdx);
-      }
-    }
-    if (!filterStackFrame(url, functionName)) {
-      stack.splice(i, 1);
-      i--;
+    const url = devirtualizeURL(callsite[1]);
+    if (filterStackFrame(url, functionName)) {
+      // Use a clone because the Flight protocol isn't yet resilient to deduping
+      // objects in the debug info. TODO: Support deduping stacks.
+      const clone: ReactCallSite = (callsite.slice(0): any);
+      clone[1] = url;
+      filteredStack.push(clone);
     }
   }
-  stackTraceCache.set(error, stack);
-  return stack;
+  return filteredStack;
 }
 
 initAsyncDebugInfo();
@@ -240,8 +259,7 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
         // one stack frame but keeping it simple for now and include all frames.
         const stack = filterStackTrace(
           request,
-          new Error('react-stack-top-frame'),
-          1,
+          parseStackTrace(new Error('react-stack-top-frame'), 1),
         );
         request.pendingChunks++;
         const owner: null | ReactComponentInfo = resolveOwner();
@@ -1078,7 +1096,7 @@ function callWithDebugContextInDEV<A, T>(
   componentDebugInfo.stack =
     task.debugStack === null
       ? null
-      : filterStackTrace(request, task.debugStack, 1);
+      : filterStackTrace(request, parseStackTrace(task.debugStack, 1));
   // $FlowFixMe[cannot-write]
   componentDebugInfo.debugStack = task.debugStack;
   // $FlowFixMe[cannot-write]
@@ -1279,7 +1297,7 @@ function renderFunctionComponent<Props>(
       componentDebugInfo.stack =
         task.debugStack === null
           ? null
-          : filterStackTrace(request, task.debugStack, 1);
+          : filterStackTrace(request, parseStackTrace(task.debugStack, 1));
       // $FlowFixMe[cannot-write]
       componentDebugInfo.props = props;
       // $FlowFixMe[cannot-write]
@@ -1615,7 +1633,7 @@ function renderClientElement(
         task.debugOwner,
         task.debugStack === null
           ? null
-          : filterStackTrace(request, task.debugStack, 1),
+          : filterStackTrace(request, parseStackTrace(task.debugStack, 1)),
         validated,
       ]
     : [REACT_ELEMENT_TYPE, type, key, props];
@@ -1748,7 +1766,7 @@ function renderElement(
         stack:
           task.debugStack === null
             ? null
-            : filterStackTrace(request, task.debugStack, 1),
+            : filterStackTrace(request, parseStackTrace(task.debugStack, 1)),
         props: props,
         debugStack: task.debugStack,
         debugTask: task.debugTask,
@@ -1877,7 +1895,10 @@ function visitAsyncNode(
           // We don't log it yet though. We return it to be logged by the point where it's awaited.
           // The ioNode might be another PromiseNode in the case where none of the AwaitNode had
           // unfiltered stacks.
-          if (filterStackTrace(request, node.stack, 1).length === 0) {
+          if (
+            filterStackTrace(request, parseStackTrace(node.stack, 1)).length ===
+            0
+          ) {
             // Typically we assume that the outer most Promise that was awaited in user space has the
             // most actionable stack trace for the start of the operation. However, if this Promise
             // was created inside only third party code, then try to use the inner node instead.
@@ -1898,7 +1919,10 @@ function visitAsyncNode(
       if (awaited !== null) {
         const ioNode = visitAsyncNode(request, task, awaited, cutOff, visited);
         if (ioNode !== null) {
-          const stack = filterStackTrace(request, node.stack, 1);
+          const stack = filterStackTrace(
+            request,
+            parseStackTrace(node.stack, 1),
+          );
           if (stack.length === 0) {
             // If this await was fully filtered out, then it was inside third party code
             // such as in an external library. We return the I/O node and try another await.
@@ -3272,7 +3296,7 @@ function emitPostponeChunk(
     try {
       // eslint-disable-next-line react-internal/safe-string-coercion
       reason = String(postponeInstance.message);
-      stack = filterStackTrace(request, postponeInstance, 0);
+      stack = filterStackTrace(request, parseStackTrace(postponeInstance, 0));
     } catch (x) {
       stack = [];
     }
@@ -3295,7 +3319,7 @@ function serializeErrorValue(request: Request, error: Error): string {
       name = error.name;
       // eslint-disable-next-line react-internal/safe-string-coercion
       message = String(error.message);
-      stack = filterStackTrace(request, error, 0);
+      stack = filterStackTrace(request, parseStackTrace(error, 0));
       const errorEnv = (error: any).environmentName;
       if (typeof errorEnv === 'string') {
         // This probably came from another FlightClient as a pass through.
@@ -3334,7 +3358,7 @@ function emitErrorChunk(
         name = error.name;
         // eslint-disable-next-line react-internal/safe-string-coercion
         message = String(error.message);
-        stack = filterStackTrace(request, error, 0);
+        stack = filterStackTrace(request, parseStackTrace(error, 0));
         const errorEnv = (error: any).environmentName;
         if (typeof errorEnv === 'string') {
           // This probably came from another FlightClient as a pass through.
@@ -3496,6 +3520,7 @@ function outlineComponentInfo(
 function emitIOInfoChunk(
   request: Request,
   id: number,
+  name: string,
   start: number,
   end: number,
   stack: ?ReactStackTrace,
@@ -3532,6 +3557,7 @@ function emitIOInfoChunk(
   const relativeStartTimestamp = start - request.timeOrigin;
   const relativeEndTimestamp = end - request.timeOrigin;
   const debugIOInfo: Omit<ReactIOInfo, 'debugTask' | 'debugStack'> = {
+    name: name,
     start: relativeStartTimestamp,
     end: relativeEndTimestamp,
     stack: stack,
@@ -3551,7 +3577,14 @@ function outlineIOInfo(request: Request, ioInfo: ReactIOInfo): void {
   // We can't serialize the ConsoleTask/Error objects so we need to omit them before serializing.
   request.pendingChunks++;
   const id = request.nextChunkId++;
-  emitIOInfoChunk(request, id, ioInfo.start, ioInfo.end, ioInfo.stack);
+  emitIOInfoChunk(
+    request,
+    id,
+    ioInfo.name,
+    ioInfo.start,
+    ioInfo.end,
+    ioInfo.stack,
+  );
   request.writtenObjects.set(ioInfo, serializeByValueID(id));
 }
 
@@ -3566,12 +3599,23 @@ function serializeIONode(
   }
 
   let stack = null;
+  let name = '';
   if (ioNode.stack !== null) {
-    stack = filterStackTrace(request, ioNode.stack, 1);
+    const fullStack = parseStackTrace(ioNode.stack, 1);
+    stack = filterStackTrace(request, fullStack);
+    name = findCalledFunctionNameFromStackTrace(request, fullStack);
+    // The name can include the object that this was called on but sometimes that's
+    // just unnecessary context.
+    if (name.startsWith('Window.')) {
+      name = name.slice(7);
+    } else if (name.startsWith('<anonymous>.')) {
+      name = name.slice(7);
+    }
   }
+
   request.pendingChunks++;
   const id = request.nextChunkId++;
-  emitIOInfoChunk(request, id, ioNode.start, ioNode.end, stack);
+  emitIOInfoChunk(request, id, name, ioNode.start, ioNode.end, stack);
   const ref = serializeByValueID(id);
   request.writtenObjects.set(ioNode, ref);
   return ref;
@@ -3712,7 +3756,10 @@ function renderConsoleValue(
         let debugStack: null | ReactStackTrace = null;
         if (element._debugStack != null) {
           // Outline the debug stack so that it doesn't get cut off.
-          debugStack = filterStackTrace(request, element._debugStack, 1);
+          debugStack = filterStackTrace(
+            request,
+            parseStackTrace(element._debugStack, 1),
+          );
           doNotLimit.add(debugStack);
           for (let i = 0; i < debugStack.length; i++) {
             doNotLimit.add(debugStack[i]);
