@@ -40,8 +40,7 @@ export function getViewTransitionName(
   const root = ((getCommittingRoot(): any): FiberRoot);
   const identifierPrefix = root.identifierPrefix;
   const globalClientId = globalClientIdCounter++;
-  const name =
-    '\u00AB' + identifierPrefix + 't' + globalClientId.toString(32) + '\u00BB';
+  const name = '_' + identifierPrefix + 't' + globalClientId.toString(32) + '_';
   instance.autoName = name;
   return name;
 }

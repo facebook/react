@@ -65,7 +65,7 @@ describe('ReactDOMFizzStaticNode', () => {
     const prelude = await readContent(result.prelude);
     if (gate(flags => flags.enableFizzBlockingRender)) {
       expect(prelude).toMatchInlineSnapshot(
-        `"<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/></head><body>hello world<template id="«R»"></template></body></html>"`,
+        `"<!DOCTYPE html><html><head><link rel="expect" href="#_R_" blocking="render"/></head><body>hello world<template id="_R_"></template></body></html>"`,
       );
     } else {
       expect(prelude).toMatchInlineSnapshot(
@@ -86,7 +86,7 @@ describe('ReactDOMFizzStaticNode', () => {
     );
     const prelude = await readContent(result.prelude);
     expect(prelude).toMatchInlineSnapshot(
-      `"<link rel="preload" as="script" fetchPriority="low" href="init.js"/><link rel="modulepreload" fetchPriority="low" href="init.mjs"/><div>hello world</div><script id="«R»">INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
+      `"<link rel="preload" as="script" fetchPriority="low" href="init.js"/><link rel="modulepreload" fetchPriority="low" href="init.mjs"/><div>hello world</div><script id="_R_">INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
     );
   });
 
