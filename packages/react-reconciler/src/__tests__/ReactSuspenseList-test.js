@@ -170,7 +170,7 @@ describe('ReactSuspenseList', () => {
   it('warns if a single fragment is passed to a "backwards" list', async () => {
     function Foo() {
       return (
-        <SuspenseList revealOrder="unstable_legacy-backwards">
+        <SuspenseList revealOrder="unstable_legacy-backwards" tail="visible">
           <>{[]}</>
         </SuspenseList>
       );
@@ -192,7 +192,7 @@ describe('ReactSuspenseList', () => {
   it('warns if a nested array is passed to a "forwards" list', async () => {
     function Foo({items}) {
       return (
-        <SuspenseList revealOrder="forwards">
+        <SuspenseList revealOrder="forwards" tail="visible">
           {items.map(name => (
             <Suspense key={name} fallback="Loading">
               {name}
@@ -973,7 +973,7 @@ describe('ReactSuspenseList', () => {
 
     function Foo() {
       return (
-        <SuspenseList revealOrder="forwards">
+        <SuspenseList revealOrder="forwards" tail="visible">
           <Suspense fallback={<Text text="Loading A" />}>
             <A />
           </Suspense>
@@ -1039,7 +1039,7 @@ describe('ReactSuspenseList', () => {
 
     function Foo() {
       return (
-        <SuspenseList revealOrder="unstable_legacy-backwards">
+        <SuspenseList revealOrder="unstable_legacy-backwards" tail="visible">
           <Suspense fallback={<Text text="Loading A" />}>
             <A />
           </Suspense>
@@ -1113,7 +1113,7 @@ describe('ReactSuspenseList', () => {
 
     function Foo({items}) {
       return (
-        <SuspenseList revealOrder="forwards">
+        <SuspenseList revealOrder="forwards" tail="visible">
           {items.map(([key, Component]) => (
             <Suspense key={key} fallback={<Text text={'Loading ' + key} />}>
               <Component />
@@ -1298,7 +1298,7 @@ describe('ReactSuspenseList', () => {
 
     function Foo({items}) {
       return (
-        <SuspenseList revealOrder="unstable_legacy-backwards">
+        <SuspenseList revealOrder="unstable_legacy-backwards" tail="visible">
           {items.map(([key, Component]) => (
             <Suspense key={key} fallback={<Text text={'Loading ' + key} />}>
               <Component />
@@ -1476,7 +1476,7 @@ describe('ReactSuspenseList', () => {
   it('switches to rendering fallbacks if the tail takes long CPU time', async () => {
     function Foo() {
       return (
-        <SuspenseList revealOrder="forwards">
+        <SuspenseList revealOrder="forwards" tail="visible">
           <Suspense fallback={<Text text="Loading A" />}>
             <Text text="A" />
           </Suspense>
@@ -1609,6 +1609,29 @@ describe('ReactSuspenseList', () => {
         <span>C</span>
       </>,
     );
+  });
+
+  // @gate enableSuspenseList
+  it('warns if no tail option is specified', async () => {
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="forwards">
+          <Suspense fallback="Loading">A</Suspense>
+          <Suspense fallback="Loading">B</Suspense>
+        </SuspenseList>
+      );
+    }
+
+    await act(() => {
+      ReactNoop.render(<Foo />);
+    });
+    assertConsoleErrorDev([
+      'The default for the <SuspenseList tail="..."> prop is changing. ' +
+        'To be future compatible you must explictly specify either ' +
+        '"visible" (the current default), "collapsed" or "hidden".' +
+        '\n    in SuspenseList (at **)' +
+        '\n    in Foo (at **)',
+    ]);
   });
 
   // @gate enableSuspenseList
@@ -2230,7 +2253,7 @@ describe('ReactSuspenseList', () => {
     function Foo() {
       return (
         <SuspenseList revealOrder="together">
-          <SuspenseList revealOrder="forwards">
+          <SuspenseList revealOrder="forwards" tail="visible">
             <Suspense fallback={<Text text="Loading A" />}>
               <Text text="A" />
             </Suspense>
@@ -2331,7 +2354,7 @@ describe('ReactSuspenseList', () => {
 
     function Foo({showB}) {
       return (
-        <SuspenseList revealOrder="forwards">
+        <SuspenseList revealOrder="forwards" tail="visible">
           <SuspenseList revealOrder="forwards" tail="hidden">
             <Suspense fallback={<Text text="Loading A" />}>
               <Text text="A" />
@@ -2397,7 +2420,7 @@ describe('ReactSuspenseList', () => {
     function Foo() {
       return (
         <div>
-          <SuspenseList revealOrder="forwards">
+          <SuspenseList revealOrder="forwards" tail="visible">
             <Text text="A" />
             <Text text="B" />
           </SuspenseList>
@@ -2749,7 +2772,7 @@ describe('ReactSuspenseList', () => {
     function App() {
       Scheduler.log('App');
       return (
-        <SuspenseList revealOrder="forwards">
+        <SuspenseList revealOrder="forwards" tail="visible">
           <Suspense fallback={<Text text="Loading A" />}>
             <Sleep time={600}>
               <TwoPass text="A" />
@@ -2836,7 +2859,7 @@ describe('ReactSuspenseList', () => {
       Scheduler.log('App');
       return (
         <Profiler id="root" onRender={onRender}>
-          <SuspenseList revealOrder="forwards">
+          <SuspenseList revealOrder="forwards" tail="visible">
             <Suspense fallback={<Fallback />}>
               <Sleep time={1}>
                 <A />
@@ -3012,7 +3035,7 @@ describe('ReactSuspenseList', () => {
       // Several layers of Bailout wrappers help verify we're
       // marking updates all the way to the propagation root.
       return (
-        <SuspenseList revealOrder="forwards">
+        <SuspenseList revealOrder="forwards" tail="visible">
           <Bailout>
             <Bailout>
               <Bailout>
@@ -3105,7 +3128,7 @@ describe('ReactSuspenseList', () => {
 
       function Repro({update}) {
         return (
-          <SuspenseList revealOrder="forwards">
+          <SuspenseList revealOrder="forwards" tail="visible">
             {update && (
               <Suspense fallback={<Text text="Loading A..." />}>
                 <A />
@@ -3204,7 +3227,7 @@ describe('ReactSuspenseList', () => {
     }
     function Foo() {
       return (
-        <SuspenseList revealOrder="forwards">
+        <SuspenseList revealOrder="forwards" tail="visible">
           <Generator />
         </SuspenseList>
       );
@@ -3260,7 +3283,11 @@ describe('ReactSuspenseList', () => {
     };
 
     function Foo() {
-      return <SuspenseList revealOrder="forwards">{iterable}</SuspenseList>;
+      return (
+        <SuspenseList revealOrder="forwards" tail="visible">
+          {iterable}
+        </SuspenseList>
+      );
     }
 
     await act(() => {
@@ -3346,7 +3373,7 @@ describe('ReactSuspenseList', () => {
   it('warns if a nested async iterable is passed to a "forwards" list', async () => {
     function Foo({items}) {
       return (
-        <SuspenseList revealOrder="forwards">
+        <SuspenseList revealOrder="forwards" tail="visible">
           {items}
           <div>Tail</div>
         </SuspenseList>

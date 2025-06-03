@@ -587,7 +587,7 @@ describe('ReactDOMFizzSuspenseList', () => {
     function Foo() {
       return (
         <div>
-          <SuspenseList revealOrder="forwards">
+          <SuspenseList revealOrder="forwards" tail="visible">
             <Suspense fallback={<Text text="Loading A" />}>
               <A />
             </Suspense>
@@ -658,7 +658,7 @@ describe('ReactDOMFizzSuspenseList', () => {
     function Foo() {
       return (
         <div>
-          <SuspenseList revealOrder="unstable_legacy-backwards">
+          <SuspenseList revealOrder="unstable_legacy-backwards" tail="visible">
             <Suspense fallback={<Text text="Loading A" />}>
               <A />
             </Suspense>
@@ -729,8 +729,10 @@ describe('ReactDOMFizzSuspenseList', () => {
     function Foo() {
       return (
         <div>
-          <SuspenseList revealOrder="forwards">
-            <SuspenseList revealOrder="unstable_legacy-backwards">
+          <SuspenseList revealOrder="forwards" tail="visible">
+            <SuspenseList
+              revealOrder="unstable_legacy-backwards"
+              tail="visible">
               <Suspense fallback={<Text text="Loading A" />}>
                 <A />
               </Suspense>
@@ -800,7 +802,7 @@ describe('ReactDOMFizzSuspenseList', () => {
     function Foo() {
       return (
         <div>
-          <SuspenseList revealOrder="forwards">
+          <SuspenseList revealOrder="forwards" tail="visible">
             <Suspense fallback={<Text text="Loading A" />}>
               <A />
             </Suspense>
@@ -855,7 +857,7 @@ describe('ReactDOMFizzSuspenseList', () => {
     function Foo() {
       return (
         <div>
-          <SuspenseList revealOrder="forwards">
+          <SuspenseList revealOrder="forwards" tail="visible">
             <Suspense fallback={<Text text="Loading A" />}>
               <A />
             </Suspense>

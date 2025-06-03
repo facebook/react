@@ -5755,7 +5755,7 @@ body {
         <html>
           <body>
             <Suspense fallback="loading...">
-              <SuspenseList revealOrder="forwards">
+              <SuspenseList revealOrder="forwards" tail="visible">
                 <Suspense fallback="loading foo...">
                   <BlockedOn value="foo">
                     <link rel="stylesheet" href="foo" precedence="foo" />

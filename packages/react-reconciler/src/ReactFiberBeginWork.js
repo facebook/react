@@ -3283,13 +3283,27 @@ function validateTailOptions(
   revealOrder: SuspenseListRevealOrder,
 ) {
   if (__DEV__) {
-    if (tailMode !== undefined && !didWarnAboutTailOptions[tailMode]) {
-      if (
+    const cacheKey = tailMode == null ? 'null' : tailMode;
+    if (!didWarnAboutTailOptions[cacheKey]) {
+      if (tailMode == null) {
+        if (
+          revealOrder === 'forwards' ||
+          revealOrder === 'backwards' ||
+          revealOrder === 'unstable_legacy-backwards'
+        ) {
+          didWarnAboutTailOptions[cacheKey] = true;
+          console.error(
+            'The default for the <SuspenseList tail="..."> prop is changing. ' +
+              'To be future compatible you must explictly specify either ' +
+              '"visible" (the current default), "collapsed" or "hidden".',
+          );
+        }
+      } else if (
         tailMode !== 'visible' &&
         tailMode !== 'collapsed' &&
         tailMode !== 'hidden'
       ) {
-        didWarnAboutTailOptions[tailMode] = true;
+        didWarnAboutTailOptions[cacheKey] = true;
         console.error(
           '"%s" is not a supported value for tail on <SuspenseList />. ' +
             'Did you mean "visible", "collapsed" or "hidden"?',
@@ -3300,7 +3314,7 @@ function validateTailOptions(
         revealOrder !== 'backwards' &&
         revealOrder !== 'unstable_legacy-backwards'
       ) {
-        didWarnAboutTailOptions[tailMode] = true;
+        didWarnAboutTailOptions[cacheKey] = true;
         console.error(
           '<SuspenseList tail="%s" /> is only valid if revealOrder is ' +
             '"forwards" or "backwards". ' +
