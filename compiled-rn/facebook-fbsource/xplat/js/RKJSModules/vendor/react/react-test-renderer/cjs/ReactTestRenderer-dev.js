@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ea7b1f6a77eb6e77728cdf3feed18db0>>
+ * @generated SignedSource<<07648f16beb32aa7767f7b3979ef84f6>>
  */
 
 "use strict";
@@ -5442,11 +5442,7 @@ __DEV__ &&
         identifierPrefix = workInProgressRoot.identifierPrefix,
         globalClientId = globalClientIdCounter++;
       identifierPrefix =
-        "\u00ab" +
-        identifierPrefix +
-        "r" +
-        globalClientId.toString(32) +
-        "\u00bb";
+        "_" + identifierPrefix + "r_" + globalClientId.toString(32) + "_";
       return (hook.memoizedState = identifierPrefix);
     }
     function mountRefresh() {
@@ -15675,10 +15671,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-526dd340-20250602",
+        version: "19.2.0-native-fb-1ae0a845-20250603",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-526dd340-20250602"
+        reconcilerVersion: "19.2.0-native-fb-1ae0a845-20250603"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15823,5 +15819,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.2.0-native-fb-526dd340-20250602";
+    exports.version = "19.2.0-native-fb-1ae0a845-20250603";
   })();

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<45d29e323ab3633031f2f104302c8875>>
+ * @generated SignedSource<<5c4966cbf1bce549ef3088ce2dddf8f5>>
  */
 
 "use strict";
@@ -5326,11 +5326,7 @@ var ContextOnlyDispatcher = {
         identifierPrefix = workInProgressRoot.identifierPrefix,
         globalClientId = globalClientIdCounter++;
       identifierPrefix =
-        "\u00ab" +
-        identifierPrefix +
-        "r" +
-        globalClientId.toString(32) +
-        "\u00bb";
+        "_" + identifierPrefix + "r_" + globalClientId.toString(32) + "_";
       return (hook.memoizedState = identifierPrefix);
     },
     useHostTransitionStatus: useHostTransitionStatus,
@@ -11959,10 +11955,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1364 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-526dd340-20250602",
+    version: "19.2.0-native-fb-1ae0a845-20250603",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-526dd340-20250602"
+    reconcilerVersion: "19.2.0-native-fb-1ae0a845-20250603"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1364.rendererConfig = extraDevToolsConfig);
