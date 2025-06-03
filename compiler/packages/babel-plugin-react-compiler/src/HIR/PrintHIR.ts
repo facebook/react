@@ -1003,6 +1003,12 @@ export function printAliasingEffect(effect: AliasingEffect): string {
     case 'MutateTransitiveConditionally': {
       return `${effect.kind} ${printPlaceForAliasEffect(effect.value)}`;
     }
+    case 'MutateFrozen': {
+      return `MutateFrozen ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.reason)}`;
+    }
+    case 'MutateGlobal': {
+      return `MutateGlobal ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.reason)}`;
+    }
     default: {
       assertExhaustive(effect, `Unexpected kind '${(effect as any).kind}'`);
     }
