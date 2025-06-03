@@ -66,12 +66,12 @@ function lowerWithMutationAliasing(fn: HIRFunction): void {
   inferMutationAliasingRanges(fn);
   rewriteInstructionKindsBasedOnReassignment(fn);
   inferReactiveScopeVariables(fn);
+  const effects = inferMutationAliasingFunctionEffects(fn);
   fn.env.logger?.debugLogIRs?.({
     kind: 'hir',
     name: 'AnalyseFunction (inner)',
     value: fn,
   });
-  const effects = inferMutationAliasingFunctionEffects(fn);
   if (effects != null) {
     fn.aliasingEffects ??= [];
     fn.aliasingEffects?.push(...effects);
