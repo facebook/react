@@ -18,7 +18,7 @@ import {
 import {getOrInsertWith} from '../Utils/utils';
 import {Environment} from '../HIR';
 import {DEFAULT_EXPORT} from '../HIR/Environment';
-import {CompileProgramResult} from './Program';
+import {CompileProgramMetadata} from './Program';
 
 function throwInvalidReact(
   options: Omit<CompilerErrorDetailOptions, 'severity'>,
@@ -109,7 +109,7 @@ export default function validateNoUntransformedReferences(
   filename: string | null,
   logger: Logger | null,
   env: EnvironmentConfig,
-  compileResult: CompileProgramResult | null,
+  compileResult: CompileProgramMetadata | null,
 ): void {
   const moduleLoadChecks = new Map<
     string,
@@ -236,7 +236,7 @@ function transformProgram(
   moduleLoadChecks: Map<string, Map<string, CheckInvalidReferenceFn>>,
   filename: string | null,
   logger: Logger | null,
-  compileResult: CompileProgramResult | null,
+  compileResult: CompileProgramMetadata | null,
 ): void {
   const traversalState: TraversalState = {
     shouldInvalidateScopes: true,

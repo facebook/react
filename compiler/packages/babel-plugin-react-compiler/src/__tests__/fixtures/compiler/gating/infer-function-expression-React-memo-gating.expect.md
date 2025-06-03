@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @gating @compilationMode(infer)
+// @gating @compilationMode:"infer"
 import React from 'react';
 export default React.forwardRef(function notNamedLikeAComponent(props) {
   return <div />;
@@ -14,7 +14,7 @@ export default React.forwardRef(function notNamedLikeAComponent(props) {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime";
-import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag"; // @gating @compilationMode(infer)
+import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag"; // @gating @compilationMode:"infer"
 import React from "react";
 export default React.forwardRef(
   isForgetEnabled_Fixtures()

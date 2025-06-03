@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @compilationMode(infer)
+// @compilationMode:"infer"
 function useStateValue(props) {
   const [state, _] = useState(null);
   return [state];
@@ -13,7 +13,7 @@ function useStateValue(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @compilationMode(infer)
+import { c as _c } from "react/compiler-runtime"; // @compilationMode:"infer"
 function useStateValue(props) {
   const $ = _c(2);
   const [state] = useState(null);

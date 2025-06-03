@@ -1437,8 +1437,8 @@ describe('ReactDOMForm', () => {
     assertLog([
       'Suspend! [Count: 0]',
       'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Count: 0]'] : []),
+      // pre-warming
+      'Suspend! [Count: 0]',
     ]);
     await act(() => resolveText('Count: 0'));
     assertLog(['Count: 0']);
@@ -1448,8 +1448,8 @@ describe('ReactDOMForm', () => {
     assertLog([
       'Suspend! [Count: 1]',
       'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Count: 1]'] : []),
+      // pre-warming
+      'Suspend! [Count: 1]',
     ]);
     expect(container.textContent).toBe('Loading...');
 
@@ -1482,8 +1482,8 @@ describe('ReactDOMForm', () => {
     await act(() => root.render(<App />));
     assertLog([
       'Suspend! [Count: 0]',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Count: 0]'] : []),
+      // pre-warming
+      'Suspend! [Count: 0]',
     ]);
     await act(() => resolveText('Count: 0'));
     assertLog(['Count: 0']);
@@ -1501,8 +1501,8 @@ describe('ReactDOMForm', () => {
     ]);
     assertLog([
       'Suspend! [Count: 1]',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Count: 1]'] : []),
+      // pre-warming
+      'Suspend! [Count: 1]',
     ]);
     expect(container.textContent).toBe('Count: 0');
   });

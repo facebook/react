@@ -1,4 +1,4 @@
-// @gating @compilationMode(annotation)
+// @gating @compilationMode:"annotation"
 export function Bar(props) {
   'use forget';
   return <div>{props.bar}</div>;

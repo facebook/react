@@ -1318,10 +1318,8 @@ describe('ReactDOMFizzServer', () => {
     expect(ref.current).toBe(null);
     expect(getVisibleChildren(container)).toEqual(
       <div>
-        Loading A
-        {/* // TODO: This is incorrect. It should be "Loading B" but Fizz SuspenseList
-            // isn't implemented fully yet. */}
-        <span>B</span>
+        {'Loading A'}
+        {'Loading B'}
       </div>,
     );
 
@@ -1335,11 +1333,9 @@ describe('ReactDOMFizzServer', () => {
     // We haven't resolved yet.
     expect(getVisibleChildren(container)).toEqual(
       <div>
-        Loading A
-        {/* // TODO: This is incorrect. It should be "Loading B" but Fizz SuspenseList
-            // isn't implemented fully yet. */}
-        <span>B</span>
-        Loading C
+        {'Loading A'}
+        {'Loading B'}
+        {'Loading C'}
       </div>,
     );
 
@@ -3590,7 +3586,9 @@ describe('ReactDOMFizzServer', () => {
         (gate(flags => flags.shouldUseFizzExternalRuntime)
           ? '<script src="react-dom-bindings/src/server/ReactDOMServerExternalRuntime.js" async=""></script>'
           : '') +
-        '<link rel="expect" href="#«R»" blocking="render">',
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<link rel="expect" href="#«R»" blocking="render">'
+          : ''),
     );
   });
 
@@ -4523,7 +4521,15 @@ describe('ReactDOMFizzServer', () => {
 
     // the html should be as-is
     expect(document.documentElement.innerHTML).toEqual(
-      '<head><script src="react-dom-bindings/src/server/ReactDOMServerExternalRuntime.js" async=""></script><link rel="expect" href="#«R»" blocking="render"></head><body><p>hello world!</p><template id="«R»"></template></body>',
+      '<head><script src="react-dom-bindings/src/server/ReactDOMServerExternalRuntime.js" async=""></script>' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<link rel="expect" href="#«R»" blocking="render">'
+          : '') +
+        '</head><body><p>hello world!</p>' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<template id="«R»"></template>'
+          : '') +
+        '</body>',
     );
   });
 
@@ -6512,7 +6518,14 @@ describe('ReactDOMFizzServer', () => {
         (gate(flags => flags.shouldUseFizzExternalRuntime)
           ? '<script src="react-dom-bindings/src/server/ReactDOMServerExternalRuntime.js" async=""></script>'
           : '') +
-        '<link rel="expect" href="#«R»" blocking="render"></head><body><script>try { foo() } catch (e) {} ;</script><template id="«R»"></template></body></html>',
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<link rel="expect" href="#«R»" blocking="render">'
+          : '') +
+        '</head><body><script>try { foo() } catch (e) {} ;</script>' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<template id="«R»"></template>'
+          : '') +
+        '</body></html>',
     );
   });
 
@@ -10263,6 +10276,174 @@ describe('ReactDOMFizzServer', () => {
       <html>
         <head />
         <body />
+      </html>,
+    );
+  });
+
+  it('can render styles with nonce', async () => {
+    CSPnonce = 'R4nd0m';
+    await act(() => {
+      const {pipe} = renderToPipeableStream(
+        <>
+          <style
+            href="foo"
+            precedence="default"
+            nonce={CSPnonce}>{`.foo { color: hotpink; }`}</style>
+          <style
+            href="bar"
+            precedence="default"
+            nonce={CSPnonce}>{`.bar { background-color: blue; }`}</style>
+        </>,
+        {nonce: {style: CSPnonce}},
+      );
+      pipe(writable);
+    });
+    expect(document.querySelector('style').nonce).toBe(CSPnonce);
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div id="container">
+            <style
+              data-precedence="default"
+              data-href="foo bar"
+              nonce={
+                CSPnonce
+              }>{`.foo { color: hotpink; }.bar { background-color: blue; }`}</style>
+          </div>
+        </body>
+      </html>,
+    );
+  });
+
+  it("shouldn't render styles with mismatched nonce", async () => {
+    CSPnonce = 'R4nd0m';
+    await act(() => {
+      const {pipe} = renderToPipeableStream(
+        <>
+          <style
+            href="foo"
+            precedence="default"
+            nonce={CSPnonce}>{`.foo { color: hotpink; }`}</style>
+          <style
+            href="bar"
+            precedence="default"
+            nonce={`${CSPnonce}${CSPnonce}`}>{`.bar { background-color: blue; }`}</style>
+        </>,
+        {nonce: {style: CSPnonce}},
+      );
+      pipe(writable);
+    });
+    assertConsoleErrorDev([
+      'React encountered a style tag with `precedence` "default" and `nonce` "R4nd0mR4nd0m". When React manages style rules using `precedence` it will only include rules if the nonce matches the style nonce "R4nd0m" that was included with this render.',
+    ]);
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div id="container">
+            <style
+              data-precedence="default"
+              data-href="foo"
+              nonce={CSPnonce}>{`.foo { color: hotpink; }`}</style>
+          </div>
+        </body>
+      </html>,
+    );
+  });
+
+  it("should render styles without nonce when render call doesn't receive nonce", async () => {
+    await act(() => {
+      const {pipe} = renderToPipeableStream(
+        <>
+          <style
+            href="foo"
+            precedence="default"
+            nonce="R4nd0m">{`.foo { color: hotpink; }`}</style>
+        </>,
+      );
+      pipe(writable);
+    });
+    assertConsoleErrorDev([
+      'React encountered a style tag with `precedence` "default" and `nonce` "R4nd0m". When React manages style rules using `precedence` it will only include a nonce attributes if you also provide the same style nonce value as a render option.',
+    ]);
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div id="container">
+            <style
+              data-precedence="default"
+              data-href="foo">{`.foo { color: hotpink; }`}</style>
+          </div>
+        </body>
+      </html>,
+    );
+  });
+
+  it('should render styles without nonce when render call receives a string nonce dedicated to scripts', async () => {
+    CSPnonce = 'R4nd0m';
+    await act(() => {
+      const {pipe} = renderToPipeableStream(
+        <>
+          <style
+            href="foo"
+            precedence="default"
+            nonce={CSPnonce}>{`.foo { color: hotpink; }`}</style>
+        </>,
+        {nonce: CSPnonce},
+      );
+      pipe(writable);
+    });
+    assertConsoleErrorDev([
+      'React encountered a style tag with `precedence` "default" and `nonce` "R4nd0m". When React manages style rules using `precedence` it will only include a nonce attributes if you also provide the same style nonce value as a render option.',
+    ]);
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div id="container">
+            <style
+              data-precedence="default"
+              data-href="foo">{`.foo { color: hotpink; }`}</style>
+          </div>
+        </body>
+      </html>,
+    );
+  });
+
+  it('should allow for different script and style nonces', async () => {
+    CSPnonce = 'R4nd0m';
+    await act(() => {
+      const {pipe} = renderToPipeableStream(
+        <>
+          <style
+            href="foo"
+            precedence="default"
+            nonce="D1ff3r3nt">{`.foo { color: hotpink; }`}</style>
+        </>,
+        {
+          nonce: {script: CSPnonce, style: 'D1ff3r3nt'},
+          bootstrapScriptContent: 'function noop(){}',
+        },
+      );
+      pipe(writable);
+    });
+    const scripts = Array.from(container.getElementsByTagName('script')).filter(
+      node => node.getAttribute('nonce') === CSPnonce,
+    );
+    expect(scripts[scripts.length - 1].textContent).toBe('function noop(){}');
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div id="container">
+            <style
+              data-precedence="default"
+              data-href="foo"
+              nonce="D1ff3r3nt">{`.foo { color: hotpink; }`}</style>
+          </div>
+        </body>
       </html>,
     );
   });

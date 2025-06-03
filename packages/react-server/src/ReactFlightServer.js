@@ -105,6 +105,8 @@ import {resolveOwner, setCurrentOwner} from './flight/ReactFlightCurrentOwner';
 import {getOwnerStackByComponentInfoInDev} from 'shared/ReactComponentInfoStack';
 import {resetOwnerStackLimit} from 'shared/ReactOwnerStackReset';
 
+import noop from 'shared/noop';
+
 import {
   callComponentInDEV,
   callLazyInitInDEV,
@@ -443,9 +445,7 @@ function defaultErrorHandler(error: mixed) {
   // Don't transform to our wrapper
 }
 
-function defaultPostponeHandler(reason: string) {
-  // Noop
-}
+const defaultPostponeHandler: (reason: string) => void = noop;
 
 function RequestInstance(
   this: $FlowFixMe,
@@ -557,8 +557,6 @@ function RequestInstance(
   );
   pingedTasks.push(rootTask);
 }
-
-function noop() {}
 
 export function createRequest(
   model: ReactClientValue,

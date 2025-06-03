@@ -1,4 +1,4 @@
-// @panicThreshold(none)
+// @panicThreshold:"none"
 import {useHook} from 'shared-runtime';
 
 function InvalidComponent(props) {

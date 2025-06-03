@@ -205,9 +205,8 @@ describe('Activity Suspense', () => {
     });
     assertLog([
       'Suspend! [hello]',
-      ...(gate(flags => flags.enableSiblingPrerendering)
-        ? ['Suspend! [hello]']
-        : []),
+      // pre-warming
+      'Suspend! [hello]',
     ]);
     expect(root).toMatchRenderedOutput('Loading');
 

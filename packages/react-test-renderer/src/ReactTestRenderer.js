@@ -60,6 +60,10 @@ import {
   disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 
+import noop from 'shared/noop';
+
+const defaultOnDefaultTransitionIndicator: () => void | (() => void) = noop;
+
 // $FlowFixMe[prop-missing]: This is only in the development export.
 const act = React.act;
 
@@ -515,6 +519,7 @@ function create(
     defaultOnUncaughtError,
     defaultOnCaughtError,
     defaultOnRecoverableError,
+    defaultOnDefaultTransitionIndicator,
     null,
   );
 

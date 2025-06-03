@@ -1,4 +1,4 @@
-// @logger
+// @loggerTestOnly
 import {createContext, use, useState} from 'react';
 import {
   Stringify,

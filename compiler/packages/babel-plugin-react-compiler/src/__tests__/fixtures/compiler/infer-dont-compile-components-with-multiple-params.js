@@ -1,4 +1,4 @@
-// @compilationMode(infer)
+// @compilationMode:"infer"
 // Takes multiple parameters - not a component!
 function Component(foo, bar) {
   return <div />;

@@ -1,4 +1,4 @@
-// @gating @panicThreshold(none) @compilationMode(infer)
+// @gating @panicThreshold:"none" @compilationMode:"infer"
 let someGlobal = 'joe';
 
 function Component() {

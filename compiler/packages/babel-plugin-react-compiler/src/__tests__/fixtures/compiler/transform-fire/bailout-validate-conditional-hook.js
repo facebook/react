@@ -1,4 +1,4 @@
-// @enableFire @panicThreshold(none)
+// @enableFire @panicThreshold:"none"
 import {fire, useEffect} from 'react';
 import {Stringify} from 'shared-runtime';
 

@@ -139,6 +139,9 @@ import {requestFormReset as requestFormResetOnFiber} from 'react-reconciler/src/
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 
 export {default as rendererVersion} from 'shared/ReactVersion';
+
+import noop from 'shared/noop';
+
 export const rendererPackageName = 'react-dom';
 export const extraDevToolsConfig = null;
 
@@ -1546,6 +1549,19 @@ export function cancelRootViewTransitionName(rootContainer: Container): void {
     rootContainer.nodeType === DOCUMENT_NODE
       ? (rootContainer: any).documentElement
       : rootContainer.ownerDocument.documentElement;
+
+  if (
+    !disableCommentsAsDOMContainers &&
+    rootContainer.nodeType === COMMENT_NODE
+  ) {
+    if (__DEV__) {
+      console.warn(
+        'Cannot cancel root view transition on a comment node. All view transitions will be globally scoped.',
+      );
+    }
+    return;
+  }
+
   if (
     documentElement !== null &&
     // $FlowFixMe[prop-missing]
@@ -1590,8 +1606,16 @@ export function restoreRootViewTransitionName(rootContainer: Container): void {
     // clone the whole document outside of the React too.
     containerInstance = (rootContainer: any);
   }
-  // $FlowFixMe[prop-missing]
-  if (containerInstance.style.viewTransitionName === 'root') {
+  if (
+    !disableCommentsAsDOMContainers &&
+    containerInstance.nodeType === COMMENT_NODE
+  ) {
+    return;
+  }
+  if (
+    // $FlowFixMe[prop-missing]
+    containerInstance.style.viewTransitionName === 'root'
+  ) {
     // If we moved the root view transition name to the container in a gesture
     // we need to restore it now.
     containerInstance.style.viewTransitionName = '';
@@ -1705,6 +1729,13 @@ export function cloneRootViewTransitionContainer(
     containerInstance = (rootContainer: any).body;
   } else if (rootContainer.nodeName === 'HTML') {
     containerInstance = (rootContainer.ownerDocument.body: any);
+  } else if (
+    !disableCommentsAsDOMContainers &&
+    rootContainer.nodeType === COMMENT_NODE
+  ) {
+    throw new Error(
+      'Cannot use a startGestureTransition() with a comment node root.',
+    );
   } else {
     // If the container is not the whole document, then we ideally should probably
     // clone the whole document outside of the React too.
@@ -3042,19 +3073,19 @@ export function updateFragmentInstanceFiber(
 }
 
 export function commitNewChildToFragmentInstance(
-  childElement: Instance,
+  childInstance: Instance,
   fragmentInstance: FragmentInstanceType,
 ): void {
   const eventListeners = fragmentInstance._eventListeners;
   if (eventListeners !== null) {
     for (let i = 0; i < eventListeners.length; i++) {
       const {type, listener, optionsOrUseCapture} = eventListeners[i];
-      childElement.addEventListener(type, listener, optionsOrUseCapture);
+      childInstance.addEventListener(type, listener, optionsOrUseCapture);
     }
   }
   if (fragmentInstance._observers !== null) {
     fragmentInstance._observers.forEach(observer => {
-      observer.observe(childElement);
+      observer.observe(childInstance);
     });
   }
 }
@@ -5628,16 +5659,14 @@ type SuspendedState = {
 };
 let suspendedState: null | SuspendedState = null;
 
-// We use a noop function when we begin suspending because if possible we want the
-// waitfor step to finish synchronously. If it doesn't we'll return a function to
-// provide the actual unsuspend function and that will get completed when the count
-// hits zero or it will get cancelled if the root starts new work.
-function noop() {}
-
 export function startSuspendingCommit(): void {
   suspendedState = {
     stylesheets: null,
     count: 0,
+    // We use a noop function when we begin suspending because if possible we want the
+    // waitfor step to finish synchronously. If it doesn't we'll return a function to
+    // provide the actual unsuspend function and that will get completed when the count
+    // hits zero or it will get cancelled if the root starts new work.
     unsuspend: noop,
   };
 }

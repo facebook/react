@@ -1,4 +1,4 @@
-// @compilationMode(infer)
+// @compilationMode:"infer"
 import {useMemo} from 'react';
 import {ValidateMemoization} from 'shared-runtime';
 

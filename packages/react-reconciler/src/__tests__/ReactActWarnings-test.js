@@ -367,8 +367,8 @@ describe('act warnings', () => {
       assertLog([
         'Suspend! [Async]',
         'Loading...',
-
-        ...(gate('enableSiblingPrerendering') ? ['Suspend! [Async]'] : []),
+        // pre-warming
+        'Suspend! [Async]',
       ]);
       expect(root).toMatchRenderedOutput('Loading...');
 
@@ -388,21 +388,19 @@ describe('act warnings', () => {
             "This ensures that you're testing the behavior the user would see in the browser. " +
             'Learn more at https://react.dev/link/wrap-tests-with-act',
 
-          ...(gate('enableSiblingPrerendering')
-            ? [
-                'A suspended resource finished loading inside a test, but the event was not wrapped in act(...).\n' +
-                  '\n' +
-                  'When testing, code that resolves suspended data should be wrapped into act(...):\n' +
-                  '\n' +
-                  'act(() => {\n' +
-                  '  /* finish loading suspended data */\n' +
-                  '});\n' +
-                  '/* assert on the output */\n' +
-                  '\n' +
-                  "This ensures that you're testing the behavior the user would see in the browser. " +
-                  'Learn more at https://react.dev/link/wrap-tests-with-act',
-              ]
-            : []),
+          // pre-warming
+
+          'A suspended resource finished loading inside a test, but the event was not wrapped in act(...).\n' +
+            '\n' +
+            'When testing, code that resolves suspended data should be wrapped into act(...):\n' +
+            '\n' +
+            'act(() => {\n' +
+            '  /* finish loading suspended data */\n' +
+            '});\n' +
+            '/* assert on the output */\n' +
+            '\n' +
+            "This ensures that you're testing the behavior the user would see in the browser. " +
+            'Learn more at https://react.dev/link/wrap-tests-with-act',
         ],
 
         {withoutStack: true},

@@ -33,7 +33,6 @@ export const transitionLaneExpirationMs = 5000;
 export const enableSchedulingProfiler = __VARIANT__;
 
 export const enableInfiniteRenderLoopDetection = __VARIANT__;
-export const enableSiblingPrerendering = __VARIANT__;
 
 export const enableFastAddPropertiesInDiffing = __VARIANT__;
 export const enableLazyPublicInstanceInFabric = false;

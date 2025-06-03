@@ -4,6 +4,13 @@
 
 ---
 
+### 6.1.2
+May 7, 2025
+
+* Restore "double-click to view owners tree" functionality ([eps1lon](https://github.com/eps1lon) in [#33039](https://github.com/facebook/react/pull/33039))
+
+---
+
 ### 6.1.1
 February 7, 2025
 
