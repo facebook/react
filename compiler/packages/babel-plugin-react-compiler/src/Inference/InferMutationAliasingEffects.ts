@@ -155,9 +155,7 @@ export function inferMutationAliasingEffects(
   }
   queue(fn.body.entry, initialState);
 
-  const signatureCache: Map<Instruction, InstructionSignature> = new Map();
-  const effectInstructionValueCache: Map<AliasingEffect, InstructionValue> =
-    new Map();
+  const context = new Context();
 
   let count = 0;
   while (queuedStates.size !== 0) {
@@ -179,7 +177,7 @@ export function inferMutationAliasingEffects(
 
       statesByBlock.set(blockId, incomingState);
       const state = incomingState.clone();
-      inferBlock(state, block, signatureCache, effectInstructionValueCache);
+      inferBlock(context, state, block);
 
       for (const nextBlockId of eachTerminalSuccessor(block.terminal)) {
         queue(nextBlockId, state);
@@ -187,6 +185,13 @@ export function inferMutationAliasingEffects(
     }
   }
   return Ok(undefined);
+}
+
+class Context {
+  instructionSignatureCache: Map<Instruction, InstructionSignature> = new Map();
+  effectInstructionValueCache: Map<AliasingEffect, InstructionValue> =
+    new Map();
+  catchHandlers: Map<BlockId, Place> = new Map();
 }
 
 function inferParam(
@@ -205,28 +210,44 @@ function inferParam(
 }
 
 function inferBlock(
+  context: Context,
   state: InferenceState,
   block: BasicBlock,
-  instructionSignatureCache: Map<Instruction, InstructionSignature>,
-  effectInstructionValueCache: Map<AliasingEffect, InstructionValue>,
 ): void {
   for (const phi of block.phis) {
     state.inferPhi(phi);
   }
 
   for (const instr of block.instructions) {
-    let instructionSignature = instructionSignatureCache.get(instr);
+    let instructionSignature = context.instructionSignatureCache.get(instr);
     if (instructionSignature == null) {
       instructionSignature = computeSignatureForInstruction(state.env, instr);
-      instructionSignatureCache.set(instr, instructionSignature);
+      context.instructionSignatureCache.set(instr, instructionSignature);
     }
-    const effects = applySignature(
-      state,
-      instructionSignature,
-      instr,
-      effectInstructionValueCache,
-    );
+    const effects = applySignature(context, state, instructionSignature, instr);
     instr.effects = effects;
+  }
+  const terminal = block.terminal;
+  if (terminal.kind === 'try' && terminal.handlerBinding != null) {
+    context.catchHandlers.set(terminal.handler, terminal.handlerBinding);
+  } else if (terminal.kind === 'maybe-throw') {
+    const handlerParam = context.catchHandlers.get(terminal.handler);
+    if (handlerParam != null) {
+      for (const instr of block.instructions) {
+        if (
+          instr.value.kind === 'CallExpression' ||
+          instr.value.kind === 'MethodCall'
+        ) {
+          /**
+           * Many instructions can error, but only calls can throw their result as the error
+           * itself. For example, `c = a.b` can throw if `a` is nullish, but the thrown value
+           * is an error object synthesized by the JS runtime. Whereas `throwsInput(x)` can
+           * throw (effectively) the result of the call.
+           */
+          state.appendAlias(handlerParam, instr.lvalue);
+        }
+      }
+    }
   }
 }
 
@@ -240,10 +261,10 @@ function inferBlock(
  * This phase may also emit errors, for example MutateLocal on a frozen value is invalid.
  */
 function applySignature(
+  context: Context,
   state: InferenceState,
   signature: InstructionSignature,
   instruction: Instruction,
-  effectInstructionValueCache: Map<AliasingEffect, InstructionValue>,
 ): Array<AliasingEffect> | null {
   const effects: Array<AliasingEffect> = [];
   /**
@@ -305,14 +326,7 @@ function applySignature(
   }
 
   for (const effect of signature.effects) {
-    applyEffect(
-      state,
-      effect,
-      instruction,
-      effectInstructionValueCache,
-      aliased,
-      effects,
-    );
+    applyEffect(context, state, effect, instruction, aliased, effects);
   }
   if (DEBUG) {
     console.log(
@@ -334,10 +348,10 @@ function applySignature(
 }
 
 function applyEffect(
+  context: Context,
   state: InferenceState,
   effect: AliasingEffect,
   instruction: Instruction,
-  effectInstructionValueCache: Map<AliasingEffect, InstructionValue>,
   aliased: Set<IdentifierId>,
   effects: Array<AliasingEffect>,
 ): void {
@@ -353,14 +367,14 @@ function applyEffect(
       break;
     }
     case 'Create': {
-      let value = effectInstructionValueCache.get(effect);
+      let value = context.effectInstructionValueCache.get(effect);
       if (value == null) {
         value = {
           kind: 'ObjectExpression',
           properties: [],
           loc: effect.into.loc,
         };
-        effectInstructionValueCache.set(effect, value);
+        context.effectInstructionValueCache.set(effect, value);
       }
       state.initialize(value, {
         kind: effect.value,
@@ -385,14 +399,14 @@ function applyEffect(
     }
     case 'CreateFrom': {
       const kind = state.kind(effect.from).kind;
-      let value = effectInstructionValueCache.get(effect);
+      let value = context.effectInstructionValueCache.get(effect);
       if (value == null) {
         value = {
           kind: 'ObjectExpression',
           properties: [],
           loc: effect.into.loc,
         };
-        effectInstructionValueCache.set(effect, value);
+        context.effectInstructionValueCache.set(effect, value);
       }
       state.initialize(value, {
         kind,
@@ -456,6 +470,7 @@ function applyEffect(
       state.define(effect.into, effect.function);
       for (const capture of effect.captures) {
         applyEffect(
+          context,
           state,
           {
             kind: 'Capture',
@@ -463,7 +478,6 @@ function applyEffect(
             into: effect.into,
           },
           instruction,
-          effectInstructionValueCache,
           aliased,
           effects,
         );
@@ -531,14 +545,14 @@ function applyEffect(
             from: effect.from,
             into: effect.into,
           });
-          let value = effectInstructionValueCache.get(effect);
+          let value = context.effectInstructionValueCache.get(effect);
           if (value == null) {
             value = {
               kind: 'Primitive',
               value: undefined,
               loc: effect.from.loc,
             };
-            effectInstructionValueCache.set(effect, value);
+            context.effectInstructionValueCache.set(effect, value);
           }
           state.initialize(value, {kind: fromKind, reason: new Set([])});
           state.define(effect.into, value);
@@ -546,14 +560,14 @@ function applyEffect(
         }
         case ValueKind.Global:
         case ValueKind.Primitive: {
-          let value = effectInstructionValueCache.get(effect);
+          let value = context.effectInstructionValueCache.get(effect);
           if (value == null) {
             value = {
               kind: 'Primitive',
               value: undefined,
               loc: effect.from.loc,
             };
-            effectInstructionValueCache.set(effect, value);
+            context.effectInstructionValueCache.set(effect, value);
           }
           state.initialize(value, {kind: fromKind, reason: new Set([])});
           state.define(effect.into, value);
@@ -605,10 +619,10 @@ function applyEffect(
           }
           for (const signatureEffect of signatureEffects) {
             applyEffect(
+              context,
               state,
               signatureEffect,
               instruction,
-              effectInstructionValueCache,
               aliased,
               effects,
             );
@@ -632,10 +646,10 @@ function applyEffect(
         }
         for (const signatureEffect of signatureEffects) {
           applyEffect(
+            context,
             state,
             signatureEffect,
             instruction,
-            effectInstructionValueCache,
             aliased,
             effects,
           );
@@ -653,10 +667,10 @@ function applyEffect(
         );
         for (const legacyEffect of legacyEffects) {
           applyEffect(
+            context,
             state,
             legacyEffect,
             instruction,
-            effectInstructionValueCache,
             aliased,
             effects,
           );
@@ -666,6 +680,7 @@ function applyEffect(
           console.log('default effects');
         }
         applyEffect(
+          context,
           state,
           {
             kind: 'Create',
@@ -673,7 +688,6 @@ function applyEffect(
             value: ValueKind.Mutable,
           },
           instruction,
-          effectInstructionValueCache,
           aliased,
           effects,
         );
@@ -691,23 +705,23 @@ function applyEffect(
           const operand = arg.kind === 'Identifier' ? arg : arg.place;
           if (operand !== effect.function || effect.mutatesFunction) {
             applyEffect(
+              context,
               state,
               {
                 kind: 'MutateTransitiveConditionally',
                 value: operand,
               },
               instruction,
-              effectInstructionValueCache,
               aliased,
               effects,
             );
           }
           applyEffect(
+            context,
             state,
             // OK: recording information flow
             {kind: 'Alias', from: operand, into: effect.into},
             instruction,
-            effectInstructionValueCache,
             aliased,
             effects,
           );
@@ -725,6 +739,7 @@ function applyEffect(
               continue;
             }
             applyEffect(
+              context,
               state,
               {
                 /*
@@ -736,7 +751,6 @@ function applyEffect(
                 into: other,
               },
               instruction,
-              effectInstructionValueCache,
               aliased,
               effects,
             );
@@ -984,7 +998,6 @@ class InferenceState {
       | 'MutateTransitiveConditionally',
     place: Place,
   ): 'none' | 'mutate' | 'mutate-frozen' | 'mutate-global' {
-    // TODO: consider handling of function expressions by looking at their effects
     const kind = this.kind(place).kind;
     switch (variant) {
       case 'MutateConditionally':
@@ -1348,18 +1361,6 @@ function computeSignatureForInstruction(
       effects.push({kind: 'Assign', from: value.value, into: lvalue});
       break;
     }
-    case 'PostfixUpdate':
-    case 'PrefixUpdate': {
-      effects.push({
-        kind: 'Create',
-        into: lvalue,
-        value: ValueKind.Primitive,
-      });
-      CompilerError.throwTodo({
-        reason: `Handle ${value.kind} in new inference`,
-        loc: instr.loc,
-      });
-    }
     case 'ObjectMethod':
     case 'FunctionExpression': {
       /**
@@ -1570,6 +1571,15 @@ function computeSignatureForInstruction(
       effects.push({kind: 'Assign', from: value.value, into: lvalue});
       break;
     }
+    case 'PostfixUpdate':
+    case 'PrefixUpdate': {
+      effects.push({
+        kind: 'Create',
+        into: lvalue,
+        value: ValueKind.Primitive,
+      });
+      break;
+    }
     case 'StoreGlobal': {
       CompilerError.throwTodo({
         reason: `Handle StoreGlobal in new inference`,
@@ -1677,15 +1687,28 @@ function computeEffectsForLegacySignature(
         break;
       }
       case Effect.ConditionallyMutateIterator: {
-        effects.push({
-          kind: 'Capture',
-          from: place,
-          into: lvalue,
-        });
-        effects.push({
-          kind: 'MutateTransitiveConditionally',
-          value: place,
-        });
+        if (
+          isArrayType(place.identifier) ||
+          isSetType(place.identifier) ||
+          isMapType(place.identifier)
+        ) {
+          effects.push({
+            kind: 'Capture',
+            from: place,
+            into: lvalue,
+          });
+        } else {
+          effects.push({
+            kind: 'Capture',
+            from: place,
+            into: lvalue,
+          });
+          captures.push(place);
+          effects.push({
+            kind: 'MutateTransitiveConditionally',
+            value: place,
+          });
+        }
         break;
       }
       case Effect.Freeze: {
