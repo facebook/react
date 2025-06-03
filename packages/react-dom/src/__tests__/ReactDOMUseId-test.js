@@ -608,10 +608,10 @@ describe('useId', () => {
         id="container"
       >
         <div>
-          _custom-prefix-R1_
+          _custom-prefix-R_1_
         </div>
         <div>
-          _custom-prefix-R2_
+          _custom-prefix-R_2_
         </div>
       </div>
     `);
@@ -625,13 +625,13 @@ describe('useId', () => {
         id="container"
       >
         <div>
-          _custom-prefix-R1_
+          _custom-prefix-R_1_
         </div>
         <div>
-          _custom-prefix-R2_
+          _custom-prefix-R_2_
         </div>
         <div>
-          _custom-prefix-r0_
+          _custom-prefix-r_0_
         </div>
       </div>
     `);
