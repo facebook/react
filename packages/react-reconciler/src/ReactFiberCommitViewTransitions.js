@@ -275,9 +275,9 @@ export function commitEnterViewTransitions(
   gesture: boolean,
 ): void {
   if (placement.tag === ViewTransitionComponent) {
+    const name = getViewTransitionName(placement);
     const state: ViewTransitionState = placement.stateNode;
     const props: ViewTransitionProps = placement.memoizedProps;
-    const name = getViewTransitionName(props, state);
     const className: ?string = getViewTransitionClassName(
       props.default,
       state.paired ? props.share : props.enter,
@@ -394,12 +394,12 @@ function commitDeletedPairViewTransitions(deletion: Fiber): void {
 
 export function commitExitViewTransitions(deletion: Fiber): void {
   if (deletion.tag === ViewTransitionComponent) {
-    const props: ViewTransitionProps = deletion.memoizedProps;
-    const name = getViewTransitionName(props, deletion.stateNode);
+    const name = getViewTransitionName(deletion);
     const pair =
       appearingViewTransitions !== null
         ? appearingViewTransitions.get(name)
         : undefined;
+    const props: ViewTransitionProps = deletion.memoizedProps;
     const className: ?string = getViewTransitionClassName(
       props.default,
       pair !== undefined ? props.share : props.exit,
@@ -472,8 +472,7 @@ export function commitBeforeUpdateViewTransition(
   // be unexpected but it is in line with the semantics that the ViewTransition is its
   // own layer that cross-fades its content when it updates. If you want to reorder then
   // each child needs its own ViewTransition.
-  const oldProps: ViewTransitionProps = current.memoizedProps;
-  const oldName = getViewTransitionName(oldProps, current.stateNode);
+  const oldName = getViewTransitionName(current);
   const newProps: ViewTransitionProps = finishedWork.memoizedProps;
   // This className applies only if there are fewer child DOM nodes than
   // before or if this update should've been cancelled but we ended up with
@@ -504,8 +503,8 @@ export function commitNestedViewTransitions(changedParent: Fiber): void {
     if (child.tag === ViewTransitionComponent) {
       // In this case the outer ViewTransition component wins but if there
       // was an update through this component then the inner one wins.
+      const name = getViewTransitionName(child);
       const props: ViewTransitionProps = child.memoizedProps;
-      const name = getViewTransitionName(props, child.stateNode);
       const className: ?string = getViewTransitionClassName(
         props.default,
         props.update,
@@ -747,11 +746,11 @@ export function measureUpdateViewTransition(
   // We still need to treat "finishedWork" as the Fiber that contains the flags for this commmit.
   const oldFiber = gesture ? finishedWork : current;
   const newFiber = gesture ? current : finishedWork;
+  const newName = getViewTransitionName(newFiber);
+  const oldName = getViewTransitionName(oldFiber);
+  // Whether it ends up having been updated or relayout we apply the update class name.
   const props: ViewTransitionProps = newFiber.memoizedProps;
   const state: ViewTransitionState = newFiber.stateNode;
-  const newName = getViewTransitionName(props, state);
-  const oldName = getViewTransitionName(oldFiber.memoizedProps, state);
-  // Whether it ends up having been updated or relayout we apply the update class name.
   const className: ?string = getViewTransitionClassName(
     props.default,
     props.update,
@@ -801,9 +800,9 @@ export function measureNestedViewTransitions(
   let child = changedParent.child;
   while (child !== null) {
     if (child.tag === ViewTransitionComponent) {
+      const name = getViewTransitionName(child);
       const props: ViewTransitionProps = child.memoizedProps;
       const state: ViewTransitionState = child.stateNode;
-      const name = getViewTransitionName(props, state);
       const className: ?string = getViewTransitionClassName(
         props.default,
         props.update,
