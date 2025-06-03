@@ -2254,7 +2254,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     function App() {
       return (
         <div>
-          <SuspenseList revealOrder="forwards">
+          <SuspenseList revealOrder="forwards" tail="visible">
             <Suspense fallback="Loading A">
               <ComponentA />
             </Suspense>

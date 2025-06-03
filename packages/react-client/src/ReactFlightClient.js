@@ -79,6 +79,7 @@ import {
   logDedupedComponentRender,
   logComponentErrored,
   logIOInfo,
+  logComponentAwait,
 } from './ReactFlightPerformanceTrack';
 
 import {
@@ -680,7 +681,7 @@ function getIOInfoTaskName(ioInfo: ReactIOInfo): string {
 }
 
 function getAsyncInfoTaskName(asyncInfo: ReactAsyncInfo): string {
-  return 'await'; // We could be smarter about this and give it a name like `then` or `Promise.all`.
+  return 'await ' + getIOInfoTaskName(asyncInfo.awaited);
 }
 
 function getServerComponentTaskName(componentInfo: ReactComponentInfo): string {
@@ -812,7 +813,13 @@ function createElement(
         console,
         getTaskName(type),
       );
-      const callStack = buildFakeCallStack(response, stack, env, createTaskFn);
+      const callStack = buildFakeCallStack(
+        response,
+        stack,
+        env,
+        false,
+        createTaskFn,
+      );
       // This owner should ideally have already been initialized to avoid getting
       // user stack frames on the stack.
       const ownerTask =
@@ -2133,6 +2140,7 @@ function resolveErrorDev(
     response,
     stack,
     env,
+    false,
     // $FlowFixMe[incompatible-use]
     Error.bind(
       null,
@@ -2195,6 +2203,7 @@ function resolvePostponeDev(
     response,
     stack,
     env,
+    false,
     // $FlowFixMe[incompatible-use]
     Error.bind(null, reason || ''),
   );
@@ -2403,12 +2412,17 @@ function buildFakeCallStack<T>(
   response: Response,
   stack: ReactStackTrace,
   environmentName: string,
+  useEnclosingLine: boolean,
   innerCall: () => T,
 ): () => T {
   let callStack = innerCall;
   for (let i = 0; i < stack.length; i++) {
     const frame = stack[i];
-    const frameKey = frame.join('-') + '-' + environmentName;
+    const frameKey =
+      frame.join('-') +
+      '-' +
+      environmentName +
+      (useEnclosingLine ? '-e' : '-n');
     let fn = fakeFunctionCache.get(frameKey);
     if (fn === undefined) {
       const [name, filename, line, col, enclosingLine, enclosingCol] = frame;
@@ -2422,8 +2436,8 @@ function buildFakeCallStack<T>(
         sourceMap,
         line,
         col,
-        enclosingLine,
-        enclosingCol,
+        useEnclosingLine ? line : enclosingLine,
+        useEnclosingLine ? col : enclosingCol,
         environmentName,
       );
       // TODO: This cache should technically live on the response since the _debugFindSourceMapURL
@@ -2469,6 +2483,15 @@ function initializeFakeTask(
     // If it's null, we can't initialize a task.
     return null;
   }
+
+  // Workaround for a bug where Chrome Performance tracking uses the enclosing line/column
+  // instead of the callsite. For ReactAsyncInfo/ReactIOInfo, the only thing we're going
+  // to use the fake task for is the Performance tracking so we encode the enclosing line/
+  // column at the callsite to get a better line number. We could do this for Components too
+  // but we're going to use those for other things too like console logs and it's not worth
+  // duplicating. If this bug is every fixed in Chrome, this should be set to false.
+  const useEnclosingLine = debugInfo.key === undefined;
+
   const stack = debugInfo.stack;
   const env: string =
     debugInfo.env == null ? response._rootEnvironmentName : debugInfo.env;
@@ -2485,6 +2508,7 @@ function initializeFakeTask(
       stack,
       '"use ' + childEnvironmentName.toLowerCase() + '"',
       env,
+      useEnclosingLine,
     );
   } else {
     const cachedEntry = debugInfo.debugTask;
@@ -2509,6 +2533,7 @@ function initializeFakeTask(
       stack,
       taskName,
       env,
+      useEnclosingLine,
     ));
   }
 }
@@ -2519,9 +2544,16 @@ function buildFakeTask(
   stack: ReactStackTrace,
   taskName: string,
   env: string,
+  useEnclosingLine: boolean,
 ): ConsoleTask {
   const createTaskFn = (console: any).createTask.bind(console, taskName);
-  const callStack = buildFakeCallStack(response, stack, env, createTaskFn);
+  const callStack = buildFakeCallStack(
+    response,
+    stack,
+    env,
+    useEnclosingLine,
+    createTaskFn,
+  );
   if (ownerTask === null) {
     const rootTask = getRootTask(response, env);
     if (rootTask != null) {
@@ -2544,6 +2576,7 @@ const createFakeJSXCallStack = {
       response,
       stack,
       environmentName,
+      false,
       fakeJSXCallSite,
     );
     return callStackForError();
@@ -2680,6 +2713,7 @@ const replayConsoleWithCallStack = {
         response,
         stackTrace,
         env,
+        false,
         bindToConsole(methodName, args, env),
       );
       if (owner != null) {
@@ -2758,9 +2792,7 @@ function resolveConsoleEntry(
 
 function initializeIOInfo(response: Response, ioInfo: ReactIOInfo): void {
   const env =
-    // TODO: Pass env through I/O info.
-    // ioInfo.env !== undefined ? ioInfo.env :
-    response._rootEnvironmentName;
+    ioInfo.env === undefined ? response._rootEnvironmentName : ioInfo.env;
   if (ioInfo.stack !== undefined) {
     initializeFakeTask(response, ioInfo, env);
     initializeFakeStack(response, ioInfo);
@@ -2771,7 +2803,7 @@ function initializeIOInfo(response: Response, ioInfo: ReactIOInfo): void {
   // $FlowFixMe[cannot-write]
   ioInfo.end += response._timeOrigin;
 
-  logIOInfo(ioInfo);
+  logIOInfo(ioInfo, response._rootEnvironmentName);
 }
 
 function resolveIOInfo(
@@ -2973,9 +3005,12 @@ function flushComponentPerformance(
     for (let i = debugInfo.length - 1; i >= 0; i--) {
       const info = debugInfo[i];
       if (typeof info.time === 'number') {
-        endTime = info.time;
-        if (endTime > childrenEndTime) {
-          childrenEndTime = endTime;
+        if (info.time > childrenEndTime) {
+          childrenEndTime = info.time;
+        }
+        if (endTime === 0) {
+          // Last timestamp is the end of the last component.
+          endTime = info.time;
         }
       }
       if (typeof info.name === 'string' && i > 0) {
@@ -3013,8 +3048,29 @@ function flushComponentPerformance(
           }
           // Track the root most component of the result for deduping logging.
           result.component = componentInfo;
+          // Set the end time of the previous component to the start of the previous.
+          endTime = startTime;
         }
         isLastComponent = false;
+      } else if (info.awaited && i > 0 && i < debugInfo.length - 2) {
+        // $FlowFixMe: Refined.
+        const asyncInfo: ReactAsyncInfo = info;
+        const startTimeInfo = debugInfo[i - 1];
+        const endTimeInfo = debugInfo[i + 1];
+        if (
+          typeof startTimeInfo.time === 'number' &&
+          typeof endTimeInfo.time === 'number'
+        ) {
+          const awaitStartTime = startTimeInfo.time;
+          const awaitEndTime = endTimeInfo.time;
+          logComponentAwait(
+            asyncInfo,
+            trackIdx,
+            awaitStartTime,
+            awaitEndTime,
+            response._rootEnvironmentName,
+          );
+        }
       }
     }
   }

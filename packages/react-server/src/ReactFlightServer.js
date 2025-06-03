@@ -1919,6 +1919,24 @@ function visitAsyncNode(
       if (awaited !== null) {
         const ioNode = visitAsyncNode(request, task, awaited, cutOff, visited);
         if (ioNode !== null) {
+          if (node.end < 0) {
+            // If we haven't defined an end time, use the resolve of the inner Promise.
+            // This can happen because the ping gets invoked before the await gets resolved.
+            if (ioNode.end < node.start) {
+              // If we're awaiting a resolved Promise it could have finished before we started.
+              node.end = node.start;
+            } else {
+              node.end = ioNode.end;
+            }
+          }
+          if (node.end < cutOff) {
+            // This was already resolved when we started this sequence. It must have been
+            // part of a different component.
+            // TODO: Think of some other way to exclude irrelevant data since if we awaited
+            // a cached promise, we should still log this component as being dependent on that data.
+            return null;
+          }
+
           const stack = filterStackTrace(
             request,
             parseStackTrace(node.stack, 1),
@@ -1930,13 +1948,27 @@ function visitAsyncNode(
           }
           // Outline the IO node.
           serializeIONode(request, ioNode);
+          // We log the environment at the time when the last promise pigned ping which may
+          // be later than what the environment was when we actually started awaiting.
+          const env = (0, request.environmentName)();
+          if (node.start <= cutOff) {
+            // If this was an await that started before this sequence but finished after,
+            // then we clamp it to the start of this sequence. We don't need to emit a time
+            // TODO: Typically we'll already have a previous time stamp with the cutOff time
+            // so we shouldn't need to emit another one. But not always.
+            emitTimingChunk(request, task.id, cutOff);
+          } else {
+            emitTimingChunk(request, task.id, node.start);
+          }
           // Then emit a reference to us awaiting it in the current task.
           request.pendingChunks++;
           emitDebugChunk(request, task.id, {
             awaited: ((ioNode: any): ReactIOInfo), // This is deduped by this reference.
+            env: env,
             owner: node.owner,
             stack: stack,
           });
+          emitTimingChunk(request, task.id, node.end);
         }
       }
       // If we had awaited anything we would have written it now.
@@ -1969,9 +2001,17 @@ function emitAsyncSequence(
     }
     serializeIONode(request, awaitedNode);
     request.pendingChunks++;
+    // We log the environment at the time when we ping which may be later than what the
+    // environment was when we actually started awaiting.
+    const env = (0, request.environmentName)();
+    // If we don't have any thing awaited, the time we started awaiting was internal
+    // when we yielded after rendering. The cutOff time is basically that.
+    emitTimingChunk(request, task.id, cutOff);
     emitDebugChunk(request, task.id, {
       awaited: ((awaitedNode: any): ReactIOInfo), // This is deduped by this reference.
+      env: env,
     });
+    emitTimingChunk(request, task.id, awaitedNode.end);
   }
 }
 
@@ -3524,6 +3564,7 @@ function emitIOInfoChunk(
   name: string,
   start: number,
   end: number,
+  env: ?string,
   owner: ?ReactComponentInfo,
   stack: ?ReactStackTrace,
 ): void {
@@ -3563,6 +3604,10 @@ function emitIOInfoChunk(
     start: relativeStartTimestamp,
     end: relativeEndTimestamp,
   };
+  if (env != null) {
+    // $FlowFixMe[cannot-write]
+    debugIOInfo.env = env;
+  }
   if (stack != null) {
     // $FlowFixMe[cannot-write]
     debugIOInfo.stack = stack;
@@ -3597,6 +3642,7 @@ function outlineIOInfo(request: Request, ioInfo: ReactIOInfo): void {
     ioInfo.name,
     ioInfo.start,
     ioInfo.end,
+    ioInfo.env,
     owner,
     ioInfo.stack,
   );
@@ -3633,9 +3679,22 @@ function serializeIONode(
     outlineComponentInfo(request, owner);
   }
 
+  // We log the environment at the time when we serialize the I/O node.
+  // The environment name may have changed from when the I/O was actually started.
+  const env = (0, request.environmentName)();
+
   request.pendingChunks++;
   const id = request.nextChunkId++;
-  emitIOInfoChunk(request, id, name, ioNode.start, ioNode.end, owner, stack);
+  emitIOInfoChunk(
+    request,
+    id,
+    name,
+    ioNode.start,
+    ioNode.end,
+    env,
+    owner,
+    stack,
+  );
   const ref = serializeByValueID(id);
   request.writtenObjects.set(ioNode, ref);
   return ref;
@@ -4161,6 +4220,7 @@ function forwardDebugInfo(
         const debugAsyncInfo: Omit<ReactAsyncInfo, 'debugTask' | 'debugStack'> =
           {
             awaited: ioInfo,
+            env: debugInfo[i].env,
             owner: debugInfo[i].owner,
             stack: debugInfo[i].stack,
           };

@@ -37,8 +37,8 @@ export type AwaitNode = {
   tag: 2,
   owner: null | ReactComponentInfo,
   stack: Error, // callsite that awaited (using await, .then(), Promise.all(), ...)
-  start: -1.1, // not used. We use the timing of the awaited promise.
-  end: -1.1, // not used.
+  start: number, // when we started blocking. This might be later than the I/O started.
+  end: number, // when we unblocked. This might be later than the I/O resolved if there's CPU time.
   awaited: null | AsyncSequence, // the promise we were waiting on
   previous: null | AsyncSequence, // the sequence that was blocking us from awaiting in the first place
 };

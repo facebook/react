@@ -9,7 +9,11 @@
 
 /* eslint-disable react-internal/no-production-logging */
 
-import type {ReactComponentInfo, ReactIOInfo} from 'shared/ReactTypes';
+import type {
+  ReactComponentInfo,
+  ReactIOInfo,
+  ReactAsyncInfo,
+} from 'shared/ReactTypes';
 
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 
@@ -224,11 +228,57 @@ function getIOColor(
   }
 }
 
-export function logIOInfo(ioInfo: ReactIOInfo): void {
+export function logComponentAwait(
+  asyncInfo: ReactAsyncInfo,
+  trackIdx: number,
+  startTime: number,
+  endTime: number,
+  rootEnv: string,
+): void {
+  if (supportsUserTiming && endTime > 0) {
+    const env = asyncInfo.env;
+    const name = asyncInfo.awaited.name;
+    const isPrimaryEnv = env === rootEnv;
+    const color = getIOColor(name);
+    const entryName =
+      'await ' +
+      (isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']');
+    const debugTask = asyncInfo.debugTask;
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          entryName,
+          startTime < 0 ? 0 : startTime,
+          endTime,
+          trackNames[trackIdx],
+          COMPONENTS_TRACK,
+          color,
+        ),
+      );
+    } else {
+      console.timeStamp(
+        entryName,
+        startTime < 0 ? 0 : startTime,
+        endTime,
+        trackNames[trackIdx],
+        COMPONENTS_TRACK,
+        color,
+      );
+    }
+  }
+}
+
+export function logIOInfo(ioInfo: ReactIOInfo, rootEnv: string): void {
   const startTime = ioInfo.start;
   const endTime = ioInfo.end;
   if (supportsUserTiming && endTime >= 0) {
     const name = ioInfo.name;
+    const env = ioInfo.env;
+    const isPrimaryEnv = env === rootEnv;
+    const entryName =
+      isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']';
     const debugTask = ioInfo.debugTask;
     const color = getIOColor(name);
     if (__DEV__ && debugTask) {
@@ -236,7 +286,7 @@ export function logIOInfo(ioInfo: ReactIOInfo): void {
         // $FlowFixMe[method-unbinding]
         console.timeStamp.bind(
           console,
-          name,
+          entryName,
           startTime < 0 ? 0 : startTime,
           endTime,
           IO_TRACK,
@@ -246,7 +296,7 @@ export function logIOInfo(ioInfo: ReactIOInfo): void {
       );
     } else {
       console.timeStamp(
-        name,
+        entryName,
         startTime < 0 ? 0 : startTime,
         endTime,
         IO_TRACK,
