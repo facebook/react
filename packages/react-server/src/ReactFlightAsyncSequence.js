@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactComponentInfo} from 'shared/ReactTypes';
+import type {ReactDebugInfo, ReactComponentInfo} from 'shared/ReactTypes';
 
 export const IO_NODE = 0;
 export const PROMISE_NODE = 1;
@@ -15,10 +15,15 @@ export const AWAIT_NODE = 2;
 export const UNRESOLVED_PROMISE_NODE = 3;
 export const UNRESOLVED_AWAIT_NODE = 4;
 
+type PromiseWithDebugInfo = interface extends Promise<any> {
+  _debugInfo?: ReactDebugInfo,
+};
+
 export type IONode = {
   tag: 0,
   owner: null | ReactComponentInfo,
   stack: Error, // callsite that spawned the I/O
+  debugInfo: null, // not used on I/O
   start: number, // start time when the first part of the I/O sequence started
   end: number, // we typically don't use this. only when there's no promise intermediate.
   awaited: null, // I/O is only blocked on external.
@@ -28,6 +33,7 @@ export type IONode = {
 export type PromiseNode = {
   tag: 1,
   owner: null | ReactComponentInfo,
+  debugInfo: null | ReactDebugInfo, // forwarded debugInfo from the Promise
   stack: Error, // callsite that created the Promise
   start: number, // start time when the Promise was created
   end: number, // end time when the Promise was resolved.
@@ -38,6 +44,7 @@ export type PromiseNode = {
 export type AwaitNode = {
   tag: 2,
   owner: null | ReactComponentInfo,
+  debugInfo: null | ReactDebugInfo, // forwarded debugInfo from the Promise
   stack: Error, // callsite that awaited (using await, .then(), Promise.all(), ...)
   start: number, // when we started blocking. This might be later than the I/O started.
   end: number, // when we unblocked. This might be later than the I/O resolved if there's CPU time.
@@ -48,6 +55,7 @@ export type AwaitNode = {
 export type UnresolvedPromiseNode = {
   tag: 3,
   owner: null | ReactComponentInfo,
+  debugInfo: WeakRef<PromiseWithDebugInfo>, // holds onto the Promise until we can extract debugInfo when it resolves
   stack: Error, // callsite that created the Promise
   start: number, // start time when the Promise was created
   end: -1.1, // set when we resolve.
@@ -58,6 +66,7 @@ export type UnresolvedPromiseNode = {
 export type UnresolvedAwaitNode = {
   tag: 4,
   owner: null | ReactComponentInfo,
+  debugInfo: WeakRef<PromiseWithDebugInfo>, // holds onto the Promise until we can extract debugInfo when it resolves
   stack: Error, // callsite that awaited (using await, .then(), Promise.all(), ...)
   start: number, // when we started blocking. This might be later than the I/O started.
   end: -1.1, // set when we resolve.

@@ -38,7 +38,12 @@ const pendingOperations: Map<number, AsyncSequence> =
 export function initAsyncDebugInfo(): void {
   if (__DEV__ && enableAsyncDebugInfo) {
     createHook({
-      init(asyncId: number, type: string, triggerAsyncId: number): void {
+      init(
+        asyncId: number,
+        type: string,
+        triggerAsyncId: number,
+        resource: any,
+      ): void {
         const trigger = pendingOperations.get(triggerAsyncId);
         let node: AsyncSequence;
         if (type === 'PROMISE') {
@@ -56,6 +61,7 @@ export function initAsyncDebugInfo(): void {
             node = ({
               tag: UNRESOLVED_AWAIT_NODE,
               owner: resolveOwner(),
+              debugInfo: new WeakRef((resource: Promise<any>)),
               stack: new Error(),
               start: performance.now(),
               end: -1.1, // set when resolved.
@@ -66,6 +72,7 @@ export function initAsyncDebugInfo(): void {
             node = ({
               tag: UNRESOLVED_PROMISE_NODE,
               owner: resolveOwner(),
+              debugInfo: new WeakRef((resource: Promise<any>)),
               stack: new Error(),
               start: performance.now(),
               end: -1.1, // Set when we resolve.
@@ -86,6 +93,7 @@ export function initAsyncDebugInfo(): void {
             node = ({
               tag: IO_NODE,
               owner: resolveOwner(),
+              debugInfo: null,
               stack: new Error(), // This is only used if no native promises are used.
               start: performance.now(),
               end: -1.1, // Only set when pinged.
@@ -100,6 +108,7 @@ export function initAsyncDebugInfo(): void {
             node = ({
               tag: IO_NODE,
               owner: resolveOwner(),
+              debugInfo: null,
               stack: new Error(),
               start: performance.now(),
               end: -1.1, // Only set when pinged.
@@ -150,6 +159,12 @@ export function initAsyncDebugInfo(): void {
           }
           // Log the end time when we resolved the promise.
           resolvedNode.end = performance.now();
+          // The Promise can be garbage collected after this so we should extract debugInfo first.
+          const promise = node.debugInfo.deref();
+          resolvedNode.debugInfo =
+            promise === undefined || promise._debugInfo === undefined
+              ? null
+              : promise._debugInfo;
           const currentAsyncId = executionAsyncId();
           if (asyncId !== currentAsyncId) {
             // If the promise was not resolved by itself, then that means that
