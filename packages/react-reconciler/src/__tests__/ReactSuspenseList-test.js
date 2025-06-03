@@ -79,7 +79,7 @@ describe('ReactSuspenseList', () => {
     });
     assertConsoleErrorDev([
       '"something" is not a supported revealOrder on ' +
-        '<SuspenseList />. Did you mean "together", "forwards" or "backwards"?' +
+        '<SuspenseList />. Did you mean "independent", "together", "forwards" or "backwards"?' +
         '\n    in SuspenseList (at **)' +
         '\n    in Foo (at **)',
     ]);
@@ -222,6 +222,78 @@ describe('ReactSuspenseList', () => {
     function Foo() {
       return (
         <SuspenseList>
+          <Suspense fallback={<Text text="Loading A" />}>
+            <A />
+          </Suspense>
+          <Suspense fallback={<Text text="Loading B" />}>
+            <B />
+          </Suspense>
+          <Suspense fallback={<Text text="Loading C" />}>
+            <C />
+          </Suspense>
+        </SuspenseList>
+      );
+    }
+
+    await A.resolve();
+
+    ReactNoop.render(<Foo />);
+
+    await waitForAll([
+      'A',
+      'Suspend! [B]',
+      'Loading B',
+      'Suspend! [C]',
+      'Loading C',
+      // pre-warming
+      'Suspend! [B]',
+      'Suspend! [C]',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>Loading B</span>
+        <span>Loading C</span>
+      </>,
+    );
+
+    await act(() => C.resolve());
+    assertLog(
+      gate('alwaysThrottleRetries')
+        ? ['Suspend! [B]', 'C', 'Suspend! [B]']
+        : ['C'],
+    );
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>Loading B</span>
+        <span>C</span>
+      </>,
+    );
+
+    await act(() => B.resolve());
+    assertLog(['B']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </>,
+    );
+  });
+
+  // @gate enableSuspenseList
+  it('shows content independently with revealOrder="independent"', async () => {
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
+
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="independent">
           <Suspense fallback={<Text text="Loading A" />}>
             <A />
           </Suspense>
@@ -564,7 +636,7 @@ describe('ReactSuspenseList', () => {
   });
 
   // @gate enableSuspenseList
-  it('displays all "together" in nested SuspenseLists where the inner is default', async () => {
+  it('displays all "together" in nested SuspenseLists where the inner is "independent"', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
     const C = createAsyncText('C');
@@ -575,7 +647,7 @@ describe('ReactSuspenseList', () => {
           <Suspense fallback={<Text text="Loading A" />}>
             <A />
           </Suspense>
-          <SuspenseList>
+          <SuspenseList revealOrder="independent">
             <Suspense fallback={<Text text="Loading B" />}>
               <B />
             </Suspense>

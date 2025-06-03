@@ -3230,6 +3230,7 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
       revealOrder !== 'forwards' &&
       revealOrder !== 'backwards' &&
       revealOrder !== 'together' &&
+      revealOrder !== 'independent' &&
       !didWarnAboutRevealOrder[revealOrder]
     ) {
       didWarnAboutRevealOrder[revealOrder] = true;
@@ -3237,7 +3238,8 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
         switch (revealOrder.toLowerCase()) {
           case 'together':
           case 'forwards':
-          case 'backwards': {
+          case 'backwards':
+          case 'independent': {
             console.error(
               '"%s" is not a valid value for revealOrder on <SuspenseList />. ' +
                 'Use lowercase "%s" instead.',
@@ -3259,7 +3261,7 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
           default:
             console.error(
               '"%s" is not a supported revealOrder on <SuspenseList />. ' +
-                'Did you mean "together", "forwards" or "backwards"?',
+                'Did you mean "independent", "together", "forwards" or "backwards"?',
               revealOrder,
             );
             break;
@@ -3267,7 +3269,7 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
       } else {
         console.error(
           '%s is not a supported value for revealOrder on <SuspenseList />. ' +
-            'Did you mean "together", "forwards" or "backwards"?',
+            'Did you mean "independent", "together", "forwards" or "backwards"?',
           revealOrder,
         );
       }

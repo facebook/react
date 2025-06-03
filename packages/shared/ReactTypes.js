@@ -309,6 +309,7 @@ export type SuspenseListRevealOrder =
   | 'forwards'
   | 'backwards'
   | 'together'
+  | 'independent'
   | void;
 
 export type SuspenseListTailMode = 'collapsed' | 'hidden' | void;
@@ -331,7 +332,7 @@ type DirectionalSuspenseListProps = {
 
 type NonDirectionalSuspenseListProps = {
   children?: ReactNodeList,
-  revealOrder?: 'together' | void,
+  revealOrder?: 'independent' | 'together' | void,
   tail?: void,
 };
 
