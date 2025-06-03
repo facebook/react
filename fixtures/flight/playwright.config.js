@@ -11,11 +11,11 @@ export default defineConfig({
   retries: isCI ? 2 : 0,
   // Opt out of parallel tests on CI.
   workers: isCI ? 1 : undefined,
-  reporter: 'html',
+  reporter: [['html'], ['list', {printSteps: true}]],
   use: {
     baseURL: 'http://localhost:3000',
 
-    trace: 'on-first-retry',
+    trace: 'on',
   },
   projects: [
     {

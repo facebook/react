@@ -13,6 +13,8 @@ const url = require('url');
 
 const Module = require('module');
 
+throw new Error('testing')
+
 module.exports = function register() {
   const Server: any = require('react-server-dom-webpack/server');
   const registerServerReference = Server.registerServerReference;
