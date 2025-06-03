@@ -15,6 +15,7 @@ import type {
 } from './ReactFlightAsyncSequence';
 
 import {IO_NODE, PROMISE_NODE, AWAIT_NODE} from './ReactFlightAsyncSequence';
+import {resolveOwner} from './flight/ReactFlightCurrentOwner';
 import {createHook, executionAsyncId} from 'async_hooks';
 import {enableAsyncDebugInfo} from 'shared/ReactFeatureFlags';
 
@@ -46,6 +47,7 @@ export function initAsyncDebugInfo(): void {
             // so that we can later pick the best stack trace in user space.
             node = ({
               tag: AWAIT_NODE,
+              owner: resolveOwner(),
               stack: new Error(),
               start: -1.1,
               end: -1.1,
@@ -55,6 +57,7 @@ export function initAsyncDebugInfo(): void {
           } else {
             node = ({
               tag: PROMISE_NODE,
+              owner: resolveOwner(),
               stack: new Error(),
               start: performance.now(),
               end: -1.1, // Set when we resolve.
@@ -74,6 +77,7 @@ export function initAsyncDebugInfo(): void {
             // We have begun a new I/O sequence.
             node = ({
               tag: IO_NODE,
+              owner: resolveOwner(),
               stack: new Error(), // This is only used if no native promises are used.
               start: performance.now(),
               end: -1.1, // Only set when pinged.
@@ -84,6 +88,7 @@ export function initAsyncDebugInfo(): void {
             // We have begun a new I/O sequence after the await.
             node = ({
               tag: IO_NODE,
+              owner: resolveOwner(),
               stack: new Error(),
               start: performance.now(),
               end: -1.1, // Only set when pinged.

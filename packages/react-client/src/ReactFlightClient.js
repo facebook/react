@@ -2616,14 +2616,15 @@ function resolveDebugInfo(
     initializeFakeTask(response, componentInfoOrAsyncInfo, env);
   }
   if (debugInfo.owner === null && response._debugRootOwner != null) {
-    // $FlowFixMe[prop-missing] By narrowing `owner` to `null`, we narrowed `debugInfo` to `ReactComponentInfo`
-    const componentInfo: ReactComponentInfo = debugInfo;
+    const componentInfoOrAsyncInfo: ReactComponentInfo | ReactAsyncInfo =
+      // $FlowFixMe: By narrowing `owner` to `null`, we narrowed `debugInfo` to `ReactComponentInfo`
+      debugInfo;
     // $FlowFixMe[cannot-write]
-    componentInfo.owner = response._debugRootOwner;
+    componentInfoOrAsyncInfo.owner = response._debugRootOwner;
     // We override the stack if we override the owner since the stack where the root JSX
     // was created on the server isn't very useful but where the request was made is.
     // $FlowFixMe[cannot-write]
-    componentInfo.debugStack = response._debugRootStack;
+    componentInfoOrAsyncInfo.debugStack = response._debugRootStack;
   } else if (debugInfo.stack !== undefined) {
     const componentInfoOrAsyncInfo: ReactComponentInfo | ReactAsyncInfo =
       // $FlowFixMe[incompatible-type]
@@ -2764,7 +2765,6 @@ function initializeIOInfo(response: Response, ioInfo: ReactIOInfo): void {
     initializeFakeTask(response, ioInfo, env);
     initializeFakeStack(response, ioInfo);
   }
-  // TODO: Initialize owner.
   // Adjust the time to the current environment's time space.
   // $FlowFixMe[cannot-write]
   ioInfo.start += response._timeOrigin;

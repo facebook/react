@@ -1934,6 +1934,7 @@ function visitAsyncNode(
           request.pendingChunks++;
           emitDebugChunk(request, task.id, {
             awaited: ((ioNode: any): ReactIOInfo), // This is deduped by this reference.
+            owner: node.owner,
             stack: stack,
           });
         }
@@ -3523,6 +3524,7 @@ function emitIOInfoChunk(
   name: string,
   start: number,
   end: number,
+  owner: ?ReactComponentInfo,
   stack: ?ReactStackTrace,
 ): void {
   if (!__DEV__) {
@@ -3560,8 +3562,15 @@ function emitIOInfoChunk(
     name: name,
     start: relativeStartTimestamp,
     end: relativeEndTimestamp,
-    stack: stack,
   };
+  if (stack != null) {
+    // $FlowFixMe[cannot-write]
+    debugIOInfo.stack = stack;
+  }
+  if (owner != null) {
+    // $FlowFixMe[cannot-write]
+    debugIOInfo.owner = owner;
+  }
   // $FlowFixMe[incompatible-type] stringify can return null
   const json: string = stringify(debugIOInfo, replacer);
   const row = id.toString(16) + ':J' + json + '\n';
@@ -3577,12 +3586,18 @@ function outlineIOInfo(request: Request, ioInfo: ReactIOInfo): void {
   // We can't serialize the ConsoleTask/Error objects so we need to omit them before serializing.
   request.pendingChunks++;
   const id = request.nextChunkId++;
+  const owner = ioInfo.owner;
+  // Ensure the owner is already outlined.
+  if (owner != null) {
+    outlineComponentInfo(request, owner);
+  }
   emitIOInfoChunk(
     request,
     id,
     ioInfo.name,
     ioInfo.start,
     ioInfo.end,
+    owner,
     ioInfo.stack,
   );
   request.writtenObjects.set(ioInfo, serializeByValueID(id));
@@ -3612,10 +3627,15 @@ function serializeIONode(
       name = name.slice(7);
     }
   }
+  const owner = ioNode.owner;
+  // Ensure the owner is already outlined.
+  if (owner != null) {
+    outlineComponentInfo(request, owner);
+  }
 
   request.pendingChunks++;
   const id = request.nextChunkId++;
-  emitIOInfoChunk(request, id, name, ioNode.start, ioNode.end, stack);
+  emitIOInfoChunk(request, id, name, ioNode.start, ioNode.end, owner, stack);
   const ref = serializeByValueID(id);
   request.writtenObjects.set(ioNode, ref);
   return ref;
@@ -4141,6 +4161,7 @@ function forwardDebugInfo(
         const debugAsyncInfo: Omit<ReactAsyncInfo, 'debugTask' | 'debugStack'> =
           {
             awaited: ioInfo,
+            owner: debugInfo[i].owner,
             stack: debugInfo[i].stack,
           };
         emitDebugChunk(request, id, debugAsyncInfo);
