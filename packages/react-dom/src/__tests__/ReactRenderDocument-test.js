@@ -80,7 +80,7 @@ describe('rendering React components at document', () => {
       expect(testDocument.body.innerHTML).toBe(
         'Hello world' +
           (gate(flags => flags.enableFizzBlockingRender)
-            ? '<template id="«R»"></template>'
+            ? '<template id="_R_"></template>'
             : ''),
       );
 
@@ -90,7 +90,7 @@ describe('rendering React components at document', () => {
       expect(testDocument.body.innerHTML).toBe(
         'Hello moon' +
           (gate(flags => flags.enableFizzBlockingRender)
-            ? '<template id="«R»"></template>'
+            ? '<template id="_R_"></template>'
             : ''),
       );
 
@@ -120,7 +120,7 @@ describe('rendering React components at document', () => {
       expect(testDocument.body.innerHTML).toBe(
         'Hello world' +
           (gate(flags => flags.enableFizzBlockingRender)
-            ? '<template id="«R»"></template>'
+            ? '<template id="_R_"></template>'
             : ''),
       );
 
@@ -135,12 +135,12 @@ describe('rendering React components at document', () => {
       expect(testDocument.body).toBe(originalBody);
       expect(originalBody.innerHTML).toBe(
         gate(flags => flags.enableFizzBlockingRender)
-          ? '<template id="«R»"></template>'
+          ? '<template id="_R_"></template>'
           : '',
       );
       expect(originalHead.innerHTML).toBe(
         gate(flags => flags.enableFizzBlockingRender)
-          ? '<link rel="expect" href="#«R»" blocking="render">'
+          ? '<link rel="expect" href="#_R_" blocking="render">'
           : '',
       );
     });
@@ -183,7 +183,7 @@ describe('rendering React components at document', () => {
       expect(testDocument.body.innerHTML).toBe(
         'Hello world' +
           (gate(flags => flags.enableFizzBlockingRender)
-            ? '<template id="«R»"></template>'
+            ? '<template id="_R_"></template>'
             : ''),
       );
 
@@ -193,7 +193,7 @@ describe('rendering React components at document', () => {
 
       expect(testDocument.body.innerHTML).toBe(
         (gate(flags => flags.enableFizzBlockingRender)
-          ? '<template id="«R»"></template>'
+          ? '<template id="_R_"></template>'
           : '') + 'Goodbye world',
       );
     });
@@ -227,7 +227,7 @@ describe('rendering React components at document', () => {
       expect(testDocument.body.innerHTML).toBe(
         'Hello world' +
           (gate(flags => flags.enableFizzBlockingRender)
-            ? '<template id="«R»"></template>'
+            ? '<template id="_R_"></template>'
             : ''),
       );
     });
@@ -366,7 +366,7 @@ describe('rendering React components at document', () => {
           ? 'Hello world'
           : 'Goodbye world' +
               (gate(flags => flags.enableFizzBlockingRender)
-                ? '<template id="«R»"></template>'
+                ? '<template id="_R_"></template>'
                 : ''),
       );
     });

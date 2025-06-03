@@ -1957,8 +1957,8 @@ describe('ReactFlight', () => {
       });
       expect(ReactNoop).toMatchRenderedOutput(
         <>
-          <div prop="«S1»" />
-          <div prop="«S2»" />
+          <div prop="_S_1_" />
+          <div prop="_S_2_" />
         </>,
       );
     });
@@ -1981,8 +1981,8 @@ describe('ReactFlight', () => {
       });
       expect(ReactNoop).toMatchRenderedOutput(
         <>
-          <div prop="«fooS1»" />
-          <div prop="«fooS2»" />
+          <div prop="_fooS_1_" />
+          <div prop="_fooS_2_" />
         </>,
       );
     });
@@ -2021,8 +2021,8 @@ describe('ReactFlight', () => {
       assertLog(['ClientDoubler']);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
-          <div prop="«S1»">«S1»</div>
-          <div prop="«S1»">«S1»</div>
+          <div prop="_S_1_">_S_1_</div>
+          <div prop="_S_1_">_S_1_</div>
         </>,
       );
     });
