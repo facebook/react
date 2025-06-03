@@ -345,7 +345,7 @@ describe('ReactSuspenseyCommitPhase', () => {
   it('demonstrate current behavior when used with SuspenseList (not ideal)', async () => {
     function App() {
       return (
-        <SuspenseList revealOrder="forwards">
+        <SuspenseList revealOrder="forwards" tail="visible">
           <Suspense fallback={<Text text="Loading A" />}>
             <SuspenseyImage src="A" />
           </Suspense>

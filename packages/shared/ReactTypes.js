@@ -308,20 +308,32 @@ export type SuspenseProps = {
 export type SuspenseListRevealOrder =
   | 'forwards'
   | 'backwards'
+  | 'unstable_legacy-backwards'
   | 'together'
+  | 'independent'
   | void;
 
-export type SuspenseListTailMode = 'collapsed' | 'hidden' | void;
+export type SuspenseListTailMode = 'visible' | 'collapsed' | 'hidden' | void;
+
+// A SuspenseList row cannot include a nested Array since it's an easy mistake to not realize it
+// is treated as a single row. A Fragment can be used to intentionally have multiple children as
+// a single row.
+type SuspenseListRow = Exclude<
+  ReactNodeList,
+  Iterable<React$Node> | AsyncIterable<React$Node>,
+>;
 
 type DirectionalSuspenseListProps = {
-  children?: ReactNodeList,
-  revealOrder: 'forwards' | 'backwards',
+  // Directional SuspenseList are defined by an array of children or multiple slots to JSX
+  // It does not allow a single element child.
+  children?: Iterable<SuspenseListRow> | AsyncIterable<SuspenseListRow>, // Note: AsyncIterable is experimental.
+  revealOrder: 'forwards' | 'backwards' | 'unstable_legacy-backwards',
   tail?: SuspenseListTailMode,
 };
 
 type NonDirectionalSuspenseListProps = {
   children?: ReactNodeList,
-  revealOrder?: 'together' | void,
+  revealOrder?: 'independent' | 'together' | void,
   tail?: void,
 };
 

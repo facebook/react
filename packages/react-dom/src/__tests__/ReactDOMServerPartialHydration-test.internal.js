@@ -2362,7 +2362,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     function App({showMore}) {
       return (
-        <SuspenseList revealOrder="forwards">
+        <SuspenseList revealOrder="forwards" tail="visible">
           {a}
           {b}
           {showMore ? (

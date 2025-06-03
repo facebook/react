@@ -6,7 +6,7 @@ import React, {
 
 export default function LargeContent() {
   return (
-    <SuspenseList revealOrder="forwards">
+    <SuspenseList revealOrder="forwards" tail="visible">
       <Suspense fallback={null}>
         <p>
           Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris

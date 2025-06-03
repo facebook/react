@@ -1799,7 +1799,7 @@ function renderSuspenseListRows(
   task: Task,
   keyPath: KeyNode,
   rows: Array<ReactNodeList>,
-  revealOrder: 'forwards' | 'backwards',
+  revealOrder: 'forwards' | 'backwards' | 'unstable_legacy-backwards',
 ): void {
   // This is a fork of renderChildrenArray that's aware of tracking rows.
   const prevKeyPath = task.keyPath;
@@ -1827,7 +1827,11 @@ function renderSuspenseListRows(
         // Since we are going to resume into a slot whose order was already
         // determined by the prerender, we can safely resume it even in reverse
         // render order.
-        const i = revealOrder !== 'backwards' ? n : totalChildren - 1 - n;
+        const i =
+          revealOrder !== 'backwards' &&
+          revealOrder !== 'unstable_legacy-backwards'
+            ? n
+            : totalChildren - 1 - n;
         const node = rows[i];
         task.row = previousSuspenseListRow = createSuspenseListRow(
           previousSuspenseListRow,
@@ -1852,7 +1856,11 @@ function renderSuspenseListRows(
         // Since we are going to resume into a slot whose order was already
         // determined by the prerender, we can safely resume it even in reverse
         // render order.
-        const i = revealOrder !== 'backwards' ? n : totalChildren - 1 - n;
+        const i =
+          revealOrder !== 'backwards' &&
+          revealOrder !== 'unstable_legacy-backwards'
+            ? n
+            : totalChildren - 1 - n;
         const node = rows[i];
         if (__DEV__) {
           warnForMissingKey(request, task, node);
@@ -1869,7 +1877,10 @@ function renderSuspenseListRows(
     }
   } else {
     task = ((task: any): RenderTask); // Refined
-    if (revealOrder !== 'backwards') {
+    if (
+      revealOrder !== 'backwards' &&
+      revealOrder !== 'unstable_legacy-backwards'
+    ) {
       // Forwards direction
       for (let i = 0; i < totalChildren; i++) {
         const node = rows[i];
@@ -1973,7 +1984,11 @@ function renderSuspenseList(
   const revealOrder: SuspenseListRevealOrder = props.revealOrder;
   // TODO: Support tail hidden/collapsed modes.
   // const tailMode: SuspenseListTailMode = props.tail;
-  if (revealOrder === 'forwards' || revealOrder === 'backwards') {
+  if (
+    revealOrder === 'forwards' ||
+    revealOrder === 'backwards' ||
+    revealOrder === 'unstable_legacy-backwards'
+  ) {
     // For ordered reveal, we need to produce rows from the children.
     if (isArray(children)) {
       renderSuspenseListRows(request, task, keyPath, children, revealOrder);

@@ -1289,7 +1289,7 @@ describe('ReactDOMFizzServer', () => {
     function App({showMore}) {
       return (
         <div>
-          <SuspenseList revealOrder="forwards">
+          <SuspenseList revealOrder="forwards" tail="visible">
             {a}
             {b}
             {showMore ? (

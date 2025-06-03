@@ -198,6 +198,70 @@ describe('ReactDOMFizzSuspenseList', () => {
   });
 
   // @gate enableSuspenseList
+  it('independently with revealOrder="independent"', async () => {
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
+
+    function Foo() {
+      return (
+        <div>
+          <SuspenseList revealOrder="independent">
+            <Suspense fallback={<Text text="Loading A" />}>
+              <A />
+            </Suspense>
+            <Suspense fallback={<Text text="Loading B" />}>
+              <B />
+            </Suspense>
+            <Suspense fallback={<Text text="Loading C" />}>
+              <C />
+            </Suspense>
+          </SuspenseList>
+        </div>
+      );
+    }
+
+    await A.resolve();
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<Foo />);
+      pipe(writable);
+    });
+
+    assertLog(['A', 'Suspend! [B]', 'Suspend! [C]', 'Loading B', 'Loading C']);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>A</span>
+        <span>Loading B</span>
+        <span>Loading C</span>
+      </div>,
+    );
+
+    await serverAct(() => C.resolve());
+    assertLog(['C']);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>A</span>
+        <span>Loading B</span>
+        <span>C</span>
+      </div>,
+    );
+
+    await serverAct(() => B.resolve());
+    assertLog(['B']);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </div>,
+    );
+  });
+
+  // @gate enableSuspenseList
   it('displays all "together"', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -452,7 +516,7 @@ describe('ReactDOMFizzSuspenseList', () => {
   });
 
   // @gate enableSuspenseList
-  it('displays all "together" in nested SuspenseLists where the inner is default', async () => {
+  it('displays all "together" in nested SuspenseLists where the inner is "independent"', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
     const C = createAsyncText('C');
@@ -464,7 +528,7 @@ describe('ReactDOMFizzSuspenseList', () => {
             <Suspense fallback={<Text text="Loading A" />}>
               <A />
             </Suspense>
-            <SuspenseList>
+            <SuspenseList revealOrder="independent">
               <Suspense fallback={<Text text="Loading B" />}>
                 <B />
               </Suspense>
@@ -523,7 +587,7 @@ describe('ReactDOMFizzSuspenseList', () => {
     function Foo() {
       return (
         <div>
-          <SuspenseList revealOrder="forwards">
+          <SuspenseList revealOrder="forwards" tail="visible">
             <Suspense fallback={<Text text="Loading A" />}>
               <A />
             </Suspense>
@@ -586,7 +650,7 @@ describe('ReactDOMFizzSuspenseList', () => {
   });
 
   // @gate enableSuspenseList
-  it('displays each items in "backwards" order', async () => {
+  it('displays each items in "backwards" order in legacy mode', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
     const C = createAsyncText('C');
@@ -594,7 +658,7 @@ describe('ReactDOMFizzSuspenseList', () => {
     function Foo() {
       return (
         <div>
-          <SuspenseList revealOrder="backwards">
+          <SuspenseList revealOrder="unstable_legacy-backwards" tail="visible">
             <Suspense fallback={<Text text="Loading A" />}>
               <A />
             </Suspense>
@@ -665,8 +729,10 @@ describe('ReactDOMFizzSuspenseList', () => {
     function Foo() {
       return (
         <div>
-          <SuspenseList revealOrder="forwards">
-            <SuspenseList revealOrder="backwards">
+          <SuspenseList revealOrder="forwards" tail="visible">
+            <SuspenseList
+              revealOrder="unstable_legacy-backwards"
+              tail="visible">
               <Suspense fallback={<Text text="Loading A" />}>
                 <A />
               </Suspense>
@@ -736,7 +802,7 @@ describe('ReactDOMFizzSuspenseList', () => {
     function Foo() {
       return (
         <div>
-          <SuspenseList revealOrder="forwards">
+          <SuspenseList revealOrder="forwards" tail="visible">
             <Suspense fallback={<Text text="Loading A" />}>
               <A />
             </Suspense>
@@ -791,7 +857,7 @@ describe('ReactDOMFizzSuspenseList', () => {
     function Foo() {
       return (
         <div>
-          <SuspenseList revealOrder="forwards">
+          <SuspenseList revealOrder="forwards" tail="visible">
             <Suspense fallback={<Text text="Loading A" />}>
               <A />
             </Suspense>
