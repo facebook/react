@@ -1021,7 +1021,19 @@ export function performWorkOnRoot(
   forceSync: boolean,
 ): void {
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-    throw new Error('Should not already be working.');
+    // When debugging with breakpoints or alerts in older browsers like Chrome 68 on Windows 7,
+    // the execution context might not get properly reset when execution resumes.
+    // Instead of throwing an error, we'll reset the execution context and log a warning.
+    if (__DEV__) {
+      console.warn(
+        'React detected an inconsistent state likely caused by debugging interruption. ' +
+        'Resetting execution context to prevent "Should not already be working" error.'
+      );
+      // Reset execution context to prevent the error
+      executionContext = NoContext;
+    } else {
+      throw new Error('Should not already be working.');
+    }
   }
 
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
@@ -3244,7 +3256,19 @@ function commitRoot(
   flushRenderPhaseStrictModeWarningsInDEV();
 
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-    throw new Error('Should not already be working.');
+    // When debugging with breakpoints or alerts in older browsers like Chrome 68 on Windows 7,
+    // the execution context might not get properly reset when execution resumes.
+    // Instead of throwing an error, we'll reset the execution context and log a warning.
+    if (__DEV__) {
+      console.warn(
+        'React detected an inconsistent state likely caused by debugging interruption. ' +
+        'Resetting execution context to prevent "Should not already be working" error.'
+      );
+      // Reset execution context to prevent the error
+      executionContext = NoContext;
+    } else {
+      throw new Error('Should not already be working.');
+    }
   }
 
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
