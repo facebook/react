@@ -356,6 +356,7 @@ function emitOutlinedFn(
       kind: 'return',
       loc: GeneratedSource,
       value: instructions.at(-1)!.lvalue,
+      effects: null,
     },
     preds: new Set(),
     phis: new Set(),

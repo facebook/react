@@ -241,6 +241,7 @@ function emitSelectorFn(env: Environment, keys: Array<string>): Instruction {
       kind: 'return',
       loc: GeneratedSource,
       value: arrayInstr.lvalue,
+      effects: null,
     },
     preds: new Set(),
     phis: new Set(),

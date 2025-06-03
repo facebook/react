@@ -15,7 +15,6 @@ import {
   Place,
   isRefOrRefValue,
   makeInstructionId,
-  printFunction,
 } from '../HIR';
 import {deadCodeElimination} from '../Optimization';
 import {inferReactiveScopeVariables} from '../ReactiveScopes';

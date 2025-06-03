@@ -222,6 +222,9 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
       value = `[${terminal.id}] Return${
         terminal.value != null ? ' ' + printPlace(terminal.value) : ''
       }`;
+      if (terminal.effects != null) {
+        value += `\n    ${terminal.effects.map(printAliasingEffect).join('\n    ')}`;
+      }
       break;
     }
     case 'goto': {
@@ -290,6 +293,9 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
     }
     case 'maybe-throw': {
       value = `[${terminal.id}] MaybeThrow continuation=bb${terminal.continuation} handler=bb${terminal.handler}`;
+      if (terminal.effects != null) {
+        value += `\n    ${terminal.effects.map(printAliasingEffect).join('\n    ')}`;
+      }
       break;
     }
     case 'scope': {
