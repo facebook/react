@@ -313,7 +313,7 @@ export type SuspenseListRevealOrder =
   | 'independent'
   | void;
 
-export type SuspenseListTailMode = 'collapsed' | 'hidden' | void;
+export type SuspenseListTailMode = 'visible' | 'collapsed' | 'hidden' | void;
 
 // A SuspenseList row cannot include a nested Array since it's an easy mistake to not realize it
 // is treated as a single row. A Fragment can be used to intentionally have multiple children as

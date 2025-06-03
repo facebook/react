@@ -123,7 +123,7 @@ describe('ReactDOMServerSuspense', () => {
   // @gate enableSuspenseList
   it('server renders a SuspenseList component and its children', async () => {
     const example = (
-      <SuspenseList>
+      <SuspenseList revealOrder="forwards" tail="visible">
         <React.Suspense fallback="Loading A">
           <div>A</div>
         </React.Suspense>

@@ -3284,11 +3284,15 @@ function validateTailOptions(
 ) {
   if (__DEV__) {
     if (tailMode !== undefined && !didWarnAboutTailOptions[tailMode]) {
-      if (tailMode !== 'collapsed' && tailMode !== 'hidden') {
+      if (
+        tailMode !== 'visible' &&
+        tailMode !== 'collapsed' &&
+        tailMode !== 'hidden'
+      ) {
         didWarnAboutTailOptions[tailMode] = true;
         console.error(
           '"%s" is not a supported value for tail on <SuspenseList />. ' +
-            'Did you mean "collapsed" or "hidden"?',
+            'Did you mean "visible", "collapsed" or "hidden"?',
           tailMode,
         );
       } else if (

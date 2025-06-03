@@ -131,7 +131,11 @@ describe('ReactSuspenseList', () => {
   // @gate enableSuspenseList
   it('warns if a single element is passed to a "forwards" list', async () => {
     function Foo({children}) {
-      return <SuspenseList revealOrder="forwards">{children}</SuspenseList>;
+      return (
+        <SuspenseList revealOrder="forwards" tail="visible">
+          {children}
+        </SuspenseList>
+      );
     }
 
     ReactNoop.render(<Foo />);
@@ -1623,7 +1627,7 @@ describe('ReactSuspenseList', () => {
     });
     assertConsoleErrorDev([
       '"collapse" is not a supported value for tail on ' +
-        '<SuspenseList />. Did you mean "collapsed" or "hidden"?' +
+        '<SuspenseList />. Did you mean "visible", "collapsed" or "hidden"?' +
         '\n    in SuspenseList (at **)' +
         '\n    in Foo (at **)',
     ]);
