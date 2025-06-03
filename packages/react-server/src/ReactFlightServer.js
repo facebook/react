@@ -1897,6 +1897,7 @@ function visitAsyncNode(
         return null;
       }
       const awaited = node.awaited;
+      let match = null;
       if (awaited !== null) {
         const ioNode = visitAsyncNode(request, task, awaited, cutOff, visited);
         if (ioNode !== null) {
@@ -1916,12 +1917,19 @@ function visitAsyncNode(
               // If we haven't defined an end time, use the resolve of the outer Promise.
               ioNode.end = node.end;
             }
-            return ioNode;
+            match = ioNode;
+          } else {
+            match = node;
           }
-          return node;
         }
       }
-      return null;
+      // We need to forward after we visit awaited nodes because what ever I/O we requested that's
+      // the thing that generated this node and its virtual children.
+      const debugInfo = node.debugInfo;
+      if (debugInfo !== null) {
+        forwardDebugInfo(request, task.id, debugInfo);
+      }
+      return match;
     }
     case UNRESOLVED_AWAIT_NODE:
     // We could be inside the .then() which is about to resolve this node.
@@ -1929,6 +1937,7 @@ function visitAsyncNode(
     // Fallthrough to the resolved path.
     case AWAIT_NODE: {
       const awaited = node.awaited;
+      let match = null;
       if (awaited !== null) {
         const ioNode = visitAsyncNode(request, task, awaited, cutOff, visited);
         if (ioNode !== null) {
@@ -1950,45 +1959,59 @@ function visitAsyncNode(
             // part of a different component.
             // TODO: Think of some other way to exclude irrelevant data since if we awaited
             // a cached promise, we should still log this component as being dependent on that data.
-            return null;
-          }
-
-          const stack = filterStackTrace(
-            request,
-            parseStackTrace(node.stack, 1),
-          );
-          if (stack.length === 0) {
-            // If this await was fully filtered out, then it was inside third party code
-            // such as in an external library. We return the I/O node and try another await.
-            return ioNode;
-          }
-          // Outline the IO node.
-          serializeIONode(request, ioNode);
-          // We log the environment at the time when the last promise pigned ping which may
-          // be later than what the environment was when we actually started awaiting.
-          const env = (0, request.environmentName)();
-          if (node.start <= cutOff) {
-            // If this was an await that started before this sequence but finished after,
-            // then we clamp it to the start of this sequence. We don't need to emit a time
-            // TODO: Typically we'll already have a previous time stamp with the cutOff time
-            // so we shouldn't need to emit another one. But not always.
-            emitTimingChunk(request, task.id, cutOff);
           } else {
-            emitTimingChunk(request, task.id, node.start);
+            const stack = filterStackTrace(
+              request,
+              parseStackTrace(node.stack, 1),
+            );
+            if (stack.length === 0) {
+              // If this await was fully filtered out, then it was inside third party code
+              // such as in an external library. We return the I/O node and try another await.
+              match = ioNode;
+            } else {
+              // Outline the IO node.
+              serializeIONode(request, ioNode);
+              // We log the environment at the time when the last promise pigned ping which may
+              // be later than what the environment was when we actually started awaiting.
+              const env = (0, request.environmentName)();
+              if (node.start <= cutOff) {
+                // If this was an await that started before this sequence but finished after,
+                // then we clamp it to the start of this sequence. We don't need to emit a time
+                // TODO: Typically we'll already have a previous time stamp with the cutOff time
+                // so we shouldn't need to emit another one. But not always.
+                emitTimingChunk(request, task.id, cutOff);
+              } else {
+                emitTimingChunk(request, task.id, node.start);
+              }
+              // Then emit a reference to us awaiting it in the current task.
+              request.pendingChunks++;
+              emitDebugChunk(request, task.id, {
+                awaited: ((ioNode: any): ReactIOInfo), // This is deduped by this reference.
+                env: env,
+                owner: node.owner,
+                stack: stack,
+              });
+              emitTimingChunk(request, task.id, node.end);
+            }
           }
-          // Then emit a reference to us awaiting it in the current task.
-          request.pendingChunks++;
-          emitDebugChunk(request, task.id, {
-            awaited: ((ioNode: any): ReactIOInfo), // This is deduped by this reference.
-            env: env,
-            owner: node.owner,
-            stack: stack,
-          });
-          emitTimingChunk(request, task.id, node.end);
         }
       }
-      // If we had awaited anything we would have written it now.
-      return null;
+      // We need to forward after we visit awaited nodes because what ever I/O we requested that's
+      // the thing that generated this node and its virtual children.
+      let debugInfo: null | ReactDebugInfo;
+      if (node.tag === UNRESOLVED_AWAIT_NODE) {
+        const promise = node.debugInfo.deref();
+        debugInfo =
+          promise === undefined || promise._debugInfo === undefined
+            ? null
+            : promise._debugInfo;
+      } else {
+        debugInfo = node.debugInfo;
+      }
+      if (debugInfo !== null) {
+        forwardDebugInfo(request, task.id, debugInfo);
+      }
+      return match;
     }
     default: {
       // eslint-disable-next-line react-internal/prod-error-codes

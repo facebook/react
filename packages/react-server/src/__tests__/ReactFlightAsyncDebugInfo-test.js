@@ -523,4 +523,94 @@ describe('ReactFlightAsyncDebugInfo', () => {
       `);
     }
   });
+
+  it('forwards debugInfo from awaited Promises', async () => {
+    async function Component() {
+      let resolve;
+      const promise = new Promise(r => (resolve = r));
+      promise._debugInfo = [
+        {time: performance.now()},
+        {
+          name: 'Virtual Component',
+        },
+        {time: performance.now()},
+      ];
+      resolve('hi');
+      const promise2 = promise.then(value => value);
+      promise2._debugInfo = [
+        {time: performance.now()},
+        {
+          name: 'Virtual Component2',
+        },
+        {time: performance.now()},
+      ];
+      const result = await promise2;
+      return result.toUpperCase();
+    }
+
+    const stream = ReactServerDOMServer.renderToPipeableStream(<Component />);
+
+    const readable = new Stream.PassThrough(streamOptions);
+
+    const result = ReactServerDOMClient.createFromNodeStream(readable, {
+      moduleMap: {},
+      moduleLoading: {},
+    });
+    stream.pipe(readable);
+
+    expect(await result).toBe('HI');
+    if (
+      __DEV__ &&
+      gate(
+        flags =>
+          flags.enableComponentPerformanceTrack && flags.enableAsyncDebugInfo,
+      )
+    ) {
+      expect(getDebugInfo(result)).toMatchInlineSnapshot(`
+        [
+          {
+            "time": 0,
+          },
+          {
+            "env": "Server",
+            "key": null,
+            "name": "Component",
+            "owner": null,
+            "props": {},
+            "stack": [
+              [
+                "Object.<anonymous>",
+                "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                552,
+                109,
+                527,
+                50,
+              ],
+            ],
+          },
+          {
+            "time": 0,
+          },
+          {
+            "name": "Virtual Component",
+          },
+          {
+            "time": 0,
+          },
+          {
+            "time": 0,
+          },
+          {
+            "name": "Virtual Component2",
+          },
+          {
+            "time": 0,
+          },
+          {
+            "time": 0,
+          },
+        ]
+      `);
+    }
+  });
 });
