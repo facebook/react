@@ -168,18 +168,6 @@ function normalizeCodeLocInfo(str) {
   });
 }
 
-function normalizeStackTrace(str) {
-  if (typeof str !== 'string') {
-    return str;
-  }
-  // Replace only the file path and line/column numbers, keep the rest.
-  // Matches: "    in ComponentName (at /path/to/file.js:123:45)"
-  return str.replace(
-    /^\s+in ([^(]+) \(at .*\/([^\/]+):\d+:\d+\)$/gm,
-    '    in $1 (at **/$2:**:**)',
-  );
-}
-
 function normalizeComponentStack(entry) {
   if (
     typeof entry[0] === 'string' &&
@@ -359,9 +347,7 @@ export function createLogAssertion(
           );
         }
 
-        const normalizedMessage = normalizeStackTrace(
-          normalizeCodeLocInfo(message),
-        );
+        const normalizedMessage = normalizeCodeLocInfo(message);
         receivedLogs.push(normalizedMessage);
 
         // Check the number of %s interpolations.
@@ -395,11 +381,9 @@ export function createLogAssertion(
         }
 
         // Main logic to check if log is expected, with the component stack.
-        const normalizedExpectedMessage = normalizeStackTrace(expectedMessage);
-
         if (
-          normalizedMessage === normalizedExpectedMessage ||
-          normalizedMessage.includes(normalizedExpectedMessage)
+          normalizedMessage === expectedMessage ||
+          normalizedMessage.includes(expectedMessage)
         ) {
           if (isLikelyAComponentStack(normalizedMessage)) {
             if (expectedWithoutStack === true) {
@@ -426,7 +410,7 @@ export function createLogAssertion(
               const message = Array.isArray(messageOrTuple)
                 ? messageOrTuple[0]
                 : messageOrTuple;
-              return normalizeStackTrace(message.replace('\n', ' '));
+              return message.replace('\n', ' ');
             })
             .join('\n'),
           receivedLogs.map(message => message.replace('\n', ' ')).join('\n'),
