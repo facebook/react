@@ -89,6 +89,7 @@ import {
   requestStorage,
   createHints,
   initAsyncDebugInfo,
+  markAsyncSequenceRootTask,
   getCurrentAsyncSequence,
   parseStackTrace,
   supportsComponentStorage,
@@ -4552,6 +4553,8 @@ function tryStreamTask(request: Request, task: Task): void {
 }
 
 function performWork(request: Request): void {
+  markAsyncSequenceRootTask();
+
   const prevDispatcher = ReactSharedInternals.H;
   ReactSharedInternals.H = HooksDispatcher;
   const prevRequest = currentRequest;

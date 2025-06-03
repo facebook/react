@@ -11,6 +11,7 @@ import type {AsyncSequence} from './ReactFlightAsyncSequence';
 
 // Exported for runtimes that don't support Promise instrumentation for async debugging.
 export function initAsyncDebugInfo(): void {}
+export function markAsyncSequenceRootTask(): void {}
 export function getCurrentAsyncSequence(): null | AsyncSequence {
   return null;
 }

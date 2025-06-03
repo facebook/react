@@ -185,6 +185,15 @@ export function initAsyncDebugInfo(): void {
   }
 }
 
+export function markAsyncSequenceRootTask(): void {
+  if (__DEV__ && enableAsyncDebugInfo) {
+    // Whatever Task we're running now is spawned by React itself to perform render work.
+    // Don't track any cause beyond this task. We may still track I/O that was started outside
+    // React but just not the cause of entering the render.
+    pendingOperations.delete(executionAsyncId());
+  }
+}
+
 export function getCurrentAsyncSequence(): null | AsyncSequence {
   if (!__DEV__ || !enableAsyncDebugInfo) {
     return null;
