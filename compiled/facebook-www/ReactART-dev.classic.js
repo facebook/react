@@ -1080,7 +1080,7 @@ __DEV__ &&
       if (null !== instance.autoName) return instance.autoName;
       props = pendingEffectsRoot.identifierPrefix;
       var globalClientId = globalClientIdCounter$1++;
-      props = "\u00ab" + props + "t" + globalClientId.toString(32) + "\u00bb";
+      props = "_" + props + "t_" + globalClientId.toString(32) + "_";
       return (instance.autoName = props);
     }
     function getClassNameByType(classByType) {
@@ -6122,11 +6122,7 @@ __DEV__ &&
         identifierPrefix = workInProgressRoot.identifierPrefix,
         globalClientId = globalClientIdCounter++;
       identifierPrefix =
-        "\u00ab" +
-        identifierPrefix +
-        "r" +
-        globalClientId.toString(32) +
-        "\u00bb";
+        "_" + identifierPrefix + "r_" + globalClientId.toString(32) + "_";
       return (hook.memoizedState = identifierPrefix);
     }
     function mountRefresh() {
@@ -19080,10 +19076,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-classic-4a1f2907-20250602",
+        version: "19.2.0-www-classic-1ae0a845-20250603",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-4a1f2907-20250602"
+        reconcilerVersion: "19.2.0-www-classic-1ae0a845-20250603"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -19117,7 +19113,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.2.0-www-classic-4a1f2907-20250602";
+    exports.version = "19.2.0-www-classic-1ae0a845-20250603";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

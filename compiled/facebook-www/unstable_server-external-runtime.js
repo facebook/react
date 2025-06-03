@@ -75,7 +75,7 @@
         "auto" !== className &&
           (classAttributeName.viewTransitionClass = className),
         (element = element.getAttribute("vt-name")) ||
-          (element = "\u00abT" + autoNameIdx++ + "\u00bb"),
+          (element = "_T_" + autoNameIdx++ + "_"),
         (classAttributeName.viewTransitionName = element),
         (shouldStartViewTransition = !0));
     }
