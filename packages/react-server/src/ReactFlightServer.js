@@ -691,7 +691,7 @@ function serializeThenable(
     // If this came from Flight, forward any debug info into this new row.
     const debugInfo: ?ReactDebugInfo = (thenable: any)._debugInfo;
     if (debugInfo) {
-      forwardDebugInfo(request, newTask.id, debugInfo);
+      forwardDebugInfo(request, newTask, debugInfo);
     }
   }
 
@@ -911,7 +911,7 @@ function serializeAsyncIterable(
   if (__DEV__) {
     const debugInfo: ?ReactDebugInfo = (iterable: any)._debugInfo;
     if (debugInfo) {
-      forwardDebugInfo(request, streamTask.id, debugInfo);
+      forwardDebugInfo(request, streamTask, debugInfo);
     }
   }
 
@@ -1278,7 +1278,7 @@ function renderFunctionComponent<Props>(
 
   let componentDebugInfo: ReactComponentInfo;
   if (__DEV__) {
-    if (debugID === null) {
+    if (!canEmitDebugInfo) {
       // We don't have a chunk to assign debug info. We need to outline this
       // component to assign it an ID.
       return outlineTask(request, task);
@@ -1289,7 +1289,7 @@ function renderFunctionComponent<Props>(
       componentDebugInfo = (prevThenableState: any)._componentDebugInfo;
     } else {
       // This is a new component in the same task so we can emit more debug info.
-      const componentDebugID = debugID;
+      const componentDebugID = task.id;
       const componentName =
         (Component: any).displayName || Component.name || '';
       const componentEnv = (0, request.environmentName)();
@@ -1543,7 +1543,7 @@ function renderFragment(
     const debugInfo: ?ReactDebugInfo = (children: any)._debugInfo;
     if (debugInfo) {
       // If this came from Flight, forward any debug info into this new row.
-      if (debugID === null) {
+      if (!canEmitDebugInfo) {
         // We don't have a chunk to assign debug info. We need to outline this
         // component to assign it an ID.
         return outlineTask(request, task);
@@ -1551,7 +1551,7 @@ function renderFragment(
         // Forward any debug info we have the first time we see it.
         // We do this after init so that we have received all the debug info
         // from the server by the time we emit it.
-        forwardDebugInfo(request, debugID, debugInfo);
+        forwardDebugInfo(request, task, debugInfo);
       }
       // Since we're rendering this array again, create a copy that doesn't
       // have the debug info so we avoid outlining or emitting debug info again.
@@ -1659,8 +1659,10 @@ function renderClientElement(
   return element;
 }
 
-// The chunk ID we're currently rendering that we can assign debug data to.
-let debugID: null | number = null;
+// Determines if we're currently rendering at the top level of a task and therefore
+// is safe to emit debug info associated with that task. Otherwise, if we're in
+// a nested context, we need to first outline.
+let canEmitDebugInfo: boolean = false;
 
 // Approximate string length of the currently serializing row.
 // Used to power outlining heuristics.
@@ -1928,7 +1930,7 @@ function visitAsyncNode(
       // the thing that generated this node and its virtual children.
       const debugInfo = node.debugInfo;
       if (debugInfo !== null) {
-        forwardDebugInfo(request, task.id, debugInfo);
+        forwardDebugInfo(request, task, debugInfo);
       }
       return match;
     }
@@ -2013,7 +2015,7 @@ function visitAsyncNode(
         debugInfo = node.debugInfo;
       }
       if (debugInfo !== null) {
-        forwardDebugInfo(request, task.id, debugInfo);
+        forwardDebugInfo(request, task, debugInfo);
       }
       return match;
     }
@@ -2767,13 +2769,13 @@ function renderModelDestructive(
           const debugInfo: ?ReactDebugInfo = (value: any)._debugInfo;
           if (debugInfo) {
             // If this came from Flight, forward any debug info into this new row.
-            if (debugID === null) {
+            if (!canEmitDebugInfo) {
               // We don't have a chunk to assign debug info. We need to outline this
               // component to assign it an ID.
               return outlineTask(request, task);
             } else {
               // Forward any debug info we have the first time we see it.
-              forwardDebugInfo(request, debugID, debugInfo);
+              forwardDebugInfo(request, task, debugInfo);
             }
           }
         }
@@ -2849,7 +2851,7 @@ function renderModelDestructive(
           const debugInfo: ?ReactDebugInfo = lazy._debugInfo;
           if (debugInfo) {
             // If this came from Flight, forward any debug info into this new row.
-            if (debugID === null) {
+            if (!canEmitDebugInfo) {
               // We don't have a chunk to assign debug info. We need to outline this
               // component to assign it an ID.
               return outlineTask(request, task);
@@ -2857,7 +2859,7 @@ function renderModelDestructive(
               // Forward any debug info we have the first time we see it.
               // We do this after init so that we have received all the debug info
               // from the server by the time we emit it.
-              forwardDebugInfo(request, debugID, debugInfo);
+              forwardDebugInfo(request, task, debugInfo);
             }
           }
         }
@@ -4268,9 +4270,10 @@ function emitTimeOriginChunk(request: Request, timeOrigin: number): void {
 
 function forwardDebugInfo(
   request: Request,
-  id: number,
+  task: Task,
   debugInfo: ReactDebugInfo,
 ) {
+  const id = task.id;
   for (let i = 0; i < debugInfo.length; i++) {
     const info = debugInfo[i];
     if (typeof info.time === 'number') {
@@ -4461,7 +4464,7 @@ function retryTask(request: Request, task: Task): void {
     return;
   }
 
-  const prevDebugID = debugID;
+  const prevCanEmitDebugInfo = canEmitDebugInfo;
   task.status = RENDERING;
 
   // We stash the outer parent size so we can restore it when we exit.
@@ -4476,8 +4479,8 @@ function retryTask(request: Request, task: Task): void {
     modelRoot = task.model;
 
     if (__DEV__) {
-      // Track the ID of the current task so we can assign debug info to this id.
-      debugID = task.id;
+      // Track that we can emit debug info for the current task.
+      canEmitDebugInfo = true;
     }
 
     // We call the destructive form that mutates this task. That way if something
@@ -4493,7 +4496,7 @@ function retryTask(request: Request, task: Task): void {
     if (__DEV__) {
       // We're now past rendering this task and future renders will spawn new tasks for their
       // debug info.
-      debugID = null;
+      canEmitDebugInfo = false;
     }
 
     // Track the root again for the resolved object.
@@ -4578,7 +4581,7 @@ function retryTask(request: Request, task: Task): void {
     erroredTask(request, task, x);
   } finally {
     if (__DEV__) {
-      debugID = prevDebugID;
+      canEmitDebugInfo = prevCanEmitDebugInfo;
     }
     serializedSize = parentSerializedSize;
   }
@@ -4587,11 +4590,11 @@ function retryTask(request: Request, task: Task): void {
 function tryStreamTask(request: Request, task: Task): void {
   // This is used to try to emit something synchronously but if it suspends,
   // we emit a reference to a new outlined task immediately instead.
-  const prevDebugID = debugID;
+  const prevCanEmitDebugInfo = canEmitDebugInfo;
   if (__DEV__) {
-    // We don't use the id of the stream task for debugID. Instead we leave it null
-    // so that we instead outline the row to get a new debugID if needed.
-    debugID = null;
+    // We can't emit debug into to a specific row of a stream task. Instead we leave
+    // it false so that we instead outline the row to get a new canEmitDebugInfo if needed.
+    canEmitDebugInfo = false;
   }
   const parentSerializedSize = serializedSize;
   try {
@@ -4599,7 +4602,7 @@ function tryStreamTask(request: Request, task: Task): void {
   } finally {
     serializedSize = parentSerializedSize;
     if (__DEV__) {
-      debugID = prevDebugID;
+      canEmitDebugInfo = prevCanEmitDebugInfo;
     }
   }
 }
