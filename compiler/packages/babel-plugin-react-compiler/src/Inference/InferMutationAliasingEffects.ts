@@ -1578,6 +1578,11 @@ function computeSignatureForInstruction(
         into: lvalue,
         value: ValueKind.Primitive,
       });
+      effects.push({
+        kind: 'Create',
+        into: value.lvalue,
+        value: ValueKind.Primitive,
+      });
       break;
     }
     case 'StoreGlobal': {
