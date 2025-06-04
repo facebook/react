@@ -31,7 +31,7 @@ export async function renderHtml({
     return React.use(payload).root;
   }
 
-  const bootstrapModules = assetsManifest.entry.bootstrapModules
+  const bootstrapModules = assetsManifest.entry.bootstrapModules;
   const htmlStream = await ReactDomServer.renderToReadableStream(<SsrRoot />, {
     bootstrapModules: url.search.includes('__nojs') ? [] : bootstrapModules,
     nonce,
