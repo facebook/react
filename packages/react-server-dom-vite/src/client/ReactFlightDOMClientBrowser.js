@@ -36,7 +36,6 @@ export {createTemporaryReferenceSet} from 'react-client/src/ReactFlightTemporary
 export type {TemporaryReferenceSet};
 
 import type {ServerConsumerModuleMap} from '../client/ReactFlightClientConfigBundlerVite';
-export {setPreloadModule} from '../client/ReactFlightClientConfigBundlerVite';
 
 function startReadingFromStream(
   response: FlightResponse,

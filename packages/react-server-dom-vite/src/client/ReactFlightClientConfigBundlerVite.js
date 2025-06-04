@@ -110,9 +110,3 @@ export function requireModule<T>(metadata: ClientReference<T>): T {
   }
   throw new Error('invalid reference');
 }
-
-// let preloadModuleFn: any;
-
-export function setPreloadModule(fn: any) {
-  // preloadModuleFn = fn;
-}

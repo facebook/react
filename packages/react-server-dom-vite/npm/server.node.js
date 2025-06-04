@@ -16,4 +16,3 @@ exports.registerClientReference = s.registerClientReference;
 exports.registerServerReference = s.registerServerReference;
 exports.createTemporaryReferenceSet = s.createTemporaryReferenceSet;
 exports.loadServerAction = s.loadServerAction;
-exports.setPreloadModule = s.setPreloadModule;

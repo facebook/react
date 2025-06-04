@@ -19,4 +19,3 @@ export {
   createTemporaryReferenceSet,
   loadServerAction,
 } from './ReactFlightDOMServerEdge';
-export {setPreloadModule} from '../client/ReactFlightClientConfigBundlerVite';

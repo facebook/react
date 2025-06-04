@@ -39,7 +39,6 @@ import type {
   ServerConsumerModuleMap,
   ServerManifest,
 } from '../client/ReactFlightClientConfigBundlerVite';
-export {setPreloadModule} from '../client/ReactFlightClientConfigBundlerVite';
 
 function noServerCall() {
   throw new Error(
