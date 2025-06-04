@@ -687,22 +687,29 @@ function serializeThenable(
     __DEV__ ? task.debugStack : null,
     __DEV__ ? task.debugTask : null,
   );
-  if (__DEV__) {
-    // If this came from Flight, forward any debug info into this new row.
-    const debugInfo: ?ReactDebugInfo = (thenable: any)._debugInfo;
-    if (debugInfo) {
-      forwardDebugInfo(request, newTask, debugInfo);
-    }
-  }
 
   switch (thenable.status) {
     case 'fulfilled': {
+      if (__DEV__) {
+        // If this came from Flight, forward any debug info into this new row.
+        const debugInfo: ?ReactDebugInfo = (thenable: any)._debugInfo;
+        if (debugInfo) {
+          forwardDebugInfo(request, newTask, debugInfo);
+        }
+      }
       // We have the resolved value, we can go ahead and schedule it for serialization.
       newTask.model = thenable.value;
       pingTask(request, newTask);
       return newTask.id;
     }
     case 'rejected': {
+      if (__DEV__) {
+        // If this came from Flight, forward any debug info into this new row.
+        const debugInfo: ?ReactDebugInfo = (thenable: any)._debugInfo;
+        if (debugInfo) {
+          forwardDebugInfo(request, newTask, debugInfo);
+        }
+      }
       const x = thenable.reason;
       erroredTask(request, newTask, x);
       return newTask.id;
@@ -751,10 +758,24 @@ function serializeThenable(
 
   thenable.then(
     value => {
+      if (__DEV__) {
+        // If this came from Flight, forward any debug info into this new row.
+        const debugInfo: ?ReactDebugInfo = (thenable: any)._debugInfo;
+        if (debugInfo) {
+          forwardDebugInfo(request, newTask, debugInfo);
+        }
+      }
       newTask.model = value;
       pingTask(request, newTask);
     },
     reason => {
+      if (__DEV__) {
+        // If this came from Flight, forward any debug info into this new row.
+        const debugInfo: ?ReactDebugInfo = (thenable: any)._debugInfo;
+        if (debugInfo) {
+          forwardDebugInfo(request, newTask, debugInfo);
+        }
+      }
       if (newTask.status === PENDING) {
         // We expect that the only status it might be otherwise is ABORTED.
         // When we abort we emit chunks in each pending task slot and don't need
