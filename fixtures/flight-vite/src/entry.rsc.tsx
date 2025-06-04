@@ -8,7 +8,7 @@ import {Root} from './routes/root';
 import {importSsr, loadModule, loadModuleClient, Resources} from '../basic/rsc';
 
 ReactServer.setPreloadModule(loadModule);
-ReactClient.setPreloadModule(loadModuleClient)
+ReactClient.setPreloadModule(loadModuleClient);
 
 export type RscPayload = {
   root: React.ReactNode;

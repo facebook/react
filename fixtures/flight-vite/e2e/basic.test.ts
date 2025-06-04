@@ -189,10 +189,10 @@ test('css server hmr @dev', async ({page}) => {
   );
 });
 
-test("test serialization @js", async ({ page }) => {
-  await page.goto("./");
+test('test serialization @js', async ({page}) => {
+  await page.goto('./');
   await waitForHydration(page);
-  await expect(page.getByTestId("serialization")).toHaveText("?");
-  await page.getByTestId("serialization").click();
-  await expect(page.getByTestId("serialization")).toHaveText("ok");
+  await expect(page.getByTestId('serialization')).toHaveText('?');
+  await page.getByTestId('serialization').click();
+  await expect(page.getByTestId('serialization')).toHaveText('ok');
 });

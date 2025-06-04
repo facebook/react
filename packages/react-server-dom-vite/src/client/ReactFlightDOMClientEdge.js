@@ -61,7 +61,7 @@ type ServerConsumerManifest = {
   moduleMap?: {},
   moduleLoading?: ModuleLoading,
   serverModuleMap?: {},
-}
+};
 
 export type Options = {
   serverConsumerManifest: ServerConsumerManifest,

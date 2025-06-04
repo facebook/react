@@ -1,5 +1,5 @@
-import { testSerializationAction } from "./action";
-import { TestSerializationClient } from "./client";
+import {testSerializationAction} from './action';
+import {TestSerializationClient} from './client';
 
 // @ts-ignore
 import * as ReactServer from 'react-server-dom-vite/server.edge';
@@ -13,7 +13,7 @@ export function TestSerializationServer() {
     serverConsumerManifest: {
       // non-null `serverModuleMap` is enough to make react flight restore original server references.
       serverModuleMap: {},
-    }
+    },
   });
   return <div>test-serialization:{deserialized}</div>;
 }

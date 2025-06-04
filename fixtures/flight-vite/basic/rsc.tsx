@@ -6,7 +6,7 @@ import assetsManifest from 'virtual:vite-rsc/assets-manifest';
 export {assetsManifest};
 
 export function loadModule(id: string) {
-  id = id.slice("server:".length);
+  id = id.slice('server:'.length);
   if (import.meta.env.DEV) {
     return import(/* @vite-ignore */ id);
   } else {
@@ -18,8 +18,8 @@ export function loadModule(id: string) {
 import * as ReactServer from 'react-server-dom-vite/server.edge';
 
 export function loadModuleClient(id: string) {
-  if (id.startsWith("client:")) {
-    id = id.slice("client:".length);
+  if (id.startsWith('client:')) {
+    id = id.slice('client:'.length);
     // TODO: likely there's no legitimate way to load the original module properly.
     // for now, we use proxy to generate `registerClientReference` on the fly.
     // https://github.com/hi-ogawa/vite-plugins/pull/906
@@ -31,10 +31,10 @@ export function loadModuleClient(id: string) {
             throw new Error("client reference shouldn't be called on server");
           },
           id,
-          name
+          name,
         ));
       },
-    })
+    });
     return Promise.resolve(proxy);
   }
   return loadModule(id);

@@ -11,7 +11,7 @@ import {
   TestUseActionState,
 } from './action-from-client/client';
 import './root.css';
-import { TestSerializationServer } from './serialization/server';
+import {TestSerializationServer} from './serialization/server';
 
 export function Root(props: {url: URL}) {
   return (
