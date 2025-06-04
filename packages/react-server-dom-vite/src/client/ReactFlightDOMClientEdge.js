@@ -60,7 +60,7 @@ type EncodeFormActionCallback = <A>(
 ) => ReactCustomFormAction;
 
 export type Options = {
-  clientManifest?: ServerConsumerModuleMap,
+  clientManifest: ServerConsumerModuleMap,
   serverManifest?: ServerManifest,
   nonce?: string,
   encodeFormAction?: EncodeFormActionCallback,
@@ -70,10 +70,10 @@ export type Options = {
   environmentName?: string,
 };
 
-function createResponseFromOptions(options?: Options) {
+function createResponseFromOptions(options: Options) {
   return createResponse(
-    options && options.clientManifest,
-    options && options.serverManifest,
+    options.clientManifest,
+    options.serverManifest ? options.serverManifest : null,
     null,
     noServerCall,
     options ? options.encodeFormAction : undefined,
@@ -120,7 +120,7 @@ function startReadingFromStream(
 
 export function createFromReadableStream<T>(
   stream: ReadableStream,
-  options?: Options,
+  options: Options,
 ): Thenable<T> {
   const response: FlightResponse = createResponseFromOptions(options);
   startReadingFromStream(response, stream);
@@ -129,7 +129,7 @@ export function createFromReadableStream<T>(
 
 export function createFromFetch<T>(
   promiseForResponse: Promise<Response>,
-  options?: Options,
+  options: Options,
 ): Thenable<T> {
   const response: FlightResponse = createResponseFromOptions(options);
   promiseForResponse.then(

@@ -51,7 +51,7 @@ type EncodeFormActionCallback = <A>(
 ) => ReactCustomFormAction;
 
 export type Options = {
-  clientManifest?: ServerConsumerModuleMap,
+  clientManifest: ServerConsumerModuleMap,
   serverManifest?: ServerManifest,
   nonce?: string,
   encodeFormAction?: EncodeFormActionCallback,
@@ -62,11 +62,11 @@ export type Options = {
 
 export function createFromNodeStream<T>(
   stream: Readable,
-  options?: Options,
+  options: Options,
 ): Thenable<T> {
   const response: Response = createResponse(
-    options && options.clientManifest,
-    options && options.serverManifest,
+    options.clientManifest,
+    options.serverManifest ? options.serverManifest : null,
     null,
     noServerCall,
     options ? options.encodeFormAction : undefined,
