@@ -254,7 +254,9 @@ export default function vitePluginRsc(rscOptions: {
           assert(this.environment.name !== 'client');
           const manifest: AssetsManifest = {
             entry: {
-              bootstrapModules: ['/@id/__x00__virtual:vite-rsc/browser-entry'],
+              bootstrapModules: [
+                assetsURL('@id/__x00__virtual:vite-rsc/browser-entry'),
+              ],
               deps: {
                 js: [],
                 css: [],
@@ -271,16 +273,20 @@ export default function vitePluginRsc(rscOptions: {
           const assetDeps = collectAssetDeps(bundle);
           const clientReferenceDeps: Record<string, AssetDeps> = {};
           for (const [key, id] of Object.entries(clientReferences)) {
-            const deps = assetDeps[id]?.deps;
-            if (deps) {
-              clientReferenceDeps[key] = deps;
-            }
+            const deps = assetDeps[id]?.deps ?? {js: [], css: []};
+            clientReferenceDeps[key] = {
+              js: deps.js.map(href => assetsURL(href)),
+              css: deps.css.map(href => assetsURL(href)),
+            };
           }
           const entry = assetDeps['\0virtual:vite-rsc/browser-entry']!;
           const manifest: AssetsManifest = {
             entry: {
-              bootstrapModules: [`/${entry.chunk.fileName}`],
-              deps: entry.deps,
+              bootstrapModules: [assetsURL(entry.chunk.fileName)],
+              deps: {
+                js: entry.deps.js.map(href => assetsURL(href)),
+                css: entry.deps.css.map(href => assetsURL(href)),
+              },
             },
             clientReferenceDeps,
           };
@@ -560,8 +566,8 @@ function collectAssetDepsInner(
 
   recurse(fileName);
   return {
-    js: [...visited].map(file => `/${file}`),
-    css: [...new Set(css)].map(file => `/${file}`),
+    js: [...visited],
+    css: [...new Set(css)],
   };
 }
 
@@ -752,10 +758,11 @@ export function vitePluginRscCss({
         // during build, css are injected through AssetsManifest.entry.deps.css
         return `export default []`;
       }
-      const {hrefs} = await collectCssByUrl(
+      const result = await collectCssByUrl(
         server.environments.rsc!,
         entries.rsc,
       );
+      const hrefs = result.hrefs.map(href => assetsURL(href.slice(1)));
       return `export default ${JSON.stringify(hrefs, null, 2)}`;
     }),
     createVirtualPlugin('vite-rsc/rsc-css-browser', async function () {
@@ -788,12 +795,18 @@ export function vitePluginRscCss({
           if (!mod?.id || !mod?.file) {
             return `export default []`;
           }
-          const {hrefs} = collectCss(server.environments.ssr, mod.id);
+          const result = collectCss(server.environments.ssr, mod.id);
           // invalidate virtual module on file change to reflect added/deleted css import
           this.addWatchFile(mod.file);
+          const hrefs = result.hrefs.map(href => assetsURL(href.slice(1)));
           return `export default ${JSON.stringify(hrefs)}`;
         }
       },
     },
   ];
+}
+
+// // https://github.com/vitejs/vite/blob/2a7473cfed96237711cda9f736465c84d442ddef/packages/vite/src/node/plugins/importAnalysisBuild.ts#L222-L230
+function assetsURL(url: string) {
+  return config.base + url;
 }

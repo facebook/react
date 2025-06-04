@@ -1,13 +1,14 @@
 // @ts-ignore
 import clientReferences from 'virtual:vite-rsc/client-references';
-import {assetsURL} from './utils/assets-url';
 
 export const clientManifest = {load: loadModule};
 
 function loadModule(id: string) {
   if (import.meta.env.DEV) {
     // @ts-ignore
-    return __vite_rsc_raw_import__(/* @vite-ignore */ assetsURL(id));
+    return __vite_rsc_raw_import__(
+      /* @vite-ignore */ import.meta.env.BASE_URL + id.slice(1),
+    );
   } else {
     return clientReferences[id]();
   }
