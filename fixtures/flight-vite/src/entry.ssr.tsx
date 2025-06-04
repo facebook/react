@@ -7,9 +7,7 @@ import * as ReactDomServer from 'react-dom/server.edge';
 import {injectRSCPayload} from 'rsc-html-stream/server';
 import type {RscPayload} from './entry.rsc';
 
-import {assetsManifest, clientManifest, loadModule} from '../basic/ssr';
-
-ReactClient.setPreloadModule(loadModule);
+import {assetsManifest, clientManifest} from '../basic/ssr';
 
 export async function renderHtml({
   url,

@@ -8,10 +8,9 @@ import type {AssetDeps} from './plugin';
 
 export {assetsManifest};
 
-export const clientManifest = {};
+export const clientManifest = {load: loadModule};
 
-export async function loadModule(id: string) {
-  id = id.slice('client:'.length);
+async function loadModule(id: string) {
   if (import.meta.env.DEV) {
     const mod = await import(/* @vite-ignore */ id);
     const modCss = await import(

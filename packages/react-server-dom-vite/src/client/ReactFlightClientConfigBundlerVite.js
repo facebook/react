@@ -18,11 +18,15 @@ import type {ImportMetadata} from '../shared/ReactFlightImportMetadata';
 import {ID, NAME} from '../shared/ReactFlightImportMetadata';
 
 export type ClientManifest = null;
-export type ServerManifest = null;
+export type ServerManifest = BundlerConfig;
 export type SSRModuleMap = null;
 export type ModuleLoading = null;
-export type ServerConsumerModuleMap = null;
+export type ServerConsumerModuleMap = BundlerConfig;
 export type ServerReferenceId = string;
+
+type BundlerConfig = {
+  load: (id: string) => Promise<any>,
+};
 
 export opaque type ClientReferenceMetadata = ImportMetadata;
 
@@ -31,6 +35,7 @@ export opaque type ClientReference<T> = [
   /* id */ string,
   /* name */ string,
   /* promise */ Thenable<any> | null,
+  /* bundlerConfig */ BundlerConfig,
 ];
 
 export function prepareDestinationForModule(
@@ -43,9 +48,7 @@ export function resolveClientReference<T>(
   bundlerConfig: ServerConsumerModuleMap,
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
-  // TODO: for now quick tagging for server consumer to differentiate
-  // server and client references to deserialize them on server.
-  return ['client:' + metadata[ID], metadata[NAME], null];
+  return [metadata[ID], metadata[NAME], null, bundlerConfig];
 }
 
 export function resolveServerReference<T>(
@@ -55,7 +58,7 @@ export function resolveServerReference<T>(
   const idx = ref.lastIndexOf('#');
   const id = ref.slice(0, idx);
   const name = ref.slice(idx + 1);
-  return ['server:' + id, name, null];
+  return [id, name, null, bundlerConfig];
 }
 
 const asyncModuleCache: Map<string, Thenable<any>> = new Map();
@@ -63,6 +66,7 @@ const asyncModuleCache: Map<string, Thenable<any>> = new Map();
 export function preloadModule<T>(
   metadata: ClientReference<T>,
 ): null | Thenable<any> {
+  const bundlerConfig = metadata[3];
   // cache same module id for build.
   if (!__DEV__) {
     const existingPromise = asyncModuleCache.get(metadata[ID]);
@@ -74,7 +78,7 @@ export function preloadModule<T>(
       return existingPromise;
     }
   }
-  const promise = preloadModuleFn(metadata[ID]);
+  const promise = bundlerConfig.load(metadata[ID]);
   promise.then(
     value => {
       const fulfilledThenable: FulfilledThenable<mixed> = (promise: any);
@@ -107,8 +111,8 @@ export function requireModule<T>(metadata: ClientReference<T>): T {
   throw new Error('invalid reference');
 }
 
-let preloadModuleFn: any;
+// let preloadModuleFn: any;
 
 export function setPreloadModule(fn: any) {
-  preloadModuleFn = fn;
+  // preloadModuleFn = fn;
 }

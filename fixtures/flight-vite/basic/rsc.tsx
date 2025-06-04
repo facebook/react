@@ -9,11 +9,10 @@ import * as ReactClient from 'react-server-dom-vite/client.edge';
 
 export {assetsManifest};
 
-export const serverManifest = {};
-export const clientManifest = {};
+export const serverManifest = {load: loadModule};
+export const clientManifest = {load: loadModuleClient};
 
-export function loadModule(id: string) {
-  id = id.slice('server:'.length);
+function loadModule(id: string) {
   if (import.meta.env.DEV) {
     return import(/* @vite-ignore */ id);
   } else {
@@ -21,27 +20,22 @@ export function loadModule(id: string) {
   }
 }
 
-export function loadModuleClient(id: string) {
-  if (id.startsWith('client:')) {
-    id = id.slice('client:'.length);
-    // TODO: likely there's no legitimate way to load the original module properly.
-    // for now, we use proxy to generate `registerClientReference` on the fly.
-    // https://github.com/hi-ogawa/vite-plugins/pull/906
-    const proxy = new Proxy({} as any, {
-      get(target, name, _receiver) {
-        if (name === 'then') return;
-        return (target[name] ??= ReactServer.registerClientReference(
-          () => {
-            throw new Error("client reference shouldn't be called on server");
-          },
-          id,
-          name,
-        ));
-      },
-    });
-    return Promise.resolve(proxy);
-  }
-  return loadModule(id);
+async function loadModuleClient(id: string) {
+  // TODO: likely there's no legitimate way to load the original module properly.
+  // for now, we use proxy to generate `registerClientReference` on the fly.
+  // https://github.com/hi-ogawa/vite-plugins/pull/906
+  return new Proxy({} as any, {
+    get(target, name, _receiver) {
+      if (name === 'then') return;
+      return (target[name] ??= ReactServer.registerClientReference(
+        () => {
+          throw new Error("client reference shouldn't be called on server");
+        },
+        id,
+        name,
+      ));
+    },
+  });
 }
 
 export async function importSsr<T>(): Promise<T> {
@@ -85,14 +79,14 @@ export async function Resources({nonce}: {nonce?: string}) {
 }
 
 export function serialize<T>(original: T): ReadableStream<Uint8Array> {
-  return ReactServer.renderToReadableStream(original, {
-    clientManifest,
-    serverManifest,
-  });
+  return ReactServer.renderToReadableStream(original);
 }
 
 export function deserialize<T>(
   serialized: ReadableStream<Uint8Array>,
 ): Promise<T> {
-  return ReactClient.createFromReadableStream(serialized, {serverManifest});
+  return ReactClient.createFromReadableStream(serialized, {
+    clientManifest,
+    serverManifest,
+  });
 }

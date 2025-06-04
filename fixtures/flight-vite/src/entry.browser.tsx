@@ -7,11 +7,8 @@ import type {RscPayload} from './entry.rsc';
 import {
   clientManifest,
   findSourceMapURL,
-  loadModule,
   setCallServer,
 } from '../basic/browser';
-
-ReactClient.setPreloadModule(loadModule);
 
 async function main() {
   const callServer = async (id: string, args: unknown) => {

@@ -35,10 +35,7 @@ import type {TemporaryReferenceSet} from 'react-client/src/ReactFlightTemporaryR
 export {createTemporaryReferenceSet} from 'react-client/src/ReactFlightTemporaryReferences';
 export type {TemporaryReferenceSet};
 
-import type {
-  ServerManifest,
-  ServerConsumerModuleMap,
-} from '../client/ReactFlightClientConfigBundlerVite';
+import type {ServerConsumerModuleMap} from '../client/ReactFlightClientConfigBundlerVite';
 export {setPreloadModule} from '../client/ReactFlightClientConfigBundlerVite';
 
 function startReadingFromStream(
@@ -71,8 +68,7 @@ function startReadingFromStream(
 type CallServerCallback = <A, T>(string, args: A) => Promise<T>;
 
 export type Options = {
-  clientManifest?: ServerConsumerModuleMap,
-  serverManifest?: ServerManifest,
+  clientManifest: ServerConsumerModuleMap,
   callServer?: CallServerCallback,
   temporaryReferences?: TemporaryReferenceSet,
   findSourceMapURL?: FindSourceMapURLCallback,
@@ -82,11 +78,11 @@ export type Options = {
 
 export function createFromReadableStream<T>(
   stream: ReadableStream,
-  options?: Options,
+  options: Options,
 ): Thenable<T> {
   const response: FlightResponse = createResponse(
-    null, // bundlerConfig
-    null, // serverReferenceConfig
+    options.clientManifest,
+    null,
     null, // moduleLoading
     options && options.callServer ? options.callServer : undefined,
     undefined, // encodeFormAction
@@ -108,10 +104,10 @@ export function createFromReadableStream<T>(
 
 export function createFromFetch<T>(
   promiseForResponse: Promise<Response>,
-  options?: Options,
+  options: Options,
 ): Thenable<T> {
   const response: FlightResponse = createResponse(
-    null, // bundlerConfig
+    options.clientManifest,
     null, // serverReferenceConfig
     null, // moduleLoading
     options && options.callServer ? options.callServer : undefined,
