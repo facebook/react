@@ -5,7 +5,7 @@ import * as ReactClient from 'react-server-dom-vite/client.edge';
 import type React from 'react';
 import type {ReactFormState} from 'react-dom/client';
 import {Root} from './routes/root';
-import {importSsr, loadModule, loadModuleClient, Resources} from '../basic/rsc';
+import {importSsr, loadModule, loadModuleClient, Resources, serverManifest} from '../basic/rsc';
 
 ReactServer.setPreloadModule(loadModule);
 ReactClient.setPreloadModule(loadModuleClient);
@@ -58,15 +58,15 @@ async function renderRsc(
         ? await request.formData()
         : await request.text();
       temporaryReferences = ReactServer.createTemporaryReferenceSet();
-      const args = await ReactServer.decodeReply(body, {temporaryReferences});
-      const action = await ReactServer.loadServerAction(actionId);
+      const args = await ReactServer.decodeReply(body, serverManifest, {temporaryReferences});
+      const action = await ReactServer.loadServerAction(actionId, serverManifest);
       returnValue = await action.apply(null, args);
     } else {
       // progressive enhancement
       const formData = await request.formData();
-      const decodedAction = await ReactServer.decodeAction(formData);
+      const decodedAction = await ReactServer.decodeAction(formData, serverManifest);
       const result = await decodedAction();
-      formState = await ReactServer.decodeFormState(result, formData);
+      formState = await ReactServer.decodeFormState(result, formData, serverManifest);
     }
   }
 

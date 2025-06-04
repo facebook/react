@@ -14,6 +14,7 @@ import {
   requireModule,
   resolveServerReference,
   type ServerReferenceId,
+  type ServerManifest,
 } from '../client/ReactFlightClientConfigBundlerVite';
 
 import {
@@ -162,10 +163,9 @@ export function prerender(
   });
 }
 
-const serverManifest = null;
-
 export function decodeReply<T>(
   body: string | FormData,
+  serverManifest: ServerManifest,
   options?: {temporaryReferences?: TemporaryReferenceSet},
 ): Thenable<T> {
   if (typeof body === 'string') {
@@ -184,18 +184,25 @@ export function decodeReply<T>(
   return root;
 }
 
-export function decodeAction<T>(body: FormData): Promise<() => T> | null {
+export function decodeAction<T>(
+  body: FormData,
+  serverManifest: ServerManifest,
+): Promise<() => T> | null {
   return decodeActionImpl(body, serverManifest);
 }
 
 export function decodeFormState<S>(
   actionResult: S,
   body: FormData,
+  serverManifest: ServerManifest,
 ): Promise<ReactFormState<S, ServerReferenceId> | null> {
   return decodeFormStateImpl(actionResult, body, serverManifest);
 }
 
-export function loadServerAction<F: (...any[]) => any>(id: string): Promise<F> {
+export function loadServerAction<F: (...any[]) => any>(
+  id: string,
+  serverManifest: ServerManifest,
+): Promise<F> {
   const reference = resolveServerReference<any>(serverManifest, id);
   return Promise.resolve(reference)
     .then(() => preloadModule(reference))

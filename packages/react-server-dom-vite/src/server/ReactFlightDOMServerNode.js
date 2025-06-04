@@ -15,7 +15,10 @@ import type {Destination} from 'react-server/src/ReactServerStreamConfigNode';
 import type {Busboy} from 'busboy';
 import type {Writable} from 'stream';
 import type {ReactFormState, Thenable} from 'shared/ReactTypes';
-import type {ServerReferenceId} from '../client/ReactFlightClientConfigBundlerVite';
+import type {
+  ServerReferenceId,
+  ServerManifest,
+} from '../client/ReactFlightClientConfigBundlerVite';
 
 import {Readable} from 'stream';
 import {
@@ -204,10 +207,9 @@ export function prerenderToNodeStream(
   });
 }
 
-const serverManifest = null;
-
 export function decodeReplyFromBusboy<T>(
   busboyStream: Busboy,
+  serverManifest: ServerManifest,
   options?: {temporaryReferences?: TemporaryReferenceSet},
 ): Thenable<T> {
   const response = createResponse(
@@ -267,6 +269,7 @@ export function decodeReplyFromBusboy<T>(
 
 export function decodeReply<T>(
   body: string | FormData,
+  serverManifest: ServerManifest,
   options?: {temporaryReferences?: TemporaryReferenceSet},
 ): Thenable<T> {
   if (typeof body === 'string') {
@@ -285,18 +288,25 @@ export function decodeReply<T>(
   return root;
 }
 
-export function decodeAction<T>(body: FormData): Promise<() => T> | null {
+export function decodeAction<T>(
+  body: FormData,
+  serverManifest: ServerManifest,
+): Promise<() => T> | null {
   return decodeActionImpl(body, serverManifest);
 }
 
 export function decodeFormState<S>(
   actionResult: S,
   body: FormData,
+  serverManifest: ServerManifest,
 ): Promise<ReactFormState<S, ServerReferenceId> | null> {
   return decodeFormStateImpl(actionResult, body, serverManifest);
 }
 
-export function loadServerAction<F: (...any[]) => any>(id: string): Promise<F> {
+export function loadServerAction<F: (...any[]) => any>(
+  id: string,
+  serverManifest: ServerManifest,
+): Promise<F> {
   const reference = resolveServerReference<any>(serverManifest, id);
   return Promise.resolve(reference)
     .then(() => preloadModule(reference))

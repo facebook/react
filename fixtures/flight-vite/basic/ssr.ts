@@ -8,6 +8,8 @@ import type {AssetDeps} from './plugin';
 
 export {assetsManifest};
 
+export const clientManifest = {};
+
 export async function loadModule(id: string) {
   id = id.slice('client:'.length);
   if (import.meta.env.DEV) {

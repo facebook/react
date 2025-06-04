@@ -1,6 +1,8 @@
 // @ts-ignore
 import clientReferences from 'virtual:vite-rsc/client-references';
 
+export const clientManifest = {};
+
 export function loadModule(id: string) {
   id = id.slice('client:'.length);
   if (import.meta.env.DEV) {

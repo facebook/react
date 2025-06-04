@@ -35,6 +35,10 @@ import type {TemporaryReferenceSet} from 'react-client/src/ReactFlightTemporaryR
 export {createTemporaryReferenceSet} from 'react-client/src/ReactFlightTemporaryReferences';
 export type {TemporaryReferenceSet};
 
+import type {
+  ServerManifest,
+  ServerConsumerModuleMap,
+} from '../client/ReactFlightClientConfigBundlerVite';
 export {setPreloadModule} from '../client/ReactFlightClientConfigBundlerVite';
 
 function startReadingFromStream(
@@ -67,6 +71,8 @@ function startReadingFromStream(
 type CallServerCallback = <A, T>(string, args: A) => Promise<T>;
 
 export type Options = {
+  clientManifest?: ServerConsumerModuleMap,
+  serverManifest?: ServerManifest,
   callServer?: CallServerCallback,
   temporaryReferences?: TemporaryReferenceSet,
   findSourceMapURL?: FindSourceMapURLCallback,

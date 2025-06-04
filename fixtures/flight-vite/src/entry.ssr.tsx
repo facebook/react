@@ -7,7 +7,7 @@ import * as ReactDomServer from 'react-dom/server.edge';
 import {injectRSCPayload} from 'rsc-html-stream/server';
 import type {RscPayload} from './entry.rsc';
 
-import {assetsManifest, loadModule} from '../basic/ssr';
+import {assetsManifest, clientManifest, loadModule} from '../basic/ssr';
 
 ReactClient.setPreloadModule(loadModule);
 
@@ -27,6 +27,7 @@ export async function renderHtml({
   let payload: Promise<RscPayload>;
   function SsrRoot() {
     payload ??= ReactClient.createFromReadableStream<RscPayload>(stream1, {
+      clientManifest,
       nonce,
     });
     return React.use(payload).root;

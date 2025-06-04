@@ -4,7 +4,12 @@ import React from 'react';
 import ReactDomClient from 'react-dom/client';
 import {rscStream} from 'rsc-html-stream/client';
 import type {RscPayload} from './entry.rsc';
-import {findSourceMapURL, loadModule, setCallServer} from '../basic/browser';
+import {
+  clientManifest,
+  findSourceMapURL,
+  loadModule,
+  setCallServer,
+} from '../basic/browser';
 
 ReactClient.setPreloadModule(loadModule);
 
@@ -25,7 +30,7 @@ async function main() {
     return payload.returnValue;
   };
   setCallServer(callServer);
-  const rscOptions = {callServer, findSourceMapURL};
+  const rscOptions = {callServer, findSourceMapURL, clientManifest};
 
   let setPayload: (v: RscPayload) => void;
   const initialPayload: RscPayload = await ReactClient.createFromReadableStream(

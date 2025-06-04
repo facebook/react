@@ -35,6 +35,10 @@ import type {TemporaryReferenceSet} from 'react-client/src/ReactFlightTemporaryR
 export {createTemporaryReferenceSet} from 'react-client/src/ReactFlightTemporaryReferences';
 export type {TemporaryReferenceSet};
 
+import type {
+  ServerConsumerModuleMap,
+  ServerManifest,
+} from '../client/ReactFlightClientConfigBundlerVite';
 export {setPreloadModule} from '../client/ReactFlightClientConfigBundlerVite';
 
 function noServerCall() {
@@ -56,12 +60,9 @@ type EncodeFormActionCallback = <A>(
   args: Promise<A>,
 ) => ReactCustomFormAction;
 
-type ServerConsumerManifest = {
-  serverModuleMap?: {},
-};
-
 export type Options = {
-  serverConsumerManifest?: ServerConsumerManifest,
+  clientManifest?: ServerConsumerModuleMap,
+  serverManifest?: ServerManifest,
   nonce?: string,
   encodeFormAction?: EncodeFormActionCallback,
   temporaryReferences?: TemporaryReferenceSet,
@@ -72,12 +73,8 @@ export type Options = {
 
 function createResponseFromOptions(options?: Options) {
   return createResponse(
-    null,
-    options &&
-      options.serverConsumerManifest &&
-      options.serverConsumerManifest.serverModuleMap
-      ? options.serverConsumerManifest.serverModuleMap
-      : null,
+    options && options.clientManifest,
+    options && options.serverManifest,
     null,
     noServerCall,
     options ? options.encodeFormAction : undefined,

@@ -9,6 +9,9 @@ import * as ReactClient from 'react-server-dom-vite/client.edge';
 
 export {assetsManifest};
 
+export const serverManifest = {};
+export const clientManifest = {};
+
 export function loadModule(id: string) {
   id = id.slice('server:'.length);
   if (import.meta.env.DEV) {
@@ -82,16 +85,14 @@ export async function Resources({nonce}: {nonce?: string}) {
 }
 
 export function serialize<T>(original: T): ReadableStream<Uint8Array> {
-  return ReactServer.renderToReadableStream(original);
+  return ReactServer.renderToReadableStream(original, {
+    clientManifest,
+    serverManifest,
+  });
 }
 
 export function deserialize<T>(
   serialized: ReadableStream<Uint8Array>,
 ): Promise<T> {
-  return ReactClient.createFromReadableStream(serialized, {
-    serverConsumerManifest: {
-      // non-null `serverModuleMap` to tell react flight client to restore original server references.
-      serverModuleMap: {},
-    },
-  });
+  return ReactClient.createFromReadableStream(serialized, {serverManifest});
 }
