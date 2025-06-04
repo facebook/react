@@ -5,15 +5,11 @@ import {TestSerializationClient} from './client';
 import * as ReactServer from 'react-server-dom-vite/server.edge';
 // @ts-ignore
 import * as ReactClient from 'react-server-dom-vite/client.edge';
+import {deserialize, serialize} from '../../../basic/rsc';
 
 export function TestSerializationServer() {
   const original = <TestSerializationClient action={testSerializationAction} />;
-  const serialized = ReactServer.renderToReadableStream(original);
-  const deserialized = ReactClient.createFromReadableStream(serialized, {
-    serverConsumerManifest: {
-      // non-null `serverModuleMap` is enough to make react flight restore original server references.
-      serverModuleMap: {},
-    },
-  });
+  const serialized = serialize(original);
+  const deserialized = deserialize<typeof original>(serialized);
   return <div>test-serialization:{deserialized}</div>;
 }

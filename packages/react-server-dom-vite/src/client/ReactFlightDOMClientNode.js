@@ -23,7 +23,6 @@ import {
 } from 'react-client/src/ReactFlightClient';
 
 import {createServerReference as createServerReferenceImpl} from 'react-client/src/ReactFlightReplyClient';
-import type {ModuleLoading} from './ReactFlightClientConfigBundlerVite';
 
 export {registerServerReference} from 'react-client/src/ReactFlightReplyClient';
 
@@ -48,8 +47,12 @@ type EncodeFormActionCallback = <A>(
   args: Promise<A>,
 ) => ReactCustomFormAction;
 
+type ServerConsumerManifest = {
+  serverModuleMap?: {},
+};
+
 export type Options = {
-  moduleLoading?: ModuleLoading,
+  serverConsumerManifest?: ServerConsumerManifest,
   nonce?: string,
   encodeFormAction?: EncodeFormActionCallback,
   findSourceMapURL?: FindSourceMapURLCallback,
@@ -62,9 +65,13 @@ export function createFromNodeStream<T>(
   options?: Options,
 ): Thenable<T> {
   const response: Response = createResponse(
-    null, // bundlerConfig
-    null, // serverReferenceConfig
-    options && options.moduleLoading ? options.moduleLoading : null,
+    null,
+    options &&
+      options.serverConsumerManifest &&
+      options.serverConsumerManifest.serverModuleMap
+      ? options.serverConsumerManifest.serverModuleMap
+      : null,
+    null,
     noServerCall,
     options ? options.encodeFormAction : undefined,
     options && typeof options.nonce === 'string' ? options.nonce : undefined,

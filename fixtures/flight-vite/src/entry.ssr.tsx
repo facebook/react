@@ -27,7 +27,6 @@ export async function renderHtml({
   let payload: Promise<RscPayload>;
   function SsrRoot() {
     payload ??= ReactClient.createFromReadableStream<RscPayload>(stream1, {
-      serverConsumerManifest: {},
       nonce,
     });
     return React.use(payload).root;

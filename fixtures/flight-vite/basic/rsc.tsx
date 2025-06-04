@@ -2,6 +2,10 @@
 import serverReferences from 'virtual:vite-rsc/server-references';
 // @ts-ignore
 import assetsManifest from 'virtual:vite-rsc/assets-manifest';
+// @ts-ignore
+import * as ReactServer from 'react-server-dom-vite/server.edge';
+// @ts-ignore
+import * as ReactClient from 'react-server-dom-vite/client.edge';
 
 export {assetsManifest};
 
@@ -13,9 +17,6 @@ export function loadModule(id: string) {
     return serverReferences[id]();
   }
 }
-
-// @ts-ignore
-import * as ReactServer from 'react-server-dom-vite/server.edge';
 
 export function loadModuleClient(id: string) {
   if (id.startsWith('client:')) {
@@ -78,4 +79,19 @@ export async function Resources({nonce}: {nonce?: string}) {
       {viteCsp}
     </>
   );
+}
+
+export function serialize<T>(original: T): ReadableStream<Uint8Array> {
+  return ReactServer.renderToReadableStream(original);
+}
+
+export function deserialize<T>(
+  serialized: ReadableStream<Uint8Array>,
+): Promise<T> {
+  return ReactClient.createFromReadableStream(serialized, {
+    serverConsumerManifest: {
+      // non-null `serverModuleMap` to tell react flight client to restore original server references.
+      serverModuleMap: {},
+    },
+  });
 }
