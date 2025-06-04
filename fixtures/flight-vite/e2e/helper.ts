@@ -10,7 +10,7 @@ export async function waitForHydration(page: Page) {
   await expect(page.getByTestId('hydrated')).toHaveText('[hydrated: 1]');
 }
 
-export async function createReloadChecker(page: Page) {
+export async function expectNoReload(page: Page) {
   // inject custom meta
   await page.evaluate(() => {
     const el = document.createElement('meta');
@@ -23,6 +23,9 @@ export async function createReloadChecker(page: Page) {
       // check if meta is preserved
       await expect(page.locator(`meta[name="x-reload-check"]`)).toBeAttached({
         timeout: 1,
+      });
+      await page.evaluate(() => {
+        document.querySelector(`meta[name="x-reload-check"]`)!.remove();
       });
     },
   };

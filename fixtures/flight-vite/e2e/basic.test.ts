@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import {type Page, expect, test} from '@playwright/test';
 import {
   createEditor,
-  createReloadChecker,
+  expectNoReload,
   testNoJs,
   waitForHydration,
 } from './helper';
@@ -22,7 +22,7 @@ test('client component', async ({page}) => {
 test('server action @js', async ({page}) => {
   await page.goto('./');
   await waitForHydration(page);
-  await using _ = await createReloadChecker(page);
+  await using _ = await expectNoReload(page);
   await testAction(page);
 });
 
@@ -78,25 +78,19 @@ test('client hmr @dev', async ({page}) => {
 test('server hmr @dev', async ({page}) => {
   await page.goto('./');
   await waitForHydration(page);
-  await page.getByRole('button', {name: 'Client Counter: 0'}).click();
-  await expect(
-    page.getByRole('button', {name: 'Client Counter: 1'}),
-  ).toBeVisible();
+  await using _ = await expectNoReload(page);
 
   using editor = createEditor('src/routes/root.tsx');
   editor.edit(s => s.replace('Server Counter', 'Server [edit] Counter'));
   await expect(
     page.getByRole('button', {name: 'Server [edit] Counter: 0'}),
   ).toBeVisible();
-  await expect(
-    page.getByRole('button', {name: 'Client Counter: 1'}),
-  ).toBeVisible();
 });
 
 test('useActionState @js', async ({page}) => {
   await page.goto('./');
   await waitForHydration(page);
-  await using _ = await createReloadChecker(page);
+  await using _ = await expectNoReload(page);
   await testUseActionState(page);
 });
 
@@ -151,7 +145,7 @@ testNoJs('css client @nojs', async ({page}) => {
 test('css client hmr @dev', async ({page}) => {
   await page.goto('./');
   await waitForHydration(page);
-  await using _ = await createReloadChecker(page);
+  await using _ = await expectNoReload(page);
   using editor = createEditor('src/routes/client.css');
   editor.edit(s => s.replaceAll('rgb(250, 150, 0)', 'rgb(150, 250, 0)'));
   await expect(page.locator('.test-style-client')).toHaveCSS(
@@ -180,7 +174,7 @@ testNoJs('css server @nojs', async ({page}) => {
 test('css server hmr @dev', async ({page}) => {
   await page.goto('./');
   await waitForHydration(page);
-  await using _ = await createReloadChecker(page);
+  await using _ = await expectNoReload(page);
   using editor = createEditor('src/routes/root.css');
   editor.edit(s => s.replaceAll('rgb(0, 200, 100)', 'rgb(0, 100, 200)'));
   await expect(page.locator('.test-style-server')).toHaveCSS(
