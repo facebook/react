@@ -42,6 +42,8 @@ import {
   decodeFormState as decodeFormStateImpl,
 } from 'react-server/src/ReactFlightActionServer';
 
+import type {ClientManifest} from './ReactFlightServerConfigViteBundler';
+
 export {
   registerClientReference,
   registerServerReference,
@@ -64,11 +66,12 @@ type Options = {
 
 export function renderToReadableStream(
   model: ReactClientValue,
+  clientManifest: ClientManifest,
   options?: Options,
 ): ReadableStream {
   const request = createRequest(
     model,
-    null,
+    clientManifest,
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.onPostpone : undefined,
@@ -114,6 +117,7 @@ type StaticResult = {
 
 export function prerender(
   model: ReactClientValue,
+  clientManifest: ClientManifest,
   options?: Options,
 ): Promise<StaticResult> {
   return new Promise((resolve, reject) => {
@@ -140,7 +144,7 @@ export function prerender(
     }
     const request = createPrerenderRequest(
       model,
-      null,
+      clientManifest,
       onAllReady,
       onFatalError,
       options ? options.onError : undefined,

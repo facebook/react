@@ -17,7 +17,9 @@ import type {
 
 export type {ClientReference, ServerReference};
 
-export type ClientManifest = null;
+// allow arbitrary ref mapping on flight server serialization side
+// (though this is not used by fixtures/flight-vite)
+export type ClientManifest = {[ref: string]: {id: string, name: string}};
 export type ServerReferenceId = string;
 export type ClientReferenceMetadata = ImportMetadata;
 export type ClientReferenceKey = string;
@@ -38,6 +40,10 @@ export function resolveClientReferenceMetadata<T>(
   clientReference: ClientReference<T>,
 ): ClientReferenceMetadata {
   const ref = clientReference.$$id;
+  const resolved = config[ref];
+  if (resolved) {
+    return [resolved.id, resolved.name];
+  }
   const idx = ref.lastIndexOf('#');
   const id = ref.slice(0, idx);
   const name = ref.slice(idx + 1);

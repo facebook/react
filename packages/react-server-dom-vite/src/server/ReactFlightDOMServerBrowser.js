@@ -47,6 +47,8 @@ import type {TemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemp
 export {createTemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
 export type {TemporaryReferenceSet};
 
+import type {ClientManifest} from './ReactFlightServerConfigViteBundler';
+
 type Options = {
   environmentName?: string | (() => string),
   filterStackFrame?: (url: string, functionName: string) => boolean,
@@ -59,11 +61,12 @@ type Options = {
 
 export function renderToReadableStream(
   model: ReactClientValue,
+  clientManifest: ClientManifest,
   options?: Options,
 ): ReadableStream {
   const request = createRequest(
     model,
-    null,
+    clientManifest,
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.onPostpone : undefined,
@@ -109,6 +112,7 @@ type StaticResult = {
 
 export function prerender(
   model: ReactClientValue,
+  clientManifest: ClientManifest,
   options?: Options,
 ): Promise<StaticResult> {
   return new Promise((resolve, reject) => {
@@ -135,7 +139,7 @@ export function prerender(
     }
     const request = createPrerenderRequest(
       model,
-      null,
+      clientManifest,
       onAllReady,
       onFatalError,
       options ? options.onError : undefined,

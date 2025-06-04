@@ -17,13 +17,13 @@ import type {ImportMetadata} from '../shared/ReactFlightImportMetadata';
 
 import {ID, NAME} from '../shared/ReactFlightImportMetadata';
 
-export type ClientManifest = null;
 export type ServerManifest = BundlerConfig;
 export type SSRModuleMap = null;
 export type ModuleLoading = null;
 export type ServerConsumerModuleMap = BundlerConfig;
 export type ServerReferenceId = string;
 
+// flight client module loading implemented on user land
 type BundlerConfig = {
   load: (id: string) => Promise<any>,
 };

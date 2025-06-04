@@ -79,7 +79,7 @@ export async function Resources({nonce}: {nonce?: string}) {
 }
 
 export function serialize<T>(original: T): ReadableStream<Uint8Array> {
-  return ReactServer.renderToReadableStream(original);
+  return ReactServer.renderToReadableStream(original, {});
 }
 
 export function deserialize<T>(

@@ -50,6 +50,7 @@ import {
   requireModule,
   resolveServerReference,
 } from '../client/ReactFlightClientConfigBundlerVite';
+import type {ClientManifest} from './ReactFlightServerConfigViteBundler';
 
 export {
   registerClientReference,
@@ -88,11 +89,12 @@ type PipeableStream = {
 
 export function renderToPipeableStream(
   model: ReactClientValue,
+  clientManifest: ClientManifest,
   options?: Options,
 ): PipeableStream {
   const request = createRequest(
     model,
-    null,
+    clientManifest,
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.onPostpone : undefined,
@@ -163,6 +165,7 @@ type StaticResult = {
 
 export function prerenderToNodeStream(
   model: ReactClientValue,
+  clientManifest: ClientManifest,
   options?: PrerenderOptions,
 ): Promise<StaticResult> {
   return new Promise((resolve, reject) => {
@@ -179,7 +182,7 @@ export function prerenderToNodeStream(
 
     const request = createPrerenderRequest(
       model,
-      null,
+      clientManifest,
       onAllReady,
       onFatalError,
       options ? options.onError : undefined,

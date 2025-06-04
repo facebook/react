@@ -79,7 +79,7 @@ async function renderRsc(
 
   const rscPayload: RscPayload = {root, formState, returnValue};
   const rscOptions = {temporaryReferences, nonce: options.nonce};
-  const stream = ReactServer.renderToReadableStream(rscPayload, rscOptions);
+  const stream = ReactServer.renderToReadableStream(rscPayload, {}, rscOptions);
 
   if (isRscRequest) {
     return new Response(stream, {
