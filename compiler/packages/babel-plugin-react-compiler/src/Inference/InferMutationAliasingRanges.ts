@@ -28,12 +28,13 @@ import {printIdentifier, printPlace} from '../HIR/PrintHIR';
 import {MutationKind} from './InferMutationAliasingFunctionEffects';
 
 const DEBUG = false;
+const VERBOSE = false;
 
 /**
  * Infers mutable ranges for all values.
  */
 export function inferMutationAliasingRanges(fn: HIRFunction): void {
-  if (DEBUG) {
+  if (VERBOSE) {
     console.log();
     console.log();
     console.log();
@@ -81,7 +82,7 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
   const seenBlocks = new Set<BlockId>();
   for (const block of fn.body.blocks.values()) {
     for (const phi of block.phis) {
-      state.create(phi.place);
+      state.create(phi.place, true);
       for (const [pred, operand] of phi.operands) {
         if (!seenBlocks.has(pred)) {
           // NOTE: annotation required to actually typecheck and not silently infer `any`
@@ -172,7 +173,7 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
     }
   }
 
-  if (DEBUG) {
+  if (VERBOSE) {
     console.log(state.debug());
     console.log(pretty(mutations));
   }
@@ -185,7 +186,7 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
       mutation.kind,
     );
   }
-  if (DEBUG) {
+  if (VERBOSE) {
     console.log(state.debug());
   }
   fn.aliasingEffects ??= [];
@@ -364,7 +365,7 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
     }
   }
 
-  if (DEBUG) {
+  if (VERBOSE) {
     console.log(printFunction(fn));
   }
 }
@@ -377,11 +378,12 @@ type Node = {
   edges: Array<{index: number; node: Identifier; kind: 'capture' | 'alias'}>;
   transitive: MutationKind;
   local: MutationKind;
+  phi: boolean;
 };
 class AliasingState {
   nodes: Map<Identifier, Node> = new Map();
 
-  create(place: Place): void {
+  create(place: Place, phi: boolean = false): void {
     this.nodes.set(place.identifier, {
       id: place.identifier,
       createdFrom: new Map(),
@@ -390,6 +392,7 @@ class AliasingState {
       edges: [],
       transitive: MutationKind.None,
       local: MutationKind.None,
+      phi,
     });
   }
 
@@ -398,7 +401,7 @@ class AliasingState {
     const fromNode = this.nodes.get(from.identifier);
     const toNode = this.nodes.get(into.identifier);
     if (fromNode == null || toNode == null) {
-      if (DEBUG) {
+      if (VERBOSE) {
         console.log(
           `skip: createFrom ${printPlace(from)}${!!fromNode} -> ${printPlace(into)}${!!toNode}`,
         );
@@ -415,7 +418,7 @@ class AliasingState {
     const fromNode = this.nodes.get(from.identifier);
     const toNode = this.nodes.get(into.identifier);
     if (fromNode == null || toNode == null) {
-      if (DEBUG) {
+      if (VERBOSE) {
         console.log(
           `skip: capture ${printPlace(from)}${!!fromNode} -> ${printPlace(into)}${!!toNode}`,
         );
@@ -432,7 +435,7 @@ class AliasingState {
     const fromNode = this.nodes.get(from.identifier);
     const toNode = this.nodes.get(into.identifier);
     if (fromNode == null || toNode == null) {
-      if (DEBUG) {
+      if (VERBOSE) {
         console.log(
           `skip: assign ${printPlace(from)}${!!fromNode} -> ${printPlace(into)}${!!toNode}`,
         );
@@ -453,9 +456,13 @@ class AliasingState {
     kind: MutationKind,
   ): void {
     const seen = new Set<Identifier>();
-    const queue = [{place: start, transitive}];
+    const queue: Array<{
+      place: Identifier;
+      transitive: boolean;
+      direction: 'backwards' | 'forwards';
+    }> = [{place: start, transitive, direction: 'backwards'}];
     while (queue.length !== 0) {
-      const {place: current, transitive} = queue.pop()!;
+      const {place: current, transitive, direction} = queue.pop()!;
       if (seen.has(current)) {
         continue;
       }
@@ -471,7 +478,7 @@ class AliasingState {
       }
       if (DEBUG) {
         console.log(
-          `mutate $${node.id.id} via ${printIdentifier(start)} at [${end}]`,
+          `[${end}] mutate index=${index} ${printIdentifier(start)}: ${printIdentifier(node.id)}`,
         );
       }
       node.id.mutableRange.end = makeInstructionId(
@@ -491,24 +498,31 @@ class AliasingState {
         if (edge.index >= index) {
           break;
         }
-        queue.push({place: edge.node, transitive});
+        queue.push({place: edge.node, transitive, direction: 'forwards'});
       }
       for (const [alias, when] of node.createdFrom) {
         if (when >= index) {
           continue;
         }
-        queue.push({place: alias, transitive: true});
+        queue.push({place: alias, transitive: true, direction: 'backwards'});
       }
-      /**
-       * all mutations affect backward alias edges by the rules:
-       * - Alias a -> b, mutate(b) => mutate(a)
-       * - Alias a -> b, mutateTransitive(b) => mutate(a)
-       */
-      for (const [alias, when] of node.aliases) {
-        if (when >= index) {
-          continue;
+      if (direction === 'backwards' || !node.phi) {
+        /**
+         * all mutations affect backward alias edges by the rules:
+         * - Alias a -> b, mutate(b) => mutate(a)
+         * - Alias a -> b, mutateTransitive(b) => mutate(a)
+         *
+         * However, if we reached a phi because one of its inputs was mutated
+         * (and we're advancing "forwards" through that node's edges), then
+         * we know we've already processed the mutation at its source. The
+         * phi's other inputs can't be affected.
+         */
+        for (const [alias, when] of node.aliases) {
+          if (when >= index) {
+            continue;
+          }
+          queue.push({place: alias, transitive, direction: 'backwards'});
         }
-        queue.push({place: alias, transitive});
       }
       /**
        * but only transitive mutations affect captures
@@ -518,9 +532,17 @@ class AliasingState {
           if (when >= index) {
             continue;
           }
-          queue.push({place: capture, transitive});
+          queue.push({place: capture, transitive, direction: 'backwards'});
         }
       }
+    }
+    if (DEBUG) {
+      const nodes = new Map();
+      for (const id of seen) {
+        const node = this.nodes.get(id);
+        nodes.set(id.id, node);
+      }
+      console.log(pretty(nodes));
     }
   }
 
