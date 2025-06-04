@@ -20,6 +20,10 @@ export function inferMutationAliasingFunctionEffects(
    */
   const tracked = new Map<IdentifierId, Place>();
   tracked.set(fn.returns.identifier.id, fn.returns);
+  for (const operand of [...fn.context, ...fn.params]) {
+    const place = operand.kind === 'Identifier' ? operand : operand.place;
+    tracked.set(place.identifier.id, place);
+  }
 
   /**
    * Track capturing/aliasing of context vars and params into each other and into the return.
@@ -96,6 +100,13 @@ export function inferMutationAliasingFunctionEffects(
             }
           }
         } else if (
+          effect.kind === 'Create' ||
+          effect.kind === 'CreateFunction'
+        ) {
+          getOrInsertDefault(dataFlow, effect.into.identifier.id, [
+            {kind: 'Alias', place: effect.into},
+          ]);
+        } else if (
           effect.kind === 'MutateFrozen' ||
           effect.kind === 'MutateGlobal'
         ) {
@@ -121,6 +132,12 @@ export function inferMutationAliasingFunctionEffects(
       continue;
     }
     for (const aliased of from) {
+      if (
+        aliased.place.identifier.id === input.identifier.id ||
+        !tracked.has(aliased.place.identifier.id)
+      ) {
+        continue;
+      }
       const effect = {kind: aliased.kind, from: aliased.place, into: input};
       effects.push(effect);
       if (
@@ -133,7 +150,7 @@ export function inferMutationAliasingFunctionEffects(
   }
   // TODO: more precise return effect inference
   if (!hasReturn) {
-    effects.push({
+    effects.unshift({
       kind: 'Create',
       into: fn.returns,
       value:
@@ -143,6 +160,9 @@ export function inferMutationAliasingFunctionEffects(
     });
   }
 
+  // console.log(pretty(tracked));
+  // console.log(pretty(dataFlow));
+  // console.log('FunctionEffects', effects.map(printAliasingEffect).join('\n'));
   return effects;
 }
 

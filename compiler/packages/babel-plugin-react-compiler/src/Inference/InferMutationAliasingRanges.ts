@@ -107,11 +107,9 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
       for (const effect of instr.effects) {
         if (effect.kind === 'Create' || effect.kind === 'CreateFunction') {
           state.create(effect.into);
-        } else if (
-          effect.kind === 'Assign' ||
-          effect.kind === 'Alias' ||
-          effect.kind === 'CreateFrom'
-        ) {
+        } else if (effect.kind === 'CreateFrom') {
+          state.createFrom(index++, effect.from, effect.into);
+        } else if (effect.kind === 'Assign' || effect.kind === 'Alias') {
           state.assign(index++, effect.from, effect.into);
         } else if (effect.kind === 'Capture') {
           state.capture(index++, effect.from, effect.into);
@@ -181,7 +179,7 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
   for (const mutation of mutations) {
     state.mutate(
       mutation.index,
-      mutation.place,
+      mutation.place.identifier,
       makeInstructionId(mutation.id + 1),
       mutation.transitive,
       mutation.kind,
@@ -191,8 +189,9 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
     console.log(state.debug());
   }
   fn.aliasingEffects ??= [];
-  for (const param of fn.context) {
-    const node = state.nodes.get(param.identifier);
+  for (const param of [...fn.context, ...fn.params]) {
+    const place = param.kind === 'Identifier' ? param : param.place;
+    const node = state.nodes.get(place.identifier);
     if (node == null) {
       continue;
     }
@@ -201,30 +200,30 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
       mutated = true;
       fn.aliasingEffects.push({
         kind: 'MutateConditionally',
-        value: param,
+        value: place,
       });
     } else if (node.local === MutationKind.Definite) {
       mutated = true;
       fn.aliasingEffects.push({
         kind: 'Mutate',
-        value: param,
+        value: place,
       });
     }
     if (node.transitive === MutationKind.Conditional) {
       mutated = true;
       fn.aliasingEffects.push({
         kind: 'MutateTransitiveConditionally',
-        value: param,
+        value: place,
       });
     } else if (node.transitive === MutationKind.Definite) {
       mutated = true;
       fn.aliasingEffects.push({
         kind: 'MutateTransitive',
-        value: param,
+        value: place,
       });
     }
     if (mutated) {
-      param.effect = Effect.Capture;
+      place.effect = Effect.Capture;
     }
   }
 
@@ -246,6 +245,21 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
         operand.effect = isPhiMutatedAfterCreation
           ? Effect.Capture
           : Effect.Read;
+      }
+      if (
+        isPhiMutatedAfterCreation &&
+        phi.place.identifier.mutableRange.start === 0
+      ) {
+        /*
+         * TODO: ideally we'd construct a precise start range, but what really
+         * matters is that the phi's range appears mutable (end > start + 1)
+         * so we just set the start to the previous instruction before this block
+         */
+        const firstInstructionIdOfBlock =
+          block.instructions.at(0)?.id ?? block.terminal.id;
+        phi.place.identifier.mutableRange.start = makeInstructionId(
+          firstInstructionIdOfBlock - 1,
+        );
       }
     }
     for (const instr of block.instructions) {
@@ -357,6 +371,7 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
 
 type Node = {
   id: Identifier;
+  createdFrom: Map<Identifier, number>;
   captures: Map<Identifier, number>;
   aliases: Map<Identifier, number>;
   edges: Array<{index: number; node: Identifier; kind: 'capture' | 'alias'}>;
@@ -369,12 +384,31 @@ class AliasingState {
   create(place: Place): void {
     this.nodes.set(place.identifier, {
       id: place.identifier,
+      createdFrom: new Map(),
       captures: new Map(),
       aliases: new Map(),
       edges: [],
       transitive: MutationKind.None,
       local: MutationKind.None,
     });
+  }
+
+  createFrom(index: number, from: Place, into: Place): void {
+    this.create(into);
+    const fromNode = this.nodes.get(from.identifier);
+    const toNode = this.nodes.get(into.identifier);
+    if (fromNode == null || toNode == null) {
+      if (DEBUG) {
+        console.log(
+          `skip: createFrom ${printPlace(from)}${!!fromNode} -> ${printPlace(into)}${!!toNode}`,
+        );
+      }
+      return;
+    }
+    fromNode.edges.push({index, node: into.identifier, kind: 'alias'});
+    if (!toNode.createdFrom.has(from.identifier)) {
+      toNode.createdFrom.set(from.identifier, index);
+    }
   }
 
   capture(index: number, from: Place, into: Place): void {
@@ -406,22 +440,22 @@ class AliasingState {
       return;
     }
     fromNode.edges.push({index, node: into.identifier, kind: 'alias'});
-    if (!toNode.captures.has(from.identifier)) {
+    if (!toNode.aliases.has(from.identifier)) {
       toNode.aliases.set(from.identifier, index);
     }
   }
 
   mutate(
     index: number,
-    start: Place,
+    start: Identifier,
     end: InstructionId,
     transitive: boolean,
     kind: MutationKind,
   ): void {
     const seen = new Set<Identifier>();
-    const queue = [start.identifier];
+    const queue = [{place: start, transitive}];
     while (queue.length !== 0) {
-      const current = queue.pop()!;
+      const {place: current, transitive} = queue.pop()!;
       if (seen.has(current)) {
         continue;
       }
@@ -430,14 +464,14 @@ class AliasingState {
       if (node == null) {
         if (DEBUG) {
           console.log(
-            `no node! ${printPlace(start)} for identifier ${printIdentifier(current)}`,
+            `no node! ${printIdentifier(start)} for identifier ${printIdentifier(current)}`,
           );
         }
         continue;
       }
       if (DEBUG) {
         console.log(
-          `mutate $${node.id.id} via ${printPlace(start)} at [${end}]`,
+          `mutate $${node.id.id} via ${printIdentifier(start)} at [${end}]`,
         );
       }
       node.id.mutableRange.end = makeInstructionId(
@@ -457,7 +491,13 @@ class AliasingState {
         if (edge.index >= index) {
           break;
         }
-        queue.push(edge.node);
+        queue.push({place: edge.node, transitive});
+      }
+      for (const [alias, when] of node.createdFrom) {
+        if (when >= index) {
+          continue;
+        }
+        queue.push({place: alias, transitive: true});
       }
       /**
        * all mutations affect backward alias edges by the rules:
@@ -468,7 +508,7 @@ class AliasingState {
         if (when >= index) {
           continue;
         }
-        queue.push(alias);
+        queue.push({place: alias, transitive});
       }
       /**
        * but only transitive mutations affect captures
@@ -478,7 +518,7 @@ class AliasingState {
           if (when >= index) {
             continue;
           }
-          queue.push(capture);
+          queue.push({place: capture, transitive});
         }
       }
     }
@@ -489,7 +529,7 @@ class AliasingState {
   }
 }
 
-function pretty(v: any): string {
+export function pretty(v: any): string {
   return prettyFormat(v, {
     plugins: [
       {
