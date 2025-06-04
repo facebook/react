@@ -22,6 +22,7 @@ import assertExhaustive from './utils/assertExhaustive';
 import {convert} from 'html-to-text';
 import {measurePerformance} from './tools/runtimePerf';
 import {parseReactComponentTree} from './tools/componentTree';
+import {captureConsoleTimeStamp} from './tools/consoleTimeStamp';
 
 function calculateMean(values: number[]): string {
   return values.length > 0
@@ -394,6 +395,46 @@ server.tool(
           {
             type: 'text' as const,
             text: componentTree,
+          },
+        ],
+      };
+    } catch (err) {
+      return {
+        isError: true,
+        content: [{type: 'text' as const, text: `Error: ${err.stack}`}],
+      };
+    }
+  },
+);
+
+server.tool(
+  'capture-react-performance-custom-tracks',
+  `
+  This tool captures data passed to console.timeStamp calls in a browser.
+  This means it will get the data that creates the 2 custom tracks in the React Performance panel in Chrome DevTools Components track and Scheduler track.
+  It connects to a browser using puppeteer, patches the console.timeStamp method to capture the data,
+  and returns the captured data back to the MCP server.
+
+  <requirements>
+  - The url should be a full url with the protocol (http:// or https://) and the domain name (e.g. localhost:3000).
+  - The user should be running a Chrome browser in debug mode on port 9222. If you receive an error message, advise the user to run
+  the following command in the terminal:
+  MacOS: "/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir=/tmp/chrome"
+  Windows: "chrome.exe --remote-debugging-port=9222 --user-data-dir=C:\temp\chrome"
+  </requirements>
+  `,
+  {
+    url: z.string().optional().default('http://localhost:3000'),
+  },
+  async ({url}) => {
+    try {
+      const capturedData = await captureConsoleTimeStamp(url);
+
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify(capturedData, null, 2),
           },
         ],
       };
