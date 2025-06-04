@@ -337,7 +337,7 @@ if (__DEV__) {
   didWarnAboutContextTypes = ({}: {[string]: boolean});
   didWarnAboutGetDerivedStateOnFunctionComponent = ({}: {[string]: boolean});
   didWarnAboutReassigningProps = false;
-  didWarnAboutRevealOrder = ({}: {[empty]: boolean});
+  didWarnAboutRevealOrder = ({}: {[string]: boolean});
   didWarnAboutTailOptions = ({}: {[string]: boolean});
   didWarnAboutDefaultPropsOnFunctionComponent = ({}: {[string]: boolean});
   didWarnAboutClassNameOnViewTransition = ({}: {[string]: boolean});
@@ -3225,19 +3225,32 @@ function findLastContentRow(firstChild: null | Fiber): null | Fiber {
 
 function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
   if (__DEV__) {
+    const cacheKey = revealOrder == null ? 'null' : revealOrder;
     if (
-      revealOrder !== undefined &&
       revealOrder !== 'forwards' &&
-      revealOrder !== 'backwards' &&
+      revealOrder !== 'unstable_legacy-backwards' &&
       revealOrder !== 'together' &&
-      !didWarnAboutRevealOrder[revealOrder]
+      revealOrder !== 'independent' &&
+      !didWarnAboutRevealOrder[cacheKey]
     ) {
-      didWarnAboutRevealOrder[revealOrder] = true;
-      if (typeof revealOrder === 'string') {
+      didWarnAboutRevealOrder[cacheKey] = true;
+      if (revealOrder == null) {
+        console.error(
+          'The default for the <SuspenseList revealOrder="..."> prop is changing. ' +
+            'To be future compatible you must explictly specify either ' +
+            '"independent" (the current default), "together", "forwards" or "legacy_unstable-backwards".',
+        );
+      } else if (revealOrder === 'backwards') {
+        console.error(
+          'The rendering order of <SuspenseList revealOrder="backwards"> is changing. ' +
+            'To be future compatible you must specify revealOrder="legacy_unstable-backwards" instead.',
+        );
+      } else if (typeof revealOrder === 'string') {
         switch (revealOrder.toLowerCase()) {
           case 'together':
           case 'forwards':
-          case 'backwards': {
+          case 'backwards':
+          case 'independent': {
             console.error(
               '"%s" is not a valid value for revealOrder on <SuspenseList />. ' +
                 'Use lowercase "%s" instead.',
@@ -3259,7 +3272,7 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
           default:
             console.error(
               '"%s" is not a supported revealOrder on <SuspenseList />. ' +
-                'Did you mean "together", "forwards" or "backwards"?',
+                'Did you mean "independent", "together", "forwards" or "backwards"?',
               revealOrder,
             );
             break;
@@ -3267,7 +3280,7 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
       } else {
         console.error(
           '%s is not a supported value for revealOrder on <SuspenseList />. ' +
-            'Did you mean "together", "forwards" or "backwards"?',
+            'Did you mean "independent", "together", "forwards" or "backwards"?',
           revealOrder,
         );
       }
@@ -3280,16 +3293,38 @@ function validateTailOptions(
   revealOrder: SuspenseListRevealOrder,
 ) {
   if (__DEV__) {
-    if (tailMode !== undefined && !didWarnAboutTailOptions[tailMode]) {
-      if (tailMode !== 'collapsed' && tailMode !== 'hidden') {
-        didWarnAboutTailOptions[tailMode] = true;
+    const cacheKey = tailMode == null ? 'null' : tailMode;
+    if (!didWarnAboutTailOptions[cacheKey]) {
+      if (tailMode == null) {
+        if (
+          revealOrder === 'forwards' ||
+          revealOrder === 'backwards' ||
+          revealOrder === 'unstable_legacy-backwards'
+        ) {
+          didWarnAboutTailOptions[cacheKey] = true;
+          console.error(
+            'The default for the <SuspenseList tail="..."> prop is changing. ' +
+              'To be future compatible you must explictly specify either ' +
+              '"visible" (the current default), "collapsed" or "hidden".',
+          );
+        }
+      } else if (
+        tailMode !== 'visible' &&
+        tailMode !== 'collapsed' &&
+        tailMode !== 'hidden'
+      ) {
+        didWarnAboutTailOptions[cacheKey] = true;
         console.error(
           '"%s" is not a supported value for tail on <SuspenseList />. ' +
-            'Did you mean "collapsed" or "hidden"?',
+            'Did you mean "visible", "collapsed" or "hidden"?',
           tailMode,
         );
-      } else if (revealOrder !== 'forwards' && revealOrder !== 'backwards') {
-        didWarnAboutTailOptions[tailMode] = true;
+      } else if (
+        revealOrder !== 'forwards' &&
+        revealOrder !== 'backwards' &&
+        revealOrder !== 'unstable_legacy-backwards'
+      ) {
+        didWarnAboutTailOptions[cacheKey] = true;
         console.error(
           '<SuspenseList tail="%s" /> is only valid if revealOrder is ' +
             '"forwards" or "backwards". ' +
@@ -3414,7 +3449,8 @@ function updateSuspenseListComponent(
         );
         break;
       }
-      case 'backwards': {
+      case 'backwards':
+      case 'unstable_legacy-backwards': {
         // We're going to find the first row that has existing content.
         // At the same time we're going to reverse the list of everything
         // we pass in the meantime. That's going to be our tail in reverse

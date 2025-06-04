@@ -33,7 +33,6 @@ export const {
   retryLaneExpirationMs,
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
-  enableFastAddPropertiesInDiffing,
   enableViewTransition,
   enableComponentPerformanceTrack,
   enableScrollEndPolyfill,
@@ -104,8 +103,6 @@ export const disableClientCache = true;
 export const enableReactTestRendererWarning = false;
 
 export const disableLegacyMode = true;
-
-export const enableShallowPropDiffing = false;
 
 export const enableEagerAlternateStateNodeCleanup = false;
 

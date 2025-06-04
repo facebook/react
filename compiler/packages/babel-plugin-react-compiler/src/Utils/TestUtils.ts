@@ -93,6 +93,21 @@ const testComplexConfigDefaults: PartialEnvironmentConfig = {
     },
   ],
 };
+
+function* splitPragma(
+  pragma: string,
+): Generator<{key: string; value: string | null}> {
+  for (const entry of pragma.split('@')) {
+    const keyVal = entry.trim();
+    const valIdx = keyVal.indexOf(':');
+    if (valIdx === -1) {
+      yield {key: keyVal.split(' ', 1)[0], value: null};
+    } else {
+      yield {key: keyVal.slice(0, valIdx), value: keyVal.slice(valIdx + 1)};
+    }
+  }
+}
+
 /**
  * For snap test fixtures and playground only.
  */
@@ -101,19 +116,11 @@ function parseConfigPragmaEnvironmentForTest(
 ): EnvironmentConfig {
   const maybeConfig: Partial<Record<keyof EnvironmentConfig, unknown>> = {};
 
-  for (const token of pragma.split(' ')) {
-    if (!token.startsWith('@')) {
-      continue;
-    }
-    const keyVal = token.slice(1);
-    const valIdx = keyVal.indexOf(':');
-    const key = valIdx === -1 ? keyVal : keyVal.slice(0, valIdx);
-    const val = valIdx === -1 ? undefined : keyVal.slice(valIdx + 1);
-    const isSet = val === undefined || val === 'true';
+  for (const {key, value: val} of splitPragma(pragma)) {
     if (!hasOwnProperty(EnvironmentConfigSchema.shape, key)) {
       continue;
     }
-
+    const isSet = val == null || val === 'true';
     if (isSet && key in testComplexConfigDefaults) {
       maybeConfig[key] = testComplexConfigDefaults[key];
     } else if (isSet) {
@@ -176,18 +183,11 @@ export function parseConfigPragmaForTests(
     compilationMode: defaults.compilationMode,
     environment,
   };
-  for (const token of pragma.split(' ')) {
-    if (!token.startsWith('@')) {
-      continue;
-    }
-    const keyVal = token.slice(1);
-    const idx = keyVal.indexOf(':');
-    const key = idx === -1 ? keyVal : keyVal.slice(0, idx);
-    const val = idx === -1 ? undefined : keyVal.slice(idx + 1);
+  for (const {key, value: val} of splitPragma(pragma)) {
     if (!hasOwnProperty(defaultOptions, key)) {
       continue;
     }
-    const isSet = val === undefined || val === 'true';
+    const isSet = val == null || val === 'true';
     if (isSet && key in testComplexPluginOptionDefaults) {
       options[key] = testComplexPluginOptionDefaults[key];
     } else if (isSet) {

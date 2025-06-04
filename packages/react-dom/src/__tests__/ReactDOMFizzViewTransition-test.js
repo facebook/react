@@ -303,7 +303,7 @@ describe('ReactDOMFizzViewTransition', () => {
 
     expect(getVisibleChildren(container)).toEqual(
       <div>
-        <div vt-name="«R0»" vt-update="auto" vt-share="auto">
+        <div vt-name="_R_0_" vt-update="auto" vt-share="auto">
           <span vt-update="auto">Loading</span>
         </div>
       </div>,
@@ -321,7 +321,7 @@ describe('ReactDOMFizzViewTransition', () => {
 
     expect(getVisibleChildren(container)).toEqual(
       <div>
-        <div vt-name="«R0»" vt-update="auto" vt-share="auto">
+        <div vt-name="_R_0_" vt-update="auto" vt-share="auto">
           <span vt-update="auto">Content</span>
         </div>
       </div>,

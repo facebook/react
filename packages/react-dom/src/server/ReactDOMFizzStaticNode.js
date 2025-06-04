@@ -44,6 +44,13 @@ import {enablePostpone, enableHalt} from 'shared/ReactFeatureFlags';
 import {ensureCorrectIsomorphicReactVersion} from '../shared/ensureCorrectIsomorphicReactVersion';
 ensureCorrectIsomorphicReactVersion();
 
+type NonceOption =
+  | string
+  | {
+      script?: string,
+      style?: string,
+    };
+
 type Options = {
   identifierPrefix?: string,
   namespaceURI?: string,
@@ -151,7 +158,7 @@ function prerenderToNodeStream(
 }
 
 type ResumeOptions = {
-  nonce?: string,
+  nonce?: NonceOption,
   signal?: AbortSignal,
   onError?: (error: mixed, errorInfo: ErrorInfo) => ?string,
   onPostpone?: (reason: string, postponeInfo: PostponeInfo) => void,

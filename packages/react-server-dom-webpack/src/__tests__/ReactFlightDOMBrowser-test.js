@@ -1888,12 +1888,12 @@ describe('ReactFlightDOMBrowser', () => {
     expect(content).toEqual(
       '<!DOCTYPE html><html><head>' +
         (gate(flags => flags.enableFizzBlockingRender)
-          ? '<link rel="expect" href="#«R»" blocking="render"/>'
+          ? '<link rel="expect" href="#_R_" blocking="render"/>'
           : '') +
         '</head>' +
         '<body><p>hello world</p>' +
         (gate(flags => flags.enableFizzBlockingRender)
-          ? '<template id="«R»"></template>'
+          ? '<template id="_R_"></template>'
           : '') +
         '</body></html>',
     );

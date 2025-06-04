@@ -677,7 +677,7 @@ describe('ReactLazyContextPropagation', () => {
       setContext = setValue;
       const children = React.useMemo(
         () => (
-          <SuspenseList revealOrder="forwards">
+          <SuspenseList revealOrder="forwards" tail="visible">
             <Child />
             <Child />
           </SuspenseList>

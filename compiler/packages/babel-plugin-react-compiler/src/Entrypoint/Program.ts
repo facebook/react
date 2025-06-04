@@ -63,7 +63,16 @@ export function tryFindDirectiveEnablingMemoization(
 
 export function findDirectiveDisablingMemoization(
   directives: Array<t.Directive>,
+  {customOptOutDirectives}: PluginOptions,
 ): t.Directive | null {
+  if (customOptOutDirectives != null) {
+    return (
+      directives.find(
+        directive =>
+          customOptOutDirectives.indexOf(directive.value.value) !== -1,
+      ) ?? null
+    );
+  }
   return (
     directives.find(directive =>
       OPT_OUT_DIRECTIVES.has(directive.value.value),
@@ -394,7 +403,8 @@ export function compileProgram(
     code: pass.code,
     suppressions,
     hasModuleScopeOptOut:
-      findDirectiveDisablingMemoization(program.node.directives) != null,
+      findDirectiveDisablingMemoization(program.node.directives, pass.opts) !=
+      null,
   });
 
   const queue: Array<CompileSource> = findFunctionsToCompile(
@@ -571,7 +581,10 @@ function processFn(
     }
     directives = {
       optIn: optIn.unwrapOr(null),
-      optOut: findDirectiveDisablingMemoization(fn.node.body.directives),
+      optOut: findDirectiveDisablingMemoization(
+        fn.node.body.directives,
+        programContext.opts,
+      ),
     };
   }
 

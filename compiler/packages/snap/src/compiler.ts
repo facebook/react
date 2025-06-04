@@ -242,6 +242,7 @@ export async function transformFixtureInput(
     filename: virtualFilepath,
     highlightCode: false,
     retainLines: true,
+    compact: true,
     plugins: [
       [plugin, options],
       'babel-plugin-fbt',

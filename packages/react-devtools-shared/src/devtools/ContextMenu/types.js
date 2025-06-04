@@ -25,7 +25,7 @@ export type ContextMenuHandle = {
   hide(): void,
 };
 
-/*::
-export type ContextMenuComponent = component(ref: React$RefSetter<ContextMenuHandle>);
-*/
+export type ContextMenuComponent = component(
+  ref: React$RefSetter<ContextMenuHandle>,
+);
 export type ContextMenuRef = {current: ContextMenuHandle | null};

@@ -47,6 +47,7 @@ export type RenderState = {
   segmentPrefix: PrecomputedChunk,
   boundaryPrefix: PrecomputedChunk,
   startInlineScript: PrecomputedChunk,
+  startInlineStyle: PrecomputedChunk,
   preamble: PreambleState,
   externalRuntimeScript: null | any,
   bootstrapChunks: Array<Chunk | PrecomputedChunk>,
@@ -76,6 +77,10 @@ export type RenderState = {
     scripts: Map<string, Resource>,
     moduleScripts: Map<string, Resource>,
   },
+  nonce: {
+    script: string | void,
+    style: string | void,
+  },
   stylesToHoist: boolean,
   // This is an extra field for the legacy renderer
   generateStaticMarkup: boolean,
@@ -99,6 +104,7 @@ export function createRenderState(
     segmentPrefix: renderState.segmentPrefix,
     boundaryPrefix: renderState.boundaryPrefix,
     startInlineScript: renderState.startInlineScript,
+    startInlineStyle: renderState.startInlineStyle,
     preamble: renderState.preamble,
     externalRuntimeScript: renderState.externalRuntimeScript,
     bootstrapChunks: renderState.bootstrapChunks,
@@ -118,6 +124,7 @@ export function createRenderState(
     scripts: renderState.scripts,
     bulkPreloads: renderState.bulkPreloads,
     preloads: renderState.preloads,
+    nonce: renderState.nonce,
     stylesToHoist: renderState.stylesToHoist,
 
     // This is an extra field for the legacy renderer

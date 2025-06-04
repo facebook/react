@@ -1799,7 +1799,7 @@ function renderSuspenseListRows(
   task: Task,
   keyPath: KeyNode,
   rows: Array<ReactNodeList>,
-  revealOrder: 'forwards' | 'backwards',
+  revealOrder: 'forwards' | 'backwards' | 'unstable_legacy-backwards',
 ): void {
   // This is a fork of renderChildrenArray that's aware of tracking rows.
   const prevKeyPath = task.keyPath;
@@ -1827,7 +1827,11 @@ function renderSuspenseListRows(
         // Since we are going to resume into a slot whose order was already
         // determined by the prerender, we can safely resume it even in reverse
         // render order.
-        const i = revealOrder !== 'backwards' ? n : totalChildren - 1 - n;
+        const i =
+          revealOrder !== 'backwards' &&
+          revealOrder !== 'unstable_legacy-backwards'
+            ? n
+            : totalChildren - 1 - n;
         const node = rows[i];
         task.row = previousSuspenseListRow = createSuspenseListRow(
           previousSuspenseListRow,
@@ -1852,7 +1856,11 @@ function renderSuspenseListRows(
         // Since we are going to resume into a slot whose order was already
         // determined by the prerender, we can safely resume it even in reverse
         // render order.
-        const i = revealOrder !== 'backwards' ? n : totalChildren - 1 - n;
+        const i =
+          revealOrder !== 'backwards' &&
+          revealOrder !== 'unstable_legacy-backwards'
+            ? n
+            : totalChildren - 1 - n;
         const node = rows[i];
         if (__DEV__) {
           warnForMissingKey(request, task, node);
@@ -1869,7 +1877,10 @@ function renderSuspenseListRows(
     }
   } else {
     task = ((task: any): RenderTask); // Refined
-    if (revealOrder !== 'backwards') {
+    if (
+      revealOrder !== 'backwards' &&
+      revealOrder !== 'unstable_legacy-backwards'
+    ) {
       // Forwards direction
       for (let i = 0; i < totalChildren; i++) {
         const node = rows[i];
@@ -1973,7 +1984,11 @@ function renderSuspenseList(
   const revealOrder: SuspenseListRevealOrder = props.revealOrder;
   // TODO: Support tail hidden/collapsed modes.
   // const tailMode: SuspenseListTailMode = props.tail;
-  if (revealOrder === 'forwards' || revealOrder === 'backwards') {
+  if (
+    revealOrder === 'forwards' ||
+    revealOrder === 'backwards' ||
+    revealOrder === 'unstable_legacy-backwards'
+  ) {
     // For ordered reveal, we need to produce rows from the children.
     if (isArray(children)) {
       renderSuspenseListRows(request, task, keyPath, children, revealOrder);
@@ -4762,6 +4777,27 @@ function abortTask(task: Task, request: Request, error: mixed): void {
   }
 }
 
+function abortTaskDEV(task: Task, request: Request, error: mixed): void {
+  if (__DEV__) {
+    const prevTaskInDEV = currentTaskInDEV;
+    const prevGetCurrentStackImpl = ReactSharedInternals.getCurrentStack;
+    setCurrentTaskInDEV(task);
+    ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
+    try {
+      abortTask(task, request, error);
+    } finally {
+      setCurrentTaskInDEV(prevTaskInDEV);
+      ReactSharedInternals.getCurrentStack = prevGetCurrentStackImpl;
+    }
+  } else {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'abortTaskDEV should never be called in production mode. This is a bug in React.',
+    );
+  }
+}
+
 function safelyEmitEarlyPreloads(
   request: Request,
   shellComplete: boolean,
@@ -6111,7 +6147,11 @@ export function abort(request: Request, reason: mixed): void {
       // This error isn't necessarily fatal in this case but we need to stash it
       // so we can use it to abort any pending work
       request.fatalError = error;
-      abortableTasks.forEach(task => abortTask(task, request, error));
+      if (__DEV__) {
+        abortableTasks.forEach(task => abortTaskDEV(task, request, error));
+      } else {
+        abortableTasks.forEach(task => abortTask(task, request, error));
+      }
       abortableTasks.clear();
     }
     if (request.destination !== null) {

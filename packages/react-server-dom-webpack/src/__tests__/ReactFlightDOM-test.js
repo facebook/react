@@ -1909,12 +1909,12 @@ describe('ReactFlightDOM', () => {
       '<!DOCTYPE html><html><head><link rel="preload" href="before1" as="style"/>' +
         '<link rel="preload" href="after1" as="style"/>' +
         (gate(flags => flags.enableFizzBlockingRender)
-          ? '<link rel="expect" href="#«R»" blocking="render"/>'
+          ? '<link rel="expect" href="#_R_" blocking="render"/>'
           : '') +
         '</head>' +
         '<body><p>hello world</p>' +
         (gate(flags => flags.enableFizzBlockingRender)
-          ? '<template id="«R»"></template>'
+          ? '<template id="_R_"></template>'
           : '') +
         '</body></html>',
     );
@@ -1922,12 +1922,12 @@ describe('ReactFlightDOM', () => {
       '<!DOCTYPE html><html><head><link rel="preload" href="before2" as="style"/>' +
         '<link rel="preload" href="after2" as="style"/>' +
         (gate(flags => flags.enableFizzBlockingRender)
-          ? '<link rel="expect" href="#«R»" blocking="render"/>'
+          ? '<link rel="expect" href="#_R_" blocking="render"/>'
           : '') +
         '</head>' +
         '<body><p>hello world</p>' +
         (gate(flags => flags.enableFizzBlockingRender)
-          ? '<template id="«R»"></template>'
+          ? '<template id="_R_"></template>'
           : '') +
         '</body></html>',
     );
