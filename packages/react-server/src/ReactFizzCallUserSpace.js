@@ -13,7 +13,7 @@ import type {LazyComponent} from 'react/src/ReactLazy';
 // TODO: Consider marking the whole bundle instead of these boundaries.
 
 const callComponent = {
-  'react-stack-bottom-frame': function <Props, Arg, R>(
+  'react-stack-bottom-frame': true && function <Props, Arg, R>(
     Component: (p: Props, arg: Arg) => R,
     props: Props,
     secondArg: Arg,
@@ -36,7 +36,7 @@ interface ClassInstance<R> {
 }
 
 const callRender = {
-  'react-stack-bottom-frame': function <R>(instance: ClassInstance<R>): R {
+  'react-stack-bottom-frame': true && function <R>(instance: ClassInstance<R>): R {
     return instance.render();
   },
 };
@@ -48,7 +48,7 @@ export const callRenderInDEV: <R>(instance: ClassInstance<R>) => R => R =
     : (null: any);
 
 const callLazyInit = {
-  'react-stack-bottom-frame': function (lazy: LazyComponent<any, any>): any {
+  'react-stack-bottom-frame': true && function (lazy: LazyComponent<any, any>): any {
     const payload = lazy._payload;
     const init = lazy._init;
     return init(payload);

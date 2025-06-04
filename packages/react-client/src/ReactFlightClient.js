@@ -2588,7 +2588,7 @@ function buildFakeTask(
 }
 
 const createFakeJSXCallStack = {
-  'react-stack-bottom-frame': function (
+  'react-stack-bottom-frame': true && function (
     response: Response,
     stack: ReactStackTrace,
     environmentName: string,
@@ -2715,7 +2715,7 @@ function getCurrentStackInDEV(): string {
 }
 
 const replayConsoleWithCallStack = {
-  'react-stack-bottom-frame': function (
+  'react-stack-bottom-frame': true && function (
     response: Response,
     methodName: string,
     stackTrace: ReactStackTrace,

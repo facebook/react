@@ -66,7 +66,7 @@ function UnknownOwner() {
   return (() => Error('react-stack-top-frame'))();
 }
 const createFakeCallStack = {
-  'react-stack-bottom-frame': function (callStackForError) {
+  'react-stack-bottom-frame': true && function (callStackForError) {
     return callStackForError();
   },
 };

@@ -19,7 +19,7 @@ import {setCurrentOwner} from './flight/ReactFlightCurrentOwner';
 // TODO: Consider marking the whole bundle instead of these boundaries.
 
 const callComponent = {
-  'react-stack-bottom-frame': function <Props, R>(
+  'react-stack-bottom-frame': true && function <Props, R>(
     Component: (p: Props, arg: void) => R,
     props: Props,
     componentDebugInfo: ReactComponentInfo,
@@ -45,7 +45,7 @@ export const callComponentInDEV: <Props, R>(
   : (null: any);
 
 const callLazyInit = {
-  'react-stack-bottom-frame': function (lazy: LazyComponent<any, any>): any {
+  'react-stack-bottom-frame': true && function (lazy: LazyComponent<any, any>): any {
     const payload = lazy._payload;
     const init = lazy._init;
     return init(payload);
@@ -58,7 +58,7 @@ export const callLazyInitInDEV: (lazy: LazyComponent<any, any>) => any = __DEV__
   : (null: any);
 
 const callIterator = {
-  'react-stack-bottom-frame': function (
+  'react-stack-bottom-frame': true && function (
     iterator: $AsyncIterator<ReactClientValue, ReactClientValue, void>,
     progress: (
       entry:

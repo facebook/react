@@ -19,7 +19,7 @@ import {captureCommitPhaseError} from './ReactFiberWorkLoop';
 // TODO: Consider marking the whole bundle instead of these boundaries.
 
 const callComponent = {
-  'react-stack-bottom-frame': function <Props, Arg, R>(
+  'react-stack-bottom-frame': true && function <Props, Arg, R>(
     Component: (p: Props, arg: Arg) => R,
     props: Props,
     secondArg: Arg,
@@ -57,7 +57,7 @@ interface ClassInstance<R> {
 }
 
 const callRender = {
-  'react-stack-bottom-frame': function <R>(instance: ClassInstance<R>): R {
+  'react-stack-bottom-frame': true && function <R>(instance: ClassInstance<R>): R {
     const wasRendering = isRendering;
     setIsRendering(true);
     try {
@@ -76,7 +76,7 @@ export const callRenderInDEV: <R>(instance: ClassInstance<R>) => R => R =
     : (null: any);
 
 const callComponentDidMount = {
-  'react-stack-bottom-frame': function (
+  'react-stack-bottom-frame': true && function (
     finishedWork: Fiber,
     instance: ClassInstance<any>,
   ): void {
@@ -99,7 +99,7 @@ export const callComponentDidMountInDEV: (
   : (null: any);
 
 const callComponentDidUpdate = {
-  'react-stack-bottom-frame': function (
+  'react-stack-bottom-frame': true && function (
     finishedWork: Fiber,
     instance: ClassInstance<any>,
     prevProps: Object,
@@ -128,7 +128,7 @@ export const callComponentDidUpdateInDEV: (
   : (null: any);
 
 const callComponentDidCatch = {
-  'react-stack-bottom-frame': function (
+  'react-stack-bottom-frame': true && function (
     instance: ClassInstance<any>,
     errorInfo: CapturedValue<mixed>,
   ): void {
@@ -151,7 +151,7 @@ export const callComponentDidCatchInDEV: (
   : (null: any);
 
 const callComponentWillUnmount = {
-  'react-stack-bottom-frame': function (
+  'react-stack-bottom-frame': true && function (
     current: Fiber,
     nearestMountedAncestor: Fiber | null,
     instance: ClassInstance<any>,
@@ -176,7 +176,7 @@ export const callComponentWillUnmountInDEV: (
   : (null: any);
 
 const callCreate = {
-  'react-stack-bottom-frame': function (
+  'react-stack-bottom-frame': true && function (
     effect: Effect,
   ): (() => void) | {...} | void | null {
     const create = effect.create;
@@ -193,7 +193,7 @@ export const callCreateInDEV: (effect: Effect) => (() => void) | void = __DEV__
   : (null: any);
 
 const callDestroy = {
-  'react-stack-bottom-frame': function (
+  'react-stack-bottom-frame': true && function (
     current: Fiber,
     nearestMountedAncestor: Fiber | null,
     destroy: () => void,
@@ -216,7 +216,7 @@ export const callDestroyInDEV: (
   : (null: any);
 
 const callLazyInit = {
-  'react-stack-bottom-frame': function (lazy: LazyComponent<any, any>): any {
+  'react-stack-bottom-frame': true && function (lazy: LazyComponent<any, any>): any {
     const payload = lazy._payload;
     const init = lazy._init;
     return init(payload);
