@@ -4274,11 +4274,19 @@ function forwardDebugInfo(
   debugInfo: ReactDebugInfo,
 ) {
   const id = task.id;
+  const minimumTime =
+    enableProfilerTimer && enableComponentPerformanceTrack ? task.time : 0;
   for (let i = 0; i < debugInfo.length; i++) {
     const info = debugInfo[i];
     if (typeof info.time === 'number') {
       // When forwarding time we need to ensure to convert it to the time space of the payload.
-      emitTimingChunk(request, id, info.time);
+      // We clamp the time to the starting render of the current component. It's as if it took
+      // no time to render and await if we reuse cached content.
+      emitTimingChunk(
+        request,
+        id,
+        info.time < minimumTime ? minimumTime : info.time,
+      );
     } else {
       request.pendingChunks++;
       if (typeof info.name === 'string') {
@@ -4290,38 +4298,47 @@ function forwardDebugInfo(
         emitDebugChunk(request, id, info);
       } else if (info.awaited) {
         const ioInfo = info.awaited;
-        // Outline the IO info in case the same I/O is awaited in more than one place.
-        outlineIOInfo(request, ioInfo);
-        // We can't serialize the ConsoleTask/Error objects so we need to omit them before serializing.
-        let debugStack;
-        if (info.stack == null && info.debugStack != null) {
-          // If we have a debugStack but no parsed stack we should parse it.
-          debugStack = filterStackTrace(
-            request,
-            parseStackTrace(info.debugStack, 1),
-          );
+        if (ioInfo.end <= request.timeOrigin) {
+          // This was already resolved when we started this render. It must have been some
+          // externally cached data. We exclude that information but we keep components and
+          // awaits that happened inside this render but might have been deduped within the
+          // render.
         } else {
-          debugStack = info.stack;
-        }
-        const debugAsyncInfo: Omit<ReactAsyncInfo, 'debugTask' | 'debugStack'> =
-          {
+          // Outline the IO info in case the same I/O is awaited in more than one place.
+          outlineIOInfo(request, ioInfo);
+          // We can't serialize the ConsoleTask/Error objects so we need to omit them before serializing.
+          let debugStack;
+          if (info.stack == null && info.debugStack != null) {
+            // If we have a debugStack but no parsed stack we should parse it.
+            debugStack = filterStackTrace(
+              request,
+              parseStackTrace(info.debugStack, 1),
+            );
+          } else {
+            debugStack = info.stack;
+          }
+          const debugAsyncInfo: Omit<
+            ReactAsyncInfo,
+            'debugTask' | 'debugStack',
+          > = {
             awaited: ioInfo,
           };
-        if (info.env != null) {
-          // $FlowFixMe[cannot-write]
-          debugAsyncInfo.env = info.env;
+          if (info.env != null) {
+            // $FlowFixMe[cannot-write]
+            debugAsyncInfo.env = info.env;
+          }
+          if (info.owner != null) {
+            // $FlowFixMe[cannot-write]
+            debugAsyncInfo.owner = info.owner;
+          }
+          if (debugStack != null) {
+            // $FlowFixMe[cannot-write]
+            debugAsyncInfo.stack = debugStack;
+          }
+          emitDebugChunk(request, id, debugAsyncInfo);
         }
-        if (info.owner != null) {
-          // $FlowFixMe[cannot-write]
-          debugAsyncInfo.owner = info.owner;
-        }
-        if (debugStack != null) {
-          // $FlowFixMe[cannot-write]
-          debugAsyncInfo.stack = debugStack;
-        }
-        emitDebugChunk(request, id, debugAsyncInfo);
       } else {
-        emitDebugChunk(request, id, debugInfo[i]);
+        emitDebugChunk(request, id, info);
       }
     }
   }
