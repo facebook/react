@@ -1879,6 +1879,7 @@ function visitAsyncNode(
   // First visit anything that blocked this sequence to start in the first place.
   if (node.previous !== null) {
     // We ignore the return value here because if it wasn't awaited in user space, then we don't log it.
+    // It also means that it can just have been part of a previous component's render.
     // TODO: This means that some I/O can get lost that was still blocking the sequence.
     visitAsyncNode(request, task, node.previous, cutOff, visited);
   }
@@ -1890,11 +1891,10 @@ function visitAsyncNode(
       return null;
     }
     case PROMISE_NODE: {
-      if (node.end < cutOff) {
-        // This was already resolved when we started this sequence. It must have been
-        // part of a different component.
-        // TODO: Think of some other way to exclude irrelevant data since if we awaited
-        // a cached promise, we should still log this component as being dependent on that data.
+      if (node.end <= request.timeOrigin) {
+        // This was already resolved when we started this render. It must have been either something
+        // that's part of a start up sequence or externally cached data. We exclude that information.
+        // The technique for debugging the effects of uncached data on the render is to simply uncache it.
         return null;
       }
       const awaited = node.awaited;
@@ -1942,6 +1942,7 @@ function visitAsyncNode(
       if (awaited !== null) {
         const ioNode = visitAsyncNode(request, task, awaited, cutOff, visited);
         if (ioNode !== null) {
+          const startTime: number = node.start;
           let endTime: number;
           if (node.tag === UNRESOLVED_AWAIT_NODE) {
             // If we haven't defined an end time, use the resolve of the inner Promise.
@@ -1955,11 +1956,18 @@ function visitAsyncNode(
           } else {
             endTime = node.end;
           }
-          if (endTime < cutOff) {
-            // This was already resolved when we started this sequence. It must have been
-            // part of a different component.
-            // TODO: Think of some other way to exclude irrelevant data since if we awaited
-            // a cached promise, we should still log this component as being dependent on that data.
+          if (endTime <= request.timeOrigin) {
+            // This was already resolved when we started this render. It must have been either something
+            // that's part of a start up sequence or externally cached data. We exclude that information.
+            return null;
+          } else if (startTime < cutOff) {
+            // We started awaiting this node before we started rendering this sequence.
+            // This means that this particular await was never part of the current sequence.
+            // If we have another await higher up in the chain it might have a more actionable stack
+            // from the perspective of this component. If we end up here from the "previous" path,
+            // then this gets I/O ignored, which is what we want because it means it was likely
+            // just part of a previous component's rendering.
+            match = ioNode;
           } else {
             const stack = filterStackTrace(
               request,
@@ -1978,15 +1986,7 @@ function visitAsyncNode(
               // We log the environment at the time when the last promise pigned ping which may
               // be later than what the environment was when we actually started awaiting.
               const env = (0, request.environmentName)();
-              if (node.start <= cutOff) {
-                // If this was an await that started before this sequence but finished after,
-                // then we clamp it to the start of this sequence. We don't need to emit a time
-                // TODO: Typically we'll already have a previous time stamp with the cutOff time
-                // so we shouldn't need to emit another one. But not always.
-                emitTimingChunk(request, task.id, cutOff);
-              } else {
-                emitTimingChunk(request, task.id, node.start);
-              }
+              emitTimingChunk(request, task.id, startTime);
               // Then emit a reference to us awaiting it in the current task.
               request.pendingChunks++;
               emitDebugChunk(request, task.id, {
@@ -1995,7 +1995,7 @@ function visitAsyncNode(
                 owner: node.owner,
                 stack: stack,
               });
-              emitTimingChunk(request, task.id, node.end);
+              emitTimingChunk(request, task.id, endTime);
             }
           }
         }
@@ -2049,12 +2049,16 @@ function emitAsyncSequence(
     const env = (0, request.environmentName)();
     // If we don't have any thing awaited, the time we started awaiting was internal
     // when we yielded after rendering. The cutOff time is basically that.
-    emitTimingChunk(request, task.id, cutOff);
+    const awaitStartTime = cutOff;
+    // If the end time finished before we started, it could've been a cached thing so
+    // we clamp it to the cutOff time. Effectively leading to a zero-time await.
+    const awaitEndTime = awaitedNode.end < cutOff ? cutOff : awaitedNode.end;
+    emitTimingChunk(request, task.id, awaitStartTime);
     emitDebugChunk(request, task.id, {
       awaited: ((awaitedNode: any): ReactIOInfo), // This is deduped by this reference.
       env: env,
     });
-    emitTimingChunk(request, task.id, awaitedNode.end);
+    emitTimingChunk(request, task.id, awaitEndTime);
   }
 }
 

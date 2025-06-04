@@ -5,6 +5,8 @@ const path = require('path');
 import {patchSetImmediate} from '../../../../scripts/jest/patchSetImmediate';
 
 let React;
+let ReactServer;
+let cache;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 let Stream;
@@ -61,6 +63,9 @@ function normalizeDebugInfo(debugInfo) {
     if (debugInfo.awaited) {
       copy.awaited = normalizeIOInfo(copy.awaited);
     }
+    if (debugInfo.props) {
+      copy.props = {};
+    }
     return copy;
   } else if (typeof debugInfo.time === 'number') {
     return {...debugInfo, time: 0};
@@ -83,6 +88,16 @@ function getDebugInfo(obj) {
   return debugInfo;
 }
 
+function filterStackFrame(filename, functionName) {
+  return (
+    filename !== '' &&
+    !filename.startsWith('node:') &&
+    !filename.includes('node_modules') &&
+    // Filter out our own internal source code since it'll typically be in node_modules
+    (!filename.includes('packages/') || filename.includes('__tests__'))
+  );
+}
+
 describe('ReactFlightAsyncDebugInfo', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -94,7 +109,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
     jest.mock('react-server-dom-webpack/server', () =>
       require('react-server-dom-webpack/server.node'),
     );
+    ReactServer = require('react');
     ReactServerDOMServer = require('react-server-dom-webpack/server');
+    cache = ReactServer.cache;
 
     jest.resetModules();
     jest.useRealTimers();
@@ -135,16 +152,23 @@ describe('ReactFlightAsyncDebugInfo', () => {
   }
 
   it('can track async information when awaited', async () => {
-    async function getData() {
+    async function getData(text) {
       await delay(1);
       const promise = delay(2);
       await Promise.all([promise]);
-      return 'hi';
+      return text.toUpperCase();
     }
 
     async function Component() {
-      const result = await getData();
-      return result;
+      const result = await getData('hi');
+      const moreData = getData('seb');
+      return <InnerComponent text={result} promise={moreData} />;
+    }
+
+    async function InnerComponent({text, promise}) {
+      // This async function depends on the I/O in parent components but it should not
+      // include that I/O as part of its own meta data.
+      return text + ', ' + (await promise);
     }
 
     const stream = ReactServerDOMServer.renderToPipeableStream(<Component />);
@@ -157,7 +181,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
     });
     stream.pipe(readable);
 
-    expect(await result).toBe('hi');
+    expect(await result).toBe('HI, SEB');
     if (
       __DEV__ &&
       gate(
@@ -179,9 +203,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                150,
+                174,
                 109,
-                137,
+                154,
                 50,
               ],
             ],
@@ -203,9 +227,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
                   [
                     "Object.<anonymous>",
                     "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                    150,
+                    174,
                     109,
-                    137,
+                    154,
                     50,
                   ],
                 ],
@@ -214,25 +238,25 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "delay",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  115,
+                  132,
                   12,
-                  114,
+                  131,
                   3,
                 ],
                 [
                   "getData",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  139,
+                  156,
                   13,
-                  138,
+                  155,
                   5,
                 ],
                 [
                   "Component",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  146,
+                  163,
                   26,
-                  145,
+                  162,
                   5,
                 ],
               ],
@@ -248,9 +272,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "Object.<anonymous>",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  150,
+                  174,
                   109,
-                  137,
+                  154,
                   50,
                 ],
               ],
@@ -259,17 +283,17 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "getData",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                139,
+                156,
                 13,
-                138,
+                155,
                 5,
               ],
               [
                 "Component",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                146,
+                163,
                 26,
-                145,
+                162,
                 5,
               ],
             ],
@@ -294,9 +318,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
                   [
                     "Object.<anonymous>",
                     "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                    150,
+                    174,
                     109,
-                    137,
+                    154,
                     50,
                   ],
                 ],
@@ -305,25 +329,25 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "delay",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  115,
+                  132,
                   12,
-                  114,
+                  131,
                   3,
                 ],
                 [
                   "getData",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  140,
+                  157,
                   21,
-                  138,
+                  155,
                   5,
                 ],
                 [
                   "Component",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  146,
+                  163,
                   20,
-                  145,
+                  162,
                   5,
                 ],
               ],
@@ -339,9 +363,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "Object.<anonymous>",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  150,
+                  174,
                   109,
-                  137,
+                  154,
                   50,
                 ],
               ],
@@ -350,17 +374,111 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "getData",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                141,
+                158,
                 21,
-                138,
+                155,
                 5,
               ],
               [
                 "Component",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                146,
+                163,
                 20,
-                145,
+                162,
+                5,
+              ],
+            ],
+          },
+          {
+            "time": 0,
+          },
+          {
+            "time": 0,
+          },
+          {
+            "env": "Server",
+            "key": null,
+            "name": "InnerComponent",
+            "props": {},
+            "stack": [
+              [
+                "Component",
+                "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                165,
+                60,
+                162,
+                5,
+              ],
+            ],
+          },
+          {
+            "time": 0,
+          },
+          {
+            "awaited": {
+              "end": 0,
+              "env": "Server",
+              "name": "getData",
+              "owner": {
+                "env": "Server",
+                "key": null,
+                "name": "Component",
+                "props": {},
+                "stack": [
+                  [
+                    "Object.<anonymous>",
+                    "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                    174,
+                    109,
+                    154,
+                    50,
+                  ],
+                ],
+              },
+              "stack": [
+                [
+                  "getData",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  155,
+                  27,
+                  155,
+                  5,
+                ],
+                [
+                  "Component",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  164,
+                  22,
+                  162,
+                  5,
+                ],
+              ],
+              "start": 0,
+            },
+            "env": "Server",
+            "owner": {
+              "env": "Server",
+              "key": null,
+              "name": "InnerComponent",
+              "props": {},
+              "stack": [
+                [
+                  "Component",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  165,
+                  60,
+                  162,
+                  5,
+                ],
+              ],
+            },
+            "stack": [
+              [
+                "InnerComponent",
+                "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                171,
+                35,
+                168,
                 5,
               ],
             ],
@@ -421,9 +539,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                392,
+                510,
                 109,
-                379,
+                497,
                 67,
               ],
             ],
@@ -445,9 +563,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
                   [
                     "Object.<anonymous>",
                     "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                    392,
+                    510,
                     109,
-                    379,
+                    497,
                     67,
                   ],
                 ],
@@ -456,9 +574,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "Component",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  382,
+                  500,
                   7,
-                  380,
+                  498,
                   5,
                 ],
               ],
@@ -518,9 +636,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                489,
+                607,
                 109,
-                480,
+                598,
                 94,
               ],
             ],
@@ -589,9 +707,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                560,
+                678,
                 109,
-                536,
+                654,
                 50,
               ],
             ],
@@ -671,9 +789,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                642,
+                760,
                 109,
-                625,
+                743,
                 63,
               ],
             ],
@@ -690,17 +808,17 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "fetchThirdParty",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                122,
+                139,
                 40,
-                120,
+                137,
                 3,
               ],
               [
                 "Component",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                638,
+                756,
                 24,
-                637,
+                755,
                 5,
               ],
             ],
@@ -722,17 +840,17 @@ describe('ReactFlightAsyncDebugInfo', () => {
                   [
                     "fetchThirdParty",
                     "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                    122,
+                    139,
                     40,
-                    120,
+                    137,
                     3,
                   ],
                   [
                     "Component",
                     "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                    638,
+                    756,
                     24,
-                    637,
+                    755,
                     5,
                   ],
                 ],
@@ -741,25 +859,25 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "delay",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  115,
+                  132,
                   12,
-                  114,
+                  131,
                   3,
                 ],
                 [
                   "getData",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  627,
+                  745,
                   13,
-                  626,
+                  744,
                   5,
                 ],
                 [
                   "ThirdPartyComponent",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  633,
+                  751,
                   24,
-                  632,
+                  750,
                   5,
                 ],
               ],
@@ -775,17 +893,17 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "fetchThirdParty",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  122,
+                  139,
                   40,
-                  120,
+                  137,
                   3,
                 ],
                 [
                   "Component",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  638,
+                  756,
                   24,
-                  637,
+                  755,
                   5,
                 ],
               ],
@@ -794,17 +912,17 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "getData",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                627,
+                745,
                 13,
-                626,
+                744,
                 5,
               ],
               [
                 "ThirdPartyComponent",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                633,
+                751,
                 24,
-                632,
+                750,
                 5,
               ],
             ],
@@ -829,17 +947,17 @@ describe('ReactFlightAsyncDebugInfo', () => {
                   [
                     "fetchThirdParty",
                     "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                    122,
+                    139,
                     40,
-                    120,
+                    137,
                     3,
                   ],
                   [
                     "Component",
                     "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                    638,
+                    756,
                     24,
-                    637,
+                    755,
                     5,
                   ],
                 ],
@@ -848,25 +966,25 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "delay",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  115,
+                  132,
                   12,
-                  114,
+                  131,
                   3,
                 ],
                 [
                   "getData",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  628,
+                  746,
                   13,
-                  626,
+                  744,
                   5,
                 ],
                 [
                   "ThirdPartyComponent",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  633,
+                  751,
                   18,
-                  632,
+                  750,
                   5,
                 ],
               ],
@@ -882,17 +1000,17 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "fetchThirdParty",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  122,
+                  139,
                   40,
-                  120,
+                  137,
                   3,
                 ],
                 [
                   "Component",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  638,
+                  756,
                   24,
-                  637,
+                  755,
                   5,
                 ],
               ],
@@ -901,23 +1019,282 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "getData",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                628,
+                746,
                 13,
-                626,
+                744,
                 5,
               ],
               [
                 "ThirdPartyComponent",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                633,
+                751,
                 18,
-                632,
+                750,
                 5,
               ],
             ],
           },
           {
             "time": 0,
+          },
+          {
+            "time": 0,
+          },
+          {
+            "time": 0,
+          },
+        ]
+      `);
+    }
+  });
+
+  it('can track cached entries awaited in later components', async () => {
+    let cacheKey;
+    let cacheValue;
+    const getData = cache(async function getData(text) {
+      if (cacheKey === text) {
+        return cacheValue;
+      }
+      await delay(1);
+      return text.toUpperCase();
+    });
+
+    async function Child() {
+      const greeting = await getData('hi');
+      return greeting + ', Seb';
+    }
+
+    async function Component() {
+      await getData('hi');
+      return <Child />;
+    }
+
+    const stream = ReactServerDOMServer.renderToPipeableStream(
+      <Component />,
+      {},
+      {
+        filterStackFrame,
+      },
+    );
+
+    const readable = new Stream.PassThrough(streamOptions);
+
+    const result = ReactServerDOMClient.createFromNodeStream(readable, {
+      moduleMap: {},
+      moduleLoading: {},
+    });
+    stream.pipe(readable);
+
+    expect(await result).toBe('HI, Seb');
+    if (
+      __DEV__ &&
+      gate(
+        flags =>
+          flags.enableComponentPerformanceTrack && flags.enableAsyncDebugInfo,
+      )
+    ) {
+      expect(getDebugInfo(result)).toMatchInlineSnapshot(`
+        [
+          {
+            "time": 0,
+          },
+          {
+            "env": "Server",
+            "key": null,
+            "name": "Component",
+            "props": {},
+            "stack": [
+              [
+                "Object.<anonymous>",
+                "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                1073,
+                40,
+                1051,
+                62,
+              ],
+            ],
+          },
+          {
+            "time": 0,
+          },
+          {
+            "awaited": {
+              "end": 0,
+              "env": "Server",
+              "name": "delay",
+              "owner": {
+                "env": "Server",
+                "key": null,
+                "name": "Component",
+                "props": {},
+                "stack": [
+                  [
+                    "Object.<anonymous>",
+                    "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                    1073,
+                    40,
+                    1051,
+                    62,
+                  ],
+                ],
+              },
+              "stack": [
+                [
+                  "delay",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  132,
+                  12,
+                  131,
+                  3,
+                ],
+                [
+                  "getData",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  1058,
+                  13,
+                  1054,
+                  25,
+                ],
+                [
+                  "Component",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  1068,
+                  13,
+                  1067,
+                  5,
+                ],
+              ],
+              "start": 0,
+            },
+            "env": "Server",
+            "owner": {
+              "env": "Server",
+              "key": null,
+              "name": "Component",
+              "props": {},
+              "stack": [
+                [
+                  "Object.<anonymous>",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  1073,
+                  40,
+                  1051,
+                  62,
+                ],
+              ],
+            },
+            "stack": [
+              [
+                "getData",
+                "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                1058,
+                13,
+                1054,
+                25,
+              ],
+              [
+                "Component",
+                "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                1068,
+                13,
+                1067,
+                5,
+              ],
+            ],
+          },
+          {
+            "time": 0,
+          },
+          {
+            "time": 0,
+          },
+          {
+            "env": "Server",
+            "key": null,
+            "name": "Child",
+            "props": {},
+            "stack": [
+              [
+                "Component",
+                "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                1069,
+                60,
+                1067,
+                5,
+              ],
+            ],
+          },
+          {
+            "time": 0,
+          },
+          {
+            "awaited": {
+              "end": 0,
+              "env": "Server",
+              "name": "getData",
+              "owner": {
+                "env": "Server",
+                "key": null,
+                "name": "Component",
+                "props": {},
+                "stack": [
+                  [
+                    "Object.<anonymous>",
+                    "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                    1073,
+                    40,
+                    1051,
+                    62,
+                  ],
+                ],
+              },
+              "stack": [
+                [
+                  "getData",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  1054,
+                  47,
+                  1054,
+                  25,
+                ],
+                [
+                  "Component",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  1068,
+                  13,
+                  1067,
+                  5,
+                ],
+              ],
+              "start": 0,
+            },
+            "env": "Server",
+            "owner": {
+              "env": "Server",
+              "key": null,
+              "name": "Child",
+              "props": {},
+              "stack": [
+                [
+                  "Component",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  1069,
+                  60,
+                  1067,
+                  5,
+                ],
+              ],
+            },
+            "stack": [
+              [
+                "Child",
+                "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                1063,
+                28,
+                1062,
+                5,
+              ],
+            ],
           },
           {
             "time": 0,
