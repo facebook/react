@@ -52,7 +52,9 @@ testNoJs('module preload on ssr @build', async ({page}) => {
   const viteManifest = JSON.parse(
     fs.readFileSync('dist/client/.vite/manifest.json', 'utf-8'),
   );
-  const file = '/' + viteManifest['src/routes/client.tsx'].file;
+  const file =
+    (process.env.TEST_BASE ? '/custom-base/' : '/') +
+    viteManifest['src/routes/client.tsx'].file;
   expect(srcs).toContain(file);
 });
 

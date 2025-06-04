@@ -8,6 +8,7 @@ import {injectRSCPayload} from 'rsc-html-stream/server';
 import type {RscPayload} from './entry.rsc';
 
 import {assetsManifest, clientManifest} from '../basic/ssr';
+import {assetsURL} from '../basic/utils/assets-url';
 
 export async function renderHtml({
   url,
@@ -31,10 +32,11 @@ export async function renderHtml({
     return React.use(payload).root;
   }
 
+  const bootstrapModules = assetsManifest.entry.bootstrapModules.map(
+    (href: string) => assetsURL(href),
+  );
   const htmlStream = await ReactDomServer.renderToReadableStream(<SsrRoot />, {
-    bootstrapModules: url.search.includes('__nojs')
-      ? []
-      : assetsManifest.entry.bootstrapModules,
+    bootstrapModules: url.search.includes('__nojs') ? [] : bootstrapModules,
     nonce,
     // @ts-ignore
     formState,

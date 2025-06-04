@@ -9,6 +9,9 @@ const command = isPreview
 export default defineConfig({
   testDir: 'e2e',
   use: {
+    baseURL: process.env.TEST_BASE
+      ? `http://localhost:${port}/custom-base/`
+      : undefined,
     trace: 'on-first-retry',
   },
   projects: [

@@ -6,6 +6,7 @@ import assetsManifest from 'virtual:vite-rsc/assets-manifest';
 import * as ReactServer from 'react-server-dom-vite/server.edge';
 // @ts-ignore
 import * as ReactClient from 'react-server-dom-vite/client.edge';
+import {assetsURL} from './utils/assets-url';
 
 export {assetsManifest};
 
@@ -57,11 +58,16 @@ export async function Resources({nonce}: {nonce?: string}) {
   }
 
   const cssLinks = css.map(href => (
-    <link key={href} rel="stylesheet" href={href} precedence="high" />
+    <link
+      key={href}
+      rel="stylesheet"
+      href={assetsURL(href)}
+      precedence="high"
+    />
   ));
 
   const jsLinks = js.map(href => (
-    <link key={href} rel="modulepreload" href={href} />
+    <link key={href} rel="modulepreload" href={assetsURL(href)} />
   ));
 
   // https://vite.dev/guide/features.html#content-security-policy-csp

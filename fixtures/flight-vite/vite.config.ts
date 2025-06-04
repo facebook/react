@@ -4,6 +4,7 @@ import rsc from './basic/plugin';
 import Inspect from 'vite-plugin-inspect';
 
 export default defineConfig({
+  base: process.env.TEST_BASE ? '/custom-base/' : undefined,
   clearScreen: false,
   build: {
     minify: false,
