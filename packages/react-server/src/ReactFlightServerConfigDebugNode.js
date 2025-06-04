@@ -11,10 +11,18 @@ import type {
   AsyncSequence,
   IONode,
   PromiseNode,
+  UnresolvedPromiseNode,
   AwaitNode,
+  UnresolvedAwaitNode,
 } from './ReactFlightAsyncSequence';
 
-import {IO_NODE, PROMISE_NODE, AWAIT_NODE} from './ReactFlightAsyncSequence';
+import {
+  IO_NODE,
+  PROMISE_NODE,
+  UNRESOLVED_PROMISE_NODE,
+  AWAIT_NODE,
+  UNRESOLVED_AWAIT_NODE,
+} from './ReactFlightAsyncSequence';
 import {resolveOwner} from './flight/ReactFlightCurrentOwner';
 import {createHook, executionAsyncId} from 'async_hooks';
 import {enableAsyncDebugInfo} from 'shared/ReactFeatureFlags';
@@ -30,7 +38,12 @@ const pendingOperations: Map<number, AsyncSequence> =
 export function initAsyncDebugInfo(): void {
   if (__DEV__ && enableAsyncDebugInfo) {
     createHook({
-      init(asyncId: number, type: string, triggerAsyncId: number): void {
+      init(
+        asyncId: number,
+        type: string,
+        triggerAsyncId: number,
+        resource: any,
+      ): void {
         const trigger = pendingOperations.get(triggerAsyncId);
         let node: AsyncSequence;
         if (type === 'PROMISE') {
@@ -46,18 +59,20 @@ export function initAsyncDebugInfo(): void {
             // If the thing we're waiting on is another Await we still track that sequence
             // so that we can later pick the best stack trace in user space.
             node = ({
-              tag: AWAIT_NODE,
+              tag: UNRESOLVED_AWAIT_NODE,
               owner: resolveOwner(),
+              debugInfo: new WeakRef((resource: Promise<any>)),
               stack: new Error(),
               start: performance.now(),
               end: -1.1, // set when resolved.
               awaited: trigger, // The thing we're awaiting on. Might get overrriden when we resolve.
               previous: current === undefined ? null : current, // The path that led us here.
-            }: AwaitNode);
+            }: UnresolvedAwaitNode);
           } else {
             node = ({
-              tag: PROMISE_NODE,
+              tag: UNRESOLVED_PROMISE_NODE,
               owner: resolveOwner(),
+              debugInfo: new WeakRef((resource: Promise<any>)),
               stack: new Error(),
               start: performance.now(),
               end: -1.1, // Set when we resolve.
@@ -66,7 +81,7 @@ export function initAsyncDebugInfo(): void {
                   ? null // It might get overridden when we resolve.
                   : trigger,
               previous: null,
-            }: PromiseNode);
+            }: UnresolvedPromiseNode);
           }
         } else if (
           type !== 'Microtask' &&
@@ -78,17 +93,22 @@ export function initAsyncDebugInfo(): void {
             node = ({
               tag: IO_NODE,
               owner: resolveOwner(),
+              debugInfo: null,
               stack: new Error(), // This is only used if no native promises are used.
               start: performance.now(),
               end: -1.1, // Only set when pinged.
               awaited: null,
               previous: null,
             }: IONode);
-          } else if (trigger.tag === AWAIT_NODE) {
+          } else if (
+            trigger.tag === AWAIT_NODE ||
+            trigger.tag === UNRESOLVED_AWAIT_NODE
+          ) {
             // We have begun a new I/O sequence after the await.
             node = ({
               tag: IO_NODE,
               owner: resolveOwner(),
+              debugInfo: null,
               stack: new Error(),
               start: performance.now(),
               end: -1.1, // Only set when pinged.
@@ -110,16 +130,41 @@ export function initAsyncDebugInfo(): void {
         pendingOperations.set(asyncId, node);
       },
       promiseResolve(asyncId: number): void {
-        const resolvedNode = pendingOperations.get(asyncId);
-        if (resolvedNode !== undefined) {
-          if (resolvedNode.tag === IO_NODE) {
-            // eslint-disable-next-line react-internal/prod-error-codes
-            throw new Error(
-              'A Promise should never be an IO_NODE. This is a bug in React.',
-            );
+        const node = pendingOperations.get(asyncId);
+        if (node !== undefined) {
+          let resolvedNode: AwaitNode | PromiseNode;
+          switch (node.tag) {
+            case UNRESOLVED_AWAIT_NODE: {
+              const awaitNode: AwaitNode = (node: any);
+              awaitNode.tag = AWAIT_NODE;
+              resolvedNode = awaitNode;
+              break;
+            }
+            case UNRESOLVED_PROMISE_NODE: {
+              const promiseNode: PromiseNode = (node: any);
+              promiseNode.tag = PROMISE_NODE;
+              resolvedNode = promiseNode;
+              break;
+            }
+            case IO_NODE:
+              // eslint-disable-next-line react-internal/prod-error-codes
+              throw new Error(
+                'A Promise should never be an IO_NODE. This is a bug in React.',
+              );
+            default:
+              // eslint-disable-next-line react-internal/prod-error-codes
+              throw new Error(
+                'A Promise should never be resolved twice. This is a bug in React or Node.js.',
+              );
           }
           // Log the end time when we resolved the promise.
           resolvedNode.end = performance.now();
+          // The Promise can be garbage collected after this so we should extract debugInfo first.
+          const promise = node.debugInfo.deref();
+          resolvedNode.debugInfo =
+            promise === undefined || promise._debugInfo === undefined
+              ? null
+              : promise._debugInfo;
           const currentAsyncId = executionAsyncId();
           if (asyncId !== currentAsyncId) {
             // If the promise was not resolved by itself, then that means that
@@ -137,6 +182,15 @@ export function initAsyncDebugInfo(): void {
         pendingOperations.delete(asyncId);
       },
     }).enable();
+  }
+}
+
+export function markAsyncSequenceRootTask(): void {
+  if (__DEV__ && enableAsyncDebugInfo) {
+    // Whatever Task we're running now is spawned by React itself to perform render work.
+    // Don't track any cause beyond this task. We may still track I/O that was started outside
+    // React but just not the cause of entering the render.
+    pendingOperations.delete(executionAsyncId());
   }
 }
 

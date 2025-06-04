@@ -266,6 +266,27 @@ ReactPromise.prototype.then = function <T>(
       initializeModuleChunk(chunk);
       break;
   }
+  if (__DEV__ && enableAsyncDebugInfo) {
+    // Because only native Promises get picked up when we're awaiting we need to wrap
+    // this in a native Promise in DEV. This means that these callbacks are no longer sync
+    // but the lazy initialization is still sync and the .value can be inspected after,
+    // allowing it to be read synchronously anyway.
+    const resolveCallback = resolve;
+    const rejectCallback = reject;
+    const wrapperPromise: Promise<T> = new Promise((res, rej) => {
+      resolve = value => {
+        // $FlowFixMe
+        wrapperPromise._debugInfo = this._debugInfo;
+        res(value);
+      };
+      reject = reason => {
+        // $FlowFixMe
+        wrapperPromise._debugInfo = this._debugInfo;
+        rej(reason);
+      };
+    });
+    wrapperPromise.then(resolveCallback, rejectCallback);
+  }
   // The status might have changed after initialization.
   switch (chunk.status) {
     case INITIALIZED:

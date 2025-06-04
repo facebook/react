@@ -14,6 +14,7 @@ module.exports = {
     Symbol: 'readonly',
     WeakMap: 'readonly',
     WeakSet: 'readonly',
+    WeakRef: 'readonly',
 
     Int8Array: 'readonly',
     Uint8Array: 'readonly',
