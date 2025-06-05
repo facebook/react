@@ -160,9 +160,6 @@ export function inferMutationAliasingFunctionEffects(
     });
   }
 
-  // console.log(pretty(tracked));
-  // console.log(pretty(dataFlow));
-  // console.log('FunctionEffects', effects.map(printAliasingEffect).join('\n'));
   return effects;
 }
 

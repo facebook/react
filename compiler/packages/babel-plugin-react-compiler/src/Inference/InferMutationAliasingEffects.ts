@@ -63,7 +63,6 @@ import {FunctionSignature} from '../HIR/ObjectShape';
 import {getWriteErrorReason} from './InferFunctionEffects';
 import prettyFormat from 'pretty-format';
 import {createTemporaryPlace} from '../HIR/HIRBuilder';
-import {pretty} from './InferMutationAliasingRanges';
 
 export function inferMutationAliasingEffects(
   fn: HIRFunction,
