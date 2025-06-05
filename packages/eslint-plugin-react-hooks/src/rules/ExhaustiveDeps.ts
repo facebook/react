@@ -1860,11 +1860,15 @@ function scanForConstructions({
 }
 
 /**
- * Assuming () means the passed/returned node:
- * (props) => (props)
- * props.(foo) => (props.foo)
- * props.foo.(bar) => (props).foo.bar
- * props.foo.bar.(baz) => (props).foo.bar.baz
+ * Assuming {} means the passed/returned node and multiple "=>" means recursive calls:
+ * {props} => {props}
+ * {props}.foo => {props.foo}
+ * {props}.foo.bar.baz => {props.foo}.bar.baz => {props.foo.bar}.baz => {props.foo.bar.baz}
+ * props.{foo} => props.{foo}
+ * props.foo.{bar} => props.foo.{bar}
+ * {ref}.current => {ref}.current
+ * {props}.foo() => {props}.foo()
+ * {foo}.bar.baz=123 => {foo.bar}.baz=123
  */
 function getDependency(node: Node): Node {
   if (
