@@ -25,6 +25,7 @@ import {
   InstructionValue,
   isArrayType,
   isMapType,
+  isPrimitiveType,
   isSetType,
   makeIdentifierId,
   ObjectMethod,
@@ -464,12 +465,15 @@ function applyEffect(
           break;
         }
         default: {
-          effects.push({
-            // OK: recording information flow
-            kind: 'CreateFrom', // prev Alias
-            from: effect.from,
-            into: effect.into,
-          });
+          // Even if the source is non-primitive, the destination may be. skip primitives.
+          if (!isPrimitiveType(effect.into.identifier)) {
+            effects.push({
+              // OK: recording information flow
+              kind: 'CreateFrom', // prev Alias
+              from: effect.from,
+              into: effect.into,
+            });
+          }
         }
       }
       break;
@@ -1622,6 +1626,7 @@ function computeSignatureForInstruction(
           suggestions: null,
         },
       });
+      effects.push({kind: 'Assign', from: value.value, into: lvalue});
       break;
     }
     case 'TypeCastExpression': {

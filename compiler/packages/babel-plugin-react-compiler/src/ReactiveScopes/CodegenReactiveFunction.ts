@@ -44,7 +44,7 @@ import {
   getHookKind,
   makeIdentifierName,
 } from '../HIR/HIR';
-import {printIdentifier, printPlace} from '../HIR/PrintHIR';
+import {printIdentifier, printInstruction, printPlace} from '../HIR/PrintHIR';
 import {eachPatternOperand} from '../HIR/visitors';
 import {Err, Ok, Result} from '../Utils/Result';
 import {GuardKind} from '../Utils/RuntimeDiagnosticConstants';
@@ -1310,7 +1310,7 @@ function codegenInstructionNullable(
         });
         CompilerError.invariant(value?.type === 'FunctionExpression', {
           reason: 'Expected a function as a function declaration value',
-          description: null,
+          description: `Got ${value == null ? String(value) : value.type} at ${printInstruction(instr)}`,
           loc: instr.value.loc,
           suggestions: null,
         });
