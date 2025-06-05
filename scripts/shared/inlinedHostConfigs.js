@@ -106,7 +106,11 @@ module.exports = [
   },
   {
     shortName: 'dom-node-webstreams',
-    entryPoints: ['react-dom/src/server/react-dom-server.node-webstreams.js'],
+    entryPoints: [
+      'react-dom/src/server/react-dom-server.node-webstreams.js',
+      'react-server-dom-webpack/src/client/react-flight-dom-client.node-webstreams.unbundled',
+      'react-server-dom-webpack/src/server/react-flight-dom-server.node-webstreams.unbundled',
+    ],
     paths: [
       'react-dom',
       'react-dom/src/ReactDOMReactServer.js',
@@ -123,7 +127,7 @@ module.exports = [
       'react-dom/src/server/ReactDOMFizzStaticEdge.js',
       'react-dom-bindings/src/server/ReactDOMFlightServerHostDispatcher.js',
       'react-dom-bindings/src/server/ReactFlightServerConfigDOM.js',
-      'react-dom-bindins/src/shared/ReactFlightClientConfigDOM.js',
+      'react-dom-bindings/src/shared/ReactFlightClientConfigDOM.js',
       'react-server-dom-webpack',
       'react-server-dom-webpack/client.node.unbundled',
       'react-server-dom-webpack/server',
@@ -132,7 +136,8 @@ module.exports = [
       'react-server-dom-webpack/static.node.unbundled',
       'react-server-dom-webpack/src/client/ReactFlightDOMClientEdge.js', // react-server-dom-webpack/client.node
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerNode.js',
-      'react-server-dom-webpack/src/server/react-flight-dom-server.node.unbundled',
+      'react-server-dom-webpack/src/client/react-flight-dom-client.node-webstreams.unbundled',
+      'react-server-dom-webpack/src/server/react-flight-dom-server.node-webstreams.unbundled',
       'react-server-dom-webpack/src/server/ReactFlightDOMServerEdge.js', // react-server-dom-webpack/src/server/react-flight-dom-server.node
       'shared/ReactDOMSharedInternals',
       'react-server/src/ReactFlightServerConfigDebugNode.js',
