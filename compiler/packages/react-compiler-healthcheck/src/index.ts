@@ -22,10 +22,16 @@ async function main() {
       type: 'string',
       default: '**/+(*.{js,mjs,jsx,ts,tsx}|package.json)',
     })
+    .option('verbose', {
+      description: 'Show all healthcheck errors and violations',
+      type: 'boolean',
+      default: false,
+    })
     .parseSync();
 
   const spinner = ora('Checking').start();
   let src = argv.src;
+  let verbose = argv.verbose
 
   const globOptions = {
     onlyFiles: true,
@@ -48,7 +54,7 @@ async function main() {
   }
   spinner.stop();
 
-  reactCompilerCheck.report();
+  reactCompilerCheck.report(verbose);
   strictModeCheck.report();
   libraryCompatCheck.report();
 }
