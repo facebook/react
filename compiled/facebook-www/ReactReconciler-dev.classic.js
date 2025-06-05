@@ -13852,7 +13852,10 @@ __DEV__ &&
                 console.error(
                   "Unexpected host component type. Expected a form. This is a bug in React."
                 ));
-          }
+          } else
+            supportsPersistence &&
+              null !== finishedWork.alternate &&
+              (finishedWork.alternate.stateNode = finishedWork.stateNode);
           break;
         case 6:
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
@@ -21937,7 +21940,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-d742611c-20250603"
+        reconcilerVersion: "19.2.0-www-classic-dddcae7a-20250605"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
