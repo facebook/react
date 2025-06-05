@@ -1,4 +1,7 @@
 import * as React from 'react';
+import {renderToPipeableStream} from 'react-server-dom-webpack/server';
+import {createFromNodeStream} from 'react-server-dom-webpack/client';
+import {PassThrough, Readable} from 'stream';
 
 import Container from './Container.js';
 
@@ -35,8 +38,50 @@ async function Bar({children}) {
   return <div>{children}</div>;
 }
 
+async function ThirdPartyComponent() {
+  return new Promise(resolve =>
+    setTimeout(() => resolve('hello from a 3rd party'), 30)
+  );
+}
+
+// Using Web streams for tee'ing convenience here.
+let cachedThirdPartyReadableWeb;
+
+function fetchThirdParty(Component) {
+  if (cachedThirdPartyReadableWeb) {
+    const [readableWeb1, readableWeb2] = cachedThirdPartyReadableWeb.tee();
+    cachedThirdPartyReadableWeb = readableWeb1;
+
+    return createFromNodeStream(Readable.fromWeb(readableWeb2), {
+      moduleMap: {},
+      moduleLoading: {},
+    });
+  }
+
+  const stream = renderToPipeableStream(
+    <ThirdPartyComponent />,
+    {},
+    {environmentName: 'third-party'}
+  );
+
+  const readable = new PassThrough();
+  // React currently only supports piping to one stream, so we convert, tee, and
+  // convert back again.
+  // TODO: Switch to web streams without converting when #33442 has landed.
+  const [readableWeb1, readableWeb2] = Readable.toWeb(readable).tee();
+  cachedThirdPartyReadableWeb = readableWeb1;
+  const result = createFromNodeStream(Readable.fromWeb(readableWeb2), {
+    moduleMap: {},
+    moduleLoading: {},
+  });
+  stream.pipe(readable);
+
+  return result;
+}
+
 async function ServerComponent() {
   await new Promise(resolve => setTimeout(() => resolve('deferred text'), 50));
+  return await fetchThirdParty();
 }
 
 export default async function App({prerender}) {
