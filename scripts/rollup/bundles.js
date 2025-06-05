@@ -366,6 +366,16 @@ const bundles = [
     externals: ['react', 'util', 'crypto', 'async_hooks', 'react-dom'],
   },
   {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-dom/src/server/react-dom-server.node-webstreams.js',
+    name: 'react-dom-server.node-webstreams',
+    global: 'ReactDOMServer',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'util', 'crypto', 'async_hooks', 'react-dom'],
+  },
+  {
     bundleTypes: __EXPERIMENTAL__ ? [FB_WWW_DEV, FB_WWW_PROD] : [],
     moduleType: RENDERER,
     entry: 'react-server-dom-fb/src/ReactDOMServerFB.js',
