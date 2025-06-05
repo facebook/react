@@ -74,7 +74,7 @@ export const enableShallowPropDiffing = false;
 export const enableSiblingPrerendering = true;
 
 export const enableUseEffectCRUDOverload = false;
-export const enableEagerAlternateStateNodeCleanup = false;
+export const enableEagerAlternateStateNodeCleanup = true;
 
 export const enableHydrationLaneScheduling = true;
 
