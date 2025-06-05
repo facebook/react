@@ -17,7 +17,7 @@ module.exports = [
       'react-dom/src/server/react-dom-server.browser.js',
       'react-dom/static.browser',
       'react-dom/unstable_server-external-runtime',
-      'react-server-dom-webpack/client.browser',
+      'react-server-dom-webpack/src/client/react-flight-dom-client.browser',
       'react-server-dom-webpack/src/server/react-flight-dom-server.browser',
     ],
     paths: [
@@ -43,6 +43,7 @@ module.exports = [
       'react-server-dom-webpack/src/client/ReactFlightDOMClientBrowser.js', // react-server-dom-webpack/client.browser
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerWebpack.js',
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerWebpackBrowser.js',
+      'react-server-dom-webpack/src/client/react-flight-dom-client.browser',
       'react-server-dom-webpack/src/server/react-flight-dom-server.browser',
       'react-server-dom-webpack/src/server/ReactFlightDOMServerBrowser.js', // react-server-dom-webpack/src/server/react-flight-dom-server.browser
       'react-devtools',
@@ -62,7 +63,7 @@ module.exports = [
       'react-dom/src/server/react-dom-server.node.js',
       'react-dom/test-utils',
       'react-dom/unstable_server-external-runtime',
-      'react-server-dom-webpack/client.node.unbundled',
+      'react-server-dom-webpack/src/client/react-flight-dom-client.node.unbundled',
       'react-server-dom-webpack/src/server/react-flight-dom-server.node.unbundled',
     ],
     paths: [
@@ -90,6 +91,7 @@ module.exports = [
       'react-server-dom-webpack/static.node.unbundled',
       'react-server-dom-webpack/src/client/ReactFlightDOMClientNode.js', // react-server-dom-webpack/client.node
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerNode.js',
+      'react-server-dom-webpack/src/client/react-flight-dom-client.node.unbundled',
       'react-server-dom-webpack/src/server/react-flight-dom-server.node.unbundled',
       'react-server-dom-webpack/src/server/ReactFlightDOMServerNode.js', // react-server-dom-webpack/src/server/react-flight-dom-server.node
       'react-devtools',
@@ -104,7 +106,11 @@ module.exports = [
   },
   {
     shortName: 'dom-node-webstreams',
-    entryPoints: ['react-dom/src/server/react-dom-server.node-webstreams.js'],
+    entryPoints: [
+      'react-dom/src/server/react-dom-server.node-webstreams.js',
+      'react-server-dom-webpack/src/client/react-flight-dom-client.node-webstreams.unbundled',
+      'react-server-dom-webpack/src/server/react-flight-dom-server.node-webstreams.unbundled',
+    ],
     paths: [
       'react-dom',
       'react-dom/src/ReactDOMReactServer.js',
@@ -130,7 +136,8 @@ module.exports = [
       'react-server-dom-webpack/static.node.unbundled',
       'react-server-dom-webpack/src/client/ReactFlightDOMClientEdge.js', // react-server-dom-webpack/client.node
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerNode.js',
-      'react-server-dom-webpack/src/server/react-flight-dom-server.node.unbundled',
+      'react-server-dom-webpack/src/client/react-flight-dom-client.node-webstreams.unbundled',
+      'react-server-dom-webpack/src/server/react-flight-dom-server.node-webstreams.unbundled',
       'react-server-dom-webpack/src/server/ReactFlightDOMServerEdge.js', // react-server-dom-webpack/src/server/react-flight-dom-server.node
       'shared/ReactDOMSharedInternals',
       'react-server/src/ReactFlightServerConfigDebugNode.js',
@@ -141,7 +148,7 @@ module.exports = [
   {
     shortName: 'dom-node-webpack',
     entryPoints: [
-      'react-server-dom-webpack/client.node',
+      'react-server-dom-webpack/src/client/react-flight-dom-client.node',
       'react-server-dom-webpack/src/server/react-flight-dom-server.node',
     ],
     paths: [
@@ -165,8 +172,10 @@ module.exports = [
       'react-server-dom-webpack/server.node',
       'react-server-dom-webpack/static',
       'react-server-dom-webpack/static.node',
+      'react-server-dom-webpack/src/client/ReactFlightDOMClientNode.js', // react-server-dom-turbopack/client.node
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerWebpack.js',
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerWebpackServer.js',
+      'react-server-dom-webpack/src/client/react-flight-dom-client.node',
       'react-server-dom-webpack/src/server/react-flight-dom-server.node',
       'react-server-dom-webpack/src/server/ReactFlightDOMServerNode.js', // react-server-dom-webpack/src/server/react-flight-dom-server.node
       'react-server-dom-webpack/node-register',
@@ -390,7 +399,7 @@ module.exports = [
     entryPoints: [
       'react-dom/src/server/react-dom-server.edge.js',
       'react-dom/static.edge',
-      'react-server-dom-webpack/client.edge',
+      'react-server-dom-webpack/src/client/react-flight-dom-client.edge',
       'react-server-dom-webpack/src/server/react-flight-dom-server.edge',
     ],
     paths: [
@@ -415,6 +424,7 @@ module.exports = [
       'react-server-dom-webpack/src/client/ReactFlightDOMClientEdge.js', // react-server-dom-webpack/client.edge
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerWebpack.js',
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerWebpackServer.js',
+      'react-server-dom-webpack/src/client/react-flight-dom-client.edge',
       'react-server-dom-webpack/src/server/react-flight-dom-server.edge',
       'react-server-dom-webpack/src/server/ReactFlightDOMServerEdge.js', // react-server-dom-webpack/src/server/react-flight-dom-server.edge
       'react-devtools',
