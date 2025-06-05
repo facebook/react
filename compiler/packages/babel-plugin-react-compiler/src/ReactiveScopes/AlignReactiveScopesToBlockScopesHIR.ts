@@ -216,7 +216,7 @@ export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
         if (node == null) {
           // Transition from block->value block, derive the outer block range
           CompilerError.invariant(fallthrough !== null, {
-            reason: `Expected a fallthrough for value block`,
+            reason: `Expected a fallthrough for value block ${terminal.id}`,
             loc: terminal.loc,
           });
           const fallthroughBlock = fn.body.blocks.get(fallthrough)!;
