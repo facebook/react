@@ -161,7 +161,7 @@ async function prerenderApp(res, returnValue, formState, noCache) {
 }
 
 app.get('/', async function (req, res) {
-  const noCache = req.headers['cache-control'] === 'no-cache';
+  const noCache = req.get('cache-control') === 'no-cache';
 
   if ('prerender' in req.query) {
     await prerenderApp(res, null, null, noCache);

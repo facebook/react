@@ -102,7 +102,7 @@ async function renderApp(req, res, next) {
     proxiedHeaders['Content-type'] = req.get('Content-type');
   }
   if (req.headers['cache-control']) {
-    proxiedHeaders['Cache-Control'] = req.headers['cache-control'];
+    proxiedHeaders['Cache-Control'] = req.get('cache-control');
   }
 
   const requestsPrerender = req.path === '/prerender';
