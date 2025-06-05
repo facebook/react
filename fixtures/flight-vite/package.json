@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build-dep": "cd ../.. && RELEASE_CHANNEL=experimental node ./scripts/rollup/build.js react-server-dom-vite/ --type=NODE_DEV,NODE_PROD",
+    "build-dep": "cd ../.. && node ./scripts/rollup/build.js react-server-dom-vite/ --type=NODE_DEV,NODE_PROD",
     "dev": "vite",
     "build": "vite build --app",
     "preview": "vite preview",
