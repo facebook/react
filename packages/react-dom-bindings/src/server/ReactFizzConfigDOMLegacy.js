@@ -27,6 +27,7 @@ import {
   writeStartClientRenderedSuspenseBoundary as writeStartClientRenderedSuspenseBoundaryImpl,
   writeEndCompletedSuspenseBoundary as writeEndCompletedSuspenseBoundaryImpl,
   writeEndClientRenderedSuspenseBoundary as writeEndClientRenderedSuspenseBoundaryImpl,
+  writePreambleStart as writePreambleStartImpl,
 } from './ReactFizzConfigDOM';
 
 import type {
@@ -170,7 +171,6 @@ export {
   createResumableState,
   createPreambleState,
   createHoistableState,
-  writePreambleStart,
   writePreambleEnd,
   writeHoistables,
   writePostamble,
@@ -309,6 +309,20 @@ export function writeEndClientRenderedSuspenseBoundary(
     return true;
   }
   return writeEndClientRenderedSuspenseBoundaryImpl(destination, renderState);
+}
+
+export function writePreambleStart(
+  destination: Destination,
+  resumableState: ResumableState,
+  renderState: RenderState,
+  skipBlockingShell: boolean,
+): void {
+  return writePreambleStartImpl(
+    destination,
+    resumableState,
+    renderState,
+    true, // skipBlockingShell
+  );
 }
 
 export type TransitionStatus = FormStatus;
