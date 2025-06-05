@@ -70,7 +70,7 @@ export const disableDefaultPropsExceptForClasses = true;
 export const renameElementSymbol = false;
 
 export const enableObjectFiber = false;
-export const enableEagerAlternateStateNodeCleanup = false;
+export const enableEagerAlternateStateNodeCleanup = true;
 
 export const enableHydrationLaneScheduling = true;
 
