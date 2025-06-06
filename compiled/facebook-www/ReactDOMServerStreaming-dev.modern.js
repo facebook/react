@@ -7627,6 +7627,20 @@ __DEV__ &&
             var completedPreambleSegments = request.completedPreambleSegments;
             if (null === completedPreambleSegments) return;
             flushedByteSize = request.byteSize;
+            var skipBlockingShell = !1,
+              blockingRenderMaxSize = 40 * request.progressiveChunkSize;
+            flushedByteSize > blockingRenderMaxSize &&
+              ((skipBlockingShell = !0),
+              logRecoverableError(
+                request,
+                Error(
+                  "This rendered a large document (>" +
+                    Math.round(blockingRenderMaxSize / 1e3) +
+                    ") without any Suspense boundaries around most of it. That can delay initial paint longer than necessary. To improve load performance, add a <Suspense> or <SuspenseList> around the content you expect to be below the header or below the fold. In the meantime, the content will deopt to paint arbitrary incomplete pieces of HTML."
+                ),
+                {},
+                null
+              ));
             var resumableState = request.resumableState,
               renderState = request.renderState;
             if (renderState.externalRuntimeScript) {
@@ -7697,7 +7711,9 @@ __DEV__ &&
             renderState.scripts.clear();
             renderState.bulkPreloads.forEach(flushResource, destination);
             renderState.bulkPreloads.clear();
-            if (htmlChunks || headChunks) {
+            if ((!htmlChunks && !headChunks) || skipBlockingShell)
+              resumableState.instructions |= 32;
+            else {
               var shellId = "_" + resumableState.idPrefix + "R_";
               destination.buffer += '<link rel="expect" href="#';
               var chunk$jscomp$0 = escapeTextForBrowser(shellId);

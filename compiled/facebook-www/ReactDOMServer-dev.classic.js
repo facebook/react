@@ -8154,6 +8154,18 @@ __DEV__ &&
             var completedPreambleSegments = request.completedPreambleSegments;
             if (null === completedPreambleSegments) return;
             flushedByteSize = request.byteSize;
+            var blockingRenderMaxSize = 40 * request.progressiveChunkSize;
+            flushedByteSize > blockingRenderMaxSize &&
+              logRecoverableError(
+                request,
+                Error(
+                  "This rendered a large document (>" +
+                    Math.round(blockingRenderMaxSize / 1e3) +
+                    ") without any Suspense boundaries around most of it. That can delay initial paint longer than necessary. To improve load performance, add a <Suspense> or <SuspenseList> around the content you expect to be below the header or below the fold. In the meantime, the content will deopt to paint arbitrary incomplete pieces of HTML."
+                ),
+                {},
+                null
+              );
             var resumableState = request.resumableState,
               renderState = request.renderState;
             if (renderState.externalRuntimeScript) {
@@ -8224,13 +8236,7 @@ __DEV__ &&
             renderState.scripts.clear();
             renderState.bulkPreloads.forEach(flushResource, destination);
             renderState.bulkPreloads.clear();
-            if (htmlChunks || headChunks) {
-              var shellId = "_" + resumableState.idPrefix + "R_";
-              destination.push(blockingRenderChunkStart);
-              var chunk$jscomp$0 = escapeTextForBrowser(shellId);
-              destination.push(chunk$jscomp$0);
-              destination.push(blockingRenderChunkEnd);
-            }
+            resumableState.instructions |= SentCompletedShellId;
             var hoistableChunks = renderState.hoistableChunks;
             for (
               i$jscomp$0 = 0;
@@ -8239,23 +8245,28 @@ __DEV__ &&
             )
               destination.push(hoistableChunks[i$jscomp$0]);
             for (
-              resumableState = hoistableChunks.length = 0;
-              resumableState < completedPreambleSegments.length;
-              resumableState++
+              blockingRenderMaxSize = hoistableChunks.length = 0;
+              blockingRenderMaxSize < completedPreambleSegments.length;
+              blockingRenderMaxSize++
             ) {
-              var segments = completedPreambleSegments[resumableState];
+              var segments = completedPreambleSegments[blockingRenderMaxSize];
               for (
-                renderState = 0;
-                renderState < segments.length;
-                renderState++
+                resumableState = 0;
+                resumableState < segments.length;
+                resumableState++
               )
-                flushSegment(request, destination, segments[renderState], null);
+                flushSegment(
+                  request,
+                  destination,
+                  segments[resumableState],
+                  null
+                );
             }
             var preamble$jscomp$0 = request.renderState.preamble,
               headChunks$jscomp$0 = preamble$jscomp$0.headChunks;
             if (preamble$jscomp$0.htmlChunks || headChunks$jscomp$0) {
-              var chunk$jscomp$1 = endChunkForTag("head");
-              destination.push(chunk$jscomp$1);
+              var chunk$jscomp$0 = endChunkForTag("head");
+              destination.push(chunk$jscomp$0);
             }
             var bodyChunks = preamble$jscomp$0.bodyChunks;
             if (bodyChunks)
@@ -8294,15 +8305,15 @@ __DEV__ &&
               (resumableState$jscomp$0.instructions & SentCompletedShellId) ===
                 NothingSent
             ) {
-              var chunk$jscomp$2 = startChunkForTag("template");
-              destination.push(chunk$jscomp$2);
+              var chunk$jscomp$1 = startChunkForTag("template");
+              destination.push(chunk$jscomp$1);
               writeCompletedShellIdAttribute(
                 destination,
                 resumableState$jscomp$0
               );
               destination.push(endOfStartTag);
-              var chunk$jscomp$3 = endChunkForTag("template");
-              destination.push(chunk$jscomp$3);
+              var chunk$jscomp$2 = endChunkForTag("template");
+              destination.push(chunk$jscomp$2);
             }
             writeBootstrap(destination, renderState$jscomp$0);
           }
@@ -8366,8 +8377,8 @@ __DEV__ &&
                   : renderState$jscomp$1.push(clientRenderScript1Partial))
               : renderState$jscomp$1.push(clientRenderData1);
             renderState$jscomp$1.push(renderState$jscomp$2.boundaryPrefix);
-            var chunk$jscomp$4 = id.toString(16);
-            renderState$jscomp$1.push(chunk$jscomp$4);
+            var chunk$jscomp$3 = id.toString(16);
+            renderState$jscomp$1.push(chunk$jscomp$3);
             scriptFormat && renderState$jscomp$1.push(clientRenderScript1A);
             if (
               errorDigest ||
@@ -8379,55 +8390,55 @@ __DEV__ &&
                 renderState$jscomp$1.push(
                   clientRenderErrorScriptArgInterstitial
                 );
-                var chunk$jscomp$5 = escapeJSStringsForInstructionScripts(
+                var chunk$jscomp$4 = escapeJSStringsForInstructionScripts(
                   errorDigest || ""
                 );
-                renderState$jscomp$1.push(chunk$jscomp$5);
+                renderState$jscomp$1.push(chunk$jscomp$4);
               } else {
                 renderState$jscomp$1.push(clientRenderData2);
-                var chunk$jscomp$6 = escapeTextForBrowser(errorDigest || "");
-                renderState$jscomp$1.push(chunk$jscomp$6);
+                var chunk$jscomp$5 = escapeTextForBrowser(errorDigest || "");
+                renderState$jscomp$1.push(chunk$jscomp$5);
               }
             if (errorMessage || errorStack || errorComponentStack)
               if (scriptFormat) {
                 renderState$jscomp$1.push(
                   clientRenderErrorScriptArgInterstitial
                 );
-                var chunk$jscomp$7 = escapeJSStringsForInstructionScripts(
+                var chunk$jscomp$6 = escapeJSStringsForInstructionScripts(
                   errorMessage || ""
                 );
-                renderState$jscomp$1.push(chunk$jscomp$7);
+                renderState$jscomp$1.push(chunk$jscomp$6);
               } else {
                 renderState$jscomp$1.push(clientRenderData3);
-                var chunk$jscomp$8 = escapeTextForBrowser(errorMessage || "");
-                renderState$jscomp$1.push(chunk$jscomp$8);
+                var chunk$jscomp$7 = escapeTextForBrowser(errorMessage || "");
+                renderState$jscomp$1.push(chunk$jscomp$7);
               }
             if (errorStack || errorComponentStack)
               if (scriptFormat) {
                 renderState$jscomp$1.push(
                   clientRenderErrorScriptArgInterstitial
                 );
-                var chunk$jscomp$9 = escapeJSStringsForInstructionScripts(
+                var chunk$jscomp$8 = escapeJSStringsForInstructionScripts(
                   errorStack || ""
                 );
-                renderState$jscomp$1.push(chunk$jscomp$9);
+                renderState$jscomp$1.push(chunk$jscomp$8);
               } else {
                 renderState$jscomp$1.push(clientRenderData4);
-                var chunk$jscomp$10 = escapeTextForBrowser(errorStack || "");
-                renderState$jscomp$1.push(chunk$jscomp$10);
+                var chunk$jscomp$9 = escapeTextForBrowser(errorStack || "");
+                renderState$jscomp$1.push(chunk$jscomp$9);
               }
             if (errorComponentStack)
               if (scriptFormat) {
                 renderState$jscomp$1.push(
                   clientRenderErrorScriptArgInterstitial
                 );
-                var chunk$jscomp$11 =
+                var chunk$jscomp$10 =
                   escapeJSStringsForInstructionScripts(errorComponentStack);
-                renderState$jscomp$1.push(chunk$jscomp$11);
+                renderState$jscomp$1.push(chunk$jscomp$10);
               } else {
                 renderState$jscomp$1.push(clientRenderData5);
-                var chunk$jscomp$12 = escapeTextForBrowser(errorComponentStack);
-                renderState$jscomp$1.push(chunk$jscomp$12);
+                var chunk$jscomp$11 = escapeTextForBrowser(errorComponentStack);
+                renderState$jscomp$1.push(chunk$jscomp$11);
               }
             var JSCompiler_inline_result = scriptFormat
               ? renderState$jscomp$1.push(clientRenderScriptEnd)
@@ -9894,8 +9905,6 @@ __DEV__ &&
       spaceSeparator = " ",
       styleTagResourceOpen3 = '">',
       styleTagResourceClose = "</style>",
-      blockingRenderChunkStart = '<link rel="expect" href="#',
-      blockingRenderChunkEnd = '" blocking="render"/>',
       completedShellIdAttributeStart = ' id="',
       arrayFirstOpenBracket = "[",
       arraySubsequentOpenBracket = ",[",
@@ -10170,5 +10179,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.2.0-www-classic-22b92915-20250606";
+    exports.version = "19.2.0-www-classic-d1772728-20250606";
   })();
