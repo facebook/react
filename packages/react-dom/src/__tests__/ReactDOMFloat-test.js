@@ -25,7 +25,7 @@ let SuspenseList;
 let textCache;
 let loadCache;
 let writable;
-const CSPnonce = null;
+let CSPnonce = null;
 let container;
 let buffer = '';
 let hasErrored = false;
@@ -69,6 +69,7 @@ describe('ReactDOMFloat', () => {
       setTimeout(cb);
     container = document.getElementById('container');
 
+    CSPnonce = null;
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
