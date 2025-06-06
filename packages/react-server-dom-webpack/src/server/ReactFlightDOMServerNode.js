@@ -54,6 +54,8 @@ export {
   createClientModuleProxy,
 } from '../ReactFlightWebpackReferences';
 
+import {textEncoder} from 'react-server/src/ReactServerStreamConfigNode';
+
 import type {TemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
 
 export {createTemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
@@ -138,6 +140,9 @@ function createFakeWritableFromReadableStreamController(
   // a fake writable for now to push into the Readable.
   return ({
     write(chunk: string | Uint8Array) {
+      if (typeof chunk === 'string') {
+        chunk = textEncoder.encode(chunk);
+      }
       controller.enqueue(chunk);
       // in web streams there is no backpressure so we can alwas write more
       return true;

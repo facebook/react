@@ -97,11 +97,13 @@ describe('ReactFlightDOMNode', () => {
     function Text({children}) {
       return <span>{children}</span>;
     }
+    // Large strings can get encoded differently so we need to test that.
+    const largeString = 'world'.repeat(1000);
     function HTML() {
       return (
         <div>
           <Text>hello</Text>
-          <Text>world</Text>
+          <Text>{largeString}</Text>
         </div>
       );
     }
@@ -127,7 +129,7 @@ describe('ReactFlightDOMNode', () => {
       html: (
         <div>
           <span>hello</span>
-          <span>world</span>
+          <span>{largeString}</span>
         </div>
       ),
     });
