@@ -302,7 +302,10 @@ function runWithEnvironment(
       validateNoImpureFunctionsInRender(hir).unwrap();
     }
 
-    if (env.config.validateNoFreezingKnownMutableFunctions) {
+    if (
+      env.config.validateNoFreezingKnownMutableFunctions ||
+      env.config.enableNewMutationAliasingModel
+    ) {
       validateNoFreezingKnownMutableFunctions(hir).unwrap();
     }
   }
