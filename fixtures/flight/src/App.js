@@ -47,8 +47,8 @@ async function ThirdPartyComponent() {
 // Using Web streams for tee'ing convenience here.
 let cachedThirdPartyReadableWeb;
 
-function fetchThirdParty(Component) {
-  if (cachedThirdPartyReadableWeb) {
+function fetchThirdParty(noCache) {
+  if (cachedThirdPartyReadableWeb && !noCache) {
     const [readableWeb1, readableWeb2] = cachedThirdPartyReadableWeb.tee();
     cachedThirdPartyReadableWeb = readableWeb1;
 
@@ -79,16 +79,16 @@ function fetchThirdParty(Component) {
   return result;
 }
 
-async function ServerComponent() {
+async function ServerComponent({noCache}) {
   await new Promise(resolve => setTimeout(() => resolve('deferred text'), 50));
-  return await fetchThirdParty();
+  return fetchThirdParty(noCache);
 }
 
-export default async function App({prerender}) {
+export default async function App({prerender, noCache}) {
   const res = await fetch('http://localhost:3001/todos');
   const todos = await res.json();
 
-  const dedupedChild = <ServerComponent />;
+  const dedupedChild = <ServerComponent noCache={noCache} />;
   const message = getServerState();
   return (
     <html lang="en">
