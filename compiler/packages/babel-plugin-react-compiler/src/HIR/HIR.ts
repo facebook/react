@@ -1397,6 +1397,11 @@ export enum ValueReason {
   JsxCaptured = 'jsx-captured',
 
   /**
+   * Passed to an effect
+   */
+  Effect = 'effect',
+
+  /**
    * Return value of a function with known frozen return value, e.g. `useState`.
    */
   KnownReturnSignature = 'known-return-signature',
