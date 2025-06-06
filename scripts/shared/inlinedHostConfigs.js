@@ -89,6 +89,7 @@ module.exports = [
       'react-server-dom-webpack/server.node.unbundled',
       'react-server-dom-webpack/static',
       'react-server-dom-webpack/static.node.unbundled',
+      'react-server-dom-webpack/src/client/ReactFlightDOMClientEdge.js', // react-server-dom-webpack/client.node
       'react-server-dom-webpack/src/client/ReactFlightDOMClientNode.js', // react-server-dom-webpack/client.node
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerNode.js',
       'react-server-dom-webpack/src/client/react-flight-dom-client.node.unbundled',
@@ -131,7 +132,8 @@ module.exports = [
       'react-server-dom-webpack/server.node',
       'react-server-dom-webpack/static',
       'react-server-dom-webpack/static.node',
-      'react-server-dom-webpack/src/client/ReactFlightDOMClientNode.js', // react-server-dom-turbopack/client.node
+      'react-server-dom-webpack/src/client/ReactFlightDOMClientEdge.js', // react-server-dom-webpack/client.node
+      'react-server-dom-webpack/src/client/ReactFlightDOMClientNode.js', // react-server-dom-webpack/client.node
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerWebpack.js',
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerWebpackServer.js',
       'react-server-dom-webpack/src/client/react-flight-dom-client.node',
@@ -176,6 +178,7 @@ module.exports = [
       'react-server-dom-turbopack/server.node',
       'react-server-dom-turbopack/static',
       'react-server-dom-turbopack/static.node',
+      'react-server-dom-turbopack/src/client/ReactFlightDOMClientEdge.js', // react-server-dom-turbopack/client.node
       'react-server-dom-turbopack/src/client/ReactFlightDOMClientNode.js', // react-server-dom-turbopack/client.node
       'react-server-dom-turbopack/src/client/ReactFlightClientConfigBundlerTurbopack.js',
       'react-server-dom-turbopack/src/client/ReactFlightClientConfigBundlerTurbopackServer.js',
@@ -221,6 +224,7 @@ module.exports = [
       'react-server-dom-parcel/server.node',
       'react-server-dom-parcel/static',
       'react-server-dom-parcel/static.node',
+      'react-server-dom-parcel/src/client/ReactFlightDOMClientEdge.js', // react-server-dom-parcel/client.node
       'react-server-dom-parcel/src/client/ReactFlightDOMClientNode.js', // react-server-dom-parcel/client.node
       'react-server-dom-parcel/src/client/ReactFlightClientConfigBundlerParcel.js',
       'react-server-dom-parcel/src/client/react-flight-dom-client.node',
