@@ -37,7 +37,7 @@ const pendingOperations: Map<number, AsyncSequence> =
 // but given that typically this is just a live server, it doesn't really matter.
 export function initAsyncDebugInfo(): void {
   if (__DEV__ && enableAsyncDebugInfo) {
-    createHook({
+    const installedHook = createHook({
       init(
         asyncId: number,
         type: string,
@@ -181,7 +181,20 @@ export function initAsyncDebugInfo(): void {
         // extracted it or it should be part of a chain of triggers.
         pendingOperations.delete(asyncId);
       },
-    }).enable();
+    });
+
+    installedHook.enable();
+
+    if (typeof FinalizationRegistry === 'function') {
+      const finalizationRegistry = new FinalizationRegistry(
+        // $FlowFixMe[method-unbinding]
+        installedHook.disable.bind(installedHook),
+      );
+      // If we ever garbage collect the getCurrentAsyncSequence function, then we
+      // know there are no more listeners to query our database and we can disable
+      // the async hook. This lets you unmount and remount the module graph.
+      finalizationRegistry.register(getCurrentAsyncSequence);
+    }
   }
 }
 
