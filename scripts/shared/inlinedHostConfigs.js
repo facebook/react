@@ -191,6 +191,19 @@ module.exports = [
     isServerSupported: true,
   },
   {
+    shortName: 'dom-node-webstreams-webpack',
+    entryPoints: [
+      'react-server-dom-webpack/src/client/react-flight-dom-client.node-webstreams',
+      'react-server-dom-webpack/src/server/react-flight-dom-server.node-webstreams',
+    ],
+    paths: [
+      'react-server-dom-webpack/src/client/react-flight-dom-client.node-webstreams',
+      'react-server-dom-webpack/src/server/react-flight-dom-server.node-webstreams',
+    ],
+    isFlowTyped: false,
+    isServerSupported: true,
+  },
+  {
     shortName: 'dom-node-turbopack',
     entryPoints: [
       'react-server-dom-turbopack/client.node',
