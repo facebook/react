@@ -222,13 +222,13 @@ export function writePreambleStart(
   destination: Destination,
   resumableState: ResumableState,
   renderState: RenderState,
-  skipExpect?: boolean, // Used as an override by ReactFizzConfigMarkup
+  skipBlockingShell: boolean,
 ): void {
   return writePreambleStartImpl(
     destination,
     resumableState,
     renderState,
-    true, // skipExpect
+    true, // skipBlockingShell
   );
 }
 

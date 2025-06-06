@@ -129,7 +129,6 @@
     "lint-build": "node ./scripts/rollup/validate/index.js",
     "extract-errors": "node scripts/error-codes/extract-errors.js",
     "postinstall": "node ./scripts/flow/createFlowConfigs.js",
-    "pretest": "./scripts/react-compiler/build-compiler.sh && ./scripts/react-compiler/link-compiler.sh",
     "test": "node ./scripts/jest/jest-cli.js",
     "test-stable": "node ./scripts/jest/jest-cli.js --release-channel=stable",
     "test-www": "node ./scripts/jest/jest-cli.js --release-channel=www-modern",

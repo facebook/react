@@ -4860,8 +4860,9 @@ export function writeCompletedSegmentInstruction(
 const completeBoundaryScriptFunctionOnly = stringToPrecomputedChunk(
   completeBoundaryFunction,
 );
-const completeBoundaryUpgradeToViewTransitionsInstruction =
-  stringToPrecomputedChunk(upgradeToViewTransitionsInstruction);
+const completeBoundaryUpgradeToViewTransitionsInstruction = stringToChunk(
+  upgradeToViewTransitionsInstruction,
+);
 const completeBoundaryScript1Partial = stringToPrecomputedChunk('$RC("');
 
 const completeBoundaryWithStylesScript1FullPartial = stringToPrecomputedChunk(
@@ -5464,7 +5465,7 @@ export function writePreambleStart(
   destination: Destination,
   resumableState: ResumableState,
   renderState: RenderState,
-  skipExpect?: boolean, // Used as an override by ReactFizzConfigMarkup
+  skipBlockingShell: boolean,
 ): void {
   // This function must be called exactly once on every request
   if (enableFizzExternalRuntime && renderState.externalRuntimeScript) {
@@ -5548,7 +5549,7 @@ export function writePreambleStart(
   renderState.bulkPreloads.forEach(flushResource, destination);
   renderState.bulkPreloads.clear();
 
-  if ((htmlChunks || headChunks) && !skipExpect) {
+  if ((htmlChunks || headChunks) && !skipBlockingShell) {
     // If we have any html or head chunks we know that we're rendering a full document.
     // A full document should block display until the full shell has downloaded.
     // Therefore we insert a render blocking instruction referring to the last body
@@ -5556,6 +5557,10 @@ export function writePreambleStart(
     // have already been emitted so we don't do anything to delay them but early so that
     // the browser doesn't risk painting too early.
     writeBlockingRenderInstruction(destination, resumableState, renderState);
+  } else {
+    // We don't need to add the shell id so mark it as if sent.
+    // Currently it might still be sent if it was already added to a bootstrap script.
+    resumableState.instructions |= SentCompletedShellId;
   }
 
   // Write embedding hoistableChunks

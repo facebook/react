@@ -61,7 +61,7 @@ export const disableClientCache = true;
 export const enableInfiniteRenderLoopDetection = false;
 
 export const renameElementSymbol = true;
-export const enableEagerAlternateStateNodeCleanup = false;
+export const enableEagerAlternateStateNodeCleanup = true;
 
 export const enableYieldingBeforePassive = true;
 

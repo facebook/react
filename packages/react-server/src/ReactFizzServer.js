@@ -182,6 +182,7 @@ import {
   disableDefaultPropsExceptForClasses,
   enableAsyncIterableChildren,
   enableViewTransition,
+  enableFizzBlockingRender,
 } from 'shared/ReactFeatureFlags';
 
 import assign from 'shared/assign';
@@ -417,6 +418,41 @@ type Preamble = PreambleState;
 // paint.
 // 500 * 1024 / 8 * .8 * 0.5 / 2
 const DEFAULT_PROGRESSIVE_CHUNK_SIZE = 12800;
+
+function getBlockingRenderMaxSize(request: Request): number {
+  // We want to make sure that we can block the reveal of a well designed complete
+  // shell but if you have constructed a too large shell (e.g. by not adding any
+  // Suspense boundaries) then that might take too long to render. We shouldn't
+  // punish users (or overzealous metrics tracking) in that scenario.
+  // There's a trade off here. If this limit is too low then you can't fit a
+  // reasonably well built UI within it without getting errors. If it's too high
+  // then things that accidentally fall below it might take too long to load.
+  // Web Vitals target 1.8 seconds for first paint and our goal to have the limit
+  // be fast enough to hit that. For this argument we assume that most external
+  // resources are already cached because it's a return visit, or inline styles.
+  // If it's not, then it's highly unlikely that any render blocking instructions
+  // we add has any impact what so ever on the paint.
+  // Assuming a first byte of about 600ms which is kind of bad but common with a
+  // decent static host. If it's longer e.g. due to dynamic rendering, then you
+  // are going to bound by dynamic production of the content and you're better off
+  // with Suspense boundaries anyway. This number doesn't matter much. Then you
+  // have about 1.2 seconds left for bandwidth. On 3G that gives you about 112.5kb
+  // worth of data. That's worth about 10x in terms of uncompressed bytes. Then we
+  // half that just to account for longer latency, slower bandwidth and CPU processing.
+  // Now we're down to about 500kb. In fact, looking at metrics we've collected with
+  // rel="expect" examples and other documents, the impact on documents smaller than
+  // that is within the noise. That's because there's enough happening within that
+  // start up to not make HTML streaming not significantly better.
+  // Content above the fold tends to be about 100-200kb tops. Therefore 500kb should
+  // be enough head room for a good loading state. After that you should use
+  // Suspense or SuspenseList to improve it.
+  // Since this is highly related to the reason you would adjust the
+  // progressiveChunkSize option, and always has to be higher, we define this limit
+  // in terms of it. So if you want to increase the limit because you have high
+  // bandwidth users, then you can adjust it up. If you are concerned about even
+  // slower bandwidth then you can adjust it down.
+  return request.progressiveChunkSize * 40; // 512kb by default.
+}
 
 function isEligibleForOutlining(
   request: Request,
@@ -5476,9 +5512,15 @@ function flushPreamble(
   destination: Destination,
   rootSegment: Segment,
   preambleSegments: Array<Array<Segment>>,
+  skipBlockingShell: boolean,
 ) {
   // The preamble is ready.
-  writePreambleStart(destination, request.resumableState, request.renderState);
+  writePreambleStart(
+    destination,
+    request.resumableState,
+    request.renderState,
+    skipBlockingShell,
+  );
   for (let i = 0; i < preambleSegments.length; i++) {
     const segments = preambleSegments[i];
     for (let j = 0; j < segments.length; j++) {
@@ -5888,11 +5930,32 @@ function flushCompletedQueues(
 
       flushedByteSize = request.byteSize; // Start counting bytes
       // TODO: Count the size of the preamble chunks too.
+      let skipBlockingShell = false;
+      if (enableFizzBlockingRender) {
+        const blockingRenderMaxSize = getBlockingRenderMaxSize(request);
+        if (flushedByteSize > blockingRenderMaxSize) {
+          skipBlockingShell = true;
+          const maxSizeKb = Math.round(blockingRenderMaxSize / 1000);
+          const error = new Error(
+            'This rendered a large document (>' +
+              maxSizeKb +
+              ') without any Suspense ' +
+              'boundaries around most of it. That can delay initial paint longer than ' +
+              'necessary. To improve load performance, add a <Suspense> or <SuspenseList> ' +
+              'around the content you expect to be below the header or below the fold. ' +
+              'In the meantime, the content will deopt to paint arbitrary incomplete ' +
+              'pieces of HTML.',
+          );
+          const errorInfo: ThrownInfo = {};
+          logRecoverableError(request, error, errorInfo, null);
+        }
+      }
       flushPreamble(
         request,
         destination,
         completedRootSegment,
         completedPreambleSegments,
+        skipBlockingShell,
       );
       flushSegment(request, destination, completedRootSegment, null);
       request.completedRootSegment = null;
