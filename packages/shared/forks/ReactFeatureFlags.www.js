@@ -104,7 +104,7 @@ export const enableReactTestRendererWarning = false;
 
 export const disableLegacyMode = true;
 
-export const enableEagerAlternateStateNodeCleanup = false;
+export const enableEagerAlternateStateNodeCleanup = true;
 
 export const enableLazyPublicInstanceInFabric = false;
 

@@ -5,6 +5,7 @@ module.exports = {
   modulePathIgnorePatterns: [
     '<rootDir>/scripts/rollup/shims/',
     '<rootDir>/scripts/bench/',
+    '<rootDir>/packages/eslint-plugin-react-hooks/',
   ],
   transform: {
     '^.+babel-plugin-react-compiler/dist/index.js$': [
