@@ -107,6 +107,7 @@
             appearingElement
           );
         }
+      var suspenseyImages = [];
       for (
         appearingElements = 0;
         appearingElements < batch.length;
@@ -160,7 +161,8 @@
               appearingElement = appearingElement.nextSibling;
             }
             for (
-              var enterElement = batch[appearingElements + 1].firstElementChild;
+              var contentNode$3 = batch[appearingElements + 1],
+                enterElement = contentNode$3.firstElementChild;
               enterElement;
 
             )
@@ -188,6 +190,10 @@
               1 === appearingElement.nodeType &&
               "none" !== appearingElement.getAttribute("vt-update")
             );
+            var appearingImages = contentNode$3.querySelectorAll(
+              'img[src]:not([loading="lazy"])'
+            );
+            suspenseyImages.push.apply(suspenseyImages, appearingImages);
           }
         }
       }
@@ -195,9 +201,50 @@
         var transition = (document.__reactViewTransition =
           document.startViewTransition({
             update: function () {
-              revealBoundaries(batch, document.documentElement.clientHeight);
+              revealBoundaries(batch);
+              for (
+                var blockingPromises = [
+                    document.documentElement.clientHeight,
+                    document.fonts.ready
+                  ],
+                  $jscomp$loop$7 = {},
+                  i$4 = 0;
+                i$4 < suspenseyImages.length;
+                $jscomp$loop$7 = {
+                  $jscomp$loop$prop$suspenseyImage$8:
+                    $jscomp$loop$7.$jscomp$loop$prop$suspenseyImage$8
+                },
+                  i$4++
+              )
+                if (
+                  (($jscomp$loop$7.$jscomp$loop$prop$suspenseyImage$8 =
+                    suspenseyImages[i$4]),
+                  !$jscomp$loop$7.$jscomp$loop$prop$suspenseyImage$8.complete)
+                ) {
+                  var rect =
+                    $jscomp$loop$7.$jscomp$loop$prop$suspenseyImage$8.getBoundingClientRect();
+                  0 < rect.bottom &&
+                    0 < rect.right &&
+                    rect.top < window.innerHeight &&
+                    rect.left < window.innerWidth &&
+                    ((rect = new Promise(
+                      (function ($jscomp$loop$7) {
+                        return function (resolve) {
+                          $jscomp$loop$7.$jscomp$loop$prop$suspenseyImage$8.addEventListener(
+                            "load",
+                            resolve
+                          );
+                          $jscomp$loop$7.$jscomp$loop$prop$suspenseyImage$8.addEventListener(
+                            "error",
+                            resolve
+                          );
+                        };
+                      })($jscomp$loop$7)
+                    )),
+                    blockingPromises.push(rect));
+                }
               return Promise.race([
-                document.fonts.ready,
+                Promise.all(blockingPromises),
                 new Promise(function (resolve) {
                   return setTimeout(resolve, 500);
                 })
@@ -206,11 +253,11 @@
             types: []
           }));
         transition.ready.finally(function () {
-          for (var i$4 = restoreQueue.length - 3; 0 <= i$4; i$4 -= 3) {
-            var element = restoreQueue[i$4],
+          for (var i$5 = restoreQueue.length - 3; 0 <= i$5; i$5 -= 3) {
+            var element = restoreQueue[i$5],
               elementStyle = element.style;
-            elementStyle.viewTransitionName = restoreQueue[i$4 + 1];
-            elementStyle.viewTransitionClass = restoreQueue[i$4 + 1];
+            elementStyle.viewTransitionName = restoreQueue[i$5 + 1];
+            elementStyle.viewTransitionClass = restoreQueue[i$5 + 1];
             "" === element.getAttribute("style") &&
               element.removeAttribute("style");
           }
@@ -286,8 +333,8 @@
           "link[data-precedence],style[data-precedence]"
         ),
         styleTagsToHoist = [],
-        i$5 = 0;
-      (node = nodes[i$5++]);
+        i$6 = 0;
+      (node = nodes[i$6++]);
 
     )
       "not all" === node.getAttribute("media")
@@ -297,11 +344,11 @@
     nodes = 0;
     node = [];
     var precedence, resourceEl;
-    for (i$5 = !0; ; ) {
-      if (i$5) {
+    for (i$6 = !0; ; ) {
+      if (i$6) {
         var stylesheetDescriptor = stylesheetDescriptors[nodes++];
         if (!stylesheetDescriptor) {
-          i$5 = !1;
+          i$6 = !1;
           nodes = 0;
           continue;
         }
