@@ -246,11 +246,8 @@ jobs:
           - "-r=stable --env=development --persistent"
           - "-r=experimental --env=development --persistent"
         shard:
-          - 1/5
-          - 2/5
-          - 3/5
-          - 4/5
-          - 5/5
+          - 1/2
+          - 2/2
     steps:
       - uses: actions/checkout@v4
         with:
@@ -278,7 +275,7 @@ jobs:
         if: steps.node_modules.outputs.cache-hit != 'true'
       - run: yarn --cwd compiler install --frozen-lockfile
         if: steps.node_modules.outputs.cache-hit != 'true'
-      - run: yarn test ${{ matrix.params }} --ci --shard=${{ matrix.shard }}
+      - run: yarn test ${{ matrix.params }} --ci
 
   # ----- BUILD -----
   build_and_lint:
@@ -289,7 +286,7 @@ jobs:
       fail-fast: false
       matrix:
         # yml is dumb. update the --total arg to yarn build if you change the number of workers
-        worker_id: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]
+        worker_id: [0,1,2,3,4]
         release_channel: [stable, experimental]
     steps:
       - uses: actions/checkout@v4
@@ -322,7 +319,7 @@ jobs:
         if: steps.node_modules.outputs.cache-hit != 'true'
       - run: yarn --cwd compiler install --frozen-lockfile
         if: steps.node_modules.outputs.cache-hit != 'true'
-      - run: yarn build --index=${{ matrix.worker_id }} --total=25 --r=${{ matrix.release_channel }} --ci
+      - run: yarn build --index=${{ matrix.worker_id }} --total=5 --r=${{ matrix.release_channel }} --ci
         env:
           CI: github
           RELEASE_CHANNEL: ${{ matrix.release_channel }}
@@ -374,17 +371,6 @@ jobs:
 
           # TODO: Test more persistent configurations?
         ]
-        shard:
-          - 1/10
-          - 2/10
-          - 3/10
-          - 4/10
-          - 5/10
-          - 6/10
-          - 7/10
-          - 8/10
-          - 9/10
-          - 10/10
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -421,7 +407,7 @@ jobs:
           merge-multiple: true
       - name: Display structure of build
         run: ls -R build
-      - run: yarn test --build ${{ matrix.test_params }} --shard=${{ matrix.shard }} --ci
+      - run: yarn test --build ${{ matrix.test_params }} --ci
 
   process_artifacts_combined:
     name: Process artifacts combined
