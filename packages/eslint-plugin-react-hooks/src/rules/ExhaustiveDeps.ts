@@ -1919,7 +1919,11 @@ function analyzePropertyChain(
   node: Node,
   optionalChains: Map<string, boolean> | null,
 ): string {
-  if (node.type === 'Identifier' || node.type === 'JSXIdentifier') {
+  if (
+    node.type === 'Identifier' ||
+    node.type === 'PrivateIdentifier' ||
+    node.type === 'JSXIdentifier'
+  ) {
     const result = node.name;
     if (optionalChains) {
       // Mark as required.
