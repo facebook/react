@@ -321,10 +321,6 @@ export function inferMutationAliasingRanges(
             }
             break;
           }
-          case 'ImmutableCapture': {
-            operandEffects.set(effect.from.identifier.id, Effect.Read);
-            break;
-          }
           case 'CreateFunction':
           case 'Create': {
             break;
@@ -350,6 +346,10 @@ export function inferMutationAliasingRanges(
           }
           case 'Freeze': {
             operandEffects.set(effect.value.identifier.id, Effect.Freeze);
+            break;
+          }
+          case 'ImmutableCapture': {
+            // no-op, Read is the default
             break;
           }
           case 'MutateFrozen':

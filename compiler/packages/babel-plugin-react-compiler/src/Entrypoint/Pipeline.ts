@@ -247,6 +247,7 @@ function runWithEnvironment(
   }
 
   if (!env.config.enableNewMutationAliasingModel) {
+    // NOTE: in the new model this is part of validateNoFreezingKnownMutableFunctions
     validateLocalsNotReassignedAfterRender(hir);
   }
 
