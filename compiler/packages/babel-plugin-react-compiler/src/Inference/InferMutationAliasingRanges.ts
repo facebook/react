@@ -6,7 +6,7 @@
  */
 
 import prettyFormat from 'pretty-format';
-import {CompilerError} from '..';
+import {CompilerError, SourceLocation} from '..';
 import {
   BlockId,
   Effect,
@@ -26,6 +26,7 @@ import {assertExhaustive, getOrInsertWith} from '../Utils/utils';
 import {printFunction} from '../HIR';
 import {printIdentifier, printPlace} from '../HIR/PrintHIR';
 import {MutationKind} from './InferMutationAliasingFunctionEffects';
+import {Result} from '../Utils/Result';
 
 const DEBUG = false;
 const VERBOSE = false;
@@ -33,18 +34,11 @@ const VERBOSE = false;
 /**
  * Infers mutable ranges for all values.
  */
-export function inferMutationAliasingRanges(fn: HIRFunction): void {
+export function inferMutationAliasingRanges(
+  fn: HIRFunction,
+  {isFunctionExpression}: {isFunctionExpression: boolean},
+): Result<void, CompilerError> {
   if (VERBOSE) {
-    console.log();
-    console.log();
-    console.log();
-    console.log();
-    console.log();
-    console.log();
-    console.log();
-    console.log();
-    console.log();
-    console.log();
     console.log();
     console.log(printFunction(fn));
   }
@@ -75,14 +69,16 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
 
   let index = 0;
 
+  const errors = new CompilerError();
+
   for (const param of [...fn.params, ...fn.context, fn.returns]) {
     const place = param.kind === 'Identifier' ? param : param.place;
-    state.create(place);
+    state.create(place, {kind: 'Object'});
   }
   const seenBlocks = new Set<BlockId>();
   for (const block of fn.body.blocks.values()) {
     for (const phi of block.phis) {
-      state.create(phi.place, true);
+      state.create(phi.place, {kind: 'Phi'});
       for (const [pred, operand] of phi.operands) {
         if (!seenBlocks.has(pred)) {
           // NOTE: annotation required to actually typecheck and not silently infer `any`
@@ -100,14 +96,29 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
     seenBlocks.add(block.id);
 
     for (const instr of block.instructions) {
-      for (const lvalue of eachInstructionLValue(instr)) {
-        state.create(lvalue);
+      if (
+        instr.value.kind === 'FunctionExpression' ||
+        instr.value.kind === 'ObjectMethod'
+      ) {
+        state.create(instr.lvalue, {
+          kind: 'Function',
+          function: instr.value.loweredFunc.func,
+        });
+      } else {
+        for (const lvalue of eachInstructionLValue(instr)) {
+          state.create(lvalue, {kind: 'Object'});
+        }
       }
 
       if (instr.effects == null) continue;
       for (const effect of instr.effects) {
-        if (effect.kind === 'Create' || effect.kind === 'CreateFunction') {
-          state.create(effect.into);
+        if (effect.kind === 'Create') {
+          state.create(effect.into, {kind: 'Object'});
+        } else if (effect.kind === 'CreateFunction') {
+          state.create(effect.into, {
+            kind: 'Function',
+            function: effect.function.loweredFunc.func,
+          });
         } else if (effect.kind === 'CreateFrom') {
           state.createFrom(index++, effect.from, effect.into);
         } else if (effect.kind === 'Assign' || effect.kind === 'Alias') {
@@ -142,6 +153,11 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
                 : MutationKind.Conditional,
             place: effect.value,
           });
+        } else if (
+          effect.kind === 'MutateFrozen' ||
+          effect.kind === 'MutateGlobal'
+        ) {
+          errors.push(effect.error);
         }
       }
     }
@@ -184,6 +200,8 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
       makeInstructionId(mutation.id + 1),
       mutation.transitive,
       mutation.kind,
+      mutation.place.loc,
+      errors,
     );
   }
   if (VERBOSE) {
@@ -197,31 +215,35 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
       continue;
     }
     let mutated = false;
-    if (node.local === MutationKind.Conditional) {
-      mutated = true;
-      fn.aliasingEffects.push({
-        kind: 'MutateConditionally',
-        value: place,
-      });
-    } else if (node.local === MutationKind.Definite) {
-      mutated = true;
-      fn.aliasingEffects.push({
-        kind: 'Mutate',
-        value: place,
-      });
+    if (node.local != null) {
+      if (node.local.kind === MutationKind.Conditional) {
+        mutated = true;
+        fn.aliasingEffects.push({
+          kind: 'MutateConditionally',
+          value: {...place, loc: node.local.loc},
+        });
+      } else if (node.local.kind === MutationKind.Definite) {
+        mutated = true;
+        fn.aliasingEffects.push({
+          kind: 'Mutate',
+          value: {...place, loc: node.local.loc},
+        });
+      }
     }
-    if (node.transitive === MutationKind.Conditional) {
-      mutated = true;
-      fn.aliasingEffects.push({
-        kind: 'MutateTransitiveConditionally',
-        value: place,
-      });
-    } else if (node.transitive === MutationKind.Definite) {
-      mutated = true;
-      fn.aliasingEffects.push({
-        kind: 'MutateTransitive',
-        value: place,
-      });
+    if (node.transitive != null) {
+      if (node.transitive.kind === MutationKind.Conditional) {
+        mutated = true;
+        fn.aliasingEffects.push({
+          kind: 'MutateTransitiveConditionally',
+          value: {...place, loc: node.transitive.loc},
+        });
+      } else if (node.transitive.kind === MutationKind.Definite) {
+        mutated = true;
+        fn.aliasingEffects.push({
+          kind: 'MutateTransitive',
+          value: {...place, loc: node.transitive.loc},
+        });
+      }
     }
     if (mutated) {
       place.effect = Effect.Capture;
@@ -360,13 +382,32 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
         operand.effect = effect;
       }
     }
-    for (const operand of eachTerminalOperand(block.terminal)) {
-      operand.effect = Effect.Read;
+    if (block.terminal.kind === 'return') {
+      block.terminal.value.effect = isFunctionExpression
+        ? Effect.Read
+        : Effect.Freeze;
+    } else {
+      for (const operand of eachTerminalOperand(block.terminal)) {
+        operand.effect = Effect.Read;
+      }
     }
   }
 
   if (VERBOSE) {
     console.log(printFunction(fn));
+  }
+  return errors.asResult();
+}
+
+function appendFunctionErrors(errors: CompilerError, fn: HIRFunction): void {
+  for (const effect of fn.aliasingEffects ?? []) {
+    switch (effect.kind) {
+      case 'MutateFrozen':
+      case 'MutateGlobal': {
+        errors.push(effect.error);
+        break;
+      }
+    }
   }
 }
 
@@ -376,28 +417,31 @@ type Node = {
   captures: Map<Identifier, number>;
   aliases: Map<Identifier, number>;
   edges: Array<{index: number; node: Identifier; kind: 'capture' | 'alias'}>;
-  transitive: MutationKind;
-  local: MutationKind;
-  phi: boolean;
+  transitive: {kind: MutationKind; loc: SourceLocation} | null;
+  local: {kind: MutationKind; loc: SourceLocation} | null;
+  value:
+    | {kind: 'Object'}
+    | {kind: 'Phi'}
+    | {kind: 'Function'; function: HIRFunction};
 };
 class AliasingState {
   nodes: Map<Identifier, Node> = new Map();
 
-  create(place: Place, phi: boolean = false): void {
+  create(place: Place, value: Node['value']): void {
     this.nodes.set(place.identifier, {
       id: place.identifier,
       createdFrom: new Map(),
       captures: new Map(),
       aliases: new Map(),
       edges: [],
-      transitive: MutationKind.None,
-      local: MutationKind.None,
-      phi,
+      transitive: null,
+      local: null,
+      value,
     });
   }
 
   createFrom(index: number, from: Place, into: Place): void {
-    this.create(into);
+    this.create(into, {kind: 'Object'});
     const fromNode = this.nodes.get(from.identifier);
     const toNode = this.nodes.get(into.identifier);
     if (fromNode == null || toNode == null) {
@@ -454,6 +498,8 @@ class AliasingState {
     end: InstructionId,
     transitive: boolean,
     kind: MutationKind,
+    loc: SourceLocation,
+    errors: CompilerError,
   ): void {
     const seen = new Set<Identifier>();
     const queue: Array<{
@@ -484,10 +530,21 @@ class AliasingState {
       node.id.mutableRange.end = makeInstructionId(
         Math.max(node.id.mutableRange.end, end),
       );
+      if (
+        node.value.kind === 'Function' &&
+        node.transitive == null &&
+        node.local == null
+      ) {
+        appendFunctionErrors(errors, node.value.function);
+      }
       if (transitive) {
-        node.transitive = Math.max(node.transitive, kind);
+        if (node.transitive == null || node.transitive.kind < kind) {
+          node.transitive = {kind, loc};
+        }
       } else {
-        node.local = Math.max(node.local, kind);
+        if (node.local == null || node.local.kind < kind) {
+          node.local = {kind, loc};
+        }
       }
       /**
        * all mutations affect "forward" edges by the rules:
@@ -506,7 +563,7 @@ class AliasingState {
         }
         queue.push({place: alias, transitive: true, direction: 'backwards'});
       }
-      if (direction === 'backwards' || !node.phi) {
+      if (direction === 'backwards' || node.value.kind !== 'Phi') {
         /**
          * all mutations affect backward alias edges by the rules:
          * - Alias a -> b, mutate(b) => mutate(a)

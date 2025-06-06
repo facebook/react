@@ -336,6 +336,7 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
             kind: 'Create',
             into: signatureArgument(2),
             value: ValueKind.Primitive,
+            reason: ValueReason.KnownReturnSignature,
           },
         ],
       },
@@ -391,6 +392,7 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
             kind: 'Create',
             into: signatureArgument(2),
             value: ValueKind.Mutable,
+            reason: ValueReason.KnownReturnSignature,
           },
           // The first arg to the callback is an item extracted from the receiver array
           {
@@ -403,6 +405,7 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
             kind: 'Create',
             into: signatureArgument(5),
             value: ValueKind.Primitive,
+            reason: ValueReason.KnownReturnSignature,
           },
           // calls the callback, returning the result into a temporary
           {

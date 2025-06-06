@@ -112,6 +112,31 @@ export function validateNoFreezingKnownMutableFunctions(
           );
           if (knownMutation && knownMutation.kind === 'ContextMutation') {
             contextMutationEffects.set(lvalue.identifier.id, knownMutation);
+          } else if (
+            fn.env.config.enableNewMutationAliasingModel &&
+            value.loweredFunc.func.aliasingEffects != null
+          ) {
+            const context = new Set(
+              value.loweredFunc.func.context.map(p => p.identifier.id),
+            );
+            effects: for (const effect of value.loweredFunc.func
+              .aliasingEffects) {
+              switch (effect.kind) {
+                case 'Mutate':
+                case 'MutateTransitive': {
+                  if (context.has(effect.value.identifier.id)) {
+                    contextMutationEffects.set(lvalue.identifier.id, {
+                      kind: 'ContextMutation',
+                      effect: Effect.Mutate,
+                      loc: effect.value.loc,
+                      places: new Set([effect.value]),
+                    });
+                    break effects;
+                  }
+                  break;
+                }
+              }
+            }
           }
           break;
         }

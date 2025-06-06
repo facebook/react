@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {HIRFunction, IdentifierId, Place, ValueKind} from '../HIR';
+import {HIRFunction, IdentifierId, Place, ValueKind, ValueReason} from '../HIR';
 import {getOrInsertDefault} from '../Utils/utils';
 import {AliasingEffect} from './InferMutationAliasingEffects';
 
@@ -157,6 +157,7 @@ export function inferMutationAliasingFunctionEffects(
         fn.returnType.kind === 'Primitive'
           ? ValueKind.Primitive
           : ValueKind.Mutable,
+      reason: ValueReason.KnownReturnSignature,
     });
   }
 
