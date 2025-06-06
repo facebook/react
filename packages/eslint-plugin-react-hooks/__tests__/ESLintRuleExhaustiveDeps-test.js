@@ -385,13 +385,20 @@ const tests = {
         }
       `,
     },
+    // Private identifier
     {
       code: normalizeIndent`
-        function MyComponent() {
-          const myEffect = () => {
-            // Doesn't use anything
-          };
-          useEffect(myEffect, []);
+        // ignore: 'eslint: v7, parser: babel-eslint'
+        class Hello {
+          static useTest(hello) {
+            useEffect(() => {
+              hello.#cruel.world();
+            }, [hello]);
+          }
+
+          #cruel = {
+            world() {}
+          }
         }
       `,
     },
@@ -8454,6 +8461,10 @@ describe('rules-of-hooks/exhaustive-deps', () => {
     sourceType: 'module',
   };
 
+  const ignorePredicate = str => t => !t.code.includes(str);
+
+  const pluginsV7 = ['classPrivateMethods'];
+
   const languageOptionsV9 = {
     ecmaVersion: 6,
     sourceType: 'module',
@@ -8464,21 +8475,31 @@ describe('rules-of-hooks/exhaustive-deps', () => {
     },
   };
 
-  const testsBabelEslint = tests;
-
   const testsHermesParser = {
     valid: [...testsFlow.valid, ...tests.valid],
     invalid: [...testsFlow.invalid, ...tests.invalid],
   };
 
+  const babelEslintV7FeaturePredicate = ignorePredicate(
+    'eslint: v7, parser: babel-eslint'
+  );
+  const testsBabelEslintV7 = {
+    valid: tests.valid.filter(babelEslintV7FeaturePredicate),
+    invalid: tests.invalid.filter(babelEslintV7FeaturePredicate),
+  };
+
   new ESLintTesterV7({
     parser: require.resolve('babel-eslint'),
-    parserOptions: parserOptionsV7,
+    parserOptions: {
+      ...parserOptionsV7,
+    },
   }).run(
     'eslint: v7, parser: babel-eslint',
     ReactHooksESLintRule,
-    testsBabelEslint
+    testsBabelEslintV7
   );
+
+  const testsBabelEslintV9 = tests;
 
   new ESLintTesterV9({
     languageOptions: {
@@ -8488,7 +8509,7 @@ describe('rules-of-hooks/exhaustive-deps', () => {
   }).run(
     'eslint: v9, parser: @babel/eslint-parser',
     ReactHooksESLintRule,
-    testsBabelEslint
+    testsBabelEslintV9
   );
 
   new ESLintTesterV7({
