@@ -4860,8 +4860,9 @@ export function writeCompletedSegmentInstruction(
 const completeBoundaryScriptFunctionOnly = stringToPrecomputedChunk(
   completeBoundaryFunction,
 );
-const completeBoundaryUpgradeToViewTransitionsInstruction =
-  stringToPrecomputedChunk(upgradeToViewTransitionsInstruction);
+const completeBoundaryUpgradeToViewTransitionsInstruction = stringToChunk(
+  upgradeToViewTransitionsInstruction,
+);
 const completeBoundaryScript1Partial = stringToPrecomputedChunk('$RC("');
 
 const completeBoundaryWithStylesScript1FullPartial = stringToPrecomputedChunk(
