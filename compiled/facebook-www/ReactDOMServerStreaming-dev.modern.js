@@ -7128,7 +7128,9 @@ __DEV__ &&
         var childSegment = segment.children[0];
         childSegment.id = segment.id;
         childSegment.parentFlushed = !0;
-        1 === childSegment.status &&
+        (1 !== childSegment.status &&
+          3 !== childSegment.status &&
+          4 !== childSegment.status) ||
           queueCompletedSegment(boundary, childSegment);
       } else boundary.completedSegments.push(segment);
     }
@@ -7157,7 +7159,7 @@ __DEV__ &&
             (0 === boundary$jscomp$0.status && (boundary$jscomp$0.status = 1),
             null !== segment &&
               segment.parentFlushed &&
-              1 === segment.status &&
+              (1 === segment.status || 3 === segment.status) &&
               queueCompletedSegment(boundary$jscomp$0, segment),
             boundary$jscomp$0.parentFlushed &&
               request$jscomp$0.completedBoundaries.push(boundary$jscomp$0),
@@ -7241,9 +7243,9 @@ __DEV__ &&
             }
           }
         else
-          null !== segment &&
-            segment.parentFlushed &&
-            1 === segment.status &&
+          null === segment ||
+            !segment.parentFlushed ||
+            (1 !== segment.status && 3 !== segment.status) ||
             (queueCompletedSegment(boundary$jscomp$0, segment),
             1 === boundary$jscomp$0.completedSegments.length &&
               boundary$jscomp$0.parentFlushed &&
@@ -7366,6 +7368,8 @@ __DEV__ &&
           chunkIdx < chunks.length &&
             (r = writeChunkAndReturn(destination, chunks[chunkIdx]));
           return r;
+        case 3:
+          return !0;
         default:
           throw Error(
             "Aborted, errored or already flushed boundaries should not be flushed again. This is a bug in React."

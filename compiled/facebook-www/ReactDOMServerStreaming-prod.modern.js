@@ -5670,7 +5670,10 @@ function queueCompletedSegment(boundary, segment) {
     var childSegment = segment.children[0];
     childSegment.id = segment.id;
     childSegment.parentFlushed = !0;
-    1 === childSegment.status && queueCompletedSegment(boundary, childSegment);
+    (1 !== childSegment.status &&
+      3 !== childSegment.status &&
+      4 !== childSegment.status) ||
+      queueCompletedSegment(boundary, childSegment);
   } else boundary.completedSegments.push(segment);
 }
 function finishedTask(request$jscomp$0, boundary, row, segment) {
@@ -5695,7 +5698,7 @@ function finishedTask(request$jscomp$0, boundary, row, segment) {
         (0 === boundary.status && (boundary.status = 1),
         null !== segment &&
           segment.parentFlushed &&
-          1 === segment.status &&
+          (1 === segment.status || 3 === segment.status) &&
           queueCompletedSegment(boundary, segment),
         boundary.parentFlushed &&
           request$jscomp$0.completedBoundaries.push(boundary),
@@ -5775,9 +5778,9 @@ function finishedTask(request$jscomp$0, boundary, row, segment) {
         }
       }
     else
-      null !== segment &&
-        segment.parentFlushed &&
-        1 === segment.status &&
+      null === segment ||
+        !segment.parentFlushed ||
+        (1 !== segment.status && 3 !== segment.status) ||
         (queueCompletedSegment(boundary, segment),
         1 === boundary.completedSegments.length &&
           boundary.parentFlushed &&
@@ -5900,6 +5903,8 @@ function flushSubtree(request, destination, segment, hoistableState) {
       chunkIdx < chunks.length &&
         (r = writeChunkAndReturn(destination, chunks[chunkIdx]));
       return r;
+    case 3:
+      return !0;
     default:
       throw Error(
         "Aborted, errored or already flushed boundaries should not be flushed again. This is a bug in React."

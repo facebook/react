@@ -5811,7 +5811,10 @@ function queueCompletedSegment(boundary, segment) {
     var childSegment = segment.children[0];
     childSegment.id = segment.id;
     childSegment.parentFlushed = !0;
-    1 === childSegment.status && queueCompletedSegment(boundary, childSegment);
+    (1 !== childSegment.status &&
+      3 !== childSegment.status &&
+      4 !== childSegment.status) ||
+      queueCompletedSegment(boundary, childSegment);
   } else boundary.completedSegments.push(segment);
 }
 function finishedTask(request$jscomp$0, boundary, row, segment) {
@@ -5834,7 +5837,7 @@ function finishedTask(request$jscomp$0, boundary, row, segment) {
         (0 === boundary.status && (boundary.status = 1),
         null !== segment &&
           segment.parentFlushed &&
-          1 === segment.status &&
+          (1 === segment.status || 3 === segment.status) &&
           queueCompletedSegment(boundary, segment),
         boundary.parentFlushed &&
           request$jscomp$0.completedBoundaries.push(boundary),
@@ -5911,9 +5914,9 @@ function finishedTask(request$jscomp$0, boundary, row, segment) {
         }
       }
     else
-      null !== segment &&
-        segment.parentFlushed &&
-        1 === segment.status &&
+      null === segment ||
+        !segment.parentFlushed ||
+        (1 !== segment.status && 3 !== segment.status) ||
         (queueCompletedSegment(boundary, segment),
         1 === boundary.completedSegments.length &&
           boundary.parentFlushed &&
@@ -6226,6 +6229,8 @@ function flushSubtree(request, destination, segment, hoistableState) {
         destination.push(chunks[chunkIdx]);
       chunkIdx < chunks.length && (r = destination.push(chunks[chunkIdx]));
       return r;
+    case 3:
+      return !0;
     default:
       throw Error(formatProdErrorMessage(390));
   }
@@ -6872,4 +6877,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.2.0-www-classic-6ccf3284-20250606";
+exports.version = "19.2.0-www-classic-142aa074-20250606";

@@ -5179,7 +5179,8 @@ __DEV__ &&
                 finishSuspenseListRow(request, previousSuspenseListRow);
           } catch (thrownValue) {
             throw (
-              ((resumeSegmentID.status = 12 === request.status ? ABORTED : 4),
+              ((resumeSegmentID.status =
+                12 === request.status ? ABORTED : ERRORED),
               thrownValue)
             );
           }
@@ -6191,7 +6192,7 @@ __DEV__ &&
                 } catch (thrownValue) {
                   throw (
                     ((boundarySegment.status =
-                      12 === request.status ? ABORTED : 4),
+                      12 === request.status ? ABORTED : ERRORED),
                     thrownValue)
                   );
                 } finally {
@@ -6272,7 +6273,8 @@ __DEV__ &&
                     contentRootSegment.status = ABORTED;
                     var error = request.fatalError;
                   } else
-                    (contentRootSegment.status = 4), (error = thrownValue$2);
+                    (contentRootSegment.status = ERRORED),
+                      (error = thrownValue$2);
                   var thrownInfo = getThrownInfo(task.componentStack);
                   var errorDigest = logRecoverableError(
                     request,
@@ -7387,7 +7389,9 @@ __DEV__ &&
         var childSegment = segment.children[0];
         childSegment.id = segment.id;
         childSegment.parentFlushed = !0;
-        childSegment.status === COMPLETED &&
+        (childSegment.status !== COMPLETED &&
+          childSegment.status !== ABORTED &&
+          childSegment.status !== ERRORED) ||
           queueCompletedSegment(boundary, childSegment);
       } else boundary.completedSegments.push(segment);
     }
@@ -7418,7 +7422,7 @@ __DEV__ &&
               (boundary$jscomp$0.status = COMPLETED),
             null !== segment &&
               segment.parentFlushed &&
-              segment.status === COMPLETED &&
+              (segment.status === COMPLETED || segment.status === ABORTED) &&
               queueCompletedSegment(boundary$jscomp$0, segment),
             boundary$jscomp$0.parentFlushed &&
               request$jscomp$0.completedBoundaries.push(boundary$jscomp$0),
@@ -7502,9 +7506,9 @@ __DEV__ &&
             }
           }
         else
-          null !== segment &&
-            segment.parentFlushed &&
-            segment.status === COMPLETED &&
+          null === segment ||
+            !segment.parentFlushed ||
+            (segment.status !== COMPLETED && segment.status !== ABORTED) ||
             (queueCompletedSegment(boundary$jscomp$0, segment),
             1 === boundary$jscomp$0.completedSegments.length &&
               boundary$jscomp$0.parentFlushed &&
@@ -7678,7 +7682,7 @@ __DEV__ &&
                     errorDigest.componentStack
                   );
                   errorDigest.abortSet.delete(errorDigest);
-                  request$jscomp$1.status = 4;
+                  request$jscomp$1.status = ERRORED;
                   var boundary$jscomp$0 = errorDigest.blockedBoundary,
                     row = errorDigest.row,
                     debugTask = errorDigest.debugTask;
@@ -7861,6 +7865,8 @@ __DEV__ &&
             destination.push(chunks[chunkIdx]);
           chunkIdx < chunks.length && (r = destination.push(chunks[chunkIdx]));
           return r;
+        case ABORTED:
+          return !0;
         default:
           throw Error(
             "Aborted, errored or already flushed boundaries should not be flushed again. This is a bug in React."
@@ -10151,6 +10157,7 @@ __DEV__ &&
       COMPLETED = 1,
       FLUSHED = 2,
       ABORTED = 3,
+      ERRORED = 4,
       POSTPONED = 5,
       CLOSED = 14,
       currentRequest = null,
@@ -10179,5 +10186,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.2.0-www-classic-6ccf3284-20250606";
+    exports.version = "19.2.0-www-classic-142aa074-20250606";
   })();
