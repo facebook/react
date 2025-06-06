@@ -22,7 +22,7 @@ import assertExhaustive from './utils/assertExhaustive';
 import {convert} from 'html-to-text';
 import {measurePerformance} from './tools/runtimePerf';
 import {parseReactComponentTree} from './tools/componentTree';
-import {captureConsoleTimeStamp} from './tools/consoleTimeStamp';
+import {beginPerfRecording, getPerfData} from './tools/recordReactPerf';
 
 function calculateMean(values: number[]): string {
   return values.length > 0
@@ -408,12 +408,14 @@ server.tool(
 );
 
 server.tool(
-  'capture-react-performance-custom-tracks',
+  'start-react-performance-recording',
   `
-  This tool captures data passed to console.timeStamp calls in a browser.
+  This tool begins captuning data passed to console.timeStamp calls in a browser.
   This means it will get the data that creates the 2 custom tracks in the React Performance panel in Chrome DevTools Components track and Scheduler track.
-  It connects to a browser using puppeteer, patches the console.timeStamp method to capture the data,
-  and returns the captured data back to the MCP server.
+  It connects to a browser using puppeteer, patches the console.timeStamp method to capture the data.
+
+  This tool will not return the data itself, it will add some simple UI to the react app that notifies the user that the tool is running and allows the user to
+  stop the recording with a button. The data will be saved and will be available in the get-react-performance-data tool.
 
   <requirements>
   - The url should be a full url with the protocol (http:// or https://) and the domain name (e.g. localhost:3000).
@@ -422,19 +424,67 @@ server.tool(
   MacOS: "/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir=/tmp/chrome"
   Windows: "chrome.exe --remote-debugging-port=9222 --user-data-dir=C:\temp\chrome"
   </requirements>
+
+  <usage>
+  - You should use this tool when the user wants to get performance data from their app
+  - You should ideally not use get-react-performance-data tool directly
+  - Verify the response from this tool is successful and notify the user performance data is being recorded on their app
+  - Prompt them to interact with the app to gather data and wait for the user to request the data on a follow up prompt using the react-perfarmance-data tool
+  </usage>
   `,
   {
     url: z.string().optional().default('http://localhost:3000'),
   },
   async ({url}) => {
     try {
-      const capturedData = await captureConsoleTimeStamp(url);
+      const capturedData = await beginPerfRecording(url);
 
       return {
         content: [
           {
             type: 'text' as const,
             text: JSON.stringify(capturedData, null, 2),
+          },
+        ],
+      };
+    } catch (err) {
+      return {
+        isError: true,
+        content: [{type: 'text' as const, text: `Error: ${err.stack}`}],
+      };
+    }
+  },
+);
+
+server.tool(
+  'get-react-performance-data',
+  `
+  This tool returns the JSON format of the performance data recorded by the start-react-performance-recording tool.
+  It retrieves the data that was captured from console.timeStamp calls in the browser, which includes information from
+  the React Performance panel in Chrome DevTools (Components track and Scheduler track).
+
+  <requirements>
+  - You must have previously run the start-react-performance-recording tool to capture performance data.
+  - The data will be available after the user has interacted with their app while recording was active.
+  </requirements>
+
+  <usage>
+  - Use this tool after running start-react-performance-recording and having the user interact with their app.
+  - The returned data will be in JSON format, containing detailed performance metrics that can be analyzed.
+  </usage>
+  `,
+  {
+    url: z.string().optional().default('http://localhost:3000'),
+  },
+  async ({url}) => {
+    try {
+      const perfData = await getPerfData(url);
+
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify(perfData, null, 2),
           },
         ],
       };
