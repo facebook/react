@@ -236,6 +236,19 @@ module.exports = [
     isServerSupported: true,
   },
   {
+    shortName: 'dom-node-webstreams-turbopack',
+    entryPoints: [
+      'react-server-dom-turbopack/src/client/react-flight-dom-client.node-webstreams',
+      'react-server-dom-turbopack/src/server/react-flight-dom-server.node-webstreams',
+    ],
+    paths: [
+      'react-server-dom-turbopack/src/client/react-flight-dom-client.node-webstreams',
+      'react-server-dom-turbopack/src/server/react-flight-dom-server.node-webstreams',
+    ],
+    isFlowTyped: false,
+    isServerSupported: true,
+  },
+  {
     shortName: 'dom-node-parcel',
     entryPoints: [
       'react-server-dom-parcel/src/client/react-flight-dom-client.node',
@@ -275,6 +288,19 @@ module.exports = [
       'react-server/src/ReactFlightServerConfigDebugNode.js',
     ],
     isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
+    shortName: 'dom-node-webstreams-parcel',
+    entryPoints: [
+      'react-server-dom-parcel/src/client/react-flight-dom-client.node-webstreams',
+      'react-server-dom-parcel/src/server/react-flight-dom-server.node-webstreams',
+    ],
+    paths: [
+      'react-server-dom-parcel/src/client/react-flight-dom-client.node-webstreams',
+      'react-server-dom-parcel/src/server/react-flight-dom-server.node-webstreams',
+    ],
+    isFlowTyped: false,
     isServerSupported: true,
   },
   {
