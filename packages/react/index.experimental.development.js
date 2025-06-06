@@ -29,7 +29,6 @@ export {
   cache,
   startTransition,
   unstable_Activity,
-  unstable_postpone,
   unstable_getCacheForType,
   unstable_SuspenseList,
   unstable_ViewTransition,
