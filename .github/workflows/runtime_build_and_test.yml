@@ -306,6 +306,7 @@ jobs:
             runtime-and-compiler-node_modules-v6-
       - run: yarn install --frozen-lockfile
         if: steps.node_modules.outputs.cache-hit != 'true'
+      - run: ./scripts/react-compiler/build-compiler.sh && ./scripts/react-compiler/link-compiler.sh
       - run: yarn workspace eslint-plugin-react-hooks test
         
   # ----- BUILD -----
