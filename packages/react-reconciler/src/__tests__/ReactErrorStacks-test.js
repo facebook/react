@@ -255,7 +255,7 @@ describe('ReactFragment', () => {
       onCaughtError,
     }).render(
       <CatchingBoundary>
-        <SuspenseList>
+        <SuspenseList revealOrder="independent">
           <SomethingThatErrors />
         </SuspenseList>
       </CatchingBoundary>,

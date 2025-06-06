@@ -3,6 +3,7 @@
 // Shared implementation and constants between the inline script and external
 // runtime instruction sets.
 
+const ELEMENT_NODE = 1;
 const COMMENT_NODE = 8;
 const ACTIVITY_START_DATA = '&';
 const ACTIVITY_END_DATA = '/&';
@@ -12,11 +13,322 @@ const SUSPENSE_PENDING_START_DATA = '$?';
 const SUSPENSE_QUEUED_START_DATA = '$~';
 const SUSPENSE_FALLBACK_START_DATA = '$!';
 
+const SUSPENSEY_FONT_AND_IMAGE_TIMEOUT = 500;
+
 // TODO: Symbols that are referenced outside this module use dynamic accessor
 // notation instead of dot notation to prevent Closure's advanced compilation
 // mode from renaming. We could use extern files instead, but I couldn't get it
 // working. Closure converts it to a dot access anyway, though, so it's not an
 // urgent issue.
+
+export function revealCompletedBoundaries(batch) {
+  window['$RT'] = performance.now();
+  for (let i = 0; i < batch.length; i += 2) {
+    const suspenseIdNode = batch[i];
+    const contentNode = batch[i + 1];
+
+    // Clear all the existing children. This is complicated because
+    // there can be embedded Suspense boundaries in the fallback.
+    // This is similar to clearSuspenseBoundary in ReactFiberConfigDOM.
+    // TODO: We could avoid this if we never emitted suspense boundaries in fallback trees.
+    // They never hydrate anyway. However, currently we support incrementally loading the fallback.
+    const parentInstance = suspenseIdNode.parentNode;
+    if (!parentInstance) {
+      // We may have client-rendered this boundary already. Skip it.
+      continue;
+    }
+
+    // Find the boundary around the fallback. This is always the previous node.
+    const suspenseNode = suspenseIdNode.previousSibling;
+
+    let node = suspenseIdNode;
+    let depth = 0;
+    do {
+      if (node && node.nodeType === COMMENT_NODE) {
+        const data = node.data;
+        if (data === SUSPENSE_END_DATA || data === ACTIVITY_END_DATA) {
+          if (depth === 0) {
+            break;
+          } else {
+            depth--;
+          }
+        } else if (
+          data === SUSPENSE_START_DATA ||
+          data === SUSPENSE_PENDING_START_DATA ||
+          data === SUSPENSE_QUEUED_START_DATA ||
+          data === SUSPENSE_FALLBACK_START_DATA ||
+          data === ACTIVITY_START_DATA
+        ) {
+          depth++;
+        }
+      }
+
+      const nextNode = node.nextSibling;
+      parentInstance.removeChild(node);
+      node = nextNode;
+    } while (node);
+
+    const endOfBoundary = node;
+
+    // Insert all the children from the contentNode between the start and end of suspense boundary.
+    while (contentNode.firstChild) {
+      parentInstance.insertBefore(contentNode.firstChild, endOfBoundary);
+    }
+
+    suspenseNode.data = SUSPENSE_START_DATA;
+    if (suspenseNode['_reactRetry']) {
+      suspenseNode['_reactRetry']();
+    }
+  }
+  batch.length = 0;
+}
+
+export function revealCompletedBoundariesWithViewTransitions(
+  revealBoundaries,
+  batch,
+) {
+  let shouldStartViewTransition = false;
+  let autoNameIdx = 0;
+  const restoreQueue = [];
+  function applyViewTransitionName(element, classAttributeName) {
+    const className = element.getAttribute(classAttributeName);
+    if (!className) {
+      return;
+    }
+    // Add any elements we apply a name to a queue to be reverted when we start.
+    const elementStyle = element.style;
+    restoreQueue.push(
+      element,
+      elementStyle['viewTransitionName'],
+      elementStyle['viewTransitionClass'],
+    );
+    if (className !== 'auto') {
+      elementStyle['viewTransitionClass'] = className;
+    }
+    let name = element.getAttribute('vt-name');
+    if (!name) {
+      // Auto-generate a name for this one.
+      // TODO: We don't have a prefix to pick from here but maybe we don't need it
+      // since it's only applicable temporarily during this specific animation.
+      const idPrefix = '';
+      name = '_' + idPrefix + 'T_' + autoNameIdx++ + '_';
+    }
+    elementStyle['viewTransitionName'] = name;
+    shouldStartViewTransition = true;
+  }
+  try {
+    const existingTransition = document['__reactViewTransition'];
+    if (existingTransition) {
+      // Retry after the previous ViewTransition finishes.
+      existingTransition.finished.finally(window['$RV'].bind(null, batch));
+      return;
+    }
+    // First collect all entering names that might form pairs exiting names.
+    const appearingViewTransitions = new Map();
+    for (let i = 1; i < batch.length; i += 2) {
+      const contentNode = batch[i];
+      const appearingElements = contentNode.querySelectorAll('[vt-share]');
+      for (let j = 0; j < appearingElements.length; j++) {
+        const appearingElement = appearingElements[j];
+        appearingViewTransitions.set(
+          appearingElement.getAttribute('vt-name'),
+          appearingElement,
+        );
+      }
+    }
+    const suspenseyImages = [];
+    // Next we'll find the nodes that we're going to animate and apply names to them..
+    for (let i = 0; i < batch.length; i += 2) {
+      const suspenseIdNode = batch[i];
+      const parentInstance = suspenseIdNode.parentNode;
+      if (!parentInstance) {
+        // We may have client-rendered this boundary already. Skip it.
+        continue;
+      }
+      const parentRect = parentInstance.getBoundingClientRect();
+      if (
+        !parentRect.left &&
+        !parentRect.top &&
+        !parentRect.width &&
+        !parentRect.height
+      ) {
+        // If the parent instance is display: none then we don't animate this boundary.
+        // This can happen when this boundary is actually a child of a different boundary that
+        // isn't yet revealed or is about to be revealed, but in that case that boundary
+        // should do the exit/enter and not this one. Conveniently this also lets us skip
+        // this if it's just in a hidden tree in general.
+        // TODO: Should we skip it if it's out of viewport? It's possible that it gets
+        // brought into the viewport by changing size.
+        // TODO: There's a another case where an inner boundary is inside a fallback that
+        // is about to be deleted. In that case we should not run exit animations on the inner.
+        continue;
+      }
+
+      // Apply exit animations to the immediate elements inside the fallback.
+      let node = suspenseIdNode;
+      let depth = 0;
+      while (node) {
+        if (node.nodeType === COMMENT_NODE) {
+          const data = node.data;
+          if (data === SUSPENSE_END_DATA) {
+            if (depth === 0) {
+              break;
+            } else {
+              depth--;
+            }
+          } else if (
+            data === SUSPENSE_START_DATA ||
+            data === SUSPENSE_PENDING_START_DATA ||
+            data === SUSPENSE_QUEUED_START_DATA ||
+            data === SUSPENSE_FALLBACK_START_DATA
+          ) {
+            depth++;
+          }
+        } else if (node.nodeType === ELEMENT_NODE) {
+          const exitElement = node;
+          const exitName = exitElement.getAttribute('vt-name');
+          const pairedElement = appearingViewTransitions.get(exitName);
+          applyViewTransitionName(
+            exitElement,
+            pairedElement ? 'vt-share' : 'vt-exit',
+          );
+          if (pairedElement) {
+            // Activate the other side as well.
+            applyViewTransitionName(pairedElement, 'vt-share');
+            appearingViewTransitions.set(exitName, null); // mark claimed
+          }
+          // Next we'll look inside this element for pairs to trigger "share".
+          const disappearingElements =
+            exitElement.querySelectorAll('[vt-share]');
+          for (let j = 0; j < disappearingElements.length; j++) {
+            const disappearingElement = disappearingElements[j];
+            const name = disappearingElement.getAttribute('vt-name');
+            const appearingElement = appearingViewTransitions.get(name);
+            if (appearingElement) {
+              applyViewTransitionName(disappearingElement, 'vt-share');
+              applyViewTransitionName(appearingElement, 'vt-share');
+              appearingViewTransitions.set(name, null); // mark claimed
+            }
+          }
+        }
+        node = node.nextSibling;
+      }
+
+      // Apply enter animations to the new nodes about to be inserted.
+      const contentNode = batch[i + 1];
+      let enterElement = contentNode.firstElementChild;
+      while (enterElement) {
+        const paired =
+          appearingViewTransitions.get(enterElement.getAttribute('vt-name')) ===
+          null;
+        if (!paired) {
+          applyViewTransitionName(enterElement, 'vt-enter');
+        }
+        enterElement = enterElement.nextElementSibling;
+      }
+
+      // Apply update animations to any parents and siblings that might be affected.
+      let ancestorElement = parentInstance;
+      do {
+        let childElement = ancestorElement.firstElementChild;
+        while (childElement) {
+          // TODO: Bail out if we can
+          const updateClassName = childElement.getAttribute('vt-update');
+          if (
+            updateClassName &&
+            updateClassName !== 'none' &&
+            !restoreQueue.includes(childElement)
+          ) {
+            // If we have already handled this element as part of another exit/enter/share, don't override.
+            applyViewTransitionName(childElement, 'vt-update');
+          }
+          childElement = childElement.nextElementSibling;
+        }
+      } while (
+        (ancestorElement = ancestorElement.parentNode) &&
+        ancestorElement.nodeType === ELEMENT_NODE &&
+        ancestorElement.getAttribute('vt-update') !== 'none'
+      );
+
+      // Find the appearing Suspensey Images inside the new content.
+      const appearingImages = contentNode.querySelectorAll(
+        'img[src]:not([loading="lazy"])',
+      );
+      // TODO: Consider marking shouldStartViewTransition if we found any images.
+      // But only once we can disable the root animation for that case.
+      suspenseyImages.push.apply(suspenseyImages, appearingImages);
+    }
+    if (shouldStartViewTransition) {
+      const transition = (document['__reactViewTransition'] = document[
+        'startViewTransition'
+      ]({
+        update: () => {
+          revealBoundaries(batch);
+          const blockingPromises = [
+            // Force layout to trigger font loading, we stash the actual value to trick minifiers.
+            document.documentElement.clientHeight,
+            // Block on fonts finishing loading before revealing these boundaries.
+            document.fonts.ready,
+          ];
+          for (let i = 0; i < suspenseyImages.length; i++) {
+            const suspenseyImage = suspenseyImages[i];
+            if (!suspenseyImage.complete) {
+              const rect = suspenseyImage.getBoundingClientRect();
+              const inViewport =
+                rect.bottom > 0 &&
+                rect.right > 0 &&
+                rect.top < window.innerHeight &&
+                rect.left < window.innerWidth;
+              if (inViewport) {
+                const loadingImage = new Promise(resolve => {
+                  suspenseyImage.addEventListener('load', resolve);
+                  suspenseyImage.addEventListener('error', resolve);
+                });
+                blockingPromises.push(loadingImage);
+              }
+            }
+          }
+          return Promise.race([
+            Promise.all(blockingPromises),
+            new Promise(resolve =>
+              setTimeout(resolve, SUSPENSEY_FONT_AND_IMAGE_TIMEOUT),
+            ),
+          ]);
+        },
+        types: [], // TODO: Add a hard coded type for Suspense reveals.
+      }));
+      transition.ready.finally(() => {
+        // Restore all the names/classes that we applied to what they were before.
+        // We do it in reverse order in case there were duplicates so the first one wins.
+        for (let i = restoreQueue.length - 3; i >= 0; i -= 3) {
+          const element = restoreQueue[i];
+          const elementStyle = element.style;
+          const previousName = restoreQueue[i + 1];
+          elementStyle['viewTransitionName'] = previousName;
+          const previousClassName = restoreQueue[i + 1];
+          elementStyle['viewTransitionClass'] = previousClassName;
+          if (element.getAttribute('style') === '') {
+            element.removeAttribute('style');
+          }
+        }
+      });
+      transition.finished.finally(() => {
+        if (document['__reactViewTransition'] === transition) {
+          document['__reactViewTransition'] = null;
+        }
+      });
+      // Queue any future completions into its own batch since they won't have been
+      // snapshotted by this one.
+      window['$RB'] = [];
+      return;
+    }
+    // Fall through to reveal.
+  } catch (x) {
+    // Fall through to reveal.
+  }
+  // ViewTransitions v2 not supported or no ViewTransitions found. Reveal immediately.
+  revealBoundaries(batch);
+}
 
 export function clientRenderBoundary(
   suspenseBoundaryID,
@@ -71,69 +383,6 @@ export function completeBoundary(suspenseBoundaryID, contentID) {
     return;
   }
 
-  function revealCompletedBoundaries() {
-    window['$RT'] = performance.now();
-    const batch = window['$RB'];
-    window['$RB'] = [];
-    for (let i = 0; i < batch.length; i += 2) {
-      const suspenseIdNode = batch[i];
-      const contentNode = batch[i + 1];
-
-      // Clear all the existing children. This is complicated because
-      // there can be embedded Suspense boundaries in the fallback.
-      // This is similar to clearSuspenseBoundary in ReactFiberConfigDOM.
-      // TODO: We could avoid this if we never emitted suspense boundaries in fallback trees.
-      // They never hydrate anyway. However, currently we support incrementally loading the fallback.
-      const parentInstance = suspenseIdNode.parentNode;
-      if (!parentInstance) {
-        // We may have client-rendered this boundary already. Skip it.
-        continue;
-      }
-
-      // Find the boundary around the fallback. This is always the previous node.
-      const suspenseNode = suspenseIdNode.previousSibling;
-
-      let node = suspenseIdNode;
-      let depth = 0;
-      do {
-        if (node && node.nodeType === COMMENT_NODE) {
-          const data = node.data;
-          if (data === SUSPENSE_END_DATA || data === ACTIVITY_END_DATA) {
-            if (depth === 0) {
-              break;
-            } else {
-              depth--;
-            }
-          } else if (
-            data === SUSPENSE_START_DATA ||
-            data === SUSPENSE_PENDING_START_DATA ||
-            data === SUSPENSE_QUEUED_START_DATA ||
-            data === SUSPENSE_FALLBACK_START_DATA ||
-            data === ACTIVITY_START_DATA
-          ) {
-            depth++;
-          }
-        }
-
-        const nextNode = node.nextSibling;
-        parentInstance.removeChild(node);
-        node = nextNode;
-      } while (node);
-
-      const endOfBoundary = node;
-
-      // Insert all the children from the contentNode between the start and end of suspense boundary.
-      while (contentNode.firstChild) {
-        parentInstance.insertBefore(contentNode.firstChild, endOfBoundary);
-      }
-
-      suspenseNode.data = SUSPENSE_START_DATA;
-      if (suspenseNode['_reactRetry']) {
-        suspenseNode['_reactRetry']();
-      }
-    }
-  }
-
   // Mark this Suspense boundary as queued so we know not to client render it
   // at the end of document load.
   const suspenseNodeOuter = suspenseIdNodeOuter.previousSibling;
@@ -151,7 +400,7 @@ export function completeBoundary(suspenseBoundaryID, contentID) {
     // We always schedule the flush in a timer even if it's very low or negative to allow
     // for multiple completeBoundary calls that are already queued to have a chance to
     // make the batch.
-    setTimeout(revealCompletedBoundaries, msUntilTimeout);
+    setTimeout(window['$RV'].bind(null, window['$RB']), msUntilTimeout);
   }
 }
 

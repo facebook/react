@@ -70,6 +70,7 @@ describe('rendering React components at document', () => {
 
       const markup = ReactDOMServer.renderToString(<Root hello="world" />);
       expect(markup).not.toContain('DOCTYPE');
+      expect(markup).not.toContain('rel="expect"');
       const testDocument = getTestDocument(markup);
       const body = testDocument.body;
 
@@ -77,22 +78,12 @@ describe('rendering React components at document', () => {
       await act(() => {
         root = ReactDOMClient.hydrateRoot(testDocument, <Root hello="world" />);
       });
-      expect(testDocument.body.innerHTML).toBe(
-        'Hello world' +
-          (gate(flags => flags.enableFizzBlockingRender)
-            ? '<template id="«R»"></template>'
-            : ''),
-      );
+      expect(testDocument.body.innerHTML).toBe('Hello world');
 
       await act(() => {
         root.render(<Root hello="moon" />);
       });
-      expect(testDocument.body.innerHTML).toBe(
-        'Hello moon' +
-          (gate(flags => flags.enableFizzBlockingRender)
-            ? '<template id="«R»"></template>'
-            : ''),
-      );
+      expect(testDocument.body.innerHTML).toBe('Hello moon');
 
       expect(body === testDocument.body).toBe(true);
     });
@@ -117,12 +108,7 @@ describe('rendering React components at document', () => {
       await act(() => {
         root = ReactDOMClient.hydrateRoot(testDocument, <Root />);
       });
-      expect(testDocument.body.innerHTML).toBe(
-        'Hello world' +
-          (gate(flags => flags.enableFizzBlockingRender)
-            ? '<template id="«R»"></template>'
-            : ''),
-      );
+      expect(testDocument.body.innerHTML).toBe('Hello world');
 
       const originalDocEl = testDocument.documentElement;
       const originalHead = testDocument.head;
@@ -133,16 +119,8 @@ describe('rendering React components at document', () => {
       expect(testDocument.firstChild).toBe(originalDocEl);
       expect(testDocument.head).toBe(originalHead);
       expect(testDocument.body).toBe(originalBody);
-      expect(originalBody.innerHTML).toBe(
-        gate(flags => flags.enableFizzBlockingRender)
-          ? '<template id="«R»"></template>'
-          : '',
-      );
-      expect(originalHead.innerHTML).toBe(
-        gate(flags => flags.enableFizzBlockingRender)
-          ? '<link rel="expect" href="#«R»" blocking="render">'
-          : '',
-      );
+      expect(originalBody.innerHTML).toBe('');
+      expect(originalHead.innerHTML).toBe('');
     });
 
     it('should not be able to switch root constructors', async () => {
@@ -180,22 +158,13 @@ describe('rendering React components at document', () => {
         root = ReactDOMClient.hydrateRoot(testDocument, <Component />);
       });
 
-      expect(testDocument.body.innerHTML).toBe(
-        'Hello world' +
-          (gate(flags => flags.enableFizzBlockingRender)
-            ? '<template id="«R»"></template>'
-            : ''),
-      );
+      expect(testDocument.body.innerHTML).toBe('Hello world');
 
       await act(() => {
         root.render(<Component2 />);
       });
 
-      expect(testDocument.body.innerHTML).toBe(
-        (gate(flags => flags.enableFizzBlockingRender)
-          ? '<template id="«R»"></template>'
-          : '') + 'Goodbye world',
-      );
+      expect(testDocument.body.innerHTML).toBe('Goodbye world');
     });
 
     it('should be able to mount into document', async () => {
@@ -224,12 +193,7 @@ describe('rendering React components at document', () => {
         );
       });
 
-      expect(testDocument.body.innerHTML).toBe(
-        'Hello world' +
-          (gate(flags => flags.enableFizzBlockingRender)
-            ? '<template id="«R»"></template>'
-            : ''),
-      );
+      expect(testDocument.body.innerHTML).toBe('Hello world');
     });
 
     it('cannot render over an existing text child at the root', async () => {
@@ -362,12 +326,7 @@ describe('rendering React components at document', () => {
           : [],
       );
       expect(testDocument.body.innerHTML).toBe(
-        favorSafetyOverHydrationPerf
-          ? 'Hello world'
-          : 'Goodbye world' +
-              (gate(flags => flags.enableFizzBlockingRender)
-                ? '<template id="«R»"></template>'
-                : ''),
+        favorSafetyOverHydrationPerf ? 'Hello world' : 'Goodbye world',
       );
     });
 

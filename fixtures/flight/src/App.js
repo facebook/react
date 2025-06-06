@@ -1,4 +1,7 @@
 import * as React from 'react';
+import {renderToPipeableStream} from 'react-server-dom-webpack/server';
+import {createFromNodeStream} from 'react-server-dom-webpack/client';
+import {PassThrough, Readable} from 'stream';
 
 import Container from './Container.js';
 
@@ -12,6 +15,7 @@ import Button from './Button.js';
 import Form from './Form.js';
 import {Dynamic} from './Dynamic.js';
 import {Client} from './Client.js';
+import {Navigate} from './Navigate.js';
 
 import {Note} from './cjs/Note.js';
 
@@ -34,15 +38,57 @@ async function Bar({children}) {
   return <div>{children}</div>;
 }
 
-async function ServerComponent() {
-  await new Promise(resolve => setTimeout(() => resolve('deferred text'), 50));
+async function ThirdPartyComponent() {
+  return new Promise(resolve =>
+    setTimeout(() => resolve('hello from a 3rd party'), 30)
+  );
 }
 
-export default async function App({prerender}) {
+// Using Web streams for tee'ing convenience here.
+let cachedThirdPartyReadableWeb;
+
+function fetchThirdParty(noCache) {
+  if (cachedThirdPartyReadableWeb && !noCache) {
+    const [readableWeb1, readableWeb2] = cachedThirdPartyReadableWeb.tee();
+    cachedThirdPartyReadableWeb = readableWeb1;
+
+    return createFromNodeStream(Readable.fromWeb(readableWeb2), {
+      moduleMap: {},
+      moduleLoading: {},
+    });
+  }
+
+  const stream = renderToPipeableStream(
+    <ThirdPartyComponent />,
+    {},
+    {environmentName: 'third-party'}
+  );
+
+  const readable = new PassThrough();
+  // React currently only supports piping to one stream, so we convert, tee, and
+  // convert back again.
+  // TODO: Switch to web streams without converting when #33442 has landed.
+  const [readableWeb1, readableWeb2] = Readable.toWeb(readable).tee();
+  cachedThirdPartyReadableWeb = readableWeb1;
+  const result = createFromNodeStream(Readable.fromWeb(readableWeb2), {
+    moduleMap: {},
+    moduleLoading: {},
+  });
+  stream.pipe(readable);
+
+  return result;
+}
+
+async function ServerComponent({noCache}) {
+  await new Promise(resolve => setTimeout(() => resolve('deferred text'), 50));
+  return fetchThirdParty(noCache);
+}
+
+export default async function App({prerender, noCache}) {
   const res = await fetch('http://localhost:3001/todos');
   const todos = await res.json();
 
-  const dedupedChild = <ServerComponent />;
+  const dedupedChild = <ServerComponent noCache={noCache} />;
   const message = getServerState();
   return (
     <html lang="en">
@@ -89,6 +135,7 @@ export default async function App({prerender}) {
           <Note />
           <Foo>{dedupedChild}</Foo>
           <Bar>{Promise.resolve([dedupedChild])}</Bar>
+          <Navigate />
         </Container>
       </body>
     </html>

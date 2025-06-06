@@ -89,6 +89,7 @@ export {
 import escapeTextForBrowser from 'react-dom-bindings/src/server/escapeTextForBrowser';
 
 export function getViewTransitionFormatContext(
+  resumableState: ResumableState,
   parentContext: FormatContext,
   update: void | null | 'none' | 'auto' | string,
   enter: void | null | 'none' | 'auto' | string,
@@ -221,13 +222,13 @@ export function writePreambleStart(
   destination: Destination,
   resumableState: ResumableState,
   renderState: RenderState,
-  skipExpect?: boolean, // Used as an override by ReactFizzConfigMarkup
+  skipBlockingShell: boolean,
 ): void {
   return writePreambleStartImpl(
     destination,
     resumableState,
     renderState,
-    true, // skipExpect
+    true, // skipBlockingShell
   );
 }
 

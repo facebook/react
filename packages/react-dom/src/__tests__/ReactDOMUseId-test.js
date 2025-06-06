@@ -96,7 +96,7 @@ describe('useId', () => {
   }
 
   function normalizeTreeIdForTesting(id) {
-    const result = id.match(/\u00AB(R|r)([a-z0-9]*)(H([0-9]*))?\u00BB/);
+    const result = id.match(/_(R|r)_([a-z0-9]*)(H([0-9]*))?_/);
     if (result === undefined) {
       throw new Error('Invalid id format');
     }
@@ -285,7 +285,7 @@ describe('useId', () => {
     // 'R:' prefix, and the first character after that, which may not correspond
     // to a complete set of 5 bits.
     //
-    // Example: «Rclalalalalalalala...:
+    // Example: _Rclalalalalalalala...:
     //
     // We can use this pattern to test large ids that exceed the bitwise
     // safe range (32 bits). The algorithm should theoretically support ids
@@ -320,8 +320,8 @@ describe('useId', () => {
 
     // Confirm that every id matches the expected pattern
     for (let i = 0; i < divs.length; i++) {
-      // Example: «Rclalalalalalalala...:
-      expect(divs[i].id).toMatch(/^\u00ABR.(((al)*a?)((la)*l?))*\u00BB$/);
+      // Example: _Rclalalalalalalala...:
+      expect(divs[i].id).toMatch(/^_R_.(((al)*a?)((la)*l?))*_$/);
     }
   });
 
@@ -345,7 +345,7 @@ describe('useId', () => {
       <div
         id="container"
       >
-        «R0», «R0H1», «R0H2»
+        _R_0_, _R_0H1_, _R_0H2_
       </div>
     `);
   });
@@ -370,7 +370,7 @@ describe('useId', () => {
       <div
         id="container"
       >
-        «R0»
+        _R_0_
       </div>
     `);
   });
@@ -608,10 +608,10 @@ describe('useId', () => {
         id="container"
       >
         <div>
-          «custom-prefix-R1»
+          _custom-prefix-R_1_
         </div>
         <div>
-          «custom-prefix-R2»
+          _custom-prefix-R_2_
         </div>
       </div>
     `);
@@ -625,13 +625,13 @@ describe('useId', () => {
         id="container"
       >
         <div>
-          «custom-prefix-R1»
+          _custom-prefix-R_1_
         </div>
         <div>
-          «custom-prefix-R2»
+          _custom-prefix-R_2_
         </div>
         <div>
-          «custom-prefix-r0»
+          _custom-prefix-r_0_
         </div>
       </div>
     `);
@@ -672,11 +672,11 @@ describe('useId', () => {
         id="container"
       >
         <div>
-          «R0»
+          _R_0_
           <!-- -->
            
           <div>
-            «R7»
+            _R_7_
           </div>
         </div>
       </div>
@@ -690,11 +690,11 @@ describe('useId', () => {
         id="container"
       >
         <div>
-          «R0»
+          _R_0_
           <!-- -->
            
           <div>
-            «R7»
+            _R_7_
           </div>
         </div>
       </div>

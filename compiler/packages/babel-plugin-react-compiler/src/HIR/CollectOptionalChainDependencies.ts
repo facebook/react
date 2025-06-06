@@ -290,6 +290,7 @@ function traverseOptionalBlock(
     );
     baseObject = {
       identifier: maybeTest.instructions[0].value.place.identifier,
+      reactive: maybeTest.instructions[0].value.place.reactive,
       path,
     };
     test = maybeTest.terminal;
@@ -391,6 +392,7 @@ function traverseOptionalBlock(
   );
   const load = {
     identifier: baseObject.identifier,
+    reactive: baseObject.reactive,
     path: [
       ...baseObject.path,
       {

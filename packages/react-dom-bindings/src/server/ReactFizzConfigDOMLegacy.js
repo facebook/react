@@ -27,6 +27,7 @@ import {
   writeStartClientRenderedSuspenseBoundary as writeStartClientRenderedSuspenseBoundaryImpl,
   writeEndCompletedSuspenseBoundary as writeEndCompletedSuspenseBoundaryImpl,
   writeEndClientRenderedSuspenseBoundary as writeEndClientRenderedSuspenseBoundaryImpl,
+  writePreambleStart as writePreambleStartImpl,
 } from './ReactFizzConfigDOM';
 
 import type {
@@ -47,6 +48,7 @@ export type RenderState = {
   segmentPrefix: PrecomputedChunk,
   boundaryPrefix: PrecomputedChunk,
   startInlineScript: PrecomputedChunk,
+  startInlineStyle: PrecomputedChunk,
   preamble: PreambleState,
   externalRuntimeScript: null | any,
   bootstrapChunks: Array<Chunk | PrecomputedChunk>,
@@ -76,6 +78,10 @@ export type RenderState = {
     scripts: Map<string, Resource>,
     moduleScripts: Map<string, Resource>,
   },
+  nonce: {
+    script: string | void,
+    style: string | void,
+  },
   stylesToHoist: boolean,
   // This is an extra field for the legacy renderer
   generateStaticMarkup: boolean,
@@ -99,6 +105,7 @@ export function createRenderState(
     segmentPrefix: renderState.segmentPrefix,
     boundaryPrefix: renderState.boundaryPrefix,
     startInlineScript: renderState.startInlineScript,
+    startInlineStyle: renderState.startInlineStyle,
     preamble: renderState.preamble,
     externalRuntimeScript: renderState.externalRuntimeScript,
     bootstrapChunks: renderState.bootstrapChunks,
@@ -118,6 +125,7 @@ export function createRenderState(
     scripts: renderState.scripts,
     bulkPreloads: renderState.bulkPreloads,
     preloads: renderState.preloads,
+    nonce: renderState.nonce,
     stylesToHoist: renderState.stylesToHoist,
 
     // This is an extra field for the legacy renderer
@@ -163,7 +171,6 @@ export {
   createResumableState,
   createPreambleState,
   createHoistableState,
-  writePreambleStart,
   writePreambleEnd,
   writeHoistables,
   writePostamble,
@@ -172,7 +179,6 @@ export {
   completeResumableState,
   emitEarlyPreloads,
   supportsClientAPIs,
-  canHavePreamble,
   hoistPreambleState,
   isPreambleReady,
   isPreambleContext,
@@ -181,6 +187,7 @@ export {
 import escapeTextForBrowser from './escapeTextForBrowser';
 
 export function getViewTransitionFormatContext(
+  resumableState: ResumableState,
   parentContext: FormatContext,
   update: void | null | 'none' | 'auto' | string,
   enter: void | null | 'none' | 'auto' | string,
@@ -191,6 +198,10 @@ export function getViewTransitionFormatContext(
 ): FormatContext {
   // ViewTransition reveals are not supported in legacy renders.
   return parentContext;
+}
+
+export function canHavePreamble(formatContext: FormatContext): boolean {
+  return false;
 }
 
 export function pushTextInstance(
@@ -298,6 +309,20 @@ export function writeEndClientRenderedSuspenseBoundary(
     return true;
   }
   return writeEndClientRenderedSuspenseBoundaryImpl(destination, renderState);
+}
+
+export function writePreambleStart(
+  destination: Destination,
+  resumableState: ResumableState,
+  renderState: RenderState,
+  skipBlockingShell: boolean,
+): void {
+  return writePreambleStartImpl(
+    destination,
+    resumableState,
+    renderState,
+    true, // skipBlockingShell
+  );
 }
 
 export type TransitionStatus = FormStatus;

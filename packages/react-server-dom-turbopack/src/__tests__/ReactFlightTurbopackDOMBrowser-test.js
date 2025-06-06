@@ -21,7 +21,7 @@ let React;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 let ReactServerScheduler;
-let reactServerAct;
+let serverAct;
 
 describe('ReactFlightTurbopackDOMBrowser', () => {
   beforeEach(() => {
@@ -29,7 +29,7 @@ describe('ReactFlightTurbopackDOMBrowser', () => {
 
     ReactServerScheduler = require('scheduler');
     patchMessageChannel(ReactServerScheduler);
-    reactServerAct = require('internal-test-utils').act;
+    serverAct = require('internal-test-utils').serverAct;
 
     // Simulate the condition resolution
     jest.mock('react', () => require('react/react.react-server'));
@@ -45,17 +45,6 @@ describe('ReactFlightTurbopackDOMBrowser', () => {
     React = require('react');
     ReactServerDOMClient = require('react-server-dom-turbopack/client');
   });
-
-  async function serverAct(callback) {
-    let maybePromise;
-    await reactServerAct(() => {
-      maybePromise = callback();
-      if (maybePromise && typeof maybePromise.catch === 'function') {
-        maybePromise.catch(() => {});
-      }
-    });
-    return maybePromise;
-  }
 
   it('should resolve HTML using W3C streams', async () => {
     function Text({children}) {

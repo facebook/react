@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Wakeable} from 'shared/ReactTypes';
+import type {Wakeable, SuspenseListTailMode} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {SuspenseInstance} from './ReactFiberConfig';
 import type {Lane} from './ReactFiberLane';
@@ -42,8 +42,6 @@ export type SuspenseState = {
   hydrationErrors: Array<CapturedValue<mixed>> | null,
 };
 
-export type SuspenseListTailMode = 'collapsed' | 'hidden' | void;
-
 export type SuspenseListRenderState = {
   isBackwards: boolean,
   // The currently rendering tail row.
@@ -77,9 +75,12 @@ export function findFirstSuspended(row: Fiber): null | Fiber {
       }
     } else if (
       node.tag === SuspenseListComponent &&
-      // revealOrder undefined can't be trusted because it don't
+      // Independent revealOrder can't be trusted because it doesn't
       // keep track of whether it suspended or not.
-      node.memoizedProps.revealOrder !== undefined
+      (node.memoizedProps.revealOrder === 'forwards' ||
+        node.memoizedProps.revealOrder === 'backwards' ||
+        node.memoizedProps.revealOrder === 'unstable_legacy-backwards' ||
+        node.memoizedProps.revealOrder === 'together')
     ) {
       const didSuspend = (node.flags & DidCapture) !== NoFlags;
       if (didSuspend) {

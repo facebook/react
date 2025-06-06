@@ -1,4 +1,4 @@
-// @inferEffectDependencies @panicThreshold:"none"
+// @inferEffectDependencies @panicThreshold:"none" @loggerTestOnly
 
 import {useEffect, useRef} from 'react';
 import {print} from 'shared-runtime';
@@ -9,3 +9,8 @@ function Component({arrRef}) {
   arrRef.current.val = 2;
   return arrRef;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{arrRef: {current: {val: 'initial ref value'}}}],
+};

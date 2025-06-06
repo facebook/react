@@ -306,6 +306,7 @@ export let shouldFireAfterActiveInstanceBlur: boolean = false;
 let viewTransitionContextChanged: boolean = false;
 let inUpdateViewTransition: boolean = false;
 let rootViewTransitionAffected: boolean = false;
+let rootViewTransitionNameCanceled: boolean = false;
 
 function isHydratingParent(current: Fiber, finishedWork: Fiber): boolean {
   if (finishedWork.tag === ActivityComponent) {
@@ -2737,6 +2738,7 @@ function commitAfterMutationEffectsOnFiber(
   switch (finishedWork.tag) {
     case HostRoot: {
       viewTransitionContextChanged = false;
+      rootViewTransitionNameCanceled = false;
       pushViewTransitionCancelableScope();
       recursivelyTraverseAfterMutationEffects(root, finishedWork, lanes);
       if (!viewTransitionContextChanged && !rootViewTransitionAffected) {
@@ -2755,6 +2757,7 @@ function commitAfterMutationEffectsOnFiber(
         }
         // We also cancel the root itself.
         cancelRootViewTransitionName(root.containerInfo);
+        rootViewTransitionNameCanceled = true;
       }
       popViewTransitionCancelableScope(null);
       break;
@@ -3613,7 +3616,7 @@ function commitPassiveMountOnFiber(
       }
 
       if (isViewTransitionEligible) {
-        if (supportsMutation) {
+        if (supportsMutation && rootViewTransitionNameCanceled) {
           restoreRootViewTransitionName(finishedRoot.containerInfo);
         }
       }

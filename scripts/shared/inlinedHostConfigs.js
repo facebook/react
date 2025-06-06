@@ -17,7 +17,7 @@ module.exports = [
       'react-dom/src/server/react-dom-server.browser.js',
       'react-dom/static.browser',
       'react-dom/unstable_server-external-runtime',
-      'react-server-dom-webpack/client.browser',
+      'react-server-dom-webpack/src/client/react-flight-dom-client.browser',
       'react-server-dom-webpack/src/server/react-flight-dom-server.browser',
     ],
     paths: [
@@ -43,6 +43,7 @@ module.exports = [
       'react-server-dom-webpack/src/client/ReactFlightDOMClientBrowser.js', // react-server-dom-webpack/client.browser
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerWebpack.js',
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerWebpackBrowser.js',
+      'react-server-dom-webpack/src/client/react-flight-dom-client.browser',
       'react-server-dom-webpack/src/server/react-flight-dom-server.browser',
       'react-server-dom-webpack/src/server/ReactFlightDOMServerBrowser.js', // react-server-dom-webpack/src/server/react-flight-dom-server.browser
       'react-devtools',
@@ -50,6 +51,7 @@ module.exports = [
       'react-devtools-shell',
       'react-devtools-shared',
       'shared/ReactDOMSharedInternals',
+      'react-server/src/ReactFlightServerConfigDebugNoop.js',
     ],
     isFlowTyped: true,
     isServerSupported: true,
@@ -59,10 +61,9 @@ module.exports = [
     entryPoints: [
       'react-dom/src/ReactDOMReactServer.js',
       'react-dom/src/server/react-dom-server.node.js',
-      'react-dom/static.node',
       'react-dom/test-utils',
       'react-dom/unstable_server-external-runtime',
-      'react-server-dom-webpack/client.node.unbundled',
+      'react-server-dom-webpack/src/client/react-flight-dom-client.node.unbundled',
       'react-server-dom-webpack/src/server/react-flight-dom-server.node.unbundled',
     ],
     paths: [
@@ -90,6 +91,7 @@ module.exports = [
       'react-server-dom-webpack/static.node.unbundled',
       'react-server-dom-webpack/src/client/ReactFlightDOMClientNode.js', // react-server-dom-webpack/client.node
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerNode.js',
+      'react-server-dom-webpack/src/client/react-flight-dom-client.node.unbundled',
       'react-server-dom-webpack/src/server/react-flight-dom-server.node.unbundled',
       'react-server-dom-webpack/src/server/ReactFlightDOMServerNode.js', // react-server-dom-webpack/src/server/react-flight-dom-server.node
       'react-devtools',
@@ -103,9 +105,50 @@ module.exports = [
     isServerSupported: true,
   },
   {
+    shortName: 'dom-node-webstreams',
+    entryPoints: [
+      'react-dom/src/server/react-dom-server.node-webstreams.js',
+      'react-server-dom-webpack/src/client/react-flight-dom-client.node-webstreams.unbundled',
+      'react-server-dom-webpack/src/server/react-flight-dom-server.node-webstreams.unbundled',
+    ],
+    paths: [
+      'react-dom',
+      'react-dom/src/ReactDOMReactServer.js',
+      'react-dom-bindings',
+      'react-dom/client',
+      'react-dom/profiling',
+      'react-dom/server',
+      'react-dom/server.node',
+      'react-dom/static',
+      'react-dom/static.node',
+      'react-dom/test-utils',
+      'react-dom/src/server/react-dom-server.node-webstreams',
+      'react-dom/src/server/ReactDOMFizzServerEdge.js',
+      'react-dom/src/server/ReactDOMFizzStaticEdge.js',
+      'react-dom-bindings/src/server/ReactDOMFlightServerHostDispatcher.js',
+      'react-dom-bindings/src/server/ReactFlightServerConfigDOM.js',
+      'react-dom-bindings/src/shared/ReactFlightClientConfigDOM.js',
+      'react-server-dom-webpack',
+      'react-server-dom-webpack/client.node.unbundled',
+      'react-server-dom-webpack/server',
+      'react-server-dom-webpack/server.node.unbundled',
+      'react-server-dom-webpack/static',
+      'react-server-dom-webpack/static.node.unbundled',
+      'react-server-dom-webpack/src/client/ReactFlightDOMClientEdge.js', // react-server-dom-webpack/client.node
+      'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerNode.js',
+      'react-server-dom-webpack/src/client/react-flight-dom-client.node-webstreams.unbundled',
+      'react-server-dom-webpack/src/server/react-flight-dom-server.node-webstreams.unbundled',
+      'react-server-dom-webpack/src/server/ReactFlightDOMServerEdge.js', // react-server-dom-webpack/src/server/react-flight-dom-server.node
+      'shared/ReactDOMSharedInternals',
+      'react-server/src/ReactFlightServerConfigDebugNode.js',
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
     shortName: 'dom-node-webpack',
     entryPoints: [
-      'react-server-dom-webpack/client.node',
+      'react-server-dom-webpack/src/client/react-flight-dom-client.node',
       'react-server-dom-webpack/src/server/react-flight-dom-server.node',
     ],
     paths: [
@@ -129,8 +172,10 @@ module.exports = [
       'react-server-dom-webpack/server.node',
       'react-server-dom-webpack/static',
       'react-server-dom-webpack/static.node',
+      'react-server-dom-webpack/src/client/ReactFlightDOMClientNode.js', // react-server-dom-turbopack/client.node
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerWebpack.js',
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerWebpackServer.js',
+      'react-server-dom-webpack/src/client/react-flight-dom-client.node',
       'react-server-dom-webpack/src/server/react-flight-dom-server.node',
       'react-server-dom-webpack/src/server/ReactFlightDOMServerNode.js', // react-server-dom-webpack/src/server/react-flight-dom-server.node
       'react-server-dom-webpack/node-register',
@@ -146,9 +191,22 @@ module.exports = [
     isServerSupported: true,
   },
   {
+    shortName: 'dom-node-webstreams-webpack',
+    entryPoints: [
+      'react-server-dom-webpack/src/client/react-flight-dom-client.node-webstreams',
+      'react-server-dom-webpack/src/server/react-flight-dom-server.node-webstreams',
+    ],
+    paths: [
+      'react-server-dom-webpack/src/client/react-flight-dom-client.node-webstreams',
+      'react-server-dom-webpack/src/server/react-flight-dom-server.node-webstreams',
+    ],
+    isFlowTyped: false,
+    isServerSupported: true,
+  },
+  {
     shortName: 'dom-node-turbopack',
     entryPoints: [
-      'react-server-dom-turbopack/client.node',
+      'react-server-dom-turbopack/src/client/react-flight-dom-client.node',
       'react-server-dom-turbopack/src/server/react-flight-dom-server.node',
     ],
     paths: [
@@ -175,6 +233,7 @@ module.exports = [
       'react-server-dom-turbopack/src/client/ReactFlightDOMClientNode.js', // react-server-dom-turbopack/client.node
       'react-server-dom-turbopack/src/client/ReactFlightClientConfigBundlerTurbopack.js',
       'react-server-dom-turbopack/src/client/ReactFlightClientConfigBundlerTurbopackServer.js',
+      'react-server-dom-turbopack/src/client/react-flight-dom-client.node',
       'react-server-dom-turbopack/src/server/react-flight-dom-server.node',
       'react-server-dom-turbopack/src/server/ReactFlightDOMServerNode.js', // react-server-dom-turbopack/src/server/react-flight-dom-server.node
       'react-server-dom-turbopack/node-register',
@@ -190,9 +249,22 @@ module.exports = [
     isServerSupported: true,
   },
   {
+    shortName: 'dom-node-webstreams-turbopack',
+    entryPoints: [
+      'react-server-dom-turbopack/src/client/react-flight-dom-client.node-webstreams',
+      'react-server-dom-turbopack/src/server/react-flight-dom-server.node-webstreams',
+    ],
+    paths: [
+      'react-server-dom-turbopack/src/client/react-flight-dom-client.node-webstreams',
+      'react-server-dom-turbopack/src/server/react-flight-dom-server.node-webstreams',
+    ],
+    isFlowTyped: false,
+    isServerSupported: true,
+  },
+  {
     shortName: 'dom-node-parcel',
     entryPoints: [
-      'react-server-dom-parcel/client.node',
+      'react-server-dom-parcel/src/client/react-flight-dom-client.node',
       'react-server-dom-parcel/src/server/react-flight-dom-server.node',
     ],
     paths: [
@@ -218,10 +290,9 @@ module.exports = [
       'react-server-dom-parcel/static.node',
       'react-server-dom-parcel/src/client/ReactFlightDOMClientNode.js', // react-server-dom-parcel/client.node
       'react-server-dom-parcel/src/client/ReactFlightClientConfigBundlerParcel.js',
+      'react-server-dom-parcel/src/client/react-flight-dom-client.node',
       'react-server-dom-parcel/src/server/react-flight-dom-server.node',
       'react-server-dom-parcel/src/server/ReactFlightDOMServerNode.js', // react-server-dom-parcel/src/server/react-flight-dom-server.node
-      'react-server-dom-parcel/node-register',
-      'react-server-dom-parcel/src/ReactFlightParcelNodeRegister.js',
       'react-devtools',
       'react-devtools-core',
       'react-devtools-shell',
@@ -230,6 +301,19 @@ module.exports = [
       'react-server/src/ReactFlightServerConfigDebugNode.js',
     ],
     isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
+    shortName: 'dom-node-webstreams-parcel',
+    entryPoints: [
+      'react-server-dom-parcel/src/client/react-flight-dom-client.node-webstreams',
+      'react-server-dom-parcel/src/server/react-flight-dom-server.node-webstreams',
+    ],
+    paths: [
+      'react-server-dom-parcel/src/client/react-flight-dom-client.node-webstreams',
+      'react-server-dom-parcel/src/server/react-flight-dom-server.node-webstreams',
+    ],
+    isFlowTyped: false,
     isServerSupported: true,
   },
   {
@@ -247,6 +331,7 @@ module.exports = [
       'react-dom-bindings/src/server/ReactFlightServerConfigDOM.js',
       'react-dom-bindings/src/shared/ReactFlightClientConfigDOM.js',
       'shared/ReactDOMSharedInternals',
+      'react-server/src/ReactFlightServerConfigDebugNoop.js',
     ],
     isFlowTyped: true,
     isServerSupported: true,
@@ -274,6 +359,7 @@ module.exports = [
       'react-devtools-shell',
       'react-devtools-shared',
       'shared/ReactDOMSharedInternals',
+      'react-server/src/ReactFlightServerConfigDebugNoop.js',
     ],
     isFlowTyped: true,
     isServerSupported: true,
@@ -281,7 +367,7 @@ module.exports = [
   {
     shortName: 'dom-browser-turbopack',
     entryPoints: [
-      'react-server-dom-turbopack/client.browser',
+      'react-server-dom-turbopack/src/client/react-flight-dom-client.browser',
       'react-server-dom-turbopack/src/server/react-flight-dom-server.browser',
     ],
     paths: [
@@ -302,6 +388,7 @@ module.exports = [
       'react-server-dom-turbopack/src/client/ReactFlightDOMClientBrowser.js', // react-server-dom-turbopack/client.browser
       'react-server-dom-turbopack/src/client/ReactFlightClientConfigBundlerTurbopack.js',
       'react-server-dom-turbopack/src/client/ReactFlightClientConfigBundlerTurbopackBrowser.js',
+      'react-server-dom-turbopack/src/client/react-flight-dom-client.browser',
       'react-server-dom-turbopack/src/server/react-flight-dom-server.browser',
       'react-server-dom-turbopack/src/server/ReactFlightDOMServerBrowser.js', // react-server-dom-turbopack/src/server/react-flight-dom-server.browser
       'react-devtools',
@@ -309,6 +396,7 @@ module.exports = [
       'react-devtools-shell',
       'react-devtools-shared',
       'shared/ReactDOMSharedInternals',
+      'react-server/src/ReactFlightServerConfigDebugNoop.js',
     ],
     isFlowTyped: true,
     isServerSupported: true,
@@ -316,7 +404,7 @@ module.exports = [
   {
     shortName: 'dom-browser-parcel',
     entryPoints: [
-      'react-server-dom-parcel/client.browser',
+      'react-server-dom-parcel/src/client/react-flight-dom-client.browser',
       'react-server-dom-parcel/src/server/react-flight-dom-server.browser',
     ],
     paths: [
@@ -336,6 +424,7 @@ module.exports = [
       'react-server-dom-parcel/static.browser',
       'react-server-dom-parcel/src/client/ReactFlightDOMClientBrowser.js', // react-server-dom-parcel/client.browser
       'react-server-dom-parcel/src/client/ReactFlightClientConfigBundlerParcel.js',
+      'react-server-dom-parcel/src/client/react-flight-dom-client.browser',
       'react-server-dom-parcel/src/server/react-flight-dom-server.browser',
       'react-server-dom-parcel/src/server/ReactFlightDOMServerBrowser.js', // react-server-dom-parcel/src/server/react-flight-dom-server.browser
       'react-devtools',
@@ -343,6 +432,7 @@ module.exports = [
       'react-devtools-shell',
       'react-devtools-shared',
       'shared/ReactDOMSharedInternals',
+      'react-server/src/ReactFlightServerConfigDebugNoop.js',
     ],
     isFlowTyped: true,
     isServerSupported: true,
@@ -352,7 +442,7 @@ module.exports = [
     entryPoints: [
       'react-dom/src/server/react-dom-server.edge.js',
       'react-dom/static.edge',
-      'react-server-dom-webpack/client.edge',
+      'react-server-dom-webpack/src/client/react-flight-dom-client.edge',
       'react-server-dom-webpack/src/server/react-flight-dom-server.edge',
     ],
     paths: [
@@ -377,6 +467,7 @@ module.exports = [
       'react-server-dom-webpack/src/client/ReactFlightDOMClientEdge.js', // react-server-dom-webpack/client.edge
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerWebpack.js',
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerWebpackServer.js',
+      'react-server-dom-webpack/src/client/react-flight-dom-client.edge',
       'react-server-dom-webpack/src/server/react-flight-dom-server.edge',
       'react-server-dom-webpack/src/server/ReactFlightDOMServerEdge.js', // react-server-dom-webpack/src/server/react-flight-dom-server.edge
       'react-devtools',
@@ -384,7 +475,7 @@ module.exports = [
       'react-devtools-shell',
       'react-devtools-shared',
       'shared/ReactDOMSharedInternals',
-      'react-server/src/ReactFlightServerConfigDebugNode.js',
+      'react-server/src/ReactFlightServerConfigDebugNoop.js',
     ],
     isFlowTyped: true,
     isServerSupported: true,
@@ -392,7 +483,7 @@ module.exports = [
   {
     shortName: 'dom-edge-turbopack',
     entryPoints: [
-      'react-server-dom-turbopack/client.edge',
+      'react-server-dom-turbopack/src/client/react-flight-dom-client.edge',
       'react-server-dom-turbopack/src/server/react-flight-dom-server.edge',
     ],
     paths: [
@@ -417,6 +508,7 @@ module.exports = [
       'react-server-dom-turbopack/src/client/ReactFlightDOMClientEdge.js', // react-server-dom-turbopack/client.edge
       'react-server-dom-turbopack/src/client/ReactFlightClientConfigBundlerTurbopack.js',
       'react-server-dom-turbopack/src/client/ReactFlightClientConfigBundlerTurbopackServer.js',
+      'react-server-dom-turbopack/src/client/react-flight-dom-client.edge',
       'react-server-dom-turbopack/src/server/react-flight-dom-server.edge',
       'react-server-dom-turbopack/src/server/ReactFlightDOMServerEdge.js', // react-server-dom-turbopack/src/server/react-flight-dom-server.edge
       'react-devtools',
@@ -424,7 +516,7 @@ module.exports = [
       'react-devtools-shell',
       'react-devtools-shared',
       'shared/ReactDOMSharedInternals',
-      'react-server/src/ReactFlightServerConfigDebugNode.js',
+      'react-server/src/ReactFlightServerConfigDebugNoop.js',
     ],
     isFlowTyped: true,
     isServerSupported: true,
@@ -432,7 +524,7 @@ module.exports = [
   {
     shortName: 'dom-edge-parcel',
     entryPoints: [
-      'react-server-dom-parcel/client.edge',
+      'react-server-dom-parcel/src/client/react-flight-dom-client.edge',
       'react-server-dom-parcel/src/server/react-flight-dom-server.edge',
     ],
     paths: [
@@ -456,6 +548,7 @@ module.exports = [
       'react-server-dom-parcel/static.edge',
       'react-server-dom-parcel/src/client/ReactFlightDOMClientEdge.js', // react-server-dom-parcel/client.edge
       'react-server-dom-parcel/src/client/ReactFlightClientConfigBundlerParcel.js',
+      'react-server-dom-parcel/src/client/react-flight-dom-client.edge',
       'react-server-dom-parcel/src/server/react-flight-dom-server.edge',
       'react-server-dom-parcel/src/server/ReactFlightDOMServerEdge.js', // react-server-dom-parcel/src/server/react-flight-dom-server.edge
       'react-devtools',
@@ -463,7 +556,7 @@ module.exports = [
       'react-devtools-shell',
       'react-devtools-shared',
       'shared/ReactDOMSharedInternals',
-      'react-server/src/ReactFlightServerConfigDebugNode.js',
+      'react-server/src/ReactFlightServerConfigDebugNoop.js',
     ],
     isFlowTyped: true,
     isServerSupported: true,
@@ -523,6 +616,7 @@ module.exports = [
       'react-dom/src/server/ReactDOMLegacyServerBrowser.js', // react-dom/server.browser
       'react-dom/src/server/ReactDOMLegacyServerNode.js', // react-dom/server.node
       'shared/ReactDOMSharedInternals',
+      'react-server/src/ReactFlightServerConfigDebugNoop.js',
     ],
     isFlowTyped: true,
     isServerSupported: true,
@@ -539,6 +633,7 @@ module.exports = [
       'react-dom-bindings',
       'react-markup',
       'shared/ReactDOMSharedInternals',
+      'react-server/src/ReactFlightServerConfigDebugNoop.js',
     ],
     isFlowTyped: true,
     isServerSupported: true,
@@ -558,6 +653,7 @@ module.exports = [
       'react-dom-bindings',
       'react-server-dom-fb',
       'shared/ReactDOMSharedInternals',
+      'react-server/src/ReactFlightServerConfigDebugNoop.js',
     ],
     isFlowTyped: true,
     isServerSupported: true,
@@ -566,28 +662,40 @@ module.exports = [
   {
     shortName: 'native',
     entryPoints: ['react-native-renderer'],
-    paths: ['react-native-renderer'],
+    paths: [
+      'react-native-renderer',
+      'react-server/src/ReactFlightServerConfigDebugNoop.js',
+    ],
     isFlowTyped: true,
     isServerSupported: false,
   },
   {
     shortName: 'fabric',
     entryPoints: ['react-native-renderer/fabric'],
-    paths: ['react-native-renderer'],
+    paths: [
+      'react-native-renderer',
+      'react-server/src/ReactFlightServerConfigDebugNoop.js',
+    ],
     isFlowTyped: true,
     isServerSupported: false,
   },
   {
     shortName: 'test',
     entryPoints: ['react-test-renderer'],
-    paths: ['react-test-renderer'],
+    paths: [
+      'react-test-renderer',
+      'react-server/src/ReactFlightServerConfigDebugNoop.js',
+    ],
     isFlowTyped: true,
     isServerSupported: false,
   },
   {
     shortName: 'art',
     entryPoints: ['react-art'],
-    paths: ['react-art'],
+    paths: [
+      'react-art',
+      'react-server/src/ReactFlightServerConfigDebugNoop.js',
+    ],
     isFlowTyped: false, // TODO: type it.
     isServerSupported: false,
   },
@@ -599,7 +707,11 @@ module.exports = [
       'react-server',
       'react-server/flight',
     ],
-    paths: ['react-client/flight', 'react-server/flight'],
+    paths: [
+      'react-client/flight',
+      'react-server/flight',
+      'react-server/src/ReactFlightServerConfigDebugNoop.js',
+    ],
     isFlowTyped: true,
     isServerSupported: true,
   },

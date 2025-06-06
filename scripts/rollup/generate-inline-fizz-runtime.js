@@ -26,6 +26,10 @@ const config = [
     exportName: 'completeBoundary',
   },
   {
+    entry: 'ReactDOMFizzInlineCompleteBoundaryUpgradeToViewTransitions.js',
+    exportName: 'completeBoundaryUpgradeToViewTransitions',
+  },
+  {
     entry: 'ReactDOMFizzInlineCompleteBoundaryWithStyles.js',
     exportName: 'completeBoundaryWithStyles',
   },
