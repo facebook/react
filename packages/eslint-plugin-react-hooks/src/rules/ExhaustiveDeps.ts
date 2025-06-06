@@ -9,12 +9,14 @@ import type {Rule, Scope} from 'eslint';
 import type {
   ArrayExpression,
   ArrowFunctionExpression,
+  AssignmentProperty,
   CallExpression,
   Expression,
   FunctionDeclaration,
   FunctionExpression,
   Identifier,
   Node,
+  ObjectPattern,
   Pattern,
   PrivateIdentifier,
   Super,
@@ -564,19 +566,30 @@ const rule = {
             continue;
           }
 
-          // Add the dependency to a map so we can make sure it is referenced
-          // again in our dependencies array. Remember whether it's stable.
-          if (!dependencies.has(dependency)) {
-            const resolved = reference.resolved;
-            const isStable =
-              memoizedIsStableKnownHookValue(resolved) ||
-              memoizedIsFunctionWithoutCapturedValues(resolved);
-            dependencies.set(dependency, {
-              isStable,
-              references: [reference],
-            });
-          } else {
-            dependencies.get(dependency)?.references.push(reference);
+          const pattern = destructuredPattern(dependencyNode);
+          const deps = pattern == null ?
+            [dependency] :
+            pattern.properties
+              .filter((prop): prop is AssignmentProperty => prop.type === 'Property')
+              .map((prop) => prop.key)
+              .filter(key => key.type === 'Identifier')
+              .map(key => `${dependency}.${key.name}`);
+
+          for (const dep of deps) {
+            // Add the dependency to a map so we can make sure it is referenced
+            // again in our dependencies array. Remember whether it's stable.
+            if (!dependencies.has(dep)) {
+              const resolved = reference.resolved;
+              const isStable =
+                memoizedIsStableKnownHookValue(resolved) ||
+                memoizedIsFunctionWithoutCapturedValues(resolved);
+              dependencies.set(dep, {
+                isStable,
+                references: [reference],
+              });
+            } else {
+              dependencies.get(dep)?.references.push(reference);
+            }
           }
         }
 
@@ -2127,6 +2140,25 @@ function getUnknownDependenciesMessage(reactiveHookName: string): string {
     `React Hook ${reactiveHookName} received a function whose dependencies ` +
     `are unknown. Pass an inline function instead.`
   );
+}
+
+// Retruns ObjectPattern node if the node is destructured into a pattern.
+// Otherwise returns null.
+function destructuredPattern(
+  node: Node
+): ObjectPattern | null {
+  const { parent } = node;
+  if (!parent || parent.type !== 'VariableDeclarator') {
+    return null;
+  }
+  if (parent.init !== node) {
+    return null;
+  }
+  const { id } = parent;
+  if (id.type !== 'ObjectPattern') {
+    return null;
+  }
+  return id;
 }
 
 export default rule;
