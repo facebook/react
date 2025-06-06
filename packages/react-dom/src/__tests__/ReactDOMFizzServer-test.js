@@ -10447,4 +10447,52 @@ describe('ReactDOMFizzServer', () => {
       </html>,
     );
   });
+
+  it('should not error when discarding deeply nested Suspense boundaries in a parent fallback partially complete before the parent boundary resolves', async () => {
+    let resolve1;
+    const promise1 = new Promise(r => (resolve1 = r));
+    let resolve2;
+    const promise2 = new Promise(r => (resolve2 = r));
+    const promise3 = new Promise(r => {});
+
+    function Use({children, promise}) {
+      React.use(promise);
+      return children;
+    }
+    function App2() {
+      return (
+        <div>
+          <Suspense
+            fallback={
+              <Suspense fallback="Loading...">
+                <Use promise={promise1}>
+                  <Suspense fallback="Loading more...">
+                    <Use promise={promise3}>
+                      <div>deep fallback</div>
+                    </Use>
+                  </Suspense>
+                </Use>
+              </Suspense>
+            }>
+            <Use promise={promise2}>Success!</Use>
+          </Suspense>
+        </div>
+      );
+    }
+
+    writable.on('data', console.log);
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App2 />);
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    await act(() => {
+      resolve1('resolved');
+      resolve2('resolved');
+    });
+
+    expect(getVisibleChildren(container)).toEqual(<div>Success!</div>);
+  });
 });
