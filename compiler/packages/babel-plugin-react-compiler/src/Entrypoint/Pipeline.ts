@@ -266,8 +266,15 @@ function runWithEnvironment(
     inferMutableRanges(hir);
     log({kind: 'hir', name: 'InferMutableRanges', value: hir});
   } else {
-    inferMutationAliasingRanges(hir);
+    const mutabilityAliasingErrors = inferMutationAliasingRanges(hir, {
+      isFunctionExpression: false,
+    });
     log({kind: 'hir', name: 'InferMutationAliasingRanges', value: hir});
+    if (env.isInferredMemoEnabled) {
+      if (mutabilityAliasingErrors.isErr()) {
+        throw mutabilityAliasingErrors.unwrapErr();
+      }
+    }
   }
 
   if (env.isInferredMemoEnabled) {
