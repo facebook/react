@@ -105,47 +105,6 @@ module.exports = [
     isServerSupported: true,
   },
   {
-    shortName: 'dom-node-webstreams',
-    entryPoints: [
-      'react-dom/src/server/react-dom-server.node-webstreams.js',
-      'react-server-dom-webpack/src/client/react-flight-dom-client.node-webstreams.unbundled',
-      'react-server-dom-webpack/src/server/react-flight-dom-server.node-webstreams.unbundled',
-    ],
-    paths: [
-      'react-dom',
-      'react-dom/src/ReactDOMReactServer.js',
-      'react-dom-bindings',
-      'react-dom/client',
-      'react-dom/profiling',
-      'react-dom/server',
-      'react-dom/server.node',
-      'react-dom/static',
-      'react-dom/static.node',
-      'react-dom/test-utils',
-      'react-dom/src/server/react-dom-server.node-webstreams',
-      'react-dom/src/server/ReactDOMFizzServerEdge.js',
-      'react-dom/src/server/ReactDOMFizzStaticEdge.js',
-      'react-dom-bindings/src/server/ReactDOMFlightServerHostDispatcher.js',
-      'react-dom-bindings/src/server/ReactFlightServerConfigDOM.js',
-      'react-dom-bindings/src/shared/ReactFlightClientConfigDOM.js',
-      'react-server-dom-webpack',
-      'react-server-dom-webpack/client.node.unbundled',
-      'react-server-dom-webpack/server',
-      'react-server-dom-webpack/server.node.unbundled',
-      'react-server-dom-webpack/static',
-      'react-server-dom-webpack/static.node.unbundled',
-      'react-server-dom-webpack/src/client/ReactFlightDOMClientEdge.js', // react-server-dom-webpack/client.node
-      'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerNode.js',
-      'react-server-dom-webpack/src/client/react-flight-dom-client.node-webstreams.unbundled',
-      'react-server-dom-webpack/src/server/react-flight-dom-server.node-webstreams.unbundled',
-      'react-server-dom-webpack/src/server/ReactFlightDOMServerEdge.js', // react-server-dom-webpack/src/server/react-flight-dom-server.node
-      'shared/ReactDOMSharedInternals',
-      'react-server/src/ReactFlightServerConfigDebugNode.js',
-    ],
-    isFlowTyped: true,
-    isServerSupported: true,
-  },
-  {
     shortName: 'dom-node-webpack',
     entryPoints: [
       'react-server-dom-webpack/src/client/react-flight-dom-client.node',
@@ -188,19 +147,6 @@ module.exports = [
       'react-server/src/ReactFlightServerConfigDebugNode.js',
     ],
     isFlowTyped: true,
-    isServerSupported: true,
-  },
-  {
-    shortName: 'dom-node-webstreams-webpack',
-    entryPoints: [
-      'react-server-dom-webpack/src/client/react-flight-dom-client.node-webstreams',
-      'react-server-dom-webpack/src/server/react-flight-dom-server.node-webstreams',
-    ],
-    paths: [
-      'react-server-dom-webpack/src/client/react-flight-dom-client.node-webstreams',
-      'react-server-dom-webpack/src/server/react-flight-dom-server.node-webstreams',
-    ],
-    isFlowTyped: false,
     isServerSupported: true,
   },
   {
@@ -249,19 +195,6 @@ module.exports = [
     isServerSupported: true,
   },
   {
-    shortName: 'dom-node-webstreams-turbopack',
-    entryPoints: [
-      'react-server-dom-turbopack/src/client/react-flight-dom-client.node-webstreams',
-      'react-server-dom-turbopack/src/server/react-flight-dom-server.node-webstreams',
-    ],
-    paths: [
-      'react-server-dom-turbopack/src/client/react-flight-dom-client.node-webstreams',
-      'react-server-dom-turbopack/src/server/react-flight-dom-server.node-webstreams',
-    ],
-    isFlowTyped: false,
-    isServerSupported: true,
-  },
-  {
     shortName: 'dom-node-parcel',
     entryPoints: [
       'react-server-dom-parcel/src/client/react-flight-dom-client.node',
@@ -301,19 +234,6 @@ module.exports = [
       'react-server/src/ReactFlightServerConfigDebugNode.js',
     ],
     isFlowTyped: true,
-    isServerSupported: true,
-  },
-  {
-    shortName: 'dom-node-webstreams-parcel',
-    entryPoints: [
-      'react-server-dom-parcel/src/client/react-flight-dom-client.node-webstreams',
-      'react-server-dom-parcel/src/server/react-flight-dom-server.node-webstreams',
-    ],
-    paths: [
-      'react-server-dom-parcel/src/client/react-flight-dom-client.node-webstreams',
-      'react-server-dom-parcel/src/server/react-flight-dom-server.node-webstreams',
-    ],
-    isFlowTyped: false,
     isServerSupported: true,
   },
   {
