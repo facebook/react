@@ -527,7 +527,11 @@ function applyEffect(
     }
     case 'CreateFunction': {
       effects.push(effect);
-      const isMutable = effect.captures.some(capture => {
+      /**
+       * We consider the function mutable if it has any mutable context variables or
+       * any side-effects that need to be tracked if the function is called.
+       */
+      const hasCaptures = effect.captures.some(capture => {
         switch (state.kind(capture).kind) {
           case ValueKind.Context:
           case ValueKind.Mutable: {
@@ -538,6 +542,12 @@ function applyEffect(
           }
         }
       });
+      const hasTrackedSideEffects =
+        effect.function.loweredFunc.func.aliasingEffects?.some(
+          effect =>
+            effect.kind === 'MutateFrozen' || effect.kind === 'MutateGlobal',
+        );
+      const isMutable = hasCaptures || hasTrackedSideEffects;
       for (const operand of effect.function.loweredFunc.func.context) {
         if (operand.effect !== Effect.Capture) {
           continue;
@@ -1593,23 +1603,6 @@ function computeSignatureForInstruction(
       }
       break;
     }
-    case 'DeclareContext': {
-      // Context variables are conceptually like mutable boxes
-      effects.push({
-        kind: 'Create',
-        into: value.lvalue.place,
-        value: ValueKind.Mutable,
-        reason: ValueReason.Other,
-      });
-      effects.push({
-        kind: 'Create',
-        into: lvalue,
-        // The result can't be referenced so this value doesn't matter
-        value: ValueKind.Primitive,
-        reason: ValueReason.Other,
-      });
-      break;
-    }
     case 'DeclareLocal': {
       // TODO check this
       effects.push({
@@ -1646,6 +1639,43 @@ function computeSignatureForInstruction(
        * with the same effect we use there (CreateFrom)
        */
       effects.push({kind: 'CreateFrom', from: value.place, into: lvalue});
+      break;
+    }
+    case 'DeclareContext': {
+      // Context variables are conceptually like mutable boxes
+      const kind = value.lvalue.kind;
+      if (
+        !context.hoistedContextDeclarations.has(
+          value.lvalue.place.identifier.declarationId,
+        ) ||
+        kind === InstructionKind.HoistedConst ||
+        kind === InstructionKind.HoistedFunction ||
+        kind === InstructionKind.HoistedLet
+      ) {
+        /**
+         * If this context variable is not hoisted, or this is the declaration doing the hoisting,
+         * then we create the box.
+         */
+        effects.push({
+          kind: 'Create',
+          into: value.lvalue.place,
+          value: ValueKind.Mutable,
+          reason: ValueReason.Other,
+        });
+      } else {
+        /**
+         * Otherwise this may be a "declare", but there was a previous DeclareContext that
+         * hoisted this variable, and we're mutating it here.
+         */
+        effects.push({kind: 'Mutate', value: value.lvalue.place});
+      }
+      effects.push({
+        kind: 'Create',
+        into: lvalue,
+        // The result can't be referenced so this value doesn't matter
+        value: ValueKind.Primitive,
+        reason: ValueReason.Other,
+      });
       break;
     }
     case 'StoreContext': {
@@ -1921,6 +1951,14 @@ function computeEffectsForLegacySignature(
       arg.kind === 'Identifier' && i < signature.positionalParams.length
         ? signature.positionalParams[i]!
         : (signature.restParam ?? Effect.ConditionallyMutate);
+
+    if (arg.kind === 'Spread' && effect === Effect.Freeze) {
+      CompilerError.throwTodo({
+        reason: 'Support spread syntax for hook arguments',
+        loc: arg.place.loc,
+      });
+    }
+
     visit(place, effect);
   }
   if (captures.length !== 0) {
