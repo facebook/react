@@ -26,6 +26,7 @@ import {
   isArrayType,
   isMapType,
   isPrimitiveType,
+  isRefOrRefValue,
   isSetType,
   makeIdentifierId,
   ObjectMethod,
@@ -206,7 +207,6 @@ class Context {
     const hash = hashEffect(effect);
     let interned = this.internedEffects.get(hash);
     if (interned == null) {
-      console.log(`intern: ${hash}`);
       this.internedEffects.set(hash, effect);
       interned = effect;
     }
@@ -334,7 +334,6 @@ function applySignature(
         }
         const value = state.kind(effect.value);
         switch (value.kind) {
-          case ValueKind.Global:
           case ValueKind.Frozen: {
             const reason = getWriteErrorReason({
               kind: value.kind,
@@ -353,7 +352,7 @@ function applySignature(
                 description:
                   effect.value.identifier.name !== null &&
                   effect.value.identifier.name.kind === 'named'
-                    ? `Found mutation of \`${effect.value.identifier.name}\``
+                    ? `Found mutation of \`${effect.value.identifier.name.value}\``
                     : null,
                 loc: effect.value.loc,
                 suggestions: null,
@@ -428,7 +427,7 @@ function applyEffect(
       }
       state.initialize(value, {
         kind: effect.value,
-        reason: new Set([ValueReason.Other]),
+        reason: new Set([effect.reason]),
       });
       state.define(effect.into, value);
       break;
@@ -448,7 +447,7 @@ function applyEffect(
       break;
     }
     case 'CreateFrom': {
-      const kind = state.kind(effect.from).kind;
+      const fromValue = state.kind(effect.from);
       let value = context.effectInstructionValueCache.get(effect);
       if (value == null) {
         value = {
@@ -459,11 +458,11 @@ function applyEffect(
         context.effectInstructionValueCache.set(effect, value);
       }
       state.initialize(value, {
-        kind,
-        reason: new Set([ValueReason.Other]),
+        kind: fromValue.kind,
+        reason: new Set(fromValue.reason),
       });
       state.define(effect.into, value);
-      switch (kind) {
+      switch (fromValue.kind) {
         case ValueKind.Primitive:
         case ValueKind.Global: {
           // no need to track this data flow
@@ -587,7 +586,8 @@ function applyEffect(
        * Alias represents potential pointer aliasing. If the type is a global,
        * a primitive (copy-on-write semantics) then we can prune the effect
        */
-      const fromKind = state.kind(effect.from).kind;
+      const fromValue = state.kind(effect.from);
+      const fromKind = fromValue.kind;
       switch (fromKind) {
         case ValueKind.Frozen: {
           effects.push({
@@ -604,7 +604,10 @@ function applyEffect(
             };
             context.effectInstructionValueCache.set(effect, value);
           }
-          state.initialize(value, {kind: fromKind, reason: new Set([])});
+          state.initialize(value, {
+            kind: fromKind,
+            reason: new Set(fromValue.reason),
+          });
           state.define(effect.into, value);
           break;
         }
@@ -619,7 +622,10 @@ function applyEffect(
             };
             context.effectInstructionValueCache.set(effect, value);
           }
-          state.initialize(value, {kind: fromKind, reason: new Set([])});
+          state.initialize(value, {
+            kind: fromKind,
+            reason: new Set(fromValue.reason),
+          });
           state.define(effect.into, value);
           break;
         }
@@ -722,6 +728,7 @@ function applyEffect(
             kind: 'Create',
             into: effect.into,
             value: ValueKind.Mutable,
+            reason: ValueReason.Other,
           },
           aliased,
           effects,
@@ -798,6 +805,8 @@ function applyEffect(
       const mutationKind = state.mutate(effect.kind, effect.value);
       if (mutationKind === 'mutate') {
         effects.push(effect);
+      } else if (mutationKind === 'mutate-ref') {
+        // no-op
       } else if (
         mutationKind !== 'none' &&
         (effect.kind === 'Mutate' || effect.kind === 'MutateTransitive')
@@ -823,7 +832,7 @@ function applyEffect(
             description:
               effect.value.identifier.name !== null &&
               effect.value.identifier.name.kind === 'named'
-                ? `Found mutation of \`${effect.value.identifier.name}\``
+                ? `Found mutation of \`${effect.value.identifier.name.value}\``
                 : null,
             loc: effect.value.loc,
             suggestions: null,
@@ -1010,6 +1019,9 @@ class InferenceState {
       kind: ValueKind.Frozen,
       reason: new Set([reason]),
     });
+    if (DEBUG) {
+      console.log(`freeze value: ${printInstructionValue(value)} ${reason}`);
+    }
     if (
       value.kind === 'FunctionExpression' &&
       (this.env.config.enablePreserveExistingMemoizationGuarantees ||
@@ -1028,7 +1040,10 @@ class InferenceState {
       | 'MutateTransitive'
       | 'MutateTransitiveConditionally',
     place: Place,
-  ): 'none' | 'mutate' | 'mutate-frozen' | 'mutate-global' {
+  ): 'none' | 'mutate' | 'mutate-frozen' | 'mutate-global' | 'mutate-ref' {
+    if (isRefOrRefValue(place.identifier)) {
+      return 'mutate-ref';
+    }
     const kind = this.kind(place).kind;
     switch (variant) {
       case 'MutateConditionally':
@@ -1261,6 +1276,7 @@ function computeSignatureForInstruction(
         kind: 'Create',
         into: lvalue,
         value: ValueKind.Mutable,
+        reason: ValueReason.Other,
       });
       // All elements are captured into part of the output value
       for (const element of value.elements) {
@@ -1287,6 +1303,7 @@ function computeSignatureForInstruction(
         kind: 'Create',
         into: lvalue,
         value: ValueKind.Mutable,
+        reason: ValueReason.Other,
       });
       for (const property of value.properties) {
         if (property.kind === 'ObjectProperty') {
@@ -1310,6 +1327,7 @@ function computeSignatureForInstruction(
         kind: 'Create',
         into: lvalue,
         value: ValueKind.Mutable,
+        reason: ValueReason.Other,
       });
       // Potentially mutates the receiver (awaiting it changes its state and can run side effects)
       effects.push({kind: 'MutateTransitiveConditionally', value: value.value});
@@ -1366,6 +1384,7 @@ function computeSignatureForInstruction(
         kind: 'Create',
         into: lvalue,
         value: ValueKind.Primitive,
+        reason: ValueReason.Other,
       });
       // Mutates the object by removing the property, no aliasing
       effects.push({kind: 'Mutate', value: value.object});
@@ -1378,6 +1397,7 @@ function computeSignatureForInstruction(
           kind: 'Create',
           into: lvalue,
           value: ValueKind.Primitive,
+          reason: ValueReason.Other,
         });
       } else {
         effects.push({
@@ -1400,6 +1420,7 @@ function computeSignatureForInstruction(
         kind: 'Create',
         into: lvalue,
         value: ValueKind.Primitive,
+        reason: ValueReason.Other,
       });
       break;
     }
@@ -1458,6 +1479,7 @@ function computeSignatureForInstruction(
         kind: 'Create',
         into: lvalue,
         value: ValueKind.Mutable,
+        reason: ValueReason.Other,
       });
       if (
         isArrayType(value.collection.identifier) ||
@@ -1508,6 +1530,7 @@ function computeSignatureForInstruction(
         kind: 'Create',
         into: lvalue,
         value: ValueKind.Primitive,
+        reason: ValueReason.Other,
       });
       break;
     }
@@ -1517,6 +1540,7 @@ function computeSignatureForInstruction(
         kind: 'Create',
         into: lvalue,
         value: ValueKind.Frozen,
+        reason: ValueReason.JsxCaptured,
       });
       for (const operand of eachInstructionValueOperand(value)) {
         effects.push({
@@ -1538,12 +1562,14 @@ function computeSignatureForInstruction(
         kind: 'Create',
         into: value.lvalue.place,
         value: ValueKind.Mutable,
+        reason: ValueReason.Other,
       });
       effects.push({
         kind: 'Create',
         into: lvalue,
         // The result can't be referenced so this value doesn't matter
         value: ValueKind.Primitive,
+        reason: ValueReason.Other,
       });
       break;
     }
@@ -1554,12 +1580,14 @@ function computeSignatureForInstruction(
         into: value.lvalue.place,
         // TODO: what kind here???
         value: ValueKind.Primitive,
+        reason: ValueReason.Other,
       });
       effects.push({
         kind: 'Create',
         into: lvalue,
         // TODO: what kind here???
         value: ValueKind.Primitive,
+        reason: ValueReason.Other,
       });
       break;
     }
@@ -1589,6 +1617,7 @@ function computeSignatureForInstruction(
           kind: 'Create',
           into: value.lvalue.place,
           value: ValueKind.Mutable,
+          reason: ValueReason.Other,
         });
       }
       // Which aliases the value
@@ -1619,11 +1648,13 @@ function computeSignatureForInstruction(
         kind: 'Create',
         into: lvalue,
         value: ValueKind.Primitive,
+        reason: ValueReason.Other,
       });
       effects.push({
         kind: 'Create',
         into: value.lvalue,
         value: ValueKind.Primitive,
+        reason: ValueReason.Other,
       });
       break;
     }
@@ -1632,19 +1663,11 @@ function computeSignatureForInstruction(
         kind: 'MutateGlobal',
         place: value.value,
         error: {
-          severity: ErrorSeverity.InvalidReact,
-          reason: getWriteErrorReason({
-            kind: ValueKind.Global,
-            reason: new Set([ValueReason.Global]),
-            context: new Set(),
-          }),
-          description:
-            value.value.identifier.name !== null &&
-            value.value.identifier.name.kind === 'named'
-              ? `Found mutation of \`${value.value.identifier.name}\``
-              : null,
-          loc: value.value.loc,
+          reason:
+            'Unexpected reassignment of a variable which was defined outside of the component. Components and hooks should be pure and side-effect free, but variable reassignment is a form of side-effect. If this variable is used in rendering, use useState instead. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render)',
+          loc: instr.loc,
           suggestions: null,
+          severity: ErrorSeverity.InvalidReact,
         },
       });
       effects.push({kind: 'Assign', from: value.value, into: lvalue});
@@ -1659,6 +1682,7 @@ function computeSignatureForInstruction(
         kind: 'Create',
         into: lvalue,
         value: ValueKind.Global,
+        reason: ValueReason.Global,
       });
       break;
     }
@@ -1677,6 +1701,7 @@ function computeSignatureForInstruction(
         kind: 'Create',
         into: lvalue,
         value: ValueKind.Primitive,
+        reason: ValueReason.Other,
       });
       break;
     }
@@ -1694,6 +1719,7 @@ function computeSignatureForInstruction(
         kind: 'Create',
         into: lvalue,
         value: ValueKind.Primitive,
+        reason: ValueReason.Other,
       });
       break;
     }
@@ -1719,16 +1745,16 @@ function computeEffectsForLegacySignature(
   receiver: Place,
   args: Array<Place | SpreadPattern | Hole>,
 ): Array<AliasingEffect> {
+  const returnValueReason = signature.returnValueReason ?? ValueReason.Other;
   const effects: Array<AliasingEffect> = [];
   effects.push({
     kind: 'Create',
     into: lvalue,
     value: signature.returnValueKind,
+    reason: returnValueReason,
   });
   const stores: Array<Place> = [];
   const captures: Array<Place> = [];
-  const returnValueReason =
-    signature.returnValueReason ?? ValueReason.KnownReturnSignature;
   function visit(place: Place, effect: Effect): void {
     switch (effect) {
       case Effect.Store: {
@@ -2046,7 +2072,12 @@ function computeEffectsForSignature(
       case 'Create': {
         const into = substitutions.get(effect.into.identifier.id) ?? [];
         for (const value of into) {
-          effects.push({kind: 'Create', into: value, value: effect.value});
+          effects.push({
+            kind: 'Create',
+            into: value,
+            value: effect.value,
+            reason: effect.reason,
+          });
         }
         break;
       }
@@ -2297,7 +2328,7 @@ export type AliasingEffect =
   /**
    * Creates a value of the given type at the given place
    */
-  | {kind: 'Create'; into: Place; value: ValueKind}
+  | {kind: 'Create'; into: Place; value: ValueKind; reason: ValueReason}
   /**
    * Creates a new value with the same kind as the starting value.
    */
@@ -2376,7 +2407,12 @@ function hashEffect(effect: AliasingEffect): string {
       ].join(':');
     }
     case 'Create': {
-      return [effect.kind, effect.into.identifier.id].join(':');
+      return [
+        effect.kind,
+        effect.into.identifier.id,
+        effect.value,
+        effect.reason,
+      ].join(':');
     }
     case 'Freeze': {
       return [effect.kind, effect.value.identifier.id, effect.reason].join(':');

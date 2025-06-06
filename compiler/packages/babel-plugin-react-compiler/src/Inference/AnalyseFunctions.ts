@@ -63,7 +63,7 @@ function lowerWithMutationAliasing(fn: HIRFunction): void {
   analyseFunctions(fn);
   inferMutationAliasingEffects(fn, {isFunctionExpression: true});
   deadCodeElimination(fn);
-  inferMutationAliasingRanges(fn);
+  inferMutationAliasingRanges(fn, {isFunctionExpression: true});
   rewriteInstructionKindsBasedOnReassignment(fn);
   inferReactiveScopeVariables(fn);
   const effects = inferMutationAliasingFunctionEffects(fn);
