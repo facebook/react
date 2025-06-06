@@ -476,6 +476,18 @@ const bundles = [
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
     entry:
+      'react-server-dom-webpack/src/server/react-flight-dom-server.node-webstreams',
+    name: 'react-server-dom-webpack-server.node-webstreams',
+    condition: 'react-server',
+    global: 'ReactServerDOMServer',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'util', 'crypto', 'async_hooks', 'react-dom'],
+  },
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry:
       'react-server-dom-webpack/src/server/react-flight-dom-server.node.unbundled',
     name: 'react-server-dom-webpack-server.node.unbundled',
     condition: 'react-server',
@@ -525,6 +537,17 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-server-dom-webpack/src/client/react-flight-dom-client.node',
     name: 'react-server-dom-webpack-client.node',
+    global: 'ReactServerDOMClient',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'react-dom', 'util', 'crypto'],
+  },
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry:
+      'react-server-dom-webpack/src/client/react-flight-dom-client.node-webstreams',
+    name: 'react-server-dom-webpack-client.node-webstreams',
     global: 'ReactServerDOMClient',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
