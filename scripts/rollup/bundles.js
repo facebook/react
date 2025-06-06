@@ -649,6 +649,18 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
+    entry:
+      'react-server-dom-turbopack/src/server/react-flight-dom-server.node-webstreams',
+    name: 'react-server-dom-turbopack-server.node-webstreams',
+    condition: 'react-server',
+    global: 'ReactServerDOMServer',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'util', 'async_hooks', 'react-dom'],
+  },
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
     entry: 'react-server-dom-turbopack/src/server/react-flight-dom-server.edge',
     name: 'react-server-dom-turbopack-server.edge',
     condition: 'react-server',
@@ -662,7 +674,9 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
-    entry: 'react-server-dom-turbopack/client.browser',
+    entry:
+      'react-server-dom-turbopack/src/client/react-flight-dom-client.browser',
+    name: 'react-server-dom-turbopack-client.browser',
     global: 'ReactServerDOMClient',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
@@ -671,7 +685,8 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
-    entry: 'react-server-dom-turbopack/client.node',
+    entry: 'react-server-dom-turbopack/src/client/react-flight-dom-client.node',
+    name: 'react-server-dom-turbopack-client.node',
     global: 'ReactServerDOMClient',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
@@ -680,7 +695,19 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
-    entry: 'react-server-dom-turbopack/client.edge',
+    entry:
+      'react-server-dom-turbopack/src/client/react-flight-dom-client.node-webstreams',
+    name: 'react-server-dom-turbopack-client.node-webstreams',
+    global: 'ReactServerDOMClient',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'react-dom', 'util'],
+  },
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-server-dom-turbopack/src/client/react-flight-dom-client.edge',
+    name: 'react-server-dom-turbopack-client.edge',
     global: 'ReactServerDOMClient',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
@@ -713,6 +740,18 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
+    entry:
+      'react-server-dom-parcel/src/server/react-flight-dom-server.node-webstreams',
+    name: 'react-server-dom-parcel-server.node-webstreams',
+    condition: 'react-server',
+    global: 'ReactServerDOMServer',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'util', 'async_hooks', 'react-dom'],
+  },
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
     entry: 'react-server-dom-parcel/src/server/react-flight-dom-server.edge',
     name: 'react-server-dom-parcel-server.edge',
     condition: 'react-server',
@@ -726,7 +765,8 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
-    entry: 'react-server-dom-parcel/client.browser',
+    entry: 'react-server-dom-parcel/src/client/react-flight-dom-client.browser',
+    name: 'react-server-dom-parcel-client.browser',
     global: 'ReactServerDOMClient',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
@@ -735,7 +775,8 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
-    entry: 'react-server-dom-parcel/client.node',
+    entry: 'react-server-dom-parcel/src/client/react-flight-dom-client.node',
+    name: 'react-server-dom-parcel-client.node',
     global: 'ReactServerDOMClient',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
@@ -744,7 +785,8 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
-    entry: 'react-server-dom-parcel/client.edge',
+    entry: 'react-server-dom-parcel/src/client/react-flight-dom-client.edge',
+    name: 'react-server-dom-parcel-client.edge',
     global: 'ReactServerDOMClient',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
