@@ -66,6 +66,8 @@ import {getWriteErrorReason} from './InferFunctionEffects';
 import prettyFormat from 'pretty-format';
 import {createTemporaryPlace} from '../HIR/HIRBuilder';
 
+const DEBUG = false;
+
 export function inferMutationAliasingEffects(
   fn: HIRFunction,
   {isFunctionExpression}: {isFunctionExpression: boolean} = {
@@ -849,7 +851,7 @@ function applyEffect(
       ) {
         const value = state.kind(effect.value);
         if (DEBUG) {
-          console.log(printAliasingEffect(effect));
+          console.log(`invalid mutation: ${printAliasingEffect(effect)}`);
           console.log(prettyFormat(state.debugAbstractValue(value)));
         }
 
@@ -890,8 +892,6 @@ function applyEffect(
     }
   }
 }
-
-const DEBUG = false;
 
 class InferenceState {
   env: Environment;
