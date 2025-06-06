@@ -246,7 +246,13 @@
               return Promise.race([
                 Promise.all(blockingPromises),
                 new Promise(function (resolve) {
-                  return setTimeout(resolve, 500);
+                  var currentTime = performance.now();
+                  setTimeout(
+                    resolve,
+                    2300 > currentTime && 2e3 < currentTime
+                      ? 2300 - currentTime
+                      : 500
+                  );
                 })
               ]);
             },
@@ -315,8 +321,12 @@
         (suspenseBoundaryID.previousSibling.data = "$~"),
           $RB.push(suspenseBoundaryID, contentID),
           2 === $RB.length &&
-            ((suspenseBoundaryID =
-              ("number" !== typeof $RT ? 0 : $RT) + 300 - performance.now()),
+            ((suspenseBoundaryID = "number" !== typeof $RT ? 0 : $RT),
+            (contentID = performance.now()),
+            (suspenseBoundaryID =
+              2300 > contentID && 2e3 < contentID
+                ? 2300 - contentID
+                : suspenseBoundaryID + 300 - contentID),
             setTimeout($RV.bind(null, $RB), suspenseBoundaryID));
   };
   var $RR = function (suspenseBoundaryID, contentID, stylesheetDescriptors) {
