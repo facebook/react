@@ -37,17 +37,3 @@ export function resumeToPipeableStream() {
     arguments,
   );
 }
-
-export function renderToReadableStream() {
-  return require('./src/server/react-dom-server.node-webstreams').renderToReadableStream.apply(
-    this,
-    arguments,
-  );
-}
-
-export function resume() {
-  return require('./src/server/react-dom-server.node-webstreams').resume.apply(
-    this,
-    arguments,
-  );
-}

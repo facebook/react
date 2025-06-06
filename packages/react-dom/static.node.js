@@ -37,17 +37,3 @@ export function resumeAndPrerenderToNodeStream() {
     arguments,
   );
 }
-
-export function prerender() {
-  return require('./src/server/react-dom-server.node-webstreams').prerender.apply(
-    this,
-    arguments,
-  );
-}
-
-export function resumeAndPrerender() {
-  return require('./src/server/react-dom-server.node-webstreams').resumeAndPrerender.apply(
-    this,
-    arguments,
-  );
-}

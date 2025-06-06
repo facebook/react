@@ -296,19 +296,14 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
 
 // We mock createHook so that we can automatically clean it up.
 let installedHook = null;
-let outgoingHook = null;
 jest.mock('async_hooks', () => {
   const actual = jest.requireActual('async_hooks');
   return {
     ...actual,
     createHook(config) {
-      // We unmount when there's more than two hooks installed.
-      // We use two because the build of server.node actually installs two hooks.
-      // One in each build.
-      if (outgoingHook) {
-        outgoingHook.disable();
+      if (installedHook) {
+        installedHook.disable();
       }
-      outgoingHook = installedHook;
       return (installedHook = actual.createHook(config));
     },
   };
