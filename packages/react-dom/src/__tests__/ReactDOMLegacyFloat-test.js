@@ -35,13 +35,7 @@ describe('ReactDOMFloat', () => {
 
     expect(result).toEqual(
       '<html><head><meta charSet="utf-8"/>' +
-        (gate(flags => flags.enableFizzBlockingRender)
-          ? '<link rel="expect" href="#_R_" blocking="render"/>'
-          : '') +
         '<title>title</title><script src="foo"></script></head>' +
-        (gate(flags => flags.enableFizzBlockingRender)
-          ? '<template id="_R_"></template>'
-          : '') +
         '</html>',
     );
   });
