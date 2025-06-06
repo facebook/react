@@ -381,6 +381,39 @@ export function inferMutationAliasingRanges(
         const effect = operandEffects.get(operand.identifier.id) ?? Effect.Read;
         operand.effect = effect;
       }
+
+      /**
+       * This case is targeted at hoisted functions like:
+       *
+       * ```
+       * x();
+       * function x() { ... }
+       * ```
+       *
+       * Which turns into:
+       *
+       * t0 = DeclareContext HoistedFunction x
+       * t1 = LoadContext x
+       * t2 = CallExpression t1 ( )
+       * t3 = FunctionExpression ...
+       * t4 = StoreContext Function x = t3
+       *
+       * If the function had captured mutable values, it would already have its
+       * range extended to include the StoreContext. But if the function doesn't
+       * capture any mutable values its range won't have been extended yet. We
+       * want to ensure that the value is memoized along with the context variable,
+       * not independently of it (bc of the way we do codegen for hoisted functions).
+       * So here we check for StoreContext rvalues and if they haven't already had
+       * their range extended to at least this instruction, we extend it.
+       */
+      if (
+        instr.value.kind === 'StoreContext' &&
+        instr.value.value.identifier.mutableRange.end <= instr.id
+      ) {
+        instr.value.value.identifier.mutableRange.end = makeInstructionId(
+          instr.id + 1,
+        );
+      }
     }
     if (block.terminal.kind === 'return') {
       block.terminal.value.effect = isFunctionExpression
