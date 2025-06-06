@@ -138,7 +138,7 @@ describe('ReactDOMFizzServerEdge', () => {
     if (gate(flags => flags.enableFizzBlockingRender)) {
       expect(errors.length).toBe(1);
       expect(errors[0].message).toContain(
-        'This rendered a large document (>512) without any Suspense boundaries around most of it.',
+        'This rendered a large document (>512 kB) without any Suspense boundaries around most of it.',
       );
     } else {
       expect(errors.length).toBe(0);
