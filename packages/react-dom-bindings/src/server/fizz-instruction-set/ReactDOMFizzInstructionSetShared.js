@@ -13,7 +13,15 @@ const SUSPENSE_PENDING_START_DATA = '$?';
 const SUSPENSE_QUEUED_START_DATA = '$~';
 const SUSPENSE_FALLBACK_START_DATA = '$!';
 
+const FALLBACK_THROTTLE_MS = 300;
+
 const SUSPENSEY_FONT_AND_IMAGE_TIMEOUT = 500;
+
+// If you have a target goal in mind for a metric to hit, you don't want the
+// only reason you miss it by a little bit to be throttling heuristics.
+// This tries to avoid throttling if avoiding it would let you hit this metric.
+// This is derived from trying to hit an LCP of 2.5 seconds with some head room.
+const TARGET_VANITY_METRIC = 2300;
 
 // TODO: Symbols that are referenced outside this module use dynamic accessor
 // notation instead of dot notation to prevent Closure's advanced compilation
@@ -290,9 +298,18 @@ export function revealCompletedBoundariesWithViewTransitions(
           }
           return Promise.race([
             Promise.all(blockingPromises),
-            new Promise(resolve =>
-              setTimeout(resolve, SUSPENSEY_FONT_AND_IMAGE_TIMEOUT),
-            ),
+            new Promise(resolve => {
+              const currentTime = performance.now();
+              const msUntilTimeout =
+                // If the throttle would make us miss the target metric, then shorten the throttle.
+                // performance.now()'s zero value is assumed to be the start time of the metric.
+                currentTime < TARGET_VANITY_METRIC &&
+                currentTime > TARGET_VANITY_METRIC - FALLBACK_THROTTLE_MS
+                  ? TARGET_VANITY_METRIC - currentTime
+                  : // Otherwise it's throttled starting from last commit time.
+                    SUSPENSEY_FONT_AND_IMAGE_TIMEOUT;
+              setTimeout(resolve, msUntilTimeout);
+            }),
           ]);
         },
         types: [], // TODO: Add a hard coded type for Suspense reveals.
@@ -360,8 +377,6 @@ export function clientRenderBoundary(
   }
 }
 
-const FALLBACK_THROTTLE_MS = 300;
-
 export function completeBoundary(suspenseBoundaryID, contentID) {
   const contentNodeOuter = document.getElementById(contentID);
   if (!contentNodeOuter) {
@@ -395,8 +410,15 @@ export function completeBoundary(suspenseBoundaryID, contentID) {
     // to flush the batch. This is delayed by the throttle heuristic.
     const globalMostRecentFallbackTime =
       typeof window['$RT'] !== 'number' ? 0 : window['$RT'];
+    const currentTime = performance.now();
     const msUntilTimeout =
-      globalMostRecentFallbackTime + FALLBACK_THROTTLE_MS - performance.now();
+      // If the throttle would make us miss the target metric, then shorten the throttle.
+      // performance.now()'s zero value is assumed to be the start time of the metric.
+      currentTime < TARGET_VANITY_METRIC &&
+      currentTime > TARGET_VANITY_METRIC - FALLBACK_THROTTLE_MS
+        ? TARGET_VANITY_METRIC - currentTime
+        : // Otherwise it's throttled starting from last commit time.
+          globalMostRecentFallbackTime + FALLBACK_THROTTLE_MS - currentTime;
     // We always schedule the flush in a timer even if it's very low or negative to allow
     // for multiple completeBoundary calls that are already queued to have a chance to
     // make the batch.
