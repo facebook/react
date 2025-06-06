@@ -459,18 +459,25 @@ server.tool(
 server.tool(
   'get-react-performance-data',
   `
-  This tool returns the JSON format of the performance data recorded by the start-react-performance-recording tool.
-  It retrieves the data that was captured from console.timeStamp calls in the browser, which includes information from
+  This tool retrieves the performance data recorded by the start-react-performance-recording tool,
+  converts it to CSV format, and saves it to a file in the artifacts directory.
+  It processes the data that was captured from console.timeStamp calls in the browser, which includes information from
   the React Performance panel in Chrome DevTools (Components track and Scheduler track).
 
   <requirements>
+  - The url should be a full url with the protocol (http:// or https://) and the domain name (e.g. localhost:3000).
+  - The user should be running a Chrome browser in debug mode on port 9222. If you receive an error message, advise the user to run
+  the following command in the terminal:
+  MacOS: "/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir=/tmp/chrome"
+  Windows: "chrome.exe --remote-debugging-port=9222 --user-data-dir=C:\temp\chrome"
   - You must have previously run the start-react-performance-recording tool to capture performance data.
   - The data will be available after the user has interacted with their app while recording was active.
   </requirements>
 
   <usage>
   - Use this tool after running start-react-performance-recording and having the user interact with their app.
-  - The returned data will be in JSON format, containing detailed performance metrics that can be analyzed.
+  - The tool will save the performance data as a CSV file in the artifacts directory.
+  - The response will include the path to the saved file.
   </usage>
   `,
   {
@@ -478,13 +485,13 @@ server.tool(
   },
   async ({url}) => {
     try {
-      const perfData = await getPerfData(url);
+      const result = await getPerfData(url);
 
       return {
         content: [
           {
             type: 'text' as const,
-            text: JSON.stringify(perfData, null, 2),
+            text: result,
           },
         ],
       };
