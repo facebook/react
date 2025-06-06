@@ -58,8 +58,7 @@ export function validateNoFreezingKnownMutableFunctions(
       const effect = contextMutationEffects.get(operand.identifier.id);
       if (effect != null) {
         errors.push({
-          reason: `This argument is a function which modifies local variables when called, which can bypass memoization and cause the UI not to update`,
-          description: `Functions that are returned from hooks, passed as arguments to hooks, or passed as props to components may not mutate local variables`,
+          reason: `This argument is a function which may reassign or mutate local variables after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead`,
           loc: operand.loc,
           severity: ErrorSeverity.InvalidReact,
         });
@@ -124,7 +123,15 @@ export function validateNoFreezingKnownMutableFunctions(
               switch (effect.kind) {
                 case 'Mutate':
                 case 'MutateTransitive': {
-                  if (context.has(effect.value.identifier.id)) {
+                  const knownMutation = contextMutationEffects.get(
+                    effect.value.identifier.id,
+                  );
+                  if (knownMutation != null) {
+                    contextMutationEffects.set(
+                      lvalue.identifier.id,
+                      knownMutation,
+                    );
+                  } else if (context.has(effect.value.identifier.id)) {
                     contextMutationEffects.set(lvalue.identifier.id, {
                       kind: 'ContextMutation',
                       effect: Effect.Mutate,
@@ -132,6 +139,19 @@ export function validateNoFreezingKnownMutableFunctions(
                       places: new Set([effect.value]),
                     });
                     break effects;
+                  }
+                  break;
+                }
+                case 'MutateConditionally':
+                case 'MutateTransitiveConditionally': {
+                  const knownMutation = contextMutationEffects.get(
+                    effect.value.identifier.id,
+                  );
+                  if (knownMutation != null) {
+                    contextMutationEffects.set(
+                      lvalue.identifier.id,
+                      knownMutation,
+                    );
                   }
                   break;
                 }
