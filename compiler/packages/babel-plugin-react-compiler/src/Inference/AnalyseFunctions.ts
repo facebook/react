@@ -25,8 +25,6 @@ import {
   eachInstructionLValue,
   eachInstructionValueOperand,
 } from '../HIR/visitors';
-import prettyFormat from 'pretty-format';
-import {printIdentifier} from '../HIR/PrintHIR';
 import {Iterable_some} from '../Utils/utils';
 
 export default function analyseFunctions(func: HIRFunction): void {
@@ -67,16 +65,6 @@ function lower(func: HIRFunction): DisjointSet<Identifier> {
   });
   inferAliasesForCapturing(func, aliases);
   return aliases;
-}
-
-export function debugAliases(aliases: DisjointSet<Identifier>): void {
-  console.log(
-    prettyFormat(
-      aliases
-        .buildSets()
-        .map(set => [...set].map(ident => printIdentifier(ident))),
-    ),
-  );
 }
 
 /**
