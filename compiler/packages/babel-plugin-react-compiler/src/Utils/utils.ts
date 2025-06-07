@@ -148,6 +148,19 @@ export function Iterable_some<T>(
   return false;
 }
 
+export function Iterable_filter<T>(
+  iter: Iterable<T>,
+  pred: (item: T) => boolean,
+): Array<T> {
+  const result: Array<T> = [];
+  for (const item of iter) {
+    if (pred(item)) {
+      result.push(item);
+    }
+  }
+  return result;
+}
+
 export function nonNull<T extends NonNullable<U>, U>(
   value: T | null | undefined,
 ): value is T {
