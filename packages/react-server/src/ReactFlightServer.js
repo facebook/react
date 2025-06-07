@@ -3587,10 +3587,16 @@ function outlineComponentInfo(
     'debugTask' | 'debugStack',
   > = {
     name: componentInfo.name,
-    env: componentInfo.env,
     key: componentInfo.key,
-    owner: componentInfo.owner,
   };
+  if (componentInfo.env != null) {
+    // $FlowFixMe[cannot-write]
+    componentDebugInfo.env = componentInfo.env;
+  }
+  if (componentInfo.owner != null) {
+    // $FlowFixMe[cannot-write]
+    componentDebugInfo.owner = componentInfo.owner;
+  }
   if (componentInfo.stack == null && componentInfo.debugStack != null) {
     // If we have a debugStack but no parsed stack we should parse it.
     // $FlowFixMe[cannot-write]
@@ -3598,7 +3604,7 @@ function outlineComponentInfo(
       request,
       parseStackTrace(componentInfo.debugStack, 1),
     );
-  } else {
+  } else if (componentInfo.stack != null) {
     // $FlowFixMe[cannot-write]
     componentDebugInfo.stack = componentInfo.stack;
   }
@@ -4293,10 +4299,19 @@ function forwardDebugInfo(
         const debugAsyncInfo: Omit<ReactAsyncInfo, 'debugTask' | 'debugStack'> =
           {
             awaited: ioInfo,
-            env: info.env,
-            owner: info.owner,
-            stack: debugStack,
           };
+        if (info.env != null) {
+          // $FlowFixMe[cannot-write]
+          debugAsyncInfo.env = info.env;
+        }
+        if (info.owner != null) {
+          // $FlowFixMe[cannot-write]
+          debugAsyncInfo.owner = info.owner;
+        }
+        if (debugStack != null) {
+          // $FlowFixMe[cannot-write]
+          debugAsyncInfo.stack = debugStack;
+        }
         emitDebugChunk(request, id, debugAsyncInfo);
       } else {
         emitDebugChunk(request, id, debugInfo[i]);

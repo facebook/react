@@ -2658,7 +2658,7 @@ function resolveDebugInfo(
     // to initialize it when we need it, we might be inside user code.
     initializeFakeTask(response, componentInfoOrAsyncInfo);
   }
-  if (debugInfo.owner === null && response._debugRootOwner != null) {
+  if (debugInfo.owner == null && response._debugRootOwner != null) {
     const componentInfoOrAsyncInfo: ReactComponentInfo | ReactAsyncInfo =
       // $FlowFixMe: By narrowing `owner` to `null`, we narrowed `debugInfo` to `ReactComponentInfo`
       debugInfo;
