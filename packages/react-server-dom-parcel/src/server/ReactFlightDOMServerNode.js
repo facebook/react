@@ -21,6 +21,9 @@ import type {
 } from '../client/ReactFlightClientConfigBundlerParcel';
 
 import {Readable} from 'stream';
+
+import {ASYNC_ITERATOR} from 'shared/ReactSymbols';
+
 import {
   createRequest,
   createPrerenderRequest,
@@ -35,6 +38,7 @@ import {
   reportGlobalError,
   close,
   resolveField,
+  resolveFile,
   resolveFileInfo,
   resolveFileChunk,
   resolveFileComplete,
@@ -56,9 +60,12 @@ export {
   registerServerReference,
 } from '../ReactFlightParcelReferences';
 
+import {textEncoder} from 'react-server/src/ReactServerStreamConfigNode';
+
 import type {TemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
 
 export {createTemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
+
 export type {TemporaryReferenceSet};
 
 function createDrainHandler(destination: Destination, request: Request) {
@@ -131,11 +138,91 @@ export function renderToPipeableStream(
   };
 }
 
-function createFakeWritable(readable: any): Writable {
+function createFakeWritableFromReadableStreamController(
+  controller: ReadableStreamController,
+): Writable {
   // The current host config expects a Writable so we create
   // a fake writable for now to push into the Readable.
   return ({
-    write(chunk) {
+    write(chunk: string | Uint8Array) {
+      if (typeof chunk === 'string') {
+        chunk = textEncoder.encode(chunk);
+      }
+      controller.enqueue(chunk);
+      // in web streams there is no backpressure so we can alwas write more
+      return true;
+    },
+    end() {
+      controller.close();
+    },
+    destroy(error) {
+      // $FlowFixMe[method-unbinding]
+      if (typeof controller.error === 'function') {
+        // $FlowFixMe[incompatible-call]: This is an Error object or the destination accepts other types.
+        controller.error(error);
+      } else {
+        controller.close();
+      }
+    },
+  }: any);
+}
+
+export function renderToReadableStream(
+  model: ReactClientValue,
+
+  options?: Options & {
+    signal?: AbortSignal,
+  },
+): ReadableStream {
+  const request = createRequest(
+    model,
+    null,
+    options ? options.onError : undefined,
+    options ? options.identifierPrefix : undefined,
+    options ? options.onPostpone : undefined,
+    options ? options.temporaryReferences : undefined,
+    __DEV__ && options ? options.environmentName : undefined,
+    __DEV__ && options ? options.filterStackFrame : undefined,
+  );
+  if (options && options.signal) {
+    const signal = options.signal;
+    if (signal.aborted) {
+      abort(request, (signal: any).reason);
+    } else {
+      const listener = () => {
+        abort(request, (signal: any).reason);
+        signal.removeEventListener('abort', listener);
+      };
+      signal.addEventListener('abort', listener);
+    }
+  }
+  let writable: Writable;
+  const stream = new ReadableStream(
+    {
+      type: 'bytes',
+      start: (controller): ?Promise<void> => {
+        writable = createFakeWritableFromReadableStreamController(controller);
+        startWork(request);
+      },
+      pull: (controller): ?Promise<void> => {
+        startFlowing(request, writable);
+      },
+      cancel: (reason): ?Promise<void> => {
+        stopFlowing(request);
+        abort(request, reason);
+      },
+    },
+    // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
+    {highWaterMark: 0},
+  );
+  return stream;
+}
+
+function createFakeWritableFromNodeReadable(readable: any): Writable {
+  // The current host config expects a Writable so we create
+  // a fake writable for now to push into the Readable.
+  return ({
+    write(chunk: string | Uint8Array) {
       return readable.push(chunk);
     },
     end() {
@@ -173,10 +260,73 @@ export function prerenderToNodeStream(
           startFlowing(request, writable);
         },
       });
-      const writable = createFakeWritable(readable);
+      const writable = createFakeWritableFromNodeReadable(readable);
       resolve({prelude: readable});
     }
 
+    const request = createPrerenderRequest(
+      model,
+      null,
+      onAllReady,
+      onFatalError,
+      options ? options.onError : undefined,
+      options ? options.identifierPrefix : undefined,
+      options ? options.onPostpone : undefined,
+      options ? options.temporaryReferences : undefined,
+      __DEV__ && options ? options.environmentName : undefined,
+      __DEV__ && options ? options.filterStackFrame : undefined,
+    );
+    if (options && options.signal) {
+      const signal = options.signal;
+      if (signal.aborted) {
+        const reason = (signal: any).reason;
+        abort(request, reason);
+      } else {
+        const listener = () => {
+          const reason = (signal: any).reason;
+          abort(request, reason);
+          signal.removeEventListener('abort', listener);
+        };
+        signal.addEventListener('abort', listener);
+      }
+    }
+    startWork(request);
+  });
+}
+
+export function prerender(
+  model: ReactClientValue,
+
+  options?: Options & {
+    signal?: AbortSignal,
+  },
+): Promise<{
+  prelude: ReadableStream,
+}> {
+  return new Promise((resolve, reject) => {
+    const onFatalError = reject;
+    function onAllReady() {
+      let writable: Writable;
+      const stream = new ReadableStream(
+        {
+          type: 'bytes',
+          start: (controller): ?Promise<void> => {
+            writable =
+              createFakeWritableFromReadableStreamController(controller);
+          },
+          pull: (controller): ?Promise<void> => {
+            startFlowing(request, writable);
+          },
+          cancel: (reason): ?Promise<void> => {
+            stopFlowing(request);
+            abort(request, reason);
+          },
+        },
+        // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
+        {highWaterMark: 0},
+      );
+      resolve({prelude: stream});
+    }
     const request = createPrerenderRequest(
       model,
       null,
@@ -290,6 +440,50 @@ export function decodeReply<T>(
   const root = getRoot<T>(response);
   close(response);
   return root;
+}
+
+export function decodeReplyFromAsyncIterable<T>(
+  iterable: AsyncIterable<[string, string | File]>,
+  options?: {temporaryReferences?: TemporaryReferenceSet},
+): Thenable<T> {
+  const iterator: AsyncIterator<[string, string | File]> =
+    iterable[ASYNC_ITERATOR]();
+
+  const response = createResponse(
+    serverManifest,
+    '',
+    options ? options.temporaryReferences : undefined,
+  );
+
+  function progress(
+    entry:
+      | {done: false, +value: [string, string | File], ...}
+      | {done: true, +value: void, ...},
+  ) {
+    if (entry.done) {
+      close(response);
+    } else {
+      const [name, value] = entry.value;
+      if (typeof value === 'string') {
+        resolveField(response, name, value);
+      } else {
+        resolveFile(response, name, value);
+      }
+      iterator.next().then(progress, error);
+    }
+  }
+  function error(reason: Error) {
+    reportGlobalError(response, reason);
+    if (typeof (iterator: any).throw === 'function') {
+      // The iterator protocol doesn't necessarily include this but a generator do.
+      // $FlowFixMe should be able to pass mixed
+      iterator.throw(reason).then(error, error);
+    }
+  }
+
+  iterator.next().then(progress, error);
+
+  return getRoot(response);
 }
 
 export function decodeAction<T>(body: FormData): Promise<() => T> | null {
