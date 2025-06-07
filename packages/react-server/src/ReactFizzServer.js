@@ -5946,7 +5946,7 @@ function flushCompletedQueues(
           const error = new Error(
             'This rendered a large document (>' +
               maxSizeKb +
-              ') without any Suspense ' +
+              ' kB) without any Suspense ' +
               'boundaries around most of it. That can delay initial paint longer than ' +
               'necessary. To improve load performance, add a <Suspense> or <SuspenseList> ' +
               'around the content you expect to be below the header or below the fold. ' +
