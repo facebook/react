@@ -3591,8 +3591,17 @@ function outlineComponentInfo(
     key: componentInfo.key,
     owner: componentInfo.owner,
   };
-  // $FlowFixMe[cannot-write]
-  componentDebugInfo.stack = componentInfo.stack;
+  if (componentInfo.stack == null && componentInfo.debugStack != null) {
+    // If we have a debugStack but no parsed stack we should parse it.
+    // $FlowFixMe[cannot-write]
+    componentDebugInfo.stack = filterStackTrace(
+      request,
+      parseStackTrace(componentInfo.debugStack, 1),
+    );
+  } else {
+    // $FlowFixMe[cannot-write]
+    componentDebugInfo.stack = componentInfo.stack;
+  }
   // Ensure we serialize props after the stack to favor the stack being complete.
   // $FlowFixMe[cannot-write]
   componentDebugInfo.props = componentInfo.props;
@@ -3679,6 +3688,16 @@ function outlineIOInfo(request: Request, ioInfo: ReactIOInfo): void {
   if (owner != null) {
     outlineComponentInfo(request, owner);
   }
+  let debugStack;
+  if (ioInfo.stack == null && ioInfo.debugStack != null) {
+    // If we have a debugStack but no parsed stack we should parse it.
+    debugStack = filterStackTrace(
+      request,
+      parseStackTrace(ioInfo.debugStack, 1),
+    );
+  } else {
+    debugStack = ioInfo.stack;
+  }
   emitIOInfoChunk(
     request,
     id,
@@ -3687,7 +3706,7 @@ function outlineIOInfo(request: Request, ioInfo: ReactIOInfo): void {
     ioInfo.end,
     ioInfo.env,
     owner,
-    ioInfo.stack,
+    debugStack,
   );
   request.writtenObjects.set(ioInfo, serializeByValueID(id));
 }
@@ -4243,29 +4262,40 @@ function forwardDebugInfo(
   debugInfo: ReactDebugInfo,
 ) {
   for (let i = 0; i < debugInfo.length; i++) {
-    if (typeof debugInfo[i].time === 'number') {
+    const info = debugInfo[i];
+    if (typeof info.time === 'number') {
       // When forwarding time we need to ensure to convert it to the time space of the payload.
-      emitTimingChunk(request, id, debugInfo[i].time);
+      emitTimingChunk(request, id, info.time);
     } else {
       request.pendingChunks++;
-      if (typeof debugInfo[i].name === 'string') {
+      if (typeof info.name === 'string') {
         // We outline this model eagerly so that we can refer to by reference as an owner.
         // If we had a smarter way to dedupe we might not have to do this if there ends up
         // being no references to this as an owner.
-        outlineComponentInfo(request, (debugInfo[i]: any));
+        outlineComponentInfo(request, (info: any));
         // Emit a reference to the outlined one.
-        emitDebugChunk(request, id, debugInfo[i]);
-      } else if (debugInfo[i].awaited) {
-        const ioInfo = debugInfo[i].awaited;
+        emitDebugChunk(request, id, info);
+      } else if (info.awaited) {
+        const ioInfo = info.awaited;
         // Outline the IO info in case the same I/O is awaited in more than one place.
         outlineIOInfo(request, ioInfo);
         // We can't serialize the ConsoleTask/Error objects so we need to omit them before serializing.
+        let debugStack;
+        if (info.stack == null && info.debugStack != null) {
+          // If we have a debugStack but no parsed stack we should parse it.
+          debugStack = filterStackTrace(
+            request,
+            parseStackTrace(info.debugStack, 1),
+          );
+        } else {
+          debugStack = info.stack;
+        }
         const debugAsyncInfo: Omit<ReactAsyncInfo, 'debugTask' | 'debugStack'> =
           {
             awaited: ioInfo,
-            env: debugInfo[i].env,
-            owner: debugInfo[i].owner,
-            stack: debugInfo[i].stack,
+            env: info.env,
+            owner: info.owner,
+            stack: debugStack,
           };
         emitDebugChunk(request, id, debugAsyncInfo);
       } else {

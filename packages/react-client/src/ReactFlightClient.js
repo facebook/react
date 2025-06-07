@@ -2679,6 +2679,9 @@ function resolveDebugInfo(
     // was created on the server isn't very useful but where the request was made is.
     // $FlowFixMe[cannot-write]
     componentInfoOrAsyncInfo.debugStack = response._debugRootStack;
+    // We clear the parsed stack frames to indicate that it needs to be re-parsed from debugStack.
+    // $FlowFixMe[cannot-write]
+    componentInfoOrAsyncInfo.stack = null;
   } else if (debugInfo.stack !== undefined) {
     const componentInfoOrAsyncInfo: ReactComponentInfo | ReactAsyncInfo =
       // $FlowFixMe[incompatible-type]
