@@ -12,6 +12,6 @@ fi
 
 HERE=$(pwd)
 
-cd compiler/packages/babel-plugin-react-compiler && yarn --silent link && cd $HERE
+cd compiler/packages/babel-plugin-react-compiler && yarn --silent link && cd "$HERE"
 
 yarn --silent link babel-plugin-react-compiler
