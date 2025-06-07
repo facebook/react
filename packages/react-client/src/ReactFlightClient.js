@@ -844,7 +844,7 @@ function createElement(
       // This owner should ideally have already been initialized to avoid getting
       // user stack frames on the stack.
       const ownerTask =
-        owner === null ? null : initializeFakeTask(response, owner, env);
+        owner === null ? null : initializeFakeTask(response, owner);
       if (ownerTask === null) {
         const rootTask = response._debugRootTask;
         if (rootTask != null) {
@@ -2494,7 +2494,6 @@ function getRootTask(
 function initializeFakeTask(
   response: Response,
   debugInfo: ReactComponentInfo | ReactAsyncInfo | ReactIOInfo,
-  childEnvironmentName: string,
 ): null | ConsoleTask {
   if (!supportsCreateTask) {
     return null;
@@ -2503,6 +2502,10 @@ function initializeFakeTask(
     // If this is an error, we should've really already initialized the task.
     // If it's null, we can't initialize a task.
     return null;
+  }
+  const cachedEntry = debugInfo.debugTask;
+  if (cachedEntry !== undefined) {
+    return cachedEntry;
   }
 
   // Workaround for a bug where Chrome Performance tracking uses the enclosing line/column
@@ -2516,47 +2519,35 @@ function initializeFakeTask(
   const stack = debugInfo.stack;
   const env: string =
     debugInfo.env == null ? response._rootEnvironmentName : debugInfo.env;
-  if (env !== childEnvironmentName) {
+  const ownerEnv: string =
+    debugInfo.owner == null || debugInfo.owner.env == null
+      ? response._rootEnvironmentName
+      : debugInfo.owner.env;
+  const ownerTask =
+    debugInfo.owner == null
+      ? null
+      : initializeFakeTask(response, debugInfo.owner);
+  const taskName =
     // This is the boundary between two environments so we'll annotate the task name.
-    // That is unusual so we don't cache it.
-    const ownerTask =
-      debugInfo.owner == null
-        ? null
-        : initializeFakeTask(response, debugInfo.owner, env);
-    return buildFakeTask(
-      response,
-      ownerTask,
-      stack,
-      '"use ' + childEnvironmentName.toLowerCase() + '"',
-      env,
-      useEnclosingLine,
-    );
-  } else {
-    const cachedEntry = debugInfo.debugTask;
-    if (cachedEntry !== undefined) {
-      return cachedEntry;
-    }
-    const ownerTask =
-      debugInfo.owner == null
-        ? null
-        : initializeFakeTask(response, debugInfo.owner, env);
-    // Some unfortunate pattern matching to refine the type.
-    const taskName =
-      debugInfo.key !== undefined
+    // We assume that the stack frame of the entry into the new environment was done
+    // from the old environment. So we use the owner's environment as the current.
+    env !== ownerEnv
+      ? '"use ' + env.toLowerCase() + '"'
+      : // Some unfortunate pattern matching to refine the type.
+        debugInfo.key !== undefined
         ? getServerComponentTaskName(((debugInfo: any): ReactComponentInfo))
         : debugInfo.name !== undefined
           ? getIOInfoTaskName(((debugInfo: any): ReactIOInfo))
           : getAsyncInfoTaskName(((debugInfo: any): ReactAsyncInfo));
-    // $FlowFixMe[cannot-write]: We consider this part of initialization.
-    return (debugInfo.debugTask = buildFakeTask(
-      response,
-      ownerTask,
-      stack,
-      taskName,
-      env,
-      useEnclosingLine,
-    ));
-  }
+  // $FlowFixMe[cannot-write]: We consider this part of initialization.
+  return (debugInfo.debugTask = buildFakeTask(
+    response,
+    ownerTask,
+    stack,
+    taskName,
+    ownerEnv,
+    useEnclosingLine,
+  ));
 }
 
 function buildFakeTask(
@@ -2658,27 +2649,30 @@ function resolveDebugInfo(
       'resolveDebugInfo should never be called in production mode. This is a bug in React.',
     );
   }
-  // We eagerly initialize the fake task because this resolving happens outside any
-  // render phase so we're not inside a user space stack at this point. If we waited
-  // to initialize it when we need it, we might be inside user code.
-  const env =
-    debugInfo.env === undefined ? response._rootEnvironmentName : debugInfo.env;
   if (debugInfo.stack !== undefined) {
     const componentInfoOrAsyncInfo: ReactComponentInfo | ReactAsyncInfo =
       // $FlowFixMe[incompatible-type]
       debugInfo;
-    initializeFakeTask(response, componentInfoOrAsyncInfo, env);
+    // We eagerly initialize the fake task because this resolving happens outside any
+    // render phase so we're not inside a user space stack at this point. If we waited
+    // to initialize it when we need it, we might be inside user code.
+    initializeFakeTask(response, componentInfoOrAsyncInfo);
   }
-  if (debugInfo.owner === null && response._debugRootOwner != null) {
+  if (debugInfo.owner == null && response._debugRootOwner != null) {
     const componentInfoOrAsyncInfo: ReactComponentInfo | ReactAsyncInfo =
       // $FlowFixMe: By narrowing `owner` to `null`, we narrowed `debugInfo` to `ReactComponentInfo`
       debugInfo;
     // $FlowFixMe[cannot-write]
     componentInfoOrAsyncInfo.owner = response._debugRootOwner;
+    // We clear the parsed stack frames to indicate that it needs to be re-parsed from debugStack.
+    // $FlowFixMe[cannot-write]
+    componentInfoOrAsyncInfo.stack = null;
     // We override the stack if we override the owner since the stack where the root JSX
     // was created on the server isn't very useful but where the request was made is.
     // $FlowFixMe[cannot-write]
     componentInfoOrAsyncInfo.debugStack = response._debugRootStack;
+    // $FlowFixMe[cannot-write]
+    componentInfoOrAsyncInfo.debugTask = response._debugRootTask;
   } else if (debugInfo.stack !== undefined) {
     const componentInfoOrAsyncInfo: ReactComponentInfo | ReactAsyncInfo =
       // $FlowFixMe[incompatible-type]
@@ -2738,7 +2732,7 @@ const replayConsoleWithCallStack = {
         bindToConsole(methodName, args, env),
       );
       if (owner != null) {
-        const task = initializeFakeTask(response, owner, env);
+        const task = initializeFakeTask(response, owner);
         initializeFakeStack(response, owner);
         if (task !== null) {
           task.run(callStack);
@@ -2812,10 +2806,8 @@ function resolveConsoleEntry(
 }
 
 function initializeIOInfo(response: Response, ioInfo: ReactIOInfo): void {
-  const env =
-    ioInfo.env === undefined ? response._rootEnvironmentName : ioInfo.env;
   if (ioInfo.stack !== undefined) {
-    initializeFakeTask(response, ioInfo, env);
+    initializeFakeTask(response, ioInfo);
     initializeFakeStack(response, ioInfo);
   }
   // Adjust the time to the current environment's time space.
