@@ -47,19 +47,13 @@ function Component() {
 ## Error
 
 ```
-  31 |   };
-  32 |
-> 33 |   useEffect(() => {
-     |             ^^^^^^^
-> 34 |     onMount();
-     | ^^^^^^^^^^^^^^
-> 35 |   }, [onMount]);
-     | ^^^^ InvalidReact: This argument is a function which may reassign or mutate local variables after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead (33:35)
-
-InvalidReact: The function modifies a local variable here (7:7)
-  36 |
-  37 |   return 'ok';
-  38 | }
+   5 |
+   6 |   const reassignLocal = newValue => {
+>  7 |     local = newValue;
+     |     ^^^^^ InvalidReact: Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead. Variable `local` cannot be reassigned after render (7:7)
+   8 |   };
+   9 |
+  10 |   const onMount = newValue => {
 ```
           
       

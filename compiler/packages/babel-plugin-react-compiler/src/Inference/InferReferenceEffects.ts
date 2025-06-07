@@ -1984,7 +1984,7 @@ function areArgumentsImmutableAndNonMutating(
   return true;
 }
 
-function getArgumentEffect(
+export function getArgumentEffect(
   signatureEffect: Effect | null,
   arg: Place | SpreadPattern,
 ): Effect {

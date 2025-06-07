@@ -41,14 +41,13 @@ function Component() {
 ## Error
 
 ```
-  29 |   };
-  30 |
-> 31 |   return <button onClick={onClick}>Submit</button>;
-     |                           ^^^^^^^ InvalidReact: This argument is a function which may reassign or mutate local variables after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead (31:31)
-
-InvalidReact: The function modifies a local variable here (5:5)
-  32 | }
-  33 |
+  3 |
+  4 |   const reassignLocal = newValue => {
+> 5 |     local = newValue;
+    |     ^^^^^ InvalidReact: Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead. Variable `local` cannot be reassigned after render (5:5)
+  6 |   };
+  7 |
+  8 |   const onClick = newValue => {
 ```
           
       
