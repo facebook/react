@@ -15,6 +15,7 @@ import {
 import {
   BasicBlock,
   BlockId,
+  DeclarationId,
   Environment,
   FunctionExpression,
   HIRFunction,
@@ -157,7 +158,13 @@ export function inferMutationAliasingEffects(
   }
   queue(fn.body.entry, initialState);
 
-  const context = new Context(isFunctionExpression, fn);
+  const hoistedContextDeclarations = findHoistedContextDeclarations(fn);
+
+  const context = new Context(
+    isFunctionExpression,
+    fn,
+    hoistedContextDeclarations,
+  );
 
   let count = 0;
   while (queuedStates.size !== 0) {
@@ -189,6 +196,25 @@ export function inferMutationAliasingEffects(
   return Ok(undefined);
 }
 
+function findHoistedContextDeclarations(fn: HIRFunction): Set<DeclarationId> {
+  const hoisted = new Set<DeclarationId>();
+  for (const block of fn.body.blocks.values()) {
+    for (const instr of block.instructions) {
+      if (instr.value.kind === 'DeclareContext') {
+        const kind = instr.value.lvalue.kind;
+        if (
+          kind == InstructionKind.HoistedConst ||
+          kind == InstructionKind.HoistedFunction ||
+          kind == InstructionKind.HoistedLet
+        ) {
+          hoisted.add(instr.value.lvalue.place.identifier.declarationId);
+        }
+      }
+    }
+  }
+  return hoisted;
+}
+
 class Context {
   internedEffects: Map<string, AliasingEffect> = new Map();
   instructionSignatureCache: Map<Instruction, InstructionSignature> = new Map();
@@ -197,10 +223,16 @@ class Context {
   catchHandlers: Map<BlockId, Place> = new Map();
   isFuctionExpression: boolean;
   fn: HIRFunction;
+  hoistedContextDeclarations: Set<DeclarationId>;
 
-  constructor(isFunctionExpression: boolean, fn: HIRFunction) {
+  constructor(
+    isFunctionExpression: boolean,
+    fn: HIRFunction,
+    hoistedContextDeclarations: Set<DeclarationId>,
+  ) {
     this.isFuctionExpression = isFunctionExpression;
     this.fn = fn;
+    this.hoistedContextDeclarations = hoistedContextDeclarations;
   }
 
   internEffect(effect: AliasingEffect): AliasingEffect {
@@ -241,7 +273,11 @@ function inferBlock(
   for (const instr of block.instructions) {
     let instructionSignature = context.instructionSignatureCache.get(instr);
     if (instructionSignature == null) {
-      instructionSignature = computeSignatureForInstruction(state.env, instr);
+      instructionSignature = computeSignatureForInstruction(
+        context,
+        state.env,
+        instr,
+      );
       context.instructionSignatureCache.set(instr, instructionSignature);
     }
     const effects = applySignature(context, state, instructionSignature, instr);
@@ -1265,6 +1301,7 @@ type InstructionSignature = {
  * an instruction.
  */
 function computeSignatureForInstruction(
+  context: Context,
   env: Environment,
   instr: Instruction,
 ): InstructionSignature {
@@ -1603,16 +1640,28 @@ function computeSignatureForInstruction(
       break;
     }
     case 'LoadContext': {
-      // We load from the context
-      effects.push({kind: 'Assign', from: value.place, into: lvalue});
+      /*
+       * Context variables are like mutable boxes. Loading from one
+       * is equivalent to a PropertyLoad from the box, so we model it
+       * with the same effect we use there (CreateFrom)
+       */
+      effects.push({kind: 'CreateFrom', from: value.place, into: lvalue});
       break;
     }
     case 'StoreContext': {
-      // We're storing into the conceptual box
-      if (value.lvalue.kind === InstructionKind.Reassign) {
+      /*
+       * Context variables are like mutable boxes, so semantically
+       * we're either creating (let/const) or mutating (reassign) a box,
+       * and then capturing the value into it.
+       */
+      if (
+        value.lvalue.kind === InstructionKind.Reassign ||
+        context.hoistedContextDeclarations.has(
+          value.lvalue.place.identifier.declarationId,
+        )
+      ) {
         effects.push({kind: 'Mutate', value: value.lvalue.place});
       } else {
-        // Context variables are conceptually like mutable boxes
         effects.push({
           kind: 'Create',
           into: value.lvalue.place,
@@ -1620,9 +1669,8 @@ function computeSignatureForInstruction(
           reason: ValueReason.Other,
         });
       }
-      // Which aliases the value
       effects.push({
-        kind: 'Alias',
+        kind: 'Capture',
         from: value.value,
         into: value.lvalue.place,
       });
