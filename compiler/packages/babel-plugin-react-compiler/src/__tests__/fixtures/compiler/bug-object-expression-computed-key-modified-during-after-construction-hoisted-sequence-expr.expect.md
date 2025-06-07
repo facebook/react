@@ -56,47 +56,21 @@ import { identity, mutate } from "shared-runtime";
  *   [{"[object Object]":[42]},{"wat0":"joe","wat1":"joe","wat2":"joe"}]
  */
 function Component(props) {
-  const $ = _c(8);
-  let key;
+  const $ = _c(2);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    key = {};
-    t0 = (mutate(key), key);
-    $[0] = key;
+  if ($[0] !== props.value) {
+    const key = {};
+    const tmp = (mutate(key), key);
+    const context = { [tmp]: identity([props.value]) };
+
+    mutate(key);
+    t0 = [context, key];
+    $[0] = props.value;
     $[1] = t0;
   } else {
-    key = $[0];
     t0 = $[1];
   }
-  const tmp = t0;
-  let t1;
-  if ($[2] !== props.value) {
-    t1 = identity([props.value]);
-    $[2] = props.value;
-    $[3] = t1;
-  } else {
-    t1 = $[3];
-  }
-  let t2;
-  if ($[4] !== t1) {
-    t2 = { [tmp]: t1 };
-    $[4] = t1;
-    $[5] = t2;
-  } else {
-    t2 = $[5];
-  }
-  const context = t2;
-
-  mutate(key);
-  let t3;
-  if ($[6] !== context) {
-    t3 = [context, key];
-    $[6] = context;
-    $[7] = t3;
-  } else {
-    t3 = $[7];
-  }
-  return t3;
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {
