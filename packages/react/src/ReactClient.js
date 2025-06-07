@@ -30,6 +30,7 @@ import {
   isValidElement,
 } from './jsx/ReactJSXElement';
 import {createContext} from './ReactContext';
+import {createStore} from './ReactStore';
 import {lazy} from './ReactLazy';
 import {forwardRef} from './ReactForwardRef';
 import {memo} from './ReactMemo';
@@ -128,6 +129,8 @@ export {
   addTransitionType as unstable_addTransitionType,
   // enableGestureTransition
   startGestureTransition as unstable_startGestureTransition,
+  // enableStore
+  createStore as unstable_createStore,
   // DEV-only
   useId,
   act,
