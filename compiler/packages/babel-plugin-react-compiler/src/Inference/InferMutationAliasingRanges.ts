@@ -20,6 +20,7 @@ import {
 } from '../HIR/visitors';
 import DisjointSet from '../Utils/DisjointSet';
 import {assertExhaustive} from '../Utils/utils';
+import {debugAliases} from './InferMutableRanges';
 import {inferMutableRangesForAlias} from './InferMutableRangesForAlias';
 
 /**
@@ -44,7 +45,9 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
 
     for (const instr of block.instructions) {
       for (const lvalue of eachInstructionLValue(instr)) {
-        lvalue.identifier.mutableRange.start = instr.id;
+        if (lvalue.identifier.mutableRange.start === 0) {
+          lvalue.identifier.mutableRange.start = instr.id;
+        }
         lvalue.identifier.mutableRange.end = makeInstructionId(
           Math.max(instr.id + 1, lvalue.identifier.mutableRange.end),
         );
