@@ -31,8 +31,22 @@ export function prerenderToNodeStream() {
   );
 }
 
+export function prerender() {
+  return require('./src/server/react-dom-server.node').prerender.apply(
+    this,
+    arguments,
+  );
+}
+
 export function resumeAndPrerenderToNodeStream() {
   return require('./src/server/react-dom-server.node').resumeAndPrerenderToNodeStream.apply(
+    this,
+    arguments,
+  );
+}
+
+export function resumeAndPrerender() {
+  return require('./src/server/react-dom-server.node').resumeAndPrerender.apply(
     this,
     arguments,
   );

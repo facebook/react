@@ -7,5 +7,9 @@
  * @flow
  */
 
-export {renderToPipeableStream, version} from './ReactDOMFizzServerNode.js';
-export {prerenderToNodeStream} from './ReactDOMFizzStaticNode.js';
+export {
+  renderToPipeableStream,
+  renderToReadableStream,
+  version,
+} from './ReactDOMFizzServerNode.js';
+export {prerenderToNodeStream, prerender} from './ReactDOMFizzStaticNode.js';
