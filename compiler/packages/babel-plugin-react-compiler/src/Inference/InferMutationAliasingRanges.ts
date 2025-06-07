@@ -71,7 +71,6 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
     kind: MutationKind;
     place: Place;
   }> = [];
-  const catchHandlers = new Map<BlockId, Place>();
 
   let index = 0;
 
@@ -157,20 +156,19 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
       state.assign(index++, block.terminal.value, fn.returns);
     }
 
-    /**
-     * TODO: add effects to terminals so that these can be emitted by the equivalent
-     * logic in InferMutationAliasingEffects
-     */
     if (
-      block.terminal.kind === 'try' &&
-      block.terminal.handlerBinding != null
+      (block.terminal.kind === 'maybe-throw' ||
+        block.terminal.kind === 'return') &&
+      block.terminal.effects != null
     ) {
-      catchHandlers.set(block.terminal.handler, block.terminal.handlerBinding);
-    } else if (block.terminal.kind === 'maybe-throw') {
-      const handlerParam = catchHandlers.get(block.terminal.handler);
-      if (handlerParam != null) {
-        for (const instr of block.instructions) {
-          state.assign(index++, instr.lvalue, handlerParam);
+      for (const effect of block.terminal.effects) {
+        if (effect.kind === 'Alias') {
+          state.assign(index++, effect.from, effect.into);
+        } else {
+          CompilerError.invariant(effect.kind === 'Freeze', {
+            reason: `Unexpected '${effect.kind}' effect for MaybeThrow terminal`,
+            loc: block.terminal.loc,
+          });
         }
       }
     }

@@ -155,7 +155,7 @@ export function inferMutationAliasingEffects(
   }
   queue(fn.body.entry, initialState);
 
-  const context = new Context();
+  const context = new Context(isFunctionExpression);
 
   let count = 0;
   while (queuedStates.size !== 0) {
@@ -192,6 +192,11 @@ class Context {
   effectInstructionValueCache: Map<AliasingEffect, InstructionValue> =
     new Map();
   catchHandlers: Map<BlockId, Place> = new Map();
+  isFuctionExpression: boolean;
+
+  constructor(isFunctionExpression: boolean) {
+    this.isFuctionExpression = isFunctionExpression;
+  }
 }
 
 function inferParam(
@@ -233,6 +238,7 @@ function inferBlock(
   } else if (terminal.kind === 'maybe-throw') {
     const handlerParam = context.catchHandlers.get(terminal.handler);
     if (handlerParam != null) {
+      const effects: Array<AliasingEffect> = [];
       for (const instr of block.instructions) {
         if (
           instr.value.kind === 'CallExpression' ||
@@ -243,10 +249,33 @@ function inferBlock(
            * itself. For example, `c = a.b` can throw if `a` is nullish, but the thrown value
            * is an error object synthesized by the JS runtime. Whereas `throwsInput(x)` can
            * throw (effectively) the result of the call.
+           *
+           * TODO: call applyEffect() instead. This meant that the catch param wasn't inferred
+           * as a mutable value, though. See `try-catch-try-value-modified-in-catch-escaping.js`
+           * fixture as an example
            */
           state.appendAlias(handlerParam, instr.lvalue);
+          const kind = state.kind(instr.lvalue).kind;
+          if (kind === ValueKind.Mutable || kind == ValueKind.Context) {
+            effects.push({
+              kind: 'Alias',
+              from: instr.lvalue,
+              into: handlerParam,
+            });
+          }
         }
       }
+      terminal.effects = effects.length !== 0 ? effects : null;
+    }
+  } else if (terminal.kind === 'return') {
+    if (!context.isFuctionExpression) {
+      terminal.effects = [
+        {
+          kind: 'Freeze',
+          value: terminal.value,
+          reason: ValueReason.JsxCaptured,
+        },
+      ];
     }
   }
 }
@@ -326,7 +355,7 @@ function applySignature(
   }
 
   for (const effect of signature.effects) {
-    applyEffect(context, state, effect, instruction, aliased, effects);
+    applyEffect(context, state, effect, aliased, effects);
   }
   if (DEBUG) {
     console.log(
@@ -351,7 +380,6 @@ function applyEffect(
   context: Context,
   state: InferenceState,
   effect: AliasingEffect,
-  instruction: Instruction,
   aliased: Set<IdentifierId>,
   effects: Array<AliasingEffect>,
 ): void {
@@ -477,7 +505,6 @@ function applyEffect(
             from: capture,
             into: effect.into,
           },
-          instruction,
           aliased,
           effects,
         );
@@ -618,14 +645,7 @@ function applyEffect(
             console.log('apply function expression effects');
           }
           for (const signatureEffect of signatureEffects) {
-            applyEffect(
-              context,
-              state,
-              signatureEffect,
-              instruction,
-              aliased,
-              effects,
-            );
+            applyEffect(context, state, signatureEffect, aliased, effects);
           }
           break;
         }
@@ -645,14 +665,7 @@ function applyEffect(
           console.log('apply aliasing signature effects');
         }
         for (const signatureEffect of signatureEffects) {
-          applyEffect(
-            context,
-            state,
-            signatureEffect,
-            instruction,
-            aliased,
-            effects,
-          );
+          applyEffect(context, state, signatureEffect, aliased, effects);
         }
       } else if (effect.signature != null) {
         if (DEBUG) {
@@ -666,14 +679,7 @@ function applyEffect(
           effect.args,
         );
         for (const legacyEffect of legacyEffects) {
-          applyEffect(
-            context,
-            state,
-            legacyEffect,
-            instruction,
-            aliased,
-            effects,
-          );
+          applyEffect(context, state, legacyEffect, aliased, effects);
         }
       } else {
         if (DEBUG) {
@@ -687,7 +693,6 @@ function applyEffect(
             into: effect.into,
             value: ValueKind.Mutable,
           },
-          instruction,
           aliased,
           effects,
         );
@@ -711,7 +716,6 @@ function applyEffect(
                 kind: 'MutateTransitiveConditionally',
                 value: operand,
               },
-              instruction,
               aliased,
               effects,
             );
@@ -721,7 +725,6 @@ function applyEffect(
             state,
             // OK: recording information flow
             {kind: 'Alias', from: operand, into: effect.into},
-            instruction,
             aliased,
             effects,
           );
@@ -750,7 +753,6 @@ function applyEffect(
                 from: operand,
                 into: other,
               },
-              instruction,
               aliased,
               effects,
             );
@@ -772,7 +774,6 @@ function applyEffect(
       ) {
         const value = state.kind(effect.value);
         if (DEBUG) {
-          console.log(printInstruction(instruction));
           console.log(printAliasingEffect(effect));
           console.log(prettyFormat(state.debugAbstractValue(value)));
         }
