@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, ValueKind} from '..';
+import {CompilerError, Effect, ValueKind} from '..';
 import {
   BasicBlock,
   BlockId,
@@ -1038,8 +1038,43 @@ function computeSignatureForInstruction(
         into: lvalue,
         value: ValueKind.Mutable,
       });
-      if (value.loweredFunc.func.aliasingEffects != null) {
-        effects.push(...value.loweredFunc.func.aliasingEffects);
+      /**
+       * We've already analyzed the function expression in AnalyzeFunctions. There, we assign
+       * a Capture effect to any context variable that appears (locally) to be aliased and/or
+       * mutated. The precise effects are annotated on the function expression's aliasingEffects
+       * property, but we don't want to execute those effects yet. We can only use those when
+       * we know exactly how the function is invoked — via an Apply effect from a custom signature.
+       *
+       * But in the general case, functions can be passed around and possibly called in ways where
+       * we don't know how to interpret their precise effects. For example:
+       *
+       * ```
+       * const a = {};
+       * // We don't want to consider a as mutating here either, this just declares the function
+       * const f = () => { maybeMutate(a) };
+       * // We don't want to consider a as mutating here either, it can't possibly call f yet
+       * const x = [f];
+       * // Here we have to assume that f can be called (transitively), and have to consider a
+       * // as mutating
+       * callAllFunctionInArray(x);
+       * ```
+       *
+       * So for any context variables that were inferred as captured or mutated, we record a
+       * Capture effect. If the resulting function is transitively mutated, this will mean
+       * that those operands are also considered mutated. If the function is never called,
+       * they won't be!
+       *
+       * Note that if the type of the context variables are frozen, global, or primitive, the
+       * Capture will either get pruned or downgraded to an ImmutableCapture.
+       */
+      for (const operand of value.loweredFunc.func.context) {
+        if (operand.effect === Effect.Capture) {
+          effects.push({
+            kind: 'Capture',
+            from: operand,
+            into: lvalue,
+          });
+        }
       }
       break;
     }
