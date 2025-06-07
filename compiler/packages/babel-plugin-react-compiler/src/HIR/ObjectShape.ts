@@ -569,6 +569,32 @@ addObject(BUILTIN_SHAPES, BuiltInSetId, [
       calleeEffect: Effect.Store,
       // returnValueKind is technically dependent on the ValueKind of the set itself
       returnValueKind: ValueKind.Mutable,
+      aliasing: {
+        receiver: makeIdentifierId(0),
+        params: [],
+        rest: makeIdentifierId(1),
+        returns: makeIdentifierId(2),
+        temporaries: [],
+        effects: [
+          // Set.add returns the receiver Set
+          {
+            kind: 'Assign',
+            from: signatureArgument(0),
+            into: signatureArgument(2),
+          },
+          // Set.add mutates the set itself
+          {
+            kind: 'Mutate',
+            value: signatureArgument(0),
+          },
+          // Captures the rest params into the set
+          {
+            kind: 'Capture',
+            from: signatureArgument(1),
+            into: signatureArgument(0),
+          },
+        ],
+      },
     }),
   ],
   [
