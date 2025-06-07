@@ -777,6 +777,10 @@ function serializeThenable(
         }
       }
       if (newTask.status === PENDING) {
+        if (enableProfilerTimer && enableComponentPerformanceTrack) {
+          // If this is async we need to time when this task finishes.
+          newTask.timed = true;
+        }
         // We expect that the only status it might be otherwise is ABORTED.
         // When we abort we emit chunks in each pending task slot and don't need
         // to do so again here.
@@ -785,11 +789,6 @@ function serializeThenable(
       }
     },
   );
-
-  if (enableProfilerTimer && enableComponentPerformanceTrack) {
-    // If this is async we need to time when this task finishes.
-    newTask.timed = true;
-  }
 
   return newTask.id;
 }
@@ -1341,12 +1340,7 @@ function renderFunctionComponent<Props>(
 
       // Track when we started rendering this component.
       if (enableProfilerTimer && enableComponentPerformanceTrack) {
-        task.timed = true;
-        emitTimingChunk(
-          request,
-          componentDebugID,
-          (task.time = performance.now()),
-        );
+        advanceTaskTime(request, task, performance.now());
       }
 
       emitDebugChunk(request, componentDebugID, componentDebugInfo);
@@ -2008,7 +2002,7 @@ function visitAsyncNode(
               // We log the environment at the time when the last promise pigned ping which may
               // be later than what the environment was when we actually started awaiting.
               const env = (0, request.environmentName)();
-              emitTimingChunk(request, task.id, startTime);
+              advanceTaskTime(request, task, startTime);
               // Then emit a reference to us awaiting it in the current task.
               request.pendingChunks++;
               emitDebugChunk(request, task.id, {
@@ -2017,7 +2011,7 @@ function visitAsyncNode(
                 owner: node.owner,
                 stack: stack,
               });
-              emitTimingChunk(request, task.id, (task.time = endTime));
+              advanceTaskTime(request, task, endTime);
             }
           }
         }
@@ -2070,17 +2064,11 @@ function emitAsyncSequence(
     const env = (0, request.environmentName)();
     // If we don't have any thing awaited, the time we started awaiting was internal
     // when we yielded after rendering. The current task time is basically that.
-    const awaitStartTime = task.time;
-    // If the end time finished before we started, it could've been a cached thing so
-    // we clamp it to the task time. Effectively leading to a zero-time await.
-    const awaitEndTime =
-      awaitedNode.end < task.time ? task.time : awaitedNode.end;
-    emitTimingChunk(request, task.id, awaitStartTime);
     emitDebugChunk(request, task.id, {
       awaited: ((awaitedNode: any): ReactIOInfo), // This is deduped by this reference.
       env: env,
     });
-    emitTimingChunk(request, task.id, (task.time = awaitEndTime));
+    advanceTaskTime(request, task, awaitedNode.end);
   }
 }
 
@@ -4294,19 +4282,13 @@ function forwardDebugInfo(
   debugInfo: ReactDebugInfo,
 ) {
   const id = task.id;
-  const minimumTime =
-    enableProfilerTimer && enableComponentPerformanceTrack ? task.time : 0;
   for (let i = 0; i < debugInfo.length; i++) {
     const info = debugInfo[i];
     if (typeof info.time === 'number') {
       // When forwarding time we need to ensure to convert it to the time space of the payload.
       // We clamp the time to the starting render of the current component. It's as if it took
       // no time to render and await if we reuse cached content.
-      emitTimingChunk(
-        request,
-        id,
-        info.time < minimumTime ? minimumTime : info.time,
-      );
+      advanceTaskTime(request, task, info.time);
     } else {
       if (typeof info.name === 'string') {
         // We outline this model eagerly so that we can refer to by reference as an owner.
@@ -4381,6 +4363,26 @@ function emitTimingChunk(
   const processedChunk = stringToChunk(row);
   // TODO: Move to its own priority queue.
   request.completedRegularChunks.push(processedChunk);
+}
+
+function advanceTaskTime(
+  request: Request,
+  task: Task,
+  timestamp: number,
+): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  // Emits a timing chunk, if the new timestamp is higher than the previous timestamp of this task.
+  if (timestamp > task.time) {
+    emitTimingChunk(request, task.id, timestamp);
+    task.time = timestamp;
+  } else if (!task.timed) {
+    // If it wasn't timed before, e.g. an outlined object, we need to emit the first timestamp and
+    // it is now timed.
+    emitTimingChunk(request, task.id, task.time);
+  }
+  task.timed = true;
 }
 
 function emitChunk(
@@ -4474,7 +4476,7 @@ function emitChunk(
 function erroredTask(request: Request, task: Task, error: mixed): void {
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     if (task.timed) {
-      emitTimingChunk(request, task.id, (task.time = performance.now()));
+      advanceTaskTime(request, task, performance.now());
     }
   }
   task.status = ERRORED;
@@ -4557,7 +4559,7 @@ function retryTask(request: Request, task: Task): void {
     // We've finished rendering. Log the end time.
     if (enableProfilerTimer && enableComponentPerformanceTrack) {
       if (task.timed) {
-        emitTimingChunk(request, task.id, (task.time = performance.now()));
+        advanceTaskTime(request, task, performance.now());
       }
     }
 
@@ -4684,7 +4686,7 @@ function abortTask(task: Task, request: Request, errorId: number): void {
   // Track when we aborted this task as its end time.
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     if (task.timed) {
-      emitTimingChunk(request, task.id, (task.time = performance.now()));
+      advanceTaskTime(request, task, performance.now());
     }
   }
   // Instead of emitting an error per task.id, we emit a model that only
