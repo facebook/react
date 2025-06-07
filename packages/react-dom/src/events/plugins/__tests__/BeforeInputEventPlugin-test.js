@@ -123,7 +123,7 @@ describe('BeforeInputEventPlugin', () => {
     },
     {
       eventSimulator: simulateEvent,
-      eventSimulatorArgs: ['textInput', {data: 'abcß'}],
+      eventSimulatorArgs: ['beforeinput', {data: 'abcß'}],
     },
     {
       eventSimulator: simulateKeyboardEvent,
@@ -161,7 +161,7 @@ describe('BeforeInputEventPlugin', () => {
     },
     {
       eventSimulator: simulateEvent,
-      eventSimulatorArgs: ['textInput', {data: '\uD83D\uDE0A'}],
+      eventSimulatorArgs: ['beforeinput', {data: '\uD83D\uDE0A'}],
     },
     {
       eventSimulator: simulateKeyboardEvent,
@@ -236,7 +236,7 @@ describe('BeforeInputEventPlugin', () => {
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
             expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
-            expect(beforeInputEvent.nativeEvent.type).toBe('textInput');
+            expect(beforeInputEvent.nativeEvent.type).toBe('beforeinput');
             expect(beforeInputEvent.type).toBe('beforeinput');
             expect(beforeInputEvent.data).toBe('abcß');
           },
@@ -288,7 +288,7 @@ describe('BeforeInputEventPlugin', () => {
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
             expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
-            expect(beforeInputEvent.nativeEvent.type).toBe('textInput');
+            expect(beforeInputEvent.nativeEvent.type).toBe('beforeinput');
             expect(beforeInputEvent.type).toBe('beforeinput');
             expect(beforeInputEvent.data).toBe('\uD83D\uDE0A');
           },
