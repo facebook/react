@@ -1341,12 +1341,7 @@ function renderFunctionComponent<Props>(
 
       // Track when we started rendering this component.
       if (enableProfilerTimer && enableComponentPerformanceTrack) {
-        task.timed = true;
-        emitTimingChunk(
-          request,
-          componentDebugID,
-          (task.time = performance.now()),
-        );
+        advanceTaskTime(request, task, performance.now());
       }
 
       emitDebugChunk(request, componentDebugID, componentDebugInfo);
@@ -1890,7 +1885,6 @@ function visitAsyncNode(
   request: Request,
   task: Task,
   node: AsyncSequence,
-  cutOff: number,
   visited: Set<AsyncSequence>,
 ): null | PromiseNode | IONode {
   if (visited.has(node)) {
@@ -1904,7 +1898,7 @@ function visitAsyncNode(
     // We ignore the return value here because if it wasn't awaited in user space, then we don't log it.
     // It also means that it can just have been part of a previous component's render.
     // TODO: This means that some I/O can get lost that was still blocking the sequence.
-    visitAsyncNode(request, task, node.previous, cutOff, visited);
+    visitAsyncNode(request, task, node.previous, visited);
   }
   switch (node.tag) {
     case IO_NODE: {
@@ -1923,7 +1917,7 @@ function visitAsyncNode(
       const awaited = node.awaited;
       let match = null;
       if (awaited !== null) {
-        const ioNode = visitAsyncNode(request, task, awaited, cutOff, visited);
+        const ioNode = visitAsyncNode(request, task, awaited, visited);
         if (ioNode !== null) {
           // This Promise was blocked on I/O. That's a signal that this Promise is interesting to log.
           // We don't log it yet though. We return it to be logged by the point where it's awaited.
@@ -1963,7 +1957,7 @@ function visitAsyncNode(
       const awaited = node.awaited;
       let match = null;
       if (awaited !== null) {
-        const ioNode = visitAsyncNode(request, task, awaited, cutOff, visited);
+        const ioNode = visitAsyncNode(request, task, awaited, visited);
         if (ioNode !== null) {
           const startTime: number = node.start;
           let endTime: number;
@@ -1983,7 +1977,7 @@ function visitAsyncNode(
             // This was already resolved when we started this render. It must have been either something
             // that's part of a start up sequence or externally cached data. We exclude that information.
             return null;
-          } else if (startTime < cutOff) {
+          } else if (startTime < task.time) {
             // We started awaiting this node before we started rendering this sequence.
             // This means that this particular await was never part of the current sequence.
             // If we have another await higher up in the chain it might have a more actionable stack
@@ -2009,7 +2003,7 @@ function visitAsyncNode(
               // We log the environment at the time when the last promise pigned ping which may
               // be later than what the environment was when we actually started awaiting.
               const env = (0, request.environmentName)();
-              emitTimingChunk(request, task.id, startTime);
+              advanceTaskTime(request, task, startTime);
               // Then emit a reference to us awaiting it in the current task.
               request.pendingChunks++;
               emitDebugChunk(request, task.id, {
@@ -2018,7 +2012,7 @@ function visitAsyncNode(
                 owner: node.owner,
                 stack: stack,
               });
-              emitTimingChunk(request, task.id, endTime);
+              advanceTaskTime(request, task, endTime);
             }
           }
         }
@@ -2051,10 +2045,9 @@ function emitAsyncSequence(
   request: Request,
   task: Task,
   node: AsyncSequence,
-  cutOff: number,
 ): void {
   const visited: Set<AsyncSequence> = new Set();
-  const awaitedNode = visitAsyncNode(request, task, node, cutOff, visited);
+  const awaitedNode = visitAsyncNode(request, task, node, visited);
   if (awaitedNode !== null) {
     // Nothing in user space (unfiltered stack) awaited this.
     if (awaitedNode.end < 0) {
@@ -2071,17 +2064,12 @@ function emitAsyncSequence(
     // environment was when we actually started awaiting.
     const env = (0, request.environmentName)();
     // If we don't have any thing awaited, the time we started awaiting was internal
-    // when we yielded after rendering. The cutOff time is basically that.
-    const awaitStartTime = cutOff;
-    // If the end time finished before we started, it could've been a cached thing so
-    // we clamp it to the cutOff time. Effectively leading to a zero-time await.
-    const awaitEndTime = awaitedNode.end < cutOff ? cutOff : awaitedNode.end;
-    emitTimingChunk(request, task.id, awaitStartTime);
+    // when we yielded after rendering. The current task time is basically that.
     emitDebugChunk(request, task.id, {
       awaited: ((awaitedNode: any): ReactIOInfo), // This is deduped by this reference.
       env: env,
     });
-    emitTimingChunk(request, task.id, awaitEndTime);
+    advanceTaskTime(request, task, awaitedNode.end);
   }
 }
 
@@ -2092,7 +2080,7 @@ function pingTask(request: Request, task: Task): void {
     if (enableAsyncDebugInfo) {
       const sequence = getCurrentAsyncSequence();
       if (sequence !== null) {
-        emitAsyncSequence(request, task, sequence, task.time);
+        emitAsyncSequence(request, task, sequence);
       }
     }
   }
@@ -4295,19 +4283,13 @@ function forwardDebugInfo(
   debugInfo: ReactDebugInfo,
 ) {
   const id = task.id;
-  const minimumTime =
-    enableProfilerTimer && enableComponentPerformanceTrack ? task.time : 0;
   for (let i = 0; i < debugInfo.length; i++) {
     const info = debugInfo[i];
     if (typeof info.time === 'number') {
       // When forwarding time we need to ensure to convert it to the time space of the payload.
       // We clamp the time to the starting render of the current component. It's as if it took
       // no time to render and await if we reuse cached content.
-      emitTimingChunk(
-        request,
-        id,
-        info.time < minimumTime ? minimumTime : info.time,
-      );
+      advanceTaskTime(request, task, info.time);
     } else {
       if (typeof info.name === 'string') {
         // We outline this model eagerly so that we can refer to by reference as an owner.
@@ -4382,6 +4364,24 @@ function emitTimingChunk(
   const processedChunk = stringToChunk(row);
   // TODO: Move to its own priority queue.
   request.completedRegularChunks.push(processedChunk);
+}
+
+function advanceTaskTime(
+  request: Request,
+  task: Task,
+  timestamp: number,
+): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  // Emits a timing chunk, if the new timestamp is higher than the previous timestamp of this task.
+  // If it wasn't timed before, e.g. an outlined object, we need to emit the first timestamp and
+  // it is now timed.
+  if (!task.timed || timestamp > task.time) {
+    emitTimingChunk(request, task.id, timestamp);
+    task.time = timestamp;
+  }
+  task.timed = true;
 }
 
 function emitChunk(
@@ -4475,7 +4475,7 @@ function emitChunk(
 function erroredTask(request: Request, task: Task, error: mixed): void {
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     if (task.timed) {
-      emitTimingChunk(request, task.id, (task.time = performance.now()));
+      advanceTaskTime(request, task, performance.now());
     }
   }
   task.status = ERRORED;
@@ -4558,7 +4558,7 @@ function retryTask(request: Request, task: Task): void {
     // We've finished rendering. Log the end time.
     if (enableProfilerTimer && enableComponentPerformanceTrack) {
       if (task.timed) {
-        emitTimingChunk(request, task.id, (task.time = performance.now()));
+        advanceTaskTime(request, task, performance.now());
       }
     }
 
@@ -4685,7 +4685,7 @@ function abortTask(task: Task, request: Request, errorId: number): void {
   // Track when we aborted this task as its end time.
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     if (task.timed) {
-      emitTimingChunk(request, task.id, (task.time = performance.now()));
+      advanceTaskTime(request, task, performance.now());
     }
   }
   // Instead of emitting an error per task.id, we emit a model that only

@@ -2902,6 +2902,46 @@ function resolveTypedArray(
   resolveBuffer(response, id, view);
 }
 
+function logComponentInfo(
+  response: Response,
+  root: SomeChunk<any>,
+  componentInfo: ReactComponentInfo,
+  trackIdx: number,
+  startTime: number,
+  componentEndTime: number,
+  childrenEndTime: number,
+  isLastComponent: boolean,
+): void {
+  // $FlowFixMe: Refined.
+  if (
+    isLastComponent &&
+    root.status === ERRORED &&
+    root.reason !== response._closedReason
+  ) {
+    // If this is the last component to render before this chunk rejected, then conceptually
+    // this component errored. If this was a cancellation then it wasn't this component that
+    // errored.
+    logComponentErrored(
+      componentInfo,
+      trackIdx,
+      startTime,
+      componentEndTime,
+      childrenEndTime,
+      response._rootEnvironmentName,
+      root.reason,
+    );
+  } else {
+    logComponentRender(
+      componentInfo,
+      trackIdx,
+      startTime,
+      componentEndTime,
+      childrenEndTime,
+      response._rootEnvironmentName,
+    );
+  }
+}
+
 function flushComponentPerformance(
   response: Response,
   root: SomeChunk<any>,
@@ -2979,6 +3019,7 @@ function flushComponentPerformance(
       if (typeof info.time === 'number') {
         if (info.time > parentEndTime) {
           parentEndTime = info.time;
+          break; // We assume the highest number is at the end.
         }
       }
     }
@@ -3013,77 +3054,57 @@ function flushComponentPerformance(
   }
 
   if (debugInfo) {
+    // Write debug info in reverse order (just like stack traces).
     let endTime = 0;
+    let componentEndTime = 0;
     let isLastComponent = true;
+    let candidateInfo = null; // An entry we can write once we know its start time.
     for (let i = debugInfo.length - 1; i >= 0; i--) {
       const info = debugInfo[i];
       if (typeof info.time === 'number') {
-        if (info.time > childrenEndTime) {
-          childrenEndTime = info.time;
+        const time = info.time;
+        if (time > childrenEndTime) {
+          childrenEndTime = time;
         }
-        if (endTime === 0) {
+        if (componentEndTime === 0) {
           // Last timestamp is the end of the last component.
-          endTime = info.time;
+          componentEndTime = info.time;
         }
-      }
-      if (typeof info.name === 'string' && i > 0) {
-        // $FlowFixMe: Refined.
-        const componentInfo: ReactComponentInfo = info;
-        const startTimeInfo = debugInfo[i - 1];
-        if (typeof startTimeInfo.time === 'number') {
-          const startTime = startTimeInfo.time;
-          if (
-            isLastComponent &&
-            root.status === ERRORED &&
-            root.reason !== response._closedReason
-          ) {
-            // If this is the last component to render before this chunk rejected, then conceptually
-            // this component errored. If this was a cancellation then it wasn't this component that
-            // errored.
-            logComponentErrored(
+        if (candidateInfo !== null) {
+          if (typeof candidateInfo.name === 'string') {
+            // $FlowFixMe: Refined.
+            const componentInfo: ReactComponentInfo = candidateInfo;
+            logComponentInfo(
+              response,
+              root,
               componentInfo,
               trackIdx,
-              startTime,
-              endTime,
+              time,
+              componentEndTime,
               childrenEndTime,
-              response._rootEnvironmentName,
-              root.reason,
+              isLastComponent,
             );
-          } else {
-            logComponentRender(
-              componentInfo,
+            componentEndTime = time; // The end time of previous component is the start time of the next.
+            // Track the root most component of the result for deduping logging.
+            result.component = componentInfo;
+            isLastComponent = false;
+          } else if (candidateInfo.awaited) {
+            // $FlowFixMe: Refined.
+            const asyncInfo: ReactAsyncInfo = candidateInfo;
+            logComponentAwait(
+              asyncInfo,
               trackIdx,
-              startTime,
+              time,
               endTime,
-              childrenEndTime,
               response._rootEnvironmentName,
             );
           }
-          // Track the root most component of the result for deduping logging.
-          result.component = componentInfo;
-          // Set the end time of the previous component to the start of the previous.
-          endTime = startTime;
+          candidateInfo = null;
         }
-        isLastComponent = false;
-      } else if (info.awaited && i > 0 && i < debugInfo.length - 2) {
-        // $FlowFixMe: Refined.
-        const asyncInfo: ReactAsyncInfo = info;
-        const startTimeInfo = debugInfo[i - 1];
-        const endTimeInfo = debugInfo[i + 1];
-        if (
-          typeof startTimeInfo.time === 'number' &&
-          typeof endTimeInfo.time === 'number'
-        ) {
-          const awaitStartTime = startTimeInfo.time;
-          const awaitEndTime = endTimeInfo.time;
-          logComponentAwait(
-            asyncInfo,
-            trackIdx,
-            awaitStartTime,
-            awaitEndTime,
-            response._rootEnvironmentName,
-          );
-        }
+        endTime = time; // The end time of the next entry is this time.
+      } else {
+        // Otherwise, store it until we know its start time.
+        candidateInfo = info;
       }
     }
   }
