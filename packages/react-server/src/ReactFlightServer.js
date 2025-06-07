@@ -1890,7 +1890,6 @@ function visitAsyncNode(
   request: Request,
   task: Task,
   node: AsyncSequence,
-  cutOff: number,
   visited: Set<AsyncSequence>,
 ): null | PromiseNode | IONode {
   if (visited.has(node)) {
@@ -1904,7 +1903,7 @@ function visitAsyncNode(
     // We ignore the return value here because if it wasn't awaited in user space, then we don't log it.
     // It also means that it can just have been part of a previous component's render.
     // TODO: This means that some I/O can get lost that was still blocking the sequence.
-    visitAsyncNode(request, task, node.previous, cutOff, visited);
+    visitAsyncNode(request, task, node.previous, visited);
   }
   switch (node.tag) {
     case IO_NODE: {
@@ -1923,7 +1922,7 @@ function visitAsyncNode(
       const awaited = node.awaited;
       let match = null;
       if (awaited !== null) {
-        const ioNode = visitAsyncNode(request, task, awaited, cutOff, visited);
+        const ioNode = visitAsyncNode(request, task, awaited, visited);
         if (ioNode !== null) {
           // This Promise was blocked on I/O. That's a signal that this Promise is interesting to log.
           // We don't log it yet though. We return it to be logged by the point where it's awaited.
@@ -1963,7 +1962,7 @@ function visitAsyncNode(
       const awaited = node.awaited;
       let match = null;
       if (awaited !== null) {
-        const ioNode = visitAsyncNode(request, task, awaited, cutOff, visited);
+        const ioNode = visitAsyncNode(request, task, awaited, visited);
         if (ioNode !== null) {
           const startTime: number = node.start;
           let endTime: number;
@@ -1983,7 +1982,7 @@ function visitAsyncNode(
             // This was already resolved when we started this render. It must have been either something
             // that's part of a start up sequence or externally cached data. We exclude that information.
             return null;
-          } else if (startTime < cutOff) {
+          } else if (startTime < task.time) {
             // We started awaiting this node before we started rendering this sequence.
             // This means that this particular await was never part of the current sequence.
             // If we have another await higher up in the chain it might have a more actionable stack
@@ -2018,7 +2017,7 @@ function visitAsyncNode(
                 owner: node.owner,
                 stack: stack,
               });
-              emitTimingChunk(request, task.id, endTime);
+              emitTimingChunk(request, task.id, (task.time = endTime));
             }
           }
         }
@@ -2051,10 +2050,9 @@ function emitAsyncSequence(
   request: Request,
   task: Task,
   node: AsyncSequence,
-  cutOff: number,
 ): void {
   const visited: Set<AsyncSequence> = new Set();
-  const awaitedNode = visitAsyncNode(request, task, node, cutOff, visited);
+  const awaitedNode = visitAsyncNode(request, task, node, visited);
   if (awaitedNode !== null) {
     // Nothing in user space (unfiltered stack) awaited this.
     if (awaitedNode.end < 0) {
@@ -2071,17 +2069,18 @@ function emitAsyncSequence(
     // environment was when we actually started awaiting.
     const env = (0, request.environmentName)();
     // If we don't have any thing awaited, the time we started awaiting was internal
-    // when we yielded after rendering. The cutOff time is basically that.
-    const awaitStartTime = cutOff;
+    // when we yielded after rendering. The current task time is basically that.
+    const awaitStartTime = task.time;
     // If the end time finished before we started, it could've been a cached thing so
-    // we clamp it to the cutOff time. Effectively leading to a zero-time await.
-    const awaitEndTime = awaitedNode.end < cutOff ? cutOff : awaitedNode.end;
+    // we clamp it to the task time. Effectively leading to a zero-time await.
+    const awaitEndTime =
+      awaitedNode.end < task.time ? task.time : awaitedNode.end;
     emitTimingChunk(request, task.id, awaitStartTime);
     emitDebugChunk(request, task.id, {
       awaited: ((awaitedNode: any): ReactIOInfo), // This is deduped by this reference.
       env: env,
     });
-    emitTimingChunk(request, task.id, awaitEndTime);
+    emitTimingChunk(request, task.id, (task.time = awaitEndTime));
   }
 }
 
@@ -2092,7 +2091,7 @@ function pingTask(request: Request, task: Task): void {
     if (enableAsyncDebugInfo) {
       const sequence = getCurrentAsyncSequence();
       if (sequence !== null) {
-        emitAsyncSequence(request, task, sequence, task.time);
+        emitAsyncSequence(request, task, sequence);
       }
     }
   }
