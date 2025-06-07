@@ -43,6 +43,7 @@ import {
 } from '../HIR/visitors';
 import {Ok, Result} from '../Utils/Result';
 import {
+  getArgumentEffect,
   getFunctionCallSignature,
   isKnownMutableEffect,
   mergeValueKinds,
@@ -547,7 +548,11 @@ function applyEffect(
           effect =>
             effect.kind === 'MutateFrozen' || effect.kind === 'MutateGlobal',
         );
-      const isMutable = hasCaptures || hasTrackedSideEffects;
+      // For legacy compatibility
+      const capturesRef = effect.function.loweredFunc.func.context.some(
+        operand => isRefOrRefValue(operand.identifier),
+      );
+      const isMutable = hasCaptures || hasTrackedSideEffects || capturesRef;
       for (const operand of effect.function.loweredFunc.func.context) {
         if (operand.effect !== Effect.Capture) {
           continue;
@@ -804,6 +809,11 @@ function applyEffect(
               aliased,
               effects,
             );
+          }
+          const mutateIterator =
+            arg.kind === 'Spread' ? conditionallyMutateIterator(operand) : null;
+          if (mutateIterator) {
+            applyEffect(context, state, mutateIterator, aliased, effects);
           }
           applyEffect(
             context,
@@ -1299,6 +1309,22 @@ type InstructionSignature = {
   effects: ReadonlyArray<AliasingEffect>;
 };
 
+function conditionallyMutateIterator(place: Place): AliasingEffect | null {
+  if (
+    !(
+      isArrayType(place.identifier) ||
+      isSetType(place.identifier) ||
+      isMapType(place.identifier)
+    )
+  ) {
+    return {
+      kind: 'MutateTransitiveConditionally',
+      value: place,
+    };
+  }
+  return null;
+}
+
 /**
  * Computes an effect signature for the instruction _without_ looking at the inference state,
  * and only using the semantics of the instructions and the inferred types. The idea is to make
@@ -1334,6 +1360,10 @@ function computeSignatureForInstruction(
             into: lvalue,
           });
         } else if (element.kind === 'Spread') {
+          const mutateIterator = conditionallyMutateIterator(element.place);
+          if (mutateIterator != null) {
+            effects.push(mutateIterator);
+          }
           effects.push({
             kind: 'Capture',
             from: element.place,
@@ -1567,7 +1597,7 @@ function computeSignatureForInstruction(
       // Extracts part of the original collection into the result
       effects.push({
         kind: 'CreateFrom',
-        from: value.iterator,
+        from: value.collection,
         into: lvalue,
       });
       break;
@@ -1623,11 +1653,20 @@ function computeSignatureForInstruction(
     }
     case 'Destructure': {
       for (const patternLValue of eachInstructionValueLValue(value)) {
-        effects.push({
-          kind: 'CreateFrom',
-          from: value.value,
-          into: patternLValue,
-        });
+        if (isPrimitiveType(patternLValue.identifier)) {
+          effects.push({
+            kind: 'Create',
+            into: patternLValue,
+            value: ValueKind.Primitive,
+            reason: ValueReason.Other,
+          });
+        } else {
+          effects.push({
+            kind: 'CreateFrom',
+            from: value.value,
+            into: patternLValue,
+          });
+        }
       }
       effects.push({kind: 'Assign', from: value.value, into: lvalue});
       break;
@@ -1947,17 +1986,11 @@ function computeEffectsForLegacySignature(
       continue;
     }
     const place = arg.kind === 'Identifier' ? arg : arg.place;
-    const effect =
+    const signatureEffect =
       arg.kind === 'Identifier' && i < signature.positionalParams.length
         ? signature.positionalParams[i]!
         : (signature.restParam ?? Effect.ConditionallyMutate);
-
-    if (arg.kind === 'Spread' && effect === Effect.Freeze) {
-      CompilerError.throwTodo({
-        reason: 'Support spread syntax for hook arguments',
-        loc: arg.place.loc,
-      });
-    }
+    const effect = getArgumentEffect(signatureEffect, arg);
 
     visit(place, effect);
   }

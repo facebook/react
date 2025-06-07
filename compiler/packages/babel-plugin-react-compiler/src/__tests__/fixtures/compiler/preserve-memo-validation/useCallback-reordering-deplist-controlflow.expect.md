@@ -40,39 +40,46 @@ import { useCallback } from "react";
 import { Stringify } from "shared-runtime";
 
 function Foo(t0) {
-  const $ = _c(8);
+  const $ = _c(10);
   const { arr1, arr2, foo } = t0;
-  let getVal1;
   let t1;
-  if ($[0] !== arr1 || $[1] !== arr2 || $[2] !== foo) {
-    const x = [arr1];
-
+  if ($[0] !== arr1) {
+    t1 = [arr1];
+    $[0] = arr1;
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  const x = t1;
+  let getVal1;
+  let t2;
+  if ($[2] !== arr2 || $[3] !== foo || $[4] !== x) {
     let y = [];
 
     getVal1 = _temp;
 
-    t1 = () => [y];
+    t2 = () => [y];
     foo ? (y = x.concat(arr2)) : y;
-    $[0] = arr1;
-    $[1] = arr2;
-    $[2] = foo;
-    $[3] = getVal1;
-    $[4] = t1;
-  } else {
-    getVal1 = $[3];
-    t1 = $[4];
-  }
-  const getVal2 = t1;
-  let t2;
-  if ($[5] !== getVal1 || $[6] !== getVal2) {
-    t2 = <Stringify val1={getVal1} val2={getVal2} shouldInvokeFns={true} />;
+    $[2] = arr2;
+    $[3] = foo;
+    $[4] = x;
     $[5] = getVal1;
-    $[6] = getVal2;
-    $[7] = t2;
+    $[6] = t2;
   } else {
-    t2 = $[7];
+    getVal1 = $[5];
+    t2 = $[6];
   }
-  return t2;
+  const getVal2 = t2;
+  let t3;
+  if ($[7] !== getVal1 || $[8] !== getVal2) {
+    t3 = <Stringify val1={getVal1} val2={getVal2} shouldInvokeFns={true} />;
+    $[7] = getVal1;
+    $[8] = getVal2;
+    $[9] = t3;
+  } else {
+    t3 = $[9];
+  }
+  return t3;
 }
 function _temp() {
   return { x: 2 };

@@ -38,7 +38,6 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
 import { CONST_TRUE, Stringify, mutate, useIdentity } from "shared-runtime";
 
 /**
@@ -54,31 +53,14 @@ import { CONST_TRUE, Stringify, mutate, useIdentity } from "shared-runtime";
  *
  */
 function Component() {
-  const $ = _c(4);
   const obj = CONST_TRUE ? { inner: { value: "hello" } } : null;
-  let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = [obj?.inner];
-    $[0] = t0;
-  } else {
-    t0 = $[0];
-  }
-  const boxedInner = t0;
+  const boxedInner = [obj?.inner];
   useIdentity(null);
   mutate(obj);
   if (boxedInner[0] !== obj?.inner) {
     throw new Error("invariant broken");
   }
-  let t1;
-  if ($[1] !== boxedInner || $[2] !== obj) {
-    t1 = <Stringify obj={obj} inner={boxedInner} />;
-    $[1] = boxedInner;
-    $[2] = obj;
-    $[3] = t1;
-  } else {
-    t1 = $[3];
-  }
-  return t1;
+  return <Stringify obj={obj} inner={boxedInner} />;
 }
 
 export const FIXTURE_ENTRYPOINT = {

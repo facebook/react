@@ -32,15 +32,13 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
-  15 |     b.push(false);
-  16 |   };
-> 17 |   return <div onClick={f} />;
-     |                        ^ InvalidReact: This argument is a function which may reassign or mutate local variables after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead (17:17)
-
-InvalidReact: The function modifies a local variable here (8:8)
-  18 | }
-  19 |
-  20 | export const FIXTURE_ENTRYPOINT = {
+   6 |   const f = () => {
+   7 |     if (cond) {
+>  8 |       a = {};
+     |       ^ InvalidReact: Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead. Variable `a` cannot be reassigned after render (8:8)
+   9 |       b = [];
+  10 |     } else {
+  11 |       a = {};
 ```
           
       

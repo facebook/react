@@ -15,16 +15,11 @@ function useFoo() {
 ## Error
 
 ```
-  1 | function useFoo() {
   2 |   let x = 0;
-> 3 |   return value => {
-    |          ^^^^^^^^^^
+  3 |   return value => {
 > 4 |     x = value;
-    | ^^^^^^^^^^^^^^
-> 5 |   };
-    | ^^^^ InvalidReact: This argument is a function which may reassign or mutate local variables after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead (3:5)
-
-InvalidReact: The function modifies a local variable here (4:4)
+    |     ^ InvalidReact: Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead. Variable `x` cannot be reassigned after render (4:4)
+  5 |   };
   6 | }
   7 |
 ```

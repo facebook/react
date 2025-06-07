@@ -247,7 +247,6 @@ function runWithEnvironment(
   }
 
   if (!env.config.enableNewMutationAliasingModel) {
-    // NOTE: in the new model this is part of validateNoFreezingKnownMutableFunctions
     validateLocalsNotReassignedAfterRender(hir);
   }
 
@@ -275,6 +274,7 @@ function runWithEnvironment(
       if (mutabilityAliasingErrors.isErr()) {
         throw mutabilityAliasingErrors.unwrapErr();
       }
+      validateLocalsNotReassignedAfterRender(hir);
     }
   }
 

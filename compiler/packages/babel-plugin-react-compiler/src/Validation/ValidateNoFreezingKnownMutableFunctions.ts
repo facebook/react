@@ -131,7 +131,10 @@ export function validateNoFreezingKnownMutableFunctions(
                       lvalue.identifier.id,
                       knownMutation,
                     );
-                  } else if (context.has(effect.value.identifier.id)) {
+                  } else if (
+                    context.has(effect.value.identifier.id) &&
+                    !isRefOrRefLikeMutableType(effect.value.identifier.type)
+                  ) {
                     contextMutationEffects.set(lvalue.identifier.id, {
                       kind: 'ContextMutation',
                       effect: Effect.Mutate,
