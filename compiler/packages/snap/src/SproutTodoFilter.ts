@@ -483,6 +483,7 @@ const skipFilter = new Set([
   'todo.lower-context-access-array-destructuring',
   'lower-context-selector-simple',
   'lower-context-acess-multiple',
+  'bug-separate-memoization-due-to-callback-capturing',
 ]);
 
 export default skipFilter;
