@@ -254,14 +254,17 @@ function diffProperties(
     prevProp = prevProps[propKey];
     nextProp = nextProps[propKey];
 
-    // functions are converted to booleans as markers that the associated
-    // events should be sent from native.
     if (typeof nextProp === 'function') {
-      nextProp = (true: any);
-      // If nextProp is not a function, then don't bother changing prevProp
-      // since nextProp will win and go into the updatePayload regardless.
-      if (typeof prevProp === 'function') {
-        prevProp = (true: any);
+      const attributeConfigHasProcess = typeof attributeConfig === 'object' && typeof attributeConfig.process === 'function';
+      if (!attributeConfigHasProcess) {
+        // functions are converted to booleans as markers that the associated
+        // events should be sent from native.
+        nextProp = (true: any);
+        // If nextProp is not a function, then don't bother changing prevProp
+        // since nextProp will win and go into the updatePayload regardless.
+        if (typeof prevProp === 'function') {
+          prevProp = (true: any);
+        }
       }
     }
 
@@ -444,18 +447,22 @@ function addNestedProperty(
       } else {
         continue;
       }
-    } else if (typeof prop === 'function') {
-      // A function prop. It represents an event handler. Pass it to native as 'true'.
-      newValue = true;
-    } else if (typeof attributeConfig !== 'object') {
-      // An atomic prop. Doesn't need to be flattened.
-      newValue = prop;
-    } else if (typeof attributeConfig.process === 'function') {
-      // An atomic prop with custom processing.
-      newValue = attributeConfig.process(prop);
-    } else if (typeof attributeConfig.diff === 'function') {
-      // An atomic prop with custom diffing. We don't need to do diffing when adding props.
-      newValue = prop;
+    } else if (typeof attributeConfig === 'object') {
+      if (typeof attributeConfig.process === 'function') {
+        // An atomic prop with custom processing.
+        newValue = attributeConfig.process(prop);
+      } else if (typeof attributeConfig.diff === 'function') {
+        // An atomic prop with custom diffing. We don't need to do diffing when adding props.
+        newValue = prop;
+      }
+    } else {
+      if (typeof prop === 'function') {
+        // A function prop. It represents an event handler. Pass it to native as 'true'.
+        newValue = true;
+      } else {
+        // An atomic prop. Doesn't need to be flattened.
+        newValue = prop;
+      }
     }
 
     if (newValue !== undefined) {

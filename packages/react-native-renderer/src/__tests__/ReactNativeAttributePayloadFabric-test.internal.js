@@ -102,6 +102,14 @@ describe('ReactNativeAttributePayloadFabric.create', () => {
     expect(processA).toBeCalledWith(2);
   });
 
+  it('should use the process attribute for functions as well', () => {
+    const process = x => x;
+    const nextFunction = () => {};
+    expect(create({a: nextFunction}, {a: {process}})).toEqual({
+      a: nextFunction,
+    });
+  });
+
   it('should work with undefined styles', () => {
     expect(create({style: undefined}, {style: {b: true}})).toEqual(null);
     expect(create({style: {a: '#ffffff', b: 1}}, {style: {b: true}})).toEqual({
@@ -451,5 +459,22 @@ describe('ReactNativeAttributePayloadFabric.diff', () => {
         {wrapper: true},
       ),
     ).toEqual(null);
+  });
+
+  it('should use the process function config when prop is a function', () => {
+    const process = jest.fn(a => a);
+    const nextFunction = function () {};
+    expect(
+      diff(
+        {
+          a: function () {},
+        },
+        {
+          a: nextFunction,
+        },
+        {a: {process}},
+      ),
+    ).toEqual({a: nextFunction});
+    expect(process).toBeCalled();
   });
 });
