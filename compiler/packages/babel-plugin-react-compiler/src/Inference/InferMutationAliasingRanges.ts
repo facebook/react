@@ -5,46 +5,61 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError} from '..';
+import prettyFormat from 'pretty-format';
+import {CompilerError, SourceLocation} from '..';
 import {
   Effect,
   HIRFunction,
   Identifier,
   IdentifierId,
+  InstructionId,
   makeInstructionId,
+  Place,
 } from '../HIR/HIR';
 import {
   eachInstructionLValue,
   eachInstructionValueOperand,
   eachTerminalOperand,
 } from '../HIR/visitors';
-import DisjointSet from '../Utils/DisjointSet';
-import {assertExhaustive} from '../Utils/utils';
-import {debugAliases} from './InferMutableRanges';
-import {inferMutableRangesForAlias} from './InferMutableRangesForAlias';
+import {assertExhaustive, getOrInsertWith} from '../Utils/utils';
+import {printFunction} from '../HIR';
+import {printInstruction} from '../HIR/PrintHIR';
+
+const DEBUG = false;
 
 /**
  * Infers mutable ranges for all values.
  */
 export function inferMutationAliasingRanges(fn: HIRFunction): void {
+  if (DEBUG) {
+    console.log();
+  }
   /**
-   * Part 1
-   * Infer ranges for transitive mutations, which includes mutations that affect
-   * captured references and not just direct aliases. We build a distjoing set
-   * that tracks capturing and direct aliasing, and look at transitive mutations
-   * only.
+   * Part 1: Infer mutable ranges for values. We build an abstract model
+   * of the effect types, distinguishing values which can capture references
+   * to other values and variables, which can point to one or more values.
+   *
+   * Transitive mutation marks value identifiers as mutated and also walks
+   * into the identifiers captured by that abstract value: local mutation
+   * only marks the top-level identifiers as mutated.
+   *
+   * TODO: add a fixpoint.
    */
-  const captures = new DisjointSet<Identifier>();
+  const state = new AliasingState();
+  for (const param of fn.context) {
+    state.create(param);
+  }
   for (const block of fn.body.blocks.values()) {
     for (const phi of block.phis) {
-      captures.union([
-        phi.place.identifier,
-        ...[...phi.operands.values()].map(place => place.identifier),
-      ]);
+      state.create(phi.place);
+      for (const operand of phi.operands.values()) {
+        state.alias(operand, phi.place);
+      }
     }
 
     for (const instr of block.instructions) {
       for (const lvalue of eachInstructionLValue(instr)) {
+        state.create(lvalue);
         if (lvalue.identifier.mutableRange.start === 0) {
           lvalue.identifier.mutableRange.start = instr.id;
         }
@@ -55,84 +70,46 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
 
       if (instr.effects == null) continue;
       for (const effect of instr.effects) {
-        if (
-          effect.kind === 'Assign' ||
-          effect.kind === 'Alias' ||
-          effect.kind === 'CreateFrom' ||
-          effect.kind === 'Capture'
-        ) {
-          captures.union([effect.from.identifier, effect.into.identifier]);
+        if (effect.kind === 'Create' || effect.kind === 'CreateFunction') {
+          state.create(effect.into);
+        } else if (effect.kind === 'Assign') {
+          state.assign(effect.from, effect.into);
+        } else if (effect.kind === 'Alias' || effect.kind === 'CreateFrom') {
+          state.alias(effect.from, effect.into);
+        } else if (effect.kind === 'Capture') {
+          state.capture(effect.from, effect.into);
         } else if (
           effect.kind === 'MutateTransitive' ||
           effect.kind === 'MutateTransitiveConditionally'
         ) {
-          const value = effect.value;
-          value.identifier.mutableRange.end = makeInstructionId(instr.id + 1);
-        }
-      }
-    }
-  }
-  /**
-   * TODO: this will incorrectly mark values as mutated in the following case:
-   * 1. Create value x
-   * 2. Create value y
-   * 3. Transitively mutate y
-   * 4. Capture x -> y
-   *
-   * We will put these all into one alias set in captures, and then InferMutableRangesForAlias
-   * will look at all identifiers in the set that start before the mutation. Thus it will see
-   * that x is created before the mutation, and consider it mutated. But the capture doesn't
-   * occur until after the mutation!
-   *
-   * The fix is to use a graph to precisely describe what is captured where at each instruction,
-   * so that on a transitive mutation we can iterate all the captured values and mark them.
-   *
-   * This then needs a fixpoint: although we would track captures for phi operands, the operands'
-   * own capture values won't be populated until we do a fixpoint.
-   */
-  inferMutableRangesForAlias(fn, captures);
-
-  /**
-   * Part 2
-   * Infer ranges for local (non-transitive) mutations. We build a disjoint set
-   * that only tracks direct value aliasing, and look only at local mutations
-   * to extend ranges
-   *
-   * TODO: similar design to the above todo for captures, use a directed graph instead of disjoint union,
-   * with fixpoint.
-   */
-  const aliases = new DisjointSet<Identifier>();
-  for (const block of fn.body.blocks.values()) {
-    for (const phi of block.phis) {
-      aliases.union([
-        phi.place.identifier,
-        ...[...phi.operands.values()].map(place => place.identifier),
-      ]);
-    }
-
-    for (const instr of block.instructions) {
-      if (instr.effects == null) continue;
-      for (const effect of instr.effects) {
-        if (
-          effect.kind === 'Assign' ||
-          effect.kind === 'Alias' ||
-          effect.kind === 'CreateFrom'
-        ) {
-          aliases.union([effect.from.identifier, effect.into.identifier]);
+          state.mutateTransitive(
+            effect.value.identifier,
+            makeInstructionId(instr.id + 1),
+            effect.value.loc,
+          );
         } else if (
           effect.kind === 'Mutate' ||
           effect.kind === 'MutateConditionally'
         ) {
-          const value = effect.value;
-          value.identifier.mutableRange.end = makeInstructionId(instr.id + 1);
+          state.mutate(
+            effect.value.identifier,
+            makeInstructionId(instr.id + 1),
+            effect.value.loc,
+          );
         }
+      }
+      if (DEBUG) {
+        console.log(printInstruction(instr));
+        console.log(state.debug());
       }
     }
   }
-  inferMutableRangesForAlias(fn, aliases);
+  if (DEBUG) {
+    console.log(state.debug());
+  }
 
   /**
-   * Part 3
+   * Part 2
    * Add legacy operand-specific effects based on instruction effects and mutable ranges.
    * Also fixes up operand mutable ranges, making sure that start is non-zero if the value
    * is mutated (depended on by later passes like InferReactiveScopeVariables which uses this
@@ -238,5 +215,139 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
     for (const operand of eachTerminalOperand(block.terminal)) {
       operand.effect = Effect.Read;
     }
+  }
+
+  if (DEBUG) {
+    console.log(printFunction(fn));
+  }
+}
+
+/**
+ * TODO: similar to alias effect inference state:
+ * - values represent the conceptual values (context vars, things that got Create*-ed)
+ *   into which other values are captured
+ * - variables deals with aliases (Assign, Alias, CreateFrom)
+ *
+ * Ex:
+ * `Capture a -> b`:
+ * - find the values represented by `a` (aValues) by looking up a in .variables, then mapping to .values
+ * - find the values represented by `b` (bValues) by looking up b in .variables, then mapping to .values
+ * - add aValues into bValues
+ */
+class AliasingState {
+  values: Map<Identifier, Set<Identifier>> = new Map();
+  variables: Map<IdentifierId, Set<Identifier>> = new Map();
+
+  create(place: Place): void {
+    this.values.set(place.identifier, new Set());
+    this.variables.set(place.identifier.id, new Set([place.identifier]));
+  }
+
+  clear(lvalue: Place): void {
+    this.variables.set(lvalue.identifier.id, new Set());
+  }
+
+  assign(from: Place, into: Place): void {
+    const fromVariables = this.variables.get(from.identifier.id);
+    if (fromVariables == null) {
+      return;
+    }
+    this.variables.set(
+      into.identifier.id,
+      new Set([...fromVariables, from.identifier, into.identifier]),
+      // fromVariables,
+    );
+  }
+
+  alias(from: Place, into: Place): void {
+    const intoVariables = getOrInsertWith(
+      this.variables,
+      into.identifier.id,
+      () => new Set(),
+    );
+    intoVariables.add(from.identifier);
+  }
+
+  capture(from: Place, into: Place): void {
+    const intoVariables = this.variables.get(into.identifier.id)!;
+    for (const v of intoVariables) {
+      const values = this.values.get(v)!;
+      values.add(from.identifier);
+    }
+  }
+
+  mutateTransitive(
+    place: Identifier,
+    end: InstructionId,
+    loc: SourceLocation,
+  ): void {
+    const variables = this.variables.get(place.id);
+    if (variables == null) {
+      return;
+    }
+    for (const value of variables) {
+      value.mutableRange.end = makeInstructionId(
+        Math.max(value.mutableRange.end, end),
+      );
+      const captured = this.values.get(value)!;
+      for (const capture of captured) {
+        this.mutateTransitive(capture, end, loc);
+      }
+    }
+  }
+
+  mutate(place: Identifier, end: InstructionId, _loc: SourceLocation): void {
+    const variables = this.variables.get(place.id);
+    if (variables == null) {
+      return;
+    }
+    place.mutableRange.end = makeInstructionId(
+      Math.max(place.mutableRange.end, end),
+    );
+    for (const value of variables) {
+      // Unlike mutateTransitive, we don't traverse into captured values
+      value.mutableRange.end = makeInstructionId(
+        Math.max(value.mutableRange.end, end),
+      );
+    }
+  }
+
+  canonicalize(): Map<IdentifierId, string> {
+    const map = new Map<IdentifierId, string>();
+    for (const value of this.values.keys()) {
+      map.set(
+        value.id,
+        `${value.mutableRange.start}:${value.mutableRange.end}`,
+      );
+    }
+    return map;
+  }
+
+  debug(): string {
+    const values = new Map<string, string>();
+    for (const [k, v] of this.values) {
+      values.set(
+        `${k.name?.value ?? ''}$${k.id}:${k.mutableRange.start}:${k.mutableRange.end}`,
+        [...v]
+          .map(
+            v =>
+              `${v.name?.value ?? ''}$${v.id}:${v.mutableRange.start}:${v.mutableRange.end}`,
+          )
+          .join(', '),
+      );
+    }
+    const variables = new Map<string, string>();
+    for (const [k, v] of this.variables) {
+      variables.set(
+        `$${k}`,
+        [...v]
+          .map(
+            v =>
+              `${v.name?.value ?? ''}$${v.id}:${v.mutableRange.start}:${v.mutableRange.end}`,
+          )
+          .join(', '),
+      );
+    }
+    return prettyFormat({values, variables});
   }
 }
