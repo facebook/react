@@ -632,8 +632,8 @@ function jsxDEVImpl(
 }
 
 /**
- * Create and return a new ReactElement of the given type.
- * See https://reactjs.org/docs/react-api.html#createelement
+ * Create a React element with the given type, props, and children.
+ * See https://react.dev/reference/react/createElement
  */
 export function createElement(type, config, children) {
   if (__DEV__) {
@@ -784,8 +784,8 @@ export function cloneAndReplaceKey(oldElement, newKey) {
 }
 
 /**
- * Clone and return a new ReactElement using element as the starting point.
- * See https://reactjs.org/docs/react-api.html#cloneelement
+ *  Create a new React element using another element as a starting point.
+ * See https://react.dev/reference/react/cloneElement
  */
 export function cloneElement(element, config, children) {
   if (element === null || element === undefined) {
@@ -911,8 +911,8 @@ function validateChildKeys(node, parentType) {
 }
 
 /**
- * Verifies the object is a ReactElement.
- * See https://reactjs.org/docs/react-api.html#isvalidelement
+ * Check whether object is a React element.
+ * See https://react.dev/reference/react/isValidElement
  * @param {?object} object
  * @return {boolean} True if `object` is a ReactElement.
  * @final
