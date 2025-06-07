@@ -131,6 +131,7 @@ export type HookKind =
   | 'useCallback'
   | 'useTransition'
   | 'useImperativeHandle'
+  | 'useEffectEvent'
   | 'Custom';
 
 /*
@@ -226,6 +227,8 @@ export const BuiltInUseTransitionId = 'BuiltInUseTransition';
 export const BuiltInStartTransitionId = 'BuiltInStartTransition';
 export const BuiltInFireId = 'BuiltInFire';
 export const BuiltInFireFunctionId = 'BuiltInFireFunction';
+export const BuiltInUseEffectEventId = 'BuiltInUseEffectEvent';
+export const BuiltinEffectEventId = 'BuiltInEffectEventFunction';
 
 // See getReanimatedModuleType() in Globals.ts — this is part of supporting Reanimated's ref-like types
 export const ReanimatedSharedValueId = 'ReanimatedSharedValueId';
@@ -947,6 +950,19 @@ addObject(BUILTIN_SHAPES, BuiltInUseRefId, [
 addObject(BUILTIN_SHAPES, BuiltInRefValueId, [
   ['*', {kind: 'Object', shapeId: BuiltInRefValueId}],
 ]);
+
+addFunction(
+  BUILTIN_SHAPES,
+  [],
+  {
+    positionalParams: [],
+    restParam: Effect.ConditionallyMutate,
+    returnType: {kind: 'Poly'},
+    calleeEffect: Effect.ConditionallyMutate,
+    returnValueKind: ValueKind.Mutable,
+  },
+  BuiltinEffectEventId,
+);
 
 /**
  * MixedReadOnly =

@@ -17,6 +17,7 @@ import {
   BuiltInSetId,
   BuiltInUseActionStateId,
   BuiltInUseContextHookId,
+  BuiltInUseEffectEventId,
   BuiltInUseEffectHookId,
   BuiltInUseInsertionEffectHookId,
   BuiltInUseLayoutEffectHookId,
@@ -27,6 +28,7 @@ import {
   BuiltInUseTransitionId,
   BuiltInWeakMapId,
   BuiltInWeakSetId,
+  BuiltinEffectEventId,
   ReanimatedSharedValueId,
   ShapeRegistry,
   addFunction,
@@ -720,6 +722,27 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
         returnValueKind: ValueKind.Frozen,
       },
       BuiltInFireId,
+    ),
+  ],
+  [
+    'useEffectEvent',
+    addHook(
+      DEFAULT_SHAPES,
+      {
+        positionalParams: [],
+        restParam: Effect.Freeze,
+        returnType: {
+          kind: 'Function',
+          return: {kind: 'Poly'},
+          shapeId: BuiltinEffectEventId,
+          isConstructor: false,
+        },
+        calleeEffect: Effect.Read,
+        hookKind: 'useEffectEvent',
+        // Frozen because it should not mutate any locally-bound values
+        returnValueKind: ValueKind.Frozen,
+      },
+      BuiltInUseEffectEventId,
     ),
   ],
 ];
