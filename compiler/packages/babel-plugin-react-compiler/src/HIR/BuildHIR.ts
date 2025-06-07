@@ -1235,6 +1235,7 @@ function lowerStatement(
           kind: 'Debugger',
           loc,
         },
+        effects: null,
         loc,
       });
       return;
@@ -1892,6 +1893,7 @@ function lowerExpression(
           place: leftValue,
           loc: exprLoc,
         },
+        effects: null,
         loc: exprLoc,
       });
       builder.terminateWithContinuation(
@@ -2827,6 +2829,7 @@ function lowerOptionalCallExpression(
           args,
           loc,
         },
+        effects: null,
         loc,
       });
     } else {
@@ -2840,6 +2843,7 @@ function lowerOptionalCallExpression(
           args,
           loc,
         },
+        effects: null,
         loc,
       });
     }
@@ -3466,9 +3470,10 @@ function lowerValueToTemporary(
   const place: Place = buildTemporaryPlace(builder, value.loc);
   builder.push({
     id: makeInstructionId(0),
-    value: value,
-    loc: value.loc,
     lvalue: {...place},
+    value: value,
+    effects: null,
+    loc: value.loc,
   });
   return place;
 }
