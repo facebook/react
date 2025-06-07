@@ -121,7 +121,12 @@ export function inferMutationAliasingRanges(
           });
         } else if (effect.kind === 'CreateFrom') {
           state.createFrom(index++, effect.from, effect.into);
-        } else if (effect.kind === 'Assign' || effect.kind === 'Alias') {
+        } else if (effect.kind === 'Assign') {
+          if (!state.nodes.has(effect.into.identifier)) {
+            state.create(effect.into, {kind: 'Object'});
+          }
+          state.assign(index++, effect.from, effect.into);
+        } else if (effect.kind === 'Alias') {
           state.assign(index++, effect.from, effect.into);
         } else if (effect.kind === 'Capture') {
           state.capture(index++, effect.from, effect.into);
@@ -204,8 +209,8 @@ export function inferMutationAliasingRanges(
       errors,
     );
   }
-  if (VERBOSE) {
-    console.log(state.debug());
+  if (DEBUG) {
+    console.log(pretty([...state.nodes.keys()]));
   }
   fn.aliasingEffects ??= [];
   for (const param of [...fn.context, ...fn.params]) {
@@ -534,6 +539,11 @@ class AliasingState {
     loc: SourceLocation,
     errors: CompilerError,
   ): void {
+    if (DEBUG) {
+      console.log(
+        `mutate ix=${index} start=$${start.id} end=[${end}]${transitive ? ' transitive' : ''} kind=${kind}`,
+      );
+    }
     const seen = new Set<Identifier>();
     const queue: Array<{
       place: Identifier;
@@ -557,7 +567,7 @@ class AliasingState {
       }
       if (DEBUG) {
         console.log(
-          `[${end}] mutate index=${index} ${printIdentifier(start)}: ${printIdentifier(node.id)}`,
+          `  mutate $${node.id.id} transitive=${transitive} direction=${direction}`,
         );
       }
       node.id.mutableRange.end = makeInstructionId(

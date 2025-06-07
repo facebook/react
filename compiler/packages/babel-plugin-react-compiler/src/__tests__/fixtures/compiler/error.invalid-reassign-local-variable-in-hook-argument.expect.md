@@ -48,19 +48,13 @@ function Component() {
 ## Error
 
 ```
-  32 |   };
-  33 |
-> 34 |   useIdentity(() => {
-     |               ^^^^^^^
-> 35 |     callback();
-     | ^^^^^^^^^^^^^^^
-> 36 |   });
-     | ^^^^ InvalidReact: This argument is a function which may reassign or mutate local variables after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead (34:36)
-
-InvalidReact: The function modifies a local variable here (8:8)
-  37 |
-  38 |   return 'ok';
-  39 | }
+   6 |
+   7 |   const reassignLocal = newValue => {
+>  8 |     local = newValue;
+     |     ^^^^^ InvalidReact: Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead. Variable `local` cannot be reassigned after render (8:8)
+   9 |   };
+  10 |
+  11 |   const callback = newValue => {
 ```
           
       
