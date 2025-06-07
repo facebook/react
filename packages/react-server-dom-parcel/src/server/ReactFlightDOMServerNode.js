@@ -251,7 +251,6 @@ type StaticResult = {
 
 export function prerenderToNodeStream(
   model: ReactClientValue,
-
   options?: PrerenderOptions,
 ): Promise<StaticResult> {
   return new Promise((resolve, reject) => {
