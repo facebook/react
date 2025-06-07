@@ -6,8 +6,9 @@
  */
 
 import prettyFormat from 'pretty-format';
-import {CompilerError, SourceLocation} from '..';
+import {CompilerError} from '..';
 import {
+  BlockId,
   Effect,
   HIRFunction,
   Identifier,
@@ -23,7 +24,8 @@ import {
 } from '../HIR/visitors';
 import {assertExhaustive, getOrInsertWith} from '../Utils/utils';
 import {printFunction} from '../HIR';
-import {printInstruction} from '../HIR/PrintHIR';
+import {printIdentifier, printPlace} from '../HIR/PrintHIR';
+import {MutationKind} from './InferMutationAliasingFunctionEffects';
 
 const DEBUG = false;
 
@@ -33,79 +35,180 @@ const DEBUG = false;
 export function inferMutationAliasingRanges(fn: HIRFunction): void {
   if (DEBUG) {
     console.log();
+    console.log();
+    console.log();
+    console.log();
+    console.log();
+    console.log();
+    console.log();
+    console.log();
+    console.log();
+    console.log();
+    console.log();
+    console.log(printFunction(fn));
   }
   /**
-   * Part 1: Infer mutable ranges for values. We build an abstract model
-   * of the effect types, distinguishing values which can capture references
-   * to other values and variables, which can point to one or more values.
+   * Part 1: Infer mutable ranges for values. We build an abstract model of
+   * values, the alias/capture edges between them, and the set of mutations.
+   * Edges and mutations are ordered, with mutations processed against the
+   * abstract model only after it is fully constructed by visiting all blocks
+   * _and_ connecting phis. Phis are considered ordered at the time of the
+   * phi node.
    *
-   * Transitive mutation marks value identifiers as mutated and also walks
-   * into the identifiers captured by that abstract value: local mutation
-   * only marks the top-level identifiers as mutated.
-   *
-   * TODO: add a fixpoint.
+   * This should (may?) mean that mutations are able to see the full state
+   * of the graph and mark all the appropriate identifiers as mutated at
+   * the correct point, accounting for both backward and forward edges.
+   * Ie a mutation of x accounts for both values that flowed into x,
+   * and values that x flowed into.
    */
   const state = new AliasingState();
-  for (const param of fn.context) {
-    state.create(param);
+  type PendingPhiOperand = {from: Place; into: Place; index: number};
+  const pendingPhis = new Map<BlockId, Array<PendingPhiOperand>>();
+  const mutations: Array<{
+    index: number;
+    id: InstructionId;
+    transitive: boolean;
+    kind: MutationKind;
+    place: Place;
+  }> = [];
+
+  let index = 0;
+
+  for (const param of [...fn.params, ...fn.context, fn.returns]) {
+    const place = param.kind === 'Identifier' ? param : param.place;
+    state.create(place);
   }
+  const seenBlocks = new Set<BlockId>();
   for (const block of fn.body.blocks.values()) {
     for (const phi of block.phis) {
       state.create(phi.place);
-      for (const operand of phi.operands.values()) {
-        state.alias(operand, phi.place);
+      for (const [pred, operand] of phi.operands) {
+        if (!seenBlocks.has(pred)) {
+          // NOTE: annotation required to actually typecheck and not silently infer `any`
+          const blockPhis = getOrInsertWith<BlockId, Array<PendingPhiOperand>>(
+            pendingPhis,
+            pred,
+            () => [],
+          );
+          blockPhis.push({from: operand, into: phi.place, index: index++});
+        } else {
+          state.assign(index++, operand, phi.place);
+        }
       }
     }
+    seenBlocks.add(block.id);
 
     for (const instr of block.instructions) {
       for (const lvalue of eachInstructionLValue(instr)) {
         state.create(lvalue);
-        if (lvalue.identifier.mutableRange.start === 0) {
-          lvalue.identifier.mutableRange.start = instr.id;
-        }
-        lvalue.identifier.mutableRange.end = makeInstructionId(
-          Math.max(instr.id + 1, lvalue.identifier.mutableRange.end),
-        );
       }
 
       if (instr.effects == null) continue;
       for (const effect of instr.effects) {
         if (effect.kind === 'Create' || effect.kind === 'CreateFunction') {
           state.create(effect.into);
-        } else if (effect.kind === 'Assign') {
-          state.assign(effect.from, effect.into);
-        } else if (effect.kind === 'Alias' || effect.kind === 'CreateFrom') {
-          state.alias(effect.from, effect.into);
+        } else if (
+          effect.kind === 'Assign' ||
+          effect.kind === 'Alias' ||
+          effect.kind === 'CreateFrom'
+        ) {
+          state.assign(index++, effect.from, effect.into);
         } else if (effect.kind === 'Capture') {
-          state.capture(effect.from, effect.into);
+          state.capture(index++, effect.from, effect.into);
         } else if (
           effect.kind === 'MutateTransitive' ||
           effect.kind === 'MutateTransitiveConditionally'
         ) {
-          state.mutateTransitive(
-            effect.value.identifier,
-            makeInstructionId(instr.id + 1),
-            effect.value.loc,
-          );
+          mutations.push({
+            index: index++,
+            id: instr.id,
+            transitive: true,
+            kind:
+              effect.kind === 'MutateTransitive'
+                ? MutationKind.Definite
+                : MutationKind.Conditional,
+            place: effect.value,
+          });
         } else if (
           effect.kind === 'Mutate' ||
           effect.kind === 'MutateConditionally'
         ) {
-          state.mutate(
-            effect.value.identifier,
-            makeInstructionId(instr.id + 1),
-            effect.value.loc,
-          );
+          mutations.push({
+            index: index++,
+            id: instr.id,
+            transitive: false,
+            kind:
+              effect.kind === 'Mutate'
+                ? MutationKind.Definite
+                : MutationKind.Conditional,
+            place: effect.value,
+          });
         }
       }
-      if (DEBUG) {
-        console.log(printInstruction(instr));
-        console.log(state.debug());
+    }
+    const blockPhis = pendingPhis.get(block.id);
+    if (blockPhis != null) {
+      for (const {from, into, index} of blockPhis) {
+        state.assign(index, from, into);
       }
     }
+    if (block.terminal.kind === 'return') {
+      state.assign(index++, block.terminal.value, fn.returns);
+    }
+  }
+
+  if (DEBUG) {
+    console.log(state.debug());
+    console.log(pretty(mutations));
+  }
+  for (const mutation of mutations) {
+    state.mutate(
+      mutation.index,
+      mutation.place,
+      makeInstructionId(mutation.id + 1),
+      mutation.transitive,
+      mutation.kind,
+    );
   }
   if (DEBUG) {
     console.log(state.debug());
+  }
+  fn.aliasingEffects ??= [];
+  for (const param of fn.context) {
+    const node = state.nodes.get(param.identifier);
+    if (node == null) {
+      continue;
+    }
+    let mutated = false;
+    if (node.local === MutationKind.Conditional) {
+      mutated = true;
+      fn.aliasingEffects.push({
+        kind: 'MutateConditionally',
+        value: param,
+      });
+    } else if (node.local === MutationKind.Definite) {
+      mutated = true;
+      fn.aliasingEffects.push({
+        kind: 'Mutate',
+        value: param,
+      });
+    }
+    if (node.transitive === MutationKind.Conditional) {
+      mutated = true;
+      fn.aliasingEffects.push({
+        kind: 'MutateTransitiveConditionally',
+        value: param,
+      });
+    } else if (node.transitive === MutationKind.Definite) {
+      mutated = true;
+      fn.aliasingEffects.push({
+        kind: 'MutateTransitive',
+        value: param,
+      });
+    }
+    if (mutated) {
+      param.effect = Effect.Capture;
+    }
   }
 
   /**
@@ -129,13 +232,21 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
       }
     }
     for (const instr of block.instructions) {
+      for (const lvalue of eachInstructionLValue(instr)) {
+        lvalue.effect = Effect.ConditionallyMutate;
+        if (lvalue.identifier.mutableRange.start === 0) {
+          lvalue.identifier.mutableRange.start = instr.id;
+        }
+        if (lvalue.identifier.mutableRange.end === 0) {
+          lvalue.identifier.mutableRange.end = makeInstructionId(
+            Math.max(instr.id + 1, lvalue.identifier.mutableRange.end),
+          );
+        }
+      }
+      for (const operand of eachInstructionValueOperand(instr.value)) {
+        operand.effect = Effect.Read;
+      }
       if (instr.effects == null) {
-        for (const lvalue of eachInstructionLValue(instr)) {
-          lvalue.effect = Effect.ConditionallyMutate;
-        }
-        for (const operand of eachInstructionValueOperand(instr.value)) {
-          operand.effect = Effect.Read;
-        }
         continue;
       }
       const operandEffects = new Map<IdentifierId, Effect>();
@@ -187,6 +298,11 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
             operandEffects.set(effect.value.identifier.id, Effect.Freeze);
             break;
           }
+          case 'MutateFrozen':
+          case 'MutateGlobal': {
+            // no-op
+            break;
+          }
           default: {
             assertExhaustive(
               effect,
@@ -222,132 +338,156 @@ export function inferMutationAliasingRanges(fn: HIRFunction): void {
   }
 }
 
-/**
- * TODO: similar to alias effect inference state:
- * - values represent the conceptual values (context vars, things that got Create*-ed)
- *   into which other values are captured
- * - variables deals with aliases (Assign, Alias, CreateFrom)
- *
- * Ex:
- * `Capture a -> b`:
- * - find the values represented by `a` (aValues) by looking up a in .variables, then mapping to .values
- * - find the values represented by `b` (bValues) by looking up b in .variables, then mapping to .values
- * - add aValues into bValues
- */
+type Node = {
+  id: Identifier;
+  captures: Map<Identifier, number>;
+  aliases: Map<Identifier, number>;
+  edges: Array<{index: number; node: Identifier; kind: 'capture' | 'alias'}>;
+  transitive: MutationKind;
+  local: MutationKind;
+};
 class AliasingState {
-  values: Map<Identifier, Set<Identifier>> = new Map();
-  variables: Map<IdentifierId, Set<Identifier>> = new Map();
+  nodes: Map<Identifier, Node> = new Map();
 
   create(place: Place): void {
-    this.values.set(place.identifier, new Set());
-    this.variables.set(place.identifier.id, new Set([place.identifier]));
+    this.nodes.set(place.identifier, {
+      id: place.identifier,
+      captures: new Map(),
+      aliases: new Map(),
+      edges: [],
+      transitive: MutationKind.None,
+      local: MutationKind.None,
+    });
   }
 
-  clear(lvalue: Place): void {
-    this.variables.set(lvalue.identifier.id, new Set());
-  }
-
-  assign(from: Place, into: Place): void {
-    const fromVariables = this.variables.get(from.identifier.id);
-    if (fromVariables == null) {
+  capture(index: number, from: Place, into: Place): void {
+    const fromNode = this.nodes.get(from.identifier);
+    const toNode = this.nodes.get(into.identifier);
+    if (fromNode == null || toNode == null) {
+      if (DEBUG) {
+        console.log(
+          `skip: capture ${printPlace(from)}${!!fromNode} -> ${printPlace(into)}${!!toNode}`,
+        );
+      }
       return;
     }
-    this.variables.set(
-      into.identifier.id,
-      new Set([...fromVariables, from.identifier, into.identifier]),
-      // fromVariables,
-    );
-  }
-
-  alias(from: Place, into: Place): void {
-    const intoVariables = getOrInsertWith(
-      this.variables,
-      into.identifier.id,
-      () => new Set(),
-    );
-    intoVariables.add(from.identifier);
-  }
-
-  capture(from: Place, into: Place): void {
-    const intoVariables = this.variables.get(into.identifier.id)!;
-    for (const v of intoVariables) {
-      const values = this.values.get(v)!;
-      values.add(from.identifier);
+    fromNode.edges.push({index, node: into.identifier, kind: 'capture'});
+    if (!toNode.captures.has(from.identifier)) {
+      toNode.captures.set(from.identifier, index);
     }
   }
 
-  mutateTransitive(
-    place: Identifier,
+  assign(index: number, from: Place, into: Place): void {
+    const fromNode = this.nodes.get(from.identifier);
+    const toNode = this.nodes.get(into.identifier);
+    if (fromNode == null || toNode == null) {
+      if (DEBUG) {
+        console.log(
+          `skip: assign ${printPlace(from)}${!!fromNode} -> ${printPlace(into)}${!!toNode}`,
+        );
+      }
+      return;
+    }
+    fromNode.edges.push({index, node: into.identifier, kind: 'alias'});
+    if (!toNode.captures.has(from.identifier)) {
+      toNode.aliases.set(from.identifier, index);
+    }
+  }
+
+  mutate(
+    index: number,
+    start: Place,
     end: InstructionId,
-    loc: SourceLocation,
+    transitive: boolean,
+    kind: MutationKind,
   ): void {
-    const variables = this.variables.get(place.id);
-    if (variables == null) {
-      return;
-    }
-    for (const value of variables) {
-      value.mutableRange.end = makeInstructionId(
-        Math.max(value.mutableRange.end, end),
+    const seen = new Set<Identifier>();
+    const queue = [start.identifier];
+    while (queue.length !== 0) {
+      const current = queue.pop()!;
+      if (seen.has(current)) {
+        continue;
+      }
+      seen.add(current);
+      const node = this.nodes.get(current);
+      if (node == null) {
+        if (DEBUG) {
+          console.log(
+            `no node! ${printPlace(start)} for identifier ${printIdentifier(current)}`,
+          );
+        }
+        continue;
+      }
+      if (DEBUG) {
+        console.log(
+          `mutate $${node.id.id} via ${printPlace(start)} at [${end}]`,
+        );
+      }
+      node.id.mutableRange.end = makeInstructionId(
+        Math.max(node.id.mutableRange.end, end),
       );
-      const captured = this.values.get(value)!;
-      for (const capture of captured) {
-        this.mutateTransitive(capture, end, loc);
+      if (transitive) {
+        node.transitive = Math.max(node.transitive, kind);
+      } else {
+        node.local = Math.max(node.local, kind);
+      }
+      /**
+       * all mutations affect "forward" edges by the rules:
+       * - Capture a -> b, mutate(a) => mutate(b)
+       * - Alias a -> b, mutate(a) => mutate(b)
+       */
+      for (const edge of node.edges) {
+        if (edge.index >= index) {
+          break;
+        }
+        queue.push(edge.node);
+      }
+      /**
+       * all mutations affect backward alias edges by the rules:
+       * - Alias a -> b, mutate(b) => mutate(a)
+       * - Alias a -> b, mutateTransitive(b) => mutate(a)
+       */
+      for (const [alias, when] of node.aliases) {
+        if (when >= index) {
+          continue;
+        }
+        queue.push(alias);
+      }
+      /**
+       * but only transitive mutations affect captures
+       */
+      if (transitive) {
+        for (const [capture, when] of node.captures) {
+          if (when >= index) {
+            continue;
+          }
+          queue.push(capture);
+        }
       }
     }
   }
 
-  mutate(place: Identifier, end: InstructionId, _loc: SourceLocation): void {
-    const variables = this.variables.get(place.id);
-    if (variables == null) {
-      return;
-    }
-    place.mutableRange.end = makeInstructionId(
-      Math.max(place.mutableRange.end, end),
-    );
-    for (const value of variables) {
-      // Unlike mutateTransitive, we don't traverse into captured values
-      value.mutableRange.end = makeInstructionId(
-        Math.max(value.mutableRange.end, end),
-      );
-    }
-  }
-
-  canonicalize(): Map<IdentifierId, string> {
-    const map = new Map<IdentifierId, string>();
-    for (const value of this.values.keys()) {
-      map.set(
-        value.id,
-        `${value.mutableRange.start}:${value.mutableRange.end}`,
-      );
-    }
-    return map;
-  }
-
   debug(): string {
-    const values = new Map<string, string>();
-    for (const [k, v] of this.values) {
-      values.set(
-        `${k.name?.value ?? ''}$${k.id}:${k.mutableRange.start}:${k.mutableRange.end}`,
-        [...v]
-          .map(
-            v =>
-              `${v.name?.value ?? ''}$${v.id}:${v.mutableRange.start}:${v.mutableRange.end}`,
-          )
-          .join(', '),
-      );
-    }
-    const variables = new Map<string, string>();
-    for (const [k, v] of this.variables) {
-      variables.set(
-        `$${k}`,
-        [...v]
-          .map(
-            v =>
-              `${v.name?.value ?? ''}$${v.id}:${v.mutableRange.start}:${v.mutableRange.end}`,
-          )
-          .join(', '),
-      );
-    }
-    return prettyFormat({values, variables});
+    return pretty(this.nodes);
   }
+}
+
+function pretty(v: any): string {
+  return prettyFormat(v, {
+    plugins: [
+      {
+        test: v =>
+          v !== null && typeof v === 'object' && v.kind === 'Identifier',
+        serialize: v => printPlace(v),
+      },
+      {
+        test: v =>
+          v !== null &&
+          typeof v === 'object' &&
+          typeof v.declarationId === 'number',
+        serialize: v =>
+          `${printIdentifier(v)}:${v.mutableRange.start}:${v.mutableRange.end}`,
+      },
+    ],
+  });
 }

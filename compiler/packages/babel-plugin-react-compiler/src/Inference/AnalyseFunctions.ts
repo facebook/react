@@ -15,6 +15,7 @@ import {
   Place,
   isRefOrRefValue,
   makeInstructionId,
+  printFunction,
 } from '../HIR';
 import {deadCodeElimination} from '../Optimization';
 import {inferReactiveScopeVariables} from '../ReactiveScopes';
@@ -72,7 +73,10 @@ function lowerWithMutationAliasing(fn: HIRFunction): void {
     value: fn,
   });
   const effects = inferMutationAliasingFunctionEffects(fn);
-  fn.aliasingEffects = effects;
+  if (effects != null) {
+    fn.aliasingEffects ??= [];
+    fn.aliasingEffects?.push(...effects);
+  }
 
   const capturedOrMutated = new Set<IdentifierId>();
   for (const effect of effects ?? []) {
@@ -97,6 +101,8 @@ function lowerWithMutationAliasing(fn: HIRFunction): void {
         capturedOrMutated.add(effect.value.identifier.id);
         break;
       }
+      case 'MutateFrozen':
+      case 'MutateGlobal':
       case 'CreateFunction':
       case 'Create':
       case 'Freeze':
@@ -114,7 +120,10 @@ function lowerWithMutationAliasing(fn: HIRFunction): void {
   }
 
   for (const operand of fn.context) {
-    if (capturedOrMutated.has(operand.identifier.id)) {
+    if (
+      capturedOrMutated.has(operand.identifier.id) ||
+      operand.effect === Effect.Capture
+    ) {
       operand.effect = Effect.Capture;
     } else {
       operand.effect = Effect.Read;
