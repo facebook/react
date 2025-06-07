@@ -1190,7 +1190,6 @@ describe('ReactFlightDOMEdge', () => {
       const greetInfo = expect.objectContaining({
         name: 'Greeting',
         env: 'Server',
-        owner: null,
       });
       expect(lazyWrapper._debugInfo).toEqual([
         {time: 12},
