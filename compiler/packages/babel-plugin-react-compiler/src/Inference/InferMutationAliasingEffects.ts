@@ -189,6 +189,7 @@ export function inferMutationAliasingEffects(
 }
 
 class Context {
+  internedEffects: Map<string, AliasingEffect> = new Map();
   instructionSignatureCache: Map<Instruction, InstructionSignature> = new Map();
   effectInstructionValueCache: Map<AliasingEffect, InstructionValue> =
     new Map();
@@ -199,6 +200,17 @@ class Context {
   constructor(isFunctionExpression: boolean, fn: HIRFunction) {
     this.isFuctionExpression = isFunctionExpression;
     this.fn = fn;
+  }
+
+  internEffect(effect: AliasingEffect): AliasingEffect {
+    const hash = hashEffect(effect);
+    let interned = this.internedEffects.get(hash);
+    if (interned == null) {
+      console.log(`intern: ${hash}`);
+      this.internedEffects.set(hash, effect);
+      interned = effect;
+    }
+    return interned;
   }
 }
 
@@ -388,10 +400,11 @@ function applySignature(
 function applyEffect(
   context: Context,
   state: InferenceState,
-  effect: AliasingEffect,
+  _effect: AliasingEffect,
   aliased: Set<IdentifierId>,
   effects: Array<AliasingEffect>,
 ): void {
+  const effect = context.internEffect(_effect);
   if (DEBUG) {
     console.log(printAliasingEffect(effect));
   }
@@ -465,15 +478,12 @@ function applyEffect(
           break;
         }
         default: {
-          // Even if the source is non-primitive, the destination may be. skip primitives.
-          if (!isPrimitiveType(effect.into.identifier)) {
-            effects.push({
-              // OK: recording information flow
-              kind: 'CreateFrom', // prev Alias
-              from: effect.from,
-              into: effect.into,
-            });
-          }
+          effects.push({
+            // OK: recording information flow
+            kind: 'CreateFrom', // prev Alias
+            from: effect.from,
+            into: effect.into,
+          });
         }
       }
       break;
@@ -1363,11 +1373,19 @@ function computeSignatureForInstruction(
     }
     case 'PropertyLoad':
     case 'ComputedLoad': {
-      effects.push({
-        kind: 'CreateFrom',
-        from: value.object,
-        into: lvalue,
-      });
+      if (isPrimitiveType(lvalue.identifier)) {
+        effects.push({
+          kind: 'Create',
+          into: lvalue,
+          value: ValueKind.Primitive,
+        });
+      } else {
+        effects.push({
+          kind: 'CreateFrom',
+          from: value.object,
+          into: lvalue,
+        });
+      }
       break;
     }
     case 'PropertyStore':
@@ -1378,8 +1396,11 @@ function computeSignatureForInstruction(
         from: value.value,
         into: value.object,
       });
-      // OK: lvalues are assigned to
-      effects.push({kind: 'Assign', from: value.value, into: lvalue});
+      effects.push({
+        kind: 'Create',
+        into: lvalue,
+        value: ValueKind.Primitive,
+      });
       break;
     }
     case 'ObjectMethod':
@@ -2207,7 +2228,23 @@ export type AliasedPlace = {place: Place; kind: 'alias' | 'capture'};
 
 export type AliasingEffect =
   /**
-   * Marks the given value, its aliases, and indirect captures, as frozen.
+   * Marks the given value and its direct aliases as frozen.
+   *
+   * Captured values are *not* considered frozen, because we cannot be sure that a previously
+   * captured value will still be captured at the point of the freeze.
+   *
+   * For example:
+   * const x = {};
+   * const y = [x];
+   * y.pop(); // y dosn't contain x anymore!
+   * freeze(y);
+   * mutate(x); // safe to mutate!
+   *
+   * The exception to this is FunctionExpressions - since it is impossible to change which
+   * value a function closes over[1] we can transitively freeze functions and their captures.
+   *
+   * [1] Except for `let` values that are reassigned and closed over by a function, but we
+   * handle this explicitly with StoreContext/LoadContext.
    */
   | {kind: 'Freeze'; value: Place; reason: ValueReason}
   /**
@@ -2304,6 +2341,67 @@ export type AliasingEffect =
       place: Place;
       error: CompilerErrorDetailOptions;
     };
+
+function hashEffect(effect: AliasingEffect): string {
+  switch (effect.kind) {
+    case 'Apply': {
+      return [
+        effect.kind,
+        effect.receiver.identifier.id,
+        effect.function.identifier.id,
+        effect.mutatesFunction,
+        effect.args
+          .map(a => {
+            if (a.kind === 'Hole') {
+              return '';
+            } else if (a.kind === 'Identifier') {
+              return a.identifier.id;
+            } else {
+              return `...${a.place.identifier.id}`;
+            }
+          })
+          .join(','),
+        effect.into.identifier.id,
+      ].join(':');
+    }
+    case 'CreateFrom':
+    case 'ImmutableCapture':
+    case 'Assign':
+    case 'Alias':
+    case 'Capture': {
+      return [
+        effect.kind,
+        effect.from.identifier.id,
+        effect.into.identifier.id,
+      ].join(':');
+    }
+    case 'Create': {
+      return [effect.kind, effect.into.identifier.id].join(':');
+    }
+    case 'Freeze': {
+      return [effect.kind, effect.value.identifier.id, effect.reason].join(':');
+    }
+    case 'MutateFrozen':
+    case 'MutateGlobal': {
+      return [effect.kind, effect.place.identifier.id].join(':');
+    }
+    case 'Mutate':
+    case 'MutateConditionally':
+    case 'MutateTransitive':
+    case 'MutateTransitiveConditionally': {
+      return [effect.kind, effect.value.identifier.id].join(':');
+    }
+    case 'CreateFunction': {
+      return [
+        effect.kind,
+        effect.into.identifier.id,
+        // return places are a unique way to identify functions themselves
+        effect.function.loweredFunc.func.returns.identifier.id,
+        effect.captures.map(p => p.identifier.id).join(','),
+      ].join(':');
+    }
+  }
+}
 
 export type AliasingSignatureEffect = AliasingEffect;
 
