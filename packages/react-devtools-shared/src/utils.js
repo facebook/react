@@ -40,6 +40,8 @@ import {
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
   SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
   SESSION_STORAGE_RECORD_TIMELINE_KEY,
+  LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PROTOCOL_REPLACE,
+  LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PROTOCOL_REPLACE_WITH,
 } from './constants';
 import {
   ComponentFilterElementType,
@@ -397,6 +399,30 @@ export function getOpenInEditorURL(): string {
     }
   } catch (error) {}
   return getDefaultOpenInEditorURL();
+}
+
+export function getOpenInEditorURLProtocolReplace(): string {
+  try {
+    const raw = localStorageGetItem(
+      LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PROTOCOL_REPLACE,
+    );
+    if (raw != null) {
+      return JSON.parse(raw);
+    }
+  } catch (error) {}
+  return '';
+}
+
+export function getOpenInEditorURLProtocolReplaceWith(): string {
+  try {
+    const raw = localStorageGetItem(
+      LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PROTOCOL_REPLACE_WITH,
+    );
+    if (raw != null) {
+      return JSON.parse(raw);
+    }
+  } catch (error) {}
+  return '';
 }
 
 type ParseElementDisplayNameFromBackendReturn = {
