@@ -155,7 +155,7 @@ export function inferMutationAliasingEffects(
   }
   queue(fn.body.entry, initialState);
 
-  const context = new Context(isFunctionExpression);
+  const context = new Context(isFunctionExpression, fn);
 
   let count = 0;
   while (queuedStates.size !== 0) {
@@ -193,9 +193,11 @@ class Context {
     new Map();
   catchHandlers: Map<BlockId, Place> = new Map();
   isFuctionExpression: boolean;
+  fn: HIRFunction;
 
-  constructor(isFunctionExpression: boolean) {
+  constructor(isFunctionExpression: boolean, fn: HIRFunction) {
     this.isFuctionExpression = isFunctionExpression;
+    this.fn = fn;
   }
 }
 
@@ -309,8 +311,14 @@ function applySignature(
   ) {
     const aliasingEffects =
       instruction.value.loweredFunc.func.aliasingEffects ?? [];
+    const context = new Set(
+      instruction.value.loweredFunc.func.context.map(p => p.identifier.id),
+    );
     for (const effect of aliasingEffects) {
       if (effect.kind === 'Mutate' || effect.kind === 'MutateTransitive') {
+        if (!context.has(effect.value.identifier.id)) {
+          continue;
+        }
         const value = state.kind(effect.value);
         switch (value.kind) {
           case ValueKind.Global:
@@ -458,7 +466,7 @@ function applyEffect(
         default: {
           effects.push({
             // OK: recording information flow
-            kind: 'Alias',
+            kind: 'CreateFrom', // prev Alias
             from: effect.from,
             into: effect.into,
           });
@@ -467,6 +475,7 @@ function applyEffect(
       break;
     }
     case 'CreateFunction': {
+      effects.push(effect);
       const isMutable = effect.captures.some(capture => {
         switch (state.kind(capture).kind) {
           case ValueKind.Context:
@@ -644,6 +653,13 @@ function applyEffect(
           if (DEBUG) {
             console.log('apply function expression effects');
           }
+          applyEffect(
+            context,
+            state,
+            {kind: 'MutateTransitiveConditionally', value: effect.function},
+            aliased,
+            effects,
+          );
           for (const signatureEffect of signatureEffects) {
             applyEffect(context, state, signatureEffect, aliased, effects);
           }
@@ -1587,10 +1603,26 @@ function computeSignatureForInstruction(
       break;
     }
     case 'StoreGlobal': {
-      CompilerError.throwTodo({
-        reason: `Handle StoreGlobal in new inference`,
-        loc: instr.loc,
+      effects.push({
+        kind: 'MutateGlobal',
+        place: value.value,
+        error: {
+          severity: ErrorSeverity.InvalidReact,
+          reason: getWriteErrorReason({
+            kind: ValueKind.Global,
+            reason: new Set([ValueReason.Global]),
+            context: new Set(),
+          }),
+          description:
+            value.value.identifier.name !== null &&
+            value.value.identifier.name.kind === 'named'
+              ? `Found mutation of \`${value.value.identifier.name}\``
+              : null,
+          loc: value.value.loc,
+          suggestions: null,
+        },
       });
+      break;
     }
     case 'TypeCastExpression': {
       effects.push({kind: 'Assign', from: value.value, into: lvalue});
