@@ -2834,8 +2834,7 @@ describe('ReactFlight', () => {
                 stack: '    in Object.<anonymous> (at **)',
                 props: {},
               },
-              {time: 22},
-              {time: 23}, // This last one is when the promise resolved into the first party.
+              {time: gate(flags => flags.enableAsyncDebugInfo) ? 25 : 23}, // This last one is when the promise resolved into the first party.
             ]
           : undefined,
       );
@@ -2850,7 +2849,7 @@ describe('ReactFlight', () => {
                 stack: '    in myLazy (at **)\n    in lazyInitializer (at **)',
                 props: {},
               },
-              {time: 22},
+              {time: gate(flags => flags.enableAsyncDebugInfo) ? 23 : 24},
             ]
           : undefined,
       );
@@ -2865,7 +2864,7 @@ describe('ReactFlight', () => {
                 stack: '    in Object.<anonymous> (at **)',
                 props: {},
               },
-              {time: 22},
+              {time: gate(flags => flags.enableAsyncDebugInfo) ? 24 : 25},
             ]
           : undefined,
       );
@@ -2975,7 +2974,6 @@ describe('ReactFlight', () => {
                 stack: '    in Object.<anonymous> (at **)',
                 props: {},
               },
-              {time: 19},
             ]
           : undefined,
       );
