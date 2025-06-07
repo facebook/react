@@ -156,7 +156,7 @@ function normalizeCodeLocInfo(str) {
   //  at Component (/path/filename.js:123:45)
   // React format:
   //    in Component (at filename.js:123)
-  return str.replace(/\n +(?:at|in) ([^(\n]+)[^\n]*/g, function (m, name) {
+  return str.replace(/\n +(?:at|in) ([^(\[\n]+)[^\n]*/g, function (m, name) {
     name = name.trim();
     if (name.endsWith('.render')) {
       // Class components will have the `render` method as part of their stack trace.
