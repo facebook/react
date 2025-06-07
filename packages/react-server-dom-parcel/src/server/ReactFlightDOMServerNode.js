@@ -95,7 +95,6 @@ type PipeableStream = {
 
 export function renderToPipeableStream(
   model: ReactClientValue,
-
   options?: Options,
 ): PipeableStream {
   const request = createRequest(
