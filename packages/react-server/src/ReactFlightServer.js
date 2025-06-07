@@ -4309,13 +4309,13 @@ function forwardDebugInfo(
         info.time < minimumTime ? minimumTime : info.time,
       );
     } else {
-      request.pendingChunks++;
       if (typeof info.name === 'string') {
         // We outline this model eagerly so that we can refer to by reference as an owner.
         // If we had a smarter way to dedupe we might not have to do this if there ends up
         // being no references to this as an owner.
         outlineComponentInfo(request, (info: any));
         // Emit a reference to the outlined one.
+        request.pendingChunks++;
         emitDebugChunk(request, id, info);
       } else if (info.awaited) {
         const ioInfo = info.awaited;
@@ -4356,9 +4356,11 @@ function forwardDebugInfo(
             // $FlowFixMe[cannot-write]
             debugAsyncInfo.stack = debugStack;
           }
+          request.pendingChunks++;
           emitDebugChunk(request, id, debugAsyncInfo);
         }
       } else {
+        request.pendingChunks++;
         emitDebugChunk(request, id, info);
       }
     }
