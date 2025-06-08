@@ -1933,10 +1933,6 @@ function visitAsyncNode(
             // If this Promise was created inside only third party code, then try to use
             // the inner I/O node instead. This could happen if third party calls into first
             // party to perform some I/O.
-            if (ioNode.end < 0) {
-              // If we haven't defined an end time, use the resolve of the outer Promise.
-              ioNode.end = node.end;
-            }
             match = ioNode;
           } else {
             match = node;
@@ -1951,10 +1947,9 @@ function visitAsyncNode(
       }
       return match;
     }
-    case UNRESOLVED_AWAIT_NODE:
-    // We could be inside the .then() which is about to resolve this node.
-    // TODO: We could call emitAsyncSequence in a microtask to avoid this issue.
-    // Fallthrough to the resolved path.
+    case UNRESOLVED_AWAIT_NODE: {
+      return null;
+    }
     case AWAIT_NODE: {
       const awaited = node.awaited;
       let match = null;
@@ -1962,19 +1957,7 @@ function visitAsyncNode(
         const ioNode = visitAsyncNode(request, task, awaited, visited);
         if (ioNode !== null) {
           const startTime: number = node.start;
-          let endTime: number;
-          if (node.tag === UNRESOLVED_AWAIT_NODE) {
-            // If we haven't defined an end time, use the resolve of the inner Promise.
-            // This can happen because the ping gets invoked before the await gets resolved.
-            if (ioNode.end < node.start) {
-              // If we're awaiting a resolved Promise it could have finished before we started.
-              endTime = node.start;
-            } else {
-              endTime = ioNode.end;
-            }
-          } else {
-            endTime = node.end;
-          }
+          const endTime: number = node.end;
           if (endTime <= request.timeOrigin) {
             // This was already resolved when we started this render. It must have been either something
             // that's part of a start up sequence or externally cached data. We exclude that information.
@@ -1998,10 +1981,8 @@ function visitAsyncNode(
               match = ioNode;
             } else {
               // Outline the IO node.
-              if (ioNode.end < 0) {
-                ioNode.end = endTime;
-              }
               serializeIONode(request, ioNode);
+
               // We log the environment at the time when the last promise pigned ping which may
               // be later than what the environment was when we actually started awaiting.
               const env = (0, request.environmentName)();
@@ -2021,16 +2002,7 @@ function visitAsyncNode(
       }
       // We need to forward after we visit awaited nodes because what ever I/O we requested that's
       // the thing that generated this node and its virtual children.
-      let debugInfo: null | ReactDebugInfo;
-      if (node.tag === UNRESOLVED_AWAIT_NODE) {
-        const promise = node.debugInfo.deref();
-        debugInfo =
-          promise === undefined || promise._debugInfo === undefined
-            ? null
-            : promise._debugInfo;
-      } else {
-        debugInfo = node.debugInfo;
-      }
+      const debugInfo: null | ReactDebugInfo = node.debugInfo;
       if (debugInfo !== null) {
         forwardDebugInfo(request, task, debugInfo);
       }
@@ -2052,14 +2024,6 @@ function emitAsyncSequence(
   const awaitedNode = visitAsyncNode(request, task, node, visited);
   if (awaitedNode !== null) {
     // Nothing in user space (unfiltered stack) awaited this.
-    if (awaitedNode.end < 0) {
-      // If this was I/O directly without a Promise, then it means that some custom Thenable
-      // called our ping directly and not from a native .then(). We use the current ping time
-      // as the end time and treat it as an await with no stack.
-      // TODO: If this I/O is recurring then we really should have different entries for
-      // each occurrence. Right now we'll only track the first time it is invoked.
-      awaitedNode.end = performance.now();
-    }
     serializeIONode(request, awaitedNode);
     request.pendingChunks++;
     // We log the environment at the time when we ping which may be later than what the

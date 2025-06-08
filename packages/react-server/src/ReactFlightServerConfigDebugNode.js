@@ -30,6 +30,24 @@ import {enableAsyncDebugInfo} from 'shared/ReactFeatureFlags';
 const pendingOperations: Map<number, AsyncSequence> =
   __DEV__ && enableAsyncDebugInfo ? new Map() : (null: any);
 
+function resolvePromiseOrAwaitNode(
+  unresolvedNode: UnresolvedAwaitNode | UnresolvedPromiseNode,
+  endTime: number,
+): AwaitNode | PromiseNode {
+  const resolvedNode: AwaitNode | PromiseNode = (unresolvedNode: any);
+  resolvedNode.tag = ((unresolvedNode.tag === UNRESOLVED_PROMISE_NODE
+    ? PROMISE_NODE
+    : AWAIT_NODE): any);
+  // The Promise can be garbage collected after this so we should extract debugInfo first.
+  const promise = unresolvedNode.debugInfo.deref();
+  resolvedNode.debugInfo =
+    promise === undefined || promise._debugInfo === undefined
+      ? null
+      : promise._debugInfo;
+  resolvedNode.end = endTime;
+  return resolvedNode;
+}
+
 // Initialize the tracing of async operations.
 // We do this globally since the async work can potentially eagerly
 // start before the first request and once requests start they can interleave.
@@ -129,42 +147,50 @@ export function initAsyncDebugInfo(): void {
         }
         pendingOperations.set(asyncId, node);
       },
+      before(asyncId: number): void {
+        const node = pendingOperations.get(asyncId);
+        if (node !== undefined) {
+          switch (node.tag) {
+            case IO_NODE: {
+              // Log the end time when we resolved the I/O. This can happen
+              // more than once if it's a recurring resource like a connection.
+              const ioNode: IONode = (node: any);
+              ioNode.end = performance.now();
+              break;
+            }
+            case UNRESOLVED_AWAIT_NODE:
+            case UNRESOLVED_PROMISE_NODE: {
+              // If we begin before we resolve, that means that this is actually already resolved but
+              // the promiseResolve hook is called at the end of the execution. This means that it was
+              // actually already resolved when we started so we just use the start time as the end time.
+              resolvePromiseOrAwaitNode(node, node.start);
+              break;
+            }
+          }
+        }
+      },
       promiseResolve(asyncId: number): void {
         const node = pendingOperations.get(asyncId);
         if (node !== undefined) {
           let resolvedNode: AwaitNode | PromiseNode;
           switch (node.tag) {
-            case UNRESOLVED_AWAIT_NODE: {
-              const awaitNode: AwaitNode = (node: any);
-              awaitNode.tag = AWAIT_NODE;
-              resolvedNode = awaitNode;
-              break;
-            }
+            case UNRESOLVED_AWAIT_NODE:
             case UNRESOLVED_PROMISE_NODE: {
-              const promiseNode: PromiseNode = (node: any);
-              promiseNode.tag = PROMISE_NODE;
-              resolvedNode = promiseNode;
+              resolvedNode = resolvePromiseOrAwaitNode(node, performance.now());
               break;
             }
-            case IO_NODE:
+            case AWAIT_NODE:
+            case PROMISE_NODE: {
+              resolvedNode = node;
+              // We already resolved this in the begin phase.
+              break;
+            }
+            default:
               // eslint-disable-next-line react-internal/prod-error-codes
               throw new Error(
                 'A Promise should never be an IO_NODE. This is a bug in React.',
               );
-            default:
-              // eslint-disable-next-line react-internal/prod-error-codes
-              throw new Error(
-                'A Promise should never be resolved twice. This is a bug in React or Node.js.',
-              );
           }
-          // Log the end time when we resolved the promise.
-          resolvedNode.end = performance.now();
-          // The Promise can be garbage collected after this so we should extract debugInfo first.
-          const promise = node.debugInfo.deref();
-          resolvedNode.debugInfo =
-            promise === undefined || promise._debugInfo === undefined
-              ? null
-              : promise._debugInfo;
           const currentAsyncId = executionAsyncId();
           if (asyncId !== currentAsyncId) {
             // If the promise was not resolved by itself, then that means that
