@@ -3046,7 +3046,9 @@ function flushComponentPerformance(
     }
     childTrackIdx = childResult.track;
     const childEndTime = childResult.endTime;
-    childTrackTime = childEndTime;
+    if (childEndTime > childTrackTime) {
+      childTrackTime = childEndTime;
+    }
     if (childEndTime > childrenEndTime) {
       childrenEndTime = childEndTime;
     }
