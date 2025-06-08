@@ -1,6 +1,6 @@
 import * as React from 'react';
-import {renderToPipeableStream} from 'react-server-dom-webpack/server';
-import {createFromNodeStream} from 'react-server-dom-webpack/client';
+import {renderToReadableStream} from 'react-server-dom-webpack/server';
+import {createFromReadableStream} from 'react-server-dom-webpack/client';
 import {PassThrough, Readable} from 'stream';
 
 import Container from './Container.js';
@@ -46,43 +46,33 @@ async function ThirdPartyComponent() {
   return delay('hello from a 3rd party', 30);
 }
 
-// Using Web streams for tee'ing convenience here.
-let cachedThirdPartyReadableWeb;
+let cachedThirdPartyStream;
 
 // We create the Component outside of AsyncLocalStorage so that it has no owner.
 // That way it gets the owner from the call to createFromNodeStream.
 const thirdPartyComponent = <ThirdPartyComponent />;
 
 function fetchThirdParty(noCache) {
-  if (cachedThirdPartyReadableWeb && !noCache) {
-    const [readableWeb1, readableWeb2] = cachedThirdPartyReadableWeb.tee();
-    cachedThirdPartyReadableWeb = readableWeb1;
+  // We're using the Web Streams APIs for tee'ing convenience.
+  const stream =
+    cachedThirdPartyStream && !noCache
+      ? cachedThirdPartyStream
+      : renderToReadableStream(
+          thirdPartyComponent,
+          {},
+          {environmentName: 'third-party'}
+        );
 
-    return createFromNodeStream(Readable.fromWeb(readableWeb2), {
+  const [stream1, stream2] = stream.tee();
+  cachedThirdPartyStream = stream1;
+
+  return createFromReadableStream(stream2, {
+    serverConsumerManifest: {
       moduleMap: {},
-      moduleLoading: {},
-    });
-  }
-
-  const stream = renderToPipeableStream(
-    thirdPartyComponent,
-    {},
-    {environmentName: 'third-party'}
-  );
-
-  const readable = new PassThrough();
-  // React currently only supports piping to one stream, so we convert, tee, and
-  // convert back again.
-  // TODO: Switch to web streams without converting when #33442 has landed.
-  const [readableWeb1, readableWeb2] = Readable.toWeb(readable).tee();
-  cachedThirdPartyReadableWeb = readableWeb1;
-  const result = createFromNodeStream(Readable.fromWeb(readableWeb2), {
-    moduleMap: {},
-    moduleLoading: {},
+      serverModuleMap: null,
+      moduleLoading: null,
+    },
   });
-  stream.pipe(readable);
-
-  return result;
 }
 
 async function ServerComponent({noCache}) {
