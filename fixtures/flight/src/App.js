@@ -43,7 +43,7 @@ async function Bar({children}) {
 }
 
 async function ThirdPartyComponent() {
-  return delay('hello from a 3rd party', 30);
+  return await delay('hello from a 3rd party', 30);
 }
 
 let cachedThirdPartyStream;
@@ -52,16 +52,35 @@ let cachedThirdPartyStream;
 // That way it gets the owner from the call to createFromNodeStream.
 const thirdPartyComponent = <ThirdPartyComponent />;
 
-function fetchThirdParty(noCache) {
+function simulateFetch(cb, latencyMs) {
+  return new Promise(resolve => {
+    // Request latency
+    setTimeout(() => {
+      const result = cb();
+      // Response latency
+      setTimeout(() => {
+        resolve(result);
+      }, latencyMs);
+    }, latencyMs);
+  });
+}
+
+async function fetchThirdParty(noCache) {
   // We're using the Web Streams APIs for tee'ing convenience.
-  const stream =
-    cachedThirdPartyStream && !noCache
-      ? cachedThirdPartyStream
-      : renderToReadableStream(
+  let stream;
+  if (cachedThirdPartyStream && !noCache) {
+    stream = cachedThirdPartyStream;
+  } else {
+    stream = await simulateFetch(
+      () =>
+        renderToReadableStream(
           thirdPartyComponent,
           {},
           {environmentName: 'third-party'}
-        );
+        ),
+      25
+    );
+  }
 
   const [stream1, stream2] = stream.tee();
   cachedThirdPartyStream = stream1;
