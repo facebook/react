@@ -687,22 +687,29 @@ function serializeThenable(
     __DEV__ ? task.debugStack : null,
     __DEV__ ? task.debugTask : null,
   );
-  if (__DEV__) {
-    // If this came from Flight, forward any debug info into this new row.
-    const debugInfo: ?ReactDebugInfo = (thenable: any)._debugInfo;
-    if (debugInfo) {
-      forwardDebugInfo(request, newTask.id, debugInfo);
-    }
-  }
 
   switch (thenable.status) {
     case 'fulfilled': {
+      if (__DEV__) {
+        // If this came from Flight, forward any debug info into this new row.
+        const debugInfo: ?ReactDebugInfo = (thenable: any)._debugInfo;
+        if (debugInfo) {
+          forwardDebugInfo(request, newTask, debugInfo);
+        }
+      }
       // We have the resolved value, we can go ahead and schedule it for serialization.
       newTask.model = thenable.value;
       pingTask(request, newTask);
       return newTask.id;
     }
     case 'rejected': {
+      if (__DEV__) {
+        // If this came from Flight, forward any debug info into this new row.
+        const debugInfo: ?ReactDebugInfo = (thenable: any)._debugInfo;
+        if (debugInfo) {
+          forwardDebugInfo(request, newTask, debugInfo);
+        }
+      }
       const x = thenable.reason;
       erroredTask(request, newTask, x);
       return newTask.id;
@@ -751,10 +758,24 @@ function serializeThenable(
 
   thenable.then(
     value => {
+      if (__DEV__) {
+        // If this came from Flight, forward any debug info into this new row.
+        const debugInfo: ?ReactDebugInfo = (thenable: any)._debugInfo;
+        if (debugInfo) {
+          forwardDebugInfo(request, newTask, debugInfo);
+        }
+      }
       newTask.model = value;
       pingTask(request, newTask);
     },
     reason => {
+      if (__DEV__) {
+        // If this came from Flight, forward any debug info into this new row.
+        const debugInfo: ?ReactDebugInfo = (thenable: any)._debugInfo;
+        if (debugInfo) {
+          forwardDebugInfo(request, newTask, debugInfo);
+        }
+      }
       if (newTask.status === PENDING) {
         // We expect that the only status it might be otherwise is ABORTED.
         // When we abort we emit chunks in each pending task slot and don't need
@@ -911,7 +932,7 @@ function serializeAsyncIterable(
   if (__DEV__) {
     const debugInfo: ?ReactDebugInfo = (iterable: any)._debugInfo;
     if (debugInfo) {
-      forwardDebugInfo(request, streamTask.id, debugInfo);
+      forwardDebugInfo(request, streamTask, debugInfo);
     }
   }
 
@@ -1278,7 +1299,7 @@ function renderFunctionComponent<Props>(
 
   let componentDebugInfo: ReactComponentInfo;
   if (__DEV__) {
-    if (debugID === null) {
+    if (!canEmitDebugInfo) {
       // We don't have a chunk to assign debug info. We need to outline this
       // component to assign it an ID.
       return outlineTask(request, task);
@@ -1289,7 +1310,7 @@ function renderFunctionComponent<Props>(
       componentDebugInfo = (prevThenableState: any)._componentDebugInfo;
     } else {
       // This is a new component in the same task so we can emit more debug info.
-      const componentDebugID = debugID;
+      const componentDebugID = task.id;
       const componentName =
         (Component: any).displayName || Component.name || '';
       const componentEnv = (0, request.environmentName)();
@@ -1543,7 +1564,7 @@ function renderFragment(
     const debugInfo: ?ReactDebugInfo = (children: any)._debugInfo;
     if (debugInfo) {
       // If this came from Flight, forward any debug info into this new row.
-      if (debugID === null) {
+      if (!canEmitDebugInfo) {
         // We don't have a chunk to assign debug info. We need to outline this
         // component to assign it an ID.
         return outlineTask(request, task);
@@ -1551,7 +1572,7 @@ function renderFragment(
         // Forward any debug info we have the first time we see it.
         // We do this after init so that we have received all the debug info
         // from the server by the time we emit it.
-        forwardDebugInfo(request, debugID, debugInfo);
+        forwardDebugInfo(request, task, debugInfo);
       }
       // Since we're rendering this array again, create a copy that doesn't
       // have the debug info so we avoid outlining or emitting debug info again.
@@ -1659,8 +1680,10 @@ function renderClientElement(
   return element;
 }
 
-// The chunk ID we're currently rendering that we can assign debug data to.
-let debugID: null | number = null;
+// Determines if we're currently rendering at the top level of a task and therefore
+// is safe to emit debug info associated with that task. Otherwise, if we're in
+// a nested context, we need to first outline.
+let canEmitDebugInfo: boolean = false;
 
 // Approximate string length of the currently serializing row.
 // Used to power outlining heuristics.
@@ -1879,6 +1902,7 @@ function visitAsyncNode(
   // First visit anything that blocked this sequence to start in the first place.
   if (node.previous !== null) {
     // We ignore the return value here because if it wasn't awaited in user space, then we don't log it.
+    // It also means that it can just have been part of a previous component's render.
     // TODO: This means that some I/O can get lost that was still blocking the sequence.
     visitAsyncNode(request, task, node.previous, cutOff, visited);
   }
@@ -1890,11 +1914,10 @@ function visitAsyncNode(
       return null;
     }
     case PROMISE_NODE: {
-      if (node.end < cutOff) {
-        // This was already resolved when we started this sequence. It must have been
-        // part of a different component.
-        // TODO: Think of some other way to exclude irrelevant data since if we awaited
-        // a cached promise, we should still log this component as being dependent on that data.
+      if (node.end <= request.timeOrigin) {
+        // This was already resolved when we started this render. It must have been either something
+        // that's part of a start up sequence or externally cached data. We exclude that information.
+        // The technique for debugging the effects of uncached data on the render is to simply uncache it.
         return null;
       }
       const awaited = node.awaited;
@@ -1928,7 +1951,7 @@ function visitAsyncNode(
       // the thing that generated this node and its virtual children.
       const debugInfo = node.debugInfo;
       if (debugInfo !== null) {
-        forwardDebugInfo(request, task.id, debugInfo);
+        forwardDebugInfo(request, task, debugInfo);
       }
       return match;
     }
@@ -1942,6 +1965,7 @@ function visitAsyncNode(
       if (awaited !== null) {
         const ioNode = visitAsyncNode(request, task, awaited, cutOff, visited);
         if (ioNode !== null) {
+          const startTime: number = node.start;
           let endTime: number;
           if (node.tag === UNRESOLVED_AWAIT_NODE) {
             // If we haven't defined an end time, use the resolve of the inner Promise.
@@ -1955,11 +1979,18 @@ function visitAsyncNode(
           } else {
             endTime = node.end;
           }
-          if (endTime < cutOff) {
-            // This was already resolved when we started this sequence. It must have been
-            // part of a different component.
-            // TODO: Think of some other way to exclude irrelevant data since if we awaited
-            // a cached promise, we should still log this component as being dependent on that data.
+          if (endTime <= request.timeOrigin) {
+            // This was already resolved when we started this render. It must have been either something
+            // that's part of a start up sequence or externally cached data. We exclude that information.
+            return null;
+          } else if (startTime < cutOff) {
+            // We started awaiting this node before we started rendering this sequence.
+            // This means that this particular await was never part of the current sequence.
+            // If we have another await higher up in the chain it might have a more actionable stack
+            // from the perspective of this component. If we end up here from the "previous" path,
+            // then this gets I/O ignored, which is what we want because it means it was likely
+            // just part of a previous component's rendering.
+            match = ioNode;
           } else {
             const stack = filterStackTrace(
               request,
@@ -1978,15 +2009,7 @@ function visitAsyncNode(
               // We log the environment at the time when the last promise pigned ping which may
               // be later than what the environment was when we actually started awaiting.
               const env = (0, request.environmentName)();
-              if (node.start <= cutOff) {
-                // If this was an await that started before this sequence but finished after,
-                // then we clamp it to the start of this sequence. We don't need to emit a time
-                // TODO: Typically we'll already have a previous time stamp with the cutOff time
-                // so we shouldn't need to emit another one. But not always.
-                emitTimingChunk(request, task.id, cutOff);
-              } else {
-                emitTimingChunk(request, task.id, node.start);
-              }
+              emitTimingChunk(request, task.id, startTime);
               // Then emit a reference to us awaiting it in the current task.
               request.pendingChunks++;
               emitDebugChunk(request, task.id, {
@@ -1995,7 +2018,7 @@ function visitAsyncNode(
                 owner: node.owner,
                 stack: stack,
               });
-              emitTimingChunk(request, task.id, node.end);
+              emitTimingChunk(request, task.id, endTime);
             }
           }
         }
@@ -2013,7 +2036,7 @@ function visitAsyncNode(
         debugInfo = node.debugInfo;
       }
       if (debugInfo !== null) {
-        forwardDebugInfo(request, task.id, debugInfo);
+        forwardDebugInfo(request, task, debugInfo);
       }
       return match;
     }
@@ -2049,12 +2072,16 @@ function emitAsyncSequence(
     const env = (0, request.environmentName)();
     // If we don't have any thing awaited, the time we started awaiting was internal
     // when we yielded after rendering. The cutOff time is basically that.
-    emitTimingChunk(request, task.id, cutOff);
+    const awaitStartTime = cutOff;
+    // If the end time finished before we started, it could've been a cached thing so
+    // we clamp it to the cutOff time. Effectively leading to a zero-time await.
+    const awaitEndTime = awaitedNode.end < cutOff ? cutOff : awaitedNode.end;
+    emitTimingChunk(request, task.id, awaitStartTime);
     emitDebugChunk(request, task.id, {
       awaited: ((awaitedNode: any): ReactIOInfo), // This is deduped by this reference.
       env: env,
     });
-    emitTimingChunk(request, task.id, awaitedNode.end);
+    emitTimingChunk(request, task.id, awaitEndTime);
   }
 }
 
@@ -2763,13 +2790,13 @@ function renderModelDestructive(
           const debugInfo: ?ReactDebugInfo = (value: any)._debugInfo;
           if (debugInfo) {
             // If this came from Flight, forward any debug info into this new row.
-            if (debugID === null) {
+            if (!canEmitDebugInfo) {
               // We don't have a chunk to assign debug info. We need to outline this
               // component to assign it an ID.
               return outlineTask(request, task);
             } else {
               // Forward any debug info we have the first time we see it.
-              forwardDebugInfo(request, debugID, debugInfo);
+              forwardDebugInfo(request, task, debugInfo);
             }
           }
         }
@@ -2845,7 +2872,7 @@ function renderModelDestructive(
           const debugInfo: ?ReactDebugInfo = lazy._debugInfo;
           if (debugInfo) {
             // If this came from Flight, forward any debug info into this new row.
-            if (debugID === null) {
+            if (!canEmitDebugInfo) {
               // We don't have a chunk to assign debug info. We need to outline this
               // component to assign it an ID.
               return outlineTask(request, task);
@@ -2853,7 +2880,7 @@ function renderModelDestructive(
               // Forward any debug info we have the first time we see it.
               // We do this after init so that we have received all the debug info
               // from the server by the time we emit it.
-              forwardDebugInfo(request, debugID, debugInfo);
+              forwardDebugInfo(request, task, debugInfo);
             }
           }
         }
@@ -4264,57 +4291,77 @@ function emitTimeOriginChunk(request: Request, timeOrigin: number): void {
 
 function forwardDebugInfo(
   request: Request,
-  id: number,
+  task: Task,
   debugInfo: ReactDebugInfo,
 ) {
+  const id = task.id;
+  const minimumTime =
+    enableProfilerTimer && enableComponentPerformanceTrack ? task.time : 0;
   for (let i = 0; i < debugInfo.length; i++) {
     const info = debugInfo[i];
     if (typeof info.time === 'number') {
       // When forwarding time we need to ensure to convert it to the time space of the payload.
-      emitTimingChunk(request, id, info.time);
+      // We clamp the time to the starting render of the current component. It's as if it took
+      // no time to render and await if we reuse cached content.
+      emitTimingChunk(
+        request,
+        id,
+        info.time < minimumTime ? minimumTime : info.time,
+      );
     } else {
-      request.pendingChunks++;
       if (typeof info.name === 'string') {
         // We outline this model eagerly so that we can refer to by reference as an owner.
         // If we had a smarter way to dedupe we might not have to do this if there ends up
         // being no references to this as an owner.
         outlineComponentInfo(request, (info: any));
         // Emit a reference to the outlined one.
+        request.pendingChunks++;
         emitDebugChunk(request, id, info);
       } else if (info.awaited) {
         const ioInfo = info.awaited;
-        // Outline the IO info in case the same I/O is awaited in more than one place.
-        outlineIOInfo(request, ioInfo);
-        // We can't serialize the ConsoleTask/Error objects so we need to omit them before serializing.
-        let debugStack;
-        if (info.stack == null && info.debugStack != null) {
-          // If we have a debugStack but no parsed stack we should parse it.
-          debugStack = filterStackTrace(
-            request,
-            parseStackTrace(info.debugStack, 1),
-          );
+        if (ioInfo.end <= request.timeOrigin) {
+          // This was already resolved when we started this render. It must have been some
+          // externally cached data. We exclude that information but we keep components and
+          // awaits that happened inside this render but might have been deduped within the
+          // render.
         } else {
-          debugStack = info.stack;
-        }
-        const debugAsyncInfo: Omit<ReactAsyncInfo, 'debugTask' | 'debugStack'> =
-          {
+          // Outline the IO info in case the same I/O is awaited in more than one place.
+          outlineIOInfo(request, ioInfo);
+          // We can't serialize the ConsoleTask/Error objects so we need to omit them before serializing.
+          let debugStack;
+          if (info.stack == null && info.debugStack != null) {
+            // If we have a debugStack but no parsed stack we should parse it.
+            debugStack = filterStackTrace(
+              request,
+              parseStackTrace(info.debugStack, 1),
+            );
+          } else {
+            debugStack = info.stack;
+          }
+          const debugAsyncInfo: Omit<
+            ReactAsyncInfo,
+            'debugTask' | 'debugStack',
+          > = {
             awaited: ioInfo,
           };
-        if (info.env != null) {
-          // $FlowFixMe[cannot-write]
-          debugAsyncInfo.env = info.env;
+          if (info.env != null) {
+            // $FlowFixMe[cannot-write]
+            debugAsyncInfo.env = info.env;
+          }
+          if (info.owner != null) {
+            // $FlowFixMe[cannot-write]
+            debugAsyncInfo.owner = info.owner;
+          }
+          if (debugStack != null) {
+            // $FlowFixMe[cannot-write]
+            debugAsyncInfo.stack = debugStack;
+          }
+          request.pendingChunks++;
+          emitDebugChunk(request, id, debugAsyncInfo);
         }
-        if (info.owner != null) {
-          // $FlowFixMe[cannot-write]
-          debugAsyncInfo.owner = info.owner;
-        }
-        if (debugStack != null) {
-          // $FlowFixMe[cannot-write]
-          debugAsyncInfo.stack = debugStack;
-        }
-        emitDebugChunk(request, id, debugAsyncInfo);
       } else {
-        emitDebugChunk(request, id, debugInfo[i]);
+        request.pendingChunks++;
+        emitDebugChunk(request, id, info);
       }
     }
   }
@@ -4457,7 +4504,7 @@ function retryTask(request: Request, task: Task): void {
     return;
   }
 
-  const prevDebugID = debugID;
+  const prevCanEmitDebugInfo = canEmitDebugInfo;
   task.status = RENDERING;
 
   // We stash the outer parent size so we can restore it when we exit.
@@ -4472,8 +4519,8 @@ function retryTask(request: Request, task: Task): void {
     modelRoot = task.model;
 
     if (__DEV__) {
-      // Track the ID of the current task so we can assign debug info to this id.
-      debugID = task.id;
+      // Track that we can emit debug info for the current task.
+      canEmitDebugInfo = true;
     }
 
     // We call the destructive form that mutates this task. That way if something
@@ -4489,7 +4536,7 @@ function retryTask(request: Request, task: Task): void {
     if (__DEV__) {
       // We're now past rendering this task and future renders will spawn new tasks for their
       // debug info.
-      debugID = null;
+      canEmitDebugInfo = false;
     }
 
     // Track the root again for the resolved object.
@@ -4574,7 +4621,7 @@ function retryTask(request: Request, task: Task): void {
     erroredTask(request, task, x);
   } finally {
     if (__DEV__) {
-      debugID = prevDebugID;
+      canEmitDebugInfo = prevCanEmitDebugInfo;
     }
     serializedSize = parentSerializedSize;
   }
@@ -4583,11 +4630,11 @@ function retryTask(request: Request, task: Task): void {
 function tryStreamTask(request: Request, task: Task): void {
   // This is used to try to emit something synchronously but if it suspends,
   // we emit a reference to a new outlined task immediately instead.
-  const prevDebugID = debugID;
+  const prevCanEmitDebugInfo = canEmitDebugInfo;
   if (__DEV__) {
-    // We don't use the id of the stream task for debugID. Instead we leave it null
-    // so that we instead outline the row to get a new debugID if needed.
-    debugID = null;
+    // We can't emit debug into to a specific row of a stream task. Instead we leave
+    // it false so that we instead outline the row to get a new canEmitDebugInfo if needed.
+    canEmitDebugInfo = false;
   }
   const parentSerializedSize = serializedSize;
   try {
@@ -4595,7 +4642,7 @@ function tryStreamTask(request: Request, task: Task): void {
   } finally {
     serializedSize = parentSerializedSize;
     if (__DEV__) {
-      debugID = prevDebugID;
+      canEmitDebugInfo = prevCanEmitDebugInfo;
     }
   }
 }
