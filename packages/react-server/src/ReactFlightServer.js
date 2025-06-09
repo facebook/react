@@ -1032,13 +1032,21 @@ function readThenable<T>(thenable: Thenable<T>): T {
   throw thenable;
 }
 
-function createLazyWrapperAroundWakeable(wakeable: Wakeable) {
+function createLazyWrapperAroundWakeable(
+  request: Request,
+  task: Task,
+  wakeable: Wakeable,
+) {
   // This is a temporary fork of the `use` implementation until we accept
   // promises everywhere.
   const thenable: Thenable<mixed> = (wakeable: any);
   switch (thenable.status) {
-    case 'fulfilled':
+    case 'fulfilled': {
+      forwardDebugInfoFromThenable(request, task, thenable);
+      return thenable.value;
+    }
     case 'rejected':
+      forwardDebugInfoFromThenable(request, task, thenable);
       break;
     default: {
       if (typeof thenable.status === 'string') {
@@ -1051,6 +1059,7 @@ function createLazyWrapperAroundWakeable(wakeable: Wakeable) {
       pendingThenable.status = 'pending';
       pendingThenable.then(
         fulfilledValue => {
+          forwardDebugInfoFromCurrentContext(request, task, thenable);
           if (thenable.status === 'pending') {
             const fulfilledThenable: FulfilledThenable<mixed> = (thenable: any);
             fulfilledThenable.status = 'fulfilled';
@@ -1058,6 +1067,7 @@ function createLazyWrapperAroundWakeable(wakeable: Wakeable) {
           }
         },
         (error: mixed) => {
+          forwardDebugInfoFromCurrentContext(request, task, thenable);
           if (thenable.status === 'pending') {
             const rejectedThenable: RejectedThenable<mixed> = (thenable: any);
             rejectedThenable.status = 'rejected';
@@ -1073,10 +1083,6 @@ function createLazyWrapperAroundWakeable(wakeable: Wakeable) {
     _payload: thenable,
     _init: readThenable,
   };
-  if (__DEV__) {
-    // If this came from React, transfer the debug info.
-    lazyType._debugInfo = thenable._debugInfo || [];
-  }
   return lazyType;
 }
 
@@ -1155,12 +1161,9 @@ function processServerComponentReturnValue(
         }
       }, voidHandler);
     }
-    if (thenable.status === 'fulfilled') {
-      return thenable.value;
-    }
     // TODO: Once we accept Promises as children on the client, we can just return
     // the thenable here.
-    return createLazyWrapperAroundWakeable(result);
+    return createLazyWrapperAroundWakeable(request, task, result);
   }
 
   if (__DEV__) {
