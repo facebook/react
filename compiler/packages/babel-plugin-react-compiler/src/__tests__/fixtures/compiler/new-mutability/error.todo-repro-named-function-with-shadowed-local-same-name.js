@@ -1,3 +1,4 @@
+// @enableNewMutationAliasingModel
 function Component(props) {
   function hasErrors() {
     let hasErrors = false;

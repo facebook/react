@@ -1,4 +1,4 @@
-// @inferEffectDependencies
+// @inferEffectDependencies @enableNewMutationAliasingModel
 import {useEffect, useState} from 'react';
 import {print} from 'shared-runtime';
 

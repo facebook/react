@@ -1,3 +1,4 @@
+// @enableNewMutationAliasingModel
 function Component() {
   // Cannot assign to globals
   someUnknownGlobal = true;
