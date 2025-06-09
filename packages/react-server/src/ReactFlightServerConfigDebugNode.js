@@ -24,8 +24,11 @@ import {
   UNRESOLVED_AWAIT_NODE,
 } from './ReactFlightAsyncSequence';
 import {resolveOwner} from './flight/ReactFlightCurrentOwner';
-import {createHook, executionAsyncId} from 'async_hooks';
+import {createHook, executionAsyncId, AsyncResource} from 'async_hooks';
 import {enableAsyncDebugInfo} from 'shared/ReactFeatureFlags';
+
+// $FlowFixMe[method-unbinding]
+const getAsyncId = AsyncResource.prototype.asyncId;
 
 const pendingOperations: Map<number, AsyncSequence> =
   __DEV__ && enableAsyncDebugInfo ? new Map() : (null: any);
@@ -259,4 +262,30 @@ export function getCurrentAsyncSequence(): null | AsyncSequence {
     return null;
   }
   return currentNode;
+}
+
+export function getAsyncSequenceFromPromise(
+  promise: any,
+): null | AsyncSequence {
+  if (!__DEV__ || !enableAsyncDebugInfo) {
+    return null;
+  }
+  // A Promise is conceptually an AsyncResource but doesn't have its own methods.
+  // We use this hack to extract the internal asyncId off the Promise.
+  let asyncId: void | number;
+  try {
+    asyncId = getAsyncId.call(promise);
+  } catch (x) {
+    // Ignore errors extracting the ID. We treat it as missing.
+    // This could happen if our hack stops working or in the case where this is
+    // a Proxy that throws such as our own ClientReference proxies.
+  }
+  if (asyncId === undefined) {
+    return null;
+  }
+  const node = pendingOperations.get(asyncId);
+  if (node === undefined) {
+    return null;
+  }
+  return node;
 }

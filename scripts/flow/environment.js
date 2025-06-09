@@ -356,7 +356,9 @@ declare module 'async_hooks' {
     run<R>(store: T, callback: (...args: any[]) => R, ...args: any[]): R;
     enterWith(store: T): void;
   }
-  declare interface AsyncResource {}
+  declare class AsyncResource {
+    asyncId(): number;
+  }
   declare function executionAsyncId(): number;
   declare function executionAsyncResource(): AsyncResource;
   declare function triggerAsyncId(): number;
