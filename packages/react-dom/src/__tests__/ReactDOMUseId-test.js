@@ -382,7 +382,7 @@ describe('useId', () => {
   });
 
   // @gate enableSuspenseList
-  it('Supports SuspenseList (reveal order default)', async () => {
+  it('Supports SuspenseList (reveal order independent)', async () => {
     function Baz({id, children}) {
       return <span id={id}>{children}</span>;
     }
@@ -394,7 +394,7 @@ describe('useId', () => {
 
     function Foo() {
       return (
-        <SuspenseList>
+        <SuspenseList revealOrder="independent">
           <Bar>A</Bar>
           <Bar>B</Bar>
         </SuspenseList>
@@ -520,7 +520,7 @@ describe('useId', () => {
 
     function Foo() {
       return (
-        <SuspenseList revealOrder="forwards">
+        <SuspenseList revealOrder="forwards" tail="visible">
           <Bar>A</Bar>
           <Bar>B</Bar>
         </SuspenseList>
@@ -553,9 +553,8 @@ describe('useId', () => {
     });
 
     // TODO: this is a bug with useID and SuspenseList revealOrder "forwards"
-    assertConsoleErrorDev(
-      [
-        `A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+    assertConsoleErrorDev([
+      `A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
 
 - A server/client branch \`if (typeof window !== 'undefined')\`.
 - Variable input such as \`Date.now()\` or \`Math.random()\` which changes each time it's called.
@@ -568,7 +567,7 @@ It can also happen if the client has a browser extension installed which messes 
 https://react.dev/link/hydration-mismatch
 
   <Foo>
-    <SuspenseList revealOrder="forwards">
+    <SuspenseList revealOrder="forwards" tail="visible">
       <Bar>
         <Baz id="_R_0_">
           <span
@@ -584,9 +583,7 @@ https://react.dev/link/hydration-mismatch
           >
 +           B
 `,
-      ],
-      {withoutStack: true},
-    );
+    ]);
 
     expect(container).toMatchInlineSnapshot(`
       <div
@@ -619,7 +616,7 @@ https://react.dev/link/hydration-mismatch
 
     function Foo() {
       return (
-        <SuspenseList revealOrder="backwards">
+        <SuspenseList revealOrder="unstable_legacy-backwards" tail="visible">
           <Bar>A</Bar>
           <Bar>B</Bar>
         </SuspenseList>
@@ -654,7 +651,7 @@ https://react.dev/link/hydration-mismatch
           ReactDOMClient.hydrateRoot(container, <Foo />);
         });
       }).rejects.toThrowError(
-        `Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client.`,
+        `Hydration failed because the server rendered text didn't match the client. As a result this tree will be regenerated on the client.`,
       );
 
       expect(container).toMatchInlineSnapshot(`
@@ -679,9 +676,8 @@ https://react.dev/link/hydration-mismatch
       });
 
       // TODO: this seems like a bug when `favorSafetyOverHydrationPerf` is false?
-      assertConsoleErrorDev(
-        [
-          `A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+      assertConsoleErrorDev([
+        `A tree hydrated but some attributes of the server rendered text didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
 
 - A server/client branch \`if (typeof window !== 'undefined')\`.
 - Variable input such as \`Date.now()\` or \`Math.random()\` which changes each time it's called.
@@ -694,7 +690,7 @@ It can also happen if the client has a browser extension installed which messes 
 https://react.dev/link/hydration-mismatch
 
   <Foo>
-    <SuspenseList revealOrder="backwards">
+    <SuspenseList revealOrder="unstable_legacy-backwards" tail="visible">
       <Bar>
       <Bar>
         <Baz id="_R_1_">
@@ -702,9 +698,7 @@ https://react.dev/link/hydration-mismatch
 +           B
 -           A
 `,
-        ],
-        {withoutStack: true},
-      );
+      ]);
 
       expect(container).toMatchInlineSnapshot(`
       <div
