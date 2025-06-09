@@ -3342,6 +3342,7 @@ function initSuspenseListRenderState(
   tail: null | Fiber,
   lastContentRow: null | Fiber,
   tailMode: SuspenseListTailMode,
+  treeForkCount: number,
 ): void {
   const renderState: null | SuspenseListRenderState =
     workInProgress.memoizedState;
@@ -3353,6 +3354,7 @@ function initSuspenseListRenderState(
       last: lastContentRow,
       tail: tail,
       tailMode: tailMode,
+      treeForkCount: treeForkCount,
     }: SuspenseListRenderState);
   } else {
     // We can reuse the existing object from previous renders.
@@ -3362,6 +3364,7 @@ function initSuspenseListRenderState(
     renderState.last = lastContentRow;
     renderState.tail = tail;
     renderState.tailMode = tailMode;
+    renderState.treeForkCount = treeForkCount;
   }
 }
 
@@ -3404,6 +3407,8 @@ function updateSuspenseListComponent(
   validateSuspenseListChildren(newChildren, revealOrder);
 
   reconcileChildren(current, workInProgress, newChildren, renderLanes);
+  // Read how many children forks this set pushed so we can push it every time we retry.
+  const treeForkCount = getIsHydrating() ? getForksAtLevel(workInProgress) : 0;
 
   if (!shouldForceFallback) {
     const didSuspendBefore =
@@ -3446,6 +3451,7 @@ function updateSuspenseListComponent(
           tail,
           lastContentRow,
           tailMode,
+          treeForkCount,
         );
         break;
       }
@@ -3478,6 +3484,7 @@ function updateSuspenseListComponent(
           tail,
           null, // last
           tailMode,
+          treeForkCount,
         );
         break;
       }
@@ -3488,6 +3495,7 @@ function updateSuspenseListComponent(
           null, // tail
           null, // last
           undefined,
+          treeForkCount,
         );
         break;
       }

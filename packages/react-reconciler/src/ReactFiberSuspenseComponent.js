@@ -54,6 +54,8 @@ export type SuspenseListRenderState = {
   tail: null | Fiber,
   // Tail insertions setting.
   tailMode: SuspenseListTailMode,
+  // Keep track of total number of forks during multiple passes
+  treeForkCount: number,
 };
 
 export type RetryQueue = Set<Wakeable>;
