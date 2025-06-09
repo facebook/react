@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b2bf10e8eb1882d1f34377206d034557>>
+ * @generated SignedSource<<8adf75f4a11a27610f361c90fed8b54d>>
  */
 
 "use strict";
@@ -1443,7 +1443,9 @@ function diffProperties(updatePayload, prevProps, nextProps, validAttributes) {
     if ((attributeConfig = validAttributes[propKey])) {
       var prevProp = prevProps[propKey];
       var nextProp = nextProps[propKey];
-      "function" === typeof nextProp &&
+      "function" !== typeof nextProp ||
+        ("object" === typeof attributeConfig &&
+          "function" === typeof attributeConfig.process) ||
         ((nextProp = !0), "function" === typeof prevProp && (prevProp = !0));
       "undefined" === typeof nextProp &&
         ((nextProp = null),
@@ -1536,13 +1538,11 @@ function addNestedProperty(payload, props, validAttributes) {
         if (payload && void 0 !== payload[i]) newValue = null;
         else continue;
       else
-        "function" === typeof prop
-          ? (newValue = !0)
-          : "object" !== typeof attributeConfig
-            ? (newValue = prop)
-            : "function" === typeof attributeConfig.process
-              ? (newValue = attributeConfig.process(prop))
-              : "function" === typeof attributeConfig.diff && (newValue = prop);
+        "object" === typeof attributeConfig
+          ? "function" === typeof attributeConfig.process
+            ? (newValue = attributeConfig.process(prop))
+            : "function" === typeof attributeConfig.diff && (newValue = prop)
+          : (newValue = "function" === typeof prop ? !0 : prop);
       void 0 !== newValue
         ? (payload || (payload = {}), (payload[i] = newValue))
         : (payload = addNestedProperty(payload, prop, attributeConfig));
@@ -11258,10 +11258,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1263 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-d742611c-20250603",
+    version: "19.2.0-native-fb-911dbd9e-20250609",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-d742611c-20250603"
+    reconcilerVersion: "19.2.0-native-fb-911dbd9e-20250609"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1263.rendererConfig = extraDevToolsConfig);

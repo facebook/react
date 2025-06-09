@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cfd734edf94c45038dd29c1ec2b6a246>>
+ * @generated SignedSource<<b48ac80b717dc28f2fd7f4cd857dd0bc>>
  */
 
 "use strict";
@@ -1324,7 +1324,9 @@ __DEV__ &&
         if ((attributeConfig = validAttributes[propKey])) {
           var prevProp = prevProps[propKey];
           var nextProp = nextProps[propKey];
-          "function" === typeof nextProp &&
+          "function" !== typeof nextProp ||
+            ("object" === typeof attributeConfig &&
+              "function" === typeof attributeConfig.process) ||
             ((nextProp = !0),
             "function" === typeof prevProp && (prevProp = !0));
           "undefined" === typeof nextProp &&
@@ -1418,14 +1420,12 @@ __DEV__ &&
             if (payload && void 0 !== payload[i]) newValue = null;
             else continue;
           else
-            "function" === typeof prop
-              ? (newValue = !0)
-              : "object" !== typeof attributeConfig
-                ? (newValue = prop)
-                : "function" === typeof attributeConfig.process
-                  ? (newValue = attributeConfig.process(prop))
-                  : "function" === typeof attributeConfig.diff &&
-                    (newValue = prop);
+            "object" === typeof attributeConfig
+              ? "function" === typeof attributeConfig.process
+                ? (newValue = attributeConfig.process(prop))
+                : "function" === typeof attributeConfig.diff &&
+                  (newValue = prop)
+              : (newValue = "function" === typeof prop ? !0 : prop);
           void 0 !== newValue
             ? (payload || (payload = {}), (payload[i] = newValue))
             : (payload = addNestedProperty(payload, prop, attributeConfig));
@@ -17575,10 +17575,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-d742611c-20250603",
+        version: "19.2.0-native-fb-911dbd9e-20250609",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-d742611c-20250603"
+        reconcilerVersion: "19.2.0-native-fb-911dbd9e-20250609"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
