@@ -1894,7 +1894,7 @@ function visitAsyncNode(
   }
   visited.add(node);
   // First visit anything that blocked this sequence to start in the first place.
-  if (node.previous !== null) {
+  if (node.previous !== null && node.end > request.timeOrigin) {
     // We ignore the return value here because if it wasn't awaited in user space, then we don't log it.
     // It also means that it can just have been part of a previous component's render.
     // TODO: This means that some I/O can get lost that was still blocking the sequence.
