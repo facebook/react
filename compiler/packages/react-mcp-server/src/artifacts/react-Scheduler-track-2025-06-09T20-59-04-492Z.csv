@@ -1,0 +1,1444 @@
+name,startTime,endTime,type,track,color
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Hydrated,3148.899999976158,3175.899999976158,Blocking,Scheduler,tertiary-dark
+Hydrated,3148.899999976158,3175.899999976158,Blocking,Scheduler,tertiary-dark
+Hydrated,3148.899999976158,3175.899999976158,Blocking,Scheduler,tertiary-dark
+Commit,3175.899999976158,3178.0999999940395,Blocking,Scheduler,secondary-dark
+Commit,3175.899999976158,3178.0999999940395,Blocking,Scheduler,secondary-dark
+Commit,3175.899999976158,3178.0999999940395,Blocking,Scheduler,secondary-dark
+,3178.0999999940395,3179.2999999821186,Blocking,Scheduler,secondary-light
+,3178.0999999940395,3179.2999999821186,Blocking,Scheduler,secondary-light
+,3178.0999999940395,3179.2999999821186,Blocking,Scheduler,secondary-light
+Remaining Effects,3179.2999999821186,3186.199999988079,Blocking,Scheduler,secondary-dark
+Remaining Effects,3179.2999999821186,3186.199999988079,Blocking,Scheduler,secondary-dark
+Remaining Effects,3179.2999999821186,3186.199999988079,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Cascading Update,3186.199999988079,3186.5999999940395,Blocking,Scheduler,error
+Cascading Update,3186.199999988079,3186.5999999940395,Blocking,Scheduler,error
+Cascading Update,3186.199999988079,3186.5999999940395,Blocking,Scheduler,error
+Render,3186.5999999940395,3188,Blocking,Scheduler,primary-dark
+Render,3186.5999999940395,3188,Blocking,Scheduler,primary-dark
+Render,3186.5999999940395,3188,Blocking,Scheduler,primary-dark
+Commit,3188,3188.199999988079,Blocking,Scheduler,secondary-dark
+Commit,3188,3188.199999988079,Blocking,Scheduler,secondary-dark
+Commit,3188,3188.199999988079,Blocking,Scheduler,secondary-dark
+,3188.199999988079,3188.5,Blocking,Scheduler,secondary-light
+,3188.199999988079,3188.5,Blocking,Scheduler,secondary-light
+,3188.199999988079,3188.5,Blocking,Scheduler,secondary-light
+Remaining Effects,3188.5,3189.2999999821186,Blocking,Scheduler,secondary-dark
+Remaining Effects,3188.5,3189.2999999821186,Blocking,Scheduler,secondary-dark
+Remaining Effects,3188.5,3189.2999999821186,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Cascading Update,3189.2999999821186,3199.2999999821186,Blocking,Scheduler,error
+Cascading Update,3189.2999999821186,3199.2999999821186,Blocking,Scheduler,error
+Cascading Update,3189.2999999821186,3199.2999999821186,Blocking,Scheduler,error
+Render,3199.2999999821186,3200.2999999821186,Blocking,Scheduler,primary-dark
+Render,3199.2999999821186,3200.2999999821186,Blocking,Scheduler,primary-dark
+Render,3199.2999999821186,3200.2999999821186,Blocking,Scheduler,primary-dark
+Commit,3200.2999999821186,3200.699999988079,Blocking,Scheduler,secondary-dark
+Commit,3200.2999999821186,3200.699999988079,Blocking,Scheduler,secondary-dark
+Commit,3200.2999999821186,3200.699999988079,Blocking,Scheduler,secondary-dark
+Waiting for Paint,3200.699999988079,3201.0999999940395,Blocking,Scheduler,secondary-light
+Waiting for Paint,3200.699999988079,3201.0999999940395,Blocking,Scheduler,secondary-light
+Waiting for Paint,3200.699999988079,3201.0999999940395,Blocking,Scheduler,secondary-light
+Remaining Effects,3201.0999999940395,3201.7999999821186,Blocking,Scheduler,secondary-dark
+Remaining Effects,3201.0999999940395,3201.7999999821186,Blocking,Scheduler,secondary-dark
+Remaining Effects,3201.0999999940395,3201.7999999821186,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Interrupted Hydration,3202.5999999940395,3235.2999999821186,Idle,Scheduler,tertiary-dark
+Interrupted Hydration,3202.5999999940395,3235.2999999821186,Idle,Scheduler,tertiary-dark
+Interrupted Hydration,3202.5999999940395,3235.2999999821186,Idle,Scheduler,tertiary-dark
+Hydrated,3235.2999999821186,3275.699999988079,Idle,Scheduler,tertiary-dark
+Hydrated,3235.2999999821186,3275.699999988079,Idle,Scheduler,tertiary-dark
+Hydrated,3235.2999999821186,3275.699999988079,Idle,Scheduler,tertiary-dark
+Commit,3275.699999988079,3276.0999999940395,Idle,Scheduler,secondary-dark
+Commit,3275.699999988079,3276.0999999940395,Idle,Scheduler,secondary-dark
+Commit,3275.699999988079,3276.0999999940395,Idle,Scheduler,secondary-dark
+Waiting for Paint,3276.0999999940395,3278.5,Idle,Scheduler,secondary-light
+Waiting for Paint,3276.0999999940395,3278.5,Idle,Scheduler,secondary-light
+Waiting for Paint,3276.0999999940395,3278.5,Idle,Scheduler,secondary-light
+Remaining Effects,3278.5,3328.5999999940395,Idle,Scheduler,secondary-dark
+Remaining Effects,3278.5,3328.5999999940395,Idle,Scheduler,secondary-dark
+Remaining Effects,3278.5,3328.5999999940395,Idle,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Hydrated,3370,3370.0999999940395,Idle,Scheduler,tertiary-dark
+Hydrated,3370,3370.0999999940395,Idle,Scheduler,tertiary-dark
+Hydrated,3370,3370.0999999940395,Idle,Scheduler,tertiary-dark
+Commit,3370.0999999940395,3370.199999988079,Idle,Scheduler,secondary-dark
+Commit,3370.0999999940395,3370.199999988079,Idle,Scheduler,secondary-dark
+Commit,3370.0999999940395,3370.199999988079,Idle,Scheduler,secondary-dark
+Waiting for Paint,3370.199999988079,3370.7999999821186,Idle,Scheduler,secondary-light
+Waiting for Paint,3370.199999988079,3370.7999999821186,Idle,Scheduler,secondary-light
+Waiting for Paint,3370.199999988079,3370.7999999821186,Idle,Scheduler,secondary-light
+Remaining Effects,3370.7999999821186,3370.899999976158,Idle,Scheduler,secondary-dark
+Remaining Effects,3370.7999999821186,3370.899999976158,Idle,Scheduler,secondary-dark
+Remaining Effects,3370.7999999821186,3370.899999976158,Idle,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,3370.699999988079,3371.5,Blocking,Scheduler,primary-light
+Update,3370.699999988079,3371.5,Blocking,Scheduler,primary-light
+Update,3370.699999988079,3371.5,Blocking,Scheduler,primary-light
+Render,3371.5,3371.899999976158,Blocking,Scheduler,primary-dark
+Render,3371.5,3371.899999976158,Blocking,Scheduler,primary-dark
+Render,3371.5,3371.899999976158,Blocking,Scheduler,primary-dark
+Commit,3371.899999976158,3372.199999988079,Blocking,Scheduler,secondary-dark
+Commit,3371.899999976158,3372.199999988079,Blocking,Scheduler,secondary-dark
+Commit,3371.899999976158,3372.199999988079,Blocking,Scheduler,secondary-dark
+Waiting for Paint,3372.199999988079,3372.5999999940395,Blocking,Scheduler,secondary-light
+Waiting for Paint,3372.199999988079,3372.5999999940395,Blocking,Scheduler,secondary-light
+Waiting for Paint,3372.199999988079,3372.5999999940395,Blocking,Scheduler,secondary-light
+Remaining Effects,3372.5999999940395,3372.899999976158,Blocking,Scheduler,secondary-dark
+Remaining Effects,3372.5999999940395,3372.899999976158,Blocking,Scheduler,secondary-dark
+Remaining Effects,3372.5999999940395,3372.899999976158,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Prepared,3373.399999976158,3387,Idle,Scheduler,tertiary-dark
+Prepared,3373.399999976158,3387,Idle,Scheduler,tertiary-dark
+Prepared,3373.399999976158,3387,Idle,Scheduler,tertiary-dark
+Commit,3387,3387.7999999821186,Idle,Scheduler,secondary-dark
+Commit,3387,3387.7999999821186,Idle,Scheduler,secondary-dark
+Commit,3387,3387.7999999821186,Idle,Scheduler,secondary-dark
+,3387.7999999821186,3388.2999999821186,Idle,Scheduler,secondary-light
+,3387.7999999821186,3388.2999999821186,Idle,Scheduler,secondary-light
+,3387.7999999821186,3388.2999999821186,Idle,Scheduler,secondary-light
+Remaining Effects,3388.2999999821186,3395.899999976158,Idle,Scheduler,secondary-dark
+Remaining Effects,3388.2999999821186,3395.899999976158,Idle,Scheduler,secondary-dark
+Remaining Effects,3388.2999999821186,3395.899999976158,Idle,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Cascading Update,3387.399999976158,3396.199999988079,Blocking,Scheduler,error
+Cascading Update,3387.399999976158,3396.199999988079,Blocking,Scheduler,error
+Cascading Update,3387.399999976158,3396.199999988079,Blocking,Scheduler,error
+Render,3396.199999988079,3397.0999999940395,Blocking,Scheduler,primary-dark
+Render,3396.199999988079,3397.0999999940395,Blocking,Scheduler,primary-dark
+Render,3396.199999988079,3397.0999999940395,Blocking,Scheduler,primary-dark
+Commit,3397.0999999940395,3397.399999976158,Blocking,Scheduler,secondary-dark
+Commit,3397.0999999940395,3397.399999976158,Blocking,Scheduler,secondary-dark
+Commit,3397.0999999940395,3397.399999976158,Blocking,Scheduler,secondary-dark
+,3397.399999976158,3397.5,Blocking,Scheduler,secondary-light
+,3397.399999976158,3397.5,Blocking,Scheduler,secondary-light
+,3397.399999976158,3397.5,Blocking,Scheduler,secondary-light
+Remaining Effects,3397.5,3397.899999976158,Blocking,Scheduler,secondary-dark
+Remaining Effects,3397.5,3397.899999976158,Blocking,Scheduler,secondary-dark
+Remaining Effects,3397.5,3397.899999976158,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,3405,3405.2999999821186,Blocking,Scheduler,primary-light
+Update,3405,3405.2999999821186,Blocking,Scheduler,primary-light
+Update,3405,3405.2999999821186,Blocking,Scheduler,primary-light
+Render,3405.2999999821186,3405.899999976158,Blocking,Scheduler,primary-dark
+Render,3405.2999999821186,3405.899999976158,Blocking,Scheduler,primary-dark
+Render,3405.2999999821186,3405.899999976158,Blocking,Scheduler,primary-dark
+Commit,3405.899999976158,3406.0999999940395,Blocking,Scheduler,secondary-dark
+Commit,3405.899999976158,3406.0999999940395,Blocking,Scheduler,secondary-dark
+Commit,3405.899999976158,3406.0999999940395,Blocking,Scheduler,secondary-dark
+Waiting for Paint,3406.0999999940395,3406.5999999940395,Blocking,Scheduler,secondary-light
+Waiting for Paint,3406.0999999940395,3406.5999999940395,Blocking,Scheduler,secondary-light
+Waiting for Paint,3406.0999999940395,3406.5999999940395,Blocking,Scheduler,secondary-light
+Remaining Effects,3406.5999999940395,3407.199999988079,Blocking,Scheduler,secondary-dark
+Remaining Effects,3406.5999999940395,3407.199999988079,Blocking,Scheduler,secondary-dark
+Remaining Effects,3406.5999999940395,3407.199999988079,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Render,3408,3408.5,Idle,Scheduler,primary-dark
+Render,3408,3408.5,Idle,Scheduler,primary-dark
+Render,3408,3408.5,Idle,Scheduler,primary-dark
+Commit,3408.5,3408.699999988079,Idle,Scheduler,secondary-dark
+Commit,3408.5,3408.699999988079,Idle,Scheduler,secondary-dark
+Commit,3408.5,3408.699999988079,Idle,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Prepared,3409.199999988079,3539.2999999821186,Idle,Scheduler,tertiary-dark
+Prepared,3409.199999988079,3539.2999999821186,Idle,Scheduler,tertiary-dark
+Prepared,3409.199999988079,3539.2999999821186,Idle,Scheduler,tertiary-dark
+Commit,3539.2999999821186,3539.5999999940395,Idle,Scheduler,secondary-dark
+Commit,3539.2999999821186,3539.5999999940395,Idle,Scheduler,secondary-dark
+Commit,3539.2999999821186,3539.5999999940395,Idle,Scheduler,secondary-dark
+Waiting for Paint,3539.5999999940395,3542.2999999821186,Idle,Scheduler,secondary-light
+Waiting for Paint,3539.5999999940395,3542.2999999821186,Idle,Scheduler,secondary-light
+Waiting for Paint,3539.5999999940395,3542.2999999821186,Idle,Scheduler,secondary-light
+Remaining Effects,3542.2999999821186,3545.899999976158,Idle,Scheduler,secondary-dark
+Remaining Effects,3542.2999999821186,3545.899999976158,Idle,Scheduler,secondary-dark
+Remaining Effects,3542.2999999821186,3545.899999976158,Idle,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Prepared,3549.199999988079,3631.899999976158,Idle,Scheduler,tertiary-dark
+Prepared,3549.199999988079,3631.899999976158,Idle,Scheduler,tertiary-dark
+Prepared,3549.199999988079,3631.899999976158,Idle,Scheduler,tertiary-dark
+Commit,3631.899999976158,3633.199999988079,Idle,Scheduler,secondary-dark
+Commit,3631.899999976158,3633.199999988079,Idle,Scheduler,secondary-dark
+Commit,3631.899999976158,3633.199999988079,Idle,Scheduler,secondary-dark
+,3633.199999988079,3634.7999999821186,Idle,Scheduler,secondary-light
+,3633.199999988079,3634.7999999821186,Idle,Scheduler,secondary-light
+,3633.199999988079,3634.7999999821186,Idle,Scheduler,secondary-light
+Remaining Effects,3634.7999999821186,3659.199999988079,Idle,Scheduler,secondary-dark
+Remaining Effects,3634.7999999821186,3659.199999988079,Idle,Scheduler,secondary-dark
+Remaining Effects,3634.7999999821186,3659.199999988079,Idle,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Cascading Update,3632.399999976158,3659.5,Blocking,Scheduler,error
+Cascading Update,3632.399999976158,3659.5,Blocking,Scheduler,error
+Cascading Update,3632.399999976158,3659.5,Blocking,Scheduler,error
+Render,3659.5,3660.7999999821186,Blocking,Scheduler,primary-dark
+Render,3659.5,3660.7999999821186,Blocking,Scheduler,primary-dark
+Render,3659.5,3660.7999999821186,Blocking,Scheduler,primary-dark
+Commit,3660.7999999821186,3661.199999988079,Blocking,Scheduler,secondary-dark
+Commit,3660.7999999821186,3661.199999988079,Blocking,Scheduler,secondary-dark
+Commit,3660.7999999821186,3661.199999988079,Blocking,Scheduler,secondary-dark
+,3661.199999988079,3661.2999999821186,Blocking,Scheduler,secondary-light
+,3661.199999988079,3661.2999999821186,Blocking,Scheduler,secondary-light
+,3661.199999988079,3661.2999999821186,Blocking,Scheduler,secondary-light
+Remaining Effects,3661.2999999821186,3662.2999999821186,Blocking,Scheduler,secondary-dark
+Remaining Effects,3661.2999999821186,3662.2999999821186,Blocking,Scheduler,secondary-dark
+Remaining Effects,3661.2999999821186,3662.2999999821186,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,3681.0999999940395,3681.2999999821186,Blocking,Scheduler,primary-light
+Update,3681.0999999940395,3681.2999999821186,Blocking,Scheduler,primary-light
+Update,3681.0999999940395,3681.2999999821186,Blocking,Scheduler,primary-light
+Render,3681.2999999821186,3681.7999999821186,Blocking,Scheduler,primary-dark
+Render,3681.2999999821186,3681.7999999821186,Blocking,Scheduler,primary-dark
+Render,3681.2999999821186,3681.7999999821186,Blocking,Scheduler,primary-dark
+Commit,3681.7999999821186,3681.899999976158,Blocking,Scheduler,secondary-dark
+Commit,3681.7999999821186,3681.899999976158,Blocking,Scheduler,secondary-dark
+Commit,3681.7999999821186,3681.899999976158,Blocking,Scheduler,secondary-dark
+,3681.899999976158,3682,Blocking,Scheduler,secondary-light
+,3681.899999976158,3682,Blocking,Scheduler,secondary-light
+,3681.899999976158,3682,Blocking,Scheduler,secondary-light
+Remaining Effects,3682,3682.2999999821186,Blocking,Scheduler,secondary-dark
+Remaining Effects,3682,3682.2999999821186,Blocking,Scheduler,secondary-dark
+Remaining Effects,3682,3682.2999999821186,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,3683.0999999940395,3683.2999999821186,Blocking,Scheduler,primary-light
+Update,3683.0999999940395,3683.2999999821186,Blocking,Scheduler,primary-light
+Update,3683.0999999940395,3683.2999999821186,Blocking,Scheduler,primary-light
+Render,3683.2999999821186,3683.5,Blocking,Scheduler,primary-dark
+Render,3683.2999999821186,3683.5,Blocking,Scheduler,primary-dark
+Render,3683.2999999821186,3683.5,Blocking,Scheduler,primary-dark
+Commit,3683.5,3683.5,Blocking,Scheduler,secondary-dark
+Commit,3683.5,3683.5,Blocking,Scheduler,secondary-dark
+Commit,3683.5,3683.5,Blocking,Scheduler,secondary-dark
+,3683.5,3683.5999999940395,Blocking,Scheduler,secondary-light
+,3683.5,3683.5999999940395,Blocking,Scheduler,secondary-light
+,3683.5,3683.5999999940395,Blocking,Scheduler,secondary-light
+Remaining Effects,3683.5999999940395,3683.899999976158,Blocking,Scheduler,secondary-dark
+Remaining Effects,3683.5999999940395,3683.899999976158,Blocking,Scheduler,secondary-dark
+Remaining Effects,3683.5999999940395,3683.899999976158,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,3684.5,3684.699999988079,Blocking,Scheduler,primary-light
+Update,3684.5,3684.699999988079,Blocking,Scheduler,primary-light
+Update,3684.5,3684.699999988079,Blocking,Scheduler,primary-light
+Render,3684.699999988079,3684.899999976158,Blocking,Scheduler,primary-dark
+Render,3684.699999988079,3684.899999976158,Blocking,Scheduler,primary-dark
+Render,3684.699999988079,3684.899999976158,Blocking,Scheduler,primary-dark
+Commit,3684.899999976158,3685,Blocking,Scheduler,secondary-dark
+Commit,3684.899999976158,3685,Blocking,Scheduler,secondary-dark
+Commit,3684.899999976158,3685,Blocking,Scheduler,secondary-dark
+,3685,3685.0999999940395,Blocking,Scheduler,secondary-light
+,3685,3685.0999999940395,Blocking,Scheduler,secondary-light
+,3685,3685.0999999940395,Blocking,Scheduler,secondary-light
+Remaining Effects,3685.0999999940395,3685.2999999821186,Blocking,Scheduler,secondary-dark
+Remaining Effects,3685.0999999940395,3685.2999999821186,Blocking,Scheduler,secondary-dark
+Remaining Effects,3685.0999999940395,3685.2999999821186,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,3685.7999999821186,3686.0999999940395,Blocking,Scheduler,primary-light
+Update,3685.7999999821186,3686.0999999940395,Blocking,Scheduler,primary-light
+Update,3685.7999999821186,3686.0999999940395,Blocking,Scheduler,primary-light
+Render,3686.0999999940395,3686.2999999821186,Blocking,Scheduler,primary-dark
+Render,3686.0999999940395,3686.2999999821186,Blocking,Scheduler,primary-dark
+Render,3686.0999999940395,3686.2999999821186,Blocking,Scheduler,primary-dark
+Commit,3686.2999999821186,3686.399999976158,Blocking,Scheduler,secondary-dark
+Commit,3686.2999999821186,3686.399999976158,Blocking,Scheduler,secondary-dark
+Commit,3686.2999999821186,3686.399999976158,Blocking,Scheduler,secondary-dark
+,3686.399999976158,3686.5,Blocking,Scheduler,secondary-light
+,3686.399999976158,3686.5,Blocking,Scheduler,secondary-light
+,3686.399999976158,3686.5,Blocking,Scheduler,secondary-light
+Remaining Effects,3686.5,3686.699999988079,Blocking,Scheduler,secondary-dark
+Remaining Effects,3686.5,3686.699999988079,Blocking,Scheduler,secondary-dark
+Remaining Effects,3686.5,3686.699999988079,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,3687.5,3687.699999988079,Blocking,Scheduler,primary-light
+Update,3687.5,3687.699999988079,Blocking,Scheduler,primary-light
+Update,3687.5,3687.699999988079,Blocking,Scheduler,primary-light
+Render,3687.699999988079,3687.899999976158,Blocking,Scheduler,primary-dark
+Render,3687.699999988079,3687.899999976158,Blocking,Scheduler,primary-dark
+Render,3687.699999988079,3687.899999976158,Blocking,Scheduler,primary-dark
+Commit,3687.899999976158,3688.0999999940395,Blocking,Scheduler,secondary-dark
+Commit,3687.899999976158,3688.0999999940395,Blocking,Scheduler,secondary-dark
+Commit,3687.899999976158,3688.0999999940395,Blocking,Scheduler,secondary-dark
+,3688.0999999940395,3688.0999999940395,Blocking,Scheduler,secondary-light
+,3688.0999999940395,3688.0999999940395,Blocking,Scheduler,secondary-light
+,3688.0999999940395,3688.0999999940395,Blocking,Scheduler,secondary-light
+Remaining Effects,3688.0999999940395,3688.2999999821186,Blocking,Scheduler,secondary-dark
+Remaining Effects,3688.0999999940395,3688.2999999821186,Blocking,Scheduler,secondary-dark
+Remaining Effects,3688.0999999940395,3688.2999999821186,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,3688.899999976158,3689.0999999940395,Blocking,Scheduler,primary-light
+Update,3688.899999976158,3689.0999999940395,Blocking,Scheduler,primary-light
+Update,3688.899999976158,3689.0999999940395,Blocking,Scheduler,primary-light
+Render,3689.0999999940395,3689.199999988079,Blocking,Scheduler,primary-dark
+Render,3689.0999999940395,3689.199999988079,Blocking,Scheduler,primary-dark
+Render,3689.0999999940395,3689.199999988079,Blocking,Scheduler,primary-dark
+Commit,3689.199999988079,3689.399999976158,Blocking,Scheduler,secondary-dark
+Commit,3689.199999988079,3689.399999976158,Blocking,Scheduler,secondary-dark
+Commit,3689.199999988079,3689.399999976158,Blocking,Scheduler,secondary-dark
+,3689.399999976158,3689.399999976158,Blocking,Scheduler,secondary-light
+,3689.399999976158,3689.399999976158,Blocking,Scheduler,secondary-light
+,3689.399999976158,3689.399999976158,Blocking,Scheduler,secondary-light
+Remaining Effects,3689.399999976158,3689.5999999940395,Blocking,Scheduler,secondary-dark
+Remaining Effects,3689.399999976158,3689.5999999940395,Blocking,Scheduler,secondary-dark
+Remaining Effects,3689.399999976158,3689.5999999940395,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,3690.199999988079,3690.399999976158,Blocking,Scheduler,primary-light
+Update,3690.199999988079,3690.399999976158,Blocking,Scheduler,primary-light
+Update,3690.199999988079,3690.399999976158,Blocking,Scheduler,primary-light
+Render,3690.399999976158,3690.5999999940395,Blocking,Scheduler,primary-dark
+Render,3690.399999976158,3690.5999999940395,Blocking,Scheduler,primary-dark
+Render,3690.399999976158,3690.5999999940395,Blocking,Scheduler,primary-dark
+Commit,3690.5999999940395,3690.699999988079,Blocking,Scheduler,secondary-dark
+Commit,3690.5999999940395,3690.699999988079,Blocking,Scheduler,secondary-dark
+Commit,3690.5999999940395,3690.699999988079,Blocking,Scheduler,secondary-dark
+,3690.699999988079,3690.7999999821186,Blocking,Scheduler,secondary-light
+,3690.699999988079,3690.7999999821186,Blocking,Scheduler,secondary-light
+,3690.699999988079,3690.7999999821186,Blocking,Scheduler,secondary-light
+Remaining Effects,3690.7999999821186,3690.899999976158,Blocking,Scheduler,secondary-dark
+Remaining Effects,3690.7999999821186,3690.899999976158,Blocking,Scheduler,secondary-dark
+Remaining Effects,3690.7999999821186,3690.899999976158,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,3691.5,3691.7999999821186,Blocking,Scheduler,primary-light
+Update,3691.5,3691.7999999821186,Blocking,Scheduler,primary-light
+Update,3691.5,3691.7999999821186,Blocking,Scheduler,primary-light
+Render,3691.7999999821186,3691.899999976158,Blocking,Scheduler,primary-dark
+Render,3691.7999999821186,3691.899999976158,Blocking,Scheduler,primary-dark
+Render,3691.7999999821186,3691.899999976158,Blocking,Scheduler,primary-dark
+Commit,3691.899999976158,3692,Blocking,Scheduler,secondary-dark
+Commit,3691.899999976158,3692,Blocking,Scheduler,secondary-dark
+Commit,3691.899999976158,3692,Blocking,Scheduler,secondary-dark
+,3692,3692,Blocking,Scheduler,secondary-light
+,3692,3692,Blocking,Scheduler,secondary-light
+,3692,3692,Blocking,Scheduler,secondary-light
+Remaining Effects,3692,3692.199999988079,Blocking,Scheduler,secondary-dark
+Remaining Effects,3692,3692.199999988079,Blocking,Scheduler,secondary-dark
+Remaining Effects,3692,3692.199999988079,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,3692.7999999821186,3693.0999999940395,Blocking,Scheduler,primary-light
+Update,3692.7999999821186,3693.0999999940395,Blocking,Scheduler,primary-light
+Update,3692.7999999821186,3693.0999999940395,Blocking,Scheduler,primary-light
+Render,3693.0999999940395,3693.2999999821186,Blocking,Scheduler,primary-dark
+Render,3693.0999999940395,3693.2999999821186,Blocking,Scheduler,primary-dark
+Render,3693.0999999940395,3693.2999999821186,Blocking,Scheduler,primary-dark
+Commit,3693.2999999821186,3693.2999999821186,Blocking,Scheduler,secondary-dark
+Commit,3693.2999999821186,3693.2999999821186,Blocking,Scheduler,secondary-dark
+Commit,3693.2999999821186,3693.2999999821186,Blocking,Scheduler,secondary-dark
+,3693.2999999821186,3693.399999976158,Blocking,Scheduler,secondary-light
+,3693.2999999821186,3693.399999976158,Blocking,Scheduler,secondary-light
+,3693.2999999821186,3693.399999976158,Blocking,Scheduler,secondary-light
+Remaining Effects,3693.399999976158,3693.699999988079,Blocking,Scheduler,secondary-dark
+Remaining Effects,3693.399999976158,3693.699999988079,Blocking,Scheduler,secondary-dark
+Remaining Effects,3693.399999976158,3693.699999988079,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,3694.2999999821186,3694.5,Blocking,Scheduler,primary-light
+Update,3694.2999999821186,3694.5,Blocking,Scheduler,primary-light
+Update,3694.2999999821186,3694.5,Blocking,Scheduler,primary-light
+Render,3694.5,3694.7999999821186,Blocking,Scheduler,primary-dark
+Render,3694.5,3694.7999999821186,Blocking,Scheduler,primary-dark
+Render,3694.5,3694.7999999821186,Blocking,Scheduler,primary-dark
+Commit,3694.7999999821186,3694.7999999821186,Blocking,Scheduler,secondary-dark
+Commit,3694.7999999821186,3694.7999999821186,Blocking,Scheduler,secondary-dark
+Commit,3694.7999999821186,3694.7999999821186,Blocking,Scheduler,secondary-dark
+,3694.7999999821186,3694.899999976158,Blocking,Scheduler,secondary-light
+,3694.7999999821186,3694.899999976158,Blocking,Scheduler,secondary-light
+,3694.7999999821186,3694.899999976158,Blocking,Scheduler,secondary-light
+Remaining Effects,3694.899999976158,3695.0999999940395,Blocking,Scheduler,secondary-dark
+Remaining Effects,3694.899999976158,3695.0999999940395,Blocking,Scheduler,secondary-dark
+Remaining Effects,3694.899999976158,3695.0999999940395,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,3695.5,3695.7999999821186,Blocking,Scheduler,primary-light
+Update,3695.5,3695.7999999821186,Blocking,Scheduler,primary-light
+Update,3695.5,3695.7999999821186,Blocking,Scheduler,primary-light
+Render,3695.7999999821186,3696,Blocking,Scheduler,primary-dark
+Render,3695.7999999821186,3696,Blocking,Scheduler,primary-dark
+Render,3695.7999999821186,3696,Blocking,Scheduler,primary-dark
+Commit,3696,3696.0999999940395,Blocking,Scheduler,secondary-dark
+Commit,3696,3696.0999999940395,Blocking,Scheduler,secondary-dark
+Commit,3696,3696.0999999940395,Blocking,Scheduler,secondary-dark
+,3696.0999999940395,3696.0999999940395,Blocking,Scheduler,secondary-light
+,3696.0999999940395,3696.0999999940395,Blocking,Scheduler,secondary-light
+,3696.0999999940395,3696.0999999940395,Blocking,Scheduler,secondary-light
+Remaining Effects,3696.0999999940395,3696.399999976158,Blocking,Scheduler,secondary-dark
+Remaining Effects,3696.0999999940395,3696.399999976158,Blocking,Scheduler,secondary-dark
+Remaining Effects,3696.0999999940395,3696.399999976158,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,3697.0999999940395,3697.2999999821186,Blocking,Scheduler,primary-light
+Update,3697.0999999940395,3697.2999999821186,Blocking,Scheduler,primary-light
+Update,3697.0999999940395,3697.2999999821186,Blocking,Scheduler,primary-light
+Render,3697.2999999821186,3697.5,Blocking,Scheduler,primary-dark
+Render,3697.2999999821186,3697.5,Blocking,Scheduler,primary-dark
+Render,3697.2999999821186,3697.5,Blocking,Scheduler,primary-dark
+Commit,3697.5,3697.5999999940395,Blocking,Scheduler,secondary-dark
+Commit,3697.5,3697.5999999940395,Blocking,Scheduler,secondary-dark
+Commit,3697.5,3697.5999999940395,Blocking,Scheduler,secondary-dark
+,3697.5999999940395,3697.5999999940395,Blocking,Scheduler,secondary-light
+,3697.5999999940395,3697.5999999940395,Blocking,Scheduler,secondary-light
+,3697.5999999940395,3697.5999999940395,Blocking,Scheduler,secondary-light
+Remaining Effects,3697.5999999940395,3697.7999999821186,Blocking,Scheduler,secondary-dark
+Remaining Effects,3697.5999999940395,3697.7999999821186,Blocking,Scheduler,secondary-dark
+Remaining Effects,3697.5999999940395,3697.7999999821186,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,3698.399999976158,3698.5999999940395,Blocking,Scheduler,primary-light
+Update,3698.399999976158,3698.5999999940395,Blocking,Scheduler,primary-light
+Update,3698.399999976158,3698.5999999940395,Blocking,Scheduler,primary-light
+Render,3698.5999999940395,3698.7999999821186,Blocking,Scheduler,primary-dark
+Render,3698.5999999940395,3698.7999999821186,Blocking,Scheduler,primary-dark
+Render,3698.5999999940395,3698.7999999821186,Blocking,Scheduler,primary-dark
+Commit,3698.7999999821186,3698.7999999821186,Blocking,Scheduler,secondary-dark
+Commit,3698.7999999821186,3698.7999999821186,Blocking,Scheduler,secondary-dark
+Commit,3698.7999999821186,3698.7999999821186,Blocking,Scheduler,secondary-dark
+,3698.7999999821186,3698.899999976158,Blocking,Scheduler,secondary-light
+,3698.7999999821186,3698.899999976158,Blocking,Scheduler,secondary-light
+,3698.7999999821186,3698.899999976158,Blocking,Scheduler,secondary-light
+Remaining Effects,3698.899999976158,3699.0999999940395,Blocking,Scheduler,secondary-dark
+Remaining Effects,3698.899999976158,3699.0999999940395,Blocking,Scheduler,secondary-dark
+Remaining Effects,3698.899999976158,3699.0999999940395,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,3699.7999999821186,3700.0999999940395,Blocking,Scheduler,primary-light
+Update,3699.7999999821186,3700.0999999940395,Blocking,Scheduler,primary-light
+Update,3699.7999999821186,3700.0999999940395,Blocking,Scheduler,primary-light
+Render,3700.0999999940395,3700.199999988079,Blocking,Scheduler,primary-dark
+Render,3700.0999999940395,3700.199999988079,Blocking,Scheduler,primary-dark
+Render,3700.0999999940395,3700.199999988079,Blocking,Scheduler,primary-dark
+Commit,3700.199999988079,3700.2999999821186,Blocking,Scheduler,secondary-dark
+Commit,3700.199999988079,3700.2999999821186,Blocking,Scheduler,secondary-dark
+Commit,3700.199999988079,3700.2999999821186,Blocking,Scheduler,secondary-dark
+,3700.2999999821186,3700.2999999821186,Blocking,Scheduler,secondary-light
+,3700.2999999821186,3700.2999999821186,Blocking,Scheduler,secondary-light
+,3700.2999999821186,3700.2999999821186,Blocking,Scheduler,secondary-light
+Remaining Effects,3700.2999999821186,3700.5,Blocking,Scheduler,secondary-dark
+Remaining Effects,3700.2999999821186,3700.5,Blocking,Scheduler,secondary-dark
+Remaining Effects,3700.2999999821186,3700.5,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,3702.7999999821186,3706.899999976158,Blocking,Scheduler,primary-light
+Update,3702.7999999821186,3706.899999976158,Blocking,Scheduler,primary-light
+Update,3702.7999999821186,3706.899999976158,Blocking,Scheduler,primary-light
+Render,3706.899999976158,3748.7999999821186,Blocking,Scheduler,primary-dark
+Render,3706.899999976158,3748.7999999821186,Blocking,Scheduler,primary-dark
+Render,3706.899999976158,3748.7999999821186,Blocking,Scheduler,primary-dark
+Commit,3748.7999999821186,3757.7999999821186,Blocking,Scheduler,secondary-dark
+Commit,3748.7999999821186,3757.7999999821186,Blocking,Scheduler,secondary-dark
+Commit,3748.7999999821186,3757.7999999821186,Blocking,Scheduler,secondary-dark
+Waiting for Paint,3757.7999999821186,3759.199999988079,Blocking,Scheduler,secondary-light
+Waiting for Paint,3757.7999999821186,3759.199999988079,Blocking,Scheduler,secondary-light
+Waiting for Paint,3757.7999999821186,3759.199999988079,Blocking,Scheduler,secondary-light
+Remaining Effects,3759.199999988079,3765.399999976158,Blocking,Scheduler,secondary-dark
+Remaining Effects,3759.199999988079,3765.399999976158,Blocking,Scheduler,secondary-dark
+Remaining Effects,3759.199999988079,3765.399999976158,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Cascading Update,3765.399999976158,3775.5999999940395,Blocking,Scheduler,error
+Cascading Update,3765.399999976158,3775.5999999940395,Blocking,Scheduler,error
+Cascading Update,3765.399999976158,3775.5999999940395,Blocking,Scheduler,error
+Render,3775.5999999940395,3782.199999988079,Blocking,Scheduler,primary-dark
+Render,3775.5999999940395,3782.199999988079,Blocking,Scheduler,primary-dark
+Render,3775.5999999940395,3782.199999988079,Blocking,Scheduler,primary-dark
+Commit,3782.199999988079,3783.699999988079,Blocking,Scheduler,secondary-dark
+Commit,3782.199999988079,3783.699999988079,Blocking,Scheduler,secondary-dark
+Commit,3782.199999988079,3783.699999988079,Blocking,Scheduler,secondary-dark
+Waiting for Paint,3783.699999988079,3784.5999999940395,Blocking,Scheduler,secondary-light
+Waiting for Paint,3783.699999988079,3784.5999999940395,Blocking,Scheduler,secondary-light
+Waiting for Paint,3783.699999988079,3784.5999999940395,Blocking,Scheduler,secondary-light
+Remaining Effects,3784.5999999940395,3802.199999988079,Blocking,Scheduler,secondary-dark
+Remaining Effects,3784.5999999940395,3802.199999988079,Blocking,Scheduler,secondary-dark
+Remaining Effects,3784.5999999940395,3802.199999988079,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Render,3809.5,3842.399999976158,Idle,Scheduler,primary-dark
+Render,3809.5,3842.399999976158,Idle,Scheduler,primary-dark
+Render,3809.5,3842.399999976158,Idle,Scheduler,primary-dark
+Commit,3842.399999976158,3842.399999976158,Idle,Scheduler,secondary-dark
+Commit,3842.399999976158,3842.399999976158,Idle,Scheduler,secondary-dark
+Commit,3842.399999976158,3842.399999976158,Idle,Scheduler,secondary-dark
+Waiting for Paint,3842.399999976158,3842.7999999821186,Idle,Scheduler,secondary-light
+Waiting for Paint,3842.399999976158,3842.7999999821186,Idle,Scheduler,secondary-light
+Waiting for Paint,3842.399999976158,3842.7999999821186,Idle,Scheduler,secondary-light
+Remaining Effects,3842.7999999821186,3842.899999976158,Idle,Scheduler,secondary-dark
+Remaining Effects,3842.7999999821186,3842.899999976158,Idle,Scheduler,secondary-dark
+Remaining Effects,3842.7999999821186,3842.899999976158,Idle,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,4165,4165.299999982119,Blocking,Scheduler,primary-light
+Update,4165,4165.299999982119,Blocking,Scheduler,primary-light
+Update,4165,4165.299999982119,Blocking,Scheduler,primary-light
+Render,4165.299999982119,4166.299999982119,Blocking,Scheduler,primary-dark
+Render,4165.299999982119,4166.299999982119,Blocking,Scheduler,primary-dark
+Render,4165.299999982119,4166.299999982119,Blocking,Scheduler,primary-dark
+Commit,4166.299999982119,4166.5,Blocking,Scheduler,secondary-dark
+Commit,4166.299999982119,4166.5,Blocking,Scheduler,secondary-dark
+Commit,4166.299999982119,4166.5,Blocking,Scheduler,secondary-dark
+Waiting for Paint,4166.5,4167.399999976158,Blocking,Scheduler,secondary-light
+Waiting for Paint,4166.5,4167.399999976158,Blocking,Scheduler,secondary-light
+Waiting for Paint,4166.5,4167.399999976158,Blocking,Scheduler,secondary-light
+Remaining Effects,4167.399999976158,4167.799999982119,Blocking,Scheduler,secondary-dark
+Remaining Effects,4167.399999976158,4167.799999982119,Blocking,Scheduler,secondary-dark
+Remaining Effects,4167.399999976158,4167.799999982119,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,4167.799999982119,4168.399999976158,Blocking,Scheduler,primary-light
+Update,4167.799999982119,4168.399999976158,Blocking,Scheduler,primary-light
+Update,4167.799999982119,4168.399999976158,Blocking,Scheduler,primary-light
+Render,4168.399999976158,4170,Blocking,Scheduler,primary-dark
+Render,4168.399999976158,4170,Blocking,Scheduler,primary-dark
+Render,4168.399999976158,4170,Blocking,Scheduler,primary-dark
+Commit,4170,4170.199999988079,Blocking,Scheduler,secondary-dark
+Commit,4170,4170.199999988079,Blocking,Scheduler,secondary-dark
+Commit,4170,4170.199999988079,Blocking,Scheduler,secondary-dark
+Waiting for Paint,4170.199999988079,4170.5999999940395,Blocking,Scheduler,secondary-light
+Waiting for Paint,4170.199999988079,4170.5999999940395,Blocking,Scheduler,secondary-light
+Waiting for Paint,4170.199999988079,4170.5999999940395,Blocking,Scheduler,secondary-light
+Remaining Effects,4170.5999999940395,4171.5999999940395,Blocking,Scheduler,secondary-dark
+Remaining Effects,4170.5999999940395,4171.5999999940395,Blocking,Scheduler,secondary-dark
+Remaining Effects,4170.5999999940395,4171.5999999940395,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,4239.699999988079,4240.0999999940395,Blocking,Scheduler,primary-light
+Update,4239.699999988079,4240.0999999940395,Blocking,Scheduler,primary-light
+Update,4239.699999988079,4240.0999999940395,Blocking,Scheduler,primary-light
+Render,4240.0999999940395,4241.299999982119,Blocking,Scheduler,primary-dark
+Render,4240.0999999940395,4241.299999982119,Blocking,Scheduler,primary-dark
+Render,4240.0999999940395,4241.299999982119,Blocking,Scheduler,primary-dark
+Commit,4241.299999982119,4241.5999999940395,Blocking,Scheduler,secondary-dark
+Commit,4241.299999982119,4241.5999999940395,Blocking,Scheduler,secondary-dark
+Commit,4241.299999982119,4241.5999999940395,Blocking,Scheduler,secondary-dark
+Waiting for Paint,4241.5999999940395,4242.299999982119,Blocking,Scheduler,secondary-light
+Waiting for Paint,4241.5999999940395,4242.299999982119,Blocking,Scheduler,secondary-light
+Waiting for Paint,4241.5999999940395,4242.299999982119,Blocking,Scheduler,secondary-light
+Remaining Effects,4242.299999982119,4242.799999982119,Blocking,Scheduler,secondary-dark
+Remaining Effects,4242.299999982119,4242.799999982119,Blocking,Scheduler,secondary-dark
+Remaining Effects,4242.299999982119,4242.799999982119,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,4244.299999982119,4247.0999999940395,Blocking,Scheduler,primary-light
+Update,4244.299999982119,4247.0999999940395,Blocking,Scheduler,primary-light
+Update,4244.299999982119,4247.0999999940395,Blocking,Scheduler,primary-light
+Render,4247.0999999940395,4248.299999982119,Blocking,Scheduler,primary-dark
+Render,4247.0999999940395,4248.299999982119,Blocking,Scheduler,primary-dark
+Render,4247.0999999940395,4248.299999982119,Blocking,Scheduler,primary-dark
+Commit,4248.299999982119,4248.5999999940395,Blocking,Scheduler,secondary-dark
+Commit,4248.299999982119,4248.5999999940395,Blocking,Scheduler,secondary-dark
+Commit,4248.299999982119,4248.5999999940395,Blocking,Scheduler,secondary-dark
+Waiting for Paint,4248.5999999940395,4252.699999988079,Blocking,Scheduler,secondary-light
+Waiting for Paint,4248.5999999940395,4252.699999988079,Blocking,Scheduler,secondary-light
+Waiting for Paint,4248.5999999940395,4252.699999988079,Blocking,Scheduler,secondary-light
+Remaining Effects,4252.699999988079,4253.5,Blocking,Scheduler,secondary-dark
+Remaining Effects,4252.699999988079,4253.5,Blocking,Scheduler,secondary-dark
+Remaining Effects,4252.699999988079,4253.5,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update Blocked,4253.5,4259.299999982119,Blocking,Scheduler,primary-light
+Update Blocked,4253.5,4259.299999982119,Blocking,Scheduler,primary-light
+Update Blocked,4253.5,4259.299999982119,Blocking,Scheduler,primary-light
+Render,4259.299999982119,4261.0999999940395,Blocking,Scheduler,primary-dark
+Render,4259.299999982119,4261.0999999940395,Blocking,Scheduler,primary-dark
+Render,4259.299999982119,4261.0999999940395,Blocking,Scheduler,primary-dark
+Commit,4261.0999999940395,4261.299999982119,Blocking,Scheduler,secondary-dark
+Commit,4261.0999999940395,4261.299999982119,Blocking,Scheduler,secondary-dark
+Commit,4261.0999999940395,4261.299999982119,Blocking,Scheduler,secondary-dark
+Waiting for Paint,4261.299999982119,4266.5,Blocking,Scheduler,secondary-light
+Waiting for Paint,4261.299999982119,4266.5,Blocking,Scheduler,secondary-light
+Waiting for Paint,4261.299999982119,4266.5,Blocking,Scheduler,secondary-light
+Remaining Effects,4266.5,4267.799999982119,Blocking,Scheduler,secondary-dark
+Remaining Effects,4266.5,4267.799999982119,Blocking,Scheduler,secondary-dark
+Remaining Effects,4266.5,4267.799999982119,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,4267.799999982119,4272.0999999940395,Blocking,Scheduler,primary-light
+Update,4267.799999982119,4272.0999999940395,Blocking,Scheduler,primary-light
+Update,4267.799999982119,4272.0999999940395,Blocking,Scheduler,primary-light
+Render,4272.0999999940395,4273.5999999940395,Blocking,Scheduler,primary-dark
+Render,4272.0999999940395,4273.5999999940395,Blocking,Scheduler,primary-dark
+Render,4272.0999999940395,4273.5999999940395,Blocking,Scheduler,primary-dark
+Commit,4273.5999999940395,4273.799999982119,Blocking,Scheduler,secondary-dark
+Commit,4273.5999999940395,4273.799999982119,Blocking,Scheduler,secondary-dark
+Commit,4273.5999999940395,4273.799999982119,Blocking,Scheduler,secondary-dark
+Waiting for Paint,4273.799999982119,4274.5,Blocking,Scheduler,secondary-light
+Waiting for Paint,4273.799999982119,4274.5,Blocking,Scheduler,secondary-light
+Waiting for Paint,4273.799999982119,4274.5,Blocking,Scheduler,secondary-light
+Remaining Effects,4274.5,4275.5999999940395,Blocking,Scheduler,secondary-dark
+Remaining Effects,4274.5,4275.5999999940395,Blocking,Scheduler,secondary-dark
+Remaining Effects,4274.5,4275.5999999940395,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,4369.0999999940395,4369.5,Transition,Scheduler,primary-light
+Update,4369.0999999940395,4369.5,Transition,Scheduler,primary-light
+Update,4369.0999999940395,4369.5,Transition,Scheduler,primary-light
+Render,4369.5,4398.5,Transition,Scheduler,primary-dark
+Render,4369.5,4398.5,Transition,Scheduler,primary-dark
+Render,4369.5,4398.5,Transition,Scheduler,primary-dark
+Commit,4398.5,4430.899999976158,Transition,Scheduler,secondary-dark
+Commit,4398.5,4430.899999976158,Transition,Scheduler,secondary-dark
+Commit,4398.5,4430.899999976158,Transition,Scheduler,secondary-dark
+Waiting for Paint,4430.899999976158,4437.5999999940395,Transition,Scheduler,secondary-light
+Waiting for Paint,4430.899999976158,4437.5999999940395,Transition,Scheduler,secondary-light
+Waiting for Paint,4430.899999976158,4437.5999999940395,Transition,Scheduler,secondary-light
+Remaining Effects,4437.5999999940395,4485,Transition,Scheduler,secondary-dark
+Remaining Effects,4437.5999999940395,4485,Transition,Scheduler,secondary-dark
+Remaining Effects,4437.5999999940395,4485,Transition,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Cascading Update,4445.0999999940395,4520.899999976158,Blocking,Scheduler,error
+Cascading Update,4445.0999999940395,4520.899999976158,Blocking,Scheduler,error
+Cascading Update,4445.0999999940395,4520.899999976158,Blocking,Scheduler,error
+Render,4520.899999976158,4521.199999988079,Blocking,Scheduler,primary-dark
+Render,4520.899999976158,4521.199999988079,Blocking,Scheduler,primary-dark
+Render,4520.899999976158,4521.199999988079,Blocking,Scheduler,primary-dark
+Commit,4521.199999988079,4521.299999982119,Blocking,Scheduler,secondary-dark
+Commit,4521.199999988079,4521.299999982119,Blocking,Scheduler,secondary-dark
+Commit,4521.199999988079,4521.299999982119,Blocking,Scheduler,secondary-dark
+Waiting for Paint,4521.299999982119,4522.199999988079,Blocking,Scheduler,secondary-light
+Waiting for Paint,4521.299999982119,4522.199999988079,Blocking,Scheduler,secondary-light
+Waiting for Paint,4521.299999982119,4522.199999988079,Blocking,Scheduler,secondary-light
+Remaining Effects,4522.199999988079,4522.299999982119,Blocking,Scheduler,secondary-dark
+Remaining Effects,4522.199999988079,4522.299999982119,Blocking,Scheduler,secondary-dark
+Remaining Effects,4522.199999988079,4522.299999982119,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,4522.299999982119,4522.799999982119,Blocking,Scheduler,primary-light
+Update,4522.299999982119,4522.799999982119,Blocking,Scheduler,primary-light
+Update,4522.299999982119,4522.799999982119,Blocking,Scheduler,primary-light
+Render,4522.799999982119,4524.399999976158,Blocking,Scheduler,primary-dark
+Render,4522.799999982119,4524.399999976158,Blocking,Scheduler,primary-dark
+Render,4522.799999982119,4524.399999976158,Blocking,Scheduler,primary-dark
+Commit,4524.399999976158,4524.5,Blocking,Scheduler,secondary-dark
+Commit,4524.399999976158,4524.5,Blocking,Scheduler,secondary-dark
+Commit,4524.399999976158,4524.5,Blocking,Scheduler,secondary-dark
+Waiting for Paint,4524.5,4525,Blocking,Scheduler,secondary-light
+Waiting for Paint,4524.5,4525,Blocking,Scheduler,secondary-light
+Waiting for Paint,4524.5,4525,Blocking,Scheduler,secondary-light
+Remaining Effects,4525,4526.699999988079,Blocking,Scheduler,secondary-dark
+Remaining Effects,4525,4526.699999988079,Blocking,Scheduler,secondary-dark
+Remaining Effects,4525,4526.699999988079,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,5764.0999999940395,5766.699999988079,Blocking,Scheduler,primary-light
+Update,5764.0999999940395,5766.699999988079,Blocking,Scheduler,primary-light
+Update,5764.0999999940395,5766.699999988079,Blocking,Scheduler,primary-light
+Render,5766.699999988079,5771.5999999940395,Blocking,Scheduler,primary-dark
+Render,5766.699999988079,5771.5999999940395,Blocking,Scheduler,primary-dark
+Render,5766.699999988079,5771.5999999940395,Blocking,Scheduler,primary-dark
+Commit,5771.5999999940395,5771.899999976158,Blocking,Scheduler,secondary-dark
+Commit,5771.5999999940395,5771.899999976158,Blocking,Scheduler,secondary-dark
+Commit,5771.5999999940395,5771.899999976158,Blocking,Scheduler,secondary-dark
+Waiting for Paint,5771.899999976158,5772.5,Blocking,Scheduler,secondary-light
+Waiting for Paint,5771.899999976158,5772.5,Blocking,Scheduler,secondary-light
+Waiting for Paint,5771.899999976158,5772.5,Blocking,Scheduler,secondary-light
+Remaining Effects,5772.5,5773.199999988079,Blocking,Scheduler,secondary-dark
+Remaining Effects,5772.5,5773.199999988079,Blocking,Scheduler,secondary-dark
+Remaining Effects,5772.5,5773.199999988079,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,5773.199999988079,5774,Blocking,Scheduler,primary-light
+Update,5773.199999988079,5774,Blocking,Scheduler,primary-light
+Update,5773.199999988079,5774,Blocking,Scheduler,primary-light
+Render,5774,5776.5,Blocking,Scheduler,primary-dark
+Render,5774,5776.5,Blocking,Scheduler,primary-dark
+Render,5774,5776.5,Blocking,Scheduler,primary-dark
+Commit,5776.5,5776.799999982119,Blocking,Scheduler,secondary-dark
+Commit,5776.5,5776.799999982119,Blocking,Scheduler,secondary-dark
+Commit,5776.5,5776.799999982119,Blocking,Scheduler,secondary-dark
+Waiting for Paint,5776.799999982119,5777.199999988079,Blocking,Scheduler,secondary-light
+Waiting for Paint,5776.799999982119,5777.199999988079,Blocking,Scheduler,secondary-light
+Waiting for Paint,5776.799999982119,5777.199999988079,Blocking,Scheduler,secondary-light
+Remaining Effects,5777.199999988079,5778.899999976158,Blocking,Scheduler,secondary-dark
+Remaining Effects,5777.199999988079,5778.899999976158,Blocking,Scheduler,secondary-dark
+Remaining Effects,5777.199999988079,5778.899999976158,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,6308.399999976158,6308.699999988079,Transition,Scheduler,primary-light
+Update,6308.399999976158,6308.699999988079,Transition,Scheduler,primary-light
+Update,6308.399999976158,6308.699999988079,Transition,Scheduler,primary-light
+Render,6308.699999988079,6325.799999982119,Transition,Scheduler,primary-dark
+Render,6308.699999988079,6325.799999982119,Transition,Scheduler,primary-dark
+Render,6308.699999988079,6325.799999982119,Transition,Scheduler,primary-dark
+Commit,6325.799999982119,6396.0999999940395,Transition,Scheduler,secondary-dark
+Commit,6325.799999982119,6396.0999999940395,Transition,Scheduler,secondary-dark
+Commit,6325.799999982119,6396.0999999940395,Transition,Scheduler,secondary-dark
+Waiting for Paint,6396.0999999940395,6417.699999988079,Transition,Scheduler,secondary-light
+Waiting for Paint,6396.0999999940395,6417.699999988079,Transition,Scheduler,secondary-light
+Waiting for Paint,6396.0999999940395,6417.699999988079,Transition,Scheduler,secondary-light
+Remaining Effects,6417.699999988079,6448.699999988079,Transition,Scheduler,secondary-dark
+Remaining Effects,6417.699999988079,6448.699999988079,Transition,Scheduler,secondary-dark
+Remaining Effects,6417.699999988079,6448.699999988079,Transition,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Cascading Update,6434.399999976158,6472.5,Blocking,Scheduler,error
+Cascading Update,6434.399999976158,6472.5,Blocking,Scheduler,error
+Cascading Update,6434.399999976158,6472.5,Blocking,Scheduler,error
+Render,6472.5,6472.799999982119,Blocking,Scheduler,primary-dark
+Render,6472.5,6472.799999982119,Blocking,Scheduler,primary-dark
+Render,6472.5,6472.799999982119,Blocking,Scheduler,primary-dark
+Commit,6472.799999982119,6472.899999976158,Blocking,Scheduler,secondary-dark
+Commit,6472.799999982119,6472.899999976158,Blocking,Scheduler,secondary-dark
+Commit,6472.799999982119,6472.899999976158,Blocking,Scheduler,secondary-dark
+Waiting for Paint,6472.899999976158,6474.0999999940395,Blocking,Scheduler,secondary-light
+Waiting for Paint,6472.899999976158,6474.0999999940395,Blocking,Scheduler,secondary-light
+Waiting for Paint,6472.899999976158,6474.0999999940395,Blocking,Scheduler,secondary-light
+Remaining Effects,6474.0999999940395,6474.299999982119,Blocking,Scheduler,secondary-dark
+Remaining Effects,6474.0999999940395,6474.299999982119,Blocking,Scheduler,secondary-dark
+Remaining Effects,6474.0999999940395,6474.299999982119,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,6474.299999982119,6474.699999988079,Blocking,Scheduler,primary-light
+Update,6474.299999982119,6474.699999988079,Blocking,Scheduler,primary-light
+Update,6474.299999982119,6474.699999988079,Blocking,Scheduler,primary-light
+Render,6474.699999988079,6475.299999982119,Blocking,Scheduler,primary-dark
+Render,6474.699999988079,6475.299999982119,Blocking,Scheduler,primary-dark
+Render,6474.699999988079,6475.299999982119,Blocking,Scheduler,primary-dark
+Commit,6475.299999982119,6475.5,Blocking,Scheduler,secondary-dark
+Commit,6475.299999982119,6475.5,Blocking,Scheduler,secondary-dark
+Commit,6475.299999982119,6475.5,Blocking,Scheduler,secondary-dark
+Waiting for Paint,6475.5,6475.899999976158,Blocking,Scheduler,secondary-light
+Waiting for Paint,6475.5,6475.899999976158,Blocking,Scheduler,secondary-light
+Waiting for Paint,6475.5,6475.899999976158,Blocking,Scheduler,secondary-light
+Remaining Effects,6475.899999976158,6476.5,Blocking,Scheduler,secondary-dark
+Remaining Effects,6475.899999976158,6476.5,Blocking,Scheduler,secondary-dark
+Remaining Effects,6475.899999976158,6476.5,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,10898.09999999404,10899.699999988079,Blocking,Scheduler,primary-light
+Update,10898.09999999404,10899.699999988079,Blocking,Scheduler,primary-light
+Update,10898.09999999404,10899.699999988079,Blocking,Scheduler,primary-light
+Render,10899.699999988079,10902.5,Blocking,Scheduler,primary-dark
+Render,10899.699999988079,10902.5,Blocking,Scheduler,primary-dark
+Render,10899.699999988079,10902.5,Blocking,Scheduler,primary-dark
+Commit,10902.5,10903,Blocking,Scheduler,secondary-dark
+Commit,10902.5,10903,Blocking,Scheduler,secondary-dark
+Commit,10902.5,10903,Blocking,Scheduler,secondary-dark
+Waiting for Paint,10903,10904.799999982119,Blocking,Scheduler,secondary-light
+Waiting for Paint,10903,10904.799999982119,Blocking,Scheduler,secondary-light
+Waiting for Paint,10903,10904.799999982119,Blocking,Scheduler,secondary-light
+Remaining Effects,10904.799999982119,10905.799999982119,Blocking,Scheduler,secondary-dark
+Remaining Effects,10904.799999982119,10905.799999982119,Blocking,Scheduler,secondary-dark
+Remaining Effects,10904.799999982119,10905.799999982119,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,11096.699999988079,11097.199999988079,Transition,Scheduler,primary-light
+Update,11096.699999988079,11097.199999988079,Transition,Scheduler,primary-light
+Update,11096.699999988079,11097.199999988079,Transition,Scheduler,primary-light
+Render,11097.199999988079,11106.09999999404,Transition,Scheduler,primary-dark
+Render,11097.199999988079,11106.09999999404,Transition,Scheduler,primary-dark
+Render,11097.199999988079,11106.09999999404,Transition,Scheduler,primary-dark
+Commit,11106.09999999404,11110,Transition,Scheduler,secondary-dark
+Commit,11106.09999999404,11110,Transition,Scheduler,secondary-dark
+Commit,11106.09999999404,11110,Transition,Scheduler,secondary-dark
+Waiting for Paint,11110,11110.899999976158,Transition,Scheduler,secondary-light
+Waiting for Paint,11110,11110.899999976158,Transition,Scheduler,secondary-light
+Waiting for Paint,11110,11110.899999976158,Transition,Scheduler,secondary-light
+Remaining Effects,11110.899999976158,11121.299999982119,Transition,Scheduler,secondary-dark
+Remaining Effects,11110.899999976158,11121.299999982119,Transition,Scheduler,secondary-dark
+Remaining Effects,11110.899999976158,11121.299999982119,Transition,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update Blocked,11110.59999999404,11131.59999999404,Blocking,Scheduler,primary-light
+Update Blocked,11110.59999999404,11131.59999999404,Blocking,Scheduler,primary-light
+Update Blocked,11110.59999999404,11131.59999999404,Blocking,Scheduler,primary-light
+Render,11131.59999999404,11132.299999982119,Blocking,Scheduler,primary-dark
+Render,11131.59999999404,11132.299999982119,Blocking,Scheduler,primary-dark
+Render,11131.59999999404,11132.299999982119,Blocking,Scheduler,primary-dark
+Commit,11132.299999982119,11132.5,Blocking,Scheduler,secondary-dark
+Commit,11132.299999982119,11132.5,Blocking,Scheduler,secondary-dark
+Commit,11132.299999982119,11132.5,Blocking,Scheduler,secondary-dark
+Waiting for Paint,11132.5,11133.399999976158,Blocking,Scheduler,secondary-light
+Waiting for Paint,11132.5,11133.399999976158,Blocking,Scheduler,secondary-light
+Waiting for Paint,11132.5,11133.399999976158,Blocking,Scheduler,secondary-light
+Remaining Effects,11133.399999976158,11133.699999988079,Blocking,Scheduler,secondary-dark
+Remaining Effects,11133.399999976158,11133.699999988079,Blocking,Scheduler,secondary-dark
+Remaining Effects,11133.399999976158,11133.699999988079,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,11133.699999988079,11134.299999982119,Blocking,Scheduler,primary-light
+Update,11133.699999988079,11134.299999982119,Blocking,Scheduler,primary-light
+Update,11133.699999988079,11134.299999982119,Blocking,Scheduler,primary-light
+Render,11134.299999982119,11134.5,Blocking,Scheduler,primary-dark
+Render,11134.299999982119,11134.5,Blocking,Scheduler,primary-dark
+Render,11134.299999982119,11134.5,Blocking,Scheduler,primary-dark
+Commit,11134.5,11134.59999999404,Blocking,Scheduler,secondary-dark
+Commit,11134.5,11134.59999999404,Blocking,Scheduler,secondary-dark
+Commit,11134.5,11134.59999999404,Blocking,Scheduler,secondary-dark
+Waiting for Paint,11134.59999999404,11135,Blocking,Scheduler,secondary-light
+Waiting for Paint,11134.59999999404,11135,Blocking,Scheduler,secondary-light
+Waiting for Paint,11134.59999999404,11135,Blocking,Scheduler,secondary-light
+Remaining Effects,11135,11135.199999988079,Blocking,Scheduler,secondary-dark
+Remaining Effects,11135,11135.199999988079,Blocking,Scheduler,secondary-dark
+Remaining Effects,11135,11135.199999988079,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,11887.199999988079,11887.59999999404,Blocking,Scheduler,primary-light
+Update,11887.199999988079,11887.59999999404,Blocking,Scheduler,primary-light
+Update,11887.199999988079,11887.59999999404,Blocking,Scheduler,primary-light
+Render,11887.59999999404,11888.399999976158,Blocking,Scheduler,primary-dark
+Render,11887.59999999404,11888.399999976158,Blocking,Scheduler,primary-dark
+Render,11887.59999999404,11888.399999976158,Blocking,Scheduler,primary-dark
+Commit,11888.399999976158,11888.59999999404,Blocking,Scheduler,secondary-dark
+Commit,11888.399999976158,11888.59999999404,Blocking,Scheduler,secondary-dark
+Commit,11888.399999976158,11888.59999999404,Blocking,Scheduler,secondary-dark
+Waiting for Paint,11888.59999999404,11889,Blocking,Scheduler,secondary-light
+Waiting for Paint,11888.59999999404,11889,Blocking,Scheduler,secondary-light
+Waiting for Paint,11888.59999999404,11889,Blocking,Scheduler,secondary-light
+Remaining Effects,11889,11889.399999976158,Blocking,Scheduler,secondary-dark
+Remaining Effects,11889,11889.399999976158,Blocking,Scheduler,secondary-dark
+Remaining Effects,11889,11889.399999976158,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,12098.799999982119,12099.199999988079,Transition,Scheduler,primary-light
+Update,12098.799999982119,12099.199999988079,Transition,Scheduler,primary-light
+Update,12098.799999982119,12099.199999988079,Transition,Scheduler,primary-light
+Render,12099.199999988079,12136.899999976158,Transition,Scheduler,primary-dark
+Render,12099.199999988079,12136.899999976158,Transition,Scheduler,primary-dark
+Render,12099.199999988079,12136.899999976158,Transition,Scheduler,primary-dark
+Commit,12136.899999976158,12148.09999999404,Transition,Scheduler,secondary-dark
+Commit,12136.899999976158,12148.09999999404,Transition,Scheduler,secondary-dark
+Commit,12136.899999976158,12148.09999999404,Transition,Scheduler,secondary-dark
+Waiting for Paint,12148.09999999404,12152.799999982119,Transition,Scheduler,secondary-light
+Waiting for Paint,12148.09999999404,12152.799999982119,Transition,Scheduler,secondary-light
+Waiting for Paint,12148.09999999404,12152.799999982119,Transition,Scheduler,secondary-light
+Remaining Effects,12152.799999982119,12230.299999982119,Transition,Scheduler,secondary-dark
+Remaining Effects,12152.799999982119,12230.299999982119,Transition,Scheduler,secondary-dark
+Remaining Effects,12152.799999982119,12230.299999982119,Transition,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Cascading Update,12187,12294,Blocking,Scheduler,error
+Cascading Update,12187,12294,Blocking,Scheduler,error
+Cascading Update,12187,12294,Blocking,Scheduler,error
+Render,12294,12294.199999988079,Blocking,Scheduler,primary-dark
+Render,12294,12294.199999988079,Blocking,Scheduler,primary-dark
+Render,12294,12294.199999988079,Blocking,Scheduler,primary-dark
+Commit,12294.199999988079,12294.399999976158,Blocking,Scheduler,secondary-dark
+Commit,12294.199999988079,12294.399999976158,Blocking,Scheduler,secondary-dark
+Commit,12294.199999988079,12294.399999976158,Blocking,Scheduler,secondary-dark
+Waiting for Paint,12294.399999976158,12302.699999988079,Blocking,Scheduler,secondary-light
+Waiting for Paint,12294.399999976158,12302.699999988079,Blocking,Scheduler,secondary-light
+Waiting for Paint,12294.399999976158,12302.699999988079,Blocking,Scheduler,secondary-light
+Remaining Effects,12302.699999988079,12302.799999982119,Blocking,Scheduler,secondary-dark
+Remaining Effects,12302.699999988079,12302.799999982119,Blocking,Scheduler,secondary-dark
+Remaining Effects,12302.699999988079,12302.799999982119,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,12302.799999982119,12303.5,Blocking,Scheduler,primary-light
+Update,12302.799999982119,12303.5,Blocking,Scheduler,primary-light
+Update,12302.799999982119,12303.5,Blocking,Scheduler,primary-light
+Render,12303.5,12304.59999999404,Blocking,Scheduler,primary-dark
+Render,12303.5,12304.59999999404,Blocking,Scheduler,primary-dark
+Render,12303.5,12304.59999999404,Blocking,Scheduler,primary-dark
+Commit,12304.59999999404,12304.899999976158,Blocking,Scheduler,secondary-dark
+Commit,12304.59999999404,12304.899999976158,Blocking,Scheduler,secondary-dark
+Commit,12304.59999999404,12304.899999976158,Blocking,Scheduler,secondary-dark
+Waiting for Paint,12304.899999976158,12305.299999982119,Blocking,Scheduler,secondary-light
+Waiting for Paint,12304.899999976158,12305.299999982119,Blocking,Scheduler,secondary-light
+Waiting for Paint,12304.899999976158,12305.299999982119,Blocking,Scheduler,secondary-light
+Remaining Effects,12305.299999982119,12306.299999982119,Blocking,Scheduler,secondary-dark
+Remaining Effects,12305.299999982119,12306.299999982119,Blocking,Scheduler,secondary-dark
+Remaining Effects,12305.299999982119,12306.299999982119,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,13833.59999999404,13833.899999976158,Blocking,Scheduler,primary-light
+Update,13833.59999999404,13833.899999976158,Blocking,Scheduler,primary-light
+Update,13833.59999999404,13833.899999976158,Blocking,Scheduler,primary-light
+Render,13833.899999976158,13834.799999982119,Blocking,Scheduler,primary-dark
+Render,13833.899999976158,13834.799999982119,Blocking,Scheduler,primary-dark
+Render,13833.899999976158,13834.799999982119,Blocking,Scheduler,primary-dark
+Commit,13834.799999982119,13835.09999999404,Blocking,Scheduler,secondary-dark
+Commit,13834.799999982119,13835.09999999404,Blocking,Scheduler,secondary-dark
+Commit,13834.799999982119,13835.09999999404,Blocking,Scheduler,secondary-dark
+Waiting for Paint,13835.09999999404,13835.5,Blocking,Scheduler,secondary-light
+Waiting for Paint,13835.09999999404,13835.5,Blocking,Scheduler,secondary-light
+Waiting for Paint,13835.09999999404,13835.5,Blocking,Scheduler,secondary-light
+Remaining Effects,13835.5,13836.5,Blocking,Scheduler,secondary-dark
+Remaining Effects,13835.5,13836.5,Blocking,Scheduler,secondary-dark
+Remaining Effects,13835.5,13836.5,Blocking,Scheduler,secondary-dark
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Blocking Track,0.003,0.003,Blocking,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Transition Track,0.003,0.003,Transition,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Suspense Track,0.003,0.003,Suspense,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Idle Track,0.003,0.003,Idle,Scheduler,primary-light
+Update,13931.699999988079,13932,Blocking,Scheduler,primary-light
+Update,13931.699999988079,13932,Blocking,Scheduler,primary-light
+Update,13931.699999988079,13932,Blocking,Scheduler,primary-light
+Render,13932,13932.59999999404,Blocking,Scheduler,primary-dark
+Render,13932,13932.59999999404,Blocking,Scheduler,primary-dark
+Render,13932,13932.59999999404,Blocking,Scheduler,primary-dark
+Commit,13932.59999999404,13932.799999982119,Blocking,Scheduler,secondary-dark
+Commit,13932.59999999404,13932.799999982119,Blocking,Scheduler,secondary-dark
+Commit,13932.59999999404,13932.799999982119,Blocking,Scheduler,secondary-dark
+Waiting for Paint,13932.799999982119,13933.199999988079,Blocking,Scheduler,secondary-light
+Waiting for Paint,13932.799999982119,13933.199999988079,Blocking,Scheduler,secondary-light
+Waiting for Paint,13932.799999982119,13933.199999988079,Blocking,Scheduler,secondary-light
+Remaining Effects,13933.199999988079,13933.399999976158,Blocking,Scheduler,secondary-dark
+Remaining Effects,13933.199999988079,13933.399999976158,Blocking,Scheduler,secondary-dark
+Remaining Effects,13933.199999988079,13933.399999976158,Blocking,Scheduler,secondary-dark

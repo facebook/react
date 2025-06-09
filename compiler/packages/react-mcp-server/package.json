@@ -22,6 +22,7 @@
     "algoliasearch": "^5.23.3",
     "cheerio": "^1.0.0",
     "data-forge": "^1.10.4",
+    "data-forge-fs": "^0.0.9",
     "html-to-text": "^9.0.5",
     "prettier": "^3.3.3",
     "puppeteer": "^24.7.2",

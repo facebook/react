@@ -514,81 +514,46 @@ server.tool(
   <description>
   Pass in a Javascript script using the data-forge library to analyze the performance data captured by the start-react-performance-recording tool.
   The script should use the data-forge library to process the data and provide insights and solutions to the user.
+  Your scripts should be very atomical so you can:
   </description>
+
+  <requirements>
+  - On your first iteration your script should just try to understand the shape of the dataFrames object
+  - the script should return a string with the analysis at the end
+  - Do not use console.log this will only cause noise
+  - only analyze the data frames within the \`dataFrames\` parameter, you should assume you always receive this parameter.
+  - Remember to ask yourself 10 questions about the dataframe and then narrow down to 5 most important about the dataset
+  - dataFrames should never  use .get method
+  </requirements>
 
   Allowed Actions
     1.	Print Results: Output will be displayed as the script's stdout.
 
   Prohibited Actions
-    1.	Overwriting Original DataFrames: Do not modify existing DataFrames to preserve their integrity for future tasks.
-    2.	Creating Charts: Chart generation is not permitted.
+    1. Overwriting Original DataFrames: Do not modify existing DataFrames to preserve their integrity for future tasks.
+    2. Creating Charts: Chart generation is not permitted.
+    3. Using console.log()
 
   When using this tool you are a senior React Performance Engineer tasked with performing exploratory data analysis on a dataset of React performance data. Your goal is to provide insightful analysis while ensuring stability and manageable result sizes.
 
   <usage>
-    Your analysis should focus on the following topic:
-
-    <analysis_topic>
-      React Performance Analysis, look for performance issues in the data and suggest solutions.
-    </analysis_topic>
-
-    Please follow these steps carefully:
-
-    1. Explore the dataset by using the script you pass into this tool. Provide a brief summary of its structure, including the number of rows, columns, and data types. Wrap your exploration process in <dataset_exploration> tags, including:
-       - List of key statistics about the dataset
-       - Potential challenges you foresee in analyzing this data
-
-    3. Wrap your thought process in <analysis_planning> tags:
-       Analyze the dataset size and complexity:
-       - How many rows and columns does it have?
-       - Are there any potential computational challenges based on the data types or volume?
-       - What kind of questions would be appropriate given the dataset's characteristics and the analysis topic?
-       - How can we ensure that our questions won't result in excessively large outputs?
-
-       Based on this analysis:
-       - List 10 potential questions related to the analysis topic
-       - Evaluate each question against the following criteria:
-         * Directly related to the analysis topic
-         * Can be answered with reasonable computational effort
-         * Will produce manageable result sizes
-         * Provides meaningful insights into the data
-       - Select the top 5 questions that best meet all criteria
-
-    4. List the 5 questions you've selected, ensuring they meet the criteria outlined above.
-
-    5. For each question, follow these steps:
-       a. Wrap your thought process in <analysis_planning> tags:
-          - How can I structure the Javascript script to efficiently answer this question?
-          - What data preprocessing steps are necessary?
-          - How can I limit the output size to ensure stability?
-          - What type of visualization would best represent the results?
-          - Outline the main steps the script will follow
-
-       b. Write a Python script to answer the question. Include comments explaining your approach and any measures taken to limit output size.
-
-       c. Use the run_script tool to execute your Python script on the MCP server.
-
-       d. Render the results returned by the run-script tool as a chart using plotly.js (prefer loading from cdnjs.cloudflare.com). Do not use react or recharts, and do not read the original CSV file directly. Provide the plotly.js code to generate the chart.
-
-    6. After completing the analysis for all 5 questions, provide a brief summary of your findings and any overarching insights gained from the data.
-
-    Remember to prioritize stability and manageability in your analysis. If at any point you encounter potential issues with large result sets, adjust your approach accordingly.
-
+    Your script will be passed into a Function() contructor, you should only use data-forge import, the function will receive the paremeters:
+    - dataForge - the dataFroge import
+    - dataFrames - A map of the currently loaded dataFrames meant to be analyzed by the tool. This is just a \`Record<string, any>\`
   </usage>
   `,
   {
     script: z.string(),
-    saveToMemory: z.array(z.string()).optional(),
   },
-  async ({script, saveToMemory}) => {
+  async ({script}) => {
     try {
-      const result = await executeDataFrameScript(script, saveToMemory);
+      const result = await executeDataFrameScript(script);
 
       return {
         content: [
           {
             type: 'text' as const,
-            text: result.output,
+            text: result,
           },
         ],
       };
@@ -643,10 +608,45 @@ Server Components - Shift data-heavy logic to the server whenever possible. Brea
 - 'compile': Run the user's code through React Compiler. Returns optimized JS/TS code with potential diagnostics.
 - 'parse-react-component-tree': Get the component tree of a React App. Returns a string representation of the component tree.
 
-## Performance Analisis Tools:
+## Performance Analysis Tools:
 - 'start-react-performance-recording': Starts capturing performance data from the browser.
-- 'process-react-performance-data': Processes the captured performance data and saves it to a file.
-- 'interpret-react-performance-data': Interprets the processed performance data and provides insights and solutions.
+- 'process-react-performance-data': Processes and loads the captured performance data and saves it to a file.
+- 'interpret-react-performance-data': Allows you to access the dataset through scripts which let you obtain and interpret the already loaded dataset.
+
+When using these tools you become a React Performance expert, your goal is to provide insightful analysis while ensuring stability and manageable result sizes.
+Follow these steps carefully when analyzing performance:
+1. Record the performance with 'start-react-performance-recording'
+2. Load the dataset with 'process-react-performance-data'
+3. Call 'interpret-react-performance-data' as many times as needed, you should gain more and more information about the dataset by using dataForge and answer questions you come up about the dataset
+
+ Based on this analysis:
+   - List 10 potential questions related to the analysis topic
+   - Evaluate each question against the following criteria:
+     * Directly related to the analysis topic
+     * Can be answered with reasonable computational effort
+     * Will produce manageable result sizes
+     * Provides meaningful insights into the data
+   - Select the top 5 questions that best meet all criteria
+
+4. List the 5 questions you've selected, ensuring they meet the criteria outlined above.
+
+5. For each question, follow these steps:
+   a. Wrap your thought process in <analysis_planning> tags:
+      - How can I structure the Python script to efficiently answer this question?
+      - What data preprocessing steps are necessary?
+      - How can I limit the output size to ensure stability?
+      - What type of visualization would best represent the results?
+      - Outline the main steps the script will follow
+
+   b. Write a JS script to answer the question. Include comments explaining your approach and any measures taken to limit output size.
+
+   c. Use the interpret-react-performance-data tool to execute your JS script on the MCP server.
+
+
+6. After completing the analysis for all 5 questions, provide a brief summary of your findings and any overarching insights gained from the data.
+
+Remember to prioritize stability and manageability in your analysis. If at any point you encounter potential issues with large result sets, adjust your approach accordingly.
+
 
 ## Process
 1. Analyze the user's code for optimization opportunities:

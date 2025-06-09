@@ -1,6 +1,8 @@
 import {hookIntoPage} from '../utils/puppeteerUtils';
 import fs from 'fs/promises';
 import path from 'path';
+import dataForge from 'data-forge';
+import {readFileSync} from 'data-forge-fs';
 
 /**
  * Connects to a browser and patches the console.timeStamp method to capture data
@@ -23,8 +25,6 @@ export async function beginPerfRecording(url: string): Promise<string> {
       // Monkey-patch console.timeStamp to capture data
       console.timeStamp = function (...args: any) {
         if ((window as any).__MCP_RECORDING_ACTIVE__) {
-          console.log('[MCP] console.timestamp called with', ...args);
-
           if ((args[4] as string)?.includes('Scheduler')) {
             const timeStampData = {
               name: args[0],
@@ -48,8 +48,6 @@ export async function beginPerfRecording(url: string): Promise<string> {
             (window as any).__COMPONENT_TRACK_TIMESTAMP_DATA__.push(
               timeStampData,
             );
-          } else {
-            console.log('[MCP] Unknown track format:', args);
           }
         }
 
@@ -175,6 +173,7 @@ async function processTrackData(
   return false;
 }
 
+const dataFrames: Record<string, any> = {};
 export async function getPerfData(url: string): Promise<string[]> {
   try {
     const page = await hookIntoPage(url);
@@ -195,8 +194,9 @@ export async function getPerfData(url: string): Promise<string[]> {
       ];
     }
 
+    const artifactsDir = path.join(__dirname, '../src/artifacts');
+
     try {
-      const artifactsDir = path.join(__dirname, '../src/artifacts');
       await fs.rm(artifactsDir, {recursive: true, force: true});
       await fs.mkdir(artifactsDir, {recursive: true});
     } catch (err) {
@@ -238,6 +238,19 @@ export async function getPerfData(url: string): Promise<string[]> {
       result.push('No scheduler track data was available to save.');
     }
 
+    // Get all CSV files in the artifacts directory
+    const files = await fs.readdir(artifactsDir);
+    const csvFiles = files.filter((file: string) => file.endsWith('.csv'));
+
+    for (const file of csvFiles) {
+      const filePath = path.join(artifactsDir, file);
+      const df = readFileSync(filePath).parseCSV();
+      const dfName = file.replace(/\.csv$/, '').replace(/[^a-zA-Z0-9]/g, '_');
+      dataFrames[dfName] = df;
+    }
+
+    result.push('DataFrames loaded successfully.');
+
     return result;
   } catch (error) {
     throw new Error(`Failed to process performance data: ${error}`);
@@ -245,99 +258,21 @@ export async function getPerfData(url: string): Promise<string[]> {
 }
 
 /**
- * Safely executes a JavaScript script that uses the data-frame library to analyze CSV files
+ * Executes a JavaScript script that uses the data-frame library to analyze CSV files
  * in the artifacts directory.
  *
  * @param script The JavaScript script to execute
  * @param saveToMemory Optional array of dataframe names to save to memory
  * @returns A promise that resolves to the result of the script execution
  */
-export async function executeDataFrameScript(
-  script: string,
-  saveToMemory?: string[],
-): Promise<{output: string; dataFrames?: Record<string, any>}> {
+export async function executeDataFrameScript(script: string): Promise<string> {
   try {
-    // Create a VM context to safely execute the script
-    const vm = require('vm');
-    const dataForge = require('data-forge');
-    const fs = require('fs');
-    const path = require('path');
-    const artifactsDir = path.join(__dirname, '../src/artifacts');
+    const executeScript = new Function('dataForge', 'dataFrames', script);
 
-    // Get all CSV files in the artifacts directory
-    const files = await fs.promises.readdir(artifactsDir);
-    const csvFiles = files.filter((file: string) => file.endsWith('.csv'));
-
-    // Create a context with the necessary libraries and data
-    const context: Record<string, any> = {
-      dataForge,
-      require,
-      console,
-      process,
-      Buffer,
-      setTimeout,
-      clearTimeout,
-      setInterval,
-      clearInterval,
-      csvFiles,
-      artifactsDir,
-      path,
-      fs,
-      data: {},
-      notes: [],
-    };
-
-    // Load all CSV files into the context
-    for (const file of csvFiles as string[]) {
-      const filePath = path.join(artifactsDir, file);
-      const dataFrame = dataForge.readFileSync(filePath).parseCSV();
-      const dfName = file.replace(/\.csv$/, '').replace(/[^a-zA-Z0-9]/g, '_');
-      context['data'][dfName] = dataFrame;
-    }
-
-    // Capture console output
-    const originalConsoleLog = console.log;
-    const capturedOutput: string[] = [];
-
-    console.log = (...args) => {
-      capturedOutput.push(
-        args
-          .map(arg =>
-            typeof arg === 'object' ? JSON.stringify(arg) : String(arg),
-          )
-          .join(' '),
-      );
-      originalConsoleLog(...args);
-    };
-
-    // Execute the script in the VM context
-    context['notes'].push(`Running script: \n${script}`);
-    vm.createContext(context);
-    vm.runInContext(script, context);
-
-    // Restore console.log
-    console.log = originalConsoleLog;
-
-    // Prepare the result
-    const stdOutScript = capturedOutput.join('\n');
-    const output = stdOutScript || 'No output';
-    context['notes'].push(`Result: ${output}`);
-
-    const result: {output: string; dataFrames?: Record<string, any>} = {output};
-
-    // Save dataframes to memory if requested
-    if (saveToMemory && Array.isArray(saveToMemory)) {
-      result.dataFrames = {};
-      for (const dfName of saveToMemory) {
-        if (context['data'][dfName]) {
-          result.dataFrames[dfName] = context['data'][dfName];
-          context['notes'].push(`Saving dataframe '${dfName}' to memory`);
-        }
-      }
-    }
+    const result = executeScript(dataForge, dataFrames);
 
     return result;
   } catch (error) {
-    throw new Error(`Error running script: ${error}`);
+    throw new Error(`Error running script: ${error.message}`);
   }
 }
