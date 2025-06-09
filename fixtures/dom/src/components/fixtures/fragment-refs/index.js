@@ -1,5 +1,6 @@
 import FixtureSet from '../../FixtureSet';
 import EventListenerCase from './EventListenerCase';
+import EventDispatchCase from './EventDispatchCase';
 import IntersectionObserverCase from './IntersectionObserverCase';
 import ResizeObserverCase from './ResizeObserverCase';
 import FocusCase from './FocusCase';
@@ -11,6 +12,7 @@ export default function FragmentRefsPage() {
   return (
     <FixtureSet title="Fragment Refs">
       <EventListenerCase />
+      <EventDispatchCase />
       <IntersectionObserverCase />
       <ResizeObserverCase />
       <FocusCase />

@@ -7,7 +7,7 @@
 
 import {codeFrameColumns} from '@babel/code-frame';
 import type {PluginObj} from '@babel/core';
-import type {parseConfigPragmaForTests as ParseConfigPragma} from 'babel-plugin-react-compiler/src/HIR/Environment';
+import type {parseConfigPragmaForTests as ParseConfigPragma} from 'babel-plugin-react-compiler/src/Utils/TestUtils';
 import type {printFunctionWithOutlined as PrintFunctionWithOutlined} from 'babel-plugin-react-compiler/src/HIR/PrintHIR';
 import type {printReactiveFunctionWithOutlined as PrintReactiveFunctionWithOutlined} from 'babel-plugin-react-compiler/src/ReactiveScopes/PrintReactiveFunction';
 import {TransformResult, transformFixtureInput} from './compiler';

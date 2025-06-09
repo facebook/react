@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment node
  */
 
 'use strict';
@@ -26,8 +27,7 @@ let ReactServerDOMStaticServer;
 let ReactServerDOMClient;
 let Stream;
 let use;
-let ReactServerScheduler;
-let reactServerAct;
+let serverAct;
 
 // We test pass-through without encoding strings but it should work without it too.
 const streamOptions = {
@@ -38,9 +38,8 @@ describe('ReactFlightDOMNode', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    ReactServerScheduler = require('scheduler');
-    patchSetImmediate(ReactServerScheduler);
-    reactServerAct = require('internal-test-utils').act;
+    patchSetImmediate();
+    serverAct = require('internal-test-utils').serverAct;
 
     // Simulate the condition resolution
     jest.mock('react', () => require('react/react.react-server'));
@@ -76,17 +75,6 @@ describe('ReactFlightDOMNode', () => {
     use = React.use;
   });
 
-  async function serverAct(callback) {
-    let maybePromise;
-    await reactServerAct(() => {
-      maybePromise = callback();
-      if (maybePromise && typeof maybePromise.catch === 'function') {
-        maybePromise.catch(() => {});
-      }
-    });
-    return maybePromise;
-  }
-
   function readResult(stream) {
     return new Promise((resolve, reject) => {
       let buffer = '';
@@ -104,6 +92,48 @@ describe('ReactFlightDOMNode', () => {
       stream.pipe(writable);
     });
   }
+
+  it('should support web streams in node', async () => {
+    function Text({children}) {
+      return <span>{children}</span>;
+    }
+    // Large strings can get encoded differently so we need to test that.
+    const largeString = 'world'.repeat(1000);
+    function HTML() {
+      return (
+        <div>
+          <Text>hello</Text>
+          <Text>{largeString}</Text>
+        </div>
+      );
+    }
+
+    function App() {
+      const model = {
+        html: <HTML />,
+      };
+      return model;
+    }
+
+    const readable = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(<App />, webpackMap),
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(readable, {
+      serverConsumerManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+    const model = await response;
+    expect(model).toEqual({
+      html: (
+        <div>
+          <span>hello</span>
+          <span>{largeString}</span>
+        </div>
+      ),
+    });
+  });
 
   it('should allow an alternative module mapping to be used for SSR', async () => {
     function ClientComponent() {
@@ -511,8 +541,6 @@ describe('ReactFlightDOMNode', () => {
     expect(errors).toEqual([new Error('Connection closed.')]);
     // Should still match the result when parsed
     const result = await readResult(ssrStream);
-    const div = document.createElement('div');
-    div.innerHTML = result;
-    expect(div.textContent).toBe('loading...');
+    expect(result).toContain('loading...');
   });
 });

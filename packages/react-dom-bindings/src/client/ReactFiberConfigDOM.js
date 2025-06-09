@@ -37,6 +37,11 @@ import {runWithFiberInDEV} from 'react-reconciler/src/ReactCurrentFiber';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
+import {
+  isFiberContainedBy,
+  isFiberFollowing,
+  isFiberPreceding,
+} from 'react-reconciler/src/ReactFiberTreeReflection';
 
 export {
   setCurrentUpdatePriority,
@@ -60,7 +65,10 @@ import {
 } from './ReactDOMComponentTree';
 import {
   traverseFragmentInstance,
-  getFragmentParentHostInstance,
+  getFragmentParentHostFiber,
+  getNextSiblingHostFiber,
+  getInstanceFromHostFiber,
+  traverseFragmentInstanceDeeply,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
 
 export {detachDeletedInstance};
@@ -131,6 +139,9 @@ import {requestFormReset as requestFormResetOnFiber} from 'react-reconciler/src/
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 
 export {default as rendererVersion} from 'shared/ReactVersion';
+
+import noop from 'shared/noop';
+
 export const rendererPackageName = 'react-dom';
 export const extraDevToolsConfig = null;
 
@@ -1538,6 +1549,19 @@ export function cancelRootViewTransitionName(rootContainer: Container): void {
     rootContainer.nodeType === DOCUMENT_NODE
       ? (rootContainer: any).documentElement
       : rootContainer.ownerDocument.documentElement;
+
+  if (
+    !disableCommentsAsDOMContainers &&
+    rootContainer.nodeType === COMMENT_NODE
+  ) {
+    if (__DEV__) {
+      console.warn(
+        'Cannot cancel root view transition on a comment node. All view transitions will be globally scoped.',
+      );
+    }
+    return;
+  }
+
   if (
     documentElement !== null &&
     // $FlowFixMe[prop-missing]
@@ -1582,8 +1606,16 @@ export function restoreRootViewTransitionName(rootContainer: Container): void {
     // clone the whole document outside of the React too.
     containerInstance = (rootContainer: any);
   }
-  // $FlowFixMe[prop-missing]
-  if (containerInstance.style.viewTransitionName === 'root') {
+  if (
+    !disableCommentsAsDOMContainers &&
+    containerInstance.nodeType === COMMENT_NODE
+  ) {
+    return;
+  }
+  if (
+    // $FlowFixMe[prop-missing]
+    containerInstance.style.viewTransitionName === 'root'
+  ) {
     // If we moved the root view transition name to the container in a gesture
     // we need to restore it now.
     containerInstance.style.viewTransitionName = '';
@@ -1697,6 +1729,13 @@ export function cloneRootViewTransitionContainer(
     containerInstance = (rootContainer: any).body;
   } else if (rootContainer.nodeName === 'HTML') {
     containerInstance = (rootContainer.ownerDocument.body: any);
+  } else if (
+    !disableCommentsAsDOMContainers &&
+    rootContainer.nodeType === COMMENT_NODE
+  ) {
+    throw new Error(
+      'Cannot use a startGestureTransition() with a comment node root.',
+    );
   } else {
     // If the container is not the whole document, then we ideally should probably
     // clone the whole document outside of the React too.
@@ -2590,6 +2629,7 @@ export type FragmentInstanceType = {
     listener: EventListener,
     optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
   ): void,
+  dispatchEvent(event: Event): boolean,
   focus(focusOptions?: FocusOptions): void,
   focusLast(focusOptions?: FocusOptions): void,
   blur(): void,
@@ -2599,6 +2639,7 @@ export type FragmentInstanceType = {
   getRootNode(getRootNodeOptions?: {
     composed: boolean,
   }): Document | ShadowRoot | FragmentInstanceType,
+  compareDocumentPosition(otherNode: Instance): number,
 };
 
 function FragmentInstance(this: FragmentInstanceType, fragmentFiber: Fiber) {
@@ -2636,12 +2677,13 @@ FragmentInstance.prototype.addEventListener = function (
   this._eventListeners = listeners;
 };
 function addEventListenerToChild(
-  child: Instance,
+  child: Fiber,
   type: string,
   listener: EventListener,
   optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
 ): boolean {
-  child.addEventListener(type, listener, optionsOrUseCapture);
+  const instance = getInstanceFromHostFiber<Instance>(child);
+  instance.addEventListener(type, listener, optionsOrUseCapture);
   return false;
 }
 // $FlowFixMe[prop-missing]
@@ -2675,43 +2717,89 @@ FragmentInstance.prototype.removeEventListener = function (
   }
 };
 function removeEventListenerFromChild(
-  child: Instance,
+  child: Fiber,
   type: string,
   listener: EventListener,
   optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
 ): boolean {
-  child.removeEventListener(type, listener, optionsOrUseCapture);
+  const instance = getInstanceFromHostFiber<Instance>(child);
+  instance.removeEventListener(type, listener, optionsOrUseCapture);
   return false;
 }
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.dispatchEvent = function (
+  this: FragmentInstanceType,
+  event: Event,
+): boolean {
+  const parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
+  if (parentHostFiber === null) {
+    return true;
+  }
+  const parentHostInstance =
+    getInstanceFromHostFiber<Instance>(parentHostFiber);
+  const eventListeners = this._eventListeners;
+  if (
+    (eventListeners !== null && eventListeners.length > 0) ||
+    !event.bubbles
+  ) {
+    const temp = document.createTextNode('');
+    if (eventListeners) {
+      for (let i = 0; i < eventListeners.length; i++) {
+        const {type, listener, optionsOrUseCapture} = eventListeners[i];
+        temp.addEventListener(type, listener, optionsOrUseCapture);
+      }
+    }
+    parentHostInstance.appendChild(temp);
+    const cancelable = temp.dispatchEvent(event);
+    if (eventListeners) {
+      for (let i = 0; i < eventListeners.length; i++) {
+        const {type, listener, optionsOrUseCapture} = eventListeners[i];
+        temp.removeEventListener(type, listener, optionsOrUseCapture);
+      }
+    }
+    parentHostInstance.removeChild(temp);
+    return cancelable;
+  } else {
+    return parentHostInstance.dispatchEvent(event);
+  }
+};
 // $FlowFixMe[prop-missing]
 FragmentInstance.prototype.focus = function (
   this: FragmentInstanceType,
   focusOptions?: FocusOptions,
 ): void {
-  traverseFragmentInstance(
+  traverseFragmentInstanceDeeply(
     this._fragmentFiber,
-    setFocusIfFocusable,
+    setFocusOnFiberIfFocusable,
     focusOptions,
   );
 };
+function setFocusOnFiberIfFocusable(
+  fiber: Fiber,
+  focusOptions?: FocusOptions,
+): boolean {
+  const instance = getInstanceFromHostFiber<Instance>(fiber);
+  return setFocusIfFocusable(instance, focusOptions);
+}
 // $FlowFixMe[prop-missing]
 FragmentInstance.prototype.focusLast = function (
   this: FragmentInstanceType,
   focusOptions?: FocusOptions,
 ): void {
-  const children: Array<Instance> = [];
-  traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
+  const children: Array<Fiber> = [];
+  traverseFragmentInstanceDeeply(
+    this._fragmentFiber,
+    collectChildren,
+    children,
+  );
   for (let i = children.length - 1; i >= 0; i--) {
     const child = children[i];
-    if (setFocusIfFocusable(child, focusOptions)) {
+    if (setFocusOnFiberIfFocusable(child, focusOptions)) {
       break;
     }
   }
 };
-function collectChildren(
-  child: Instance,
-  collection: Array<Instance>,
-): boolean {
+function collectChildren(child: Fiber, collection: Array<Fiber>): boolean {
   collection.push(child);
   return false;
 }
@@ -2724,12 +2812,13 @@ FragmentInstance.prototype.blur = function (this: FragmentInstanceType): void {
     blurActiveElementWithinFragment,
   );
 };
-function blurActiveElementWithinFragment(child: Instance): boolean {
+function blurActiveElementWithinFragment(child: Fiber): boolean {
   // TODO: We can get the activeElement from the parent outside of the loop when we have a reference.
-  const ownerDocument = child.ownerDocument;
-  if (child === ownerDocument.activeElement) {
+  const instance = getInstanceFromHostFiber<Instance>(child);
+  const ownerDocument = instance.ownerDocument;
+  if (instance === ownerDocument.activeElement) {
     // $FlowFixMe[prop-missing]
-    child.blur();
+    instance.blur();
     return true;
   }
   return false;
@@ -2746,10 +2835,11 @@ FragmentInstance.prototype.observeUsing = function (
   traverseFragmentInstance(this._fragmentFiber, observeChild, observer);
 };
 function observeChild(
-  child: Instance,
+  child: Fiber,
   observer: IntersectionObserver | ResizeObserver,
 ) {
-  observer.observe(child);
+  const instance = getInstanceFromHostFiber<Instance>(child);
+  observer.observe(instance);
   return false;
 }
 // $FlowFixMe[prop-missing]
@@ -2770,10 +2860,11 @@ FragmentInstance.prototype.unobserveUsing = function (
   }
 };
 function unobserveChild(
-  child: Instance,
+  child: Fiber,
   observer: IntersectionObserver | ResizeObserver,
 ) {
-  observer.unobserve(child);
+  const instance = getInstanceFromHostFiber<Instance>(child);
+  observer.unobserve(instance);
   return false;
 }
 // $FlowFixMe[prop-missing]
@@ -2784,9 +2875,10 @@ FragmentInstance.prototype.getClientRects = function (
   traverseFragmentInstance(this._fragmentFiber, collectClientRects, rects);
   return rects;
 };
-function collectClientRects(child: Instance, rects: Array<DOMRect>): boolean {
+function collectClientRects(child: Fiber, rects: Array<DOMRect>): boolean {
+  const instance = getInstanceFromHostFiber<Instance>(child);
   // $FlowFixMe[method-unbinding]
-  rects.push.apply(rects, child.getClientRects());
+  rects.push.apply(rects, instance.getClientRects());
   return false;
 }
 // $FlowFixMe[prop-missing]
@@ -2794,15 +2886,144 @@ FragmentInstance.prototype.getRootNode = function (
   this: FragmentInstanceType,
   getRootNodeOptions?: {composed: boolean},
 ): Document | ShadowRoot | FragmentInstanceType {
-  const parentHostInstance = getFragmentParentHostInstance(this._fragmentFiber);
-  if (parentHostInstance === null) {
+  const parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
+  if (parentHostFiber === null) {
     return this;
   }
+  const parentHostInstance =
+    getInstanceFromHostFiber<Instance>(parentHostFiber);
   const rootNode =
     // $FlowFixMe[incompatible-cast] Flow expects Node
     (parentHostInstance.getRootNode(getRootNodeOptions): Document | ShadowRoot);
   return rootNode;
 };
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.compareDocumentPosition = function (
+  this: FragmentInstanceType,
+  otherNode: Instance,
+): number {
+  const parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
+  if (parentHostFiber === null) {
+    return Node.DOCUMENT_POSITION_DISCONNECTED;
+  }
+  const children: Array<Fiber> = [];
+  traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
+
+  let result = Node.DOCUMENT_POSITION_DISCONNECTED;
+  if (children.length === 0) {
+    // If the fragment has no children, we can use the parent and
+    // siblings to determine a position.
+    const parentHostInstance =
+      getInstanceFromHostFiber<Instance>(parentHostFiber);
+    const parentResult = parentHostInstance.compareDocumentPosition(otherNode);
+    result = parentResult;
+    if (parentHostInstance === otherNode) {
+      result = Node.DOCUMENT_POSITION_CONTAINS;
+    } else {
+      if (parentResult & Node.DOCUMENT_POSITION_CONTAINED_BY) {
+        // otherNode is one of the fragment's siblings. Use the next
+        // sibling to determine if its preceding or following.
+        const nextSiblingFiber = getNextSiblingHostFiber(this._fragmentFiber);
+        if (nextSiblingFiber === null) {
+          result = Node.DOCUMENT_POSITION_PRECEDING;
+        } else {
+          const nextSiblingInstance =
+            getInstanceFromHostFiber<Instance>(nextSiblingFiber);
+          const nextSiblingResult =
+            nextSiblingInstance.compareDocumentPosition(otherNode);
+          if (
+            nextSiblingResult === 0 ||
+            nextSiblingResult & Node.DOCUMENT_POSITION_FOLLOWING
+          ) {
+            result = Node.DOCUMENT_POSITION_FOLLOWING;
+          } else {
+            result = Node.DOCUMENT_POSITION_PRECEDING;
+          }
+        }
+      }
+    }
+
+    result |= Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC;
+    return result;
+  }
+
+  const firstElement = getInstanceFromHostFiber<Instance>(children[0]);
+  const lastElement = getInstanceFromHostFiber<Instance>(
+    children[children.length - 1],
+  );
+  const firstResult = firstElement.compareDocumentPosition(otherNode);
+  const lastResult = lastElement.compareDocumentPosition(otherNode);
+  if (
+    (firstResult & Node.DOCUMENT_POSITION_FOLLOWING &&
+      lastResult & Node.DOCUMENT_POSITION_PRECEDING) ||
+    otherNode === firstElement ||
+    otherNode === lastElement
+  ) {
+    result = Node.DOCUMENT_POSITION_CONTAINED_BY;
+  } else {
+    result = firstResult;
+  }
+
+  if (
+    result & Node.DOCUMENT_POSITION_DISCONNECTED ||
+    result & Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC
+  ) {
+    return result;
+  }
+
+  // Now that we have the result from the DOM API, we double check it matches
+  // the state of the React tree. If it doesn't, we have a case of portaled or
+  // otherwise injected elements and we return DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC.
+  const documentPositionMatchesFiberPosition =
+    validateDocumentPositionWithFiberTree(
+      result,
+      this._fragmentFiber,
+      children[0],
+      children[children.length - 1],
+      otherNode,
+    );
+  if (documentPositionMatchesFiberPosition) {
+    return result;
+  }
+  return Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC;
+};
+
+function validateDocumentPositionWithFiberTree(
+  documentPosition: number,
+  fragmentFiber: Fiber,
+  precedingBoundaryFiber: Fiber,
+  followingBoundaryFiber: Fiber,
+  otherNode: Instance,
+): boolean {
+  const otherFiber = getClosestInstanceFromNode(otherNode);
+  if (documentPosition & Node.DOCUMENT_POSITION_CONTAINED_BY) {
+    return !!otherFiber && isFiberContainedBy(fragmentFiber, otherFiber);
+  }
+  if (documentPosition & Node.DOCUMENT_POSITION_CONTAINS) {
+    if (otherFiber === null) {
+      // otherFiber could be null if its the document or body element
+      const ownerDocument = otherNode.ownerDocument;
+      return otherNode === ownerDocument || otherNode === ownerDocument.body;
+    }
+    return isFiberContainedBy(otherFiber, fragmentFiber);
+  }
+  if (documentPosition & Node.DOCUMENT_POSITION_PRECEDING) {
+    return (
+      !!otherFiber &&
+      (otherFiber === precedingBoundaryFiber ||
+        isFiberPreceding(precedingBoundaryFiber, otherFiber))
+    );
+  }
+  if (documentPosition & Node.DOCUMENT_POSITION_FOLLOWING) {
+    return (
+      !!otherFiber &&
+      (otherFiber === followingBoundaryFiber ||
+        isFiberFollowing(followingBoundaryFiber, otherFiber))
+    );
+  }
+
+  return false;
+}
 
 function normalizeListenerOptions(
   opts: ?EventListenerOptionsOrUseCapture,
@@ -2852,19 +3073,19 @@ export function updateFragmentInstanceFiber(
 }
 
 export function commitNewChildToFragmentInstance(
-  childElement: Instance,
+  childInstance: Instance,
   fragmentInstance: FragmentInstanceType,
 ): void {
   const eventListeners = fragmentInstance._eventListeners;
   if (eventListeners !== null) {
     for (let i = 0; i < eventListeners.length; i++) {
       const {type, listener, optionsOrUseCapture} = eventListeners[i];
-      childElement.addEventListener(type, listener, optionsOrUseCapture);
+      childInstance.addEventListener(type, listener, optionsOrUseCapture);
     }
   }
   if (fragmentInstance._observers !== null) {
     fragmentInstance._observers.forEach(observer => {
-      observer.observe(childElement);
+      observer.observe(childInstance);
     });
   }
 }
@@ -5438,16 +5659,14 @@ type SuspendedState = {
 };
 let suspendedState: null | SuspendedState = null;
 
-// We use a noop function when we begin suspending because if possible we want the
-// waitfor step to finish synchronously. If it doesn't we'll return a function to
-// provide the actual unsuspend function and that will get completed when the count
-// hits zero or it will get cancelled if the root starts new work.
-function noop() {}
-
 export function startSuspendingCommit(): void {
   suspendedState = {
     stylesheets: null,
     count: 0,
+    // We use a noop function when we begin suspending because if possible we want the
+    // waitfor step to finish synchronously. If it doesn't we'll return a function to
+    // provide the actual unsuspend function and that will get completed when the count
+    // hits zero or it will get cancelled if the root starts new work.
     unsuspend: noop,
   };
 }

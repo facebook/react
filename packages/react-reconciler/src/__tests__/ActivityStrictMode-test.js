@@ -240,11 +240,10 @@ describe('Activity StrictMode', () => {
       'Parent mount',
       'Parent unmount',
       'Parent mount',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['Child rendered', 'Child suspended']
-        : []),
-
+      // pre-warming
+      'Child rendered',
+      'Child suspended',
+      // end pre-warming
       '------------------------------',
       'Child rendered',
       'Child rendered',

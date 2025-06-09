@@ -1,4 +1,4 @@
-// @enableFire @panicThreshold(none)
+// @enableFire @panicThreshold:"none"
 import {useRef} from 'react';
 
 function Component({props, bar}) {

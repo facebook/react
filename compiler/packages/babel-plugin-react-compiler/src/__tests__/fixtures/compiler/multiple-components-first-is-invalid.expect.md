@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @panicThreshold(none)
+// @panicThreshold:"none"
 import {useHook} from 'shared-runtime';
 
 function InvalidComponent(props) {
@@ -21,7 +21,7 @@ function ValidComponent(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @panicThreshold(none)
+import { c as _c } from "react/compiler-runtime"; // @panicThreshold:"none"
 import { useHook } from "shared-runtime";
 
 function InvalidComponent(props) {

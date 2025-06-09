@@ -65,6 +65,24 @@ function drawWeb(nodeToData: Map<HostInstance, Data>) {
     drawGroupBorders(context, group);
     drawGroupLabel(context, group);
   });
+
+  if (canvas !== null) {
+    if (nodeToData.size === 0 && canvas.matches(':popover-open')) {
+      // $FlowFixMe[prop-missing]: Flow doesn't recognize Popover API
+      // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
+      canvas.hidePopover();
+      return;
+    }
+    // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
+    if (canvas.matches(':popover-open')) {
+      // $FlowFixMe[prop-missing]: Flow doesn't recognize Popover API
+      // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
+      canvas.hidePopover();
+    }
+    // $FlowFixMe[prop-missing]: Flow doesn't recognize Popover API
+    // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
+    canvas.showPopover();
+  }
 }
 
 type GroupItem = {
@@ -191,7 +209,15 @@ function destroyNative(agent: Agent) {
 
 function destroyWeb() {
   if (canvas !== null) {
+    if (canvas.matches(':popover-open')) {
+      // $FlowFixMe[prop-missing]: Flow doesn't recognize Popover API
+      // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
+      canvas.hidePopover();
+    }
+
+    // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API and loses canvas nullability tracking
     if (canvas.parentNode != null) {
+      // $FlowFixMe[incompatible-call]: Flow doesn't track that canvas is non-null here
       canvas.parentNode.removeChild(canvas);
     }
     canvas = null;
@@ -204,6 +230,9 @@ export function destroy(agent: Agent): void {
 
 function initialize(): void {
   canvas = window.document.createElement('canvas');
+  canvas.setAttribute('popover', 'manual');
+
+  // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
   canvas.style.cssText = `
     xx-background-color: red;
     xx-opacity: 0.5;
@@ -213,7 +242,10 @@ function initialize(): void {
     position: fixed;
     right: 0;
     top: 0;
-    z-index: 1000000000;
+    background-color: transparent;
+    outline: none;
+    box-shadow: none;
+    border: none;
   `;
 
   const root = window.document.documentElement;

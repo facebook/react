@@ -1,4 +1,4 @@
-// @customMacros(idx.*.b)
+// @customMacros:"idx.*.b"
 
 function Component(props) {
   // outlined

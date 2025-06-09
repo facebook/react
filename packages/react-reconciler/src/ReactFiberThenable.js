@@ -18,6 +18,8 @@ import {getWorkInProgressRoot} from './ReactFiberWorkLoop';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
+import noop from 'shared/noop';
+
 opaque type ThenableStateDev = {
   didWarnAboutUncachedPromise: boolean,
   thenables: Array<Thenable<any>>,
@@ -94,8 +96,6 @@ export function isThenableResolved(thenable: Thenable<mixed>): boolean {
   const status = thenable.status;
   return status === 'fulfilled' || status === 'rejected';
 }
-
-function noop(): void {}
 
 export function trackUsedThenable<T>(
   thenableState: ThenableState,

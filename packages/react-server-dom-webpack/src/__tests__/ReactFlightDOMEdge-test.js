@@ -36,7 +36,7 @@ let ReactServerDOMServer;
 let ReactServerDOMStaticServer;
 let ReactServerDOMClient;
 let use;
-let reactServerAct;
+let serverAct;
 let assertConsoleErrorDev;
 
 function normalizeCodeLocInfo(str) {
@@ -66,7 +66,7 @@ describe('ReactFlightDOMEdge', () => {
 
     jest.resetModules();
 
-    reactServerAct = require('internal-test-utils').serverAct;
+    serverAct = require('internal-test-utils').serverAct;
     assertConsoleErrorDev =
       require('internal-test-utils').assertConsoleErrorDev;
 
@@ -105,17 +105,6 @@ describe('ReactFlightDOMEdge', () => {
     ReactServerDOMClient = require('react-server-dom-webpack/client');
     use = React.use;
   });
-
-  async function serverAct(callback) {
-    let maybePromise;
-    await reactServerAct(() => {
-      maybePromise = callback();
-      if (maybePromise && typeof maybePromise.catch === 'function') {
-        maybePromise.catch(() => {});
-      }
-    });
-    return maybePromise;
-  }
 
   function passThrough(stream) {
     // Simulate more realistic network by splitting up and rejoining some chunks.
@@ -1201,7 +1190,6 @@ describe('ReactFlightDOMEdge', () => {
       const greetInfo = expect.objectContaining({
         name: 'Greeting',
         env: 'Server',
-        owner: null,
       });
       expect(lazyWrapper._debugInfo).toEqual([
         {time: 12},

@@ -19,7 +19,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react-compiler-runtime"; // @target="18"
+import { c as _c } from "react/compiler-runtime"; // @target="18"
 
 function Component() {
   const $ = _c(1);

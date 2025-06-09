@@ -14,6 +14,7 @@ module.exports = {
     Symbol: 'readonly',
     WeakMap: 'readonly',
     WeakSet: 'readonly',
+    WeakRef: 'readonly',
 
     Int8Array: 'readonly',
     Uint8Array: 'readonly',
@@ -33,6 +34,7 @@ module.exports = {
     globalThis: 'readonly',
     FinalizationRegistry: 'readonly',
     ScrollTimeline: 'readonly',
+    navigation: 'readonly',
     // Vendor specific
     MSApp: 'readonly',
     __REACT_DEVTOOLS_GLOBAL_HOOK__: 'readonly',

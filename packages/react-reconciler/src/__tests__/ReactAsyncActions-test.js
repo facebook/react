@@ -301,10 +301,9 @@ describe('ReactAsyncActions', () => {
       'Async action ended',
       'Pending: false',
       'Suspend! [A1]',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['Suspend! [B1]', 'Suspend! [C1]']
-        : []),
+      // pre-warming
+      'Suspend! [B1]',
+      'Suspend! [C1]',
     ]);
     expect(root).toMatchRenderedOutput(
       <>
@@ -321,8 +320,8 @@ describe('ReactAsyncActions', () => {
       'Pending: false',
       'A1',
       'Suspend! [B1]',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [C1]'] : []),
+      // pre-warming
+      'Suspend! [C1]',
     ]);
     expect(root).toMatchRenderedOutput(
       <>

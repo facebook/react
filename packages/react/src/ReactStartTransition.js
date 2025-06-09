@@ -25,6 +25,8 @@ import {
 
 import reportGlobalError from 'shared/reportGlobalError';
 
+import noop from 'shared/noop';
+
 export type Transition = {
   types: null | TransitionTypes, // enableViewTransition
   gesture: null | GestureProvider, // enableGestureTransition
@@ -177,9 +179,7 @@ export function startGestureTransition(
   } finally {
     ReactSharedInternals.T = prevTransition;
   }
-  return function cancelGesture() {
-    // Noop
-  };
+  return noop;
 }
 
 function warnAboutTransitionSubscriptions(
@@ -200,5 +200,3 @@ function warnAboutTransitionSubscriptions(
     }
   }
 }
-
-function noop() {}

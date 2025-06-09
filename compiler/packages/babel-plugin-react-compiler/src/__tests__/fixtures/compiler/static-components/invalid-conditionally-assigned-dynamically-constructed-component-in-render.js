@@ -1,4 +1,4 @@
-// @logger @validateStaticComponents
+// @loggerTestOnly @validateStaticComponents
 function Example(props) {
   let Component;
   if (props.cond) {

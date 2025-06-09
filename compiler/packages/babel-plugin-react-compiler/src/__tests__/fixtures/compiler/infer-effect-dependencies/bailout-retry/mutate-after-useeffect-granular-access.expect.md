@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @inferEffectDependencies @panicThreshold(none)
+// @inferEffectDependencies @panicThreshold:"none"
 import {useEffect} from 'react';
 import {print} from 'shared-runtime';
 
@@ -20,7 +20,7 @@ function Component({foo}) {
 ## Code
 
 ```javascript
-// @inferEffectDependencies @panicThreshold(none)
+// @inferEffectDependencies @panicThreshold:"none"
 import { useEffect } from "react";
 import { print } from "shared-runtime";
 

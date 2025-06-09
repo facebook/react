@@ -128,6 +128,14 @@ export function getNull(): null {
   return null;
 }
 
+export function getTrue(): true {
+  return true;
+}
+
+export function getFalse(): false {
+  return false;
+}
+
 export function calculateExpensiveNumber(x: number): number {
   return x;
 }

@@ -1,4 +1,4 @@
-// @compilationMode(infer)
+// @compilationMode:"infer"
 
 function Foo({}, ref) {
   return <div ref={ref} />;

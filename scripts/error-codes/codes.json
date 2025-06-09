@@ -544,5 +544,7 @@
   "556": "Expected prepareToHydrateHostActivityInstance() to never be called. This error is likely caused by a bug in React. Please file an issue.",
   "557": "Expected to have a hydrated activity instance. This error is likely caused by a bug in React. Please file an issue.",
   "558": "Client rendering an Activity suspended it again. This is a bug in React.",
-  "559": "Expected to find a host node. This is a bug in React."
+  "559": "Expected to find a host node. This is a bug in React.",
+  "560": "Cannot use a startGestureTransition() with a comment node root.",
+  "561": "This rendered a large document (>%s kB) without any Suspense boundaries around most of it. That can delay initial paint longer than necessary. To improve load performance, add a <Suspense> or <SuspenseList> around the content you expect to be below the header or below the fold. In the meantime, the content will deopt to paint arbitrary incomplete pieces of HTML."
 }

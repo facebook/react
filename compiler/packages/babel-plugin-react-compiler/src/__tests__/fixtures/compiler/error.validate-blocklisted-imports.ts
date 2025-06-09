@@ -1,4 +1,4 @@
-// @validateBlocklistedImports(DangerousImport)
+// @validateBlocklistedImports:["DangerousImport"]
 import {foo} from 'DangerousImport';
 import {useIdentity} from 'shared-runtime';
 

@@ -43,11 +43,18 @@ export default function FocusCase() {
         </Fixture.Controls>
         <div className="highlight-focused-children" style={{display: 'flex'}}>
           <Fragment ref={fragmentRef}>
-            <div style={{outline: '1px solid black'}}>Unfocusable div</div>
-            <button>Button 1</button>
+            <div style={{outline: '1px solid black'}}>
+              <p>Unfocusable div</p>
+            </div>
+            <div style={{outline: '1px solid black'}}>
+              <p>Unfocusable div with nested focusable button</p>
+              <button>Button 1</button>
+            </div>
             <button>Button 2</button>
             <input type="text" placeholder="Input field" />
-            <div style={{outline: '1px solid black'}}>Unfocusable div</div>
+            <div style={{outline: '1px solid black'}}>
+              <p>Unfocusable div</p>
+            </div>
           </Fragment>
         </div>
       </Fixture>

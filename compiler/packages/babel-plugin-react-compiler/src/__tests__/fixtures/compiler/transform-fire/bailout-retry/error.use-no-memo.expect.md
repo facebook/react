@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enableFire @panicThreshold(none)
+// @enableFire @panicThreshold:"none"
 import {fire} from 'react';
 
 /**

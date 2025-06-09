@@ -8,6 +8,8 @@ import {
   completeBoundaryWithStyles,
   completeSegment,
   listenToFormSubmissionsForReplaying,
+  revealCompletedBoundaries,
+  revealCompletedBoundariesWithViewTransitions,
 } from './ReactDOMFizzInstructionSetShared';
 
 // This is a string so Closure's advanced compilation mode doesn't mangle it.
@@ -15,6 +17,10 @@ import {
 window['$RM'] = new Map();
 window['$RB'] = [];
 window['$RX'] = clientRenderBoundary;
+window['$RV'] = revealCompletedBoundariesWithViewTransitions.bind(
+  null,
+  revealCompletedBoundaries,
+);
 window['$RC'] = completeBoundary;
 window['$RR'] = completeBoundaryWithStyles;
 window['$RS'] = completeSegment;

@@ -18,8 +18,9 @@ import {
 import {getOrInsertWith} from '../Utils/utils';
 import {ExternalFunction, isHookName} from '../HIR/Environment';
 import {Err, Ok, Result} from '../Utils/Result';
-import {CompilerReactTarget} from './Options';
-import {getReactCompilerRuntimeModule} from './Program';
+import {LoggerEvent, PluginOptions} from './Options';
+import {BabelFn, getReactCompilerRuntimeModule} from './Program';
+import {SuppressionRange} from './Suppression';
 
 export function validateRestrictedImports(
   path: NodePath<t.Program>,
@@ -52,32 +53,65 @@ export function validateRestrictedImports(
   }
 }
 
+type ProgramContextOptions = {
+  program: NodePath<t.Program>;
+  suppressions: Array<SuppressionRange>;
+  opts: PluginOptions;
+  filename: string | null;
+  code: string | null;
+  hasModuleScopeOptOut: boolean;
+};
 export class ProgramContext {
-  /* Program and environment context */
+  /**
+   * Program and environment context
+   */
   scope: BabelScope;
+  opts: PluginOptions;
+  filename: string | null;
+  code: string | null;
   reactRuntimeModule: string;
-  hookPattern: string | null;
+  suppressions: Array<SuppressionRange>;
+  hasModuleScopeOptOut: boolean;
 
+  /*
+   * This is a hack to work around what seems to be a Babel bug. Babel doesn't
+   * consistently respect the `skip()` function to avoid revisiting a node within
+   * a pass, so we use this set to track nodes that we have compiled.
+   */
+  alreadyCompiled: WeakSet<object> | Set<object> = new (WeakSet ?? Set)();
   // known generated or referenced identifiers in the program
   knownReferencedNames: Set<string> = new Set();
   // generated imports
   imports: Map<string, Map<string, NonLocalImportSpecifier>> = new Map();
 
-  constructor(
-    program: NodePath<t.Program>,
-    reactRuntimeModule: CompilerReactTarget,
-    hookPattern: string | null,
-  ) {
-    this.hookPattern = hookPattern;
+  /**
+   * Metadata from compilation
+   */
+  retryErrors: Array<{fn: BabelFn; error: CompilerError}> = [];
+  inferredEffectLocations: Set<t.SourceLocation> = new Set();
+
+  constructor({
+    program,
+    suppressions,
+    opts,
+    filename,
+    code,
+    hasModuleScopeOptOut,
+  }: ProgramContextOptions) {
     this.scope = program.scope;
-    this.reactRuntimeModule = getReactCompilerRuntimeModule(reactRuntimeModule);
+    this.opts = opts;
+    this.filename = filename;
+    this.code = code;
+    this.reactRuntimeModule = getReactCompilerRuntimeModule(opts.target);
+    this.suppressions = suppressions;
+    this.hasModuleScopeOptOut = hasModuleScopeOptOut;
   }
 
   isHookName(name: string): boolean {
-    if (this.hookPattern == null) {
+    if (this.opts.environment.hookPattern == null) {
       return isHookName(name);
     } else {
-      const match = new RegExp(this.hookPattern).exec(name);
+      const match = new RegExp(this.opts.environment.hookPattern).exec(name);
       return (
         match != null && typeof match[1] === 'string' && isHookName(match[1])
       );
@@ -178,6 +212,12 @@ export class ProgramContext {
       suggestions: null,
     });
     return Err(error);
+  }
+
+  logEvent(event: LoggerEvent): void {
+    if (this.opts.logger != null) {
+      this.opts.logger.logEvent(this.filename, event);
+    }
   }
 }
 

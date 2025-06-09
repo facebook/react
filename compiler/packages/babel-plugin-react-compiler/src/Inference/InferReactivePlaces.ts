@@ -26,6 +26,7 @@ import {
 import {PostDominator} from '../HIR/Dominator';
 import {
   eachInstructionLValue,
+  eachInstructionOperand,
   eachInstructionValueOperand,
   eachTerminalOperand,
 } from '../HIR/visitors';
@@ -292,7 +293,7 @@ export function inferReactivePlaces(fn: HIRFunction): void {
         let hasReactiveInput = false;
         /*
          * NOTE: we want to mark all operands as reactive or not, so we
-         * avoid short-circuting here
+         * avoid short-circuiting here
          */
         for (const operand of eachInstructionValueOperand(value)) {
           const reactive = reactiveIdentifiers.isReactive(operand);
@@ -375,6 +376,41 @@ export function inferReactivePlaces(fn: HIRFunction): void {
       }
     }
   } while (reactiveIdentifiers.snapshot());
+
+  function propagateReactivityToInnerFunctions(
+    fn: HIRFunction,
+    isOutermost: boolean,
+  ): void {
+    for (const [, block] of fn.body.blocks) {
+      for (const instr of block.instructions) {
+        if (!isOutermost) {
+          for (const operand of eachInstructionOperand(instr)) {
+            reactiveIdentifiers.isReactive(operand);
+          }
+        }
+        if (
+          instr.value.kind === 'ObjectMethod' ||
+          instr.value.kind === 'FunctionExpression'
+        ) {
+          propagateReactivityToInnerFunctions(
+            instr.value.loweredFunc.func,
+            false,
+          );
+        }
+      }
+      if (!isOutermost) {
+        for (const operand of eachTerminalOperand(block.terminal)) {
+          reactiveIdentifiers.isReactive(operand);
+        }
+      }
+    }
+  }
+
+  /**
+   * Propagate reactivity for inner functions, as we eventually hoist and dedupe
+   * dependency instructions for scopes.
+   */
+  propagateReactivityToInnerFunctions(fn, true);
 }
 
 /*

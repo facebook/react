@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @logger @validateNoJSXInTryStatements
+// @loggerTestOnly @validateNoJSXInTryStatements
 function Component(props) {
   let el;
   try {
@@ -18,7 +18,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @logger @validateNoJSXInTryStatements
+import { c as _c } from "react/compiler-runtime"; // @loggerTestOnly @validateNoJSXInTryStatements
 function Component(props) {
   const $ = _c(1);
   let el;
@@ -42,8 +42,8 @@ function Component(props) {
 ## Logs
 
 ```
-{"kind":"CompileError","detail":{"options":{"reason":"Unexpected JSX element within a try statement. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary)","description":null,"severity":"InvalidReact","loc":{"start":{"line":5,"column":9,"index":96},"end":{"line":5,"column":16,"index":103},"filename":"invalid-jsx-in-try-with-catch.ts"}}},"fnLoc":null}
-{"kind":"CompileSuccess","fnLoc":{"start":{"line":2,"column":0,"index":41},"end":{"line":10,"column":1,"index":152},"filename":"invalid-jsx-in-try-with-catch.ts"},"fnName":"Component","memoSlots":1,"memoBlocks":1,"memoValues":1,"prunedMemoBlocks":0,"prunedMemoValues":0}
+{"kind":"CompileError","detail":{"options":{"reason":"Unexpected JSX element within a try statement. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary)","description":null,"severity":"InvalidReact","loc":{"start":{"line":5,"column":9,"index":104},"end":{"line":5,"column":16,"index":111},"filename":"invalid-jsx-in-try-with-catch.ts"}}},"fnLoc":null}
+{"kind":"CompileSuccess","fnLoc":{"start":{"line":2,"column":0,"index":49},"end":{"line":10,"column":1,"index":160},"filename":"invalid-jsx-in-try-with-catch.ts"},"fnName":"Component","memoSlots":1,"memoBlocks":1,"memoValues":1,"prunedMemoBlocks":0,"prunedMemoValues":0}
 ```
       
 ### Eval output

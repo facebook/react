@@ -104,6 +104,16 @@ const ReactNoopServer = ReactFizzServer({
   getChildFormatContext(): null {
     return null;
   },
+  getSuspenseFallbackFormatContext(): null {
+    return null;
+  },
+  getSuspenseContentFormatContext(): null {
+    return null;
+  },
+
+  getViewTransitionFormatContext(): null {
+    return null;
+  },
 
   resetResumableState(): void {},
   completeResumableState(): void {},
@@ -352,6 +362,7 @@ function render(children: React$Element<any>, options?: Options): Destination {
   };
   const request = ReactNoopServer.createRequest(
     children,
+    null,
     null,
     null,
     options ? options.progressiveChunkSize : undefined,

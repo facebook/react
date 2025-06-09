@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @compilationMode(infer)
+// @compilationMode:"infer"
 const Test = () => <div />;
 
 export const FIXTURE_ENTRYPOINT = {
@@ -15,7 +15,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @compilationMode(infer)
+import { c as _c } from "react/compiler-runtime"; // @compilationMode:"infer"
 const Test = () => {
   const $ = _c(1);
   let t0;

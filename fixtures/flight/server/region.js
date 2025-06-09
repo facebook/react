@@ -50,7 +50,7 @@ const {readFile} = require('fs').promises;
 
 const React = require('react');
 
-async function renderApp(res, returnValue, formState) {
+async function renderApp(res, returnValue, formState, noCache) {
   const {renderToPipeableStream} = await import(
     'react-server-dom-webpack/server'
   );
@@ -97,7 +97,7 @@ async function renderApp(res, returnValue, formState) {
         key: filename,
       })
     ),
-    React.createElement(App)
+    React.createElement(App, {noCache})
   );
   // For client-invoked server actions we refresh the tree and return a return value.
   const payload = {root, returnValue, formState};
@@ -105,7 +105,7 @@ async function renderApp(res, returnValue, formState) {
   pipe(res);
 }
 
-async function prerenderApp(res, returnValue, formState) {
+async function prerenderApp(res, returnValue, formState, noCache) {
   const {unstable_prerenderToNodeStream: prerenderToNodeStream} = await import(
     'react-server-dom-webpack/static'
   );
@@ -152,7 +152,7 @@ async function prerenderApp(res, returnValue, formState) {
         key: filename,
       })
     ),
-    React.createElement(App, {prerender: true})
+    React.createElement(App, {prerender: true, noCache})
   );
   // For client-invoked server actions we refresh the tree and return a return value.
   const payload = {root, returnValue, formState};
@@ -161,14 +161,17 @@ async function prerenderApp(res, returnValue, formState) {
 }
 
 app.get('/', async function (req, res) {
+  const noCache = req.get('cache-control') === 'no-cache';
+
   if ('prerender' in req.query) {
-    await prerenderApp(res, null, null);
+    await prerenderApp(res, null, null, noCache);
   } else {
-    await renderApp(res, null, null);
+    await renderApp(res, null, null, noCache);
   }
 });
 
 app.post('/', bodyParser.text(), async function (req, res) {
+  const noCache = req.headers['cache-control'] === 'no-cache';
   const {decodeReply, decodeReplyFromBusboy, decodeAction, decodeFormState} =
     await import('react-server-dom-webpack/server');
   const serverReference = req.get('rsc-action');
@@ -201,7 +204,7 @@ app.post('/', bodyParser.text(), async function (req, res) {
       // We handle the error on the client
     }
     // Refresh the client and return the value
-    renderApp(res, result, null);
+    renderApp(res, result, null, noCache);
   } else {
     // This is the progressive enhancement case
     const UndiciRequest = require('undici').Request;
@@ -217,11 +220,11 @@ app.post('/', bodyParser.text(), async function (req, res) {
       // Wait for any mutations
       const result = await action();
       const formState = decodeFormState(result, formData);
-      renderApp(res, null, formState);
+      renderApp(res, null, formState, noCache);
     } catch (x) {
       const {setServerState} = await import('../src/ServerState.js');
       setServerState('Error: ' + x.message);
-      renderApp(res, null, null);
+      renderApp(res, null, null, noCache);
     }
   }
 });

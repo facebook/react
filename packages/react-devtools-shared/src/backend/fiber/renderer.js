@@ -50,6 +50,7 @@ import {
   gt,
   gte,
   parseSourceFromComponentStack,
+  parseSourceFromOwnerStack,
   serializeToString,
 } from 'react-devtools-shared/src/backend/utils';
 import {
@@ -5805,15 +5806,13 @@ export function attach(
   function getSourceForFiberInstance(
     fiberInstance: FiberInstance,
   ): Source | null {
-    const unresolvedSource = fiberInstance.source;
-    if (
-      unresolvedSource !== null &&
-      typeof unresolvedSource === 'object' &&
-      !isError(unresolvedSource)
-    ) {
-      // $FlowFixMe: isError should have refined it.
-      return unresolvedSource;
+    // Favor the owner source if we have one.
+    const ownerSource = getSourceForInstance(fiberInstance);
+    if (ownerSource !== null) {
+      return ownerSource;
     }
+
+    // Otherwise fallback to the throwing trick.
     const dispatcherRef = getDispatcherRef(renderer);
     const stackFrame =
       dispatcherRef == null
@@ -5824,10 +5823,7 @@ export function attach(
             dispatcherRef,
           );
     if (stackFrame === null) {
-      // If we don't find a source location by throwing, try to get one
-      // from an owned child if possible. This is the same branch as
-      // for virtual instances.
-      return getSourceForInstance(fiberInstance);
+      return null;
     }
     const source = parseSourceFromComponentStack(stackFrame);
     fiberInstance.source = source;
@@ -5835,7 +5831,7 @@ export function attach(
   }
 
   function getSourceForInstance(instance: DevToolsInstance): Source | null {
-    let unresolvedSource = instance.source;
+    const unresolvedSource = instance.source;
     if (unresolvedSource === null) {
       // We don't have any source yet. We can try again later in case an owned child mounts later.
       // TODO: We won't have any information here if the child is filtered.
@@ -5848,7 +5844,9 @@ export function attach(
     // any intermediate utility functions. This won't point to the top of the component function
     // but it's at least somewhere within it.
     if (isError(unresolvedSource)) {
-      unresolvedSource = formatOwnerStack((unresolvedSource: any));
+      return (instance.source = parseSourceFromOwnerStack(
+        (unresolvedSource: any),
+      ));
     }
     if (typeof unresolvedSource === 'string') {
       const idx = unresolvedSource.lastIndexOf('\n');
@@ -5859,6 +5857,86 @@ export function attach(
 
     // $FlowFixMe: refined.
     return unresolvedSource;
+  }
+
+  type InternalMcpFunctions = {
+    __internal_only_getComponentTree?: Function,
+  };
+
+  const internalMcpFunctions: InternalMcpFunctions = {};
+  if (__IS_INTERNAL_MCP_BUILD__) {
+    // eslint-disable-next-line no-inner-declarations
+    function __internal_only_getComponentTree(): string {
+      let treeString = '';
+
+      function buildTreeString(
+        instance: DevToolsInstance,
+        prefix: string = '',
+        isLastChild: boolean = true,
+      ): void {
+        if (!instance) return;
+
+        const name =
+          (instance.kind !== VIRTUAL_INSTANCE
+            ? getDisplayNameForFiber(instance.data)
+            : instance.data.name) || 'Unknown';
+
+        const id = instance.id !== undefined ? instance.id : 'unknown';
+
+        if (name !== 'createRoot()') {
+          treeString +=
+            prefix +
+            (isLastChild ? '└── ' : '├── ') +
+            name +
+            ' (id: ' +
+            id +
+            ')\n';
+        }
+
+        const childPrefix = prefix + (isLastChild ? '    ' : '│   ');
+
+        let childCount = 0;
+        let tempChild = instance.firstChild;
+        while (tempChild !== null) {
+          childCount++;
+          tempChild = tempChild.nextSibling;
+        }
+
+        let child = instance.firstChild;
+        let currentChildIndex = 0;
+
+        while (child !== null) {
+          currentChildIndex++;
+          const isLastSibling = currentChildIndex === childCount;
+          buildTreeString(child, childPrefix, isLastSibling);
+          child = child.nextSibling;
+        }
+      }
+
+      const rootInstances: Array<DevToolsInstance> = [];
+      idToDevToolsInstanceMap.forEach(instance => {
+        if (instance.parent === null || instance.parent.parent === null) {
+          rootInstances.push(instance);
+        }
+      });
+
+      if (rootInstances.length > 0) {
+        for (let i = 0; i < rootInstances.length; i++) {
+          const isLast = i === rootInstances.length - 1;
+          buildTreeString(rootInstances[i], '', isLast);
+          if (!isLast) {
+            treeString += '\n';
+          }
+        }
+      } else {
+        treeString = 'No component tree found.';
+      }
+
+      return treeString;
+    }
+
+    internalMcpFunctions.__internal_only_getComponentTree =
+      __internal_only_getComponentTree;
   }
 
   return {
@@ -5900,5 +5978,6 @@ export function attach(
     storeAsGlobal,
     updateComponentFilters,
     getEnvironmentNames,
+    ...internalMcpFunctions,
   };
 }

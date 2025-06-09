@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @logger @validateStaticComponents
+// @loggerTestOnly @validateStaticComponents
 function Example(props) {
   const Component = props.foo.bar();
   return <Component />;
@@ -13,7 +13,7 @@ function Example(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @logger @validateStaticComponents
+import { c as _c } from "react/compiler-runtime"; // @loggerTestOnly @validateStaticComponents
 function Example(props) {
   const $ = _c(4);
   let t0;
@@ -41,9 +41,9 @@ function Example(props) {
 ## Logs
 
 ```
-{"kind":"CompileError","detail":{"options":{"reason":"Components created during render will reset their state each time they are created. Declare components outside of render. ","description":null,"severity":"InvalidReact","suggestions":null,"loc":{"start":{"line":4,"column":10,"index":110},"end":{"line":4,"column":19,"index":119},"filename":"invalid-dynamically-constructed-component-method-call.ts"}}},"fnLoc":null}
-{"kind":"CompileError","detail":{"options":{"reason":"The component may be created during render","description":null,"severity":"InvalidReact","suggestions":null,"loc":{"start":{"line":3,"column":20,"index":83},"end":{"line":3,"column":35,"index":98},"filename":"invalid-dynamically-constructed-component-method-call.ts"}}},"fnLoc":null}
-{"kind":"CompileSuccess","fnLoc":{"start":{"line":2,"column":0,"index":37},"end":{"line":5,"column":1,"index":125},"filename":"invalid-dynamically-constructed-component-method-call.ts"},"fnName":"Example","memoSlots":4,"memoBlocks":2,"memoValues":2,"prunedMemoBlocks":0,"prunedMemoValues":0}
+{"kind":"CompileError","detail":{"options":{"reason":"Components created during render will reset their state each time they are created. Declare components outside of render. ","description":null,"severity":"InvalidReact","suggestions":null,"loc":{"start":{"line":4,"column":10,"index":118},"end":{"line":4,"column":19,"index":127},"filename":"invalid-dynamically-constructed-component-method-call.ts"}}},"fnLoc":null}
+{"kind":"CompileError","detail":{"options":{"reason":"The component may be created during render","description":null,"severity":"InvalidReact","suggestions":null,"loc":{"start":{"line":3,"column":20,"index":91},"end":{"line":3,"column":35,"index":106},"filename":"invalid-dynamically-constructed-component-method-call.ts"}}},"fnLoc":null}
+{"kind":"CompileSuccess","fnLoc":{"start":{"line":2,"column":0,"index":45},"end":{"line":5,"column":1,"index":133},"filename":"invalid-dynamically-constructed-component-method-call.ts"},"fnName":"Example","memoSlots":4,"memoBlocks":2,"memoValues":2,"prunedMemoBlocks":0,"prunedMemoValues":0}
 ```
       
 ### Eval output

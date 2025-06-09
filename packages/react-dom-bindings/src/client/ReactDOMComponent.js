@@ -63,6 +63,8 @@ import {validateProperties as validateInputProperties} from '../shared/ReactDOMN
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
 import sanitizeURL from '../shared/sanitizeURL';
 
+import noop from 'shared/noop';
+
 import {trackHostMutation} from 'react-reconciler/src/ReactFiberMutationTracking';
 
 import {
@@ -70,6 +72,7 @@ import {
   enableScrollEndPolyfill,
   enableSrcObject,
   enableTrustedTypesIntegration,
+  enableViewTransition,
 } from 'shared/ReactFeatureFlags';
 import {
   mediaEventTypes,
@@ -318,8 +321,6 @@ function checkForUnmatchedText(
   }
   return false;
 }
-
-function noop() {}
 
 export function trapClickOnNonInteractiveElement(node: HTMLElement) {
   // Mobile Safari does not fire properly bubble click events on
@@ -3217,6 +3218,18 @@ export function diffHydratedProperties(
           break;
         case 'selected':
           break;
+        case 'vt-name':
+        case 'vt-update':
+        case 'vt-enter':
+        case 'vt-exit':
+        case 'vt-share':
+          if (enableViewTransition) {
+            // View Transition annotations are expected from the Server Runtime.
+            // However, if they're also specified on the client and don't match
+            // that's an error.
+            break;
+          }
+        // Fallthrough
         default:
           // Intentionally use the original name.
           // See discussion in https://github.com/facebook/react/pull/10676.

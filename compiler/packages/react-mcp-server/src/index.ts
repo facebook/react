@@ -21,6 +21,13 @@ import {queryAlgolia} from './utils/algolia';
 import assertExhaustive from './utils/assertExhaustive';
 import {convert} from 'html-to-text';
 import {measurePerformance} from './tools/runtimePerf';
+import {parseReactComponentTree} from './tools/componentTree';
+
+function calculateMean(values: number[]): string {
+  return values.length > 0
+    ? values.reduce((acc, curr) => acc + curr, 0) / values.length + 'ms'
+    : 'could not collect';
+}
 
 const server = new McpServer({
   name: 'React',
@@ -326,17 +333,16 @@ server.tool(
 # React Component Performance Results
 
 ## Mean Render Time
-${results.renderTime / iterations}ms
+${calculateMean(results.renderTime)}
 
 ## Mean Web Vitals
-- Cumulative Layout Shift (CLS): ${results.webVitals.cls / iterations}ms
-- Largest Contentful Paint (LCP): ${results.webVitals.lcp / iterations}ms
-- Interaction to Next Paint (INP): ${results.webVitals.inp / iterations}ms
-- First Input Delay (FID): ${results.webVitals.fid / iterations}ms
+- Cumulative Layout Shift (CLS): ${calculateMean(results.webVitals.cls)}
+- Largest Contentful Paint (LCP): ${calculateMean(results.webVitals.lcp)}
+- Interaction to Next Paint (INP): ${calculateMean(results.webVitals.inp)}
 
 ## Mean React Profiler
-- Actual Duration: ${results.reactProfiler.actualDuration / iterations}ms
-- Base Duration: ${results.reactProfiler.baseDuration / iterations}ms
+- Actual Duration: ${calculateMean(results.reactProfiler.actualDuration)}
+- Base Duration: ${calculateMean(results.reactProfiler.baseDuration)}
 `;
 
       return {
@@ -356,6 +362,45 @@ ${results.renderTime / iterations}ms
             text: `Error measuring performance: ${error.message}\n\n${error.stack}`,
           },
         ],
+      };
+    }
+  },
+);
+
+server.tool(
+  'parse-react-component-tree',
+  `
+  This tool gets the component tree of a React App.
+  passing in a url will attempt to connect to the browser and get the current state of the component tree. If no url is passed in,
+  the default url will be used (http://localhost:3000).
+
+  <requirements>
+  - The url should be a full url with the protocol (http:// or https://) and the domain name (e.g. localhost:3000).
+  - Also the user should be running a Chrome browser running on debug mode on port 9222. If you receive an error message, advise the user to run
+  the following comand in the terminal:
+  MacOS: "/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir=/tmp/chrome"
+  Windows: "chrome.exe --remote-debugging-port=9222 --user-data-dir=C:\temp\chrome"
+  </requirements>
+  `,
+  {
+    url: z.string().optional().default('http://localhost:3000'),
+  },
+  async ({url}) => {
+    try {
+      const componentTree = await parseReactComponentTree(url);
+
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: componentTree,
+          },
+        ],
+      };
+    } catch (err) {
+      return {
+        isError: true,
+        content: [{type: 'text' as const, text: `Error: ${err.stack}`}],
       };
     }
   },
