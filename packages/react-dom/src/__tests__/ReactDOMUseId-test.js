@@ -552,39 +552,6 @@ describe('useId', () => {
       ReactDOMClient.hydrateRoot(container, <Foo />);
     });
 
-    // TODO: this is a bug with useID and SuspenseList revealOrder "forwards"
-    assertConsoleErrorDev([
-      `A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
-
-- A server/client branch \`if (typeof window !== 'undefined')\`.
-- Variable input such as \`Date.now()\` or \`Math.random()\` which changes each time it's called.
-- Date formatting in a user's locale which doesn't match the server.
-- External changing data without sending a snapshot of it along with the HTML.
-- Invalid HTML tag nesting.
-
-It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
-
-https://react.dev/link/hydration-mismatch
-
-  <Foo>
-    <SuspenseList revealOrder="forwards" tail="visible">
-      <Bar>
-        <Baz id="_R_0_">
-          <span
-+           id="_R_0_"
--           id="_R_1_"
-          >
-+           A
-      <Bar>
-        <Baz id="_R_1_">
-          <span
-+           id="_R_1_"
--           id="_R_2_"
-          >
-+           B
-`,
-    ]);
-
     expect(container).toMatchInlineSnapshot(`
       <div
         id="container"
@@ -599,6 +566,62 @@ https://react.dev/link/hydration-mismatch
         >
           B
         </span>
+      </div>
+    `);
+  });
+
+  // @gate enableSuspenseList
+  it('Supports SuspenseList (reveal order "backwards") with a single child in a list of many', async () => {
+    function Baz({id, children}) {
+      return <span id={id}>{children}</span>;
+    }
+
+    function Bar({children}) {
+      const id = useId();
+      return <Baz id={id}>{children}</Baz>;
+    }
+
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="unstable_legacy-backwards" tail="visible">
+          {null}
+          <Bar>A</Bar>
+          {null}
+        </SuspenseList>
+      );
+    }
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<Foo />);
+      pipe(writable);
+    });
+    expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        <span
+          id="_R_2_"
+        >
+          A
+        </span>
+        <!-- -->
+      </div>
+    `);
+
+    await clientAct(async () => {
+      ReactDOMClient.hydrateRoot(container, <Foo />);
+    });
+
+    expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        <span
+          id="_R_2_"
+        >
+          A
+        </span>
+        <!-- -->
       </div>
     `);
   });
@@ -645,7 +668,7 @@ https://react.dev/link/hydration-mismatch
     `);
 
     if (gate(flags => flags.favorSafetyOverHydrationPerf)) {
-      // TODO: this is a bug with useID and SuspenseList revealOrder "backwards"
+      // TODO: This is a bug with revealOrder="backwards" in that it hydrates in reverse.
       await expect(async () => {
         await clientAct(async () => {
           ReactDOMClient.hydrateRoot(container, <Foo />);
@@ -675,9 +698,9 @@ https://react.dev/link/hydration-mismatch
         ReactDOMClient.hydrateRoot(container, <Foo />);
       });
 
-      // TODO: this seems like a bug when `favorSafetyOverHydrationPerf` is false?
+      // TODO: This is a bug with revealOrder="backwards" in that it hydrates in reverse.
       assertConsoleErrorDev([
-        `A tree hydrated but some attributes of the server rendered text didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+        `A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
 
 - A server/client branch \`if (typeof window !== 'undefined')\`.
 - Variable input such as \`Date.now()\` or \`Math.random()\` which changes each time it's called.
@@ -690,11 +713,14 @@ It can also happen if the client has a browser extension installed which messes 
 https://react.dev/link/hydration-mismatch
 
   <Foo>
-    <SuspenseList revealOrder="unstable_legacy-backwards" tail="visible">
+    <SuspenseList revealOrder="unstable_l..." tail="visible">
       <Bar>
       <Bar>
-        <Baz id="_R_1_">
-          <span id="_R_1_">
+        <Baz id="_R_2_">
+          <span
++           id="_R_2_"
+-           id="_R_1_"
+          >
 +           B
 -           A
 `,

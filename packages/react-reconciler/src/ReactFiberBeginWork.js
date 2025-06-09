@@ -3408,7 +3408,7 @@ function updateSuspenseListComponent(
 
   reconcileChildren(current, workInProgress, newChildren, renderLanes);
   // Read how many children forks this set pushed so we can push it every time we retry.
-  const treeForkCount = getForksAtLevel(workInProgress);
+  const treeForkCount = getIsHydrating() ? getForksAtLevel(workInProgress) : 0;
 
   if (!shouldForceFallback) {
     const didSuspendBefore =

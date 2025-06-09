@@ -184,7 +184,7 @@ import {resetChildFibers} from './ReactChildFiber';
 import {createScopeInstance} from './ReactFiberScope';
 import {transferActualDuration} from './ReactProfilerTimer';
 import {popCacheProvider} from './ReactFiberCacheComponent';
-import {popTreeContext} from './ReactFiberTreeContext';
+import {popTreeContext, pushTreeFork} from './ReactFiberTreeContext';
 import {popRootTransition, popTransition} from './ReactFiberTransition';
 import {
   popMarkerInstance,
@@ -1764,6 +1764,10 @@ function completeWork(
                     ForceSuspenseFallback,
                   ),
                 );
+                if (getIsHydrating()) {
+                  // Re-apply tree fork since we popped the tree fork context in the beginning of this function.
+                  pushTreeFork(workInProgress, renderState.treeForkCount);
+                }
                 // Don't bubble properties in this case.
                 return workInProgress.child;
               }
@@ -1890,6 +1894,10 @@ function completeWork(
         }
         pushSuspenseListContext(workInProgress, suspenseContext);
         // Do a pass over the next row.
+        if (getIsHydrating()) {
+          // Re-apply tree fork since we popped the tree fork context in the beginning of this function.
+          pushTreeFork(workInProgress, renderState.treeForkCount);
+        }
         // Don't bubble properties in this case.
         return next;
       }
