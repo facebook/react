@@ -1995,7 +1995,7 @@ function visitAsyncNode(
                 owner: node.owner,
                 stack: stack,
               });
-              advanceTaskTime(request, task, endTime);
+              markOperationEndTime(request, task, endTime);
             }
           }
         }
@@ -2035,7 +2035,7 @@ function emitAsyncSequence(
       awaited: ((awaitedNode: any): ReactIOInfo), // This is deduped by this reference.
       env: env,
     });
-    advanceTaskTime(request, task, awaitedNode.end);
+    markOperationEndTime(request, task, awaitedNode.end);
   }
 }
 
@@ -4255,7 +4255,7 @@ function forwardDebugInfo(
       // When forwarding time we need to ensure to convert it to the time space of the payload.
       // We clamp the time to the starting render of the current component. It's as if it took
       // no time to render and await if we reuse cached content.
-      advanceTaskTime(request, task, info.time);
+      markOperationEndTime(request, task, info.time);
     } else {
       if (typeof info.name === 'string') {
         // We outline this model eagerly so that we can refer to by reference as an owner.
@@ -4352,6 +4352,20 @@ function advanceTaskTime(
   task.timed = true;
 }
 
+function markOperationEndTime(request: Request, task: Task, timestamp: number) {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  // This is like advanceTaskTime() but always emits a timing chunk even if it doesn't advance.
+  // This ensures that the end time of the previous entry isn't implied to be the start of the next one.
+  if (timestamp > task.time) {
+    emitTimingChunk(request, task.id, timestamp);
+    task.time = timestamp;
+  } else {
+    emitTimingChunk(request, task.id, task.time);
+  }
+}
+
 function emitChunk(
   request: Request,
   task: Task,
@@ -4443,7 +4457,7 @@ function emitChunk(
 function erroredTask(request: Request, task: Task, error: mixed): void {
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     if (task.timed) {
-      advanceTaskTime(request, task, performance.now());
+      markOperationEndTime(request, task, performance.now());
     }
   }
   task.status = ERRORED;
@@ -4526,7 +4540,7 @@ function retryTask(request: Request, task: Task): void {
     // We've finished rendering. Log the end time.
     if (enableProfilerTimer && enableComponentPerformanceTrack) {
       if (task.timed) {
-        advanceTaskTime(request, task, performance.now());
+        markOperationEndTime(request, task, performance.now());
       }
     }
 
@@ -4653,7 +4667,7 @@ function abortTask(task: Task, request: Request, errorId: number): void {
   // Track when we aborted this task as its end time.
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     if (task.timed) {
-      advanceTaskTime(request, task, performance.now());
+      markOperationEndTime(request, task, performance.now());
     }
   }
   // Instead of emitting an error per task.id, we emit a model that only
