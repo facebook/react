@@ -31,6 +31,7 @@ import {
   HIR,
   BasicBlock,
   BlockId,
+  isEffectEventFunctionType,
 } from '../HIR';
 import {collectHoistablePropertyLoadsInInnerFn} from '../HIR/CollectHoistablePropertyLoads';
 import {collectOptionalChainSidemap} from '../HIR/CollectOptionalChainDependencies';
@@ -209,7 +210,8 @@ export function inferEffectDependencies(fn: HIRFunction): void {
                 ((isUseRefType(maybeDep.identifier) ||
                   isSetStateType(maybeDep.identifier)) &&
                   !reactiveIds.has(maybeDep.identifier.id)) ||
-                isFireFunctionType(maybeDep.identifier)
+                isFireFunctionType(maybeDep.identifier) ||
+                isEffectEventFunctionType(maybeDep.identifier)
               ) {
                 // exclude non-reactive hook results, which will never be in a memo block
                 continue;
