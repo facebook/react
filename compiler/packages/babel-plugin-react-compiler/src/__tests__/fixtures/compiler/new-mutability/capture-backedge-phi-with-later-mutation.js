@@ -22,14 +22,14 @@ function Component({prop1, prop2}) {
   return <Stringify z={z} />;
 }
 
-// export const FIXTURE_ENTRYPOINT = {
-//   fn: Component,
-//   params: [{prop1: 0, prop2: 0}],
-//   sequentialRenders: [
-//     {prop1: 0, prop2: 0},
-//     {prop1: 1, prop2: 0},
-//     {prop1: 1, prop2: 1},
-//     {prop1: 0, prop2: 1},
-//     {prop1: 0, prop2: 0},
-//   ],
-// };
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{prop1: 0, prop2: 'a'}],
+  sequentialRenders: [
+    {prop1: 0, prop2: 'a'},
+    {prop1: 1, prop2: 'a'},
+    {prop1: 1, prop2: 'b'},
+    {prop1: 0, prop2: 'b'},
+    {prop1: 0, prop2: 'a'},
+  ],
+};

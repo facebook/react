@@ -8,7 +8,6 @@ import {arrayPush, Stringify} from 'shared-runtime';
 function Component({prop1, prop2}) {
   'use memo';
 
-  // we'll ultimately extract the item from this array as z, and mutate later
   let x = [{value: prop1}];
   let z;
   while (x.length < 2) {
@@ -17,27 +16,25 @@ function Component({prop1, prop2}) {
     // this mutation occurs before the reassigned value
     arrayPush(x, {value: prop2});
 
-    // this condition will never be true, so x doesn't get reassigned
-    if (x[0].value === null) {
+    if (x[0].value === prop1) {
       x = [{value: prop2}];
       const y = x;
       z = y[0];
     }
   }
-  // the code is set up so that z will always be the value from the original x
   z.other = true;
   return <Stringify z={z} />;
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{prop1: 0, prop2: 0}],
+  params: [{prop1: 0, prop2: 'a'}],
   sequentialRenders: [
-    {prop1: 0, prop2: 0},
-    {prop1: 1, prop2: 0},
-    {prop1: 1, prop2: 1},
-    {prop1: 0, prop2: 1},
-    {prop1: 0, prop2: 0},
+    {prop1: 0, prop2: 'a'},
+    {prop1: 1, prop2: 'a'},
+    {prop1: 1, prop2: 'b'},
+    {prop1: 0, prop2: 'b'},
+    {prop1: 0, prop2: 'a'},
   ],
 };
 
@@ -58,7 +55,7 @@ function Component(t0) {
     let x = [{ value: prop1 }];
     while (x.length < 2) {
       arrayPush(x, { value: prop2 });
-      if (x[0].value === null) {
+      if (x[0].value === prop1) {
         x = [{ value: prop2 }];
         const y = x;
         z = y[0];
@@ -85,21 +82,21 @@ function Component(t0) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ prop1: 0, prop2: 0 }],
+  params: [{ prop1: 0, prop2: "a" }],
   sequentialRenders: [
-    { prop1: 0, prop2: 0 },
-    { prop1: 1, prop2: 0 },
-    { prop1: 1, prop2: 1 },
-    { prop1: 0, prop2: 1 },
-    { prop1: 0, prop2: 0 },
+    { prop1: 0, prop2: "a" },
+    { prop1: 1, prop2: "a" },
+    { prop1: 1, prop2: "b" },
+    { prop1: 0, prop2: "b" },
+    { prop1: 0, prop2: "a" },
   ],
 };
 
 ```
       
 ### Eval output
-(kind: ok) [[ (exception in render) TypeError: Cannot set properties of undefined (setting 'other') ]]
-[[ (exception in render) TypeError: Cannot set properties of undefined (setting 'other') ]]
-[[ (exception in render) TypeError: Cannot set properties of undefined (setting 'other') ]]
-[[ (exception in render) TypeError: Cannot set properties of undefined (setting 'other') ]]
-[[ (exception in render) TypeError: Cannot set properties of undefined (setting 'other') ]]
+(kind: ok) <div>{"z":{"value":"a","other":true}}</div>
+<div>{"z":{"value":"a","other":true}}</div>
+<div>{"z":{"value":"b","other":true}}</div>
+<div>{"z":{"value":"b","other":true}}</div>
+<div>{"z":{"value":"a","other":true}}</div>
