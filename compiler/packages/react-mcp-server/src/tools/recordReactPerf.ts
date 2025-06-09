@@ -138,11 +138,48 @@ export async function beginPerfRecording(url: string): Promise<string> {
   }
 }
 
-export async function getPerfData(url: string): Promise<string> {
+async function processTrackData(
+  trackData: any,
+  headers: string[],
+): Promise<boolean> {
+  const artifactsDir = path.join(__dirname, '../src/artifacts');
+
+  if (Array.isArray(trackData) && trackData.length > 0) {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+
+    const trackName = trackData[0].track;
+
+    const componentFilename = `react-${trackName}-track-${timestamp}.csv`;
+    const componentFilePath = path.join(artifactsDir, componentFilename);
+
+    const componentRows = trackData.map(item => {
+      return headers
+        .map(header => {
+          const value = item[header];
+          if (value === undefined) {
+            return '';
+          }
+          if (typeof value === 'string' && value.includes(',')) {
+            return `"${value}"`;
+          }
+          return value;
+        })
+        .join(',');
+    });
+
+    const componentCsvContent = [headers, ...componentRows].join('\n');
+
+    await fs.writeFile(componentFilePath, componentCsvContent, 'utf8');
+
+    return true;
+  }
+  return false;
+}
+
+export async function getPerfData(url: string): Promise<string[]> {
   try {
     const page = await hookIntoPage(url);
 
-    // Get both timestamp data tracks from the browser
     const [componentTrackData, schedulerTrackData] = await page.evaluate(() => {
       return [
         (window as any).__COMPONENT_TRACK_TIMESTAMP_DATA__ || [],
@@ -154,114 +191,55 @@ export async function getPerfData(url: string): Promise<string> {
       (!Array.isArray(componentTrackData) || componentTrackData.length === 0) &&
       (!Array.isArray(schedulerTrackData) || schedulerTrackData.length === 0)
     ) {
-      return 'No performance data was captured. Make sure to run start-react-performance-recording first.';
+      return [
+        'No performance data was captured. Make sure to run start-react-performance-recording first.',
+      ];
     }
 
-    // Create a timestamp for the filenames
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const artifactsDir = path.join(__dirname, '../src/artifacts');
-
-    // Ensure the artifacts directory exists
     try {
+      const artifactsDir = path.join(__dirname, '../src/artifacts');
+      await fs.rm(artifactsDir, {recursive: true, force: true});
       await fs.mkdir(artifactsDir, {recursive: true});
     } catch (err) {
       console.error(`Error creating directory: ${err}`);
     }
 
-    const results = [];
+    const result = [];
 
-    // Process Component Track data
-    if (Array.isArray(componentTrackData) && componentTrackData.length > 0) {
-      const componentFilename = `react-component-track-${timestamp}.csv`;
-      const componentFilePath = path.join(artifactsDir, componentFilename);
-
-      // Define headers for component track
-      const componentHeaders = [
+    if (
+      await processTrackData(componentTrackData, [
         'name',
         'startTime',
         'endTime',
         'track',
         'color',
-      ].join(',');
-
-      // Convert data to CSV rows
-      const componentRows = componentTrackData.map(item => {
-        return componentHeaders
-          .split(',')
-          .map(header => {
-            const value = item[header];
-            // Handle undefined values
-            if (value === undefined) {
-              return '';
-            }
-            // Handle strings with commas by wrapping in quotes
-            if (typeof value === 'string' && value.includes(',')) {
-              return `"${value}"`;
-            }
-            return value;
-          })
-          .join(',');
-      });
-
-      // Combine headers and rows
-      const componentCsvContent = [componentHeaders, ...componentRows].join(
-        '\n',
+      ])
+    ) {
+      result.push(
+        'Component track data saved in the artifacts directory it can now be accessed through the interpret-perf-data tool.',
       );
-
-      // Write to file
-      await fs.writeFile(componentFilePath, componentCsvContent, 'utf8');
-
-      results.push(`Component track data saved to ${componentFilename}`);
+    } else {
+      result.push('No component track data was available to save.');
     }
 
-    // Process Scheduler Track data
-    if (Array.isArray(schedulerTrackData) && schedulerTrackData.length > 0) {
-      const schedulerFilename = `react-scheduler-track-${timestamp}.csv`;
-      const schedulerFilePath = path.join(artifactsDir, schedulerFilename);
-
-      // Define headers for scheduler track
-      const schedulerHeaders = [
+    if (
+      await processTrackData(schedulerTrackData, [
         'name',
         'startTime',
         'endTime',
         'type',
         'track',
         'color',
-      ].join(',');
-
-      // Convert data to CSV rows
-      const schedulerRows = schedulerTrackData.map(item => {
-        return schedulerHeaders
-          .split(',')
-          .map(header => {
-            const value = item[header];
-            // Handle undefined values
-            if (value === undefined) {
-              return '';
-            }
-            // Handle strings with commas by wrapping in quotes
-            if (typeof value === 'string' && value.includes(',')) {
-              return `"${value}"`;
-            }
-            return value;
-          })
-          .join(',');
-      });
-
-      // Combine headers and rows
-      const schedulerCsvContent = [schedulerHeaders, ...schedulerRows].join(
-        '\n',
+      ])
+    ) {
+      result.push(
+        'Scheduler track data saved in the artifacts directory it can now be accessed through the interpret-perf-data tool.',
       );
-
-      // Write to file
-      await fs.writeFile(schedulerFilePath, schedulerCsvContent, 'utf8');
-
-      results.push(`Scheduler track data saved to ${schedulerFilename}`);
+    } else {
+      result.push('No scheduler track data was available to save.');
     }
 
-    return results.length > 0
-      ? `Performance data saved in the artifacts directory:\n${results.join('\n')}`
-      : 'No performance data was available to save.';
+    return result;
   } catch (error) {
     throw new Error(`Failed to process performance data: ${error}`);
   }
