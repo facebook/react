@@ -37,8 +37,19 @@ async function delay(text, ms) {
   return new Promise(resolve => setTimeout(() => resolve(text), ms));
 }
 
+async function delayTwice() {
+  await delay('', 20);
+  await delay('', 10);
+}
+
+async function delayTrice() {
+  const p = delayTwice();
+  await delay('', 40);
+  return p;
+}
+
 async function Bar({children}) {
-  await delay('deferred text', 10);
+  await delayTrice();
   return <div>{children}</div>;
 }
 
