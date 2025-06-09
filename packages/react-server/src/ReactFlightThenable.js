@@ -22,7 +22,7 @@ import type {
 
 import noop from 'shared/noop';
 
-export opaque type ThenableState = Array<Thenable<any>>;
+export type ThenableState = Array<Thenable<any>>;
 
 // An error that is thrown (e.g. by `use`) to trigger Suspense. If we
 // detect this is caught by userspace, we'll log a warning in development.

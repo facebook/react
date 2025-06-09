@@ -107,6 +107,7 @@ import {
   prepareToUseHooksForRequest,
   prepareToUseHooksForComponent,
   getThenableStateAfterSuspending,
+  getTrackedThenablesAfterRendering,
   resetHooksForRequest,
 } from './ReactFlightHooks';
 import {DefaultAsyncDispatcher} from './flight/ReactFlightAsyncDispatcher';
@@ -1382,6 +1383,22 @@ function renderFunctionComponent<Props>(
     // the abort error as the reason.
     // eslint-disable-next-line no-throw-literal
     throw null;
+  }
+
+  if (
+    __DEV__ ||
+    (enableProfilerTimer &&
+      enableComponentPerformanceTrack &&
+      enableAsyncDebugInfo)
+  ) {
+    // Forward any debug information for any Promises that we use():ed during the render.
+    // We do this at the end so that we don't keep doing this for each retry.
+    const trackedThenables = getTrackedThenablesAfterRendering();
+    if (trackedThenables !== null) {
+      for (let i = 0; i < trackedThenables.length; i++) {
+        forwardDebugInfoFromThenable(request, task, trackedThenables[i]);
+      }
+    }
   }
 
   // Apply special cases.
