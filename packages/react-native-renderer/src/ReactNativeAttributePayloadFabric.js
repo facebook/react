@@ -255,7 +255,9 @@ function diffProperties(
     nextProp = nextProps[propKey];
 
     if (typeof nextProp === 'function') {
-      const attributeConfigHasProcess = typeof attributeConfig === 'object' && typeof attributeConfig.process === 'function';
+      const attributeConfigHasProcess =
+        typeof attributeConfig === 'object' &&
+        typeof attributeConfig.process === 'function';
       if (!attributeConfigHasProcess) {
         // functions are converted to booleans as markers that the associated
         // events should be sent from native.
