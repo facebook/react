@@ -8591,7 +8591,8 @@ __DEV__ &&
       isBackwards,
       tail,
       lastContentRow,
-      tailMode
+      tailMode,
+      treeForkCount
     ) {
       var renderState = workInProgress.memoizedState;
       null === renderState
@@ -8601,23 +8602,24 @@ __DEV__ &&
             renderingStartTime: 0,
             last: lastContentRow,
             tail: tail,
-            tailMode: tailMode
+            tailMode: tailMode,
+            treeForkCount: treeForkCount
           })
         : ((renderState.isBackwards = isBackwards),
           (renderState.rendering = null),
           (renderState.renderingStartTime = 0),
           (renderState.last = lastContentRow),
           (renderState.tail = tail),
-          (renderState.tailMode = tailMode));
+          (renderState.tailMode = tailMode),
+          (renderState.treeForkCount = treeForkCount));
     }
     function updateSuspenseListComponent(current, workInProgress, renderLanes) {
       var nextProps = workInProgress.pendingProps,
         revealOrder = nextProps.revealOrder,
-        tailMode = nextProps.tail;
-      nextProps = nextProps.children;
-      var suspenseContext = suspenseStackCursor.current,
-        shouldForceFallback = 0 !== (suspenseContext & ForceSuspenseFallback);
-      shouldForceFallback
+        tailMode = nextProps.tail,
+        newChildren = nextProps.children,
+        suspenseContext = suspenseStackCursor.current;
+      (nextProps = 0 !== (suspenseContext & ForceSuspenseFallback))
         ? ((suspenseContext =
             (suspenseContext & SubtreeSuspenseContextMask) |
             ForceSuspenseFallback),
@@ -8706,29 +8708,29 @@ __DEV__ &&
         ("forwards" === revealOrder ||
           "backwards" === revealOrder ||
           "unstable_legacy-backwards" === revealOrder) &&
-        void 0 !== nextProps &&
-        null !== nextProps &&
-        !1 !== nextProps
+        void 0 !== newChildren &&
+        null !== newChildren &&
+        !1 !== newChildren
       )
-        if (isArrayImpl(nextProps))
+        if (isArrayImpl(newChildren))
           for (
             suspenseContext = 0;
-            suspenseContext < nextProps.length;
+            suspenseContext < newChildren.length;
             suspenseContext++
           ) {
             if (
               !validateSuspenseListNestedChild(
-                nextProps[suspenseContext],
+                newChildren[suspenseContext],
                 suspenseContext
               )
             )
               break a;
           }
         else if (
-          ((suspenseContext = getIteratorFn(nextProps)),
+          ((suspenseContext = getIteratorFn(newChildren)),
           "function" === typeof suspenseContext)
         ) {
-          if ((suspenseContext = suspenseContext.call(nextProps)))
+          if ((suspenseContext = suspenseContext.call(newChildren)))
             for (
               var step = suspenseContext.next(), _i = 0;
               !step.done;
@@ -8742,12 +8744,11 @@ __DEV__ &&
             'A single row was passed to a <SuspenseList revealOrder="%s" />. This is not useful since it needs multiple rows. Did you mean to pass multiple children or an array?',
             revealOrder
           );
-      reconcileChildren(current, workInProgress, nextProps, renderLanes);
-      if (
-        !shouldForceFallback &&
-        null !== current &&
-        0 !== (current.flags & 128)
-      )
+      reconcileChildren(current, workInProgress, newChildren, renderLanes);
+      isHydrating
+        ? (warnIfNotHydrating(), (newChildren = treeForkCount))
+        : (newChildren = 0);
+      if (!nextProps && null !== current && 0 !== (current.flags & 128))
         a: for (current = workInProgress.child; null !== current; ) {
           if (13 === current.tag)
             null !== current.memoizedState &&
@@ -8788,7 +8789,8 @@ __DEV__ &&
             !1,
             revealOrder,
             renderLanes,
-            tailMode
+            tailMode,
+            newChildren
           );
           break;
         case "backwards":
@@ -8811,11 +8813,19 @@ __DEV__ &&
             !0,
             renderLanes,
             null,
-            tailMode
+            tailMode,
+            newChildren
           );
           break;
         case "together":
-          initSuspenseListRenderState(workInProgress, !1, null, null, void 0);
+          initSuspenseListRenderState(
+            workInProgress,
+            !1,
+            null,
+            null,
+            void 0,
+            newChildren
+          );
           break;
         default:
           workInProgress.memoizedState = null;
@@ -10856,12 +10866,12 @@ __DEV__ &&
           );
         case 19:
           pop(suspenseStackCursor, workInProgress);
-          type = workInProgress.memoizedState;
-          if (null === type) return bubbleProperties(workInProgress), null;
-          newProps = 0 !== (workInProgress.flags & 128);
-          nextResource = type.rendering;
+          newProps = workInProgress.memoizedState;
+          if (null === newProps) return bubbleProperties(workInProgress), null;
+          type = 0 !== (workInProgress.flags & 128);
+          nextResource = newProps.rendering;
           if (null === nextResource)
-            if (newProps) cutOffTailIfNeeded(type, !1);
+            if (type) cutOffTailIfNeeded(newProps, !1);
             else {
               if (
                 workInProgressRootExitStatus !== RootInProgress ||
@@ -10871,7 +10881,7 @@ __DEV__ &&
                   nextResource = findFirstSuspended(current);
                   if (null !== nextResource) {
                     workInProgress.flags |= 128;
-                    cutOffTailIfNeeded(type, !1);
+                    cutOffTailIfNeeded(newProps, !1);
                     current = nextResource.updateQueue;
                     workInProgress.updateQueue = current;
                     scheduleRetryEffect(workInProgress, current);
@@ -10891,65 +10901,69 @@ __DEV__ &&
                         ForceSuspenseFallback,
                       workInProgress
                     );
+                    isHydrating &&
+                      pushTreeFork(workInProgress, newProps.treeForkCount);
                     return workInProgress.child;
                   }
                   current = current.sibling;
                 }
-              null !== type.tail &&
+              null !== newProps.tail &&
                 now$1() > workInProgressRootRenderTargetTime &&
                 ((workInProgress.flags |= 128),
-                (newProps = !0),
-                cutOffTailIfNeeded(type, !1),
+                (type = !0),
+                cutOffTailIfNeeded(newProps, !1),
                 (workInProgress.lanes = 4194304));
             }
           else {
-            if (!newProps)
+            if (!type)
               if (
                 ((current = findFirstSuspended(nextResource)), null !== current)
               ) {
                 if (
                   ((workInProgress.flags |= 128),
-                  (newProps = !0),
+                  (type = !0),
                   (current = current.updateQueue),
                   (workInProgress.updateQueue = current),
                   scheduleRetryEffect(workInProgress, current),
-                  cutOffTailIfNeeded(type, !0),
-                  null === type.tail &&
-                    "hidden" === type.tailMode &&
+                  cutOffTailIfNeeded(newProps, !0),
+                  null === newProps.tail &&
+                    "hidden" === newProps.tailMode &&
                     !nextResource.alternate &&
                     !isHydrating)
                 )
                   return bubbleProperties(workInProgress), null;
               } else
-                2 * now$1() - type.renderingStartTime >
+                2 * now$1() - newProps.renderingStartTime >
                   workInProgressRootRenderTargetTime &&
                   536870912 !== renderLanes &&
                   ((workInProgress.flags |= 128),
-                  (newProps = !0),
-                  cutOffTailIfNeeded(type, !1),
+                  (type = !0),
+                  cutOffTailIfNeeded(newProps, !1),
                   (workInProgress.lanes = 4194304));
-            type.isBackwards
+            newProps.isBackwards
               ? ((nextResource.sibling = workInProgress.child),
                 (workInProgress.child = nextResource))
-              : ((current = type.last),
+              : ((current = newProps.last),
                 null !== current
                   ? (current.sibling = nextResource)
                   : (workInProgress.child = nextResource),
-                (type.last = nextResource));
+                (newProps.last = nextResource));
           }
-          if (null !== type.tail)
+          if (null !== newProps.tail)
             return (
-              (current = type.tail),
-              (type.rendering = current),
-              (type.tail = current.sibling),
-              (type.renderingStartTime = now$1()),
+              (current = newProps.tail),
+              (newProps.rendering = current),
+              (newProps.tail = current.sibling),
+              (newProps.renderingStartTime = now$1()),
               (current.sibling = null),
               (renderLanes = suspenseStackCursor.current),
-              (renderLanes = newProps
+              (renderLanes = type
                 ? (renderLanes & SubtreeSuspenseContextMask) |
                   ForceSuspenseFallback
                 : renderLanes & SubtreeSuspenseContextMask),
               push(suspenseStackCursor, renderLanes, workInProgress),
+              isHydrating &&
+                pushTreeFork(workInProgress, newProps.treeForkCount),
               current
             );
           bubbleProperties(workInProgress);
@@ -21721,7 +21735,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-4df098c4-20250609"
+        reconcilerVersion: "19.2.0-www-modern-c38e2689-20250609"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

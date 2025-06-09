@@ -5783,7 +5783,8 @@ function initSuspenseListRenderState(
   isBackwards,
   tail,
   lastContentRow,
-  tailMode
+  tailMode,
+  treeForkCount
 ) {
   var renderState = workInProgress.memoizedState;
   null === renderState
@@ -5793,14 +5794,16 @@ function initSuspenseListRenderState(
         renderingStartTime: 0,
         last: lastContentRow,
         tail: tail,
-        tailMode: tailMode
+        tailMode: tailMode,
+        treeForkCount: treeForkCount
       })
     : ((renderState.isBackwards = isBackwards),
       (renderState.rendering = null),
       (renderState.renderingStartTime = 0),
       (renderState.last = lastContentRow),
       (renderState.tail = tail),
-      (renderState.tailMode = tailMode));
+      (renderState.tailMode = tailMode),
+      (renderState.treeForkCount = treeForkCount));
 }
 function updateSuspenseListComponent(current, workInProgress, renderLanes) {
   var nextProps = workInProgress.pendingProps,
@@ -5854,7 +5857,8 @@ function updateSuspenseListComponent(current, workInProgress, renderLanes) {
         !1,
         revealOrder,
         renderLanes,
-        tailMode
+        tailMode,
+        0
       );
       break;
     case "backwards":
@@ -5877,11 +5881,12 @@ function updateSuspenseListComponent(current, workInProgress, renderLanes) {
         !0,
         renderLanes,
         null,
-        tailMode
+        tailMode,
+        0
       );
       break;
     case "together":
-      initSuspenseListRenderState(workInProgress, !1, null, null, void 0);
+      initSuspenseListRenderState(workInProgress, !1, null, null, void 0, 0);
       break;
     default:
       workInProgress.memoizedState = null;
@@ -11395,10 +11400,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1624 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-4df098c4-20250609",
+  version: "19.2.0-www-classic-c38e2689-20250609",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-4df098c4-20250609"
+  reconcilerVersion: "19.2.0-www-classic-c38e2689-20250609"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1625 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11424,4 +11429,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.2.0-www-classic-4df098c4-20250609";
+exports.version = "19.2.0-www-classic-c38e2689-20250609";
