@@ -161,9 +161,9 @@ export function initAsyncDebugInfo(): void {
             case UNRESOLVED_AWAIT_NODE:
             case UNRESOLVED_PROMISE_NODE: {
               // If we begin before we resolve, that means that this is actually already resolved but
-              // the promiseResolve hook is called at the end of the execution. This means that it was
-              // actually already resolved when we started so we just use the start time as the end time.
-              resolvePromiseOrAwaitNode(node, node.start);
+              // the promiseResolve hook is called at the end of the execution. So we track the time
+              // in the beginning instead.
+              resolvePromiseOrAwaitNode(node, performance.now());
               break;
             }
           }
