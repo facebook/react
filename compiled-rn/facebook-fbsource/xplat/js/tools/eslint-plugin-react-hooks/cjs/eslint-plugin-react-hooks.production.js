@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<71c7df11ea319bb2a5f453c3e0f565e1>>
+ * @generated SignedSource<<2a9081e0196e1db500124884fc1203a5>>
  */
 
 'use strict';
@@ -17839,6 +17839,10 @@ function isDispatcherType(id) {
 function isFireFunctionType(id) {
     return (id.type.kind === 'Function' && id.type.shapeId === 'BuiltInFireFunction');
 }
+function isEffectEventFunctionType(id) {
+    return (id.type.kind === 'Function' &&
+        id.type.shapeId === 'BuiltInEffectEventFunction');
+}
 function isStableType(id) {
     return (isSetStateType(id) ||
         isSetActionStateType(id) ||
@@ -29642,6 +29646,8 @@ const BuiltInUseTransitionId = 'BuiltInUseTransition';
 const BuiltInStartTransitionId = 'BuiltInStartTransition';
 const BuiltInFireId = 'BuiltInFire';
 const BuiltInFireFunctionId = 'BuiltInFireFunction';
+const BuiltInUseEffectEventId = 'BuiltInUseEffectEvent';
+const BuiltinEffectEventId = 'BuiltInEffectEventFunction';
 const ReanimatedSharedValueId = 'ReanimatedSharedValueId';
 const BUILTIN_SHAPES = new Map();
 addObject(BUILTIN_SHAPES, BuiltInPropsId, [
@@ -30194,6 +30200,13 @@ addObject(BUILTIN_SHAPES, BuiltInUseRefId, [
 addObject(BUILTIN_SHAPES, BuiltInRefValueId, [
     ['*', { kind: 'Object', shapeId: BuiltInRefValueId }],
 ]);
+addFunction(BUILTIN_SHAPES, [], {
+    positionalParams: [],
+    restParam: Effect.ConditionallyMutate,
+    returnType: { kind: 'Poly' },
+    calleeEffect: Effect.ConditionallyMutate,
+    returnValueKind: ValueKind.Mutable,
+}, BuiltinEffectEventId);
 addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
     [
         'toString',
@@ -38051,6 +38064,22 @@ const REACT_APIS = [
             calleeEffect: Effect.Read,
             returnValueKind: ValueKind.Frozen,
         }, BuiltInFireId),
+    ],
+    [
+        'useEffectEvent',
+        addHook(DEFAULT_SHAPES, {
+            positionalParams: [],
+            restParam: Effect.Freeze,
+            returnType: {
+                kind: 'Function',
+                return: { kind: 'Poly' },
+                shapeId: BuiltinEffectEventId,
+                isConstructor: false,
+            },
+            calleeEffect: Effect.Read,
+            hookKind: 'useEffectEvent',
+            returnValueKind: ValueKind.Frozen,
+        }, BuiltInUseEffectEventId),
     ],
 ];
 TYPED_GLOBALS.push([
@@ -50956,7 +50985,8 @@ function inferEffectDependencies(fn) {
                             if (((isUseRefType(maybeDep.identifier) ||
                                 isSetStateType(maybeDep.identifier)) &&
                                 !reactiveIds.has(maybeDep.identifier.id)) ||
-                                isFireFunctionType(maybeDep.identifier)) {
+                                isFireFunctionType(maybeDep.identifier) ||
+                                isEffectEventFunctionType(maybeDep.identifier)) {
                                 continue;
                             }
                             const dep = truncateDepAtCurrent(maybeDep);
