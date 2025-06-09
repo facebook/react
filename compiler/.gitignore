@@ -9,6 +9,8 @@ dist
 !packages/playground/.vscode
 testfilter.txt
 
+packages/react-mcp-server/artifacts
+
 # forgive
 *.vsix
 .vscode-test
