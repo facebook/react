@@ -30,6 +30,9 @@ import {enableAsyncDebugInfo} from 'shared/ReactFeatureFlags';
 const pendingOperations: Map<number, AsyncSequence> =
   __DEV__ && enableAsyncDebugInfo ? new Map() : (null: any);
 
+// Keep the last resolved await as a workaround for async functions missing data.
+let lastRanAwait: null | AwaitNode = null;
+
 function resolvePromiseOrAwaitNode(
   unresolvedNode: UnresolvedAwaitNode | UnresolvedPromiseNode,
   endTime: number,
@@ -152,23 +155,49 @@ export function initAsyncDebugInfo(): void {
         if (node !== undefined) {
           switch (node.tag) {
             case IO_NODE: {
+              lastRanAwait = null;
               // Log the end time when we resolved the I/O. This can happen
               // more than once if it's a recurring resource like a connection.
               const ioNode: IONode = (node: any);
               ioNode.end = performance.now();
               break;
             }
-            case UNRESOLVED_AWAIT_NODE:
-            case UNRESOLVED_PROMISE_NODE: {
+            case UNRESOLVED_AWAIT_NODE: {
               // If we begin before we resolve, that means that this is actually already resolved but
               // the promiseResolve hook is called at the end of the execution. So we track the time
-              // in the beginning instead.
-              resolvePromiseOrAwaitNode(node, performance.now());
+              // in the before call instead.
+              // $FlowFixMe
+              lastRanAwait = resolvePromiseOrAwaitNode(node, performance.now());
               break;
+            }
+            case AWAIT_NODE: {
+              lastRanAwait = node;
+              break;
+            }
+            case UNRESOLVED_PROMISE_NODE: {
+              // We typically don't expected Promises to have an execution scope since only the awaits
+              // have a then() callback. However, this can happen for native async functions. The last
+              // piece of code that executes the return after the last await has the execution context
+              // of the Promise.
+              const resolvedNode = resolvePromiseOrAwaitNode(
+                node,
+                performance.now(),
+              );
+              // We are missing information about what this was unblocked by but we can guess that it
+              // was whatever await we ran last since this will continue in a microtask after that.
+              // This is not perfect because there could potentially be other microtasks getting in
+              // between.
+              resolvedNode.previous = lastRanAwait;
+              lastRanAwait = null;
+              break;
+            }
+            default: {
+              lastRanAwait = null;
             }
           }
         }
       },
+
       promiseResolve(asyncId: number): void {
         const node = pendingOperations.get(asyncId);
         if (node !== undefined) {
@@ -181,8 +210,8 @@ export function initAsyncDebugInfo(): void {
             }
             case AWAIT_NODE:
             case PROMISE_NODE: {
+              // We already resolved this in the begin hook.
               resolvedNode = node;
-              // We already resolved this in the begin phase.
               break;
             }
             default:
