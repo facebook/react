@@ -13,7 +13,15 @@ const SUSPENSE_PENDING_START_DATA = '$?';
 const SUSPENSE_QUEUED_START_DATA = '$~';
 const SUSPENSE_FALLBACK_START_DATA = '$!';
 
-const SUSPENSEY_FONT_TIMEOUT = 500;
+const FALLBACK_THROTTLE_MS = 300;
+
+const SUSPENSEY_FONT_AND_IMAGE_TIMEOUT = 500;
+
+// If you have a target goal in mind for a metric to hit, you don't want the
+// only reason you miss it by a little bit to be throttling heuristics.
+// This tries to avoid throttling if avoiding it would let you hit this metric.
+// This is derived from trying to hit an LCP of 2.5 seconds with some head room.
+const TARGET_VANITY_METRIC = 2300;
 
 // TODO: Symbols that are referenced outside this module use dynamic accessor
 // notation instead of dot notation to prevent Closure's advanced compilation
@@ -111,7 +119,7 @@ export function revealCompletedBoundariesWithViewTransitions(
       // TODO: We don't have a prefix to pick from here but maybe we don't need it
       // since it's only applicable temporarily during this specific animation.
       const idPrefix = '';
-      name = '\u00AB' + idPrefix + 'T' + autoNameIdx++ + '\u00BB';
+      name = '_' + idPrefix + 'T_' + autoNameIdx++ + '_';
     }
     elementStyle['viewTransitionName'] = name;
     shouldStartViewTransition = true;
@@ -136,6 +144,7 @@ export function revealCompletedBoundariesWithViewTransitions(
         );
       }
     }
+    const suspenseyImages = [];
     // Next we'll find the nodes that we're going to animate and apply names to them..
     for (let i = 0; i < batch.length; i += 2) {
       const suspenseIdNode = batch[i];
@@ -248,21 +257,59 @@ export function revealCompletedBoundariesWithViewTransitions(
         ancestorElement.nodeType === ELEMENT_NODE &&
         ancestorElement.getAttribute('vt-update') !== 'none'
       );
+
+      // Find the appearing Suspensey Images inside the new content.
+      const appearingImages = contentNode.querySelectorAll(
+        'img[src]:not([loading="lazy"])',
+      );
+      // TODO: Consider marking shouldStartViewTransition if we found any images.
+      // But only once we can disable the root animation for that case.
+      suspenseyImages.push.apply(suspenseyImages, appearingImages);
     }
     if (shouldStartViewTransition) {
       const transition = (document['__reactViewTransition'] = document[
         'startViewTransition'
       ]({
         update: () => {
-          revealBoundaries(
-            batch,
-            // Force layout to trigger font loading, we pass the actual value to trick minifiers.
+          revealBoundaries(batch);
+          const blockingPromises = [
+            // Force layout to trigger font loading, we stash the actual value to trick minifiers.
             document.documentElement.clientHeight,
-          );
-          return Promise.race([
             // Block on fonts finishing loading before revealing these boundaries.
             document.fonts.ready,
-            new Promise(resolve => setTimeout(resolve, SUSPENSEY_FONT_TIMEOUT)),
+          ];
+          for (let i = 0; i < suspenseyImages.length; i++) {
+            const suspenseyImage = suspenseyImages[i];
+            if (!suspenseyImage.complete) {
+              const rect = suspenseyImage.getBoundingClientRect();
+              const inViewport =
+                rect.bottom > 0 &&
+                rect.right > 0 &&
+                rect.top < window.innerHeight &&
+                rect.left < window.innerWidth;
+              if (inViewport) {
+                const loadingImage = new Promise(resolve => {
+                  suspenseyImage.addEventListener('load', resolve);
+                  suspenseyImage.addEventListener('error', resolve);
+                });
+                blockingPromises.push(loadingImage);
+              }
+            }
+          }
+          return Promise.race([
+            Promise.all(blockingPromises),
+            new Promise(resolve => {
+              const currentTime = performance.now();
+              const msUntilTimeout =
+                // If the throttle would make us miss the target metric, then shorten the throttle.
+                // performance.now()'s zero value is assumed to be the start time of the metric.
+                currentTime < TARGET_VANITY_METRIC &&
+                currentTime > TARGET_VANITY_METRIC - FALLBACK_THROTTLE_MS
+                  ? TARGET_VANITY_METRIC - currentTime
+                  : // Otherwise it's throttled starting from last commit time.
+                    SUSPENSEY_FONT_AND_IMAGE_TIMEOUT;
+              setTimeout(resolve, msUntilTimeout);
+            }),
           ]);
         },
         types: [], // TODO: Add a hard coded type for Suspense reveals.
@@ -330,8 +377,6 @@ export function clientRenderBoundary(
   }
 }
 
-const FALLBACK_THROTTLE_MS = 300;
-
 export function completeBoundary(suspenseBoundaryID, contentID) {
   const contentNodeOuter = document.getElementById(contentID);
   if (!contentNodeOuter) {
@@ -365,8 +410,15 @@ export function completeBoundary(suspenseBoundaryID, contentID) {
     // to flush the batch. This is delayed by the throttle heuristic.
     const globalMostRecentFallbackTime =
       typeof window['$RT'] !== 'number' ? 0 : window['$RT'];
+    const currentTime = performance.now();
     const msUntilTimeout =
-      globalMostRecentFallbackTime + FALLBACK_THROTTLE_MS - performance.now();
+      // If the throttle would make us miss the target metric, then shorten the throttle.
+      // performance.now()'s zero value is assumed to be the start time of the metric.
+      currentTime < TARGET_VANITY_METRIC &&
+      currentTime > TARGET_VANITY_METRIC - FALLBACK_THROTTLE_MS
+        ? TARGET_VANITY_METRIC - currentTime
+        : // Otherwise it's throttled starting from last commit time.
+          globalMostRecentFallbackTime + FALLBACK_THROTTLE_MS - currentTime;
     // We always schedule the flush in a timer even if it's very low or negative to allow
     // for multiple completeBoundary calls that are already queued to have a chance to
     // make the batch.

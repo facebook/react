@@ -1,4 +1,7 @@
 import * as React from 'react';
+import {renderToReadableStream} from 'react-server-dom-webpack/server';
+import {createFromReadableStream} from 'react-server-dom-webpack/client';
+import {PassThrough, Readable} from 'stream';
 
 import Container from './Container.js';
 
@@ -30,20 +33,58 @@ function Foo({children}) {
   return <div>{children}</div>;
 }
 
+async function delay(text, ms) {
+  return new Promise(resolve => setTimeout(() => resolve(text), ms));
+}
+
 async function Bar({children}) {
-  await new Promise(resolve => setTimeout(() => resolve('deferred text'), 10));
+  await delay('deferred text', 10);
   return <div>{children}</div>;
 }
 
-async function ServerComponent() {
-  await new Promise(resolve => setTimeout(() => resolve('deferred text'), 50));
+async function ThirdPartyComponent() {
+  return delay('hello from a 3rd party', 30);
 }
 
-export default async function App({prerender}) {
+let cachedThirdPartyStream;
+
+// We create the Component outside of AsyncLocalStorage so that it has no owner.
+// That way it gets the owner from the call to createFromNodeStream.
+const thirdPartyComponent = <ThirdPartyComponent />;
+
+function fetchThirdParty(noCache) {
+  // We're using the Web Streams APIs for tee'ing convenience.
+  const stream =
+    cachedThirdPartyStream && !noCache
+      ? cachedThirdPartyStream
+      : renderToReadableStream(
+          thirdPartyComponent,
+          {},
+          {environmentName: 'third-party'}
+        );
+
+  const [stream1, stream2] = stream.tee();
+  cachedThirdPartyStream = stream1;
+
+  return createFromReadableStream(stream2, {
+    serverConsumerManifest: {
+      moduleMap: {},
+      serverModuleMap: null,
+      moduleLoading: null,
+    },
+  });
+}
+
+async function ServerComponent({noCache}) {
+  await delay('deferred text', 50);
+  return await fetchThirdParty(noCache);
+}
+
+export default async function App({prerender, noCache}) {
   const res = await fetch('http://localhost:3001/todos');
   const todos = await res.json();
 
-  const dedupedChild = <ServerComponent />;
+  const dedupedChild = <ServerComponent noCache={noCache} />;
   const message = getServerState();
   return (
     <html lang="en">

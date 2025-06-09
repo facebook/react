@@ -25,7 +25,7 @@ let SuspenseList;
 let textCache;
 let loadCache;
 let writable;
-const CSPnonce = null;
+let CSPnonce = null;
 let container;
 let buffer = '';
 let hasErrored = false;
@@ -69,6 +69,7 @@ describe('ReactDOMFloat', () => {
       setTimeout(cb);
     container = document.getElementById('container');
 
+    CSPnonce = null;
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
@@ -707,12 +708,12 @@ describe('ReactDOMFloat', () => {
           ? '<script src="react-dom/unstable_server-external-runtime" async=""></script>'
           : '') +
         (gate(flags => flags.enableFizzBlockingRender)
-          ? '<link rel="expect" href="#«R»" blocking="render"/>'
+          ? '<link rel="expect" href="#_R_" blocking="render"/>'
           : '') +
         '<title>foo</title></head>' +
         '<body>bar' +
         (gate(flags => flags.enableFizzBlockingRender)
-          ? '<template id="«R»"></template>'
+          ? '<template id="_R_"></template>'
           : ''),
       '</body></html>',
     ]);
@@ -5755,7 +5756,7 @@ body {
         <html>
           <body>
             <Suspense fallback="loading...">
-              <SuspenseList revealOrder="forwards">
+              <SuspenseList revealOrder="forwards" tail="visible">
                 <Suspense fallback="loading foo...">
                   <BlockedOn value="foo">
                     <link rel="stylesheet" href="foo" precedence="foo" />
@@ -8594,6 +8595,86 @@ background-color: green;
           'The href for the <style> where this ocurred is "foo bar".\n' +
           '    in style (at **)',
       ]);
+    });
+
+    it('can emit styles with nonce', async () => {
+      const nonce = 'R4nD0m';
+      const fooCss = '.foo { color: hotpink; }';
+      const barCss = '.bar { background-color: blue; }';
+      const bazCss = '.baz { border: 1px solid black; }';
+      await act(() => {
+        renderToPipeableStream(
+          <html>
+            <body>
+              <Suspense>
+                <BlockedOn value="first">
+                  <div>first</div>
+                  <style href="foo" precedence="default" nonce={nonce}>
+                    {fooCss}
+                  </style>
+                  <style href="bar" precedence="default" nonce={nonce}>
+                    {barCss}
+                  </style>
+                  <BlockedOn value="second">
+                    <div>second</div>
+                    <style href="baz" precedence="default" nonce={nonce}>
+                      {bazCss}
+                    </style>
+                  </BlockedOn>
+                </BlockedOn>
+              </Suspense>
+            </body>
+          </html>,
+          {nonce: {style: nonce}},
+        ).pipe(writable);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body />
+        </html>,
+      );
+
+      await act(() => {
+        resolveText('first');
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>
+            <style
+              data-href="foo bar"
+              data-precedence="default"
+              media="not all"
+              nonce={nonce}>
+              {`${fooCss}${barCss}`}
+            </style>
+          </body>
+        </html>,
+      );
+
+      await act(() => {
+        resolveText('second');
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <style data-href="foo bar" data-precedence="default" nonce={nonce}>
+              {`${fooCss}${barCss}`}
+            </style>
+            <style data-href="baz" data-precedence="default" nonce={nonce}>
+              {bazCss}
+            </style>
+          </head>
+          <body>
+            <div>first</div>
+            <div>second</div>
+          </body>
+        </html>,
+      );
     });
   });
 

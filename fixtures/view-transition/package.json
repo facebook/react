@@ -22,9 +22,9 @@
     ]
   },
   "scripts": {
-    "predev": "cp -r ../../build/oss-experimental/* ./node_modules/",
-    "prestart": "cp -r ../../build/oss-experimental/* ./node_modules/",
-    "prebuild": "cp -r ../../build/oss-experimental/* ./node_modules/",
+    "predev": "cp -r ../../build/oss-experimental/* ./node_modules/ && rm -rf node_modules/.cache;",
+    "prestart": "cp -r ../../build/oss-experimental/* ./node_modules/ && rm -rf node_modules/.cache;",
+    "prebuild": "cp -r ../../build/oss-experimental/* ./node_modules/ && rm -rf node_modules/.cache;",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:client": "BROWSER=none PORT=3001 react-scripts start",
     "dev:server": "NODE_ENV=development node server",

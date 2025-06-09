@@ -79,7 +79,7 @@ describe('ReactSuspenseList', () => {
     });
     assertConsoleErrorDev([
       '"something" is not a supported revealOrder on ' +
-        '<SuspenseList />. Did you mean "together", "forwards" or "backwards"?' +
+        '<SuspenseList />. Did you mean "independent", "together", "forwards" or "backwards"?' +
         '\n    in SuspenseList (at **)' +
         '\n    in Foo (at **)',
     ]);
@@ -131,7 +131,11 @@ describe('ReactSuspenseList', () => {
   // @gate enableSuspenseList
   it('warns if a single element is passed to a "forwards" list', async () => {
     function Foo({children}) {
-      return <SuspenseList revealOrder="forwards">{children}</SuspenseList>;
+      return (
+        <SuspenseList revealOrder="forwards" tail="visible">
+          {children}
+        </SuspenseList>
+      );
     }
 
     ReactNoop.render(<Foo />);
@@ -166,7 +170,7 @@ describe('ReactSuspenseList', () => {
   it('warns if a single fragment is passed to a "backwards" list', async () => {
     function Foo() {
       return (
-        <SuspenseList revealOrder="backwards">
+        <SuspenseList revealOrder="unstable_legacy-backwards" tail="visible">
           <>{[]}</>
         </SuspenseList>
       );
@@ -176,7 +180,7 @@ describe('ReactSuspenseList', () => {
       ReactNoop.render(<Foo />);
     });
     assertConsoleErrorDev([
-      'A single row was passed to a <SuspenseList revealOrder="backwards" />. ' +
+      'A single row was passed to a <SuspenseList revealOrder="unstable_legacy-backwards" />. ' +
         'This is not useful since it needs multiple rows. ' +
         'Did you mean to pass multiple children or an array?' +
         '\n    in SuspenseList (at **)' +
@@ -188,7 +192,7 @@ describe('ReactSuspenseList', () => {
   it('warns if a nested array is passed to a "forwards" list', async () => {
     function Foo({items}) {
       return (
-        <SuspenseList revealOrder="forwards">
+        <SuspenseList revealOrder="forwards" tail="visible">
           {items.map(name => (
             <Suspense key={name} fallback="Loading">
               {name}
@@ -214,7 +218,7 @@ describe('ReactSuspenseList', () => {
   });
 
   // @gate enableSuspenseList
-  it('shows content independently by default', async () => {
+  it('warns if no revealOrder is specified', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
     const C = createAsyncText('C');
@@ -222,6 +226,86 @@ describe('ReactSuspenseList', () => {
     function Foo() {
       return (
         <SuspenseList>
+          <Suspense fallback={<Text text="Loading A" />}>
+            <A />
+          </Suspense>
+          <Suspense fallback={<Text text="Loading B" />}>
+            <B />
+          </Suspense>
+          <Suspense fallback={<Text text="Loading C" />}>
+            <C />
+          </Suspense>
+        </SuspenseList>
+      );
+    }
+
+    await A.resolve();
+
+    ReactNoop.render(<Foo />);
+
+    await waitForAll([
+      'A',
+      'Suspend! [B]',
+      'Loading B',
+      'Suspend! [C]',
+      'Loading C',
+      // pre-warming
+      'Suspend! [B]',
+      'Suspend! [C]',
+    ]);
+
+    assertConsoleErrorDev([
+      'The default for the <SuspenseList revealOrder="..."> prop is changing. ' +
+        'To be future compatible you must explictly specify either ' +
+        '"independent" (the current default), "together", "forwards" or "legacy_unstable-backwards".' +
+        '\n    in SuspenseList (at **)' +
+        '\n    in Foo (at **)',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>Loading B</span>
+        <span>Loading C</span>
+      </>,
+    );
+
+    await act(() => C.resolve());
+    assertLog(
+      gate('alwaysThrottleRetries')
+        ? ['Suspend! [B]', 'C', 'Suspend! [B]']
+        : ['C'],
+    );
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>Loading B</span>
+        <span>C</span>
+      </>,
+    );
+
+    await act(() => B.resolve());
+    assertLog(['B']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </>,
+    );
+  });
+
+  // @gate enableSuspenseList
+  it('shows content independently with revealOrder="independent"', async () => {
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
+
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="independent">
           <Suspense fallback={<Text text="Loading A" />}>
             <A />
           </Suspense>
@@ -564,7 +648,7 @@ describe('ReactSuspenseList', () => {
   });
 
   // @gate enableSuspenseList
-  it('displays all "together" in nested SuspenseLists where the inner is default', async () => {
+  it('displays all "together" in nested SuspenseLists where the inner is "independent"', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
     const C = createAsyncText('C');
@@ -575,7 +659,7 @@ describe('ReactSuspenseList', () => {
           <Suspense fallback={<Text text="Loading A" />}>
             <A />
           </Suspense>
-          <SuspenseList>
+          <SuspenseList revealOrder="independent">
             <Suspense fallback={<Text text="Loading B" />}>
               <B />
             </Suspense>
@@ -897,7 +981,7 @@ describe('ReactSuspenseList', () => {
 
     function Foo() {
       return (
-        <SuspenseList revealOrder="forwards">
+        <SuspenseList revealOrder="forwards" tail="visible">
           <Suspense fallback={<Text text="Loading A" />}>
             <A />
           </Suspense>
@@ -956,6 +1040,85 @@ describe('ReactSuspenseList', () => {
   });
 
   // @gate enableSuspenseList
+  it('warns if revealOrder="backwards" is specified', async () => {
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
+
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="backwards" tail="visible">
+          <Suspense fallback={<Text text="Loading A" />}>
+            <A />
+          </Suspense>
+          <Suspense fallback={<Text text="Loading B" />}>
+            <B />
+          </Suspense>
+          <Suspense fallback={<Text text="Loading C" />}>
+            <C />
+          </Suspense>
+        </SuspenseList>
+      );
+    }
+
+    await A.resolve();
+
+    ReactNoop.render(<Foo />);
+
+    await waitForAll([
+      'Suspend! [C]',
+      'Loading C',
+      'Loading B',
+      'Loading A',
+      // pre-warming
+      'Suspend! [C]',
+    ]);
+
+    assertConsoleErrorDev([
+      'The rendering order of <SuspenseList revealOrder="backwards"> is changing. ' +
+        'To be future compatible you must specify ' +
+        'revealOrder="legacy_unstable-backwards" instead.' +
+        '\n    in SuspenseList (at **)' +
+        '\n    in Foo (at **)',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>Loading A</span>
+        <span>Loading B</span>
+        <span>Loading C</span>
+      </>,
+    );
+
+    await act(() => C.resolve());
+    assertLog([
+      'C',
+      'Suspend! [B]',
+      // pre-warming
+      'Suspend! [B]',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>Loading A</span>
+        <span>Loading B</span>
+        <span>C</span>
+      </>,
+    );
+
+    await act(() => B.resolve());
+    assertLog(['B', 'A']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </>,
+    );
+  });
+
+  // @gate enableSuspenseList
   it('displays each items in "backwards" order', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -963,7 +1126,7 @@ describe('ReactSuspenseList', () => {
 
     function Foo() {
       return (
-        <SuspenseList revealOrder="backwards">
+        <SuspenseList revealOrder="unstable_legacy-backwards" tail="visible">
           <Suspense fallback={<Text text="Loading A" />}>
             <A />
           </Suspense>
@@ -1037,7 +1200,7 @@ describe('ReactSuspenseList', () => {
 
     function Foo({items}) {
       return (
-        <SuspenseList revealOrder="forwards">
+        <SuspenseList revealOrder="forwards" tail="visible">
           {items.map(([key, Component]) => (
             <Suspense key={key} fallback={<Text text={'Loading ' + key} />}>
               <Component />
@@ -1222,7 +1385,7 @@ describe('ReactSuspenseList', () => {
 
     function Foo({items}) {
       return (
-        <SuspenseList revealOrder="backwards">
+        <SuspenseList revealOrder="unstable_legacy-backwards" tail="visible">
           {items.map(([key, Component]) => (
             <Suspense key={key} fallback={<Text text={'Loading ' + key} />}>
               <Component />
@@ -1400,7 +1563,7 @@ describe('ReactSuspenseList', () => {
   it('switches to rendering fallbacks if the tail takes long CPU time', async () => {
     function Foo() {
       return (
-        <SuspenseList revealOrder="forwards">
+        <SuspenseList revealOrder="forwards" tail="visible">
           <Suspense fallback={<Text text="Loading A" />}>
             <Text text="A" />
           </Suspense>
@@ -1536,6 +1699,29 @@ describe('ReactSuspenseList', () => {
   });
 
   // @gate enableSuspenseList
+  it('warns if no tail option is specified', async () => {
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="forwards">
+          <Suspense fallback="Loading">A</Suspense>
+          <Suspense fallback="Loading">B</Suspense>
+        </SuspenseList>
+      );
+    }
+
+    await act(() => {
+      ReactNoop.render(<Foo />);
+    });
+    assertConsoleErrorDev([
+      'The default for the <SuspenseList tail="..."> prop is changing. ' +
+        'To be future compatible you must explictly specify either ' +
+        '"visible" (the current default), "collapsed" or "hidden".' +
+        '\n    in SuspenseList (at **)' +
+        '\n    in Foo (at **)',
+    ]);
+  });
+
+  // @gate enableSuspenseList
   it('warns if an unsupported tail option is used', async () => {
     function Foo() {
       return (
@@ -1551,7 +1737,7 @@ describe('ReactSuspenseList', () => {
     });
     assertConsoleErrorDev([
       '"collapse" is not a supported value for tail on ' +
-        '<SuspenseList />. Did you mean "collapsed" or "hidden"?' +
+        '<SuspenseList />. Did you mean "visible", "collapsed" or "hidden"?' +
         '\n    in SuspenseList (at **)' +
         '\n    in Foo (at **)',
     ]);
@@ -1796,7 +1982,7 @@ describe('ReactSuspenseList', () => {
 
     function Foo({items}) {
       return (
-        <SuspenseList revealOrder="backwards" tail="collapsed">
+        <SuspenseList revealOrder="unstable_legacy-backwards" tail="collapsed">
           {items.map(([key, Component]) => (
             <Suspense key={key} fallback={<Text text={'Loading ' + key} />}>
               <Component />
@@ -2154,7 +2340,7 @@ describe('ReactSuspenseList', () => {
     function Foo() {
       return (
         <SuspenseList revealOrder="together">
-          <SuspenseList revealOrder="forwards">
+          <SuspenseList revealOrder="forwards" tail="visible">
             <Suspense fallback={<Text text="Loading A" />}>
               <Text text="A" />
             </Suspense>
@@ -2255,7 +2441,7 @@ describe('ReactSuspenseList', () => {
 
     function Foo({showB}) {
       return (
-        <SuspenseList revealOrder="forwards">
+        <SuspenseList revealOrder="forwards" tail="visible">
           <SuspenseList revealOrder="forwards" tail="hidden">
             <Suspense fallback={<Text text="Loading A" />}>
               <Text text="A" />
@@ -2321,7 +2507,7 @@ describe('ReactSuspenseList', () => {
     function Foo() {
       return (
         <div>
-          <SuspenseList revealOrder="forwards">
+          <SuspenseList revealOrder="forwards" tail="visible">
             <Text text="A" />
             <Text text="B" />
           </SuspenseList>
@@ -2673,7 +2859,7 @@ describe('ReactSuspenseList', () => {
     function App() {
       Scheduler.log('App');
       return (
-        <SuspenseList revealOrder="forwards">
+        <SuspenseList revealOrder="forwards" tail="visible">
           <Suspense fallback={<Text text="Loading A" />}>
             <Sleep time={600}>
               <TwoPass text="A" />
@@ -2760,7 +2946,7 @@ describe('ReactSuspenseList', () => {
       Scheduler.log('App');
       return (
         <Profiler id="root" onRender={onRender}>
-          <SuspenseList revealOrder="forwards">
+          <SuspenseList revealOrder="forwards" tail="visible">
             <Suspense fallback={<Fallback />}>
               <Sleep time={1}>
                 <A />
@@ -2936,7 +3122,7 @@ describe('ReactSuspenseList', () => {
       // Several layers of Bailout wrappers help verify we're
       // marking updates all the way to the propagation root.
       return (
-        <SuspenseList revealOrder="forwards">
+        <SuspenseList revealOrder="forwards" tail="visible">
           <Bailout>
             <Bailout>
               <Bailout>
@@ -3029,7 +3215,7 @@ describe('ReactSuspenseList', () => {
 
       function Repro({update}) {
         return (
-          <SuspenseList revealOrder="forwards">
+          <SuspenseList revealOrder="forwards" tail="visible">
             {update && (
               <Suspense fallback={<Text text="Loading A..." />}>
                 <A />
@@ -3128,7 +3314,7 @@ describe('ReactSuspenseList', () => {
     }
     function Foo() {
       return (
-        <SuspenseList revealOrder="forwards">
+        <SuspenseList revealOrder="forwards" tail="visible">
           <Generator />
         </SuspenseList>
       );
@@ -3184,7 +3370,11 @@ describe('ReactSuspenseList', () => {
     };
 
     function Foo() {
-      return <SuspenseList revealOrder="forwards">{iterable}</SuspenseList>;
+      return (
+        <SuspenseList revealOrder="forwards" tail="visible">
+          {iterable}
+        </SuspenseList>
+      );
     }
 
     await act(() => {
@@ -3270,7 +3460,7 @@ describe('ReactSuspenseList', () => {
   it('warns if a nested async iterable is passed to a "forwards" list', async () => {
     function Foo({items}) {
       return (
-        <SuspenseList revealOrder="forwards">
+        <SuspenseList revealOrder="forwards" tail="visible">
           {items}
           <div>Tail</div>
         </SuspenseList>
