@@ -410,12 +410,12 @@ describe('useId', () => {
         id="container"
       >
         <span
-          id=":R1:"
+          id="_R_1_"
         >
           A
         </span>
         <span
-          id=":R2:"
+          id="_R_2_"
         >
           B
         </span>
@@ -431,12 +431,12 @@ describe('useId', () => {
         id="container"
       >
         <span
-          id=":R1:"
+          id="_R_1_"
         >
           A
         </span>
         <span
-          id=":R2:"
+          id="_R_2_"
         >
           B
         </span>
@@ -473,12 +473,12 @@ describe('useId', () => {
         id="container"
       >
         <span
-          id=":R1:"
+          id="_R_1_"
         >
           A
         </span>
         <span
-          id=":R2:"
+          id="_R_2_"
         >
           B
         </span>
@@ -494,12 +494,12 @@ describe('useId', () => {
         id="container"
       >
         <span
-          id=":R1:"
+          id="_R_1_"
         >
           A
         </span>
         <span
-          id=":R2:"
+          id="_R_2_"
         >
           B
         </span>
@@ -536,12 +536,12 @@ describe('useId', () => {
         id="container"
       >
         <span
-          id=":R1:"
+          id="_R_1_"
         >
           A
         </span>
         <span
-          id=":R2:"
+          id="_R_2_"
         >
           B
         </span>
@@ -570,17 +570,17 @@ https://react.dev/link/hydration-mismatch
   <Foo>
     <SuspenseList revealOrder="forwards">
       <Bar>
-        <Baz id=":R0:">
+        <Baz id="_R_0_">
           <span
-+           id=":R0:"
--           id=":R1:"
++           id="_R_0_"
+-           id="_R_1_"
           >
 +           A
       <Bar>
-        <Baz id=":R1:">
+        <Baz id="_R_1_">
           <span
-+           id=":R1:"
--           id=":R2:"
++           id="_R_1_"
+-           id="_R_2_"
           >
 +           B
 `,
@@ -593,12 +593,12 @@ https://react.dev/link/hydration-mismatch
         id="container"
       >
         <span
-          id=":R1:"
+          id="_R_1_"
         >
           A
         </span>
         <span
-          id=":R2:"
+          id="_R_2_"
         >
           B
         </span>
@@ -635,12 +635,12 @@ https://react.dev/link/hydration-mismatch
         id="container"
       >
         <span
-          id=":R1:"
+          id="_R_1_"
         >
           A
         </span>
         <span
-          id=":R2:"
+          id="_R_2_"
         >
           B
         </span>
@@ -662,12 +662,12 @@ https://react.dev/link/hydration-mismatch
         id="container"
       >
         <span
-          id=":r1:"
+          id="_r_1_"
         >
           A
         </span>
         <span
-          id=":r0:"
+          id="_r_0_"
         >
           B
         </span>
@@ -697,8 +697,8 @@ https://react.dev/link/hydration-mismatch
     <SuspenseList revealOrder="backwards">
       <Bar>
       <Bar>
-        <Baz id=":R1:">
-          <span id=":R1:">
+        <Baz id="_R_1_">
+          <span id="_R_1_">
 +           B
 -           A
 `,
@@ -711,12 +711,12 @@ https://react.dev/link/hydration-mismatch
         id="container"
       >
         <span
-          id=":R1:"
+          id="_R_1_"
         >
           A
         </span>
         <span
-          id=":R2:"
+          id="_R_2_"
         >
           B
         </span>
