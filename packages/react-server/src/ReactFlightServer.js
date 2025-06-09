@@ -91,6 +91,7 @@ import {
   initAsyncDebugInfo,
   markAsyncSequenceRootTask,
   getCurrentAsyncSequence,
+  getAsyncSequenceFromPromise,
   parseStackTrace,
   supportsComponentStorage,
   componentStorage,
@@ -690,26 +691,14 @@ function serializeThenable(
 
   switch (thenable.status) {
     case 'fulfilled': {
-      if (__DEV__) {
-        // If this came from Flight, forward any debug info into this new row.
-        const debugInfo: ?ReactDebugInfo = (thenable: any)._debugInfo;
-        if (debugInfo) {
-          forwardDebugInfo(request, newTask, debugInfo);
-        }
-      }
+      forwardDebugInfoFromThenable(request, newTask, thenable);
       // We have the resolved value, we can go ahead and schedule it for serialization.
       newTask.model = thenable.value;
       pingTask(request, newTask);
       return newTask.id;
     }
     case 'rejected': {
-      if (__DEV__) {
-        // If this came from Flight, forward any debug info into this new row.
-        const debugInfo: ?ReactDebugInfo = (thenable: any)._debugInfo;
-        if (debugInfo) {
-          forwardDebugInfo(request, newTask, debugInfo);
-        }
-      }
+      forwardDebugInfoFromThenable(request, newTask, thenable);
       const x = thenable.reason;
       erroredTask(request, newTask, x);
       return newTask.id;
@@ -758,24 +747,11 @@ function serializeThenable(
 
   thenable.then(
     value => {
-      if (__DEV__) {
-        // If this came from Flight, forward any debug info into this new row.
-        const debugInfo: ?ReactDebugInfo = (thenable: any)._debugInfo;
-        if (debugInfo) {
-          forwardDebugInfo(request, newTask, debugInfo);
-        }
-      }
+      forwardDebugInfoFromCurrentContext(request, newTask, thenable);
       newTask.model = value;
       pingTask(request, newTask);
     },
     reason => {
-      if (__DEV__) {
-        // If this came from Flight, forward any debug info into this new row.
-        const debugInfo: ?ReactDebugInfo = (thenable: any)._debugInfo;
-        if (debugInfo) {
-          forwardDebugInfo(request, newTask, debugInfo);
-        }
-      }
       if (newTask.status === PENDING) {
         if (enableProfilerTimer && enableComponentPerformanceTrack) {
           // If this is async we need to time when this task finishes.
@@ -1098,7 +1074,7 @@ function createLazyWrapperAroundWakeable(wakeable: Wakeable) {
   };
   if (__DEV__) {
     // If this came from React, transfer the debug info.
-    lazyType._debugInfo = (thenable: any)._debugInfo || [];
+    lazyType._debugInfo = thenable._debugInfo || [];
   }
   return lazyType;
 }
@@ -2044,12 +2020,6 @@ function pingTask(request: Request, task: Task): void {
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     // If this was async we need to emit the time when it completes.
     task.timed = true;
-    if (enableAsyncDebugInfo) {
-      const sequence = getCurrentAsyncSequence();
-      if (sequence !== null) {
-        emitAsyncSequence(request, task, sequence);
-      }
-    }
   }
   const pingedTasks = request.pingedTasks;
   pingedTasks.push(task);
@@ -4312,6 +4282,54 @@ function forwardDebugInfo(
         request.pendingChunks++;
         emitDebugChunk(request, id, info);
       }
+    }
+  }
+}
+
+function forwardDebugInfoFromThenable(
+  request: Request,
+  task: Task,
+  thenable: Thenable<any>,
+): void {
+  if (__DEV__) {
+    // If this came from Flight, forward any debug info into this new row.
+    const debugInfo: ?ReactDebugInfo = thenable._debugInfo;
+    if (debugInfo) {
+      forwardDebugInfo(request, task, debugInfo);
+    }
+  }
+  if (
+    enableProfilerTimer &&
+    enableComponentPerformanceTrack &&
+    enableAsyncDebugInfo
+  ) {
+    const sequence = getAsyncSequenceFromPromise(thenable);
+    if (sequence !== null) {
+      emitAsyncSequence(request, task, sequence);
+    }
+  }
+}
+
+function forwardDebugInfoFromCurrentContext(
+  request: Request,
+  task: Task,
+  thenable: Thenable<any>,
+): void {
+  if (__DEV__) {
+    // If this came from Flight, forward any debug info into this new row.
+    const debugInfo: ?ReactDebugInfo = thenable._debugInfo;
+    if (debugInfo) {
+      forwardDebugInfo(request, task, debugInfo);
+    }
+  }
+  if (
+    enableProfilerTimer &&
+    enableComponentPerformanceTrack &&
+    enableAsyncDebugInfo
+  ) {
+    const sequence = getCurrentAsyncSequence();
+    if (sequence !== null) {
+      emitAsyncSequence(request, task, sequence);
     }
   }
 }
