@@ -1880,7 +1880,7 @@ function visitAsyncNode(
   request: Request,
   task: Task,
   node: AsyncSequence,
-  visited: Set<AsyncSequence>,
+  visited: Set<AsyncSequence | ReactDebugInfo>,
   cutOff: number,
 ): null | PromiseNode | IONode {
   if (visited.has(node)) {
@@ -1939,7 +1939,8 @@ function visitAsyncNode(
       // We need to forward after we visit awaited nodes because what ever I/O we requested that's
       // the thing that generated this node and its virtual children.
       const debugInfo = node.debugInfo;
-      if (debugInfo !== null) {
+      if (debugInfo !== null && !visited.has(debugInfo)) {
+        visited.add(debugInfo);
         forwardDebugInfo(request, task, debugInfo);
       }
       return match;
@@ -1999,8 +2000,9 @@ function visitAsyncNode(
       }
       // We need to forward after we visit awaited nodes because what ever I/O we requested that's
       // the thing that generated this node and its virtual children.
-      const debugInfo: null | ReactDebugInfo = node.debugInfo;
-      if (debugInfo !== null) {
+      const debugInfo = node.debugInfo;
+      if (debugInfo !== null && !visited.has(debugInfo)) {
+        visited.add(debugInfo);
         forwardDebugInfo(request, task, debugInfo);
       }
       return match;
@@ -2016,8 +2018,12 @@ function emitAsyncSequence(
   request: Request,
   task: Task,
   node: AsyncSequence,
+  alreadyForwardedDebugInfo: ?ReactDebugInfo,
 ): void {
-  const visited: Set<AsyncSequence> = new Set();
+  const visited: Set<AsyncSequence | ReactDebugInfo> = new Set();
+  if (__DEV__ && alreadyForwardedDebugInfo) {
+    visited.add(alreadyForwardedDebugInfo);
+  }
   const awaitedNode = visitAsyncNode(request, task, node, visited, task.time);
   if (awaitedNode !== null) {
     // Nothing in user space (unfiltered stack) awaited this.
@@ -4311,9 +4317,10 @@ function forwardDebugInfoFromThenable(
   task: Task,
   thenable: Thenable<any>,
 ): void {
+  let debugInfo: ?ReactDebugInfo;
   if (__DEV__) {
     // If this came from Flight, forward any debug info into this new row.
-    const debugInfo: ?ReactDebugInfo = thenable._debugInfo;
+    debugInfo = thenable._debugInfo;
     if (debugInfo) {
       forwardDebugInfo(request, task, debugInfo);
     }
@@ -4325,7 +4332,7 @@ function forwardDebugInfoFromThenable(
   ) {
     const sequence = getAsyncSequenceFromPromise(thenable);
     if (sequence !== null) {
-      emitAsyncSequence(request, task, sequence);
+      emitAsyncSequence(request, task, sequence, debugInfo);
     }
   }
 }
@@ -4335,9 +4342,10 @@ function forwardDebugInfoFromCurrentContext(
   task: Task,
   thenable: Thenable<any>,
 ): void {
+  let debugInfo: ?ReactDebugInfo;
   if (__DEV__) {
     // If this came from Flight, forward any debug info into this new row.
-    const debugInfo: ?ReactDebugInfo = thenable._debugInfo;
+    debugInfo = thenable._debugInfo;
     if (debugInfo) {
       forwardDebugInfo(request, task, debugInfo);
     }
@@ -4349,7 +4357,7 @@ function forwardDebugInfoFromCurrentContext(
   ) {
     const sequence = getCurrentAsyncSequence();
     if (sequence !== null) {
-      emitAsyncSequence(request, task, sequence);
+      emitAsyncSequence(request, task, sequence, debugInfo);
     }
   }
 }
