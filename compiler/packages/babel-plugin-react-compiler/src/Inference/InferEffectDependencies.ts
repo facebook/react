@@ -236,9 +236,10 @@ export function inferEffectDependencies(fn: HIRFunction): void {
 
             newInstructions.push({
               id: makeInstructionId(0),
-              loc: GeneratedSource,
               lvalue: {...depsPlace, effect: Effect.Mutate},
+              effects: null,
               value: deps,
+              loc: GeneratedSource,
             });
 
             // Step 2: push the inferred deps array as an argument of the useEffect
@@ -249,9 +250,10 @@ export function inferEffectDependencies(fn: HIRFunction): void {
             // Global functions have no reactive dependencies, so we can insert an empty array
             newInstructions.push({
               id: makeInstructionId(0),
-              loc: GeneratedSource,
               lvalue: {...depsPlace, effect: Effect.Mutate},
+              effects: null,
               value: deps,
+              loc: GeneratedSource,
             });
             value.args.push({...depsPlace, effect: Effect.Freeze});
             rewriteInstrs.set(instr.id, newInstructions);
@@ -316,21 +318,25 @@ function writeDependencyToInstructions(
   const instructions: Array<Instruction> = [];
   let currValue = createTemporaryPlace(env, GeneratedSource);
   currValue.reactive = reactive;
+  const dependencyPlace: Place = {
+    kind: 'Identifier',
+    identifier: dep.identifier,
+    effect: Effect.Capture,
+    reactive,
+    loc: loc,
+  };
   instructions.push({
     id: makeInstructionId(0),
     loc: GeneratedSource,
     lvalue: {...currValue, effect: Effect.Mutate},
     value: {
       kind: 'LoadLocal',
-      place: {
-        kind: 'Identifier',
-        identifier: dep.identifier,
-        effect: Effect.Capture,
-        reactive,
-        loc: loc,
-      },
+      place: {...dependencyPlace},
       loc: loc,
     },
+    effects: [
+      {kind: 'Alias', from: {...dependencyPlace}, into: {...currValue}},
+    ],
   });
   for (const path of dep.path) {
     if (path.optional) {
@@ -359,6 +365,7 @@ function writeDependencyToInstructions(
         property: path.property,
         loc: loc,
       },
+      effects: [{kind: 'Capture', from: {...currValue}, into: {...nextValue}}],
     });
     currValue = nextValue;
   }
