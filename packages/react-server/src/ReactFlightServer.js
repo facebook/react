@@ -1885,6 +1885,7 @@ function visitAsyncNode(
   task: Task,
   node: AsyncSequence,
   visited: Set<AsyncSequence>,
+  cutOff: number,
 ): null | PromiseNode | IONode {
   if (visited.has(node)) {
     // It's possible to visit them same node twice when it's part of both an "awaited" path
@@ -1897,7 +1898,7 @@ function visitAsyncNode(
     // We ignore the return value here because if it wasn't awaited in user space, then we don't log it.
     // It also means that it can just have been part of a previous component's render.
     // TODO: This means that some I/O can get lost that was still blocking the sequence.
-    visitAsyncNode(request, task, node.previous, visited);
+    visitAsyncNode(request, task, node.previous, visited, cutOff);
   }
   switch (node.tag) {
     case IO_NODE: {
@@ -1916,7 +1917,7 @@ function visitAsyncNode(
       const awaited = node.awaited;
       let match = null;
       if (awaited !== null) {
-        const ioNode = visitAsyncNode(request, task, awaited, visited);
+        const ioNode = visitAsyncNode(request, task, awaited, visited, cutOff);
         if (ioNode !== null) {
           // This Promise was blocked on I/O. That's a signal that this Promise is interesting to log.
           // We don't log it yet though. We return it to be logged by the point where it's awaited.
@@ -1954,7 +1955,7 @@ function visitAsyncNode(
       const awaited = node.awaited;
       let match = null;
       if (awaited !== null) {
-        const ioNode = visitAsyncNode(request, task, awaited, visited);
+        const ioNode = visitAsyncNode(request, task, awaited, visited, cutOff);
         if (ioNode !== null) {
           const startTime: number = node.start;
           const endTime: number = node.end;
@@ -1962,7 +1963,7 @@ function visitAsyncNode(
             // This was already resolved when we started this render. It must have been either something
             // that's part of a start up sequence or externally cached data. We exclude that information.
             return null;
-          } else if (startTime < task.time) {
+          } else if (startTime < cutOff) {
             // We started awaiting this node before we started rendering this sequence.
             // This means that this particular await was never part of the current sequence.
             // If we have another await higher up in the chain it might have a more actionable stack
@@ -2021,7 +2022,7 @@ function emitAsyncSequence(
   node: AsyncSequence,
 ): void {
   const visited: Set<AsyncSequence> = new Set();
-  const awaitedNode = visitAsyncNode(request, task, node, visited);
+  const awaitedNode = visitAsyncNode(request, task, node, visited, task.time);
   if (awaitedNode !== null) {
     // Nothing in user space (unfiltered stack) awaited this.
     serializeIONode(request, awaitedNode);
