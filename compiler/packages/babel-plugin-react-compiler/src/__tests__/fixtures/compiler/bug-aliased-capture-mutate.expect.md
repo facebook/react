@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @flow @enableTransitivelyFreezeFunctionExpressions:false
+// @flow @enableTransitivelyFreezeFunctionExpressions:false @enableNewMutationAliasingModel:false
 import {setPropertyByKey, Stringify} from 'shared-runtime';
 
 /**
