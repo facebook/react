@@ -86,7 +86,7 @@ export function inferMutableRanges(ir: HIRFunction): void {
   }
 }
 
-function areEqualMaps<T>(a: Map<T, T>, b: Map<T, T>): boolean {
+function areEqualMaps<T, U>(a: Map<T, U>, b: Map<T, U>): boolean {
   if (a.size !== b.size) {
     return false;
   }
