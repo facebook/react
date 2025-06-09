@@ -1,4 +1,3 @@
-import puppeteer from 'puppeteer';
 import {hookIntoPage} from '../utils/puppeteerUtils';
 import fs from 'fs/promises';
 import path from 'path';
@@ -242,5 +241,103 @@ export async function getPerfData(url: string): Promise<string[]> {
     return result;
   } catch (error) {
     throw new Error(`Failed to process performance data: ${error}`);
+  }
+}
+
+/**
+ * Safely executes a JavaScript script that uses the data-frame library to analyze CSV files
+ * in the artifacts directory.
+ *
+ * @param script The JavaScript script to execute
+ * @param saveToMemory Optional array of dataframe names to save to memory
+ * @returns A promise that resolves to the result of the script execution
+ */
+export async function executeDataFrameScript(
+  script: string,
+  saveToMemory?: string[],
+): Promise<{output: string; dataFrames?: Record<string, any>}> {
+  try {
+    // Create a VM context to safely execute the script
+    const vm = require('vm');
+    const dataForge = require('data-forge');
+    const fs = require('fs');
+    const path = require('path');
+    const artifactsDir = path.join(__dirname, '../src/artifacts');
+
+    // Get all CSV files in the artifacts directory
+    const files = await fs.promises.readdir(artifactsDir);
+    const csvFiles = files.filter((file: string) => file.endsWith('.csv'));
+
+    // Create a context with the necessary libraries and data
+    const context: Record<string, any> = {
+      dataForge,
+      require,
+      console,
+      process,
+      Buffer,
+      setTimeout,
+      clearTimeout,
+      setInterval,
+      clearInterval,
+      csvFiles,
+      artifactsDir,
+      path,
+      fs,
+      data: {},
+      notes: [],
+    };
+
+    // Load all CSV files into the context
+    for (const file of csvFiles as string[]) {
+      const filePath = path.join(artifactsDir, file);
+      const dataFrame = dataForge.readFileSync(filePath).parseCSV();
+      const dfName = file.replace(/\.csv$/, '').replace(/[^a-zA-Z0-9]/g, '_');
+      context['data'][dfName] = dataFrame;
+    }
+
+    // Capture console output
+    const originalConsoleLog = console.log;
+    const capturedOutput: string[] = [];
+
+    console.log = (...args) => {
+      capturedOutput.push(
+        args
+          .map(arg =>
+            typeof arg === 'object' ? JSON.stringify(arg) : String(arg),
+          )
+          .join(' '),
+      );
+      originalConsoleLog(...args);
+    };
+
+    // Execute the script in the VM context
+    context['notes'].push(`Running script: \n${script}`);
+    vm.createContext(context);
+    vm.runInContext(script, context);
+
+    // Restore console.log
+    console.log = originalConsoleLog;
+
+    // Prepare the result
+    const stdOutScript = capturedOutput.join('\n');
+    const output = stdOutScript || 'No output';
+    context['notes'].push(`Result: ${output}`);
+
+    const result: {output: string; dataFrames?: Record<string, any>} = {output};
+
+    // Save dataframes to memory if requested
+    if (saveToMemory && Array.isArray(saveToMemory)) {
+      result.dataFrames = {};
+      for (const dfName of saveToMemory) {
+        if (context['data'][dfName]) {
+          result.dataFrames[dfName] = context['data'][dfName];
+          context['notes'].push(`Saving dataframe '${dfName}' to memory`);
+        }
+      }
+    }
+
+    return result;
+  } catch (error) {
+    throw new Error(`Error running script: ${error}`);
   }
 }

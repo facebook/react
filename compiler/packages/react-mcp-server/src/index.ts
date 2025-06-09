@@ -22,7 +22,11 @@ import assertExhaustive from './utils/assertExhaustive';
 import {convert} from 'html-to-text';
 import {measurePerformance} from './tools/runtimePerf';
 import {parseReactComponentTree} from './tools/componentTree';
-import {beginPerfRecording, getPerfData} from './tools/recordReactPerf';
+import {
+  beginPerfRecording,
+  getPerfData,
+  executeDataFrameScript,
+} from './tools/recordReactPerf';
 
 function calculateMean(values: number[]): string {
   return values.length > 0
@@ -507,14 +511,13 @@ server.tool(
 server.tool(
   'interpret-react-performance-data',
   `
-
   <description>
   Pass in a Javascript script using the data-forge library to analyze the performance data captured by the start-react-performance-recording tool.
   The script should use the data-forge library to process the data and provide insights and solutions to the user.
   </description>
 
   Allowed Actions
-    1.	Print Results: Output will be displayed as the script’s stdout.
+    1.	Print Results: Output will be displayed as the script's stdout.
 
   Prohibited Actions
     1.	Overwriting Original DataFrames: Do not modify existing DataFrames to preserve their integrity for future tasks.
@@ -575,14 +578,17 @@ server.tool(
   `,
   {
     script: z.string(),
+    saveToMemory: z.array(z.string()).optional(),
   },
-  async () => {
+  async ({script, saveToMemory}) => {
     try {
+      const result = await executeDataFrameScript(script, saveToMemory);
+
       return {
         content: [
           {
             type: 'text' as const,
-            text: 'Hello World',
+            text: result.output,
           },
         ],
       };
