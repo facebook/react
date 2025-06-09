@@ -416,6 +416,7 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
             into: signatureArgument(4),
             signature: null,
             mutatesFunction: false,
+            loc: GeneratedSource,
           },
           // captures the result of the callback into the return array
           {

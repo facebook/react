@@ -100,6 +100,8 @@ function lowerWithMutationAliasing(fn: HIRFunction): void {
         capturedOrMutated.add(effect.value.identifier.id);
         break;
       }
+      case 'Impure':
+      case 'Render':
       case 'MutateFrozen':
       case 'MutateGlobal':
       case 'CreateFunction':

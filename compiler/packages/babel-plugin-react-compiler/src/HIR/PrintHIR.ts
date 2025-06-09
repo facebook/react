@@ -1015,6 +1015,12 @@ export function printAliasingEffect(effect: AliasingEffect): string {
     case 'MutateGlobal': {
       return `MutateGlobal ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.reason)}`;
     }
+    case 'Impure': {
+      return `Impure ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.reason)}`;
+    }
+    case 'Render': {
+      return `Render ${printPlaceForAliasEffect(effect.place)}`;
+    }
     default: {
       assertExhaustive(effect, `Unexpected kind '${(effect as any).kind}'`);
     }

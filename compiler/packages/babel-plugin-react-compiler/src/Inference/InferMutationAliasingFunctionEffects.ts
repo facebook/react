@@ -108,7 +108,9 @@ export function inferMutationAliasingFunctionEffects(
           ]);
         } else if (
           effect.kind === 'MutateFrozen' ||
-          effect.kind === 'MutateGlobal'
+          effect.kind === 'MutateGlobal' ||
+          effect.kind === 'Impure' ||
+          effect.kind === 'Render'
         ) {
           effects.push(effect);
         }

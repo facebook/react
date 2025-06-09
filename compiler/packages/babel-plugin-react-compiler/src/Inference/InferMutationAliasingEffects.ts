@@ -10,6 +10,7 @@ import {
   CompilerErrorDetailOptions,
   Effect,
   ErrorSeverity,
+  SourceLocation,
   ValueKind,
 } from '..';
 import {
@@ -380,10 +381,7 @@ function applySignature(
               context: new Set(),
             });
             effects.push({
-              kind:
-                value.kind === ValueKind.Frozen
-                  ? 'MutateFrozen'
-                  : 'MutateGlobal',
+              kind: 'MutateFrozen',
               place: effect.value,
               error: {
                 severity: ErrorSeverity.InvalidReact,
@@ -546,7 +544,10 @@ function applyEffect(
       const hasTrackedSideEffects =
         effect.function.loweredFunc.func.aliasingEffects?.some(
           effect =>
-            effect.kind === 'MutateFrozen' || effect.kind === 'MutateGlobal',
+            // TODO; include "render" here?
+            effect.kind === 'MutateFrozen' ||
+            effect.kind === 'MutateGlobal' ||
+            effect.kind === 'Impure',
         );
       // For legacy compatibility
       const capturesRef = effect.function.loweredFunc.func.context.some(
@@ -721,6 +722,7 @@ function applyEffect(
           effect.receiver,
           effect.args,
           functionValues[0].loweredFunc.func.context,
+          effect.loc,
         );
         if (signatureEffects != null) {
           if (DEBUG) {
@@ -747,6 +749,8 @@ function applyEffect(
               effect.into,
               effect.receiver,
               effect.args,
+              [],
+              effect.loc,
             )
           : null;
       if (signatureEffects != null) {
@@ -766,6 +770,7 @@ function applyEffect(
           effect.into,
           effect.receiver,
           effect.args,
+          effect.loc,
         );
         for (const legacyEffect of legacyEffects) {
           applyEffect(context, state, legacyEffect, aliased, effects);
@@ -899,6 +904,8 @@ function applyEffect(
       }
       break;
     }
+    case 'Impure':
+    case 'Render':
     case 'MutateFrozen':
     case 'MutateGlobal': {
       effects.push(effect);
@@ -1452,6 +1459,7 @@ function computeSignatureForInstruction(
         args: value.args,
         into: lvalue,
         signature,
+        loc: value.loc,
       });
       break;
     }
@@ -1630,6 +1638,24 @@ function computeSignatureForInstruction(
           from: operand,
           into: lvalue,
         });
+      }
+      if (value.kind === 'JsxExpression') {
+        if (value.tag.kind === 'Identifier') {
+          // Tags are render function, by definition they're called during render
+          effects.push({
+            kind: 'Render',
+            place: value.tag,
+          });
+        }
+        if (value.children != null) {
+          // Children are typically called during render, not used as an event/effect callback
+          for (const child of value.children) {
+            effects.push({
+              kind: 'Render',
+              place: child,
+            });
+          }
+        }
       }
       break;
     }
@@ -1861,6 +1887,7 @@ function computeEffectsForLegacySignature(
   lvalue: Place,
   receiver: Place,
   args: Array<Place | SpreadPattern | Hole>,
+  loc: SourceLocation,
 ): Array<AliasingEffect> {
   const returnValueReason = signature.returnValueReason ?? ValueReason.Other;
   const effects: Array<AliasingEffect> = [];
@@ -1870,6 +1897,23 @@ function computeEffectsForLegacySignature(
     value: signature.returnValueKind,
     reason: returnValueReason,
   });
+  if (signature.impure && state.env.config.validateNoImpureFunctionsInRender) {
+    effects.push({
+      kind: 'Impure',
+      place: receiver,
+      error: {
+        reason:
+          'Calling an impure function can produce unstable results. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent)',
+        description:
+          signature.canonicalName != null
+            ? `\`${signature.canonicalName}\` is an impure function whose results may change on every call`
+            : null,
+        severity: ErrorSeverity.InvalidReact,
+        loc,
+        suggestions: null,
+      },
+    });
+  }
   const stores: Array<Place> = [];
   const captures: Array<Place> = [];
   function visit(place: Place, effect: Effect): void {
@@ -2083,6 +2127,7 @@ function computeEffectsForSignature(
   args: Array<Place | SpreadPattern | Hole>,
   // Used for signatures constructed dynamically which reference context variables
   context: Array<Place> = [],
+  loc: SourceLocation,
 ): Array<AliasingEffect> | null {
   if (
     // Not enough args
@@ -2163,11 +2208,19 @@ function computeEffectsForSignature(
         }
         break;
       }
+      case 'Impure':
       case 'MutateFrozen':
       case 'MutateGlobal': {
         const values = substitutions.get(effect.place.identifier.id) ?? [];
         for (const value of values) {
           effects.push({kind: effect.kind, place: value, error: effect.error});
+        }
+        break;
+      }
+      case 'Render': {
+        const values = substitutions.get(effect.place.identifier.id) ?? [];
+        for (const value of values) {
+          effects.push({kind: effect.kind, place: value});
         }
         break;
       }
@@ -2254,6 +2307,7 @@ function computeEffectsForSignature(
           function: applyFunction[0],
           into: applyInto[0],
           signature: effect.signature,
+          loc,
         });
         break;
       }
@@ -2468,6 +2522,7 @@ export type AliasingEffect =
       args: Array<Place | SpreadPattern | Hole>;
       into: Place;
       signature: FunctionSignature | null;
+      loc: SourceLocation;
     }
   /**
    * Constructs a function value with the given captures. The mutability of the function
@@ -2490,6 +2545,20 @@ export type AliasingEffect =
       kind: 'MutateGlobal';
       place: Place;
       error: CompilerErrorDetailOptions;
+    }
+  /**
+   * Indicates a side-effect that is not safe during render
+   */
+  | {kind: 'Impure'; place: Place; error: CompilerErrorDetailOptions}
+  /**
+   * Indicates that a given place is accessed during render. Used to distingush
+   * hook arguments that are known to be called immediately vs those used for
+   * event handlers/effects, and for JSX values known to be called during render
+   * (tags, children) vs those that may be events/effect (other props).
+   */
+  | {
+      kind: 'Render';
+      place: Place;
     };
 
 function hashEffect(effect: AliasingEffect): string {
@@ -2536,6 +2605,8 @@ function hashEffect(effect: AliasingEffect): string {
     case 'Freeze': {
       return [effect.kind, effect.value.identifier.id, effect.reason].join(':');
     }
+    case 'Impure':
+    case 'Render':
     case 'MutateFrozen':
     case 'MutateGlobal': {
       return [effect.kind, effect.place.identifier.id].join(':');

@@ -66,6 +66,7 @@ export function inferMutationAliasingRanges(
     kind: MutationKind;
     place: Place;
   }> = [];
+  const renders: Array<{index: number; place: Place}> = [];
 
   let index = 0;
 
@@ -160,9 +161,12 @@ export function inferMutationAliasingRanges(
           });
         } else if (
           effect.kind === 'MutateFrozen' ||
-          effect.kind === 'MutateGlobal'
+          effect.kind === 'MutateGlobal' ||
+          effect.kind === 'Impure'
         ) {
           errors.push(effect.error);
+        } else if (effect.kind === 'Render') {
+          renders.push({index: index++, place: effect.place});
         }
       }
     }
@@ -208,6 +212,9 @@ export function inferMutationAliasingRanges(
       mutation.place.loc,
       errors,
     );
+  }
+  for (const render of renders) {
+    state.render(render.index, render.place.identifier, errors);
   }
   if (DEBUG) {
     console.log(pretty([...state.nodes.keys()]));
@@ -357,6 +364,8 @@ export function inferMutationAliasingRanges(
             // no-op, Read is the default
             break;
           }
+          case 'Impure':
+          case 'Render':
           case 'MutateFrozen':
           case 'MutateGlobal': {
             // no-op
@@ -440,6 +449,7 @@ export function inferMutationAliasingRanges(
 function appendFunctionErrors(errors: CompilerError, fn: HIRFunction): void {
   for (const effect of fn.aliasingEffects ?? []) {
     switch (effect.kind) {
+      case 'Impure':
       case 'MutateFrozen':
       case 'MutateGlobal': {
         errors.push(effect.error);
@@ -527,6 +537,43 @@ class AliasingState {
     fromNode.edges.push({index, node: into.identifier, kind: 'alias'});
     if (!toNode.aliases.has(from.identifier)) {
       toNode.aliases.set(from.identifier, index);
+    }
+  }
+
+  render(index: number, start: Identifier, errors: CompilerError): void {
+    const seen = new Set<Identifier>();
+    const queue: Array<Identifier> = [start];
+    while (queue.length !== 0) {
+      const current = queue.pop()!;
+      if (seen.has(current)) {
+        continue;
+      }
+      seen.add(current);
+      const node = this.nodes.get(current);
+      if (node == null || node.transitive != null || node.local != null) {
+        continue;
+      }
+      if (node.value.kind === 'Function') {
+        appendFunctionErrors(errors, node.value.function);
+      }
+      for (const [alias, when] of node.createdFrom) {
+        if (when >= index) {
+          continue;
+        }
+        queue.push(alias);
+      }
+      for (const [alias, when] of node.aliases) {
+        if (when >= index) {
+          continue;
+        }
+        queue.push(alias);
+      }
+      for (const [capture, when] of node.captures) {
+        if (when >= index) {
+          continue;
+        }
+        queue.push(capture);
+      }
     }
   }
 
