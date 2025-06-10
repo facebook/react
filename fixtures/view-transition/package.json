@@ -14,7 +14,7 @@
     "ignore-styles": "^5.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "animation-timelines": "^0.0.1"
+    "animation-timelines": "^0.0.4"
   },
   "eslintConfig": {
     "extends": [
