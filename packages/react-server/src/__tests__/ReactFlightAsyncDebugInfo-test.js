@@ -501,16 +501,16 @@ describe('ReactFlightAsyncDebugInfo', () => {
       return text.toUpperCase();
     }
 
-    async function Component() {
-      const result = await getData('hi');
+    function Component() {
+      const result = ReactServer.use(getData('hi'));
       const moreData = getData('seb');
       return <InnerComponent text={result} promise={moreData} />;
     }
 
-    async function InnerComponent({text, promise}) {
+    function InnerComponent({text, promise}) {
       // This async function depends on the I/O in parent components but it should not
       // include that I/O as part of its own meta data.
-      return text + ', ' + (await promise);
+      return text + ', ' + ReactServer.use(promise);
     }
 
     const stream = ReactServerDOMServer.renderToPipeableStream(
@@ -603,7 +603,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
                   "Component",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
                   505,
-                  26,
+                  36,
                   504,
                   5,
                 ],
@@ -640,7 +640,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 "Component",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
                 505,
-                26,
+                36,
                 504,
                 5,
               ],
@@ -667,9 +667,6 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 5,
               ],
             ],
-          },
-          {
-            "time": 0,
           },
           {
             "awaited": {
@@ -721,32 +718,6 @@ describe('ReactFlightAsyncDebugInfo', () => {
               "start": 0,
             },
             "env": "Server",
-            "owner": {
-              "env": "Server",
-              "key": null,
-              "name": "InnerComponent",
-              "props": {},
-              "stack": [
-                [
-                  "Component",
-                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  507,
-                  60,
-                  504,
-                  5,
-                ],
-              ],
-            },
-            "stack": [
-              [
-                "InnerComponent",
-                "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                513,
-                35,
-                510,
-                5,
-              ],
-            ],
           },
           {
             "time": 0,
