@@ -25,7 +25,14 @@ export default function SwipeRecognizer({
     if (activeGesture.current !== null) {
       return;
     }
-    if (typeof ScrollTimeline !== 'function') {
+
+    const ua = navigator.userAgent;
+    const supportsScrollTimeline =
+      typeof ScrollTimeline === 'function' &&
+      (ua.indexOf('Safari') === -1 ||
+        (ua.indexOf('iPhone') === -1 && ua.indexOf('iPad') === -1));
+    if (!supportsScrollTimeline) {
+      // TODO: Polyfill
       return;
     }
     // eslint-disable-next-line no-undef
