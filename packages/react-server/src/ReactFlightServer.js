@@ -777,6 +777,10 @@ function serializeThenable(
         }
       }
       if (newTask.status === PENDING) {
+        if (enableProfilerTimer && enableComponentPerformanceTrack) {
+          // If this is async we need to time when this task finishes.
+          newTask.timed = true;
+        }
         // We expect that the only status it might be otherwise is ABORTED.
         // When we abort we emit chunks in each pending task slot and don't need
         // to do so again here.
@@ -785,11 +789,6 @@ function serializeThenable(
       }
     },
   );
-
-  if (enableProfilerTimer && enableComponentPerformanceTrack) {
-    // If this is async we need to time when this task finishes.
-    newTask.timed = true;
-  }
 
   return newTask.id;
 }
@@ -1341,12 +1340,7 @@ function renderFunctionComponent<Props>(
 
       // Track when we started rendering this component.
       if (enableProfilerTimer && enableComponentPerformanceTrack) {
-        task.timed = true;
-        emitTimingChunk(
-          request,
-          componentDebugID,
-          (task.time = performance.now()),
-        );
+        advanceTaskTime(request, task, performance.now());
       }
 
       emitDebugChunk(request, componentDebugID, componentDebugInfo);
@@ -1890,8 +1884,8 @@ function visitAsyncNode(
   request: Request,
   task: Task,
   node: AsyncSequence,
-  cutOff: number,
   visited: Set<AsyncSequence>,
+  cutOff: number,
 ): null | PromiseNode | IONode {
   if (visited.has(node)) {
     // It's possible to visit them same node twice when it's part of both an "awaited" path
@@ -1900,11 +1894,11 @@ function visitAsyncNode(
   }
   visited.add(node);
   // First visit anything that blocked this sequence to start in the first place.
-  if (node.previous !== null) {
+  if (node.previous !== null && node.end > request.timeOrigin) {
     // We ignore the return value here because if it wasn't awaited in user space, then we don't log it.
     // It also means that it can just have been part of a previous component's render.
     // TODO: This means that some I/O can get lost that was still blocking the sequence.
-    visitAsyncNode(request, task, node.previous, cutOff, visited);
+    visitAsyncNode(request, task, node.previous, visited, cutOff);
   }
   switch (node.tag) {
     case IO_NODE: {
@@ -1923,24 +1917,23 @@ function visitAsyncNode(
       const awaited = node.awaited;
       let match = null;
       if (awaited !== null) {
-        const ioNode = visitAsyncNode(request, task, awaited, cutOff, visited);
+        const ioNode = visitAsyncNode(request, task, awaited, visited, cutOff);
         if (ioNode !== null) {
           // This Promise was blocked on I/O. That's a signal that this Promise is interesting to log.
           // We don't log it yet though. We return it to be logged by the point where it's awaited.
           // The ioNode might be another PromiseNode in the case where none of the AwaitNode had
           // unfiltered stacks.
-          if (
+          if (ioNode.tag === PROMISE_NODE) {
+            // If the ioNode was a Promise, then that means we found one in user space since otherwise
+            // we would've returned an IO node. We assume this has the best stack.
+            match = ioNode;
+          } else if (
             filterStackTrace(request, parseStackTrace(node.stack, 1)).length ===
             0
           ) {
-            // Typically we assume that the outer most Promise that was awaited in user space has the
-            // most actionable stack trace for the start of the operation. However, if this Promise
-            // was created inside only third party code, then try to use the inner node instead.
-            // This could happen if you pass a first party Promise into a third party to be awaited there.
-            if (ioNode.end < 0) {
-              // If we haven't defined an end time, use the resolve of the outer Promise.
-              ioNode.end = node.end;
-            }
+            // If this Promise was created inside only third party code, then try to use
+            // the inner I/O node instead. This could happen if third party calls into first
+            // party to perform some I/O.
             match = ioNode;
           } else {
             match = node;
@@ -1955,30 +1948,17 @@ function visitAsyncNode(
       }
       return match;
     }
-    case UNRESOLVED_AWAIT_NODE:
-    // We could be inside the .then() which is about to resolve this node.
-    // TODO: We could call emitAsyncSequence in a microtask to avoid this issue.
-    // Fallthrough to the resolved path.
+    case UNRESOLVED_AWAIT_NODE: {
+      return null;
+    }
     case AWAIT_NODE: {
       const awaited = node.awaited;
       let match = null;
       if (awaited !== null) {
-        const ioNode = visitAsyncNode(request, task, awaited, cutOff, visited);
+        const ioNode = visitAsyncNode(request, task, awaited, visited, cutOff);
         if (ioNode !== null) {
           const startTime: number = node.start;
-          let endTime: number;
-          if (node.tag === UNRESOLVED_AWAIT_NODE) {
-            // If we haven't defined an end time, use the resolve of the inner Promise.
-            // This can happen because the ping gets invoked before the await gets resolved.
-            if (ioNode.end < node.start) {
-              // If we're awaiting a resolved Promise it could have finished before we started.
-              endTime = node.start;
-            } else {
-              endTime = ioNode.end;
-            }
-          } else {
-            endTime = node.end;
-          }
+          const endTime: number = node.end;
           if (endTime <= request.timeOrigin) {
             // This was already resolved when we started this render. It must have been either something
             // that's part of a start up sequence or externally cached data. We exclude that information.
@@ -2002,14 +1982,12 @@ function visitAsyncNode(
               match = ioNode;
             } else {
               // Outline the IO node.
-              if (ioNode.end < 0) {
-                ioNode.end = endTime;
-              }
               serializeIONode(request, ioNode);
+
               // We log the environment at the time when the last promise pigned ping which may
               // be later than what the environment was when we actually started awaiting.
               const env = (0, request.environmentName)();
-              emitTimingChunk(request, task.id, startTime);
+              advanceTaskTime(request, task, startTime);
               // Then emit a reference to us awaiting it in the current task.
               request.pendingChunks++;
               emitDebugChunk(request, task.id, {
@@ -2018,23 +1996,14 @@ function visitAsyncNode(
                 owner: node.owner,
                 stack: stack,
               });
-              emitTimingChunk(request, task.id, endTime);
+              markOperationEndTime(request, task, endTime);
             }
           }
         }
       }
       // We need to forward after we visit awaited nodes because what ever I/O we requested that's
       // the thing that generated this node and its virtual children.
-      let debugInfo: null | ReactDebugInfo;
-      if (node.tag === UNRESOLVED_AWAIT_NODE) {
-        const promise = node.debugInfo.deref();
-        debugInfo =
-          promise === undefined || promise._debugInfo === undefined
-            ? null
-            : promise._debugInfo;
-      } else {
-        debugInfo = node.debugInfo;
-      }
+      const debugInfo: null | ReactDebugInfo = node.debugInfo;
       if (debugInfo !== null) {
         forwardDebugInfo(request, task, debugInfo);
       }
@@ -2051,37 +2020,23 @@ function emitAsyncSequence(
   request: Request,
   task: Task,
   node: AsyncSequence,
-  cutOff: number,
 ): void {
   const visited: Set<AsyncSequence> = new Set();
-  const awaitedNode = visitAsyncNode(request, task, node, cutOff, visited);
+  const awaitedNode = visitAsyncNode(request, task, node, visited, task.time);
   if (awaitedNode !== null) {
     // Nothing in user space (unfiltered stack) awaited this.
-    if (awaitedNode.end < 0) {
-      // If this was I/O directly without a Promise, then it means that some custom Thenable
-      // called our ping directly and not from a native .then(). We use the current ping time
-      // as the end time and treat it as an await with no stack.
-      // TODO: If this I/O is recurring then we really should have different entries for
-      // each occurrence. Right now we'll only track the first time it is invoked.
-      awaitedNode.end = performance.now();
-    }
     serializeIONode(request, awaitedNode);
     request.pendingChunks++;
     // We log the environment at the time when we ping which may be later than what the
     // environment was when we actually started awaiting.
     const env = (0, request.environmentName)();
     // If we don't have any thing awaited, the time we started awaiting was internal
-    // when we yielded after rendering. The cutOff time is basically that.
-    const awaitStartTime = cutOff;
-    // If the end time finished before we started, it could've been a cached thing so
-    // we clamp it to the cutOff time. Effectively leading to a zero-time await.
-    const awaitEndTime = awaitedNode.end < cutOff ? cutOff : awaitedNode.end;
-    emitTimingChunk(request, task.id, awaitStartTime);
+    // when we yielded after rendering. The current task time is basically that.
     emitDebugChunk(request, task.id, {
       awaited: ((awaitedNode: any): ReactIOInfo), // This is deduped by this reference.
       env: env,
     });
-    emitTimingChunk(request, task.id, awaitEndTime);
+    markOperationEndTime(request, task, awaitedNode.end);
   }
 }
 
@@ -2092,7 +2047,7 @@ function pingTask(request: Request, task: Task): void {
     if (enableAsyncDebugInfo) {
       const sequence = getCurrentAsyncSequence();
       if (sequence !== null) {
-        emitAsyncSequence(request, task, sequence, task.time);
+        emitAsyncSequence(request, task, sequence);
       }
     }
   }
@@ -4295,19 +4250,13 @@ function forwardDebugInfo(
   debugInfo: ReactDebugInfo,
 ) {
   const id = task.id;
-  const minimumTime =
-    enableProfilerTimer && enableComponentPerformanceTrack ? task.time : 0;
   for (let i = 0; i < debugInfo.length; i++) {
     const info = debugInfo[i];
     if (typeof info.time === 'number') {
       // When forwarding time we need to ensure to convert it to the time space of the payload.
       // We clamp the time to the starting render of the current component. It's as if it took
       // no time to render and await if we reuse cached content.
-      emitTimingChunk(
-        request,
-        id,
-        info.time < minimumTime ? minimumTime : info.time,
-      );
+      markOperationEndTime(request, task, info.time);
     } else {
       if (typeof info.name === 'string') {
         // We outline this model eagerly so that we can refer to by reference as an owner.
@@ -4382,6 +4331,40 @@ function emitTimingChunk(
   const processedChunk = stringToChunk(row);
   // TODO: Move to its own priority queue.
   request.completedRegularChunks.push(processedChunk);
+}
+
+function advanceTaskTime(
+  request: Request,
+  task: Task,
+  timestamp: number,
+): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  // Emits a timing chunk, if the new timestamp is higher than the previous timestamp of this task.
+  if (timestamp > task.time) {
+    emitTimingChunk(request, task.id, timestamp);
+    task.time = timestamp;
+  } else if (!task.timed) {
+    // If it wasn't timed before, e.g. an outlined object, we need to emit the first timestamp and
+    // it is now timed.
+    emitTimingChunk(request, task.id, task.time);
+  }
+  task.timed = true;
+}
+
+function markOperationEndTime(request: Request, task: Task, timestamp: number) {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  // This is like advanceTaskTime() but always emits a timing chunk even if it doesn't advance.
+  // This ensures that the end time of the previous entry isn't implied to be the start of the next one.
+  if (timestamp > task.time) {
+    emitTimingChunk(request, task.id, timestamp);
+    task.time = timestamp;
+  } else {
+    emitTimingChunk(request, task.id, task.time);
+  }
 }
 
 function emitChunk(
@@ -4475,7 +4458,7 @@ function emitChunk(
 function erroredTask(request: Request, task: Task, error: mixed): void {
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     if (task.timed) {
-      emitTimingChunk(request, task.id, (task.time = performance.now()));
+      markOperationEndTime(request, task, performance.now());
     }
   }
   task.status = ERRORED;
@@ -4558,7 +4541,7 @@ function retryTask(request: Request, task: Task): void {
     // We've finished rendering. Log the end time.
     if (enableProfilerTimer && enableComponentPerformanceTrack) {
       if (task.timed) {
-        emitTimingChunk(request, task.id, (task.time = performance.now()));
+        markOperationEndTime(request, task, performance.now());
       }
     }
 
@@ -4685,7 +4668,7 @@ function abortTask(task: Task, request: Request, errorId: number): void {
   // Track when we aborted this task as its end time.
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     if (task.timed) {
-      emitTimingChunk(request, task.id, (task.time = performance.now()));
+      markOperationEndTime(request, task, performance.now());
     }
   }
   // Instead of emitting an error per task.id, we emit a model that only
