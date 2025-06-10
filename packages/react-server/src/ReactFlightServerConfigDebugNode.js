@@ -210,7 +210,7 @@ export function initAsyncDebugInfo(): void {
             }
             case AWAIT_NODE:
             case PROMISE_NODE: {
-              // We already resolved this in the begin hook.
+              // We already resolved this in the before hook.
               resolvedNode = node;
               break;
             }
