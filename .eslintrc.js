@@ -622,6 +622,7 @@ module.exports = {
     ScrollTimeline: 'readonly',
     EventListenerOptionsOrUseCapture: 'readonly',
     FocusOptions: 'readonly',
+    OptionalEffectTiming: 'readonly',
 
     spyOnDev: 'readonly',
     spyOnDevAndProd: 'readonly',
