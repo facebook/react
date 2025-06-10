@@ -692,14 +692,14 @@ function serializeThenable(
 
   switch (thenable.status) {
     case 'fulfilled': {
-      forwardDebugInfoFromThenable(request, newTask, thenable);
+      forwardDebugInfoFromThenable(request, newTask, thenable, null, null);
       // We have the resolved value, we can go ahead and schedule it for serialization.
       newTask.model = thenable.value;
       pingTask(request, newTask);
       return newTask.id;
     }
     case 'rejected': {
-      forwardDebugInfoFromThenable(request, newTask, thenable);
+      forwardDebugInfoFromThenable(request, newTask, thenable, null, null);
       const x = thenable.reason;
       erroredTask(request, newTask, x);
       return newTask.id;
@@ -1042,11 +1042,11 @@ function createLazyWrapperAroundWakeable(
   const thenable: Thenable<mixed> = (wakeable: any);
   switch (thenable.status) {
     case 'fulfilled': {
-      forwardDebugInfoFromThenable(request, task, thenable);
+      forwardDebugInfoFromThenable(request, task, thenable, null, null);
       return thenable.value;
     }
     case 'rejected':
-      forwardDebugInfoFromThenable(request, task, thenable);
+      forwardDebugInfoFromThenable(request, task, thenable, null, null);
       break;
     default: {
       if (typeof thenable.status === 'string') {
@@ -1366,6 +1366,7 @@ function renderFunctionComponent<Props>(
       }
     }
   } else {
+    componentDebugInfo = (null: any);
     prepareToUseHooksForComponent(prevThenableState, null);
     // The secondArg is always undefined in Server Components since refs error early.
     const secondArg = undefined;
@@ -1398,8 +1399,20 @@ function renderFunctionComponent<Props>(
     // We do this at the end so that we don't keep doing this for each retry.
     const trackedThenables = getTrackedThenablesAfterRendering();
     if (trackedThenables !== null) {
+      const stacks: Array<Error> =
+        __DEV__ && enableAsyncDebugInfo
+          ? (trackedThenables: any)._stacks ||
+            ((trackedThenables: any)._stacks = [])
+          : (null: any);
       for (let i = 0; i < trackedThenables.length; i++) {
-        forwardDebugInfoFromThenable(request, task, trackedThenables[i]);
+        const stack = __DEV__ && enableAsyncDebugInfo ? stacks[i] : null;
+        forwardDebugInfoFromThenable(
+          request,
+          task,
+          trackedThenables[i],
+          __DEV__ ? componentDebugInfo : null,
+          stack,
+        );
       }
     }
   }
@@ -2019,6 +2032,8 @@ function emitAsyncSequence(
   task: Task,
   node: AsyncSequence,
   alreadyForwardedDebugInfo: ?ReactDebugInfo,
+  owner: null | ReactComponentInfo,
+  stack: null | Error,
 ): void {
   const visited: Set<AsyncSequence | ReactDebugInfo> = new Set();
   if (__DEV__ && alreadyForwardedDebugInfo) {
@@ -2034,10 +2049,21 @@ function emitAsyncSequence(
     const env = (0, request.environmentName)();
     // If we don't have any thing awaited, the time we started awaiting was internal
     // when we yielded after rendering. The current task time is basically that.
-    emitDebugChunk(request, task.id, {
+    const debugInfo: ReactAsyncInfo = {
       awaited: ((awaitedNode: any): ReactIOInfo), // This is deduped by this reference.
       env: env,
-    });
+    };
+    if (__DEV__) {
+      if (owner != null) {
+        // $FlowFixMe[cannot-write]
+        debugInfo.owner = owner;
+      }
+      if (stack != null) {
+        // $FlowFixMe[cannot-write]
+        debugInfo.stack = filterStackTrace(request, parseStackTrace(stack, 1));
+      }
+    }
+    emitDebugChunk(request, task.id, debugInfo);
     markOperationEndTime(request, task, awaitedNode.end);
   }
 }
@@ -4316,6 +4342,8 @@ function forwardDebugInfoFromThenable(
   request: Request,
   task: Task,
   thenable: Thenable<any>,
+  owner: null | ReactComponentInfo, // DEV-only
+  stack: null | Error, // DEV-only
 ): void {
   let debugInfo: ?ReactDebugInfo;
   if (__DEV__) {
@@ -4332,7 +4360,7 @@ function forwardDebugInfoFromThenable(
   ) {
     const sequence = getAsyncSequenceFromPromise(thenable);
     if (sequence !== null) {
-      emitAsyncSequence(request, task, sequence, debugInfo);
+      emitAsyncSequence(request, task, sequence, debugInfo, owner, stack);
     }
   }
 }
@@ -4357,7 +4385,7 @@ function forwardDebugInfoFromCurrentContext(
   ) {
     const sequence = getCurrentAsyncSequence();
     if (sequence !== null) {
-      emitAsyncSequence(request, task, sequence, debugInfo);
+      emitAsyncSequence(request, task, sequence, debugInfo, null, null);
     }
   }
 }
