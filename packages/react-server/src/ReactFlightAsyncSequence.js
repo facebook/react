@@ -38,7 +38,7 @@ export type PromiseNode = {
   start: number, // start time when the Promise was created
   end: number, // end time when the Promise was resolved.
   awaited: null | AsyncSequence, // the thing that ended up resolving this promise
-  previous: null, // where we created the promise is not interesting since creating it doesn't mean waiting.
+  previous: null | AsyncSequence, // represents what the last return of an async function depended on before returning
 };
 
 export type AwaitNode = {
