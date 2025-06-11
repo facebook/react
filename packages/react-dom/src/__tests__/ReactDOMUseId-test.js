@@ -7,7 +7,6 @@
  * @emails react-core
  * @jest-environment ./scripts/jest/ReactDOMServerIntegrationEnvironment
  */
-
 let JSDOM;
 let React;
 let ReactDOMClient;
@@ -24,6 +23,8 @@ let buffer = '';
 let hasErrored = false;
 let fatalError = undefined;
 let waitForPaint;
+let SuspenseList;
+let assertConsoleErrorDev;
 
 describe('useId', () => {
   beforeEach(() => {
@@ -32,11 +33,16 @@ describe('useId', () => {
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     clientAct = require('internal-test-utils').act;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
     ReactDOMFizzServer = require('react-dom/server');
     Stream = require('stream');
     Suspense = React.Suspense;
     useId = React.useId;
     useState = React.useState;
+    if (gate(flags => flags.enableSuspenseList)) {
+      SuspenseList = React.unstable_SuspenseList;
+    }
 
     const InternalTestUtils = require('internal-test-utils');
     waitForPaint = InternalTestUtils.waitForPaint;
@@ -373,6 +379,370 @@ describe('useId', () => {
         _R_0_
       </div>
     `);
+  });
+
+  // @gate enableSuspenseList
+  it('Supports SuspenseList (reveal order independent)', async () => {
+    function Baz({id, children}) {
+      return <span id={id}>{children}</span>;
+    }
+
+    function Bar({children}) {
+      const id = useId();
+      return <Baz id={id}>{children}</Baz>;
+    }
+
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="independent">
+          <Bar>A</Bar>
+          <Bar>B</Bar>
+        </SuspenseList>
+      );
+    }
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<Foo />);
+      pipe(writable);
+    });
+    expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        <span
+          id="_R_1_"
+        >
+          A
+        </span>
+        <span
+          id="_R_2_"
+        >
+          B
+        </span>
+      </div>
+    `);
+
+    await clientAct(async () => {
+      ReactDOMClient.hydrateRoot(container, <Foo />);
+    });
+
+    expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        <span
+          id="_R_1_"
+        >
+          A
+        </span>
+        <span
+          id="_R_2_"
+        >
+          B
+        </span>
+      </div>
+    `);
+  });
+
+  // @gate enableSuspenseList
+  it('Supports SuspenseList (reveal order "together")', async () => {
+    function Baz({id, children}) {
+      return <span id={id}>{children}</span>;
+    }
+
+    function Bar({children}) {
+      const id = useId();
+      return <Baz id={id}>{children}</Baz>;
+    }
+
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="together">
+          <Bar>A</Bar>
+          <Bar>B</Bar>
+        </SuspenseList>
+      );
+    }
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<Foo />);
+      pipe(writable);
+    });
+    expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        <span
+          id="_R_1_"
+        >
+          A
+        </span>
+        <span
+          id="_R_2_"
+        >
+          B
+        </span>
+      </div>
+    `);
+
+    await clientAct(async () => {
+      ReactDOMClient.hydrateRoot(container, <Foo />);
+    });
+
+    expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        <span
+          id="_R_1_"
+        >
+          A
+        </span>
+        <span
+          id="_R_2_"
+        >
+          B
+        </span>
+      </div>
+    `);
+  });
+
+  // @gate enableSuspenseList
+  it('Supports SuspenseList (reveal order "forwards")', async () => {
+    function Baz({id, children}) {
+      return <span id={id}>{children}</span>;
+    }
+
+    function Bar({children}) {
+      const id = useId();
+      return <Baz id={id}>{children}</Baz>;
+    }
+
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="forwards" tail="visible">
+          <Bar>A</Bar>
+          <Bar>B</Bar>
+        </SuspenseList>
+      );
+    }
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<Foo />);
+      pipe(writable);
+    });
+    expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        <span
+          id="_R_1_"
+        >
+          A
+        </span>
+        <span
+          id="_R_2_"
+        >
+          B
+        </span>
+      </div>
+    `);
+
+    await clientAct(async () => {
+      ReactDOMClient.hydrateRoot(container, <Foo />);
+    });
+
+    expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        <span
+          id="_R_1_"
+        >
+          A
+        </span>
+        <span
+          id="_R_2_"
+        >
+          B
+        </span>
+      </div>
+    `);
+  });
+
+  // @gate enableSuspenseList
+  it('Supports SuspenseList (reveal order "backwards") with a single child in a list of many', async () => {
+    function Baz({id, children}) {
+      return <span id={id}>{children}</span>;
+    }
+
+    function Bar({children}) {
+      const id = useId();
+      return <Baz id={id}>{children}</Baz>;
+    }
+
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="unstable_legacy-backwards" tail="visible">
+          {null}
+          <Bar>A</Bar>
+          {null}
+        </SuspenseList>
+      );
+    }
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<Foo />);
+      pipe(writable);
+    });
+    expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        <span
+          id="_R_2_"
+        >
+          A
+        </span>
+        <!-- -->
+      </div>
+    `);
+
+    await clientAct(async () => {
+      ReactDOMClient.hydrateRoot(container, <Foo />);
+    });
+
+    expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        <span
+          id="_R_2_"
+        >
+          A
+        </span>
+        <!-- -->
+      </div>
+    `);
+  });
+
+  // @gate enableSuspenseList
+  it('Supports SuspenseList (reveal order "backwards")', async () => {
+    function Baz({id, children}) {
+      return <span id={id}>{children}</span>;
+    }
+
+    function Bar({children}) {
+      const id = useId();
+      return <Baz id={id}>{children}</Baz>;
+    }
+
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="unstable_legacy-backwards" tail="visible">
+          <Bar>A</Bar>
+          <Bar>B</Bar>
+        </SuspenseList>
+      );
+    }
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<Foo />);
+      pipe(writable);
+    });
+    expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        <span
+          id="_R_1_"
+        >
+          A
+        </span>
+        <span
+          id="_R_2_"
+        >
+          B
+        </span>
+      </div>
+    `);
+
+    if (gate(flags => flags.favorSafetyOverHydrationPerf)) {
+      // TODO: This is a bug with revealOrder="backwards" in that it hydrates in reverse.
+      await expect(async () => {
+        await clientAct(async () => {
+          ReactDOMClient.hydrateRoot(container, <Foo />);
+        });
+      }).rejects.toThrowError(
+        `Hydration failed because the server rendered text didn't match the client. As a result this tree will be regenerated on the client.`,
+      );
+
+      expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        <span
+          id="_r_1_"
+        >
+          A
+        </span>
+        <span
+          id="_r_0_"
+        >
+          B
+        </span>
+      </div>
+    `);
+    } else {
+      await clientAct(async () => {
+        ReactDOMClient.hydrateRoot(container, <Foo />);
+      });
+
+      // TODO: This is a bug with revealOrder="backwards" in that it hydrates in reverse.
+      assertConsoleErrorDev([
+        `A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch \`if (typeof window !== 'undefined')\`.
+- Variable input such as \`Date.now()\` or \`Math.random()\` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  <Foo>
+    <SuspenseList revealOrder="unstable_l..." tail="visible">
+      <Bar>
+      <Bar>
+        <Baz id="_R_2_">
+          <span
++           id="_R_2_"
+-           id="_R_1_"
+          >
++           B
+-           A
+`,
+      ]);
+
+      expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        <span
+          id="_R_1_"
+        >
+          A
+        </span>
+        <span
+          id="_R_2_"
+        >
+          B
+        </span>
+      </div>
+    `);
+    }
   });
 
   it('basic incremental hydration', async () => {

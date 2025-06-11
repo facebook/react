@@ -340,30 +340,35 @@ export default function ComponentsSettings({
   );
 
   return (
-    <div className={styles.Settings}>
-      <label className={styles.Setting}>
-        <input
-          type="checkbox"
-          checked={!collapseNodesByDefault}
-          onChange={updateCollapseNodesByDefault}
-        />{' '}
-        Expand component tree by default
-      </label>
+    <div className={styles.SettingList}>
+      <div className={styles.SettingWrapper}>
+        <label className={styles.SettingRow}>
+          <input
+            type="checkbox"
+            checked={!collapseNodesByDefault}
+            onChange={updateCollapseNodesByDefault}
+            className={styles.SettingRowCheckbox}
+          />
+          Expand component tree by default
+        </label>
+      </div>
 
-      <label className={styles.Setting}>
-        <input
-          type="checkbox"
-          checked={parseHookNames}
-          onChange={updateParseHookNames}
-        />{' '}
-        Always parse hook names from source{' '}
-        <span className={styles.Warning}>(may be slow)</span>
-      </label>
+      <div className={styles.SettingWrapper}>
+        <label className={styles.SettingRow}>
+          <input
+            type="checkbox"
+            checked={parseHookNames}
+            onChange={updateParseHookNames}
+            className={styles.SettingRowCheckbox}
+          />
+          Always parse hook names from source&nbsp;
+          <span className={styles.Warning}>(may be slow)</span>
+        </label>
+      </div>
 
       <label className={styles.OpenInURLSetting}>
         Open in Editor URL:{' '}
         <select
-          className={styles.Select}
           value={openInEditorURLPreset}
           onChange={({currentTarget}) => {
             const selectedValue = currentTarget.value;
@@ -432,7 +437,6 @@ export default function ComponentsSettings({
               </td>
               <td className={styles.TableCell}>
                 <select
-                  className={styles.Select}
                   value={componentFilter.type}
                   onChange={({currentTarget}) =>
                     changeFilterType(
@@ -467,7 +471,6 @@ export default function ComponentsSettings({
               <td className={styles.TableCell}>
                 {componentFilter.type === ComponentFilterElementType && (
                   <select
-                    className={styles.Select}
                     value={componentFilter.value}
                     onChange={({currentTarget}) =>
                       updateFilterValueElementType(
@@ -515,7 +518,6 @@ export default function ComponentsSettings({
                 )}
                 {componentFilter.type === ComponentFilterEnvironmentName && (
                   <select
-                    className={styles.Select}
                     value={componentFilter.value}
                     onChange={({currentTarget}) =>
                       updateFilterValueEnvironmentName(

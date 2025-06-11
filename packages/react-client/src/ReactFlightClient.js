@@ -844,7 +844,7 @@ function createElement(
       // This owner should ideally have already been initialized to avoid getting
       // user stack frames on the stack.
       const ownerTask =
-        owner === null ? null : initializeFakeTask(response, owner, env);
+        owner === null ? null : initializeFakeTask(response, owner);
       if (ownerTask === null) {
         const rootTask = response._debugRootTask;
         if (rootTask != null) {
@@ -2494,7 +2494,6 @@ function getRootTask(
 function initializeFakeTask(
   response: Response,
   debugInfo: ReactComponentInfo | ReactAsyncInfo | ReactIOInfo,
-  childEnvironmentName: string,
 ): null | ConsoleTask {
   if (!supportsCreateTask) {
     return null;
@@ -2503,6 +2502,10 @@ function initializeFakeTask(
     // If this is an error, we should've really already initialized the task.
     // If it's null, we can't initialize a task.
     return null;
+  }
+  const cachedEntry = debugInfo.debugTask;
+  if (cachedEntry !== undefined) {
+    return cachedEntry;
   }
 
   // Workaround for a bug where Chrome Performance tracking uses the enclosing line/column
@@ -2516,47 +2519,35 @@ function initializeFakeTask(
   const stack = debugInfo.stack;
   const env: string =
     debugInfo.env == null ? response._rootEnvironmentName : debugInfo.env;
-  if (env !== childEnvironmentName) {
+  const ownerEnv: string =
+    debugInfo.owner == null || debugInfo.owner.env == null
+      ? response._rootEnvironmentName
+      : debugInfo.owner.env;
+  const ownerTask =
+    debugInfo.owner == null
+      ? null
+      : initializeFakeTask(response, debugInfo.owner);
+  const taskName =
     // This is the boundary between two environments so we'll annotate the task name.
-    // That is unusual so we don't cache it.
-    const ownerTask =
-      debugInfo.owner == null
-        ? null
-        : initializeFakeTask(response, debugInfo.owner, env);
-    return buildFakeTask(
-      response,
-      ownerTask,
-      stack,
-      '"use ' + childEnvironmentName.toLowerCase() + '"',
-      env,
-      useEnclosingLine,
-    );
-  } else {
-    const cachedEntry = debugInfo.debugTask;
-    if (cachedEntry !== undefined) {
-      return cachedEntry;
-    }
-    const ownerTask =
-      debugInfo.owner == null
-        ? null
-        : initializeFakeTask(response, debugInfo.owner, env);
-    // Some unfortunate pattern matching to refine the type.
-    const taskName =
-      debugInfo.key !== undefined
+    // We assume that the stack frame of the entry into the new environment was done
+    // from the old environment. So we use the owner's environment as the current.
+    env !== ownerEnv
+      ? '"use ' + env.toLowerCase() + '"'
+      : // Some unfortunate pattern matching to refine the type.
+        debugInfo.key !== undefined
         ? getServerComponentTaskName(((debugInfo: any): ReactComponentInfo))
         : debugInfo.name !== undefined
           ? getIOInfoTaskName(((debugInfo: any): ReactIOInfo))
           : getAsyncInfoTaskName(((debugInfo: any): ReactAsyncInfo));
-    // $FlowFixMe[cannot-write]: We consider this part of initialization.
-    return (debugInfo.debugTask = buildFakeTask(
-      response,
-      ownerTask,
-      stack,
-      taskName,
-      env,
-      useEnclosingLine,
-    ));
-  }
+  // $FlowFixMe[cannot-write]: We consider this part of initialization.
+  return (debugInfo.debugTask = buildFakeTask(
+    response,
+    ownerTask,
+    stack,
+    taskName,
+    ownerEnv,
+    useEnclosingLine,
+  ));
 }
 
 function buildFakeTask(
@@ -2658,27 +2649,30 @@ function resolveDebugInfo(
       'resolveDebugInfo should never be called in production mode. This is a bug in React.',
     );
   }
-  // We eagerly initialize the fake task because this resolving happens outside any
-  // render phase so we're not inside a user space stack at this point. If we waited
-  // to initialize it when we need it, we might be inside user code.
-  const env =
-    debugInfo.env === undefined ? response._rootEnvironmentName : debugInfo.env;
   if (debugInfo.stack !== undefined) {
     const componentInfoOrAsyncInfo: ReactComponentInfo | ReactAsyncInfo =
       // $FlowFixMe[incompatible-type]
       debugInfo;
-    initializeFakeTask(response, componentInfoOrAsyncInfo, env);
+    // We eagerly initialize the fake task because this resolving happens outside any
+    // render phase so we're not inside a user space stack at this point. If we waited
+    // to initialize it when we need it, we might be inside user code.
+    initializeFakeTask(response, componentInfoOrAsyncInfo);
   }
-  if (debugInfo.owner === null && response._debugRootOwner != null) {
+  if (debugInfo.owner == null && response._debugRootOwner != null) {
     const componentInfoOrAsyncInfo: ReactComponentInfo | ReactAsyncInfo =
       // $FlowFixMe: By narrowing `owner` to `null`, we narrowed `debugInfo` to `ReactComponentInfo`
       debugInfo;
     // $FlowFixMe[cannot-write]
     componentInfoOrAsyncInfo.owner = response._debugRootOwner;
+    // We clear the parsed stack frames to indicate that it needs to be re-parsed from debugStack.
+    // $FlowFixMe[cannot-write]
+    componentInfoOrAsyncInfo.stack = null;
     // We override the stack if we override the owner since the stack where the root JSX
     // was created on the server isn't very useful but where the request was made is.
     // $FlowFixMe[cannot-write]
     componentInfoOrAsyncInfo.debugStack = response._debugRootStack;
+    // $FlowFixMe[cannot-write]
+    componentInfoOrAsyncInfo.debugTask = response._debugRootTask;
   } else if (debugInfo.stack !== undefined) {
     const componentInfoOrAsyncInfo: ReactComponentInfo | ReactAsyncInfo =
       // $FlowFixMe[incompatible-type]
@@ -2738,7 +2732,7 @@ const replayConsoleWithCallStack = {
         bindToConsole(methodName, args, env),
       );
       if (owner != null) {
-        const task = initializeFakeTask(response, owner, env);
+        const task = initializeFakeTask(response, owner);
         initializeFakeStack(response, owner);
         if (task !== null) {
           task.run(callStack);
@@ -2812,10 +2806,8 @@ function resolveConsoleEntry(
 }
 
 function initializeIOInfo(response: Response, ioInfo: ReactIOInfo): void {
-  const env =
-    ioInfo.env === undefined ? response._rootEnvironmentName : ioInfo.env;
   if (ioInfo.stack !== undefined) {
-    initializeFakeTask(response, ioInfo, env);
+    initializeFakeTask(response, ioInfo);
     initializeFakeStack(response, ioInfo);
   }
   // Adjust the time to the current environment's time space.
@@ -2910,6 +2902,46 @@ function resolveTypedArray(
   resolveBuffer(response, id, view);
 }
 
+function logComponentInfo(
+  response: Response,
+  root: SomeChunk<any>,
+  componentInfo: ReactComponentInfo,
+  trackIdx: number,
+  startTime: number,
+  componentEndTime: number,
+  childrenEndTime: number,
+  isLastComponent: boolean,
+): void {
+  // $FlowFixMe: Refined.
+  if (
+    isLastComponent &&
+    root.status === ERRORED &&
+    root.reason !== response._closedReason
+  ) {
+    // If this is the last component to render before this chunk rejected, then conceptually
+    // this component errored. If this was a cancellation then it wasn't this component that
+    // errored.
+    logComponentErrored(
+      componentInfo,
+      trackIdx,
+      startTime,
+      componentEndTime,
+      childrenEndTime,
+      response._rootEnvironmentName,
+      root.reason,
+    );
+  } else {
+    logComponentRender(
+      componentInfo,
+      trackIdx,
+      startTime,
+      componentEndTime,
+      childrenEndTime,
+      response._rootEnvironmentName,
+    );
+  }
+}
+
 function flushComponentPerformance(
   response: Response,
   root: SomeChunk<any>,
@@ -2965,21 +2997,20 @@ function flushComponentPerformance(
   // in parallel with the previous.
   const debugInfo = __DEV__ && root._debugInfo;
   if (debugInfo) {
-    for (let i = 1; i < debugInfo.length; i++) {
+    let startTime = 0;
+    for (let i = 0; i < debugInfo.length; i++) {
       const info = debugInfo[i];
+      if (typeof info.time === 'number') {
+        startTime = info.time;
+      }
       if (typeof info.name === 'string') {
-        // $FlowFixMe: Refined.
-        const startTimeInfo = debugInfo[i - 1];
-        if (typeof startTimeInfo.time === 'number') {
-          const startTime = startTimeInfo.time;
-          if (startTime < trackTime) {
-            // The start time of this component is before the end time of the previous
-            // component on this track so we need to bump the next one to a parallel track.
-            trackIdx++;
-          }
-          trackTime = startTime;
-          break;
+        if (startTime < trackTime) {
+          // The start time of this component is before the end time of the previous
+          // component on this track so we need to bump the next one to a parallel track.
+          trackIdx++;
         }
+        trackTime = startTime;
+        break;
       }
     }
     for (let i = debugInfo.length - 1; i >= 0; i--) {
@@ -2987,6 +3018,7 @@ function flushComponentPerformance(
       if (typeof info.time === 'number') {
         if (info.time > parentEndTime) {
           parentEndTime = info.time;
+          break; // We assume the highest number is at the end.
         }
       }
     }
@@ -3014,85 +3046,72 @@ function flushComponentPerformance(
     }
     childTrackIdx = childResult.track;
     const childEndTime = childResult.endTime;
-    childTrackTime = childEndTime;
+    if (childEndTime > childTrackTime) {
+      childTrackTime = childEndTime;
+    }
     if (childEndTime > childrenEndTime) {
       childrenEndTime = childEndTime;
     }
   }
 
   if (debugInfo) {
-    let endTime = 0;
+    // Write debug info in reverse order (just like stack traces).
+    let componentEndTime = 0;
     let isLastComponent = true;
+    let endTime = -1;
+    let endTimeIdx = -1;
     for (let i = debugInfo.length - 1; i >= 0; i--) {
       const info = debugInfo[i];
-      if (typeof info.time === 'number') {
-        if (info.time > childrenEndTime) {
-          childrenEndTime = info.time;
-        }
-        if (endTime === 0) {
-          // Last timestamp is the end of the last component.
-          endTime = info.time;
-        }
+      if (typeof info.time !== 'number') {
+        continue;
       }
-      if (typeof info.name === 'string' && i > 0) {
-        // $FlowFixMe: Refined.
-        const componentInfo: ReactComponentInfo = info;
-        const startTimeInfo = debugInfo[i - 1];
-        if (typeof startTimeInfo.time === 'number') {
-          const startTime = startTimeInfo.time;
-          if (
-            isLastComponent &&
-            root.status === ERRORED &&
-            root.reason !== response._closedReason
-          ) {
-            // If this is the last component to render before this chunk rejected, then conceptually
-            // this component errored. If this was a cancellation then it wasn't this component that
-            // errored.
-            logComponentErrored(
+      if (componentEndTime === 0) {
+        // Last timestamp is the end of the last component.
+        componentEndTime = info.time;
+      }
+      const time = info.time;
+      if (endTimeIdx > -1) {
+        // Now that we know the start and end time, we can emit the entries between.
+        for (let j = endTimeIdx - 1; j > i; j--) {
+          const candidateInfo = debugInfo[j];
+          if (typeof candidateInfo.name === 'string') {
+            if (componentEndTime > childrenEndTime) {
+              childrenEndTime = componentEndTime;
+            }
+            // $FlowFixMe: Refined.
+            const componentInfo: ReactComponentInfo = candidateInfo;
+            logComponentInfo(
+              response,
+              root,
               componentInfo,
               trackIdx,
-              startTime,
-              endTime,
+              time,
+              componentEndTime,
               childrenEndTime,
-              response._rootEnvironmentName,
-              root.reason,
+              isLastComponent,
             );
-          } else {
-            logComponentRender(
-              componentInfo,
+            componentEndTime = time; // The end time of previous component is the start time of the next.
+            // Track the root most component of the result for deduping logging.
+            result.component = componentInfo;
+            isLastComponent = false;
+          } else if (candidateInfo.awaited) {
+            if (endTime > childrenEndTime) {
+              childrenEndTime = endTime;
+            }
+            // $FlowFixMe: Refined.
+            const asyncInfo: ReactAsyncInfo = candidateInfo;
+            logComponentAwait(
+              asyncInfo,
               trackIdx,
-              startTime,
+              time,
               endTime,
-              childrenEndTime,
               response._rootEnvironmentName,
             );
           }
-          // Track the root most component of the result for deduping logging.
-          result.component = componentInfo;
-          // Set the end time of the previous component to the start of the previous.
-          endTime = startTime;
-        }
-        isLastComponent = false;
-      } else if (info.awaited && i > 0 && i < debugInfo.length - 2) {
-        // $FlowFixMe: Refined.
-        const asyncInfo: ReactAsyncInfo = info;
-        const startTimeInfo = debugInfo[i - 1];
-        const endTimeInfo = debugInfo[i + 1];
-        if (
-          typeof startTimeInfo.time === 'number' &&
-          typeof endTimeInfo.time === 'number'
-        ) {
-          const awaitStartTime = startTimeInfo.time;
-          const awaitEndTime = endTimeInfo.time;
-          logComponentAwait(
-            asyncInfo,
-            trackIdx,
-            awaitStartTime,
-            awaitEndTime,
-            response._rootEnvironmentName,
-          );
         }
       }
+      endTime = time; // The end time of the next entry is this time.
+      endTimeIdx = i;
     }
   }
   result.endTime = childrenEndTime;

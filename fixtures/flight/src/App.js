@@ -1,6 +1,6 @@
 import * as React from 'react';
-import {renderToPipeableStream} from 'react-server-dom-webpack/server';
-import {createFromNodeStream} from 'react-server-dom-webpack/client';
+import {renderToReadableStream} from 'react-server-dom-webpack/server';
+import {createFromReadableStream} from 'react-server-dom-webpack/client';
 import {PassThrough, Readable} from 'stream';
 
 import Container from './Container.js';
@@ -33,55 +33,81 @@ function Foo({children}) {
   return <div>{children}</div>;
 }
 
+async function delay(text, ms) {
+  return new Promise(resolve => setTimeout(() => resolve(text), ms));
+}
+
+async function delayTwice() {
+  await delay('', 20);
+  await delay('', 10);
+}
+
+async function delayTrice() {
+  const p = delayTwice();
+  await delay('', 40);
+  return p;
+}
+
 async function Bar({children}) {
-  await new Promise(resolve => setTimeout(() => resolve('deferred text'), 10));
+  await delayTrice();
   return <div>{children}</div>;
 }
 
 async function ThirdPartyComponent() {
-  return new Promise(resolve =>
-    setTimeout(() => resolve('hello from a 3rd party'), 30)
-  );
+  return await delay('hello from a 3rd party', 30);
 }
 
-// Using Web streams for tee'ing convenience here.
-let cachedThirdPartyReadableWeb;
+let cachedThirdPartyStream;
 
-function fetchThirdParty(noCache) {
-  if (cachedThirdPartyReadableWeb && !noCache) {
-    const [readableWeb1, readableWeb2] = cachedThirdPartyReadableWeb.tee();
-    cachedThirdPartyReadableWeb = readableWeb1;
+// We create the Component outside of AsyncLocalStorage so that it has no owner.
+// That way it gets the owner from the call to createFromNodeStream.
+const thirdPartyComponent = <ThirdPartyComponent />;
 
-    return createFromNodeStream(Readable.fromWeb(readableWeb2), {
-      moduleMap: {},
-      moduleLoading: {},
-    });
+function simulateFetch(cb, latencyMs) {
+  return new Promise(resolve => {
+    // Request latency
+    setTimeout(() => {
+      const result = cb();
+      // Response latency
+      setTimeout(() => {
+        resolve(result);
+      }, latencyMs);
+    }, latencyMs);
+  });
+}
+
+async function fetchThirdParty(noCache) {
+  // We're using the Web Streams APIs for tee'ing convenience.
+  let stream;
+  if (cachedThirdPartyStream && !noCache) {
+    stream = cachedThirdPartyStream;
+  } else {
+    stream = await simulateFetch(
+      () =>
+        renderToReadableStream(
+          thirdPartyComponent,
+          {},
+          {environmentName: 'third-party'}
+        ),
+      25
+    );
   }
 
-  const stream = renderToPipeableStream(
-    <ThirdPartyComponent />,
-    {},
-    {environmentName: 'third-party'}
-  );
+  const [stream1, stream2] = stream.tee();
+  cachedThirdPartyStream = stream1;
 
-  const readable = new PassThrough();
-  // React currently only supports piping to one stream, so we convert, tee, and
-  // convert back again.
-  // TODO: Switch to web streams without converting when #33442 has landed.
-  const [readableWeb1, readableWeb2] = Readable.toWeb(readable).tee();
-  cachedThirdPartyReadableWeb = readableWeb1;
-  const result = createFromNodeStream(Readable.fromWeb(readableWeb2), {
-    moduleMap: {},
-    moduleLoading: {},
+  return createFromReadableStream(stream2, {
+    serverConsumerManifest: {
+      moduleMap: {},
+      serverModuleMap: null,
+      moduleLoading: null,
+    },
   });
-  stream.pipe(readable);
-
-  return result;
 }
 
 async function ServerComponent({noCache}) {
-  await new Promise(resolve => setTimeout(() => resolve('deferred text'), 50));
-  return fetchThirdParty(noCache);
+  await delay('deferred text', 50);
+  return await fetchThirdParty(noCache);
 }
 
 export default async function App({prerender, noCache}) {

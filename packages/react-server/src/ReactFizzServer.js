@@ -163,7 +163,6 @@ import {
   REACT_FRAGMENT_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_MEMO_TYPE,
-  REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_CONSUMER_TYPE,
   REACT_SCOPE_TYPE,
@@ -178,7 +177,6 @@ import {
   enableScopeAPI,
   enablePostpone,
   enableHalt,
-  enableRenderableContext,
   disableDefaultPropsExceptForClasses,
   enableAsyncIterableChildren,
   enableViewTransition,
@@ -2959,38 +2957,16 @@ function renderElement(
         renderMemo(request, task, keyPath, type, props, ref);
         return;
       }
-      case REACT_PROVIDER_TYPE: {
-        if (!enableRenderableContext) {
-          const context: ReactContext<any> = (type: any)._context;
-          renderContextProvider(request, task, keyPath, context, props);
-          return;
-        }
-        // Fall through
-      }
       case REACT_CONTEXT_TYPE: {
-        if (enableRenderableContext) {
-          const context = type;
-          renderContextProvider(request, task, keyPath, context, props);
-          return;
-        } else {
-          let context: ReactContext<any> = (type: any);
-          if (__DEV__) {
-            if ((context: any)._context !== undefined) {
-              context = (context: any)._context;
-            }
-          }
-          renderContextConsumer(request, task, keyPath, context, props);
-          return;
-        }
+        const context = type;
+        renderContextProvider(request, task, keyPath, context, props);
+        return;
       }
       case REACT_CONSUMER_TYPE: {
-        if (enableRenderableContext) {
-          const context: ReactContext<any> = (type: ReactConsumerType<any>)
-            ._context;
-          renderContextConsumer(request, task, keyPath, context, props);
-          return;
-        }
-        // Fall through
+        const context: ReactContext<any> = (type: ReactConsumerType<any>)
+          ._context;
+        renderContextConsumer(request, task, keyPath, context, props);
+        return;
       }
       case REACT_LAZY_TYPE: {
         renderLazyComponent(request, task, keyPath, type, props, ref);
@@ -4918,7 +4894,11 @@ function queueCompletedSegment(
     const childSegment = segment.children[0];
     childSegment.id = segment.id;
     childSegment.parentFlushed = true;
-    if (childSegment.status === COMPLETED) {
+    if (
+      childSegment.status === COMPLETED ||
+      childSegment.status === ABORTED ||
+      childSegment.status === ERRORED
+    ) {
       queueCompletedSegment(boundary, childSegment);
     }
   } else {
@@ -4989,7 +4969,7 @@ function finishedTask(
         // Our parent segment already flushed, so we need to schedule this segment to be emitted.
         // If it is a segment that was aborted, we'll write other content instead so we don't need
         // to emit it.
-        if (segment.status === COMPLETED) {
+        if (segment.status === COMPLETED || segment.status === ABORTED) {
           queueCompletedSegment(boundary, segment);
         }
       }
@@ -5058,7 +5038,7 @@ function finishedTask(
         // Our parent already flushed, so we need to schedule this segment to be emitted.
         // If it is a segment that was aborted, we'll write other content instead so we don't need
         // to emit it.
-        if (segment.status === COMPLETED) {
+        if (segment.status === COMPLETED || segment.status === ABORTED) {
           queueCompletedSegment(boundary, segment);
           const completedSegments = boundary.completedSegments;
           if (completedSegments.length === 1) {
@@ -5575,6 +5555,9 @@ function flushSubtree(
       }
       return r;
     }
+    case ABORTED: {
+      return true;
+    }
     default: {
       throw new Error(
         'Aborted, errored or already flushed boundaries should not be flushed again. This is a bug in React.',
@@ -5939,7 +5922,7 @@ function flushCompletedQueues(
           const error = new Error(
             'This rendered a large document (>' +
               maxSizeKb +
-              ') without any Suspense ' +
+              ' kB) without any Suspense ' +
               'boundaries around most of it. That can delay initial paint longer than ' +
               'necessary. To improve load performance, add a <Suspense> or <SuspenseList> ' +
               'around the content you expect to be below the header or below the fold. ' +

@@ -46,12 +46,31 @@ describe('ReactDOMFizzStaticNode', () => {
     });
   }
 
+  async function readContentWeb(stream) {
+    const reader = stream.getReader();
+    let content = '';
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) {
+        return content;
+      }
+      content += Buffer.from(value).toString('utf8');
+    }
+  }
+
   // @gate experimental
   it('should call prerenderToNodeStream', async () => {
     const result = await ReactDOMFizzStatic.prerenderToNodeStream(
       <div>hello world</div>,
     );
     const prelude = await readContent(result.prelude);
+    expect(prelude).toMatchInlineSnapshot(`"<div>hello world</div>"`);
+  });
+
+  // @gate experimental
+  it('should suppport web streams', async () => {
+    const result = await ReactDOMFizzStatic.prerender(<div>hello world</div>);
+    const prelude = await readContentWeb(result.prelude);
     expect(prelude).toMatchInlineSnapshot(`"<div>hello world</div>"`);
   });
 

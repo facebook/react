@@ -1785,6 +1785,13 @@ export function isFireFunctionType(id: Identifier): boolean {
   );
 }
 
+export function isEffectEventFunctionType(id: Identifier): boolean {
+  return (
+    id.type.kind === 'Function' &&
+    id.type.shapeId === 'BuiltInEffectEventFunction'
+  );
+}
+
 export function isStableType(id: Identifier): boolean {
   return (
     isSetStateType(id) ||

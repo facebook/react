@@ -21,7 +21,6 @@ export const enableDO_NOT_USE_disableStrictPassiveEffect = __VARIANT__;
 export const enableHiddenSubtreeInsertionEffectCleanup = __VARIANT__;
 export const enableNoCloningMemoCache = __VARIANT__;
 export const enableObjectFiber = __VARIANT__;
-export const enableRenderableContext = __VARIANT__;
 export const enableRetryLaneExpiration = __VARIANT__;
 export const enableTransitionTracing = __VARIANT__;
 export const favorSafetyOverHydrationPerf = __VARIANT__;

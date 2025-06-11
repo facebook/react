@@ -189,7 +189,7 @@ export function close(destination: Destination) {
   destination.end();
 }
 
-const textEncoder = new TextEncoder();
+export const textEncoder: TextEncoder = new TextEncoder();
 
 export function stringToChunk(content: string): Chunk {
   return content;

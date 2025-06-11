@@ -69,35 +69,37 @@ export default function ProfilerSettings(_: {}): React.Node {
   const minCommitDurationInputRef = useRef<HTMLInputElement | null>(null);
 
   return (
-    <div className={styles.Settings}>
-      <div className={styles.Setting}>
-        <label>
+    <div className={styles.SettingList}>
+      <div className={styles.SettingWrapper}>
+        <label className={styles.SettingRow}>
           <input
             type="checkbox"
             checked={recordChangeDescriptions}
             onChange={updateRecordChangeDescriptions}
-          />{' '}
-          Record why each component rendered while profiling.
+            className={styles.SettingRowCheckbox}
+          />
+          Record why each component rendered while profiling
         </label>
       </div>
 
-      <div className={styles.Setting}>
-        <label>
+      <div className={styles.SettingWrapper}>
+        <label className={styles.SettingRow}>
           <input
             checked={isCommitFilterEnabled}
             onChange={updateIsCommitFilterEnabled}
             type="checkbox"
-          />{' '}
+            className={styles.SettingRowCheckbox}
+          />
           Hide commits below
-        </label>{' '}
-        <input
-          className={styles.Input}
-          onChange={updateMinCommitDuration}
-          ref={minCommitDurationInputRef}
-          type="number"
-          value={minCommitDuration}
-        />{' '}
-        (ms)
+          <input
+            className={styles.Input}
+            onChange={updateMinCommitDuration}
+            ref={minCommitDurationInputRef}
+            type="number"
+            value={minCommitDuration}
+          />
+          &nbsp;(ms)
+        </label>
       </div>
     </div>
   );

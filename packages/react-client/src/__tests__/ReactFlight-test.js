@@ -320,7 +320,6 @@ describe('ReactFlight', () => {
                 name: 'Greeting',
                 env: 'Server',
                 key: null,
-                owner: null,
                 stack: '    in Object.<anonymous> (at **)',
                 props: {
                   firstName: 'Seb',
@@ -364,7 +363,6 @@ describe('ReactFlight', () => {
                 name: 'Greeting',
                 env: 'Server',
                 key: null,
-                owner: null,
                 stack: '    in Object.<anonymous> (at **)',
                 props: {
                   firstName: 'Seb',
@@ -2812,7 +2810,6 @@ describe('ReactFlight', () => {
                 name: 'ServerComponent',
                 env: 'Server',
                 key: null,
-                owner: null,
                 stack: '    in Object.<anonymous> (at **)',
                 props: {
                   transport: expect.arrayContaining([]),
@@ -2829,16 +2826,15 @@ describe('ReactFlight', () => {
       expect(getDebugInfo(thirdPartyChildren[0])).toEqual(
         __DEV__
           ? [
-              {time: 14},
+              {time: 22}, // Clamped to the start
               {
                 name: 'ThirdPartyComponent',
                 env: 'third-party',
                 key: null,
-                owner: null,
                 stack: '    in Object.<anonymous> (at **)',
                 props: {},
               },
-              {time: 15},
+              {time: 22},
               {time: 23}, // This last one is when the promise resolved into the first party.
             ]
           : undefined,
@@ -2846,32 +2842,30 @@ describe('ReactFlight', () => {
       expect(getDebugInfo(thirdPartyChildren[1])).toEqual(
         __DEV__
           ? [
-              {time: 16},
+              {time: 22}, // Clamped to the start
               {
                 name: 'ThirdPartyLazyComponent',
                 env: 'third-party',
                 key: null,
-                owner: null,
                 stack: '    in myLazy (at **)\n    in lazyInitializer (at **)',
                 props: {},
               },
-              {time: 17},
+              {time: 22},
             ]
           : undefined,
       );
       expect(getDebugInfo(thirdPartyChildren[2])).toEqual(
         __DEV__
           ? [
-              {time: 12},
+              {time: 22},
               {
                 name: 'ThirdPartyFragmentComponent',
                 env: 'third-party',
                 key: '3',
-                owner: null,
                 stack: '    in Object.<anonymous> (at **)',
                 props: {},
               },
-              {time: 13},
+              {time: 22},
             ]
           : undefined,
       );
@@ -2941,7 +2935,6 @@ describe('ReactFlight', () => {
                 name: 'ServerComponent',
                 env: 'Server',
                 key: null,
-                owner: null,
                 stack: '    in Object.<anonymous> (at **)',
                 props: {
                   transport: expect.arrayContaining([]),
@@ -2961,7 +2954,6 @@ describe('ReactFlight', () => {
                 name: 'Keyed',
                 env: 'Server',
                 key: 'keyed',
-                owner: null,
                 stack: '    in ServerComponent (at **)',
                 props: {
                   children: {},
@@ -2975,16 +2967,15 @@ describe('ReactFlight', () => {
       expect(getDebugInfo(thirdPartyFragment.props.children)).toEqual(
         __DEV__
           ? [
-              {time: 12},
+              {time: 19}, // Clamp to the start
               {
                 name: 'ThirdPartyAsyncIterableComponent',
                 env: 'third-party',
                 key: null,
-                owner: null,
                 stack: '    in Object.<anonymous> (at **)',
                 props: {},
               },
-              {time: 13},
+              {time: 19},
             ]
           : undefined,
       );
@@ -3137,7 +3128,6 @@ describe('ReactFlight', () => {
                 name: 'Component',
                 env: 'A',
                 key: null,
-                owner: null,
                 stack: '    in Object.<anonymous> (at **)',
                 props: {},
               },
@@ -3325,7 +3315,6 @@ describe('ReactFlight', () => {
           name: 'Greeting',
           env: 'Server',
           key: null,
-          owner: null,
           stack: '    in Object.<anonymous> (at **)',
           props: {
             firstName: 'Seb',

@@ -39,14 +39,14 @@ export function resumeToPipeableStream() {
 }
 
 export function renderToReadableStream() {
-  return require('./src/server/react-dom-server.node-webstreams').renderToReadableStream.apply(
+  return require('./src/server/react-dom-server.node').renderToReadableStream.apply(
     this,
     arguments,
   );
 }
 
 export function resume() {
-  return require('./src/server/react-dom-server.node-webstreams').resume.apply(
+  return require('./src/server/react-dom-server.node').resume.apply(
     this,
     arguments,
   );

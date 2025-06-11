@@ -708,7 +708,6 @@ describe('ReactFlightDOMBrowser', () => {
             name: 'Server',
             env: 'Server',
             key: null,
-            owner: null,
           }),
         }),
       );
@@ -724,7 +723,6 @@ describe('ReactFlightDOMBrowser', () => {
             name: 'Server',
             env: 'Server',
             key: null,
-            owner: null,
           }),
         }),
       );

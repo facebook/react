@@ -38,7 +38,6 @@ import {
   enablePersistedModeClonedFlag,
   enableProfilerTimer,
   enableTransitionTracing,
-  enableRenderableContext,
   passChildrenWhenCloningPersistedNodes,
   disableLegacyMode,
   enableViewTransition,
@@ -184,7 +183,7 @@ import {resetChildFibers} from './ReactChildFiber';
 import {createScopeInstance} from './ReactFiberScope';
 import {transferActualDuration} from './ReactProfilerTimer';
 import {popCacheProvider} from './ReactFiberCacheComponent';
-import {popTreeContext} from './ReactFiberTreeContext';
+import {popTreeContext, pushTreeFork} from './ReactFiberTreeContext';
 import {popRootTransition, popTransition} from './ReactFiberTransition';
 import {
   popMarkerInstance,
@@ -1667,12 +1666,7 @@ function completeWork(
       return null;
     case ContextProvider:
       // Pop provider fiber
-      let context: ReactContext<any>;
-      if (enableRenderableContext) {
-        context = workInProgress.type;
-      } else {
-        context = workInProgress.type._context;
-      }
+      const context: ReactContext<any> = workInProgress.type;
       popProvider(context, workInProgress);
       bubbleProperties(workInProgress);
       return null;
@@ -1764,6 +1758,10 @@ function completeWork(
                     ForceSuspenseFallback,
                   ),
                 );
+                if (getIsHydrating()) {
+                  // Re-apply tree fork since we popped the tree fork context in the beginning of this function.
+                  pushTreeFork(workInProgress, renderState.treeForkCount);
+                }
                 // Don't bubble properties in this case.
                 return workInProgress.child;
               }
@@ -1890,6 +1888,10 @@ function completeWork(
         }
         pushSuspenseListContext(workInProgress, suspenseContext);
         // Do a pass over the next row.
+        if (getIsHydrating()) {
+          // Re-apply tree fork since we popped the tree fork context in the beginning of this function.
+          pushTreeFork(workInProgress, renderState.treeForkCount);
+        }
         // Don't bubble properties in this case.
         return next;
       }
