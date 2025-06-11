@@ -1389,6 +1389,16 @@ export enum ValueReason {
   JsxCaptured = 'jsx-captured',
 
   /**
+   * Argument to a hook
+   */
+  HookCaptured = 'hook-captured',
+
+  /**
+   * Return value of a hook
+   */
+  HookReturn = 'hook-return',
+
+  /**
    * Passed to an effect
    */
   Effect = 'effect',
