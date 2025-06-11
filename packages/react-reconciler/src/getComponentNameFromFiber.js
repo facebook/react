@@ -94,7 +94,7 @@ export default function getComponentNameFromFiber(fiber: Fiber): string | null {
       return getContextName(consumer._context) + '.Consumer';
     case ContextProvider:
       const context: ReactContext<any> = (type: any);
-      return getContextName(context) + '.Provider';
+      return getContextName(context);
     case DehydratedFragment:
       return 'DehydratedFragment';
     case ForwardRef:

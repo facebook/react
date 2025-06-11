@@ -106,7 +106,7 @@ export default function getComponentNameFromType(type: mixed): string | null {
         return 'Portal';
       case REACT_CONTEXT_TYPE:
         const context: ReactContext<any> = (type: any);
-        return getContextName(context) + '.Provider';
+        return getContextName(context);
       case REACT_CONSUMER_TYPE:
         const consumer: ReactConsumerType<any> = (type: any);
         return getContextName(consumer._context) + '.Consumer';
