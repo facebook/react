@@ -1108,7 +1108,7 @@ function getComponentNameFromType(type) {
       case REACT_PORTAL_TYPE:
         return "Portal";
       case REACT_CONTEXT_TYPE:
-        return (type.displayName || "Context") + ".Provider";
+        return type.displayName || "Context";
       case REACT_CONSUMER_TYPE:
         return (type._context.displayName || "Context") + ".Consumer";
       case REACT_FORWARD_REF_TYPE:
@@ -1144,7 +1144,7 @@ function getComponentNameFromFiber(fiber) {
     case 9:
       return (type._context.displayName || "Context") + ".Consumer";
     case 10:
-      return (type.displayName || "Context") + ".Provider";
+      return type.displayName || "Context";
     case 18:
       return "DehydratedFragment";
     case 11:
@@ -21522,14 +21522,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2326 = React.version;
 if (
-  "19.2.0-www-classic-6c86e56a-20250611" !==
+  "19.2.0-www-classic-b7e2de63-20250611" !==
   isomorphicReactPackageVersion$jscomp$inline_2326
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2326,
-      "19.2.0-www-classic-6c86e56a-20250611"
+      "19.2.0-www-classic-b7e2de63-20250611"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -21547,10 +21547,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2328 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-6c86e56a-20250611",
+  version: "19.2.0-www-classic-b7e2de63-20250611",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-6c86e56a-20250611"
+  reconcilerVersion: "19.2.0-www-classic-b7e2de63-20250611"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2328.getLaneLabelMap = getLaneLabelMap),
@@ -21965,7 +21965,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-classic-6c86e56a-20250611";
+exports.version = "19.2.0-www-classic-b7e2de63-20250611";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
