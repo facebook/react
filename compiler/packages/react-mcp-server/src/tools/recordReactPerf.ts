@@ -186,7 +186,7 @@ function getDuckDB(): { db: duckdb.Database, conn: duckdb.Connection } {
   return { db, conn: conn! };
 }
 
-export async function getPerfData(url: string): Promise<string[]> {
+export async function processPerfData(url: string): Promise<string[]> {
   try {
     const page = await hookIntoPage(url);
 
@@ -283,7 +283,7 @@ export async function getPerfData(url: string): Promise<string[]> {
  * @param query The SQL query to execute
  * @returns A promise that resolves to the result of the query execution
  */
-export async function executeDataFrameScript(query: string): Promise<string> {
+export async function executeDataAnalysis(query: string): Promise<string> {
   try {
     const { conn } = getDuckDB();
 

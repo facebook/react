@@ -24,8 +24,8 @@ import {measurePerformance} from './tools/runtimePerf';
 import {parseReactComponentTree} from './tools/componentTree';
 import {
   beginPerfRecording,
-  getPerfData,
-  executeDataFrameScript,
+  processPerfData,
+  executeDataAnalysis,
 } from './tools/recordReactPerf';
 
 function calculateMean(values: number[]): string {
@@ -489,7 +489,7 @@ server.tool(
   },
   async ({url}) => {
     try {
-      const result = await getPerfData(url);
+      const result = await processPerfData(url);
 
       return {
         content: [
@@ -549,7 +549,7 @@ server.tool(
   },
   async ({script}) => {
     try {
-      const result = await executeDataFrameScript(script);
+      const result = await executeDataAnalysis(script);
 
       return {
         content: [
