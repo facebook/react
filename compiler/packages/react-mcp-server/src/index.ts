@@ -621,35 +621,6 @@ Follow these steps carefully when analyzing performance:
 2. Load the dataset with 'process-react-performance-data'
 3. Call 'interpret-react-performance-data' as many times as needed, you should gain more and more information about the dataset by using dataForge and answer questions you come up about the dataset
 
- Based on this analysis:
-   - List 10 potential questions related to the analysis topic
-   - Evaluate each question against the following criteria:
-     * Directly related to the analysis topic
-     * Can be answered with reasonable computational effort
-     * Will produce manageable result sizes
-     * Provides meaningful insights into the data
-   - Select the top 5 questions that best meet all criteria
-
-4. List the 5 questions you've selected, ensuring they meet the criteria outlined above.
-
-5. For each question, follow these steps:
-   a. Wrap your thought process in <analysis_planning> tags:
-      - How can I structure the Python script to efficiently answer this question?
-      - What data preprocessing steps are necessary?
-      - How can I limit the output size to ensure stability?
-      - What type of visualization would best represent the results?
-      - Outline the main steps the script will follow
-
-   b. Write a JS script to answer the question. Include comments explaining your approach and any measures taken to limit output size.
-
-   c. Use the interpret-react-performance-data tool to execute your JS script on the MCP server.
-
-
-6. After completing the analysis for all 5 questions, provide a brief summary of your findings and any overarching insights gained from the data.
-
-Remember to prioritize stability and manageability in your analysis. If at any point you encounter potential issues with large result sets, adjust your approach accordingly.
-
-
 ## Process
 1. Analyze the user's code for optimization opportunities:
    - Check for React anti-patterns that prevent compiler optimization
