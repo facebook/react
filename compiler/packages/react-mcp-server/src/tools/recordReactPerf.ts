@@ -177,13 +177,13 @@ async function processTrackData(
 let db: duckdb.Database | null = null;
 let conn: duckdb.Connection | null = null;
 
-function getDuckDB(): { db: duckdb.Database, conn: duckdb.Connection } {
+function getDuckDB(): {db: duckdb.Database; conn: duckdb.Connection} {
   if (!db) {
     const dbPath = path.join(__dirname, '../src/artifacts/perf_data.db');
     db = new duckdb.Database(dbPath);
     conn = db.connect();
   }
-  return { db, conn: conn! };
+  return {db, conn: conn!};
 }
 
 export async function processPerfData(url: string): Promise<string[]> {
@@ -260,13 +260,15 @@ export async function processPerfData(url: string): Promise<string[]> {
     }
 
     // Initialize DuckDB and load CSV files
-    const { conn } = getDuckDB();
+    const {conn} = getDuckDB();
 
     // Create tables and load data from CSV files
     for (const csvFile of csvFiles) {
       // Create table based on CSV structure
       conn.exec(`DROP TABLE IF EXISTS ${csvFile.tableName}`);
-      conn.exec(`CREATE TABLE ${csvFile.tableName} AS SELECT * FROM read_csv_auto('${csvFile.path}')`);
+      conn.exec(
+        `CREATE TABLE ${csvFile.tableName} AS SELECT * FROM read_csv_auto('${csvFile.path}')`,
+      );
     }
 
     result.push('DuckDB database created and data loaded successfully.');
@@ -285,10 +287,10 @@ export async function processPerfData(url: string): Promise<string[]> {
  */
 export async function executeDataAnalysis(query: string): Promise<string> {
   try {
-    const { conn } = getDuckDB();
+    const {conn} = getDuckDB();
 
     // Check if tables exist by querying the information schema
-    const tablesExist = await new Promise<boolean>((resolve) => {
+    const tablesExist = await new Promise<boolean>(resolve => {
       conn.all(
         `SELECT table_name FROM information_schema.tables
          WHERE table_name IN ('component_track', 'scheduler_track')`,
@@ -298,7 +300,7 @@ export async function executeDataAnalysis(query: string): Promise<string> {
           } else {
             resolve(true);
           }
-        }
+        },
       );
     });
 
@@ -328,7 +330,9 @@ Example workflow:
       }
 
       const headers = Object.keys(result[0]);
-      const rows = result.map(row => headers.map(h => JSON.stringify(row[h])).join(','));
+      const rows = result.map(row =>
+        headers.map(h => JSON.stringify(row[h])).join(','),
+      );
 
       return [headers.join(','), ...rows].join('\n');
     } else {
