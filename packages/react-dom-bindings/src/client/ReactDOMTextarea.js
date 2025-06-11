@@ -34,6 +34,11 @@ let didWarnValDefaultVal = false;
  * `defaultValue` if specified, or the children content (deprecated).
  */
 
+function shouldIgnoreValue(value: mixed): boolean {
+  // Ignore symbols and functions - don't process them through stringification
+  return typeof value === 'symbol' || typeof value === 'function';
+}
+
 export function validateTextareaProps(element: Element, props: Object) {
   if (__DEV__) {
     if (
@@ -61,13 +66,15 @@ export function validateTextareaProps(element: Element, props: Object) {
   }
 }
 
+// UPDATED updateTextarea function
 export function updateTextarea(
   element: Element,
   value: ?string,
   defaultValue: ?string,
 ) {
   const node: HTMLTextAreaElement = (element: any);
-  if (value != null) {
+  // CHANGE: Add shouldIgnoreValue check before processing value
+  if (value != null && !shouldIgnoreValue(value)) {
     // Cast `value` to a string to ensure the value is set correctly. While
     // browsers typically do this as necessary, jsdom doesn't.
     const newValue = toString(getToStringValue(value));
@@ -75,21 +82,33 @@ export function updateTextarea(
     if (newValue !== node.value) {
       node.value = newValue;
     }
-    // TOOO: This should respect disableInputAttributeSyncing flag.
+    // TODO: This should respect disableInputAttributeSyncing flag.
     if (defaultValue == null) {
       if (node.defaultValue !== newValue) {
         node.defaultValue = newValue;
       }
       return;
     }
+  } else if (value != null && shouldIgnoreValue(value)) {
+    // FIXED: Handle symbol/function value by setting empty string
+    node.value = '';
+    if (defaultValue == null) {
+      node.defaultValue = '';
+      return;
+    }
   }
-  if (defaultValue != null) {
+
+  if (defaultValue != null && !shouldIgnoreValue(defaultValue)) {
     node.defaultValue = toString(getToStringValue(defaultValue));
+  } else if (defaultValue != null && shouldIgnoreValue(defaultValue)) {
+    // FIXED: Handle symbol/function defaultValue
+    node.defaultValue = '';
   } else {
     node.defaultValue = '';
   }
 }
 
+// UPDATED initTextarea function
 export function initTextarea(
   element: Element,
   value: ?string,
@@ -99,6 +118,11 @@ export function initTextarea(
   const node: HTMLTextAreaElement = (element: any);
 
   let initialValue = value;
+
+  // FIXED: Check for symbol/function in value
+  if (initialValue != null && shouldIgnoreValue(initialValue)) {
+    initialValue = null; // Treat as if no value was provided
+  }
 
   // Only bother fetching default value if we're going to use it
   if (initialValue == null) {
@@ -121,7 +145,11 @@ export function initTextarea(
         defaultValue = children;
       }
     }
-    if (defaultValue == null) {
+
+    // FIXED: Check for symbol/function in defaultValue
+    if (defaultValue != null && shouldIgnoreValue(defaultValue)) {
+      defaultValue = '';
+    } else if (defaultValue == null) {
       defaultValue = '';
     }
     initialValue = defaultValue;
@@ -154,8 +182,10 @@ export function hydrateTextarea(
 ): void {
   const node: HTMLTextAreaElement = (element: any);
   let initialValue = value;
-  if (initialValue == null) {
-    if (defaultValue == null) {
+
+  // CHANGE: Add shouldIgnoreValue checks
+  if (initialValue == null || shouldIgnoreValue(initialValue)) {
+    if (defaultValue == null || shouldIgnoreValue(defaultValue)) {
       defaultValue = '';
     }
     initialValue = defaultValue;

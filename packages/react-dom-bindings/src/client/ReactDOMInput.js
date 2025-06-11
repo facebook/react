@@ -44,6 +44,11 @@ let didWarnCheckedDefaultChecked = false;
  * See http://www.w3.org/TR/2012/WD-html5-20121025/the-input-element.html
  */
 
+function shouldIgnoreValue(value: mixed): boolean {
+  // Ignore symbols and functions - don't process them through stringification
+  return typeof value === 'symbol' || typeof value === 'function';
+}
+
 export function validateInputProps(element: Element, props: Object) {
   if (__DEV__) {
     // Normally we check for undefined and null the same, but explicitly specifying both
@@ -86,6 +91,7 @@ export function validateInputProps(element: Element, props: Object) {
   }
 }
 
+// UPDATED updateInput function - key changes highlighted
 export function updateInput(
   element: Element,
   value: ?string,
@@ -118,7 +124,8 @@ export function updateInput(
     node.removeAttribute('type');
   }
 
-  if (value != null) {
+  // FIXED: Handle symbol/function values by treating them as null
+  if (value != null && !shouldIgnoreValue(value)) {
     if (type === 'number') {
       if (
         // $FlowFixMe[incompatible-type]
@@ -132,6 +139,9 @@ export function updateInput(
     } else if (node.value !== toString(getToStringValue(value))) {
       node.value = toString(getToStringValue(value));
     }
+  } else if (value != null && shouldIgnoreValue(value)) {
+    // FIXED: When value is symbol/function, explicitly clear it
+    node.value = '';
   } else if (type === 'submit' || type === 'reset') {
     // Submit/reset inputs need the attribute removed completely to avoid
     // blank-text buttons.
@@ -142,21 +152,31 @@ export function updateInput(
     // When not syncing the value attribute, React only assigns a new value
     // whenever the defaultValue React prop has changed. When not present,
     // React does nothing
-    if (defaultValue != null) {
+    if (defaultValue != null && !shouldIgnoreValue(defaultValue)) {
       setDefaultValue(node, type, getToStringValue(defaultValue));
+    } else if (defaultValue != null && shouldIgnoreValue(defaultValue)) {
+      // FIXED: Handle symbol/function defaultValue
+      setDefaultValue(node, type, getToStringValue(''));
     } else if (lastDefaultValue != null) {
       node.removeAttribute('value');
     }
   } else {
+    // CHANGE: Add shouldIgnoreValue checks for both value and defaultValue
     // When syncing the value attribute, the value comes from a cascade of
     // properties:
     //  1. The value React property
     //  2. The defaultValue React property
     //  3. Otherwise there should be no change
-    if (value != null) {
+    if (value != null && !shouldIgnoreValue(value)) {
       setDefaultValue(node, type, getToStringValue(value));
-    } else if (defaultValue != null) {
+    } else if (value != null && shouldIgnoreValue(value)) {
+      // FIXED: Handle symbol/function value
+      setDefaultValue(node, type, getToStringValue(''));
+    } else if (defaultValue != null && !shouldIgnoreValue(defaultValue)) {
       setDefaultValue(node, type, getToStringValue(defaultValue));
+    } else if (defaultValue != null && shouldIgnoreValue(defaultValue)) {
+      // FIXED: Handle symbol/function defaultValue
+      setDefaultValue(node, type, getToStringValue(''));
     } else if (lastDefaultValue != null) {
       node.removeAttribute('value');
     }
@@ -203,6 +223,7 @@ export function updateInput(
   }
 }
 
+// UPDATED initInput function
 export function initInput(
   element: Element,
   value: ?string,
@@ -227,21 +248,34 @@ export function initInput(
     node.type = type;
   }
 
-  if (value != null || defaultValue != null) {
+  // CHANGE: Add shouldIgnoreValue checks before processing value and defaultValue
+  // FIXED: Handle symbol/function values by converting to null/empty
+  const processedValue =
+    value != null && !shouldIgnoreValue(value) ? value : null;
+  const processedDefaultValue =
+    defaultValue != null && !shouldIgnoreValue(defaultValue)
+      ? defaultValue
+      : null;
+
+  if (processedValue != null || processedDefaultValue != null) {
     const isButton = type === 'submit' || type === 'reset';
 
     // Avoid setting value attribute on submit/reset inputs as it overrides the
     // default value provided by the browser. See: #12872
-    if (isButton && (value === undefined || value === null)) {
+    if (isButton && (processedValue === undefined || processedValue === null)) {
       // We track the value just in case it changes type later on.
       track((element: any));
       return;
     }
 
     const defaultValueStr =
-      defaultValue != null ? toString(getToStringValue(defaultValue)) : '';
+      processedDefaultValue != null
+        ? toString(getToStringValue(processedDefaultValue))
+        : '';
     const initialValue =
-      value != null ? toString(getToStringValue(value)) : defaultValueStr;
+      processedValue != null
+        ? toString(getToStringValue(processedValue))
+        : defaultValueStr;
 
     // Do not assign value if it is already set. This prevents user text input
     // from being lost during SSR hydration.
@@ -249,7 +283,7 @@ export function initInput(
       if (disableInputAttributeSyncing) {
         // When not syncing the value attribute, the value property points
         // directly to the React prop. Only assign it if it exists.
-        if (value != null) {
+        if (processedValue != null) {
           // Always assign on buttons so that it is possible to assign an
           // empty string to clear button text.
           //
@@ -258,8 +292,11 @@ export function initInput(
           // prematurely marking required inputs as invalid. Equality is compared
           // to the current value in case the browser provided value is not an
           // empty string.
-          if (isButton || toString(getToStringValue(value)) !== node.value) {
-            node.value = toString(getToStringValue(value));
+          if (
+            isButton ||
+            toString(getToStringValue(processedValue)) !== node.value
+          ) {
+            node.value = toString(getToStringValue(processedValue));
           }
         }
       } else {
@@ -278,7 +315,7 @@ export function initInput(
     if (disableInputAttributeSyncing) {
       // When not syncing the value attribute, assign the value attribute
       // directly from the defaultValue React property (when present)
-      if (defaultValue != null) {
+      if (processedDefaultValue != null) {
         node.defaultValue = defaultValueStr;
       }
     } else {
@@ -287,6 +324,16 @@ export function initInput(
       // assignment step above.
       node.defaultValue = initialValue;
     }
+    // FIXED: Handle the case where both value and defaultValue are symbols/functions
+  } else if (
+    (value != null && shouldIgnoreValue(value)) ||
+    (defaultValue != null && shouldIgnoreValue(defaultValue))
+  ) {
+    // Set empty values for symbol/function inputs
+    node.value = '';
+    node.defaultValue = '';
+    track((element: any));
+    return;
   }
 
   // Normally, we'd just do `node.checked = node.checked` upon initial mount, less this bug
@@ -353,10 +400,22 @@ export function hydrateInput(
 ): void {
   const node: HTMLInputElement = (element: any);
 
+  // CHANGE: Add shouldIgnoreValue checks
+  const processedValue =
+    value != null && !shouldIgnoreValue(value) ? value : null;
+  const processedDefaultValue =
+    defaultValue != null && !shouldIgnoreValue(defaultValue)
+      ? defaultValue
+      : null;
+
   const defaultValueStr =
-    defaultValue != null ? toString(getToStringValue(defaultValue)) : '';
+    processedDefaultValue != null
+      ? toString(getToStringValue(processedDefaultValue))
+      : '';
   const initialValue =
-    value != null ? toString(getToStringValue(value)) : defaultValueStr;
+    processedValue != null
+      ? toString(getToStringValue(processedValue))
+      : defaultValueStr;
 
   const checkedOrDefault = checked != null ? checked : defaultChecked;
   // TODO: This 'function' or 'symbol' check isn't replicated in other places
