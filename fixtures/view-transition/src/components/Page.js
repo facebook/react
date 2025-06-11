@@ -18,6 +18,7 @@ import SwipeRecognizer from './SwipeRecognizer';
 import './Page.css';
 
 import transitions from './Transitions.module.css';
+import NestedReveal from './NestedReveal';
 
 async function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -241,6 +242,7 @@ export default function Page({url, navigate}) {
           </div>
         </ViewTransition>
       </SwipeRecognizer>
+      <NestedReveal />
     </div>
   );
 }
