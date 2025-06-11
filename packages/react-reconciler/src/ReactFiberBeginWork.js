@@ -116,7 +116,6 @@ import {
   enableLegacyHidden,
   enableCPUSuspense,
   enablePostpone,
-  enableRenderableContext,
   disableLegacyMode,
   disableDefaultPropsExceptForClasses,
   enableHydrationLaneScheduling,
@@ -3591,12 +3590,7 @@ function updateContextProvider(
   workInProgress: Fiber,
   renderLanes: Lanes,
 ) {
-  let context: ReactContext<any>;
-  if (enableRenderableContext) {
-    context = workInProgress.type;
-  } else {
-    context = workInProgress.type._context;
-  }
+  const context: ReactContext<any> = workInProgress.type;
   const newProps = workInProgress.pendingProps;
   const newValue = newProps.value;
 
@@ -3623,18 +3617,8 @@ function updateContextConsumer(
   workInProgress: Fiber,
   renderLanes: Lanes,
 ) {
-  let context: ReactContext<any>;
-  if (enableRenderableContext) {
-    const consumerType: ReactConsumerType<any> = workInProgress.type;
-    context = consumerType._context;
-  } else {
-    context = workInProgress.type;
-    if (__DEV__) {
-      if ((context: any)._context !== undefined) {
-        context = (context: any)._context;
-      }
-    }
-  }
+  const consumerType: ReactConsumerType<any> = workInProgress.type;
+  const context: ReactContext<any> = consumerType._context;
   const newProps = workInProgress.pendingProps;
   const render = newProps.children;
 
@@ -3878,12 +3862,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       break;
     case ContextProvider: {
       const newValue = workInProgress.memoizedProps.value;
-      let context: ReactContext<any>;
-      if (enableRenderableContext) {
-        context = workInProgress.type;
-      } else {
-        context = workInProgress.type._context;
-      }
+      const context: ReactContext<any> = workInProgress.type;
       pushProvider(workInProgress, context, newValue);
       break;
     }

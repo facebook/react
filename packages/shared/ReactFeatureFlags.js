@@ -204,9 +204,6 @@ export const enableReactTestRendererWarning = true;
 // before removing them in stable in the next Major
 export const disableLegacyMode = true;
 
-// Make <Context> equivalent to <Context.Provider> instead of <Context.Consumer>
-export const enableRenderableContext = true;
-
 // -----------------------------------------------------------------------------
 // Chopping Block
 //

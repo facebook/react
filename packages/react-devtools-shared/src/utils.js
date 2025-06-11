@@ -19,14 +19,12 @@ import {
   REACT_MEMO_TYPE,
   REACT_PORTAL_TYPE,
   REACT_PROFILER_TYPE,
-  REACT_PROVIDER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_TRACING_MARKER_TYPE,
   REACT_VIEW_TRANSITION_TYPE,
 } from 'shared/ReactSymbols';
-import {enableRenderableContext} from 'shared/ReactFeatureFlags';
 import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
@@ -86,6 +84,9 @@ const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
 const encodedStringCache: LRUCache<string, Array<number>> = new LRU({
   max: 1000,
 });
+
+// Previously, the type of `Context.Provider`.
+const LEGACY_REACT_PROVIDER_TYPE: symbol = Symbol.for('react.provider');
 
 export function alphaSortKeys(
   a: string | number | symbol,
@@ -712,14 +713,7 @@ function typeOfWithLegacyElementSymbol(object: any): mixed {
               case REACT_MEMO_TYPE:
                 return $$typeofType;
               case REACT_CONSUMER_TYPE:
-                if (enableRenderableContext) {
-                  return $$typeofType;
-                }
-              // Fall through
-              case REACT_PROVIDER_TYPE:
-                if (!enableRenderableContext) {
-                  return $$typeofType;
-                }
+                return $$typeofType;
               // Fall through
               default:
                 return $$typeof;
@@ -740,7 +734,7 @@ export function getDisplayNameForReactElement(
   switch (elementType) {
     case REACT_CONSUMER_TYPE:
       return 'ContextConsumer';
-    case REACT_PROVIDER_TYPE:
+    case LEGACY_REACT_PROVIDER_TYPE:
       return 'ContextProvider';
     case REACT_CONTEXT_TYPE:
       return 'Context';

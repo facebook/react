@@ -41,7 +41,6 @@ import {
   enableLegacyHidden,
   enableTransitionTracing,
   enableDO_NOT_USE_disableStrictPassiveEffect,
-  enableRenderableContext,
   disableLegacyMode,
   enableObjectFiber,
   enableViewTransition,
@@ -101,7 +100,6 @@ import {
   REACT_FRAGMENT_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_PROFILER_TYPE,
-  REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_CONSUMER_TYPE,
   REACT_SUSPENSE_TYPE,
@@ -638,25 +636,12 @@ export function createFiberFromTypeAndProps(
       default: {
         if (typeof type === 'object' && type !== null) {
           switch (type.$$typeof) {
-            case REACT_PROVIDER_TYPE:
-              if (!enableRenderableContext) {
-                fiberTag = ContextProvider;
-                break getTag;
-              }
-            // Fall through
             case REACT_CONTEXT_TYPE:
-              if (enableRenderableContext) {
-                fiberTag = ContextProvider;
-                break getTag;
-              } else {
-                fiberTag = ContextConsumer;
-                break getTag;
-              }
+              fiberTag = ContextProvider;
+              break getTag;
             case REACT_CONSUMER_TYPE:
-              if (enableRenderableContext) {
-                fiberTag = ContextConsumer;
-                break getTag;
-              }
+              fiberTag = ContextConsumer;
+              break getTag;
             // Fall through
             case REACT_FORWARD_REF_TYPE:
               fiberTag = ForwardRef;
