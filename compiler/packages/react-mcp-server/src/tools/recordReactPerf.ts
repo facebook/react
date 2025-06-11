@@ -1,7 +1,8 @@
 import {hookIntoPage} from '../utils/puppeteerUtils';
 import fs from 'fs/promises';
 import path from 'path';
-import * as duckdb from 'duckdb';
+import Database from 'better-sqlite3';
+import type {Database as DatabaseType} from 'better-sqlite3';
 
 /**
  * Connects to a browser and patches the console.timeStamp method to capture data
@@ -135,58 +136,66 @@ export async function beginPerfRecording(url: string): Promise<string> {
   }
 }
 
+/**
+ * Processes track data and loads it directly into the database
+ *
+ * @param trackData The track data to process
+ * @param headers The headers for the track data
+ * @param tableName The name of the table to create
+ * @returns A promise that resolves to true if the data was processed successfully, false otherwise
+ */
 async function processTrackData(
-  trackData: any,
+  trackData: any[],
   headers: string[],
-): Promise<string | null> {
-  const artifactsDir = path.join(__dirname, '../src/artifacts');
-
-  if (Array.isArray(trackData) && trackData.length > 0) {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-
-    const trackName = trackData[0].track;
-
-    const componentFilename = `react-${trackName}-track-${timestamp}.csv`;
-    const componentFilePath = path.join(artifactsDir, componentFilename);
-
-    const componentRows = trackData.map(item => {
-      return headers
-        .map(header => {
-          const value = item[header];
-          if (value === undefined) {
-            return '';
-          }
-          if (typeof value === 'string' && value.includes(',')) {
-            return `"${value}"`;
-          }
-          return value;
-        })
-        .join(',');
-    });
-
-    const componentCsvContent = [headers, ...componentRows].join('\n');
-
-    await fs.writeFile(componentFilePath, componentCsvContent, 'utf8');
-
-    return componentFilePath;
+  tableName: string,
+): Promise<boolean> {
+  if (!Array.isArray(trackData) || trackData.length === 0) {
+    return false;
   }
-  return null;
+
+  const db = getSQLiteDB();
+
+  db.exec(`DROP TABLE IF EXISTS ${tableName}`);
+
+  const createTableSQL = `CREATE TABLE ${tableName} (
+    ${headers.map(header => `${header.trim()} TEXT`).join(', ')}
+  )`;
+  db.exec(createTableSQL);
+
+  const placeholders = headers.map(() => '?').join(', ');
+  const insertSQL = `INSERT INTO ${tableName} (${headers.join(', ')}) VALUES (${placeholders})`;
+  const insertStmt = db.prepare(insertSQL);
+
+  const transaction = db.transaction((rows: any[]) => {
+    for (const row of rows) {
+      insertStmt.run(...row);
+    }
+  });
+
+  const dataRows = trackData.map(item => {
+    return headers.map(header => {
+      const value = item[header];
+      return value === undefined ? null : value;
+    });
+  });
+
+  transaction(dataRows);
+
+  return true;
 }
 
-// Create a singleton DuckDB connection
-let db: duckdb.Database | null = null;
-let conn: duckdb.Connection | null = null;
+let db: DatabaseType | null = null;
 
-function getDuckDB(): {db: duckdb.Database; conn: duckdb.Connection} {
+function getSQLiteDB(): DatabaseType {
   if (!db) {
     const dbPath = path.join(__dirname, '../src/artifacts/perf_data.db');
-    db = new duckdb.Database(dbPath);
-    conn = db.connect();
-  }
-  return {db, conn: conn!};
-}
+    db = new Database(dbPath, {verbose: console.log});
 
-export async function processPerfData(url: string): Promise<string[]> {
+    db.pragma('foreign_keys = ON');
+  }
+  return db;
+}
+export async function getPerfData(url: string): Promise<string[]> {
   try {
     const page = await hookIntoPage(url);
 
@@ -207,71 +216,45 @@ export async function processPerfData(url: string): Promise<string[]> {
     }
 
     const artifactsDir = path.join(__dirname, '../src/artifacts');
-
     try {
-      await fs.rm(artifactsDir, {recursive: true, force: true});
       await fs.mkdir(artifactsDir, {recursive: true});
     } catch (err) {
       console.error(`Error creating directory: ${err}`);
     }
 
     const result = [];
-    const csvFiles = [];
 
-    const componentCsvPath = await processTrackData(componentTrackData, [
-      'name',
-      'startTime',
-      'endTime',
-      'track',
-      'color',
-    ]);
+    const componentSuccess = await processTrackData(
+      componentTrackData,
+      ['name', 'startTime', 'endTime', 'track', 'color'],
+      'component_track',
+    );
 
-    if (componentCsvPath) {
-      csvFiles.push({
-        path: componentCsvPath,
-        tableName: 'component_track',
-      });
+    if (componentSuccess) {
       result.push(
-        'Component track data saved in the artifacts directory it can now be accessed through the interpret-perf-data tool.',
+        'Component track data loaded into the database and can now be accessed through the interpret-perf-data tool.',
       );
     } else {
       result.push('No component track data was available to save.');
     }
 
-    const schedulerCsvPath = await processTrackData(schedulerTrackData, [
-      'name',
-      'startTime',
-      'endTime',
-      'type',
-      'track',
-      'color',
-    ]);
+    const schedulerSuccess = await processTrackData(
+      schedulerTrackData,
+      ['name', 'startTime', 'endTime', 'type', 'track', 'color'],
+      'scheduler_track',
+    );
 
-    if (schedulerCsvPath) {
-      csvFiles.push({
-        path: schedulerCsvPath,
-        tableName: 'scheduler_track',
-      });
+    if (schedulerSuccess) {
       result.push(
-        'Scheduler track data saved in the artifacts directory it can now be accessed through the interpret-perf-data tool.',
+        'Scheduler track data loaded into the database and can now be accessed through the interpret-perf-data tool.',
       );
     } else {
       result.push('No scheduler track data was available to save.');
     }
 
-    // Initialize DuckDB and load CSV files
-    const {conn} = getDuckDB();
-
-    // Create tables and load data from CSV files
-    for (const csvFile of csvFiles) {
-      // Create table based on CSV structure
-      conn.exec(`DROP TABLE IF EXISTS ${csvFile.tableName}`);
-      conn.exec(
-        `CREATE TABLE ${csvFile.tableName} AS SELECT * FROM read_csv_auto('${csvFile.path}')`,
-      );
+    if (componentSuccess || schedulerSuccess) {
+      result.push('SQLite database created and data loaded successfully.');
     }
-
-    result.push('DuckDB database created and data loaded successfully.');
 
     return result;
   } catch (error) {
@@ -280,29 +263,24 @@ export async function processPerfData(url: string): Promise<string[]> {
 }
 
 /**
- * Executes a SQL query against the DuckDB database containing performance data.
+ * Executes a SQL query against the SQLite database containing performance data.
  *
  * @param query The SQL query to execute
  * @returns A promise that resolves to the result of the query execution
  */
-export async function executeDataAnalysis(query: string): Promise<string> {
+export async function interpretData(query: string): Promise<string> {
   try {
-    const {conn} = getDuckDB();
+    const db = getSQLiteDB();
 
-    // Check if tables exist by querying the information schema
-    const tablesExist = await new Promise<boolean>(resolve => {
-      conn.all(
-        `SELECT table_name FROM information_schema.tables
-         WHERE table_name IN ('component_track', 'scheduler_track')`,
-        (err: Error | null, result: any[]) => {
-          if (err || !result || result.length === 0) {
-            resolve(false);
-          } else {
-            resolve(true);
-          }
-        },
-      );
-    });
+    const tablesExist =
+      db
+        .prepare(
+          `
+      SELECT name FROM sqlite_master
+      WHERE type='table' AND name IN ('component_track', 'scheduler_track')
+    `,
+        )
+        .all().length > 0;
 
     if (!tablesExist) {
       return `No performance data tables found. Please run the process-react-performance-data tool first to capture and load performance data.
@@ -310,19 +288,17 @@ export async function executeDataAnalysis(query: string): Promise<string> {
 Example workflow:
 1. Run 'start-react-performance-recording' to begin capturing data
 2. Interact with your React application to generate performance data
-3. Run 'process-react-performance-data' to process and load the data into DuckDB
+3. Run 'process-react-performance-data' to process and load the data into SQLite
 4. Then run SQL queries using this tool`;
     }
 
-    const result = await new Promise<any>((resolve, reject) => {
-      conn.all(query, (err: Error | null, result: any) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(result);
-        }
-      });
-    });
+    let result: any;
+    try {
+      result = db.prepare(query).all();
+    } catch (err) {
+      db.exec(query);
+      return 'Query executed successfully.';
+    }
 
     if (Array.isArray(result)) {
       if (result.length === 0) {
