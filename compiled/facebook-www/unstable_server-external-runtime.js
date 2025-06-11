@@ -281,8 +281,9 @@
     $RT = performance.now();
     for (var i = 0; i < batch.length; i += 2) {
       var suspenseIdNode = batch[i],
-        contentNode = batch[i + 1],
-        parentInstance = suspenseIdNode.parentNode;
+        contentNode = batch[i + 1];
+      contentNode.parentNode.removeChild(contentNode);
+      var parentInstance = suspenseIdNode.parentNode;
       if (parentInstance) {
         var suspenseNode = suspenseIdNode.previousSibling,
           depth = 0;
@@ -314,11 +315,8 @@
   });
   var $RC = function (suspenseBoundaryID, contentID) {
     if ((contentID = document.getElementById(contentID)))
-      if (
-        (contentID.parentNode.removeChild(contentID),
-        (suspenseBoundaryID = document.getElementById(suspenseBoundaryID)))
-      )
-        (suspenseBoundaryID.previousSibling.data = "$~"),
+      (suspenseBoundaryID = document.getElementById(suspenseBoundaryID))
+        ? ((suspenseBoundaryID.previousSibling.data = "$~"),
           $RB.push(suspenseBoundaryID, contentID),
           2 === $RB.length &&
             ((suspenseBoundaryID = "number" !== typeof $RT ? 0 : $RT),
@@ -327,7 +325,8 @@
               2300 > contentID && 2e3 < contentID
                 ? 2300 - contentID
                 : suspenseBoundaryID + 300 - contentID),
-            setTimeout($RV.bind(null, $RB), suspenseBoundaryID));
+            setTimeout($RV.bind(null, $RB), suspenseBoundaryID)))
+        : contentID.parentNode.removeChild(contentID);
   };
   var $RR = function (suspenseBoundaryID, contentID, stylesheetDescriptors) {
     function cleanupWith(cb) {
