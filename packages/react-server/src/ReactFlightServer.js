@@ -91,6 +91,7 @@ import {
   initAsyncDebugInfo,
   markAsyncSequenceRootTask,
   getCurrentAsyncSequence,
+  getAsyncSequenceFromPromise,
   parseStackTrace,
   supportsComponentStorage,
   componentStorage,
@@ -106,6 +107,7 @@ import {
   prepareToUseHooksForRequest,
   prepareToUseHooksForComponent,
   getThenableStateAfterSuspending,
+  getTrackedThenablesAfterRendering,
   resetHooksForRequest,
 } from './ReactFlightHooks';
 import {DefaultAsyncDispatcher} from './flight/ReactFlightAsyncDispatcher';
@@ -690,26 +692,14 @@ function serializeThenable(
 
   switch (thenable.status) {
     case 'fulfilled': {
-      if (__DEV__) {
-        // If this came from Flight, forward any debug info into this new row.
-        const debugInfo: ?ReactDebugInfo = (thenable: any)._debugInfo;
-        if (debugInfo) {
-          forwardDebugInfo(request, newTask, debugInfo);
-        }
-      }
+      forwardDebugInfoFromThenable(request, newTask, thenable, null, null);
       // We have the resolved value, we can go ahead and schedule it for serialization.
       newTask.model = thenable.value;
       pingTask(request, newTask);
       return newTask.id;
     }
     case 'rejected': {
-      if (__DEV__) {
-        // If this came from Flight, forward any debug info into this new row.
-        const debugInfo: ?ReactDebugInfo = (thenable: any)._debugInfo;
-        if (debugInfo) {
-          forwardDebugInfo(request, newTask, debugInfo);
-        }
-      }
+      forwardDebugInfoFromThenable(request, newTask, thenable, null, null);
       const x = thenable.reason;
       erroredTask(request, newTask, x);
       return newTask.id;
@@ -758,24 +748,11 @@ function serializeThenable(
 
   thenable.then(
     value => {
-      if (__DEV__) {
-        // If this came from Flight, forward any debug info into this new row.
-        const debugInfo: ?ReactDebugInfo = (thenable: any)._debugInfo;
-        if (debugInfo) {
-          forwardDebugInfo(request, newTask, debugInfo);
-        }
-      }
+      forwardDebugInfoFromCurrentContext(request, newTask, thenable);
       newTask.model = value;
       pingTask(request, newTask);
     },
     reason => {
-      if (__DEV__) {
-        // If this came from Flight, forward any debug info into this new row.
-        const debugInfo: ?ReactDebugInfo = (thenable: any)._debugInfo;
-        if (debugInfo) {
-          forwardDebugInfo(request, newTask, debugInfo);
-        }
-      }
       if (newTask.status === PENDING) {
         if (enableProfilerTimer && enableComponentPerformanceTrack) {
           // If this is async we need to time when this task finishes.
@@ -1055,13 +1032,21 @@ function readThenable<T>(thenable: Thenable<T>): T {
   throw thenable;
 }
 
-function createLazyWrapperAroundWakeable(wakeable: Wakeable) {
+function createLazyWrapperAroundWakeable(
+  request: Request,
+  task: Task,
+  wakeable: Wakeable,
+) {
   // This is a temporary fork of the `use` implementation until we accept
   // promises everywhere.
   const thenable: Thenable<mixed> = (wakeable: any);
   switch (thenable.status) {
-    case 'fulfilled':
+    case 'fulfilled': {
+      forwardDebugInfoFromThenable(request, task, thenable, null, null);
+      return thenable.value;
+    }
     case 'rejected':
+      forwardDebugInfoFromThenable(request, task, thenable, null, null);
       break;
     default: {
       if (typeof thenable.status === 'string') {
@@ -1074,6 +1059,7 @@ function createLazyWrapperAroundWakeable(wakeable: Wakeable) {
       pendingThenable.status = 'pending';
       pendingThenable.then(
         fulfilledValue => {
+          forwardDebugInfoFromCurrentContext(request, task, thenable);
           if (thenable.status === 'pending') {
             const fulfilledThenable: FulfilledThenable<mixed> = (thenable: any);
             fulfilledThenable.status = 'fulfilled';
@@ -1081,6 +1067,7 @@ function createLazyWrapperAroundWakeable(wakeable: Wakeable) {
           }
         },
         (error: mixed) => {
+          forwardDebugInfoFromCurrentContext(request, task, thenable);
           if (thenable.status === 'pending') {
             const rejectedThenable: RejectedThenable<mixed> = (thenable: any);
             rejectedThenable.status = 'rejected';
@@ -1096,10 +1083,6 @@ function createLazyWrapperAroundWakeable(wakeable: Wakeable) {
     _payload: thenable,
     _init: readThenable,
   };
-  if (__DEV__) {
-    // If this came from React, transfer the debug info.
-    lazyType._debugInfo = (thenable: any)._debugInfo || [];
-  }
   return lazyType;
 }
 
@@ -1178,12 +1161,9 @@ function processServerComponentReturnValue(
         }
       }, voidHandler);
     }
-    if (thenable.status === 'fulfilled') {
-      return thenable.value;
-    }
     // TODO: Once we accept Promises as children on the client, we can just return
     // the thenable here.
-    return createLazyWrapperAroundWakeable(result);
+    return createLazyWrapperAroundWakeable(request, task, result);
   }
 
   if (__DEV__) {
@@ -1386,6 +1366,7 @@ function renderFunctionComponent<Props>(
       }
     }
   } else {
+    componentDebugInfo = (null: any);
     prepareToUseHooksForComponent(prevThenableState, null);
     // The secondArg is always undefined in Server Components since refs error early.
     const secondArg = undefined;
@@ -1406,6 +1387,34 @@ function renderFunctionComponent<Props>(
     // the abort error as the reason.
     // eslint-disable-next-line no-throw-literal
     throw null;
+  }
+
+  if (
+    __DEV__ ||
+    (enableProfilerTimer &&
+      enableComponentPerformanceTrack &&
+      enableAsyncDebugInfo)
+  ) {
+    // Forward any debug information for any Promises that we use():ed during the render.
+    // We do this at the end so that we don't keep doing this for each retry.
+    const trackedThenables = getTrackedThenablesAfterRendering();
+    if (trackedThenables !== null) {
+      const stacks: Array<Error> =
+        __DEV__ && enableAsyncDebugInfo
+          ? (trackedThenables: any)._stacks ||
+            ((trackedThenables: any)._stacks = [])
+          : (null: any);
+      for (let i = 0; i < trackedThenables.length; i++) {
+        const stack = __DEV__ && enableAsyncDebugInfo ? stacks[i] : null;
+        forwardDebugInfoFromThenable(
+          request,
+          task,
+          trackedThenables[i],
+          __DEV__ ? componentDebugInfo : null,
+          stack,
+        );
+      }
+    }
   }
 
   // Apply special cases.
@@ -1884,7 +1893,7 @@ function visitAsyncNode(
   request: Request,
   task: Task,
   node: AsyncSequence,
-  visited: Set<AsyncSequence>,
+  visited: Set<AsyncSequence | ReactDebugInfo>,
   cutOff: number,
 ): null | PromiseNode | IONode {
   if (visited.has(node)) {
@@ -1943,7 +1952,8 @@ function visitAsyncNode(
       // We need to forward after we visit awaited nodes because what ever I/O we requested that's
       // the thing that generated this node and its virtual children.
       const debugInfo = node.debugInfo;
-      if (debugInfo !== null) {
+      if (debugInfo !== null && !visited.has(debugInfo)) {
+        visited.add(debugInfo);
         forwardDebugInfo(request, task, debugInfo);
       }
       return match;
@@ -2003,8 +2013,9 @@ function visitAsyncNode(
       }
       // We need to forward after we visit awaited nodes because what ever I/O we requested that's
       // the thing that generated this node and its virtual children.
-      const debugInfo: null | ReactDebugInfo = node.debugInfo;
-      if (debugInfo !== null) {
+      const debugInfo = node.debugInfo;
+      if (debugInfo !== null && !visited.has(debugInfo)) {
+        visited.add(debugInfo);
         forwardDebugInfo(request, task, debugInfo);
       }
       return match;
@@ -2020,8 +2031,14 @@ function emitAsyncSequence(
   request: Request,
   task: Task,
   node: AsyncSequence,
+  alreadyForwardedDebugInfo: ?ReactDebugInfo,
+  owner: null | ReactComponentInfo,
+  stack: null | Error,
 ): void {
-  const visited: Set<AsyncSequence> = new Set();
+  const visited: Set<AsyncSequence | ReactDebugInfo> = new Set();
+  if (__DEV__ && alreadyForwardedDebugInfo) {
+    visited.add(alreadyForwardedDebugInfo);
+  }
   const awaitedNode = visitAsyncNode(request, task, node, visited, task.time);
   if (awaitedNode !== null) {
     // Nothing in user space (unfiltered stack) awaited this.
@@ -2032,10 +2049,21 @@ function emitAsyncSequence(
     const env = (0, request.environmentName)();
     // If we don't have any thing awaited, the time we started awaiting was internal
     // when we yielded after rendering. The current task time is basically that.
-    emitDebugChunk(request, task.id, {
+    const debugInfo: ReactAsyncInfo = {
       awaited: ((awaitedNode: any): ReactIOInfo), // This is deduped by this reference.
       env: env,
-    });
+    };
+    if (__DEV__) {
+      if (owner != null) {
+        // $FlowFixMe[cannot-write]
+        debugInfo.owner = owner;
+      }
+      if (stack != null) {
+        // $FlowFixMe[cannot-write]
+        debugInfo.stack = filterStackTrace(request, parseStackTrace(stack, 1));
+      }
+    }
+    emitDebugChunk(request, task.id, debugInfo);
     markOperationEndTime(request, task, awaitedNode.end);
   }
 }
@@ -2044,12 +2072,6 @@ function pingTask(request: Request, task: Task): void {
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     // If this was async we need to emit the time when it completes.
     task.timed = true;
-    if (enableAsyncDebugInfo) {
-      const sequence = getCurrentAsyncSequence();
-      if (sequence !== null) {
-        emitAsyncSequence(request, task, sequence);
-      }
-    }
   }
   const pingedTasks = request.pingedTasks;
   pingedTasks.push(task);
@@ -4312,6 +4334,58 @@ function forwardDebugInfo(
         request.pendingChunks++;
         emitDebugChunk(request, id, info);
       }
+    }
+  }
+}
+
+function forwardDebugInfoFromThenable(
+  request: Request,
+  task: Task,
+  thenable: Thenable<any>,
+  owner: null | ReactComponentInfo, // DEV-only
+  stack: null | Error, // DEV-only
+): void {
+  let debugInfo: ?ReactDebugInfo;
+  if (__DEV__) {
+    // If this came from Flight, forward any debug info into this new row.
+    debugInfo = thenable._debugInfo;
+    if (debugInfo) {
+      forwardDebugInfo(request, task, debugInfo);
+    }
+  }
+  if (
+    enableProfilerTimer &&
+    enableComponentPerformanceTrack &&
+    enableAsyncDebugInfo
+  ) {
+    const sequence = getAsyncSequenceFromPromise(thenable);
+    if (sequence !== null) {
+      emitAsyncSequence(request, task, sequence, debugInfo, owner, stack);
+    }
+  }
+}
+
+function forwardDebugInfoFromCurrentContext(
+  request: Request,
+  task: Task,
+  thenable: Thenable<any>,
+): void {
+  let debugInfo: ?ReactDebugInfo;
+  if (__DEV__) {
+    // If this came from Flight, forward any debug info into this new row.
+    debugInfo = thenable._debugInfo;
+    if (debugInfo) {
+      forwardDebugInfo(request, task, debugInfo);
+    }
+  }
+  if (
+    enableProfilerTimer &&
+    enableComponentPerformanceTrack &&
+    enableAsyncDebugInfo
+  ) {
+    const sequence = getCurrentAsyncSequence();
+    if (sequence !== null) {
+      emitAsyncSequence(request, task, sequence, debugInfo, null, null);
     }
   }
 }

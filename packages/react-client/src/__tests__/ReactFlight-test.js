@@ -2991,6 +2991,64 @@ describe('ReactFlight', () => {
     );
   });
 
+  // @gate !__DEV__ || enableComponentPerformanceTrack
+  it('preserves debug info for server-to-server through use()', async () => {
+    function ThirdPartyComponent() {
+      return 'hi';
+    }
+
+    function ServerComponent({transport}) {
+      // This is a Server Component that receives other Server Components from a third party.
+      const text = ReactServer.use(ReactNoopFlightClient.read(transport));
+      return <div>{text.toUpperCase()}</div>;
+    }
+
+    const thirdPartyTransport = ReactNoopFlightServer.render(
+      <ThirdPartyComponent />,
+      {
+        environmentName: 'third-party',
+      },
+    );
+
+    const transport = ReactNoopFlightServer.render(
+      <ServerComponent transport={thirdPartyTransport} />,
+    );
+
+    await act(async () => {
+      const promise = ReactNoopFlightClient.read(transport);
+      expect(getDebugInfo(promise)).toEqual(
+        __DEV__
+          ? [
+              {time: 16},
+              {
+                name: 'ServerComponent',
+                env: 'Server',
+                key: null,
+                stack: '    in Object.<anonymous> (at **)',
+                props: {
+                  transport: expect.arrayContaining([]),
+                },
+              },
+              {time: 16},
+              {
+                name: 'ThirdPartyComponent',
+                env: 'third-party',
+                key: null,
+                stack: '    in Object.<anonymous> (at **)',
+                props: {},
+              },
+              {time: 16},
+              {time: 17},
+            ]
+          : undefined,
+      );
+      const result = await promise;
+      ReactNoop.render(result);
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(<div>HI</div>);
+  });
+
   it('preserves error stacks passed through server-to-server with source maps', async () => {
     async function ServerComponent({transport}) {
       // This is a Server Component that receives other Server Components from a third party.

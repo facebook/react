@@ -58,6 +58,12 @@ export function getThenableStateAfterSuspending(): ThenableState {
   return state;
 }
 
+export function getTrackedThenablesAfterRendering(): null | Array<
+  Thenable<any>,
+> {
+  return thenableState;
+}
+
 export const HooksDispatcher: Dispatcher = {
   readContext: (unsupportedContext: any),
 
