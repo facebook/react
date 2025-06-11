@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0ef40058f23db68f833b4628232ab55e>>
+ * @generated SignedSource<<2c063987ba7526ed833dd36590028098>>
  */
 
 /*
@@ -266,7 +266,6 @@ var assign = Object.assign,
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
   REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
-  REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
   REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
   REACT_CONTEXT_TYPE = Symbol.for("react.context"),
   REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
@@ -2811,7 +2810,6 @@ function createFiberFromTypeAndProps(
       default:
         if ("object" === typeof type && null !== type)
           switch (type.$$typeof) {
-            case REACT_PROVIDER_TYPE:
             case REACT_CONTEXT_TYPE:
               fiberTag = 10;
               break a;
@@ -17131,14 +17129,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2018 = React.version;
 if (
-  "19.2.0-native-fb-c38e2689-20250609" !==
+  "19.2.0-native-fb-6c86e56a-20250611" !==
   isomorphicReactPackageVersion$jscomp$inline_2018
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2018,
-      "19.2.0-native-fb-c38e2689-20250609"
+      "19.2.0-native-fb-6c86e56a-20250611"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17160,10 +17158,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2539 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-c38e2689-20250609",
+  version: "19.2.0-native-fb-6c86e56a-20250611",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-c38e2689-20250609"
+  reconcilerVersion: "19.2.0-native-fb-6c86e56a-20250611"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2540 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17414,4 +17412,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-native-fb-c38e2689-20250609";
+exports.version = "19.2.0-native-fb-6c86e56a-20250611";

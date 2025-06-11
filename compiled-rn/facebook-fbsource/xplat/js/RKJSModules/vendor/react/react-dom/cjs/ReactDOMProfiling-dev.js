@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<73d9fa34ec237b6391e5b31e94a06f12>>
+ * @generated SignedSource<<a302907adb16876f0ccd9831546a7808>>
  */
 
 /*
@@ -4426,7 +4426,6 @@ __DEV__ &&
           default:
             if ("object" === typeof type && null !== type)
               switch (type.$$typeof) {
-                case REACT_PROVIDER_TYPE:
                 case REACT_CONTEXT_TYPE:
                   fiberTag = 10;
                   break a;
@@ -11494,8 +11493,8 @@ __DEV__ &&
           );
           return workInProgress.child;
         case 10:
-          var context = workInProgress.type;
-          var newProps = workInProgress.pendingProps,
+          var context = workInProgress.type,
+            newProps = workInProgress.pendingProps,
             newValue = newProps.value;
           "value" in newProps ||
             hasWarnedAboutUsingNoValuePropOnContextProvider ||
@@ -11512,8 +11511,8 @@ __DEV__ &&
           );
           return workInProgress.child;
         case 9:
-          var context$jscomp$0 = workInProgress.type._context;
-          var render = workInProgress.pendingProps.children;
+          var context$jscomp$0 = workInProgress.type._context,
+            render = workInProgress.pendingProps.children;
           "function" !== typeof render &&
             console.error(
               "A context consumer was rendered with multiple children, or a child that isn't a function. A context consumer expects a single child that is a function. If you did pass a function, make sure there is no trailing or leading whitespace around it."
@@ -23294,7 +23293,6 @@ __DEV__ &&
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
       REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
-      REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
       REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
       REACT_CONTEXT_TYPE = Symbol.for("react.context"),
       REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
@@ -27125,11 +27123,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-native-fb-c38e2689-20250609" !== isomorphicReactPackageVersion)
+      if ("19.2.0-native-fb-6c86e56a-20250611" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-native-fb-c38e2689-20250609\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-native-fb-6c86e56a-20250611\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -27166,10 +27164,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-native-fb-c38e2689-20250609",
+          version: "19.2.0-native-fb-6c86e56a-20250611",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-native-fb-c38e2689-20250609"
+          reconcilerVersion: "19.2.0-native-fb-6c86e56a-20250611"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -27623,7 +27621,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-native-fb-c38e2689-20250609";
+    exports.version = "19.2.0-native-fb-6c86e56a-20250611";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

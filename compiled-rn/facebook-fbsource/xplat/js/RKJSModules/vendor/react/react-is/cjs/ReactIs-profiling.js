@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<02657cbe4e63d726fcada6db65c81292>>
+ * @generated SignedSource<<453945d75318f02d8ce69988b0dd882f>>
  */
 
 "use strict";
@@ -20,9 +20,8 @@ var renameElementSymbol =
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
-  REACT_PROFILER_TYPE = Symbol.for("react.profiler");
-Symbol.for("react.provider");
-var REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
+  REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
+  REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
   REACT_CONTEXT_TYPE = Symbol.for("react.context"),
   REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
   REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"),

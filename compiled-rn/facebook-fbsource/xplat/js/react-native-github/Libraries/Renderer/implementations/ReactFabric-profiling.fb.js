@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b5e9f0efcb1deb2ff1da1fe60a784be6>>
+ * @generated SignedSource<<21879231ed86888f352d52b79f52d177>>
  */
 
 "use strict";
@@ -235,7 +235,6 @@ var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
   REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
-  REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
   REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
   REACT_CONTEXT_TYPE = Symbol.for("react.context"),
   REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
@@ -11529,7 +11528,6 @@ function createFiberFromTypeAndProps(
       default:
         if ("object" === typeof type && null !== type)
           switch (type.$$typeof) {
-            case REACT_PROVIDER_TYPE:
             case REACT_CONTEXT_TYPE:
               fiberTag = 10;
               break a;
@@ -11967,10 +11965,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1364 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-c38e2689-20250609",
+    version: "19.2.0-native-fb-6c86e56a-20250611",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-c38e2689-20250609"
+    reconcilerVersion: "19.2.0-native-fb-6c86e56a-20250611"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1364.rendererConfig = extraDevToolsConfig);
