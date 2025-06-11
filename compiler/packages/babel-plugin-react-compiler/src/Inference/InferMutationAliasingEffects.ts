@@ -38,6 +38,7 @@ import {
 import {
   eachInstructionValueLValue,
   eachInstructionValueOperand,
+  eachTerminalOperand,
   eachTerminalSuccessor,
 } from '../HIR/visitors';
 import {Ok, Result} from '../Utils/Result';
@@ -221,8 +222,19 @@ export function inferMutationAliasingEffects(
   return Ok(undefined);
 }
 
-function findHoistedContextDeclarations(fn: HIRFunction): Set<DeclarationId> {
-  const hoisted = new Set<DeclarationId>();
+function findHoistedContextDeclarations(
+  fn: HIRFunction,
+): Map<DeclarationId, Place | null> {
+  const hoisted = new Map<DeclarationId, Place | null>();
+  function visit(place: Place): void {
+    if (
+      hoisted.has(place.identifier.declarationId) &&
+      hoisted.get(place.identifier.declarationId) == null
+    ) {
+      // If this is the first load of the value, store the location
+      hoisted.set(place.identifier.declarationId, place);
+    }
+  }
   for (const block of fn.body.blocks.values()) {
     for (const instr of block.instructions) {
       if (instr.value.kind === 'DeclareContext') {
@@ -232,9 +244,16 @@ function findHoistedContextDeclarations(fn: HIRFunction): Set<DeclarationId> {
           kind == InstructionKind.HoistedFunction ||
           kind == InstructionKind.HoistedLet
         ) {
-          hoisted.add(instr.value.lvalue.place.identifier.declarationId);
+          hoisted.set(instr.value.lvalue.place.identifier.declarationId, null);
+        }
+      } else {
+        for (const operand of eachInstructionValueOperand(instr.value)) {
+          visit(operand);
         }
       }
+    }
+    for (const operand of eachTerminalOperand(block.terminal)) {
+      visit(operand);
     }
   }
   return hoisted;
@@ -248,12 +267,12 @@ class Context {
   catchHandlers: Map<BlockId, Place> = new Map();
   isFuctionExpression: boolean;
   fn: HIRFunction;
-  hoistedContextDeclarations: Set<DeclarationId>;
+  hoistedContextDeclarations: Map<DeclarationId, Place | null>;
 
   constructor(
     isFunctionExpression: boolean,
     fn: HIRFunction,
-    hoistedContextDeclarations: Set<DeclarationId>,
+    hoistedContextDeclarations: Map<DeclarationId, Place | null>,
   ) {
     this.isFuctionExpression = isFunctionExpression;
     this.fn = fn;
@@ -901,48 +920,69 @@ function applyEffect(
           console.log(prettyFormat(state.debugAbstractValue(value)));
         }
 
-        let reason: string;
-        let description: string | null = null;
-
         if (
           mutationKind === 'mutate-frozen' &&
           context.hoistedContextDeclarations.has(
             effect.value.identifier.declarationId,
           )
         ) {
-          reason = `This variable is accessed before it is declared, which prevents the earlier access from updating when this value changes over time`;
-          if (
+          const description =
             effect.value.identifier.name !== null &&
             effect.value.identifier.name.kind === 'named'
-          ) {
-            description = `Move the declaration of \`${effect.value.identifier.name.value}\` to before it is first referenced`;
+              ? `Variable \`${effect.value.identifier.name.value}\` is accessed before it is declared`
+              : null;
+          const hoistedAccess = context.hoistedContextDeclarations.get(
+            effect.value.identifier.declarationId,
+          );
+          if (hoistedAccess != null && hoistedAccess.loc != effect.value.loc) {
+            effects.push({
+              kind: 'MutateFrozen',
+              place: effect.value,
+              error: {
+                severity: ErrorSeverity.InvalidReact,
+                reason: `This variable is accessed before it is declared, which may prevent it from updating as the assigned value changes over time`,
+                description,
+                loc: hoistedAccess.loc,
+                suggestions: null,
+              },
+            });
           }
+
+          effects.push({
+            kind: 'MutateFrozen',
+            place: effect.value,
+            error: {
+              severity: ErrorSeverity.InvalidReact,
+              reason: `This variable is accessed before it is declared, which prevents the earlier access from updating when this value changes over time`,
+              description,
+              loc: effect.value.loc,
+              suggestions: null,
+            },
+          });
         } else {
-          reason = getWriteErrorReason({
+          const reason = getWriteErrorReason({
             kind: value.kind,
             reason: value.reason,
             context: new Set(),
           });
-          if (
+          const description =
             effect.value.identifier.name !== null &&
             effect.value.identifier.name.kind === 'named'
-          ) {
-            description = `Found mutation of \`${effect.value.identifier.name.value}\``;
-          }
+              ? `Found mutation of \`${effect.value.identifier.name.value}\``
+              : null;
+          effects.push({
+            kind:
+              value.kind === ValueKind.Frozen ? 'MutateFrozen' : 'MutateGlobal',
+            place: effect.value,
+            error: {
+              severity: ErrorSeverity.InvalidReact,
+              reason,
+              description,
+              loc: effect.value.loc,
+              suggestions: null,
+            },
+          });
         }
-
-        effects.push({
-          kind:
-            value.kind === ValueKind.Frozen ? 'MutateFrozen' : 'MutateGlobal',
-          place: effect.value,
-          error: {
-            severity: ErrorSeverity.InvalidReact,
-            reason,
-            description,
-            loc: effect.value.loc,
-            suggestions: null,
-          },
-        });
       }
       break;
     }
