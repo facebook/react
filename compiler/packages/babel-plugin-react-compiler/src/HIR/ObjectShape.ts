@@ -1302,6 +1302,34 @@ export const DefaultNonmutatingHook = addHook(
     calleeEffect: Effect.Read,
     hookKind: 'Custom',
     returnValueKind: ValueKind.Frozen,
+    aliasing: {
+      receiver: makeIdentifierId(0),
+      params: [],
+      rest: makeIdentifierId(1),
+      returns: makeIdentifierId(2),
+      temporaries: [],
+      effects: [
+        // Freeze the arguments
+        {
+          kind: 'Freeze',
+          value: signatureArgument(1),
+          reason: ValueReason.HookCaptured,
+        },
+        // Returns a frozen value
+        {
+          kind: 'Create',
+          into: signatureArgument(2),
+          value: ValueKind.Frozen,
+          reason: ValueReason.HookReturn,
+        },
+        // May alias any arguments into the return
+        {
+          kind: 'Alias',
+          from: signatureArgument(1),
+          into: signatureArgument(2),
+        },
+      ],
+    },
   },
   'DefaultNonmutatingHook',
 );
