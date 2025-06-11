@@ -512,34 +512,36 @@ server.tool(
   'interpret-react-performance-data',
   `
   <description>
-  Pass in a Javascript script using the data-forge library to analyze the performance data captured by the start-react-performance-recording tool.
-  The script should use the data-forge library to process the data and provide insights and solutions to the user.
-  Your scripts should be very atomical so you can:
+  Pass in a SQL query to analyze the performance data captured by the start-react-performance-recording tool.
+  The query will be executed against a DuckDB database containing the performance data.
+  Your queries should be focused and specific to extract meaningful insights from the data.
   </description>
 
   <requirements>
-  - On your first iteration your script should just try to understand the shape of the dataFrames object
-  - the script should return a string with the analysis at the end
-  - Do not use console.log this will only cause noise
-  - only analyze the data frames within the \`dataFrames\` parameter, you should assume you always receive this parameter.
-  - Remember to ask yourself 10 questions about the dataframe and then narrow down to 5 most important about the dataset
-  - dataFrames should never  use .get method
+  - On your first iteration your query should just try to understand the structure of the tables
+  - The query should return a result set that provides meaningful analysis
+  - Queries should be well-structured and optimized for performance
+  - Remember to ask yourself 10 questions about the data and then narrow down to the 5 most important about the dataset
   </requirements>
 
   Allowed Actions
-    1.	Print Results: Output will be displayed as the script's stdout.
+    1. Print Results: Output will be displayed as the query result.
 
   Prohibited Actions
-    1. Overwriting Original DataFrames: Do not modify existing DataFrames to preserve their integrity for future tasks.
+    1. Modifying the database schema or data: Queries should be read-only.
     2. Creating Charts: Chart generation is not permitted.
-    3. Using console.log()
 
   When using this tool you are a senior React Performance Engineer tasked with performing exploratory data analysis on a dataset of React performance data. Your goal is to provide insightful analysis while ensuring stability and manageable result sizes.
 
   <usage>
-    Your script will be passed into a Function() contructor, you should only use data-forge import, the function will receive the paremeters:
-    - dataForge - the dataFroge import
-    - dataFrames - A map of the currently loaded dataFrames meant to be analyzed by the tool. This is just a \`Record<string, any>\`
+    Your SQL query will be executed against a DuckDB database containing the following tables:
+    - component_track: Contains data from the Components track in React DevTools
+    - scheduler_track: Contains data from the Scheduler track in React DevTools
+
+    Example queries:
+    - "SELECT * FROM component_track LIMIT 10" - View the first 10 rows of the component track data
+    - "SELECT name, COUNT(*) as render_count FROM component_track GROUP BY name ORDER BY render_count DESC LIMIT 10" - Find the components with the most renders
+    - "SELECT name, AVG(endTime - startTime) as avg_duration FROM component_track GROUP BY name ORDER BY avg_duration DESC LIMIT 10" - Find the components with the longest average render time
   </usage>
   `,
   {

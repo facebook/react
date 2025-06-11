@@ -1,8 +1,7 @@
 import {hookIntoPage} from '../utils/puppeteerUtils';
 import fs from 'fs/promises';
 import path from 'path';
-import dataForge from 'data-forge';
-import {readFileSync} from 'data-forge-fs';
+import * as duckdb from 'duckdb';
 
 /**
  * Connects to a browser and patches the console.timeStamp method to capture data
@@ -24,7 +23,8 @@ export async function beginPerfRecording(url: string): Promise<string> {
 
       // Monkey-patch console.timeStamp to capture data
       console.timeStamp = function (...args: any) {
-        if ((window as any).__MCP_RECORDING_ACTIVE__) {
+        // Filter out 0 endTimes, this is used in devtools to hide duplicated render blocks but is noise for us
+        if ((window as any).__MCP_RECORDING_ACTIVE__ && args[2] !== 0) {
           if ((args[4] as string)?.includes('Scheduler')) {
             const timeStampData = {
               name: args[0],
@@ -43,7 +43,7 @@ export async function beginPerfRecording(url: string): Promise<string> {
               startTime: args[1],
               endTime: args[2],
               track: 'Components',
-              color: args[4],
+              color: args[5],
             };
             (window as any).__COMPONENT_TRACK_TIMESTAMP_DATA__.push(
               timeStampData,
@@ -138,7 +138,7 @@ export async function beginPerfRecording(url: string): Promise<string> {
 async function processTrackData(
   trackData: any,
   headers: string[],
-): Promise<boolean> {
+): Promise<string | null> {
   const artifactsDir = path.join(__dirname, '../src/artifacts');
 
   if (Array.isArray(trackData) && trackData.length > 0) {
@@ -168,12 +168,24 @@ async function processTrackData(
 
     await fs.writeFile(componentFilePath, componentCsvContent, 'utf8');
 
-    return true;
+    return componentFilePath;
   }
-  return false;
+  return null;
 }
 
-const dataFrames: Record<string, any> = {};
+// Create a singleton DuckDB connection
+let db: duckdb.Database | null = null;
+let conn: duckdb.Connection | null = null;
+
+function getDuckDB(): { db: duckdb.Database, conn: duckdb.Connection } {
+  if (!db) {
+    const dbPath = path.join(__dirname, '../src/artifacts/perf_data.db');
+    db = new duckdb.Database(dbPath);
+    conn = db.connect();
+  }
+  return { db, conn: conn! };
+}
+
 export async function getPerfData(url: string): Promise<string[]> {
   try {
     const page = await hookIntoPage(url);
@@ -204,16 +216,21 @@ export async function getPerfData(url: string): Promise<string[]> {
     }
 
     const result = [];
+    const csvFiles = [];
 
-    if (
-      await processTrackData(componentTrackData, [
-        'name',
-        'startTime',
-        'endTime',
-        'track',
-        'color',
-      ])
-    ) {
+    const componentCsvPath = await processTrackData(componentTrackData, [
+      'name',
+      'startTime',
+      'endTime',
+      'track',
+      'color',
+    ]);
+
+    if (componentCsvPath) {
+      csvFiles.push({
+        path: componentCsvPath,
+        tableName: 'component_track',
+      });
       result.push(
         'Component track data saved in the artifacts directory it can now be accessed through the interpret-perf-data tool.',
       );
@@ -221,16 +238,20 @@ export async function getPerfData(url: string): Promise<string[]> {
       result.push('No component track data was available to save.');
     }
 
-    if (
-      await processTrackData(schedulerTrackData, [
-        'name',
-        'startTime',
-        'endTime',
-        'type',
-        'track',
-        'color',
-      ])
-    ) {
+    const schedulerCsvPath = await processTrackData(schedulerTrackData, [
+      'name',
+      'startTime',
+      'endTime',
+      'type',
+      'track',
+      'color',
+    ]);
+
+    if (schedulerCsvPath) {
+      csvFiles.push({
+        path: schedulerCsvPath,
+        tableName: 'scheduler_track',
+      });
       result.push(
         'Scheduler track data saved in the artifacts directory it can now be accessed through the interpret-perf-data tool.',
       );
@@ -238,18 +259,17 @@ export async function getPerfData(url: string): Promise<string[]> {
       result.push('No scheduler track data was available to save.');
     }
 
-    // Get all CSV files in the artifacts directory
-    const files = await fs.readdir(artifactsDir);
-    const csvFiles = files.filter((file: string) => file.endsWith('.csv'));
+    // Initialize DuckDB and load CSV files
+    const { conn } = getDuckDB();
 
-    for (const file of csvFiles) {
-      const filePath = path.join(artifactsDir, file);
-      const df = readFileSync(filePath).parseCSV();
-      const dfName = file.replace(/\.csv$/, '').replace(/[^a-zA-Z0-9]/g, '_');
-      dataFrames[dfName] = df;
+    // Create tables and load data from CSV files
+    for (const csvFile of csvFiles) {
+      // Create table based on CSV structure
+      conn.exec(`DROP TABLE IF EXISTS ${csvFile.tableName}`);
+      conn.exec(`CREATE TABLE ${csvFile.tableName} AS SELECT * FROM read_csv_auto('${csvFile.path}')`);
     }
 
-    result.push('DataFrames loaded successfully.');
+    result.push('DuckDB database created and data loaded successfully.');
 
     return result;
   } catch (error) {
@@ -258,21 +278,63 @@ export async function getPerfData(url: string): Promise<string[]> {
 }
 
 /**
- * Executes a JavaScript script that uses the data-frame library to analyze CSV files
- * in the artifacts directory.
+ * Executes a SQL query against the DuckDB database containing performance data.
  *
- * @param script The JavaScript script to execute
- * @param saveToMemory Optional array of dataframe names to save to memory
- * @returns A promise that resolves to the result of the script execution
+ * @param query The SQL query to execute
+ * @returns A promise that resolves to the result of the query execution
  */
-export async function executeDataFrameScript(script: string): Promise<string> {
+export async function executeDataFrameScript(query: string): Promise<string> {
   try {
-    const executeScript = new Function('dataForge', 'dataFrames', script);
+    const { conn } = getDuckDB();
 
-    const result = executeScript(dataForge, dataFrames);
+    // Check if tables exist by querying the information schema
+    const tablesExist = await new Promise<boolean>((resolve) => {
+      conn.all(
+        `SELECT table_name FROM information_schema.tables
+         WHERE table_name IN ('component_track', 'scheduler_track')`,
+        (err: Error | null, result: any[]) => {
+          if (err || !result || result.length === 0) {
+            resolve(false);
+          } else {
+            resolve(true);
+          }
+        }
+      );
+    });
 
-    return result;
+    if (!tablesExist) {
+      return `No performance data tables found. Please run the process-react-performance-data tool first to capture and load performance data.
+
+Example workflow:
+1. Run 'start-react-performance-recording' to begin capturing data
+2. Interact with your React application to generate performance data
+3. Run 'process-react-performance-data' to process and load the data into DuckDB
+4. Then run SQL queries using this tool`;
+    }
+
+    const result = await new Promise<any>((resolve, reject) => {
+      conn.all(query, (err: Error | null, result: any) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(result);
+        }
+      });
+    });
+
+    if (Array.isArray(result)) {
+      if (result.length === 0) {
+        return 'Query executed successfully, but returned no results.';
+      }
+
+      const headers = Object.keys(result[0]);
+      const rows = result.map(row => headers.map(h => JSON.stringify(row[h])).join(','));
+
+      return [headers.join(','), ...rows].join('\n');
+    } else {
+      return JSON.stringify(result, null, 2);
+    }
   } catch (error) {
-    throw new Error(`Error running script: ${error.message}`);
+    throw new Error(`Error running SQL query: ${error.message}`);
   }
 }
