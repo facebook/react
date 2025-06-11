@@ -21,6 +21,7 @@ const rules = {
 const configRules = {
   'react-hooks/rules-of-hooks': 'error',
   'react-hooks/exhaustive-deps': 'warn',
+  'react-hooks/react-compiler': 'error',
 } satisfies Linter.RulesRecord;
 
 // Flat config
