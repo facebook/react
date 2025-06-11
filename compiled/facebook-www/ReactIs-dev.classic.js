@@ -34,9 +34,7 @@ __DEV__ &&
                   case REACT_MEMO_TYPE:
                     return object;
                   case REACT_CONSUMER_TYPE:
-                    if (enableRenderableContext) return object;
-                  case REACT_PROVIDER_TYPE:
-                    if (!enableRenderableContext) return object;
+                    return object;
                   default:
                     return $$typeof;
                 }
@@ -47,7 +45,6 @@ __DEV__ &&
       }
     }
     var dynamicFeatureFlags = require("ReactFeatureFlags"),
-      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
       enableViewTransition = dynamicFeatureFlags.enableViewTransition;
@@ -59,7 +56,6 @@ __DEV__ &&
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
       REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
-      REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
       REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
       REACT_CONTEXT_TYPE = Symbol.for("react.context"),
       REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
@@ -72,12 +68,8 @@ __DEV__ &&
       REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
       REACT_VIEW_TRANSITION_TYPE = Symbol.for("react.view_transition"),
       REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
-    exports.ContextConsumer = enableRenderableContext
-      ? REACT_CONSUMER_TYPE
-      : REACT_CONTEXT_TYPE;
-    exports.ContextProvider = enableRenderableContext
-      ? REACT_CONTEXT_TYPE
-      : REACT_PROVIDER_TYPE;
+    exports.ContextConsumer = REACT_CONSUMER_TYPE;
+    exports.ContextProvider = REACT_CONTEXT_TYPE;
     exports.Element = REACT_ELEMENT_TYPE;
     exports.ForwardRef = REACT_FORWARD_REF_TYPE;
     exports.Fragment = REACT_FRAGMENT_TYPE;
@@ -89,14 +81,10 @@ __DEV__ &&
     exports.Suspense = REACT_SUSPENSE_TYPE;
     exports.SuspenseList = REACT_SUSPENSE_LIST_TYPE;
     exports.isContextConsumer = function (object) {
-      return enableRenderableContext
-        ? typeOf(object) === REACT_CONSUMER_TYPE
-        : typeOf(object) === REACT_CONTEXT_TYPE;
+      return typeOf(object) === REACT_CONSUMER_TYPE;
     };
     exports.isContextProvider = function (object) {
-      return enableRenderableContext
-        ? typeOf(object) === REACT_CONTEXT_TYPE
-        : typeOf(object) === REACT_PROVIDER_TYPE;
+      return typeOf(object) === REACT_CONTEXT_TYPE;
     };
     exports.isElement = function (object) {
       return (
@@ -149,10 +137,7 @@ __DEV__ &&
           (type.$$typeof === REACT_LAZY_TYPE ||
             type.$$typeof === REACT_MEMO_TYPE ||
             type.$$typeof === REACT_CONTEXT_TYPE ||
-            (!enableRenderableContext &&
-              type.$$typeof === REACT_PROVIDER_TYPE) ||
-            (enableRenderableContext &&
-              type.$$typeof === REACT_CONSUMER_TYPE) ||
+            type.$$typeof === REACT_CONSUMER_TYPE ||
             type.$$typeof === REACT_FORWARD_REF_TYPE ||
             type.$$typeof === REACT_CLIENT_REFERENCE ||
             void 0 !== type.getModuleId))

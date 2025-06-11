@@ -122,17 +122,10 @@ __DEV__ &&
         ) {
           case REACT_PORTAL_TYPE:
             return "Portal";
-          case REACT_PROVIDER_TYPE:
-            if (enableRenderableContext) break;
-            else return (type._context.displayName || "Context") + ".Provider";
           case REACT_CONTEXT_TYPE:
-            return enableRenderableContext
-              ? (type.displayName || "Context") + ".Provider"
-              : (type.displayName || "Context") + ".Consumer";
+            return (type.displayName || "Context") + ".Provider";
           case REACT_CONSUMER_TYPE:
-            if (enableRenderableContext)
-              return (type._context.displayName || "Context") + ".Consumer";
-            break;
+            return (type._context.displayName || "Context") + ".Consumer";
           case REACT_FORWARD_REF_TYPE:
             var innerType = type.render;
             type = type.displayName;
@@ -753,7 +746,6 @@ __DEV__ &&
     var dynamicFeatureFlags = require("ReactFeatureFlags"),
       disableDefaultPropsExceptForClasses =
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
-      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
       enableViewTransition = dynamicFeatureFlags.enableViewTransition;
@@ -765,7 +757,6 @@ __DEV__ &&
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
       REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
-      REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
       REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
       REACT_CONTEXT_TYPE = Symbol.for("react.context"),
       REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
@@ -1151,7 +1142,7 @@ __DEV__ &&
       return props;
     };
     exports.createContext = function (defaultValue) {
-      var context = {
+      defaultValue = {
         $$typeof: REACT_CONTEXT_TYPE,
         _currentValue: defaultValue,
         _currentValue2: defaultValue,
@@ -1159,66 +1150,14 @@ __DEV__ &&
         Provider: null,
         Consumer: null
       };
-      enableRenderableContext
-        ? ((context.Provider = context),
-          (context.Consumer = {
-            $$typeof: REACT_CONSUMER_TYPE,
-            _context: context
-          }))
-        : ((context.Provider = {
-            $$typeof: REACT_PROVIDER_TYPE,
-            _context: context
-          }),
-          (defaultValue = { $$typeof: REACT_CONTEXT_TYPE, _context: context }),
-          Object.defineProperties(defaultValue, {
-            Provider: {
-              get: function () {
-                return context.Provider;
-              },
-              set: function (_Provider) {
-                context.Provider = _Provider;
-              }
-            },
-            _currentValue: {
-              get: function () {
-                return context._currentValue;
-              },
-              set: function (_currentValue) {
-                context._currentValue = _currentValue;
-              }
-            },
-            _currentValue2: {
-              get: function () {
-                return context._currentValue2;
-              },
-              set: function (_currentValue2) {
-                context._currentValue2 = _currentValue2;
-              }
-            },
-            _threadCount: {
-              get: function () {
-                return context._threadCount;
-              },
-              set: function (_threadCount) {
-                context._threadCount = _threadCount;
-              }
-            },
-            Consumer: {
-              get: function () {
-                return context.Consumer;
-              }
-            },
-            displayName: {
-              get: function () {
-                return context.displayName;
-              },
-              set: function () {}
-            }
-          }),
-          (context.Consumer = defaultValue));
-      context._currentRenderer = null;
-      context._currentRenderer2 = null;
-      return context;
+      defaultValue.Provider = defaultValue;
+      defaultValue.Consumer = {
+        $$typeof: REACT_CONSUMER_TYPE,
+        _context: defaultValue
+      };
+      defaultValue._currentRenderer = null;
+      defaultValue._currentRenderer2 = null;
+      return defaultValue;
     };
     exports.createElement = function (type, config, children) {
       for (var i = 2; i < arguments.length; i++)
@@ -1537,7 +1476,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.2.0-www-classic-c38e2689-20250609";
+    exports.version = "19.2.0-www-classic-6c86e56a-20250611";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

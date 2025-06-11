@@ -3804,17 +3804,10 @@ __DEV__ &&
         ) {
           case REACT_PORTAL_TYPE:
             return "Portal";
-          case REACT_PROVIDER_TYPE:
-            if (enableRenderableContext) break;
-            else return (type._context.displayName || "Context") + ".Provider";
           case REACT_CONTEXT_TYPE:
-            return enableRenderableContext
-              ? (type.displayName || "Context") + ".Provider"
-              : (type.displayName || "Context") + ".Consumer";
+            return (type.displayName || "Context") + ".Provider";
           case REACT_CONSUMER_TYPE:
-            if (enableRenderableContext)
-              return (type._context.displayName || "Context") + ".Consumer";
-            break;
+            return (type._context.displayName || "Context") + ".Consumer";
           case REACT_FORWARD_REF_TYPE:
             var innerType = type.render;
             type = type.displayName;
@@ -5277,68 +5270,6 @@ __DEV__ &&
       }
       return baseProps;
     }
-    function renderContextConsumer(request, task, keyPath, context, props) {
-      props = props.children;
-      "function" !== typeof props &&
-        console.error(
-          "A context consumer was rendered with multiple children, or a child that isn't a function. A context consumer expects a single child that is a function. If you did pass a function, make sure there is no trailing or leading whitespace around it."
-        );
-      context = props(context._currentValue2);
-      props = task.keyPath;
-      task.keyPath = keyPath;
-      renderNodeDestructive(request, task, context, -1);
-      task.keyPath = props;
-    }
-    function renderContextProvider(request, task, keyPath, context, props) {
-      var value = props.value,
-        children = props.children;
-      props = task.context;
-      var prevKeyPath = task.keyPath;
-      var prevValue = context._currentValue2;
-      context._currentValue2 = value;
-      void 0 !== context._currentRenderer2 &&
-        null !== context._currentRenderer2 &&
-        context._currentRenderer2 !== rendererSigil &&
-        console.error(
-          "Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported."
-        );
-      context._currentRenderer2 = rendererSigil;
-      var prevNode = currentActiveSnapshot;
-      currentActiveSnapshot = value = {
-        parent: prevNode,
-        depth: null === prevNode ? 0 : prevNode.depth + 1,
-        context: context,
-        parentValue: prevValue,
-        value: value
-      };
-      task.context = value;
-      task.keyPath = keyPath;
-      renderNodeDestructive(request, task, children, -1);
-      request = currentActiveSnapshot;
-      if (null === request)
-        throw Error(
-          "Tried to pop a Context at the root of the app. This is a bug in React."
-        );
-      request.context !== context &&
-        console.error(
-          "The parent context is not the expected context. This is probably a bug in React."
-        );
-      request.context._currentValue2 = request.parentValue;
-      void 0 !== context._currentRenderer2 &&
-        null !== context._currentRenderer2 &&
-        context._currentRenderer2 !== rendererSigil &&
-        console.error(
-          "Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported."
-        );
-      context._currentRenderer2 = rendererSigil;
-      context = currentActiveSnapshot = request.parent;
-      task.context = context;
-      task.keyPath = prevKeyPath;
-      props !== task.context &&
-        console.error(
-          "Popping the context provider did not return back to the original snapshot. This is a bug in React."
-        );
-    }
     function renderElement(request, task, keyPath, type, props, ref) {
       if ("function" === typeof type)
         if (type.prototype && type.prototype.isReactComponent) {
@@ -6368,38 +6299,72 @@ __DEV__ &&
                 ref
               );
               return;
-            case REACT_PROVIDER_TYPE:
-              if (!enableRenderableContext) {
-                renderContextProvider(
-                  request,
-                  task,
-                  keyPath,
-                  type._context,
-                  props
-                );
-                return;
-              }
             case REACT_CONTEXT_TYPE:
-              if (enableRenderableContext)
-                renderContextProvider(request, task, keyPath, type, props);
-              else {
-                var _context2 = type;
-                void 0 !== _context2._context &&
-                  (_context2 = _context2._context);
-                renderContextConsumer(request, task, keyPath, _context2, props);
-              }
+              var value$jscomp$0 = props.value,
+                children$jscomp$2 = props.children;
+              var prevSnapshot = task.context;
+              var prevKeyPath$jscomp$6 = task.keyPath;
+              var prevValue = type._currentValue2;
+              type._currentValue2 = value$jscomp$0;
+              void 0 !== type._currentRenderer2 &&
+                null !== type._currentRenderer2 &&
+                type._currentRenderer2 !== rendererSigil &&
+                console.error(
+                  "Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported."
+                );
+              type._currentRenderer2 = rendererSigil;
+              var prevNode = currentActiveSnapshot,
+                newNode = {
+                  parent: prevNode,
+                  depth: null === prevNode ? 0 : prevNode.depth + 1,
+                  context: type,
+                  parentValue: prevValue,
+                  value: value$jscomp$0
+                };
+              currentActiveSnapshot = newNode;
+              task.context = newNode;
+              task.keyPath = keyPath;
+              renderNodeDestructive(request, task, children$jscomp$2, -1);
+              var prevSnapshot$jscomp$0 = currentActiveSnapshot;
+              if (null === prevSnapshot$jscomp$0)
+                throw Error(
+                  "Tried to pop a Context at the root of the app. This is a bug in React."
+                );
+              prevSnapshot$jscomp$0.context !== type &&
+                console.error(
+                  "The parent context is not the expected context. This is probably a bug in React."
+                );
+              prevSnapshot$jscomp$0.context._currentValue2 =
+                prevSnapshot$jscomp$0.parentValue;
+              void 0 !== type._currentRenderer2 &&
+                null !== type._currentRenderer2 &&
+                type._currentRenderer2 !== rendererSigil &&
+                console.error(
+                  "Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported."
+                );
+              type._currentRenderer2 = rendererSigil;
+              var JSCompiler_inline_result$jscomp$0 = (currentActiveSnapshot =
+                prevSnapshot$jscomp$0.parent);
+              task.context = JSCompiler_inline_result$jscomp$0;
+              task.keyPath = prevKeyPath$jscomp$6;
+              prevSnapshot !== task.context &&
+                console.error(
+                  "Popping the context provider did not return back to the original snapshot. This is a bug in React."
+                );
               return;
             case REACT_CONSUMER_TYPE:
-              if (enableRenderableContext) {
-                renderContextConsumer(
-                  request,
-                  task,
-                  keyPath,
-                  type._context,
-                  props
+              var context = type._context,
+                render = props.children;
+              "function" !== typeof render &&
+                console.error(
+                  "A context consumer was rendered with multiple children, or a child that isn't a function. A context consumer expects a single child that is a function. If you did pass a function, make sure there is no trailing or leading whitespace around it."
                 );
-                return;
-              }
+              var newChildren = render(context._currentValue2),
+                prevKeyPath$jscomp$7 = task.keyPath;
+              task.keyPath = keyPath;
+              renderNodeDestructive(request, task, newChildren, -1);
+              task.keyPath = prevKeyPath$jscomp$7;
+              return;
             case REACT_LAZY_TYPE:
               var Component = callLazyInitInDEV(type);
               if (12 === request.status) throw null;
@@ -8694,7 +8659,6 @@ __DEV__ &&
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       disableLegacyContextForFunctionComponents =
         dynamicFeatureFlags.disableLegacyContextForFunctionComponents,
-      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
       enableViewTransition = dynamicFeatureFlags.enableViewTransition,
@@ -8706,7 +8670,6 @@ __DEV__ &&
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
       REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
-      REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
       REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
       REACT_CONTEXT_TYPE = Symbol.for("react.context"),
       REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
@@ -10186,5 +10149,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.2.0-www-classic-c38e2689-20250609";
+    exports.version = "19.2.0-www-classic-6c86e56a-20250611";
   })();

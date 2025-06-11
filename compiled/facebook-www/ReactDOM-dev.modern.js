@@ -1302,17 +1302,10 @@ __DEV__ &&
         ) {
           case REACT_PORTAL_TYPE:
             return "Portal";
-          case REACT_PROVIDER_TYPE:
-            if (enableRenderableContext) break;
-            else return (type._context.displayName || "Context") + ".Provider";
           case REACT_CONTEXT_TYPE:
-            return enableRenderableContext
-              ? (type.displayName || "Context") + ".Provider"
-              : (type.displayName || "Context") + ".Consumer";
+            return (type.displayName || "Context") + ".Provider";
           case REACT_CONSUMER_TYPE:
-            if (enableRenderableContext)
-              return (type._context.displayName || "Context") + ".Consumer";
-            break;
+            return (type._context.displayName || "Context") + ".Consumer";
           case REACT_FORWARD_REF_TYPE:
             var innerType = type.render;
             type = type.displayName;
@@ -1351,13 +1344,9 @@ __DEV__ &&
         case 24:
           return "Cache";
         case 9:
-          return enableRenderableContext
-            ? (type._context.displayName || "Context") + ".Consumer"
-            : (type.displayName || "Context") + ".Consumer";
+          return (type._context.displayName || "Context") + ".Consumer";
         case 10:
-          return enableRenderableContext
-            ? (type.displayName || "Context") + ".Provider"
-            : (type._context.displayName || "Context") + ".Provider";
+          return (type.displayName || "Context") + ".Provider";
         case 18:
           return "DehydratedFragment";
         case 11:
@@ -4367,9 +4356,7 @@ __DEV__ &&
             throw Error("Should have a current fiber. This is a bug in React.");
           currentParent = currentParent.memoizedProps;
           if (null !== currentParent) {
-            var context = enableRenderableContext
-              ? parent.type
-              : parent.type._context;
+            var context = parent.type;
             objectIs(parent.pendingProps.value, currentParent.value) ||
               (null !== current
                 ? current.push(context)
@@ -10781,9 +10768,7 @@ __DEV__ &&
         case 10:
           pushProvider(
             workInProgress,
-            enableRenderableContext
-              ? workInProgress.type
-              : workInProgress.type._context,
+            workInProgress.type,
             workInProgress.memoizedProps.value
           );
           break;
@@ -11473,10 +11458,8 @@ __DEV__ &&
           );
           return workInProgress.child;
         case 10:
-          var context = enableRenderableContext
-            ? workInProgress.type
-            : workInProgress.type._context;
-          var newProps = workInProgress.pendingProps,
+          var context = workInProgress.type,
+            newProps = workInProgress.pendingProps,
             newValue = newProps.value;
           "value" in newProps ||
             hasWarnedAboutUsingNoValuePropOnContextProvider ||
@@ -11493,13 +11476,8 @@ __DEV__ &&
           );
           return workInProgress.child;
         case 9:
-          if (enableRenderableContext)
-            var context$jscomp$0 = workInProgress.type._context;
-          else
-            (context$jscomp$0 = workInProgress.type),
-              void 0 !== context$jscomp$0._context &&
-                (context$jscomp$0 = context$jscomp$0._context);
-          var render = workInProgress.pendingProps.children;
+          var context$jscomp$0 = workInProgress.type._context,
+            render = workInProgress.pendingProps.children;
           "function" !== typeof render &&
             console.error(
               "A context consumer was rendered with multiple children, or a child that isn't a function. A context consumer expects a single child that is a function. If you did pass a function, make sure there is no trailing or leading whitespace around it."
@@ -11925,10 +11903,7 @@ __DEV__ &&
         var node = startingChild,
           context = context$jscomp$0,
           childContextValues = childContextValues$jscomp$0;
-        if (
-          10 === node.tag &&
-          (enableRenderableContext ? node.type : node.type._context) === context
-        )
+        if (10 === node.tag && node.type === context)
           childContextValues.push(node.memoizedProps.value);
         else {
           var child = node.child;
@@ -12639,12 +12614,7 @@ __DEV__ &&
           );
         case 10:
           return (
-            popProvider(
-              enableRenderableContext
-                ? workInProgress.type
-                : workInProgress.type._context,
-              workInProgress
-            ),
+            popProvider(workInProgress.type, workInProgress),
             bubbleProperties(workInProgress),
             null
           );
@@ -12904,15 +12874,7 @@ __DEV__ &&
         case 4:
           return popHostContainer(workInProgress), null;
         case 10:
-          return (
-            popProvider(
-              enableRenderableContext
-                ? workInProgress.type
-                : workInProgress.type._context,
-              workInProgress
-            ),
-            null
-          );
+          return popProvider(workInProgress.type, workInProgress), null;
         case 22:
         case 23:
           return (
@@ -12971,12 +12933,7 @@ __DEV__ &&
           pop(suspenseStackCursor, interruptedWork);
           break;
         case 10:
-          popProvider(
-            enableRenderableContext
-              ? interruptedWork.type
-              : interruptedWork.type._context,
-            interruptedWork
-          );
+          popProvider(interruptedWork.type, interruptedWork);
           break;
         case 22:
         case 23:
@@ -20539,19 +20496,12 @@ __DEV__ &&
           default:
             if ("object" === typeof type && null !== type)
               switch (type.$$typeof) {
-                case REACT_PROVIDER_TYPE:
-                  if (!enableRenderableContext) {
-                    fiberTag = 10;
-                    break a;
-                  }
                 case REACT_CONTEXT_TYPE:
-                  fiberTag = enableRenderableContext ? 10 : 9;
+                  fiberTag = 10;
                   break a;
                 case REACT_CONSUMER_TYPE:
-                  if (enableRenderableContext) {
-                    fiberTag = 9;
-                    break a;
-                  }
+                  fiberTag = 9;
+                  break a;
                 case REACT_FORWARD_REF_TYPE:
                   fiberTag = 11;
                   resolvedType = resolveForwardRefForHotReloading(resolvedType);
@@ -27277,7 +27227,6 @@ __DEV__ &&
         dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
       enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache,
       enableObjectFiber = dynamicFeatureFlags.enableObjectFiber,
-      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableTrustedTypesIntegration =
@@ -27380,7 +27329,6 @@ __DEV__ &&
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
       REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
-      REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
       REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
       REACT_CONTEXT_TYPE = Symbol.for("react.context"),
       REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
@@ -31281,11 +31229,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-www-modern-c38e2689-20250609" !== isomorphicReactPackageVersion)
+      if ("19.2.0-www-modern-6c86e56a-20250611" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-www-modern-c38e2689-20250609\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-www-modern-6c86e56a-20250611\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -31328,10 +31276,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-www-modern-c38e2689-20250609",
+          version: "19.2.0-www-modern-6c86e56a-20250611",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-www-modern-c38e2689-20250609"
+          reconcilerVersion: "19.2.0-www-modern-6c86e56a-20250611"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -31931,7 +31879,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-www-modern-c38e2689-20250609";
+    exports.version = "19.2.0-www-modern-6c86e56a-20250611";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

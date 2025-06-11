@@ -18,7 +18,6 @@
 var dynamicFeatureFlags = require("ReactFeatureFlags"),
   disableDefaultPropsExceptForClasses =
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
-  enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
   enableViewTransition = dynamicFeatureFlags.enableViewTransition,
@@ -30,7 +29,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
   REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
-  REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
   REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
   REACT_CONTEXT_TYPE = Symbol.for("react.context"),
   REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
@@ -499,17 +497,11 @@ exports.createContext = function (defaultValue) {
     Provider: null,
     Consumer: null
   };
-  enableRenderableContext
-    ? ((defaultValue.Provider = defaultValue),
-      (defaultValue.Consumer = {
-        $$typeof: REACT_CONSUMER_TYPE,
-        _context: defaultValue
-      }))
-    : ((defaultValue.Provider = {
-        $$typeof: REACT_PROVIDER_TYPE,
-        _context: defaultValue
-      }),
-      (defaultValue.Consumer = defaultValue));
+  defaultValue.Provider = defaultValue;
+  defaultValue.Consumer = {
+    $$typeof: REACT_CONSUMER_TYPE,
+    _context: defaultValue
+  };
   return defaultValue;
 };
 exports.createElement = function (type, config, children) {
@@ -639,7 +631,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.2.0-www-classic-c38e2689-20250609";
+exports.version = "19.2.0-www-classic-6c86e56a-20250611";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

@@ -13,7 +13,7 @@
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1167() {
+    function JSCompiler_object_inline_createNodeMock_1168() {
       return null;
     }
     function findHook(fiber, id) {
@@ -294,10 +294,10 @@ __DEV__ &&
         ) {
           case REACT_PORTAL_TYPE:
             return "Portal";
-          case REACT_PROVIDER_TYPE:
-            return (type._context.displayName || "Context") + ".Provider";
           case REACT_CONTEXT_TYPE:
-            return (type.displayName || "Context") + ".Consumer";
+            return (type.displayName || "Context") + ".Provider";
+          case REACT_CONSUMER_TYPE:
+            return (type._context.displayName || "Context") + ".Consumer";
           case REACT_FORWARD_REF_TYPE:
             var innerType = type.render;
             type = type.displayName;
@@ -329,9 +329,9 @@ __DEV__ &&
         case 24:
           return "Cache";
         case 9:
-          return (type.displayName || "Context") + ".Consumer";
+          return (type._context.displayName || "Context") + ".Consumer";
         case 10:
-          return (type._context.displayName || "Context") + ".Provider";
+          return (type.displayName || "Context") + ".Provider";
         case 18:
           return "DehydratedFragment";
         case 11:
@@ -1947,7 +1947,7 @@ __DEV__ &&
             throw Error("Should have a current fiber. This is a bug in React.");
           currentParent = currentParent.memoizedProps;
           if (null !== currentParent) {
-            var context = parent.type._context;
+            var context = parent.type;
             objectIs(parent.pendingProps.value, currentParent.value) ||
               (null !== current
                 ? current.push(context)
@@ -7611,7 +7611,7 @@ __DEV__ &&
         case 10:
           pushProvider(
             workInProgress,
-            workInProgress.type._context,
+            workInProgress.type,
             workInProgress.memoizedProps.value
           );
           break;
@@ -8001,7 +8001,7 @@ __DEV__ &&
           );
         case 10:
           return (
-            (returnFiber = workInProgress.type._context),
+            (returnFiber = workInProgress.type),
             (prevSibling = workInProgress.pendingProps),
             (nextProps = prevSibling.value),
             "value" in prevSibling ||
@@ -8021,9 +8021,7 @@ __DEV__ &&
           );
         case 9:
           return (
-            (prevSibling = workInProgress.type),
-            void 0 !== prevSibling._context &&
-              (prevSibling = prevSibling._context),
+            (prevSibling = workInProgress.type._context),
             (returnFiber = workInProgress.pendingProps.children),
             "function" !== typeof returnFiber &&
               console.error(
@@ -8284,7 +8282,7 @@ __DEV__ &&
         var node = startingChild,
           context = context$jscomp$0,
           childContextValues = childContextValues$jscomp$0;
-        if (10 === node.tag && node.type._context === context)
+        if (10 === node.tag && node.type === context)
           childContextValues.push(node.memoizedProps.value);
         else {
           var child = node.child;
@@ -8682,7 +8680,7 @@ __DEV__ &&
           );
         case 10:
           return (
-            popProvider(workInProgress.type._context, workInProgress),
+            popProvider(workInProgress.type, workInProgress),
             bubbleProperties(workInProgress),
             null
           );
@@ -8920,9 +8918,7 @@ __DEV__ &&
         case 4:
           return popHostContainer(workInProgress), null;
         case 10:
-          return (
-            popProvider(workInProgress.type._context, workInProgress), null
-          );
+          return popProvider(workInProgress.type, workInProgress), null;
         case 22:
         case 23:
           return (
@@ -8975,7 +8971,7 @@ __DEV__ &&
           pop(suspenseStackCursor, interruptedWork);
           break;
         case 10:
-          popProvider(interruptedWork.type._context, interruptedWork);
+          popProvider(interruptedWork.type, interruptedWork);
           break;
         case 22:
         case 23:
@@ -12937,13 +12933,12 @@ __DEV__ &&
           default:
             if ("object" === typeof type && null !== type)
               switch (type.$$typeof) {
-                case REACT_PROVIDER_TYPE:
+                case REACT_CONTEXT_TYPE:
                   fiberTag = 10;
                   break a;
-                case REACT_CONTEXT_TYPE:
+                case REACT_CONSUMER_TYPE:
                   fiberTag = 9;
                   break a;
-                case REACT_CONSUMER_TYPE:
                 case REACT_FORWARD_REF_TYPE:
                   fiberTag = 11;
                   resolvedType = resolveForwardRefForHotReloading(resolvedType);
@@ -13428,7 +13423,6 @@ __DEV__ &&
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
       REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
-      REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
       REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
       REACT_CONTEXT_TYPE = Symbol.for("react.context"),
       REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
@@ -15423,10 +15417,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-modern-c38e2689-20250609",
+        version: "19.2.0-www-modern-6c86e56a-20250611",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-c38e2689-20250609"
+        reconcilerVersion: "19.2.0-www-modern-6c86e56a-20250611"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15446,7 +15440,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1167,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1168,
         isConcurrentOnly = !0 !== global.IS_REACT_NATIVE_TEST_ENVIRONMENT,
         isConcurrent = isConcurrentOnly,
         isStrictMode = !1;
@@ -15561,5 +15555,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.2.0-www-modern-c38e2689-20250609";
+    exports.version = "19.2.0-www-modern-6c86e56a-20250611";
   })();

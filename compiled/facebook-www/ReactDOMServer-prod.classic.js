@@ -57,7 +57,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
   disableLegacyContextForFunctionComponents =
     dynamicFeatureFlags.disableLegacyContextForFunctionComponents,
-  enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
   enableViewTransition = dynamicFeatureFlags.enableViewTransition,
@@ -69,7 +68,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
   REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
-  REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
   REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
   REACT_CONTEXT_TYPE = Symbol.for("react.context"),
   REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
@@ -2913,16 +2911,16 @@ function createRenderState(resumableState, generateStaticMarkup) {
       "\x3c/script>"
     ));
   bootstrapScriptContent = idPrefix + "P:";
-  var JSCompiler_object_inline_segmentPrefix_1851 = idPrefix + "S:";
+  var JSCompiler_object_inline_segmentPrefix_1866 = idPrefix + "S:";
   idPrefix += "B:";
-  var JSCompiler_object_inline_preconnects_1865 = new Set(),
-    JSCompiler_object_inline_fontPreloads_1866 = new Set(),
-    JSCompiler_object_inline_highImagePreloads_1867 = new Set(),
-    JSCompiler_object_inline_styles_1868 = new Map(),
-    JSCompiler_object_inline_bootstrapScripts_1869 = new Set(),
-    JSCompiler_object_inline_scripts_1870 = new Set(),
-    JSCompiler_object_inline_bulkPreloads_1871 = new Set(),
-    JSCompiler_object_inline_preloads_1872 = {
+  var JSCompiler_object_inline_preconnects_1880 = new Set(),
+    JSCompiler_object_inline_fontPreloads_1881 = new Set(),
+    JSCompiler_object_inline_highImagePreloads_1882 = new Set(),
+    JSCompiler_object_inline_styles_1883 = new Map(),
+    JSCompiler_object_inline_bootstrapScripts_1884 = new Set(),
+    JSCompiler_object_inline_scripts_1885 = new Set(),
+    JSCompiler_object_inline_bulkPreloads_1886 = new Set(),
+    JSCompiler_object_inline_preloads_1887 = {
       images: new Map(),
       stylesheets: new Map(),
       scripts: new Map(),
@@ -2959,7 +2957,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
       scriptConfig.moduleScriptResources[href] = null;
       scriptConfig = [];
       pushLinkImpl(scriptConfig, props);
-      JSCompiler_object_inline_bootstrapScripts_1869.add(scriptConfig);
+      JSCompiler_object_inline_bootstrapScripts_1884.add(scriptConfig);
       bootstrapChunks.push('<script src="', escapeTextForBrowser(src), '"');
       "string" === typeof integrity &&
         bootstrapChunks.push(
@@ -3006,7 +3004,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         (props.moduleScriptResources[scriptConfig] = null),
         (props = []),
         pushLinkImpl(props, integrity),
-        JSCompiler_object_inline_bootstrapScripts_1869.add(props),
+        JSCompiler_object_inline_bootstrapScripts_1884.add(props),
         bootstrapChunks.push(
           '<script type="module" src="',
           escapeTextForBrowser(i),
@@ -3028,7 +3026,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         bootstrapChunks.push(' async="">\x3c/script>');
   return {
     placeholderPrefix: bootstrapScriptContent,
-    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1851,
+    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1866,
     boundaryPrefix: idPrefix,
     startInlineScript: "<script",
     startInlineStyle: "<style",
@@ -3048,14 +3046,14 @@ function createRenderState(resumableState, generateStaticMarkup) {
     charsetChunks: [],
     viewportChunks: [],
     hoistableChunks: [],
-    preconnects: JSCompiler_object_inline_preconnects_1865,
-    fontPreloads: JSCompiler_object_inline_fontPreloads_1866,
-    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1867,
-    styles: JSCompiler_object_inline_styles_1868,
-    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1869,
-    scripts: JSCompiler_object_inline_scripts_1870,
-    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1871,
-    preloads: JSCompiler_object_inline_preloads_1872,
+    preconnects: JSCompiler_object_inline_preconnects_1880,
+    fontPreloads: JSCompiler_object_inline_fontPreloads_1881,
+    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1882,
+    styles: JSCompiler_object_inline_styles_1883,
+    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1884,
+    scripts: JSCompiler_object_inline_scripts_1885,
+    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1886,
+    preloads: JSCompiler_object_inline_preloads_1887,
     nonce: { script: void 0, style: void 0 },
     stylesToHoist: !1,
     generateStaticMarkup: generateStaticMarkup
@@ -3106,17 +3104,10 @@ function getComponentNameFromType(type) {
     switch (type.$$typeof) {
       case REACT_PORTAL_TYPE:
         return "Portal";
-      case REACT_PROVIDER_TYPE:
-        if (enableRenderableContext) break;
-        else return (type._context.displayName || "Context") + ".Provider";
       case REACT_CONTEXT_TYPE:
-        return enableRenderableContext
-          ? (type.displayName || "Context") + ".Provider"
-          : (type.displayName || "Context") + ".Consumer";
+        return (type.displayName || "Context") + ".Provider";
       case REACT_CONSUMER_TYPE:
-        if (enableRenderableContext)
-          return (type._context.displayName || "Context") + ".Consumer";
-        break;
+        return (type._context.displayName || "Context") + ".Consumer";
       case REACT_FORWARD_REF_TYPE:
         var innerType = type.render;
         type = type.displayName;
@@ -4365,38 +4356,6 @@ function resolveDefaultPropsOnNonClassComponent(Component, baseProps) {
   }
   return baseProps;
 }
-function renderContextConsumer(request, task, keyPath, context, props) {
-  props = props.children;
-  context = props(context._currentValue2);
-  props = task.keyPath;
-  task.keyPath = keyPath;
-  renderNodeDestructive(request, task, context, -1);
-  task.keyPath = props;
-}
-function renderContextProvider(request, task, keyPath, context, props) {
-  var value = props.value,
-    children = props.children;
-  props = task.keyPath;
-  var prevValue = context._currentValue2;
-  context._currentValue2 = value;
-  var prevNode = currentActiveSnapshot;
-  currentActiveSnapshot = context = {
-    parent: prevNode,
-    depth: null === prevNode ? 0 : prevNode.depth + 1,
-    context: context,
-    parentValue: prevValue,
-    value: value
-  };
-  task.context = context;
-  task.keyPath = keyPath;
-  renderNodeDestructive(request, task, children, -1);
-  request = currentActiveSnapshot;
-  if (null === request) throw Error(formatProdErrorMessage(403));
-  request.context._currentValue2 = request.parentValue;
-  request = currentActiveSnapshot = request.parent;
-  task.context = request;
-  task.keyPath = props;
-}
 function renderElement(request, task, keyPath, type, props, ref) {
   if ("function" === typeof type)
     if (type.prototype && type.prototype.isReactComponent) {
@@ -5046,21 +5005,40 @@ function renderElement(request, task, keyPath, type, props, ref) {
             );
           renderElement(request, task, keyPath, innerType, resolvedProps, ref);
           return;
-        case REACT_PROVIDER_TYPE:
-          if (!enableRenderableContext) {
-            renderContextProvider(request, task, keyPath, type._context, props);
-            return;
-          }
         case REACT_CONTEXT_TYPE:
-          enableRenderableContext
-            ? renderContextProvider(request, task, keyPath, type, props)
-            : renderContextConsumer(request, task, keyPath, type, props);
+          var children$jscomp$2 = props.children,
+            prevKeyPath$jscomp$6 = task.keyPath,
+            nextValue = props.value;
+          var prevValue = type._currentValue2;
+          type._currentValue2 = nextValue;
+          var prevNode = currentActiveSnapshot,
+            newNode = {
+              parent: prevNode,
+              depth: null === prevNode ? 0 : prevNode.depth + 1,
+              context: type,
+              parentValue: prevValue,
+              value: nextValue
+            };
+          currentActiveSnapshot = newNode;
+          task.context = newNode;
+          task.keyPath = keyPath;
+          renderNodeDestructive(request, task, children$jscomp$2, -1);
+          var prevSnapshot = currentActiveSnapshot;
+          if (null === prevSnapshot) throw Error(formatProdErrorMessage(403));
+          prevSnapshot.context._currentValue2 = prevSnapshot.parentValue;
+          var JSCompiler_inline_result$jscomp$3 = (currentActiveSnapshot =
+            prevSnapshot.parent);
+          task.context = JSCompiler_inline_result$jscomp$3;
+          task.keyPath = prevKeyPath$jscomp$6;
           return;
         case REACT_CONSUMER_TYPE:
-          if (enableRenderableContext) {
-            renderContextConsumer(request, task, keyPath, type._context, props);
-            return;
-          }
+          var render = props.children,
+            newChildren = render(type._context._currentValue2),
+            prevKeyPath$jscomp$7 = task.keyPath;
+          task.keyPath = keyPath;
+          renderNodeDestructive(request, task, newChildren, -1);
+          task.keyPath = prevKeyPath$jscomp$7;
+          return;
         case REACT_LAZY_TYPE:
           var init = type._init;
           var Component = init(type._payload);
@@ -5562,15 +5540,15 @@ function renderNode(request, task, node, childIndex) {
       chunkLength = segment.chunks.length;
     try {
       return renderNodeDestructive(request, task, node, childIndex);
-    } catch (thrownValue$63) {
+    } catch (thrownValue$61) {
       if (
         (resetHooksState(),
         (segment.children.length = childrenLength),
         (segment.chunks.length = chunkLength),
         (node =
-          thrownValue$63 === SuspenseException
+          thrownValue$61 === SuspenseException
             ? getSuspendedThenable()
-            : thrownValue$63),
+            : thrownValue$61),
         "object" === typeof node && null !== node)
       ) {
         if ("function" === typeof node.then) {
@@ -6674,12 +6652,12 @@ function flushCompletedQueues(request, destination) {
       completedBoundaries.splice(0, i);
       var partialBoundaries = request.partialBoundaries;
       for (i = 0; i < partialBoundaries.length; i++) {
-        var boundary$69 = partialBoundaries[i];
+        var boundary$67 = partialBoundaries[i];
         a: {
           clientRenderedBoundaries = request;
           boundary = destination;
-          flushedByteSize = boundary$69.byteSize;
-          var completedSegments = boundary$69.completedSegments;
+          flushedByteSize = boundary$67.byteSize;
+          var completedSegments = boundary$67.completedSegments;
           for (
             JSCompiler_inline_result = 0;
             JSCompiler_inline_result < completedSegments.length;
@@ -6689,7 +6667,7 @@ function flushCompletedQueues(request, destination) {
               !flushPartiallyCompletedSegment(
                 clientRenderedBoundaries,
                 boundary,
-                boundary$69,
+                boundary$67,
                 completedSegments[JSCompiler_inline_result]
               )
             ) {
@@ -6699,10 +6677,10 @@ function flushCompletedQueues(request, destination) {
               break a;
             }
           completedSegments.splice(0, JSCompiler_inline_result);
-          var row = boundary$69.row;
+          var row = boundary$67.row;
           null !== row &&
             row.together &&
-            1 === boundary$69.pendingTasks &&
+            1 === boundary$67.pendingTasks &&
             (1 === row.pendingTasks
               ? unblockSuspenseListRow(
                   clientRenderedBoundaries,
@@ -6712,7 +6690,7 @@ function flushCompletedQueues(request, destination) {
               : row.pendingTasks--);
           JSCompiler_inline_result$jscomp$0 = writeHoistablesForBoundary(
             boundary,
-            boundary$69.contentState,
+            boundary$67.contentState,
             clientRenderedBoundaries.renderState
           );
         }
@@ -6795,8 +6773,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$71) {
-    logRecoverableError(request, error$71, {}), fatalError(request, error$71);
+  } catch (error$69) {
+    logRecoverableError(request, error$69, {}), fatalError(request, error$69);
   }
 }
 function addToReplayParent(node, parentKeyPath, trackedPostpones) {
@@ -6877,4 +6855,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.2.0-www-classic-c38e2689-20250609";
+exports.version = "19.2.0-www-classic-6c86e56a-20250611";

@@ -48,17 +48,10 @@ __DEV__ &&
         ) {
           case REACT_PORTAL_TYPE:
             return "Portal";
-          case REACT_PROVIDER_TYPE:
-            if (enableRenderableContext) break;
-            else return (type._context.displayName || "Context") + ".Provider";
           case REACT_CONTEXT_TYPE:
-            return enableRenderableContext
-              ? (type.displayName || "Context") + ".Provider"
-              : (type.displayName || "Context") + ".Consumer";
+            return (type.displayName || "Context") + ".Provider";
           case REACT_CONSUMER_TYPE:
-            if (enableRenderableContext)
-              return (type._context.displayName || "Context") + ".Consumer";
-            break;
+            return (type._context.displayName || "Context") + ".Consumer";
           case REACT_FORWARD_REF_TYPE:
             var innerType = type.render;
             type = type.displayName;
@@ -307,7 +300,6 @@ __DEV__ &&
       dynamicFeatureFlags = require("ReactFeatureFlags"),
       disableDefaultPropsExceptForClasses =
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
-      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
       enableViewTransition = dynamicFeatureFlags.enableViewTransition;
@@ -319,7 +311,6 @@ __DEV__ &&
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
       REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
-      REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
       REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
       REACT_CONTEXT_TYPE = Symbol.for("react.context"),
       REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),

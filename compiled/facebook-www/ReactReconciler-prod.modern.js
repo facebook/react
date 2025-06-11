@@ -194,17 +194,10 @@ module.exports = function ($$$config) {
       switch (type.$$typeof) {
         case REACT_PORTAL_TYPE:
           return "Portal";
-        case REACT_PROVIDER_TYPE:
-          if (enableRenderableContext) break;
-          else return (type._context.displayName || "Context") + ".Provider";
         case REACT_CONTEXT_TYPE:
-          return enableRenderableContext
-            ? (type.displayName || "Context") + ".Provider"
-            : (type.displayName || "Context") + ".Consumer";
+          return (type.displayName || "Context") + ".Provider";
         case REACT_CONSUMER_TYPE:
-          if (enableRenderableContext)
-            return (type._context.displayName || "Context") + ".Consumer";
-          break;
+          return (type._context.displayName || "Context") + ".Consumer";
         case REACT_FORWARD_REF_TYPE:
           var innerType = type.render;
           type = type.displayName;
@@ -432,18 +425,18 @@ module.exports = function ($$$config) {
       0 < remainingLanes;
 
     ) {
-      var index$6 = 31 - clz32(remainingLanes),
-        lane = 1 << index$6;
-      entanglements[index$6] = 0;
-      expirationTimes[index$6] = -1;
-      var hiddenUpdatesForLane = hiddenUpdates[index$6];
+      var index$5 = 31 - clz32(remainingLanes),
+        lane = 1 << index$5;
+      entanglements[index$5] = 0;
+      expirationTimes[index$5] = -1;
+      var hiddenUpdatesForLane = hiddenUpdates[index$5];
       if (null !== hiddenUpdatesForLane)
         for (
-          hiddenUpdates[index$6] = null, index$6 = 0;
-          index$6 < hiddenUpdatesForLane.length;
-          index$6++
+          hiddenUpdates[index$5] = null, index$5 = 0;
+          index$5 < hiddenUpdatesForLane.length;
+          index$5++
         ) {
-          var update = hiddenUpdatesForLane[index$6];
+          var update = hiddenUpdatesForLane[index$5];
           null !== update && (update.lane &= -536870913);
         }
       remainingLanes &= ~lane;
@@ -468,10 +461,10 @@ module.exports = function ($$$config) {
   function markRootEntangled(root, entangledLanes) {
     var rootEntangledLanes = (root.entangledLanes |= entangledLanes);
     for (root = root.entanglements; rootEntangledLanes; ) {
-      var index$7 = 31 - clz32(rootEntangledLanes),
-        lane = 1 << index$7;
-      (lane & entangledLanes) | (root[index$7] & entangledLanes) &&
-        (root[index$7] |= entangledLanes);
+      var index$6 = 31 - clz32(rootEntangledLanes),
+        lane = 1 << index$6;
+      (lane & entangledLanes) | (root[index$6] & entangledLanes) &&
+        (root[index$6] |= entangledLanes);
       rootEntangledLanes &= ~lane;
     }
   }
@@ -525,11 +518,11 @@ module.exports = function ($$$config) {
   function getTransitionsForLanes(root, lanes) {
     if (!enableTransitionTracing) return null;
     for (var transitionsForLanes = []; 0 < lanes; ) {
-      var index$10 = 31 - clz32(lanes),
-        lane = 1 << index$10;
-      index$10 = root.transitionLanes[index$10];
-      null !== index$10 &&
-        index$10.forEach(function (transition) {
+      var index$9 = 31 - clz32(lanes),
+        lane = 1 << index$9;
+      index$9 = root.transitionLanes[index$9];
+      null !== index$9 &&
+        index$9.forEach(function (transition) {
           transitionsForLanes.push(transition);
         });
       lanes &= ~lane;
@@ -539,10 +532,10 @@ module.exports = function ($$$config) {
   function clearTransitionsForLanes(root, lanes) {
     if (enableTransitionTracing)
       for (; 0 < lanes; ) {
-        var index$11 = 31 - clz32(lanes),
-          lane = 1 << index$11;
-        null !== root.transitionLanes[index$11] &&
-          (root.transitionLanes[index$11] = null);
+        var index$10 = 31 - clz32(lanes),
+          lane = 1 << index$10;
+        null !== root.transitionLanes[index$10] &&
+          (root.transitionLanes[index$10] = null);
         lanes &= ~lane;
       }
   }
@@ -655,16 +648,16 @@ module.exports = function ($$$config) {
               } else {
                 try {
                   Fake.call();
-                } catch (x$12) {
-                  control = x$12;
+                } catch (x$11) {
+                  control = x$11;
                 }
                 fn.call(Fake.prototype);
               }
             } else {
               try {
                 throw Error();
-              } catch (x$13) {
-                control = x$13;
+              } catch (x$12) {
+                control = x$12;
               }
               (Fake = fn()) &&
                 "function" === typeof Fake.catch &&
@@ -1127,9 +1120,7 @@ module.exports = function ($$$config) {
         if (null === currentParent) throw Error(formatProdErrorMessage(387));
         currentParent = currentParent.memoizedProps;
         if (null !== currentParent) {
-          var context = enableRenderableContext
-            ? parent.type
-            : parent.type._context;
+          var context = parent.type;
           objectIs(parent.pendingProps.value, currentParent.value) ||
             (null !== current ? current.push(context) : (current = [context]));
         }
@@ -1324,12 +1315,12 @@ module.exports = function ($$$config) {
       0 < pendingLanes;
 
     ) {
-      var index$4 = 31 - clz32(pendingLanes),
-        lane = 1 << index$4,
-        expirationTime = expirationTimes[index$4];
+      var index$3 = 31 - clz32(pendingLanes),
+        lane = 1 << index$3,
+        expirationTime = expirationTimes[index$3];
       if (-1 === expirationTime) {
         if (0 === (lane & suspendedLanes) || 0 !== (lane & pingedLanes))
-          expirationTimes[index$4] = computeExpirationTime(lane, currentTime);
+          expirationTimes[index$3] = computeExpirationTime(lane, currentTime);
       } else expirationTime <= currentTime && (root.expiredLanes |= lane);
       pendingLanes &= ~lane;
     }
@@ -3025,7 +3016,7 @@ module.exports = function ($$$config) {
       var newBaseQueueFirst = (baseFirst = null),
         newBaseQueueLast = null,
         update = current,
-        didReadFromEntangledAsyncAction$57 = !1;
+        didReadFromEntangledAsyncAction$56 = !1;
       do {
         var updateLane = update.lane & -536870913;
         if (
@@ -3047,11 +3038,11 @@ module.exports = function ($$$config) {
                   next: null
                 }),
               updateLane === currentEntangledLane &&
-                (didReadFromEntangledAsyncAction$57 = !0);
+                (didReadFromEntangledAsyncAction$56 = !0);
           else if ((renderLanes & revertLane) === revertLane) {
             update = update.next;
             revertLane === currentEntangledLane &&
-              (didReadFromEntangledAsyncAction$57 = !0);
+              (didReadFromEntangledAsyncAction$56 = !0);
             continue;
           } else
             (updateLane = {
@@ -3099,7 +3090,7 @@ module.exports = function ($$$config) {
       if (
         !objectIs(pendingQueue, hook.memoizedState) &&
         ((didReceiveUpdate = !0),
-        didReadFromEntangledAsyncAction$57 &&
+        didReadFromEntangledAsyncAction$56 &&
           ((reducer = currentEntangledActionThenable), null !== reducer))
       )
         throw reducer;
@@ -3310,8 +3301,8 @@ module.exports = function ($$$config) {
       try {
         (prevTransition = action(prevState, payload)),
           handleActionReturnValue(actionQueue, node, prevTransition);
-      } catch (error$61) {
-        onActionError(actionQueue, node, error$61);
+      } catch (error$60) {
+        onActionError(actionQueue, node, error$60);
       }
   }
   function handleActionReturnValue(actionQueue, node, returnValue) {
@@ -3949,9 +3940,9 @@ module.exports = function ($$$config) {
       (disableDefaultPropsExceptForClasses || !alreadyResolvedDefaultProps)
     ) {
       newProps === baseProps && (newProps = assign({}, newProps));
-      for (var propName$63 in Component)
-        void 0 === newProps[propName$63] &&
-          (newProps[propName$63] = Component[propName$63]);
+      for (var propName$62 in Component)
+        void 0 === newProps[propName$62] &&
+          (newProps[propName$62] = Component[propName$62]);
     }
     return newProps;
   }
@@ -5550,9 +5541,7 @@ module.exports = function ($$$config) {
       case 10:
         pushProvider(
           workInProgress,
-          enableRenderableContext
-            ? workInProgress.type
-            : workInProgress.type._context,
+          workInProgress.type,
           workInProgress.memoizedProps.value
         );
         break;
@@ -5565,9 +5554,9 @@ module.exports = function ($$$config) {
           );
         break;
       case 13:
-        var state$96 = workInProgress.memoizedState;
-        if (null !== state$96) {
-          if (null !== state$96.dehydrated)
+        var state$95 = workInProgress.memoizedState;
+        if (null !== state$95) {
+          if (null !== state$95.dehydrated)
             return (
               pushPrimaryTreeSuspenseHandler(workInProgress),
               (workInProgress.flags |= 128),
@@ -5591,17 +5580,17 @@ module.exports = function ($$$config) {
         break;
       case 19:
         var didSuspendBefore = 0 !== (current.flags & 128);
-        state$96 = 0 !== (renderLanes & workInProgress.childLanes);
-        state$96 ||
+        state$95 = 0 !== (renderLanes & workInProgress.childLanes);
+        state$95 ||
           (propagateParentContextChanges(
             current,
             workInProgress,
             renderLanes,
             !1
           ),
-          (state$96 = 0 !== (renderLanes & workInProgress.childLanes)));
+          (state$95 = 0 !== (renderLanes & workInProgress.childLanes)));
         if (didSuspendBefore) {
-          if (state$96)
+          if (state$95)
             return updateSuspenseListComponent(
               current,
               workInProgress,
@@ -5615,7 +5604,7 @@ module.exports = function ($$$config) {
           (didSuspendBefore.tail = null),
           (didSuspendBefore.lastEffect = null));
         push(suspenseStackCursor, suspenseStackCursor.current);
-        if (state$96) break;
+        if (state$95) break;
         else return null;
       case 22:
         return (
@@ -5632,8 +5621,8 @@ module.exports = function ($$$config) {
         break;
       case 25:
         if (enableTransitionTracing) {
-          state$96 = workInProgress.stateNode;
-          null !== state$96 && pushMarkerInstance(workInProgress, state$96);
+          state$95 = workInProgress.stateNode;
+          null !== state$95 && pushMarkerInstance(workInProgress, state$95);
           break;
         }
       case 23:
@@ -6062,13 +6051,7 @@ module.exports = function ($$$config) {
       case 10:
         return (
           (props = workInProgress.pendingProps),
-          pushProvider(
-            workInProgress,
-            enableRenderableContext
-              ? workInProgress.type
-              : workInProgress.type._context,
-            props.value
-          ),
+          pushProvider(workInProgress, workInProgress.type, props.value),
           reconcileChildren(
             current,
             workInProgress,
@@ -6079,9 +6062,7 @@ module.exports = function ($$$config) {
         );
       case 9:
         return (
-          (init = enableRenderableContext
-            ? workInProgress.type._context
-            : workInProgress.type),
+          (init = workInProgress.type._context),
           (props = workInProgress.pendingProps.children),
           prepareToReadContext(workInProgress),
           (init = readContext(init)),
@@ -6404,10 +6385,7 @@ module.exports = function ($$$config) {
       var node = startingChild,
         context = context$jscomp$0,
         childContextValues = childContextValues$jscomp$0;
-      if (
-        10 === node.tag &&
-        (enableRenderableContext ? node.type : node.type._context) === context
-      )
+      if (10 === node.tag && node.type === context)
         childContextValues.push(node.memoizedProps.value);
       else {
         var child = node.child;
@@ -6506,44 +6484,44 @@ module.exports = function ($$$config) {
         needsVisibilityToggle = needsVisibilityToggle.sibling;
       }
     else if (supportsPersistence)
-      for (var node$106 = workInProgress.child; null !== node$106; ) {
-        if (5 === node$106.tag) {
-          var instance = node$106.stateNode;
+      for (var node$105 = workInProgress.child; null !== node$105; ) {
+        if (5 === node$105.tag) {
+          var instance = node$105.stateNode;
           needsVisibilityToggle &&
             isHidden &&
             (instance = cloneHiddenInstance(
               instance,
-              node$106.type,
-              node$106.memoizedProps
+              node$105.type,
+              node$105.memoizedProps
             ));
           appendInitialChild(parent, instance);
-        } else if (6 === node$106.tag)
-          (instance = node$106.stateNode),
+        } else if (6 === node$105.tag)
+          (instance = node$105.stateNode),
             needsVisibilityToggle &&
               isHidden &&
               (instance = cloneHiddenTextInstance(
                 instance,
-                node$106.memoizedProps
+                node$105.memoizedProps
               )),
             appendInitialChild(parent, instance);
-        else if (4 !== node$106.tag)
-          if (22 === node$106.tag && null !== node$106.memoizedState)
-            (instance = node$106.child),
-              null !== instance && (instance.return = node$106),
-              appendAllChildren(parent, node$106, !0, !0);
-          else if (null !== node$106.child) {
-            node$106.child.return = node$106;
-            node$106 = node$106.child;
+        else if (4 !== node$105.tag)
+          if (22 === node$105.tag && null !== node$105.memoizedState)
+            (instance = node$105.child),
+              null !== instance && (instance.return = node$105),
+              appendAllChildren(parent, node$105, !0, !0);
+          else if (null !== node$105.child) {
+            node$105.child.return = node$105;
+            node$105 = node$105.child;
             continue;
           }
-        if (node$106 === workInProgress) break;
-        for (; null === node$106.sibling; ) {
-          if (null === node$106.return || node$106.return === workInProgress)
+        if (node$105 === workInProgress) break;
+        for (; null === node$105.sibling; ) {
+          if (null === node$105.return || node$105.return === workInProgress)
             return;
-          node$106 = node$106.return;
+          node$105 = node$105.return;
         }
-        node$106.sibling.return = node$106.return;
-        node$106 = node$106.sibling;
+        node$105.sibling.return = node$105.return;
+        node$105 = node$105.sibling;
       }
   }
   function appendAllChildrenToContainer(
@@ -6613,31 +6591,31 @@ module.exports = function ($$$config) {
       current.memoizedProps !== newProps && markUpdate(workInProgress);
     else if (supportsPersistence) {
       var currentInstance = current.stateNode,
-        oldProps$109 = current.memoizedProps;
+        oldProps$108 = current.memoizedProps;
       if (
         (current = doesRequireClone(current, workInProgress)) ||
-        oldProps$109 !== newProps
+        oldProps$108 !== newProps
       ) {
         var currentHostContext = contextStackCursor.current;
-        oldProps$109 = cloneInstance(
+        oldProps$108 = cloneInstance(
           currentInstance,
           type,
-          oldProps$109,
+          oldProps$108,
           newProps,
           !current,
           null
         );
-        oldProps$109 === currentInstance
+        oldProps$108 === currentInstance
           ? (workInProgress.stateNode = currentInstance)
           : (finalizeInitialChildren(
-              oldProps$109,
+              oldProps$108,
               type,
               newProps,
               currentHostContext
             ) && markUpdate(workInProgress),
-            (workInProgress.stateNode = oldProps$109),
+            (workInProgress.stateNode = oldProps$108),
             current
-              ? appendAllChildren(oldProps$109, workInProgress, !1, !1)
+              ? appendAllChildren(oldProps$108, workInProgress, !1, !1)
               : markUpdate(workInProgress));
       } else workInProgress.stateNode = currentInstance;
     }
@@ -6704,15 +6682,15 @@ module.exports = function ($$$config) {
           break;
         case "collapsed":
           lastTailNode = renderState.tail;
-          for (var lastTailNode$111 = null; null !== lastTailNode; )
+          for (var lastTailNode$110 = null; null !== lastTailNode; )
             null !== lastTailNode.alternate &&
-              (lastTailNode$111 = lastTailNode),
+              (lastTailNode$110 = lastTailNode),
               (lastTailNode = lastTailNode.sibling);
-          null === lastTailNode$111
+          null === lastTailNode$110
             ? hasRenderedATailFallback || null === renderState.tail
               ? (renderState.tail = null)
               : (renderState.tail.sibling = null)
-            : (lastTailNode$111.sibling = null);
+            : (lastTailNode$110.sibling = null);
       }
   }
   function bubbleProperties(completedWork) {
@@ -6722,19 +6700,19 @@ module.exports = function ($$$config) {
       newChildLanes = 0,
       subtreeFlags = 0;
     if (didBailout)
-      for (var child$112 = completedWork.child; null !== child$112; )
-        (newChildLanes |= child$112.lanes | child$112.childLanes),
-          (subtreeFlags |= child$112.subtreeFlags & 65011712),
-          (subtreeFlags |= child$112.flags & 65011712),
-          (child$112.return = completedWork),
-          (child$112 = child$112.sibling);
+      for (var child$111 = completedWork.child; null !== child$111; )
+        (newChildLanes |= child$111.lanes | child$111.childLanes),
+          (subtreeFlags |= child$111.subtreeFlags & 65011712),
+          (subtreeFlags |= child$111.flags & 65011712),
+          (child$111.return = completedWork),
+          (child$111 = child$111.sibling);
     else
-      for (child$112 = completedWork.child; null !== child$112; )
-        (newChildLanes |= child$112.lanes | child$112.childLanes),
-          (subtreeFlags |= child$112.subtreeFlags),
-          (subtreeFlags |= child$112.flags),
-          (child$112.return = completedWork),
-          (child$112 = child$112.sibling);
+      for (child$111 = completedWork.child; null !== child$111; )
+        (newChildLanes |= child$111.lanes | child$111.childLanes),
+          (subtreeFlags |= child$111.subtreeFlags),
+          (subtreeFlags |= child$111.flags),
+          (child$111.return = completedWork),
+          (child$111 = child$111.sibling);
     completedWork.subtreeFlags |= subtreeFlags;
     completedWork.childLanes = newChildLanes;
     return didBailout;
@@ -6894,17 +6872,17 @@ module.exports = function ($$$config) {
                 nextResource
               ) && (workInProgress.flags |= 64);
           else {
-            var instance$122 = createInstance(
+            var instance$121 = createInstance(
               type,
               newProps,
               rootInstanceStackCursor.current,
               nextResource,
               workInProgress
             );
-            appendAllChildren(instance$122, workInProgress, !1, !1);
-            workInProgress.stateNode = instance$122;
+            appendAllChildren(instance$121, workInProgress, !1, !1);
+            workInProgress.stateNode = instance$121;
             finalizeInitialChildren(
-              instance$122,
+              instance$121,
               type,
               newProps,
               nextResource
@@ -7080,11 +7058,7 @@ module.exports = function ($$$config) {
         );
       case 10:
         return (
-          popProvider(
-            enableRenderableContext
-              ? workInProgress.type
-              : workInProgress.type._context
-          ),
+          popProvider(workInProgress.type),
           bubbleProperties(workInProgress),
           null
         );
@@ -7323,14 +7297,7 @@ module.exports = function ($$$config) {
       case 4:
         return popHostContainer(), null;
       case 10:
-        return (
-          popProvider(
-            enableRenderableContext
-              ? workInProgress.type
-              : workInProgress.type._context
-          ),
-          null
-        );
+        return popProvider(workInProgress.type), null;
       case 22:
       case 23:
         return (
@@ -7387,11 +7354,7 @@ module.exports = function ($$$config) {
         pop(suspenseStackCursor);
         break;
       case 10:
-        popProvider(
-          enableRenderableContext
-            ? interruptedWork.type
-            : interruptedWork.type._context
-        );
+        popProvider(interruptedWork.type);
         break;
       case 22:
       case 23:
@@ -7553,8 +7516,8 @@ module.exports = function ($$$config) {
       else if ("function" === typeof ref)
         try {
           ref(null);
-        } catch (error$148) {
-          captureCommitPhaseError(current, nearestMountedAncestor, error$148);
+        } catch (error$147) {
+          captureCommitPhaseError(current, nearestMountedAncestor, error$147);
         }
       else ref.current = null;
   }
@@ -8392,11 +8355,11 @@ module.exports = function ($$$config) {
                 current,
                 finishedRoot.__reactInternalSnapshotBeforeUpdate
               );
-            } catch (error$146) {
+            } catch (error$145) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$146
+                error$145
               );
             }
           }
@@ -9517,25 +9480,25 @@ module.exports = function ($$$config) {
                 break;
               }
             case 5:
-              var parent$149 = hostParentFiber.stateNode;
+              var parent$148 = hostParentFiber.stateNode;
               hostParentFiber.flags & 32 &&
-                (resetTextContent(parent$149), (hostParentFiber.flags &= -33));
-              var before$150 = getHostSibling(finishedWork);
+                (resetTextContent(parent$148), (hostParentFiber.flags &= -33));
+              var before$149 = getHostSibling(finishedWork);
               insertOrAppendPlacementNode(
                 finishedWork,
-                before$150,
-                parent$149,
+                before$149,
+                parent$148,
                 parentFragmentInstances
               );
               break;
             case 3:
             case 4:
-              var parent$151 = hostParentFiber.stateNode.containerInfo,
-                before$152 = getHostSibling(finishedWork);
+              var parent$150 = hostParentFiber.stateNode.containerInfo,
+                before$151 = getHostSibling(finishedWork);
               insertOrAppendPlacementNodeIntoContainer(
                 finishedWork,
-                before$152,
-                parent$151,
+                before$151,
+                parent$150,
                 parentFragmentInstances
               );
               break;
@@ -10109,14 +10072,14 @@ module.exports = function ($$$config) {
           );
         break;
       case 22:
-        var instance$166 = finishedWork.stateNode,
-          current$167 = finishedWork.alternate;
+        var instance$165 = finishedWork.stateNode,
+          current$166 = finishedWork.alternate;
         null !== finishedWork.memoizedState
           ? (isViewTransitionEligible &&
-              null !== current$167 &&
-              null === current$167.memoizedState &&
-              restoreEnterOrExitViewTransitions(current$167),
-            instance$166._visibility & 2
+              null !== current$166 &&
+              null === current$166.memoizedState &&
+              restoreEnterOrExitViewTransitions(current$166),
+            instance$165._visibility & 2
               ? recursivelyTraversePassiveMountEffects(
                   finishedRoot,
                   finishedWork,
@@ -10128,17 +10091,17 @@ module.exports = function ($$$config) {
                   finishedWork
                 ))
           : (isViewTransitionEligible &&
-              null !== current$167 &&
-              null !== current$167.memoizedState &&
+              null !== current$166 &&
+              null !== current$166.memoizedState &&
               restoreEnterOrExitViewTransitions(finishedWork),
-            instance$166._visibility & 2
+            instance$165._visibility & 2
               ? recursivelyTraversePassiveMountEffects(
                   finishedRoot,
                   finishedWork,
                   committedLanes,
                   committedTransitions
                 )
-              : ((instance$166._visibility |= 2),
+              : ((instance$165._visibility |= 2),
                 recursivelyTraverseReconnectPassiveEffects(
                   finishedRoot,
                   finishedWork,
@@ -10148,9 +10111,9 @@ module.exports = function ($$$config) {
                 )));
         flags & 2048 &&
           commitOffscreenPassiveMountEffects(
-            current$167,
+            current$166,
             finishedWork,
-            instance$166
+            instance$165
           );
         break;
       case 24:
@@ -10245,9 +10208,9 @@ module.exports = function ($$$config) {
             );
           break;
         case 22:
-          var instance$170 = finishedWork.stateNode;
+          var instance$169 = finishedWork.stateNode;
           null !== finishedWork.memoizedState
-            ? instance$170._visibility & 2
+            ? instance$169._visibility & 2
               ? recursivelyTraverseReconnectPassiveEffects(
                   finishedRoot,
                   finishedWork,
@@ -10259,7 +10222,7 @@ module.exports = function ($$$config) {
                   finishedRoot,
                   finishedWork
                 )
-            : ((instance$170._visibility |= 2),
+            : ((instance$169._visibility |= 2),
               recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -10272,7 +10235,7 @@ module.exports = function ($$$config) {
             commitOffscreenPassiveMountEffects(
               finishedWork.alternate,
               finishedWork,
-              instance$170
+              instance$169
             );
           break;
         case 24:
@@ -10885,11 +10848,11 @@ module.exports = function ($$$config) {
           enableTransitionTracing))
       ) {
         var transitionLanesMap = root.transitionLanes,
-          index$9 = 31 - clz32(lane),
-          transitions = transitionLanesMap[index$9];
+          index$8 = 31 - clz32(lane),
+          transitions = transitionLanesMap[index$8];
         null === transitions && (transitions = new Set());
         transitions.add(fiber);
-        transitionLanesMap[index$9] = transitions;
+        transitionLanesMap[index$8] = transitions;
       }
       root === workInProgressRoot &&
         (0 === (executionContext & 2) &&
@@ -11199,9 +11162,9 @@ module.exports = function ($$$config) {
     didAttemptEntireTree && (root.warmLanes |= suspendedLanes);
     didAttemptEntireTree = root.expirationTimes;
     for (var lanes = suspendedLanes; 0 < lanes; ) {
-      var index$5 = 31 - clz32(lanes),
-        lane = 1 << index$5;
-      didAttemptEntireTree[index$5] = -1;
+      var index$4 = 31 - clz32(lanes),
+        lane = 1 << index$4;
+      didAttemptEntireTree[index$4] = -1;
       lanes &= ~lane;
     }
     0 !== spawnedLane &&
@@ -11263,9 +11226,9 @@ module.exports = function ($$$config) {
         0 < allEntangledLanes;
 
       ) {
-        var index$3 = 31 - clz32(allEntangledLanes),
-          lane = 1 << index$3;
-        lanes |= root[index$3];
+        var index$2 = 31 - clz32(allEntangledLanes),
+          lane = 1 << index$2;
+        lanes |= root[index$2];
         allEntangledLanes &= ~lane;
       }
     entangledRenderLanes = lanes;
@@ -11386,8 +11349,8 @@ module.exports = function ($$$config) {
         workLoopSync();
         exitStatus = workInProgressRootExitStatus;
         break;
-      } catch (thrownValue$187) {
-        handleThrow(root, thrownValue$187);
+      } catch (thrownValue$186) {
+        handleThrow(root, thrownValue$186);
       }
     while (1);
     lanes && root.shellSuspendCounter++;
@@ -11508,8 +11471,8 @@ module.exports = function ($$$config) {
         }
         workLoopConcurrentByScheduler();
         break;
-      } catch (thrownValue$189) {
-        handleThrow(root, thrownValue$189);
+      } catch (thrownValue$188) {
+        handleThrow(root, thrownValue$188);
       }
     while (1);
     lastContextDependency = currentlyRenderingFiber$1 = null;
@@ -12424,19 +12387,12 @@ module.exports = function ($$$config) {
         default:
           if ("object" === typeof type && null !== type)
             switch (type.$$typeof) {
-              case REACT_PROVIDER_TYPE:
-                if (!enableRenderableContext) {
-                  fiberTag = 10;
-                  break a;
-                }
               case REACT_CONTEXT_TYPE:
-                fiberTag = enableRenderableContext ? 10 : 9;
+                fiberTag = 10;
                 break a;
               case REACT_CONSUMER_TYPE:
-                if (enableRenderableContext) {
-                  fiberTag = 9;
-                  break a;
-                }
+                fiberTag = 9;
+                break a;
               case REACT_FORWARD_REF_TYPE:
                 fiberTag = 11;
                 break a;
@@ -12656,7 +12612,6 @@ module.exports = function ($$$config) {
       dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
     enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache,
     enableObjectFiber = dynamicFeatureFlags.enableObjectFiber,
-    enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
     enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
     enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
     favorSafetyOverHydrationPerf =
@@ -12675,7 +12630,6 @@ module.exports = function ($$$config) {
     REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
     REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
     REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
-    REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
     REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
     REACT_CONTEXT_TYPE = Symbol.for("react.context"),
     REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
@@ -12999,15 +12953,15 @@ module.exports = function ($$$config) {
             (root = root.next);
       root = transition.types;
       if (null !== root) {
-        for (var root$22 = firstScheduledRoot; null !== root$22; )
-          queueTransitionTypes(root$22, root), (root$22 = root$22.next);
+        for (var root$21 = firstScheduledRoot; null !== root$21; )
+          queueTransitionTypes(root$21, root), (root$21 = root$21.next);
         if (0 !== currentEntangledLane && enableViewTransition) {
-          root$22 = entangledTransitionTypes;
-          null === root$22 && (root$22 = entangledTransitionTypes = []);
+          root$21 = entangledTransitionTypes;
+          null === root$21 && (root$21 = entangledTransitionTypes = []);
           for (var i = 0; i < root.length; i++) {
             var transitionType = root[i];
-            -1 === root$22.indexOf(transitionType) &&
-              root$22.push(transitionType);
+            -1 === root$21.indexOf(transitionType) &&
+              root$21.push(transitionType);
           }
         }
       }
@@ -13878,7 +13832,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-modern-c38e2689-20250609"
+      reconcilerVersion: "19.2.0-www-modern-6c86e56a-20250611"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
