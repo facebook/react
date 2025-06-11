@@ -189,7 +189,7 @@ let db: DatabaseType | null = null;
 function getSQLiteDB(): DatabaseType {
   if (!db) {
     const dbPath = path.join(__dirname, '../src/artifacts/perf_data.db');
-    db = new Database(dbPath, {verbose: console.log});
+    db = new Database(dbPath);
 
     db.pragma('foreign_keys = ON');
   }
@@ -219,7 +219,7 @@ export async function getPerfData(url: string): Promise<string[]> {
     try {
       await fs.mkdir(artifactsDir, {recursive: true});
     } catch (err) {
-      console.error(`Error creating directory: ${err}`);
+      throw Error(`Error creating directory: ${err}`);
     }
 
     const result = [];
