@@ -41,7 +41,7 @@ export const FIXTURE_ENTRYPOINT = {
   19 |   useEffect(() => setState(2), []);
   20 |
 > 21 |   const [state, setState] = useState(0);
-     |                 ^^^^^^^^ InvalidReact: Updating a value used previously in an effect function or as an effect dependency is not allowed. Consider moving the mutation before calling useEffect(). Found mutation of `setState` (21:21)
+     |                 ^^^^^^^^ InvalidReact: This variable is accessed before it is declared, which prevents the earlier access from updating when this value changes over time. Move the declaration of `setState` to before it is first referenced (21:21)
   22 |   return <Stringify state={state} />;
   23 | }
   24 |
