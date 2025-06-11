@@ -24,7 +24,6 @@ export const {
   enableInfiniteRenderLoopDetection,
   enableNoCloningMemoCache,
   enableObjectFiber,
-  enableRenderableContext,
   enableRetryLaneExpiration,
   enableTransitionTracing,
   enableTrustedTypesIntegration,
