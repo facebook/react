@@ -107,7 +107,6 @@ function applyConstantPropagation(
   fn: HIRFunction,
   constants: Constants,
 ): boolean {
-  let hasChanges = false;
   for (const [, block] of fn.body.blocks) {
     /*
      * Initialize phi values if all operands have the same known constant value.
@@ -120,6 +119,8 @@ function applyConstantPropagation(
         constants.set(phi.place.identifier.id, value);
       }
     }
+
+    const localReassignments = new Map<IdentifierId, Place>();
 
     for (let i = 0; i < block.instructions.length; i++) {
       if (block.kind === 'sequence' && i === block.instructions.length - 1) {
@@ -134,8 +135,28 @@ function applyConstantPropagation(
       if (value !== null) {
         constants.set(instr.lvalue.identifier.id, value);
       }
-    }
 
+      switch (instr.value.kind) {
+        case 'StoreLocal': {
+          const identifierValue = localReassignments.get(
+            instr.value.value.identifier.id,
+          );
+          if (identifierValue != null) {
+            // constants.set(value.lvalue.place.identifier.id, placeValue);
+            instr.value.value = identifierValue;
+          }
+
+          localReassignments.set(
+            instr.value.lvalue.place.identifier.id,
+            instr.value.value,
+          );
+        }
+      }
+    }
+  }
+
+  let hasChanges = false;
+  for (const [, block] of fn.body.blocks) {
     const terminal = block.terminal;
     switch (terminal.kind) {
       case 'if': {
@@ -153,6 +174,41 @@ function applyConstantPropagation(
             loc: terminal.loc,
           };
         }
+        break;
+      }
+      case 'ternary': {
+        if (!fn.env.config.enableTernaryConstantPropagation) {
+          break;
+        }
+        const branchBlock = fn.body.blocks.get(terminal.test);
+        if (branchBlock === undefined) {
+          break;
+        }
+
+        if (branchBlock.terminal.kind !== 'branch') {
+          // TODO: could be other kinds like logical
+          break;
+        }
+
+        const testValue = read(constants, branchBlock.terminal.test);
+        if (testValue !== null && testValue.kind === 'Primitive') {
+          hasChanges = true;
+          const targetBlockId = testValue.value
+            ? branchBlock.terminal.consequent
+            : branchBlock.terminal.alternate;
+
+          const chosenBlock = fn.body.blocks.get(targetBlockId);
+          if (chosenBlock?.terminal.kind === 'goto') {
+            block.terminal = {
+              kind: 'goto',
+              variant: GotoVariant.Break,
+              block: targetBlockId,
+              id: terminal.id,
+              loc: terminal.loc,
+            };
+          }
+        }
+
         break;
       }
       default: {
