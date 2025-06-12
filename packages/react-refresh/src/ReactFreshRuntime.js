@@ -75,6 +75,10 @@ const rootElements: WeakMap<any, ReactNodeList> | null =
 
 let isPerformingRefresh = false;
 
+function isClass(functionString: string): boolean {
+  return /^\s*class\s/.test(functionString);
+}
+
 function computeFullKey(signature: Signature): string {
   if (signature.fullKey !== null) {
     return signature.fullKey;
@@ -669,6 +673,10 @@ export function isLikelyComponentType(type: any): boolean {
           const ownNames = Object.getOwnPropertyNames(type.prototype);
           if (ownNames.length > 1 || ownNames[0] !== 'constructor') {
             // This looks like a class.
+            return false;
+          }
+          // class fields like `class Foo { value = 'foo'; }`
+          if (/^\s*class\s/.test(type.toString())) {
             return false;
           }
           // eslint-disable-next-line no-proto
