@@ -5,7 +5,7 @@ import React, {
   unstable_startGestureTransition as startGestureTransition,
 } from 'react';
 
-import ScrollTimelinePolyfill from './ScrollTimelinePolyfill';
+import ScrollTimelinePolyfill from 'animation-timelines/scroll-timeline';
 
 // Example of a Component that can recognize swipe gestures using a ScrollTimeline
 // without scrolling its own content. Allowing it to be used as an inert gesture
