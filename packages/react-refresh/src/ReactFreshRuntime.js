@@ -75,10 +75,6 @@ const rootElements: WeakMap<any, ReactNodeList> | null =
 
 let isPerformingRefresh = false;
 
-function isClass(functionString: string): boolean {
-  return /^\s*class\s/.test(functionString);
-}
-
 function computeFullKey(signature: Signature): string {
   if (signature.fullKey !== null) {
     return signature.fullKey;
