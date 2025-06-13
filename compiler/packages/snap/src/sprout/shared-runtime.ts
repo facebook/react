@@ -396,4 +396,8 @@ export function typedLog(...values: Array<any>): void {
   console.log(...values);
 }
 
+export function typedIdentity<T>(value: T): T {
+  return value;
+}
+
 export default typedLog;

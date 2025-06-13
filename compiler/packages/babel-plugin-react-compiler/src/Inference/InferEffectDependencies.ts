@@ -257,6 +257,7 @@ export function inferEffectDependencies(fn: HIRFunction): void {
                 loc: GeneratedSource,
                 lvalue: {...depsPlace, effect: Effect.Mutate},
                 value: deps,
+                effects: null,
               },
             });
             value.args.push({...depsPlace, effect: Effect.Freeze});
@@ -271,6 +272,7 @@ export function inferEffectDependencies(fn: HIRFunction): void {
                 loc: GeneratedSource,
                 lvalue: {...depsPlace, effect: Effect.Mutate},
                 value: deps,
+                effects: null,
               },
             });
             value.args.push({...depsPlace, effect: Effect.Freeze});
