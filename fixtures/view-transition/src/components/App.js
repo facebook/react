@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useState,
   unstable_addTransitionType as addTransitionType,
+  use,
 } from 'react';
 
 import Chrome from './Chrome';
