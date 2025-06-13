@@ -165,6 +165,7 @@ export default class HIRBuilder {
           handler: exceptionHandler,
           id: makeInstructionId(0),
           loc: instruction.loc,
+          effects: null,
         },
         continuationBlock,
       );

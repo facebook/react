@@ -735,6 +735,7 @@ export function mapTerminalSuccessors(
         loc: terminal.loc,
         value: terminal.value,
         id: makeInstructionId(0),
+        effects: terminal.effects,
       };
     }
     case 'throw': {
@@ -842,6 +843,7 @@ export function mapTerminalSuccessors(
         handler,
         id: makeInstructionId(0),
         loc: terminal.loc,
+        effects: terminal.effects,
       };
     }
     case 'try': {

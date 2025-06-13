@@ -175,21 +175,14 @@ import {
  * and mutability.
  */
 function Component(t0) {
-  const $ = _c(4);
+  const $ = _c(2);
   const { prop } = t0;
   let t1;
   if ($[0] !== prop) {
     const obj = shallowCopy(prop);
     const aliasedObj = identity(obj);
-    let t2;
-    if ($[2] !== obj) {
-      t2 = [obj.id];
-      $[2] = obj;
-      $[3] = t2;
-    } else {
-      t2 = $[3];
-    }
-    const id = t2;
+
+    const id = [obj.id];
 
     mutate(aliasedObj);
     setPropertyByKey(aliasedObj, "id", prop.id + 1);
