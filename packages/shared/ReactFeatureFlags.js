@@ -260,7 +260,4 @@ export const enableAsyncDebugInfo = __EXPERIMENTAL__;
 // Track which Fiber(s) schedule render work.
 export const enableUpdaterTracking = __PROFILE__;
 
-// Internal only.
-export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
-
 export const ownerStackLimit = 1e4;
