@@ -50,7 +50,6 @@ export const enableLegacyHidden = false;
 
 export const enableTransitionTracing = false;
 
-export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFizzExternalRuntime = false;
 
 export const alwaysThrottleRetries = true;

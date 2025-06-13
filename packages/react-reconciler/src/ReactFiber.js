@@ -40,7 +40,6 @@ import {
   enableScopeAPI,
   enableLegacyHidden,
   enableTransitionTracing,
-  enableDO_NOT_USE_disableStrictPassiveEffect,
   disableLegacyMode,
   enableObjectFiber,
   enableViewTransition,
@@ -92,7 +91,6 @@ import {
   ProfileMode,
   StrictLegacyMode,
   StrictEffectsMode,
-  NoStrictPassiveEffectsMode,
   SuspenseyImagesMode,
 } from './ReactTypeOfMode';
 import {
@@ -599,12 +597,6 @@ export function createFiberFromTypeAndProps(
         if (disableLegacyMode || (mode & ConcurrentMode) !== NoMode) {
           // Strict effects should never run on legacy roots
           mode |= StrictEffectsMode;
-          if (
-            enableDO_NOT_USE_disableStrictPassiveEffect &&
-            pendingProps.DO_NOT_USE_disableStrictPassiveEffect
-          ) {
-            mode |= NoStrictPassiveEffectsMode;
-          }
         }
         break;
       case REACT_PROFILER_TYPE:
