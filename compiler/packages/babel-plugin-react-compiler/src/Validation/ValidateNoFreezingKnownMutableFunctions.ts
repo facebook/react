@@ -58,8 +58,7 @@ export function validateNoFreezingKnownMutableFunctions(
       const effect = contextMutationEffects.get(operand.identifier.id);
       if (effect != null) {
         errors.push({
-          reason: `This argument is a function which modifies local variables when called, which can bypass memoization and cause the UI not to update`,
-          description: `Functions that are returned from hooks, passed as arguments to hooks, or passed as props to components may not mutate local variables`,
+          reason: `This argument is a function which may reassign or mutate local variables after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead`,
           loc: operand.loc,
           severity: ErrorSeverity.InvalidReact,
         });
@@ -112,6 +111,55 @@ export function validateNoFreezingKnownMutableFunctions(
           );
           if (knownMutation && knownMutation.kind === 'ContextMutation') {
             contextMutationEffects.set(lvalue.identifier.id, knownMutation);
+          } else if (
+            fn.env.config.enableNewMutationAliasingModel &&
+            value.loweredFunc.func.aliasingEffects != null
+          ) {
+            const context = new Set(
+              value.loweredFunc.func.context.map(p => p.identifier.id),
+            );
+            effects: for (const effect of value.loweredFunc.func
+              .aliasingEffects) {
+              switch (effect.kind) {
+                case 'Mutate':
+                case 'MutateTransitive': {
+                  const knownMutation = contextMutationEffects.get(
+                    effect.value.identifier.id,
+                  );
+                  if (knownMutation != null) {
+                    contextMutationEffects.set(
+                      lvalue.identifier.id,
+                      knownMutation,
+                    );
+                  } else if (
+                    context.has(effect.value.identifier.id) &&
+                    !isRefOrRefLikeMutableType(effect.value.identifier.type)
+                  ) {
+                    contextMutationEffects.set(lvalue.identifier.id, {
+                      kind: 'ContextMutation',
+                      effect: Effect.Mutate,
+                      loc: effect.value.loc,
+                      places: new Set([effect.value]),
+                    });
+                    break effects;
+                  }
+                  break;
+                }
+                case 'MutateConditionally':
+                case 'MutateTransitiveConditionally': {
+                  const knownMutation = contextMutationEffects.get(
+                    effect.value.identifier.id,
+                  );
+                  if (knownMutation != null) {
+                    contextMutationEffects.set(
+                      lvalue.identifier.id,
+                      knownMutation,
+                    );
+                  }
+                  break;
+                }
+              }
+            }
           }
           break;
         }

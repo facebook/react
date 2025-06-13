@@ -47,7 +47,7 @@ import {
   makeType,
   promoteTemporary,
 } from './HIR';
-import HIRBuilder, {Bindings} from './HIRBuilder';
+import HIRBuilder, {Bindings, createTemporaryPlace} from './HIRBuilder';
 import {BuiltInArrayId} from './ObjectShape';
 
 /*
@@ -181,6 +181,7 @@ export function lower(
       loc: GeneratedSource,
       value: lowerExpressionToTemporary(builder, body),
       id: makeInstructionId(0),
+      effects: null,
     };
     builder.terminateWithContinuation(terminal, fallthrough);
   } else if (body.isBlockStatement()) {
@@ -210,6 +211,7 @@ export function lower(
         loc: GeneratedSource,
       }),
       id: makeInstructionId(0),
+      effects: null,
     },
     null,
   );
@@ -220,6 +222,7 @@ export function lower(
     fnType: bindings == null ? env.fnType : 'Other',
     returnTypeAnnotation: null, // TODO: extract the actual return type node if present
     returnType: makeType(),
+    returns: createTemporaryPlace(env, func.node.loc ?? GeneratedSource),
     body: builder.build(),
     context,
     generator: func.node.generator === true,
@@ -227,6 +230,7 @@ export function lower(
     loc: func.node.loc ?? GeneratedSource,
     env,
     effects: null,
+    aliasingEffects: null,
     directives,
   });
 }
@@ -287,6 +291,7 @@ function lowerStatement(
         loc: stmt.node.loc ?? GeneratedSource,
         value,
         id: makeInstructionId(0),
+        effects: null,
       };
       builder.terminate(terminal, 'block');
       return;
@@ -1237,6 +1242,7 @@ function lowerStatement(
           kind: 'Debugger',
           loc,
         },
+        effects: null,
         loc,
       });
       return;
@@ -1894,6 +1900,7 @@ function lowerExpression(
           place: leftValue,
           loc: exprLoc,
         },
+        effects: null,
         loc: exprLoc,
       });
       builder.terminateWithContinuation(
@@ -2829,6 +2836,7 @@ function lowerOptionalCallExpression(
           args,
           loc,
         },
+        effects: null,
         loc,
       });
     } else {
@@ -2842,6 +2850,7 @@ function lowerOptionalCallExpression(
           args,
           loc,
         },
+        effects: null,
         loc,
       });
     }
@@ -3465,9 +3474,10 @@ export function lowerValueToTemporary(
   const place: Place = buildTemporaryPlace(builder, value.loc);
   builder.push({
     id: makeInstructionId(0),
-    value: value,
-    loc: value.loc,
     lvalue: {...place},
+    value: value,
+    effects: null,
+    loc: value.loc,
   });
   return place;
 }
