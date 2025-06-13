@@ -41,7 +41,8 @@ import {useExtensionComponentsPanelVisibility} from 'react-devtools-shared/src/f
 import {useChangeOwnerAction} from './OwnersListContext';
 
 // Never indent more than this number of pixels (even if we have the room).
-const DEFAULT_INDENTATION_SIZE = 12;
+const MAX_INDENTATION_SIZE = 12;
+const MIN_INDENTATION_SIZE = 4;
 
 export type ItemData = {
   isNavigatingWithKeyboard: boolean,
@@ -490,11 +491,11 @@ function updateIndentationSizeVar(
 
   // Reset the max indentation size if the width of the tree has increased.
   if (listWidth > prevListWidthRef.current) {
-    indentationSizeRef.current = DEFAULT_INDENTATION_SIZE;
+    indentationSizeRef.current = MAX_INDENTATION_SIZE;
   }
   prevListWidthRef.current = listWidth;
 
-  let maxIndentationSize: number = indentationSizeRef.current;
+  let indentationSize: number = indentationSizeRef.current;
 
   // eslint-disable-next-line no-for-of-loops/no-for-of-loops
   for (const child of innerDiv.children) {
@@ -517,12 +518,13 @@ function updateIndentationSizeVar(
 
     const remainingWidth = Math.max(0, listWidth - childWidth);
 
-    maxIndentationSize = Math.min(maxIndentationSize, remainingWidth / depth);
+    indentationSize = Math.min(indentationSize, remainingWidth / depth);
   }
 
-  indentationSizeRef.current = maxIndentationSize;
+  indentationSize = Math.max(indentationSize, MIN_INDENTATION_SIZE);
+  indentationSizeRef.current = indentationSize;
 
-  list.style.setProperty('--indentation-size', `${maxIndentationSize}px`);
+  list.style.setProperty('--indentation-size', `${indentationSize}px`);
 }
 
 // $FlowFixMe[missing-local-annot]
@@ -545,7 +547,7 @@ function InnerElementType({children, style}) {
   // The user may have resized the window specifically to make more room for DevTools.
   // In either case, this should reset our max indentation size logic.
   // 2. The second is when the user enters or exits an owner tree.
-  const indentationSizeRef = useRef<number>(DEFAULT_INDENTATION_SIZE);
+  const indentationSizeRef = useRef<number>(MAX_INDENTATION_SIZE);
   const prevListWidthRef = useRef<number>(0);
   const prevOwnerIDRef = useRef<number | null>(ownerID);
   const divRef = useRef<HTMLDivElement | null>(null);
@@ -554,7 +556,7 @@ function InnerElementType({children, style}) {
   // so when the user opens the "owners tree" view, we should discard the previous width.
   if (ownerID !== prevOwnerIDRef.current) {
     prevOwnerIDRef.current = ownerID;
-    indentationSizeRef.current = DEFAULT_INDENTATION_SIZE;
+    indentationSizeRef.current = MAX_INDENTATION_SIZE;
   }
 
   // When we render new content, measure to see if we need to shrink indentation to fit it.
