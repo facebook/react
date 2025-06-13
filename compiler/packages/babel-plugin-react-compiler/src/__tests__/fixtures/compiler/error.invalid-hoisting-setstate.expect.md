@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @enableNewMutationAliasingModel
 import {useEffect, useState} from 'react';
 import {Stringify} from 'shared-runtime';
 
@@ -33,45 +34,17 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 
-## Code
 
-```javascript
-import { c as _c } from "react/compiler-runtime";
-import { useEffect, useState } from "react";
-import { Stringify } from "shared-runtime";
-
-function Foo() {
-  const $ = _c(3);
-  let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = [];
-    $[0] = t0;
-  } else {
-    t0 = $[0];
-  }
-  useEffect(() => setState(2), t0);
-
-  const [state, t1] = useState(0);
-  const setState = t1;
-  let t2;
-  if ($[1] !== state) {
-    t2 = <Stringify state={state} />;
-    $[1] = state;
-    $[2] = t2;
-  } else {
-    t2 = $[2];
-  }
-  return t2;
-}
-
-export const FIXTURE_ENTRYPOINT = {
-  fn: Foo,
-  params: [{}],
-  sequentialRenders: [{}, {}],
-};
+## Error
 
 ```
+  19 |   useEffect(() => setState(2), []);
+  20 |
+> 21 |   const [state, setState] = useState(0);
+     |                 ^^^^^^^^ InvalidReact: This variable is accessed before it is declared, which prevents the earlier access from updating when this value changes over time. Move the declaration of `setState` to before it is first referenced (21:21)
+  22 |   return <Stringify state={state} />;
+  23 | }
+  24 |
+```
+          
       
-### Eval output
-(kind: ok) <div>{"state":2}</div>
-<div>{"state":2}</div>

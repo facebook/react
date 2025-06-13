@@ -27,7 +27,7 @@ function SomeComponent() {
    9 |   return (
   10 |     <Button
 > 11 |       onPress={() => (sharedVal.value = Math.random())}
-     |                       ^^^^^^^^^ InvalidReact: Mutating a value returned from a function whose return value should not be mutated. Found mutation of `sharedVal` (11:11)
+     |                       ^^^^^^^^^ InvalidReact: This mutates a variable that React considers immutable. Found mutation of `sharedVal` (11:11)
   12 |       title="Randomize"
   13 |     />
   14 |   );

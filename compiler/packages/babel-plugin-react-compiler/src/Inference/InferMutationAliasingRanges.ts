@@ -1,0 +1,737 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+import prettyFormat from 'pretty-format';
+import {CompilerError, SourceLocation} from '..';
+import {
+  BlockId,
+  Effect,
+  HIRFunction,
+  Identifier,
+  IdentifierId,
+  InstructionId,
+  makeInstructionId,
+  Place,
+} from '../HIR/HIR';
+import {
+  eachInstructionLValue,
+  eachInstructionValueOperand,
+  eachTerminalOperand,
+} from '../HIR/visitors';
+import {assertExhaustive, getOrInsertWith} from '../Utils/utils';
+import {printFunction} from '../HIR';
+import {printIdentifier, printPlace} from '../HIR/PrintHIR';
+import {MutationKind} from './InferMutationAliasingFunctionEffects';
+import {Result} from '../Utils/Result';
+
+const DEBUG = false;
+const VERBOSE = false;
+
+/**
+ * Infers mutable ranges for all values in the program, using previously inferred
+ * mutation/aliasing effects. This pass builds a data flow graph using the effects,
+ * tracking an abstract notion of "when" each effect occurs relative to the others.
+ * It then walks each mutation effect against the graph, updating the range of each
+ * node that would be reachable at the "time" that the effect occurred.
+ *
+ * This pass also validates against invalid effects: any function that is reachable
+ * by being called, or via a Render effect, is validated against mutating globals
+ * or calling impure code.
+ *
+ * Note that this function also populates the outer function's aliasing effects with
+ * any mutations that apply to its params or context variables. For example, a
+ * function expression such as the following:
+ *
+ * ```
+ * (x) => { x.y = true }
+ * ```
+ *
+ * Would populate a `Mutate x` aliasing effect on the outer function.
+ */
+export function inferMutationAliasingRanges(
+  fn: HIRFunction,
+  {isFunctionExpression}: {isFunctionExpression: boolean},
+): Result<void, CompilerError> {
+  if (VERBOSE) {
+    console.log();
+    console.log(printFunction(fn));
+  }
+  /**
+   * Part 1: Infer mutable ranges for values. We build an abstract model of
+   * values, the alias/capture edges between them, and the set of mutations.
+   * Edges and mutations are ordered, with mutations processed against the
+   * abstract model only after it is fully constructed by visiting all blocks
+   * _and_ connecting phis. Phis are considered ordered at the time of the
+   * phi node.
+   *
+   * This should (may?) mean that mutations are able to see the full state
+   * of the graph and mark all the appropriate identifiers as mutated at
+   * the correct point, accounting for both backward and forward edges.
+   * Ie a mutation of x accounts for both values that flowed into x,
+   * and values that x flowed into.
+   */
+  const state = new AliasingState();
+  type PendingPhiOperand = {from: Place; into: Place; index: number};
+  const pendingPhis = new Map<BlockId, Array<PendingPhiOperand>>();
+  const mutations: Array<{
+    index: number;
+    id: InstructionId;
+    transitive: boolean;
+    kind: MutationKind;
+    place: Place;
+  }> = [];
+  const renders: Array<{index: number; place: Place}> = [];
+
+  let index = 0;
+
+  const errors = new CompilerError();
+
+  for (const param of [...fn.params, ...fn.context, fn.returns]) {
+    const place = param.kind === 'Identifier' ? param : param.place;
+    state.create(place, {kind: 'Object'});
+  }
+  const seenBlocks = new Set<BlockId>();
+  for (const block of fn.body.blocks.values()) {
+    for (const phi of block.phis) {
+      state.create(phi.place, {kind: 'Phi'});
+      for (const [pred, operand] of phi.operands) {
+        if (!seenBlocks.has(pred)) {
+          // NOTE: annotation required to actually typecheck and not silently infer `any`
+          const blockPhis = getOrInsertWith<BlockId, Array<PendingPhiOperand>>(
+            pendingPhis,
+            pred,
+            () => [],
+          );
+          blockPhis.push({from: operand, into: phi.place, index: index++});
+        } else {
+          state.assign(index++, operand, phi.place);
+        }
+      }
+    }
+    seenBlocks.add(block.id);
+
+    for (const instr of block.instructions) {
+      if (
+        instr.value.kind === 'FunctionExpression' ||
+        instr.value.kind === 'ObjectMethod'
+      ) {
+        state.create(instr.lvalue, {
+          kind: 'Function',
+          function: instr.value.loweredFunc.func,
+        });
+      } else {
+        for (const lvalue of eachInstructionLValue(instr)) {
+          state.create(lvalue, {kind: 'Object'});
+        }
+      }
+
+      if (instr.effects == null) continue;
+      for (const effect of instr.effects) {
+        if (effect.kind === 'Create') {
+          state.create(effect.into, {kind: 'Object'});
+        } else if (effect.kind === 'CreateFunction') {
+          state.create(effect.into, {
+            kind: 'Function',
+            function: effect.function.loweredFunc.func,
+          });
+        } else if (effect.kind === 'CreateFrom') {
+          state.createFrom(index++, effect.from, effect.into);
+        } else if (effect.kind === 'Assign') {
+          if (!state.nodes.has(effect.into.identifier)) {
+            state.create(effect.into, {kind: 'Object'});
+          }
+          state.assign(index++, effect.from, effect.into);
+        } else if (effect.kind === 'Alias') {
+          state.assign(index++, effect.from, effect.into);
+        } else if (effect.kind === 'Capture') {
+          state.capture(index++, effect.from, effect.into);
+        } else if (
+          effect.kind === 'MutateTransitive' ||
+          effect.kind === 'MutateTransitiveConditionally'
+        ) {
+          mutations.push({
+            index: index++,
+            id: instr.id,
+            transitive: true,
+            kind:
+              effect.kind === 'MutateTransitive'
+                ? MutationKind.Definite
+                : MutationKind.Conditional,
+            place: effect.value,
+          });
+        } else if (
+          effect.kind === 'Mutate' ||
+          effect.kind === 'MutateConditionally'
+        ) {
+          mutations.push({
+            index: index++,
+            id: instr.id,
+            transitive: false,
+            kind:
+              effect.kind === 'Mutate'
+                ? MutationKind.Definite
+                : MutationKind.Conditional,
+            place: effect.value,
+          });
+        } else if (
+          effect.kind === 'MutateFrozen' ||
+          effect.kind === 'MutateGlobal' ||
+          effect.kind === 'Impure'
+        ) {
+          errors.push(effect.error);
+        } else if (effect.kind === 'Render') {
+          renders.push({index: index++, place: effect.place});
+        }
+      }
+    }
+    const blockPhis = pendingPhis.get(block.id);
+    if (blockPhis != null) {
+      for (const {from, into, index} of blockPhis) {
+        state.assign(index, from, into);
+      }
+    }
+    if (block.terminal.kind === 'return') {
+      state.assign(index++, block.terminal.value, fn.returns);
+    }
+
+    if (
+      (block.terminal.kind === 'maybe-throw' ||
+        block.terminal.kind === 'return') &&
+      block.terminal.effects != null
+    ) {
+      for (const effect of block.terminal.effects) {
+        if (effect.kind === 'Alias') {
+          state.assign(index++, effect.from, effect.into);
+        } else {
+          CompilerError.invariant(effect.kind === 'Freeze', {
+            reason: `Unexpected '${effect.kind}' effect for MaybeThrow terminal`,
+            loc: block.terminal.loc,
+          });
+        }
+      }
+    }
+  }
+
+  if (VERBOSE) {
+    console.log(state.debug());
+    console.log(pretty(mutations));
+  }
+  for (const mutation of mutations) {
+    state.mutate(
+      mutation.index,
+      mutation.place.identifier,
+      makeInstructionId(mutation.id + 1),
+      mutation.transitive,
+      mutation.kind,
+      mutation.place.loc,
+      errors,
+    );
+  }
+  for (const render of renders) {
+    state.render(render.index, render.place.identifier, errors);
+  }
+  if (DEBUG) {
+    console.log(pretty([...state.nodes.keys()]));
+  }
+  fn.aliasingEffects ??= [];
+  for (const param of [...fn.context, ...fn.params]) {
+    const place = param.kind === 'Identifier' ? param : param.place;
+    const node = state.nodes.get(place.identifier);
+    if (node == null) {
+      continue;
+    }
+    let mutated = false;
+    if (node.local != null) {
+      if (node.local.kind === MutationKind.Conditional) {
+        mutated = true;
+        fn.aliasingEffects.push({
+          kind: 'MutateConditionally',
+          value: {...place, loc: node.local.loc},
+        });
+      } else if (node.local.kind === MutationKind.Definite) {
+        mutated = true;
+        fn.aliasingEffects.push({
+          kind: 'Mutate',
+          value: {...place, loc: node.local.loc},
+        });
+      }
+    }
+    if (node.transitive != null) {
+      if (node.transitive.kind === MutationKind.Conditional) {
+        mutated = true;
+        fn.aliasingEffects.push({
+          kind: 'MutateTransitiveConditionally',
+          value: {...place, loc: node.transitive.loc},
+        });
+      } else if (node.transitive.kind === MutationKind.Definite) {
+        mutated = true;
+        fn.aliasingEffects.push({
+          kind: 'MutateTransitive',
+          value: {...place, loc: node.transitive.loc},
+        });
+      }
+    }
+    if (mutated) {
+      place.effect = Effect.Capture;
+    }
+  }
+
+  /**
+   * Part 2
+   * Add legacy operand-specific effects based on instruction effects and mutable ranges.
+   * Also fixes up operand mutable ranges, making sure that start is non-zero if the value
+   * is mutated (depended on by later passes like InferReactiveScopeVariables which uses this
+   * to filter spurious mutations of globals, which we now guard against more precisely)
+   */
+  for (const block of fn.body.blocks.values()) {
+    for (const phi of block.phis) {
+      // TODO: we don't actually set these effects today!
+      phi.place.effect = Effect.Store;
+      const isPhiMutatedAfterCreation: boolean =
+        phi.place.identifier.mutableRange.end >
+        (block.instructions.at(0)?.id ?? block.terminal.id);
+      for (const operand of phi.operands.values()) {
+        operand.effect = isPhiMutatedAfterCreation
+          ? Effect.Capture
+          : Effect.Read;
+      }
+      if (
+        isPhiMutatedAfterCreation &&
+        phi.place.identifier.mutableRange.start === 0
+      ) {
+        /*
+         * TODO: ideally we'd construct a precise start range, but what really
+         * matters is that the phi's range appears mutable (end > start + 1)
+         * so we just set the start to the previous instruction before this block
+         */
+        const firstInstructionIdOfBlock =
+          block.instructions.at(0)?.id ?? block.terminal.id;
+        phi.place.identifier.mutableRange.start = makeInstructionId(
+          firstInstructionIdOfBlock - 1,
+        );
+      }
+    }
+    for (const instr of block.instructions) {
+      for (const lvalue of eachInstructionLValue(instr)) {
+        lvalue.effect = Effect.ConditionallyMutate;
+        if (lvalue.identifier.mutableRange.start === 0) {
+          lvalue.identifier.mutableRange.start = instr.id;
+        }
+        if (lvalue.identifier.mutableRange.end === 0) {
+          lvalue.identifier.mutableRange.end = makeInstructionId(
+            Math.max(instr.id + 1, lvalue.identifier.mutableRange.end),
+          );
+        }
+      }
+      for (const operand of eachInstructionValueOperand(instr.value)) {
+        operand.effect = Effect.Read;
+      }
+      if (instr.effects == null) {
+        continue;
+      }
+      const operandEffects = new Map<IdentifierId, Effect>();
+      for (const effect of instr.effects) {
+        switch (effect.kind) {
+          case 'Assign':
+          case 'Alias':
+          case 'Capture':
+          case 'CreateFrom': {
+            const isMutatedOrReassigned =
+              effect.into.identifier.mutableRange.end > instr.id;
+            if (isMutatedOrReassigned) {
+              operandEffects.set(effect.from.identifier.id, Effect.Capture);
+              operandEffects.set(effect.into.identifier.id, Effect.Store);
+            } else {
+              operandEffects.set(effect.from.identifier.id, Effect.Read);
+              operandEffects.set(effect.into.identifier.id, Effect.Store);
+            }
+            break;
+          }
+          case 'CreateFunction':
+          case 'Create': {
+            break;
+          }
+          case 'Mutate': {
+            operandEffects.set(effect.value.identifier.id, Effect.Store);
+            break;
+          }
+          case 'Apply': {
+            CompilerError.invariant(false, {
+              reason: `[AnalyzeFunctions] Expected Apply effects to be replaced with more precise effects`,
+              loc: effect.function.loc,
+            });
+          }
+          case 'MutateTransitive':
+          case 'MutateConditionally':
+          case 'MutateTransitiveConditionally': {
+            operandEffects.set(
+              effect.value.identifier.id,
+              Effect.ConditionallyMutate,
+            );
+            break;
+          }
+          case 'Freeze': {
+            operandEffects.set(effect.value.identifier.id, Effect.Freeze);
+            break;
+          }
+          case 'ImmutableCapture': {
+            // no-op, Read is the default
+            break;
+          }
+          case 'Impure':
+          case 'Render':
+          case 'MutateFrozen':
+          case 'MutateGlobal': {
+            // no-op
+            break;
+          }
+          default: {
+            assertExhaustive(
+              effect,
+              `Unexpected effect kind ${(effect as any).kind}`,
+            );
+          }
+        }
+      }
+      for (const lvalue of eachInstructionLValue(instr)) {
+        const effect =
+          operandEffects.get(lvalue.identifier.id) ??
+          Effect.ConditionallyMutate;
+        lvalue.effect = effect;
+      }
+      for (const operand of eachInstructionValueOperand(instr.value)) {
+        if (
+          operand.identifier.mutableRange.end > instr.id &&
+          operand.identifier.mutableRange.start === 0
+        ) {
+          operand.identifier.mutableRange.start = instr.id;
+        }
+        const effect = operandEffects.get(operand.identifier.id) ?? Effect.Read;
+        operand.effect = effect;
+      }
+
+      /**
+       * This case is targeted at hoisted functions like:
+       *
+       * ```
+       * x();
+       * function x() { ... }
+       * ```
+       *
+       * Which turns into:
+       *
+       * t0 = DeclareContext HoistedFunction x
+       * t1 = LoadContext x
+       * t2 = CallExpression t1 ( )
+       * t3 = FunctionExpression ...
+       * t4 = StoreContext Function x = t3
+       *
+       * If the function had captured mutable values, it would already have its
+       * range extended to include the StoreContext. But if the function doesn't
+       * capture any mutable values its range won't have been extended yet. We
+       * want to ensure that the value is memoized along with the context variable,
+       * not independently of it (bc of the way we do codegen for hoisted functions).
+       * So here we check for StoreContext rvalues and if they haven't already had
+       * their range extended to at least this instruction, we extend it.
+       */
+      if (
+        instr.value.kind === 'StoreContext' &&
+        instr.value.value.identifier.mutableRange.end <= instr.id
+      ) {
+        instr.value.value.identifier.mutableRange.end = makeInstructionId(
+          instr.id + 1,
+        );
+      }
+    }
+    if (block.terminal.kind === 'return') {
+      block.terminal.value.effect = isFunctionExpression
+        ? Effect.Read
+        : Effect.Freeze;
+    } else {
+      for (const operand of eachTerminalOperand(block.terminal)) {
+        operand.effect = Effect.Read;
+      }
+    }
+  }
+
+  if (VERBOSE) {
+    console.log(printFunction(fn));
+  }
+  return errors.asResult();
+}
+
+function appendFunctionErrors(errors: CompilerError, fn: HIRFunction): void {
+  for (const effect of fn.aliasingEffects ?? []) {
+    switch (effect.kind) {
+      case 'Impure':
+      case 'MutateFrozen':
+      case 'MutateGlobal': {
+        errors.push(effect.error);
+        break;
+      }
+    }
+  }
+}
+
+type Node = {
+  id: Identifier;
+  createdFrom: Map<Identifier, number>;
+  captures: Map<Identifier, number>;
+  aliases: Map<Identifier, number>;
+  edges: Array<{index: number; node: Identifier; kind: 'capture' | 'alias'}>;
+  transitive: {kind: MutationKind; loc: SourceLocation} | null;
+  local: {kind: MutationKind; loc: SourceLocation} | null;
+  value:
+    | {kind: 'Object'}
+    | {kind: 'Phi'}
+    | {kind: 'Function'; function: HIRFunction};
+};
+class AliasingState {
+  nodes: Map<Identifier, Node> = new Map();
+
+  create(place: Place, value: Node['value']): void {
+    this.nodes.set(place.identifier, {
+      id: place.identifier,
+      createdFrom: new Map(),
+      captures: new Map(),
+      aliases: new Map(),
+      edges: [],
+      transitive: null,
+      local: null,
+      value,
+    });
+  }
+
+  createFrom(index: number, from: Place, into: Place): void {
+    this.create(into, {kind: 'Object'});
+    const fromNode = this.nodes.get(from.identifier);
+    const toNode = this.nodes.get(into.identifier);
+    if (fromNode == null || toNode == null) {
+      if (VERBOSE) {
+        console.log(
+          `skip: createFrom ${printPlace(from)}${!!fromNode} -> ${printPlace(into)}${!!toNode}`,
+        );
+      }
+      return;
+    }
+    fromNode.edges.push({index, node: into.identifier, kind: 'alias'});
+    if (!toNode.createdFrom.has(from.identifier)) {
+      toNode.createdFrom.set(from.identifier, index);
+    }
+  }
+
+  capture(index: number, from: Place, into: Place): void {
+    const fromNode = this.nodes.get(from.identifier);
+    const toNode = this.nodes.get(into.identifier);
+    if (fromNode == null || toNode == null) {
+      if (VERBOSE) {
+        console.log(
+          `skip: capture ${printPlace(from)}${!!fromNode} -> ${printPlace(into)}${!!toNode}`,
+        );
+      }
+      return;
+    }
+    fromNode.edges.push({index, node: into.identifier, kind: 'capture'});
+    if (!toNode.captures.has(from.identifier)) {
+      toNode.captures.set(from.identifier, index);
+    }
+  }
+
+  assign(index: number, from: Place, into: Place): void {
+    const fromNode = this.nodes.get(from.identifier);
+    const toNode = this.nodes.get(into.identifier);
+    if (fromNode == null || toNode == null) {
+      if (VERBOSE) {
+        console.log(
+          `skip: assign ${printPlace(from)}${!!fromNode} -> ${printPlace(into)}${!!toNode}`,
+        );
+      }
+      return;
+    }
+    fromNode.edges.push({index, node: into.identifier, kind: 'alias'});
+    if (!toNode.aliases.has(from.identifier)) {
+      toNode.aliases.set(from.identifier, index);
+    }
+  }
+
+  render(index: number, start: Identifier, errors: CompilerError): void {
+    const seen = new Set<Identifier>();
+    const queue: Array<Identifier> = [start];
+    while (queue.length !== 0) {
+      const current = queue.pop()!;
+      if (seen.has(current)) {
+        continue;
+      }
+      seen.add(current);
+      const node = this.nodes.get(current);
+      if (node == null || node.transitive != null || node.local != null) {
+        continue;
+      }
+      if (node.value.kind === 'Function') {
+        appendFunctionErrors(errors, node.value.function);
+      }
+      for (const [alias, when] of node.createdFrom) {
+        if (when >= index) {
+          continue;
+        }
+        queue.push(alias);
+      }
+      for (const [alias, when] of node.aliases) {
+        if (when >= index) {
+          continue;
+        }
+        queue.push(alias);
+      }
+      for (const [capture, when] of node.captures) {
+        if (when >= index) {
+          continue;
+        }
+        queue.push(capture);
+      }
+    }
+  }
+
+  mutate(
+    index: number,
+    start: Identifier,
+    end: InstructionId,
+    transitive: boolean,
+    kind: MutationKind,
+    loc: SourceLocation,
+    errors: CompilerError,
+  ): void {
+    if (DEBUG) {
+      console.log(
+        `mutate ix=${index} start=$${start.id} end=[${end}]${transitive ? ' transitive' : ''} kind=${kind}`,
+      );
+    }
+    const seen = new Set<Identifier>();
+    const queue: Array<{
+      place: Identifier;
+      transitive: boolean;
+      direction: 'backwards' | 'forwards';
+    }> = [{place: start, transitive, direction: 'backwards'}];
+    while (queue.length !== 0) {
+      const {place: current, transitive, direction} = queue.pop()!;
+      if (seen.has(current)) {
+        continue;
+      }
+      seen.add(current);
+      const node = this.nodes.get(current);
+      if (node == null) {
+        if (DEBUG) {
+          console.log(
+            `no node! ${printIdentifier(start)} for identifier ${printIdentifier(current)}`,
+          );
+        }
+        continue;
+      }
+      if (DEBUG) {
+        console.log(
+          `  mutate $${node.id.id} transitive=${transitive} direction=${direction}`,
+        );
+      }
+      node.id.mutableRange.end = makeInstructionId(
+        Math.max(node.id.mutableRange.end, end),
+      );
+      if (
+        node.value.kind === 'Function' &&
+        node.transitive == null &&
+        node.local == null
+      ) {
+        appendFunctionErrors(errors, node.value.function);
+      }
+      if (transitive) {
+        if (node.transitive == null || node.transitive.kind < kind) {
+          node.transitive = {kind, loc};
+        }
+      } else {
+        if (node.local == null || node.local.kind < kind) {
+          node.local = {kind, loc};
+        }
+      }
+      /**
+       * all mutations affect "forward" edges by the rules:
+       * - Capture a -> b, mutate(a) => mutate(b)
+       * - Alias a -> b, mutate(a) => mutate(b)
+       */
+      for (const edge of node.edges) {
+        if (edge.index >= index) {
+          break;
+        }
+        queue.push({place: edge.node, transitive, direction: 'forwards'});
+      }
+      for (const [alias, when] of node.createdFrom) {
+        if (when >= index) {
+          continue;
+        }
+        queue.push({place: alias, transitive: true, direction: 'backwards'});
+      }
+      if (direction === 'backwards' || node.value.kind !== 'Phi') {
+        /**
+         * all mutations affect backward alias edges by the rules:
+         * - Alias a -> b, mutate(b) => mutate(a)
+         * - Alias a -> b, mutateTransitive(b) => mutate(a)
+         *
+         * However, if we reached a phi because one of its inputs was mutated
+         * (and we're advancing "forwards" through that node's edges), then
+         * we know we've already processed the mutation at its source. The
+         * phi's other inputs can't be affected.
+         */
+        for (const [alias, when] of node.aliases) {
+          if (when >= index) {
+            continue;
+          }
+          queue.push({place: alias, transitive, direction: 'backwards'});
+        }
+      }
+      /**
+       * but only transitive mutations affect captures
+       */
+      if (transitive) {
+        for (const [capture, when] of node.captures) {
+          if (when >= index) {
+            continue;
+          }
+          queue.push({place: capture, transitive, direction: 'backwards'});
+        }
+      }
+    }
+    if (DEBUG) {
+      const nodes = new Map();
+      for (const id of seen) {
+        const node = this.nodes.get(id);
+        nodes.set(id.id, node);
+      }
+      console.log(pretty(nodes));
+    }
+  }
+
+  debug(): string {
+    return pretty(this.nodes);
+  }
+}
+
+export function pretty(v: any): string {
+  return prettyFormat(v, {
+    plugins: [
+      {
+        test: v =>
+          v !== null && typeof v === 'object' && v.kind === 'Identifier',
+        serialize: v => printPlace(v),
+      },
+      {
+        test: v =>
+          v !== null &&
+          typeof v === 'object' &&
+          typeof v.declarationId === 'number',
+        serialize: v =>
+          `${printIdentifier(v)}:${v.mutableRange.start}:${v.mutableRange.end}`,
+      },
+    ],
+  });
+}
