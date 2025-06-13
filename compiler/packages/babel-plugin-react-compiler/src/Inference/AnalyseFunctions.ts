@@ -22,7 +22,7 @@ import {inferMutableRanges} from './InferMutableRanges';
 import inferReferenceEffects from './InferReferenceEffects';
 import {assertExhaustive} from '../Utils/utils';
 import {inferMutationAliasingEffects} from './InferMutationAliasingEffects';
-import {inferMutationAliasingFunctionEffects} from './InferMutationAliasingFunctionEffects';
+import {inferFunctionExpressionAliasingEffectsSignature} from './InferFunctionExpressionAliasingEffectsSignature';
 import {inferMutationAliasingRanges} from './InferMutationAliasingRanges';
 
 export default function analyseFunctions(func: HIRFunction): void {
@@ -71,7 +71,7 @@ function lowerWithMutationAliasing(fn: HIRFunction): void {
   inferMutationAliasingRanges(fn, {isFunctionExpression: true});
   rewriteInstructionKindsBasedOnReassignment(fn);
   inferReactiveScopeVariables(fn);
-  const effects = inferMutationAliasingFunctionEffects(fn);
+  const effects = inferFunctionExpressionAliasingEffectsSignature(fn);
   fn.env.logger?.debugLogIRs?.({
     kind: 'hir',
     name: 'AnalyseFunction (inner)',

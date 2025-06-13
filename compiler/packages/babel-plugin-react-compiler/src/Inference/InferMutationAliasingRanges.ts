@@ -25,7 +25,7 @@ import {
 import {assertExhaustive, getOrInsertWith} from '../Utils/utils';
 import {printFunction} from '../HIR';
 import {printIdentifier, printPlace} from '../HIR/PrintHIR';
-import {MutationKind} from './InferMutationAliasingFunctionEffects';
+import {MutationKind} from './InferFunctionExpressionAliasingEffectsSignature';
 import {Result} from '../Utils/Result';
 
 const DEBUG = false;
