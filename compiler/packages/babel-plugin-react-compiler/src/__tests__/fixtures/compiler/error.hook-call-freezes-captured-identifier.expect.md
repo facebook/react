@@ -32,7 +32,7 @@ export const FIXTURE_ENTRYPOINT = {
   11 |   });
   12 |
 > 13 |   x.value += count;
-     |   ^ InvalidReact: This mutates a variable that React considers immutable (13:13)
+     |   ^ InvalidReact: Updating a value previously passed as an argument to a hook is not allowed. Consider moving the mutation before calling the hook (13:13)
   14 |   return <Stringify x={x} cb={cb} />;
   15 | }
   16 |

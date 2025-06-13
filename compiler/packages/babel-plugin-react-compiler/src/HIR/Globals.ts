@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {Effect, ValueKind, ValueReason} from './HIR';
+import {Effect, makeIdentifierId, ValueKind, ValueReason} from './HIR';
 import {
   BUILTIN_SHAPES,
   BuiltInArrayId,
@@ -34,6 +34,7 @@ import {
   addFunction,
   addHook,
   addObject,
+  signatureArgument,
 } from './ObjectShape';
 import {BuiltInType, ObjectType, PolyType} from './Types';
 import {TypeConfig} from './TypeSchema';
@@ -644,6 +645,41 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
         calleeEffect: Effect.Read,
         hookKind: 'useEffect',
         returnValueKind: ValueKind.Frozen,
+        aliasing: {
+          receiver: makeIdentifierId(0),
+          params: [],
+          rest: makeIdentifierId(1),
+          returns: makeIdentifierId(2),
+          temporaries: [signatureArgument(3)],
+          effects: [
+            // Freezes the function and deps
+            {
+              kind: 'Freeze',
+              value: signatureArgument(1),
+              reason: ValueReason.Effect,
+            },
+            // Internally creates an effect object that captures the function and deps
+            {
+              kind: 'Create',
+              into: signatureArgument(3),
+              value: ValueKind.Frozen,
+              reason: ValueReason.KnownReturnSignature,
+            },
+            // The effect stores the function and dependencies
+            {
+              kind: 'Capture',
+              from: signatureArgument(1),
+              into: signatureArgument(3),
+            },
+            // Returns undefined
+            {
+              kind: 'Create',
+              into: signatureArgument(2),
+              value: ValueKind.Primitive,
+              reason: ValueReason.KnownReturnSignature,
+            },
+          ],
+        },
       },
       BuiltInUseEffectHookId,
     ),
