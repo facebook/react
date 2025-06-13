@@ -1,3 +1,4 @@
+// @enableNewMutationAliasingModel:false
 import {identity, mutate} from 'shared-runtime';
 
 /**

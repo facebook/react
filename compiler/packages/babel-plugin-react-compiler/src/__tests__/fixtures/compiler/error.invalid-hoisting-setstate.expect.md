@@ -1,3 +1,8 @@
+
+## Input
+
+```javascript
+// @enableNewMutationAliasingModel
 import {useEffect, useState} from 'react';
 import {Stringify} from 'shared-runtime';
 
@@ -26,3 +31,20 @@ export const FIXTURE_ENTRYPOINT = {
   params: [{}],
   sequentialRenders: [{}, {}],
 };
+
+```
+
+
+## Error
+
+```
+  19 |   useEffect(() => setState(2), []);
+  20 |
+> 21 |   const [state, setState] = useState(0);
+     |                 ^^^^^^^^ InvalidReact: Updating a value used previously in an effect function or as an effect dependency is not allowed. Consider moving the mutation before calling useEffect(). Found mutation of `setState` (21:21)
+  22 |   return <Stringify state={state} />;
+  23 | }
+  24 |
+```
+          
+      

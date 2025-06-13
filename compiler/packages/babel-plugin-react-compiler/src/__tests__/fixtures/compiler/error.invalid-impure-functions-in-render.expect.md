@@ -20,7 +20,7 @@ function Component() {
   2 |
   3 | function Component() {
 > 4 |   const date = Date.now();
-    |                ^^^^^^^^ InvalidReact: Calling an impure function can produce unstable results. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent). `Date.now` is an impure function whose results may change on every call (4:4)
+    |                ^^^^^^^^^^ InvalidReact: Calling an impure function can produce unstable results. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent). `Date.now` is an impure function whose results may change on every call (4:4)
 
 InvalidReact: Calling an impure function can produce unstable results. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent). `performance.now` is an impure function whose results may change on every call (5:5)
 
