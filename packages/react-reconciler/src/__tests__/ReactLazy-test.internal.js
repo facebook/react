@@ -941,15 +941,11 @@ describe('ReactLazy', () => {
       </Suspense>,
     );
     await waitForThrow(
-      gate('enableRenderableContext')
-        ? 'Element type is invalid. Received a promise that resolves to: Context.Provider. ' +
-            'Lazy element type must resolve to a class or function.'
-        : 'Element type is invalid. Received a promise that resolves to: Context.Consumer. ' +
-            'Lazy element type must resolve to a class or function.',
+      'Element type is invalid. Received a promise that resolves to: Context. ' +
+        'Lazy element type must resolve to a class or function.',
     );
   });
 
-  // @gate enableRenderableContext
   it('throws with a useful error when wrapping Context.Consumer with lazy()', async () => {
     const Context = React.createContext(null);
     const BadLazy = lazy(() => fakeImport(Context.Consumer));

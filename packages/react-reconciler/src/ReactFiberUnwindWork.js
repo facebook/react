@@ -36,7 +36,6 @@ import {NoMode, ProfileMode} from './ReactTypeOfMode';
 import {
   enableProfilerTimer,
   enableTransitionTracing,
-  enableRenderableContext,
 } from 'shared/ReactFeatureFlags';
 
 import {popHostContainer, popHostContext} from './ReactFiberHostContext';
@@ -189,12 +188,7 @@ function unwindWork(
       popHostContainer(workInProgress);
       return null;
     case ContextProvider:
-      let context: ReactContext<any>;
-      if (enableRenderableContext) {
-        context = workInProgress.type;
-      } else {
-        context = workInProgress.type._context;
-      }
+      const context: ReactContext<any> = workInProgress.type;
       popProvider(context, workInProgress);
       return null;
     case OffscreenComponent:
@@ -286,12 +280,7 @@ function unwindInterruptedWork(
       popSuspenseListContext(interruptedWork);
       break;
     case ContextProvider:
-      let context: ReactContext<any>;
-      if (enableRenderableContext) {
-        context = interruptedWork.type;
-      } else {
-        context = interruptedWork.type._context;
-      }
+      const context: ReactContext<any> = interruptedWork.type;
       popProvider(context, interruptedWork);
       break;
     case OffscreenComponent:

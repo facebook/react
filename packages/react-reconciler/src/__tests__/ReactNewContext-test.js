@@ -1358,7 +1358,6 @@ describe('ReactNewContext', () => {
       );
     });
 
-    // @gate enableRenderableContext || !__DEV__
     it('warns when passed a consumer', async () => {
       const Context = React.createContext(0);
       function Foo() {
@@ -1657,7 +1656,6 @@ Context fuzz tester error! Copy and paste the following line into the test suite
     });
   });
 
-  // @gate enableRenderableContext
   it('should treat Context as Context.Provider', async () => {
     const BarContext = React.createContext({value: 'bar-initial'});
     expect(BarContext.Provider).toBe(BarContext);

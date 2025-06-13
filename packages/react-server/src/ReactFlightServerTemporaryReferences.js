@@ -52,6 +52,9 @@ const proxyHandlers = {
       // reference.
       case 'defaultProps':
         return undefined;
+      // React looks for debugInfo on thenables.
+      case '_debugInfo':
+        return undefined;
       // Avoid this attempting to be serialized.
       case 'toJSON':
         return undefined;
