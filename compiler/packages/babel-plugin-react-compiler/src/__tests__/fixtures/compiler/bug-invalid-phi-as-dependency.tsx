@@ -1,3 +1,4 @@
+// @enableNewMutationAliasingModel:false
 import {CONST_TRUE, Stringify, mutate, useIdentity} from 'shared-runtime';
 
 /**

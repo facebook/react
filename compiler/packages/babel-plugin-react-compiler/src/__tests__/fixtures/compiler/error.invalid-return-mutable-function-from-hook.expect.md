@@ -26,7 +26,7 @@ function useFoo() {
 >  8 |     cache.set('key', 'value');
      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >  9 |   };
-     | ^^^^ InvalidReact: This argument is a function which modifies local variables when called, which can bypass memoization and cause the UI not to update. Functions that are returned from hooks, passed as arguments to hooks, or passed as props to components may not mutate local variables (7:9)
+     | ^^^^ InvalidReact: This argument is a function which may reassign or mutate local variables after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead (7:9)
 
 InvalidReact: The function modifies a local variable here (8:8)
   10 | }

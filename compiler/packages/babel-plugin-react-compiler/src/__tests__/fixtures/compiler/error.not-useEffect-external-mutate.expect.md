@@ -21,6 +21,8 @@ function Component(props) {
   4 |   foo(() => {
 > 5 |     x.a = 10;
     |     ^ InvalidReact: Writing to a variable defined outside a component or hook is not allowed. Consider using an effect (5:5)
+
+InvalidReact: Writing to a variable defined outside a component or hook is not allowed. Consider using an effect (6:6)
   6 |     x.a = 20;
   7 |   });
   8 | }
