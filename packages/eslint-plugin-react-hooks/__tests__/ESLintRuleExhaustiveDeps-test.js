@@ -7748,6 +7748,34 @@ const testsFlow = {
   invalid: [
     {
       code: normalizeIndent`
+        hook useExample(a) {
+          useEffect(() => {
+            console.log(a);
+          }, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'a'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [a]',
+              output: normalizeIndent`
+                hook useExample(a) {
+                  useEffect(() => {
+                    console.log(a);
+                  }, [a]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
       function Foo() {
         const foo = ({}: any);
         useMemo(() => {
@@ -8311,7 +8339,9 @@ describe('rules-of-hooks/exhaustive-deps', () => {
     },
   };
 
-  const testsBabelEslint = {
+  const testsBabelEslint = tests;
+
+  const testsHermesParser = {
     valid: [...testsFlow.valid, ...tests.valid],
     invalid: [...testsFlow.invalid, ...tests.invalid],
   };
@@ -8334,6 +8364,33 @@ describe('rules-of-hooks/exhaustive-deps', () => {
     'eslint: v9, parser: @babel/eslint-parser',
     ReactHooksESLintRule,
     testsBabelEslint
+  );
+
+  new ESLintTesterV7({
+    parser: require.resolve('hermes-eslint'),
+    parserOptions: {
+      sourceType: 'module',
+      enableExperimentalComponentSyntax: true,
+    },
+  }).run(
+    'eslint: v7, parser: hermes-eslint',
+    ReactHooksESLintRule,
+    testsHermesParser
+  );
+
+  new ESLintTesterV9({
+    languageOptions: {
+      ...languageOptionsV9,
+      parser: require('hermes-eslint'),
+      parserOptions: {
+        sourceType: 'module',
+        enableExperimentalComponentSyntax: true,
+      },
+    },
+  }).run(
+    'eslint: v9, parser: hermes-eslint',
+    ReactHooksESLintRule,
+    testsHermesParser
   );
 
   const testsTypescriptEslintParser = {
