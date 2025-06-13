@@ -6,10 +6,21 @@
  */
 
 import {CompilerError} from '../CompilerError';
-import {Effect, ValueKind, ValueReason} from './HIR';
+import {AliasingSignature} from '../Inference/AliasingEffects';
+import {
+  Effect,
+  GeneratedSource,
+  makeDeclarationId,
+  makeIdentifierId,
+  makeInstructionId,
+  Place,
+  ValueKind,
+  ValueReason,
+} from './HIR';
 import {
   BuiltInType,
   FunctionType,
+  makeType,
   ObjectType,
   PolyType,
   PrimitiveType,
@@ -180,6 +191,9 @@ export type FunctionSignature = {
   impure?: boolean;
 
   canonicalName?: string;
+
+  aliasing?: AliasingSignature | null;
+  todo_aliasing?: AliasingSignature | null;
 };
 
 /*
@@ -305,6 +319,30 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
       returnType: PRIMITIVE_TYPE,
       calleeEffect: Effect.Store,
       returnValueKind: ValueKind.Primitive,
+      aliasing: {
+        receiver: makeIdentifierId(0),
+        params: [],
+        rest: makeIdentifierId(1),
+        returns: makeIdentifierId(2),
+        temporaries: [],
+        effects: [
+          // Push directly mutates the array itself
+          {kind: 'Mutate', value: signatureArgument(0)},
+          // The arguments are captured into the array
+          {
+            kind: 'Capture',
+            from: signatureArgument(1),
+            into: signatureArgument(0),
+          },
+          // Returns the new length, a primitive
+          {
+            kind: 'Create',
+            into: signatureArgument(2),
+            value: ValueKind.Primitive,
+            reason: ValueReason.KnownReturnSignature,
+          },
+        ],
+      },
     }),
   ],
   [
@@ -335,6 +373,62 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
       returnValueKind: ValueKind.Mutable,
       noAlias: true,
       mutableOnlyIfOperandsAreMutable: true,
+      aliasing: {
+        receiver: makeIdentifierId(0),
+        params: [makeIdentifierId(1)],
+        rest: null,
+        returns: makeIdentifierId(2),
+        temporaries: [
+          // Temporary representing captured items of the receiver
+          signatureArgument(3),
+          // Temporary representing the result of the callback
+          signatureArgument(4),
+          /*
+           * Undefined `this` arg to the callback. Note the signature does not
+           * support passing an explicit thisArg second param
+           */
+          signatureArgument(5),
+        ],
+        effects: [
+          // Map creates a new mutable array
+          {
+            kind: 'Create',
+            into: signatureArgument(2),
+            value: ValueKind.Mutable,
+            reason: ValueReason.KnownReturnSignature,
+          },
+          // The first arg to the callback is an item extracted from the receiver array
+          {
+            kind: 'CreateFrom',
+            from: signatureArgument(0),
+            into: signatureArgument(3),
+          },
+          // The undefined this for the callback
+          {
+            kind: 'Create',
+            into: signatureArgument(5),
+            value: ValueKind.Primitive,
+            reason: ValueReason.KnownReturnSignature,
+          },
+          // calls the callback, returning the result into a temporary
+          {
+            kind: 'Apply',
+            receiver: signatureArgument(5),
+            args: [signatureArgument(3), {kind: 'Hole'}, signatureArgument(0)],
+            function: signatureArgument(1),
+            into: signatureArgument(4),
+            signature: null,
+            mutatesFunction: false,
+            loc: GeneratedSource,
+          },
+          // captures the result of the callback into the return array
+          {
+            kind: 'Capture',
+            from: signatureArgument(4),
+            into: signatureArgument(2),
+          },
+        ],
+      },
     }),
   ],
   [
@@ -482,6 +576,32 @@ addObject(BUILTIN_SHAPES, BuiltInSetId, [
       calleeEffect: Effect.Store,
       // returnValueKind is technically dependent on the ValueKind of the set itself
       returnValueKind: ValueKind.Mutable,
+      aliasing: {
+        receiver: makeIdentifierId(0),
+        params: [],
+        rest: makeIdentifierId(1),
+        returns: makeIdentifierId(2),
+        temporaries: [],
+        effects: [
+          // Set.add returns the receiver Set
+          {
+            kind: 'Assign',
+            from: signatureArgument(0),
+            into: signatureArgument(2),
+          },
+          // Set.add mutates the set itself
+          {
+            kind: 'Mutate',
+            value: signatureArgument(0),
+          },
+          // Captures the rest params into the set
+          {
+            kind: 'Capture',
+            from: signatureArgument(1),
+            into: signatureArgument(0),
+          },
+        ],
+      },
     }),
   ],
   [
@@ -1182,6 +1302,53 @@ export const DefaultNonmutatingHook = addHook(
     calleeEffect: Effect.Read,
     hookKind: 'Custom',
     returnValueKind: ValueKind.Frozen,
+    aliasing: {
+      receiver: makeIdentifierId(0),
+      params: [],
+      rest: makeIdentifierId(1),
+      returns: makeIdentifierId(2),
+      temporaries: [],
+      effects: [
+        // Freeze the arguments
+        {
+          kind: 'Freeze',
+          value: signatureArgument(1),
+          reason: ValueReason.HookCaptured,
+        },
+        // Returns a frozen value
+        {
+          kind: 'Create',
+          into: signatureArgument(2),
+          value: ValueKind.Frozen,
+          reason: ValueReason.HookReturn,
+        },
+        // May alias any arguments into the return
+        {
+          kind: 'Alias',
+          from: signatureArgument(1),
+          into: signatureArgument(2),
+        },
+      ],
+    },
   },
   'DefaultNonmutatingHook',
 );
+
+export function signatureArgument(id: number): Place {
+  const place: Place = {
+    kind: 'Identifier',
+    effect: Effect.Unknown,
+    loc: GeneratedSource,
+    reactive: false,
+    identifier: {
+      declarationId: makeDeclarationId(id),
+      id: makeIdentifierId(id),
+      loc: GeneratedSource,
+      mutableRange: {start: makeInstructionId(0), end: makeInstructionId(0)},
+      name: null,
+      scope: null,
+      type: makeType(),
+    },
+  };
+  return place;
+}

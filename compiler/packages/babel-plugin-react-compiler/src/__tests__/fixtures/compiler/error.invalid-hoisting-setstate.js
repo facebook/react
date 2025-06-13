@@ -1,3 +1,4 @@
+// @enableNewMutationAliasingModel
 import {useEffect, useState} from 'react';
 import {Stringify} from 'shared-runtime';
 

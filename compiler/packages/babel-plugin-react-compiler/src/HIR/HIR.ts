@@ -13,6 +13,7 @@ import {Environment, ReactFunctionType} from './Environment';
 import type {HookKind} from './ObjectShape';
 import {Type, makeType} from './Types';
 import {z} from 'zod';
+import type {AliasingEffect} from '../Inference/AliasingEffects';
 
 /*
  * *******************************************************************************************
@@ -100,6 +101,7 @@ export type ReactiveInstruction = {
   id: InstructionId;
   lvalue: Place | null;
   value: ReactiveValue;
+  effects?: Array<AliasingEffect> | null; // TODO make non-optional
   loc: SourceLocation;
 };
 
@@ -278,12 +280,14 @@ export type HIRFunction = {
   params: Array<Place | SpreadPattern>;
   returnTypeAnnotation: t.FlowType | t.TSType | null;
   returnType: Type;
+  returns: Place;
   context: Array<Place>;
   effects: Array<FunctionEffect> | null;
   body: HIR;
   generator: boolean;
   async: boolean;
   directives: Array<string>;
+  aliasingEffects?: Array<AliasingEffect> | null;
 };
 
 export type FunctionEffect =
@@ -449,6 +453,7 @@ export type ReturnTerminal = {
   value: Place;
   id: InstructionId;
   fallthrough?: never;
+  effects: Array<AliasingEffect> | null;
 };
 
 export type GotoTerminal = {
@@ -609,6 +614,7 @@ export type MaybeThrowTerminal = {
   id: InstructionId;
   loc: SourceLocation;
   fallthrough?: never;
+  effects: Array<AliasingEffect> | null;
 };
 
 export type ReactiveScopeTerminal = {
@@ -645,12 +651,14 @@ export type Instruction = {
   lvalue: Place;
   value: InstructionValue;
   loc: SourceLocation;
+  effects: Array<AliasingEffect> | null;
 };
 
 export type TInstruction<T extends InstructionValue> = {
   id: InstructionId;
   lvalue: Place;
   value: T;
+  effects: Array<AliasingEffect> | null;
   loc: SourceLocation;
 };
 
@@ -1379,6 +1387,21 @@ export enum ValueReason {
    * Used in a JSX expression.
    */
   JsxCaptured = 'jsx-captured',
+
+  /**
+   * Argument to a hook
+   */
+  HookCaptured = 'hook-captured',
+
+  /**
+   * Return value of a hook
+   */
+  HookReturn = 'hook-return',
+
+  /**
+   * Passed to an effect
+   */
+  Effect = 'effect',
 
   /**
    * Return value of a function with known frozen return value, e.g. `useState`.

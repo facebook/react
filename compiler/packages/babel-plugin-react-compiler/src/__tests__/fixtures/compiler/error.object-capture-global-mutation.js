@@ -1,3 +1,4 @@
+// @enableNewMutationAliasingModel:false
 function Foo() {
   const x = () => {
     window.href = 'foo';
