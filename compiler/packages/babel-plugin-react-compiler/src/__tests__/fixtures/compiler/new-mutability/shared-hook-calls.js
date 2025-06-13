@@ -1,4 +1,4 @@
-// @enableFire
+// @enableFire @enableNewMutationAliasingModel
 import {fire} from 'react';
 
 function Component({bar, baz}) {
