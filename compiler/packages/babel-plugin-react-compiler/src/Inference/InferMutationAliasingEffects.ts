@@ -50,12 +50,14 @@ import {
 } from './InferReferenceEffects';
 import {
   assertExhaustive,
+  getOrInsertDefault,
   getOrInsertWith,
   Set_isSuperset,
 } from '../Utils/utils';
 import {
   printAliasingEffect,
   printAliasingSignature,
+  printFunction,
   printIdentifier,
   printInstruction,
   printInstructionValue,
@@ -195,12 +197,15 @@ export function inferMutationAliasingEffects(
   let count = 0;
   while (queuedStates.size !== 0) {
     count++;
-    if (count > 1000) {
+    if (count > 100) {
       console.log(
         'oops infinite loop',
         fn.id,
         typeof fn.loc !== 'symbol' ? fn.loc?.filename : null,
       );
+      if (DEBUG) {
+        console.log(printFunction(fn));
+      }
       throw new Error('infinite loop');
     }
     for (const [blockId, block] of fn.body.blocks) {
@@ -212,6 +217,11 @@ export function inferMutationAliasingEffects(
 
       statesByBlock.set(blockId, incomingState);
       const state = incomingState.clone();
+      if (DEBUG) {
+        console.log('*************');
+        console.log(`bb${block.id}`);
+        console.log('*************');
+      }
       inferBlock(context, state, block);
 
       for (const nextBlockId of eachTerminalSuccessor(block.terminal)) {
@@ -264,7 +274,13 @@ class Context {
   instructionSignatureCache: Map<Instruction, InstructionSignature> = new Map();
   effectInstructionValueCache: Map<AliasingEffect, InstructionValue> =
     new Map();
+  applySignatureCache: Map<
+    AliasingSignature,
+    Map<AliasingEffect, Array<AliasingEffect> | null>
+  > = new Map();
   catchHandlers: Map<BlockId, Place> = new Map();
+  functionSignatureCache: Map<FunctionExpression, AliasingSignature> =
+    new Map();
   isFuctionExpression: boolean;
   fn: HIRFunction;
   hoistedContextDeclarations: Map<DeclarationId, Place | null>;
@@ -277,6 +293,19 @@ class Context {
     this.isFuctionExpression = isFunctionExpression;
     this.fn = fn;
     this.hoistedContextDeclarations = hoistedContextDeclarations;
+  }
+
+  cacheApplySignature(
+    signature: AliasingSignature,
+    effect: Extract<AliasingEffect, {kind: 'Apply'}>,
+    f: () => Array<AliasingEffect> | null,
+  ): Array<AliasingEffect> | null {
+    const inner = getOrInsertDefault(
+      this.applySignatureCache,
+      signature,
+      new Map(),
+    );
+    return getOrInsertWith(inner, effect, f);
   }
 
   internEffect(effect: AliasingEffect): AliasingEffect {
@@ -352,11 +381,13 @@ function inferBlock(
           state.appendAlias(handlerParam, instr.lvalue);
           const kind = state.kind(instr.lvalue).kind;
           if (kind === ValueKind.Mutable || kind == ValueKind.Context) {
-            effects.push({
-              kind: 'Alias',
-              from: instr.lvalue,
-              into: handlerParam,
-            });
+            effects.push(
+              context.internEffect({
+                kind: 'Alias',
+                from: instr.lvalue,
+                into: handlerParam,
+              }),
+            );
           }
         }
       }
@@ -365,11 +396,11 @@ function inferBlock(
   } else if (terminal.kind === 'return') {
     if (!context.isFuctionExpression) {
       terminal.effects = [
-        {
+        context.internEffect({
           kind: 'Freeze',
           value: terminal.value,
           reason: ValueReason.JsxCaptured,
-        },
+        }),
       ];
     }
   }
@@ -546,20 +577,21 @@ function applyEffect(
           break;
         }
         case ValueKind.Frozen: {
-          effects.push({
-            kind: 'ImmutableCapture',
-            from: effect.from,
-            into: effect.into,
-          });
+          applyEffect(
+            context,
+            state,
+            {
+              kind: 'ImmutableCapture',
+              from: effect.from,
+              into: effect.into,
+            },
+            aliased,
+            effects,
+          );
           break;
         }
         default: {
-          effects.push({
-            // OK: recording information flow
-            kind: 'CreateFrom', // prev Alias
-            from: effect.from,
-            into: effect.into,
-          });
+          effects.push(effect);
         }
       }
       break;
@@ -658,11 +690,17 @@ function applyEffect(
         }
         case ValueKind.Frozen: {
           isMutableReferenceType = false;
-          effects.push({
-            kind: 'ImmutableCapture',
-            from: effect.from,
-            into: effect.into,
-          });
+          applyEffect(
+            context,
+            state,
+            {
+              kind: 'ImmutableCapture',
+              from: effect.from,
+              into: effect.into,
+            },
+            aliased,
+            effects,
+          );
           break;
         }
         default: {
@@ -684,11 +722,17 @@ function applyEffect(
       const fromKind = fromValue.kind;
       switch (fromKind) {
         case ValueKind.Frozen: {
-          effects.push({
-            kind: 'ImmutableCapture',
-            from: effect.from,
-            into: effect.into,
-          });
+          applyEffect(
+            context,
+            state,
+            {
+              kind: 'ImmutableCapture',
+              from: effect.from,
+              into: effect.into,
+            },
+            aliased,
+            effects,
+          );
           let value = context.effectInstructionValueCache.get(effect);
           if (value == null) {
             value = {
@@ -746,23 +790,33 @@ function applyEffect(
          * We're calling a locally declared function, we already know it's effects!
          * We just have to substitute in the args for the params
          */
-        const signature = buildSignatureFromFunctionExpression(
-          state.env,
-          functionValues[0],
-        );
+        const functionExpr = functionValues[0];
+        let signature = context.functionSignatureCache.get(functionExpr);
+        if (signature == null) {
+          signature = buildSignatureFromFunctionExpression(
+            state.env,
+            functionExpr,
+          );
+          context.functionSignatureCache.set(functionExpr, signature);
+        }
         if (DEBUG) {
           console.log(
             `constructed alias signature:\n${printAliasingSignature(signature)}`,
           );
         }
-        const signatureEffects = computeEffectsForSignature(
-          state.env,
+        const signatureEffects = context.cacheApplySignature(
           signature,
-          effect.into,
-          effect.receiver,
-          effect.args,
-          functionValues[0].loweredFunc.func.context,
-          effect.loc,
+          effect,
+          () =>
+            computeEffectsForSignature(
+              state.env,
+              signature,
+              effect.into,
+              effect.receiver,
+              effect.args,
+              functionExpr.loweredFunc.func.context,
+              effect.loc,
+            ),
         );
         if (signatureEffects != null) {
           if (DEBUG) {
@@ -781,18 +835,24 @@ function applyEffect(
           break;
         }
       }
-      const signatureEffects =
-        effect.signature?.aliasing != null
-          ? computeEffectsForSignature(
+      let signatureEffects = null;
+      if (effect.signature?.aliasing != null) {
+        const signature = effect.signature.aliasing;
+        signatureEffects = context.cacheApplySignature(
+          effect.signature.aliasing,
+          effect,
+          () =>
+            computeEffectsForSignature(
               state.env,
-              effect.signature.aliasing,
+              signature,
               effect.into,
               effect.receiver,
               effect.args,
               [],
               effect.loc,
-            )
-          : null;
+            ),
+        );
+      }
       if (signatureEffects != null) {
         if (DEBUG) {
           console.log('apply aliasing signature effects');
@@ -935,30 +995,42 @@ function applyEffect(
             effect.value.identifier.declarationId,
           );
           if (hoistedAccess != null && hoistedAccess.loc != effect.value.loc) {
-            effects.push({
+            applyEffect(
+              context,
+              state,
+              {
+                kind: 'MutateFrozen',
+                place: effect.value,
+                error: {
+                  severity: ErrorSeverity.InvalidReact,
+                  reason: `This variable is accessed before it is declared, which may prevent it from updating as the assigned value changes over time`,
+                  description,
+                  loc: hoistedAccess.loc,
+                  suggestions: null,
+                },
+              },
+              aliased,
+              effects,
+            );
+          }
+
+          applyEffect(
+            context,
+            state,
+            {
               kind: 'MutateFrozen',
               place: effect.value,
               error: {
                 severity: ErrorSeverity.InvalidReact,
-                reason: `This variable is accessed before it is declared, which may prevent it from updating as the assigned value changes over time`,
+                reason: `This variable is accessed before it is declared, which prevents the earlier access from updating when this value changes over time`,
                 description,
-                loc: hoistedAccess.loc,
+                loc: effect.value.loc,
                 suggestions: null,
               },
-            });
-          }
-
-          effects.push({
-            kind: 'MutateFrozen',
-            place: effect.value,
-            error: {
-              severity: ErrorSeverity.InvalidReact,
-              reason: `This variable is accessed before it is declared, which prevents the earlier access from updating when this value changes over time`,
-              description,
-              loc: effect.value.loc,
-              suggestions: null,
             },
-          });
+            aliased,
+            effects,
+          );
         } else {
           const reason = getWriteErrorReason({
             kind: value.kind,
@@ -970,18 +1042,26 @@ function applyEffect(
             effect.value.identifier.name.kind === 'named'
               ? `Found mutation of \`${effect.value.identifier.name.value}\``
               : null;
-          effects.push({
-            kind:
-              value.kind === ValueKind.Frozen ? 'MutateFrozen' : 'MutateGlobal',
-            place: effect.value,
-            error: {
-              severity: ErrorSeverity.InvalidReact,
-              reason,
-              description,
-              loc: effect.value.loc,
-              suggestions: null,
+          applyEffect(
+            context,
+            state,
+            {
+              kind:
+                value.kind === ValueKind.Frozen
+                  ? 'MutateFrozen'
+                  : 'MutateGlobal',
+              place: effect.value,
+              error: {
+                severity: ErrorSeverity.InvalidReact,
+                reason,
+                description,
+                loc: effect.value.loc,
+                suggestions: null,
+              },
             },
-          });
+            aliased,
+            effects,
+          );
         }
       }
       break;
