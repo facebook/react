@@ -99,7 +99,7 @@ module.exports = {
   },
   /*
    * If rules need to be disabled then the rule is insufficiently high signal
-   * and should be diasbled altogether or customized (in either case via a standalone PR)
+   * and should be disabled altogether or customized (in either case via a standalone PR)
    */
   noInlineConfig: true,
   reportUnusedDisableDirectives: true,
