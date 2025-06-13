@@ -31,6 +31,86 @@ export const ObjectTypeSchema: z.ZodType<ObjectTypeConfig> = z.object({
   properties: ObjectPropertiesSchema.nullable(),
 });
 
+export const LifetimeIdSchema = z.string().refine(id => id.startsWith('@'), {
+  message: "Placeholder names must start with '@'",
+});
+
+export type FreezeEffectConfig = {
+  kind: 'Freeze';
+  value: string;
+};
+
+export const FreezeEffectSchema: z.ZodType<FreezeEffectConfig> = z.object({
+  kind: z.literal('Freeze'),
+  value: LifetimeIdSchema,
+});
+
+export type CreateEffectConfig = {
+  kind: 'Create';
+  into: string;
+  value: ValueKind;
+};
+
+export const CreateEffectSchema: z.ZodType<CreateEffectConfig> = z.object({
+  kind: z.literal('Create'),
+  into: LifetimeIdSchema,
+  value: ValueKindSchema,
+});
+
+export type AssignEffectConfig = {
+  kind: 'Assign';
+  from: string;
+  into: string;
+};
+
+export const AssignEffectSchema: z.ZodType<AssignEffectConfig> = z.object({
+  kind: z.literal('Assign'),
+  from: LifetimeIdSchema,
+  into: LifetimeIdSchema,
+});
+
+export type ImpureEffectConfig = {
+  kind: 'Impure';
+  place: string;
+};
+
+export const ImpureEffectSchema: z.ZodType<ImpureEffectConfig> = z.object({
+  kind: z.literal('Impure'),
+  place: LifetimeIdSchema,
+});
+
+export type AliasingEffectConfig =
+  | FreezeEffectConfig
+  | CreateEffectConfig
+  | AssignEffectConfig
+  | ImpureEffectConfig;
+
+export const AliasingEffectSchema: z.ZodType<AliasingEffectConfig> = z.union([
+  FreezeEffectSchema,
+  CreateEffectSchema,
+  AssignEffectSchema,
+  ImpureEffectSchema,
+]);
+
+export type AliasingSignatureConfig = {
+  receiver: string;
+  params: Array<string>;
+  rest: string | null;
+  returns: string;
+  effects: Array<AliasingEffectConfig>;
+  temporaries: Array<string>;
+};
+
+export const AliasingSignatureSchema: z.ZodType<AliasingSignatureConfig> =
+  z.object({
+    receiver: LifetimeIdSchema,
+    params: z.array(LifetimeIdSchema),
+    rest: LifetimeIdSchema.nullable(),
+    returns: LifetimeIdSchema,
+    effects: z.array(AliasingEffectSchema),
+    temporaries: z.array(LifetimeIdSchema),
+  });
+
 export type FunctionTypeConfig = {
   kind: 'function';
   positionalParams: Array<Effect>;
@@ -42,6 +122,7 @@ export type FunctionTypeConfig = {
   mutableOnlyIfOperandsAreMutable?: boolean | null | undefined;
   impure?: boolean | null | undefined;
   canonicalName?: string | null | undefined;
+  aliasing?: AliasingSignatureConfig | null | undefined;
 };
 export const FunctionTypeSchema: z.ZodType<FunctionTypeConfig> = z.object({
   kind: z.literal('function'),
@@ -54,6 +135,7 @@ export const FunctionTypeSchema: z.ZodType<FunctionTypeConfig> = z.object({
   mutableOnlyIfOperandsAreMutable: z.boolean().nullable().optional(),
   impure: z.boolean().nullable().optional(),
   canonicalName: z.string().nullable().optional(),
+  aliasing: AliasingSignatureSchema.nullable().optional(),
 });
 
 export type HookTypeConfig = {
@@ -63,6 +145,7 @@ export type HookTypeConfig = {
   returnType: TypeConfig;
   returnValueKind?: ValueKind | null | undefined;
   noAlias?: boolean | null | undefined;
+  aliasing?: AliasingSignatureConfig | null | undefined;
 };
 export const HookTypeSchema: z.ZodType<HookTypeConfig> = z.object({
   kind: z.literal('hook'),
@@ -71,6 +154,7 @@ export const HookTypeSchema: z.ZodType<HookTypeConfig> = z.object({
   returnType: z.lazy(() => TypeSchema),
   returnValueKind: ValueKindSchema.nullable().optional(),
   noAlias: z.boolean().nullable().optional(),
+  aliasing: AliasingSignatureSchema.nullable().optional(),
 });
 
 export type BuiltInTypeConfig =

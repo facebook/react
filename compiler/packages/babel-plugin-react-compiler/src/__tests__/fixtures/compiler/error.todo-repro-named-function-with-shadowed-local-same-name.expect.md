@@ -22,7 +22,7 @@ function Component(props) {
    7 |     return hasErrors;
    8 |   }
 >  9 |   return hasErrors();
-     |          ^^^^^^^^^ Invariant: [hoisting] Expected value for identifier to be initialized. hasErrors_0$14 (9:9)
+     |          ^^^^^^^^^ Invariant: [InferMutationAliasingEffects] Expected value kind to be initialized. <unknown> hasErrors_0$15:TFunction (9:9)
   10 | }
   11 |
 ```
