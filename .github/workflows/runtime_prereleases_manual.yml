@@ -88,6 +88,8 @@ jobs:
     # different versions of the same package, even if they use different
     # dist tags.
     needs: publish_prerelease_canary
+    # Ensures the job runs even if canary is skipped
+    if: always()
     with:
       commit_sha: ${{ inputs.prerelease_commit_sha }}
       release_channel: experimental
