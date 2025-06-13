@@ -1,3 +1,8 @@
+## 5.2.1
+
+- Add support for [Flow's component and hook syntax](https://flow.org/en/docs/react/component-syntax/). ([@kassens](https://github.com/kassens) in [#33089](https://github.com/facebook/react/pull/33089), [#33182](https://github.com/facebook/react/pull/33182))
+- Fix doc url for rules of hooks ([@hyoban](https://github.com/hyoban) in [#33118](https://github.com/facebook/react/pull/33118))
+
 ## 5.2.0
 
 - Support flat config ([@michaelfaith](https://github.com/michaelfaith) in [#30774](https://github.com/facebook/react/pull/30774))
