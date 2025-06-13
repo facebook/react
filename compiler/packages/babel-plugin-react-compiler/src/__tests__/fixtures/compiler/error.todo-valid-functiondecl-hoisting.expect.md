@@ -34,13 +34,13 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
-  13 |     return bar();
+  11 |
+  12 |   function foo() {
+> 13 |     return bar();
+     |            ^^^ Todo: [PruneHoistedContexts] Rewrite hoisted function references (13:13)
   14 |   }
-> 15 |   function bar() {
-     |            ^^^ Todo: [PruneHoistedContexts] Rewrite hoisted function references (15:15)
+  15 |   function bar() {
   16 |     return 42;
-  17 |   }
-  18 |
 ```
           
       
