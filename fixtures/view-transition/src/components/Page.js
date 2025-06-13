@@ -13,7 +13,7 @@ import React, {
 
 import {createPortal} from 'react-dom';
 
-import SwipeRecognizer from './SwipeRecognizer';
+import SwipeRecognizer from './SwipeRecognizer.js';
 
 import './Page.css';
 
