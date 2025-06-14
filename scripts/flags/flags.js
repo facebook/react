@@ -168,7 +168,6 @@ const allFlagsUniqueFlags = Array.from(
   ])
 ).sort();
 
-// Simplify flag value mapping using a helper function
 function getFlagValue(flag, flagData) {
   const value = flagData[flag];
   switch (value) {
@@ -266,7 +265,6 @@ function formatTableAsCSV(table) {
   return `${header}\n${rows}`;
 }
 
-// Main function to output data
 function output() {
   const table = buildTable();
   const csv = formatTableAsCSV(table);
