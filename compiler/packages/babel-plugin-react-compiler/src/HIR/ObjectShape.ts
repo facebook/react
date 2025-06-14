@@ -444,7 +444,281 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
       returnValueKind: ValueKind.Primitive,
     }),
   ],
-  // TODO: rest of Array properties
+  [
+    'copyWithin',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: {kind: 'Object', shapeId: BuiltInArrayId},
+      calleeEffect: Effect.Store,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    'fill',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Capture,
+      returnType: {kind: 'Object', shapeId: BuiltInArrayId},
+      calleeEffect: Effect.Store,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    'findLast',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.ConditionallyMutate,
+      returnType: {kind: 'Poly'},
+      /*
+       * callee is ConditionallyMutate because items of the array
+       * flow into the lambda and may be mutated there, even though
+       * the array object itself is not modified
+       */
+      calleeEffect: Effect.ConditionallyMutate,
+      returnValueKind: ValueKind.Mutable,
+      noAlias: true,
+      mutableOnlyIfOperandsAreMutable: true,
+    }),
+  ],
+  [
+    'findLastIndex',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.ConditionallyMutate,
+      returnType: PRIMITIVE_TYPE,
+      /*
+       * callee is ConditionallyMutate because items of the array
+       * flow into the lambda and may be mutated there, even though
+       * the array object itself is not modified
+       */
+      calleeEffect: Effect.ConditionallyMutate,
+      returnValueKind: ValueKind.Primitive,
+      noAlias: true,
+      mutableOnlyIfOperandsAreMutable: true,
+    }),
+  ],
+  [
+    'flat',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: {kind: 'Object', shapeId: BuiltInArrayId},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    'forEach',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.ConditionallyMutate,
+      returnType: PRIMITIVE_TYPE,
+      /*
+       * callee is ConditionallyMutate because items of the array
+       * flow into the lambda and may be mutated there, even though
+       * the array object itself is not modified
+       */
+      calleeEffect: Effect.ConditionallyMutate,
+      returnValueKind: ValueKind.Primitive,
+      noAlias: true,
+      mutableOnlyIfOperandsAreMutable: true,
+    }),
+  ],
+  [
+    'lastIndexOf',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'reduce',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.ConditionallyMutate,
+      returnType: {kind: 'Poly'},
+      /*
+       * callee is ConditionallyMutate because items of the array
+       * flow into the lambda and may be mutated there, even though
+       * the array object itself is not modified
+       */
+      calleeEffect: Effect.ConditionallyMutate,
+      returnValueKind: ValueKind.Mutable,
+      noAlias: true,
+      mutableOnlyIfOperandsAreMutable: true,
+    }),
+  ],
+  [
+    'reduceRight',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.ConditionallyMutate,
+      returnType: {kind: 'Poly'},
+      /*
+       * callee is ConditionallyMutate because items of the array
+       * flow into the lambda and may be mutated there, even though
+       * the array object itself is not modified
+       */
+      calleeEffect: Effect.ConditionallyMutate,
+      returnValueKind: ValueKind.Mutable,
+      noAlias: true,
+      mutableOnlyIfOperandsAreMutable: true,
+    }),
+  ],
+  [
+    'reverse',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: null,
+      returnType: {kind: 'Object', shapeId: BuiltInArrayId},
+      calleeEffect: Effect.Store,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    'shift',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: null,
+      returnType: {kind: 'Poly'},
+      calleeEffect: Effect.Store,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    'sort',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.ConditionallyMutate,
+      returnType: {kind: 'Object', shapeId: BuiltInArrayId},
+      calleeEffect: Effect.Store,
+      returnValueKind: ValueKind.Mutable,
+      noAlias: true,
+    }),
+  ],
+  [
+    'splice',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Capture,
+      returnType: {kind: 'Object', shapeId: BuiltInArrayId},
+      calleeEffect: Effect.Store,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    'toLocaleString',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'toReversed',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: null,
+      returnType: {kind: 'Object', shapeId: BuiltInArrayId},
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    'toSorted',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.ConditionallyMutate,
+      returnType: {kind: 'Object', shapeId: BuiltInArrayId},
+      /*
+       * callee is ConditionallyMutate because items of the array
+       * flow into the lambda and may be mutated there, even though
+       * the array object itself is not modified
+       */
+      calleeEffect: Effect.ConditionallyMutate,
+      returnValueKind: ValueKind.Mutable,
+      mutableOnlyIfOperandsAreMutable: true,
+    }),
+  ],
+  [
+    'toSpliced',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Capture,
+      returnType: {kind: 'Object', shapeId: BuiltInArrayId},
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    'toString',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: null,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'unshift',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Capture,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Store,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'with',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Capture,
+      returnType: {kind: 'Object', shapeId: BuiltInArrayId},
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  /**
+   * Iterators
+   */
+  [
+    'entries',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: null,
+      returnType: {kind: 'Poly'},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    'keys',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: null,
+      returnType: {kind: 'Poly'},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    'values',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: null,
+      returnType: {kind: 'Poly'},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
 ]);
 
 /* Built-in Object shape */
