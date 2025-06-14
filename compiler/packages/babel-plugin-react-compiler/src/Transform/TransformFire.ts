@@ -436,6 +436,7 @@ function makeLoadUseFireInstruction(
     value: instrValue,
     lvalue: {...useFirePlace},
     loc: GeneratedSource,
+    effects: null,
   };
 }
 
@@ -460,6 +461,7 @@ function makeLoadFireCalleeInstruction(
     },
     lvalue: {...loadedFireCallee},
     loc: GeneratedSource,
+    effects: null,
   };
 }
 
@@ -483,6 +485,7 @@ function makeCallUseFireInstruction(
     value: useFireCall,
     lvalue: {...useFireCallResultPlace},
     loc: GeneratedSource,
+    effects: null,
   };
 }
 
@@ -511,6 +514,7 @@ function makeStoreUseFireInstruction(
     },
     lvalue: fireFunctionBindingLValuePlace,
     loc: GeneratedSource,
+    effects: null,
   };
 }
 

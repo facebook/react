@@ -47,7 +47,7 @@ import {
   makeType,
   promoteTemporary,
 } from './HIR';
-import HIRBuilder, {Bindings} from './HIRBuilder';
+import HIRBuilder, {Bindings, createTemporaryPlace} from './HIRBuilder';
 import {BuiltInArrayId} from './ObjectShape';
 
 /*
@@ -72,7 +72,7 @@ export function lower(
   env: Environment,
   // Bindings captured from the outer function, in case lower() is called recursively (for lambdas)
   bindings: Bindings | null = null,
-  capturedRefs: Array<t.Identifier> = [],
+  capturedRefs: Map<t.Identifier, SourceLocation> = new Map(),
 ): Result<HIRFunction, CompilerError> {
   const builder = new HIRBuilder(env, {
     bindings,
@@ -80,13 +80,13 @@ export function lower(
   });
   const context: HIRFunction['context'] = [];
 
-  for (const ref of capturedRefs ?? []) {
+  for (const [ref, loc] of capturedRefs ?? []) {
     context.push({
       kind: 'Identifier',
       identifier: builder.resolveBinding(ref),
       effect: Effect.Unknown,
       reactive: false,
-      loc: ref.loc ?? GeneratedSource,
+      loc,
     });
   }
 
@@ -181,6 +181,7 @@ export function lower(
       loc: GeneratedSource,
       value: lowerExpressionToTemporary(builder, body),
       id: makeInstructionId(0),
+      effects: null,
     };
     builder.terminateWithContinuation(terminal, fallthrough);
   } else if (body.isBlockStatement()) {
@@ -210,6 +211,7 @@ export function lower(
         loc: GeneratedSource,
       }),
       id: makeInstructionId(0),
+      effects: null,
     },
     null,
   );
@@ -220,6 +222,7 @@ export function lower(
     fnType: bindings == null ? env.fnType : 'Other',
     returnTypeAnnotation: null, // TODO: extract the actual return type node if present
     returnType: makeType(),
+    returns: createTemporaryPlace(env, func.node.loc ?? GeneratedSource),
     body: builder.build(),
     context,
     generator: func.node.generator === true,
@@ -227,6 +230,7 @@ export function lower(
     loc: func.node.loc ?? GeneratedSource,
     env,
     effects: null,
+    aliasingEffects: null,
     directives,
   });
 }
@@ -287,6 +291,7 @@ function lowerStatement(
         loc: stmt.node.loc ?? GeneratedSource,
         value,
         id: makeInstructionId(0),
+        effects: null,
       };
       builder.terminate(terminal, 'block');
       return;
@@ -1237,6 +1242,7 @@ function lowerStatement(
           kind: 'Debugger',
           loc,
         },
+        effects: null,
         loc,
       });
       return;
@@ -1894,6 +1900,7 @@ function lowerExpression(
           place: leftValue,
           loc: exprLoc,
         },
+        effects: null,
         loc: exprLoc,
       });
       builder.terminateWithContinuation(
@@ -2829,6 +2836,7 @@ function lowerOptionalCallExpression(
           args,
           loc,
         },
+        effects: null,
         loc,
       });
     } else {
@@ -2842,6 +2850,7 @@ function lowerOptionalCallExpression(
           args,
           loc,
         },
+        effects: null,
         loc,
       });
     }
@@ -3430,10 +3439,12 @@ function lowerFunction(
    * This isn't a problem in practice because use Babel's scope analysis to
    * identify the correct references.
    */
-  const lowering = lower(expr, builder.environment, builder.bindings, [
-    ...builder.context,
-    ...capturedContext,
-  ]);
+  const lowering = lower(
+    expr,
+    builder.environment,
+    builder.bindings,
+    new Map([...builder.context, ...capturedContext]),
+  );
   let loweredFunc: HIRFunction;
   if (lowering.isErr()) {
     lowering
@@ -3465,9 +3476,10 @@ export function lowerValueToTemporary(
   const place: Place = buildTemporaryPlace(builder, value.loc);
   builder.push({
     id: makeInstructionId(0),
-    value: value,
-    loc: value.loc,
     lvalue: {...place},
+    value: value,
+    effects: null,
+    loc: value.loc,
   });
   return place;
 }
@@ -4150,6 +4162,11 @@ function captureScopes({from, to}: {from: Scope; to: Scope}): Set<Scope> {
   return scopes;
 }
 
+/**
+ * Returns a mapping of "context" identifiers — references to free variables that
+ * will become part of the function expression's `context` array — along with the
+ * source location of their first reference within the function.
+ */
 function gatherCapturedContext(
   fn: NodePath<
     | t.FunctionExpression
@@ -4158,8 +4175,8 @@ function gatherCapturedContext(
     | t.ObjectMethod
   >,
   componentScope: Scope,
-): Array<t.Identifier> {
-  const capturedIds = new Set<t.Identifier>();
+): Map<t.Identifier, SourceLocation> {
+  const capturedIds = new Map<t.Identifier, SourceLocation>();
 
   /*
    * Capture all the scopes from the parent of this function up to and including
@@ -4202,8 +4219,15 @@ function gatherCapturedContext(
 
     // Add the base identifier binding as a dependency.
     const binding = baseIdentifier.scope.getBinding(baseIdentifier.node.name);
-    if (binding !== undefined && pureScopes.has(binding.scope)) {
-      capturedIds.add(binding.identifier);
+    if (
+      binding !== undefined &&
+      pureScopes.has(binding.scope) &&
+      !capturedIds.has(binding.identifier)
+    ) {
+      capturedIds.set(
+        binding.identifier,
+        path.node.loc ?? binding.identifier.loc ?? GeneratedSource,
+      );
     }
   }
 
@@ -4240,7 +4264,7 @@ function gatherCapturedContext(
     },
   });
 
-  return [...capturedIds.keys()];
+  return capturedIds;
 }
 
 function notNull<T>(value: T | null): value is T {

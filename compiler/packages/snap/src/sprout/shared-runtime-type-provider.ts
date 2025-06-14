@@ -69,6 +69,22 @@ export function makeSharedRuntimeTypeProvider({
             returnValueKind: ValueKindEnum.Mutable,
             noAlias: true,
           },
+          typedIdentity: {
+            kind: 'function',
+            positionalParams: [EffectEnum.Read],
+            restParam: null,
+            calleeEffect: EffectEnum.Read,
+            returnType: {kind: 'type', name: 'Any'},
+            returnValueKind: ValueKindEnum.Mutable,
+            aliasing: {
+              receiver: '@receiver',
+              params: ['@value'],
+              rest: null,
+              returns: '@return',
+              temporaries: [],
+              effects: [{kind: 'Assign', from: '@value', into: '@return'}],
+            },
+          },
         },
       };
     } else if (moduleName === 'ReactCompilerTest') {
