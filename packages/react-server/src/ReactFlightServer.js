@@ -4105,7 +4105,9 @@ function renderConsoleValue(
     }
 
     // $FlowFixMe[method-unbinding]
-    const serializedValue = serializeEval('(' + Function.prototype.toString.call(value) + ')');
+    const serializedValue = serializeEval(
+      '(' + Function.prototype.toString.call(value) + ')',
+    );
     request.pendingChunks++;
     const id = request.nextChunkId++;
     const processedChunk = encodeReferenceChunk(request, id, serializedValue);
