@@ -177,6 +177,7 @@ function validateProperty(tagName, name, value, eventRegistry) {
       case 'style':
       case 'suppressContentEditableWarning':
       case 'suppressHydrationWarning':
+      case 'suppressReset':
       case 'defaultValue': // Reserved
       case 'defaultChecked':
       case 'innerHTML':
