@@ -4096,8 +4096,23 @@ function renderConsoleValue(
     }
 
     // Serialize the body of the function as an eval so it can be printed.
+    const writtenObjects = request.writtenObjects;
+    const existingReference = writtenObjects.get(value);
+    if (existingReference !== undefined) {
+      // We've already emitted this function, so we can
+      // just refer to that by its existing reference.
+      return existingReference;
+    }
+
     // $FlowFixMe[method-unbinding]
-    return serializeEval('(' + Function.prototype.toString.call(value) + ')');
+    const serializedValue = serializeEval('(' + Function.prototype.toString.call(value) + ')');
+    request.pendingChunks++;
+    const id = request.nextChunkId++;
+    const processedChunk = encodeReferenceChunk(request, id, serializedValue);
+    request.completedRegularChunks.push(processedChunk);
+    const reference = serializeByValueID(id);
+    writtenObjects.set(value, reference);
+    return reference;
   }
 
   if (typeof value === 'symbol') {
