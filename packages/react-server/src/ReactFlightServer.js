@@ -4104,8 +4104,8 @@ function renderConsoleValue(
       return existingReference;
     }
 
-    // $FlowFixMe[method-unbinding]
     const serializedValue = serializeEval(
+      // $FlowFixMe[method-unbinding]
       '(' + Function.prototype.toString.call(value) + ')',
     );
     request.pendingChunks++;
