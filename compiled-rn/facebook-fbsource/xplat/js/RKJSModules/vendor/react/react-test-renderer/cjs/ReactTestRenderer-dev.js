@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<43e58578929c261b8ab13320f55b2181>>
+ * @generated SignedSource<<2b8f0d2c9675e7844e883cb4d40c2e0e>>
  */
 
 "use strict";
@@ -5169,8 +5169,7 @@ __DEV__ &&
           )));
     }
     function mountEffect(create, deps) {
-      0 !== (currentlyRenderingFiber.mode & 16) &&
-      0 === (currentlyRenderingFiber.mode & 64)
+      0 !== (currentlyRenderingFiber.mode & 16)
         ? mountEffectImpl(276826112, Passive, create, deps)
         : mountEffectImpl(8390656, Passive, create, deps);
     }
@@ -12751,8 +12750,7 @@ __DEV__ &&
                   fiber,
                   doubleInvokeEffectsOnFiber,
                   root,
-                  fiber,
-                  0 === (fiber.mode & 64)
+                  fiber
                 )
               : recursivelyTraverseAndDoubleInvokeEffectsInDEV(
                   root,
@@ -12779,15 +12777,12 @@ __DEV__ &&
         }
     }
     function doubleInvokeEffectsOnFiber(root, fiber) {
-      var shouldDoubleInvokePassiveEffects =
-        2 < arguments.length && void 0 !== arguments[2] ? arguments[2] : !0;
       setIsStrictModeForDevtools(!0);
       try {
         disappearLayoutEffects(fiber),
-          shouldDoubleInvokePassiveEffects && disconnectPassiveEffect(fiber),
+          disconnectPassiveEffect(fiber),
           reappearLayoutEffects(root, fiber.alternate, fiber, !1),
-          shouldDoubleInvokePassiveEffects &&
-            reconnectPassiveEffects(root, fiber, 0, null, !1, 0);
+          reconnectPassiveEffects(root, fiber, 0, null, !1, 0);
       } finally {
         setIsStrictModeForDevtools(!1);
       }
@@ -15710,10 +15705,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-b7e2de63-20250611",
+        version: "19.2.0-native-fb-5d24c64c-20250616",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-b7e2de63-20250611"
+        reconcilerVersion: "19.2.0-native-fb-5d24c64c-20250616"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15858,5 +15853,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.2.0-native-fb-b7e2de63-20250611";
+    exports.version = "19.2.0-native-fb-5d24c64c-20250616";
   })();
