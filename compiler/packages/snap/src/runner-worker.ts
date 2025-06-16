@@ -24,6 +24,7 @@ import type {
   CompilerPipelineValue,
   Effect,
   ValueKind,
+  ValueReason,
 } from 'babel-plugin-react-compiler/src';
 import chalk from 'chalk';
 
@@ -78,6 +79,9 @@ async function compile(
     const ValueKindEnum = importedCompilerPlugin[
       'ValueKind'
     ] as typeof ValueKind;
+    const ValueReasonEnum = importedCompilerPlugin[
+      'ValueReason'
+    ] as typeof ValueReason;
     const printFunctionWithOutlined = importedCompilerPlugin[
       PRINT_HIR_IMPORT
     ] as typeof PrintFunctionWithOutlined;
@@ -128,6 +132,7 @@ async function compile(
       debugIRLogger,
       EffectEnum,
       ValueKindEnum,
+      ValueReasonEnum,
     );
 
     if (result.kind === 'err') {
