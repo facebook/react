@@ -12307,9 +12307,6 @@ module.exports = function ($$$config) {
         case REACT_STRICT_MODE_TYPE:
           fiberTag = 8;
           mode |= 24;
-          enableDO_NOT_USE_disableStrictPassiveEffect &&
-            pendingProps.DO_NOT_USE_disableStrictPassiveEffect &&
-            (mode |= 64);
           break;
         case REACT_PROFILER_TYPE:
           return (
@@ -12604,8 +12601,6 @@ module.exports = function ($$$config) {
       dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
     disableSchedulerTimeoutInWorkLoop =
       dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
-    enableDO_NOT_USE_disableStrictPassiveEffect =
-      dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
     enableHiddenSubtreeInsertionEffectCleanup =
       dynamicFeatureFlags.enableHiddenSubtreeInsertionEffectCleanup,
     enableInfiniteRenderLoopDetection =
@@ -13832,7 +13827,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-modern-a00ca6f6-20250611"
+      reconcilerVersion: "19.2.0-www-modern-5d24c64c-20250616"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

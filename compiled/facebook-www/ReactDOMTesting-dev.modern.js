@@ -7787,8 +7787,7 @@ __DEV__ &&
           )));
     }
     function mountEffect(create, deps) {
-      (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode &&
-      (currentlyRenderingFiber.mode & NoStrictPassiveEffectsMode) === NoMode
+      (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
         ? mountEffectImpl(276826112, Passive, create, deps)
         : mountEffectImpl(8390656, Passive, create, deps);
     }
@@ -20190,8 +20189,7 @@ __DEV__ &&
                   fiber,
                   doubleInvokeEffectsOnFiber,
                   root,
-                  fiber,
-                  (fiber.mode & NoStrictPassiveEffectsMode) === NoMode
+                  fiber
                 )
               : recursivelyTraverseAndDoubleInvokeEffectsInDEV(
                   root,
@@ -20218,15 +20216,12 @@ __DEV__ &&
         }
     }
     function doubleInvokeEffectsOnFiber(root, fiber) {
-      var shouldDoubleInvokePassiveEffects =
-        2 < arguments.length && void 0 !== arguments[2] ? arguments[2] : !0;
       setIsStrictModeForDevtools(!0);
       try {
         disappearLayoutEffects(fiber),
-          shouldDoubleInvokePassiveEffects && disconnectPassiveEffect(fiber),
+          disconnectPassiveEffect(fiber),
           reappearLayoutEffects(root, fiber.alternate, fiber, !1),
-          shouldDoubleInvokePassiveEffects &&
-            reconnectPassiveEffects(root, fiber, 0, null, !1, 0);
+          reconnectPassiveEffects(root, fiber, 0, null, !1, 0);
       } finally {
         setIsStrictModeForDevtools(!1);
       }
@@ -20632,9 +20627,6 @@ __DEV__ &&
             fiberTag = 8;
             mode |= StrictLegacyMode;
             mode |= StrictEffectsMode;
-            enableDO_NOT_USE_disableStrictPassiveEffect &&
-              pendingProps.DO_NOT_USE_disableStrictPassiveEffect &&
-              (mode |= NoStrictPassiveEffectsMode);
             break;
           case REACT_PROFILER_TYPE:
             return (
@@ -27490,8 +27482,6 @@ __DEV__ &&
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       disableSchedulerTimeoutInWorkLoop =
         dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
-      enableDO_NOT_USE_disableStrictPassiveEffect =
-        dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
       enableHiddenSubtreeInsertionEffectCleanup =
         dynamicFeatureFlags.enableHiddenSubtreeInsertionEffectCleanup,
       enableInfiniteRenderLoopDetection =
@@ -28595,7 +28585,6 @@ __DEV__ &&
       ProfileMode = 2,
       StrictLegacyMode = 8,
       StrictEffectsMode = 16,
-      NoStrictPassiveEffectsMode = 64,
       SuspenseyImagesMode = 32,
       valueCursor = createCursor(null);
     var rendererCursorDEV = createCursor(null);
@@ -31550,11 +31539,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-www-modern-a00ca6f6-20250611" !== isomorphicReactPackageVersion)
+      if ("19.2.0-www-modern-5d24c64c-20250616" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-www-modern-a00ca6f6-20250611\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-www-modern-5d24c64c-20250616\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -31597,10 +31586,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-www-modern-a00ca6f6-20250611",
+          version: "19.2.0-www-modern-5d24c64c-20250616",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-www-modern-a00ca6f6-20250611"
+          reconcilerVersion: "19.2.0-www-modern-5d24c64c-20250616"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -32366,5 +32355,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-www-modern-a00ca6f6-20250611";
+    exports.version = "19.2.0-www-modern-5d24c64c-20250616";
   })();

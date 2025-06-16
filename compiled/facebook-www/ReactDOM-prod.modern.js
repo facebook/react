@@ -38,8 +38,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
   disableSchedulerTimeoutInWorkLoop =
     dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
-  enableDO_NOT_USE_disableStrictPassiveEffect =
-    dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
   enableHiddenSubtreeInsertionEffectCleanup =
     dynamicFeatureFlags.enableHiddenSubtreeInsertionEffectCleanup,
   enableInfiniteRenderLoopDetection =
@@ -13590,9 +13588,6 @@ function createFiberFromTypeAndProps(
       case REACT_STRICT_MODE_TYPE:
         fiberTag = 8;
         mode |= 24;
-        enableDO_NOT_USE_disableStrictPassiveEffect &&
-          pendingProps.DO_NOT_USE_disableStrictPassiveEffect &&
-          (mode |= 64);
         break;
       case REACT_PROFILER_TYPE:
         return (
@@ -19273,14 +19268,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2072 = React.version;
 if (
-  "19.2.0-www-modern-a00ca6f6-20250611" !==
+  "19.2.0-www-modern-5d24c64c-20250616" !==
   isomorphicReactPackageVersion$jscomp$inline_2072
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2072,
-      "19.2.0-www-modern-a00ca6f6-20250611"
+      "19.2.0-www-modern-5d24c64c-20250616"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -19298,10 +19293,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2677 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-a00ca6f6-20250611",
+  version: "19.2.0-www-modern-5d24c64c-20250616",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-a00ca6f6-20250611"
+  reconcilerVersion: "19.2.0-www-modern-5d24c64c-20250616"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2678 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -19713,4 +19708,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-modern-a00ca6f6-20250611";
+exports.version = "19.2.0-www-modern-5d24c64c-20250616";
