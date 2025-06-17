@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<12150442b769f0fb84d725a8dd8ee196>>
+ * @generated SignedSource<<b8a3bb6e31a093536faab3987c9e8a21>>
  */
 
 "use strict";
@@ -15407,6 +15407,9 @@ __DEV__ &&
             cache.data.set(resourceType, cacheForType));
           return cacheForType;
         },
+        cacheSignal: function () {
+          return readContext(CacheContext).controller.signal;
+        },
         getOwner: function () {
           return current;
         }
@@ -15705,10 +15708,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-75e78d24-20250616",
+        version: "19.2.0-native-fb-e1dc0349-20250617",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-75e78d24-20250616"
+        reconcilerVersion: "19.2.0-native-fb-e1dc0349-20250617"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15853,5 +15856,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.2.0-native-fb-75e78d24-20250616";
+    exports.version = "19.2.0-native-fb-e1dc0349-20250617";
   })();

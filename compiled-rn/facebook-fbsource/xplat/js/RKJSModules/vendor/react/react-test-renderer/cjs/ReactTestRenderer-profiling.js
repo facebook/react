@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a21245e187a354e27c6cd46547bac93c>>
+ * @generated SignedSource<<28481e2a5163e6793f7975712f4f4483>>
  */
 
 "use strict";
@@ -8615,6 +8615,9 @@ var DefaultAsyncDispatcher = {
         ((cacheForType = resourceType()),
         cache.data.set(resourceType, cacheForType));
       return cacheForType;
+    },
+    cacheSignal: function () {
+      return readContext(CacheContext).controller.signal;
     }
   },
   PossiblyWeakMap = "function" === typeof WeakMap ? WeakMap : Map,
@@ -10522,10 +10525,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1254 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-75e78d24-20250616",
+  version: "19.2.0-native-fb-e1dc0349-20250617",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-75e78d24-20250616",
+  reconcilerVersion: "19.2.0-native-fb-e1dc0349-20250617",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$155 = 0;
@@ -10676,4 +10679,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.2.0-native-fb-75e78d24-20250616";
+exports.version = "19.2.0-native-fb-e1dc0349-20250617";

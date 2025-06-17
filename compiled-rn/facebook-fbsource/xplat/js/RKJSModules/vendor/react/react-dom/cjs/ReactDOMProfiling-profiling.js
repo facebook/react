@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cf408fad07f798041c15fc74734d89c5>>
+ * @generated SignedSource<<fac43c09363a9138535d5da8fb04d68d>>
  */
 
 /*
@@ -11898,6 +11898,9 @@ var DefaultAsyncDispatcher = {
         ((cacheForType = resourceType()),
         cache.data.set(resourceType, cacheForType));
       return cacheForType;
+    },
+    cacheSignal: function () {
+      return readContext(CacheContext).controller.signal;
     }
   },
   PossiblyWeakMap = "function" === typeof WeakMap ? WeakMap : Map,
@@ -17843,14 +17846,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2121 = React.version;
 if (
-  "19.2.0-native-fb-75e78d24-20250616" !==
+  "19.2.0-native-fb-e1dc0349-20250617" !==
   isomorphicReactPackageVersion$jscomp$inline_2121
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2121,
-      "19.2.0-native-fb-75e78d24-20250616"
+      "19.2.0-native-fb-e1dc0349-20250617"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17872,10 +17875,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2128 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-75e78d24-20250616",
+  version: "19.2.0-native-fb-e1dc0349-20250617",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-75e78d24-20250616",
+  reconcilerVersion: "19.2.0-native-fb-e1dc0349-20250617",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$313 = 0;
@@ -18141,7 +18144,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-native-fb-75e78d24-20250616";
+exports.version = "19.2.0-native-fb-e1dc0349-20250617";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<870f00adc13ea8547e454cb0410e95d9>>
+ * @generated SignedSource<<6f3965782e9227b96e955551e0d10967>>
  */
 
 'use strict';
@@ -49666,62 +49666,64 @@ function inlineImmediatelyInvokedFunctionExpressions(fn) {
     const inlinedFunctions = new Set();
     const queue = Array.from(fn.body.blocks.values());
     queue: for (const block of queue) {
-        for (let ii = 0; ii < block.instructions.length; ii++) {
-            const instr = block.instructions[ii];
-            switch (instr.value.kind) {
-                case 'FunctionExpression': {
-                    if (instr.lvalue.identifier.name === null) {
-                        functions.set(instr.lvalue.identifier.id, instr.value);
+        if (isStatementBlockKind(block.kind)) {
+            for (let ii = 0; ii < block.instructions.length; ii++) {
+                const instr = block.instructions[ii];
+                switch (instr.value.kind) {
+                    case 'FunctionExpression': {
+                        if (instr.lvalue.identifier.name === null) {
+                            functions.set(instr.lvalue.identifier.id, instr.value);
+                        }
+                        break;
                     }
-                    break;
-                }
-                case 'CallExpression': {
-                    if (instr.value.args.length !== 0) {
-                        continue;
+                    case 'CallExpression': {
+                        if (instr.value.args.length !== 0) {
+                            continue;
+                        }
+                        const body = functions.get(instr.value.callee.identifier.id);
+                        if (body === undefined) {
+                            continue;
+                        }
+                        if (body.loweredFunc.func.params.length > 0 ||
+                            body.loweredFunc.func.async ||
+                            body.loweredFunc.func.generator) {
+                            continue;
+                        }
+                        inlinedFunctions.add(instr.value.callee.identifier.id);
+                        const continuationBlockId = fn.env.nextBlockId;
+                        const continuationBlock = {
+                            id: continuationBlockId,
+                            instructions: block.instructions.slice(ii + 1),
+                            kind: block.kind,
+                            phis: new Set(),
+                            preds: new Set(),
+                            terminal: block.terminal,
+                        };
+                        fn.body.blocks.set(continuationBlockId, continuationBlock);
+                        block.instructions.length = ii;
+                        const newTerminal = {
+                            block: body.loweredFunc.func.body.entry,
+                            id: makeInstructionId(0),
+                            kind: 'label',
+                            fallthrough: continuationBlockId,
+                            loc: block.terminal.loc,
+                        };
+                        block.terminal = newTerminal;
+                        const result = instr.lvalue;
+                        declareTemporary(fn.env, block, result);
+                        promoteTemporary(result.identifier);
+                        for (const [id, block] of body.loweredFunc.func.body.blocks) {
+                            block.preds.clear();
+                            rewriteBlock(fn.env, block, continuationBlockId, result);
+                            fn.body.blocks.set(id, block);
+                        }
+                        queue.push(continuationBlock);
+                        continue queue;
                     }
-                    const body = functions.get(instr.value.callee.identifier.id);
-                    if (body === undefined) {
-                        continue;
-                    }
-                    if (body.loweredFunc.func.params.length > 0 ||
-                        body.loweredFunc.func.async ||
-                        body.loweredFunc.func.generator) {
-                        continue;
-                    }
-                    inlinedFunctions.add(instr.value.callee.identifier.id);
-                    const continuationBlockId = fn.env.nextBlockId;
-                    const continuationBlock = {
-                        id: continuationBlockId,
-                        instructions: block.instructions.slice(ii + 1),
-                        kind: block.kind,
-                        phis: new Set(),
-                        preds: new Set(),
-                        terminal: block.terminal,
-                    };
-                    fn.body.blocks.set(continuationBlockId, continuationBlock);
-                    block.instructions.length = ii;
-                    const newTerminal = {
-                        block: body.loweredFunc.func.body.entry,
-                        id: makeInstructionId(0),
-                        kind: 'label',
-                        fallthrough: continuationBlockId,
-                        loc: block.terminal.loc,
-                    };
-                    block.terminal = newTerminal;
-                    const result = instr.lvalue;
-                    declareTemporary(fn.env, block, result);
-                    promoteTemporary(result.identifier);
-                    for (const [id, block] of body.loweredFunc.func.body.blocks) {
-                        block.preds.clear();
-                        rewriteBlock(fn.env, block, continuationBlockId, result);
-                        fn.body.blocks.set(id, block);
-                    }
-                    queue.push(continuationBlock);
-                    continue queue;
-                }
-                default: {
-                    for (const place of eachInstructionValueOperand(instr.value)) {
-                        functions.delete(place.identifier.id);
+                    default: {
+                        for (const place of eachInstructionValueOperand(instr.value)) {
+                            functions.delete(place.identifier.id);
+                        }
                     }
                 }
             }
