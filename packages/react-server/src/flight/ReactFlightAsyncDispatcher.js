@@ -32,6 +32,10 @@ export const DefaultAsyncDispatcher: AsyncDispatcher = ({
     return entry;
   },
   cacheSignal(): null | AbortSignal {
+    const request = resolveRequest();
+    if (request) {
+      return request.cacheController.signal;
+    }
     return null;
   },
 }: any);

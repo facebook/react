@@ -419,6 +419,7 @@ export type Request = {
   destination: null | Destination,
   bundlerConfig: ClientManifest,
   cache: Map<Function, mixed>,
+  cacheController: AbortController,
   nextChunkId: number,
   pendingChunks: number,
   hints: Hints,
@@ -529,6 +530,7 @@ function RequestInstance(
   this.destination = null;
   this.bundlerConfig = bundlerConfig;
   this.cache = new Map();
+  this.cacheController = new AbortController();
   this.nextChunkId = 0;
   this.pendingChunks = 0;
   this.hints = hints;
@@ -604,7 +606,7 @@ export function createRequest(
   model: ReactClientValue,
   bundlerConfig: ClientManifest,
   onError: void | ((error: mixed) => ?string),
-  identifierPrefix?: string,
+  identifierPrefix: void | string,
   onPostpone: void | ((reason: string) => void),
   temporaryReferences: void | TemporaryReferenceSet,
   environmentName: void | string | (() => string), // DEV-only
@@ -636,7 +638,7 @@ export function createPrerenderRequest(
   onAllReady: () => void,
   onFatalError: () => void,
   onError: void | ((error: mixed) => ?string),
-  identifierPrefix?: string,
+  identifierPrefix: void | string,
   onPostpone: void | ((reason: string) => void),
   temporaryReferences: void | TemporaryReferenceSet,
   environmentName: void | string | (() => string), // DEV-only
@@ -4922,6 +4924,7 @@ export function abort(request: Request, reason: mixed): void {
     if (request.status <= OPEN) {
       request.status = ABORTING;
     }
+    request.cacheController.abort(reason);
     const abortableTasks = request.abortableTasks;
     if (abortableTasks.size > 0) {
       if (enableHalt && request.type === PRERENDER) {
