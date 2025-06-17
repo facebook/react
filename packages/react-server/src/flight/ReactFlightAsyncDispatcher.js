@@ -31,6 +31,9 @@ export const DefaultAsyncDispatcher: AsyncDispatcher = ({
     }
     return entry;
   },
+  cacheSignal(): null | AbortSignal {
+    return null;
+  },
 }: any);
 
 if (__DEV__) {
