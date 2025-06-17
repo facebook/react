@@ -70,6 +70,7 @@ type Options = {
   environmentName?: string | (() => string),
   filterStackFrame?: (url: string, functionName: string) => boolean,
   identifierPrefix?: string,
+  signal?: AbortSignal,
   onError?: (error: mixed) => void,
   onPostpone?: (reason: string) => void,
 };
@@ -87,6 +88,18 @@ function render(model: ReactClientValue, options?: Options): Destination {
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
   );
+  const signal = options ? options.signal : undefined;
+  if (signal) {
+    if (signal.aborted) {
+      ReactNoopFlightServer.abort(request, (signal: any).reason);
+    } else {
+      const listener = () => {
+        ReactNoopFlightServer.abort(request, (signal: any).reason);
+        signal.removeEventListener('abort', listener);
+      };
+      signal.addEventListener('abort', listener);
+    }
+  }
   ReactNoopFlightServer.startWork(request);
   ReactNoopFlightServer.startFlowing(request, destination);
   return destination;

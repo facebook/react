@@ -14,6 +14,7 @@ let React;
 let ReactNoopFlightServer;
 let ReactNoopFlightClient;
 let cache;
+let cacheSignal;
 
 describe('ReactCache', () => {
   beforeEach(() => {
@@ -25,6 +26,7 @@ describe('ReactCache', () => {
     ReactNoopFlightClient = require('react-noop-renderer/flight-client');
 
     cache = React.cache;
+    cacheSignal = React.cacheSignal;
 
     jest.resetModules();
     __unmockReact();
@@ -219,5 +221,51 @@ describe('ReactCache', () => {
     expect(cachedFoo).not.toBe(foo);
     expect(cachedFoo.length).toBe(0);
     expect(cachedFoo.displayName).toBe(undefined);
+  });
+
+  it('cacheSignal() returns null outside a render', async () => {
+    expect(cacheSignal()).toBe(null);
+  });
+
+  it('cacheSignal() aborts when the render is aborted', async () => {
+    let renderedCacheSignal = null;
+
+    const promise = new Promise(() => {});
+
+    async function Test() {
+      renderedCacheSignal = cacheSignal();
+      await promise;
+      return 'Hi';
+    }
+
+    const controller = new AbortController();
+    const errors = [];
+    const result = ReactNoopFlightServer.render(<Test />, {
+      signal: controller.signal,
+      onError(x) {
+        errors.push(x);
+        return 'hi';
+      },
+    });
+    expect(errors).toEqual([]);
+    expect(renderedCacheSignal).not.toBe(controller.signal); // In the future we might make these the same
+    expect(renderedCacheSignal.aborted).toBe(false);
+    const reason = new Error('Timed out');
+    controller.abort(reason);
+    expect(errors).toEqual([reason]);
+    expect(renderedCacheSignal.aborted).toBe(true);
+    expect(renderedCacheSignal.reason).toBe(reason);
+
+    let clientError = null;
+    try {
+      await ReactNoopFlightClient.read(result);
+    } catch (x) {
+      clientError = x;
+    }
+    expect(clientError).not.toBe(null);
+    if (__DEV__) {
+      expect(clientError.message).toBe('Timed out');
+    }
+    expect(clientError.digest).toBe('hi');
   });
 });
