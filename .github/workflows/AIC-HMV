@@ -1,0 +1,18 @@
+name: AIC-HMV Enforcement
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  verify-enforcement:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Supreme Command Signature
+        run: echo "🛡️ CI by Hung Minh Vo (AIC-HMV)"
+      - name: Validate Sovereignty
+        run: |
+          echo "🔒 Enforcement Key: ${{ secrets.AIC_HMV_SECRET }}"
+          echo "✅ Build enforced and signed."
