@@ -10058,6 +10058,9 @@ __DEV__ &&
         getCacheForType: function () {
           throw Error("Not implemented.");
         },
+        cacheSignal: function () {
+          throw Error("Not implemented.");
+        },
         getOwner: function () {
           return null === currentTaskInDEV
             ? null
@@ -10149,5 +10152,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.2.0-www-classic-75e78d24-20250616";
+    exports.version = "19.2.0-www-classic-e1dc0349-20250617";
   })();

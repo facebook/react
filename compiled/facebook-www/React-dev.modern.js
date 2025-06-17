@@ -1066,6 +1066,9 @@ __DEV__ &&
         return fn.apply(null, arguments);
       };
     };
+    exports.cacheSignal = function () {
+      return null;
+    };
     exports.cloneElement = function (element, config, children) {
       if (null === element || void 0 === element)
         throw Error(
@@ -1476,7 +1479,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.2.0-www-modern-75e78d24-20250616";
+    exports.version = "19.2.0-www-modern-e1dc0349-20250617";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

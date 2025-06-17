@@ -9335,6 +9335,9 @@ __DEV__ &&
         getCacheForType: function () {
           throw Error("Not implemented.");
         },
+        cacheSignal: function () {
+          throw Error("Not implemented.");
+        },
         getOwner: function () {
           return null === currentTaskInDEV
             ? null

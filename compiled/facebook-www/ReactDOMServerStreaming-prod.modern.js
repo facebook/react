@@ -3464,6 +3464,9 @@ var HooksDispatcher = {
   DefaultAsyncDispatcher = {
     getCacheForType: function () {
       throw Error("Not implemented.");
+    },
+    cacheSignal: function () {
+      throw Error("Not implemented.");
     }
   },
   prefix,
