@@ -3371,6 +3371,13 @@ function fatalError(request: Request, error: mixed): void {
     request.status = CLOSING;
     request.fatalError = error;
   }
+  const abortReason = new Error(
+    'The render was aborted due to a fatal error.',
+    {
+      cause: error,
+    },
+  );
+  request.cacheController.abort(abortReason);
 }
 
 function emitPostponeChunk(
@@ -4842,6 +4849,12 @@ function flushCompletedChunks(
     if (enableTaint) {
       cleanupTaintQueue(request);
     }
+    if (request.status < ABORTING) {
+      const abortReason = new Error(
+        'This render completed successfully. All cacheSignals are now aborted to allow clean up of any unused resources.',
+      );
+      request.cacheController.abort(abortReason);
+    }
     request.status = CLOSED;
     close(destination);
     request.destination = null;
@@ -4923,8 +4936,8 @@ export function abort(request: Request, reason: mixed): void {
     // We define any status below OPEN as OPEN equivalent
     if (request.status <= OPEN) {
       request.status = ABORTING;
+      request.cacheController.abort(reason);
     }
-    request.cacheController.abort(reason);
     const abortableTasks = request.abortableTasks;
     if (abortableTasks.size > 0) {
       if (enableHalt && request.type === PRERENDER) {

@@ -227,6 +227,42 @@ describe('ReactCache', () => {
     expect(cacheSignal()).toBe(null);
   });
 
+  it('cacheSignal() aborts when the render finishes normally', async () => {
+    let renderedCacheSignal = null;
+
+    let resolve;
+    const promise = new Promise(r => (resolve = r));
+
+    async function Test() {
+      renderedCacheSignal = cacheSignal();
+      await promise;
+      return 'Hi';
+    }
+
+    const controller = new AbortController();
+    const errors = [];
+    const result = ReactNoopFlightServer.render(<Test />, {
+      signal: controller.signal,
+      onError(x) {
+        errors.push(x);
+      },
+    });
+    expect(errors).toEqual([]);
+    expect(renderedCacheSignal).not.toBe(controller.signal); // In the future we might make these the same
+    expect(renderedCacheSignal.aborted).toBe(false);
+    await resolve();
+    await 0;
+    await 0;
+
+    expect(await ReactNoopFlightClient.read(result)).toBe('Hi');
+
+    expect(errors).toEqual([]);
+    expect(renderedCacheSignal.aborted).toBe(true);
+    expect(renderedCacheSignal.reason.message).toContain(
+      'This render completed successfully.',
+    );
+  });
+
   it('cacheSignal() aborts when the render is aborted', async () => {
     let renderedCacheSignal = null;
 
