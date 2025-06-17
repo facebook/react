@@ -17,7 +17,7 @@ function Component({a, b}) {
   // does not mutate x, so x should not depend on b
   typedMutate(z, b);
 
-  return <ValidateMemoization inputs={[a]} output={x} alwaysCheck={true} />;
+  return <ValidateMemoization inputs={[a]} output={x} />;
 }
 
 export const FIXTURE_ENTRYPOINT = {
@@ -73,7 +73,7 @@ function Component(t0) {
   }
   let t4;
   if ($[4] !== t3 || $[5] !== x) {
-    t4 = <ValidateMemoization inputs={t3} output={x} alwaysCheck={true} />;
+    t4 = <ValidateMemoization inputs={t3} output={x} />;
     $[4] = t3;
     $[5] = x;
     $[6] = t4;
