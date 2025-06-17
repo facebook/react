@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<6bd04f43c2c59c63845a3660db4ebd24>>
+ * @generated SignedSource<<2a9081e0196e1db500124884fc1203a5>>
  */
 
 'use strict';
@@ -49445,64 +49445,62 @@ function inlineImmediatelyInvokedFunctionExpressions(fn) {
     const inlinedFunctions = new Set();
     const queue = Array.from(fn.body.blocks.values());
     queue: for (const block of queue) {
-        if (isStatementBlockKind(block.kind)) {
-            for (let ii = 0; ii < block.instructions.length; ii++) {
-                const instr = block.instructions[ii];
-                switch (instr.value.kind) {
-                    case 'FunctionExpression': {
-                        if (instr.lvalue.identifier.name === null) {
-                            functions.set(instr.lvalue.identifier.id, instr.value);
-                        }
-                        break;
+        for (let ii = 0; ii < block.instructions.length; ii++) {
+            const instr = block.instructions[ii];
+            switch (instr.value.kind) {
+                case 'FunctionExpression': {
+                    if (instr.lvalue.identifier.name === null) {
+                        functions.set(instr.lvalue.identifier.id, instr.value);
                     }
-                    case 'CallExpression': {
-                        if (instr.value.args.length !== 0) {
-                            continue;
-                        }
-                        const body = functions.get(instr.value.callee.identifier.id);
-                        if (body === undefined) {
-                            continue;
-                        }
-                        if (body.loweredFunc.func.params.length > 0 ||
-                            body.loweredFunc.func.async ||
-                            body.loweredFunc.func.generator) {
-                            continue;
-                        }
-                        inlinedFunctions.add(instr.value.callee.identifier.id);
-                        const continuationBlockId = fn.env.nextBlockId;
-                        const continuationBlock = {
-                            id: continuationBlockId,
-                            instructions: block.instructions.slice(ii + 1),
-                            kind: block.kind,
-                            phis: new Set(),
-                            preds: new Set(),
-                            terminal: block.terminal,
-                        };
-                        fn.body.blocks.set(continuationBlockId, continuationBlock);
-                        block.instructions.length = ii;
-                        const newTerminal = {
-                            block: body.loweredFunc.func.body.entry,
-                            id: makeInstructionId(0),
-                            kind: 'label',
-                            fallthrough: continuationBlockId,
-                            loc: block.terminal.loc,
-                        };
-                        block.terminal = newTerminal;
-                        const result = instr.lvalue;
-                        declareTemporary(fn.env, block, result);
-                        promoteTemporary(result.identifier);
-                        for (const [id, block] of body.loweredFunc.func.body.blocks) {
-                            block.preds.clear();
-                            rewriteBlock(fn.env, block, continuationBlockId, result);
-                            fn.body.blocks.set(id, block);
-                        }
-                        queue.push(continuationBlock);
-                        continue queue;
+                    break;
+                }
+                case 'CallExpression': {
+                    if (instr.value.args.length !== 0) {
+                        continue;
                     }
-                    default: {
-                        for (const place of eachInstructionValueOperand(instr.value)) {
-                            functions.delete(place.identifier.id);
-                        }
+                    const body = functions.get(instr.value.callee.identifier.id);
+                    if (body === undefined) {
+                        continue;
+                    }
+                    if (body.loweredFunc.func.params.length > 0 ||
+                        body.loweredFunc.func.async ||
+                        body.loweredFunc.func.generator) {
+                        continue;
+                    }
+                    inlinedFunctions.add(instr.value.callee.identifier.id);
+                    const continuationBlockId = fn.env.nextBlockId;
+                    const continuationBlock = {
+                        id: continuationBlockId,
+                        instructions: block.instructions.slice(ii + 1),
+                        kind: block.kind,
+                        phis: new Set(),
+                        preds: new Set(),
+                        terminal: block.terminal,
+                    };
+                    fn.body.blocks.set(continuationBlockId, continuationBlock);
+                    block.instructions.length = ii;
+                    const newTerminal = {
+                        block: body.loweredFunc.func.body.entry,
+                        id: makeInstructionId(0),
+                        kind: 'label',
+                        fallthrough: continuationBlockId,
+                        loc: block.terminal.loc,
+                    };
+                    block.terminal = newTerminal;
+                    const result = instr.lvalue;
+                    declareTemporary(fn.env, block, result);
+                    promoteTemporary(result.identifier);
+                    for (const [id, block] of body.loweredFunc.func.body.blocks) {
+                        block.preds.clear();
+                        rewriteBlock(fn.env, block, continuationBlockId, result);
+                        fn.body.blocks.set(id, block);
+                    }
+                    queue.push(continuationBlock);
+                    continue queue;
+                }
+                default: {
+                    for (const place of eachInstructionValueOperand(instr.value)) {
+                        functions.delete(place.identifier.id);
                     }
                 }
             }
