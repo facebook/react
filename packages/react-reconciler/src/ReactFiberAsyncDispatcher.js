@@ -26,7 +26,8 @@ function getCacheForType<T>(resourceType: () => T): T {
 }
 
 function cacheSignal(): null | AbortSignal {
-  return null;
+  const cache: Cache = readContext(CacheContext);
+  return cache.controller.signal;
 }
 
 export const DefaultAsyncDispatcher: AsyncDispatcher = ({
