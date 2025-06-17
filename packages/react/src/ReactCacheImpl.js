@@ -126,3 +126,7 @@ export function cache<A: Iterable<mixed>, T>(fn: (...A) => T): (...A) => T {
     }
   };
 }
+
+export function cacheSignal(): null | AbortSignal {
+  return null;
+}
