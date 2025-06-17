@@ -6,3 +6,8 @@ function Component(props) {
       })();
   return items;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{foo: true}],
+};
