@@ -901,11 +901,36 @@ function applyEffect(
           console.log(prettyFormat(state.debugAbstractValue(value)));
         }
 
-        const reason = getWriteErrorReason({
-          kind: value.kind,
-          reason: value.reason,
-          context: new Set(),
-        });
+        let reason: string;
+        let description: string | null = null;
+
+        if (
+          mutationKind === 'mutate-frozen' &&
+          context.hoistedContextDeclarations.has(
+            effect.value.identifier.declarationId,
+          )
+        ) {
+          reason = `This variable is accessed before it is declared, which prevents the earlier access from updating when this value changes over time`;
+          if (
+            effect.value.identifier.name !== null &&
+            effect.value.identifier.name.kind === 'named'
+          ) {
+            description = `Move the declaration of \`${effect.value.identifier.name.value}\` to before it is first referenced`;
+          }
+        } else {
+          reason = getWriteErrorReason({
+            kind: value.kind,
+            reason: value.reason,
+            context: new Set(),
+          });
+          if (
+            effect.value.identifier.name !== null &&
+            effect.value.identifier.name.kind === 'named'
+          ) {
+            description = `Found mutation of \`${effect.value.identifier.name.value}\``;
+          }
+        }
+
         effects.push({
           kind:
             value.kind === ValueKind.Frozen ? 'MutateFrozen' : 'MutateGlobal',
@@ -913,11 +938,7 @@ function applyEffect(
           error: {
             severity: ErrorSeverity.InvalidReact,
             reason,
-            description:
-              effect.value.identifier.name !== null &&
-              effect.value.identifier.name.kind === 'named'
-                ? `Found mutation of \`${effect.value.identifier.name.value}\``
-                : null,
+            description,
             loc: effect.value.loc,
             suggestions: null,
           },
