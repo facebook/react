@@ -8,7 +8,12 @@
 import {isValidIdentifier} from '@babel/types';
 import {z} from 'zod';
 import {Effect, ValueKind} from '..';
-import {EffectSchema, ValueKindSchema} from './HIR';
+import {
+  EffectSchema,
+  ValueKindSchema,
+  ValueReason,
+  ValueReasonSchema,
+} from './HIR';
 
 export type ObjectPropertiesConfig = {[key: string]: TypeConfig};
 export const ObjectPropertiesSchema: z.ZodType<ObjectPropertiesConfig> = z
@@ -38,23 +43,48 @@ export const LifetimeIdSchema = z.string().refine(id => id.startsWith('@'), {
 export type FreezeEffectConfig = {
   kind: 'Freeze';
   value: string;
+  reason: ValueReason;
 };
 
 export const FreezeEffectSchema: z.ZodType<FreezeEffectConfig> = z.object({
   kind: z.literal('Freeze'),
   value: LifetimeIdSchema,
+  reason: ValueReasonSchema,
 });
+
+export type MutateEffectConfig = {
+  kind: 'Mutate';
+  value: string;
+};
+
+export const MutateEffectSchema: z.ZodType<MutateEffectConfig> = z.object({
+  kind: z.literal('Mutate'),
+  value: LifetimeIdSchema,
+});
+
+export type MutateTransitiveConditionallyConfig = {
+  kind: 'MutateTransitiveConditionally';
+  value: string;
+};
+
+export const MutateTransitiveConditionallySchema: z.ZodType<MutateTransitiveConditionallyConfig> =
+  z.object({
+    kind: z.literal('MutateTransitiveConditionally'),
+    value: LifetimeIdSchema,
+  });
 
 export type CreateEffectConfig = {
   kind: 'Create';
   into: string;
   value: ValueKind;
+  reason: ValueReason;
 };
 
 export const CreateEffectSchema: z.ZodType<CreateEffectConfig> = z.object({
   kind: z.literal('Create'),
   into: LifetimeIdSchema,
   value: ValueKindSchema,
+  reason: ValueReasonSchema,
 });
 
 export type AssignEffectConfig = {
@@ -66,6 +96,77 @@ export type AssignEffectConfig = {
 export const AssignEffectSchema: z.ZodType<AssignEffectConfig> = z.object({
   kind: z.literal('Assign'),
   from: LifetimeIdSchema,
+  into: LifetimeIdSchema,
+});
+
+export type AliasEffectConfig = {
+  kind: 'Alias';
+  from: string;
+  into: string;
+};
+
+export const AliasEffectSchema: z.ZodType<AliasEffectConfig> = z.object({
+  kind: z.literal('Alias'),
+  from: LifetimeIdSchema,
+  into: LifetimeIdSchema,
+});
+
+export type CaptureEffectConfig = {
+  kind: 'Capture';
+  from: string;
+  into: string;
+};
+
+export const CaptureEffectSchema: z.ZodType<CaptureEffectConfig> = z.object({
+  kind: z.literal('Capture'),
+  from: LifetimeIdSchema,
+  into: LifetimeIdSchema,
+});
+
+export type CreateFromEffectConfig = {
+  kind: 'CreateFrom';
+  from: string;
+  into: string;
+};
+
+export const CreateFromEffectSchema: z.ZodType<CreateFromEffectConfig> =
+  z.object({
+    kind: z.literal('CreateFrom'),
+    from: LifetimeIdSchema,
+    into: LifetimeIdSchema,
+  });
+
+export type ApplyArgConfig =
+  | string
+  | {kind: 'Spread'; place: string}
+  | {kind: 'Hole'};
+
+export const ApplyArgSchema: z.ZodType<ApplyArgConfig> = z.union([
+  LifetimeIdSchema,
+  z.object({
+    kind: z.literal('Spread'),
+    place: LifetimeIdSchema,
+  }),
+  z.object({
+    kind: z.literal('Hole'),
+  }),
+]);
+
+export type ApplyEffectConfig = {
+  kind: 'Apply';
+  receiver: string;
+  function: string;
+  mutatesFunction: boolean;
+  args: Array<ApplyArgConfig>;
+  into: string;
+};
+
+export const ApplyEffectSchema: z.ZodType<ApplyEffectConfig> = z.object({
+  kind: z.literal('Apply'),
+  receiver: LifetimeIdSchema,
+  function: LifetimeIdSchema,
+  mutatesFunction: z.boolean(),
+  args: z.array(ApplyArgSchema),
   into: LifetimeIdSchema,
 });
 
@@ -82,14 +183,26 @@ export const ImpureEffectSchema: z.ZodType<ImpureEffectConfig> = z.object({
 export type AliasingEffectConfig =
   | FreezeEffectConfig
   | CreateEffectConfig
+  | CreateFromEffectConfig
   | AssignEffectConfig
-  | ImpureEffectConfig;
+  | AliasEffectConfig
+  | CaptureEffectConfig
+  | ImpureEffectConfig
+  | MutateEffectConfig
+  | MutateTransitiveConditionallyConfig
+  | ApplyEffectConfig;
 
 export const AliasingEffectSchema: z.ZodType<AliasingEffectConfig> = z.union([
   FreezeEffectSchema,
   CreateEffectSchema,
+  CreateFromEffectSchema,
   AssignEffectSchema,
+  AliasEffectSchema,
+  CaptureEffectSchema,
   ImpureEffectSchema,
+  MutateEffectSchema,
+  MutateTransitiveConditionallySchema,
+  ApplyEffectSchema,
 ]);
 
 export type AliasingSignatureConfig = {
