@@ -8,6 +8,7 @@
 import {CompilerErrorDetailOptions} from '../CompilerError';
 import {
   FunctionExpression,
+  GeneratedSource,
   Hole,
   IdentifierId,
   ObjectMethod,
@@ -18,6 +19,7 @@ import {
   ValueReason,
 } from '../HIR';
 import {FunctionSignature} from '../HIR/ObjectShape';
+import {printSourceLocation} from '../HIR/PrintHIR';
 
 /**
  * `AliasingEffect` describes a set of "effects" that an instruction/terminal has on one or
@@ -200,10 +202,19 @@ export function hashEffect(effect: AliasingEffect): string {
       return [effect.kind, effect.value.identifier.id, effect.reason].join(':');
     }
     case 'Impure':
-    case 'Render':
+    case 'Render': {
+      return [effect.kind, effect.place.identifier.id].join(':');
+    }
     case 'MutateFrozen':
     case 'MutateGlobal': {
-      return [effect.kind, effect.place.identifier.id].join(':');
+      return [
+        effect.kind,
+        effect.place.identifier.id,
+        effect.error.severity,
+        effect.error.reason,
+        effect.error.description,
+        printSourceLocation(effect.error.loc ?? GeneratedSource),
+      ].join(':');
     }
     case 'Mutate':
     case 'MutateConditionally':
