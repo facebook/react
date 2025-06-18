@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @enableNewMutationAliasingModel
 function Component() {
   let local;
 
@@ -41,13 +42,13 @@ function Component() {
 ## Error
 
 ```
-  3 |
-  4 |   const reassignLocal = newValue => {
-> 5 |     local = newValue;
-    |     ^^^^^ InvalidReact: Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead. Variable `local` cannot be reassigned after render (5:5)
-  6 |   };
-  7 |
-  8 |   const onClick = newValue => {
+  4 |
+  5 |   const reassignLocal = newValue => {
+> 6 |     local = newValue;
+    |     ^^^^^ InvalidReact: Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead. Variable `local` cannot be reassigned after render (6:6)
+  7 |   };
+  8 |
+  9 |   const onClick = newValue => {
 ```
           
       
