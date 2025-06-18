@@ -4,6 +4,7 @@
 ```javascript
 // @enableNewMutationAliasingModel
 
+import {useMemo} from 'react';
 import {
   identity,
   makeObject_Primitives,
@@ -14,7 +15,7 @@ import {
 
 function Component({a, b}) {
   // create a mutable value with input `a`
-  const x = makeObject_Primitives(a);
+  const x = useMemo(() => makeObject_Primitives(a), [a]);
 
   // freeze the value
   useIdentity(x);
@@ -49,6 +50,7 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @enableNewMutationAliasingModel
 
+import { useMemo } from "react";
 import {
   identity,
   makeObject_Primitives,
@@ -61,13 +63,15 @@ function Component(t0) {
   const $ = _c(7);
   const { a, b } = t0;
   let t1;
+  let t2;
   if ($[0] !== a) {
-    t1 = makeObject_Primitives(a);
+    t2 = makeObject_Primitives(a);
     $[0] = a;
-    $[1] = t1;
+    $[1] = t2;
   } else {
-    t1 = $[1];
+    t2 = $[1];
   }
+  t1 = t2;
   const x = t1;
 
   useIdentity(x);
@@ -75,24 +79,24 @@ function Component(t0) {
   const x2 = typedIdentity(x);
 
   identity(x2, b);
-  let t2;
-  if ($[2] !== a) {
-    t2 = [a];
-    $[2] = a;
-    $[3] = t2;
-  } else {
-    t2 = $[3];
-  }
   let t3;
-  if ($[4] !== t2 || $[5] !== x) {
-    t3 = <ValidateMemoization inputs={t2} output={x} />;
-    $[4] = t2;
-    $[5] = x;
-    $[6] = t3;
+  if ($[2] !== a) {
+    t3 = [a];
+    $[2] = a;
+    $[3] = t3;
   } else {
-    t3 = $[6];
+    t3 = $[3];
   }
-  return t3;
+  let t4;
+  if ($[4] !== t3 || $[5] !== x) {
+    t4 = <ValidateMemoization inputs={t3} output={x} />;
+    $[4] = t3;
+    $[5] = x;
+    $[6] = t4;
+  } else {
+    t4 = $[6];
+  }
+  return t4;
 }
 
 export const FIXTURE_ENTRYPOINT = {
