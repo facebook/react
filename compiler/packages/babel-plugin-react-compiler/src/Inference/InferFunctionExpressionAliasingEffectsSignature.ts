@@ -28,7 +28,7 @@ import {AliasingEffect} from './AliasingEffects';
  * This function *also* propagates more ambient-style effects (MutateFrozen, MutateGlobal, Impure, Render)
  * from instructions within the function up to the function itself.
  */
-export function inferMutationAliasingFunctionEffects(
+export function inferFunctionExpressionAliasingEffectsSignature(
   fn: HIRFunction,
 ): Array<AliasingEffect> | null {
   const effects: Array<AliasingEffect> = [];
