@@ -269,12 +269,10 @@ export function ValidateMemoization({
   inputs,
   output: rawOutput,
   onlyCheckCompiled = false,
-  alwaysCheck = false,
 }: {
   inputs: Array<any>;
   output: any;
   onlyCheckCompiled?: boolean;
-  alwaysCheck?: boolean;
 }): React.ReactElement {
   'use no forget';
   // Wrap rawOutput as it might be a function, which useState would invoke.
@@ -282,7 +280,7 @@ export function ValidateMemoization({
   const [previousInputs, setPreviousInputs] = React.useState(inputs);
   const [previousOutput, setPreviousOutput] = React.useState(output);
   if (
-    alwaysCheck ||
+    !onlyCheckCompiled ||
     (onlyCheckCompiled &&
       (globalThis as any).__SNAP_EVALUATOR_MODE === 'forget')
   ) {

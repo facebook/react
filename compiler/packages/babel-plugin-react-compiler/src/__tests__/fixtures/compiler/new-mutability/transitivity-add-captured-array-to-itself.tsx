@@ -16,8 +16,8 @@ function Component({a, b}) {
 
   return (
     <>
-      <ValidateMemoization inputs={[a]} output={o} alwaysCheck={true} />;
-      <ValidateMemoization inputs={[a, b]} output={x} alwaysCheck={true} />;
+      <ValidateMemoization inputs={[a]} output={o} />;
+      <ValidateMemoization inputs={[a, b]} output={x} />;
     </>
   );
 }
