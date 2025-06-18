@@ -30,6 +30,7 @@ export {
 export {
   Effect,
   ValueKind,
+  ValueReason,
   printHIR,
   printFunctionWithOutlined,
   validateEnvironmentConfig,
