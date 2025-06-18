@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @inferEffectDependencies
+// @inferEffectDependencies @enableNewMutationAliasingModel
 import {useEffect, useState} from 'react';
 import {print} from 'shared-runtime';
 
@@ -26,7 +26,7 @@ function ReactiveRefInEffect(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @inferEffectDependencies
+import { c as _c } from "react/compiler-runtime"; // @inferEffectDependencies @enableNewMutationAliasingModel
 import { useEffect, useState } from "react";
 import { print } from "shared-runtime";
 
@@ -34,22 +34,28 @@ import { print } from "shared-runtime";
  * setState types are not enough to determine to omit from deps. Must also take reactivity into account.
  */
 function ReactiveRefInEffect(props) {
-  const $ = _c(2);
+  const $ = _c(4);
   const [, setState1] = useRef("initial value");
   const [, setState2] = useRef("initial value");
   let setState;
-  if (props.foo) {
-    setState = setState1;
+  if ($[0] !== props.foo) {
+    if (props.foo) {
+      setState = setState1;
+    } else {
+      setState = setState2;
+    }
+    $[0] = props.foo;
+    $[1] = setState;
   } else {
-    setState = setState2;
+    setState = $[1];
   }
   let t0;
-  if ($[0] !== setState) {
+  if ($[2] !== setState) {
     t0 = () => print(setState);
-    $[0] = setState;
-    $[1] = t0;
+    $[2] = setState;
+    $[3] = t0;
   } else {
-    t0 = $[1];
+    t0 = $[3];
   }
   useEffect(t0, [setState]);
 }

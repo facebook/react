@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @enableNewMutationAliasingModel
 function bar(a) {
   let x = [a];
   let y = {};
@@ -22,19 +23,27 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime"; // @enableNewMutationAliasingModel
 function bar(a) {
-  const $ = _c(2);
-  let y;
+  const $ = _c(4);
+  let t0;
   if ($[0] !== a) {
-    const x = [a];
+    t0 = [a];
+    $[0] = a;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
+  const x = t0;
+  let y;
+  if ($[2] !== x[0]) {
     y = {};
 
     y = x[0];
-    $[0] = a;
-    $[1] = y;
+    $[2] = x[0];
+    $[3] = y;
   } else {
-    y = $[1];
+    y = $[3];
   }
   return y;
 }

@@ -1,3 +1,4 @@
+// @enableNewMutationAliasingModel
 function Component() {
   const foo = () => {
     // Cannot assign to globals

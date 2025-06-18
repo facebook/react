@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @inferEffectDependencies @panicThreshold:"none" @loggerTestOnly
+// @inferEffectDependencies @panicThreshold:"none" @loggerTestOnly @enableNewMutationAliasingModel
 import {useEffect} from 'react';
 import {print} from 'shared-runtime';
 
@@ -25,7 +25,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-// @inferEffectDependencies @panicThreshold:"none" @loggerTestOnly
+// @inferEffectDependencies @panicThreshold:"none" @loggerTestOnly @enableNewMutationAliasingModel
 import { useEffect } from "react";
 import { print } from "shared-runtime";
 
@@ -48,9 +48,9 @@ export const FIXTURE_ENTRYPOINT = {
 ## Logs
 
 ```
-{"kind":"CompileError","fnLoc":{"start":{"line":5,"column":0,"index":139},"end":{"line":12,"column":1,"index":384},"filename":"mutate-after-useeffect-optional-chain.ts"},"detail":{"reason":"This mutates a variable that React considers immutable","description":null,"loc":{"start":{"line":10,"column":2,"index":345},"end":{"line":10,"column":5,"index":348},"filename":"mutate-after-useeffect-optional-chain.ts","identifierName":"arr"},"suggestions":null,"severity":"InvalidReact"}}
-{"kind":"AutoDepsDecorations","fnLoc":{"start":{"line":9,"column":2,"index":304},"end":{"line":9,"column":39,"index":341},"filename":"mutate-after-useeffect-optional-chain.ts"},"decorations":[{"start":{"line":9,"column":24,"index":326},"end":{"line":9,"column":27,"index":329},"filename":"mutate-after-useeffect-optional-chain.ts","identifierName":"arr"}]}
-{"kind":"CompileSuccess","fnLoc":{"start":{"line":5,"column":0,"index":139},"end":{"line":12,"column":1,"index":384},"filename":"mutate-after-useeffect-optional-chain.ts"},"fnName":"Component","memoSlots":0,"memoBlocks":0,"memoValues":0,"prunedMemoBlocks":0,"prunedMemoValues":0}
+{"kind":"CompileError","fnLoc":{"start":{"line":5,"column":0,"index":171},"end":{"line":12,"column":1,"index":416},"filename":"mutate-after-useeffect-optional-chain.ts"},"detail":{"reason":"Updating a value used previously in an effect function or as an effect dependency is not allowed. Consider moving the mutation before calling useEffect()","description":null,"severity":"InvalidReact","suggestions":null,"loc":{"start":{"line":10,"column":2,"index":377},"end":{"line":10,"column":5,"index":380},"filename":"mutate-after-useeffect-optional-chain.ts","identifierName":"arr"}}}
+{"kind":"AutoDepsDecorations","fnLoc":{"start":{"line":9,"column":2,"index":336},"end":{"line":9,"column":39,"index":373},"filename":"mutate-after-useeffect-optional-chain.ts"},"decorations":[{"start":{"line":9,"column":24,"index":358},"end":{"line":9,"column":27,"index":361},"filename":"mutate-after-useeffect-optional-chain.ts","identifierName":"arr"}]}
+{"kind":"CompileSuccess","fnLoc":{"start":{"line":5,"column":0,"index":171},"end":{"line":12,"column":1,"index":416},"filename":"mutate-after-useeffect-optional-chain.ts"},"fnName":"Component","memoSlots":0,"memoBlocks":0,"memoValues":0,"prunedMemoBlocks":0,"prunedMemoValues":0}
 ```
       
 ### Eval output

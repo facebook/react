@@ -1,3 +1,4 @@
+// @enableNewMutationAliasingModel
 import {
   Stringify,
   mutate,

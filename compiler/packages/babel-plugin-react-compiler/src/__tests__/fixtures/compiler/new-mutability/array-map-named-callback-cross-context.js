@@ -1,3 +1,4 @@
+// @enableNewMutationAliasingModel
 import {Stringify} from 'shared-runtime';
 
 /**

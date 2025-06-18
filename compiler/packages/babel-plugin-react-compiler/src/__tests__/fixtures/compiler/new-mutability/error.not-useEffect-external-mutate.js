@@ -1,3 +1,4 @@
+// @enableNewMutationAliasingModel
 let x = {a: 42};
 
 function Component(props) {

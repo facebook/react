@@ -1,4 +1,4 @@
-// @validateNoImpureFunctionsInRender
+// @validateNoImpureFunctionsInRender @enableNewMutationAliasingModel
 
 function Component() {
   const date = Date.now();
