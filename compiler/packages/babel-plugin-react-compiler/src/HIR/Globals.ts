@@ -5,14 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
-  Effect,
-  GeneratedSource,
-  makeIdentifierId,
-  Place,
-  ValueKind,
-  ValueReason,
-} from './HIR';
+import {Effect, ValueKind, ValueReason} from './HIR';
 import {
   BUILTIN_SHAPES,
   BuiltInArrayId,
@@ -41,18 +34,12 @@ import {
   addFunction,
   addHook,
   addObject,
-  signatureArgument,
 } from './ObjectShape';
 import {BuiltInType, ObjectType, PolyType} from './Types';
-import {
-  AliasingEffectConfig,
-  AliasingSignatureConfig,
-  TypeConfig,
-} from './TypeSchema';
+import {TypeConfig} from './TypeSchema';
 import {assertExhaustive} from '../Utils/utils';
 import {isHookName} from './Environment';
 import {CompilerError, SourceLocation} from '..';
-import {AliasingEffect, AliasingSignature} from '../Inference/AliasingEffects';
 
 /*
  * This file exports types and defaults for JavaScript global objects.
@@ -658,35 +645,35 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
         hookKind: 'useEffect',
         returnValueKind: ValueKind.Frozen,
         aliasing: {
-          receiver: makeIdentifierId(0),
+          receiver: '@receiver',
           params: [],
-          rest: makeIdentifierId(1),
-          returns: makeIdentifierId(2),
-          temporaries: [signatureArgument(3)],
+          rest: '@rest',
+          returns: '@returns',
+          temporaries: ['@effect'],
           effects: [
             // Freezes the function and deps
             {
               kind: 'Freeze',
-              value: signatureArgument(1),
+              value: '@rest',
               reason: ValueReason.Effect,
             },
             // Internally creates an effect object that captures the function and deps
             {
               kind: 'Create',
-              into: signatureArgument(3),
+              into: '@effect',
               value: ValueKind.Frozen,
               reason: ValueReason.KnownReturnSignature,
             },
             // The effect stores the function and dependencies
             {
               kind: 'Capture',
-              from: signatureArgument(1),
-              into: signatureArgument(3),
+              from: '@rest',
+              into: '@effect',
             },
             // Returns undefined
             {
               kind: 'Create',
-              into: signatureArgument(2),
+              into: '@returns',
               value: ValueKind.Primitive,
               reason: ValueReason.KnownReturnSignature,
             },
@@ -903,10 +890,6 @@ export function installTypeConfig(
       }
     }
     case 'function': {
-      const aliasing =
-        typeConfig.aliasing != null
-          ? parseAliasingSignatureConfig(typeConfig.aliasing, moduleName, loc)
-          : null;
       return addFunction(shapes, [], {
         positionalParams: typeConfig.positionalParams,
         restParam: typeConfig.restParam,
@@ -922,14 +905,10 @@ export function installTypeConfig(
         noAlias: typeConfig.noAlias === true,
         mutableOnlyIfOperandsAreMutable:
           typeConfig.mutableOnlyIfOperandsAreMutable === true,
-        aliasing,
+        aliasing: typeConfig.aliasing,
       });
     }
     case 'hook': {
-      const aliasing =
-        typeConfig.aliasing != null
-          ? parseAliasingSignatureConfig(typeConfig.aliasing, moduleName, loc)
-          : null;
       return addHook(shapes, {
         hookKind: 'Custom',
         positionalParams: typeConfig.positionalParams ?? [],
@@ -944,7 +923,7 @@ export function installTypeConfig(
         ),
         returnValueKind: typeConfig.returnValueKind ?? ValueKind.Frozen,
         noAlias: typeConfig.noAlias === true,
-        aliasing,
+        aliasing: typeConfig.aliasing,
       });
     }
     case 'object': {
@@ -985,90 +964,6 @@ export function installTypeConfig(
       );
     }
   }
-}
-
-function parseAliasingSignatureConfig(
-  typeConfig: AliasingSignatureConfig,
-  moduleName: string,
-  loc: SourceLocation,
-): AliasingSignature {
-  const lifetimes = new Map<string, Place>();
-  function define(temp: string): Place {
-    CompilerError.invariant(!lifetimes.has(temp), {
-      reason: `Invalid type configuration for module`,
-      description: `Expected aliasing signature to have unique names for receiver, params, rest, returns, and temporaries in module '${moduleName}'`,
-      loc,
-    });
-    const place = signatureArgument(lifetimes.size);
-    lifetimes.set(temp, place);
-    return place;
-  }
-  function lookup(temp: string): Place {
-    const place = lifetimes.get(temp);
-    CompilerError.invariant(place != null, {
-      reason: `Invalid type configuration for module`,
-      description: `Expected aliasing signature effects to reference known names from receiver/params/rest/returns/temporaries, but '${temp}' is not a known name in '${moduleName}'`,
-      loc,
-    });
-    return place;
-  }
-  const receiver = define(typeConfig.receiver);
-  const params = typeConfig.params.map(define);
-  const rest = typeConfig.rest != null ? define(typeConfig.rest) : null;
-  const returns = define(typeConfig.returns);
-  const temporaries = typeConfig.temporaries.map(define);
-  const effects = typeConfig.effects.map(
-    (effect: AliasingEffectConfig): AliasingEffect => {
-      switch (effect.kind) {
-        case 'Assign': {
-          return {
-            kind: 'Assign',
-            from: lookup(effect.from),
-            into: lookup(effect.into),
-          };
-        }
-        case 'Create': {
-          return {
-            kind: 'Create',
-            into: lookup(effect.into),
-            reason: ValueReason.KnownReturnSignature,
-            value: effect.value,
-          };
-        }
-        case 'Freeze': {
-          return {
-            kind: 'Freeze',
-            value: lookup(effect.value),
-            reason: ValueReason.KnownReturnSignature,
-          };
-        }
-        case 'Impure': {
-          return {
-            kind: 'Impure',
-            place: lookup(effect.place),
-            error: CompilerError.throwTodo({
-              reason: 'Support impure effect declarations',
-              loc: GeneratedSource,
-            }),
-          };
-        }
-        default: {
-          assertExhaustive(
-            effect,
-            `Unexpected effect kind '${(effect as any).kind}'`,
-          );
-        }
-      }
-    },
-  );
-  return {
-    receiver: receiver.identifier.id,
-    params: params.map(p => p.identifier.id),
-    rest: rest != null ? rest.identifier.id : null,
-    returns: returns.identifier.id,
-    temporaries,
-    effects,
-  };
 }
 
 export function getReanimatedModuleType(registry: ShapeRegistry): ObjectType {
