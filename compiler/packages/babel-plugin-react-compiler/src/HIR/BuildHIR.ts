@@ -72,7 +72,7 @@ export function lower(
   env: Environment,
   // Bindings captured from the outer function, in case lower() is called recursively (for lambdas)
   bindings: Bindings | null = null,
-  capturedRefs: Array<t.Identifier> = [],
+  capturedRefs: Map<t.Identifier, SourceLocation> = new Map(),
 ): Result<HIRFunction, CompilerError> {
   const builder = new HIRBuilder(env, {
     bindings,
@@ -80,13 +80,13 @@ export function lower(
   });
   const context: HIRFunction['context'] = [];
 
-  for (const ref of capturedRefs ?? []) {
+  for (const [ref, loc] of capturedRefs ?? []) {
     context.push({
       kind: 'Identifier',
       identifier: builder.resolveBinding(ref),
       effect: Effect.Unknown,
       reactive: false,
-      loc: ref.loc ?? GeneratedSource,
+      loc,
     });
   }
 
@@ -3439,10 +3439,12 @@ function lowerFunction(
    * This isn't a problem in practice because use Babel's scope analysis to
    * identify the correct references.
    */
-  const lowering = lower(expr, builder.environment, builder.bindings, [
-    ...builder.context,
-    ...capturedContext,
-  ]);
+  const lowering = lower(
+    expr,
+    builder.environment,
+    builder.bindings,
+    new Map([...builder.context, ...capturedContext]),
+  );
   let loweredFunc: HIRFunction;
   if (lowering.isErr()) {
     lowering
@@ -4160,6 +4162,11 @@ function captureScopes({from, to}: {from: Scope; to: Scope}): Set<Scope> {
   return scopes;
 }
 
+/**
+ * Returns a mapping of "context" identifiers — references to free variables that
+ * will become part of the function expression's `context` array — along with the
+ * source location of their first reference within the function.
+ */
 function gatherCapturedContext(
   fn: NodePath<
     | t.FunctionExpression
@@ -4168,8 +4175,8 @@ function gatherCapturedContext(
     | t.ObjectMethod
   >,
   componentScope: Scope,
-): Array<t.Identifier> {
-  const capturedIds = new Set<t.Identifier>();
+): Map<t.Identifier, SourceLocation> {
+  const capturedIds = new Map<t.Identifier, SourceLocation>();
 
   /*
    * Capture all the scopes from the parent of this function up to and including
@@ -4212,8 +4219,15 @@ function gatherCapturedContext(
 
     // Add the base identifier binding as a dependency.
     const binding = baseIdentifier.scope.getBinding(baseIdentifier.node.name);
-    if (binding !== undefined && pureScopes.has(binding.scope)) {
-      capturedIds.add(binding.identifier);
+    if (
+      binding !== undefined &&
+      pureScopes.has(binding.scope) &&
+      !capturedIds.has(binding.identifier)
+    ) {
+      capturedIds.set(
+        binding.identifier,
+        path.node.loc ?? binding.identifier.loc ?? GeneratedSource,
+      );
     }
   }
 
@@ -4250,7 +4264,7 @@ function gatherCapturedContext(
     },
   });
 
-  return [...capturedIds.keys()];
+  return capturedIds;
 }
 
 function notNull<T>(value: T | null): value is T {
