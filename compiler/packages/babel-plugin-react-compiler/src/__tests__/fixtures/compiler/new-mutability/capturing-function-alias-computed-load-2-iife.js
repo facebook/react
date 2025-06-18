@@ -1,3 +1,4 @@
+// @enableNewMutationAliasingModel
 function bar(a) {
   let x = [a];
   let y = {};

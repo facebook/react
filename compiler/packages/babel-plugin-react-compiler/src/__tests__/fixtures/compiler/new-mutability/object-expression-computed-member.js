@@ -1,3 +1,4 @@
+// @enableNewMutationAliasingModel
 import {identity, mutate, mutateAndReturn} from 'shared-runtime';
 
 function Component(props) {

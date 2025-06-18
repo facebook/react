@@ -1,4 +1,4 @@
-// @inferEffectDependencies @panicThreshold:"none" @loggerTestOnly
+// @inferEffectDependencies @panicThreshold:"none" @loggerTestOnly @enableNewMutationAliasingModel
 import {useEffect} from 'react';
 
 function Component({foo}) {
