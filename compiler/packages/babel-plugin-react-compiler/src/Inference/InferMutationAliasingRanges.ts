@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import prettyFormat from 'pretty-format';
 import {CompilerError, SourceLocation} from '..';
 import {
   BlockId,
@@ -23,13 +22,8 @@ import {
   eachTerminalOperand,
 } from '../HIR/visitors';
 import {assertExhaustive, getOrInsertWith} from '../Utils/utils';
-import {printFunction} from '../HIR';
-import {printIdentifier, printPlace} from '../HIR/PrintHIR';
 import {MutationKind} from './InferFunctionExpressionAliasingEffectsSignature';
 import {Result} from '../Utils/Result';
-
-const DEBUG = false;
-const VERBOSE = false;
 
 /**
  * Infers mutable ranges for all values in the program, using previously inferred
@@ -56,10 +50,6 @@ export function inferMutationAliasingRanges(
   fn: HIRFunction,
   {isFunctionExpression}: {isFunctionExpression: boolean},
 ): Result<void, CompilerError> {
-  if (VERBOSE) {
-    console.log();
-    console.log(printFunction(fn));
-  }
   /**
    * Part 1: Infer mutable ranges for values. We build an abstract model of
    * values, the alias/capture edges between them, and the set of mutations.
@@ -115,20 +105,6 @@ export function inferMutationAliasingRanges(
     seenBlocks.add(block.id);
 
     for (const instr of block.instructions) {
-      if (
-        instr.value.kind === 'FunctionExpression' ||
-        instr.value.kind === 'ObjectMethod'
-      ) {
-        state.create(instr.lvalue, {
-          kind: 'Function',
-          function: instr.value.loweredFunc.func,
-        });
-      } else {
-        for (const lvalue of eachInstructionLValue(instr)) {
-          state.create(lvalue, {kind: 'Object'});
-        }
-      }
-
       if (instr.effects == null) continue;
       for (const effect of instr.effects) {
         if (effect.kind === 'Create') {
@@ -141,6 +117,15 @@ export function inferMutationAliasingRanges(
         } else if (effect.kind === 'CreateFrom') {
           state.createFrom(index++, effect.from, effect.into);
         } else if (effect.kind === 'Assign') {
+          /**
+           * TODO: Invariant that the node is not initialized yet
+           *
+           * InferFunctionExpressionAliasingEffectSignatures currently infers
+           * Assign effects in some places that should be Alias, leading to
+           * Assign effects that reinitialize a value. The end result appears to
+           * be fine, but we should fix that inference pass so that we add the
+           * invariant here.
+           */
           if (!state.nodes.has(effect.into.identifier)) {
             state.create(effect.into, {kind: 'Object'});
           }
@@ -216,10 +201,6 @@ export function inferMutationAliasingRanges(
     }
   }
 
-  if (VERBOSE) {
-    console.log(state.debug());
-    console.log(pretty(mutations));
-  }
   for (const mutation of mutations) {
     state.mutate(
       mutation.index,
@@ -233,9 +214,6 @@ export function inferMutationAliasingRanges(
   }
   for (const render of renders) {
     state.render(render.index, render.place.identifier, errors);
-  }
-  if (DEBUG) {
-    console.log(pretty([...state.nodes.keys()]));
   }
   fn.aliasingEffects ??= [];
   for (const param of [...fn.context, ...fn.params]) {
@@ -458,9 +436,6 @@ export function inferMutationAliasingRanges(
     }
   }
 
-  if (VERBOSE) {
-    console.log(printFunction(fn));
-  }
   return errors.asResult();
 }
 
@@ -511,11 +486,6 @@ class AliasingState {
     const fromNode = this.nodes.get(from.identifier);
     const toNode = this.nodes.get(into.identifier);
     if (fromNode == null || toNode == null) {
-      if (VERBOSE) {
-        console.log(
-          `skip: createFrom ${printPlace(from)}${!!fromNode} -> ${printPlace(into)}${!!toNode}`,
-        );
-      }
       return;
     }
     fromNode.edges.push({index, node: into.identifier, kind: 'alias'});
@@ -528,11 +498,6 @@ class AliasingState {
     const fromNode = this.nodes.get(from.identifier);
     const toNode = this.nodes.get(into.identifier);
     if (fromNode == null || toNode == null) {
-      if (VERBOSE) {
-        console.log(
-          `skip: capture ${printPlace(from)}${!!fromNode} -> ${printPlace(into)}${!!toNode}`,
-        );
-      }
       return;
     }
     fromNode.edges.push({index, node: into.identifier, kind: 'capture'});
@@ -545,11 +510,6 @@ class AliasingState {
     const fromNode = this.nodes.get(from.identifier);
     const toNode = this.nodes.get(into.identifier);
     if (fromNode == null || toNode == null) {
-      if (VERBOSE) {
-        console.log(
-          `skip: assign ${printPlace(from)}${!!fromNode} -> ${printPlace(into)}${!!toNode}`,
-        );
-      }
       return;
     }
     fromNode.edges.push({index, node: into.identifier, kind: 'alias'});
@@ -604,11 +564,6 @@ class AliasingState {
     loc: SourceLocation,
     errors: CompilerError,
   ): void {
-    if (DEBUG) {
-      console.log(
-        `mutate ix=${index} start=$${start.id} end=[${end}]${transitive ? ' transitive' : ''} kind=${kind}`,
-      );
-    }
     const seen = new Set<Identifier>();
     const queue: Array<{
       place: Identifier;
@@ -623,17 +578,7 @@ class AliasingState {
       seen.add(current);
       const node = this.nodes.get(current);
       if (node == null) {
-        if (DEBUG) {
-          console.log(
-            `no node! ${printIdentifier(start)} for identifier ${printIdentifier(current)}`,
-          );
-        }
         continue;
-      }
-      if (DEBUG) {
-        console.log(
-          `  mutate $${node.id.id} transitive=${transitive} direction=${direction}`,
-        );
       }
       node.id.mutableRange.end = makeInstructionId(
         Math.max(node.id.mutableRange.end, end),
@@ -701,37 +646,5 @@ class AliasingState {
         }
       }
     }
-    if (DEBUG) {
-      const nodes = new Map();
-      for (const id of seen) {
-        const node = this.nodes.get(id);
-        nodes.set(id.id, node);
-      }
-      console.log(pretty(nodes));
-    }
   }
-
-  debug(): string {
-    return pretty(this.nodes);
-  }
-}
-
-export function pretty(v: any): string {
-  return prettyFormat(v, {
-    plugins: [
-      {
-        test: v =>
-          v !== null && typeof v === 'object' && v.kind === 'Identifier',
-        serialize: v => printPlace(v),
-      },
-      {
-        test: v =>
-          v !== null &&
-          typeof v === 'object' &&
-          typeof v.declarationId === 'number',
-        serialize: v =>
-          `${printIdentifier(v)}:${v.mutableRange.start}:${v.mutableRange.end}`,
-      },
-    ],
-  });
 }
