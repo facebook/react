@@ -1453,6 +1453,20 @@ export const ValueKindSchema = z.enum([
   ValueKind.Context,
 ]);
 
+export const ValueReasonSchema = z.enum([
+  ValueReason.Context,
+  ValueReason.Effect,
+  ValueReason.Global,
+  ValueReason.HookCaptured,
+  ValueReason.HookReturn,
+  ValueReason.JsxCaptured,
+  ValueReason.KnownReturnSignature,
+  ValueReason.Other,
+  ValueReason.ReactiveFunctionArgument,
+  ValueReason.ReducerState,
+  ValueReason.State,
+]);
+
 // The effect with which a value is modified.
 export enum Effect {
   // Default value: not allowed after lifetime inference
