@@ -23,14 +23,9 @@ function Component({a, b, c}: {a: number; b: number; c: number}) {
 
   return (
     <>
-      <ValidateMemoization inputs={[a, b, c]} output={x} alwaysCheck={true} />;
+      <ValidateMemoization inputs={[a, b, c]} output={x} />;
       {/* TODO: should only depend on c */}
-      <ValidateMemoization
-        inputs={[a, b, c]}
-        output={x[0]}
-        alwaysCheck={true}
-      />
-      ;
+      <ValidateMemoization inputs={[a, b, c]} output={x[0]} />;
     </>
   );
 }
@@ -98,7 +93,7 @@ function Component(t0) {
   }
   let t3;
   if ($[9] !== t2 || $[10] !== x) {
-    t3 = <ValidateMemoization inputs={t2} output={x} alwaysCheck={true} />;
+    t3 = <ValidateMemoization inputs={t2} output={x} />;
     $[9] = t2;
     $[10] = x;
     $[11] = t3;
@@ -117,7 +112,7 @@ function Component(t0) {
   }
   let t5;
   if ($[16] !== t4 || $[17] !== x[0]) {
-    t5 = <ValidateMemoization inputs={t4} output={x[0]} alwaysCheck={true} />;
+    t5 = <ValidateMemoization inputs={t4} output={x[0]} />;
     $[16] = t4;
     $[17] = x[0];
     $[18] = t5;
