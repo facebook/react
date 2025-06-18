@@ -19,7 +19,7 @@ function Component({a, b}) {
   3 |   const x = {a};
   4 |   useFreeze(x);
 > 5 |   x.y = true;
-    |   ^ InvalidReact: This mutates a variable that React considers immutable (5:5)
+    |   ^ InvalidReact: Updating a value previously passed as an argument to a hook is not allowed. Consider moving the mutation before calling the hook (5:5)
   6 |   return <div>error</div>;
   7 | }
   8 |
