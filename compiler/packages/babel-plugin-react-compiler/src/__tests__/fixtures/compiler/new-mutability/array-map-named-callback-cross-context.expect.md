@@ -58,67 +58,62 @@ import { Stringify } from "shared-runtime";
  * - cb1 is not assumed to be called since it's only used as a call operand
  */
 function useFoo(t0) {
-  const $ = _c(14);
-  let arr1;
-  let arr2;
+  const $ = _c(13);
+  const { arr1, arr2 } = t0;
   let t1;
-  if ($[0] !== t0) {
-    ({ arr1, arr2 } = t0);
-    let t2;
-    if ($[4] !== arr1[0]) {
-      t2 = (e) => arr1[0].value + e.value;
-      $[4] = arr1[0];
-      $[5] = t2;
-    } else {
-      t2 = $[5];
-    }
-    const cb1 = t2;
-    t1 = () => arr1.map(cb1);
-    $[0] = t0;
-    $[1] = arr1;
-    $[2] = arr2;
-    $[3] = t1;
+  if ($[0] !== arr1[0]) {
+    t1 = (e) => arr1[0].value + e.value;
+    $[0] = arr1[0];
+    $[1] = t1;
   } else {
-    arr1 = $[1];
-    arr2 = $[2];
-    t1 = $[3];
+    t1 = $[1];
   }
-  const getArrMap1 = t1;
+  const cb1 = t1;
   let t2;
-  if ($[6] !== arr2) {
-    t2 = (e_0) => arr2[0].value + e_0.value;
-    $[6] = arr2;
-    $[7] = t2;
+  if ($[2] !== arr1 || $[3] !== cb1) {
+    t2 = () => arr1.map(cb1);
+    $[2] = arr1;
+    $[3] = cb1;
+    $[4] = t2;
   } else {
-    t2 = $[7];
+    t2 = $[4];
   }
-  const cb2 = t2;
+  const getArrMap1 = t2;
   let t3;
-  if ($[8] !== arr1 || $[9] !== cb2) {
-    t3 = () => arr1.map(cb2);
-    $[8] = arr1;
-    $[9] = cb2;
-    $[10] = t3;
+  if ($[5] !== arr2) {
+    t3 = (e_0) => arr2[0].value + e_0.value;
+    $[5] = arr2;
+    $[6] = t3;
   } else {
-    t3 = $[10];
+    t3 = $[6];
   }
-  const getArrMap2 = t3;
+  const cb2 = t3;
   let t4;
-  if ($[11] !== getArrMap1 || $[12] !== getArrMap2) {
-    t4 = (
+  if ($[7] !== arr1 || $[8] !== cb2) {
+    t4 = () => arr1.map(cb2);
+    $[7] = arr1;
+    $[8] = cb2;
+    $[9] = t4;
+  } else {
+    t4 = $[9];
+  }
+  const getArrMap2 = t4;
+  let t5;
+  if ($[10] !== getArrMap1 || $[11] !== getArrMap2) {
+    t5 = (
       <Stringify
         getArrMap1={getArrMap1}
         getArrMap2={getArrMap2}
         shouldInvokeFns={true}
       />
     );
-    $[11] = getArrMap1;
-    $[12] = getArrMap2;
-    $[13] = t4;
+    $[10] = getArrMap1;
+    $[11] = getArrMap2;
+    $[12] = t5;
   } else {
-    t4 = $[13];
+    t5 = $[12];
   }
-  return t4;
+  return t5;
 }
 
 export const FIXTURE_ENTRYPOINT = {
