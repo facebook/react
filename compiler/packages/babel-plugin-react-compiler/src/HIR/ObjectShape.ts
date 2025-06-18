@@ -6,14 +6,18 @@
  */
 
 import {CompilerError} from '../CompilerError';
-import {AliasingSignature} from '../Inference/AliasingEffects';
+import {AliasingEffect, AliasingSignature} from '../Inference/AliasingEffects';
+import {assertExhaustive} from '../Utils/utils';
 import {
   Effect,
   GeneratedSource,
+  Hole,
   makeDeclarationId,
   makeIdentifierId,
   makeInstructionId,
   Place,
+  SourceLocation,
+  SpreadPattern,
   ValueKind,
   ValueReason,
 } from './HIR';
@@ -25,6 +29,7 @@ import {
   PolyType,
   PrimitiveType,
 } from './Types';
+import {AliasingEffectConfig, AliasingSignatureConfig} from './TypeSchema';
 
 /*
  * This file exports types and defaults for JavaScript object shapes. These are
@@ -53,13 +58,20 @@ function createAnonId(): string {
 export function addFunction(
   registry: ShapeRegistry,
   properties: Iterable<[string, BuiltInType | PolyType]>,
-  fn: Omit<FunctionSignature, 'hookKind'>,
+  fn: Omit<FunctionSignature, 'hookKind' | 'aliasing'> & {
+    aliasing?: AliasingSignatureConfig | null | undefined;
+  },
   id: string | null = null,
   isConstructor: boolean = false,
 ): FunctionType {
   const shapeId = id ?? createAnonId();
+  const aliasing =
+    fn.aliasing != null
+      ? parseAliasingSignatureConfig(fn.aliasing, '<builtin>', GeneratedSource)
+      : null;
   addShape(registry, shapeId, properties, {
     ...fn,
+    aliasing,
     hookKind: null,
   });
   return {
@@ -77,16 +89,146 @@ export function addFunction(
  */
 export function addHook(
   registry: ShapeRegistry,
-  fn: FunctionSignature & {hookKind: HookKind},
+  fn: Omit<FunctionSignature, 'aliasing'> & {
+    hookKind: HookKind;
+    aliasing?: AliasingSignatureConfig | null | undefined;
+  },
   id: string | null = null,
 ): FunctionType {
   const shapeId = id ?? createAnonId();
-  addShape(registry, shapeId, [], fn);
+  const aliasing =
+    fn.aliasing != null
+      ? parseAliasingSignatureConfig(fn.aliasing, '<builtin>', GeneratedSource)
+      : null;
+  addShape(registry, shapeId, [], {...fn, aliasing});
   return {
     kind: 'Function',
     return: fn.returnType,
     shapeId,
     isConstructor: false,
+  };
+}
+
+function parseAliasingSignatureConfig(
+  typeConfig: AliasingSignatureConfig,
+  moduleName: string,
+  loc: SourceLocation,
+): AliasingSignature {
+  const lifetimes = new Map<string, Place>();
+  function define(temp: string): Place {
+    CompilerError.invariant(!lifetimes.has(temp), {
+      reason: `Invalid type configuration for module`,
+      description: `Expected aliasing signature to have unique names for receiver, params, rest, returns, and temporaries in module '${moduleName}'`,
+      loc,
+    });
+    const place = signatureArgument(lifetimes.size);
+    lifetimes.set(temp, place);
+    return place;
+  }
+  function lookup(temp: string): Place {
+    const place = lifetimes.get(temp);
+    CompilerError.invariant(place != null, {
+      reason: `Invalid type configuration for module`,
+      description: `Expected aliasing signature effects to reference known names from receiver/params/rest/returns/temporaries, but '${temp}' is not a known name in '${moduleName}'`,
+      loc,
+    });
+    return place;
+  }
+  const receiver = define(typeConfig.receiver);
+  const params = typeConfig.params.map(define);
+  const rest = typeConfig.rest != null ? define(typeConfig.rest) : null;
+  const returns = define(typeConfig.returns);
+  const temporaries = typeConfig.temporaries.map(define);
+  const effects = typeConfig.effects.map(
+    (effect: AliasingEffectConfig): AliasingEffect => {
+      switch (effect.kind) {
+        case 'CreateFrom':
+        case 'Capture':
+        case 'Alias':
+        case 'Assign': {
+          const from = lookup(effect.from);
+          const into = lookup(effect.into);
+          return {
+            kind: effect.kind,
+            from,
+            into,
+          };
+        }
+        case 'Mutate':
+        case 'MutateTransitiveConditionally': {
+          const value = lookup(effect.value);
+          return {kind: effect.kind, value};
+        }
+        case 'Create': {
+          const into = lookup(effect.into);
+          return {
+            kind: 'Create',
+            into,
+            reason: effect.reason,
+            value: effect.value,
+          };
+        }
+        case 'Freeze': {
+          const value = lookup(effect.value);
+          return {
+            kind: 'Freeze',
+            value,
+            reason: effect.reason,
+          };
+        }
+        case 'Impure': {
+          const place = lookup(effect.place);
+          return {
+            kind: 'Impure',
+            place,
+            error: CompilerError.throwTodo({
+              reason: 'Support impure effect declarations',
+              loc: GeneratedSource,
+            }),
+          };
+        }
+        case 'Apply': {
+          const receiver = lookup(effect.receiver);
+          const fn = lookup(effect.function);
+          const args: Array<Place | SpreadPattern | Hole> = effect.args.map(
+            arg => {
+              if (typeof arg === 'string') {
+                return lookup(arg);
+              } else if (arg.kind === 'Spread') {
+                return {kind: 'Spread', place: lookup(arg.place)};
+              } else {
+                return arg;
+              }
+            },
+          );
+          const into = lookup(effect.into);
+          return {
+            kind: 'Apply',
+            receiver,
+            function: fn,
+            mutatesFunction: effect.mutatesFunction,
+            args,
+            into,
+            loc,
+            signature: null,
+          };
+        }
+        default: {
+          assertExhaustive(
+            effect,
+            `Unexpected effect kind '${(effect as any).kind}'`,
+          );
+        }
+      }
+    },
+  );
+  return {
+    receiver: receiver.identifier.id,
+    params: params.map(p => p.identifier.id),
+    rest: rest != null ? rest.identifier.id : null,
+    returns: returns.identifier.id,
+    temporaries,
+    effects,
   };
 }
 
@@ -192,8 +334,7 @@ export type FunctionSignature = {
 
   canonicalName?: string;
 
-  aliasing?: AliasingSignature | null;
-  todo_aliasing?: AliasingSignature | null;
+  aliasing?: AliasingSignature | null | undefined;
 };
 
 /*
@@ -320,24 +461,24 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
       calleeEffect: Effect.Store,
       returnValueKind: ValueKind.Primitive,
       aliasing: {
-        receiver: makeIdentifierId(0),
+        receiver: '@receiver',
         params: [],
-        rest: makeIdentifierId(1),
-        returns: makeIdentifierId(2),
+        rest: '@rest',
+        returns: '@returns',
         temporaries: [],
         effects: [
           // Push directly mutates the array itself
-          {kind: 'Mutate', value: signatureArgument(0)},
+          {kind: 'Mutate', value: '@receiver'},
           // The arguments are captured into the array
           {
             kind: 'Capture',
-            from: signatureArgument(1),
-            into: signatureArgument(0),
+            from: '@rest',
+            into: '@receiver',
           },
           // Returns the new length, a primitive
           {
             kind: 'Create',
-            into: signatureArgument(2),
+            into: '@returns',
             value: ValueKind.Primitive,
             reason: ValueReason.KnownReturnSignature,
           },
@@ -374,58 +515,56 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
       noAlias: true,
       mutableOnlyIfOperandsAreMutable: true,
       aliasing: {
-        receiver: makeIdentifierId(0),
-        params: [makeIdentifierId(1)],
+        receiver: '@receiver',
+        params: ['@callback'],
         rest: null,
-        returns: makeIdentifierId(2),
+        returns: '@returns',
         temporaries: [
           // Temporary representing captured items of the receiver
-          signatureArgument(3),
+          '@item',
           // Temporary representing the result of the callback
-          signatureArgument(4),
+          '@callbackReturn',
           /*
            * Undefined `this` arg to the callback. Note the signature does not
            * support passing an explicit thisArg second param
            */
-          signatureArgument(5),
+          '@thisArg',
         ],
         effects: [
           // Map creates a new mutable array
           {
             kind: 'Create',
-            into: signatureArgument(2),
+            into: '@returns',
             value: ValueKind.Mutable,
             reason: ValueReason.KnownReturnSignature,
           },
           // The first arg to the callback is an item extracted from the receiver array
           {
             kind: 'CreateFrom',
-            from: signatureArgument(0),
-            into: signatureArgument(3),
+            from: '@receiver',
+            into: '@item',
           },
           // The undefined this for the callback
           {
             kind: 'Create',
-            into: signatureArgument(5),
+            into: '@thisArg',
             value: ValueKind.Primitive,
             reason: ValueReason.KnownReturnSignature,
           },
           // calls the callback, returning the result into a temporary
           {
             kind: 'Apply',
-            receiver: signatureArgument(5),
-            args: [signatureArgument(3), {kind: 'Hole'}, signatureArgument(0)],
-            function: signatureArgument(1),
-            into: signatureArgument(4),
-            signature: null,
+            receiver: '@thisArg',
+            args: ['@item', {kind: 'Hole'}, '@receiver'],
+            function: '@callback',
+            into: '@callbackReturn',
             mutatesFunction: false,
-            loc: GeneratedSource,
           },
           // captures the result of the callback into the return array
           {
             kind: 'Capture',
-            from: signatureArgument(4),
-            into: signatureArgument(2),
+            from: '@callbackReturn',
+            into: '@returns',
           },
         ],
       },
@@ -577,28 +716,28 @@ addObject(BUILTIN_SHAPES, BuiltInSetId, [
       // returnValueKind is technically dependent on the ValueKind of the set itself
       returnValueKind: ValueKind.Mutable,
       aliasing: {
-        receiver: makeIdentifierId(0),
+        receiver: '@receiver',
         params: [],
-        rest: makeIdentifierId(1),
-        returns: makeIdentifierId(2),
+        rest: '@rest',
+        returns: '@returns',
         temporaries: [],
         effects: [
           // Set.add returns the receiver Set
           {
             kind: 'Assign',
-            from: signatureArgument(0),
-            into: signatureArgument(2),
+            from: '@receiver',
+            into: '@returns',
           },
           // Set.add mutates the set itself
           {
             kind: 'Mutate',
-            value: signatureArgument(0),
+            value: '@receiver',
           },
           // Captures the rest params into the set
           {
             kind: 'Capture',
-            from: signatureArgument(1),
-            into: signatureArgument(0),
+            from: '@rest',
+            into: '@receiver',
           },
         ],
       },
@@ -1303,30 +1442,30 @@ export const DefaultNonmutatingHook = addHook(
     hookKind: 'Custom',
     returnValueKind: ValueKind.Frozen,
     aliasing: {
-      receiver: makeIdentifierId(0),
+      receiver: '@receiver',
       params: [],
-      rest: makeIdentifierId(1),
-      returns: makeIdentifierId(2),
+      rest: '@rest',
+      returns: '@returns',
       temporaries: [],
       effects: [
         // Freeze the arguments
         {
           kind: 'Freeze',
-          value: signatureArgument(1),
+          value: '@rest',
           reason: ValueReason.HookCaptured,
         },
         // Returns a frozen value
         {
           kind: 'Create',
-          into: signatureArgument(2),
+          into: '@returns',
           value: ValueKind.Frozen,
           reason: ValueReason.HookReturn,
         },
         // May alias any arguments into the return
         {
           kind: 'Alias',
-          from: signatureArgument(1),
-          into: signatureArgument(2),
+          from: '@rest',
+          into: '@returns',
         },
       ],
     },
