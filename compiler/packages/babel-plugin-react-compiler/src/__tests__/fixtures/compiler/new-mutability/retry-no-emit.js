@@ -1,4 +1,4 @@
-// @inferEffectDependencies @noEmit @panicThreshold:"none" @loggerTestOnly
+// @inferEffectDependencies @noEmit @panicThreshold:"none" @loggerTestOnly @enableNewMutationAliasingModel
 import {print} from 'shared-runtime';
 import useEffectWrapper from 'useEffectWrapper';
 

@@ -1,4 +1,4 @@
-// @inferEffectDependencies @panicThreshold:"none" @loggerTestOnly
+// @inferEffectDependencies @panicThreshold:"none" @loggerTestOnly @enableNewMutationAliasingModel
 
 import {useEffect, useRef} from 'react';
 import {print} from 'shared-runtime';

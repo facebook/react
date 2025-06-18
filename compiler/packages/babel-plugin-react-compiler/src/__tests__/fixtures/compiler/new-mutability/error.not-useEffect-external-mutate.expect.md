@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @enableNewMutationAliasingModel
 let x = {a: 42};
 
 function Component(props) {
@@ -17,13 +18,15 @@ function Component(props) {
 ## Error
 
 ```
-  3 | function Component(props) {
-  4 |   foo(() => {
-> 5 |     x.a = 10;
-    |     ^ InvalidReact: Writing to a variable defined outside a component or hook is not allowed. Consider using an effect (5:5)
-  6 |     x.a = 20;
-  7 |   });
-  8 | }
+  4 | function Component(props) {
+  5 |   foo(() => {
+> 6 |     x.a = 10;
+    |     ^ InvalidReact: Writing to a variable defined outside a component or hook is not allowed. Consider using an effect (6:6)
+
+InvalidReact: Writing to a variable defined outside a component or hook is not allowed. Consider using an effect (7:7)
+  7 |     x.a = 20;
+  8 |   });
+  9 | }
 ```
           
       

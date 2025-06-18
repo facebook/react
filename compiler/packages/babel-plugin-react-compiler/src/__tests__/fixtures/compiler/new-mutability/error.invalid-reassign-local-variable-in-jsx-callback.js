@@ -1,3 +1,4 @@
+// @enableNewMutationAliasingModel
 function Component() {
   let local;
 
