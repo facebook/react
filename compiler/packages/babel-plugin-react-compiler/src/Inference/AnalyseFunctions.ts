@@ -42,8 +42,16 @@ export default function analyseFunctions(func: HIRFunction): void {
            * Reset mutable range for outer inferReferenceEffects
            */
           for (const operand of instr.value.loweredFunc.func.context) {
-            operand.identifier.mutableRange.start = makeInstructionId(0);
-            operand.identifier.mutableRange.end = makeInstructionId(0);
+            /**
+             * NOTE: inferReactiveScopeVariables makes identifiers in the scope
+             * point to the *same* mutableRange instance. Resetting start/end
+             * here is insufficient, because a later mutation of the range
+             * for any one identifier could affect the range for other identifiers.
+             */
+            operand.identifier.mutableRange = {
+              start: makeInstructionId(0),
+              end: makeInstructionId(0),
+            };
             operand.identifier.scope = null;
           }
           break;
