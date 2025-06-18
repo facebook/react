@@ -271,9 +271,9 @@ a.property = value // a _is_ b, this mutates b
 
 ```
 CreateFrom a <- b
-Mutate A
+Mutate a
 =>
-MutateTransitive b
+Mutate b
 ```
 
 Example:
@@ -300,6 +300,26 @@ const a = {};
 a.b = b;
 a.property = value; // mutates a, not b
 ```
+
+### Mutation of Source Affects Alias, Assignment, CreateFrom, and Capture
+
+```
+Alias a <- b OR Assign a <- b OR CreateFrom a <- b OR Capture a <- b
+Mutate b
+=>
+Mutate a
+```
+
+A derived value changes when it's source value is mutated.
+
+Example:
+
+```js
+const x = {};
+const y = [x];
+x.y = true; // this changes the value within `y` ie mutates y
+```
+
 
 ### TransitiveMutation of Alias, Assignment, CreateFrom, or Capture Mutates the Source
 
