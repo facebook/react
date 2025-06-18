@@ -362,6 +362,11 @@ function inferBlock(
   } else if (terminal.kind === 'maybe-throw') {
     const handlerParam = context.catchHandlers.get(terminal.handler);
     if (handlerParam != null) {
+      CompilerError.invariant(state.kind(handlerParam) != null, {
+        reason:
+          'Expected catch binding to be intialized with a DeclareLocal Catch instruction',
+        loc: terminal.loc,
+      });
       const effects: Array<AliasingEffect> = [];
       for (const instr of block.instructions) {
         if (
@@ -476,14 +481,14 @@ function applySignature(
    * Track which values we've already aliased once, so that we can switch to
    * appendAlias() for subsequent aliases into the same value
    */
-  const aliased = new Set<IdentifierId>();
+  const initialized = new Set<IdentifierId>();
 
   if (DEBUG) {
     console.log(printInstruction(instruction));
   }
 
   for (const effect of signature.effects) {
-    applyEffect(context, state, effect, aliased, effects);
+    applyEffect(context, state, effect, initialized, effects);
   }
   if (DEBUG) {
     console.log(
@@ -508,7 +513,7 @@ function applyEffect(
   context: Context,
   state: InferenceState,
   _effect: AliasingEffect,
-  aliased: Set<IdentifierId>,
+  initialized: Set<IdentifierId>,
   effects: Array<AliasingEffect>,
 ): void {
   const effect = context.internEffect(_effect);
@@ -524,6 +529,13 @@ function applyEffect(
       break;
     }
     case 'Create': {
+      CompilerError.invariant(!initialized.has(effect.into.identifier.id), {
+        reason: `Cannot re-initialize variable within an instruction`,
+        description: `Re-initialized ${printPlace(effect.into)} in ${printAliasingEffect(effect)}`,
+        loc: effect.into.loc,
+      });
+      initialized.add(effect.into.identifier.id);
+
       let value = context.effectInstructionValueCache.get(effect);
       if (value == null) {
         value = {
@@ -538,6 +550,7 @@ function applyEffect(
         reason: new Set([effect.reason]),
       });
       state.define(effect.into, value);
+      effects.push(effect);
       break;
     }
     case 'ImmutableCapture': {
@@ -555,6 +568,13 @@ function applyEffect(
       break;
     }
     case 'CreateFrom': {
+      CompilerError.invariant(!initialized.has(effect.into.identifier.id), {
+        reason: `Cannot re-initialize variable within an instruction`,
+        description: `Re-initialized ${printPlace(effect.into)} in ${printAliasingEffect(effect)}`,
+        loc: effect.into.loc,
+      });
+      initialized.add(effect.into.identifier.id);
+
       const fromValue = state.kind(effect.from);
       let value = context.effectInstructionValueCache.get(effect);
       if (value == null) {
@@ -573,10 +593,21 @@ function applyEffect(
       switch (fromValue.kind) {
         case ValueKind.Primitive:
         case ValueKind.Global: {
-          // no need to track this data flow
+          effects.push({
+            kind: 'Create',
+            value: fromValue.kind,
+            into: effect.into,
+            reason: [...fromValue.reason][0] ?? ValueReason.Other,
+          });
           break;
         }
         case ValueKind.Frozen: {
+          effects.push({
+            kind: 'Create',
+            value: fromValue.kind,
+            into: effect.into,
+            reason: [...fromValue.reason][0] ?? ValueReason.Other,
+          });
           applyEffect(
             context,
             state,
@@ -585,7 +616,7 @@ function applyEffect(
               from: effect.from,
               into: effect.into,
             },
-            aliased,
+            initialized,
             effects,
           );
           break;
@@ -597,6 +628,13 @@ function applyEffect(
       break;
     }
     case 'CreateFunction': {
+      CompilerError.invariant(!initialized.has(effect.into.identifier.id), {
+        reason: `Cannot re-initialize variable within an instruction`,
+        description: `Re-initialized ${printPlace(effect.into)} in ${printAliasingEffect(effect)}`,
+        loc: effect.into.loc,
+      });
+      initialized.add(effect.into.identifier.id);
+
       effects.push(effect);
       /**
        * We consider the function mutable if it has any mutable context variables or
@@ -653,7 +691,7 @@ function applyEffect(
             from: capture,
             into: effect.into,
           },
-          aliased,
+          initialized,
           effects,
         );
       }
@@ -661,6 +699,14 @@ function applyEffect(
     }
     case 'Alias':
     case 'Capture': {
+      CompilerError.invariant(
+        effect.kind === 'Capture' || initialized.has(effect.into.identifier.id),
+        {
+          reason: `Expected destination value to already be initialized within this instruction for Alias effect`,
+          description: `Destination ${printPlace(effect.into)} is not initialized in this instruction`,
+          loc: effect.into.loc,
+        },
+      );
       /*
        * Capture describes potential information flow: storing a pointer to one value
        * within another. If the destination is not mutable, or the source value has
@@ -698,7 +744,7 @@ function applyEffect(
               from: effect.from,
               into: effect.into,
             },
-            aliased,
+            initialized,
             effects,
           );
           break;
@@ -714,6 +760,13 @@ function applyEffect(
       break;
     }
     case 'Assign': {
+      CompilerError.invariant(!initialized.has(effect.into.identifier.id), {
+        reason: `Cannot re-initialize variable within an instruction`,
+        description: `Re-initialized ${printPlace(effect.into)} in ${printAliasingEffect(effect)}`,
+        loc: effect.into.loc,
+      });
+      initialized.add(effect.into.identifier.id);
+
       /*
        * Alias represents potential pointer aliasing. If the type is a global,
        * a primitive (copy-on-write semantics) then we can prune the effect
@@ -730,7 +783,7 @@ function applyEffect(
               from: effect.from,
               into: effect.into,
             },
-            aliased,
+            initialized,
             effects,
           );
           let value = context.effectInstructionValueCache.get(effect);
@@ -768,12 +821,7 @@ function applyEffect(
           break;
         }
         default: {
-          if (aliased.has(effect.into.identifier.id)) {
-            state.appendAlias(effect.into, effect.from);
-          } else {
-            aliased.add(effect.into.identifier.id);
-            state.alias(effect.into, effect.from);
-          }
+          state.assign(effect.into, effect.from);
           effects.push(effect);
           break;
         }
@@ -826,11 +874,11 @@ function applyEffect(
             context,
             state,
             {kind: 'MutateTransitiveConditionally', value: effect.function},
-            aliased,
+            initialized,
             effects,
           );
           for (const signatureEffect of signatureEffects) {
-            applyEffect(context, state, signatureEffect, aliased, effects);
+            applyEffect(context, state, signatureEffect, initialized, effects);
           }
           break;
         }
@@ -858,7 +906,7 @@ function applyEffect(
           console.log('apply aliasing signature effects');
         }
         for (const signatureEffect of signatureEffects) {
-          applyEffect(context, state, signatureEffect, aliased, effects);
+          applyEffect(context, state, signatureEffect, initialized, effects);
         }
       } else if (effect.signature != null) {
         if (DEBUG) {
@@ -873,7 +921,7 @@ function applyEffect(
           effect.loc,
         );
         for (const legacyEffect of legacyEffects) {
-          applyEffect(context, state, legacyEffect, aliased, effects);
+          applyEffect(context, state, legacyEffect, initialized, effects);
         }
       } else {
         if (DEBUG) {
@@ -888,7 +936,7 @@ function applyEffect(
             value: ValueKind.Mutable,
             reason: ValueReason.Other,
           },
-          aliased,
+          initialized,
           effects,
         );
         /*
@@ -911,21 +959,21 @@ function applyEffect(
                 kind: 'MutateTransitiveConditionally',
                 value: operand,
               },
-              aliased,
+              initialized,
               effects,
             );
           }
           const mutateIterator =
             arg.kind === 'Spread' ? conditionallyMutateIterator(operand) : null;
           if (mutateIterator) {
-            applyEffect(context, state, mutateIterator, aliased, effects);
+            applyEffect(context, state, mutateIterator, initialized, effects);
           }
           applyEffect(
             context,
             state,
             // OK: recording information flow
             {kind: 'Alias', from: operand, into: effect.into},
-            aliased,
+            initialized,
             effects,
           );
           for (const otherArg of [
@@ -953,7 +1001,7 @@ function applyEffect(
                 from: operand,
                 into: other,
               },
-              aliased,
+              initialized,
               effects,
             );
           }
@@ -1009,7 +1057,7 @@ function applyEffect(
                   suggestions: null,
                 },
               },
-              aliased,
+              initialized,
               effects,
             );
           }
@@ -1028,7 +1076,7 @@ function applyEffect(
                 suggestions: null,
               },
             },
-            aliased,
+            initialized,
             effects,
           );
         } else {
@@ -1059,7 +1107,7 @@ function applyEffect(
                 suggestions: null,
               },
             },
-            aliased,
+            initialized,
             effects,
           );
         }
@@ -1166,7 +1214,7 @@ class InferenceState {
   }
 
   // Updates the value at @param place to point to the same value as @param value.
-  alias(place: Place, value: Place): void {
+  assign(place: Place, value: Place): void {
     const values = this.#variables.get(value.identifier.id);
     CompilerError.invariant(values != null, {
       reason: `[InferMutationAliasingEffects] Expected value for identifier to be initialized`,
