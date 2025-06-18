@@ -33,7 +33,7 @@ import {createContext} from './ReactContext';
 import {lazy} from './ReactLazy';
 import {forwardRef} from './ReactForwardRef';
 import {memo} from './ReactMemo';
-import {cache} from './ReactCacheClient';
+import {cache, cacheSignal} from './ReactCacheClient';
 import {postpone} from './ReactPostpone';
 import {
   getCacheForType,
@@ -83,6 +83,7 @@ export {
   lazy,
   memo,
   cache,
+  cacheSignal,
   postpone as unstable_postpone,
   useCallback,
   useContext,

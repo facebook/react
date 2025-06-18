@@ -17,6 +17,7 @@ import {
   InstructionKind,
   LabelTerminal,
   Place,
+  isStatementBlockKind,
   makeInstructionId,
   promoteTemporary,
   reversePostorderBlocks,
@@ -90,100 +91,106 @@ export function inlineImmediatelyInvokedFunctionExpressions(
    */
   const queue = Array.from(fn.body.blocks.values());
   queue: for (const block of queue) {
-    for (let ii = 0; ii < block.instructions.length; ii++) {
-      const instr = block.instructions[ii]!;
-      switch (instr.value.kind) {
-        case 'FunctionExpression': {
-          if (instr.lvalue.identifier.name === null) {
-            functions.set(instr.lvalue.identifier.id, instr.value);
+    /*
+     * We can't handle labels inside expressions yet, so we don't inline IIFEs if they are in an
+     * expression block.
+     */
+    if (isStatementBlockKind(block.kind)) {
+      for (let ii = 0; ii < block.instructions.length; ii++) {
+        const instr = block.instructions[ii]!;
+        switch (instr.value.kind) {
+          case 'FunctionExpression': {
+            if (instr.lvalue.identifier.name === null) {
+              functions.set(instr.lvalue.identifier.id, instr.value);
+            }
+            break;
           }
-          break;
-        }
-        case 'CallExpression': {
-          if (instr.value.args.length !== 0) {
-            // We don't support inlining when there are arguments
-            continue;
+          case 'CallExpression': {
+            if (instr.value.args.length !== 0) {
+              // We don't support inlining when there are arguments
+              continue;
+            }
+            const body = functions.get(instr.value.callee.identifier.id);
+            if (body === undefined) {
+              // Not invoking a local function expression, can't inline
+              continue;
+            }
+
+            if (
+              body.loweredFunc.func.params.length > 0 ||
+              body.loweredFunc.func.async ||
+              body.loweredFunc.func.generator
+            ) {
+              // Can't inline functions with params, or async/generator functions
+              continue;
+            }
+
+            // We know this function is used for an IIFE and can prune it later
+            inlinedFunctions.add(instr.value.callee.identifier.id);
+
+            // Create a new block which will contain code following the IIFE call
+            const continuationBlockId = fn.env.nextBlockId;
+            const continuationBlock: BasicBlock = {
+              id: continuationBlockId,
+              instructions: block.instructions.slice(ii + 1),
+              kind: block.kind,
+              phis: new Set(),
+              preds: new Set(),
+              terminal: block.terminal,
+            };
+            fn.body.blocks.set(continuationBlockId, continuationBlock);
+
+            /*
+             * Trim the original block to contain instructions up to (but not including)
+             * the IIFE
+             */
+            block.instructions.length = ii;
+
+            /*
+             * To account for complex control flow within the lambda, we treat the lambda
+             * as if it were a single labeled statement, and replace all returns with gotos
+             * to the label fallthrough.
+             */
+            const newTerminal: LabelTerminal = {
+              block: body.loweredFunc.func.body.entry,
+              id: makeInstructionId(0),
+              kind: 'label',
+              fallthrough: continuationBlockId,
+              loc: block.terminal.loc,
+            };
+            block.terminal = newTerminal;
+
+            // We store the result in the IIFE temporary
+            const result = instr.lvalue;
+
+            // Declare the IIFE temporary
+            declareTemporary(fn.env, block, result);
+
+            // Promote the temporary with a name as we require this to persist
+            promoteTemporary(result.identifier);
+
+            /*
+             * Rewrite blocks from the lambda to replace any `return` with a
+             * store to the result and `goto` the continuation block
+             */
+            for (const [id, block] of body.loweredFunc.func.body.blocks) {
+              block.preds.clear();
+              rewriteBlock(fn.env, block, continuationBlockId, result);
+              fn.body.blocks.set(id, block);
+            }
+
+            /*
+             * Ensure we visit the continuation block, since there may have been
+             * sequential IIFEs that need to be visited.
+             */
+            queue.push(continuationBlock);
+            continue queue;
           }
-          const body = functions.get(instr.value.callee.identifier.id);
-          if (body === undefined) {
-            // Not invoking a local function expression, can't inline
-            continue;
-          }
-
-          if (
-            body.loweredFunc.func.params.length > 0 ||
-            body.loweredFunc.func.async ||
-            body.loweredFunc.func.generator
-          ) {
-            // Can't inline functions with params, or async/generator functions
-            continue;
-          }
-
-          // We know this function is used for an IIFE and can prune it later
-          inlinedFunctions.add(instr.value.callee.identifier.id);
-
-          // Create a new block which will contain code following the IIFE call
-          const continuationBlockId = fn.env.nextBlockId;
-          const continuationBlock: BasicBlock = {
-            id: continuationBlockId,
-            instructions: block.instructions.slice(ii + 1),
-            kind: block.kind,
-            phis: new Set(),
-            preds: new Set(),
-            terminal: block.terminal,
-          };
-          fn.body.blocks.set(continuationBlockId, continuationBlock);
-
-          /*
-           * Trim the original block to contain instructions up to (but not including)
-           * the IIFE
-           */
-          block.instructions.length = ii;
-
-          /*
-           * To account for complex control flow within the lambda, we treat the lambda
-           * as if it were a single labeled statement, and replace all returns with gotos
-           * to the label fallthrough.
-           */
-          const newTerminal: LabelTerminal = {
-            block: body.loweredFunc.func.body.entry,
-            id: makeInstructionId(0),
-            kind: 'label',
-            fallthrough: continuationBlockId,
-            loc: block.terminal.loc,
-          };
-          block.terminal = newTerminal;
-
-          // We store the result in the IIFE temporary
-          const result = instr.lvalue;
-
-          // Declare the IIFE temporary
-          declareTemporary(fn.env, block, result);
-
-          // Promote the temporary with a name as we require this to persist
-          promoteTemporary(result.identifier);
-
-          /*
-           * Rewrite blocks from the lambda to replace any `return` with a
-           * store to the result and `goto` the continuation block
-           */
-          for (const [id, block] of body.loweredFunc.func.body.blocks) {
-            block.preds.clear();
-            rewriteBlock(fn.env, block, continuationBlockId, result);
-            fn.body.blocks.set(id, block);
-          }
-
-          /*
-           * Ensure we visit the continuation block, since there may have been
-           * sequential IIFEs that need to be visited.
-           */
-          queue.push(continuationBlock);
-          continue queue;
-        }
-        default: {
-          for (const place of eachInstructionValueOperand(instr.value)) {
-            // Any other use of a function expression means it isn't an IIFE
-            functions.delete(place.identifier.id);
+          default: {
+            for (const place of eachInstructionValueOperand(instr.value)) {
+              // Any other use of a function expression means it isn't an IIFE
+              functions.delete(place.identifier.id);
+            }
           }
         }
       }

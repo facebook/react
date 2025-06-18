@@ -44,6 +44,7 @@ export {
   lazy,
   memo,
   cache,
+  cacheSignal,
   startTransition,
   unstable_LegacyHidden,
   unstable_Activity,
