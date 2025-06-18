@@ -27,7 +27,7 @@ function SomeComponent() {
    9 |   return (
   10 |     <Button
 > 11 |       onPress={() => (sharedVal.value = Math.random())}
-     |                       ^^^^^^^^^ InvalidReact: This mutates a variable that React considers immutable. Found mutation of `sharedVal` (11:11)
+     |                       ^^^^^^^^^ InvalidReact: Updating a value returned from a hook is not allowed. Consider moving the mutation into the hook where the value is constructed. Found mutation of `sharedVal` (11:11)
   12 |       title="Randomize"
   13 |     />
   14 |   );
