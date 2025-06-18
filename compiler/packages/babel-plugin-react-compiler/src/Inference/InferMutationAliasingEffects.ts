@@ -57,7 +57,6 @@ import {
 import {
   printAliasingEffect,
   printAliasingSignature,
-  printFunction,
   printIdentifier,
   printInstruction,
   printInstructionValue,
@@ -194,19 +193,15 @@ export function inferMutationAliasingEffects(
     hoistedContextDeclarations,
   );
 
-  let count = 0;
+  let iterationCount = 0;
   while (queuedStates.size !== 0) {
-    count++;
-    if (count > 100) {
-      console.log(
-        'oops infinite loop',
-        fn.id,
-        typeof fn.loc !== 'symbol' ? fn.loc?.filename : null,
-      );
-      if (DEBUG) {
-        console.log(printFunction(fn));
-      }
-      throw new Error('infinite loop');
+    iterationCount++;
+    if (iterationCount > 100) {
+      CompilerError.invariant(false, {
+        reason: `[InferMutationAliasingEffects] Potential infinite loop`,
+        description: `A value, temporary place, or effect was not cached properly`,
+        loc: fn.loc,
+      });
     }
     for (const [blockId, block] of fn.body.blocks) {
       const incomingState = queuedStates.get(blockId);
@@ -217,11 +212,6 @@ export function inferMutationAliasingEffects(
 
       statesByBlock.set(blockId, incomingState);
       const state = incomingState.clone();
-      if (DEBUG) {
-        console.log('*************');
-        console.log(`bb${block.id}`);
-        console.log('*************');
-      }
       inferBlock(context, state, block);
 
       for (const nextBlockId of eachTerminalSuccessor(block.terminal)) {
@@ -867,9 +857,6 @@ function applyEffect(
             ),
         );
         if (signatureEffects != null) {
-          if (DEBUG) {
-            console.log('apply function expression effects');
-          }
           applyEffect(
             context,
             state,
@@ -902,16 +889,10 @@ function applyEffect(
         );
       }
       if (signatureEffects != null) {
-        if (DEBUG) {
-          console.log('apply aliasing signature effects');
-        }
         for (const signatureEffect of signatureEffects) {
           applyEffect(context, state, signatureEffect, initialized, effects);
         }
       } else if (effect.signature != null) {
-        if (DEBUG) {
-          console.log('apply legacy signature effects');
-        }
         const legacyEffects = computeEffectsForLegacySignature(
           state,
           effect.signature,
@@ -924,9 +905,6 @@ function applyEffect(
           applyEffect(context, state, legacyEffect, initialized, effects);
         }
       } else {
-        if (DEBUG) {
-          console.log('default effects');
-        }
         applyEffect(
           context,
           state,
@@ -1292,9 +1270,6 @@ class InferenceState {
       kind: ValueKind.Frozen,
       reason: new Set([reason]),
     });
-    if (DEBUG) {
-      console.log(`freeze value: ${printInstructionValue(value)} ${reason}`);
-    }
     if (
       value.kind === 'FunctionExpression' &&
       (this.env.config.enablePreserveExistingMemoizationGuarantees ||
@@ -2334,17 +2309,6 @@ function computeEffectsForSignature(
     // Too many args and there is no rest param to hold them
     (args.length > signature.params.length && signature.rest == null)
   ) {
-    if (DEBUG) {
-      if (signature.params.length > args.length) {
-        console.log(
-          `not enough args: ${args.length} args for ${signature.params.length} params`,
-        );
-      } else {
-        console.log(
-          `too many args: ${args.length} args for ${signature.params.length} params, with no rest param`,
-        );
-      }
-    }
     return null;
   }
   // Build substitutions
@@ -2359,9 +2323,6 @@ function computeEffectsForSignature(
       continue;
     } else if (params == null || i >= params.length || arg.kind === 'Spread') {
       if (signature.rest == null) {
-        if (DEBUG) {
-          console.log(`no rest value to hold param`);
-        }
         return null;
       }
       const place = arg.kind === 'Identifier' ? arg : arg.place;
@@ -2469,23 +2430,14 @@ function computeEffectsForSignature(
       case 'Apply': {
         const applyReceiver = substitutions.get(effect.receiver.identifier.id);
         if (applyReceiver == null || applyReceiver.length !== 1) {
-          if (DEBUG) {
-            console.log(`too many substitutions for receiver`);
-          }
           return null;
         }
         const applyFunction = substitutions.get(effect.function.identifier.id);
         if (applyFunction == null || applyFunction.length !== 1) {
-          if (DEBUG) {
-            console.log(`too many substitutions for function`);
-          }
           return null;
         }
         const applyInto = substitutions.get(effect.into.identifier.id);
         if (applyInto == null || applyInto.length !== 1) {
-          if (DEBUG) {
-            console.log(`too many substitutions for into`);
-          }
           return null;
         }
         const applyArgs: Array<Place | SpreadPattern | Hole> = [];
@@ -2495,18 +2447,12 @@ function computeEffectsForSignature(
           } else if (arg.kind === 'Identifier') {
             const applyArg = substitutions.get(arg.identifier.id);
             if (applyArg == null || applyArg.length !== 1) {
-              if (DEBUG) {
-                console.log(`too many substitutions for arg`);
-              }
               return null;
             }
             applyArgs.push(applyArg[0]);
           } else {
             const applyArg = substitutions.get(arg.place.identifier.id);
             if (applyArg == null || applyArg.length !== 1) {
-              if (DEBUG) {
-                console.log(`too many substitutions for arg`);
-              }
               return null;
             }
             applyArgs.push({kind: 'Spread', place: applyArg[0]});
