@@ -19,14 +19,9 @@ function Component({a, b, c}: {a: number; b: number; c: number}) {
 
   return (
     <>
-      <ValidateMemoization inputs={[a, b, c]} output={x} alwaysCheck={true} />;
+      <ValidateMemoization inputs={[a, b, c]} output={x} />;
       {/* TODO: should only depend on c */}
-      <ValidateMemoization
-        inputs={[a, b, c]}
-        output={x[0]}
-        alwaysCheck={true}
-      />
-      ;
+      <ValidateMemoization inputs={[a, b, c]} output={x[0]} />;
     </>
   );
 }
