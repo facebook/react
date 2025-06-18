@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @enableNewMutationAliasingModel:false
 import {makeArray, mutate} from 'shared-runtime';
 
 /**
@@ -56,7 +57,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime"; // @enableNewMutationAliasingModel:false
 import { makeArray, mutate } from "shared-runtime";
 
 /**

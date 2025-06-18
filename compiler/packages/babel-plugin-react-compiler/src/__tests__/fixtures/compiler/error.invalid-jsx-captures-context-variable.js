@@ -1,3 +1,4 @@
+// @enableNewMutationAliasingModel
 import {Stringify, useIdentity} from 'shared-runtime';
 
 function Component({prop1, prop2}) {
