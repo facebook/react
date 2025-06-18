@@ -1,5 +1,6 @@
 // @enableNewMutationAliasingModel
 
+import {useMemo} from 'react';
 import {
   identity,
   makeObject_Primitives,
@@ -10,7 +11,7 @@ import {
 
 function Component({a, b}) {
   // create a mutable value with input `a`
-  const x = makeObject_Primitives(a);
+  const x = useMemo(() => makeObject_Primitives(a), [a]);
 
   // freeze the value
   useIdentity(x);

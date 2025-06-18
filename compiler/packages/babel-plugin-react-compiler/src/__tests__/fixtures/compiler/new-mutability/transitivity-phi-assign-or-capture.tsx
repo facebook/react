@@ -17,7 +17,7 @@ function Component({a, b}) {
   // could mutate x
   typedMutate(z, b);
 
-  return <ValidateMemoization inputs={[a, b]} output={x} alwaysCheck={true} />;
+  return <ValidateMemoization inputs={[a, b]} output={x} />;
 }
 
 export const FIXTURE_ENTRYPOINT = {
