@@ -18,7 +18,11 @@ import type {
   CompilerReactTarget,
   CompilerPipelineValue,
 } from 'babel-plugin-react-compiler/src/Entrypoint';
-import type {Effect, ValueKind} from 'babel-plugin-react-compiler/src/HIR';
+import type {
+  Effect,
+  ValueKind,
+  ValueReason,
+} from 'babel-plugin-react-compiler/src/HIR';
 import type {parseConfigPragmaForTests as ParseConfigPragma} from 'babel-plugin-react-compiler/src/Utils/TestUtils';
 import * as HermesParser from 'hermes-parser';
 import invariant from 'invariant';
@@ -42,6 +46,7 @@ function makePluginOptions(
   debugIRLogger: (value: CompilerPipelineValue) => void,
   EffectEnum: typeof Effect,
   ValueKindEnum: typeof ValueKind,
+  ValueReasonEnum: typeof ValueReason,
 ): [PluginOptions, Array<{filename: string | null; event: LoggerEvent}>] {
   // TODO(@mofeiZ) rewrite snap fixtures to @validatePreserveExistingMemo:false
   let validatePreserveExistingMemoizationGuarantees = false;
@@ -77,6 +82,7 @@ function makePluginOptions(
       moduleTypeProvider: makeSharedRuntimeTypeProvider({
         EffectEnum,
         ValueKindEnum,
+        ValueReasonEnum,
       }),
       assertValidMutableRanges: true,
       validatePreserveExistingMemoizationGuarantees,
@@ -209,6 +215,7 @@ export async function transformFixtureInput(
   debugIRLogger: (value: CompilerPipelineValue) => void,
   EffectEnum: typeof Effect,
   ValueKindEnum: typeof ValueKind,
+  ValueReasonEnum: typeof ValueReason,
 ): Promise<{kind: 'ok'; value: TransformResult} | {kind: 'err'; msg: string}> {
   // Extract the first line to quickly check for custom test directives
   const firstLine = input.substring(0, input.indexOf('\n'));
@@ -237,6 +244,7 @@ export async function transformFixtureInput(
     debugIRLogger,
     EffectEnum,
     ValueKindEnum,
+    ValueReasonEnum,
   );
   const forgetResult = transformFromAstSync(inputAst, input, {
     filename: virtualFilepath,
