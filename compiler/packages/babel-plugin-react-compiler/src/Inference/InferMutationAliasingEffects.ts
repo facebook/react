@@ -1980,28 +1980,17 @@ function computeEffectsForLegacySignature(
         break;
       }
       case Effect.ConditionallyMutateIterator: {
-        if (
-          isArrayType(place.identifier) ||
-          isSetType(place.identifier) ||
-          isMapType(place.identifier)
-        ) {
-          effects.push({
-            kind: 'Capture',
-            from: place,
-            into: lvalue,
-          });
-        } else {
-          effects.push({
-            kind: 'Capture',
-            from: place,
-            into: lvalue,
-          });
+        const mutateIterator = conditionallyMutateIterator(place);
+        if (mutateIterator != null) {
+          effects.push(mutateIterator);
+          // TODO: should we always push to captures?
           captures.push(place);
-          effects.push({
-            kind: 'MutateTransitiveConditionally',
-            value: place,
-          });
         }
+        effects.push({
+          kind: 'Capture',
+          from: place,
+          into: lvalue,
+        });
         break;
       }
       case Effect.Freeze: {
@@ -2191,6 +2180,7 @@ function computeEffectsForSignature(
     return null;
   }
   // Build substitutions
+  const mutableSpreads = new Set<IdentifierId>();
   const substitutions: Map<IdentifierId, Array<Place>> = new Map();
   substitutions.set(signature.receiver, [receiver]);
   substitutions.set(signature.returns, [lvalue]);
@@ -2208,6 +2198,13 @@ function computeEffectsForSignature(
       }
       const place = arg.kind === 'Identifier' ? arg : arg.place;
       getOrInsertWith(substitutions, signature.rest, () => []).push(place);
+
+      if (arg.kind === 'Spread') {
+        const mutateIterator = conditionallyMutateIterator(arg.place);
+        if (mutateIterator != null) {
+          mutableSpreads.add(arg.place.identifier.id);
+        }
+      }
     } else {
       const param = params[i];
       substitutions.set(param, [arg]);
@@ -2279,6 +2276,12 @@ function computeEffectsForSignature(
       case 'Freeze': {
         const values = substitutions.get(effect.value.identifier.id) ?? [];
         for (const value of values) {
+          if (mutableSpreads.has(value.identifier.id)) {
+            CompilerError.throwTodo({
+              reason: 'Support spread syntax for hook arguments',
+              loc: value.loc,
+            });
+          }
           effects.push({kind: 'Freeze', value, reason: effect.reason});
         }
         break;
