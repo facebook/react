@@ -261,3 +261,5 @@ export const enableAsyncDebugInfo = __EXPERIMENTAL__;
 export const enableUpdaterTracking = __PROFILE__;
 
 export const ownerStackLimit = 1e4;
+
+export const enableStore = false;
