@@ -301,9 +301,6 @@ jobs:
           path: |
             **/node_modules
           key: runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
-          restore-keys: |
-            runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
-            runtime-and-compiler-node_modules-v6-
       - name: Install runtime dependencies
         run: yarn install --frozen-lockfile
         if: steps.node_modules.outputs.cache-hit != 'true'
