@@ -301,10 +301,12 @@ jobs:
           path: |
             **/node_modules
           key: runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
-          restore-keys: |
-            runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
-            runtime-and-compiler-node_modules-v6-
-      - run: yarn install --frozen-lockfile
+      - name: Install runtime dependencies
+        run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
+      - name: Install compiler dependencies
+        run: yarn install --frozen-lockfile
+        working-directory: compiler
         if: steps.node_modules.outputs.cache-hit != 'true'
       - run: ./scripts/react-compiler/build-compiler.sh && ./scripts/react-compiler/link-compiler.sh
       - run: yarn workspace eslint-plugin-react-hooks test
