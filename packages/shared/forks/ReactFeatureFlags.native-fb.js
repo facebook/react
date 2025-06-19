@@ -59,7 +59,6 @@ export const enableProfilerTimer = __PROFILE__;
 export const enableReactTestRendererWarning = false;
 export const enableRetryLaneExpiration = false;
 export const enableSchedulingProfiler = __PROFILE__;
-export const enableComponentPerformanceTrack = false;
 export const enableScopeAPI = false;
 export const enableSuspenseAvoidThisFallback = false;
 export const enableSuspenseCallback = true;
@@ -84,6 +83,8 @@ export const enableSrcObject = false;
 export const enableHydrationChangeEvent = true;
 export const enableDefaultTransitionIndicator = false;
 export const ownerStackLimit = 1e4;
+export const enableComponentPerformanceTrack: boolean =
+  __PROFILE__ && dynamicFlags.enableComponentPerformanceTrack;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);
