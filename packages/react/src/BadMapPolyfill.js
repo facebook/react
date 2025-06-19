@@ -17,7 +17,11 @@ if (__DEV__) {
     new Set([frozenObject]);
     /* eslint-enable no-new */
   } catch (e) {
-    // TODO: Consider warning about bad polyfills
+    // Warn about bad polyfills that don't support frozen objects
+    console['warn'](
+      'React detected a Map/Set polyfill that cannot handle frozen objects. ' +
+        'This might cause issues with React\'s internals.'
+    );
     hasBadMapPolyfill = true;
   }
 }
