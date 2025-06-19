@@ -108,5 +108,5 @@ jobs:
         with:
           webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
           embed-author-name: "GitHub Actions"
-          embed-title: 'Publish of $${{ inputs.release_channel }} release failed'
+          embed-title: '[Runtime] Publish of ${{ inputs.release_channel }}@${{ inputs.dist_tag}} release failed'
           embed-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}
