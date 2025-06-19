@@ -2133,6 +2133,84 @@ export function startViewTransition(
     });
     // $FlowFixMe[prop-missing]
     ownerDocument.__reactViewTransition = transition;
+
+    const readyCallback = () => {
+      const documentElement: Element = (ownerDocument.documentElement: any);
+      // Loop through all View Transition Animations.
+      const animations = documentElement.getAnimations({subtree: true});
+      for (let i = 0; i < animations.length; i++) {
+        const animation = animations[i];
+        const effect: KeyframeEffect = (animation.effect: any);
+        // $FlowFixMe
+        const pseudoElement: ?string = effect.pseudoElement;
+        if (
+          pseudoElement != null &&
+          pseudoElement.startsWith('::view-transition-group')
+        ) {
+          const keyframes = effect.getKeyframes();
+          // Next, we're going to try to optimize this animation in case the auto-generated
+          // width/height keyframes are unnecessary.
+          let width;
+          let height;
+          let unchangedDimensions = true;
+          for (let j = 0; j < keyframes.length; j++) {
+            const keyframe = keyframes[j];
+            const w = keyframe.width;
+            if (width === undefined) {
+              width = w;
+            } else if (width !== w) {
+              unchangedDimensions = false;
+              break;
+            }
+            const h = keyframe.height;
+            if (height === undefined) {
+              height = h;
+            } else if (height !== h) {
+              unchangedDimensions = false;
+              break;
+            }
+            // We're clearing the keyframes in case we are going to apply the optimization.
+            delete keyframe.width;
+            delete keyframe.height;
+            if (keyframe.transform === 'none') {
+              delete keyframe.transform;
+            }
+          }
+          if (
+            unchangedDimensions &&
+            width !== undefined &&
+            height !== undefined
+          ) {
+            // Replace the keyframes with ones that don't animate the width/height.
+            // $FlowFixMe
+            effect.setKeyframes(keyframes);
+            // Read back the new animation to see what the underlying width/height of the pseudo-element was.
+            const computedStyle = getComputedStyle(
+              // $FlowFixMe
+              effect.target,
+              // $FlowFixMe
+              effect.pseudoElement,
+            );
+            if (
+              computedStyle.width !== width ||
+              computedStyle.height !== height
+            ) {
+              // Oops. Turns out that the pseudo-element had a different width/height so we need to let it
+              // be overridden. Add it back.
+              const first = keyframes[0];
+              first.width = width;
+              first.height = height;
+              const last = keyframes[keyframes.length - 1];
+              last.width = width;
+              last.height = height;
+              // $FlowFixMe
+              effect.setKeyframes(keyframes);
+            }
+          }
+        }
+      }
+      spawnedWorkCallback();
+    };
     const handleError = (error: mixed) => {
       try {
         error = customizeViewTransitionError(error, false);
@@ -2150,7 +2228,7 @@ export function startViewTransition(
         spawnedWorkCallback();
       }
     };
-    transition.ready.then(spawnedWorkCallback, handleError);
+    transition.ready.then(readyCallback, handleError);
     transition.finished.finally(() => {
       cancelAllViewTransitionAnimations((ownerDocument.documentElement: any));
       // $FlowFixMe[prop-missing]
