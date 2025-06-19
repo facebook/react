@@ -2145,7 +2145,7 @@ export function startViewTransition(
         const pseudoElement: ?string = effect.pseudoElement;
         if (
           pseudoElement != null &&
-          pseudoElement.startsWith('::view-transition-group')
+          pseudoElement.startsWith('::view-transition')
         ) {
           const keyframes = effect.getKeyframes();
           // Next, we're going to try to optimize this animation in case the auto-generated
@@ -2297,11 +2297,26 @@ function animateGesture(
   moveFirstFrameIntoViewport: boolean,
   moveAllFramesIntoViewport: boolean,
 ) {
+  let width;
+  let height;
+  let unchangedDimensions = true;
   for (let i = 0; i < keyframes.length; i++) {
     const keyframe = keyframes[i];
     // Delete any easing since we always apply linear easing to gestures.
     delete keyframe.easing;
     delete keyframe.computedOffset;
+    const w = keyframe.width;
+    if (width === undefined) {
+      width = w;
+    } else if (width !== w) {
+      unchangedDimensions = false;
+    }
+    const h = keyframe.height;
+    if (height === undefined) {
+      height = h;
+    } else if (height !== h) {
+      unchangedDimensions = false;
+    }
     // Chrome returns "auto" for width/height which is not a valid value to
     // animate to. Similarly, transform: "none" is actually lack of transform.
     if (keyframe.width === 'auto') {
@@ -2350,6 +2365,19 @@ function animateGesture(
     // keyframe. Otherwise it applies to every keyframe.
     moveOldFrameIntoViewport(keyframes[0]);
   }
+  if (unchangedDimensions && width !== undefined && height !== undefined) {
+    // Read the underlying width/height of the pseudo-element. The previous animation
+    // should have already been cancelled so we should observe the underlying element.
+    const computedStyle = getComputedStyle(targetElement, pseudoElement);
+    if (computedStyle.width === width && computedStyle.height === height) {
+      for (let i = 0; i < keyframes.length; i++) {
+        const keyframe = keyframes[i];
+        delete keyframe.width;
+        delete keyframe.height;
+      }
+    }
+  }
+
   // TODO: Reverse the reverse if the original direction is reverse.
   const reverse = rangeStart > rangeEnd;
   targetElement.animate(keyframes, {
