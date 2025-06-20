@@ -52,7 +52,7 @@ jobs:
   publish_prerelease_canary:
     if: ${{ !inputs.experimental_only }}
     name: Publish to Canary channel
-    uses: facebook/react/.github/workflows/runtime_prereleases.yml@main
+    uses: facebook/react/.github/workflows/runtime_prereleases.yml@sebbie/fix-wet-release
     permissions:
       # We use github.token to download the build artifact from a previous runtime_build_and_test.yml run
       actions: read
@@ -79,7 +79,7 @@ jobs:
 
   publish_prerelease_experimental:
     name: Publish to Experimental channel
-    uses: facebook/react/.github/workflows/runtime_prereleases.yml@main
+    uses: facebook/react/.github/workflows/runtime_prereleases.yml@sebbie/fix-wet-release
     permissions:
       # We use github.token to download the build artifact from a previous runtime_build_and_test.yml run
       actions: read
