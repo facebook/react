@@ -282,7 +282,8 @@
     for (var i = 0; i < batch.length; i += 2) {
       var suspenseIdNode = batch[i],
         contentNode = batch[i + 1];
-      contentNode.parentNode.removeChild(contentNode);
+      null !== contentNode.parentNode &&
+        contentNode.parentNode.removeChild(contentNode);
       var parentInstance = suspenseIdNode.parentNode;
       if (parentInstance) {
         var suspenseNode = suspenseIdNode.previousSibling,
