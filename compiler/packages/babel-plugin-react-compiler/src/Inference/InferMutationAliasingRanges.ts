@@ -22,8 +22,8 @@ import {
   eachTerminalOperand,
 } from '../HIR/visitors';
 import {assertExhaustive, getOrInsertWith} from '../Utils/utils';
-import {MutationKind} from './InferFunctionExpressionAliasingEffectsSignature';
-import {Result} from '../Utils/Result';
+import {Err, Ok, Result} from '../Utils/Result';
+import {AliasingEffect} from './AliasingEffects';
 
 /**
  * Infers mutable ranges for all values in the program, using previously inferred
@@ -49,7 +49,7 @@ import {Result} from '../Utils/Result';
 export function inferMutationAliasingRanges(
   fn: HIRFunction,
   {isFunctionExpression}: {isFunctionExpression: boolean},
-): Result<void, CompilerError> {
+): Result<Array<AliasingEffect>, CompilerError> {
   /**
    * Part 1: Infer mutable ranges for values. We build an abstract model of
    * values, the alias/capture edges between them, and the set of mutations.
@@ -215,7 +215,7 @@ export function inferMutationAliasingRanges(
   for (const render of renders) {
     state.render(render.index, render.place.identifier, errors);
   }
-  fn.aliasingEffects ??= [];
+  const functionEffects: Array<AliasingEffect> = [];
   for (const param of [...fn.context, ...fn.params]) {
     const place = param.kind === 'Identifier' ? param : param.place;
     const node = state.nodes.get(place.identifier);
@@ -226,13 +226,13 @@ export function inferMutationAliasingRanges(
     if (node.local != null) {
       if (node.local.kind === MutationKind.Conditional) {
         mutated = true;
-        fn.aliasingEffects.push({
+        functionEffects.push({
           kind: 'MutateConditionally',
           value: {...place, loc: node.local.loc},
         });
       } else if (node.local.kind === MutationKind.Definite) {
         mutated = true;
-        fn.aliasingEffects.push({
+        functionEffects.push({
           kind: 'Mutate',
           value: {...place, loc: node.local.loc},
         });
@@ -241,13 +241,13 @@ export function inferMutationAliasingRanges(
     if (node.transitive != null) {
       if (node.transitive.kind === MutationKind.Conditional) {
         mutated = true;
-        fn.aliasingEffects.push({
+        functionEffects.push({
           kind: 'MutateTransitiveConditionally',
           value: {...place, loc: node.transitive.loc},
         });
       } else if (node.transitive.kind === MutationKind.Definite) {
         mutated = true;
-        fn.aliasingEffects.push({
+        functionEffects.push({
           kind: 'MutateTransitive',
           value: {...place, loc: node.transitive.loc},
         });
@@ -436,7 +436,9 @@ export function inferMutationAliasingRanges(
     }
   }
 
-  return errors.asResult();
+  return errors.hasErrors() && !isFunctionExpression
+    ? Err(errors)
+    : Ok(functionEffects);
 }
 
 function appendFunctionErrors(errors: CompilerError, fn: HIRFunction): void {
@@ -450,6 +452,12 @@ function appendFunctionErrors(errors: CompilerError, fn: HIRFunction): void {
       }
     }
   }
+}
+
+export enum MutationKind {
+  None = 0,
+  Conditional = 1,
+  Definite = 2,
 }
 
 type Node = {
