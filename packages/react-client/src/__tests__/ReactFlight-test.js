@@ -3328,19 +3328,10 @@ describe('ReactFlight', () => {
     await ReactNoopFlightClient.read(transport);
 
     expect(mockConsoleLog).toHaveBeenCalledTimes(1);
-    // TODO: Support cyclic objects in console encoding.
-    // expect(mockConsoleLog.mock.calls[0][0]).toBe('hi');
-    // const cyclic2 = mockConsoleLog.mock.calls[0][1].cyclic;
-    // expect(cyclic2).not.toBe(cyclic); // Was serialized and therefore cloned
-    // expect(cyclic2.cycle).toBe(cyclic2);
-    expect(mockConsoleLog.mock.calls[0][0]).toBe(
-      'Unknown Value: React could not send it from the server.',
-    );
-    expect(mockConsoleLog.mock.calls[0][1].message).toBe(
-      'Converting circular structure to JSON\n' +
-        "    --> starting at object with constructor 'Object'\n" +
-        "    --- property 'cycle' closes the circle",
-    );
+    expect(mockConsoleLog.mock.calls[0][0]).toBe('hi');
+    const cyclic2 = mockConsoleLog.mock.calls[0][1].cyclic;
+    expect(cyclic2).not.toBe(cyclic); // Was serialized and therefore cloned
+    expect(cyclic2.cycle).toBe(cyclic2);
   });
 
   // @gate !__DEV__ || enableComponentPerformanceTrack
