@@ -3535,27 +3535,7 @@ function emitDebugChunk(
     );
   }
 
-  // We use the console encoding so that we can dedupe objects but don't necessarily
-  // use the full serialization that requires a task.
-  const counter = {objectLimit: 500};
-  function replacer(
-    this:
-      | {+[key: string | number]: ReactClientValue}
-      | $ReadOnlyArray<ReactClientValue>,
-    parentPropertyName: string,
-    value: ReactClientValue,
-  ): ReactJSONValue {
-    return renderConsoleValue(
-      request,
-      counter,
-      this,
-      parentPropertyName,
-      value,
-    );
-  }
-
-  // $FlowFixMe[incompatible-type] stringify can return null
-  const json: string = stringify(debugInfo, replacer);
+  const json: string = serializeConsoleValue(request, 500, debugInfo);
   const row = serializeRowHeader('D', id) + json + '\n';
   const processedChunk = stringToChunk(row);
   request.completedRegularChunks.push(processedChunk);
@@ -3651,22 +3631,6 @@ function emitIOInfoChunk(
   if (stack) {
     objectLimit += stack.length;
   }
-  const counter = {objectLimit};
-  function replacer(
-    this:
-      | {+[key: string | number]: ReactClientValue}
-      | $ReadOnlyArray<ReactClientValue>,
-    parentPropertyName: string,
-    value: ReactClientValue,
-  ): ReactJSONValue {
-    return renderConsoleValue(
-      request,
-      counter,
-      this,
-      parentPropertyName,
-      value,
-    );
-  }
 
   const relativeStartTimestamp = start - request.timeOrigin;
   const relativeEndTimestamp = end - request.timeOrigin;
@@ -3687,8 +3651,7 @@ function emitIOInfoChunk(
     // $FlowFixMe[cannot-write]
     debugIOInfo.owner = owner;
   }
-  // $FlowFixMe[incompatible-type] stringify can return null
-  const json: string = stringify(debugIOInfo, replacer);
+  const json: string = serializeConsoleValue(request, objectLimit, debugIOInfo);
   const row = id.toString(16) + ':J' + json + '\n';
   const processedChunk = stringToChunk(row);
   request.completedRegularChunks.push(processedChunk);
@@ -4152,6 +4115,46 @@ function renderConsoleValue(
   return 'unknown type ' + typeof value;
 }
 
+function serializeConsoleValue(
+  request: Request,
+  objectLimit: number,
+  model: mixed,
+): string {
+  const counter = {objectLimit: objectLimit};
+
+  function replacer(
+    this:
+      | {+[key: string | number]: ReactClientValue}
+      | $ReadOnlyArray<ReactClientValue>,
+    parentPropertyName: string,
+    value: ReactClientValue,
+  ): ReactJSONValue {
+    try {
+      return renderConsoleValue(
+        request,
+        counter,
+        this,
+        parentPropertyName,
+        value,
+      );
+    } catch (x) {
+      return (
+        'Unknown Value: React could not send it from the server.\n' + x.message
+      );
+    }
+  }
+
+  try {
+    // $FlowFixMe[incompatible-cast] stringify can return null
+    return (stringify(model, replacer): string);
+  } catch (x) {
+    // $FlowFixMe[incompatible-cast] stringify can return null
+    return (stringify(
+      'Unknown Value: React could not send it from the server.\n' + x.message,
+    ): string);
+  }
+}
+
 function outlineConsoleValue(
   request: Request,
   counter: {objectLimit: number},
@@ -4226,29 +4229,6 @@ function emitConsoleChunk(
     );
   }
 
-  const counter = {objectLimit: 500};
-  function replacer(
-    this:
-      | {+[key: string | number]: ReactClientValue}
-      | $ReadOnlyArray<ReactClientValue>,
-    parentPropertyName: string,
-    value: ReactClientValue,
-  ): ReactJSONValue {
-    try {
-      return renderConsoleValue(
-        request,
-        counter,
-        this,
-        parentPropertyName,
-        value,
-      );
-    } catch (x) {
-      return (
-        'Unknown Value: React could not send it from the server.\n' + x.message
-      );
-    }
-  }
-
   // Ensure the owner is already outlined.
   if (owner != null) {
     outlineComponentInfo(request, owner);
@@ -4259,22 +4239,16 @@ function emitConsoleChunk(
   const payload = [methodName, stackTrace, owner, env];
   // $FlowFixMe[method-unbinding]
   payload.push.apply(payload, args);
-  let json: string;
-  try {
-    // $FlowFixMe[incompatible-type] stringify can return null
-    json = stringify(payload, replacer);
-  } catch (x) {
-    json = stringify(
-      [
-        methodName,
-        stackTrace,
-        owner,
-        env,
-        'Unknown Value: React could not send it from the server.',
-        x,
-      ],
-      replacer,
-    );
+  let json = serializeConsoleValue(request, 500, payload);
+  if (json[0] !== '[') {
+    // This looks like an error. Try a simpler object.
+    json = serializeConsoleValue(request, 500, [
+      methodName,
+      stackTrace,
+      owner,
+      env,
+      'Unknown Value: React could not send it from the server.',
+    ]);
   }
   const row = ':W' + json + '\n';
   const processedChunk = stringToChunk(row);
