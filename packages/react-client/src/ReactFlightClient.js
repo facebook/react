@@ -266,7 +266,11 @@ ReactPromise.prototype.then = function <T>(
       initializeModuleChunk(chunk);
       break;
   }
-  if (__DEV__ && enableAsyncDebugInfo) {
+  if (
+    __DEV__ &&
+    enableAsyncDebugInfo &&
+    (typeof resolve !== 'function' || !(resolve: any).isReactInternalListener)
+  ) {
     // Because only native Promises get picked up when we're awaiting we need to wrap
     // this in a native Promise in DEV. This means that these callbacks are no longer sync
     // but the lazy initialization is still sync and the .value can be inspected after,
@@ -1051,6 +1055,10 @@ function waitForReference<T>(
         wakeChunk(resolveListeners, handler.value);
       }
     }
+  }
+  // Use to avoid the microtask resolution in DEV.
+  if (__DEV__ && enableAsyncDebugInfo) {
+    (fulfill: any).isReactInternalListener = true;
   }
 
   function reject(error: mixed): void {

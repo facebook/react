@@ -448,6 +448,7 @@ export type Request = {
   environmentName: () => string,
   filterStackFrame: (url: string, functionName: string) => boolean,
   didWarnForKey: null | WeakSet<ReactComponentInfo>,
+  writtenDebugObjects: WeakMap<Reference, string>,
 };
 
 const {
@@ -567,6 +568,7 @@ function RequestInstance(
         ? defaultFilterStackFrame
         : filterStackFrame;
     this.didWarnForKey = null;
+    this.writtenDebugObjects = new WeakMap();
   }
 
   let timeOrigin: number;
@@ -3553,7 +3555,7 @@ function outlineComponentInfo(
     );
   }
 
-  if (request.writtenObjects.has(componentInfo)) {
+  if (request.writtenDebugObjects.has(componentInfo)) {
     // Already written
     return;
   }
@@ -3606,7 +3608,10 @@ function outlineComponentInfo(
   componentDebugInfo.props = componentInfo.props;
 
   const id = outlineConsoleValue(request, counter, componentDebugInfo);
-  request.writtenObjects.set(componentInfo, serializeByValueID(id));
+  const ref = serializeByValueID(id);
+  request.writtenDebugObjects.set(componentInfo, ref);
+  // We also store this in the main dedupe set so that it can be referenced by inline React Elements.
+  request.writtenObjects.set(componentInfo, ref);
 }
 
 function emitIOInfoChunk(
@@ -3690,14 +3695,14 @@ function outlineIOInfo(request: Request, ioInfo: ReactIOInfo): void {
     owner,
     debugStack,
   );
-  request.writtenObjects.set(ioInfo, serializeByValueID(id));
+  request.writtenDebugObjects.set(ioInfo, serializeByValueID(id));
 }
 
 function serializeIONode(
   request: Request,
   ioNode: IONode | PromiseNode,
 ): string {
-  const existingRef = request.writtenObjects.get(ioNode);
+  const existingRef = request.writtenDebugObjects.get(ioNode);
   if (existingRef !== undefined) {
     // Already written
     return existingRef;
@@ -3740,7 +3745,7 @@ function serializeIONode(
     stack,
   );
   const ref = serializeByValueID(id);
-  request.writtenObjects.set(ioNode, ref);
+  request.writtenDebugObjects.set(ioNode, ref);
   return ref;
 }
 
@@ -3797,6 +3802,8 @@ function serializeEval(source: string): string {
   return '$E' + source;
 }
 
+let debugModelRoot: mixed = null;
+let debugNoOutline: mixed = null;
 // This is a forked version of renderModel which should never error, never suspend and is limited
 // in the depth it can encode.
 function renderConsoleValue(
@@ -3840,11 +3847,57 @@ function renderConsoleValue(
       }
     }
 
+    const writtenDebugObjects = request.writtenDebugObjects;
+    const existingDebugReference = writtenDebugObjects.get(value);
+    if (existingDebugReference !== undefined) {
+      if (debugModelRoot === value) {
+        // This is the ID we're currently emitting so we need to write it
+        // once but if we discover it again, we refer to it by id.
+        debugModelRoot = null;
+      } else {
+        // We've already emitted this as a debug object. We favor that version if available.
+        return existingDebugReference;
+      }
+    } else if (parentPropertyName.indexOf(':') === -1) {
+      // TODO: If the property name contains a colon, we don't dedupe. Escape instead.
+      const parentReference = writtenDebugObjects.get(parent);
+      if (parentReference !== undefined) {
+        // If the parent has a reference, we can refer to this object indirectly
+        // through the property name inside that parent.
+        let propertyName = parentPropertyName;
+        if (isArray(parent) && parent[0] === REACT_ELEMENT_TYPE) {
+          // For elements, we've converted it to an array but we'll have converted
+          // it back to an element before we read the references so the property
+          // needs to be aliased.
+          switch (parentPropertyName) {
+            case '1':
+              propertyName = 'type';
+              break;
+            case '2':
+              propertyName = 'key';
+              break;
+            case '3':
+              propertyName = 'props';
+              break;
+            case '4':
+              propertyName = '_owner';
+              break;
+          }
+        }
+        writtenDebugObjects.set(value, parentReference + ':' + propertyName);
+      } else if (debugNoOutline !== value) {
+        // If this isn't the root object (like meta data) and we don't have an id for it, outline
+        // it so that we can dedupe it by reference later.
+        const outlinedId = outlineConsoleValue(request, counter, value);
+        return serializeByValueID(outlinedId);
+      }
+    }
+
     const writtenObjects = request.writtenObjects;
     const existingReference = writtenObjects.get(value);
     if (existingReference !== undefined) {
-      // We've already emitted this as a real object, so we can
-      // just refer to that by its existing reference.
+      // We've already emitted this as a real object, so we can refer to that by its existing reference.
+      // This might be slightly different serialization than what renderConsoleValue would've produced.
       return existingReference;
     }
 
@@ -4068,8 +4121,8 @@ function renderConsoleValue(
     }
 
     // Serialize the body of the function as an eval so it can be printed.
-    const writtenObjects = request.writtenObjects;
-    const existingReference = writtenObjects.get(value);
+    const writtenDebugObjects = request.writtenDebugObjects;
+    const existingReference = writtenDebugObjects.get(value);
     if (existingReference !== undefined) {
       // We've already emitted this function, so we can
       // just refer to that by its existing reference.
@@ -4085,7 +4138,7 @@ function renderConsoleValue(
     const processedChunk = encodeReferenceChunk(request, id, serializedValue);
     request.completedRegularChunks.push(processedChunk);
     const reference = serializeByValueID(id);
-    writtenObjects.set(value, reference);
+    writtenDebugObjects.set(value, reference);
     return reference;
   }
 
@@ -4144,6 +4197,8 @@ function serializeConsoleValue(
     }
   }
 
+  const prevNoOutline = debugNoOutline;
+  debugNoOutline = model;
   try {
     // $FlowFixMe[incompatible-cast] stringify can return null
     return (stringify(model, replacer): string);
@@ -4152,6 +4207,8 @@ function serializeConsoleValue(
     return (stringify(
       'Unknown Value: React could not send it from the server.\n' + x.message,
     ): string);
+  } finally {
+    debugNoOutline = prevNoOutline;
   }
 }
 
@@ -4195,6 +4252,13 @@ function outlineConsoleValue(
     }
   }
 
+  const id = request.nextChunkId++;
+  const prevModelRoot = debugModelRoot;
+  debugModelRoot = model;
+  if (typeof model === 'object' && model !== null) {
+    // Future references can refer to this object by id.
+    request.writtenDebugObjects.set(model, serializeByValueID(id));
+  }
   let json: string;
   try {
     // $FlowFixMe[incompatible-cast] stringify can return null
@@ -4204,10 +4268,11 @@ function outlineConsoleValue(
     json = (stringify(
       'Unknown Value: React could not send it from the server.\n' + x.message,
     ): string);
+  } finally {
+    debugModelRoot = prevModelRoot;
   }
 
   request.pendingChunks++;
-  const id = request.nextChunkId++;
   const row = id.toString(16) + ':' + json + '\n';
   const processedChunk = stringToChunk(row);
   request.completedRegularChunks.push(processedChunk);
