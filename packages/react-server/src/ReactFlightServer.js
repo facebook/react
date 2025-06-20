@@ -2440,7 +2440,7 @@ function serializeConsoleMap(
   counter: {objectLimit: number},
   map: Map<ReactClientValue, ReactClientValue>,
 ): string {
-  // Like serializeMap but for renderConsoleValue.
+  // Like serializeMap but for renderDebugModel.
   const entries = Array.from(map);
   // The Map itself doesn't take up any space but the outlined object does.
   counter.objectLimit++;
@@ -2458,7 +2458,7 @@ function serializeConsoleMap(
       doNotLimit.add(value);
     }
   }
-  const id = outlineConsoleValue(request, counter, entries);
+  const id = outlineDebugModel(request, counter, entries);
   return '$Q' + id.toString(16);
 }
 
@@ -2467,7 +2467,7 @@ function serializeConsoleSet(
   counter: {objectLimit: number},
   set: Set<ReactClientValue>,
 ): string {
-  // Like serializeMap but for renderConsoleValue.
+  // Like serializeMap but for renderDebugModel.
   const entries = Array.from(set);
   // The Set itself doesn't take up any space but the outlined object does.
   counter.objectLimit++;
@@ -2479,7 +2479,7 @@ function serializeConsoleSet(
       doNotLimit.add(entry);
     }
   }
-  const id = outlineConsoleValue(request, counter, entries);
+  const id = outlineDebugModel(request, counter, entries);
   return '$W' + id.toString(16);
 }
 
@@ -3537,7 +3537,7 @@ function emitDebugChunk(
     );
   }
 
-  const json: string = serializeConsoleValue(request, 500, debugInfo);
+  const json: string = serializeDebugModel(request, 500, debugInfo);
   const row = serializeRowHeader('D', id) + json + '\n';
   const processedChunk = stringToChunk(row);
   request.completedRegularChunks.push(processedChunk);
@@ -3607,7 +3607,7 @@ function outlineComponentInfo(
   // $FlowFixMe[cannot-write]
   componentDebugInfo.props = componentInfo.props;
 
-  const id = outlineConsoleValue(request, counter, componentDebugInfo);
+  const id = outlineDebugModel(request, counter, componentDebugInfo);
   const ref = serializeByValueID(id);
   request.writtenDebugObjects.set(componentInfo, ref);
   // We also store this in the main dedupe set so that it can be referenced by inline React Elements.
@@ -3656,7 +3656,7 @@ function emitIOInfoChunk(
     // $FlowFixMe[cannot-write]
     debugIOInfo.owner = owner;
   }
-  const json: string = serializeConsoleValue(request, objectLimit, debugIOInfo);
+  const json: string = serializeDebugModel(request, objectLimit, debugIOInfo);
   const row = id.toString(16) + ':J' + json + '\n';
   const processedChunk = stringToChunk(row);
   request.completedRegularChunks.push(processedChunk);
@@ -3806,7 +3806,7 @@ let debugModelRoot: mixed = null;
 let debugNoOutline: mixed = null;
 // This is a forked version of renderModel which should never error, never suspend and is limited
 // in the depth it can encode.
-function renderConsoleValue(
+function renderDebugModel(
   request: Request,
   counter: {objectLimit: number},
   parent:
@@ -3888,7 +3888,7 @@ function renderConsoleValue(
       } else if (debugNoOutline !== value) {
         // If this isn't the root object (like meta data) and we don't have an id for it, outline
         // it so that we can dedupe it by reference later.
-        const outlinedId = outlineConsoleValue(request, counter, value);
+        const outlinedId = outlineDebugModel(request, counter, value);
         return serializeByValueID(outlinedId);
       }
     }
@@ -3897,7 +3897,7 @@ function renderConsoleValue(
     const existingReference = writtenObjects.get(value);
     if (existingReference !== undefined) {
       // We've already emitted this as a real object, so we can refer to that by its existing reference.
-      // This might be slightly different serialization than what renderConsoleValue would've produced.
+      // This might be slightly different serialization than what renderDebugModel would've produced.
       return existingReference;
     }
 
@@ -3959,7 +3959,7 @@ function renderConsoleValue(
       switch (thenable.status) {
         case 'fulfilled': {
           return serializePromiseID(
-            outlineConsoleValue(request, counter, thenable.value),
+            outlineDebugModel(request, counter, thenable.value),
           );
         }
         case 'rejected': {
@@ -4168,7 +4168,7 @@ function renderConsoleValue(
   return 'unknown type ' + typeof value;
 }
 
-function serializeConsoleValue(
+function serializeDebugModel(
   request: Request,
   objectLimit: number,
   model: mixed,
@@ -4183,7 +4183,7 @@ function serializeConsoleValue(
     value: ReactClientValue,
   ): ReactJSONValue {
     try {
-      return renderConsoleValue(
+      return renderDebugModel(
         request,
         counter,
         this,
@@ -4212,7 +4212,7 @@ function serializeConsoleValue(
   }
 }
 
-function outlineConsoleValue(
+function outlineDebugModel(
   request: Request,
   counter: {objectLimit: number},
   model: ReactClientValue,
@@ -4221,7 +4221,7 @@ function outlineConsoleValue(
     // These errors should never make it into a build so we don't need to encode them in codes.json
     // eslint-disable-next-line react-internal/prod-error-codes
     throw new Error(
-      'outlineConsoleValue should never be called in production mode. This is a bug in React.',
+      'outlineDebugModel should never be called in production mode. This is a bug in React.',
     );
   }
 
@@ -4238,7 +4238,7 @@ function outlineConsoleValue(
     value: ReactClientValue,
   ): ReactJSONValue {
     try {
-      return renderConsoleValue(
+      return renderDebugModel(
         request,
         counter,
         this,
@@ -4304,10 +4304,10 @@ function emitConsoleChunk(
   const payload = [methodName, stackTrace, owner, env];
   // $FlowFixMe[method-unbinding]
   payload.push.apply(payload, args);
-  let json = serializeConsoleValue(request, 500, payload);
+  let json = serializeDebugModel(request, 500, payload);
   if (json[0] !== '[') {
     // This looks like an error. Try a simpler object.
-    json = serializeConsoleValue(request, 500, [
+    json = serializeDebugModel(request, 500, [
       methodName,
       stackTrace,
       owner,
