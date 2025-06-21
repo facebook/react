@@ -2213,7 +2213,8 @@ function animateGesture(
   keyframes: any,
   targetElement: Element,
   pseudoElement: string,
-  timeline: AnimationTimeline,
+  timeline: GestureTimeline,
+  customTimelineCleanup: Array<() => void>,
   rangeStart: number,
   rangeEnd: number,
   moveFirstFrameIntoViewport: boolean,
@@ -2274,24 +2275,49 @@ function animateGesture(
   }
   // TODO: Reverse the reverse if the original direction is reverse.
   const reverse = rangeStart > rangeEnd;
-  targetElement.animate(keyframes, {
-    pseudoElement: pseudoElement,
-    // Set the timeline to the current gesture timeline to drive the updates.
-    timeline: timeline,
-    // We reset all easing functions to linear so that it feels like you
-    // have direct impact on the transition and to avoid double bouncing
-    // from scroll bouncing.
-    easing: 'linear',
-    // We fill in both direction for overscroll.
-    fill: 'both', // TODO: Should we preserve the fill instead?
-    // We play all gestures in reverse, except if we're in reverse direction
-    // in which case we need to play it in reverse of the reverse.
-    direction: reverse ? 'normal' : 'reverse',
-    // Range start needs to be higher than range end. If it goes in reverse
-    // we reverse the whole animation below.
-    rangeStart: (reverse ? rangeEnd : rangeStart) + '%',
-    rangeEnd: (reverse ? rangeStart : rangeEnd) + '%',
-  });
+  if (timeline instanceof AnimationTimeline) {
+    // Native Timeline
+    targetElement.animate(keyframes, {
+      pseudoElement: pseudoElement,
+      // Set the timeline to the current gesture timeline to drive the updates.
+      timeline: timeline,
+      // We reset all easing functions to linear so that it feels like you
+      // have direct impact on the transition and to avoid double bouncing
+      // from scroll bouncing.
+      easing: 'linear',
+      // We fill in both direction for overscroll.
+      fill: 'both', // TODO: Should we preserve the fill instead?
+      // We play all gestures in reverse, except if we're in reverse direction
+      // in which case we need to play it in reverse of the reverse.
+      direction: reverse ? 'normal' : 'reverse',
+      // Range start needs to be higher than range end. If it goes in reverse
+      // we reverse the whole animation below.
+      rangeStart: (reverse ? rangeEnd : rangeStart) + '%',
+      rangeEnd: (reverse ? rangeStart : rangeEnd) + '%',
+    });
+  } else {
+    // Custom Timeline
+    const animation = targetElement.animate(keyframes, {
+      pseudoElement: pseudoElement,
+      // We reset all easing functions to linear so that it feels like you
+      // have direct impact on the transition and to avoid double bouncing
+      // from scroll bouncing.
+      easing: 'linear',
+      // We fill in both direction for overscroll.
+      fill: 'both', // TODO: Should we preserve the fill instead?
+      // We play all gestures in reverse, except if we're in reverse direction
+      // in which case we need to play it in reverse of the reverse.
+      direction: reverse ? 'normal' : 'reverse',
+      // We set the delay and duration to represent the span of the range.
+      delay: reverse ? rangeEnd : rangeStart,
+      duration: reverse ? rangeStart - rangeEnd : rangeEnd - rangeStart,
+    });
+    // Let the custom timeline take control of driving the animation.
+    const cleanup = timeline.animate(animation);
+    if (cleanup) {
+      customTimelineCleanup.push(cleanup);
+    }
+  }
 }
 
 export function startGestureTransition(
@@ -2320,6 +2346,7 @@ export function startGestureTransition(
     });
     // $FlowFixMe[prop-missing]
     ownerDocument.__reactViewTransition = transition;
+    const customTimelineCleanup: Array<() => void> = []; // Cleanup Animations started in a CustomTimeline
     const readyCallback = () => {
       const documentElement: Element = (ownerDocument.documentElement: any);
       // Loop through all View Transition Animations.
@@ -2419,6 +2446,7 @@ export function startGestureTransition(
             effect.target,
             pseudoElement,
             timeline,
+            customTimelineCleanup,
             adjustedRangeStart,
             adjustedRangeEnd,
             isGeneratedGroupAnim,
@@ -2445,6 +2473,7 @@ export function startGestureTransition(
                 effect.target,
                 pseudoElementName,
                 timeline,
+                customTimelineCleanup,
                 rangeStart,
                 rangeEnd,
                 false,
@@ -2494,6 +2523,10 @@ export function startGestureTransition(
     transition.ready.then(readyForAnimations, handleError);
     transition.finished.finally(() => {
       cancelAllViewTransitionAnimations((ownerDocument.documentElement: any));
+      for (let i = 0; i < customTimelineCleanup.length; i++) {
+        const cleanup = customTimelineCleanup[i];
+        cleanup();
+      }
       // $FlowFixMe[prop-missing]
       if (ownerDocument.__reactViewTransition === transition) {
         // $FlowFixMe[prop-missing]
@@ -2597,10 +2630,15 @@ export function createViewTransitionInstance(
   };
 }
 
-export type GestureTimeline = AnimationTimeline; // TODO: More provider types.
+interface CustomTimeline {
+  currentTime: number;
+  animate(animation: Animation): void | (() => void);
+}
 
-export function getCurrentGestureOffset(provider: GestureTimeline): number {
-  const time = provider.currentTime;
+export type GestureTimeline = AnimationTimeline | CustomTimeline;
+
+export function getCurrentGestureOffset(timeline: GestureTimeline): number {
+  const time = timeline.currentTime;
   if (time === null) {
     throw new Error(
       'Cannot start a gesture with a disconnected AnimationTimeline.',
