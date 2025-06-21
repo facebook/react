@@ -113,7 +113,7 @@ export function initAsyncDebugInfo(): void {
             node = ({
               tag: UNRESOLVED_AWAIT_NODE,
               owner: resolveOwner(),
-              stack: parseStackTrace(new Error(), 1),
+              stack: parseStackTrace(new Error(), 5),
               start: performance.now(),
               end: -1.1, // set when resolved.
               promise: new WeakRef((resource: Promise<any>)),
@@ -124,7 +124,7 @@ export function initAsyncDebugInfo(): void {
             node = ({
               tag: UNRESOLVED_PROMISE_NODE,
               owner: resolveOwner(),
-              stack: parseStackTrace(new Error(), 1),
+              stack: parseStackTrace(new Error(), 5),
               start: performance.now(),
               end: -1.1, // Set when we resolve.
               promise: new WeakRef((resource: Promise<any>)),
@@ -145,7 +145,7 @@ export function initAsyncDebugInfo(): void {
             node = ({
               tag: IO_NODE,
               owner: resolveOwner(),
-              stack: parseStackTrace(new Error(), 1), // This is only used if no native promises are used.
+              stack: parseStackTrace(new Error(), 3), // This is only used if no native promises are used.
               start: performance.now(),
               end: -1.1, // Only set when pinged.
               promise: null,
@@ -160,7 +160,7 @@ export function initAsyncDebugInfo(): void {
             node = ({
               tag: IO_NODE,
               owner: resolveOwner(),
-              stack: parseStackTrace(new Error(), 1),
+              stack: parseStackTrace(new Error(), 3),
               start: performance.now(),
               end: -1.1, // Only set when pinged.
               promise: null,
