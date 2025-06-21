@@ -315,12 +315,68 @@ function getIOColor(
   }
 }
 
+export function logComponentAwaitErrored(
+  asyncInfo: ReactAsyncInfo,
+  trackIdx: number,
+  startTime: number,
+  endTime: number,
+  rootEnv: string,
+  error: mixed,
+): void {
+  if (supportsUserTiming && endTime > 0) {
+    const env = asyncInfo.env;
+    const name = asyncInfo.awaited.name;
+    const isPrimaryEnv = env === rootEnv;
+    const entryName =
+      'await ' +
+      (isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']');
+    const debugTask = asyncInfo.debugTask;
+    if (__DEV__ && debugTask) {
+      const message =
+        typeof error === 'object' &&
+        error !== null &&
+        typeof error.message === 'string'
+          ? // eslint-disable-next-line react-internal/safe-string-coercion
+            String(error.message)
+          : // eslint-disable-next-line react-internal/safe-string-coercion
+            String(error);
+      const properties = [['Rejected', message]];
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        performance.measure.bind(performance, entryName, {
+          start: startTime < 0 ? 0 : startTime,
+          end: endTime,
+          detail: {
+            devtools: {
+              color: 'error',
+              track: trackNames[trackIdx],
+              trackGroup: COMPONENTS_TRACK,
+              properties,
+              tooltipText: entryName + ' Rejected',
+            },
+          },
+        }),
+      );
+    } else {
+      console.timeStamp(
+        entryName,
+        startTime < 0 ? 0 : startTime,
+        endTime,
+        trackNames[trackIdx],
+        COMPONENTS_TRACK,
+        'error',
+      );
+    }
+  }
+}
+
 export function logComponentAwait(
   asyncInfo: ReactAsyncInfo,
   trackIdx: number,
   startTime: number,
   endTime: number,
   rootEnv: string,
+  value: mixed,
 ): void {
   if (supportsUserTiming && endTime > 0) {
     const env = asyncInfo.env;
@@ -332,17 +388,26 @@ export function logComponentAwait(
       (isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']');
     const debugTask = asyncInfo.debugTask;
     if (__DEV__ && debugTask) {
+      const properties: Array<[string, string]> = [];
+      if (typeof value === 'object' && value !== null) {
+        addObjectToProperties(value, properties, 0);
+      } else if (value !== undefined) {
+        addValueToProperties('Resolved', value, properties, 0);
+      }
       debugTask.run(
         // $FlowFixMe[method-unbinding]
-        console.timeStamp.bind(
-          console,
-          entryName,
-          startTime < 0 ? 0 : startTime,
-          endTime,
-          trackNames[trackIdx],
-          COMPONENTS_TRACK,
-          color,
-        ),
+        performance.measure.bind(performance, entryName, {
+          start: startTime < 0 ? 0 : startTime,
+          end: endTime,
+          detail: {
+            devtools: {
+              color: color,
+              track: trackNames[trackIdx],
+              trackGroup: COMPONENTS_TRACK,
+              properties,
+            },
+          },
+        }),
       );
     } else {
       console.timeStamp(

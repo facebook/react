@@ -81,6 +81,7 @@ import {
   logIOInfo,
   logIOInfoErrored,
   logComponentAwait,
+  logComponentAwaitErrored,
 } from './ReactFlightPerformanceTrack';
 
 import {
@@ -3214,13 +3215,55 @@ function flushComponentPerformance(
             }
             // $FlowFixMe: Refined.
             const asyncInfo: ReactAsyncInfo = candidateInfo;
-            logComponentAwait(
-              asyncInfo,
-              trackIdx,
-              time,
-              endTime,
-              response._rootEnvironmentName,
-            );
+            const env = response._rootEnvironmentName;
+            const promise = asyncInfo.awaited.value;
+            if (promise) {
+              const thenable: Thenable<mixed> = (promise: any);
+              switch (thenable.status) {
+                case INITIALIZED:
+                  logComponentAwait(
+                    asyncInfo,
+                    trackIdx,
+                    time,
+                    endTime,
+                    env,
+                    thenable.value,
+                  );
+                  break;
+                case ERRORED:
+                  logComponentAwaitErrored(
+                    asyncInfo,
+                    trackIdx,
+                    time,
+                    endTime,
+                    env,
+                    thenable.reason,
+                  );
+                  break;
+                default:
+                  // We assume that we should have received the data by now since this is logged at the
+                  // end of the response stream. This is more sensitive to ordering so we don't wait
+                  // to log it.
+                  logComponentAwait(
+                    asyncInfo,
+                    trackIdx,
+                    time,
+                    endTime,
+                    env,
+                    undefined,
+                  );
+                  break;
+              }
+            } else {
+              logComponentAwait(
+                asyncInfo,
+                trackIdx,
+                time,
+                endTime,
+                env,
+                undefined,
+              );
+            }
           }
         }
       }
