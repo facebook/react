@@ -3732,6 +3732,7 @@ function emitIOInfoChunk(
   name: string,
   start: number,
   end: number,
+  value: ?Promise<mixed>,
   env: ?string,
   owner: ?ReactComponentInfo,
   stack: ?ReactStackTrace,
@@ -3756,6 +3757,10 @@ function emitIOInfoChunk(
     start: relativeStartTimestamp,
     end: relativeEndTimestamp,
   };
+  if (value != null) {
+    // $FlowFixMe[cannot-write]
+    debugIOInfo.value = value;
+  }
   if (env != null) {
     // $FlowFixMe[cannot-write]
     debugIOInfo.env = env;
@@ -3803,6 +3808,7 @@ function outlineIOInfo(request: Request, ioInfo: ReactIOInfo): void {
     ioInfo.name,
     ioInfo.start,
     ioInfo.end,
+    ioInfo.value,
     ioInfo.env,
     owner,
     debugStack,
@@ -3840,6 +3846,12 @@ function serializeIONode(
     outlineComponentInfo(request, owner);
   }
 
+  let value: void | Promise<mixed> = undefined;
+  const promiseRef = ioNode.promise;
+  if (promiseRef !== null) {
+    value = promiseRef.deref();
+  }
+
   // We log the environment at the time when we serialize the I/O node.
   // The environment name may have changed from when the I/O was actually started.
   const env = (0, request.environmentName)();
@@ -3852,6 +3864,7 @@ function serializeIONode(
     name,
     ioNode.start,
     ioNode.end,
+    value,
     env,
     owner,
     stack,
