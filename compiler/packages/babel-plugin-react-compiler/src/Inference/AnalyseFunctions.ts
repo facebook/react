@@ -20,11 +20,10 @@ import {inferReactiveScopeVariables} from '../ReactiveScopes';
 import {rewriteInstructionKindsBasedOnReassignment} from '../SSA';
 import {inferMutableRanges} from './InferMutableRanges';
 import inferReferenceEffects from './InferReferenceEffects';
-import {assertExhaustive, retainWhere} from '../Utils/utils';
+import {assertExhaustive} from '../Utils/utils';
 import {inferMutationAliasingEffects} from './InferMutationAliasingEffects';
 import {inferFunctionExpressionAliasingEffectsSignature} from './InferFunctionExpressionAliasingEffectsSignature';
 import {inferMutationAliasingRanges} from './InferMutationAliasingRanges';
-import {hashEffect} from './AliasingEffects';
 
 export default function analyseFunctions(func: HIRFunction): void {
   for (const [_, block] of func.body.blocks) {
@@ -69,89 +68,103 @@ function lowerWithMutationAliasing(fn: HIRFunction): void {
   analyseFunctions(fn);
   inferMutationAliasingEffects(fn, {isFunctionExpression: true});
   deadCodeElimination(fn);
-  inferMutationAliasingRanges(fn, {isFunctionExpression: true});
+  const mutationEffects = inferMutationAliasingRanges(fn, {
+    isFunctionExpression: true,
+  }).unwrap();
   rewriteInstructionKindsBasedOnReassignment(fn);
   inferReactiveScopeVariables(fn);
-  const effects = inferFunctionExpressionAliasingEffectsSignature(fn);
+  const aliasingEffects = inferFunctionExpressionAliasingEffectsSignature(fn);
+  if (aliasingEffects == null) {
+    /**
+     * If the data flow within the function expression is too complex to resolve,
+     * we null out the function expressions' alisingEffects. This ensures that
+     * InferMutationAliasingEffects at the outer level will fall back to a more
+     * conservative of the function as a plain mutable value — see the handling of
+     * 'Apply' in applyEffect(). As part of this we also set all context variables
+     * to Capture, which will downgrade if they turn out to be primitives, frozen,
+     * globals, etc.
+     */
+    fn.aliasingEffects = null;
+    for (const operand of fn.context) {
+      operand.effect = Effect.Capture;
+    }
+  } else {
+    /**
+     * We were able to determine a precise set of mutation and aliasing (data flow)
+     * effects for the function. Annotate which context variables are Capture based
+     * on which are mutated and/or captured into some other value. Capture is used
+     * as a signal to InferMutationAliasingEffects (at the outer function level) that
+     * the function itself has to be treated as mutable. See 'CreateFunction' handling
+     * in applyEffect().
+     */
+    const functionEffects = [...mutationEffects, ...aliasingEffects];
+    fn.aliasingEffects = functionEffects;
+
+    /**
+     * Phase 2: populate the Effect of each context variable to use in inferring
+     * the outer function. For example, InferMutationAliasingEffects uses context variable
+     * effects to decide if the function may be mutable or not.
+     */
+    const capturedOrMutated = new Set<IdentifierId>();
+    for (const effect of functionEffects) {
+      switch (effect.kind) {
+        case 'Assign':
+        case 'Alias':
+        case 'Capture':
+        case 'CreateFrom': {
+          capturedOrMutated.add(effect.from.identifier.id);
+          break;
+        }
+        case 'Apply': {
+          CompilerError.invariant(false, {
+            reason: `[AnalyzeFunctions] Expected Apply effects to be replaced with more precise effects`,
+            loc: effect.function.loc,
+          });
+        }
+        case 'Mutate':
+        case 'MutateConditionally':
+        case 'MutateTransitive':
+        case 'MutateTransitiveConditionally': {
+          capturedOrMutated.add(effect.value.identifier.id);
+          break;
+        }
+        case 'Impure':
+        case 'Render':
+        case 'MutateFrozen':
+        case 'MutateGlobal':
+        case 'CreateFunction':
+        case 'Create':
+        case 'Freeze':
+        case 'ImmutableCapture': {
+          // no-op
+          break;
+        }
+        default: {
+          assertExhaustive(
+            effect,
+            `Unexpected effect kind ${(effect as any).kind}`,
+          );
+        }
+      }
+    }
+
+    for (const operand of fn.context) {
+      if (
+        capturedOrMutated.has(operand.identifier.id) ||
+        operand.effect === Effect.Capture
+      ) {
+        operand.effect = Effect.Capture;
+      } else {
+        operand.effect = Effect.Read;
+      }
+    }
+  }
+
   fn.env.logger?.debugLogIRs?.({
     kind: 'hir',
     name: 'AnalyseFunction (inner)',
     value: fn,
   });
-  if (effects != null) {
-    fn.aliasingEffects ??= [];
-    fn.aliasingEffects?.push(...effects);
-  }
-  if (fn.aliasingEffects != null) {
-    const seen = new Set<string>();
-    retainWhere(fn.aliasingEffects, effect => {
-      const hash = hashEffect(effect);
-      if (seen.has(hash)) {
-        return false;
-      }
-      seen.add(hash);
-      return true;
-    });
-  }
-
-  /**
-   * Phase 2: populate the Effect of each context variable to use in inferring
-   * the outer function. For example, InferMutationAliasingEffects uses context variable
-   * effects to decide if the function may be mutable or not.
-   */
-  const capturedOrMutated = new Set<IdentifierId>();
-  for (const effect of effects ?? []) {
-    switch (effect.kind) {
-      case 'Assign':
-      case 'Alias':
-      case 'Capture':
-      case 'CreateFrom': {
-        capturedOrMutated.add(effect.from.identifier.id);
-        break;
-      }
-      case 'Apply': {
-        CompilerError.invariant(false, {
-          reason: `[AnalyzeFunctions] Expected Apply effects to be replaced with more precise effects`,
-          loc: effect.function.loc,
-        });
-      }
-      case 'Mutate':
-      case 'MutateConditionally':
-      case 'MutateTransitive':
-      case 'MutateTransitiveConditionally': {
-        capturedOrMutated.add(effect.value.identifier.id);
-        break;
-      }
-      case 'Impure':
-      case 'Render':
-      case 'MutateFrozen':
-      case 'MutateGlobal':
-      case 'CreateFunction':
-      case 'Create':
-      case 'Freeze':
-      case 'ImmutableCapture': {
-        // no-op
-        break;
-      }
-      default: {
-        assertExhaustive(
-          effect,
-          `Unexpected effect kind ${(effect as any).kind}`,
-        );
-      }
-    }
-  }
-
-  for (const operand of fn.context) {
-    if (
-      capturedOrMutated.has(operand.identifier.id) ||
-      operand.effect === Effect.Capture
-    ) {
-      operand.effect = Effect.Capture;
-    } else {
-      operand.effect = Effect.Read;
-    }
-  }
 }
 
 function lower(func: HIRFunction): void {

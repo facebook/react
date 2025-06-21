@@ -5,9 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {HIRFunction, IdentifierId, Place, ValueKind, ValueReason} from '../HIR';
-import {getOrInsertDefault} from '../Utils/utils';
-import {AliasingEffect} from './AliasingEffects';
+import {
+  BlockId,
+  HIRFunction,
+  IdentifierId,
+  Place,
+  ValueKind,
+  ValueReason,
+} from '../HIR';
+import {getOrInsertDefault, retainWhere} from '../Utils/utils';
+import {AliasingEffect, hashEffect} from './AliasingEffects';
 
 /**
  * This function tracks data flow within an inner function expression in order to
@@ -77,11 +84,14 @@ export function inferFunctionExpressionAliasingEffectsSignature(
     );
   }
 
-  // todo: fixpoint
+  const seenBlocks = new Set<BlockId>();
   for (const block of fn.body.blocks.values()) {
     for (const phi of block.phis) {
       const operands: Array<AliasedIdentifier> = [];
-      for (const operand of phi.operands.values()) {
+      for (const [pred, operand] of phi.operands) {
+        if (!seenBlocks.has(pred)) {
+          return null;
+        }
         const inputs = lookup(operand, 'Alias');
         if (inputs != null) {
           operands.push(...inputs);
@@ -91,6 +101,7 @@ export function inferFunctionExpressionAliasingEffectsSignature(
         dataFlow.set(phi.place.identifier.id, operands);
       }
     }
+    seenBlocks.add(block.id);
     for (const instr of block.instructions) {
       if (instr.effects == null) continue;
       for (const effect of instr.effects) {
@@ -182,13 +193,16 @@ export function inferFunctionExpressionAliasingEffectsSignature(
     });
   }
 
+  const seen = new Set<string>();
+  retainWhere(effects, effect => {
+    const hash = hashEffect(effect);
+    if (seen.has(hash)) {
+      return false;
+    }
+    seen.add(hash);
+    return true;
+  });
   return effects;
-}
-
-export enum MutationKind {
-  None = 0,
-  Conditional = 1,
-  Definite = 2,
 }
 
 type AliasingKind = 'Alias' | 'Capture' | 'CreateFrom' | 'Assign';

@@ -822,7 +822,8 @@ function applyEffect(
       const functionValues = state.values(effect.function);
       if (
         functionValues.length === 1 &&
-        functionValues[0].kind === 'FunctionExpression'
+        functionValues[0].kind === 'FunctionExpression' &&
+        functionValues[0].loweredFunc.func.aliasingEffects != null
       ) {
         /*
          * We're calling a locally declared function, we already know it's effects!
