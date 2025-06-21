@@ -17,13 +17,105 @@ import type {
 
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 
+import {OMITTED_PROP_ERROR} from './ReactFlightPropertyAccess';
+
+import hasOwnProperty from 'shared/hasOwnProperty';
+
 const supportsUserTiming =
   enableProfilerTimer &&
   typeof console !== 'undefined' &&
-  typeof console.timeStamp === 'function';
+  typeof console.timeStamp === 'function' &&
+  typeof performance !== 'undefined' &&
+  // $FlowFixMe[method-unbinding]
+  typeof performance.measure === 'function';
 
 const IO_TRACK = 'Server Requests ⚛';
 const COMPONENTS_TRACK = 'Server Components ⚛';
+
+function isPrimitiveArray(array: Object) {
+  for (let i = 0; i < array.length; i++) {
+    const value = array[i];
+    if (typeof value === 'object' && value !== null) {
+      return false;
+    }
+    if (typeof value === 'function') {
+      return false;
+    }
+    if (typeof value === 'string' && value.length > 50) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function addObjectToProperties(
+  object: Object,
+  properties: Array<[string, string]>,
+  indent: number,
+): void {
+  for (const key in object) {
+    if (hasOwnProperty.call(object, key)) {
+      const value = object[key];
+      addValueToProperties(key, value, properties, indent);
+    }
+  }
+}
+
+function addValueToProperties(
+  propertyName: string,
+  value: mixed,
+  properties: Array<[string, string]>,
+  indent: number,
+): void {
+  let desc;
+  switch (typeof value) {
+    case 'object':
+      if (value === null) {
+        desc = 'null';
+        break;
+      } else {
+        // $FlowFixMe[method-unbinding]
+        const objectToString = Object.prototype.toString.call(value);
+        const objectName = objectToString.slice(8, objectToString.length - 1);
+        if (objectName === 'Array' && isPrimitiveArray(value)) {
+          desc = JSON.stringify(value);
+          break;
+        }
+        properties.push([
+          '\xa0\xa0'.repeat(indent) + propertyName,
+          objectName === 'Object' ? '' : objectName,
+        ]);
+        if (indent < 3) {
+          addObjectToProperties(value, properties, indent + 1);
+        }
+        return;
+      }
+    case 'function':
+      if (value.name === '') {
+        desc = '() => {}';
+      } else {
+        desc = value.name + '() {}';
+      }
+      break;
+    case 'string':
+      if (value === OMITTED_PROP_ERROR) {
+        desc = '...';
+      } else {
+        desc = JSON.stringify(value);
+      }
+      break;
+    case 'undefined':
+      desc = 'undefined';
+      break;
+    case 'boolean':
+      desc = value ? 'true' : 'false';
+      break;
+    default:
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      desc = String(value);
+  }
+  properties.push(['\xa0\xa0'.repeat(indent) + propertyName, desc]);
+}
 
 export function markAllTracksInOrder() {
   if (supportsUserTiming) {
@@ -133,12 +225,7 @@ export function logComponentErrored(
     const isPrimaryEnv = env === rootEnv;
     const entryName =
       isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']';
-    if (
-      __DEV__ &&
-      typeof performance !== 'undefined' &&
-      // $FlowFixMe[method-unbinding]
-      typeof performance.measure === 'function'
-    ) {
+    if (__DEV__) {
       const message =
         typeof error === 'object' &&
         error !== null &&
@@ -270,7 +357,63 @@ export function logComponentAwait(
   }
 }
 
-export function logIOInfo(ioInfo: ReactIOInfo, rootEnv: string): void {
+export function logIOInfoErrored(
+  ioInfo: ReactIOInfo,
+  rootEnv: string,
+  error: mixed,
+): void {
+  const startTime = ioInfo.start;
+  const endTime = ioInfo.end;
+  if (supportsUserTiming && endTime >= 0) {
+    const name = ioInfo.name;
+    const env = ioInfo.env;
+    const isPrimaryEnv = env === rootEnv;
+    const entryName =
+      isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']';
+    const debugTask = ioInfo.debugTask;
+    if (__DEV__ && debugTask) {
+      const message =
+        typeof error === 'object' &&
+        error !== null &&
+        typeof error.message === 'string'
+          ? // eslint-disable-next-line react-internal/safe-string-coercion
+            String(error.message)
+          : // eslint-disable-next-line react-internal/safe-string-coercion
+            String(error);
+      const properties = [['Rejected', message]];
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        performance.measure.bind(performance, entryName, {
+          start: startTime < 0 ? 0 : startTime,
+          end: endTime,
+          detail: {
+            devtools: {
+              color: 'error',
+              track: IO_TRACK,
+              properties,
+              tooltipText: entryName + ' Rejected',
+            },
+          },
+        }),
+      );
+    } else {
+      console.timeStamp(
+        entryName,
+        startTime < 0 ? 0 : startTime,
+        endTime,
+        IO_TRACK,
+        undefined,
+        'error',
+      );
+    }
+  }
+}
+
+export function logIOInfo(
+  ioInfo: ReactIOInfo,
+  rootEnv: string,
+  value: mixed,
+): void {
   const startTime = ioInfo.start;
   const endTime = ioInfo.end;
   if (supportsUserTiming && endTime >= 0) {
@@ -282,17 +425,25 @@ export function logIOInfo(ioInfo: ReactIOInfo, rootEnv: string): void {
     const debugTask = ioInfo.debugTask;
     const color = getIOColor(name);
     if (__DEV__ && debugTask) {
+      const properties: Array<[string, string]> = [];
+      if (typeof value === 'object' && value !== null) {
+        addObjectToProperties(value, properties, 0);
+      } else if (value !== undefined) {
+        addValueToProperties('Resolved', value, properties, 0);
+      }
       debugTask.run(
         // $FlowFixMe[method-unbinding]
-        console.timeStamp.bind(
-          console,
-          entryName,
-          startTime < 0 ? 0 : startTime,
-          endTime,
-          IO_TRACK,
-          undefined,
-          color,
-        ),
+        performance.measure.bind(performance, entryName, {
+          start: startTime < 0 ? 0 : startTime,
+          end: endTime,
+          detail: {
+            devtools: {
+              color: color,
+              track: IO_TRACK,
+              properties,
+            },
+          },
+        }),
       );
     } else {
       console.timeStamp(
