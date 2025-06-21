@@ -26,6 +26,7 @@ import {
 import {resolveOwner} from './flight/ReactFlightCurrentOwner';
 import {createHook, executionAsyncId, AsyncResource} from 'async_hooks';
 import {enableAsyncDebugInfo} from 'shared/ReactFeatureFlags';
+import {parseStackTrace} from './ReactFlightServerConfig';
 
 // $FlowFixMe[method-unbinding]
 const getAsyncId = AsyncResource.prototype.asyncId;
@@ -86,7 +87,7 @@ export function initAsyncDebugInfo(): void {
               tag: UNRESOLVED_AWAIT_NODE,
               owner: resolveOwner(),
               debugInfo: new WeakRef((resource: Promise<any>)),
-              stack: new Error(),
+              stack: parseStackTrace(new Error(), 1),
               start: performance.now(),
               end: -1.1, // set when resolved.
               awaited: trigger, // The thing we're awaiting on. Might get overrriden when we resolve.
@@ -97,7 +98,7 @@ export function initAsyncDebugInfo(): void {
               tag: UNRESOLVED_PROMISE_NODE,
               owner: resolveOwner(),
               debugInfo: new WeakRef((resource: Promise<any>)),
-              stack: new Error(),
+              stack: parseStackTrace(new Error(), 1),
               start: performance.now(),
               end: -1.1, // Set when we resolve.
               awaited:
@@ -118,7 +119,7 @@ export function initAsyncDebugInfo(): void {
               tag: IO_NODE,
               owner: resolveOwner(),
               debugInfo: null,
-              stack: new Error(), // This is only used if no native promises are used.
+              stack: parseStackTrace(new Error(), 1), // This is only used if no native promises are used.
               start: performance.now(),
               end: -1.1, // Only set when pinged.
               awaited: null,
@@ -133,7 +134,7 @@ export function initAsyncDebugInfo(): void {
               tag: IO_NODE,
               owner: resolveOwner(),
               debugInfo: null,
-              stack: new Error(),
+              stack: parseStackTrace(new Error(), 1),
               start: performance.now(),
               end: -1.1, // Only set when pinged.
               awaited: null,
