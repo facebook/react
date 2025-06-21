@@ -2435,7 +2435,7 @@ function serializeSet(request: Request, set: Set<ReactClientValue>): string {
   return '$W' + id.toString(16);
 }
 
-function serializeConsoleMap(
+function serializeDebugMap(
   request: Request,
   counter: {objectLimit: number},
   map: Map<ReactClientValue, ReactClientValue>,
@@ -2462,7 +2462,7 @@ function serializeConsoleMap(
   return '$Q' + id.toString(16);
 }
 
-function serializeConsoleSet(
+function serializeDebugSet(
   request: Request,
   counter: {objectLimit: number},
   set: Set<ReactClientValue>,
@@ -3993,10 +3993,10 @@ function renderDebugModel(
     }
 
     if (value instanceof Map) {
-      return serializeConsoleMap(request, counter, value);
+      return serializeDebugMap(request, counter, value);
     }
     if (value instanceof Set) {
-      return serializeConsoleSet(request, counter, value);
+      return serializeDebugSet(request, counter, value);
     }
     // TODO: FormData is not available in old Node. Remove the typeof later.
     if (typeof FormData === 'function' && value instanceof FormData) {
