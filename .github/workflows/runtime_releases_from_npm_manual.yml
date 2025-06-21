@@ -110,7 +110,7 @@ jobs:
             --tags=${{ inputs.tags }} \
             --publishVersion=${{ inputs.version_to_publish }} \
             --onlyPackages=${{ inputs.only_packages }} ${{ (inputs.dry && '') || '\'}}
-            ${{ inputs.dry && '--dry'}}
+            ${{ inputs.dry && '--dry' || '' }}
       - if: '${{ inputs.skip_packages }}'
         name: 'Publish all packages EXCEPT ${{ inputs.skip_packages }}'
         run: |
@@ -119,7 +119,7 @@ jobs:
             --tags=${{ inputs.tags }} \
             --publishVersion=${{ inputs.version_to_publish }} \
             --skipPackages=${{ inputs.skip_packages }} ${{ (inputs.dry && '') || '\'}}
-            ${{ inputs.dry && '--dry'}}
+            ${{ inputs.dry && '--dry' || '' }}
       - name: Archive released package for debugging
         uses: actions/upload-artifact@v4
         with:
