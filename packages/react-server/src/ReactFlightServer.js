@@ -2053,10 +2053,13 @@ function visitAsyncNode(
       }
       // We need to forward after we visit awaited nodes because what ever I/O we requested that's
       // the thing that generated this node and its virtual children.
-      const debugInfo = node.debugInfo;
-      if (debugInfo !== null && !visited.has(debugInfo)) {
-        visited.add(debugInfo);
-        forwardDebugInfo(request, task, debugInfo);
+      const promise = node.promise.deref();
+      if (promise !== undefined) {
+        const debugInfo = promise._debugInfo;
+        if (debugInfo != null && !visited.has(debugInfo)) {
+          visited.add(debugInfo);
+          forwardDebugInfo(request, task, debugInfo);
+        }
       }
       return match;
     }
@@ -2112,10 +2115,13 @@ function visitAsyncNode(
       }
       // We need to forward after we visit awaited nodes because what ever I/O we requested that's
       // the thing that generated this node and its virtual children.
-      const debugInfo = node.debugInfo;
-      if (debugInfo !== null && !visited.has(debugInfo)) {
-        visited.add(debugInfo);
-        forwardDebugInfo(request, task, debugInfo);
+      const promise = node.promise.deref();
+      if (promise !== undefined) {
+        const debugInfo = promise._debugInfo;
+        if (debugInfo != null && !visited.has(debugInfo)) {
+          visited.add(debugInfo);
+          forwardDebugInfo(request, task, debugInfo);
+        }
       }
       return match;
     }
