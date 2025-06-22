@@ -677,6 +677,105 @@ export function resolveRequest(): null | Request {
   return null;
 }
 
+function serializeDebugThenable(
+  request: Request,
+  counter: {objectLimit: number},
+  thenable: Thenable<any>,
+): string {
+  // Like serializeThenable but for renderDebugModel
+  request.pendingChunks++;
+  const id = request.nextChunkId++;
+  const ref = serializePromiseID(id);
+  request.writtenDebugObjects.set(thenable, ref);
+
+  switch (thenable.status) {
+    case 'fulfilled': {
+      emitOutlinedDebugModelChunk(request, id, counter, thenable.value);
+      return ref;
+    }
+    case 'rejected': {
+      const x = thenable.reason;
+      if (
+        enablePostpone &&
+        typeof x === 'object' &&
+        x !== null &&
+        (x: any).$$typeof === REACT_POSTPONE_TYPE
+      ) {
+        const postponeInstance: Postpone = (x: any);
+        // We don't log this postpone.
+        emitPostponeChunk(request, id, postponeInstance);
+      } else {
+        // We don't log these errors since they didn't actually throw into Flight.
+        const digest = '';
+        emitErrorChunk(request, id, digest, x);
+      }
+      return ref;
+    }
+  }
+
+  let cancelled = false;
+
+  thenable.then(
+    value => {
+      if (cancelled) {
+        return;
+      }
+      cancelled = true;
+      if (request.status === ABORTING) {
+        emitDebugHaltChunk(request, id);
+        enqueueFlush(request);
+        return;
+      }
+      emitOutlinedDebugModelChunk(request, id, counter, value);
+      enqueueFlush(request);
+    },
+    reason => {
+      if (cancelled) {
+        return;
+      }
+      cancelled = true;
+      if (request.status === ABORTING) {
+        emitDebugHaltChunk(request, id);
+        enqueueFlush(request);
+        return;
+      }
+      if (
+        enablePostpone &&
+        typeof reason === 'object' &&
+        reason !== null &&
+        (reason: any).$$typeof === REACT_POSTPONE_TYPE
+      ) {
+        const postponeInstance: Postpone = (reason: any);
+        // We don't log this postpone.
+        emitPostponeChunk(request, id, postponeInstance);
+      } else {
+        // We don't log these errors since they didn't actually throw into Flight.
+        const digest = '';
+        emitErrorChunk(request, id, digest, reason);
+      }
+      enqueueFlush(request);
+    },
+  );
+
+  // We don't use scheduleMicrotask here because it doesn't actually schedule a microtask
+  // in all our configs which is annoying.
+  Promise.resolve().then(() => {
+    // If we don't resolve the Promise within a microtask. Leave it as hanging since we
+    // don't want to block the render forever on a Promise that might never resolve.
+    if (cancelled) {
+      return;
+    }
+    cancelled = true;
+    emitDebugHaltChunk(request, id);
+    enqueueFlush(request);
+    // Clean up the request so we don't leak this forever.
+    request = (null: any);
+    counter = (null: any);
+  });
+
+  return ref;
+}
+
 function serializeThenable(
   request: Request,
   task: Task,
@@ -2194,10 +2293,6 @@ function serializeLazyID(id: number): string {
   return '$L' + id.toString(16);
 }
 
-function serializeInfinitePromise(): string {
-  return '$@';
-}
-
 function serializePromiseID(id: number): string {
   return '$@' + id.toString(16);
 }
@@ -3514,6 +3609,21 @@ function emitModelChunk(request: Request, id: number, json: string): void {
   request.completedRegularChunks.push(processedChunk);
 }
 
+function emitDebugHaltChunk(request: Request, id: number): void {
+  if (!__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'emitDebugHaltChunk should never be called in production mode. This is a bug in React.',
+    );
+  }
+  // This emits a marker that this row will never complete and should intentionally never resolve
+  // even when the client stream is closed. We use just the lack of data to indicate this.
+  const row = id.toString(16) + ':\n';
+  const processedChunk = stringToChunk(row);
+  request.completedRegularChunks.push(processedChunk);
+}
+
 function emitDebugChunk(
   request: Request,
   id: number,
@@ -3950,36 +4060,7 @@ function renderDebugModel(
     // $FlowFixMe[method-unbinding]
     if (typeof value.then === 'function') {
       const thenable: Thenable<any> = (value: any);
-      switch (thenable.status) {
-        case 'fulfilled': {
-          return serializePromiseID(
-            outlineDebugModel(request, counter, thenable.value),
-          );
-        }
-        case 'rejected': {
-          const x = thenable.reason;
-          request.pendingChunks++;
-          const errorId = request.nextChunkId++;
-          if (
-            enablePostpone &&
-            typeof x === 'object' &&
-            x !== null &&
-            (x: any).$$typeof === REACT_POSTPONE_TYPE
-          ) {
-            const postponeInstance: Postpone = (x: any);
-            // We don't log this postpone.
-            emitPostponeChunk(request, errorId, postponeInstance);
-          } else {
-            // We don't log these errors since they didn't actually throw into Flight.
-            const digest = '';
-            emitErrorChunk(request, errorId, digest, x);
-          }
-          return serializePromiseID(errorId);
-        }
-      }
-      // If it hasn't already resolved (and been instrumented) we just encode an infinite
-      // promise that will never resolve.
-      return serializeInfinitePromise();
+      return serializeDebugThenable(request, counter, thenable);
     }
 
     if (isArray(value)) {
@@ -4206,16 +4287,17 @@ function serializeDebugModel(
   }
 }
 
-function outlineDebugModel(
+function emitOutlinedDebugModelChunk(
   request: Request,
+  id: number,
   counter: {objectLimit: number},
   model: ReactClientValue,
-): number {
+): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
     // eslint-disable-next-line react-internal/prod-error-codes
     throw new Error(
-      'outlineDebugModel should never be called in production mode. This is a bug in React.',
+      'emitOutlinedDebugModel should never be called in production mode. This is a bug in React.',
     );
   }
 
@@ -4246,7 +4328,6 @@ function outlineDebugModel(
     }
   }
 
-  const id = request.nextChunkId++;
   const prevModelRoot = debugModelRoot;
   debugModelRoot = model;
   if (typeof model === 'object' && model !== null) {
@@ -4266,10 +4347,27 @@ function outlineDebugModel(
     debugModelRoot = prevModelRoot;
   }
 
-  request.pendingChunks++;
   const row = id.toString(16) + ':' + json + '\n';
   const processedChunk = stringToChunk(row);
   request.completedRegularChunks.push(processedChunk);
+}
+
+function outlineDebugModel(
+  request: Request,
+  counter: {objectLimit: number},
+  model: ReactClientValue,
+): number {
+  if (!__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'outlineDebugModel should never be called in production mode. This is a bug in React.',
+    );
+  }
+
+  const id = request.nextChunkId++;
+  request.pendingChunks++;
+  emitOutlinedDebugModelChunk(request, id, counter, model);
   return id;
 }
 

@@ -155,6 +155,7 @@ const RESOLVED_MODEL = 'resolved_model';
 const RESOLVED_MODULE = 'resolved_module';
 const INITIALIZED = 'fulfilled';
 const ERRORED = 'rejected';
+const HALTED = 'halted'; // DEV-only. Means it never resolves even if connection closes.
 
 type PendingChunk<T> = {
   status: 'pending',
@@ -221,13 +222,23 @@ type ErroredChunk<T> = {
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
+type HaltedChunk<T> = {
+  status: 'halted',
+  value: null,
+  reason: null,
+  _response: Response,
+  _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
+  _debugInfo?: null | ReactDebugInfo, // DEV-only
+  then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
+};
 type SomeChunk<T> =
   | PendingChunk<T>
   | BlockedChunk<T>
   | ResolvedModelChunk<T>
   | ResolvedModuleChunk<T>
   | InitializedChunk<T>
-  | ErroredChunk<T>;
+  | ErroredChunk<T>
+  | HaltedChunk<T>;
 
 // $FlowFixMe[missing-this-annot]
 function ReactPromise(
@@ -311,6 +322,9 @@ ReactPromise.prototype.then = function <T>(
         chunk.reason.push(reject);
       }
       break;
+    case HALTED: {
+      break;
+    }
     default:
       if (reject) {
         reject(chunk.reason);
@@ -368,6 +382,7 @@ function readChunk<T>(chunk: SomeChunk<T>): T {
       return chunk.value;
     case PENDING:
     case BLOCKED:
+    case HALTED:
       // eslint-disable-next-line no-throw-literal
       throw ((chunk: any): Thenable<T>);
     default:
@@ -1367,6 +1382,7 @@ function getOutlinedModel<T>(
       return chunkValue;
     case PENDING:
     case BLOCKED:
+    case HALTED:
       return waitForReference(chunk, parentObject, key, response, map, path);
     default:
       // This is an error. Instead of erroring directly, we're going to encode this on
@@ -1470,10 +1486,6 @@ function parseModelString(
       }
       case '@': {
         // Promise
-        if (value.length === 2) {
-          // Infinite promise that never resolves.
-          return new Promise(() => {});
-        }
         const id = parseInt(value.slice(2), 16);
         const chunk = getChunk(response, id);
         if (enableProfilerTimer && enableComponentPerformanceTrack) {
@@ -1767,6 +1779,22 @@ export function createResponse(
     replayConsole,
     environmentName,
   );
+}
+
+function resolveDebugHalt(response: Response, id: number): void {
+  const chunks = response._chunks;
+  let chunk = chunks.get(id);
+  if (!chunk) {
+    chunks.set(id, (chunk = createPendingChunk(response)));
+  } else {
+  }
+  if (chunk.status !== PENDING && chunk.status !== BLOCKED) {
+    return;
+  }
+  const haltedChunk: HaltedChunk<any> = (chunk: any);
+  haltedChunk.status = HALTED;
+  haltedChunk.value = null;
+  haltedChunk.reason = null;
 }
 
 function resolveModel(
@@ -3339,6 +3367,10 @@ function processFullStringRow(
     }
     // Fallthrough
     default: /* """ "{" "[" "t" "f" "n" "0" - "9" */ {
+      if (__DEV__ && row === '') {
+        resolveDebugHalt(response, id);
+        return;
+      }
       // We assume anything else is JSON.
       resolveModel(response, id, row);
       return;

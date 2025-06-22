@@ -24,7 +24,7 @@ type Source = Array<Uint8Array>;
 
 const decoderOptions = {stream: true};
 
-const {createResponse, processBinaryChunk, getRoot} = ReactFlightClient({
+const {createResponse, processBinaryChunk, getRoot, close} = ReactFlightClient({
   createStringDecoder() {
     return new TextDecoder();
   },
@@ -56,6 +56,7 @@ const {createResponse, processBinaryChunk, getRoot} = ReactFlightClient({
 
 type ReadOptions = {|
   findSourceMapURL?: FindSourceMapURLCallback,
+  close?: boolean,
 |};
 
 function read<T>(source: Source, options: ReadOptions): Thenable<T> {
@@ -73,6 +74,9 @@ function read<T>(source: Source, options: ReadOptions): Thenable<T> {
   );
   for (let i = 0; i < source.length; i++) {
     processBinaryChunk(response, source[i], 0);
+  }
+  if (options !== undefined && options.close) {
+    close(response);
   }
   return getRoot(response);
 }

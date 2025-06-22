@@ -3213,7 +3213,8 @@ describe('ReactFlight', () => {
         prop: 123,
         fn: foo,
         map: new Map([['foo', foo]]),
-        promise: new Promise(() => {}),
+        promise: Promise.resolve('yo'),
+        infinitePromise: new Promise(() => {}),
       });
       throw new Error('err');
     }
@@ -3258,9 +3259,14 @@ describe('ReactFlight', () => {
     });
     ownerStacks = [];
 
+    // Let the Promises resolve.
+    await 0;
+    await 0;
+    await 0;
+
     // The error should not actually get logged because we're not awaiting the root
     // so it's not thrown but the server log also shouldn't be replayed.
-    await ReactNoopFlightClient.read(transport);
+    await ReactNoopFlightClient.read(transport, {close: true});
 
     expect(mockConsoleLog).toHaveBeenCalledTimes(1);
     expect(mockConsoleLog.mock.calls[0][0]).toBe('hi');
@@ -3280,6 +3286,23 @@ describe('ReactFlight', () => {
 
     const promise = mockConsoleLog.mock.calls[0][1].promise;
     expect(promise).toBeInstanceOf(Promise);
+    expect(await promise).toBe('yo');
+
+    const infinitePromise = mockConsoleLog.mock.calls[0][1].infinitePromise;
+    expect(infinitePromise).toBeInstanceOf(Promise);
+    let resolved = false;
+    infinitePromise.then(
+      () => (resolved = true),
+      x => {
+        console.error(x);
+        resolved = true;
+      },
+    );
+    await 0;
+    await 0;
+    await 0;
+    // This should not reject upon aborting the stream.
+    expect(resolved).toBe(false);
 
     expect(ownerStacks).toEqual(['\n    in App (at **)']);
   });
