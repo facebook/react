@@ -2077,32 +2077,34 @@ function startAsyncIterable<T>(
       }
     },
   };
-  const iterable: $AsyncIterable<T, T, void> = {
-    [ASYNC_ITERATOR](): $AsyncIterator<T, T, void> {
-      let nextReadIndex = 0;
-      return createIterator(arg => {
-        if (arg !== undefined) {
-          throw new Error(
-            'Values cannot be passed to next() of AsyncIterables passed to Client Components.',
+
+  const iterable: $AsyncIterable<T, T, void> = ({}: any);
+  // $FlowFixMe[cannot-write]
+  iterable[ASYNC_ITERATOR] = (): $AsyncIterator<T, T, void> => {
+    let nextReadIndex = 0;
+    return createIterator(arg => {
+      if (arg !== undefined) {
+        throw new Error(
+          'Values cannot be passed to next() of AsyncIterables passed to Client Components.',
+        );
+      }
+      if (nextReadIndex === buffer.length) {
+        if (closed) {
+          // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
+          return new ReactPromise(
+            INITIALIZED,
+            {done: true, value: undefined},
+            null,
+            response,
           );
         }
-        if (nextReadIndex === buffer.length) {
-          if (closed) {
-            // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-            return new ReactPromise(
-              INITIALIZED,
-              {done: true, value: undefined},
-              null,
-              response,
-            );
-          }
-          buffer[nextReadIndex] =
-            createPendingChunk<IteratorResult<T, T>>(response);
-        }
-        return buffer[nextReadIndex++];
-      });
-    },
+        buffer[nextReadIndex] =
+          createPendingChunk<IteratorResult<T, T>>(response);
+      }
+      return buffer[nextReadIndex++];
+    });
   };
+
   // TODO: If it's a single shot iterator we can optimize memory by cleaning up the buffer after
   // reading through the end, but currently we favor code size over this optimization.
   resolveStream(
