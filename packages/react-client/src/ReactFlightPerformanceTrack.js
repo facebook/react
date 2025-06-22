@@ -96,7 +96,7 @@ function addValueToProperties(
       } else {
         // $FlowFixMe[method-unbinding]
         const objectToString = Object.prototype.toString.call(value);
-        const objectName = objectToString.slice(8, objectToString.length - 1);
+        let objectName = objectToString.slice(8, objectToString.length - 1);
         if (objectName === 'Array') {
           const array: Array<any> = (value: any);
           const kind = getArrayKind(array);
@@ -110,6 +110,12 @@ function addValueToProperties(
               addValueToProperties(entry[0], entry[1], properties, indent + 1);
             }
             return;
+          }
+        }
+        if (objectName === 'Object') {
+          const proto: any = Object.getPrototypeOf(value);
+          if (proto && typeof proto.constructor === 'function') {
+            objectName = proto.constructor.name;
           }
         }
         properties.push([
