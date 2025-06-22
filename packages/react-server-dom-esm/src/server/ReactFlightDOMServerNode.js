@@ -95,6 +95,7 @@ function renderToPipeableStream(
     options ? options.temporaryReferences : undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
+    false, // TODO
   );
   let hasStartedFlowing = false;
   startWork(request);
@@ -184,6 +185,7 @@ function prerenderToNodeStream(
       options ? options.temporaryReferences : undefined,
       __DEV__ && options ? options.environmentName : undefined,
       __DEV__ && options ? options.filterStackFrame : undefined,
+      false,
     );
     if (options && options.signal) {
       const signal = options.signal;

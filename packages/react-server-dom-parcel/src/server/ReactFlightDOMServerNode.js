@@ -106,6 +106,7 @@ export function renderToPipeableStream(
     options ? options.temporaryReferences : undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
+    false, // TODO
   );
   let hasStartedFlowing = false;
   startWork(request);
@@ -183,6 +184,7 @@ export function renderToReadableStream(
     options ? options.temporaryReferences : undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
+    false, // TODO
   );
   if (options && options.signal) {
     const signal = options.signal;
@@ -275,6 +277,7 @@ export function prerenderToNodeStream(
       options ? options.temporaryReferences : undefined,
       __DEV__ && options ? options.environmentName : undefined,
       __DEV__ && options ? options.filterStackFrame : undefined,
+      false,
     );
     if (options && options.signal) {
       const signal = options.signal;
@@ -338,6 +341,7 @@ export function prerender(
       options ? options.temporaryReferences : undefined,
       __DEV__ && options ? options.environmentName : undefined,
       __DEV__ && options ? options.filterStackFrame : undefined,
+      false,
     );
     if (options && options.signal) {
       const signal = options.signal;
