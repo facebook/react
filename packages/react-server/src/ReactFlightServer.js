@@ -139,6 +139,7 @@ import {
 
 import {
   describeObjectForErrorMessage,
+  isGetter,
   isSimpleObject,
   jsxPropsParents,
   jsxChildrenParents,
@@ -148,6 +149,7 @@ import {
 import ReactSharedInternals from './ReactSharedInternalsServer';
 import isArray from 'shared/isArray';
 import getPrototypeOf from 'shared/getPrototypeOf';
+import hasOwnProperty from 'shared/hasOwnProperty';
 import binaryToComparableString from 'shared/binaryToComparableString';
 
 import {SuspenseException, getSuspendedThenable} from './ReactFlightThenable';
@@ -3906,6 +3908,8 @@ function serializeEval(source: string): string {
   return '$E' + source;
 }
 
+const CONSTRUCTOR_MARKER: symbol = __DEV__ ? Symbol() : (null: any);
+
 let debugModelRoot: mixed = null;
 let debugNoOutline: mixed = null;
 // This is a forked version of renderModel which should never error, never suspend and is limited
@@ -3941,6 +3945,16 @@ function renderDebugModel(
         (value: any),
       );
     }
+    if (value.$$typeof === CONSTRUCTOR_MARKER) {
+      const constructor: Function = (value: any).constructor;
+      let ref = request.writtenDebugObjects.get(constructor);
+      if (ref === undefined) {
+        const id = outlineDebugModel(request, counter, constructor);
+        ref = serializeByValueID(id);
+      }
+      return '$P' + ref.slice(1);
+    }
+
     if (request.temporaryReferences !== undefined) {
       const tempRef = resolveTemporaryReference(
         request.temporaryReferences,
@@ -4139,6 +4153,34 @@ function renderDebugModel(
     const iteratorFn = getIteratorFn(value);
     if (iteratorFn) {
       return Array.from((value: any));
+    }
+
+    const proto = getPrototypeOf(value);
+    if (proto !== ObjectPrototype && proto !== null) {
+      const object: Object = value;
+      const instanceDescription: Object = Object.create(null);
+      for (const propName in object) {
+        if (hasOwnProperty.call(value, propName) || isGetter(proto, propName)) {
+          // We intentionally invoke getters on the prototype to read any enumerable getters.
+          instanceDescription[propName] = object[propName];
+        }
+      }
+      const constructor = proto.constructor;
+      if (
+        typeof constructor === 'function' &&
+        constructor.prototype === proto
+      ) {
+        // This is a simple class shape.
+        if (hasOwnProperty.call(object, '') || isGetter(proto, '')) {
+          // This object already has an empty property name. Skip encoding its prototype.
+        } else {
+          instanceDescription[''] = {
+            $$typeof: CONSTRUCTOR_MARKER,
+            constructor: constructor,
+          };
+        }
+      }
+      return instanceDescription;
     }
 
     // $FlowFixMe[incompatible-return]

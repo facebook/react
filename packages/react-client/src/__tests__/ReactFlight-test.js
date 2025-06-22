@@ -3208,6 +3208,20 @@ describe('ReactFlight', () => {
       return 'hello';
     }
 
+    class MyClass {
+      constructor() {
+        this.x = 1;
+      }
+      method() {}
+      get y() {
+        return this.x + 1;
+      }
+      get z() {
+        return this.x + 5;
+      }
+    }
+    Object.defineProperty(MyClass.prototype, 'y', {enumerable: true});
+
     function ServerComponent() {
       console.log('hi', {
         prop: 123,
@@ -3215,6 +3229,8 @@ describe('ReactFlight', () => {
         map: new Map([['foo', foo]]),
         promise: Promise.resolve('yo'),
         infinitePromise: new Promise(() => {}),
+        Class: MyClass,
+        instance: new MyClass(),
       });
       throw new Error('err');
     }
@@ -3303,6 +3319,19 @@ describe('ReactFlight', () => {
     await 0;
     // This should not reject upon aborting the stream.
     expect(resolved).toBe(false);
+
+    const Class = mockConsoleLog.mock.calls[0][1].Class;
+    const instance = mockConsoleLog.mock.calls[0][1].instance;
+    expect(typeof Class).toBe('function');
+    expect(Class.prototype.constructor).toBe(Class);
+    expect(instance instanceof Class).toBe(true);
+    expect(Object.getPrototypeOf(instance)).toBe(Class.prototype);
+    expect(instance.x).toBe(1);
+    expect(instance.hasOwnProperty('y')).toBe(true);
+    expect(instance.y).toBe(2); // Enumerable getter was reified
+    expect(instance.hasOwnProperty('z')).toBe(false);
+    expect(instance.z).toBe(6); // Not enumerable getter was transferred as part of the toString() of the class
+    expect(typeof instance.method).toBe('function'); // Methods are included only if they're part of the toString()
 
     expect(ownerStacks).toEqual(['\n    in App (at **)']);
   });

@@ -1430,6 +1430,17 @@ function createFormData(
   return formData;
 }
 
+function applyConstructor(
+  response: Response,
+  model: Function,
+  parentObject: Object,
+  key: string,
+): void {
+  Object.setPrototypeOf(parentObject, model.prototype);
+  // Delete the property. It was just a placeholder.
+  return undefined;
+}
+
 function extractIterator(response: Response, model: Array<any>): Iterator<any> {
   // $FlowFixMe[incompatible-use]: This uses raw Symbols because we're extracting from a native array.
   return model[Symbol.iterator]();
@@ -1605,6 +1616,21 @@ function parseModelString(
       case 'n': {
         // BigInt
         return BigInt(value.slice(2));
+      }
+      case 'P': {
+        if (__DEV__) {
+          // In DEV mode we allow debug objects to specify themselves as instances of
+          // another constructor.
+          const ref = value.slice(2);
+          return getOutlinedModel(
+            response,
+            ref,
+            parentObject,
+            key,
+            applyConstructor,
+          );
+        }
+        //Fallthrough
       }
       case 'E': {
         if (__DEV__) {
