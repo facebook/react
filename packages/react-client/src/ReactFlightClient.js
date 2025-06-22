@@ -1430,6 +1430,17 @@ function createFormData(
   return formData;
 }
 
+function applyConstructor(
+  response: Response,
+  model: Function,
+  parentObject: Object,
+  key: string,
+): void {
+  Object.setPrototypeOf(parentObject, model.prototype);
+  // Delete the property. It was just a placeholder.
+  return undefined;
+}
+
 function extractIterator(response: Response, model: Array<any>): Iterator<any> {
   // $FlowFixMe[incompatible-use]: This uses raw Symbols because we're extracting from a native array.
   return model[Symbol.iterator]();
@@ -1606,16 +1617,60 @@ function parseModelString(
         // BigInt
         return BigInt(value.slice(2));
       }
+      case 'P': {
+        if (__DEV__) {
+          // In DEV mode we allow debug objects to specify themselves as instances of
+          // another constructor.
+          const ref = value.slice(2);
+          return getOutlinedModel(
+            response,
+            ref,
+            parentObject,
+            key,
+            applyConstructor,
+          );
+        }
+        //Fallthrough
+      }
       case 'E': {
         if (__DEV__) {
           // In DEV mode we allow indirect eval to produce functions for logging.
           // This should not compile to eval() because then it has local scope access.
+          const code = value.slice(2);
           try {
             // eslint-disable-next-line no-eval
-            return (0, eval)(value.slice(2));
+            return (0, eval)(code);
           } catch (x) {
             // We currently use this to express functions so we fail parsing it,
             // let's just return a blank function as a place holder.
+            if (code.startsWith('(async function')) {
+              const idx = code.indexOf('(', 15);
+              if (idx !== -1) {
+                const name = code.slice(15, idx).trim();
+                // eslint-disable-next-line no-eval
+                return (0, eval)(
+                  '({' + JSON.stringify(name) + ':async function(){}})',
+                )[name];
+              }
+            } else if (code.startsWith('(function')) {
+              const idx = code.indexOf('(', 9);
+              if (idx !== -1) {
+                const name = code.slice(9, idx).trim();
+                // eslint-disable-next-line no-eval
+                return (0, eval)(
+                  '({' + JSON.stringify(name) + ':function(){}})',
+                )[name];
+              }
+            } else if (code.startsWith('(class')) {
+              const idx = code.indexOf('{', 6);
+              if (idx !== -1) {
+                const name = code.slice(6, idx).trim();
+                // eslint-disable-next-line no-eval
+                return (0, eval)('({' + JSON.stringify(name) + ':class{}})')[
+                  name
+                ];
+              }
+            }
             return function () {};
           }
         }
