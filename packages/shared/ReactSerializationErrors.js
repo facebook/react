@@ -92,6 +92,7 @@ export function isSimpleObject(object: any): boolean {
 export function objectName(object: mixed): string {
   // $FlowFixMe[method-unbinding]
   const name = Object.prototype.toString.call(object);
+  // Extract 'Object' from '[object Object]':
   return name.slice(8, name.length - 1);
 }
 
