@@ -20,6 +20,7 @@ import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 import {OMITTED_PROP_ERROR} from './ReactFlightPropertyAccess';
 
 import hasOwnProperty from 'shared/hasOwnProperty';
+import isArray from 'shared/isArray';
 
 const supportsUserTiming =
   enableProfilerTimer &&
@@ -32,20 +33,39 @@ const supportsUserTiming =
 const IO_TRACK = 'Server Requests ⚛';
 const COMPONENTS_TRACK = 'Server Components ⚛';
 
-function isPrimitiveArray(array: Object) {
+const EMPTY_ARRAY = 0;
+const COMPLEX_ARRAY = 1;
+const PRIMITIVE_ARRAY = 2; // Primitive values only
+const ENTRIES_ARRAY = 3; // Tuple arrays of string and value (like Headers, Map, etc)
+function getArrayKind(array: Object): 0 | 1 | 2 | 3 {
+  let kind = EMPTY_ARRAY;
   for (let i = 0; i < array.length; i++) {
     const value = array[i];
     if (typeof value === 'object' && value !== null) {
-      return false;
-    }
-    if (typeof value === 'function') {
-      return false;
-    }
-    if (typeof value === 'string' && value.length > 50) {
-      return false;
+      if (
+        isArray(value) &&
+        value.length === 2 &&
+        typeof value[0] === 'string'
+      ) {
+        // Key value tuple
+        if (kind !== EMPTY_ARRAY && kind !== ENTRIES_ARRAY) {
+          return COMPLEX_ARRAY;
+        }
+        kind = ENTRIES_ARRAY;
+      } else {
+        return COMPLEX_ARRAY;
+      }
+    } else if (typeof value === 'function') {
+      return COMPLEX_ARRAY;
+    } else if (typeof value === 'string' && value.length > 50) {
+      return COMPLEX_ARRAY;
+    } else if (kind !== EMPTY_ARRAY && kind !== PRIMITIVE_ARRAY) {
+      return COMPLEX_ARRAY;
+    } else {
+      kind = PRIMITIVE_ARRAY;
     }
   }
-  return true;
+  return kind;
 }
 
 function addObjectToProperties(
@@ -77,9 +97,20 @@ function addValueToProperties(
         // $FlowFixMe[method-unbinding]
         const objectToString = Object.prototype.toString.call(value);
         const objectName = objectToString.slice(8, objectToString.length - 1);
-        if (objectName === 'Array' && isPrimitiveArray(value)) {
-          desc = JSON.stringify(value);
-          break;
+        if (objectName === 'Array') {
+          const array: Array<any> = (value: any);
+          const kind = getArrayKind(array);
+          if (kind === PRIMITIVE_ARRAY || kind === EMPTY_ARRAY) {
+            desc = JSON.stringify(array);
+            break;
+          } else if (kind === ENTRIES_ARRAY) {
+            properties.push(['\xa0\xa0'.repeat(indent) + propertyName, '']);
+            for (let i = 0; i < array.length; i++) {
+              const entry = array[i];
+              addValueToProperties(entry[0], entry[1], properties, indent + 1);
+            }
+            return;
+          }
         }
         properties.push([
           '\xa0\xa0'.repeat(indent) + propertyName,
