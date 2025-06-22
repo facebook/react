@@ -110,6 +110,22 @@ const tests: CompilerTestCases = {
 
   invalid: [
     {
+      name: '[InvalidInput] Ref access during render',
+      code: normalizeIndent`
+        function Component(props) {
+          const ref = useRef(null);
+          const value = ref.current;
+          return value;
+        }
+      `,
+      errors: [
+        {
+          message:
+            'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
+        },
+      ],
+    },
+    {
       name: '[InvalidInput] Ref access in useState initial value function',
       code: normalizeIndent`
         function Component(props) {
