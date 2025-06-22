@@ -54,7 +54,7 @@ function addObjectToProperties(
   indent: number,
 ): void {
   for (const key in object) {
-    if (hasOwnProperty.call(object, key)) {
+    if (hasOwnProperty.call(object, key) && key[0] !== '_') {
       const value = object[key];
       addValueToProperties(key, value, properties, indent);
     }
