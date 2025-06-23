@@ -20,7 +20,7 @@ import {
 } from './ReactFiberWorkLoop';
 import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates';
 import {updateContainerSync} from './ReactFiberReconciler';
-import {emptyContextObject} from './ReactFiberContext';
+import {emptyContextObject} from './ReactFiberLegacyContext';
 import {SyncLane} from './ReactFiberLane';
 import {
   ClassComponent,
