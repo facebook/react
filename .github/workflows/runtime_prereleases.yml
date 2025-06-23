@@ -85,7 +85,7 @@ jobs:
             --skipTests \
             --tags=${{ inputs.dist_tag }} \
             --onlyPackages=${{ inputs.only_packages }} ${{ (inputs.dry && '') || '\'}}
-            ${{ inputs.dry && '--dry'}}
+            ${{ inputs.dry && '--dry' || '' }}
       - if: '${{ inputs.skip_packages }}'
         name: 'Publish all packages EXCEPT ${{ inputs.skip_packages }}'
         run: |
@@ -94,14 +94,14 @@ jobs:
             --skipTests \
             --tags=${{ inputs.dist_tag }} \
             --skipPackages=${{ inputs.skip_packages }} ${{ (inputs.dry && '') || '\'}}
-            ${{ inputs.dry && '--dry'}}
+            ${{ inputs.dry && '--dry' || '' }}
       - if: '${{ !(inputs.skip_packages && inputs.only_packages) }}'
         name: 'Publish all packages'
         run: |
           scripts/release/publish.js \
             --ci \
             --tags=${{ inputs.dist_tag }} ${{ (inputs.dry && '') || '\'}}
-            ${{ inputs.dry && '--dry'}}
+            ${{ inputs.dry && '--dry' || '' }}
       - name: Notify Discord on failure
         if: failure() && inputs.enableFailureNotification == true
         uses: tsickert/discord-webhook@86dc739f3f165f16dadc5666051c367efa1692f4
