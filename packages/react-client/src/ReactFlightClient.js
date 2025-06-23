@@ -79,7 +79,9 @@ import {
   logDedupedComponentRender,
   logComponentErrored,
   logIOInfo,
+  logIOInfoErrored,
   logComponentAwait,
+  logComponentAwaitErrored,
 } from './ReactFlightPerformanceTrack';
 
 import {
@@ -95,6 +97,8 @@ import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {getOwnerStackByComponentInfoInDev} from 'shared/ReactComponentInfoStack';
 
 import {injectInternals} from './ReactFlightClientDevToolsHook';
+
+import {OMITTED_PROP_ERROR} from './ReactFlightPropertyAccess';
 
 import ReactVersion from 'shared/ReactVersion';
 
@@ -1684,11 +1688,7 @@ function parseModelString(
           Object.defineProperty(parentObject, key, {
             get: function () {
               // TODO: We should ideally throw here to indicate a difference.
-              return (
-                'This object has been omitted by React in the console log ' +
-                'to avoid sending too much data from the server. Try logging smaller ' +
-                'or more specific objects.'
-              );
+              return OMITTED_PROP_ERROR;
             },
             enumerable: true,
             configurable: false,
@@ -2909,7 +2909,29 @@ function initializeIOInfo(response: Response, ioInfo: ReactIOInfo): void {
   // $FlowFixMe[cannot-write]
   ioInfo.end += response._timeOrigin;
 
-  logIOInfo(ioInfo, response._rootEnvironmentName);
+  const env = response._rootEnvironmentName;
+  const promise = ioInfo.value;
+  if (promise) {
+    const thenable: Thenable<mixed> = (promise: any);
+    switch (thenable.status) {
+      case INITIALIZED:
+        logIOInfo(ioInfo, env, thenable.value);
+        break;
+      case ERRORED:
+        logIOInfoErrored(ioInfo, env, thenable.reason);
+        break;
+      default:
+        // If we haven't resolved the Promise yet, wait to log until have so we can include
+        // its data in the log.
+        promise.then(
+          logIOInfo.bind(null, ioInfo, env),
+          logIOInfoErrored.bind(null, ioInfo, env),
+        );
+        break;
+    }
+  } else {
+    logIOInfo(ioInfo, env, undefined);
+  }
 }
 
 function resolveIOInfo(
@@ -3193,13 +3215,55 @@ function flushComponentPerformance(
             }
             // $FlowFixMe: Refined.
             const asyncInfo: ReactAsyncInfo = candidateInfo;
-            logComponentAwait(
-              asyncInfo,
-              trackIdx,
-              time,
-              endTime,
-              response._rootEnvironmentName,
-            );
+            const env = response._rootEnvironmentName;
+            const promise = asyncInfo.awaited.value;
+            if (promise) {
+              const thenable: Thenable<mixed> = (promise: any);
+              switch (thenable.status) {
+                case INITIALIZED:
+                  logComponentAwait(
+                    asyncInfo,
+                    trackIdx,
+                    time,
+                    endTime,
+                    env,
+                    thenable.value,
+                  );
+                  break;
+                case ERRORED:
+                  logComponentAwaitErrored(
+                    asyncInfo,
+                    trackIdx,
+                    time,
+                    endTime,
+                    env,
+                    thenable.reason,
+                  );
+                  break;
+                default:
+                  // We assume that we should have received the data by now since this is logged at the
+                  // end of the response stream. This is more sensitive to ordering so we don't wait
+                  // to log it.
+                  logComponentAwait(
+                    asyncInfo,
+                    trackIdx,
+                    time,
+                    endTime,
+                    env,
+                    undefined,
+                  );
+                  break;
+              }
+            } else {
+              logComponentAwait(
+                asyncInfo,
+                trackIdx,
+                time,
+                endTime,
+                env,
+                undefined,
+              );
+            }
           }
         }
       }

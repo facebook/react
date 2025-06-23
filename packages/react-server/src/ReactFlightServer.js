@@ -2053,10 +2053,13 @@ function visitAsyncNode(
       }
       // We need to forward after we visit awaited nodes because what ever I/O we requested that's
       // the thing that generated this node and its virtual children.
-      const debugInfo = node.debugInfo;
-      if (debugInfo !== null && !visited.has(debugInfo)) {
-        visited.add(debugInfo);
-        forwardDebugInfo(request, task, debugInfo);
+      const promise = node.promise.deref();
+      if (promise !== undefined) {
+        const debugInfo = promise._debugInfo;
+        if (debugInfo != null && !visited.has(debugInfo)) {
+          visited.add(debugInfo);
+          forwardDebugInfo(request, task, debugInfo);
+        }
       }
       return match;
     }
@@ -2084,14 +2087,32 @@ function visitAsyncNode(
             // just part of a previous component's rendering.
             match = ioNode;
           } else {
-            const stack = filterStackTrace(request, node.stack);
-            if (stack.length === 0) {
+            let isAwaitInUserspace = false;
+            const fullStack = node.stack;
+            if (fullStack.length > 0) {
+              // Check if the very first stack frame that awaited this Promise was in user space.
+              // TODO: This doesn't take into account wrapper functions such as our fake .then()
+              // in FlightClient which will always be considered third party awaits if you call
+              // .then directly.
+              const filterStackFrame = request.filterStackFrame;
+              const callsite = fullStack[0];
+              const functionName = callsite[0];
+              const url = devirtualizeURL(callsite[1]);
+              isAwaitInUserspace = filterStackFrame(url, functionName);
+            }
+            if (!isAwaitInUserspace) {
               // If this await was fully filtered out, then it was inside third party code
               // such as in an external library. We return the I/O node and try another await.
               match = ioNode;
             } else {
+              // We found a user space await.
+
               // Outline the IO node.
-              serializeIONode(request, ioNode);
+              // The ioNode is where the I/O was initiated, but after that it could have been
+              // processed through various awaits in the internals of the third party code.
+              // Therefore we don't use the inner most Promise as the conceptual value but the
+              // Promise that was ultimately awaited by the user space await.
+              serializeIONode(request, ioNode, awaited.promise);
 
               // We log the environment at the time when the last promise pigned ping which may
               // be later than what the environment was when we actually started awaiting.
@@ -2103,7 +2124,7 @@ function visitAsyncNode(
                 awaited: ((ioNode: any): ReactIOInfo), // This is deduped by this reference.
                 env: env,
                 owner: node.owner,
-                stack: stack,
+                stack: filterStackTrace(request, node.stack),
               });
               markOperationEndTime(request, task, endTime);
             }
@@ -2112,10 +2133,13 @@ function visitAsyncNode(
       }
       // We need to forward after we visit awaited nodes because what ever I/O we requested that's
       // the thing that generated this node and its virtual children.
-      const debugInfo = node.debugInfo;
-      if (debugInfo !== null && !visited.has(debugInfo)) {
-        visited.add(debugInfo);
-        forwardDebugInfo(request, task, debugInfo);
+      const promise = node.promise.deref();
+      if (promise !== undefined) {
+        const debugInfo = promise._debugInfo;
+        if (debugInfo != null && !visited.has(debugInfo)) {
+          visited.add(debugInfo);
+          forwardDebugInfo(request, task, debugInfo);
+        }
       }
       return match;
     }
@@ -2141,7 +2165,7 @@ function emitAsyncSequence(
   const awaitedNode = visitAsyncNode(request, task, node, visited, task.time);
   if (awaitedNode !== null) {
     // Nothing in user space (unfiltered stack) awaited this.
-    serializeIONode(request, awaitedNode);
+    serializeIONode(request, awaitedNode, awaitedNode.promise);
     request.pendingChunks++;
     // We log the environment at the time when we ping which may be later than what the
     // environment was when we actually started awaiting.
@@ -3726,6 +3750,7 @@ function emitIOInfoChunk(
   name: string,
   start: number,
   end: number,
+  value: ?Promise<mixed>,
   env: ?string,
   owner: ?ReactComponentInfo,
   stack: ?ReactStackTrace,
@@ -3750,6 +3775,10 @@ function emitIOInfoChunk(
     start: relativeStartTimestamp,
     end: relativeEndTimestamp,
   };
+  if (value !== undefined) {
+    // $FlowFixMe[cannot-write]
+    debugIOInfo.value = value;
+  }
   if (env != null) {
     // $FlowFixMe[cannot-write]
     debugIOInfo.env = env;
@@ -3797,6 +3826,7 @@ function outlineIOInfo(request: Request, ioInfo: ReactIOInfo): void {
     ioInfo.name,
     ioInfo.start,
     ioInfo.end,
+    ioInfo.value,
     ioInfo.env,
     owner,
     debugStack,
@@ -3807,6 +3837,7 @@ function outlineIOInfo(request: Request, ioInfo: ReactIOInfo): void {
 function serializeIONode(
   request: Request,
   ioNode: IONode | PromiseNode,
+  promiseRef: null | WeakRef<Promise<mixed>>,
 ): string {
   const existingRef = request.writtenDebugObjects.get(ioNode);
   if (existingRef !== undefined) {
@@ -3834,6 +3865,11 @@ function serializeIONode(
     outlineComponentInfo(request, owner);
   }
 
+  let value: void | Promise<mixed> = undefined;
+  if (promiseRef !== null) {
+    value = promiseRef.deref();
+  }
+
   // We log the environment at the time when we serialize the I/O node.
   // The environment name may have changed from when the I/O was actually started.
   const env = (0, request.environmentName)();
@@ -3846,6 +3882,7 @@ function serializeIONode(
     name,
     ioNode.start,
     ioNode.end,
+    value,
     env,
     owner,
     stack,

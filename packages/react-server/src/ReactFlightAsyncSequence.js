@@ -27,9 +27,9 @@ export type IONode = {
   tag: 0,
   owner: null | ReactComponentInfo,
   stack: ReactStackTrace, // callsite that spawned the I/O
-  debugInfo: null, // not used on I/O
   start: number, // start time when the first part of the I/O sequence started
   end: number, // we typically don't use this. only when there's no promise intermediate.
+  promise: null, // not used on I/O
   awaited: null, // I/O is only blocked on external.
   previous: null | AwaitNode | UnresolvedAwaitNode, // the preceeding await that spawned this new work
 };
@@ -37,10 +37,10 @@ export type IONode = {
 export type PromiseNode = {
   tag: 1,
   owner: null | ReactComponentInfo,
-  debugInfo: null | ReactDebugInfo, // forwarded debugInfo from the Promise
   stack: ReactStackTrace, // callsite that created the Promise
   start: number, // start time when the Promise was created
   end: number, // end time when the Promise was resolved.
+  promise: WeakRef<PromiseWithDebugInfo>, // a reference to this Promise if still referenced
   awaited: null | AsyncSequence, // the thing that ended up resolving this promise
   previous: null | AsyncSequence, // represents what the last return of an async function depended on before returning
 };
@@ -48,10 +48,10 @@ export type PromiseNode = {
 export type AwaitNode = {
   tag: 2,
   owner: null | ReactComponentInfo,
-  debugInfo: null | ReactDebugInfo, // forwarded debugInfo from the Promise
   stack: ReactStackTrace, // callsite that awaited (using await, .then(), Promise.all(), ...)
   start: number, // when we started blocking. This might be later than the I/O started.
   end: number, // when we unblocked. This might be later than the I/O resolved if there's CPU time.
+  promise: WeakRef<PromiseWithDebugInfo>, // a reference to this Promise if still referenced
   awaited: null | AsyncSequence, // the promise we were waiting on
   previous: null | AsyncSequence, // the sequence that was blocking us from awaiting in the first place
 };
@@ -59,10 +59,10 @@ export type AwaitNode = {
 export type UnresolvedPromiseNode = {
   tag: 3,
   owner: null | ReactComponentInfo,
-  debugInfo: WeakRef<PromiseWithDebugInfo>, // holds onto the Promise until we can extract debugInfo when it resolves
   stack: ReactStackTrace, // callsite that created the Promise
   start: number, // start time when the Promise was created
   end: -1.1, // set when we resolve.
+  promise: WeakRef<PromiseWithDebugInfo>, // a reference to this Promise if still referenced
   awaited: null | AsyncSequence, // the thing that ended up resolving this promise
   previous: null, // where we created the promise is not interesting since creating it doesn't mean waiting.
 };
@@ -70,10 +70,10 @@ export type UnresolvedPromiseNode = {
 export type UnresolvedAwaitNode = {
   tag: 4,
   owner: null | ReactComponentInfo,
-  debugInfo: WeakRef<PromiseWithDebugInfo>, // holds onto the Promise until we can extract debugInfo when it resolves
   stack: ReactStackTrace, // callsite that awaited (using await, .then(), Promise.all(), ...)
   start: number, // when we started blocking. This might be later than the I/O started.
   end: -1.1, // set when we resolve.
+  promise: WeakRef<PromiseWithDebugInfo>, // a reference to this Promise if still referenced
   awaited: null | AsyncSequence, // the promise we were waiting on
   previous: null | AsyncSequence, // the sequence that was blocking us from awaiting in the first place
 };

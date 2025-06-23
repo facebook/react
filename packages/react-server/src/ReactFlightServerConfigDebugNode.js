@@ -34,6 +34,23 @@ const getAsyncId = AsyncResource.prototype.asyncId;
 const pendingOperations: Map<number, AsyncSequence> =
   __DEV__ && enableAsyncDebugInfo ? new Map() : (null: any);
 
+// This is a weird one. This map, keeps a dependent Promise alive if the child Promise is still alive.
+// A PromiseNode/AwaitNode cannot hold a strong reference to its own Promise because then it'll never get
+// GC:ed. We only need it if a dependent AwaitNode points to it. We could put a reference in the Node
+// but that would require a GC pass between every Node that gets destroyed. I.e. the root gets destroy()
+// called on it and then that release it from the pendingOperations map which allows the next one to GC
+// and so on. By putting this relationship in a WeakMap this could be done as a single pass in the VM.
+// We don't actually ever have to read from this map since we have WeakRef reference to these Promises
+// if they're still alive. It's also optional information so we could just expose only if GC didn't run.
+const awaitedPromise: WeakMap<Promise<any>, Promise<any>> = __DEV__ &&
+enableAsyncDebugInfo
+  ? new WeakMap()
+  : (null: any);
+const previousPromise: WeakMap<Promise<any>, Promise<any>> = __DEV__ &&
+enableAsyncDebugInfo
+  ? new WeakMap()
+  : (null: any);
+
 // Keep the last resolved await as a workaround for async functions missing data.
 let lastRanAwait: null | AwaitNode = null;
 
@@ -45,12 +62,6 @@ function resolvePromiseOrAwaitNode(
   resolvedNode.tag = ((unresolvedNode.tag === UNRESOLVED_PROMISE_NODE
     ? PROMISE_NODE
     : AWAIT_NODE): any);
-  // The Promise can be garbage collected after this so we should extract debugInfo first.
-  const promise = unresolvedNode.debugInfo.deref();
-  resolvedNode.debugInfo =
-    promise === undefined || promise._debugInfo === undefined
-      ? null
-      : promise._debugInfo;
   resolvedNode.end = endTime;
   return resolvedNode;
 }
@@ -72,6 +83,14 @@ export function initAsyncDebugInfo(): void {
         const trigger = pendingOperations.get(triggerAsyncId);
         let node: AsyncSequence;
         if (type === 'PROMISE') {
+          if (trigger !== undefined && trigger.promise !== null) {
+            const triggerPromise = trigger.promise.deref();
+            if (triggerPromise !== undefined) {
+              // Keep the awaited Promise alive as long as the child is alive so we can
+              // trace its value at the end.
+              awaitedPromise.set(resource, triggerPromise);
+            }
+          }
           const currentAsyncId = executionAsyncId();
           if (currentAsyncId !== triggerAsyncId) {
             // When you call .then() on a native Promise, or await/Promise.all() a thenable,
@@ -81,15 +100,23 @@ export function initAsyncDebugInfo(): void {
               return;
             }
             const current = pendingOperations.get(currentAsyncId);
+            if (current !== undefined && current.promise !== null) {
+              const currentPromise = current.promise.deref();
+              if (currentPromise !== undefined) {
+                // Keep the previous Promise alive as long as the child is alive so we can
+                // trace its value at the end.
+                previousPromise.set(resource, currentPromise);
+              }
+            }
             // If the thing we're waiting on is another Await we still track that sequence
             // so that we can later pick the best stack trace in user space.
             node = ({
               tag: UNRESOLVED_AWAIT_NODE,
               owner: resolveOwner(),
-              debugInfo: new WeakRef((resource: Promise<any>)),
-              stack: parseStackTrace(new Error(), 1),
+              stack: parseStackTrace(new Error(), 5),
               start: performance.now(),
               end: -1.1, // set when resolved.
+              promise: new WeakRef((resource: Promise<any>)),
               awaited: trigger, // The thing we're awaiting on. Might get overrriden when we resolve.
               previous: current === undefined ? null : current, // The path that led us here.
             }: UnresolvedAwaitNode);
@@ -97,10 +124,10 @@ export function initAsyncDebugInfo(): void {
             node = ({
               tag: UNRESOLVED_PROMISE_NODE,
               owner: resolveOwner(),
-              debugInfo: new WeakRef((resource: Promise<any>)),
-              stack: parseStackTrace(new Error(), 1),
+              stack: parseStackTrace(new Error(), 5),
               start: performance.now(),
               end: -1.1, // Set when we resolve.
+              promise: new WeakRef((resource: Promise<any>)),
               awaited:
                 trigger === undefined
                   ? null // It might get overridden when we resolve.
@@ -118,10 +145,10 @@ export function initAsyncDebugInfo(): void {
             node = ({
               tag: IO_NODE,
               owner: resolveOwner(),
-              debugInfo: null,
-              stack: parseStackTrace(new Error(), 1), // This is only used if no native promises are used.
+              stack: parseStackTrace(new Error(), 3), // This is only used if no native promises are used.
               start: performance.now(),
               end: -1.1, // Only set when pinged.
+              promise: null,
               awaited: null,
               previous: null,
             }: IONode);
@@ -133,10 +160,10 @@ export function initAsyncDebugInfo(): void {
             node = ({
               tag: IO_NODE,
               owner: resolveOwner(),
-              debugInfo: null,
-              stack: parseStackTrace(new Error(), 1),
+              stack: parseStackTrace(new Error(), 3),
               start: performance.now(),
               end: -1.1, // Only set when pinged.
+              promise: null,
               awaited: null,
               previous: trigger,
             }: IONode);
