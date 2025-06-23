@@ -236,7 +236,7 @@ import {
   isContextProvider as isLegacyContextProvider,
   pushTopLevelContextObject,
   invalidateContextProvider,
-} from './ReactFiberContext';
+} from './ReactFiberLegacyContext';
 import {
   getIsHydrating,
   enterHydrationState,
