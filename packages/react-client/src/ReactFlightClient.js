@@ -165,7 +165,6 @@ type PendingChunk<T> = {
   status: 'pending',
   value: null | Array<(T) => mixed>,
   reason: null | Array<(mixed) => mixed>,
-  _response: null,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
@@ -174,7 +173,6 @@ type BlockedChunk<T> = {
   status: 'blocked',
   value: null | Array<(T) => mixed>,
   reason: null | Array<(mixed) => mixed>,
-  _response: null,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
@@ -182,8 +180,7 @@ type BlockedChunk<T> = {
 type ResolvedModelChunk<T> = {
   status: 'resolved_model',
   value: UninitializedModel,
-  reason: null,
-  _response: Response,
+  reason: Response,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
@@ -192,7 +189,6 @@ type ResolvedModuleChunk<T> = {
   status: 'resolved_module',
   value: ClientReference<T>,
   reason: null,
-  _response: null,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
@@ -201,7 +197,6 @@ type InitializedChunk<T> = {
   status: 'fulfilled',
   value: T,
   reason: null | FlightStreamController,
-  _response: null,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
@@ -212,7 +207,6 @@ type InitializedStreamChunk<
   status: 'fulfilled',
   value: T,
   reason: FlightStreamController,
-  _response: null,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (ReadableStream) => mixed, reject?: (mixed) => mixed): void,
@@ -221,7 +215,6 @@ type ErroredChunk<T> = {
   status: 'rejected',
   value: null,
   reason: mixed,
-  _response: null,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
@@ -230,7 +223,6 @@ type HaltedChunk<T> = {
   status: 'halted',
   value: null,
   reason: null,
-  _response: null,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
@@ -245,16 +237,10 @@ type SomeChunk<T> =
   | HaltedChunk<T>;
 
 // $FlowFixMe[missing-this-annot]
-function ReactPromise(
-  status: any,
-  value: any,
-  reason: any,
-  response: null | Response,
-) {
+function ReactPromise(status: any, value: any, reason: any) {
   this.status = status;
   this.value = value;
   this.reason = reason;
-  this._response = response;
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     this._children = [];
   }
@@ -401,12 +387,12 @@ export function getRoot<T>(response: Response): Thenable<T> {
 
 function createPendingChunk<T>(response: Response): PendingChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new ReactPromise(PENDING, null, null, null);
+  return new ReactPromise(PENDING, null, null);
 }
 
 function createBlockedChunk<T>(response: Response): BlockedChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new ReactPromise(BLOCKED, null, null, null);
+  return new ReactPromise(BLOCKED, null, null);
 }
 
 function createErrorChunk<T>(
@@ -414,7 +400,7 @@ function createErrorChunk<T>(
   error: mixed,
 ): ErroredChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new ReactPromise(ERRORED, null, error, null);
+  return new ReactPromise(ERRORED, null, error);
 }
 
 function wakeChunk<T>(listeners: Array<(T) => mixed>, value: T): void {
@@ -486,7 +472,7 @@ function createResolvedModelChunk<T>(
   value: UninitializedModel,
 ): ResolvedModelChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new ReactPromise(RESOLVED_MODEL, value, null, response);
+  return new ReactPromise(RESOLVED_MODEL, value, response);
 }
 
 function createResolvedModuleChunk<T>(
@@ -494,7 +480,7 @@ function createResolvedModuleChunk<T>(
   value: ClientReference<T>,
 ): ResolvedModuleChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new ReactPromise(RESOLVED_MODULE, value, null, null);
+  return new ReactPromise(RESOLVED_MODULE, value, null);
 }
 
 function createInitializedTextChunk(
@@ -502,7 +488,7 @@ function createInitializedTextChunk(
   value: string,
 ): InitializedChunk<string> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new ReactPromise(INITIALIZED, value, null, null);
+  return new ReactPromise(INITIALIZED, value, null);
 }
 
 function createInitializedBufferChunk(
@@ -510,7 +496,7 @@ function createInitializedBufferChunk(
   value: $ArrayBufferView | ArrayBuffer,
 ): InitializedChunk<Uint8Array> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new ReactPromise(INITIALIZED, value, null, null);
+  return new ReactPromise(INITIALIZED, value, null);
 }
 
 function createInitializedIteratorResultChunk<T>(
@@ -519,7 +505,7 @@ function createInitializedIteratorResultChunk<T>(
   done: boolean,
 ): InitializedChunk<IteratorResult<T, T>> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new ReactPromise(INITIALIZED, {done: done, value: value}, null, null);
+  return new ReactPromise(INITIALIZED, {done: done, value: value}, null);
 }
 
 function createInitializedStreamChunk<
@@ -532,7 +518,7 @@ function createInitializedStreamChunk<
   // We use the reason field to stash the controller since we already have that
   // field. It's a bit of a hack but efficient.
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new ReactPromise(INITIALIZED, value, controller, null);
+  return new ReactPromise(INITIALIZED, value, controller);
 }
 
 function createResolvedIteratorResultChunk<T>(
@@ -544,7 +530,7 @@ function createResolvedIteratorResultChunk<T>(
   const iteratorResultJSON =
     (done ? '{"done":true,"value":' : '{"done":false,"value":') + value + '}';
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new ReactPromise(RESOLVED_MODEL, iteratorResultJSON, null, response);
+  return new ReactPromise(RESOLVED_MODEL, iteratorResultJSON, response);
 }
 
 function resolveIteratorResultChunk<T>(
@@ -577,7 +563,7 @@ function resolveModelChunk<T>(
   const resolvedChunk: ResolvedModelChunk<T> = (chunk: any);
   resolvedChunk.status = RESOLVED_MODEL;
   resolvedChunk.value = value;
-  resolvedChunk._response = response;
+  resolvedChunk.reason = response;
   if (resolveListeners !== null) {
     // This is unfortunate that we're reading this eagerly if
     // we already have listeners attached since they might no
@@ -623,7 +609,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
   initializingHandler = null;
 
   const resolvedModel = chunk.value;
-  const response = chunk._response;
+  const response = chunk.reason;
 
   // We go to the BLOCKED state until we've fully resolved this.
   // We do this before parsing in case we try to initialize the same chunk
@@ -2187,7 +2173,6 @@ function startAsyncIterable<T>(
           return new ReactPromise(
             INITIALIZED,
             {done: true, value: undefined},
-            null,
             null,
           );
         }
