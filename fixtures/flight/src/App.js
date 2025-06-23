@@ -123,7 +123,6 @@ async function ServerComponent({noCache}) {
 export default async function App({prerender, noCache}) {
   const res = await fetch('http://localhost:3001/todos');
   const todos = await res.json();
-  console.log(res);
 
   const dedupedChild = <ServerComponent noCache={noCache} />;
   const message = getServerState();
