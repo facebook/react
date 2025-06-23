@@ -56,6 +56,7 @@ const {createResponse, processBinaryChunk, getRoot, close} = ReactFlightClient({
 
 type ReadOptions = {|
   findSourceMapURL?: FindSourceMapURLCallback,
+  debugChannel?: {onMessage: (message: string) => void},
   close?: boolean,
 |};
 
@@ -71,6 +72,9 @@ function read<T>(source: Source, options: ReadOptions): Thenable<T> {
     options !== undefined ? options.findSourceMapURL : undefined,
     true,
     undefined,
+    __DEV__ && options !== undefined && options.debugChannel !== undefined
+      ? options.debugChannel.onMessage
+      : undefined,
   );
   for (let i = 0; i < source.length; i++) {
     processBinaryChunk(response, source[i], 0);

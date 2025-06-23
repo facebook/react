@@ -124,17 +124,14 @@ describe('ReactFlight', () => {
     );
 
     await act(async () => {
-      const rootModel = await ReactNoopFlightClient.read(transport);
+      const rootModel = await ReactNoopFlightClient.read(transport, {
+        debugChannel,
+      });
       const root = rootModel.root;
       const children = getDebugInfo(root)[1].props.children;
       expect(children.type).toBe('div');
       expect(children.props.children.type).toBe('div');
       ReactNoop.render(root);
-    });
-
-    await act(async () => {
-      // Ask for more data
-      debugChannel.onMessage('Q:7');
     });
 
     expect(ReactNoop).toMatchRenderedOutput(<div>not using props</div>);
