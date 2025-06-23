@@ -59,4 +59,10 @@ module.exports = {
   get createPublicRootInstance() {
     return require('./createPublicRootInstance').default;
   },
+  get createAttributePayload() {
+    return require('./createAttributePayload').default;
+  },
+  get diffAttributePayloads() {
+    return require('./diffAttributePayloads').default;
+  },
 };
