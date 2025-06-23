@@ -514,9 +514,9 @@ Intuition: these effects are inverses of each other (capturing into an object, e
 Capture then CreatFrom is equivalent to Alias: we have to assume that the result _is_ the original value and that a local mutation of the result could mutate the original.
 
 ```js
-const y = [x]; // capture
-const z = y[0]; // createfrom
-mutate(z); // this clearly can mutate x, so the result must be one of Assign/Alias/CreateFrom 
+const b = [a]; // capture
+const c = b[0]; // createfrom
+mutate(c); // this clearly can mutate a, so the result must be one of Assign/Alias/CreateFrom 
 ```
 
 We use Alias as the return type because the mutability kind of the result is not derived from the source value (there's a fresh object in between due to the capture), so the full set of effects in practice would be a Create+Alias.
@@ -528,17 +528,17 @@ CreateFrom c <- b
 Alias c <- a
 ```
 
-Meanwhile the opposite direction preservers the capture, because the result is not the same as the source:
+Meanwhile the opposite direction preserves the capture, because the result is not the same as the source:
 
 ```js
-const y = x[0]; // createfrom
-const z = [y]; // capture
-mutate(z); // does not mutate x, so the result must be Capture
+const b = a[0]; // createfrom
+const c = [b]; // capture
+mutate(c); // does not mutate a, so the result must be Capture
 ```
 
 ```
-Capture b <- a
-CreateFrom c <- b
+CreateFrom b <- a
+Capture c <- b
 =>
-Capture b <- a
+Capture c <- a
 ```

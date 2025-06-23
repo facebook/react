@@ -5,9 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {HIRFunction, IdentifierId, Place, ValueKind, ValueReason} from '../HIR';
-import {getOrInsertDefault} from '../Utils/utils';
+import {
+  BlockId,
+  HIRFunction,
+  IdentifierId,
+  Place,
+  ValueKind,
+  ValueReason,
+} from '../HIR';
 import {AliasingEffect} from './AliasingEffects';
+import {CompilerError} from '..';
 
 /**
  * This function tracks data flow within an inner function expression in order to
@@ -31,147 +38,195 @@ import {AliasingEffect} from './AliasingEffects';
 export function inferFunctionExpressionAliasingEffectsSignature(
   fn: HIRFunction,
 ): Array<AliasingEffect> | null {
-  const effects: Array<AliasingEffect> = [];
-
-  /**
-   * Map used to identify tracked variables: params, context vars, return value
-   * This is used to detect mutation/capturing/aliasing of params/context vars
-   */
-  const tracked = new Map<IdentifierId, Place>();
-  tracked.set(fn.returns.identifier.id, fn.returns);
-  for (const operand of [...fn.context, ...fn.params]) {
-    const place = operand.kind === 'Identifier' ? operand : operand.place;
-    tracked.set(place.identifier.id, place);
-  }
-
-  /**
-   * Track capturing/aliasing of context vars and params into each other and into the return.
-   * We don't need to track locals and intermediate values, since we're only concerned with effects
-   * as they relate to arguments visible outside the function.
-   *
-   * For each aliased identifier we track capture/alias/createfrom and then merge this with how
-   * the value is used. Eg capturing an alias => capture. See joinEffects() helper.
-   */
-  type AliasedIdentifier = {
-    kind: AliasingKind;
+  const seenBlocks = new Set<BlockId>();
+  type Node = {
     place: Place;
+    aliasing: Map<IdentifierId, 'Alias' | 'Capture'>;
   };
-  const dataFlow = new Map<IdentifierId, Array<AliasedIdentifier>>();
-
-  /*
-   * Check for aliasing of tracked values. Also joins the effects of how the value is
-   * used (@param kind) with the aliasing type of each value
-   */
-  function lookup(
-    place: Place,
-    kind: AliasedIdentifier['kind'],
-  ): Array<AliasedIdentifier> | null {
-    if (tracked.has(place.identifier.id)) {
-      return [{kind, place}];
-    }
-    return (
-      dataFlow.get(place.identifier.id)?.map(aliased => ({
-        kind: joinEffects(aliased.kind, kind),
-        place: aliased.place,
-      })) ?? null
-    );
+  const state = new Map<IdentifierId, Node>();
+  const tracked = new Map<IdentifierId, Place>();
+  for (const param of [...fn.params, ...fn.context, fn.returns]) {
+    const place = param.kind === 'Identifier' ? param : param.place;
+    tracked.set(place.identifier.id, place);
+    state.set(place.identifier.id, {
+      place,
+      aliasing: new Map(),
+    });
   }
 
-  // todo: fixpoint
+  const effects: Array<AliasingEffect> = [];
+  let needsCreateReturnValue = false;
   for (const block of fn.body.blocks.values()) {
     for (const phi of block.phis) {
-      const operands: Array<AliasedIdentifier> = [];
-      for (const operand of phi.operands.values()) {
-        const inputs = lookup(operand, 'Alias');
-        if (inputs != null) {
-          operands.push(...inputs);
+      const node = {
+        place: phi.place,
+        aliasing: new Map(),
+      };
+      for (const [pred, operand] of phi.operands) {
+        if (!seenBlocks.has(pred)) {
+          // TODO: infer data flow in function expressions with loops
+          return null;
         }
-      }
-      if (operands.length !== 0) {
-        dataFlow.set(phi.place.identifier.id, operands);
-      }
-    }
-    for (const instr of block.instructions) {
-      if (instr.effects == null) continue;
-      for (const effect of instr.effects) {
-        if (
-          effect.kind === 'Assign' ||
-          effect.kind === 'Capture' ||
-          effect.kind === 'Alias' ||
-          effect.kind === 'CreateFrom'
-        ) {
-          const from = lookup(effect.from, effect.kind);
-          if (from == null) {
-            continue;
-          }
-          const into = lookup(effect.into, 'Alias');
-          if (into == null) {
-            getOrInsertDefault(dataFlow, effect.into.identifier.id, []).push(
-              ...from,
-            );
-          } else {
-            for (const aliased of into) {
-              getOrInsertDefault(
-                dataFlow,
-                aliased.place.identifier.id,
-                [],
-              ).push(...from);
+        const operandNode = state.get(operand.identifier.id);
+        if (operandNode == null) {
+          continue;
+        }
+        if (tracked.has(operandNode.place.identifier.id)) {
+          node.aliasing.set(operandNode.place.identifier.id, 'Alias');
+        } else {
+          for (const [id, kind] of operandNode.aliasing) {
+            const prevKind = node.aliasing.get(id);
+            if (prevKind == null) {
+              operandNode.aliasing.set(id, kind);
+            } else {
+              operandNode.aliasing.set(id, 'Alias');
             }
           }
-        } else if (
-          effect.kind === 'Create' ||
-          effect.kind === 'CreateFunction'
-        ) {
-          getOrInsertDefault(dataFlow, effect.into.identifier.id, [
-            {kind: 'Alias', place: effect.into},
-          ]);
-        } else if (
-          effect.kind === 'MutateFrozen' ||
-          effect.kind === 'MutateGlobal' ||
-          effect.kind === 'Impure' ||
-          effect.kind === 'Render'
-        ) {
-          effects.push(effect);
+        }
+      }
+      state.set(phi.place.identifier.id, node);
+    }
+    seenBlocks.add(block.id);
+    for (const instr of block.instructions) {
+      if (instr.effects == null) {
+        continue;
+      }
+      for (const effect of instr.effects) {
+        switch (effect.kind) {
+          case 'Create': {
+            if (
+              effect.value === ValueKind.Primitive ||
+              effect.value === ValueKind.Frozen ||
+              effect.value === ValueKind.Global
+            ) {
+              continue;
+            }
+            state.set(effect.into.identifier.id, {
+              place: effect.into,
+              aliasing: new Map(),
+            });
+            break;
+          }
+          case 'CreateFunction': {
+            state.set(effect.into.identifier.id, {
+              place: effect.into,
+              aliasing: new Map(),
+            });
+            break;
+          }
+          case 'Assign': {
+            const from = state.get(effect.from.identifier.id);
+            if (from != null) {
+              state.set(effect.into.identifier.id, from);
+            }
+            break;
+          }
+          case 'CreateFrom': {
+            const from = state.get(effect.from.identifier.id);
+            if (from != null) {
+              state.set(effect.into.identifier.id, from);
+            }
+            break;
+          }
+          case 'Alias':
+          case 'Capture': {
+            if (effect.from.identifier.id === effect.into.identifier.id) {
+              continue;
+            }
+            const from = state.get(effect.from.identifier.id);
+            const into = state.get(effect.into.identifier.id);
+            if (from == null || into == null) {
+              continue;
+            }
+
+            if (tracked.has(from.place.identifier.id)) {
+              const prevKind = into.aliasing.get(from.place.identifier.id);
+              if (prevKind == null) {
+                into.aliasing.set(from.place.identifier.id, effect.kind);
+              } else if (prevKind !== effect.kind) {
+                into.aliasing.set(from.place.identifier.id, 'Alias');
+              }
+              for (const [id, aliasedKind] of into.aliasing) {
+                if (id === from.place.identifier.id) {
+                  continue;
+                }
+                const intoNode = state.get(id)!;
+                const kind =
+                  effect.kind === 'Capture' ? 'Capture' : aliasedKind;
+                const prevKind = intoNode.aliasing.get(
+                  from.place.identifier.id,
+                );
+                if (prevKind == null) {
+                  intoNode.aliasing.set(from.place.identifier.id, kind);
+                } else if (prevKind !== kind) {
+                  intoNode.aliasing.set(from.place.identifier.id, 'Alias');
+                }
+              }
+            } else {
+              for (const [id, aliasedKind] of from.aliasing) {
+                if (id === into.place.identifier.id) {
+                  continue;
+                }
+                const kind =
+                  effect.kind === 'Capture' ? 'Capture' : aliasedKind;
+                const prevKind = into.aliasing.get(id);
+                if (prevKind == null) {
+                  into.aliasing.set(id, kind);
+                } else if (prevKind !== kind) {
+                  into.aliasing.set(id, 'Alias');
+                }
+              }
+            }
+            break;
+          }
+          case 'Apply': {
+            // already converts to individual effects
+            break;
+          }
+          case 'MutateFrozen':
+          case 'MutateGlobal':
+          case 'Impure':
+          case 'Render': {
+            effects.push(effect);
+            break;
+          }
         }
       }
     }
     if (block.terminal.kind === 'return') {
-      const from = lookup(block.terminal.value, 'Alias');
-      if (from != null) {
-        getOrInsertDefault(dataFlow, fn.returns.identifier.id, []).push(
-          ...from,
-        );
-      }
-    }
-  }
-
-  // Create aliasing effects based on observed data flow
-  let hasReturn = false;
-  for (const [into, from] of dataFlow) {
-    const input = tracked.get(into);
-    if (input == null) {
-      continue;
-    }
-    for (const aliased of from) {
-      if (
-        aliased.place.identifier.id === input.identifier.id ||
-        !tracked.has(aliased.place.identifier.id)
-      ) {
+      const from = state.get(block.terminal.value.identifier.id);
+      const into = state.get(fn.returns.identifier.id);
+      if (from == null || into == null) {
+        needsCreateReturnValue = true;
         continue;
       }
-      const effect = {kind: aliased.kind, from: aliased.place, into: input};
-      effects.push(effect);
-      if (
-        into === fn.returns.identifier.id &&
-        (aliased.kind === 'Assign' || aliased.kind === 'CreateFrom')
-      ) {
-        hasReturn = true;
+      if (tracked.has(from.place.identifier.id)) {
+        const prevKind = into.aliasing.get(from.place.identifier.id);
+        if (prevKind == null) {
+          into.aliasing.set(from.place.identifier.id, 'Alias');
+        } else if (prevKind !== 'Alias') {
+          into.aliasing.set(from.place.identifier.id, 'Alias');
+        }
+      } else {
+        needsCreateReturnValue = true;
+        for (const [id, aliasedKind] of from.aliasing) {
+          const prevKind = into.aliasing.get(id);
+          if (prevKind == null) {
+            into.aliasing.set(id, aliasedKind);
+          } else if (prevKind !== aliasedKind) {
+            into.aliasing.set(id, 'Alias');
+          }
+        }
       }
+    } else if (block.terminal.kind === 'try') {
+      // TODO: infer data flow with try/catch
+    } else if (block.terminal.kind === 'throw') {
+      // TODO: infer data flow with throwing function expressions
+      return null;
     }
   }
-  // TODO: more precise return effect inference
-  if (!hasReturn) {
-    effects.unshift({
+  if (needsCreateReturnValue) {
+    effects.push({
       kind: 'Create',
       into: fn.returns,
       value:
@@ -181,26 +236,48 @@ export function inferFunctionExpressionAliasingEffectsSignature(
       reason: ValueReason.KnownReturnSignature,
     });
   }
-
-  return effects;
-}
-
-export enum MutationKind {
-  None = 0,
-  Conditional = 1,
-  Definite = 2,
-}
-
-type AliasingKind = 'Alias' | 'Capture' | 'CreateFrom' | 'Assign';
-function joinEffects(
-  effect1: AliasingKind,
-  effect2: AliasingKind,
-): AliasingKind {
-  if (effect1 === 'Capture' || effect2 === 'Capture') {
-    return 'Capture';
-  } else if (effect1 === 'Assign' || effect2 === 'Assign') {
-    return 'Assign';
-  } else {
-    return 'Alias';
+  const seen = new Set<Node>();
+  for (const node of state.values()) {
+    if (!tracked.has(node.place.identifier.id)) {
+      continue;
+    }
+    if (seen.has(node)) {
+      continue;
+    }
+    seen.add(node);
+    if (
+      !needsCreateReturnValue &&
+      node.place.identifier.id === fn.returns.identifier.id &&
+      node.aliasing.size === 1 &&
+      [...node.aliasing.values()][0] === 'Alias'
+    ) {
+      // Special case of assigning a single value to the return
+      const place = tracked.get([...node.aliasing.keys()][0])!;
+      effects.push({
+        kind: 'Assign',
+        from: place,
+        into: fn.returns,
+      });
+      continue;
+    }
+    for (const [id, kind] of node.aliasing) {
+      const from = tracked.get(id);
+      CompilerError.invariant(from != null, {
+        reason: `Expected all aliased values to derive from a parameter or context variable`,
+        loc: fn.loc,
+      });
+      switch (kind) {
+        case 'Alias': {
+          // effects.push({kind: 'Alias', from, into: node.place});
+          effects.push({kind: 'Capture', from, into: node.place});
+          break;
+        }
+        case 'Capture': {
+          effects.push({kind: 'Capture', from, into: node.place});
+          break;
+        }
+      }
+    }
   }
+  return effects;
 }
