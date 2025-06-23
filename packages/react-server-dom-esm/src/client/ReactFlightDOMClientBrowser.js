@@ -12,6 +12,7 @@ import type {Thenable} from 'shared/ReactTypes.js';
 import type {
   Response as FlightResponse,
   FindSourceMapURLCallback,
+  DebugChannelCallback,
 } from 'react-client/src/ReactFlightClient';
 
 import type {ReactServerValue} from 'react-client/src/ReactFlightReplyClient';
@@ -43,11 +44,30 @@ type CallServerCallback = <A, T>(string, args: A) => Promise<T>;
 export type Options = {
   moduleBaseURL?: string,
   callServer?: CallServerCallback,
+  debugChannel?: {writable?: WritableStream, ...},
   temporaryReferences?: TemporaryReferenceSet,
   findSourceMapURL?: FindSourceMapURLCallback,
   replayConsoleLogs?: boolean,
   environmentName?: string,
 };
+
+function createDebugCallbackFromWritableStream(
+  debugWritable: WritableStream,
+): DebugChannelCallback {
+  const textEncoder = new TextEncoder();
+  const writer = debugWritable.getWriter();
+  return message => {
+    if (message === '') {
+      writer.close();
+    } else {
+      // Note: It's important that this function doesn't close over the Response object or it can't be GC:ed.
+      // Therefore, we can't report errors from this write back to the Response object.
+      if (__DEV__) {
+        writer.write(textEncoder.encode(message + '\n')).catch(console.error);
+      }
+    }
+  };
+}
 
 function createResponseFromOptions(options: void | Options) {
   return createResponse(
@@ -66,6 +86,12 @@ function createResponseFromOptions(options: void | Options) {
     __DEV__ ? (options ? options.replayConsoleLogs !== false : true) : false, // defaults to true
     __DEV__ && options && options.environmentName
       ? options.environmentName
+      : undefined,
+    __DEV__ &&
+      options &&
+      options.debugChannel !== undefined &&
+      options.debugChannel.writable !== undefined
+      ? createDebugCallbackFromWritableStream(options.debugChannel.writable)
       : undefined,
   );
 }
