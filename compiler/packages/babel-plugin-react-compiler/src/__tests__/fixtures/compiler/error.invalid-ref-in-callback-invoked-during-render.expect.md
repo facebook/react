@@ -18,12 +18,17 @@ function Component(props) {
 ## Error
 
 ```
-   6 |     return <Foo item={item} current={current} />;
-   7 |   };
->  8 |   return <Items>{props.items.map(item => renderItem(item))}</Items>;
-     |                                  ^^^^^^^^^^^^^^^^^^^^^^^^ InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef) (8:8)
-   9 | }
-  10 |
+  3 |   const ref = useRef(null);
+  4 |   const renderItem = item => {
+> 5 |     const current = ref.current;
+    |                     ^^^^^^^^^^^ InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef) (5:5)
+
+InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef). Cannot access ref value `current` (6:6)
+
+InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef) (6:6)
+  6 |     return <Foo item={item} current={current} />;
+  7 |   };
+  8 |   return <Items>{props.items.map(item => renderItem(item))}</Items>;
 ```
           
       
