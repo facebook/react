@@ -433,7 +433,6 @@ export type Request = {
   nextChunkId: number,
   pendingChunks: number,
   hints: Hints,
-  abortListeners: Set<(reason: mixed) => void>,
   abortableTasks: Set<Task>,
   pingedTasks: Array<Task>,
   completedImportChunks: Array<Chunk>,
@@ -547,7 +546,6 @@ function RequestInstance(
   this.nextChunkId = 0;
   this.pendingChunks = 0;
   this.hints = hints;
-  this.abortListeners = new Set();
   this.abortableTasks = abortSet;
   this.pingedTasks = pingedTasks;
   this.completedImportChunks = ([]: Array<Chunk>);
@@ -936,7 +934,6 @@ function serializeReadableStream(
     __DEV__ ? task.debugStack : null,
     __DEV__ ? task.debugTask : null,
   );
-  request.abortableTasks.delete(streamTask);
 
   request.pendingChunks++; // The task represents the Start row. This adds a Stop row.
 
@@ -955,8 +952,9 @@ function serializeReadableStream(
     if (entry.done) {
       const endStreamRow = streamTask.id.toString(16) + ':C\n';
       request.completedRegularChunks.push(stringToChunk(endStreamRow));
+      request.abortableTasks.delete(streamTask);
+      request.cacheController.signal.removeEventListener('abort', abortStream);
       enqueueFlush(request);
-      request.abortListeners.delete(abortStream);
       callOnAllReadyIfReady(request);
       aborted = true;
     } else {
@@ -976,20 +974,23 @@ function serializeReadableStream(
       return;
     }
     aborted = true;
-    request.abortListeners.delete(abortStream);
+    request.cacheController.signal.removeEventListener('abort', abortStream);
     erroredTask(request, streamTask, reason);
     enqueueFlush(request);
 
     // $FlowFixMe should be able to pass mixed
     reader.cancel(reason).then(error, error);
   }
-  function abortStream(reason: mixed) {
+  function abortStream() {
     if (aborted) {
       return;
     }
     aborted = true;
-    request.abortListeners.delete(abortStream);
+    const signal = request.cacheController.signal;
+    signal.removeEventListener('abort', abortStream);
+    const reason = signal.reason;
     if (enableHalt && request.type === PRERENDER) {
+      request.abortableTasks.delete(streamTask);
       request.pendingChunks--;
     } else {
       erroredTask(request, streamTask, reason);
@@ -999,7 +1000,7 @@ function serializeReadableStream(
     reader.cancel(reason).then(error, error);
   }
 
-  request.abortListeners.add(abortStream);
+  request.cacheController.signal.addEventListener('abort', abortStream);
   reader.read().then(progress, error);
   return serializeByValueID(streamTask.id);
 }
@@ -1028,7 +1029,6 @@ function serializeAsyncIterable(
     __DEV__ ? task.debugStack : null,
     __DEV__ ? task.debugTask : null,
   );
-  request.abortableTasks.delete(streamTask);
 
   request.pendingChunks++; // The task represents the Start row. This adds a Stop row.
 
@@ -1075,8 +1075,12 @@ function serializeAsyncIterable(
         }
       }
       request.completedRegularChunks.push(stringToChunk(endStreamRow));
+      request.abortableTasks.delete(streamTask);
+      request.cacheController.signal.removeEventListener(
+        'abort',
+        abortIterable,
+      );
       enqueueFlush(request);
-      request.abortListeners.delete(abortIterable);
       callOnAllReadyIfReady(request);
       aborted = true;
     } else {
@@ -1101,7 +1105,7 @@ function serializeAsyncIterable(
       return;
     }
     aborted = true;
-    request.abortListeners.delete(abortIterable);
+    request.cacheController.signal.removeEventListener('abort', abortIterable);
     erroredTask(request, streamTask, reason);
     enqueueFlush(request);
     if (typeof (iterator: any).throw === 'function') {
@@ -1110,16 +1114,19 @@ function serializeAsyncIterable(
       iterator.throw(reason).then(error, error);
     }
   }
-  function abortIterable(reason: mixed) {
+  function abortIterable() {
     if (aborted) {
       return;
     }
     aborted = true;
-    request.abortListeners.delete(abortIterable);
+    const signal = request.cacheController.signal;
+    signal.removeEventListener('abort', abortIterable);
+    const reason = signal.reason;
     if (enableHalt && request.type === PRERENDER) {
+      request.abortableTasks.delete(streamTask);
       request.pendingChunks--;
     } else {
-      erroredTask(request, streamTask, reason);
+      erroredTask(request, streamTask, signal.reason);
       enqueueFlush(request);
     }
     if (typeof (iterator: any).throw === 'function') {
@@ -1128,7 +1135,7 @@ function serializeAsyncIterable(
       iterator.throw(reason).then(error, error);
     }
   }
-  request.abortListeners.add(abortIterable);
+  request.cacheController.signal.addEventListener('abort', abortIterable);
   if (__DEV__) {
     callIteratorInDEV(iterator, progress, error);
   } else {
@@ -2683,7 +2690,7 @@ function serializeBlob(request: Request, blob: Blob): string {
       return;
     }
     if (entry.done) {
-      request.abortListeners.delete(abortBlob);
+      request.cacheController.signal.removeEventListener('abort', abortBlob);
       aborted = true;
       pingTask(request, newTask);
       return;
@@ -2698,18 +2705,20 @@ function serializeBlob(request: Request, blob: Blob): string {
       return;
     }
     aborted = true;
-    request.abortListeners.delete(abortBlob);
+    request.cacheController.signal.removeEventListener('abort', abortBlob);
     erroredTask(request, newTask, reason);
     enqueueFlush(request);
     // $FlowFixMe should be able to pass mixed
     reader.cancel(reason).then(error, error);
   }
-  function abortBlob(reason: mixed) {
+  function abortBlob() {
     if (aborted) {
       return;
     }
     aborted = true;
-    request.abortListeners.delete(abortBlob);
+    const signal = request.cacheController.signal;
+    signal.removeEventListener('abort', abortBlob);
+    const reason = signal.reason;
     if (enableHalt && request.type === PRERENDER) {
       request.pendingChunks--;
     } else {
@@ -2720,7 +2729,7 @@ function serializeBlob(request: Request, blob: Blob): string {
     reader.cancel(reason).then(error, error);
   }
 
-  request.abortListeners.add(abortBlob);
+  request.cacheController.signal.addEventListener('abort', abortBlob);
 
   // $FlowFixMe[incompatible-call]
   reader.read().then(progress).catch(error);
@@ -5257,7 +5266,7 @@ function enqueueFlush(request: Request): void {
 }
 
 function callOnAllReadyIfReady(request: Request): void {
-  if (request.abortableTasks.size === 0 && request.abortListeners.size === 0) {
+  if (request.abortableTasks.size === 0) {
     request.onAllReady();
   }
 }
@@ -5345,37 +5354,7 @@ export function abort(request: Request, reason: mixed): void {
         callOnAllReadyIfReady(request);
       }
     }
-    const abortListeners = request.abortListeners;
-    if (abortListeners.size > 0) {
-      let error;
-      if (
-        enablePostpone &&
-        typeof reason === 'object' &&
-        reason !== null &&
-        (reason: any).$$typeof === REACT_POSTPONE_TYPE
-      ) {
-        // We aborted with a Postpone but since we're passing this to an
-        // external handler, passing this object would leak it outside React.
-        // We create an alternative reason for it instead.
-        error = new Error('The render was aborted due to being postponed.');
-      } else {
-        error =
-          reason === undefined
-            ? new Error(
-                'The render was aborted by the server without a reason.',
-              )
-            : typeof reason === 'object' &&
-                reason !== null &&
-                typeof reason.then === 'function'
-              ? new Error(
-                  'The render was aborted by the server with a promise.',
-                )
-              : reason;
-      }
-      abortListeners.forEach(callback => callback(error));
-      abortListeners.clear();
-      callOnAllReadyIfReady(request);
-    }
+    callOnAllReadyIfReady(request);
     if (request.destination !== null) {
       flushCompletedChunks(request, request.destination);
     }
