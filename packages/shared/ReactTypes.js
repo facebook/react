@@ -209,6 +209,7 @@ export type ReactComponentInfo = {
   // Stashed Data for the Specific Execution Environment. Not part of the transport protocol
   +debugStack?: null | Error,
   +debugTask?: null | ConsoleTask,
+  debugLocation?: null | Error,
 };
 
 export type ReactEnvironmentInfo = {

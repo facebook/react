@@ -69,7 +69,7 @@ function getErrorForJestMatcher(error) {
 
 function normalizeComponentInfo(debugInfo) {
   if (Array.isArray(debugInfo.stack)) {
-    const {debugTask, debugStack, ...copy} = debugInfo;
+    const {debugTask, debugStack, debugLocation, ...copy} = debugInfo;
     copy.stack = formatV8Stack(debugInfo.stack);
     if (debugInfo.owner) {
       copy.owner = normalizeComponentInfo(debugInfo.owner);
