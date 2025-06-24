@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<3ec315b23d58f77ab22de256d9e3f74e>>
+ * @generated SignedSource<<6b5ccdc72dcd58154e7873e789b28875>>
  */
 
 'use strict';
@@ -17851,6 +17851,9 @@ function isUseRefType(id) {
 }
 function isUseStateType(id) {
     return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInUseState';
+}
+function isJsxType(type) {
+    return type.kind === 'Object' && type.shapeId === 'BuiltInJsx';
 }
 function isRefOrRefValue(id) {
     return isUseRefType(id) || isRefValueType(id);
@@ -50141,7 +50144,8 @@ function applyEffect(context, state, _effect, initialized, effects) {
         case 'Apply': {
             const functionValues = state.values(effect.function);
             if (functionValues.length === 1 &&
-                functionValues[0].kind === 'FunctionExpression') {
+                functionValues[0].kind === 'FunctionExpression' &&
+                functionValues[0].loweredFunc.func.aliasingEffects != null) {
                 const functionExpr = functionValues[0];
                 let signature = context.functionSignatureCache.get(functionExpr);
                 if (signature == null) {
@@ -51080,7 +51084,6 @@ function computeEffectsForLegacySignature(state, signature, lvalue, receiver, ar
                 const mutateIterator = conditionallyMutateIterator(place);
                 if (mutateIterator != null) {
                     effects.push(mutateIterator);
-                    captures.push(place);
                 }
                 effects.push({
                     kind: 'Capture',
@@ -51398,132 +51401,9 @@ function buildSignatureFromFunctionExpression(env, fn) {
     };
 }
 
-function inferFunctionExpressionAliasingEffectsSignature(fn) {
-    const effects = [];
-    const tracked = new Map();
-    tracked.set(fn.returns.identifier.id, fn.returns);
-    for (const operand of [...fn.context, ...fn.params]) {
-        const place = operand.kind === 'Identifier' ? operand : operand.place;
-        tracked.set(place.identifier.id, place);
-    }
-    const dataFlow = new Map();
-    function lookup(place, kind) {
-        var _a, _b;
-        if (tracked.has(place.identifier.id)) {
-            return [{ kind, place }];
-        }
-        return ((_b = (_a = dataFlow.get(place.identifier.id)) === null || _a === void 0 ? void 0 : _a.map(aliased => ({
-            kind: joinEffects(aliased.kind, kind),
-            place: aliased.place,
-        }))) !== null && _b !== void 0 ? _b : null);
-    }
-    for (const block of fn.body.blocks.values()) {
-        for (const phi of block.phis) {
-            const operands = [];
-            for (const operand of phi.operands.values()) {
-                const inputs = lookup(operand, 'Alias');
-                if (inputs != null) {
-                    operands.push(...inputs);
-                }
-            }
-            if (operands.length !== 0) {
-                dataFlow.set(phi.place.identifier.id, operands);
-            }
-        }
-        for (const instr of block.instructions) {
-            if (instr.effects == null)
-                continue;
-            for (const effect of instr.effects) {
-                if (effect.kind === 'Assign' ||
-                    effect.kind === 'Capture' ||
-                    effect.kind === 'Alias' ||
-                    effect.kind === 'CreateFrom') {
-                    const from = lookup(effect.from, effect.kind);
-                    if (from == null) {
-                        continue;
-                    }
-                    const into = lookup(effect.into, 'Alias');
-                    if (into == null) {
-                        getOrInsertDefault(dataFlow, effect.into.identifier.id, []).push(...from);
-                    }
-                    else {
-                        for (const aliased of into) {
-                            getOrInsertDefault(dataFlow, aliased.place.identifier.id, []).push(...from);
-                        }
-                    }
-                }
-                else if (effect.kind === 'Create' ||
-                    effect.kind === 'CreateFunction') {
-                    getOrInsertDefault(dataFlow, effect.into.identifier.id, [
-                        { kind: 'Alias', place: effect.into },
-                    ]);
-                }
-                else if (effect.kind === 'MutateFrozen' ||
-                    effect.kind === 'MutateGlobal' ||
-                    effect.kind === 'Impure' ||
-                    effect.kind === 'Render') {
-                    effects.push(effect);
-                }
-            }
-        }
-        if (block.terminal.kind === 'return') {
-            const from = lookup(block.terminal.value, 'Alias');
-            if (from != null) {
-                getOrInsertDefault(dataFlow, fn.returns.identifier.id, []).push(...from);
-            }
-        }
-    }
-    let hasReturn = false;
-    for (const [into, from] of dataFlow) {
-        const input = tracked.get(into);
-        if (input == null) {
-            continue;
-        }
-        for (const aliased of from) {
-            if (aliased.place.identifier.id === input.identifier.id ||
-                !tracked.has(aliased.place.identifier.id)) {
-                continue;
-            }
-            const effect = { kind: aliased.kind, from: aliased.place, into: input };
-            effects.push(effect);
-            if (into === fn.returns.identifier.id &&
-                (aliased.kind === 'Assign' || aliased.kind === 'CreateFrom')) {
-                hasReturn = true;
-            }
-        }
-    }
-    if (!hasReturn) {
-        effects.unshift({
-            kind: 'Create',
-            into: fn.returns,
-            value: fn.returnType.kind === 'Primitive'
-                ? ValueKind.Primitive
-                : ValueKind.Mutable,
-            reason: ValueReason.KnownReturnSignature,
-        });
-    }
-    return effects;
-}
-var MutationKind;
-(function (MutationKind) {
-    MutationKind[MutationKind["None"] = 0] = "None";
-    MutationKind[MutationKind["Conditional"] = 1] = "Conditional";
-    MutationKind[MutationKind["Definite"] = 2] = "Definite";
-})(MutationKind || (MutationKind = {}));
-function joinEffects(effect1, effect2) {
-    if (effect1 === 'Capture' || effect2 === 'Capture') {
-        return 'Capture';
-    }
-    else if (effect1 === 'Assign' || effect2 === 'Assign') {
-        return 'Assign';
-    }
-    else {
-        return 'Alias';
-    }
-}
-
 function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
-    var _a, _b, _c, _d, _e, _f, _g;
+    var _a, _b, _c, _d, _e, _f;
+    const functionEffects = [];
     const state = new AliasingState();
     const pendingPhis = new Map();
     const mutations = [];
@@ -51605,9 +51485,11 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
                     effect.kind === 'MutateGlobal' ||
                     effect.kind === 'Impure') {
                     errors.push(effect.error);
+                    functionEffects.push(effect);
                 }
                 else if (effect.kind === 'Render') {
                     renders.push({ index: index++, place: effect.place });
+                    functionEffects.push(effect);
                 }
             }
         }
@@ -51642,7 +51524,6 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
     for (const render of renders) {
         state.render(render.index, render.place.identifier, errors);
     }
-    (_a = fn.aliasingEffects) !== null && _a !== void 0 ? _a : (fn.aliasingEffects = []);
     for (const param of [...fn.context, ...fn.params]) {
         const place = param.kind === 'Identifier' ? param : param.place;
         const node = state.nodes.get(place.identifier);
@@ -51653,14 +51534,14 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
         if (node.local != null) {
             if (node.local.kind === MutationKind.Conditional) {
                 mutated = true;
-                fn.aliasingEffects.push({
+                functionEffects.push({
                     kind: 'MutateConditionally',
                     value: Object.assign(Object.assign({}, place), { loc: node.local.loc }),
                 });
             }
             else if (node.local.kind === MutationKind.Definite) {
                 mutated = true;
-                fn.aliasingEffects.push({
+                functionEffects.push({
                     kind: 'Mutate',
                     value: Object.assign(Object.assign({}, place), { loc: node.local.loc }),
                 });
@@ -51669,14 +51550,14 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
         if (node.transitive != null) {
             if (node.transitive.kind === MutationKind.Conditional) {
                 mutated = true;
-                fn.aliasingEffects.push({
+                functionEffects.push({
                     kind: 'MutateTransitiveConditionally',
                     value: Object.assign(Object.assign({}, place), { loc: node.transitive.loc }),
                 });
             }
             else if (node.transitive.kind === MutationKind.Definite) {
                 mutated = true;
-                fn.aliasingEffects.push({
+                functionEffects.push({
                     kind: 'MutateTransitive',
                     value: Object.assign(Object.assign({}, place), { loc: node.transitive.loc }),
                 });
@@ -51690,7 +51571,7 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
         for (const phi of block.phis) {
             phi.place.effect = Effect.Store;
             const isPhiMutatedAfterCreation = phi.place.identifier.mutableRange.end >
-                ((_c = (_b = block.instructions.at(0)) === null || _b === void 0 ? void 0 : _b.id) !== null && _c !== void 0 ? _c : block.terminal.id);
+                ((_b = (_a = block.instructions.at(0)) === null || _a === void 0 ? void 0 : _a.id) !== null && _b !== void 0 ? _b : block.terminal.id);
             for (const operand of phi.operands.values()) {
                 operand.effect = isPhiMutatedAfterCreation
                     ? Effect.Capture
@@ -51698,7 +51579,7 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
             }
             if (isPhiMutatedAfterCreation &&
                 phi.place.identifier.mutableRange.start === 0) {
-                const firstInstructionIdOfBlock = (_e = (_d = block.instructions.at(0)) === null || _d === void 0 ? void 0 : _d.id) !== null && _e !== void 0 ? _e : block.terminal.id;
+                const firstInstructionIdOfBlock = (_d = (_c = block.instructions.at(0)) === null || _c === void 0 ? void 0 : _c.id) !== null && _d !== void 0 ? _d : block.terminal.id;
                 phi.place.identifier.mutableRange.start = makeInstructionId(firstInstructionIdOfBlock - 1);
             }
         }
@@ -51775,7 +51656,7 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
                 }
             }
             for (const lvalue of eachInstructionLValue(instr)) {
-                const effect = (_f = operandEffects.get(lvalue.identifier.id)) !== null && _f !== void 0 ? _f : Effect.ConditionallyMutate;
+                const effect = (_e = operandEffects.get(lvalue.identifier.id)) !== null && _e !== void 0 ? _e : Effect.ConditionallyMutate;
                 lvalue.effect = effect;
             }
             for (const operand of eachInstructionValueOperand(instr.value)) {
@@ -51783,7 +51664,7 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
                     operand.identifier.mutableRange.start === 0) {
                     operand.identifier.mutableRange.start = instr.id;
                 }
-                const effect = (_g = operandEffects.get(operand.identifier.id)) !== null && _g !== void 0 ? _g : Effect.Read;
+                const effect = (_f = operandEffects.get(operand.identifier.id)) !== null && _f !== void 0 ? _f : Effect.Read;
                 operand.effect = effect;
             }
             if (instr.value.kind === 'StoreContext' &&
@@ -51802,7 +51683,57 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
             }
         }
     }
-    return errors.asResult();
+    functionEffects.push({
+        kind: 'Create',
+        into: fn.returns,
+        value: fn.returnType.kind === 'Primitive'
+            ? ValueKind.Primitive
+            : isJsxType(fn.returnType)
+                ? ValueKind.Frozen
+                : ValueKind.Mutable,
+        reason: ValueReason.KnownReturnSignature,
+    });
+    const tracked = [];
+    const ignoredErrors = new CompilerError();
+    for (const param of [...fn.params, ...fn.context, fn.returns]) {
+        const place = param.kind === 'Identifier' ? param : param.place;
+        tracked.push(place);
+    }
+    for (const into of tracked) {
+        const mutationIndex = index++;
+        state.mutate(mutationIndex, into.identifier, null, true, MutationKind.Conditional, into.loc, ignoredErrors);
+        for (const from of tracked) {
+            if (from.identifier.id === into.identifier.id ||
+                from.identifier.id === fn.returns.identifier.id) {
+                continue;
+            }
+            const fromNode = state.nodes.get(from.identifier);
+            CompilerError.invariant(fromNode != null, {
+                reason: `Expected a node to exist for all parameters and context variables`,
+                loc: into.loc,
+            });
+            if (fromNode.lastMutated === mutationIndex) {
+                if (into.identifier.id === fn.returns.identifier.id) {
+                    functionEffects.push({
+                        kind: 'Alias',
+                        from,
+                        into,
+                    });
+                }
+                else {
+                    functionEffects.push({
+                        kind: 'Capture',
+                        from,
+                        into,
+                    });
+                }
+            }
+        }
+    }
+    if (errors.hasErrors() && !isFunctionExpression) {
+        return Err(errors);
+    }
+    return Ok(functionEffects);
 }
 function appendFunctionErrors(errors, fn) {
     var _a;
@@ -51817,6 +51748,12 @@ function appendFunctionErrors(errors, fn) {
         }
     }
 }
+var MutationKind;
+(function (MutationKind) {
+    MutationKind[MutationKind["None"] = 0] = "None";
+    MutationKind[MutationKind["Conditional"] = 1] = "Conditional";
+    MutationKind[MutationKind["Definite"] = 2] = "Definite";
+})(MutationKind || (MutationKind = {}));
 class AliasingState {
     constructor() {
         this.nodes = new Map();
@@ -51830,6 +51767,7 @@ class AliasingState {
             edges: [],
             transitive: null,
             local: null,
+            lastMutated: 0,
             value,
         });
     }
@@ -51916,7 +51854,10 @@ class AliasingState {
             if (node == null) {
                 continue;
             }
-            node.id.mutableRange.end = makeInstructionId(Math.max(node.id.mutableRange.end, end));
+            node.lastMutated = Math.max(node.lastMutated, index);
+            if (end != null) {
+                node.id.mutableRange.end = makeInstructionId(Math.max(node.id.mutableRange.end, end));
+            }
             if (node.value.kind === 'Function' &&
                 node.transitive == null &&
                 node.local == null) {
@@ -51991,36 +51932,18 @@ function analyseFunctions(func) {
     }
 }
 function lowerWithMutationAliasing(fn) {
-    var _a, _b, _c, _d;
+    var _a, _b;
     analyseFunctions(fn);
     inferMutationAliasingEffects(fn, { isFunctionExpression: true });
     deadCodeElimination(fn);
-    inferMutationAliasingRanges(fn, { isFunctionExpression: true });
+    const functionEffects = inferMutationAliasingRanges(fn, {
+        isFunctionExpression: true,
+    }).unwrap();
     rewriteInstructionKindsBasedOnReassignment(fn);
     inferReactiveScopeVariables(fn);
-    const effects = inferFunctionExpressionAliasingEffectsSignature(fn);
-    (_b = (_a = fn.env.logger) === null || _a === void 0 ? void 0 : _a.debugLogIRs) === null || _b === void 0 ? void 0 : _b.call(_a, {
-        kind: 'hir',
-        name: 'AnalyseFunction (inner)',
-        value: fn,
-    });
-    if (effects != null) {
-        (_c = fn.aliasingEffects) !== null && _c !== void 0 ? _c : (fn.aliasingEffects = []);
-        (_d = fn.aliasingEffects) === null || _d === void 0 ? void 0 : _d.push(...effects);
-    }
-    if (fn.aliasingEffects != null) {
-        const seen = new Set();
-        retainWhere(fn.aliasingEffects, effect => {
-            const hash = hashEffect(effect);
-            if (seen.has(hash)) {
-                return false;
-            }
-            seen.add(hash);
-            return true;
-        });
-    }
+    fn.aliasingEffects = functionEffects;
     const capturedOrMutated = new Set();
-    for (const effect of effects !== null && effects !== void 0 ? effects : []) {
+    for (const effect of functionEffects) {
         switch (effect.kind) {
             case 'Assign':
             case 'Alias':
@@ -52066,6 +51989,11 @@ function lowerWithMutationAliasing(fn) {
             operand.effect = Effect.Read;
         }
     }
+    (_b = (_a = fn.env.logger) === null || _a === void 0 ? void 0 : _a.debugLogIRs) === null || _b === void 0 ? void 0 : _b.call(_a, {
+        kind: 'hir',
+        name: 'AnalyseFunction (inner)',
+        value: fn,
+    });
 }
 function lower(func) {
     var _a, _b;
