@@ -157,7 +157,6 @@ export default [
   "Expected `%s` listener to be a function, instead got `false`.\n\nIf you used to conditionally omit it with %s={condition && value}, pass %s={condition ? value : undefined} instead.",
   "Expected `%s` listener to be a function, instead got a value of `%s` type.",
   "Expected a constant size argument for each invocation of useMemoCache. The previous cache was allocated with size %s but size %s was requested.",
-  "Expected an empty stack. Something was not reset properly.",
   "Expected currently replaying event to be null. This error is likely caused by a bug in React. Please file an issue.",
   "Expected currently replaying event to not be null. This error is likely caused by a bug in React. Please file an issue.",
   "Expected host context to exist. This error is likely caused by a bug in React. Please file an issue.",
