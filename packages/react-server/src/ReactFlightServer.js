@@ -2358,7 +2358,7 @@ function serializeDeferredObject(
   if (deferredDebugObjects !== null) {
     // This client supports a long lived connection. We can assign this object
     // an ID to be lazy loaded later.
-    // This keeps the connection alive until we ask for it or retain it.
+    // This keeps the connection alive until we ask for it or release it.
     request.pendingChunks++;
     const id = request.nextChunkId++;
     deferredDebugObjects.existing.set(value, id);
@@ -4091,7 +4091,7 @@ function renderDebugModel(
 
     if (counter.objectLimit <= 0 && !doNotLimit.has(value)) {
       // We've reached our max number of objects to serialize across the wire so we serialize this
-      // as a marker so that the client can error or lazy load thiswhen accessed by the console.
+      // as a marker so that the client can error or lazy load this when accessed by the console.
       return serializeDeferredObject(request, value);
     }
 
@@ -4284,7 +4284,7 @@ function renderDebugModel(
       // Large strings are counted towards the object limit.
       if (counter.objectLimit <= 0) {
         // We've reached our max number of objects to serialize across the wire so we serialize this
-        // as a marker so that the client can error or lazy load thiswhen accessed by the console.
+        // as a marker so that the client can error or lazy load this when accessed by the console.
         return serializeDeferredObject(request, value);
       }
       counter.objectLimit--;
@@ -5323,7 +5323,7 @@ export function resolveDebugMessage(request: Request, message: string): void {
   const deferredDebugObjects = request.deferredDebugObjects;
   if (deferredDebugObjects === null) {
     throw new Error(
-      "resolveDebugMessage/closeDebugChannel not be called for a Request that wasn't kept alive. This is a bug in React.",
+      "resolveDebugMessage/closeDebugChannel should not be called for a Request that wasn't kept alive. This is a bug in React.",
     );
   }
   // This function lets the client ask for more data lazily through the debug channel.
@@ -5376,7 +5376,7 @@ export function closeDebugChannel(request: Request): void {
   const deferredDebugObjects = request.deferredDebugObjects;
   if (deferredDebugObjects === null) {
     throw new Error(
-      "resolveDebugMessage/closeDebugChannel not be called for a Request that wasn't kept alive. This is a bug in React.",
+      "resolveDebugMessage/closeDebugChannel should not be called for a Request that wasn't kept alive. This is a bug in React.",
     );
   }
   deferredDebugObjects.retained.forEach((value, id) => {
