@@ -837,13 +837,11 @@ function serializeThenable(
       if (request.status === ABORTING) {
         // We can no longer accept any resolved values
         request.abortableTasks.delete(newTask);
-        newTask.status = ABORTED;
         if (enableHalt && request.type === PRERENDER) {
-          request.pendingChunks--;
+          haltTask(newTask, request);
         } else {
           const errorId: number = (request.fatalError: any);
-          const model = stringify(serializeByValueID(errorId));
-          emitModelChunk(request, newTask.id, model);
+          abortTask(newTask, request, errorId);
         }
         return newTask.id;
       }
@@ -985,9 +983,8 @@ function serializeReadableStream(
     signal.removeEventListener('abort', abortStream);
     const reason = signal.reason;
     if (enableHalt && request.type === PRERENDER) {
-      streamTask.status = ABORTED;
+      haltTask(streamTask, request);
       request.abortableTasks.delete(streamTask);
-      request.pendingChunks--;
     } else {
       erroredTask(request, streamTask, reason);
       enqueueFlush(request);
@@ -1114,9 +1111,8 @@ function serializeAsyncIterable(
     signal.removeEventListener('abort', abortIterable);
     const reason = signal.reason;
     if (enableHalt && request.type === PRERENDER) {
-      streamTask.status = ABORTED;
+      haltTask(streamTask, request);
       request.abortableTasks.delete(streamTask);
-      request.pendingChunks--;
     } else {
       erroredTask(request, streamTask, signal.reason);
       enqueueFlush(request);
@@ -5002,16 +4998,15 @@ function retryTask(request: Request, task: Task): void {
   } catch (thrownValue) {
     if (request.status === ABORTING) {
       request.abortableTasks.delete(task);
-      task.status = ABORTED;
+      task.status = PENDING;
       if (enableHalt && request.type === PRERENDER) {
         // When aborting a prerener with halt semantics we don't emit
         // anything into the slot for a task that aborts, it remains unresolved
-        request.pendingChunks--;
+        haltTask(task, request);
       } else {
         // Otherwise we emit an error chunk into the task slot.
         const errorId: number = (request.fatalError: any);
-        const model = stringify(serializeByValueID(errorId));
-        emitModelChunk(request, task.id, model);
+        abortTask(task, request, errorId);
       }
       return;
     }
