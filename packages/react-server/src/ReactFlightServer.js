@@ -941,22 +941,19 @@ function serializeReadableStream(
     streamTask.id.toString(16) + ':' + (supportsBYOB ? 'r' : 'R') + '\n';
   request.completedRegularChunks.push(stringToChunk(startStreamRow));
 
-  // There's a race condition between when the stream is aborted and when the promise
-  // resolves so we track whether we already aborted it to avoid writing twice.
-  let aborted = false;
   function progress(entry: {done: boolean, value: ReactClientValue, ...}) {
-    if (aborted) {
+    if (streamTask.status !== PENDING) {
       return;
     }
 
     if (entry.done) {
+      streamTask.status = COMPLETED;
       const endStreamRow = streamTask.id.toString(16) + ':C\n';
       request.completedRegularChunks.push(stringToChunk(endStreamRow));
       request.abortableTasks.delete(streamTask);
       request.cacheController.signal.removeEventListener('abort', abortStream);
       enqueueFlush(request);
       callOnAllReadyIfReady(request);
-      aborted = true;
     } else {
       try {
         streamTask.model = entry.value;
@@ -970,10 +967,9 @@ function serializeReadableStream(
     }
   }
   function error(reason: mixed) {
-    if (aborted) {
+    if (streamTask.status !== PENDING) {
       return;
     }
-    aborted = true;
     request.cacheController.signal.removeEventListener('abort', abortStream);
     erroredTask(request, streamTask, reason);
     enqueueFlush(request);
@@ -982,14 +978,14 @@ function serializeReadableStream(
     reader.cancel(reason).then(error, error);
   }
   function abortStream() {
-    if (aborted) {
+    if (streamTask.status !== PENDING) {
       return;
     }
-    aborted = true;
     const signal = request.cacheController.signal;
     signal.removeEventListener('abort', abortStream);
     const reason = signal.reason;
     if (enableHalt && request.type === PRERENDER) {
+      streamTask.status = ABORTED;
       request.abortableTasks.delete(streamTask);
       request.pendingChunks--;
     } else {
@@ -1043,19 +1039,17 @@ function serializeAsyncIterable(
     }
   }
 
-  // There's a race condition between when the stream is aborted and when the promise
-  // resolves so we track whether we already aborted it to avoid writing twice.
-  let aborted = false;
   function progress(
     entry:
       | {done: false, +value: ReactClientValue, ...}
       | {done: true, +value: ReactClientValue, ...},
   ) {
-    if (aborted) {
+    if (streamTask.status !== PENDING) {
       return;
     }
 
     if (entry.done) {
+      streamTask.status = COMPLETED;
       let endStreamRow;
       if (entry.value === undefined) {
         endStreamRow = streamTask.id.toString(16) + ':C\n';
@@ -1082,7 +1076,6 @@ function serializeAsyncIterable(
       );
       enqueueFlush(request);
       callOnAllReadyIfReady(request);
-      aborted = true;
     } else {
       try {
         streamTask.model = entry.value;
@@ -1101,10 +1094,9 @@ function serializeAsyncIterable(
     }
   }
   function error(reason: mixed) {
-    if (aborted) {
+    if (streamTask.status !== PENDING) {
       return;
     }
-    aborted = true;
     request.cacheController.signal.removeEventListener('abort', abortIterable);
     erroredTask(request, streamTask, reason);
     enqueueFlush(request);
@@ -1115,14 +1107,14 @@ function serializeAsyncIterable(
     }
   }
   function abortIterable() {
-    if (aborted) {
+    if (streamTask.status !== PENDING) {
       return;
     }
-    aborted = true;
     const signal = request.cacheController.signal;
     signal.removeEventListener('abort', abortIterable);
     const reason = signal.reason;
     if (enableHalt && request.type === PRERENDER) {
+      streamTask.status = ABORTED;
       request.abortableTasks.delete(streamTask);
       request.pendingChunks--;
     } else {
@@ -2682,16 +2674,14 @@ function serializeBlob(request: Request, blob: Blob): string {
 
   const reader = blob.stream().getReader();
 
-  let aborted = false;
   function progress(
     entry: {done: false, value: Uint8Array} | {done: true, value: void},
   ): Promise<void> | void {
-    if (aborted) {
+    if (newTask.status !== PENDING) {
       return;
     }
     if (entry.done) {
       request.cacheController.signal.removeEventListener('abort', abortBlob);
-      aborted = true;
       pingTask(request, newTask);
       return;
     }
@@ -2701,10 +2691,9 @@ function serializeBlob(request: Request, blob: Blob): string {
     return reader.read().then(progress).catch(error);
   }
   function error(reason: mixed) {
-    if (aborted) {
+    if (newTask.status !== PENDING) {
       return;
     }
-    aborted = true;
     request.cacheController.signal.removeEventListener('abort', abortBlob);
     erroredTask(request, newTask, reason);
     enqueueFlush(request);
@@ -2712,10 +2701,9 @@ function serializeBlob(request: Request, blob: Blob): string {
     reader.cancel(reason).then(error, error);
   }
   function abortBlob() {
-    if (aborted) {
+    if (newTask.status !== PENDING) {
       return;
     }
-    aborted = true;
     const signal = request.cacheController.signal;
     signal.removeEventListener('abort', abortBlob);
     const reason = signal.reason;
