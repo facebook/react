@@ -75,6 +75,7 @@ import type {
   AsyncSequence,
   IONode,
   PromiseNode,
+  UnresolvedPromiseNode,
 } from './ReactFlightAsyncSequence';
 
 import {
@@ -734,6 +735,12 @@ function serializeDebugThenable(
     }
   }
 
+  if (request.status === ABORTING) {
+    // Ensure that we have time to emit the halt chunk if we're sync aborting.
+    emitDebugHaltChunk(request, id);
+    return ref;
+  }
+
   let cancelled = false;
 
   thenable.then(
@@ -804,7 +811,7 @@ function serializeThenable(
 ): number {
   const newTask = createTask(
     request,
-    null,
+    (thenable: any), // will be replaced by the value before we retry. used for debug info.
     task.keyPath, // the server component sequence continues through Promise-as-a-child.
     task.implicitSlot,
     request.abortableTasks,
@@ -3869,7 +3876,7 @@ function outlineIOInfo(request: Request, ioInfo: ReactIOInfo): void {
 
 function serializeIONode(
   request: Request,
-  ioNode: IONode | PromiseNode,
+  ioNode: IONode | PromiseNode | UnresolvedPromiseNode,
   promiseRef: null | WeakRef<Promise<mixed>>,
 ): string {
   const existingRef = request.writtenDebugObjects.get(ioNode);
@@ -4679,6 +4686,74 @@ function forwardDebugInfoFromCurrentContext(
   }
 }
 
+function forwardDebugInfoFromAbortedTask(request: Request, task: Task): void {
+  // If a task is aborted, we can still include as much debug info as we can from the
+  // value that we have so far.
+  const model: any = task.model;
+  if (typeof model !== 'object' || model === null) {
+    return;
+  }
+  let debugInfo: ?ReactDebugInfo;
+  if (__DEV__) {
+    // If this came from Flight, forward any debug info into this new row.
+    debugInfo = model._debugInfo;
+    if (debugInfo) {
+      forwardDebugInfo(request, task, debugInfo);
+    }
+  }
+  if (
+    enableProfilerTimer &&
+    enableComponentPerformanceTrack &&
+    enableAsyncDebugInfo
+  ) {
+    let thenable: null | Thenable<any> = null;
+    if (typeof model.then === 'function') {
+      thenable = (model: any);
+    } else if (model.$$typeof === REACT_LAZY_TYPE) {
+      const payload = model._payload;
+      const init = model._init;
+      try {
+        init(payload);
+      } catch (x) {
+        if (
+          typeof x === 'object' &&
+          x !== null &&
+          typeof x.then === 'function'
+        ) {
+          thenable = (x: any);
+        }
+      }
+    }
+    if (thenable !== null) {
+      const sequence = getAsyncSequenceFromPromise(thenable);
+      if (sequence !== null) {
+        let node = sequence;
+        while (node.tag === UNRESOLVED_AWAIT_NODE && node.awaited !== null) {
+          // See if any of the dependencies are resolved yet.
+          node = node.awaited;
+        }
+        if (node.tag === UNRESOLVED_PROMISE_NODE) {
+          // We don't know what Promise will eventually end up resolving this Promise and if it
+          // was I/O at all. However, we assume that it was some kind of I/O since it didn't
+          // complete in time before aborting.
+          // The best we can do is try to emit the stack of where this Promise was created.
+          serializeIONode(request, node, null);
+          request.pendingChunks++;
+          const env = (0, request.environmentName)();
+          const asyncInfo: ReactAsyncInfo = {
+            awaited: ((node: any): ReactIOInfo), // This is deduped by this reference.
+            env: env,
+          };
+          emitDebugChunk(request, task.id, asyncInfo);
+          markOperationEndTime(request, task, performance.now());
+        } else {
+          emitAsyncSequence(request, task, sequence, debugInfo, null, null);
+        }
+      }
+    }
+  }
+}
+
 function emitTimingChunk(
   request: Request,
   id: number,
@@ -5028,6 +5103,7 @@ function abortTask(task: Task, request: Request, errorId: number): void {
     return;
   }
   task.status = ABORTED;
+  forwardDebugInfoFromAbortedTask(request, task);
   // Track when we aborted this task as its end time.
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     if (task.timed) {
@@ -5047,6 +5123,7 @@ function haltTask(task: Task, request: Request): void {
     return;
   }
   task.status = ABORTED;
+  forwardDebugInfoFromAbortedTask(request, task);
   // We don't actually emit anything for this task id because we are intentionally
   // leaving the reference unfulfilled.
   request.pendingChunks--;
