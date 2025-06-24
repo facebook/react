@@ -37,7 +37,7 @@ function normalizeStack(stack) {
 }
 
 function normalizeIOInfo(ioInfo) {
-  const {debugTask, debugStack, ...copy} = ioInfo;
+  const {debugTask, debugStack, debugLocation, ...copy} = ioInfo;
   if (ioInfo.stack) {
     copy.stack = normalizeStack(ioInfo.stack);
   }
@@ -72,7 +72,7 @@ function normalizeIOInfo(ioInfo) {
 
 function normalizeDebugInfo(debugInfo) {
   if (Array.isArray(debugInfo.stack)) {
-    const {debugTask, debugStack, ...copy} = debugInfo;
+    const {debugTask, debugStack, debugLocation, ...copy} = debugInfo;
     copy.stack = normalizeStack(debugInfo.stack);
     if (debugInfo.owner) {
       copy.owner = normalizeDebugInfo(debugInfo.owner);

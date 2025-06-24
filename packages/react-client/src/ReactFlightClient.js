@@ -2739,9 +2739,15 @@ function initializeFakeStack(
     // $FlowFixMe[cannot-write]
     debugInfo.debugStack = createFakeJSXCallStackInDEV(response, stack, env);
   }
-  if (debugInfo.owner != null) {
+  const owner = debugInfo.owner;
+  if (owner != null) {
     // Initialize any owners not yet initialized.
-    initializeFakeStack(response, debugInfo.owner);
+    initializeFakeStack(response, owner);
+    if (owner.debugLocation === undefined && debugInfo.debugStack != null) {
+      // If we are the child of this owner, then the owner should be the bottom frame
+      // our stack. We can use it as the implied location of the owner.
+      owner.debugLocation = debugInfo.debugStack;
+    }
   }
 }
 
