@@ -20,11 +20,9 @@ import {inferReactiveScopeVariables} from '../ReactiveScopes';
 import {rewriteInstructionKindsBasedOnReassignment} from '../SSA';
 import {inferMutableRanges} from './InferMutableRanges';
 import inferReferenceEffects from './InferReferenceEffects';
-import {assertExhaustive, retainWhere} from '../Utils/utils';
+import {assertExhaustive} from '../Utils/utils';
 import {inferMutationAliasingEffects} from './InferMutationAliasingEffects';
-import {inferFunctionExpressionAliasingEffectsSignature} from './InferFunctionExpressionAliasingEffectsSignature';
 import {inferMutationAliasingRanges} from './InferMutationAliasingRanges';
-import {hashEffect} from './AliasingEffects';
 
 export default function analyseFunctions(func: HIRFunction): void {
   for (const [_, block] of func.body.blocks) {
@@ -69,30 +67,12 @@ function lowerWithMutationAliasing(fn: HIRFunction): void {
   analyseFunctions(fn);
   inferMutationAliasingEffects(fn, {isFunctionExpression: true});
   deadCodeElimination(fn);
-  inferMutationAliasingRanges(fn, {isFunctionExpression: true});
+  const functionEffects = inferMutationAliasingRanges(fn, {
+    isFunctionExpression: true,
+  }).unwrap();
   rewriteInstructionKindsBasedOnReassignment(fn);
   inferReactiveScopeVariables(fn);
-  const effects = inferFunctionExpressionAliasingEffectsSignature(fn);
-  fn.env.logger?.debugLogIRs?.({
-    kind: 'hir',
-    name: 'AnalyseFunction (inner)',
-    value: fn,
-  });
-  if (effects != null) {
-    fn.aliasingEffects ??= [];
-    fn.aliasingEffects?.push(...effects);
-  }
-  if (fn.aliasingEffects != null) {
-    const seen = new Set<string>();
-    retainWhere(fn.aliasingEffects, effect => {
-      const hash = hashEffect(effect);
-      if (seen.has(hash)) {
-        return false;
-      }
-      seen.add(hash);
-      return true;
-    });
-  }
+  fn.aliasingEffects = functionEffects;
 
   /**
    * Phase 2: populate the Effect of each context variable to use in inferring
@@ -100,7 +80,7 @@ function lowerWithMutationAliasing(fn: HIRFunction): void {
    * effects to decide if the function may be mutable or not.
    */
   const capturedOrMutated = new Set<IdentifierId>();
-  for (const effect of effects ?? []) {
+  for (const effect of functionEffects) {
     switch (effect.kind) {
       case 'Assign':
       case 'Alias':
@@ -152,6 +132,12 @@ function lowerWithMutationAliasing(fn: HIRFunction): void {
       operand.effect = Effect.Read;
     }
   }
+
+  fn.env.logger?.debugLogIRs?.({
+    kind: 'hir',
+    name: 'AnalyseFunction (inner)',
+    value: fn,
+  });
 }
 
 function lower(func: HIRFunction): void {
