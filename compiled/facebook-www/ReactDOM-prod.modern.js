@@ -14827,20 +14827,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1822 = 0;
-  i$jscomp$inline_1822 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1822++
+  var i$jscomp$inline_1828 = 0;
+  i$jscomp$inline_1828 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1828++
 ) {
-  var eventName$jscomp$inline_1823 =
-      simpleEventPluginEvents[i$jscomp$inline_1822],
-    domEventName$jscomp$inline_1824 =
-      eventName$jscomp$inline_1823.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1825 =
-      eventName$jscomp$inline_1823[0].toUpperCase() +
-      eventName$jscomp$inline_1823.slice(1);
+  var eventName$jscomp$inline_1829 =
+      simpleEventPluginEvents[i$jscomp$inline_1828],
+    domEventName$jscomp$inline_1830 =
+      eventName$jscomp$inline_1829.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1831 =
+      eventName$jscomp$inline_1829[0].toUpperCase() +
+      eventName$jscomp$inline_1829.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1824,
-    "on" + capitalizedEvent$jscomp$inline_1825
+    domEventName$jscomp$inline_1830,
+    "on" + capitalizedEvent$jscomp$inline_1831
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -19269,16 +19269,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_2072 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2078 = React.version;
 if (
-  "19.2.0-www-modern-94cf60be-20250624" !==
-  isomorphicReactPackageVersion$jscomp$inline_2072
+  "19.2.0-www-modern-e67b4fe2-20250624" !==
+  isomorphicReactPackageVersion$jscomp$inline_2078
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2072,
-      "19.2.0-www-modern-94cf60be-20250624"
+      isomorphicReactPackageVersion$jscomp$inline_2078,
+      "19.2.0-www-modern-e67b4fe2-20250624"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -19294,24 +19294,24 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2677 = {
+var internals$jscomp$inline_2683 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-94cf60be-20250624",
+  version: "19.2.0-www-modern-e67b4fe2-20250624",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-94cf60be-20250624"
+  reconcilerVersion: "19.2.0-www-modern-e67b4fe2-20250624"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2678 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2684 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2678.isDisabled &&
-    hook$jscomp$inline_2678.supportsFiber
+    !hook$jscomp$inline_2684.isDisabled &&
+    hook$jscomp$inline_2684.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2678.inject(
-        internals$jscomp$inline_2677
+      (rendererID = hook$jscomp$inline_2684.inject(
+        internals$jscomp$inline_2683
       )),
-        (injectedHook = hook$jscomp$inline_2678);
+        (injectedHook = hook$jscomp$inline_2684);
     } catch (err) {}
 }
 function defaultOnDefaultTransitionIndicator() {
@@ -19711,4 +19711,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-modern-94cf60be-20250624";
+exports.version = "19.2.0-www-modern-e67b4fe2-20250624";
