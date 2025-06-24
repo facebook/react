@@ -27,7 +27,7 @@ export const FIXTURE_ENTRYPOINT = {
    7 |     r.current = 1;
    8 |   }
 >  9 |   r.current = 1;
-     |   ^^^^^^^^^ InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef) (9:9)
+     |   ^ InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef) (9:9)
   10 | }
   11 |
   12 | export const FIXTURE_ENTRYPOINT = {

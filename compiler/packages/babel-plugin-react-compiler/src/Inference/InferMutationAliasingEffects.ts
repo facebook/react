@@ -28,7 +28,9 @@ import {
   isMapType,
   isPrimitiveType,
   isRefOrRefValue,
+  isRefValueType,
   isSetType,
+  isUseRefType,
   makeIdentifierId,
   Phi,
   Place,
@@ -52,6 +54,7 @@ import {
   assertExhaustive,
   getOrInsertDefault,
   getOrInsertWith,
+  retainWhere,
   Set_isSuperset,
 } from '../Utils/utils';
 import {
@@ -219,6 +222,7 @@ export function inferMutationAliasingEffects(
       }
     }
   }
+  inferRefAccessEffects(fn);
   return Ok(undefined);
 }
 
@@ -2513,3 +2517,97 @@ export type AbstractValue = {
   kind: ValueKind;
   reason: ReadonlySet<ValueReason>;
 };
+
+function inferRefAccessEffects(fn: HIRFunction): void {
+  const nullish = new Set<IdentifierId>();
+  const nullishTest = new Map<IdentifierId, Place>();
+  const guarded: Array<BlockId> = [];
+
+  function visitOperand(operand: Place): AliasingEffect | null {
+    const nullTestRef = nullishTest.get(operand.identifier.id);
+    if (isRefValueType(operand.identifier) || nullTestRef != null) {
+      const refOperand = nullTestRef ?? operand;
+      return {
+        kind: 'Impure',
+        error: {
+          severity: ErrorSeverity.InvalidReact,
+          reason:
+            'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
+          loc: refOperand.loc,
+          description:
+            refOperand.identifier.name !== null &&
+            refOperand.identifier.name.kind === 'named'
+              ? `Cannot access ref value \`${refOperand.identifier.name.value}\``
+              : null,
+          suggestions: null,
+        },
+        place: refOperand,
+      };
+    }
+    return null;
+  }
+
+  for (const block of fn.body.blocks.values()) {
+    retainWhere(guarded, id => id !== block.id);
+    for (const instr of block.instructions) {
+      const {lvalue, value} = instr;
+      if (
+        value.kind === 'BinaryExpression' &&
+        ((isRefValueType(value.left.identifier) &&
+          nullish.has(value.right.identifier.id)) ||
+          (nullish.has(value.left.identifier.id) &&
+            isRefValueType(value.right.identifier)))
+      ) {
+        nullishTest.set(
+          lvalue.identifier.id,
+          isRefValueType(value.left.identifier) ? value.left : value.right,
+        );
+      } else if (value.kind === 'Primitive' && value.value == null) {
+        nullish.add(lvalue.identifier.id);
+      } else if (
+        value.kind === 'PropertyStore' &&
+        value.property === 'current' &&
+        isUseRefType(value.object.identifier)
+      ) {
+        if (guarded.length === 0) {
+          instr.effects ??= [];
+          instr.effects.push({
+            kind: 'Impure',
+            error: {
+              severity: ErrorSeverity.InvalidReact,
+              reason:
+                'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
+              loc: value.object.loc,
+              description:
+                value.object.identifier.name !== null &&
+                value.object.identifier.name.kind === 'named'
+                  ? `Cannot access ref value \`${value.object.identifier.name.value}\``
+                  : null,
+              suggestions: null,
+            },
+            place: value.object,
+          });
+        }
+      } else {
+        for (const operand of eachInstructionValueOperand(value)) {
+          const error = visitOperand(operand);
+          if (error) {
+            instr.effects ??= [];
+            instr.effects.push(error);
+          }
+        }
+      }
+    }
+    if (
+      block.terminal.kind === 'if' &&
+      nullishTest.has(block.terminal.test.identifier.id)
+    ) {
+      guarded.push(block.terminal.fallthrough);
+    } else {
+      for (const operand of eachTerminalOperand(block.terminal)) {
+        const _effect = visitOperand(operand);
+        // TODO: need a place to store terminal effects generically
+      }
+    }
+  }
+}
