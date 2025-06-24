@@ -328,6 +328,8 @@ export type FindSourceMapURLCallback = (
   environmentName: string,
 ) => null | string;
 
+export type DebugChannelCallback = (message: string) => void;
+
 export type Response = {
   _bundlerConfig: ServerConsumerModuleMap,
   _serverReferenceConfig: null | ServerManifest,
@@ -351,6 +353,7 @@ export type Response = {
   _debugRootStack?: null | Error, // DEV-only
   _debugRootTask?: null | ConsoleTask, // DEV-only
   _debugFindSourceMapURL?: void | FindSourceMapURLCallback, // DEV-only
+  _debugChannel?: void | DebugChannelCallback, // DEV-only
   _replayConsole: boolean, // DEV-only
   _rootEnvironmentName: string, // DEV-only, the requested environment name.
 };
@@ -687,6 +690,15 @@ export function reportGlobalError(response: Response, error: Error): void {
       triggerErrorOnChunk(chunk, error);
     }
   });
+  if (__DEV__) {
+    const debugChannel = response._debugChannel;
+    if (debugChannel !== undefined) {
+      // If we don't have any more ways of reading data, we don't have to send any
+      // more neither. So we close the writable side.
+      debugChannel('');
+      response._debugChannel = undefined;
+    }
+  }
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     markAllTracksInOrder();
     flushComponentPerformance(
@@ -1667,6 +1679,14 @@ function parseModelString(
       }
       case 'Y': {
         if (__DEV__) {
+          if (value.length > 2) {
+            const debugChannel = response._debugChannel;
+            if (debugChannel) {
+              const ref = value.slice(2);
+              debugChannel('R:' + ref); // Release this reference immediately
+            }
+          }
+
           // In DEV mode we encode omitted objects in logs as a getter that throws
           // so that when you try to access it on the client, you know why that
           // happened.
@@ -1730,9 +1750,10 @@ function ResponseInstance(
   encodeFormAction: void | EncodeFormActionCallback,
   nonce: void | string,
   temporaryReferences: void | TemporaryReferenceSet,
-  findSourceMapURL: void | FindSourceMapURLCallback,
-  replayConsole: boolean,
-  environmentName: void | string,
+  findSourceMapURL: void | FindSourceMapURLCallback, // DEV-only
+  replayConsole: boolean, // DEV-only
+  environmentName: void | string, // DEV-only
+  debugChannel: void | DebugChannelCallback, // DEV-only
 ) {
   const chunks: Map<number, SomeChunk<any>> = new Map();
   this._bundlerConfig = bundlerConfig;
@@ -1787,6 +1808,7 @@ function ResponseInstance(
       );
     }
     this._debugFindSourceMapURL = findSourceMapURL;
+    this._debugChannel = debugChannel;
     this._replayConsole = replayConsole;
     this._rootEnvironmentName = rootEnv;
   }
@@ -1802,9 +1824,10 @@ export function createResponse(
   encodeFormAction: void | EncodeFormActionCallback,
   nonce: void | string,
   temporaryReferences: void | TemporaryReferenceSet,
-  findSourceMapURL: void | FindSourceMapURLCallback,
-  replayConsole: boolean,
-  environmentName: void | string,
+  findSourceMapURL: void | FindSourceMapURLCallback, // DEV-only
+  replayConsole: boolean, // DEV-only
+  environmentName: void | string, // DEV-only
+  debugChannel: void | DebugChannelCallback, // DEV-only
 ): Response {
   // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
   return new ResponseInstance(
@@ -1818,6 +1841,7 @@ export function createResponse(
     findSourceMapURL,
     replayConsole,
     environmentName,
+    debugChannel,
   );
 }
 

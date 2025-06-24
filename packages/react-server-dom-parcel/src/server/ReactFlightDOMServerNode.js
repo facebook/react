@@ -20,6 +20,8 @@ import type {
   ServerReferenceId,
 } from '../client/ReactFlightClientConfigBundlerParcel';
 
+import type {Duplex} from 'stream';
+
 import {Readable} from 'stream';
 
 import {ASYNC_ITERATOR} from 'shared/ReactSymbols';
@@ -31,6 +33,8 @@ import {
   startFlowing,
   stopFlowing,
   abort,
+  resolveDebugMessage,
+  closeDebugChannel,
 } from 'react-server/src/ReactFlightServer';
 
 import {
@@ -49,6 +53,7 @@ import {
   decodeAction as decodeActionImpl,
   decodeFormState as decodeFormStateImpl,
 } from 'react-server/src/ReactFlightActionServer';
+
 import {
   preloadModule,
   requireModule,
@@ -59,6 +64,12 @@ export {
   createClientReference,
   registerServerReference,
 } from '../ReactFlightParcelReferences';
+
+import {
+  createStringDecoder,
+  readPartialStringChunk,
+  readFinalStringChunk,
+} from 'react-client/src/ReactFlightClientStreamConfigNode';
 
 import {textEncoder} from 'react-server/src/ReactServerStreamConfigNode';
 
@@ -79,7 +90,69 @@ function createCancelHandler(request: Request, reason: string) {
   };
 }
 
+function startReadingFromDebugChannelReadable(
+  request: Request,
+  stream: Readable | WebSocket,
+): void {
+  const stringDecoder = createStringDecoder();
+  let lastWasPartial = false;
+  let stringBuffer = '';
+  function onData(chunk: string | Uint8Array) {
+    if (typeof chunk === 'string') {
+      if (lastWasPartial) {
+        stringBuffer += readFinalStringChunk(stringDecoder, new Uint8Array(0));
+        lastWasPartial = false;
+      }
+      stringBuffer += chunk;
+    } else {
+      const buffer: Uint8Array = (chunk: any);
+      stringBuffer += readPartialStringChunk(stringDecoder, buffer);
+      lastWasPartial = true;
+    }
+    const messages = stringBuffer.split('\n');
+    for (let i = 0; i < messages.length - 1; i++) {
+      resolveDebugMessage(request, messages[i]);
+    }
+    stringBuffer = messages[messages.length - 1];
+  }
+  function onError(error: mixed) {
+    abort(
+      request,
+      new Error('Lost connection to the Debug Channel.', {
+        cause: error,
+      }),
+    );
+  }
+  function onClose() {
+    closeDebugChannel(request);
+  }
+  if (
+    // $FlowFixMe[method-unbinding]
+    typeof stream.addEventListener === 'function' &&
+    // $FlowFixMe[method-unbinding]
+    typeof stream.binaryType === 'string'
+  ) {
+    const ws: WebSocket = (stream: any);
+    ws.binaryType = 'arraybuffer';
+    ws.addEventListener('message', event => {
+      // $FlowFixMe
+      onData(event.data);
+    });
+    ws.addEventListener('error', event => {
+      // $FlowFixMe
+      onError(event.error);
+    });
+    ws.addEventListener('close', onClose);
+  } else {
+    const readable: Readable = (stream: any);
+    readable.on('data', onData);
+    readable.on('error', onError);
+    readable.on('end', onClose);
+  }
+}
+
 type Options = {
+  debugChannel?: Readable | Duplex | WebSocket,
   environmentName?: string | (() => string),
   filterStackFrame?: (url: string, functionName: string) => boolean,
   onError?: (error: mixed) => void,
@@ -97,6 +170,7 @@ export function renderToPipeableStream(
   model: ReactClientValue,
   options?: Options,
 ): PipeableStream {
+  const debugChannel = __DEV__ && options ? options.debugChannel : undefined;
   const request = createRequest(
     model,
     null,
@@ -106,9 +180,13 @@ export function renderToPipeableStream(
     options ? options.temporaryReferences : undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
+    debugChannel !== undefined,
   );
   let hasStartedFlowing = false;
   startWork(request);
+  if (debugChannel !== undefined) {
+    startReadingFromDebugChannelReadable(request, debugChannel);
+  }
   return {
     pipe<T: Writable>(destination: T): T {
       if (hasStartedFlowing) {
@@ -149,7 +227,7 @@ function createFakeWritableFromReadableStreamController(
         chunk = textEncoder.encode(chunk);
       }
       controller.enqueue(chunk);
-      // in web streams there is no backpressure so we can alwas write more
+      // in web streams there is no backpressure so we can always write more
       return true;
     },
     end() {
@@ -167,13 +245,58 @@ function createFakeWritableFromReadableStreamController(
   }: any);
 }
 
+function startReadingFromDebugChannelReadableStream(
+  request: Request,
+  stream: ReadableStream,
+): void {
+  const reader = stream.getReader();
+  const stringDecoder = createStringDecoder();
+  let stringBuffer = '';
+  function progress({
+    done,
+    value,
+  }: {
+    done: boolean,
+    value: ?any,
+    ...
+  }): void | Promise<void> {
+    const buffer: Uint8Array = (value: any);
+    stringBuffer += done
+      ? readFinalStringChunk(stringDecoder, new Uint8Array(0))
+      : readPartialStringChunk(stringDecoder, buffer);
+    const messages = stringBuffer.split('\n');
+    for (let i = 0; i < messages.length - 1; i++) {
+      resolveDebugMessage(request, messages[i]);
+    }
+    stringBuffer = messages[messages.length - 1];
+    if (done) {
+      closeDebugChannel(request);
+      return;
+    }
+    return reader.read().then(progress).catch(error);
+  }
+  function error(e: any) {
+    abort(
+      request,
+      new Error('Lost connection to the Debug Channel.', {
+        cause: e,
+      }),
+    );
+  }
+  reader.read().then(progress).catch(error);
+}
+
 export function renderToReadableStream(
   model: ReactClientValue,
-
-  options?: Options & {
+  options?: Omit<Options, 'debugChannel'> & {
+    debugChannel?: {readable?: ReadableStream, ...},
     signal?: AbortSignal,
   },
 ): ReadableStream {
+  const debugChannelReadable =
+    __DEV__ && options && options.debugChannel
+      ? options.debugChannel.readable
+      : undefined;
   const request = createRequest(
     model,
     null,
@@ -183,6 +306,7 @@ export function renderToReadableStream(
     options ? options.temporaryReferences : undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
+    debugChannelReadable !== undefined,
   );
   if (options && options.signal) {
     const signal = options.signal;
@@ -195,6 +319,9 @@ export function renderToReadableStream(
       };
       signal.addEventListener('abort', listener);
     }
+  }
+  if (debugChannelReadable !== undefined) {
+    startReadingFromDebugChannelReadableStream(request, debugChannelReadable);
   }
   let writable: Writable;
   const stream = new ReadableStream(
@@ -275,6 +402,7 @@ export function prerenderToNodeStream(
       options ? options.temporaryReferences : undefined,
       __DEV__ && options ? options.environmentName : undefined,
       __DEV__ && options ? options.filterStackFrame : undefined,
+      false,
     );
     if (options && options.signal) {
       const signal = options.signal;
@@ -296,7 +424,6 @@ export function prerenderToNodeStream(
 
 export function prerender(
   model: ReactClientValue,
-
   options?: Options & {
     signal?: AbortSignal,
   },
@@ -338,6 +465,7 @@ export function prerender(
       options ? options.temporaryReferences : undefined,
       __DEV__ && options ? options.environmentName : undefined,
       __DEV__ && options ? options.filterStackFrame : undefined,
+      false,
     );
     if (options && options.signal) {
       const signal = options.signal;

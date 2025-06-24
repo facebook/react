@@ -171,6 +171,7 @@ export function experimental_renderToHTML(
       undefined,
       'Markup',
       undefined,
+      false,
     );
     const flightResponse = createFlightResponse(
       null,
