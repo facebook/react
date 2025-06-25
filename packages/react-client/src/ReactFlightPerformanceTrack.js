@@ -247,6 +247,53 @@ export function logComponentRender(
   }
 }
 
+export function logComponentAborted(
+  componentInfo: ReactComponentInfo,
+  trackIdx: number,
+  startTime: number,
+  endTime: number,
+  childrenEndTime: number,
+  rootEnv: string,
+): void {
+  if (supportsUserTiming) {
+    const env = componentInfo.env;
+    const name = componentInfo.name;
+    const isPrimaryEnv = env === rootEnv;
+    const entryName =
+      isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']';
+    if (__DEV__) {
+      const properties = [
+        [
+          'Aborted',
+          'The stream was aborted before this Component finished rendering.',
+        ],
+      ];
+      performance.measure(entryName, {
+        start: startTime < 0 ? 0 : startTime,
+        end: childrenEndTime,
+        detail: {
+          devtools: {
+            color: 'warning',
+            track: trackNames[trackIdx],
+            trackGroup: COMPONENTS_TRACK,
+            tooltipText: entryName + ' Aborted',
+            properties,
+          },
+        },
+      });
+    } else {
+      console.timeStamp(
+        entryName,
+        startTime < 0 ? 0 : startTime,
+        childrenEndTime,
+        trackNames[trackIdx],
+        COMPONENTS_TRACK,
+        'warning',
+      );
+    }
+  }
+}
+
 export function logComponentErrored(
   componentInfo: ReactComponentInfo,
   trackIdx: number,
@@ -352,6 +399,54 @@ function getIOColor(
   }
 }
 
+export function logComponentAwaitAborted(
+  asyncInfo: ReactAsyncInfo,
+  trackIdx: number,
+  startTime: number,
+  endTime: number,
+  rootEnv: string,
+): void {
+  if (supportsUserTiming && endTime > 0) {
+    const env = asyncInfo.env;
+    const name = asyncInfo.awaited.name;
+    const isPrimaryEnv = env === rootEnv;
+    const entryName =
+      'await ' +
+      (isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']');
+    const debugTask = asyncInfo.debugTask || asyncInfo.awaited.debugTask;
+    if (__DEV__ && debugTask) {
+      const properties = [
+        ['Aborted', 'The stream was aborted before this Promise resolved.'],
+      ];
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        performance.measure.bind(performance, entryName, {
+          start: startTime < 0 ? 0 : startTime,
+          end: endTime,
+          detail: {
+            devtools: {
+              color: 'warning',
+              track: trackNames[trackIdx],
+              trackGroup: COMPONENTS_TRACK,
+              properties,
+              tooltipText: entryName + ' Aborted',
+            },
+          },
+        }),
+      );
+    } else {
+      console.timeStamp(
+        entryName,
+        startTime < 0 ? 0 : startTime,
+        endTime,
+        trackNames[trackIdx],
+        COMPONENTS_TRACK,
+        'warning',
+      );
+    }
+  }
+}
+
 export function logComponentAwaitErrored(
   asyncInfo: ReactAsyncInfo,
   trackIdx: number,
@@ -367,7 +462,7 @@ export function logComponentAwaitErrored(
     const entryName =
       'await ' +
       (isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']');
-    const debugTask = asyncInfo.debugTask;
+    const debugTask = asyncInfo.debugTask || asyncInfo.awaited.debugTask;
     if (__DEV__ && debugTask) {
       const message =
         typeof error === 'object' &&
@@ -423,7 +518,7 @@ export function logComponentAwait(
     const entryName =
       'await ' +
       (isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']');
-    const debugTask = asyncInfo.debugTask;
+    const debugTask = asyncInfo.debugTask || asyncInfo.awaited.debugTask;
     if (__DEV__ && debugTask) {
       const properties: Array<[string, string]> = [];
       if (typeof value === 'object' && value !== null) {
