@@ -125,14 +125,16 @@ export async function measurePerformance(
 
     // ui chaos monkey
     const selectors = await page.evaluate(() => {
-      window.__INTERACTABLE_SELECTORS__ = [];
+      (window as any).__INTERACTABLE_SELECTORS__ = [];
       const elements = Array.from(document.querySelectorAll('a')).concat(
-        Array.from(document.querySelectorAll('button')),
+        Array.from(document.querySelectorAll('button')) as any,
       );
       for (const el of elements) {
-        window.__INTERACTABLE_SELECTORS__.push(el.tagName.toLowerCase());
+        (window as any).__INTERACTABLE_SELECTORS__.push(
+          el.tagName.toLowerCase(),
+        );
       }
-      return window.__INTERACTABLE_SELECTORS__;
+      return (window as any).__INTERACTABLE_SELECTORS__;
     });
 
     await Promise.all(

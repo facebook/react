@@ -8,20 +8,11 @@
 import {McpServer} from '@modelcontextprotocol/sdk/server/mcp.js';
 import {StdioServerTransport} from '@modelcontextprotocol/sdk/server/stdio.js';
 import {z} from 'zod';
-import {compile, type PrintedCompilerPipelineValue} from './compiler';
-import {
-  CompilerPipelineValue,
-  printReactiveFunctionWithOutlined,
-  printFunctionWithOutlined,
-  PluginOptions,
-  SourceLocation,
-} from 'babel-plugin-react-compiler/src';
-import * as cheerio from 'cheerio';
-import {queryAlgolia} from './utils/algolia';
 import assertExhaustive from './utils/assertExhaustive';
-import {convert} from 'html-to-text';
 import {measurePerformance} from './tools/runtimePerf';
 import {parseReactComponentTree} from './tools/componentTree';
+import compileTool from './tools/compileTool';
+import devDocsTool from './tools/devDocsTool';
 
 function calculateMean(values: number[]): string {
   return values.length > 0
@@ -41,40 +32,29 @@ server.tool(
     query: z.string(),
   },
   async ({query}) => {
-    try {
-      const pages = await queryAlgolia(query);
-      if (pages.length === 0) {
+    const result = await devDocsTool(query);
+
+    switch (result.kind) {
+      case 'success': {
         return {
-          content: [{type: 'text' as const, text: `No results`}],
+          isError: false,
+          content: result.content.map(text => {
+            return {
+              type: 'text' as const,
+              text: text,
+            };
+          }),
         };
       }
-      const content = pages.map(html => {
-        const $ = cheerio.load(html);
-        // react.dev should always have at least one <article> with the main content
-        const article = $('article').html();
-        if (article != null) {
-          return {
-            type: 'text' as const,
-            text: convert(article),
-          };
-        } else {
-          return {
-            type: 'text' as const,
-            // Fallback to converting the whole page to text.
-            text: convert($.html()),
-          };
-        }
-      });
-      return {
-        content,
-      };
-    } catch (err) {
-      return {
-        isError: true,
-        content: [{type: 'text' as const, text: `Error: ${err.stack}`}],
-      };
+      case 'error':
+        return {
+          isError: true,
+          content: [{type: 'text' as const, text: result.text}],
+        };
+      default:
+        assertExhaustive(result, `Unhandled result ${JSON.stringify(result)}`);
     }
-  },
+  }
 );
 
 server.tool(
@@ -93,199 +73,47 @@ server.tool(
     passName: z.enum(['HIR', 'ReactiveFunction', 'All', '@DEBUG']).optional(),
   },
   async ({text, passName}) => {
-    const pipelinePasses = new Map<
-      string,
-      Array<PrintedCompilerPipelineValue>
-    >();
-    const recordPass: (
-      result: PrintedCompilerPipelineValue,
-    ) => void = result => {
-      const entry = pipelinePasses.get(result.name);
-      if (Array.isArray(entry)) {
-        entry.push(result);
-      } else {
-        pipelinePasses.set(result.name, [result]);
-      }
-    };
-    const logIR = (result: CompilerPipelineValue): void => {
-      switch (result.kind) {
-        case 'ast': {
-          break;
-        }
-        case 'hir': {
-          recordPass({
-            kind: 'hir',
-            fnName: result.value.id,
-            name: result.name,
-            value: printFunctionWithOutlined(result.value),
-          });
-          break;
-        }
-        case 'reactive': {
-          recordPass({
-            kind: 'reactive',
-            fnName: result.value.id,
-            name: result.name,
-            value: printReactiveFunctionWithOutlined(result.value),
-          });
-          break;
-        }
-        case 'debug': {
-          recordPass({
-            kind: 'debug',
-            fnName: null,
-            name: result.name,
-            value: result.value,
-          });
-          break;
-        }
-        default: {
-          assertExhaustive(result, `Unhandled result ${result}`);
-        }
-      }
-    };
-    const errors: Array<{message: string; loc: SourceLocation | null}> = [];
-    const compilerOptions: Partial<PluginOptions> = {
-      panicThreshold: 'none',
-      logger: {
-        debugLogIRs: logIR,
-        logEvent: (_filename, event): void => {
-          if (event.kind === 'CompileError') {
-            const detail = event.detail;
-            const loc =
-              detail.loc == null || typeof detail.loc == 'symbol'
-                ? event.fnLoc
-                : detail.loc;
-            errors.push({
-              message: detail.reason,
-              loc,
-            });
-          }
-        },
-      },
-    };
-    try {
-      const result = await compile({
-        text,
-        file: 'anonymous.tsx',
-        options: compilerOptions,
-      });
-      if (result.code == null) {
+    const results = await compileTool(text, passName);
+
+    switch (results.kind) {
+      case 'success': {
         return {
-          isError: true,
-          content: [{type: 'text' as const, text: 'Error: Could not compile'}],
-        };
-      }
-      const requestedPasses: Array<{type: 'text'; text: string}> = [];
-      if (passName != null) {
-        switch (passName) {
-          case 'All': {
-            const hir = pipelinePasses.get('PropagateScopeDependenciesHIR');
-            if (hir !== undefined) {
-              for (const pipelineValue of hir) {
-                requestedPasses.push({
-                  type: 'text' as const,
-                  text: pipelineValue.value,
-                });
-              }
-            }
-            const reactiveFunc = pipelinePasses.get('PruneHoistedContexts');
-            if (reactiveFunc !== undefined) {
-              for (const pipelineValue of reactiveFunc) {
-                requestedPasses.push({
-                  type: 'text' as const,
-                  text: pipelineValue.value,
-                });
-              }
-            }
-            break;
-          }
-          case 'HIR': {
-            // Last pass before HIR -> ReactiveFunction
-            const requestedPass = pipelinePasses.get(
-              'PropagateScopeDependenciesHIR',
-            );
-            if (requestedPass !== undefined) {
-              for (const pipelineValue of requestedPass) {
-                requestedPasses.push({
-                  type: 'text' as const,
-                  text: pipelineValue.value,
-                });
-              }
-            } else {
-              console.error(`Could not find requested pass ${passName}`);
-            }
-            break;
-          }
-          case 'ReactiveFunction': {
-            // Last pass
-            const requestedPass = pipelinePasses.get('PruneHoistedContexts');
-            if (requestedPass !== undefined) {
-              for (const pipelineValue of requestedPass) {
-                requestedPasses.push({
-                  type: 'text' as const,
-                  text: pipelineValue.value,
-                });
-              }
-            } else {
-              console.error(`Could not find requested pass ${passName}`);
-            }
-            break;
-          }
-          case '@DEBUG': {
-            for (const [, pipelinePass] of pipelinePasses) {
-              for (const pass of pipelinePass) {
-                requestedPasses.push({
-                  type: 'text' as const,
-                  text: `${pass.name}\n\n${pass.value}`,
-                });
-              }
-            }
-            break;
-          }
-          default: {
-            assertExhaustive(
-              passName,
-              `Unhandled passName option: ${passName}`,
-            );
-          }
-        }
-        const requestedPass = pipelinePasses.get(passName);
-        if (requestedPass !== undefined) {
-          for (const pipelineValue of requestedPass) {
-            if (pipelineValue.name === passName) {
-              requestedPasses.push({
-                type: 'text' as const,
-                text: pipelineValue.value,
-              });
-            }
-          }
-        }
-      }
-      if (errors.length > 0) {
-        return {
-          content: errors.map(err => {
+          isError: false,
+          content: results.content.map(text => {
             return {
               type: 'text' as const,
-              text:
-                err.loc === null || typeof err.loc === 'symbol'
-                  ? `React Compiler bailed out:\n\n${err.message}`
-                  : `React Compiler bailed out:\n\n${err.message}@${err.loc.start.line}:${err.loc.end.line}`,
+              text,
             };
           }),
         };
       }
-      return {
-        content: [
-          {type: 'text' as const, text: result.code},
-          ...requestedPasses,
-        ],
-      };
-    } catch (err) {
-      return {
-        isError: true,
-        content: [{type: 'text' as const, text: `Error: ${err.stack}`}],
-      };
+      case 'bailout': {
+        return {
+          isError: true,
+          content: results.content.map(text => {
+            return {
+              type: 'text' as const,
+              text,
+            };
+          }),
+        };
+      }
+      case 'error':
+      case 'compile-error':
+        return {
+          isError: true,
+          content: [
+            {
+              type: 'text' as const,
+              text: results.text,
+            },
+          ],
+        };
+      default:
+        assertExhaustive(
+          results,
+          `Unhandled result ${JSON.stringify(results)}`,
+        );
     }
   },
 );
