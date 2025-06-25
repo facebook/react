@@ -43992,12 +43992,9 @@ function codegenFunction(fn, { uniqueIdentifiers, fbtOperands, }) {
 }
 function codegenReactiveFunction(cx, fn) {
     for (const param of fn.params) {
-        if (param.kind === 'Identifier') {
-            cx.temp.set(param.identifier.declarationId, null);
-        }
-        else {
-            cx.temp.set(param.place.identifier.declarationId, null);
-        }
+        const place = param.kind === 'Identifier' ? param : param.place;
+        cx.temp.set(place.identifier.declarationId, null);
+        cx.declare(place.identifier);
     }
     const params = fn.params.map(param => convertParameter(param));
     const body = codegenBlock(cx, fn.body);
@@ -44549,7 +44546,7 @@ function codegenTerminal(cx, terminal) {
                     ? codegenPlaceToExpression(cx, case_.test)
                     : null;
                 const block = codegenBlock(cx, case_.block);
-                return libExports$1.switchCase(test, [block]);
+                return libExports$1.switchCase(test, block.body.length === 0 ? [] : [block]);
             }));
         }
         case 'throw': {
@@ -45628,6 +45625,10 @@ function compareScopeDeclaration(a, b) {
 
 function extractScopeDeclarationsFromDestructuring(fn) {
     const state = new State$1(fn.env);
+    for (const param of fn.params) {
+        const place = param.kind === 'Identifier' ? param : param.place;
+        state.declared.add(place.identifier.declarationId);
+    }
     visitReactiveFunction(fn, new Visitor$9(), state);
 }
 let State$1 = class State {
