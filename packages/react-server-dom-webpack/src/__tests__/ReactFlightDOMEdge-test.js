@@ -32,7 +32,7 @@ let webpackModuleLoading;
 let React;
 let ReactServer;
 let ReactDOMServer;
-let ReactDOMServerStatic;
+let ReactDOMFizzStatic;
 let ReactServerDOMServer;
 let ReactServerDOMStaticServer;
 let ReactServerDOMClient;
@@ -103,7 +103,7 @@ describe('ReactFlightDOMEdge', () => {
     );
     React = require('react');
     ReactDOMServer = require('react-dom/server.edge');
-    ReactDOMServerStatic = require('react-dom/static.edge');
+    ReactDOMFizzStatic = require('react-dom/static.edge');
     ReactServerDOMClient = require('react-server-dom-webpack/client');
     use = React.use;
   });
@@ -1872,7 +1872,7 @@ describe('ReactFlightDOMEdge', () => {
 
     const clientAbortController = new AbortController();
 
-    const fizzPrerenderStreamResult = ReactDOMServerStatic.prerender(
+    const fizzPrerenderStreamResult = ReactDOMFizzStatic.prerender(
       React.createElement(ClientRoot, {response: prerenderResponse}),
       {
         signal: clientAbortController.signal,

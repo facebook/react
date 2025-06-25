@@ -21,7 +21,7 @@ let webpackModules;
 let webpackModuleLoading;
 let React;
 let ReactDOMServer;
-let ReactDOMServerStatic;
+let ReactDOMFizzStatic;
 let ReactServer;
 let ReactServerDOMServer;
 let ReactServerDOMStaticServer;
@@ -48,7 +48,6 @@ describe('ReactFlightDOMNode', () => {
       require('react-server-dom-webpack/server.node'),
     );
     ReactServer = require('react');
-    ReactDOMServerStatic = require('react-dom/static');
     ReactServerDOMServer = require('react-server-dom-webpack/server');
     if (__EXPERIMENTAL__) {
       jest.mock('react-server-dom-webpack/static', () =>
@@ -72,6 +71,7 @@ describe('ReactFlightDOMNode', () => {
 
     React = require('react');
     ReactDOMServer = require('react-dom/server.node');
+    ReactDOMFizzStatic = require('react-dom/static');
     ReactServerDOMClient = require('react-server-dom-webpack/client');
     Stream = require('stream');
     use = React.use;
@@ -665,7 +665,7 @@ describe('ReactFlightDOMNode', () => {
 
     const clientAbortController = new AbortController();
 
-    const fizzPrerenderStreamResult = ReactDOMServerStatic.prerender(
+    const fizzPrerenderStreamResult = ReactDOMFizzStatic.prerender(
       React.createElement(ClientRoot, {response: prerenderResponse}),
       {
         signal: clientAbortController.signal,
