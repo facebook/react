@@ -1804,7 +1804,7 @@ describe('ReactFlightDOMEdge', () => {
     expect(error.message).toBe(expectedMessage);
   });
 
-  // @gate enableHalt && enableAsyncDebugInfo
+  // @gate enableHalt
   it('does not include source locations in component stacks for halted components', async () => {
     // We only support adding source locations for halted components in the Node.js builds.
 
