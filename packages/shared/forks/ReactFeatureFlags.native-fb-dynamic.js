@@ -26,3 +26,4 @@ export const passChildrenWhenCloningPersistedNodes = __VARIANT__;
 export const enableLazyPublicInstanceInFabric = __VARIANT__;
 export const renameElementSymbol = __VARIANT__;
 export const enableFragmentRefs = __VARIANT__;
+export const enableComponentPerformanceTrack = __VARIANT__;

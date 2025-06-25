@@ -18,6 +18,8 @@ import type {Busboy} from 'busboy';
 import type {Writable} from 'stream';
 import type {Thenable} from 'shared/ReactTypes';
 
+import type {Duplex} from 'stream';
+
 import {Readable} from 'stream';
 
 import {
@@ -27,6 +29,8 @@ import {
   startFlowing,
   stopFlowing,
   abort,
+  resolveDebugMessage,
+  closeDebugChannel,
 } from 'react-server/src/ReactFlightServer';
 
 import {
@@ -50,6 +54,12 @@ export {
   registerClientReference,
 } from '../ReactFlightESMReferences';
 
+import {
+  createStringDecoder,
+  readPartialStringChunk,
+  readFinalStringChunk,
+} from 'react-client/src/ReactFlightClientStreamConfigNode';
+
 import type {TemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
 
 export {createTemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
@@ -67,7 +77,69 @@ function createCancelHandler(request: Request, reason: string) {
   };
 }
 
+function startReadingFromDebugChannelReadable(
+  request: Request,
+  stream: Readable | WebSocket,
+): void {
+  const stringDecoder = createStringDecoder();
+  let lastWasPartial = false;
+  let stringBuffer = '';
+  function onData(chunk: string | Uint8Array) {
+    if (typeof chunk === 'string') {
+      if (lastWasPartial) {
+        stringBuffer += readFinalStringChunk(stringDecoder, new Uint8Array(0));
+        lastWasPartial = false;
+      }
+      stringBuffer += chunk;
+    } else {
+      const buffer: Uint8Array = (chunk: any);
+      stringBuffer += readPartialStringChunk(stringDecoder, buffer);
+      lastWasPartial = true;
+    }
+    const messages = stringBuffer.split('\n');
+    for (let i = 0; i < messages.length - 1; i++) {
+      resolveDebugMessage(request, messages[i]);
+    }
+    stringBuffer = messages[messages.length - 1];
+  }
+  function onError(error: mixed) {
+    abort(
+      request,
+      new Error('Lost connection to the Debug Channel.', {
+        cause: error,
+      }),
+    );
+  }
+  function onClose() {
+    closeDebugChannel(request);
+  }
+  if (
+    // $FlowFixMe[method-unbinding]
+    typeof stream.addEventListener === 'function' &&
+    // $FlowFixMe[method-unbinding]
+    typeof stream.binaryType === 'string'
+  ) {
+    const ws: WebSocket = (stream: any);
+    ws.binaryType = 'arraybuffer';
+    ws.addEventListener('message', event => {
+      // $FlowFixMe
+      onData(event.data);
+    });
+    ws.addEventListener('error', event => {
+      // $FlowFixMe
+      onError(event.error);
+    });
+    ws.addEventListener('close', onClose);
+  } else {
+    const readable: Readable = (stream: any);
+    readable.on('data', onData);
+    readable.on('error', onError);
+    readable.on('end', onClose);
+  }
+}
+
 type Options = {
+  debugChannel?: Readable | Duplex | WebSocket,
   environmentName?: string | (() => string),
   filterStackFrame?: (url: string, functionName: string) => boolean,
   onError?: (error: mixed) => void,
@@ -86,6 +158,7 @@ function renderToPipeableStream(
   moduleBasePath: ClientManifest,
   options?: Options,
 ): PipeableStream {
+  const debugChannel = __DEV__ && options ? options.debugChannel : undefined;
   const request = createRequest(
     model,
     moduleBasePath,
@@ -95,9 +168,13 @@ function renderToPipeableStream(
     options ? options.temporaryReferences : undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
+    debugChannel !== undefined,
   );
   let hasStartedFlowing = false;
   startWork(request);
+  if (debugChannel !== undefined) {
+    startReadingFromDebugChannelReadable(request, debugChannel);
+  }
   return {
     pipe<T: Writable>(destination: T): T {
       if (hasStartedFlowing) {
@@ -126,11 +203,12 @@ function renderToPipeableStream(
     },
   };
 }
+
 function createFakeWritable(readable: any): Writable {
   // The current host config expects a Writable so we create
   // a fake writable for now to push into the Readable.
   return ({
-    write(chunk) {
+    write(chunk: string | Uint8Array) {
       return readable.push(chunk);
     },
     end() {
@@ -184,6 +262,7 @@ function prerenderToNodeStream(
       options ? options.temporaryReferences : undefined,
       __DEV__ && options ? options.environmentName : undefined,
       __DEV__ && options ? options.filterStackFrame : undefined,
+      false,
     );
     if (options && options.signal) {
       const signal = options.signal;
@@ -287,8 +366,8 @@ function decodeReply<T>(
 export {
   renderToPipeableStream,
   prerenderToNodeStream,
-  decodeReplyFromBusboy,
   decodeReply,
+  decodeReplyFromBusboy,
   decodeAction,
   decodeFormState,
 };

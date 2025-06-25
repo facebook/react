@@ -33,12 +33,22 @@ function Foo({children}) {
   return <div>{children}</div>;
 }
 
+async function delayedError(text, ms) {
+  return new Promise((_, reject) =>
+    setTimeout(() => reject(new Error(text)), ms)
+  );
+}
+
 async function delay(text, ms) {
   return new Promise(resolve => setTimeout(() => resolve(text), ms));
 }
 
 async function delayTwice() {
-  await delay('', 20);
+  try {
+    await delayedError('Delayed exception', 20);
+  } catch (x) {
+    // Ignored
+  }
   await delay('', 10);
 }
 

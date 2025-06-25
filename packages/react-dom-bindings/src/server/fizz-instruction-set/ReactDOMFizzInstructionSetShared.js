@@ -34,11 +34,16 @@ export function revealCompletedBoundaries(batch) {
   for (let i = 0; i < batch.length; i += 2) {
     const suspenseIdNode = batch[i];
     const contentNode = batch[i + 1];
-    // We can detach the content now.
-    // Completions of boundaries within this contentNode will now find the boundary
-    // in its designated place.
-    contentNode.parentNode.removeChild(contentNode);
-
+    if (contentNode.parentNode === null) {
+      // If the client has failed hydration we may have already deleted the streaming
+      // segments. The server may also have emitted a complete instruction but cancelled
+      // the segment. Regardless we can ignore this case.
+    } else {
+      // We can detach the content now.
+      // Completions of boundaries within this contentNode will now find the boundary
+      // in its designated place.
+      contentNode.parentNode.removeChild(contentNode);
+    }
     // Clear all the existing children. This is complicated because
     // there can be embedded Suspense boundaries in the fallback.
     // This is similar to clearSuspenseBoundary in ReactFiberConfigDOM.

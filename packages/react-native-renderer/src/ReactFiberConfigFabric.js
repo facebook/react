@@ -12,7 +12,6 @@ import type {
   TouchedViewDataAtPoint,
   ViewConfig,
 } from './ReactNativeTypes';
-import {create, diff} from './ReactNativeAttributePayloadFabric';
 import {dispatchEvent} from './ReactFabricEventEmitter';
 import {
   NoEventPriority,
@@ -35,6 +34,8 @@ import {
   deepFreezeAndThrowOnMutationInDev,
   createPublicInstance,
   createPublicTextInstance,
+  createAttributePayload,
+  diffAttributePayloads,
   type PublicInstance as ReactNativePublicInstance,
   type PublicTextInstance,
   type PublicRootInstance,
@@ -190,7 +191,10 @@ export function createInstance(
     }
   }
 
-  const updatePayload = create(props, viewConfig.validAttributes);
+  const updatePayload = createAttributePayload(
+    props,
+    viewConfig.validAttributes,
+  );
 
   const node = createNode(
     tag, // reactTag
@@ -456,7 +460,11 @@ export function cloneInstance(
   newChildSet: ?ChildSet,
 ): Instance {
   const viewConfig = instance.canonical.viewConfig;
-  const updatePayload = diff(oldProps, newProps, viewConfig.validAttributes);
+  const updatePayload = diffAttributePayloads(
+    oldProps,
+    newProps,
+    viewConfig.validAttributes,
+  );
   // TODO: If the event handlers have changed, we need to update the current props
   // in the commit phase but there is no host config hook to do it yet.
   // So instead we hack it by updating it in the render phase.
@@ -505,7 +513,7 @@ export function cloneHiddenInstance(
 ): Instance {
   const viewConfig = instance.canonical.viewConfig;
   const node = instance.node;
-  const updatePayload = create(
+  const updatePayload = createAttributePayload(
     {style: {display: 'none'}},
     viewConfig.validAttributes,
   );
