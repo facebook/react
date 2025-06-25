@@ -89,7 +89,6 @@ export const disableLegacyMode = true;
 export const disableLegacyContext = true;
 export const disableLegacyContextForFunctionComponents = true;
 export const enableReactTestRendererWarning = true;
-export const disableDefaultPropsExceptForClasses = true;
 
 export const enableObjectFiber = false;
 
