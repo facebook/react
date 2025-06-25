@@ -5250,7 +5250,8 @@ function enqueueFlush(request: Request): void {
 
 function callOnAllReadyIfReady(request: Request): void {
   if (request.abortableTasks.size === 0) {
-    request.onAllReady();
+    const onAllReady = request.onAllReady;
+    onAllReady();
   }
 }
 
