@@ -108,7 +108,7 @@ import {
   getMaskedContext,
   processChildContext,
   emptyContextObject,
-} from './ReactFizzContext';
+} from './ReactFizzLegacyContext';
 import {
   readContext,
   rootContextSnapshot,
