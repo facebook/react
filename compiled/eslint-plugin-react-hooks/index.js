@@ -27076,9 +27076,6 @@ function printFunction(fn) {
     if (fn.id !== null) {
         definition += fn.id;
     }
-    else {
-        definition += '<<anonymous>>';
-    }
     if (fn.params.length !== 0) {
         definition +=
             '(' +
@@ -27097,8 +27094,10 @@ function printFunction(fn) {
     else {
         definition += '()';
     }
-    definition += `: ${printPlace(fn.returns)}`;
-    output.push(definition);
+    if (definition.length !== 0) {
+        output.push(definition);
+    }
+    output.push(`: ${printType(fn.returnType)} @ ${printPlace(fn.returns)}`);
     output.push(...fn.directives);
     output.push(printHIR(fn.body));
     return output.join('\n');
@@ -30923,6 +30922,7 @@ function lower$1(func, env, bindings = null, capturedRefs = new Map()) {
         params,
         fnType: bindings == null ? env.fnType : 'Other',
         returnTypeAnnotation: null,
+        returnType: makeType(),
         returns: createTemporaryPlace(env, (_b = func.node.loc) !== null && _b !== void 0 ? _b : GeneratedSource),
         body: builder.build(),
         context,
@@ -44546,7 +44546,7 @@ function codegenTerminal(cx, terminal) {
                     ? codegenPlaceToExpression(cx, case_.test)
                     : null;
                 const block = codegenBlock(cx, case_.block);
-                return libExports$1.switchCase(test, block.body.length === 0 ? [] : [block]);
+                return libExports$1.switchCase(test, [block]);
             }));
         }
         case 'throw': {
@@ -51683,13 +51683,12 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
             }
         }
     }
-    const returns = fn.returns.identifier;
     functionEffects.push({
         kind: 'Create',
         into: fn.returns,
-        value: isPrimitiveType(returns)
+        value: fn.returnType.kind === 'Primitive'
             ? ValueKind.Primitive
-            : isJsxType(returns.type)
+            : isJsxType(fn.returnType)
                 ? ValueKind.Frozen
                 : ValueKind.Mutable,
         reason: ValueReason.KnownReturnSignature,
@@ -55273,8 +55272,7 @@ function apply(func, unifier) {
             }
         }
     }
-    const returns = func.returns.identifier;
-    returns.type = unifier.get(returns.type);
+    func.returnType = unifier.get(func.returnType);
 }
 function equation(left, right) {
     return {
@@ -55316,13 +55314,13 @@ function* generate(func) {
         }
     }
     if (returnTypes.length > 1) {
-        yield equation(func.returns.identifier.type, {
+        yield equation(func.returnType, {
             kind: 'Phi',
             operands: returnTypes,
         });
     }
     else if (returnTypes.length === 1) {
-        yield equation(func.returns.identifier.type, returnTypes[0]);
+        yield equation(func.returnType, returnTypes[0]);
     }
 }
 function setName(names, id, name) {
@@ -55533,7 +55531,7 @@ function* generateInstructionTypes(env, names, instr) {
             yield equation(left, {
                 kind: 'Function',
                 shapeId: BuiltInFunctionId,
-                return: value.loweredFunc.func.returns.identifier.type,
+                return: value.loweredFunc.func.returnType,
                 isConstructor: false,
             });
             break;
@@ -57676,6 +57674,7 @@ function emitSelectorFn(env, keys) {
         env,
         params: [obj],
         returnTypeAnnotation: null,
+        returnType: makeType(),
         returns: createTemporaryPlace(env, GeneratedSource),
         context: [],
         effects: null,
@@ -58093,6 +58092,7 @@ function emitOutlinedFn(env, jsx, oldProps, globals) {
         env,
         params: [propsObj],
         returnTypeAnnotation: null,
+        returnType: makeType(),
         returns: createTemporaryPlace(env, GeneratedSource),
         context: [],
         effects: null,
