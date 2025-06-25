@@ -221,7 +221,6 @@ export function lower(
     params,
     fnType: bindings == null ? env.fnType : 'Other',
     returnTypeAnnotation: null, // TODO: extract the actual return type node if present
-    returnType: makeType(),
     returns: createTemporaryPlace(env, func.node.loc ?? GeneratedSource),
     body: builder.build(),
     context,

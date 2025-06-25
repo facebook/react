@@ -54,6 +54,8 @@ export function printFunction(fn: HIRFunction): string {
   let definition = '';
   if (fn.id !== null) {
     definition += fn.id;
+  } else {
+    definition += '<<anonymous>>';
   }
   if (fn.params.length !== 0) {
     definition +=
@@ -71,10 +73,8 @@ export function printFunction(fn: HIRFunction): string {
   } else {
     definition += '()';
   }
-  if (definition.length !== 0) {
-    output.push(definition);
-  }
-  output.push(`: ${printType(fn.returnType)} @ ${printPlace(fn.returns)}`);
+  definition += `: ${printPlace(fn.returns)}`;
+  output.push(definition);
   output.push(...fn.directives);
   output.push(printHIR(fn.body));
   return output.join('\n');
