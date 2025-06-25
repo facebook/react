@@ -71,6 +71,7 @@ type Options = {
   filterStackFrame?: (url: string, functionName: string) => boolean,
   identifierPrefix?: string,
   signal?: AbortSignal,
+  debugChannel?: {onMessage?: (message: string) => void},
   onError?: (error: mixed) => void,
   onPostpone?: (reason: string) => void,
 };
@@ -87,6 +88,7 @@ function render(model: ReactClientValue, options?: Options): Destination {
     undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
+    __DEV__ && options && options.debugChannel !== undefined,
   );
   const signal = options ? options.signal : undefined;
   if (signal) {
@@ -99,6 +101,11 @@ function render(model: ReactClientValue, options?: Options): Destination {
       };
       signal.addEventListener('abort', listener);
     }
+  }
+  if (__DEV__ && options && options.debugChannel !== undefined) {
+    options.debugChannel.onMessage = message => {
+      ReactNoopFlightServer.resolveDebugMessage(request, message);
+    };
   }
   ReactNoopFlightServer.startWork(request);
   ReactNoopFlightServer.startFlowing(request, destination);

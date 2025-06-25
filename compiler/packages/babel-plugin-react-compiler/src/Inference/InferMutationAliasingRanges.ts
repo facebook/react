@@ -13,7 +13,10 @@ import {
   Identifier,
   IdentifierId,
   InstructionId,
+  isJsxType,
   makeInstructionId,
+  ValueKind,
+  ValueReason,
   Place,
 } from '../HIR/HIR';
 import {
@@ -22,34 +25,58 @@ import {
   eachTerminalOperand,
 } from '../HIR/visitors';
 import {assertExhaustive, getOrInsertWith} from '../Utils/utils';
-import {MutationKind} from './InferFunctionExpressionAliasingEffectsSignature';
-import {Result} from '../Utils/Result';
+import {Err, Ok, Result} from '../Utils/Result';
+import {AliasingEffect} from './AliasingEffects';
 
 /**
- * Infers mutable ranges for all values in the program, using previously inferred
- * mutation/aliasing effects. This pass builds a data flow graph using the effects,
- * tracking an abstract notion of "when" each effect occurs relative to the others.
- * It then walks each mutation effect against the graph, updating the range of each
- * node that would be reachable at the "time" that the effect occurred.
+ * This pass builds an abstract model of the heap and interprets the effects of the
+ * given function in order to determine the following:
+ * - The mutable ranges of all identifiers in the function
+ * - The externally-visible effects of the function, such as mutations of params and
+ *   context-vars, aliasing between params/context-vars/return-value, and impure side
+ *   effects.
+ * - The legacy `Effect` to store on each Place.
+ *
+ * This pass builds a data flow graph using the effects, tracking an abstract notion
+ * of "when" each effect occurs relative to the others. It then walks each mutation
+ * effect against the graph, updating the range of each node that would be reachable
+ * at the "time" that the effect occurred.
  *
  * This pass also validates against invalid effects: any function that is reachable
  * by being called, or via a Render effect, is validated against mutating globals
  * or calling impure code.
  *
  * Note that this function also populates the outer function's aliasing effects with
- * any mutations that apply to its params or context variables. For example, a
- * function expression such as the following:
+ * any mutations that apply to its params or context variables.
+ *
+ * ## Example
+ * A function expression such as the following:
  *
  * ```
  * (x) => { x.y = true }
  * ```
  *
  * Would populate a `Mutate x` aliasing effect on the outer function.
+ *
+ * ## Returned Function Effects
+ *
+ * The function returns (if successful) a list of externally-visible effects.
+ * This is determined by simulating a conditional, transitive mutation against
+ * each param, context variable, and return value in turn, and seeing which other
+ * such values are affected. If they're affected, they must be captured, so we
+ * record a Capture.
+ *
+ * The only tricky bit is the return value, which could _alias_ (or even assign)
+ * one or more of the params/context-vars rather than just capturing. So we have
+ * to do a bit more tracking for returns.
  */
 export function inferMutationAliasingRanges(
   fn: HIRFunction,
   {isFunctionExpression}: {isFunctionExpression: boolean},
-): Result<void, CompilerError> {
+): Result<Array<AliasingEffect>, CompilerError> {
+  // The set of externally-visible effects
+  const functionEffects: Array<AliasingEffect> = [];
+
   /**
    * Part 1: Infer mutable ranges for values. We build an abstract model of
    * values, the alias/capture edges between them, and the set of mutations.
@@ -168,8 +195,10 @@ export function inferMutationAliasingRanges(
           effect.kind === 'Impure'
         ) {
           errors.push(effect.error);
+          functionEffects.push(effect);
         } else if (effect.kind === 'Render') {
           renders.push({index: index++, place: effect.place});
+          functionEffects.push(effect);
         }
       }
     }
@@ -215,7 +244,6 @@ export function inferMutationAliasingRanges(
   for (const render of renders) {
     state.render(render.index, render.place.identifier, errors);
   }
-  fn.aliasingEffects ??= [];
   for (const param of [...fn.context, ...fn.params]) {
     const place = param.kind === 'Identifier' ? param : param.place;
     const node = state.nodes.get(place.identifier);
@@ -226,13 +254,13 @@ export function inferMutationAliasingRanges(
     if (node.local != null) {
       if (node.local.kind === MutationKind.Conditional) {
         mutated = true;
-        fn.aliasingEffects.push({
+        functionEffects.push({
           kind: 'MutateConditionally',
           value: {...place, loc: node.local.loc},
         });
       } else if (node.local.kind === MutationKind.Definite) {
         mutated = true;
-        fn.aliasingEffects.push({
+        functionEffects.push({
           kind: 'Mutate',
           value: {...place, loc: node.local.loc},
         });
@@ -241,13 +269,13 @@ export function inferMutationAliasingRanges(
     if (node.transitive != null) {
       if (node.transitive.kind === MutationKind.Conditional) {
         mutated = true;
-        fn.aliasingEffects.push({
+        functionEffects.push({
           kind: 'MutateTransitiveConditionally',
           value: {...place, loc: node.transitive.loc},
         });
       } else if (node.transitive.kind === MutationKind.Definite) {
         mutated = true;
-        fn.aliasingEffects.push({
+        functionEffects.push({
           kind: 'MutateTransitive',
           value: {...place, loc: node.transitive.loc},
         });
@@ -436,7 +464,82 @@ export function inferMutationAliasingRanges(
     }
   }
 
-  return errors.asResult();
+  /**
+   * Part 3
+   * Finish populating the externally visible effects. Above we bubble-up the side effects
+   * (MutateFrozen/MutableGlobal/Impure/Render) as well as mutations of context variables.
+   * Here we populate an effect to create the return value as well as populating alias/capture
+   * effects for how data flows between the params, context vars, and return.
+   */
+  functionEffects.push({
+    kind: 'Create',
+    into: fn.returns,
+    value:
+      fn.returnType.kind === 'Primitive'
+        ? ValueKind.Primitive
+        : isJsxType(fn.returnType)
+          ? ValueKind.Frozen
+          : ValueKind.Mutable,
+    reason: ValueReason.KnownReturnSignature,
+  });
+  /**
+   * Determine precise data-flow effects by simulating transitive mutations of the params/
+   * captures and seeing what other params/context variables are affected. Anything that
+   * would be transitively mutated needs a capture relationship.
+   */
+  const tracked: Array<Place> = [];
+  const ignoredErrors = new CompilerError();
+  for (const param of [...fn.params, ...fn.context, fn.returns]) {
+    const place = param.kind === 'Identifier' ? param : param.place;
+    tracked.push(place);
+  }
+  for (const into of tracked) {
+    const mutationIndex = index++;
+    state.mutate(
+      mutationIndex,
+      into.identifier,
+      null,
+      true,
+      MutationKind.Conditional,
+      into.loc,
+      ignoredErrors,
+    );
+    for (const from of tracked) {
+      if (
+        from.identifier.id === into.identifier.id ||
+        from.identifier.id === fn.returns.identifier.id
+      ) {
+        continue;
+      }
+      const fromNode = state.nodes.get(from.identifier);
+      CompilerError.invariant(fromNode != null, {
+        reason: `Expected a node to exist for all parameters and context variables`,
+        loc: into.loc,
+      });
+      if (fromNode.lastMutated === mutationIndex) {
+        if (into.identifier.id === fn.returns.identifier.id) {
+          // The return value could be any of the params/context variables
+          functionEffects.push({
+            kind: 'Alias',
+            from,
+            into,
+          });
+        } else {
+          // Otherwise params/context-vars can only capture each other
+          functionEffects.push({
+            kind: 'Capture',
+            from,
+            into,
+          });
+        }
+      }
+    }
+  }
+
+  if (errors.hasErrors() && !isFunctionExpression) {
+    return Err(errors);
+  }
+  return Ok(functionEffects);
 }
 
 function appendFunctionErrors(errors: CompilerError, fn: HIRFunction): void {
@@ -452,6 +555,12 @@ function appendFunctionErrors(errors: CompilerError, fn: HIRFunction): void {
   }
 }
 
+export enum MutationKind {
+  None = 0,
+  Conditional = 1,
+  Definite = 2,
+}
+
 type Node = {
   id: Identifier;
   createdFrom: Map<Identifier, number>;
@@ -460,6 +569,7 @@ type Node = {
   edges: Array<{index: number; node: Identifier; kind: 'capture' | 'alias'}>;
   transitive: {kind: MutationKind; loc: SourceLocation} | null;
   local: {kind: MutationKind; loc: SourceLocation} | null;
+  lastMutated: number;
   value:
     | {kind: 'Object'}
     | {kind: 'Phi'}
@@ -477,6 +587,7 @@ class AliasingState {
       edges: [],
       transitive: null,
       local: null,
+      lastMutated: 0,
       value,
     });
   }
@@ -558,7 +669,8 @@ class AliasingState {
   mutate(
     index: number,
     start: Identifier,
-    end: InstructionId,
+    // Null is used for simulated mutations
+    end: InstructionId | null,
     transitive: boolean,
     kind: MutationKind,
     loc: SourceLocation,
@@ -580,9 +692,12 @@ class AliasingState {
       if (node == null) {
         continue;
       }
-      node.id.mutableRange.end = makeInstructionId(
-        Math.max(node.id.mutableRange.end, end),
-      );
+      node.lastMutated = Math.max(node.lastMutated, index);
+      if (end != null) {
+        node.id.mutableRange.end = makeInstructionId(
+          Math.max(node.id.mutableRange.end, end),
+        );
+      }
       if (
         node.value.kind === 'Function' &&
         node.transitive == null &&

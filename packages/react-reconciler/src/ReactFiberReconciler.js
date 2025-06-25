@@ -57,7 +57,7 @@ import {
   processChildContext,
   emptyContextObject,
   isContextProvider as isLegacyContextProvider,
-} from './ReactFiberContext';
+} from './ReactFiberLegacyContext';
 import {createFiberRoot} from './ReactFiberRoot';
 import {isRootDehydrated} from './ReactFiberShellHydration';
 import {

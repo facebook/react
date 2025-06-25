@@ -3099,6 +3099,9 @@ function replayElement(
           if (task.node === currentNode) {
             // This same element suspended so we need to pop the replay we just added.
             task.replay = replay;
+          } else {
+            // We finished rendering this node, so now we can consume this slot.
+            replayNodes.splice(i, 1);
           }
           throw x;
         }
@@ -4127,6 +4130,8 @@ function renderNode(
   const segment = task.blockedSegment;
   if (segment === null) {
     // Replay
+    task = ((task: any): ReplayTask); // Refined
+    const previousReplaySet: ReplaySet = task.replay;
     try {
       return renderNodeDestructive(request, task, node, childIndex);
     } catch (thrownValue) {
@@ -4166,6 +4171,7 @@ function renderNode(
           task.keyPath = previousKeyPath;
           task.treeContext = previousTreeContext;
           task.componentStack = previousComponentStack;
+          task.replay = previousReplaySet;
           if (__DEV__) {
             task.debugTask = previousDebugTask;
           }
@@ -4199,6 +4205,7 @@ function renderNode(
           task.keyPath = previousKeyPath;
           task.treeContext = previousTreeContext;
           task.componentStack = previousComponentStack;
+          task.replay = previousReplaySet;
           if (__DEV__) {
             task.debugTask = previousDebugTask;
           }

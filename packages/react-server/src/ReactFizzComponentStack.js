@@ -86,7 +86,7 @@ function describeComponentStackByType(
       }
     }
     if (typeof type.name === 'string') {
-      return describeDebugInfoFrame(type.name, type.env);
+      return describeDebugInfoFrame(type.name, type.env, type.debugLocation);
     }
   }
   switch (type) {
