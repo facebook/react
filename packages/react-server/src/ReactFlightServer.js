@@ -2149,7 +2149,11 @@ function visitAsyncNode(
                 owner: node.owner,
                 stack: filterStackTrace(request, node.stack),
               });
-              markOperationEndTime(request, task, endTime);
+              // Mark the end time of the await. If we're aborting then we don't emit this
+              // to signal that this never resolved inside this render.
+              if (request.status !== ABORTING) {
+                markOperationEndTime(request, task, endTime);
+              }
             }
           }
         }
@@ -2210,7 +2214,12 @@ function emitAsyncSequence(
       }
     }
     emitDebugChunk(request, task.id, debugInfo);
-    markOperationEndTime(request, task, awaitedNode.end);
+    // Mark the end time of the await. If we're aborting then we don't emit this
+    // to signal that this never resolved inside this render.
+    if (request.status !== ABORTING) {
+      // If we're currently aborting, then this never resolved into user space.
+      markOperationEndTime(request, task, awaitedNode.end);
+    }
   }
 }
 
@@ -3910,6 +3919,13 @@ function serializeIONode(
   // The environment name may have changed from when the I/O was actually started.
   const env = (0, request.environmentName)();
 
+  const endTime =
+    ioNode.tag === UNRESOLVED_PROMISE_NODE
+      ? // Mark the end time as now. It's arbitrary since it's not resolved but this
+        // marks when we stopped trying.
+        performance.now()
+      : ioNode.end;
+
   request.pendingChunks++;
   const id = request.nextChunkId++;
   emitIOInfoChunk(
@@ -3917,7 +3933,7 @@ function serializeIONode(
     id,
     name,
     ioNode.start,
-    ioNode.end,
+    endTime,
     value,
     env,
     owner,
@@ -4741,7 +4757,6 @@ function forwardDebugInfoFromAbortedTask(request: Request, task: Task): void {
             env: env,
           };
           emitDebugChunk(request, task.id, asyncInfo);
-          markOperationEndTime(request, task, performance.now());
         } else {
           emitAsyncSequence(request, task, sequence, debugInfo, null, null);
         }
