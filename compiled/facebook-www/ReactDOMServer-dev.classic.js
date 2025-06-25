@@ -7224,8 +7224,8 @@ __DEV__ &&
         if (13 !== request.status && request.status !== CLOSED) {
           boundary = task.replay;
           if (null === boundary) {
-            logRecoverableError(request, error, segment, null);
-            fatalError(request, error, segment, null);
+            logRecoverableError(request, error, segment, task.debugTask);
+            fatalError(request, error, segment, task.debugTask);
             return;
           }
           boundary.pendingTasks--;
@@ -7253,7 +7253,12 @@ __DEV__ &&
       } else
         boundary.status !== CLIENT_RENDERED &&
           ((boundary.status = CLIENT_RENDERED),
-          (errorDigest = logRecoverableError(request, error, segment, null)),
+          (errorDigest = logRecoverableError(
+            request,
+            error,
+            segment,
+            task.debugTask
+          )),
           (boundary.status = CLIENT_RENDERED),
           encodeErrorForBoundary(boundary, errorDigest, error, segment, !0),
           untrackBoundary(request, boundary),
@@ -10167,5 +10172,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.2.0-www-classic-e67b4fe2-20250624";
+    exports.version = "19.2.0-www-classic-cee7939b-20250625";
   })();

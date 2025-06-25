@@ -6963,8 +6963,8 @@ __DEV__ &&
         if (13 !== request.status && 14 !== request.status) {
           boundary = task.replay;
           if (null === boundary) {
-            logRecoverableError(request, error, segment, null);
-            fatalError(request, error, segment, null);
+            logRecoverableError(request, error, segment, task.debugTask);
+            fatalError(request, error, segment, task.debugTask);
             return;
           }
           boundary.pendingTasks--;
@@ -6992,7 +6992,12 @@ __DEV__ &&
       } else
         4 !== boundary.status &&
           ((boundary.status = 4),
-          (errorDigest = logRecoverableError(request, error, segment, null)),
+          (errorDigest = logRecoverableError(
+            request,
+            error,
+            segment,
+            task.debugTask
+          )),
           (boundary.status = 4),
           encodeErrorForBoundary(boundary, errorDigest, error, segment, !0),
           untrackBoundary(request, boundary),
