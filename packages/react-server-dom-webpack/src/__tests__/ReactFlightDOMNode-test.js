@@ -48,7 +48,7 @@ describe('ReactFlightDOMNode', () => {
       require('react-server-dom-webpack/server.node'),
     );
     ReactServer = require('react');
-    ReactDOMServerStatic = require('react-dom/static.node');
+    ReactDOMServerStatic = require('react-dom/static');
     ReactServerDOMServer = require('react-server-dom-webpack/server');
     if (__EXPERIMENTAL__) {
       jest.mock('react-server-dom-webpack/static', () =>
