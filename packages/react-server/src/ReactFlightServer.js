@@ -2149,7 +2149,11 @@ function visitAsyncNode(
                 owner: node.owner,
                 stack: filterStackTrace(request, node.stack),
               });
-              markOperationEndTime(request, task, endTime);
+              // Mark the end time of the await. If we're aborting then we don't emit this
+              // to signal that this never resolved inside this render.
+              if (request.status !== ABORTING) {
+                markOperationEndTime(request, task, endTime);
+              }
             }
           }
         }
@@ -2210,7 +2214,12 @@ function emitAsyncSequence(
       }
     }
     emitDebugChunk(request, task.id, debugInfo);
-    markOperationEndTime(request, task, awaitedNode.end);
+    // Mark the end time of the await. If we're aborting then we don't emit this
+    // to signal that this never resolved inside this render.
+    if (request.status !== ABORTING) {
+      // If we're currently aborting, then this never resolved into user space.
+      markOperationEndTime(request, task, awaitedNode.end);
+    }
   }
 }
 
@@ -4741,7 +4750,6 @@ function forwardDebugInfoFromAbortedTask(request: Request, task: Task): void {
             env: env,
           };
           emitDebugChunk(request, task.id, asyncInfo);
-          markOperationEndTime(request, task, performance.now());
         } else {
           emitAsyncSequence(request, task, sequence, debugInfo, null, null);
         }
