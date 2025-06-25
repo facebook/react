@@ -5286,6 +5286,7 @@ export function abort(request: Request, reason: mixed): void {
     if (request.status <= OPEN) {
       request.status = ABORTING;
       request.cacheController.abort(reason);
+      callOnAllReadyIfReady(request);
     }
     const abortableTasks = request.abortableTasks;
     if (abortableTasks.size > 0) {
@@ -5337,7 +5338,6 @@ export function abort(request: Request, reason: mixed): void {
         callOnAllReadyIfReady(request);
       }
     }
-    callOnAllReadyIfReady(request);
     if (request.destination !== null) {
       flushCompletedChunks(request, request.destination);
     }
