@@ -1815,7 +1815,7 @@ function ResponseInstance(
     this._rootEnvironmentName = rootEnv;
   }
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
-    // Since we don't know when recording of profiles with start and stop. We have to
+    // Since we don't know when recording of profiles will start and stop, we have to
     // mark the order over and over again.
     markAllTracksInOrder();
   }
