@@ -285,7 +285,7 @@ function runWithEnvironment(
     }
 
     if (env.config.validateRefAccessDuringRender) {
-      validateNoRefAccessInRender(hir).unwrap();
+      // validateNoRefAccessInRender(hir).unwrap();
     }
 
     if (env.config.validateNoSetStateInRender) {

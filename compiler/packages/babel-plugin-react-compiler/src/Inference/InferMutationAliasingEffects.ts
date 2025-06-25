@@ -28,7 +28,9 @@ import {
   isMapType,
   isPrimitiveType,
   isRefOrRefValue,
+  isRefValueType,
   isSetType,
+  isUseRefType,
   makeIdentifierId,
   Phi,
   Place,
@@ -218,6 +220,9 @@ export function inferMutationAliasingEffects(
         queue(nextBlockId, state);
       }
     }
+  }
+  if (fn.env.config.validateRefAccessDuringRender) {
+    inferRefAccessEffects(fn, isFunctionExpression);
   }
   return Ok(undefined);
 }
@@ -2513,3 +2518,127 @@ export type AbstractValue = {
   kind: ValueKind;
   reason: ReadonlySet<ValueReason>;
 };
+
+function inferRefAccessEffects(
+  fn: HIRFunction,
+  _isFunctionExpression: boolean,
+): void {
+  const nullish = new Set<IdentifierId>();
+  const nullishTest = new Map<IdentifierId, Place>();
+  let guard: {ref: IdentifierId; fallthrough: BlockId} | null = null;
+  const temporaries: Map<IdentifierId, Place> = new Map();
+
+  function visitOperand(operand: Place): AliasingEffect | null {
+    const nullTestRef = nullishTest.get(operand.identifier.id);
+    if (isRefValueType(operand.identifier) || nullTestRef != null) {
+      const refOperand = nullTestRef ?? operand;
+      return {
+        kind: 'Impure',
+        error: {
+          severity: ErrorSeverity.InvalidReact,
+          reason:
+            'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
+          loc: refOperand.loc,
+          description:
+            refOperand.identifier.name !== null &&
+            refOperand.identifier.name.kind === 'named'
+              ? `Cannot access ref value \`${refOperand.identifier.name.value}\``
+              : null,
+          suggestions: null,
+        },
+        place: refOperand,
+      };
+    }
+    return null;
+  }
+
+  for (const block of fn.body.blocks.values()) {
+    if (guard !== null && guard.fallthrough === block.id) {
+      guard = null;
+    }
+    for (const instr of block.instructions) {
+      const {lvalue, value} = instr;
+      if (value.kind === 'LoadLocal' && isUseRefType(value.place.identifier)) {
+        temporaries.set(lvalue.identifier.id, value.place);
+      } else if (
+        value.kind === 'StoreLocal' &&
+        isUseRefType(value.value.identifier)
+      ) {
+        temporaries.set(value.lvalue.place.identifier.id, value.value);
+        temporaries.set(lvalue.identifier.id, value.value);
+      } else if (
+        value.kind === 'BinaryExpression' &&
+        ((isRefValueType(value.left.identifier) &&
+          nullish.has(value.right.identifier.id)) ||
+          (nullish.has(value.left.identifier.id) &&
+            isRefValueType(value.right.identifier)))
+      ) {
+        const refOperand = isRefValueType(value.left.identifier)
+          ? value.left
+          : value.right;
+        const operand = temporaries.get(refOperand.identifier.id) ?? refOperand;
+        nullishTest.set(lvalue.identifier.id, operand);
+      } else if (value.kind === 'Primitive' && value.value == null) {
+        nullish.add(lvalue.identifier.id);
+      } else if (
+        value.kind === 'PropertyLoad' &&
+        isUseRefType(value.object.identifier) &&
+        value.property === 'current'
+      ) {
+        const refOperand =
+          temporaries.get(value.object.identifier.id) ?? value.object;
+        temporaries.set(lvalue.identifier.id, refOperand);
+      } else if (
+        value.kind === 'PropertyStore' &&
+        value.property === 'current' &&
+        isUseRefType(value.object.identifier)
+      ) {
+        const refOperand =
+          temporaries.get(value.object.identifier.id) ?? value.object;
+        if (guard != null && refOperand.identifier.id === guard.ref) {
+          // Allow a single write within the guard
+          guard = null;
+        } else {
+          instr.effects ??= [];
+          instr.effects.push({
+            kind: 'Impure',
+            error: {
+              severity: ErrorSeverity.InvalidReact,
+              reason:
+                'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
+              loc: value.loc,
+              description:
+                value.object.identifier.name !== null &&
+                value.object.identifier.name.kind === 'named'
+                  ? `Cannot access ref value \`${value.object.identifier.name.value}\``
+                  : null,
+              suggestions: null,
+            },
+            place: value.object,
+          });
+        }
+      } else {
+        for (const operand of eachInstructionValueOperand(value)) {
+          const error = visitOperand(operand);
+          if (error) {
+            instr.effects ??= [];
+            instr.effects.push(error);
+          }
+        }
+      }
+    }
+    if (
+      guard == null &&
+      block.terminal.kind === 'if' &&
+      nullishTest.has(block.terminal.test.identifier.id)
+    ) {
+      const ref = nullishTest.get(block.terminal.test.identifier.id)!;
+      guard = {ref: ref.identifier.id, fallthrough: block.terminal.fallthrough};
+    } else {
+      for (const operand of eachTerminalOperand(block.terminal)) {
+        const _effect = visitOperand(operand);
+        // TODO: need a place to store terminal effects generically
+      }
+    }
+  }
+}
