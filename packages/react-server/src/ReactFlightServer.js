@@ -2704,7 +2704,7 @@ function serializeBlob(request: Request, blob: Blob): string {
     signal.removeEventListener('abort', abortBlob);
     const reason = signal.reason;
     if (enableHalt && request.type === PRERENDER) {
-      request.pendingChunks--;
+      haltTask(newTask, request);
     } else {
       erroredTask(request, newTask, reason);
       enqueueFlush(request);
