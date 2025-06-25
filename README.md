@@ -8,6 +8,10 @@ React is a JavaScript library for building user interfaces.
 
 [Learn how to use React in your project](https://react.dev/learn).
 
+## About
+
+React is maintained by a dedicated team of developers and a vibrant open source community. Our goal is to provide a robust, flexible, and efficient library for building user interfaces across platforms. Whether you are building for the web, mobile, or beyond, React aims to make development productive and enjoyable.
+
 ## Installation
 
 React has been designed for gradual adoption from the start, and **you can use as little or as much React as you need**:
