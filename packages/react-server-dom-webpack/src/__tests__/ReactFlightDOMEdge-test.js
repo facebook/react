@@ -230,6 +230,30 @@ describe('ReactFlightDOMEdge', () => {
     }
   }
 
+  async function createBufferedUnclosingStream(
+    prelude: ReadableStream<Uint8Array>,
+  ): ReadableStream<Uint8Array> {
+    const chunks: Array<Uint8Array> = [];
+    const reader = prelude.getReader();
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) {
+        break;
+      } else {
+        chunks.push(value);
+      }
+    }
+
+    let i = 0;
+    return new ReadableStream({
+      async pull(controller) {
+        if (i < chunks.length) {
+          controller.enqueue(chunks[i++]);
+        }
+      },
+    });
+  }
+
   it('should allow an alternative module mapping to be used for SSR', async () => {
     function ClientComponent() {
       return <span>Client Component</span>;
@@ -1890,27 +1914,3 @@ describe('ReactFlightDOMEdge', () => {
     }
   });
 });
-
-async function createBufferedUnclosingStream(
-  prelude: ReadableStream<Uint8Array>,
-): ReadableStream<Uint8Array> {
-  const chunks: Array<Uint8Array> = [];
-  const reader = prelude.getReader();
-  while (true) {
-    const {done, value} = await reader.read();
-    if (done) {
-      break;
-    } else {
-      chunks.push(value);
-    }
-  }
-
-  let i = 0;
-  return new ReadableStream({
-    async pull(controller) {
-      if (i < chunks.length) {
-        controller.enqueue(chunks[i++]);
-      }
-    },
-  });
-}
