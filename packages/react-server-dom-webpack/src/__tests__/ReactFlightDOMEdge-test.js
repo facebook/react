@@ -1780,7 +1780,7 @@ describe('ReactFlightDOMEdge', () => {
     expect(error.message).toBe(expectedMessage);
   });
 
-  // @gate __DEV__ && enableHalt && enableAsyncDebugInfo
+  // @gate enableHalt && enableAsyncDebugInfo
   it('does not include source locations in component stacks for halted components', async () => {
     // We only support adding source locations for halted components in the Node.js builds.
 
@@ -1854,7 +1854,9 @@ describe('ReactFlightDOMEdge', () => {
         signal: clientAbortController.signal,
         onError(error, errorInfo) {
           componentStack = errorInfo.componentStack;
-          ownerStack = React.captureOwnerStack();
+          ownerStack = React.captureOwnerStack
+            ? React.captureOwnerStack()
+            : null;
         },
       },
     );
@@ -1871,11 +1873,21 @@ describe('ReactFlightDOMEdge', () => {
 
     expect(prerenderHTML).toContain('Loading...');
 
-    expect(normalizeCodeLocInfo(componentStack)).toBe(
-      '\n    in Component\n    in Suspense\n    in body\n    in html\n    in ClientRoot (at **)',
-    );
+    if (__DEV__) {
+      expect(normalizeCodeLocInfo(componentStack)).toBe(
+        '\n    in Component\n    in Suspense\n    in body\n    in html\n    in ClientRoot (at **)',
+      );
+    } else {
+      expect(normalizeCodeLocInfo(componentStack)).toBe(
+        '\n    in Suspense\n    in body\n    in html\n    in ClientRoot (at **)',
+      );
+    }
 
-    expect(normalizeCodeLocInfo(ownerStack)).toBe('\n    in App (at **)');
+    if (__DEV__) {
+      expect(normalizeCodeLocInfo(ownerStack)).toBe('\n    in App (at **)');
+    } else {
+      expect(ownerStack).toBeNull();
+    }
   });
 });
 

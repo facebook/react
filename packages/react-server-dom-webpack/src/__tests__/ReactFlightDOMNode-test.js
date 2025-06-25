@@ -591,7 +591,7 @@ describe('ReactFlightDOMNode', () => {
     expect(result).toContain('loading...');
   });
 
-  // @gate __DEV__ && enableHalt && enableAsyncDebugInfo
+  // @gate enableHalt && enableAsyncDebugInfo
   it('includes source locations in component and owner stacks for halted components', async () => {
     async function Component() {
       await new Promise(() => {});
@@ -665,7 +665,9 @@ describe('ReactFlightDOMNode', () => {
         signal: clientAbortController.signal,
         onError(error, errorInfo) {
           componentStack = errorInfo.componentStack;
-          ownerStack = React.captureOwnerStack();
+          ownerStack = React.captureOwnerStack
+            ? React.captureOwnerStack()
+            : null;
         },
       },
     );
@@ -685,12 +687,22 @@ describe('ReactFlightDOMNode', () => {
 
     expect(prerenderHTML).toContain('Loading...');
 
-    expect(normalizeCodeLocInfo(componentStack)).toBe(
-      '\n    in Component (at **)\n    in Suspense\n    in body\n    in html\n    in ClientRoot (at **)',
-    );
+    if (__DEV__) {
+      expect(normalizeCodeLocInfo(componentStack)).toBe(
+        '\n    in Component (at **)\n    in Suspense\n    in body\n    in html\n    in ClientRoot (at **)',
+      );
+    } else {
+      expect(normalizeCodeLocInfo(componentStack)).toBe(
+        '\n    in Suspense\n    in body\n    in html\n    in ClientRoot (at **)',
+      );
+    }
 
-    expect(normalizeCodeLocInfo(ownerStack)).toBe(
-      '\n    in Component (at **)\n    in App (at **)',
-    );
+    if (__DEV__) {
+      expect(normalizeCodeLocInfo(ownerStack)).toBe(
+        '\n    in Component (at **)\n    in App (at **)',
+      );
+    } else {
+      expect(ownerStack).toBeNull();
+    }
   });
 });
