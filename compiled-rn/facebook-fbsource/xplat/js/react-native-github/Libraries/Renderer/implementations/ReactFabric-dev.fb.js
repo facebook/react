@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<32a22b607e3646113f31c5040693ab57>>
+ * @generated SignedSource<<7581843a2cfaa6a692230809b2d00e6c>>
  */
 
 "use strict";
@@ -1200,252 +1200,6 @@ __DEV__ &&
             )));
         }
       }
-    }
-    function defaultDiffer(prevProp, nextProp) {
-      return "object" !== typeof nextProp || null === nextProp
-        ? !0
-        : ReactNativePrivateInterface.deepDiffer(
-            prevProp,
-            nextProp,
-            deepDifferOptions
-          );
-    }
-    function restoreDeletedValuesInNestedArray(
-      updatePayload,
-      node,
-      validAttributes
-    ) {
-      if (isArrayImpl(node))
-        for (var i = node.length; i-- && 0 < removedKeyCount; )
-          restoreDeletedValuesInNestedArray(
-            updatePayload,
-            node[i],
-            validAttributes
-          );
-      else if (node && 0 < removedKeyCount)
-        for (i in removedKeys)
-          if (removedKeys[i]) {
-            var nextProp = node[i];
-            if (void 0 !== nextProp) {
-              var attributeConfig = validAttributes[i];
-              if (attributeConfig) {
-                "function" === typeof nextProp && (nextProp = !0);
-                "undefined" === typeof nextProp && (nextProp = null);
-                if ("object" !== typeof attributeConfig)
-                  updatePayload[i] = nextProp;
-                else if (
-                  "function" === typeof attributeConfig.diff ||
-                  "function" === typeof attributeConfig.process
-                )
-                  (nextProp =
-                    "function" === typeof attributeConfig.process
-                      ? attributeConfig.process(nextProp)
-                      : nextProp),
-                    (updatePayload[i] = nextProp);
-                removedKeys[i] = !1;
-                removedKeyCount--;
-              }
-            }
-          }
-    }
-    function diffNestedProperty(
-      updatePayload,
-      prevProp,
-      nextProp,
-      validAttributes
-    ) {
-      if (!updatePayload && prevProp === nextProp) return updatePayload;
-      if (!prevProp || !nextProp)
-        return nextProp
-          ? addNestedProperty(updatePayload, nextProp, validAttributes)
-          : prevProp
-            ? clearNestedProperty(updatePayload, prevProp, validAttributes)
-            : updatePayload;
-      if (!isArrayImpl(prevProp) && !isArrayImpl(nextProp))
-        return diffProperties(
-          updatePayload,
-          prevProp,
-          nextProp,
-          validAttributes
-        );
-      if (isArrayImpl(prevProp) && isArrayImpl(nextProp)) {
-        var minLength =
-            prevProp.length < nextProp.length
-              ? prevProp.length
-              : nextProp.length,
-          i;
-        for (i = 0; i < minLength; i++)
-          updatePayload = diffNestedProperty(
-            updatePayload,
-            prevProp[i],
-            nextProp[i],
-            validAttributes
-          );
-        for (; i < prevProp.length; i++)
-          updatePayload = clearNestedProperty(
-            updatePayload,
-            prevProp[i],
-            validAttributes
-          );
-        for (; i < nextProp.length; i++)
-          (prevProp = nextProp[i]) &&
-            (updatePayload = addNestedProperty(
-              updatePayload,
-              prevProp,
-              validAttributes
-            ));
-        return updatePayload;
-      }
-      return isArrayImpl(prevProp)
-        ? diffProperties(
-            updatePayload,
-            ReactNativePrivateInterface.flattenStyle(prevProp),
-            nextProp,
-            validAttributes
-          )
-        : diffProperties(
-            updatePayload,
-            prevProp,
-            ReactNativePrivateInterface.flattenStyle(nextProp),
-            validAttributes
-          );
-    }
-    function clearNestedProperty(updatePayload, prevProp, validAttributes) {
-      if (!prevProp) return updatePayload;
-      if (!isArrayImpl(prevProp))
-        return diffProperties(
-          updatePayload,
-          prevProp,
-          emptyObject$1,
-          validAttributes
-        );
-      for (var i = 0; i < prevProp.length; i++)
-        updatePayload = clearNestedProperty(
-          updatePayload,
-          prevProp[i],
-          validAttributes
-        );
-      return updatePayload;
-    }
-    function diffProperties(
-      updatePayload,
-      prevProps,
-      nextProps,
-      validAttributes
-    ) {
-      var attributeConfig, propKey;
-      for (propKey in nextProps)
-        if ((attributeConfig = validAttributes[propKey])) {
-          var prevProp = prevProps[propKey];
-          var nextProp = nextProps[propKey];
-          "function" !== typeof nextProp ||
-            ("object" === typeof attributeConfig &&
-              "function" === typeof attributeConfig.process) ||
-            ((nextProp = !0),
-            "function" === typeof prevProp && (prevProp = !0));
-          "undefined" === typeof nextProp &&
-            ((nextProp = null),
-            "undefined" === typeof prevProp && (prevProp = null));
-          removedKeys && (removedKeys[propKey] = !1);
-          if (updatePayload && void 0 !== updatePayload[propKey])
-            if ("object" !== typeof attributeConfig)
-              updatePayload[propKey] = nextProp;
-            else {
-              if (
-                "function" === typeof attributeConfig.diff ||
-                "function" === typeof attributeConfig.process
-              )
-                (attributeConfig =
-                  "function" === typeof attributeConfig.process
-                    ? attributeConfig.process(nextProp)
-                    : nextProp),
-                  (updatePayload[propKey] = attributeConfig);
-            }
-          else if (prevProp !== nextProp)
-            if ("object" !== typeof attributeConfig)
-              defaultDiffer(prevProp, nextProp) &&
-                ((updatePayload || (updatePayload = {}))[propKey] = nextProp);
-            else if (
-              "function" === typeof attributeConfig.diff ||
-              "function" === typeof attributeConfig.process
-            ) {
-              if (
-                void 0 === prevProp ||
-                ("function" === typeof attributeConfig.diff
-                  ? attributeConfig.diff(prevProp, nextProp)
-                  : defaultDiffer(prevProp, nextProp))
-              )
-                (attributeConfig =
-                  "function" === typeof attributeConfig.process
-                    ? attributeConfig.process(nextProp)
-                    : nextProp),
-                  ((updatePayload || (updatePayload = {}))[propKey] =
-                    attributeConfig);
-            } else
-              (removedKeys = null),
-                (removedKeyCount = 0),
-                (updatePayload = diffNestedProperty(
-                  updatePayload,
-                  prevProp,
-                  nextProp,
-                  attributeConfig
-                )),
-                0 < removedKeyCount &&
-                  updatePayload &&
-                  (restoreDeletedValuesInNestedArray(
-                    updatePayload,
-                    nextProp,
-                    attributeConfig
-                  ),
-                  (removedKeys = null));
-        }
-      for (var _propKey in prevProps)
-        void 0 === nextProps[_propKey] &&
-          (!(attributeConfig = validAttributes[_propKey]) ||
-            (updatePayload && void 0 !== updatePayload[_propKey]) ||
-            ((prevProp = prevProps[_propKey]),
-            void 0 !== prevProp &&
-              ("object" !== typeof attributeConfig ||
-              "function" === typeof attributeConfig.diff ||
-              "function" === typeof attributeConfig.process
-                ? (((updatePayload || (updatePayload = {}))[_propKey] = null),
-                  removedKeys || (removedKeys = {}),
-                  removedKeys[_propKey] ||
-                    ((removedKeys[_propKey] = !0), removedKeyCount++))
-                : (updatePayload = clearNestedProperty(
-                    updatePayload,
-                    prevProp,
-                    attributeConfig
-                  )))));
-      return updatePayload;
-    }
-    function addNestedProperty(payload, props, validAttributes) {
-      if (isArrayImpl(props)) {
-        for (var i = 0; i < props.length; i++)
-          payload = addNestedProperty(payload, props[i], validAttributes);
-        return payload;
-      }
-      for (i in props) {
-        var prop = props[i],
-          attributeConfig = validAttributes[i];
-        if (null != attributeConfig) {
-          var newValue = void 0;
-          if (void 0 === prop)
-            if (payload && void 0 !== payload[i]) newValue = null;
-            else continue;
-          else
-            "object" === typeof attributeConfig
-              ? "function" === typeof attributeConfig.process
-                ? (newValue = attributeConfig.process(prop))
-                : "function" === typeof attributeConfig.diff &&
-                  (newValue = prop)
-              : (newValue = "function" === typeof prop ? !0 : prop);
-          void 0 !== newValue
-            ? (payload || (payload = {}), (payload[i] = newValue))
-            : (payload = addNestedProperty(payload, prop, attributeConfig));
-        }
-      }
-      return payload;
     }
     function batchedUpdates$1(fn, bookkeeping) {
       if (isInsideEventHandler) return fn(bookkeeping);
@@ -10025,8 +9779,7 @@ __DEV__ &&
               b: {
                 var keepChildren = !current;
                 newChildSet = _type2 ? void 0 : newChildSet;
-                _oldProps = diffProperties(
-                  null,
+                _oldProps = ReactNativePrivateInterface.diffAttributePayloads(
                   _oldProps,
                   newProps,
                   renderLanes.canonical.viewConfig.validAttributes
@@ -10084,8 +9837,7 @@ __DEV__ &&
                 ReactNativePrivateInterface.deepFreezeAndThrowOnMutationInDev(
                   newProps[keepChildren]
                 );
-            keepChildren = addNestedProperty(
-              null,
+            keepChildren = ReactNativePrivateInterface.createAttributePayload(
               newProps,
               _type2.validAttributes
             );
@@ -16163,12 +15915,11 @@ __DEV__ &&
       return DefaultEventPriority;
     }
     function cloneHiddenInstance(instance) {
-      var node = instance.node;
-      var updatePayload = addNestedProperty(
-        null,
-        { style: { display: "none" } },
-        instance.canonical.viewConfig.validAttributes
-      );
+      var node = instance.node,
+        updatePayload = ReactNativePrivateInterface.createAttributePayload(
+          { style: { display: "none" } },
+          instance.canonical.viewConfig.validAttributes
+        );
       return {
         node: cloneNodeWithNewProps(node, updatePayload),
         canonical: instance.canonical
@@ -16966,11 +16717,7 @@ __DEV__ &&
         }
       }
     });
-    var emptyObject$1 = {},
-      removedKeys = null,
-      removedKeyCount = 0,
-      deepDifferOptions = { unsafelyIgnoreFunctions: !0 },
-      isInsideEventHandler = !1,
+    var isInsideEventHandler = !1,
       eventQueue = null,
       scheduleCallback$3 = Scheduler.unstable_scheduleCallback,
       cancelCallback$1 = Scheduler.unstable_cancelCallback,
@@ -19128,10 +18875,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-e67b4fe2-20250624",
+        version: "19.2.0-native-fb-7a3ffef7-20250625",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-e67b4fe2-20250624"
+        reconcilerVersion: "19.2.0-native-fb-7a3ffef7-20250625"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ff6b3fad0bf2a924304adcee73eb1173>>
+ * @generated SignedSource<<e00814911b0d7e6b98af158e8e66a4fa>>
  */
 
 "use strict";
@@ -1247,7 +1247,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_329 = {
+var injectedNamesToPlugins$jscomp$inline_325 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -1293,268 +1293,32 @@ var injectedNamesToPlugins$jscomp$inline_329 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_330 = !1,
-  pluginName$jscomp$inline_331;
-for (pluginName$jscomp$inline_331 in injectedNamesToPlugins$jscomp$inline_329)
+  isOrderingDirty$jscomp$inline_326 = !1,
+  pluginName$jscomp$inline_327;
+for (pluginName$jscomp$inline_327 in injectedNamesToPlugins$jscomp$inline_325)
   if (
-    injectedNamesToPlugins$jscomp$inline_329.hasOwnProperty(
-      pluginName$jscomp$inline_331
+    injectedNamesToPlugins$jscomp$inline_325.hasOwnProperty(
+      pluginName$jscomp$inline_327
     )
   ) {
-    var pluginModule$jscomp$inline_332 =
-      injectedNamesToPlugins$jscomp$inline_329[pluginName$jscomp$inline_331];
+    var pluginModule$jscomp$inline_328 =
+      injectedNamesToPlugins$jscomp$inline_325[pluginName$jscomp$inline_327];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_331) ||
-      namesToPlugins[pluginName$jscomp$inline_331] !==
-        pluginModule$jscomp$inline_332
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_327) ||
+      namesToPlugins[pluginName$jscomp$inline_327] !==
+        pluginModule$jscomp$inline_328
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_331])
+      if (namesToPlugins[pluginName$jscomp$inline_327])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_331 + "`.")
+            (pluginName$jscomp$inline_327 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_331] =
-        pluginModule$jscomp$inline_332;
-      isOrderingDirty$jscomp$inline_330 = !0;
+      namesToPlugins[pluginName$jscomp$inline_327] =
+        pluginModule$jscomp$inline_328;
+      isOrderingDirty$jscomp$inline_326 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_330 && recomputePluginOrdering();
-var emptyObject = {},
-  removedKeys = null,
-  removedKeyCount = 0,
-  deepDifferOptions = { unsafelyIgnoreFunctions: !0 };
-function defaultDiffer(prevProp, nextProp) {
-  return "object" !== typeof nextProp || null === nextProp
-    ? !0
-    : ReactNativePrivateInterface.deepDiffer(
-        prevProp,
-        nextProp,
-        deepDifferOptions
-      );
-}
-function restoreDeletedValuesInNestedArray(
-  updatePayload,
-  node,
-  validAttributes
-) {
-  if (isArrayImpl(node))
-    for (var i = node.length; i-- && 0 < removedKeyCount; )
-      restoreDeletedValuesInNestedArray(
-        updatePayload,
-        node[i],
-        validAttributes
-      );
-  else if (node && 0 < removedKeyCount)
-    for (i in removedKeys)
-      if (removedKeys[i]) {
-        var nextProp = node[i];
-        if (void 0 !== nextProp) {
-          var attributeConfig = validAttributes[i];
-          if (attributeConfig) {
-            "function" === typeof nextProp && (nextProp = !0);
-            "undefined" === typeof nextProp && (nextProp = null);
-            if ("object" !== typeof attributeConfig)
-              updatePayload[i] = nextProp;
-            else if (
-              "function" === typeof attributeConfig.diff ||
-              "function" === typeof attributeConfig.process
-            )
-              (nextProp =
-                "function" === typeof attributeConfig.process
-                  ? attributeConfig.process(nextProp)
-                  : nextProp),
-                (updatePayload[i] = nextProp);
-            removedKeys[i] = !1;
-            removedKeyCount--;
-          }
-        }
-      }
-}
-function diffNestedProperty(
-  updatePayload,
-  prevProp,
-  nextProp,
-  validAttributes
-) {
-  if (!updatePayload && prevProp === nextProp) return updatePayload;
-  if (!prevProp || !nextProp)
-    return nextProp
-      ? addNestedProperty(updatePayload, nextProp, validAttributes)
-      : prevProp
-        ? clearNestedProperty(updatePayload, prevProp, validAttributes)
-        : updatePayload;
-  if (!isArrayImpl(prevProp) && !isArrayImpl(nextProp))
-    return diffProperties(updatePayload, prevProp, nextProp, validAttributes);
-  if (isArrayImpl(prevProp) && isArrayImpl(nextProp)) {
-    var minLength =
-        prevProp.length < nextProp.length ? prevProp.length : nextProp.length,
-      i;
-    for (i = 0; i < minLength; i++)
-      updatePayload = diffNestedProperty(
-        updatePayload,
-        prevProp[i],
-        nextProp[i],
-        validAttributes
-      );
-    for (; i < prevProp.length; i++)
-      updatePayload = clearNestedProperty(
-        updatePayload,
-        prevProp[i],
-        validAttributes
-      );
-    for (; i < nextProp.length; i++)
-      (prevProp = nextProp[i]) &&
-        (updatePayload = addNestedProperty(
-          updatePayload,
-          prevProp,
-          validAttributes
-        ));
-    return updatePayload;
-  }
-  return isArrayImpl(prevProp)
-    ? diffProperties(
-        updatePayload,
-        ReactNativePrivateInterface.flattenStyle(prevProp),
-        nextProp,
-        validAttributes
-      )
-    : diffProperties(
-        updatePayload,
-        prevProp,
-        ReactNativePrivateInterface.flattenStyle(nextProp),
-        validAttributes
-      );
-}
-function clearNestedProperty(updatePayload, prevProp, validAttributes) {
-  if (!prevProp) return updatePayload;
-  if (!isArrayImpl(prevProp))
-    return diffProperties(
-      updatePayload,
-      prevProp,
-      emptyObject,
-      validAttributes
-    );
-  for (var i = 0; i < prevProp.length; i++)
-    updatePayload = clearNestedProperty(
-      updatePayload,
-      prevProp[i],
-      validAttributes
-    );
-  return updatePayload;
-}
-function diffProperties(updatePayload, prevProps, nextProps, validAttributes) {
-  var attributeConfig, propKey;
-  for (propKey in nextProps)
-    if ((attributeConfig = validAttributes[propKey])) {
-      var prevProp = prevProps[propKey];
-      var nextProp = nextProps[propKey];
-      "function" !== typeof nextProp ||
-        ("object" === typeof attributeConfig &&
-          "function" === typeof attributeConfig.process) ||
-        ((nextProp = !0), "function" === typeof prevProp && (prevProp = !0));
-      "undefined" === typeof nextProp &&
-        ((nextProp = null),
-        "undefined" === typeof prevProp && (prevProp = null));
-      removedKeys && (removedKeys[propKey] = !1);
-      if (updatePayload && void 0 !== updatePayload[propKey])
-        if ("object" !== typeof attributeConfig)
-          updatePayload[propKey] = nextProp;
-        else {
-          if (
-            "function" === typeof attributeConfig.diff ||
-            "function" === typeof attributeConfig.process
-          )
-            (attributeConfig =
-              "function" === typeof attributeConfig.process
-                ? attributeConfig.process(nextProp)
-                : nextProp),
-              (updatePayload[propKey] = attributeConfig);
-        }
-      else if (prevProp !== nextProp)
-        if ("object" !== typeof attributeConfig)
-          defaultDiffer(prevProp, nextProp) &&
-            ((updatePayload || (updatePayload = {}))[propKey] = nextProp);
-        else if (
-          "function" === typeof attributeConfig.diff ||
-          "function" === typeof attributeConfig.process
-        ) {
-          if (
-            void 0 === prevProp ||
-            ("function" === typeof attributeConfig.diff
-              ? attributeConfig.diff(prevProp, nextProp)
-              : defaultDiffer(prevProp, nextProp))
-          )
-            (attributeConfig =
-              "function" === typeof attributeConfig.process
-                ? attributeConfig.process(nextProp)
-                : nextProp),
-              ((updatePayload || (updatePayload = {}))[propKey] =
-                attributeConfig);
-        } else
-          (removedKeys = null),
-            (removedKeyCount = 0),
-            (updatePayload = diffNestedProperty(
-              updatePayload,
-              prevProp,
-              nextProp,
-              attributeConfig
-            )),
-            0 < removedKeyCount &&
-              updatePayload &&
-              (restoreDeletedValuesInNestedArray(
-                updatePayload,
-                nextProp,
-                attributeConfig
-              ),
-              (removedKeys = null));
-    }
-  for (var propKey$6 in prevProps)
-    void 0 === nextProps[propKey$6] &&
-      (!(attributeConfig = validAttributes[propKey$6]) ||
-        (updatePayload && void 0 !== updatePayload[propKey$6]) ||
-        ((prevProp = prevProps[propKey$6]),
-        void 0 !== prevProp &&
-          ("object" !== typeof attributeConfig ||
-          "function" === typeof attributeConfig.diff ||
-          "function" === typeof attributeConfig.process
-            ? (((updatePayload || (updatePayload = {}))[propKey$6] = null),
-              removedKeys || (removedKeys = {}),
-              removedKeys[propKey$6] ||
-                ((removedKeys[propKey$6] = !0), removedKeyCount++))
-            : (updatePayload = clearNestedProperty(
-                updatePayload,
-                prevProp,
-                attributeConfig
-              )))));
-  return updatePayload;
-}
-function addNestedProperty(payload, props, validAttributes) {
-  if (isArrayImpl(props)) {
-    for (var i = 0; i < props.length; i++)
-      payload = addNestedProperty(payload, props[i], validAttributes);
-    return payload;
-  }
-  for (i in props) {
-    var prop = props[i],
-      attributeConfig = validAttributes[i];
-    if (null != attributeConfig) {
-      var newValue = void 0;
-      if (void 0 === prop)
-        if (payload && void 0 !== payload[i]) newValue = null;
-        else continue;
-      else
-        "object" === typeof attributeConfig
-          ? "function" === typeof attributeConfig.process
-            ? (newValue = attributeConfig.process(prop))
-            : "function" === typeof attributeConfig.diff && (newValue = prop)
-          : (newValue = "function" === typeof prop ? !0 : prop);
-      void 0 !== newValue
-        ? (payload || (payload = {}), (payload[i] = newValue))
-        : (payload = addNestedProperty(payload, prop, attributeConfig));
-    }
-  }
-  return payload;
-}
+isOrderingDirty$jscomp$inline_326 && recomputePluginOrdering();
 function batchedUpdatesImpl(fn, bookkeeping) {
   return fn(bookkeeping);
 }
@@ -1897,18 +1661,18 @@ function markRootFinished(
     0 < remainingLanes;
 
   ) {
-    var index$11 = 31 - clz32(remainingLanes),
-      lane = 1 << index$11;
-    entanglements[index$11] = 0;
-    expirationTimes[index$11] = -1;
-    var hiddenUpdatesForLane = hiddenUpdates[index$11];
+    var index$9 = 31 - clz32(remainingLanes),
+      lane = 1 << index$9;
+    entanglements[index$9] = 0;
+    expirationTimes[index$9] = -1;
+    var hiddenUpdatesForLane = hiddenUpdates[index$9];
     if (null !== hiddenUpdatesForLane)
       for (
-        hiddenUpdates[index$11] = null, index$11 = 0;
-        index$11 < hiddenUpdatesForLane.length;
-        index$11++
+        hiddenUpdates[index$9] = null, index$9 = 0;
+        index$9 < hiddenUpdatesForLane.length;
+        index$9++
       ) {
-        var update = hiddenUpdatesForLane[index$11];
+        var update = hiddenUpdatesForLane[index$9];
         null !== update && (update.lane &= -536870913);
       }
     remainingLanes &= ~lane;
@@ -1932,10 +1696,10 @@ function markSpawnedDeferredLane(root, spawnedLane, entangledLanes) {
 function markRootEntangled(root, entangledLanes) {
   var rootEntangledLanes = (root.entangledLanes |= entangledLanes);
   for (root = root.entanglements; rootEntangledLanes; ) {
-    var index$12 = 31 - clz32(rootEntangledLanes),
-      lane = 1 << index$12;
-    (lane & entangledLanes) | (root[index$12] & entangledLanes) &&
-      (root[index$12] |= entangledLanes);
+    var index$10 = 31 - clz32(rootEntangledLanes),
+      lane = 1 << index$10;
+    (lane & entangledLanes) | (root[index$10] & entangledLanes) &&
+      (root[index$10] |= entangledLanes);
     rootEntangledLanes &= ~lane;
   }
 }
@@ -1986,9 +1750,9 @@ function getBumpedLaneForHydration(root, renderLanes) {
 function addFiberToLanesMap(root, fiber, lanes) {
   if (isDevToolsPresent)
     for (root = root.pendingUpdatersLaneMap; 0 < lanes; ) {
-      var index$13 = 31 - clz32(lanes),
-        lane = 1 << index$13;
-      root[index$13].add(fiber);
+      var index$11 = 31 - clz32(lanes),
+        lane = 1 << index$11;
+      root[index$11].add(fiber);
       lanes &= ~lane;
     }
 }
@@ -2000,16 +1764,16 @@ function movePendingFibersToMemoized(root, lanes) {
       0 < lanes;
 
     ) {
-      var index$14 = 31 - clz32(lanes);
-      root = 1 << index$14;
-      index$14 = pendingUpdatersLaneMap[index$14];
-      0 < index$14.size &&
-        (index$14.forEach(function (fiber) {
+      var index$12 = 31 - clz32(lanes);
+      root = 1 << index$12;
+      index$12 = pendingUpdatersLaneMap[index$12];
+      0 < index$12.size &&
+        (index$12.forEach(function (fiber) {
           var alternate = fiber.alternate;
           (null !== alternate && memoizedUpdaters.has(alternate)) ||
             memoizedUpdaters.add(fiber);
         }),
-        index$14.clear());
+        index$12.clear());
       lanes &= ~root;
     }
 }
@@ -2071,36 +1835,36 @@ function findCurrentFiberUsingSlowPath(fiber) {
     }
     if (a.return !== b.return) (a = parentA), (b = parentB);
     else {
-      for (var didFindChild = !1, child$15 = parentA.child; child$15; ) {
-        if (child$15 === a) {
+      for (var didFindChild = !1, child$13 = parentA.child; child$13; ) {
+        if (child$13 === a) {
           didFindChild = !0;
           a = parentA;
           b = parentB;
           break;
         }
-        if (child$15 === b) {
+        if (child$13 === b) {
           didFindChild = !0;
           b = parentA;
           a = parentB;
           break;
         }
-        child$15 = child$15.sibling;
+        child$13 = child$13.sibling;
       }
       if (!didFindChild) {
-        for (child$15 = parentB.child; child$15; ) {
-          if (child$15 === a) {
+        for (child$13 = parentB.child; child$13; ) {
+          if (child$13 === a) {
             didFindChild = !0;
             a = parentB;
             b = parentA;
             break;
           }
-          if (child$15 === b) {
+          if (child$13 === b) {
             didFindChild = !0;
             b = parentB;
             a = parentA;
             break;
           }
-          child$15 = child$15.sibling;
+          child$13 = child$13.sibling;
         }
         if (!didFindChild)
           throw Error(
@@ -2944,12 +2708,12 @@ function scheduleTaskForRootDuringMicrotask(root, currentTime) {
     0 < lanes;
 
   ) {
-    var index$9 = 31 - clz32(lanes),
-      lane = 1 << index$9,
-      expirationTime = expirationTimes[index$9];
+    var index$7 = 31 - clz32(lanes),
+      lane = 1 << index$7,
+      expirationTime = expirationTimes[index$7];
     if (-1 === expirationTime) {
       if (0 === (lane & suspendedLanes) || 0 !== (lane & pingedLanes))
-        expirationTimes[index$9] = computeExpirationTime(lane, currentTime);
+        expirationTimes[index$7] = computeExpirationTime(lane, currentTime);
     } else expirationTime <= currentTime && (root.expiredLanes |= lane);
     lanes &= ~lane;
   }
@@ -4677,7 +4441,7 @@ function updateReducerImpl(hook, current, reducer) {
     var newBaseQueueFirst = (baseFirst = null),
       newBaseQueueLast = null,
       update = current,
-      didReadFromEntangledAsyncAction$53 = !1;
+      didReadFromEntangledAsyncAction$51 = !1;
     do {
       var updateLane = update.lane & -536870913;
       if (
@@ -4699,11 +4463,11 @@ function updateReducerImpl(hook, current, reducer) {
                 next: null
               }),
             updateLane === currentEntangledLane &&
-              (didReadFromEntangledAsyncAction$53 = !0);
+              (didReadFromEntangledAsyncAction$51 = !0);
         else if ((renderLanes & revertLane) === revertLane) {
           update = update.next;
           revertLane === currentEntangledLane &&
-            (didReadFromEntangledAsyncAction$53 = !0);
+            (didReadFromEntangledAsyncAction$51 = !0);
           continue;
         } else
           (updateLane = {
@@ -4751,7 +4515,7 @@ function updateReducerImpl(hook, current, reducer) {
     if (
       !objectIs(pendingQueue, hook.memoizedState) &&
       ((didReceiveUpdate = !0),
-      didReadFromEntangledAsyncAction$53 &&
+      didReadFromEntangledAsyncAction$51 &&
         ((reducer = currentEntangledActionThenable), null !== reducer))
     )
       throw reducer;
@@ -4953,8 +4717,8 @@ function runActionStateAction(actionQueue, node) {
     try {
       (prevTransition = action(prevState, payload)),
         handleActionReturnValue(actionQueue, node, prevTransition);
-    } catch (error$57) {
-      onActionError(actionQueue, node, error$57);
+    } catch (error$55) {
+      onActionError(actionQueue, node, error$55);
     }
 }
 function handleActionReturnValue(actionQueue, node, returnValue) {
@@ -5870,9 +5634,9 @@ function resolveClassComponentProps(Component, baseProps) {
   }
   if ((Component = Component.defaultProps)) {
     newProps === baseProps && (newProps = assign({}, newProps));
-    for (var propName$59 in Component)
-      void 0 === newProps[propName$59] &&
-        (newProps[propName$59] = Component[propName$59]);
+    for (var propName$57 in Component)
+      void 0 === newProps[propName$57] &&
+        (newProps[propName$57] = Component[propName$57]);
   }
   return newProps;
 }
@@ -7877,14 +7641,14 @@ function cutOffTailIfNeeded(renderState, hasRenderedATailFallback) {
       break;
     case "collapsed":
       lastTailNode = renderState.tail;
-      for (var lastTailNode$103 = null; null !== lastTailNode; )
-        null !== lastTailNode.alternate && (lastTailNode$103 = lastTailNode),
+      for (var lastTailNode$101 = null; null !== lastTailNode; )
+        null !== lastTailNode.alternate && (lastTailNode$101 = lastTailNode),
           (lastTailNode = lastTailNode.sibling);
-      null === lastTailNode$103
+      null === lastTailNode$101
         ? hasRenderedATailFallback || null === renderState.tail
           ? (renderState.tail = null)
           : (renderState.tail.sibling = null)
-        : (lastTailNode$103.sibling = null);
+        : (lastTailNode$101.sibling = null);
   }
 }
 function bubbleProperties(completedWork) {
@@ -7896,53 +7660,53 @@ function bubbleProperties(completedWork) {
   if (didBailout)
     if (0 !== (completedWork.mode & 2)) {
       for (
-        var treeBaseDuration$105 = completedWork.selfBaseDuration,
-          child$106 = completedWork.child;
-        null !== child$106;
+        var treeBaseDuration$103 = completedWork.selfBaseDuration,
+          child$104 = completedWork.child;
+        null !== child$104;
 
       )
-        (newChildLanes |= child$106.lanes | child$106.childLanes),
-          (subtreeFlags |= child$106.subtreeFlags & 65011712),
-          (subtreeFlags |= child$106.flags & 65011712),
-          (treeBaseDuration$105 += child$106.treeBaseDuration),
-          (child$106 = child$106.sibling);
-      completedWork.treeBaseDuration = treeBaseDuration$105;
+        (newChildLanes |= child$104.lanes | child$104.childLanes),
+          (subtreeFlags |= child$104.subtreeFlags & 65011712),
+          (subtreeFlags |= child$104.flags & 65011712),
+          (treeBaseDuration$103 += child$104.treeBaseDuration),
+          (child$104 = child$104.sibling);
+      completedWork.treeBaseDuration = treeBaseDuration$103;
     } else
       for (
-        treeBaseDuration$105 = completedWork.child;
-        null !== treeBaseDuration$105;
+        treeBaseDuration$103 = completedWork.child;
+        null !== treeBaseDuration$103;
 
       )
         (newChildLanes |=
-          treeBaseDuration$105.lanes | treeBaseDuration$105.childLanes),
-          (subtreeFlags |= treeBaseDuration$105.subtreeFlags & 65011712),
-          (subtreeFlags |= treeBaseDuration$105.flags & 65011712),
-          (treeBaseDuration$105.return = completedWork),
-          (treeBaseDuration$105 = treeBaseDuration$105.sibling);
+          treeBaseDuration$103.lanes | treeBaseDuration$103.childLanes),
+          (subtreeFlags |= treeBaseDuration$103.subtreeFlags & 65011712),
+          (subtreeFlags |= treeBaseDuration$103.flags & 65011712),
+          (treeBaseDuration$103.return = completedWork),
+          (treeBaseDuration$103 = treeBaseDuration$103.sibling);
   else if (0 !== (completedWork.mode & 2)) {
-    treeBaseDuration$105 = completedWork.actualDuration;
-    child$106 = completedWork.selfBaseDuration;
+    treeBaseDuration$103 = completedWork.actualDuration;
+    child$104 = completedWork.selfBaseDuration;
     for (var child = completedWork.child; null !== child; )
       (newChildLanes |= child.lanes | child.childLanes),
         (subtreeFlags |= child.subtreeFlags),
         (subtreeFlags |= child.flags),
-        (treeBaseDuration$105 += child.actualDuration),
-        (child$106 += child.treeBaseDuration),
+        (treeBaseDuration$103 += child.actualDuration),
+        (child$104 += child.treeBaseDuration),
         (child = child.sibling);
-    completedWork.actualDuration = treeBaseDuration$105;
-    completedWork.treeBaseDuration = child$106;
+    completedWork.actualDuration = treeBaseDuration$103;
+    completedWork.treeBaseDuration = child$104;
   } else
     for (
-      treeBaseDuration$105 = completedWork.child;
-      null !== treeBaseDuration$105;
+      treeBaseDuration$103 = completedWork.child;
+      null !== treeBaseDuration$103;
 
     )
       (newChildLanes |=
-        treeBaseDuration$105.lanes | treeBaseDuration$105.childLanes),
-        (subtreeFlags |= treeBaseDuration$105.subtreeFlags),
-        (subtreeFlags |= treeBaseDuration$105.flags),
-        (treeBaseDuration$105.return = completedWork),
-        (treeBaseDuration$105 = treeBaseDuration$105.sibling);
+        treeBaseDuration$103.lanes | treeBaseDuration$103.childLanes),
+        (subtreeFlags |= treeBaseDuration$103.subtreeFlags),
+        (subtreeFlags |= treeBaseDuration$103.flags),
+        (treeBaseDuration$103.return = completedWork),
+        (treeBaseDuration$103 = treeBaseDuration$103.sibling);
   completedWork.subtreeFlags |= subtreeFlags;
   completedWork.childLanes = newChildLanes;
   return didBailout;
@@ -8019,8 +7783,7 @@ function completeWork(current, workInProgress, renderLanes) {
             )));
           b: {
             newChildSet = type ? void 0 : newChildSet;
-            oldProps = diffProperties(
-              null,
+            oldProps = ReactNativePrivateInterface.diffAttributePayloads(
               oldProps,
               newProps,
               renderLanes.canonical.viewConfig.validAttributes
@@ -8070,7 +7833,10 @@ function completeWork(current, workInProgress, renderLanes) {
         current = nextReactTag;
         nextReactTag += 2;
         type = getViewConfigForType(type);
-        oldProps = addNestedProperty(null, newProps, type.validAttributes);
+        oldProps = ReactNativePrivateInterface.createAttributePayload(
+          newProps,
+          type.validAttributes
+        );
         oldProps = createNode(
           current,
           type.uiViewClassName,
@@ -8602,9 +8368,9 @@ function commitHookEffectListMount(flags, finishedWork) {
                 finishedWork
               );
           lastEffect = void 0;
-          var create$137 = updateQueue.create,
+          var create = updateQueue.create,
             inst = updateQueue.inst;
-          lastEffect = create$137();
+          lastEffect = create();
           inst.destroy = lastEffect;
           0 !== (flags & 8)
             ? null !== injectedProfilingHooks &&
@@ -8744,8 +8510,8 @@ function safelyCallComponentWillUnmount(
   } else
     try {
       instance.componentWillUnmount();
-    } catch (error$141) {
-      captureCommitPhaseError(current, nearestMountedAncestor, error$141);
+    } catch (error$138) {
+      captureCommitPhaseError(current, nearestMountedAncestor, error$138);
     }
 }
 function safelyAttachRef(current, nearestMountedAncestor) {
@@ -8814,8 +8580,8 @@ function safelyDetachRef(current, nearestMountedAncestor) {
             recordEffectDuration(current);
           }
         else ref(null);
-      } catch (error$142) {
-        captureCommitPhaseError(current, nearestMountedAncestor, error$142);
+      } catch (error$139) {
+        captureCommitPhaseError(current, nearestMountedAncestor, error$139);
       }
     else ref.current = null;
 }
@@ -9020,11 +8786,11 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
           } else
             try {
               finishedRoot.componentDidMount();
-            } catch (error$138) {
+            } catch (error$135) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$138
+                error$135
               );
             }
         else {
@@ -9041,11 +8807,11 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
                 current,
                 finishedRoot.__reactInternalSnapshotBeforeUpdate
               );
-            } catch (error$139) {
+            } catch (error$136) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$139
+                error$136
               );
             }
             recordEffectDuration();
@@ -9056,11 +8822,11 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
                 current,
                 finishedRoot.__reactInternalSnapshotBeforeUpdate
               );
-            } catch (error$140) {
+            } catch (error$137) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$140
+                error$137
               );
             }
         }
@@ -11262,9 +11028,9 @@ function markRootSuspended(
   didAttemptEntireTree && (root.warmLanes |= suspendedLanes);
   didAttemptEntireTree = root.expirationTimes;
   for (var lanes = suspendedLanes; 0 < lanes; ) {
-    var index$10 = 31 - clz32(lanes),
-      lane = 1 << index$10;
-    didAttemptEntireTree[index$10] = -1;
+    var index$8 = 31 - clz32(lanes),
+      lane = 1 << index$8;
+    didAttemptEntireTree[index$8] = -1;
     lanes &= ~lane;
   }
   0 !== spawnedLane &&
@@ -11664,8 +11430,8 @@ function renderRootSync(root, lanes, shouldYieldForPrerendering) {
       workLoopSync();
       memoizedUpdaters = workInProgressRootExitStatus;
       break;
-    } catch (thrownValue$174) {
-      handleThrow(root, thrownValue$174);
+    } catch (thrownValue$171) {
+      handleThrow(root, thrownValue$171);
     }
   while (1);
   lanes && root.shellSuspendCounter++;
@@ -11788,8 +11554,8 @@ function renderRootConcurrent(root, lanes) {
         }
       workLoopConcurrentByScheduler();
       break;
-    } catch (thrownValue$176) {
-      handleThrow(root, thrownValue$176);
+    } catch (thrownValue$173) {
+      handleThrow(root, thrownValue$173);
     }
   while (1);
   lastContextDependency = currentlyRenderingFiber$1 = null;
@@ -13016,14 +12782,13 @@ function resolveUpdatePriority() {
 var scheduleTimeout = setTimeout,
   cancelTimeout = clearTimeout;
 function cloneHiddenInstance(instance) {
-  var node = instance.node;
-  var JSCompiler_inline_result = addNestedProperty(
-    null,
-    { style: { display: "none" } },
-    instance.canonical.viewConfig.validAttributes
-  );
+  var node = instance.node,
+    updatePayload = ReactNativePrivateInterface.createAttributePayload(
+      { style: { display: "none" } },
+      instance.canonical.viewConfig.validAttributes
+    );
   return {
-    node: cloneNodeWithNewProps(node, JSCompiler_inline_result),
+    node: cloneNodeWithNewProps(node, updatePayload),
     canonical: instance.canonical
   };
 }
@@ -13165,20 +12930,20 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1502 = {
+  internals$jscomp$inline_1490 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-e67b4fe2-20250624",
+    version: "19.2.0-native-fb-7a3ffef7-20250625",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-e67b4fe2-20250624"
+    reconcilerVersion: "19.2.0-native-fb-7a3ffef7-20250625"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1502.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1502.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1490.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1490.getLaneLabelMap = function () {
   for (
-    var map = new Map(), lane = 1, index$180 = 0;
-    31 > index$180;
-    index$180++
+    var map = new Map(), lane = 1, index$177 = 0;
+    31 > index$177;
+    index$177++
   ) {
     var label = getLabelForLane(lane);
     map.set(lane, label);
@@ -13186,20 +12951,20 @@ internals$jscomp$inline_1502.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1502.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1490.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1827 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1811 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1827.isDisabled &&
-    hook$jscomp$inline_1827.supportsFiber
+    !hook$jscomp$inline_1811.isDisabled &&
+    hook$jscomp$inline_1811.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1827.inject(
-        internals$jscomp$inline_1502
+      (rendererID = hook$jscomp$inline_1811.inject(
+        internals$jscomp$inline_1490
       )),
-        (injectedHook = hook$jscomp$inline_1827);
+        (injectedHook = hook$jscomp$inline_1811);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
