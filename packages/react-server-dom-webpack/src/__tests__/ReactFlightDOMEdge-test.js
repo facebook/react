@@ -32,6 +32,7 @@ let webpackModuleLoading;
 let React;
 let ReactServer;
 let ReactDOMServer;
+let ReactDOMServerStatic;
 let ReactServerDOMServer;
 let ReactServerDOMStaticServer;
 let ReactServerDOMClient;
@@ -102,6 +103,7 @@ describe('ReactFlightDOMEdge', () => {
     );
     React = require('react');
     ReactDOMServer = require('react-dom/server.edge');
+    ReactDOMServerStatic = require('react-dom/static.edge');
     ReactServerDOMClient = require('react-server-dom-webpack/client');
     use = React.use;
   });
@@ -1777,4 +1779,127 @@ describe('ReactFlightDOMEdge', () => {
     expect(error).not.toBe(null);
     expect(error.message).toBe(expectedMessage);
   });
+
+  // @gate __DEV__ && enableHalt && enableAsyncDebugInfo
+  it.failing(
+    'includes source locations in component stacks for halted components',
+    async () => {
+      async function Component() {
+        await new Promise(() => {});
+        return null;
+      }
+
+      function App() {
+        return ReactServer.createElement(
+          'html',
+          null,
+          ReactServer.createElement(
+            'body',
+            null,
+            ReactServer.createElement(
+              ReactServer.Suspense,
+              {fallback: 'Loading...'},
+              ReactServer.createElement(Component, null),
+            ),
+          ),
+        );
+      }
+
+      const serverAbortController = new AbortController();
+      const errors = [];
+      const prerenderResult = ReactServerDOMStaticServer.unstable_prerender(
+        ReactServer.createElement(App, null),
+        webpackMap,
+        {
+          signal: serverAbortController.signal,
+          onError(err) {
+            errors.push(err);
+          },
+        },
+      );
+
+      await new Promise(resolve => {
+        setImmediate(() => {
+          serverAbortController.abort();
+          resolve();
+        });
+      });
+
+      const {prelude} = await prerenderResult;
+
+      expect(errors).toEqual([]);
+
+      function ClientRoot({response}) {
+        return use(response);
+      }
+
+      const prerenderResponse = ReactServerDOMClient.createFromReadableStream(
+        await createBufferedUnclosingStream(prelude),
+        {
+          serverConsumerManifest: {
+            moduleMap: null,
+            moduleLoading: null,
+          },
+        },
+      );
+
+      let componentStack;
+      let ownerStack;
+
+      const clientAbortController = new AbortController();
+
+      const fizzPrerenderStreamResult = ReactDOMServerStatic.prerender(
+        React.createElement(ClientRoot, {response: prerenderResponse}),
+        {
+          signal: clientAbortController.signal,
+          onError(error, errorInfo) {
+            componentStack = errorInfo.componentStack;
+            ownerStack = ReactServer.captureOwnerStack();
+          },
+        },
+      );
+
+      await new Promise(resolve => {
+        setImmediate(() => {
+          clientAbortController.abort();
+          resolve();
+        });
+      });
+
+      const fizzPrerenderStream = await fizzPrerenderStreamResult;
+      const prerenderHTML = await readResult(fizzPrerenderStream.prelude);
+
+      expect(prerenderHTML).toContain('Loading...');
+
+      expect(normalizeCodeLocInfo(componentStack)).toBe(
+        '\n    in Component (at **)\n    in Suspense\n    in body\n    in html\n    in ClientRoot (at **)',
+      );
+
+      expect(normalizeCodeLocInfo(ownerStack)).toBe('\n    in App (at **)');
+    },
+  );
 });
+
+async function createBufferedUnclosingStream(
+  prelude: ReadableStream<Uint8Array>,
+): ReadableStream<Uint8Array> {
+  const chunks: Array<Uint8Array> = [];
+  const reader = prelude.getReader();
+  while (true) {
+    const {done, value} = await reader.read();
+    if (done) {
+      break;
+    } else {
+      chunks.push(value);
+    }
+  }
+
+  let i = 0;
+  return new ReadableStream({
+    async pull(controller) {
+      if (i < chunks.length) {
+        controller.enqueue(chunks[i++]);
+      }
+    },
+  });
+}
