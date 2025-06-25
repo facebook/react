@@ -2211,6 +2211,10 @@ function emitAsyncSequence(
         debugInfo.stack = filterStackTrace(request, parseStackTrace(stack, 1));
       }
     }
+    // We don't have a start time for this await but in case there was no start time emitted
+    // we need to include something. TODO: We should maybe ideally track the time when we
+    // called .then() but without updating the task.time field since that's used for the cutoff.
+    advanceTaskTime(request, task, task.time);
     emitDebugChunk(request, task.id, debugInfo);
     // Mark the end time of the await. If we're aborting then we don't emit this
     // to signal that this never resolved inside this render.
@@ -4752,6 +4756,10 @@ function forwardDebugInfoFromAbortedTask(request: Request, task: Task): void {
             awaited: ((node: any): ReactIOInfo), // This is deduped by this reference.
             env: env,
           };
+          // We don't have a start time for this await but in case there was no start time emitted
+          // we need to include something. TODO: We should maybe ideally track the time when we
+          // called .then() but without updating the task.time field since that's used for the cutoff.
+          advanceTaskTime(request, task, task.time);
           emitDebugChunk(request, task.id, asyncInfo);
         } else {
           emitAsyncSequence(request, task, sequence, debugInfo, null, null);
