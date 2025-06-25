@@ -1812,6 +1812,12 @@ function ResponseInstance(
     this._replayConsole = replayConsole;
     this._rootEnvironmentName = rootEnv;
   }
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // Since we don't know when recording of profiles with start and stop. We have to
+    // mark the order over and over again.
+    markAllTracksInOrder();
+  }
+
   // Don't inline this call because it causes closure to outline the call above.
   this._fromJSON = createFromJSONCallback(this);
 }
