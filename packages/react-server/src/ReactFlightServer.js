@@ -986,6 +986,7 @@ function serializeReadableStream(
       haltTask(streamTask, request);
       request.abortableTasks.delete(streamTask);
     } else {
+      // TODO: Make this use abortTask() instead.
       erroredTask(request, streamTask, reason);
       enqueueFlush(request);
     }
@@ -1114,6 +1115,7 @@ function serializeAsyncIterable(
       haltTask(streamTask, request);
       request.abortableTasks.delete(streamTask);
     } else {
+      // TODO: Make this use abortTask() instead.
       erroredTask(request, streamTask, signal.reason);
       enqueueFlush(request);
     }
@@ -2706,6 +2708,7 @@ function serializeBlob(request: Request, blob: Blob): string {
     if (enableHalt && request.type === PRERENDER) {
       haltTask(newTask, request);
     } else {
+      // TODO: Make this use abortTask() instead.
       erroredTask(request, newTask, reason);
       enqueueFlush(request);
     }
