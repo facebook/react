@@ -614,6 +614,7 @@ describe('ReactFlightDOMNode', () => {
       );
     }
 
+    const errors = [];
     const serverAbortController = new AbortController();
     const {pendingResult} = await serverAct(async () => {
       // destructure trick to avoid the act scope from awaiting the returned value
@@ -623,6 +624,9 @@ describe('ReactFlightDOMNode', () => {
           webpackMap,
           {
             signal: serverAbortController.signal,
+            onError(error) {
+              errors.push(error);
+            },
           },
         ),
       };
@@ -639,6 +643,8 @@ describe('ReactFlightDOMNode', () => {
     );
 
     const {prelude} = await pendingResult;
+
+    expect(errors).toEqual([]);
 
     function ClientRoot({response}) {
       return use(response);
