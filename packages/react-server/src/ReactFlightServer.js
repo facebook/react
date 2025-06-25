@@ -3919,6 +3919,13 @@ function serializeIONode(
   // The environment name may have changed from when the I/O was actually started.
   const env = (0, request.environmentName)();
 
+  const endTime =
+    ioNode.tag === UNRESOLVED_PROMISE_NODE
+      ? // Mark the end time as now. It's arbitrary since it's not resolved but this
+        // marks when we stopped trying.
+        performance.now()
+      : ioNode.end;
+
   request.pendingChunks++;
   const id = request.nextChunkId++;
   emitIOInfoChunk(
@@ -3926,7 +3933,7 @@ function serializeIONode(
     id,
     name,
     ioNode.start,
-    ioNode.end,
+    endTime,
     value,
     env,
     owner,
