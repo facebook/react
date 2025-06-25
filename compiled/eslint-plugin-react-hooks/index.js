@@ -27076,6 +27076,9 @@ function printFunction(fn) {
     if (fn.id !== null) {
         definition += fn.id;
     }
+    else {
+        definition += '<<anonymous>>';
+    }
     if (fn.params.length !== 0) {
         definition +=
             '(' +
@@ -27094,10 +27097,8 @@ function printFunction(fn) {
     else {
         definition += '()';
     }
-    if (definition.length !== 0) {
-        output.push(definition);
-    }
-    output.push(`: ${printType(fn.returnType)} @ ${printPlace(fn.returns)}`);
+    definition += `: ${printPlace(fn.returns)}`;
+    output.push(definition);
     output.push(...fn.directives);
     output.push(printHIR(fn.body));
     return output.join('\n');
@@ -30922,7 +30923,6 @@ function lower$1(func, env, bindings = null, capturedRefs = new Map()) {
         params,
         fnType: bindings == null ? env.fnType : 'Other',
         returnTypeAnnotation: null,
-        returnType: makeType(),
         returns: createTemporaryPlace(env, (_b = func.node.loc) !== null && _b !== void 0 ? _b : GeneratedSource),
         body: builder.build(),
         context,
@@ -51683,12 +51683,13 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
             }
         }
     }
+    const returns = fn.returns.identifier;
     functionEffects.push({
         kind: 'Create',
         into: fn.returns,
-        value: fn.returnType.kind === 'Primitive'
+        value: isPrimitiveType(returns)
             ? ValueKind.Primitive
-            : isJsxType(fn.returnType)
+            : isJsxType(returns.type)
                 ? ValueKind.Frozen
                 : ValueKind.Mutable,
         reason: ValueReason.KnownReturnSignature,
@@ -55272,7 +55273,8 @@ function apply(func, unifier) {
             }
         }
     }
-    func.returnType = unifier.get(func.returnType);
+    const returns = func.returns.identifier;
+    returns.type = unifier.get(returns.type);
 }
 function equation(left, right) {
     return {
@@ -55314,13 +55316,13 @@ function* generate(func) {
         }
     }
     if (returnTypes.length > 1) {
-        yield equation(func.returnType, {
+        yield equation(func.returns.identifier.type, {
             kind: 'Phi',
             operands: returnTypes,
         });
     }
     else if (returnTypes.length === 1) {
-        yield equation(func.returnType, returnTypes[0]);
+        yield equation(func.returns.identifier.type, returnTypes[0]);
     }
 }
 function setName(names, id, name) {
@@ -55531,7 +55533,7 @@ function* generateInstructionTypes(env, names, instr) {
             yield equation(left, {
                 kind: 'Function',
                 shapeId: BuiltInFunctionId,
-                return: value.loweredFunc.func.returnType,
+                return: value.loweredFunc.func.returns.identifier.type,
                 isConstructor: false,
             });
             break;
@@ -57674,7 +57676,6 @@ function emitSelectorFn(env, keys) {
         env,
         params: [obj],
         returnTypeAnnotation: null,
-        returnType: makeType(),
         returns: createTemporaryPlace(env, GeneratedSource),
         context: [],
         effects: null,
@@ -58092,7 +58093,6 @@ function emitOutlinedFn(env, jsx, oldProps, globals) {
         env,
         params: [propsObj],
         returnTypeAnnotation: null,
-        returnType: makeType(),
         returns: createTemporaryPlace(env, GeneratedSource),
         context: [],
         effects: null,
