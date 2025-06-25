@@ -933,8 +933,8 @@ function serializeReadableStream(
     __DEV__ ? task.debugTask : null,
   );
 
-  request.pendingChunks++; // The task represents the Start row. This adds a Stop row.
-
+  // The task represents the Stop row. This adds a Start row.
+  request.pendingChunks++;
   const startStreamRow =
     streamTask.id.toString(16) + ':' + (supportsBYOB ? 'r' : 'R') + '\n';
   request.completedRegularChunks.push(stringToChunk(startStreamRow));
@@ -1023,8 +1023,8 @@ function serializeAsyncIterable(
     __DEV__ ? task.debugTask : null,
   );
 
-  request.pendingChunks++; // The task represents the Start row. This adds a Stop row.
-
+  // The task represents the Stop row. This adds a Start row.
+  request.pendingChunks++;
   const startStreamRow =
     streamTask.id.toString(16) + ':' + (isIterator ? 'x' : 'X') + '\n';
   request.completedRegularChunks.push(stringToChunk(startStreamRow));
