@@ -1778,25 +1778,32 @@ function renderClientElement(
   } else if (keyPath !== null) {
     key = keyPath + ',' + key;
   }
+  let debugOwner = null;
+  let debugStack = null;
   if (__DEV__) {
-    if (task.debugOwner !== null) {
+    debugOwner = task.debugOwner;
+    if (debugOwner !== null) {
       // Ensure we outline this owner if it is the first time we see it.
       // So that we can refer to it directly.
-      outlineComponentInfo(request, task.debugOwner);
+      outlineComponentInfo(request, debugOwner);
+    }
+    if (task.debugStack !== null) {
+      // Outline the debug stack so that we write to the completedDebugChunks instead.
+      debugStack = filterStackTrace(
+        request,
+        parseStackTrace(task.debugStack, 1),
+      );
+      const id = outlineDebugModel(
+        request,
+        {objectLimit: debugStack.length * 2 + 1},
+        debugStack,
+      );
+      // We also store this in the main dedupe set so that it can be referenced by inline React Elements.
+      request.writtenObjects.set(debugStack, serializeByValueID(id));
     }
   }
   const element = __DEV__
-    ? [
-        REACT_ELEMENT_TYPE,
-        type,
-        key,
-        props,
-        task.debugOwner,
-        task.debugStack === null
-          ? null
-          : filterStackTrace(request, parseStackTrace(task.debugStack, 1)),
-        validated,
-      ]
+    ? [REACT_ELEMENT_TYPE, type, key, props, debugOwner, debugStack, validated]
     : [REACT_ELEMENT_TYPE, type, key, props];
   if (task.implicitSlot && key !== null) {
     // The root Server Component had no key so it was in an implicit slot.
