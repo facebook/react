@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {emptyContextObject} from './ReactFizzContext';
+import {emptyContextObject} from './ReactFizzLegacyContext';
 import {readContext} from './ReactFizzNewContext';
 
 import {disableLegacyContext} from 'shared/ReactFeatureFlags';
