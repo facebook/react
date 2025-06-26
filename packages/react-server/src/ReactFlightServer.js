@@ -454,6 +454,7 @@ export type Request = {
   // Profiling-only
   timeOrigin: number,
   // DEV-only
+  completedDebugChunks: Array<Chunk>,
   environmentName: () => string,
   filterStackFrame: (url: string, functionName: string) => boolean,
   didWarnForKey: null | WeakSet<ReactComponentInfo>,
@@ -567,6 +568,7 @@ function RequestInstance(
   this.onFatalError = onFatalError;
 
   if (__DEV__) {
+    this.completedDebugChunks = ([]: Array<Chunk>);
     this.environmentName =
       environmentName === undefined
         ? () => 'Server'
@@ -5214,6 +5216,24 @@ function flushCompletedChunks(
       }
     }
     errorChunks.splice(0, i);
+
+    // Next comes debug meta data.
+    // TODO: Move this first since other chunks are blocked on their debug info. I'm only testing that the client is resilient.
+    if (__DEV__) {
+      const debugChunks = request.completedDebugChunks;
+      i = 0;
+      for (; i < debugChunks.length; i++) {
+        request.pendingChunks--;
+        const chunk = debugChunks[i];
+        const keepWriting: boolean = writeChunkAndReturn(destination, chunk);
+        if (!keepWriting) {
+          request.destination = null;
+          i++;
+          break;
+        }
+      }
+      debugChunks.splice(0, i);
+    }
   } finally {
     request.flushScheduled = false;
     completeWriting(destination);
