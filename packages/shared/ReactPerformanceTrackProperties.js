@@ -11,6 +11,8 @@ import {OMITTED_PROP_ERROR} from 'shared/ReactFlightPropertyAccess';
 
 import hasOwnProperty from 'shared/hasOwnProperty';
 import isArray from 'shared/isArray';
+import {REACT_ELEMENT_TYPE} from './ReactSymbols';
+import getComponentNameFromType from './getComponentNameFromType';
 
 const EMPTY_ARRAY = 0;
 const COMPLEX_ARRAY = 1;
@@ -73,6 +75,58 @@ export function addValueToProperties(
         desc = 'null';
         break;
       } else {
+        if (value.$$typeof === REACT_ELEMENT_TYPE) {
+          // JSX
+          const typeName = getComponentNameFromType(value.type) || '\u2026';
+          const key = value.key;
+          const props: any = value.props;
+          const propsKeys = Object.keys(props);
+          const propsLength = propsKeys.length;
+          if (key == null && propsLength === 0) {
+            desc = '<' + typeName + ' />';
+            break;
+          }
+          if (
+            indent < 3 ||
+            (propsLength === 1 && propsKeys[0] === 'children' && key == null)
+          ) {
+            desc = '<' + typeName + ' \u2026 />';
+            break;
+          }
+          properties.push([
+            '\xa0\xa0'.repeat(indent) + propertyName,
+            '<' + typeName,
+          ]);
+          if (key !== null) {
+            addValueToProperties('key', key, properties, indent + 1);
+          }
+          let hasChildren = false;
+          for (const propKey in props) {
+            if (propKey === 'children') {
+              if (
+                props.children != null &&
+                (!isArray(props.children) || props.children.length > 0)
+              ) {
+                hasChildren = true;
+              }
+            } else if (
+              hasOwnProperty.call(props, propKey) &&
+              propKey[0] !== '_'
+            ) {
+              addValueToProperties(
+                propKey,
+                props[propKey],
+                properties,
+                indent + 1,
+              );
+            }
+          }
+          properties.push([
+            '',
+            hasChildren ? '>\u2026</' + typeName + '>' : '/>',
+          ]);
+          return;
+        }
         // $FlowFixMe[method-unbinding]
         const objectToString = Object.prototype.toString.call(value);
         let objectName = objectToString.slice(8, objectToString.length - 1);
@@ -99,7 +153,7 @@ export function addValueToProperties(
         }
         properties.push([
           '\xa0\xa0'.repeat(indent) + propertyName,
-          objectName === 'Object' ? '' : objectName,
+          objectName === 'Object' ? (indent < 3 ? '' : '\u2026') : objectName,
         ]);
         if (indent < 3) {
           addObjectToProperties(value, properties, indent + 1);
@@ -115,7 +169,7 @@ export function addValueToProperties(
       break;
     case 'string':
       if (value === OMITTED_PROP_ERROR) {
-        desc = '...';
+        desc = '\u2026'; // ellipsis
       } else {
         desc = JSON.stringify(value);
       }
