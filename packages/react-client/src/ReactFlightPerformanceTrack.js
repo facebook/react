@@ -101,17 +101,27 @@ export function logComponentRender(
       isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']';
     const debugTask = componentInfo.debugTask;
     if (__DEV__ && debugTask) {
+      const properties: Array<[string, string]> = [];
+      if (componentInfo.key != null) {
+        addValueToProperties('key', componentInfo.key, properties, 0);
+      }
+      if (componentInfo.props != null) {
+        addObjectToProperties(componentInfo.props, properties, 0);
+      }
       debugTask.run(
         // $FlowFixMe[method-unbinding]
-        console.timeStamp.bind(
-          console,
-          entryName,
-          startTime < 0 ? 0 : startTime,
-          childrenEndTime,
-          trackNames[trackIdx],
-          COMPONENTS_TRACK,
-          color,
-        ),
+        performance.measure.bind(performance, entryName, {
+          start: startTime < 0 ? 0 : startTime,
+          end: childrenEndTime,
+          detail: {
+            devtools: {
+              color: color,
+              track: trackNames[trackIdx],
+              trackGroup: COMPONENTS_TRACK,
+              properties,
+            },
+          },
+        }),
       );
     } else {
       console.timeStamp(
@@ -147,6 +157,12 @@ export function logComponentAborted(
           'The stream was aborted before this Component finished rendering.',
         ],
       ];
+      if (componentInfo.key != null) {
+        addValueToProperties('key', componentInfo.key, properties, 0);
+      }
+      if (componentInfo.props != null) {
+        addObjectToProperties(componentInfo.props, properties, 0);
+      }
       performance.measure(entryName, {
         start: startTime < 0 ? 0 : startTime,
         end: childrenEndTime,
@@ -198,6 +214,12 @@ export function logComponentErrored(
           : // eslint-disable-next-line react-internal/safe-string-coercion
             String(error);
       const properties = [['Error', message]];
+      if (componentInfo.key != null) {
+        addValueToProperties('key', componentInfo.key, properties, 0);
+      }
+      if (componentInfo.props != null) {
+        addObjectToProperties(componentInfo.props, properties, 0);
+      }
       performance.measure(entryName, {
         start: startTime < 0 ? 0 : startTime,
         end: childrenEndTime,
