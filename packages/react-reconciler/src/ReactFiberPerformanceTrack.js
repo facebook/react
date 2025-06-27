@@ -572,7 +572,8 @@ export function logBlockingStart(
     // If a blocking update was spawned within render or an effect, that's considered a cascading render.
     // If you have a second blocking update within the same event, that suggests multiple flushSync or
     // setState in a microtask which is also considered a cascade.
-    if (eventTime > 0 && eventType !== null) {
+    const eventEndTime = updateTime > 0 ? updateTime : renderStartTime;
+    if (eventTime > 0 && eventType !== null && eventEndTime > eventTime) {
       // Log the time from the event timeStamp until we called setState.
       const color = eventIsRepeat ? 'secondary-light' : 'warning';
       if (__DEV__ && debugTask) {
@@ -582,7 +583,7 @@ export function logBlockingStart(
             console,
             eventIsRepeat ? '' : 'Event: ' + eventType,
             eventTime,
-            updateTime > 0 ? updateTime : renderStartTime,
+            eventEndTime,
             currentTrack,
             LANES_TRACK_GROUP,
             color,
@@ -592,14 +593,14 @@ export function logBlockingStart(
         console.timeStamp(
           eventIsRepeat ? '' : 'Event: ' + eventType,
           eventTime,
-          updateTime > 0 ? updateTime : renderStartTime,
+          eventEndTime,
           currentTrack,
           LANES_TRACK_GROUP,
           color,
         );
       }
     }
-    if (updateTime > 0) {
+    if (updateTime > 0 && renderStartTime > updateTime) {
       // Log the time from when we called setState until we started rendering.
       const color = isSpawnedUpdate
         ? 'error'
@@ -652,15 +653,11 @@ export function logTransitionStart(
 ): void {
   if (supportsUserTiming) {
     currentTrack = 'Transition';
-    if (eventTime > 0 && eventType !== null) {
+    const eventEndTime =
+      startTime > 0 ? startTime : updateTime > 0 ? updateTime : renderStartTime;
+    if (eventTime > 0 && eventEndTime > eventTime && eventType !== null) {
       // Log the time from the event timeStamp until we started a transition.
       const color = eventIsRepeat ? 'secondary-light' : 'warning';
-      const endTime =
-        startTime > 0
-          ? startTime
-          : updateTime > 0
-            ? updateTime
-            : renderStartTime;
       if (__DEV__ && debugTask) {
         debugTask.run(
           // $FlowFixMe[method-unbinding]
@@ -668,7 +665,7 @@ export function logTransitionStart(
             console,
             eventIsRepeat ? '' : 'Event: ' + eventType,
             eventTime,
-            endTime,
+            eventEndTime,
             currentTrack,
             LANES_TRACK_GROUP,
             color,
@@ -678,14 +675,15 @@ export function logTransitionStart(
         console.timeStamp(
           eventIsRepeat ? '' : 'Event: ' + eventType,
           eventTime,
-          endTime,
+          eventEndTime,
           currentTrack,
           LANES_TRACK_GROUP,
           color,
         );
       }
     }
-    if (startTime > 0) {
+    const startEndTime = updateTime > 0 ? updateTime : renderStartTime;
+    if (startTime > 0 && startEndTime > startTime) {
       // Log the time from when we started an async transition until we called setState or started rendering.
       // TODO: Ideally this would use the debugTask of the startTransition call perhaps.
       if (__DEV__ && debugTask) {
@@ -695,7 +693,7 @@ export function logTransitionStart(
             console,
             'Action',
             startTime,
-            updateTime > 0 ? updateTime : renderStartTime,
+            startEndTime,
             currentTrack,
             LANES_TRACK_GROUP,
             'primary-dark',
@@ -705,14 +703,14 @@ export function logTransitionStart(
         console.timeStamp(
           'Action',
           startTime,
-          updateTime > 0 ? updateTime : renderStartTime,
+          startEndTime,
           currentTrack,
           LANES_TRACK_GROUP,
           'primary-dark',
         );
       }
     }
-    if (updateTime > 0) {
+    if (updateTime > 0 && renderStartTime > updateTime) {
       // Log the time from when we called setState until we started rendering.
       if (__DEV__ && debugTask) {
         debugTask.run(
