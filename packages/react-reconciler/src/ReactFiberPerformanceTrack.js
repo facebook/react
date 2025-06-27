@@ -101,28 +101,22 @@ function logComponentTrigger(
   trigger: string,
 ) {
   if (supportsUserTiming) {
+    reusableComponentOptions.start = startTime;
+    reusableComponentOptions.end = endTime;
+    reusableComponentDevToolDetails.color = 'warning';
+    reusableComponentDevToolDetails.properties = null;
     const debugTask = fiber._debugTask;
     if (__DEV__ && debugTask) {
       debugTask.run(
-        console.timeStamp.bind(
-          console,
+        // $FlowFixMe[method-unbinding]
+        performance.measure.bind(
+          performance,
           trigger,
-          startTime,
-          endTime,
-          COMPONENTS_TRACK,
-          undefined,
-          'warning',
+          reusableComponentOptions,
         ),
       );
     } else {
-      console.timeStamp(
-        trigger,
-        startTime,
-        endTime,
-        COMPONENTS_TRACK,
-        undefined,
-        'warning',
-      );
+      performance.measure(trigger, reusableComponentOptions);
     }
   }
 }
