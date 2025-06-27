@@ -454,6 +454,7 @@ export type Request = {
   // Profiling-only
   timeOrigin: number,
   // DEV-only
+  completedDebugChunks: Array<Chunk | BinaryChunk>,
   environmentName: () => string,
   filterStackFrame: (url: string, functionName: string) => boolean,
   didWarnForKey: null | WeakSet<ReactComponentInfo>,
@@ -567,6 +568,7 @@ function RequestInstance(
   this.onFatalError = onFatalError;
 
   if (__DEV__) {
+    this.completedDebugChunks = ([]: Array<Chunk>);
     this.environmentName =
       environmentName === undefined
         ? () => 'Server'
@@ -727,7 +729,7 @@ function serializeDebugThenable(
       } else {
         // We don't log these errors since they didn't actually throw into Flight.
         const digest = '';
-        emitErrorChunk(request, id, digest, x);
+        emitErrorChunk(request, id, digest, x, true);
       }
       return ref;
     }
@@ -777,7 +779,7 @@ function serializeDebugThenable(
       } else {
         // We don't log these errors since they didn't actually throw into Flight.
         const digest = '';
-        emitErrorChunk(request, id, digest, reason);
+        emitErrorChunk(request, id, digest, reason, true);
       }
       enqueueFlush(request);
     },
@@ -1776,25 +1778,32 @@ function renderClientElement(
   } else if (keyPath !== null) {
     key = keyPath + ',' + key;
   }
+  let debugOwner = null;
+  let debugStack = null;
   if (__DEV__) {
-    if (task.debugOwner !== null) {
+    debugOwner = task.debugOwner;
+    if (debugOwner !== null) {
       // Ensure we outline this owner if it is the first time we see it.
       // So that we can refer to it directly.
-      outlineComponentInfo(request, task.debugOwner);
+      outlineComponentInfo(request, debugOwner);
+    }
+    if (task.debugStack !== null) {
+      // Outline the debug stack so that we write to the completedDebugChunks instead.
+      debugStack = filterStackTrace(
+        request,
+        parseStackTrace(task.debugStack, 1),
+      );
+      const id = outlineDebugModel(
+        request,
+        {objectLimit: debugStack.length * 2 + 1},
+        debugStack,
+      );
+      // We also store this in the main dedupe set so that it can be referenced by inline React Elements.
+      request.writtenObjects.set(debugStack, serializeByValueID(id));
     }
   }
   const element = __DEV__
-    ? [
-        REACT_ELEMENT_TYPE,
-        type,
-        key,
-        props,
-        task.debugOwner,
-        task.debugStack === null
-          ? null
-          : filterStackTrace(request, parseStackTrace(task.debugStack, 1)),
-        validated,
-      ]
+    ? [REACT_ELEMENT_TYPE, type, key, props, debugOwner, debugStack, validated]
     : [REACT_ELEMENT_TYPE, type, key, props];
   if (task.implicitSlot && key !== null) {
     // The root Server Component had no key so it was in an implicit slot.
@@ -2461,7 +2470,7 @@ function serializeClientReference(
       resolveClientReferenceMetadata(request.bundlerConfig, clientReference);
     request.pendingChunks++;
     const importId = request.nextChunkId++;
-    emitImportChunk(request, importId, clientReferenceMetadata);
+    emitImportChunk(request, importId, clientReferenceMetadata, false);
     writtenClientReferences.set(clientReferenceKey, importId);
     if (parent[0] === REACT_ELEMENT_TYPE && parentPropertyName === '1') {
       // If we're encoding the "type" of an element, we can refer
@@ -2476,7 +2485,56 @@ function serializeClientReference(
     request.pendingChunks++;
     const errorId = request.nextChunkId++;
     const digest = logRecoverableError(request, x, null);
-    emitErrorChunk(request, errorId, digest, x);
+    emitErrorChunk(request, errorId, digest, x, false);
+    return serializeByValueID(errorId);
+  }
+}
+
+function serializeDebugClientReference(
+  request: Request,
+  parent:
+    | {+[propertyName: string | number]: ReactClientValue}
+    | $ReadOnlyArray<ReactClientValue>,
+  parentPropertyName: string,
+  clientReference: ClientReference<any>,
+): string {
+  // Like serializeDebugClientReference but it doesn't dedupe in the regular set
+  // and it writes to completedDebugChunk instead of imports.
+  const clientReferenceKey: ClientReferenceKey =
+    getClientReferenceKey(clientReference);
+  const writtenClientReferences = request.writtenClientReferences;
+  const existingId = writtenClientReferences.get(clientReferenceKey);
+  if (existingId !== undefined) {
+    if (parent[0] === REACT_ELEMENT_TYPE && parentPropertyName === '1') {
+      // If we're encoding the "type" of an element, we can refer
+      // to that by a lazy reference instead of directly since React
+      // knows how to deal with lazy values. This lets us suspend
+      // on this component rather than its parent until the code has
+      // loaded.
+      return serializeLazyID(existingId);
+    }
+    return serializeByValueID(existingId);
+  }
+  try {
+    const clientReferenceMetadata: ClientReferenceMetadata =
+      resolveClientReferenceMetadata(request.bundlerConfig, clientReference);
+    request.pendingChunks++;
+    const importId = request.nextChunkId++;
+    emitImportChunk(request, importId, clientReferenceMetadata, true);
+    if (parent[0] === REACT_ELEMENT_TYPE && parentPropertyName === '1') {
+      // If we're encoding the "type" of an element, we can refer
+      // to that by a lazy reference instead of directly since React
+      // knows how to deal with lazy values. This lets us suspend
+      // on this component rather than its parent until the code has
+      // loaded.
+      return serializeLazyID(importId);
+    }
+    return serializeByValueID(importId);
+  } catch (x) {
+    request.pendingChunks++;
+    const errorId = request.nextChunkId++;
+    const digest = logRecoverableError(request, x, null);
+    emitErrorChunk(request, errorId, digest, x, true);
     return serializeByValueID(errorId);
   }
 }
@@ -2571,7 +2629,14 @@ function serializeTemporaryReference(
 function serializeLargeTextString(request: Request, text: string): string {
   request.pendingChunks++;
   const textId = request.nextChunkId++;
-  emitTextChunk(request, textId, text);
+  emitTextChunk(request, textId, text, false);
+  return serializeByValueID(textId);
+}
+
+function serializeDebugLargeTextString(request: Request, text: string): string {
+  request.pendingChunks++;
+  const textId = request.nextChunkId++;
+  emitTextChunk(request, textId, text, true);
   return serializeByValueID(textId);
 }
 
@@ -2587,6 +2652,16 @@ function serializeMap(
 function serializeFormData(request: Request, formData: FormData): string {
   const entries = Array.from(formData.entries());
   const id = outlineModel(request, (entries: any));
+  return '$K' + id.toString(16);
+}
+
+function serializeDebugFormData(request: Request, formData: FormData): string {
+  const entries = Array.from(formData.entries());
+  const id = outlineDebugModel(
+    request,
+    {objectLimit: entries.length * 2 + 1},
+    (entries: any),
+  );
   return '$K' + id.toString(16);
 }
 
@@ -2659,8 +2734,53 @@ function serializeTypedArray(
 ): string {
   request.pendingChunks++;
   const bufferId = request.nextChunkId++;
-  emitTypedArrayChunk(request, bufferId, tag, typedArray);
+  emitTypedArrayChunk(request, bufferId, tag, typedArray, false);
   return serializeByValueID(bufferId);
+}
+
+function serializeDebugTypedArray(
+  request: Request,
+  tag: string,
+  typedArray: $ArrayBufferView,
+): string {
+  request.pendingChunks++;
+  const bufferId = request.nextChunkId++;
+  emitTypedArrayChunk(request, bufferId, tag, typedArray, true);
+  return serializeByValueID(bufferId);
+}
+
+function serializeDebugBlob(request: Request, blob: Blob): string {
+  const model: Array<string | Uint8Array> = [blob.type];
+  const reader = blob.stream().getReader();
+  const id = request.nextChunkId++;
+  function progress(
+    entry: {done: false, value: Uint8Array} | {done: true, value: void},
+  ): Promise<void> | void {
+    if (entry.done) {
+      emitOutlinedDebugModelChunk(
+        request,
+        id,
+        {objectLimit: model.length + 2},
+        model,
+      );
+      enqueueFlush(request);
+      return;
+    }
+    // TODO: Emit the chunk early and refer to it later by dedupe.
+    model.push(entry.value);
+    // $FlowFixMe[incompatible-call]
+    return reader.read().then(progress).catch(error);
+  }
+  function error(reason: mixed) {
+    const digest = '';
+    emitErrorChunk(request, id, digest, reason, true);
+    enqueueFlush(request);
+    // $FlowFixMe should be able to pass mixed
+    reader.cancel(reason).then(noop, noop);
+  }
+  // $FlowFixMe[incompatible-call]
+  reader.read().then(progress).catch(error);
+  return '$B' + id.toString(16);
 }
 
 function serializeBlob(request: Request, blob: Blob): string {
@@ -2849,7 +2969,7 @@ function renderModel(
       emitPostponeChunk(request, errorId, postponeInstance);
     } else {
       const digest = logRecoverableError(request, x, task);
-      emitErrorChunk(request, errorId, digest, x);
+      emitErrorChunk(request, errorId, digest, x, false);
     }
     if (wasReactNode) {
       // We'll replace this element with a lazy reference that throws on the client
@@ -3600,11 +3720,48 @@ function serializeErrorValue(request: Request, error: Error): string {
   }
 }
 
+function serializeDebugErrorValue(request: Request, error: Error): string {
+  if (__DEV__) {
+    let name: string = 'Error';
+    let message: string;
+    let stack: ReactStackTrace;
+    let env = (0, request.environmentName)();
+    try {
+      name = error.name;
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      message = String(error.message);
+      stack = filterStackTrace(request, parseStackTrace(error, 0));
+      const errorEnv = (error: any).environmentName;
+      if (typeof errorEnv === 'string') {
+        // This probably came from another FlightClient as a pass through.
+        // Keep the environment name.
+        env = errorEnv;
+      }
+    } catch (x) {
+      message = 'An error occurred but serializing the error message failed.';
+      stack = [];
+    }
+    const errorInfo: ReactErrorInfoDev = {name, message, stack, env};
+    const id = outlineDebugModel(
+      request,
+      {objectLimit: stack.length * 2 + 1},
+      errorInfo,
+    );
+    return '$Z' + id.toString(16);
+  } else {
+    // In prod we don't emit any information about this Error object to avoid
+    // unintentional leaks. Since this doesn't actually throw on the server
+    // we don't go through onError and so don't register any digest neither.
+    return '$Z';
+  }
+}
+
 function emitErrorChunk(
   request: Request,
   id: number,
   digest: string,
   error: mixed,
+  debug: boolean,
 ): void {
   let errorInfo: ReactErrorInfo;
   if (__DEV__) {
@@ -3642,19 +3799,28 @@ function emitErrorChunk(
   }
   const row = serializeRowHeader('E', id) + stringify(errorInfo) + '\n';
   const processedChunk = stringToChunk(row);
-  request.completedErrorChunks.push(processedChunk);
+  if (__DEV__ && debug) {
+    request.completedDebugChunks.push(processedChunk);
+  } else {
+    request.completedErrorChunks.push(processedChunk);
+  }
 }
 
 function emitImportChunk(
   request: Request,
   id: number,
   clientReferenceMetadata: ClientReferenceMetadata,
+  debug: boolean,
 ): void {
   // $FlowFixMe[incompatible-type] stringify can return null
   const json: string = stringify(clientReferenceMetadata);
   const row = serializeRowHeader('I', id) + json + '\n';
   const processedChunk = stringToChunk(row);
-  request.completedImportChunks.push(processedChunk);
+  if (__DEV__ && debug) {
+    request.completedDebugChunks.push(processedChunk);
+  } else {
+    request.completedImportChunks.push(processedChunk);
+  }
 }
 
 function emitHintChunk<Code: HintCode>(
@@ -3692,7 +3858,7 @@ function emitDebugHaltChunk(request: Request, id: number): void {
   // even when the client stream is closed. We use just the lack of data to indicate this.
   const row = id.toString(16) + ':\n';
   const processedChunk = stringToChunk(row);
-  request.completedRegularChunks.push(processedChunk);
+  request.completedDebugChunks.push(processedChunk);
 }
 
 function emitDebugChunk(
@@ -3715,7 +3881,7 @@ function emitDebugChunk(
   const json: string = serializeDebugModel(request, 500, debugInfo);
   const row = serializeRowHeader('D', id) + json + '\n';
   const processedChunk = stringToChunk(row);
-  request.completedRegularChunks.push(processedChunk);
+  request.completedDebugChunks.push(processedChunk);
 }
 
 function outlineComponentInfo(
@@ -3839,7 +4005,7 @@ function emitIOInfoChunk(
   const json: string = serializeDebugModel(request, objectLimit, debugIOInfo);
   const row = id.toString(16) + ':J' + json + '\n';
   const processedChunk = stringToChunk(row);
-  request.completedRegularChunks.push(processedChunk);
+  request.completedDebugChunks.push(processedChunk);
 }
 
 function outlineIOInfo(request: Request, ioInfo: ReactIOInfo): void {
@@ -3949,6 +4115,7 @@ function emitTypedArrayChunk(
   id: number,
   tag: string,
   typedArray: $ArrayBufferView,
+  debug: boolean,
 ): void {
   if (enableTaint) {
     if (TaintRegistryByteLengths.has(typedArray.byteLength)) {
@@ -3968,10 +4135,19 @@ function emitTypedArrayChunk(
   const binaryLength = byteLengthOfBinaryChunk(binaryChunk);
   const row = id.toString(16) + ':' + tag + binaryLength.toString(16) + ',';
   const headerChunk = stringToChunk(row);
-  request.completedRegularChunks.push(headerChunk, binaryChunk);
+  if (__DEV__ && debug) {
+    request.completedDebugChunks.push(headerChunk, binaryChunk);
+  } else {
+    request.completedRegularChunks.push(headerChunk, binaryChunk);
+  }
 }
 
-function emitTextChunk(request: Request, id: number, text: string): void {
+function emitTextChunk(
+  request: Request,
+  id: number,
+  text: string,
+  debug: boolean,
+): void {
   if (byteLengthOfChunk === null) {
     // eslint-disable-next-line react-internal/prod-error-codes
     throw new Error(
@@ -3983,7 +4159,11 @@ function emitTextChunk(request: Request, id: number, text: string): void {
   const binaryLength = byteLengthOfChunk(textChunk);
   const row = id.toString(16) + ':T' + binaryLength.toString(16) + ',';
   const headerChunk = stringToChunk(row);
-  request.completedRegularChunks.push(headerChunk, textChunk);
+  if (__DEV__ && debug) {
+    request.completedDebugChunks.push(headerChunk, textChunk);
+  } else {
+    request.completedRegularChunks.push(headerChunk, textChunk);
+  }
 }
 
 function serializeEval(source: string): string {
@@ -4027,7 +4207,7 @@ function renderDebugModel(
       // This might be confusing though because on the Server it won't actually
       // be this value, so if you're debugging client references maybe you'd be
       // better with a place holder.
-      return serializeClientReference(
+      return serializeDebugClientReference(
         request,
         parent,
         parentPropertyName,
@@ -4191,65 +4371,65 @@ function renderDebugModel(
     }
     // TODO: FormData is not available in old Node. Remove the typeof later.
     if (typeof FormData === 'function' && value instanceof FormData) {
-      return serializeFormData(request, value);
+      return serializeDebugFormData(request, value);
     }
     if (value instanceof Error) {
-      return serializeErrorValue(request, value);
+      return serializeDebugErrorValue(request, value);
     }
     if (value instanceof ArrayBuffer) {
-      return serializeTypedArray(request, 'A', new Uint8Array(value));
+      return serializeDebugTypedArray(request, 'A', new Uint8Array(value));
     }
     if (value instanceof Int8Array) {
       // char
-      return serializeTypedArray(request, 'O', value);
+      return serializeDebugTypedArray(request, 'O', value);
     }
     if (value instanceof Uint8Array) {
       // unsigned char
-      return serializeTypedArray(request, 'o', value);
+      return serializeDebugTypedArray(request, 'o', value);
     }
     if (value instanceof Uint8ClampedArray) {
       // unsigned clamped char
-      return serializeTypedArray(request, 'U', value);
+      return serializeDebugTypedArray(request, 'U', value);
     }
     if (value instanceof Int16Array) {
       // sort
-      return serializeTypedArray(request, 'S', value);
+      return serializeDebugTypedArray(request, 'S', value);
     }
     if (value instanceof Uint16Array) {
       // unsigned short
-      return serializeTypedArray(request, 's', value);
+      return serializeDebugTypedArray(request, 's', value);
     }
     if (value instanceof Int32Array) {
       // long
-      return serializeTypedArray(request, 'L', value);
+      return serializeDebugTypedArray(request, 'L', value);
     }
     if (value instanceof Uint32Array) {
       // unsigned long
-      return serializeTypedArray(request, 'l', value);
+      return serializeDebugTypedArray(request, 'l', value);
     }
     if (value instanceof Float32Array) {
       // float
-      return serializeTypedArray(request, 'G', value);
+      return serializeDebugTypedArray(request, 'G', value);
     }
     if (value instanceof Float64Array) {
       // double
-      return serializeTypedArray(request, 'g', value);
+      return serializeDebugTypedArray(request, 'g', value);
     }
     if (value instanceof BigInt64Array) {
       // number
-      return serializeTypedArray(request, 'M', value);
+      return serializeDebugTypedArray(request, 'M', value);
     }
     if (value instanceof BigUint64Array) {
       // unsigned number
       // We use "m" instead of "n" since JSON can start with "null"
-      return serializeTypedArray(request, 'm', value);
+      return serializeDebugTypedArray(request, 'm', value);
     }
     if (value instanceof DataView) {
-      return serializeTypedArray(request, 'V', value);
+      return serializeDebugTypedArray(request, 'V', value);
     }
     // TODO: Blob is not available in old Node. Remove the typeof check later.
     if (typeof Blob === 'function' && value instanceof Blob) {
-      return serializeBlob(request, value);
+      return serializeDebugBlob(request, value);
     }
 
     const iteratorFn = getIteratorFn(value);
@@ -4310,7 +4490,7 @@ function renderDebugModel(
       // For large strings, we encode them outside the JSON payload so that we
       // don't have to double encode and double parse the strings. This can also
       // be more compact in case the string has a lot of escaped characters.
-      return serializeLargeTextString(request, value);
+      return serializeDebugLargeTextString(request, value);
     }
     return escapeStringValue(value);
   }
@@ -4329,7 +4509,7 @@ function renderDebugModel(
 
   if (typeof value === 'function') {
     if (isClientReference(value)) {
-      return serializeClientReference(
+      return serializeDebugClientReference(
         request,
         parent,
         parentPropertyName,
@@ -4362,7 +4542,7 @@ function renderDebugModel(
     request.pendingChunks++;
     const id = request.nextChunkId++;
     const processedChunk = encodeReferenceChunk(request, id, serializedValue);
-    request.completedRegularChunks.push(processedChunk);
+    request.completedDebugChunks.push(processedChunk);
     const reference = serializeByValueID(id);
     writtenDebugObjects.set(value, reference);
     return reference;
@@ -4500,7 +4680,7 @@ function emitOutlinedDebugModelChunk(
 
   const row = id.toString(16) + ':' + json + '\n';
   const processedChunk = stringToChunk(row);
-  request.completedRegularChunks.push(processedChunk);
+  request.completedDebugChunks.push(processedChunk);
 }
 
 function outlineDebugModel(
@@ -4560,7 +4740,7 @@ function emitConsoleChunk(
   }
   const row = ':W' + json + '\n';
   const processedChunk = stringToChunk(row);
-  request.completedRegularChunks.push(processedChunk);
+  request.completedDebugChunks.push(processedChunk);
 }
 
 function emitTimeOriginChunk(request: Request, timeOrigin: number): void {
@@ -4571,7 +4751,7 @@ function emitTimeOriginChunk(request: Request, timeOrigin: number): void {
   const row = ':N' + timeOrigin + '\n';
   const processedChunk = stringToChunk(row);
   // TODO: Move to its own priority queue.
-  request.completedRegularChunks.push(processedChunk);
+  request.completedDebugChunks.push(processedChunk);
 }
 
 function forwardDebugInfo(
@@ -4783,7 +4963,7 @@ function emitTimingChunk(
     serializeRowHeader('D', id) + '{"time":' + relativeTimestamp + '}\n';
   const processedChunk = stringToChunk(row);
   // TODO: Move to its own priority queue.
-  request.completedRegularChunks.push(processedChunk);
+  request.completedDebugChunks.push(processedChunk);
 }
 
 function advanceTaskTime(
@@ -4839,71 +5019,71 @@ function emitChunk(
         throwTaintViolation(tainted.message);
       }
     }
-    emitTextChunk(request, id, value);
+    emitTextChunk(request, id, value, false);
     return;
   }
   if (value instanceof ArrayBuffer) {
-    emitTypedArrayChunk(request, id, 'A', new Uint8Array(value));
+    emitTypedArrayChunk(request, id, 'A', new Uint8Array(value), false);
     return;
   }
   if (value instanceof Int8Array) {
     // char
-    emitTypedArrayChunk(request, id, 'O', value);
+    emitTypedArrayChunk(request, id, 'O', value, false);
     return;
   }
   if (value instanceof Uint8Array) {
     // unsigned char
-    emitTypedArrayChunk(request, id, 'o', value);
+    emitTypedArrayChunk(request, id, 'o', value, false);
     return;
   }
   if (value instanceof Uint8ClampedArray) {
     // unsigned clamped char
-    emitTypedArrayChunk(request, id, 'U', value);
+    emitTypedArrayChunk(request, id, 'U', value, false);
     return;
   }
   if (value instanceof Int16Array) {
     // sort
-    emitTypedArrayChunk(request, id, 'S', value);
+    emitTypedArrayChunk(request, id, 'S', value, false);
     return;
   }
   if (value instanceof Uint16Array) {
     // unsigned short
-    emitTypedArrayChunk(request, id, 's', value);
+    emitTypedArrayChunk(request, id, 's', value, false);
     return;
   }
   if (value instanceof Int32Array) {
     // long
-    emitTypedArrayChunk(request, id, 'L', value);
+    emitTypedArrayChunk(request, id, 'L', value, false);
     return;
   }
   if (value instanceof Uint32Array) {
     // unsigned long
-    emitTypedArrayChunk(request, id, 'l', value);
+    emitTypedArrayChunk(request, id, 'l', value, false);
     return;
   }
   if (value instanceof Float32Array) {
     // float
-    emitTypedArrayChunk(request, id, 'G', value);
+    emitTypedArrayChunk(request, id, 'G', value, false);
     return;
   }
   if (value instanceof Float64Array) {
     // double
-    emitTypedArrayChunk(request, id, 'g', value);
+    emitTypedArrayChunk(request, id, 'g', value, false);
     return;
   }
   if (value instanceof BigInt64Array) {
     // number
-    emitTypedArrayChunk(request, id, 'M', value);
+    emitTypedArrayChunk(request, id, 'M', value, false);
     return;
   }
   if (value instanceof BigUint64Array) {
     // unsigned number
     // We use "m" instead of "n" since JSON can start with "null"
-    emitTypedArrayChunk(request, id, 'm', value);
+    emitTypedArrayChunk(request, id, 'm', value, false);
     return;
   }
   if (value instanceof DataView) {
-    emitTypedArrayChunk(request, id, 'V', value);
+    emitTypedArrayChunk(request, id, 'V', value, false);
     return;
   }
   // For anything else we need to try to serialize it using JSON.
@@ -4930,7 +5110,7 @@ function erroredTask(request: Request, task: Task, error: mixed): void {
     emitPostponeChunk(request, task.id, postponeInstance);
   } else {
     const digest = logRecoverableError(request, error, task);
-    emitErrorChunk(request, task.id, digest, error);
+    emitErrorChunk(request, task.id, digest, error, false);
   }
   request.abortableTasks.delete(task);
   callOnAllReadyIfReady(request);
@@ -5183,6 +5363,24 @@ function flushCompletedChunks(
     }
     hintChunks.splice(0, i);
 
+    // Debug meta data comes before the model data because it will often end up blocking the model from
+    // completing since the JSX will reference the debug data.
+    if (__DEV__) {
+      const debugChunks = request.completedDebugChunks;
+      i = 0;
+      for (; i < debugChunks.length; i++) {
+        request.pendingChunks--;
+        const chunk = debugChunks[i];
+        const keepWriting: boolean = writeChunkAndReturn(destination, chunk);
+        if (!keepWriting) {
+          request.destination = null;
+          i++;
+          break;
+        }
+      }
+      debugChunks.splice(0, i);
+    }
+
     // Next comes model data.
     const regularChunks = request.completedRegularChunks;
     i = 0;
@@ -5359,7 +5557,7 @@ export function abort(request: Request, reason: mixed): void {
         const errorId = request.nextChunkId++;
         request.fatalError = errorId;
         request.pendingChunks++;
-        emitErrorChunk(request, errorId, digest, error);
+        emitErrorChunk(request, errorId, digest, error, false);
         abortableTasks.forEach(task => abortTask(task, request, errorId));
         abortableTasks.clear();
         callOnAllReadyIfReady(request);

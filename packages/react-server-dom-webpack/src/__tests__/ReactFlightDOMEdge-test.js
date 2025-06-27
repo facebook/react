@@ -674,7 +674,7 @@ describe('ReactFlightDOMEdge', () => {
     const [stream2, drip] = dripStream(stream);
 
     // Allow some of the content through.
-    drip(5000);
+    drip(__DEV__ ? 7500 : 5000);
 
     const result = await ReactServerDOMClient.createFromReadableStream(
       stream2,

@@ -764,6 +764,78 @@ function getTaskName(type: mixed): string {
   }
 }
 
+function initializeElement(response: Response, element: any): void {
+  if (!__DEV__) {
+    return;
+  }
+  const stack = element._debugStack;
+  const owner = element._owner;
+  if (owner === null) {
+    element._owner = response._debugRootOwner;
+  }
+  let env = response._rootEnvironmentName;
+  if (owner !== null && owner.env != null) {
+    // Interestingly we don't actually have the environment name of where
+    // this JSX was created if it doesn't have an owner but if it does
+    // it must be the same environment as the owner. We could send it separately
+    // but it seems a bit unnecessary for this edge case.
+    env = owner.env;
+  }
+  let normalizedStackTrace: null | Error = null;
+  if (owner === null && response._debugRootStack != null) {
+    // We override the stack if we override the owner since the stack where the root JSX
+    // was created on the server isn't very useful but where the request was made is.
+    normalizedStackTrace = response._debugRootStack;
+  } else if (stack !== null) {
+    // We create a fake stack and then create an Error object inside of it.
+    // This means that the stack trace is now normalized into the native format
+    // of the browser and the stack frames will have been registered with
+    // source mapping information.
+    // This can unfortunately happen within a user space callstack which will
+    // remain on the stack.
+    normalizedStackTrace = createFakeJSXCallStackInDEV(response, stack, env);
+  }
+  element._debugStack = normalizedStackTrace;
+  let task: null | ConsoleTask = null;
+  if (supportsCreateTask && stack !== null) {
+    const createTaskFn = (console: any).createTask.bind(
+      console,
+      getTaskName(element.type),
+    );
+    const callStack = buildFakeCallStack(
+      response,
+      stack,
+      env,
+      false,
+      createTaskFn,
+    );
+    // This owner should ideally have already been initialized to avoid getting
+    // user stack frames on the stack.
+    const ownerTask =
+      owner === null ? null : initializeFakeTask(response, owner);
+    if (ownerTask === null) {
+      const rootTask = response._debugRootTask;
+      if (rootTask != null) {
+        task = rootTask.run(callStack);
+      } else {
+        task = callStack();
+      }
+    } else {
+      task = ownerTask.run(callStack);
+    }
+  }
+  element._debugTask = task;
+
+  // This owner should ideally have already been initialized to avoid getting
+  // user stack frames on the stack.
+  if (owner !== null) {
+    initializeFakeStack(response, owner);
+  }
+  // TODO: We should be freezing the element but currently, we might write into
+  // _debugInfo later. We could move it into _store which remains mutable.
+  Object.freeze(element.props);
+}
+
 function createElement(
   response: Response,
   type: mixed,
@@ -783,7 +855,7 @@ function createElement(
       type,
       key,
       props,
-      _owner: __DEV__ && owner === null ? response._debugRootOwner : owner,
+      _owner: owner,
     }: any);
     Object.defineProperty(element, 'ref', {
       enumerable: false,
@@ -821,75 +893,18 @@ function createElement(
       writable: true,
       value: null,
     });
-    let env = response._rootEnvironmentName;
-    if (owner !== null && owner.env != null) {
-      // Interestingly we don't actually have the environment name of where
-      // this JSX was created if it doesn't have an owner but if it does
-      // it must be the same environment as the owner. We could send it separately
-      // but it seems a bit unnecessary for this edge case.
-      env = owner.env;
-    }
-    let normalizedStackTrace: null | Error = null;
-    if (owner === null && response._debugRootStack != null) {
-      // We override the stack if we override the owner since the stack where the root JSX
-      // was created on the server isn't very useful but where the request was made is.
-      normalizedStackTrace = response._debugRootStack;
-    } else if (stack !== null) {
-      // We create a fake stack and then create an Error object inside of it.
-      // This means that the stack trace is now normalized into the native format
-      // of the browser and the stack frames will have been registered with
-      // source mapping information.
-      // This can unfortunately happen within a user space callstack which will
-      // remain on the stack.
-      normalizedStackTrace = createFakeJSXCallStackInDEV(response, stack, env);
-    }
     Object.defineProperty(element, '_debugStack', {
       configurable: false,
       enumerable: false,
       writable: true,
-      value: normalizedStackTrace,
+      value: stack,
     });
-
-    let task: null | ConsoleTask = null;
-    if (supportsCreateTask && stack !== null) {
-      const createTaskFn = (console: any).createTask.bind(
-        console,
-        getTaskName(type),
-      );
-      const callStack = buildFakeCallStack(
-        response,
-        stack,
-        env,
-        false,
-        createTaskFn,
-      );
-      // This owner should ideally have already been initialized to avoid getting
-      // user stack frames on the stack.
-      const ownerTask =
-        owner === null ? null : initializeFakeTask(response, owner);
-      if (ownerTask === null) {
-        const rootTask = response._debugRootTask;
-        if (rootTask != null) {
-          task = rootTask.run(callStack);
-        } else {
-          task = callStack();
-        }
-      } else {
-        task = ownerTask.run(callStack);
-      }
-    }
     Object.defineProperty(element, '_debugTask', {
       configurable: false,
       enumerable: false,
       writable: true,
-      value: task,
+      value: null,
     });
-
-    // This owner should ideally have already been initialized to avoid getting
-    // user stack frames on the stack.
-    if (owner !== null) {
-      initializeFakeStack(response, owner);
-    }
   }
 
   if (initializingHandler !== null) {
@@ -905,6 +920,7 @@ function createElement(
         handler.value,
       );
       if (__DEV__) {
+        initializeElement(response, element);
         // Conceptually the error happened inside this Element but right before
         // it was rendered. We don't have a client side component to render but
         // we can add some DebugInfo to explain that this was conceptually a
@@ -933,15 +949,15 @@ function createElement(
       handler.value = element;
       handler.chunk = blockedChunk;
       if (__DEV__) {
-        const freeze = Object.freeze.bind(Object, element.props);
-        blockedChunk.then(freeze, freeze);
+        /// After we have initialized any blocked references, initialize stack etc.
+        const init = initializeElement.bind(null, response, element);
+        blockedChunk.then(init, init);
       }
       return createLazyChunkWrapper(blockedChunk);
     }
-  } else if (__DEV__) {
-    // TODO: We should be freezing the element but currently, we might write into
-    // _debugInfo later. We could move it into _store which remains mutable.
-    Object.freeze(element.props);
+  }
+  if (__DEV__) {
+    initializeElement(response, element);
   }
 
   return element;
@@ -1053,6 +1069,11 @@ function waitForReference<T>(
         case '4':
           if (__DEV__) {
             element._owner = mappedValue;
+          }
+          break;
+        case '5':
+          if (__DEV__) {
+            element._debugStack = mappedValue;
           }
           break;
       }
