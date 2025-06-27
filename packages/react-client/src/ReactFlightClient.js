@@ -831,6 +831,8 @@ function initializeElement(response: Response, element: any): void {
   if (owner !== null) {
     initializeFakeStack(response, owner);
   }
+  // TODO: We should be freezing the element but currently, we might write into
+  // _debugInfo later. We could move it into _store which remains mutable.
   Object.freeze(element.props);
 }
 
@@ -955,8 +957,6 @@ function createElement(
     }
   }
   if (__DEV__) {
-    // TODO: We should be freezing the element but currently, we might write into
-    // _debugInfo later. We could move it into _store which remains mutable.
     initializeElement(response, element);
   }
 

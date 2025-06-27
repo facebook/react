@@ -4289,7 +4289,7 @@ function renderDebugModel(
     }
 
     if (counter.objectLimit <= 0 && !doNotLimit.has(value)) {
-      // We've reached our max number of objects to serializeDebug across the wire so we serializeDebug this
+      // We've reached our max number of objects to serialize across the wire so we serialize this
       // as a marker so that the client can error or lazy load this when accessed by the console.
       return serializeDeferredObject(request, value);
     }
@@ -4482,7 +4482,7 @@ function renderDebugModel(
     if (value.length >= 1024) {
       // Large strings are counted towards the object limit.
       if (counter.objectLimit <= 0) {
-        // We've reached our max number of objects to serializeDebug across the wire so we serializeDebug this
+        // We've reached our max number of objects to serialize across the wire so we serialize this
         // as a marker so that the client can error or lazy load this when accessed by the console.
         return serializeDeferredObject(request, value);
       }
