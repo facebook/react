@@ -13149,6 +13149,7 @@ module.exports = function ($$$config) {
             }
             console.error(error);
           },
+    hasOwnProperty = Object.prototype.hasOwnProperty,
     prefix,
     suffix,
     reentry = !1,
@@ -13245,7 +13246,6 @@ module.exports = function ($$$config) {
   };
   var resumedCache = createCursor(null),
     transitionStack = createCursor(null),
-    hasOwnProperty = Object.prototype.hasOwnProperty,
     SuspenseException = Error(formatProdErrorMessage(460)),
     SuspenseyCommitException = Error(formatProdErrorMessage(474)),
     SuspenseActionException = Error(formatProdErrorMessage(542)),
@@ -14109,7 +14109,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-classic-bb6c9d52-20250625"
+      reconcilerVersion: "19.2.0-www-classic-d2a288fe-20250627"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

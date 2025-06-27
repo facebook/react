@@ -13557,6 +13557,7 @@ __DEV__ &&
               }
               console.error(error);
             },
+      hasOwnProperty = Object.prototype.hasOwnProperty,
       disabledDepth = 0,
       prevLog,
       prevInfo,
@@ -13647,7 +13648,6 @@ __DEV__ &&
         prevOnStartTransitionFinish(transition, returnValue);
     };
     var resumedCache = createCursor(null),
-      hasOwnProperty = Object.prototype.hasOwnProperty,
       ReactStrictModeWarnings = {
         recordUnsafeLifecycleWarnings: function () {},
         flushPendingUnsafeLifecycleWarnings: function () {},
@@ -15429,10 +15429,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-modern-bb6c9d52-20250625",
+        version: "19.2.0-www-modern-d2a288fe-20250627",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-bb6c9d52-20250625"
+        reconcilerVersion: "19.2.0-www-modern-d2a288fe-20250627"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15567,5 +15567,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.2.0-www-modern-bb6c9d52-20250625";
+    exports.version = "19.2.0-www-modern-d2a288fe-20250627";
   })();
