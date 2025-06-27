@@ -172,6 +172,8 @@ const reusableComponentOptions = {
   },
 };
 
+const resuableChangedPropsEntry = ['Changed Props', ''];
+
 export function logComponentRender(
   fiber: Fiber,
   startTime: number,
@@ -214,14 +216,14 @@ export function logComponentRender(
         alternate.memoizedProps !== props
       ) {
         // If this is an update, we'll diff the props and emit which ones changed.
-        const properties: Array<[string, string]> = [];
+        const properties: Array<[string, string]> = [resuableChangedPropsEntry];
         addObjectDiffToProperties(
           alternate.memoizedProps,
           props,
           properties,
           0,
         );
-        if (properties.length > 0) {
+        if (properties.length > 1) {
           reusableComponentOptions.start = startTime;
           reusableComponentOptions.end = endTime;
           reusableComponentDevToolDetails.color = color;
