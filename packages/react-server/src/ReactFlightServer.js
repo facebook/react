@@ -2151,9 +2151,7 @@ function visitAsyncNode(
               });
               // Mark the end time of the await. If we're aborting then we don't emit this
               // to signal that this never resolved inside this render.
-              if (request.status !== ABORTING) {
-                markOperationEndTime(request, task, endTime);
-              }
+              markOperationEndTime(request, task, endTime);
             }
           }
         }
@@ -2213,13 +2211,15 @@ function emitAsyncSequence(
         debugInfo.stack = filterStackTrace(request, parseStackTrace(stack, 1));
       }
     }
+    // We don't have a start time for this await but in case there was no start time emitted
+    // we need to include something. TODO: We should maybe ideally track the time when we
+    // called .then() but without updating the task.time field since that's used for the cutoff.
+    advanceTaskTime(request, task, task.time);
     emitDebugChunk(request, task.id, debugInfo);
     // Mark the end time of the await. If we're aborting then we don't emit this
     // to signal that this never resolved inside this render.
-    if (request.status !== ABORTING) {
-      // If we're currently aborting, then this never resolved into user space.
-      markOperationEndTime(request, task, awaitedNode.end);
-    }
+    // If we're currently aborting, then this never resolved into user space.
+    markOperationEndTime(request, task, awaitedNode.end);
   }
 }
 
@@ -4756,6 +4756,10 @@ function forwardDebugInfoFromAbortedTask(request: Request, task: Task): void {
             awaited: ((node: any): ReactIOInfo), // This is deduped by this reference.
             env: env,
           };
+          // We don't have a start time for this await but in case there was no start time emitted
+          // we need to include something. TODO: We should maybe ideally track the time when we
+          // called .then() but without updating the task.time field since that's used for the cutoff.
+          advanceTaskTime(request, task, task.time);
           emitDebugChunk(request, task.id, asyncInfo);
         } else {
           emitAsyncSequence(request, task, sequence, debugInfo, null, null);
@@ -4808,6 +4812,10 @@ function markOperationEndTime(request: Request, task: Task, timestamp: number) {
   }
   // This is like advanceTaskTime() but always emits a timing chunk even if it doesn't advance.
   // This ensures that the end time of the previous entry isn't implied to be the start of the next one.
+  if (request.status === ABORTING) {
+    // If we're aborting then we don't emit any end times that happened after.
+    return;
+  }
   if (timestamp > task.time) {
     emitTimingChunk(request, task.id, timestamp);
     task.time = timestamp;

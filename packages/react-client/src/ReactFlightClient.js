@@ -77,10 +77,12 @@ import {
   markAllTracksInOrder,
   logComponentRender,
   logDedupedComponentRender,
+  logComponentAborted,
   logComponentErrored,
   logIOInfo,
   logIOInfoErrored,
   logComponentAwait,
+  logComponentAwaitAborted,
   logComponentAwaitErrored,
 } from './ReactFlightPerformanceTrack';
 
@@ -1812,6 +1814,12 @@ function ResponseInstance(
     this._replayConsole = replayConsole;
     this._rootEnvironmentName = rootEnv;
   }
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // Since we don't know when recording of profiles will start and stop, we have to
+    // mark the order over and over again.
+    markAllTracksInOrder();
+  }
+
   // Don't inline this call because it causes closure to outline the call above.
   this._fromJSON = createFromJSONCallback(this);
 }
@@ -3289,6 +3297,44 @@ function flushComponentPerformance(
                 undefined,
               );
             }
+          }
+        }
+      } else {
+        // Anything between the end and now was aborted if it has no end time.
+        // Either because the client stream was aborted reading it or the server stream aborted.
+        endTime = time; // If we don't find anything else the endTime is the start time.
+        for (let j = debugInfo.length - 1; j > i; j--) {
+          const candidateInfo = debugInfo[j];
+          if (typeof candidateInfo.name === 'string') {
+            if (componentEndTime > childrenEndTime) {
+              childrenEndTime = componentEndTime;
+            }
+            // $FlowFixMe: Refined.
+            const componentInfo: ReactComponentInfo = candidateInfo;
+            const env = response._rootEnvironmentName;
+            logComponentAborted(
+              componentInfo,
+              trackIdx,
+              time,
+              componentEndTime,
+              childrenEndTime,
+              env,
+            );
+            componentEndTime = time; // The end time of previous component is the start time of the next.
+            // Track the root most component of the result for deduping logging.
+            result.component = componentInfo;
+            isLastComponent = false;
+          } else if (candidateInfo.awaited) {
+            // If we don't have an end time for an await, that means we aborted.
+            const asyncInfo: ReactAsyncInfo = candidateInfo;
+            const env = response._rootEnvironmentName;
+            if (asyncInfo.awaited.end > endTime) {
+              endTime = asyncInfo.awaited.end; // Take the end time of the I/O as the await end.
+            }
+            if (endTime > childrenEndTime) {
+              childrenEndTime = endTime;
+            }
+            logComponentAwaitAborted(asyncInfo, trackIdx, time, endTime, env);
           }
         }
       }
