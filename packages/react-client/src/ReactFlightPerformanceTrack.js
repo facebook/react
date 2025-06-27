@@ -300,6 +300,30 @@ function getIOColor(
   }
 }
 
+function getIODescription(value: mixed): string {
+  return '';
+}
+
+function getIOLongName(
+  ioInfo: ReactIOInfo,
+  description: string,
+  env: void | string,
+  rootEnv: string,
+): string {
+  return getIOShortName(ioInfo, description, env, rootEnv);
+}
+
+function getIOShortName(
+  ioInfo: ReactIOInfo,
+  description: string,
+  env: void | string,
+  rootEnv: string,
+): string {
+  const name = ioInfo.name;
+  const isPrimaryEnv = env === rootEnv;
+  return isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']';
+}
+
 export function logComponentAwaitAborted(
   asyncInfo: ReactAsyncInfo,
   trackIdx: number,
@@ -308,17 +332,16 @@ export function logComponentAwaitAborted(
   rootEnv: string,
 ): void {
   if (supportsUserTiming && endTime > 0) {
-    const env = asyncInfo.env;
-    const name = asyncInfo.awaited.name;
-    const isPrimaryEnv = env === rootEnv;
     const entryName =
-      'await ' +
-      (isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']');
+      'await ' + getIOShortName(asyncInfo.awaited, '', asyncInfo.env, rootEnv);
     const debugTask = asyncInfo.debugTask || asyncInfo.awaited.debugTask;
     if (__DEV__ && debugTask) {
       const properties = [
         ['Aborted', 'The stream was aborted before this Promise resolved.'],
       ];
+      const tooltipText =
+        getIOLongName(asyncInfo.awaited, '', asyncInfo.env, rootEnv) +
+        ' Aborted';
       debugTask.run(
         // $FlowFixMe[method-unbinding]
         performance.measure.bind(performance, entryName, {
@@ -330,7 +353,7 @@ export function logComponentAwaitAborted(
               track: trackNames[trackIdx],
               trackGroup: COMPONENTS_TRACK,
               properties,
-              tooltipText: entryName + ' Aborted',
+              tooltipText,
             },
           },
         }),
@@ -357,12 +380,10 @@ export function logComponentAwaitErrored(
   error: mixed,
 ): void {
   if (supportsUserTiming && endTime > 0) {
-    const env = asyncInfo.env;
-    const name = asyncInfo.awaited.name;
-    const isPrimaryEnv = env === rootEnv;
+    const description = getIODescription(error);
     const entryName =
       'await ' +
-      (isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']');
+      getIOShortName(asyncInfo.awaited, description, asyncInfo.env, rootEnv);
     const debugTask = asyncInfo.debugTask || asyncInfo.awaited.debugTask;
     if (__DEV__ && debugTask) {
       const message =
@@ -374,6 +395,9 @@ export function logComponentAwaitErrored(
           : // eslint-disable-next-line react-internal/safe-string-coercion
             String(error);
       const properties = [['Rejected', message]];
+      const tooltipText =
+        getIOLongName(asyncInfo.awaited, description, asyncInfo.env, rootEnv) +
+        ' Rejected';
       debugTask.run(
         // $FlowFixMe[method-unbinding]
         performance.measure.bind(performance, entryName, {
@@ -385,7 +409,7 @@ export function logComponentAwaitErrored(
               track: trackNames[trackIdx],
               trackGroup: COMPONENTS_TRACK,
               properties,
-              tooltipText: entryName + ' Rejected',
+              tooltipText,
             },
           },
         }),
@@ -412,13 +436,15 @@ export function logComponentAwait(
   value: mixed,
 ): void {
   if (supportsUserTiming && endTime > 0) {
-    const env = asyncInfo.env;
-    const name = asyncInfo.awaited.name;
-    const isPrimaryEnv = env === rootEnv;
+    const description = getIODescription(value);
+    const name = getIOShortName(
+      asyncInfo.awaited,
+      description,
+      asyncInfo.env,
+      rootEnv,
+    );
+    const entryName = 'await ' + name;
     const color = getIOColor(name);
-    const entryName =
-      'await ' +
-      (isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']');
     const debugTask = asyncInfo.debugTask || asyncInfo.awaited.debugTask;
     if (__DEV__ && debugTask) {
       const properties: Array<[string, string]> = [];
@@ -427,6 +453,12 @@ export function logComponentAwait(
       } else if (value !== undefined) {
         addValueToProperties('Resolved', value, properties, 0);
       }
+      const tooltipText = getIOLongName(
+        asyncInfo.awaited,
+        description,
+        asyncInfo.env,
+        rootEnv,
+      );
       debugTask.run(
         // $FlowFixMe[method-unbinding]
         performance.measure.bind(performance, entryName, {
@@ -438,6 +470,7 @@ export function logComponentAwait(
               track: trackNames[trackIdx],
               trackGroup: COMPONENTS_TRACK,
               properties,
+              tooltipText,
             },
           },
         }),
@@ -463,11 +496,8 @@ export function logIOInfoErrored(
   const startTime = ioInfo.start;
   const endTime = ioInfo.end;
   if (supportsUserTiming && endTime >= 0) {
-    const name = ioInfo.name;
-    const env = ioInfo.env;
-    const isPrimaryEnv = env === rootEnv;
-    const entryName =
-      isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']';
+    const description = getIODescription(error);
+    const entryName = getIOShortName(ioInfo, description, ioInfo.env, rootEnv);
     const debugTask = ioInfo.debugTask;
     if (__DEV__ && debugTask) {
       const message =
@@ -479,6 +509,8 @@ export function logIOInfoErrored(
           : // eslint-disable-next-line react-internal/safe-string-coercion
             String(error);
       const properties = [['Rejected', message]];
+      const tooltipText =
+        getIOLongName(ioInfo, description, ioInfo.env, rootEnv) + ' Rejected';
       debugTask.run(
         // $FlowFixMe[method-unbinding]
         performance.measure.bind(performance, entryName, {
@@ -489,7 +521,7 @@ export function logIOInfoErrored(
               color: 'error',
               track: IO_TRACK,
               properties,
-              tooltipText: entryName + ' Rejected',
+              tooltipText,
             },
           },
         }),
@@ -515,13 +547,10 @@ export function logIOInfo(
   const startTime = ioInfo.start;
   const endTime = ioInfo.end;
   if (supportsUserTiming && endTime >= 0) {
-    const name = ioInfo.name;
-    const env = ioInfo.env;
-    const isPrimaryEnv = env === rootEnv;
-    const entryName =
-      isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']';
+    const description = getIODescription(value);
+    const entryName = getIOShortName(ioInfo, description, ioInfo.env, rootEnv);
+    const color = getIOColor(entryName);
     const debugTask = ioInfo.debugTask;
-    const color = getIOColor(name);
     if (__DEV__ && debugTask) {
       const properties: Array<[string, string]> = [];
       if (typeof value === 'object' && value !== null) {
@@ -529,6 +558,12 @@ export function logIOInfo(
       } else if (value !== undefined) {
         addValueToProperties('Resolved', value, properties, 0);
       }
+      const tooltipText = getIOLongName(
+        ioInfo,
+        description,
+        ioInfo.env,
+        rootEnv,
+      );
       debugTask.run(
         // $FlowFixMe[method-unbinding]
         performance.measure.bind(performance, entryName, {
@@ -539,6 +574,7 @@ export function logIOInfo(
               color: color,
               track: IO_TRACK,
               properties,
+              tooltipText,
             },
           },
         }),
