@@ -100,7 +100,7 @@ import {getOwnerStackByComponentInfoInDev} from 'shared/ReactComponentInfoStack'
 
 import {injectInternals} from './ReactFlightClientDevToolsHook';
 
-import {OMITTED_PROP_ERROR} from './ReactFlightPropertyAccess';
+import {OMITTED_PROP_ERROR} from 'shared/ReactFlightPropertyAccess';
 
 import ReactVersion from 'shared/ReactVersion';
 

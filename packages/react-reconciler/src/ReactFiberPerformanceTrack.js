@@ -26,6 +26,11 @@ import {
   includesOnlyHydrationOrOffscreenLanes,
 } from './ReactFiberLane';
 
+import {
+  addValueToProperties,
+  addObjectToProperties,
+} from 'shared/ReactPerformanceTrackProperties';
+
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 
 const supportsUserTiming =
@@ -239,7 +244,7 @@ export function logComponentErrored(
       typeof performance.measure === 'function'
     ) {
       let debugTask: ?ConsoleTask = null;
-      const properties = [];
+      const properties: Array<[string, string]> = [];
       for (let i = 0; i < errors.length; i++) {
         const capturedValue = errors[i];
         if (debugTask == null && capturedValue.source !== null) {
@@ -260,6 +265,12 @@ export function logComponentErrored(
             : // eslint-disable-next-line react-internal/safe-string-coercion
               String(error);
         properties.push(['Error', message]);
+      }
+      if (fiber.key !== null) {
+        addValueToProperties('key', fiber.key, properties, 0);
+      }
+      if (fiber.memoizedProps !== null) {
+        addObjectToProperties(fiber.memoizedProps, properties, 0);
       }
       if (debugTask == null) {
         // If the captured values don't have a debug task, fallback to the
@@ -320,7 +331,7 @@ function logComponentEffectErrored(
       // $FlowFixMe[method-unbinding]
       typeof performance.measure === 'function'
     ) {
-      const properties = [];
+      const properties: Array<[string, string]> = [];
       for (let i = 0; i < errors.length; i++) {
         const capturedValue = errors[i];
         const error = capturedValue.value;
@@ -333,6 +344,12 @@ function logComponentEffectErrored(
             : // eslint-disable-next-line react-internal/safe-string-coercion
               String(error);
         properties.push(['Error', message]);
+      }
+      if (fiber.key !== null) {
+        addValueToProperties('key', fiber.key, properties, 0);
+      }
+      if (fiber.memoizedProps !== null) {
+        addObjectToProperties(fiber.memoizedProps, properties, 0);
       }
       const options = {
         start: startTime,
@@ -804,7 +821,7 @@ export function logRecoveredRenderPhase(
       // $FlowFixMe[method-unbinding]
       typeof performance.measure === 'function'
     ) {
-      const properties = [];
+      const properties: Array<[string, string]> = [];
       for (let i = 0; i < recoverableErrors.length; i++) {
         const capturedValue = recoverableErrors[i];
         const error = capturedValue.value;
@@ -928,7 +945,7 @@ export function logCommitErrored(
       // $FlowFixMe[method-unbinding]
       typeof performance.measure === 'function'
     ) {
-      const properties = [];
+      const properties: Array<[string, string]> = [];
       for (let i = 0; i < errors.length; i++) {
         const capturedValue = errors[i];
         const error = capturedValue.value;
