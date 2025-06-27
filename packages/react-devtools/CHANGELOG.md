@@ -4,6 +4,17 @@
 
 ---
 
+### 6.1.3
+June 27, 2025
+
+* devtools: emit performance entries only when profiling ([hoxyq](https://github.com/hoxyq) in [#33652](https://github.com/facebook/react/pull/33652))
+* Get Server Component Function Location for Parent Stacks using Child's Owner Stack ([sebmarkbage](https://github.com/sebmarkbage) in [#33629](https://github.com/facebook/react/pull/33629))
+* Added minimum indent size to Component Tree ([jsdf](https://github.com/jsdf) in [#33517](https://github.com/facebook/react/pull/33517))
+* refactor[devtools]: update css for settings and support css variables in shadow dom scnenario ([hoxyq](https://github.com/hoxyq) in [#33487](https://github.com/facebook/react/pull/33487))
+* Get source location from structured callsites in prepareStackTrace ([sebmarkbage](https://github.com/sebmarkbage) in [#33143](https://github.com/facebook/react/pull/33143))
+
+---
+
 ### 6.1.2
 May 7, 2025
 
