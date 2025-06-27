@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c0639191f928a48fcc462eb3b614ab82>>
+ * @generated SignedSource<<0f9c486840bf4438d803b6b4760b1522>>
  */
 
 "use strict";
@@ -825,6 +825,7 @@ var objectIs = "function" === typeof Object.is ? Object.is : is,
           }
           console.error(error);
         },
+  hasOwnProperty = Object.prototype.hasOwnProperty,
   prefix,
   suffix;
 function describeBuiltInComponentFrame(name) {
@@ -1636,7 +1637,6 @@ function getSuspendedCache() {
     ? null
     : { parent: CacheContext._currentValue2, pool: cacheFromPool };
 }
-var hasOwnProperty = Object.prototype.hasOwnProperty;
 function shallowEqual(objA, objB) {
   if (objectIs(objA, objB)) return !0;
   if (
@@ -10525,10 +10525,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1260 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-9b2a545b-20250625",
+  version: "19.2.0-native-fb-d2a288fe-20250627",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-9b2a545b-20250625",
+  reconcilerVersion: "19.2.0-native-fb-d2a288fe-20250627",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$155 = 0;
@@ -10679,4 +10679,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.2.0-native-fb-9b2a545b-20250625";
+exports.version = "19.2.0-native-fb-d2a288fe-20250627";

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3b2b558b0f53bb44eda50c63a6813755>>
+ * @generated SignedSource<<02e4bc0a247bcc2fae03f4320b37655d>>
  */
 
 "use strict";
@@ -1967,6 +1967,7 @@ var objectIs = "function" === typeof Object.is ? Object.is : is,
           }
           console.error(error);
         },
+  hasOwnProperty = Object.prototype.hasOwnProperty,
   CapturedStacks = new WeakMap();
 function createCapturedValueAtFiber(value, source) {
   if ("object" === typeof value && null !== value) {
@@ -2533,7 +2534,6 @@ function getSuspendedCache() {
     ? null
     : { parent: CacheContext._currentValue2, pool: cacheFromPool };
 }
-var hasOwnProperty = Object.prototype.hasOwnProperty;
 function shallowEqual(objA, objB) {
   if (objectIs(objA, objB)) return !0;
   if (
@@ -11029,10 +11029,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1257 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-9b2a545b-20250625",
+    version: "19.2.0-native-fb-d2a288fe-20250627",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-9b2a545b-20250625"
+    reconcilerVersion: "19.2.0-native-fb-d2a288fe-20250627"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1257.rendererConfig = extraDevToolsConfig);

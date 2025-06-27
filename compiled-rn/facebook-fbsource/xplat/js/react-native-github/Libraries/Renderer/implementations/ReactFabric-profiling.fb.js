@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2e72debd304412209eef28fe72c1b611>>
+ * @generated SignedSource<<12db920ecc8365f81d0133beb896453f>>
  */
 
 "use strict";
@@ -2051,6 +2051,7 @@ var objectIs = "function" === typeof Object.is ? Object.is : is,
           }
           console.error(error);
         },
+  hasOwnProperty = Object.prototype.hasOwnProperty,
   supportsUserTiming =
     "undefined" !== typeof console && "function" === typeof console.timeStamp,
   currentTrack = "Blocking";
@@ -2923,7 +2924,6 @@ function getSuspendedCache() {
     ? null
     : { parent: CacheContext._currentValue2, pool: cacheFromPool };
 }
-var hasOwnProperty = Object.prototype.hasOwnProperty;
 function shallowEqual(objA, objB) {
   if (objectIs(objA, objB)) return !0;
   if (
@@ -12932,10 +12932,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1490 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-9b2a545b-20250625",
+    version: "19.2.0-native-fb-d2a288fe-20250627",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-9b2a545b-20250625"
+    reconcilerVersion: "19.2.0-native-fb-d2a288fe-20250627"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1490.rendererConfig = extraDevToolsConfig);

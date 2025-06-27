@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<97cbb346ddd2b1bcb00e8360a1ef82bf>>
+ * @generated SignedSource<<c84f8c8135d52fee47f3e4218253fb75>>
  */
 
 "use strict";
@@ -777,6 +777,7 @@ var objectIs = "function" === typeof Object.is ? Object.is : is,
           }
           console.error(error);
         },
+  hasOwnProperty = Object.prototype.hasOwnProperty,
   prefix,
   suffix;
 function describeBuiltInComponentFrame(name) {
@@ -1520,7 +1521,6 @@ function getSuspendedCache() {
     ? null
     : { parent: CacheContext._currentValue2, pool: cacheFromPool };
 }
-var hasOwnProperty = Object.prototype.hasOwnProperty;
 function shallowEqual(objA, objB) {
   if (objectIs(objA, objB)) return !0;
   if (
@@ -9905,10 +9905,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1453 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-9b2a545b-20250625",
+  version: "19.2.0-native-fb-d2a288fe-20250627",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-9b2a545b-20250625"
+  reconcilerVersion: "19.2.0-native-fb-d2a288fe-20250627"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1454 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10044,4 +10044,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.2.0-native-fb-9b2a545b-20250625";
+exports.version = "19.2.0-native-fb-d2a288fe-20250627";

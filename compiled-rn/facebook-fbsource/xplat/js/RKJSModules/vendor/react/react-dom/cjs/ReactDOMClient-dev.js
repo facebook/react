@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6c1a8b9a30fef259200b63e7b175baf0>>
+ * @generated SignedSource<<e355cf9905136d20848cebe371abcfc9>>
  */
 
 /*
@@ -3862,6 +3862,147 @@ __DEV__ &&
       topLevelEventsToReactNames.set(domEventName, reactName);
       registerTwoPhaseEvent(reactName, [domEventName]);
     }
+    function getArrayKind(array) {
+      for (var kind = EMPTY_ARRAY, i = 0; i < array.length; i++) {
+        var value = array[i];
+        if ("object" === typeof value && null !== value)
+          if (
+            isArrayImpl(value) &&
+            2 === value.length &&
+            "string" === typeof value[0]
+          ) {
+            if (kind !== EMPTY_ARRAY && kind !== ENTRIES_ARRAY)
+              return COMPLEX_ARRAY;
+            kind = ENTRIES_ARRAY;
+          } else return COMPLEX_ARRAY;
+        else {
+          if (
+            "function" === typeof value ||
+            ("string" === typeof value && 50 < value.length) ||
+            (kind !== EMPTY_ARRAY && kind !== PRIMITIVE_ARRAY)
+          )
+            return COMPLEX_ARRAY;
+          kind = PRIMITIVE_ARRAY;
+        }
+      }
+      return kind;
+    }
+    function addObjectToProperties(object, properties, indent) {
+      for (var key in object)
+        hasOwnProperty.call(object, key) &&
+          "_" !== key[0] &&
+          addValueToProperties(key, object[key], properties, indent);
+    }
+    function addValueToProperties(propertyName, value, properties, indent) {
+      switch (typeof value) {
+        case "object":
+          if (null === value) {
+            value = "null";
+            break;
+          } else {
+            if (value.$$typeof === REACT_ELEMENT_TYPE) {
+              var typeName = getComponentNameFromType(value.type) || "\u2026",
+                key = value.key;
+              value = value.props;
+              var propsKeys = Object.keys(value),
+                propsLength = propsKeys.length;
+              if (null == key && 0 === propsLength) {
+                value = "<" + typeName + " />";
+                break;
+              }
+              if (
+                3 > indent ||
+                (1 === propsLength &&
+                  "children" === propsKeys[0] &&
+                  null == key)
+              ) {
+                value = "<" + typeName + " \u2026 />";
+                break;
+              }
+              properties.push([
+                "\u00a0\u00a0".repeat(indent) + propertyName,
+                "<" + typeName
+              ]);
+              null !== key &&
+                addValueToProperties("key", key, properties, indent + 1);
+              propertyName = !1;
+              for (var propKey in value)
+                "children" === propKey
+                  ? null != value.children &&
+                    (!isArrayImpl(value.children) ||
+                      0 < value.children.length) &&
+                    (propertyName = !0)
+                  : hasOwnProperty.call(value, propKey) &&
+                    "_" !== propKey[0] &&
+                    addValueToProperties(
+                      propKey,
+                      value[propKey],
+                      properties,
+                      indent + 1
+                    );
+              properties.push([
+                "",
+                propertyName ? ">\u2026</" + typeName + ">" : "/>"
+              ]);
+              return;
+            }
+            typeName = Object.prototype.toString.call(value);
+            typeName = typeName.slice(8, typeName.length - 1);
+            if ("Array" === typeName)
+              if (
+                ((propKey = getArrayKind(value)),
+                propKey === PRIMITIVE_ARRAY || propKey === EMPTY_ARRAY)
+              ) {
+                value = JSON.stringify(value);
+                break;
+              } else if (propKey === ENTRIES_ARRAY) {
+                properties.push([
+                  "\u00a0\u00a0".repeat(indent) + propertyName,
+                  ""
+                ]);
+                for (
+                  propertyName = 0;
+                  propertyName < value.length;
+                  propertyName++
+                )
+                  (typeName = value[propertyName]),
+                    addValueToProperties(
+                      typeName[0],
+                      typeName[1],
+                      properties,
+                      indent + 1
+                    );
+                return;
+              }
+            "Object" === typeName &&
+              (propKey = Object.getPrototypeOf(value)) &&
+              "function" === typeof propKey.constructor &&
+              (typeName = propKey.constructor.name);
+            properties.push([
+              "\u00a0\u00a0".repeat(indent) + propertyName,
+              "Object" === typeName ? (3 > indent ? "" : "\u2026") : typeName
+            ]);
+            3 > indent && addObjectToProperties(value, properties, indent + 1);
+            return;
+          }
+        case "function":
+          value = "" === value.name ? "() => {}" : value.name + "() {}";
+          break;
+        case "string":
+          value =
+            value === OMITTED_PROP_ERROR ? "\u2026" : JSON.stringify(value);
+          break;
+        case "undefined":
+          value = "undefined";
+          break;
+        case "boolean":
+          value = value ? "true" : "false";
+          break;
+        default:
+          value = String(value);
+      }
+      properties.push(["\u00a0\u00a0".repeat(indent) + propertyName, value]);
+    }
     function setCurrentTrackFromLanes(lanes) {
       currentTrack =
         lanes & 127
@@ -3970,6 +4111,10 @@ __DEV__ &&
                   : String(capturedValue)
               ]);
             }
+            null !== fiber.key &&
+              addValueToProperties("key", fiber.key, properties, 0);
+            null !== fiber.memoizedProps &&
+              addObjectToProperties(fiber.memoizedProps, properties, 0);
             null == debugTask && (debugTask = fiber._debugTask);
             fiber = {
               start: startTime,
@@ -4023,6 +4168,10 @@ __DEV__ &&
                     : String(error)
                 ]);
               }
+              null !== fiber.key &&
+                addValueToProperties("key", fiber.key, selfTime, 0);
+              null !== fiber.memoizedProps &&
+                addObjectToProperties(fiber.memoizedProps, selfTime, 0);
               startTime = {
                 start: startTime,
                 end: endTime,
@@ -26070,6 +26219,12 @@ __DEV__ &&
               }
               console.error(error);
             },
+      OMITTED_PROP_ERROR =
+        "This object has been omitted by React in the console log to avoid sending too much data from the server. Try logging smaller or more specific objects.",
+      EMPTY_ARRAY = 0,
+      COMPLEX_ARRAY = 1,
+      PRIMITIVE_ARRAY = 2,
+      ENTRIES_ARRAY = 3,
       supportsUserTiming =
         "undefined" !== typeof console &&
         "function" === typeof console.timeStamp,
@@ -28651,11 +28806,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-native-fb-9b2a545b-20250625" !== isomorphicReactPackageVersion)
+      if ("19.2.0-native-fb-d2a288fe-20250627" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-native-fb-9b2a545b-20250625\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-native-fb-d2a288fe-20250627\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -28692,10 +28847,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-native-fb-9b2a545b-20250625",
+          version: "19.2.0-native-fb-d2a288fe-20250627",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-native-fb-9b2a545b-20250625"
+          reconcilerVersion: "19.2.0-native-fb-d2a288fe-20250627"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -28833,5 +28988,5 @@ __DEV__ &&
       listenToAllSupportedEvents(container);
       return new ReactDOMHydrationRoot(initialChildren);
     };
-    exports.version = "19.2.0-native-fb-9b2a545b-20250625";
+    exports.version = "19.2.0-native-fb-d2a288fe-20250627";
   })();
