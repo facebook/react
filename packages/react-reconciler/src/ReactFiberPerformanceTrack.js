@@ -24,6 +24,7 @@ import {
   includesOnlyHydrationLanes,
   includesOnlyOffscreenLanes,
   includesOnlyHydrationOrOffscreenLanes,
+  includesSomeLane,
 } from './ReactFiberLane';
 
 import {
@@ -104,6 +105,7 @@ function logComponentTrigger(
     reusableComponentOptions.start = startTime;
     reusableComponentOptions.end = endTime;
     reusableComponentDevToolDetails.color = 'warning';
+    reusableComponentDevToolDetails.tooltipText = trigger;
     reusableComponentDevToolDetails.properties = null;
     const debugTask = fiber._debugTask;
     if (__DEV__ && debugTask) {
@@ -153,11 +155,30 @@ export function logComponentDisappeared(
   logComponentTrigger(fiber, startTime, endTime, 'Disconnect');
 }
 
+let alreadyWarnedForDeepEquality = false;
+
+export function pushDeepEquality(): boolean {
+  if (__DEV__) {
+    // If this is true then we don't reset it to false because we're tracking if any
+    // parent already warned about having deep equality props in this subtree.
+    return alreadyWarnedForDeepEquality;
+  }
+  return false;
+}
+
+export function popDeepEquality(prev: boolean): void {
+  if (__DEV__) {
+    alreadyWarnedForDeepEquality = prev;
+  }
+}
+
 const reusableComponentDevToolDetails = {
   color: 'primary',
   properties: (null: null | Array<[string, string]>),
+  tooltipText: '',
   track: COMPONENTS_TRACK,
 };
+
 const reusableComponentOptions = {
   start: -0,
   end: -0,
@@ -168,11 +189,17 @@ const reusableComponentOptions = {
 
 const resuableChangedPropsEntry = ['Changed Props', ''];
 
+const DEEP_EQUALITY_WARNING =
+  'This component received deeply equal props. It might benefit from useMemo or the React Compiler in its owner.';
+
+const reusableDeeplyEqualPropsEntry = ['Changed Props', DEEP_EQUALITY_WARNING];
+
 export function logComponentRender(
   fiber: Fiber,
   startTime: number,
   endTime: number,
   wasHydrated: boolean,
+  committedLanes: Lanes,
 ): void {
   const name = getComponentNameFromFiber(fiber);
   if (name === null) {
@@ -211,17 +238,36 @@ export function logComponentRender(
       ) {
         // If this is an update, we'll diff the props and emit which ones changed.
         const properties: Array<[string, string]> = [resuableChangedPropsEntry];
-        addObjectDiffToProperties(
+        const isDeeplyEqual = addObjectDiffToProperties(
           alternate.memoizedProps,
           props,
           properties,
           0,
         );
         if (properties.length > 1) {
+          if (
+            isDeeplyEqual &&
+            !alreadyWarnedForDeepEquality &&
+            !includesSomeLane(alternate.lanes, committedLanes) &&
+            (fiber.actualDuration: any) > 100
+          ) {
+            alreadyWarnedForDeepEquality = true;
+            // This is the first component in a subtree which rerendered with deeply equal props
+            // and didn't have its own work scheduled and took a non-trivial amount of time.
+            // We highlight this for further inspection.
+            // Note that we only consider this case if properties.length > 1 which it will only
+            // be if we have emitted any diffs. We'd only emit diffs if there were any nested
+            // equal objects. Therefore, we don't warn for simple shallow equality.
+            properties[0] = reusableDeeplyEqualPropsEntry;
+            reusableComponentDevToolDetails.color = 'warning';
+            reusableComponentDevToolDetails.tooltipText = DEEP_EQUALITY_WARNING;
+          } else {
+            reusableComponentDevToolDetails.color = color;
+            reusableComponentDevToolDetails.tooltipText = name;
+          }
+          reusableComponentDevToolDetails.properties = properties;
           reusableComponentOptions.start = startTime;
           reusableComponentOptions.end = endTime;
-          reusableComponentDevToolDetails.color = color;
-          reusableComponentDevToolDetails.properties = properties;
           debugTask.run(
             // $FlowFixMe[method-unbinding]
             performance.measure.bind(
