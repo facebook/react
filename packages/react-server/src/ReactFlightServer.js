@@ -3744,7 +3744,7 @@ function serializeDebugErrorValue(request: Request, error: Error): string {
     const errorInfo: ReactErrorInfoDev = {name, message, stack, env};
     const id = outlineDebugModel(
       request,
-      {objectLimit: stack.length + 2},
+      {objectLimit: stack.length * 2 + 1},
       errorInfo,
     );
     return '$Z' + id.toString(16);
