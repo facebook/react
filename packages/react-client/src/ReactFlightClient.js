@@ -702,14 +702,16 @@ export function reportGlobalError(response: Response, error: Error): void {
     }
   }
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
-    markAllTracksInOrder();
-    flushComponentPerformance(
-      response,
-      getChunk(response, 0),
-      0,
-      -Infinity,
-      -Infinity,
-    );
+    if (response._replayConsole) {
+      markAllTracksInOrder();
+      flushComponentPerformance(
+        response,
+        getChunk(response, 0),
+        0,
+        -Infinity,
+        -Infinity,
+      );
+    }
   }
 }
 
@@ -1838,7 +1840,9 @@ function ResponseInstance(
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     // Since we don't know when recording of profiles will start and stop, we have to
     // mark the order over and over again.
-    markAllTracksInOrder();
+    if (replayConsole) {
+      markAllTracksInOrder();
+    }
   }
 
   // Don't inline this call because it causes closure to outline the call above.
@@ -2963,28 +2967,30 @@ function initializeIOInfo(response: Response, ioInfo: ReactIOInfo): void {
   // $FlowFixMe[cannot-write]
   ioInfo.end += response._timeOrigin;
 
-  const env = response._rootEnvironmentName;
-  const promise = ioInfo.value;
-  if (promise) {
-    const thenable: Thenable<mixed> = (promise: any);
-    switch (thenable.status) {
-      case INITIALIZED:
-        logIOInfo(ioInfo, env, thenable.value);
-        break;
-      case ERRORED:
-        logIOInfoErrored(ioInfo, env, thenable.reason);
-        break;
-      default:
-        // If we haven't resolved the Promise yet, wait to log until have so we can include
-        // its data in the log.
-        promise.then(
-          logIOInfo.bind(null, ioInfo, env),
-          logIOInfoErrored.bind(null, ioInfo, env),
-        );
-        break;
+  if (response._replayConsole) {
+    const env = response._rootEnvironmentName;
+    const promise = ioInfo.value;
+    if (promise) {
+      const thenable: Thenable<mixed> = (promise: any);
+      switch (thenable.status) {
+        case INITIALIZED:
+          logIOInfo(ioInfo, env, thenable.value);
+          break;
+        case ERRORED:
+          logIOInfoErrored(ioInfo, env, thenable.reason);
+          break;
+        default:
+          // If we haven't resolved the Promise yet, wait to log until have so we can include
+          // its data in the log.
+          promise.then(
+            logIOInfo.bind(null, ioInfo, env),
+            logIOInfoErrored.bind(null, ioInfo, env),
+          );
+          break;
+      }
+    } else {
+      logIOInfo(ioInfo, env, undefined);
     }
-  } else {
-    logIOInfo(ioInfo, env, undefined);
   }
 }
 
