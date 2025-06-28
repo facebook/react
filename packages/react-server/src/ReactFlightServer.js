@@ -58,11 +58,10 @@ import type {
   FulfilledThenable,
   RejectedThenable,
   ReactDebugInfo,
+  ReactDebugInfoEntry,
   ReactComponentInfo,
-  ReactEnvironmentInfo,
   ReactIOInfo,
   ReactAsyncInfo,
-  ReactTimeInfo,
   ReactStackTrace,
   ReactCallSite,
   ReactFunctionLocation,
@@ -4078,11 +4077,7 @@ function emitDebugHaltChunk(request: Request, id: number): void {
 function emitDebugChunk(
   request: Request,
   id: number,
-  debugInfo:
-    | ReactComponentInfo
-    | ReactAsyncInfo
-    | ReactEnvironmentInfo
-    | ReactTimeInfo,
+  debugInfo: ReactDebugInfoEntry,
 ): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
