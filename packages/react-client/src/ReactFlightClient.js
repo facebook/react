@@ -805,6 +805,17 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
     initializingChunk = cyclicChunk;
   }
 
+  if (__DEV__) {
+    const blockingDebugChunk = chunk._blockedDebugInfo;
+    if (
+      blockingDebugChunk != null &&
+      (blockingDebugChunk.status === BLOCKED ||
+        blockingDebugChunk.status === PENDING)
+    ) {
+      waitForReference(blockingDebugChunk, {}, '', response, () => {}, ['']);
+    }
+  }
+
   try {
     const value: T = parseModel(response, resolvedModel);
     // Invoke any listeners added while resolving this model. I.e. cyclic
@@ -2433,6 +2444,22 @@ function resolveStream<T: ReadableStream | $AsyncIterable<any, any, void>>(
     chunks.set(id, createInitializedStreamChunk(response, stream, controller));
     return;
   }
+  if (__DEV__) {
+    const blockedDebugInfo = chunk._blockedDebugInfo;
+    if (blockedDebugInfo != null) {
+      // If we're blocked on debug info, wait until it has loaded before we resolve.
+      const unblock = resolveStream.bind(
+        null,
+        response,
+        id,
+        stream,
+        controller,
+      );
+      blockedDebugInfo.then(unblock, unblock);
+      return;
+    }
+  }
+
   if (chunk.status !== PENDING) {
     // We already resolved. We didn't expect to see this.
     return;
@@ -2814,6 +2841,41 @@ function resolvePostponeDev(
     chunks.set(id, createErrorChunk(response, postponeInstance));
   } else {
     triggerErrorOnChunk(response, chunk, postponeInstance);
+  }
+}
+
+function resolveErrorModel(
+  response: Response,
+  id: number,
+  row: UninitializedModel,
+): void {
+  const chunks = response._chunks;
+  const chunk = chunks.get(id);
+  if (__DEV__ && chunk) {
+    if (__DEV__) {
+      const blockedDebugInfo = chunk._blockedDebugInfo;
+      if (blockedDebugInfo != null) {
+        // If we're blocked on debug info, wait until it has loaded before we resolve.
+        // TODO: Handle cycle if that model depends on this one.
+        const unblock = resolveErrorModel.bind(null, response, id, row);
+        blockedDebugInfo.then(unblock, unblock);
+        return;
+      }
+    }
+  }
+  const errorInfo = JSON.parse(row);
+  let error;
+  if (__DEV__) {
+    error = resolveErrorDev(response, errorInfo);
+  } else {
+    error = resolveErrorProd(response);
+  }
+  (error: any).digest = errorInfo.digest;
+  const errorWithDigest: ErrorWithDigest = (error: any);
+  if (!chunk) {
+    chunks.set(id, createErrorChunk(response, errorWithDigest));
+  } else {
+    triggerErrorOnChunk(response, chunk, errorWithDigest);
   }
 }
 
@@ -3276,28 +3338,18 @@ function resolveDebugModel(
   json: UninitializedModel,
 ): void {
   const parentChunk = getChunk(response, id);
-  const blockedChunk = parentChunk._blockedDebugInfo;
-  if (blockedChunk == null) {
-    // If we're not blocked on any other chunks, we can try to eagerly initialize
-    // this as a fast-path to avoid awaiting them.
-    const chunk: ResolvedModelChunk<ReactDebugInfoEntry> =
-      createResolvedModelChunk(response, json);
-    initializeModelChunk(chunk);
-    const initializedChunk: SomeChunk<ReactDebugInfoEntry> = chunk;
-    if (initializedChunk.status === INITIALIZED) {
-      resolveDebugInfo(response, parentChunk, initializedChunk.value);
-    } else {
-      chunk.then(
-        v => resolveDebugInfo(response, parentChunk, v),
-        e => {
-          // Ignore debug info errors for now. Unnecessary noise.
-        },
-      );
-      parentChunk._blockedDebugInfo = chunk;
-    }
+  // If we're not blocked on any other chunks, we can try to eagerly initialize
+  // this as a fast-path to avoid awaiting them.
+  const chunk: ResolvedModelChunk<ReactDebugInfoEntry> =
+    createResolvedModelChunk(response, json);
+  // The previous blocked chunk is now blocking this one.
+  chunk._blockedDebugInfo = parentChunk._blockedDebugInfo;
+  initializeModelChunk(chunk);
+  const initializedChunk: SomeChunk<ReactDebugInfoEntry> = chunk;
+  if (initializedChunk.status === INITIALIZED) {
+    resolveDebugInfo(response, parentChunk, initializedChunk.value);
+    parentChunk._blockedDebugInfo = null;
   } else {
-    // We're still waiting on a previous chunk so we can't enqueue quite yet.
-    const chunk: SomeChunk<ReactDebugInfoEntry> = createPendingChunk(response);
     chunk.then(
       v => resolveDebugInfo(response, parentChunk, v),
       e => {
@@ -3305,14 +3357,6 @@ function resolveDebugModel(
       },
     );
     parentChunk._blockedDebugInfo = chunk;
-    blockedChunk.then(function () {
-      if (parentChunk._blockedDebugInfo === chunk) {
-        // We were still the last chunk so we can now clear the queue and return
-        // to synchronous emitting.
-        parentChunk._blockedDebugInfo = null;
-      }
-      resolveModelChunk(response, chunk, json);
-    });
   }
 }
 
@@ -3956,22 +4000,7 @@ function processFullStringRow(
       return;
     }
     case 69 /* "E" */: {
-      const errorInfo = JSON.parse(row);
-      let error;
-      if (__DEV__) {
-        error = resolveErrorDev(response, errorInfo);
-      } else {
-        error = resolveErrorProd(response);
-      }
-      (error: any).digest = errorInfo.digest;
-      const errorWithDigest: ErrorWithDigest = (error: any);
-      const chunks = response._chunks;
-      const chunk = chunks.get(id);
-      if (!chunk) {
-        chunks.set(id, createErrorChunk(response, errorWithDigest));
-      } else {
-        triggerErrorOnChunk(response, chunk, errorWithDigest);
-      }
+      resolveErrorModel(response, id, row);
       return;
     }
     case 84 /* "T" */: {
