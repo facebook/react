@@ -12,7 +12,8 @@ import type {
   Fiber,
   FiberRoot,
 } from './ReactInternalTypes';
-import type {OffscreenInstance} from './ReactFiberActivityComponent';
+import type {Transition} from 'react/src/ReactStartTransition';
+import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
 import type {StackCursor} from './ReactFiberStack';
 
 import {enableTransitionTracing} from 'shared/ReactFeatureFlags';
@@ -34,19 +35,6 @@ export type PendingTransitionCallbacks = {
     {aborts: Array<TransitionAbort>, transitions: Set<Transition>},
   > | null,
   markerComplete: Map<string, Set<Transition>> | null,
-};
-
-// TODO: Unclear to me why these are separate types
-export type Transition = {
-  name: string,
-  startTime: number,
-  ...
-};
-
-export type BatchConfigTransition = {
-  name?: string,
-  startTime?: number,
-  _updatedFibers?: Set<Fiber>,
 };
 
 // TODO: Is there a way to not include the tag or name here?
@@ -79,9 +67,11 @@ export function processTransitionCallbacks(
       const transitionStart = pendingTransitions.transitionStart;
       const onTransitionStart = callbacks.onTransitionStart;
       if (transitionStart !== null && onTransitionStart != null) {
-        transitionStart.forEach(transition =>
-          onTransitionStart(transition.name, transition.startTime),
-        );
+        transitionStart.forEach(transition => {
+          if (transition.name != null) {
+            onTransitionStart(transition.name, transition.startTime);
+          }
+        });
       }
 
       const markerProgress = pendingTransitions.markerProgress;
@@ -95,13 +85,15 @@ export function processTransitionCallbacks(
                 ? Array.from(markerInstance.pendingBoundaries.values())
                 : [];
             markerInstance.transitions.forEach(transition => {
-              onMarkerProgress(
-                transition.name,
-                markerName,
-                transition.startTime,
-                endTime,
-                pending,
-              );
+              if (transition.name != null) {
+                onMarkerProgress(
+                  transition.name,
+                  markerName,
+                  transition.startTime,
+                  endTime,
+                  pending,
+                );
+              }
             });
           }
         });
@@ -112,12 +104,14 @@ export function processTransitionCallbacks(
       if (markerComplete !== null && onMarkerComplete != null) {
         markerComplete.forEach((transitions, markerName) => {
           transitions.forEach(transition => {
-            onMarkerComplete(
-              transition.name,
-              markerName,
-              transition.startTime,
-              endTime,
-            );
+            if (transition.name != null) {
+              onMarkerComplete(
+                transition.name,
+                markerName,
+                transition.startTime,
+                endTime,
+              );
+            }
           });
         });
       }
@@ -153,12 +147,14 @@ export function processTransitionCallbacks(
             });
 
             if (filteredAborts.length > 0) {
-              onMarkerIncomplete(
-                transition.name,
-                markerName,
-                transition.startTime,
-                filteredAborts,
-              );
+              if (transition.name != null) {
+                onMarkerIncomplete(
+                  transition.name,
+                  markerName,
+                  transition.startTime,
+                  filteredAborts,
+                );
+              }
             }
           });
         });
@@ -168,21 +164,29 @@ export function processTransitionCallbacks(
       const onTransitionProgress = callbacks.onTransitionProgress;
       if (onTransitionProgress != null && transitionProgress !== null) {
         transitionProgress.forEach((pending, transition) => {
-          onTransitionProgress(
-            transition.name,
-            transition.startTime,
-            endTime,
-            Array.from(pending.values()),
-          );
+          if (transition.name != null) {
+            onTransitionProgress(
+              transition.name,
+              transition.startTime,
+              endTime,
+              Array.from(pending.values()),
+            );
+          }
         });
       }
 
       const transitionComplete = pendingTransitions.transitionComplete;
       const onTransitionComplete = callbacks.onTransitionComplete;
       if (transitionComplete !== null && onTransitionComplete != null) {
-        transitionComplete.forEach(transition =>
-          onTransitionComplete(transition.name, transition.startTime, endTime),
-        );
+        transitionComplete.forEach(transition => {
+          if (transition.name != null) {
+            onTransitionComplete(
+              transition.name,
+              transition.startTime,
+              endTime,
+            );
+          }
+        });
       }
     }
   }

@@ -19,6 +19,7 @@ import type {
   ChildSet,
   Resource,
 } from './ReactFiberConfig';
+import type {ActivityState} from './ReactFiberActivityComponent';
 import type {
   SuspenseState,
   SuspenseListRenderState,
@@ -27,7 +28,7 @@ import type {
 import type {
   OffscreenState,
   OffscreenQueue,
-} from './ReactFiberActivityComponent';
+} from './ReactFiberOffscreenComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 import type {Cache} from './ReactFiberCacheComponent';
 import {
@@ -37,11 +38,10 @@ import {
   enablePersistedModeClonedFlag,
   enableProfilerTimer,
   enableTransitionTracing,
-  enableRenderableContext,
   passChildrenWhenCloningPersistedNodes,
   disableLegacyMode,
-  enableSiblingPrerendering,
   enableViewTransition,
+  enableSuspenseyImages,
 } from 'shared/ReactFeatureFlags';
 
 import {now} from './Scheduler';
@@ -77,7 +77,12 @@ import {
   ViewTransitionComponent,
   ActivityComponent,
 } from './ReactWorkTags';
-import {NoMode, ConcurrentMode, ProfileMode} from './ReactTypeOfMode';
+import {
+  NoMode,
+  ConcurrentMode,
+  ProfileMode,
+  SuspenseyImagesMode,
+} from './ReactTypeOfMode';
 import {
   Placement,
   Update,
@@ -95,6 +100,7 @@ import {
   ShouldSuspendCommit,
   Cloned,
   ViewTransitionStatic,
+  Hydrate,
 } from './ReactFiberFlags';
 
 import {
@@ -103,6 +109,7 @@ import {
   resolveSingletonInstance,
   appendInitialChild,
   finalizeInitialChildren,
+  finalizeHydratedChildren,
   supportsMutation,
   supportsPersistence,
   supportsResources,
@@ -116,6 +123,8 @@ import {
   preparePortalMount,
   prepareScopeUpdate,
   maySuspendCommit,
+  maySuspendCommitOnUpdate,
+  maySuspendCommitInSyncRender,
   mayResourceSuspendCommit,
   preloadInstance,
   preloadResource,
@@ -141,11 +150,12 @@ import {
   isContextProvider as isLegacyContextProvider,
   popContext as popLegacyContext,
   popTopLevelContextObject as popTopLevelLegacyContextObject,
-} from './ReactFiberContext';
+} from './ReactFiberLegacyContext';
 import {popProvider} from './ReactFiberNewContext';
 import {
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,
+  prepareToHydrateHostActivityInstance,
   prepareToHydrateHostSuspenseInstance,
   popHydrationState,
   resetHydrationState,
@@ -167,12 +177,13 @@ import {
   includesSomeLane,
   mergeLanes,
   claimNextRetryLane,
+  includesOnlySuspenseyCommitEligibleLanes,
 } from './ReactFiberLane';
 import {resetChildFibers} from './ReactChildFiber';
 import {createScopeInstance} from './ReactFiberScope';
 import {transferActualDuration} from './ReactProfilerTimer';
 import {popCacheProvider} from './ReactFiberCacheComponent';
-import {popTreeContext} from './ReactFiberTreeContext';
+import {popTreeContext, pushTreeFork} from './ReactFiberTreeContext';
 import {popRootTransition, popTransition} from './ReactFiberTransition';
 import {
   popMarkerInstance,
@@ -547,10 +558,18 @@ function updateHostComponent(
 function preloadInstanceAndSuspendIfNeeded(
   workInProgress: Fiber,
   type: Type,
-  props: Props,
+  oldProps: null | Props,
+  newProps: Props,
   renderLanes: Lanes,
 ) {
-  if (!maySuspendCommit(type, props)) {
+  const maySuspend =
+    (enableSuspenseyImages ||
+      (workInProgress.mode & SuspenseyImagesMode) !== NoMode) &&
+    (oldProps === null
+      ? maySuspendCommit(type, newProps)
+      : maySuspendCommitOnUpdate(type, oldProps, newProps));
+
+  if (!maySuspend) {
     // If this flag was set previously, we can remove it. The flag
     // represents whether this particular set of props might ever need to
     // suspend. The safest thing to do is for maySuspendCommit to always
@@ -568,15 +587,25 @@ function preloadInstanceAndSuspendIfNeeded(
   // loaded yet.
   workInProgress.flags |= MaySuspendCommit;
 
-  // preload the instance if necessary. Even if this is an urgent render there
-  // could be benefits to preloading early.
-  // @TODO we should probably do the preload in begin work
-  const isReady = preloadInstance(type, props);
-  if (!isReady) {
-    if (shouldRemainOnPreviousScreen()) {
-      workInProgress.flags |= ShouldSuspendCommit;
+  if (
+    includesOnlySuspenseyCommitEligibleLanes(renderLanes) ||
+    maySuspendCommitInSyncRender(type, newProps)
+  ) {
+    // preload the instance if necessary. Even if this is an urgent render there
+    // could be benefits to preloading early.
+    // @TODO we should probably do the preload in begin work
+    const isReady = preloadInstance(workInProgress.stateNode, type, newProps);
+    if (!isReady) {
+      if (shouldRemainOnPreviousScreen()) {
+        workInProgress.flags |= ShouldSuspendCommit;
+      } else {
+        suspendCommit();
+      }
     } else {
-      suspendCommit();
+      // Even if we're ready we suspend the commit and check again in the pre-commit
+      // phase if we need to suspend anyway. Such as if it's delayed on decoding or
+      // if it was dropped from the cache while rendering due to pressure.
+      workInProgress.flags |= ShouldSuspendCommit;
     }
   }
 }
@@ -636,9 +665,7 @@ function scheduleRetryEffect(
 
     // Track the lanes that have been scheduled for an immediate retry so that
     // we can mark them as suspended upon committing the root.
-    if (enableSiblingPrerendering) {
-      markSpawnedRetryLane(retryLane);
-    }
+    markSpawnedRetryLane(retryLane);
   }
 }
 
@@ -870,6 +897,88 @@ function bubbleProperties(completedWork: Fiber) {
   return didBailout;
 }
 
+function completeDehydratedActivityBoundary(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  nextState: ActivityState | null,
+): boolean {
+  const wasHydrated = popHydrationState(workInProgress);
+
+  if (nextState !== null) {
+    // We might be inside a hydration state the first time we're picking up this
+    // Activity boundary, and also after we've reentered it for further hydration.
+    if (current === null) {
+      if (!wasHydrated) {
+        throw new Error(
+          'A dehydrated suspense component was completed without a hydrated node. ' +
+            'This is probably a bug in React.',
+        );
+      }
+      prepareToHydrateHostActivityInstance(workInProgress);
+      bubbleProperties(workInProgress);
+      if (enableProfilerTimer) {
+        if ((workInProgress.mode & ProfileMode) !== NoMode) {
+          const isTimedOutSuspense = nextState !== null;
+          if (isTimedOutSuspense) {
+            // Don't count time spent in a timed out Suspense subtree as part of the base duration.
+            const primaryChildFragment = workInProgress.child;
+            if (primaryChildFragment !== null) {
+              // $FlowFixMe[unsafe-arithmetic] Flow doesn't support type casting in combination with the -= operator
+              workInProgress.treeBaseDuration -=
+                ((primaryChildFragment.treeBaseDuration: any): number);
+            }
+          }
+        }
+      }
+      return false;
+    } else {
+      emitPendingHydrationWarnings();
+      // We might have reentered this boundary to hydrate it. If so, we need to reset the hydration
+      // state since we're now exiting out of it. popHydrationState doesn't do that for us.
+      resetHydrationState();
+      if ((workInProgress.flags & DidCapture) === NoFlags) {
+        // This boundary did not suspend so it's now hydrated and unsuspended.
+        nextState = workInProgress.memoizedState = null;
+      }
+      // If nothing suspended, we need to schedule an effect to mark this boundary
+      // as having hydrated so events know that they're free to be invoked.
+      // It's also a signal to replay events and the suspense callback.
+      // If something suspended, schedule an effect to attach retry listeners.
+      // So we might as well always mark this.
+      workInProgress.flags |= Update;
+      bubbleProperties(workInProgress);
+      if (enableProfilerTimer) {
+        if ((workInProgress.mode & ProfileMode) !== NoMode) {
+          const isTimedOutSuspense = nextState !== null;
+          if (isTimedOutSuspense) {
+            // Don't count time spent in a timed out Suspense subtree as part of the base duration.
+            const primaryChildFragment = workInProgress.child;
+            if (primaryChildFragment !== null) {
+              // $FlowFixMe[unsafe-arithmetic] Flow doesn't support type casting in combination with the -= operator
+              workInProgress.treeBaseDuration -=
+                ((primaryChildFragment.treeBaseDuration: any): number);
+            }
+          }
+        }
+      }
+      return false;
+    }
+  } else {
+    // Successfully completed this tree. If this was a forced client render,
+    // there may have been recoverable errors during first hydration
+    // attempt. If so, add them to a queue so we can log them in the
+    // commit phase. We also add them to prev state so we can get to them
+    // from the Suspense Boundary.
+    const hydrationErrors = upgradeHydrationErrorsToRecoverable();
+    if (current !== null && current.memoizedState !== null) {
+      const prevState: ActivityState = current.memoizedState;
+      prevState.hydrationErrors = hydrationErrors;
+    }
+    // Fall through to normal Offscreen path
+    return true;
+  }
+}
+
 function completeDehydratedSuspenseBoundary(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -911,7 +1020,7 @@ function completeDehydratedSuspenseBoundary(
       resetHydrationState();
       if ((workInProgress.flags & DidCapture) === NoFlags) {
         // This boundary did not suspend so it's now hydrated and unsuspended.
-        workInProgress.memoizedState = null;
+        nextState = workInProgress.memoizedState = null;
       }
       // If nothing suspended, we need to schedule an effect to mark this boundary
       // as having hydrated so events know that they're free to be invoked.
@@ -970,7 +1079,6 @@ function completeWork(
       }
       // Fallthrough
     }
-    case ActivityComponent:
     case LazyComponent:
     case SimpleMemoComponent:
     case FunctionComponent:
@@ -1104,6 +1212,7 @@ function completeWork(
             preloadInstanceAndSuspendIfNeeded(
               workInProgress,
               type,
+              null,
               newProps,
               renderLanes,
             );
@@ -1137,10 +1246,10 @@ function completeWork(
               return null;
             }
           } else {
+            const oldProps = current.memoizedProps;
             // This is an Instance
             // We may have props to update on the Hoistable instance.
             if (supportsMutation) {
-              const oldProps = current.memoizedProps;
               if (oldProps !== newProps) {
                 markUpdate(workInProgress);
               }
@@ -1160,6 +1269,7 @@ function completeWork(
             preloadInstanceAndSuspendIfNeeded(
               workInProgress,
               type,
+              oldProps,
               newProps,
               renderLanes,
             );
@@ -1279,6 +1389,16 @@ function completeWork(
           // TODO: Move this and createInstance step into the beginPhase
           // to consolidate.
           prepareToHydrateHostInstance(workInProgress, currentHostContext);
+          if (
+            finalizeHydratedChildren(
+              workInProgress.stateNode,
+              type,
+              newProps,
+              currentHostContext,
+            )
+          ) {
+            workInProgress.flags |= Hydrate;
+          }
         } else {
           const rootContainerInstance = getRootHostContainer();
           const instance = createInstance(
@@ -1323,6 +1443,7 @@ function completeWork(
       preloadInstanceAndSuspendIfNeeded(
         workInProgress,
         workInProgress.type,
+        current === null ? null : current.memoizedProps,
         workInProgress.pendingProps,
         renderLanes,
       );
@@ -1360,6 +1481,46 @@ function completeWork(
           );
         }
       }
+      bubbleProperties(workInProgress);
+      return null;
+    }
+    case ActivityComponent: {
+      const nextState: null | ActivityState = workInProgress.memoizedState;
+
+      if (current === null || current.memoizedState !== null) {
+        const fallthroughToNormalOffscreenPath =
+          completeDehydratedActivityBoundary(
+            current,
+            workInProgress,
+            nextState,
+          );
+        if (!fallthroughToNormalOffscreenPath) {
+          if (workInProgress.flags & ForceClientRender) {
+            popSuspenseHandler(workInProgress);
+            // Special case. There were remaining unhydrated nodes. We treat
+            // this as a mismatch. Revert to client rendering.
+            return workInProgress;
+          } else {
+            popSuspenseHandler(workInProgress);
+            // Did not finish hydrating, either because this is the initial
+            // render or because something suspended.
+            return null;
+          }
+        }
+
+        if ((workInProgress.flags & DidCapture) !== NoFlags) {
+          // We called retryActivityComponentWithoutHydrating and tried client rendering
+          // but now we suspended again. We should never arrive here because we should
+          // not have pushed a suspense handler during that second pass and it should
+          // instead have suspended above.
+          throw new Error(
+            'Client rendering an Activity suspended it again. This is a bug in React.',
+          );
+        }
+
+        // Continue with the normal Activity path.
+      }
+
       bubbleProperties(workInProgress);
       return null;
     }
@@ -1404,7 +1565,6 @@ function completeWork(
       if ((workInProgress.flags & DidCapture) !== NoFlags) {
         // Something suspended. Re-render with the fallback children.
         workInProgress.lanes = renderLanes;
-        // Do not reset the effect list.
         if (
           enableProfilerTimer &&
           (workInProgress.mode & ProfileMode) !== NoMode
@@ -1506,12 +1666,7 @@ function completeWork(
       return null;
     case ContextProvider:
       // Pop provider fiber
-      let context: ReactContext<any>;
-      if (enableRenderableContext) {
-        context = workInProgress.type;
-      } else {
-        context = workInProgress.type._context;
-      }
+      const context: ReactContext<any> = workInProgress.type;
       popProvider(context, workInProgress);
       bubbleProperties(workInProgress);
       return null;
@@ -1603,6 +1758,10 @@ function completeWork(
                     ForceSuspenseFallback,
                   ),
                 );
+                if (getIsHydrating()) {
+                  // Re-apply tree fork since we popped the tree fork context in the beginning of this function.
+                  pushTreeFork(workInProgress, renderState.treeForkCount);
+                }
                 // Don't bubble properties in this case.
                 return workInProgress.child;
               }
@@ -1729,6 +1888,10 @@ function completeWork(
         }
         pushSuspenseListContext(workInProgress, suspenseContext);
         // Do a pass over the next row.
+        if (getIsHydrating()) {
+          // Re-apply tree fork since we popped the tree fork context in the beginning of this function.
+          pushTreeFork(workInProgress, renderState.treeForkCount);
+        }
         // Don't bubble properties in this case.
         return next;
       }

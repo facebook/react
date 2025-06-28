@@ -141,14 +141,14 @@ function getCompareDependencyResultDescription(
 ): string {
   switch (result) {
     case CompareDependencyResult.Ok:
-      return 'dependencies equal';
+      return 'Dependencies equal';
     case CompareDependencyResult.RootDifference:
     case CompareDependencyResult.PathDifference:
-      return 'inferred different dependency than source';
+      return 'Inferred different dependency than source';
     case CompareDependencyResult.RefAccessDifference:
-      return 'differences in ref.current access';
+      return 'Differences in ref.current access';
     case CompareDependencyResult.Subpath:
-      return 'inferred less specific property than source';
+      return 'Inferred less specific property than source';
   }
 }
 
@@ -279,17 +279,20 @@ function validateInferredDep(
     severity: ErrorSeverity.CannotPreserveMemoization,
     reason:
       'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected',
-    description: DEBUG
-      ? `The inferred dependency was \`${prettyPrintScopeDependency(
-          dep,
-        )}\`, but the source dependencies were [${validDepsInMemoBlock
-          .map(dep => printManualMemoDependency(dep, true))
-          .join(', ')}]. Detail: ${
-          errorDiagnostic
-            ? getCompareDependencyResultDescription(errorDiagnostic)
-            : 'none'
-        }`
-      : null,
+    description:
+      DEBUG ||
+      // If the dependency is a named variable then we can report it. Otherwise only print in debug mode
+      (dep.identifier.name != null && dep.identifier.name.kind === 'named')
+        ? `The inferred dependency was \`${prettyPrintScopeDependency(
+            dep,
+          )}\`, but the source dependencies were [${validDepsInMemoBlock
+            .map(dep => printManualMemoDependency(dep, true))
+            .join(', ')}]. ${
+            errorDiagnostic
+              ? getCompareDependencyResultDescription(errorDiagnostic)
+              : 'Inferred dependency not present in source'
+          }`
+        : null,
     loc: memoLocation,
     suggestions: null,
   });

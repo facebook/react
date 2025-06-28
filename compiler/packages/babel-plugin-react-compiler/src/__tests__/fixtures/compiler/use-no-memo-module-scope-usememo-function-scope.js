@@ -1,4 +1,4 @@
-// @compilationMode(all)
+// @compilationMode:"all"
 'use no memo';
 
 function TestComponent({x}) {

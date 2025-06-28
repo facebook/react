@@ -8,21 +8,25 @@
  */
 
 import type {ReactElement} from 'shared/ReactElementType';
-import type {ReactFragment, ReactPortal, ReactScope} from 'shared/ReactTypes';
+import type {
+  ReactFragment,
+  ReactPortal,
+  ReactScope,
+  ViewTransitionProps,
+  ActivityProps,
+} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Lanes} from './ReactFiberLane';
-import type {SuspenseInstance} from './ReactFiberConfig';
+import type {ActivityInstance, SuspenseInstance} from './ReactFiberConfig';
 import type {
+  LegacyHiddenProps,
   OffscreenProps,
   OffscreenInstance,
-} from './ReactFiberActivityComponent';
-import type {
-  ViewTransitionProps,
-  ViewTransitionState,
-} from './ReactFiberViewTransitionComponent';
+} from './ReactFiberOffscreenComponent';
+import type {ViewTransitionState} from './ReactFiberViewTransitionComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 
 import {
@@ -36,11 +40,10 @@ import {
   enableScopeAPI,
   enableLegacyHidden,
   enableTransitionTracing,
-  enableDO_NOT_USE_disableStrictPassiveEffect,
-  enableRenderableContext,
   disableLegacyMode,
   enableObjectFiber,
   enableViewTransition,
+  enableSuspenseyImages,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
@@ -73,7 +76,7 @@ import {
   ViewTransitionComponent,
   ActivityComponent,
 } from './ReactWorkTags';
-import {OffscreenVisible} from './ReactFiberActivityComponent';
+import {OffscreenVisible} from './ReactFiberOffscreenComponent';
 import {getComponentNameFromOwner} from 'react-reconciler/src/getComponentNameFromFiber';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {
@@ -88,14 +91,13 @@ import {
   ProfileMode,
   StrictLegacyMode,
   StrictEffectsMode,
-  NoStrictPassiveEffectsMode,
+  SuspenseyImagesMode,
 } from './ReactTypeOfMode';
 import {
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_PROFILER_TYPE,
-  REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_CONSUMER_TYPE,
   REACT_SUSPENSE_TYPE,
@@ -595,12 +597,6 @@ export function createFiberFromTypeAndProps(
         if (disableLegacyMode || (mode & ConcurrentMode) !== NoMode) {
           // Strict effects should never run on legacy roots
           mode |= StrictEffectsMode;
-          if (
-            enableDO_NOT_USE_disableStrictPassiveEffect &&
-            pendingProps.DO_NOT_USE_disableStrictPassiveEffect
-          ) {
-            mode |= NoStrictPassiveEffectsMode;
-          }
         }
         break;
       case REACT_PROFILER_TYPE:
@@ -632,25 +628,12 @@ export function createFiberFromTypeAndProps(
       default: {
         if (typeof type === 'object' && type !== null) {
           switch (type.$$typeof) {
-            case REACT_PROVIDER_TYPE:
-              if (!enableRenderableContext) {
-                fiberTag = ContextProvider;
-                break getTag;
-              }
-            // Fall through
             case REACT_CONTEXT_TYPE:
-              if (enableRenderableContext) {
-                fiberTag = ContextProvider;
-                break getTag;
-              } else {
-                fiberTag = ContextConsumer;
-                break getTag;
-              }
+              fiberTag = ContextProvider;
+              break getTag;
             case REACT_CONSUMER_TYPE:
-              if (enableRenderableContext) {
-                fiberTag = ContextConsumer;
-                break getTag;
-              }
+              fiberTag = ContextConsumer;
+              break getTag;
             // Fall through
             case REACT_FORWARD_REF_TYPE:
               fiberTag = ForwardRef;
@@ -858,7 +841,7 @@ export function createFiberFromOffscreen(
   return fiber;
 }
 export function createFiberFromActivity(
-  pendingProps: OffscreenProps,
+  pendingProps: ActivityProps,
   mode: TypeOfMode,
   lanes: Lanes,
   key: null | string,
@@ -875,6 +858,11 @@ export function createFiberFromViewTransition(
   lanes: Lanes,
   key: null | string,
 ): Fiber {
+  if (!enableSuspenseyImages) {
+    // Render a ViewTransition component opts into SuspenseyImages mode even
+    // when the flag is off.
+    mode |= SuspenseyImagesMode;
+  }
   const fiber = createFiber(ViewTransitionComponent, pendingProps, key, mode);
   fiber.elementType = REACT_VIEW_TRANSITION_TYPE;
   fiber.lanes = lanes;
@@ -889,7 +877,7 @@ export function createFiberFromViewTransition(
 }
 
 export function createFiberFromLegacyHidden(
-  pendingProps: OffscreenProps,
+  pendingProps: LegacyHiddenProps,
   mode: TypeOfMode,
   lanes: Lanes,
   key: null | string,
@@ -940,7 +928,7 @@ export function createFiberFromText(
 }
 
 export function createFiberFromDehydratedFragment(
-  dehydratedNode: SuspenseInstance,
+  dehydratedNode: SuspenseInstance | ActivityInstance,
 ): Fiber {
   const fiber = createFiber(DehydratedFragment, null, null, NoMode);
   fiber.stateNode = dehydratedNode;

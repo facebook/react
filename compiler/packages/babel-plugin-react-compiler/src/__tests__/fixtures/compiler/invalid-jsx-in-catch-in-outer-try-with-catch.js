@@ -1,4 +1,4 @@
-// @logger @validateNoJSXInTryStatements
+// @loggerTestOnly @validateNoJSXInTryStatements
 import {identity} from 'shared-runtime';
 
 function Component(props) {

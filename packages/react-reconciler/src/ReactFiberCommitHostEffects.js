@@ -10,6 +10,7 @@
 import type {
   Instance,
   TextInstance,
+  ActivityInstance,
   SuspenseInstance,
   Container,
   ChildSet,
@@ -41,11 +42,15 @@ import {
   insertBefore,
   insertInContainerBefore,
   replaceContainerChildren,
+  hideDehydratedBoundary,
   hideInstance,
   hideTextInstance,
+  unhideDehydratedBoundary,
   unhideInstance,
   unhideTextInstance,
+  commitHydratedInstance,
   commitHydratedContainer,
+  commitHydratedActivityInstance,
   commitHydratedSuspenseInstance,
   removeChildFromContainer,
   removeChild,
@@ -77,6 +82,28 @@ export function commitHostMount(finishedWork: Fiber) {
       );
     } else {
       commitMount(instance, type, props, finishedWork);
+    }
+  } catch (error) {
+    captureCommitPhaseError(finishedWork, finishedWork.return, error);
+  }
+}
+
+export function commitHostHydratedInstance(finishedWork: Fiber) {
+  const type = finishedWork.type;
+  const props = finishedWork.memoizedProps;
+  const instance: Instance = finishedWork.stateNode;
+  try {
+    if (__DEV__) {
+      runWithFiberInDEV(
+        finishedWork,
+        commitHydratedInstance,
+        instance,
+        type,
+        props,
+        finishedWork,
+      );
+    } else {
+      commitHydratedInstance(instance, type, props, finishedWork);
     }
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
@@ -152,6 +179,27 @@ export function commitHostResetTextContent(finishedWork: Fiber) {
   }
 }
 
+export function commitShowHideSuspenseBoundary(node: Fiber, isHidden: boolean) {
+  try {
+    const instance = node.stateNode;
+    if (isHidden) {
+      if (__DEV__) {
+        runWithFiberInDEV(node, hideDehydratedBoundary, instance);
+      } else {
+        hideDehydratedBoundary(instance);
+      }
+    } else {
+      if (__DEV__) {
+        runWithFiberInDEV(node, unhideDehydratedBoundary, node.stateNode);
+      } else {
+        unhideDehydratedBoundary(node.stateNode);
+      }
+    }
+  } catch (error) {
+    captureCommitPhaseError(node, node.return, error);
+  }
+}
+
 export function commitShowHideHostInstance(node: Fiber, isHidden: boolean) {
   try {
     const instance = node.stateNode;
@@ -207,8 +255,16 @@ export function commitShowHideHostTextInstance(node: Fiber, isHidden: boolean) {
 
 export function commitNewChildToFragmentInstances(
   fiber: Fiber,
-  parentFragmentInstances: Array<FragmentInstanceType>,
+  parentFragmentInstances: null | Array<FragmentInstanceType>,
 ): void {
+  if (
+    fiber.tag !== HostComponent ||
+    // Only run fragment insertion effects for initial insertions
+    fiber.alternate !== null ||
+    parentFragmentInstances === null
+  ) {
+    return;
+  }
   for (let i = 0; i < parentFragmentInstances.length; i++) {
     const fragmentInstance = parentFragmentInstances[i];
     commitNewChildToFragmentInstance(fiber.stateNode, fragmentInstance);
@@ -336,14 +392,7 @@ function insertOrAppendPlacementNodeIntoContainer(
     } else {
       appendChildToContainer(parent, stateNode);
     }
-    // TODO: Enable HostText for RN
-    if (
-      enableFragmentRefs &&
-      tag === HostComponent &&
-      // Only run fragment insertion effects for initial insertions
-      node.alternate === null &&
-      parentFragmentInstances !== null
-    ) {
+    if (enableFragmentRefs) {
       commitNewChildToFragmentInstances(node, parentFragmentInstances);
     }
     trackHostMutation();
@@ -401,14 +450,7 @@ function insertOrAppendPlacementNode(
     } else {
       appendChild(parent, stateNode);
     }
-    // TODO: Enable HostText for RN
-    if (
-      enableFragmentRefs &&
-      tag === HostComponent &&
-      // Only run fragment insertion effects for initial insertions
-      node.alternate === null &&
-      parentFragmentInstances !== null
-    ) {
+    if (enableFragmentRefs) {
       commitNewChildToFragmentInstances(node, parentFragmentInstances);
     }
     trackHostMutation();
@@ -446,10 +488,6 @@ function insertOrAppendPlacementNode(
 }
 
 function commitPlacement(finishedWork: Fiber): void {
-  if (!supportsMutation) {
-    return;
-  }
-
   // Recursively insert all host nodes into the parent.
   let hostParentFiber;
   let parentFragmentInstances = null;
@@ -469,6 +507,17 @@ function commitPlacement(finishedWork: Fiber): void {
     }
     parentFiber = parentFiber.return;
   }
+
+  if (!supportsMutation) {
+    if (enableFragmentRefs) {
+      commitImmutablePlacementNodeToFragmentInstances(
+        finishedWork,
+        parentFragmentInstances,
+      );
+    }
+    return;
+  }
+
   if (hostParentFiber == null) {
     throw new Error(
       'Expected to find a host parent. This error is likely caused by a bug ' +
@@ -530,6 +579,41 @@ function commitPlacement(finishedWork: Fiber): void {
         'Invalid host parent fiber. This error is likely caused by a bug ' +
           'in React. Please file an issue.',
       );
+  }
+}
+
+function commitImmutablePlacementNodeToFragmentInstances(
+  finishedWork: Fiber,
+  parentFragmentInstances: null | Array<FragmentInstanceType>,
+): void {
+  if (!enableFragmentRefs) {
+    return;
+  }
+  const isHost = finishedWork.tag === HostComponent;
+  if (isHost) {
+    commitNewChildToFragmentInstances(finishedWork, parentFragmentInstances);
+    return;
+  } else if (finishedWork.tag === HostPortal) {
+    // If the insertion itself is a portal, then we don't want to traverse
+    // down its children. Instead, we'll get insertions from each child in
+    // the portal directly.
+    return;
+  }
+
+  const child = finishedWork.child;
+  if (child !== null) {
+    commitImmutablePlacementNodeToFragmentInstances(
+      child,
+      parentFragmentInstances,
+    );
+    let sibling = child.sibling;
+    while (sibling !== null) {
+      commitImmutablePlacementNodeToFragmentInstances(
+        sibling,
+        parentFragmentInstances,
+      );
+      sibling = sibling.sibling;
+    }
   }
 }
 
@@ -653,6 +737,25 @@ export function commitHostHydratedContainer(
       );
     } else {
       commitHydratedContainer(root.containerInfo);
+    }
+  } catch (error) {
+    captureCommitPhaseError(finishedWork, finishedWork.return, error);
+  }
+}
+
+export function commitHostHydratedActivity(
+  activityInstance: ActivityInstance,
+  finishedWork: Fiber,
+) {
+  try {
+    if (__DEV__) {
+      runWithFiberInDEV(
+        finishedWork,
+        commitHydratedActivityInstance,
+        activityInstance,
+      );
+    } else {
+      commitHydratedActivityInstance(activityInstance);
     }
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);

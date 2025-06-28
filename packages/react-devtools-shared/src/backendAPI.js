@@ -239,6 +239,7 @@ export function convertInspectedElementBackendToFrontend(
     key,
     errors,
     warnings,
+    nativeTag,
   } = inspectedElementBackend;
 
   const inspectedElement: InspectedElementFrontend = {
@@ -273,6 +274,7 @@ export function convertInspectedElementBackendToFrontend(
     state: hydrateHelper(state),
     errors,
     warnings,
+    nativeTag,
   };
 
   return inspectedElement;

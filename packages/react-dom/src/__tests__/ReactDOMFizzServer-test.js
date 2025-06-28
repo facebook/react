@@ -83,8 +83,12 @@ describe('ReactDOMFizzServer', () => {
     global.Node = global.window.Node;
     global.addEventListener = global.window.addEventListener;
     global.MutationObserver = global.window.MutationObserver;
+    // The Fizz runtime assumes requestAnimationFrame exists so we need to polyfill it.
+    global.requestAnimationFrame = global.window.requestAnimationFrame = cb =>
+      setTimeout(cb);
     container = document.getElementById('container');
 
+    CSPnonce = null;
     Scheduler = require('scheduler');
     React = require('react');
     ReactDOM = require('react-dom');
@@ -206,6 +210,7 @@ describe('ReactDOMFizzServer', () => {
     buffer = '';
 
     if (!bufferedContent) {
+      jest.runAllTimers();
       return;
     }
 
@@ -314,6 +319,8 @@ describe('ReactDOMFizzServer', () => {
       div.innerHTML = bufferedContent;
       await insertNodesAndExecuteScripts(div, streamingContainer, CSPnonce);
     }
+    // Let throttled boundaries reveal
+    jest.runAllTimers();
   }
 
   function resolveText(text) {
@@ -602,12 +609,12 @@ describe('ReactDOMFizzServer', () => {
       ]);
 
       // check that there are 6 scripts with a matching nonce:
-      // The runtime script, an inline bootstrap script, two bootstrap scripts and two bootstrap modules
+      // The runtime script or initial paint time, an inline bootstrap script, two bootstrap scripts and two bootstrap modules
       expect(
         Array.from(container.getElementsByTagName('script')).filter(
           node => node.getAttribute('nonce') === CSPnonce,
         ).length,
-      ).toEqual(gate(flags => flags.shouldUseFizzExternalRuntime) ? 6 : 5);
+      ).toEqual(6);
 
       await act(() => {
         resolve({default: Text});
@@ -836,7 +843,7 @@ describe('ReactDOMFizzServer', () => {
         container.childNodes,
         renderOptions.unstable_externalRuntimeSrc,
       ).length,
-    ).toBe(1);
+    ).toBe(gate(flags => flags.shouldUseFizzExternalRuntime) ? 1 : 2);
     await act(() => {
       resolveElement({default: <Text text="Hello" />});
     });
@@ -1283,7 +1290,7 @@ describe('ReactDOMFizzServer', () => {
     function App({showMore}) {
       return (
         <div>
-          <SuspenseList revealOrder="forwards">
+          <SuspenseList revealOrder="forwards" tail="visible">
             {a}
             {b}
             {showMore ? (
@@ -1312,10 +1319,8 @@ describe('ReactDOMFizzServer', () => {
     expect(ref.current).toBe(null);
     expect(getVisibleChildren(container)).toEqual(
       <div>
-        Loading A
-        {/* // TODO: This is incorrect. It should be "Loading B" but Fizz SuspenseList
-            // isn't implemented fully yet. */}
-        <span>B</span>
+        {'Loading A'}
+        {'Loading B'}
       </div>,
     );
 
@@ -1329,11 +1334,9 @@ describe('ReactDOMFizzServer', () => {
     // We haven't resolved yet.
     expect(getVisibleChildren(container)).toEqual(
       <div>
-        Loading A
-        {/* // TODO: This is incorrect. It should be "Loading B" but Fizz SuspenseList
-            // isn't implemented fully yet. */}
-        <span>B</span>
-        Loading C
+        {'Loading A'}
+        {'Loading B'}
+        {'Loading C'}
       </div>,
     );
 
@@ -3580,7 +3583,13 @@ describe('ReactDOMFizzServer', () => {
     expect(document.head.innerHTML).toBe(
       '<script type="importmap">' +
         JSON.stringify(importMap) +
-        '</script><script async="" src="foo"></script>',
+        '</script><script async="" src="foo"></script>' +
+        (gate(flags => flags.shouldUseFizzExternalRuntime)
+          ? '<script src="react-dom-bindings/src/server/ReactDOMServerExternalRuntime.js" async=""></script>'
+          : '') +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<link rel="expect" href="#_R_" blocking="render">'
+          : ''),
     );
   });
 
@@ -4189,7 +4198,7 @@ describe('ReactDOMFizzServer', () => {
         renderOptions.unstable_externalRuntimeSrc,
       ).map(n => n.outerHTML),
     ).toEqual([
-      '<script src="foo" async=""></script>',
+      '<script src="foo" id="_R_" async=""></script>',
       '<script src="bar" async=""></script>',
       '<script src="baz" integrity="qux" async=""></script>',
       '<script type="module" src="quux" async=""></script>',
@@ -4276,7 +4285,7 @@ describe('ReactDOMFizzServer', () => {
         renderOptions.unstable_externalRuntimeSrc,
       ).map(n => n.outerHTML),
     ).toEqual([
-      '<script src="foo" async=""></script>',
+      '<script src="foo" id="_R_" async=""></script>',
       '<script src="bar" async=""></script>',
       '<script src="baz" crossorigin="" async=""></script>',
       '<script src="qux" crossorigin="" async=""></script>',
@@ -4494,7 +4503,8 @@ describe('ReactDOMFizzServer', () => {
     expect(document.getElementsByTagName('script').length).toEqual(1);
   });
 
-  it('does not send the external runtime for static pages', async () => {
+  // @gate shouldUseFizzExternalRuntime
+  it('does (unfortunately) send the external runtime for static pages', async () => {
     await act(() => {
       const {pipe} = renderToPipeableStream(
         <html>
@@ -4508,11 +4518,19 @@ describe('ReactDOMFizzServer', () => {
     });
 
     // no scripts should be sent
-    expect(document.getElementsByTagName('script').length).toEqual(0);
+    expect(document.getElementsByTagName('script').length).toEqual(1);
 
     // the html should be as-is
     expect(document.documentElement.innerHTML).toEqual(
-      '<head></head><body><p>hello world!</p></body>',
+      '<head><script src="react-dom-bindings/src/server/ReactDOMServerExternalRuntime.js" async=""></script>' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<link rel="expect" href="#_R_" blocking="render">'
+          : '') +
+        '</head><body><p>hello world!</p>' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<template id="_R_"></template>'
+          : '') +
+        '</body>',
     );
   });
 
@@ -5310,7 +5328,9 @@ describe('ReactDOMFizzServer', () => {
       });
 
       expect(container.innerHTML).toEqual(
-        '<div>hello<b>world, <!-- -->Foo</b>!</div>',
+        (gate(flags => flags.shouldUseFizzExternalRuntime)
+          ? '<script src="react-dom-bindings/src/server/ReactDOMServerExternalRuntime.js" async=""></script>'
+          : '') + '<div>hello<b>world, <!-- -->Foo</b>!</div>',
       );
       const errors = [];
       ReactDOMClient.hydrateRoot(container, <App name="Foo" />, {
@@ -5511,7 +5531,7 @@ describe('ReactDOMFizzServer', () => {
         pipe(writable);
       });
 
-      expect(container.firstElementChild.outerHTML).toEqual(
+      expect(container.lastElementChild.outerHTML).toEqual(
         '<div>hello<b>world<!-- --></b></div>',
       );
 
@@ -5549,7 +5569,7 @@ describe('ReactDOMFizzServer', () => {
         pipe(writable);
       });
 
-      expect(container.firstElementChild.outerHTML).toEqual(
+      expect(container.lastElementChild.outerHTML).toEqual(
         '<div>hello<b>world</b></div>',
       );
 
@@ -5689,7 +5709,10 @@ describe('ReactDOMFizzServer', () => {
       });
 
       expect(container.innerHTML).toEqual(
-        '<div><!--$-->hello<!-- -->world<!-- --><!--/$--><!--$-->world<!-- --><!--/$--><!--$-->hello<!-- -->world<!-- --><br><!--/$--><!--$-->world<!-- --><br><!--/$--></div>',
+        (gate(flags => flags.shouldUseFizzExternalRuntime)
+          ? '<script src="react-dom-bindings/src/server/ReactDOMServerExternalRuntime.js" async=""></script>'
+          : '') +
+          '<div><!--$-->hello<!-- -->world<!-- --><!--/$--><!--$-->world<!-- --><!--/$--><!--$-->hello<!-- -->world<!-- --><br><!--/$--><!--$-->world<!-- --><br><!--/$--></div>',
       );
 
       const errors = [];
@@ -6492,7 +6515,18 @@ describe('ReactDOMFizzServer', () => {
     });
 
     expect(document.documentElement.outerHTML).toEqual(
-      '<html><head></head><body><script>try { foo() } catch (e) {} ;</script></body></html>',
+      '<html><head>' +
+        (gate(flags => flags.shouldUseFizzExternalRuntime)
+          ? '<script src="react-dom-bindings/src/server/ReactDOMServerExternalRuntime.js" async=""></script>'
+          : '') +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<link rel="expect" href="#_R_" blocking="render">'
+          : '') +
+        '</head><body><script>try { foo() } catch (e) {} ;</script>' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<template id="_R_"></template>'
+          : '') +
+        '</body></html>',
     );
   });
 
@@ -10245,5 +10279,279 @@ describe('ReactDOMFizzServer', () => {
         <body />
       </html>,
     );
+  });
+
+  it('can render styles with nonce', async () => {
+    CSPnonce = 'R4nd0m';
+    await act(() => {
+      const {pipe} = renderToPipeableStream(
+        <>
+          <style
+            href="foo"
+            precedence="default"
+            nonce={CSPnonce}>{`.foo { color: hotpink; }`}</style>
+          <style
+            href="bar"
+            precedence="default"
+            nonce={CSPnonce}>{`.bar { background-color: blue; }`}</style>
+        </>,
+        {nonce: {style: CSPnonce}},
+      );
+      pipe(writable);
+    });
+    expect(document.querySelector('style').nonce).toBe(CSPnonce);
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div id="container">
+            <style
+              data-precedence="default"
+              data-href="foo bar"
+              nonce={
+                CSPnonce
+              }>{`.foo { color: hotpink; }.bar { background-color: blue; }`}</style>
+          </div>
+        </body>
+      </html>,
+    );
+  });
+
+  it("shouldn't render styles with mismatched nonce", async () => {
+    CSPnonce = 'R4nd0m';
+    await act(() => {
+      const {pipe} = renderToPipeableStream(
+        <>
+          <style
+            href="foo"
+            precedence="default"
+            nonce={CSPnonce}>{`.foo { color: hotpink; }`}</style>
+          <style
+            href="bar"
+            precedence="default"
+            nonce={`${CSPnonce}${CSPnonce}`}>{`.bar { background-color: blue; }`}</style>
+        </>,
+        {nonce: {style: CSPnonce}},
+      );
+      pipe(writable);
+    });
+    assertConsoleErrorDev([
+      'React encountered a style tag with `precedence` "default" and `nonce` "R4nd0mR4nd0m". When React manages style rules using `precedence` it will only include rules if the nonce matches the style nonce "R4nd0m" that was included with this render.',
+    ]);
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div id="container">
+            <style
+              data-precedence="default"
+              data-href="foo"
+              nonce={CSPnonce}>{`.foo { color: hotpink; }`}</style>
+          </div>
+        </body>
+      </html>,
+    );
+  });
+
+  it("should render styles without nonce when render call doesn't receive nonce", async () => {
+    await act(() => {
+      const {pipe} = renderToPipeableStream(
+        <>
+          <style
+            href="foo"
+            precedence="default"
+            nonce="R4nd0m">{`.foo { color: hotpink; }`}</style>
+        </>,
+      );
+      pipe(writable);
+    });
+    assertConsoleErrorDev([
+      'React encountered a style tag with `precedence` "default" and `nonce` "R4nd0m". When React manages style rules using `precedence` it will only include a nonce attributes if you also provide the same style nonce value as a render option.',
+    ]);
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div id="container">
+            <style
+              data-precedence="default"
+              data-href="foo">{`.foo { color: hotpink; }`}</style>
+          </div>
+        </body>
+      </html>,
+    );
+  });
+
+  it('should render styles without nonce when render call receives a string nonce dedicated to scripts', async () => {
+    CSPnonce = 'R4nd0m';
+    await act(() => {
+      const {pipe} = renderToPipeableStream(
+        <>
+          <style
+            href="foo"
+            precedence="default"
+            nonce={CSPnonce}>{`.foo { color: hotpink; }`}</style>
+        </>,
+        {nonce: CSPnonce},
+      );
+      pipe(writable);
+    });
+    assertConsoleErrorDev([
+      'React encountered a style tag with `precedence` "default" and `nonce` "R4nd0m". When React manages style rules using `precedence` it will only include a nonce attributes if you also provide the same style nonce value as a render option.',
+    ]);
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div id="container">
+            <style
+              data-precedence="default"
+              data-href="foo">{`.foo { color: hotpink; }`}</style>
+          </div>
+        </body>
+      </html>,
+    );
+  });
+
+  it('should allow for different script and style nonces', async () => {
+    CSPnonce = 'R4nd0m';
+    await act(() => {
+      const {pipe} = renderToPipeableStream(
+        <>
+          <style
+            href="foo"
+            precedence="default"
+            nonce="D1ff3r3nt">{`.foo { color: hotpink; }`}</style>
+        </>,
+        {
+          nonce: {script: CSPnonce, style: 'D1ff3r3nt'},
+          bootstrapScriptContent: 'function noop(){}',
+        },
+      );
+      pipe(writable);
+    });
+    const scripts = Array.from(container.getElementsByTagName('script')).filter(
+      node => node.getAttribute('nonce') === CSPnonce,
+    );
+    expect(scripts[scripts.length - 1].textContent).toBe('function noop(){}');
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div id="container">
+            <style
+              data-precedence="default"
+              data-href="foo"
+              nonce="D1ff3r3nt">{`.foo { color: hotpink; }`}</style>
+          </div>
+        </body>
+      </html>,
+    );
+  });
+
+  it('should not error when discarding deeply nested Suspense boundaries in a parent fallback partially complete before the parent boundary resolves', async () => {
+    let resolve1;
+    const promise1 = new Promise(r => (resolve1 = r));
+    let resolve2;
+    const promise2 = new Promise(r => (resolve2 = r));
+    const promise3 = new Promise(r => {});
+
+    function Use({children, promise}) {
+      React.use(promise);
+      return children;
+    }
+    function App() {
+      return (
+        <div>
+          <Suspense
+            fallback={
+              <div>
+                <Suspense fallback="Loading...">
+                  <div>
+                    <Use promise={promise1}>
+                      <div>
+                        <Suspense fallback="Loading more...">
+                          <div>
+                            <Use promise={promise3}>
+                              <div>deep fallback</div>
+                            </Use>
+                          </div>
+                        </Suspense>
+                      </div>
+                    </Use>
+                  </div>
+                </Suspense>
+              </div>
+            }>
+            <Use promise={promise2}>Success!</Use>
+          </Suspense>
+        </div>
+      );
+    }
+
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <div>Loading...</div>
+      </div>,
+    );
+
+    await act(() => {
+      resolve1('resolved');
+      resolve2('resolved');
+    });
+
+    expect(getVisibleChildren(container)).toEqual(<div>Success!</div>);
+  });
+
+  it('should not error when discarding deeply nested Suspense boundaries in a parent fallback partially complete before the parent boundary resolves with empty segments', async () => {
+    let resolve1;
+    const promise1 = new Promise(r => (resolve1 = r));
+    let resolve2;
+    const promise2 = new Promise(r => (resolve2 = r));
+    const promise3 = new Promise(r => {});
+
+    function Use({children, promise}) {
+      React.use(promise);
+      return children;
+    }
+    function App() {
+      return (
+        <div>
+          <Suspense
+            fallback={
+              <Suspense fallback="Loading...">
+                <Use promise={promise1}>
+                  <Suspense fallback="Loading more...">
+                    <Use promise={promise3}>
+                      <div>deep fallback</div>
+                    </Use>
+                  </Suspense>
+                </Use>
+              </Suspense>
+            }>
+            <Use promise={promise2}>Success!</Use>
+          </Suspense>
+        </div>
+      );
+    }
+
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    await act(() => {
+      resolve1('resolved');
+      resolve2('resolved');
+    });
+
+    expect(getVisibleChildren(container)).toEqual(<div>Success!</div>);
   });
 });

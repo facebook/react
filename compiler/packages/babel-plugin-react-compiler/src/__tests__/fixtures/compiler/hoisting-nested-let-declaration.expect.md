@@ -41,11 +41,9 @@ function hoisting() {
       return result;
     };
 
-    let foo;
-    foo = () => bar + baz;
+    let foo = () => bar + baz;
 
-    let bar;
-    bar = 3;
+    let bar = 3;
     const baz = 2;
     t0 = qux();
     $[0] = t0;

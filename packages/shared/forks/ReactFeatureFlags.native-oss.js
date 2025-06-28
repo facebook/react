@@ -29,8 +29,6 @@ export const enableAsyncDebugInfo = false;
 export const enableAsyncIterableChildren = false;
 export const enableCPUSuspense = false;
 export const enableCreateEventHandleAPI = false;
-export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
-export const enableFabricCompleteRootInCommitPhase = false;
 export const enableMoveBefore = true;
 export const enableFizzExternalRuntime = true;
 export const enableHalt = false;
@@ -44,12 +42,11 @@ export const enableObjectFiber = false;
 export const enablePersistedModeClonedFlag = false;
 export const enablePostpone = false;
 export const enableReactTestRendererWarning = false;
-export const enableRenderableContext = true;
 export const enableRetryLaneExpiration = false;
 export const enableSchedulingProfiler = __PROFILE__;
 export const enableComponentPerformanceTrack = false;
 export const enableScopeAPI = false;
-export const enableShallowPropDiffing = false;
+export const enableEagerAlternateStateNodeCleanup = true;
 export const enableSuspenseAvoidThisFallback = false;
 export const enableSuspenseCallback = false;
 export const enableTaint = true;
@@ -62,18 +59,20 @@ export const renameElementSymbol = true;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
-export const enableSiblingPrerendering = true;
-
 export const enableHydrationLaneScheduling = true;
 
 export const enableYieldingBeforePassive = false;
 
 export const enableThrottledScheduling = false;
 export const enableViewTransition = false;
-export const enableSwipeTransition = false;
-export const enableFastAddPropertiesInDiffing = false;
+export const enableGestureTransition = false;
 export const enableLazyPublicInstanceInFabric = false;
 export const enableScrollEndPolyfill = true;
+export const enableSuspenseyImages = false;
+export const enableFizzBlockingRender = true;
+export const enableSrcObject = false;
+export const enableHydrationChangeEvent = false;
+export const enableDefaultTransitionIndicator = false;
 export const ownerStackLimit = 1e4;
 
 export const enableFragmentRefs = false;

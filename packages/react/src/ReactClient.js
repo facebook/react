@@ -33,7 +33,7 @@ import {createContext} from './ReactContext';
 import {lazy} from './ReactLazy';
 import {forwardRef} from './ReactForwardRef';
 import {memo} from './ReactMemo';
-import {cache} from './ReactCacheClient';
+import {cache, cacheSignal} from './ReactCacheClient';
 import {postpone} from './ReactPostpone';
 import {
   getCacheForType,
@@ -57,10 +57,9 @@ import {
   use,
   useOptimistic,
   useActionState,
-  useSwipeTransition,
 } from './ReactHooks';
 import ReactSharedInternals from './ReactSharedInternalsClient';
-import {startTransition} from './ReactStartTransition';
+import {startTransition, startGestureTransition} from './ReactStartTransition';
 import {addTransitionType} from './ReactTransitionType';
 import {act} from './ReactAct';
 import {captureOwnerStack} from './ReactOwnerStack';
@@ -84,6 +83,7 @@ export {
   lazy,
   memo,
   cache,
+  cacheSignal,
   postpone as unstable_postpone,
   useCallback,
   useContext,
@@ -127,8 +127,8 @@ export {
   // enableViewTransition
   REACT_VIEW_TRANSITION_TYPE as unstable_ViewTransition,
   addTransitionType as unstable_addTransitionType,
-  // enableSwipeTransition
-  useSwipeTransition as unstable_useSwipeTransition,
+  // enableGestureTransition
+  startGestureTransition as unstable_startGestureTransition,
   // DEV-only
   useId,
   act,

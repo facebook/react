@@ -37,7 +37,7 @@
     "prettier": "^3.3.3",
     "prettier-plugin-hermes-parser": "^0.26.0",
     "prompt-promise": "^1.0.3",
-    "rimraf": "^5.0.10",
+    "rimraf": "^6.0.1",
     "to-fast-properties": "^2.0.0",
     "tsup": "^8.4.0",
     "typescript": "^5.4.3",
@@ -45,7 +45,6 @@
     "yargs": "^17.7.2"
   },
   "resolutions": {
-    "rimraf": "5.0.10",
     "@babel/types": "7.26.3"
   },
   "packageManager": "yarn@1.22.22"

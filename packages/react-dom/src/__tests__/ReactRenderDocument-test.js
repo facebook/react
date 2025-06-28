@@ -70,6 +70,7 @@ describe('rendering React components at document', () => {
 
       const markup = ReactDOMServer.renderToString(<Root hello="world" />);
       expect(markup).not.toContain('DOCTYPE');
+      expect(markup).not.toContain('rel="expect"');
       const testDocument = getTestDocument(markup);
       const body = testDocument.body;
 
@@ -118,8 +119,8 @@ describe('rendering React components at document', () => {
       expect(testDocument.firstChild).toBe(originalDocEl);
       expect(testDocument.head).toBe(originalHead);
       expect(testDocument.body).toBe(originalBody);
-      expect(originalBody.firstChild).toEqual(null);
-      expect(originalHead.firstChild).toEqual(null);
+      expect(originalBody.innerHTML).toBe('');
+      expect(originalHead.innerHTML).toBe('');
     });
 
     it('should not be able to switch root constructors', async () => {

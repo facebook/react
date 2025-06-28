@@ -95,7 +95,7 @@ export default function HoveredFiberInfo({fiberData}: Props): React.Node {
         <div className={styles.Content}>
           {renderDurationInfo || <div>Did not client render.</div>}
 
-          <WhatChanged fiberID={id} />
+          <WhatChanged fiberID={id} displayMode="compact" />
         </div>
       </div>
     </Fragment>

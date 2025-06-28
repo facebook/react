@@ -29,7 +29,6 @@ import {
 } from './ReactFiberFlags';
 
 import is from 'shared/objectIs';
-import {enableRenderableContext} from 'shared/ReactFeatureFlags';
 import {getHostTransitionProvider} from './ReactFiberHostContext';
 
 const valueCursor: StackCursor<mixed> = createCursor(null);
@@ -389,13 +388,7 @@ function propagateParentContextChanges(
 
       const oldProps = currentParent.memoizedProps;
       if (oldProps !== null) {
-        let context: ReactContext<any>;
-        if (enableRenderableContext) {
-          context = parent.type;
-        } else {
-          context = parent.type._context;
-        }
-
+        const context: ReactContext<any> = parent.type;
         const newProps = parent.pendingProps;
         const newValue = newProps.value;
 

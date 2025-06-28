@@ -164,8 +164,10 @@ describe('ReactDOMSuspensePlaceholder', () => {
       'A',
       'Suspend! [B]',
       'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['A', 'Suspend! [B]', 'C'] : []),
+      // pre-warming
+      'A',
+      'Suspend! [B]',
+      'C',
     ]);
     await act(() => {
       resolveText('B');

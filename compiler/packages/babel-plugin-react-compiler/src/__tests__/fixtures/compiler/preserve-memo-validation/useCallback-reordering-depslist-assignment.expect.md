@@ -36,31 +36,38 @@ import { Stringify } from "shared-runtime";
 
 // We currently produce invalid output (incorrect scoping for `y` declaration)
 function useFoo(arr1, arr2) {
-  const $ = _c(5);
+  const $ = _c(7);
   let t0;
-  if ($[0] !== arr1 || $[1] !== arr2) {
-    const x = [arr1];
-
+  if ($[0] !== arr1) {
+    t0 = [arr1];
+    $[0] = arr1;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
+  const x = t0;
+  let t1;
+  if ($[2] !== arr2 || $[3] !== x) {
     let y;
-    t0 = () => ({ y });
+    t1 = () => ({ y });
 
     (y = x.concat(arr2)), y;
-    $[0] = arr1;
-    $[1] = arr2;
-    $[2] = t0;
-  } else {
-    t0 = $[2];
-  }
-  const getVal = t0;
-  let t1;
-  if ($[3] !== getVal) {
-    t1 = <Stringify getVal={getVal} shouldInvokeFns={true} />;
-    $[3] = getVal;
+    $[2] = arr2;
+    $[3] = x;
     $[4] = t1;
   } else {
     t1 = $[4];
   }
-  return t1;
+  const getVal = t1;
+  let t2;
+  if ($[5] !== getVal) {
+    t2 = <Stringify getVal={getVal} shouldInvokeFns={true} />;
+    $[5] = getVal;
+    $[6] = t2;
+  } else {
+    t2 = $[6];
+  }
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {

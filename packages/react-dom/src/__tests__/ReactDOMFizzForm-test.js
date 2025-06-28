@@ -18,6 +18,7 @@ global.ReadableStream =
 global.TextEncoder = require('util').TextEncoder;
 
 let act;
+let serverAct;
 let container;
 let React;
 let ReactDOMServer;
@@ -25,20 +26,19 @@ let ReactDOMClient;
 let useFormStatus;
 let useOptimistic;
 let useActionState;
-let Scheduler;
 let assertConsoleErrorDev;
 
 describe('ReactDOMFizzForm', () => {
   beforeEach(() => {
     jest.resetModules();
-    Scheduler = require('scheduler');
-    patchMessageChannel(Scheduler);
+    patchMessageChannel();
     React = require('react');
     ReactDOMServer = require('react-dom/server.browser');
     ReactDOMClient = require('react-dom/client');
     useFormStatus = require('react-dom').useFormStatus;
     useOptimistic = require('react').useOptimistic;
     act = require('internal-test-utils').act;
+    serverAct = require('internal-test-utils').serverAct;
     assertConsoleErrorDev =
       require('internal-test-utils').assertConsoleErrorDev;
     container = document.createElement('div');
@@ -54,14 +54,6 @@ describe('ReactDOMFizzForm', () => {
   afterEach(() => {
     document.body.removeChild(container);
   });
-
-  async function serverAct(callback) {
-    let maybePromise;
-    await act(() => {
-      maybePromise = callback();
-    });
-    return maybePromise;
-  }
 
   function submit(submitter) {
     const form = submitter.form || submitter;

@@ -732,7 +732,7 @@ describe('Activity', () => {
 
     const root = ReactNoop.createRoot();
     await act(() => {
-      root.render(<Activity hidden={false} />);
+      root.render(<Activity />);
     });
     assertLog([]);
     expect(root).toMatchRenderedOutput(null);
@@ -741,7 +741,7 @@ describe('Activity', () => {
       // Partially render a component
       startTransition(() => {
         root.render(
-          <Activity hidden={false}>
+          <Activity>
             <Child />
             <Text text="Sibling" />
           </Activity>,
@@ -764,7 +764,7 @@ describe('Activity', () => {
       assertConsoleErrorDev([
         "Can't perform a React state update on a component that hasn't mounted yet. " +
           'This indicates that you have a side-effect in your render function that ' +
-          'asynchronously later calls tries to update the component. ' +
+          'asynchronously tries to update the component. ' +
           'Move this work to useEffect instead.\n' +
           '    in Child (at **)',
       ]);
@@ -1479,5 +1479,29 @@ describe('Activity', () => {
     // insertion effect already fired.
     assertLog([]);
     expect(root).toMatchRenderedOutput(<span prop={2} />);
+  });
+
+  // @gate enableActivity
+  it('warns if you pass a hidden prop', async () => {
+    function App() {
+      return (
+        // eslint-disable-next-line react/jsx-boolean-value
+        <Activity hidden>
+          <div />
+        </Activity>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(<App show={true} step={1} />);
+    });
+    assertConsoleErrorDev([
+      '<Activity> doesn\'t accept a hidden prop. Use mode="hidden" instead.\n' +
+        '- <Activity hidden>\n' +
+        '+ <Activity mode="hidden">\n' +
+        '    in Activity (at **)\n' +
+        '    in App (at **)',
+    ]);
   });
 });

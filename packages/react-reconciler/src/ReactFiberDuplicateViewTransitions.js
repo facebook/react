@@ -8,7 +8,7 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {ViewTransitionProps} from './ReactFiberViewTransitionComponent';
+import type {ViewTransitionProps} from 'shared/ReactTypes';
 import {runWithFiberInDEV} from './ReactCurrentFiber';
 
 // Use in DEV to track mounted named ViewTransitions. This is used to warn for

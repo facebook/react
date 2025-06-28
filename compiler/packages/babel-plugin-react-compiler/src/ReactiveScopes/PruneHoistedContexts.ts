@@ -7,12 +7,17 @@
 
 import {CompilerError} from '..';
 import {
-  DeclarationId,
+  convertHoistedLValueKind,
+  IdentifierId,
+  InstructionId,
   InstructionKind,
+  Place,
   ReactiveFunction,
   ReactiveInstruction,
+  ReactiveScopeBlock,
   ReactiveStatement,
 } from '../HIR';
+import {empty, Stack} from '../Utils/Stack';
 import {
   ReactiveFunctionTransform,
   Transformed,
@@ -22,138 +27,144 @@ import {
 /*
  * Prunes DeclareContexts lowered for HoistedConsts, and transforms any references back to its
  * original instruction kind.
+ *
+ * Also detects and bails out on context variables which are:
+ * - function declarations, which are hoisted by JS engines to the nearest block scope
+ * - referenced before they are defined (i.e. having a `DeclareContext HoistedConst`)
+ * - declared
+ *
+ * This is because React Compiler converts a `function foo()` function declaration to
+ * 1. a `let foo;` declaration before reactive memo blocks
+ * 2. a `foo = function foo() {}` assignment within the block
+ *
+ * This means references before the assignment are invalid (see fixture
+ * error.todo-functiondecl-hoisting)
  */
 export function pruneHoistedContexts(fn: ReactiveFunction): void {
-  const hoistedIdentifiers: HoistedIdentifiers = new Map();
-  visitReactiveFunction(fn, new Visitor(), hoistedIdentifiers);
+  visitReactiveFunction(fn, new Visitor(), {
+    activeScopes: empty(),
+    uninitialized: new Map(),
+  });
 }
 
-const REWRITTEN_HOISTED_CONST: unique symbol = Symbol(
-  'REWRITTEN_HOISTED_CONST',
-);
-const REWRITTEN_HOISTED_LET: unique symbol = Symbol('REWRITTEN_HOISTED_LET');
+type VisitorState = {
+  activeScopes: Stack<Set<IdentifierId>>;
+  uninitialized: Map<
+    IdentifierId,
+    | {
+        kind: 'unknown-kind';
+      }
+    | {
+        kind: 'func';
+        definition: Place | null;
+      }
+  >;
+};
 
-type HoistedIdentifiers = Map<
-  DeclarationId,
-  | InstructionKind
-  | typeof REWRITTEN_HOISTED_CONST
-  | typeof REWRITTEN_HOISTED_LET
->;
-
-class Visitor extends ReactiveFunctionTransform<HoistedIdentifiers> {
+class Visitor extends ReactiveFunctionTransform<VisitorState> {
+  override visitScope(scope: ReactiveScopeBlock, state: VisitorState): void {
+    state.activeScopes = state.activeScopes.push(
+      new Set(scope.scope.declarations.keys()),
+    );
+    /**
+     * Add declared but not initialized / assigned variables. This may include
+     * function declarations that escape the memo block.
+     */
+    for (const decl of scope.scope.declarations.values()) {
+      state.uninitialized.set(decl.identifier.id, {kind: 'unknown-kind'});
+    }
+    this.traverseScope(scope, state);
+    state.activeScopes.pop();
+    for (const decl of scope.scope.declarations.values()) {
+      state.uninitialized.delete(decl.identifier.id);
+    }
+  }
+  override visitPlace(
+    _id: InstructionId,
+    place: Place,
+    state: VisitorState,
+  ): void {
+    const maybeHoistedFn = state.uninitialized.get(place.identifier.id);
+    if (
+      maybeHoistedFn?.kind === 'func' &&
+      maybeHoistedFn.definition !== place
+    ) {
+      CompilerError.throwTodo({
+        reason: '[PruneHoistedContexts] Rewrite hoisted function references',
+        loc: place.loc,
+      });
+    }
+  }
   override transformInstruction(
     instruction: ReactiveInstruction,
-    state: HoistedIdentifiers,
+    state: VisitorState,
   ): Transformed<ReactiveStatement> {
-    this.visitInstruction(instruction, state);
-
     /**
      * Remove hoisted declarations to preserve TDZ
      */
-    if (
-      instruction.value.kind === 'DeclareContext' &&
-      instruction.value.lvalue.kind === 'HoistedConst'
-    ) {
-      state.set(
-        instruction.value.lvalue.place.identifier.declarationId,
-        InstructionKind.Const,
+    if (instruction.value.kind === 'DeclareContext') {
+      const maybeNonHoisted = convertHoistedLValueKind(
+        instruction.value.lvalue.kind,
       );
-      return {kind: 'remove'};
-    }
-
-    if (
-      instruction.value.kind === 'DeclareContext' &&
-      instruction.value.lvalue.kind === 'HoistedLet'
-    ) {
-      state.set(
-        instruction.value.lvalue.place.identifier.declarationId,
-        InstructionKind.Let,
-      );
-      return {kind: 'remove'};
-    }
-
-    if (
-      instruction.value.kind === 'DeclareContext' &&
-      instruction.value.lvalue.kind === 'HoistedFunction'
-    ) {
-      state.set(
-        instruction.value.lvalue.place.identifier.declarationId,
-        InstructionKind.Function,
-      );
-      return {kind: 'remove'};
-    }
-
-    if (instruction.value.kind === 'StoreContext') {
-      const kind = state.get(
-        instruction.value.lvalue.place.identifier.declarationId,
-      );
-      if (kind != null) {
-        CompilerError.invariant(kind !== REWRITTEN_HOISTED_CONST, {
-          reason: 'Expected exactly one store to a hoisted const variable',
-          loc: instruction.loc,
-        });
+      if (maybeNonHoisted != null) {
         if (
-          kind === InstructionKind.Const ||
-          kind === InstructionKind.Function
+          maybeNonHoisted === InstructionKind.Function &&
+          state.uninitialized.has(instruction.value.lvalue.place.identifier.id)
         ) {
-          state.set(
-            instruction.value.lvalue.place.identifier.declarationId,
-            REWRITTEN_HOISTED_CONST,
-          );
-          return {
-            kind: 'replace',
-            value: {
-              kind: 'instruction',
-              instruction: {
-                ...instruction,
-                value: {
-                  ...instruction.value,
-                  lvalue: {
-                    ...instruction.value.lvalue,
-                    kind,
-                  },
-                  type: null,
-                  kind: 'StoreLocal',
-                },
-              },
+          state.uninitialized.set(
+            instruction.value.lvalue.place.identifier.id,
+            {
+              kind: 'func',
+              definition: null,
             },
-          };
-        } else if (kind !== REWRITTEN_HOISTED_LET) {
-          /**
-           * Context variables declared with let may have reassignments. Only
-           * insert a `DeclareContext` for the first encountered `StoreContext`
-           * instruction.
-           */
-          state.set(
-            instruction.value.lvalue.place.identifier.declarationId,
-            REWRITTEN_HOISTED_LET,
           );
-          return {
-            kind: 'replace-many',
-            value: [
-              {
-                kind: 'instruction',
-                instruction: {
-                  id: instruction.id,
-                  lvalue: null,
-                  value: {
-                    kind: 'DeclareContext',
-                    lvalue: {
-                      kind: InstructionKind.Let,
-                      place: {...instruction.value.lvalue.place},
-                    },
-                    loc: instruction.value.loc,
-                  },
-                  loc: instruction.loc,
-                },
-              },
-              {kind: 'instruction', instruction},
-            ],
-          };
+        }
+        return {kind: 'remove'};
+      }
+    }
+    if (
+      instruction.value.kind === 'StoreContext' &&
+      instruction.value.lvalue.kind !== InstructionKind.Reassign
+    ) {
+      /**
+       * Rewrite StoreContexts let/const that will be pre-declared in
+       * codegen to reassignments.
+       */
+      const lvalueId = instruction.value.lvalue.place.identifier.id;
+      const isDeclaredByScope = state.activeScopes.find(scope =>
+        scope.has(lvalueId),
+      );
+      if (isDeclaredByScope) {
+        if (
+          instruction.value.lvalue.kind === InstructionKind.Let ||
+          instruction.value.lvalue.kind === InstructionKind.Const
+        ) {
+          instruction.value.lvalue.kind = InstructionKind.Reassign;
+        } else if (instruction.value.lvalue.kind === InstructionKind.Function) {
+          const maybeHoistedFn = state.uninitialized.get(lvalueId);
+          if (maybeHoistedFn != null) {
+            CompilerError.invariant(maybeHoistedFn.kind === 'func', {
+              reason: '[PruneHoistedContexts] Unexpected hoisted function',
+              loc: instruction.loc,
+            });
+            maybeHoistedFn.definition = instruction.value.lvalue.place;
+            /**
+             * References to hoisted functions are now "safe" as variable assignments
+             * have finished.
+             */
+            state.uninitialized.delete(lvalueId);
+          }
+        } else {
+          CompilerError.throwTodo({
+            reason: '[PruneHoistedContexts] Unexpected kind',
+            description: `(${instruction.value.lvalue.kind})`,
+            loc: instruction.loc,
+          });
         }
       }
     }
 
+    this.visitInstruction(instruction, state);
     return {kind: 'keep'};
   }
 }

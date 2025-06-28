@@ -7,16 +7,19 @@
  * @flow
  */
 
+import type {
+  ViewTransitionProps,
+  ProfilerProps,
+  ProfilerPhase,
+} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {FragmentInstanceType} from './ReactFiberConfig';
-import {
-  getViewTransitionName,
-  type ViewTransitionState,
-  type ViewTransitionProps,
-} from './ReactFiberViewTransitionComponent';
+import type {ViewTransitionState} from './ReactFiberViewTransitionComponent';
+
+import {getViewTransitionName} from './ReactFiberViewTransitionComponent';
 
 import {
   enableProfilerTimer,
@@ -938,9 +941,9 @@ function commitProfiler(
   commitStartTime: number,
   effectDuration: number,
 ) {
-  const {id, onCommit, onRender} = finishedWork.memoizedProps;
+  const {id, onCommit, onRender} = (finishedWork.memoizedProps: ProfilerProps);
 
-  let phase = current === null ? 'mount' : 'update';
+  let phase: ProfilerPhase = current === null ? 'mount' : 'update';
   if (enableProfilerNestedUpdatePhase) {
     if (isCurrentUpdateNested()) {
       phase = 'nested-update';
@@ -951,8 +954,11 @@ function commitProfiler(
     onRender(
       id,
       phase,
+      // $FlowFixMe: This should be always a number in profiling mode
       finishedWork.actualDuration,
+      // $FlowFixMe: This should be always a number in profiling mode
       finishedWork.treeBaseDuration,
+      // $FlowFixMe: This should be always a number in profiling mode
       finishedWork.actualStartTime,
       commitStartTime,
     );
@@ -960,12 +966,7 @@ function commitProfiler(
 
   if (enableProfilerCommitHooks) {
     if (typeof onCommit === 'function') {
-      onCommit(
-        finishedWork.memoizedProps.id,
-        phase,
-        effectDuration,
-        commitStartTime,
-      );
+      onCommit(id, phase, effectDuration, commitStartTime);
     }
   }
 }

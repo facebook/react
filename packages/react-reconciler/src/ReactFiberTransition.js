@@ -7,16 +7,22 @@
  * @flow
  */
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
-import type {Thenable} from 'shared/ReactTypes';
-import type {Lanes} from './ReactFiberLane';
+import type {
+  Thenable,
+  GestureProvider,
+  GestureOptions,
+} from 'shared/ReactTypes';
+import {NoLane, type Lanes} from './ReactFiberLane';
 import type {StackCursor} from './ReactFiberStack';
 import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent';
-import type {
-  BatchConfigTransition,
-  Transition,
-} from './ReactFiberTracingMarkerComponent';
+import type {Transition} from 'react/src/ReactStartTransition';
+import type {ScheduledGesture} from './ReactFiberGestureScheduler';
 
-import {enableTransitionTracing} from 'shared/ReactFeatureFlags';
+import {
+  enableTransitionTracing,
+  enableViewTransition,
+  enableGestureTransition,
+} from 'shared/ReactFeatureFlags';
 import {isPrimaryRenderer} from './ReactFiberConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
 import {
@@ -28,10 +34,23 @@ import {
   retainCache,
   CacheContext,
 } from './ReactFiberCacheComponent';
+import {
+  queueTransitionTypes,
+  entangleAsyncTransitionTypes,
+  entangledTransitionTypes,
+} from './ReactFiberTransitionTypes';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {entangleAsyncAction} from './ReactFiberAsyncAction';
+import {
+  entangleAsyncAction,
+  peekEntangledActionLane,
+} from './ReactFiberAsyncAction';
 import {startAsyncTransitionTimer} from './ReactProfilerTimer';
+import {firstScheduledRoot} from './ReactFiberRootScheduler';
+import {
+  startScheduledGesture,
+  cancelScheduledGesture,
+} from './ReactFiberGestureScheduler';
 
 export const NoTransition = null;
 
@@ -57,7 +76,7 @@ export const NoTransition = null;
 // reconciler. Leaving this for a future PR.
 const prevOnStartTransitionFinish = ReactSharedInternals.S;
 ReactSharedInternals.S = function onStartTransitionFinishForReconciler(
-  transition: BatchConfigTransition,
+  transition: Transition,
   returnValue: mixed,
 ) {
   if (
@@ -76,12 +95,99 @@ ReactSharedInternals.S = function onStartTransitionFinishForReconciler(
     const thenable: Thenable<mixed> = (returnValue: any);
     entangleAsyncAction(transition, thenable);
   }
+  if (enableViewTransition) {
+    if (entangledTransitionTypes !== null) {
+      // If we scheduled work on any new roots, we need to add any entangled async
+      // transition types to those roots too.
+      let root = firstScheduledRoot;
+      while (root !== null) {
+        queueTransitionTypes(root, entangledTransitionTypes);
+        root = root.next;
+      }
+    }
+    const transitionTypes = transition.types;
+    if (transitionTypes !== null) {
+      // Within this Transition we should've now scheduled any roots we have updates
+      // to work on. If there are no updates on a root, then the Transition type won't
+      // be applied to that root.
+      let root = firstScheduledRoot;
+      while (root !== null) {
+        queueTransitionTypes(root, transitionTypes);
+        root = root.next;
+      }
+      if (peekEntangledActionLane() !== NoLane) {
+        // If we have entangled, async actions going on, the update associated with
+        // these types might come later. We need to save them for later.
+        entangleAsyncTransitionTypes(transitionTypes);
+      }
+    }
+  }
   if (prevOnStartTransitionFinish !== null) {
     prevOnStartTransitionFinish(transition, returnValue);
   }
 };
 
-export function requestCurrentTransition(): BatchConfigTransition | null {
+function chainGestureCancellation(
+  root: FiberRoot,
+  scheduledGesture: ScheduledGesture,
+  prevCancel: null | (() => void),
+): () => void {
+  return function cancelGesture(): void {
+    if (scheduledGesture !== null) {
+      cancelScheduledGesture(root, scheduledGesture);
+    }
+    if (prevCancel !== null) {
+      prevCancel();
+    }
+  };
+}
+
+if (enableGestureTransition) {
+  const prevOnStartGestureTransitionFinish = ReactSharedInternals.G;
+  ReactSharedInternals.G = function onStartGestureTransitionFinishForReconciler(
+    transition: Transition,
+    provider: GestureProvider,
+    options: ?GestureOptions,
+  ): () => void {
+    let cancel = null;
+    if (prevOnStartGestureTransitionFinish !== null) {
+      cancel = prevOnStartGestureTransitionFinish(
+        transition,
+        provider,
+        options,
+      );
+    }
+    // For every root that has work scheduled, check if there's a ScheduledGesture
+    // matching this provider and if so, increase its ref count so its retained by
+    // this cancellation callback. We could add the roots to a temporary array as
+    // we schedule them inside the callback to keep track of them. There's a slight
+    // nuance here which is that if there's more than one root scheduled with the
+    // same provider, but it doesn't update in this callback, then we still update
+    // its options and retain it until this cancellation releases. The idea being
+    // that it's conceptually started globally.
+    let root = firstScheduledRoot;
+    while (root !== null) {
+      const scheduledGesture = startScheduledGesture(
+        root,
+        provider,
+        options,
+        transition.types,
+      );
+      if (scheduledGesture !== null) {
+        cancel = chainGestureCancellation(root, scheduledGesture, cancel);
+      }
+      root = root.next;
+    }
+    if (cancel !== null) {
+      return cancel;
+    }
+    return function cancelGesture(): void {
+      // Nothing was scheduled but it could've been scheduled by another renderer.
+    };
+  };
+}
+
+export function requestCurrentTransition(): Transition | null {
   return ReactSharedInternals.T;
 }
 

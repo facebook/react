@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @gating @compilationMode(annotation)
+// @gating @compilationMode:"annotation"
 export function Bar(props) {
   'use forget';
   return <div>{props.bar}</div>;
@@ -28,7 +28,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime";
-import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag"; // @gating @compilationMode(annotation)
+import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag"; // @gating @compilationMode:"annotation"
 export const Bar = isForgetEnabled_Fixtures()
   ? function Bar(props) {
       "use forget";

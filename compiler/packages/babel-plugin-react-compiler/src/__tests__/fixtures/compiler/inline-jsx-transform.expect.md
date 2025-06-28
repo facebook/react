@@ -83,10 +83,10 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c2 } from "react/compiler-runtime"; // @inlineJsxTransform
 
 function Parent(t0) {
-  const $ = _c2(2);
+  const $ = _c2(3);
   const { children, ref } = t0;
   let t1;
-  if ($[0] !== children) {
+  if ($[0] !== children || $[1] !== ref) {
     if (DEV) {
       t1 = <div ref={ref}>{children}</div>;
     } else {
@@ -99,9 +99,10 @@ function Parent(t0) {
       };
     }
     $[0] = children;
-    $[1] = t1;
+    $[1] = ref;
+    $[2] = t1;
   } else {
-    t1 = $[1];
+    t1 = $[2];
   }
   return t1;
 }

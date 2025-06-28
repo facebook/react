@@ -13,6 +13,7 @@ import {Environment, ReactFunctionType} from './Environment';
 import type {HookKind} from './ObjectShape';
 import {Type, makeType} from './Types';
 import {z} from 'zod';
+import type {AliasingEffect} from '../Inference/AliasingEffects';
 
 /*
  * *******************************************************************************************
@@ -100,6 +101,7 @@ export type ReactiveInstruction = {
   id: InstructionId;
   lvalue: Place | null;
   value: ReactiveValue;
+  effects?: Array<AliasingEffect> | null; // TODO make non-optional
   loc: SourceLocation;
 };
 
@@ -277,13 +279,14 @@ export type HIRFunction = {
   env: Environment;
   params: Array<Place | SpreadPattern>;
   returnTypeAnnotation: t.FlowType | t.TSType | null;
-  returnType: Type;
+  returns: Place;
   context: Array<Place>;
   effects: Array<FunctionEffect> | null;
   body: HIR;
   generator: boolean;
   async: boolean;
   directives: Array<string>;
+  aliasingEffects?: Array<AliasingEffect> | null;
 };
 
 export type FunctionEffect =
@@ -449,6 +452,7 @@ export type ReturnTerminal = {
   value: Place;
   id: InstructionId;
   fallthrough?: never;
+  effects: Array<AliasingEffect> | null;
 };
 
 export type GotoTerminal = {
@@ -609,6 +613,7 @@ export type MaybeThrowTerminal = {
   id: InstructionId;
   loc: SourceLocation;
   fallthrough?: never;
+  effects: Array<AliasingEffect> | null;
 };
 
 export type ReactiveScopeTerminal = {
@@ -645,12 +650,14 @@ export type Instruction = {
   lvalue: Place;
   value: InstructionValue;
   loc: SourceLocation;
+  effects: Array<AliasingEffect> | null;
 };
 
 export type TInstruction<T extends InstructionValue> = {
   id: InstructionId;
   lvalue: Place;
   value: T;
+  effects: Array<AliasingEffect> | null;
   loc: SourceLocation;
 };
 
@@ -744,6 +751,27 @@ export enum InstructionKind {
 
   HoistedFunction = 'HoistedFunction',
   Function = 'Function',
+}
+
+export function convertHoistedLValueKind(
+  kind: InstructionKind,
+): InstructionKind | null {
+  switch (kind) {
+    case InstructionKind.HoistedLet:
+      return InstructionKind.Let;
+    case InstructionKind.HoistedConst:
+      return InstructionKind.Const;
+    case InstructionKind.HoistedFunction:
+      return InstructionKind.Function;
+    case InstructionKind.Let:
+    case InstructionKind.Const:
+    case InstructionKind.Function:
+    case InstructionKind.Reassign:
+    case InstructionKind.Catch:
+      return null;
+    default:
+      assertExhaustive(kind, 'Unexpected lvalue kind');
+  }
 }
 
 function _staticInvariantInstructionValueHasLocation(
@@ -880,8 +908,20 @@ export type InstructionValue =
   | StoreLocal
   | {
       kind: 'StoreContext';
+      /**
+       * StoreContext kinds:
+       * Reassign: context variable reassignment in source
+       * Const:    const declaration + assignment in source
+       *           ('const' context vars are ones whose declarations are hoisted)
+       * Let:      let declaration + assignment in source
+       * Function: function declaration in source (similar to `const`)
+       */
       lvalue: {
-        kind: InstructionKind.Reassign;
+        kind:
+          | InstructionKind.Reassign
+          | InstructionKind.Const
+          | InstructionKind.Let
+          | InstructionKind.Function;
         place: Place;
       };
       value: Place;
@@ -1348,6 +1388,21 @@ export enum ValueReason {
   JsxCaptured = 'jsx-captured',
 
   /**
+   * Argument to a hook
+   */
+  HookCaptured = 'hook-captured',
+
+  /**
+   * Return value of a hook
+   */
+  HookReturn = 'hook-return',
+
+  /**
+   * Passed to an effect
+   */
+  Effect = 'effect',
+
+  /**
    * Return value of a function with known frozen return value, e.g. `useState`.
    */
   KnownReturnSignature = 'known-return-signature',
@@ -1395,6 +1450,20 @@ export const ValueKindSchema = z.enum([
   ValueKind.Global,
   ValueKind.Mutable,
   ValueKind.Context,
+]);
+
+export const ValueReasonSchema = z.enum([
+  ValueReason.Context,
+  ValueReason.Effect,
+  ValueReason.Global,
+  ValueReason.HookCaptured,
+  ValueReason.HookReturn,
+  ValueReason.JsxCaptured,
+  ValueReason.KnownReturnSignature,
+  ValueReason.Other,
+  ValueReason.ReactiveFunctionArgument,
+  ValueReason.ReducerState,
+  ValueReason.State,
 ]);
 
 // The effect with which a value is modified.
@@ -1535,6 +1604,18 @@ export type DependencyPathEntry = {
 export type DependencyPath = Array<DependencyPathEntry>;
 export type ReactiveScopeDependency = {
   identifier: Identifier;
+  /**
+   * Reflects whether the base identifier is reactive. Note that some reactive
+   * objects may have non-reactive properties, but we do not currently track
+   * this.
+   *
+   * ```js
+   * // Technically, result[0] is reactive and result[1] is not.
+   * // Currently, both dependencies would be marked as reactive.
+   * const result = useState();
+   * ```
+   */
+  reactive: boolean;
   path: DependencyPath;
 };
 
@@ -1688,8 +1769,24 @@ export function isUseStateType(id: Identifier): boolean {
   return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInUseState';
 }
 
+export function isJsxType(type: Type): boolean {
+  return type.kind === 'Object' && type.shapeId === 'BuiltInJsx';
+}
+
 export function isRefOrRefValue(id: Identifier): boolean {
   return isUseRefType(id) || isRefValueType(id);
+}
+
+/*
+ * Returns true if the type is a Ref or a custom user type that acts like a ref when it
+ * shouldn't. For now the only other case of this is Reanimated's shared values.
+ */
+export function isRefOrRefLikeMutableType(type: Type): boolean {
+  return (
+    type.kind === 'Object' &&
+    (type.shapeId === 'BuiltInUseRefId' ||
+      type.shapeId == 'ReanimatedSharedValueId')
+  );
 }
 
 export function isSetStateType(id: Identifier): boolean {
@@ -1722,6 +1819,19 @@ export function isDispatcherType(id: Identifier): boolean {
   return id.type.kind === 'Function' && id.type.shapeId === 'BuiltInDispatch';
 }
 
+export function isFireFunctionType(id: Identifier): boolean {
+  return (
+    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInFireFunction'
+  );
+}
+
+export function isEffectEventFunctionType(id: Identifier): boolean {
+  return (
+    id.type.kind === 'Function' &&
+    id.type.shapeId === 'BuiltInEffectEventFunction'
+  );
+}
+
 export function isStableType(id: Identifier): boolean {
   return (
     isSetStateType(id) ||
@@ -1730,6 +1840,40 @@ export function isStableType(id: Identifier): boolean {
     isUseRefType(id) ||
     isStartTransitionType(id)
   );
+}
+
+export function isStableTypeContainer(id: Identifier): boolean {
+  const type_ = id.type;
+  if (type_.kind !== 'Object') {
+    return false;
+  }
+  return (
+    isUseStateType(id) || // setState
+    type_.shapeId === 'BuiltInUseActionState' || // setActionState
+    isUseReducerType(id) || // dispatcher
+    type_.shapeId === 'BuiltInUseTransition' // startTransition
+  );
+}
+
+export function evaluatesToStableTypeOrContainer(
+  env: Environment,
+  {value}: Instruction,
+): boolean {
+  if (value.kind === 'CallExpression' || value.kind === 'MethodCall') {
+    const callee =
+      value.kind === 'CallExpression' ? value.callee : value.property;
+
+    const calleeHookKind = getHookKind(env, callee.identifier);
+    switch (calleeHookKind) {
+      case 'useState':
+      case 'useReducer':
+      case 'useActionState':
+      case 'useRef':
+      case 'useTransition':
+        return true;
+    }
+  }
+  return false;
 }
 
 export function isUseEffectHookType(id: Identifier): boolean {

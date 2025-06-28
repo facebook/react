@@ -293,3 +293,18 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     return require('internal-test-utils/ReactJSDOM.js');
   });
 }
+
+// We mock createHook so that we can automatically clean it up.
+let installedHook = null;
+jest.mock('async_hooks', () => {
+  const actual = jest.requireActual('async_hooks');
+  return {
+    ...actual,
+    createHook(config) {
+      if (installedHook) {
+        installedHook.disable();
+      }
+      return (installedHook = actual.createHook(config));
+    },
+  };
+});

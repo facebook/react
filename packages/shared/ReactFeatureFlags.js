@@ -92,14 +92,19 @@ export const enableHalt = __EXPERIMENTAL__;
 
 export const enableViewTransition = __EXPERIMENTAL__;
 
-export const enableSwipeTransition = __EXPERIMENTAL__;
+export const enableGestureTransition = __EXPERIMENTAL__;
 
 export const enableScrollEndPolyfill = __EXPERIMENTAL__;
 
-/**
- * Switches the Fabric API from doing layout in commit work instead of complete work.
- */
-export const enableFabricCompleteRootInCommitPhase = false;
+export const enableSuspenseyImages = false;
+
+export const enableFizzBlockingRender = __EXPERIMENTAL__; // rel="expect"
+
+export const enableSrcObject = __EXPERIMENTAL__;
+
+export const enableHydrationChangeEvent = __EXPERIMENTAL__;
+
+export const enableDefaultTransitionIndicator = __EXPERIMENTAL__;
 
 /**
  * Switches Fiber creation to a simple object instead of a constructor.
@@ -136,9 +141,7 @@ export const passChildrenWhenCloningPersistedNodes = false;
  */
 export const enablePersistedModeClonedFlag = false;
 
-export const enableShallowPropDiffing = false;
-
-export const enableSiblingPrerendering = true;
+export const enableEagerAlternateStateNodeCleanup = true;
 
 /**
  * Enables an expiration time for retry lanes to avoid starvation.
@@ -154,7 +157,6 @@ export const transitionLaneExpirationMs = 5000;
  */
 export const enableInfiniteRenderLoopDetection = false;
 
-export const enableFastAddPropertiesInDiffing = true;
 export const enableLazyPublicInstanceInFabric = false;
 
 export const enableFragmentRefs = __EXPERIMENTAL__;
@@ -189,7 +191,7 @@ export const disableLegacyContext = true;
 export const disableLegacyContextForFunctionComponents = true;
 
 // Enable the moveBefore() alternative to insertBefore(). This preserves states of moves.
-export const enableMoveBefore = __EXPERIMENTAL__;
+export const enableMoveBefore = false;
 
 // Disabled caching behavior of `react/cache` in client runtimes.
 export const disableClientCache = true;
@@ -201,9 +203,6 @@ export const enableReactTestRendererWarning = true;
 // This allows us to land breaking changes to remove legacy mode APIs in experimental builds
 // before removing them in stable in the next Major
 export const disableLegacyMode = true;
-
-// Make <Context> equivalent to <Context.Provider> instead of <Context.Consumer>
-export const enableRenderableContext = true;
 
 // -----------------------------------------------------------------------------
 // Chopping Block
@@ -260,8 +259,5 @@ export const enableAsyncDebugInfo = __EXPERIMENTAL__;
 
 // Track which Fiber(s) schedule render work.
 export const enableUpdaterTracking = __PROFILE__;
-
-// Internal only.
-export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 
 export const ownerStackLimit = 1e4;

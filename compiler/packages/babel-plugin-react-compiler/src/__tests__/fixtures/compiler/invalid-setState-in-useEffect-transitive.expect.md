@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @logger @validateNoSetStateInPassiveEffects
+// @loggerTestOnly @validateNoSetStateInPassiveEffects
 import {useEffect, useState} from 'react';
 
 function Component() {
@@ -24,7 +24,7 @@ function Component() {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @logger @validateNoSetStateInPassiveEffects
+import { c as _c } from "react/compiler-runtime"; // @loggerTestOnly @validateNoSetStateInPassiveEffects
 import { useEffect, useState } from "react";
 
 function Component() {
@@ -65,8 +65,8 @@ function _temp(s) {
 ## Logs
 
 ```
-{"kind":"CompileError","detail":{"options":{"reason":"Calling setState directly within a useEffect causes cascading renders and is not recommended. Consider alternatives to useEffect. (https://react.dev/learn/you-might-not-need-an-effect)","description":null,"severity":"InvalidReact","suggestions":null,"loc":{"start":{"line":13,"column":4,"index":264},"end":{"line":13,"column":5,"index":265},"filename":"invalid-setState-in-useEffect-transitive.ts","identifierName":"g"}}},"fnLoc":null}
-{"kind":"CompileSuccess","fnLoc":{"start":{"line":4,"column":0,"index":91},"end":{"line":16,"column":1,"index":292},"filename":"invalid-setState-in-useEffect-transitive.ts"},"fnName":"Component","memoSlots":2,"memoBlocks":2,"memoValues":2,"prunedMemoBlocks":0,"prunedMemoValues":0}
+{"kind":"CompileError","detail":{"options":{"reason":"Calling setState directly within a useEffect causes cascading renders and is not recommended. Consider alternatives to useEffect. (https://react.dev/learn/you-might-not-need-an-effect)","description":null,"severity":"InvalidReact","suggestions":null,"loc":{"start":{"line":13,"column":4,"index":272},"end":{"line":13,"column":5,"index":273},"filename":"invalid-setState-in-useEffect-transitive.ts","identifierName":"g"}}},"fnLoc":null}
+{"kind":"CompileSuccess","fnLoc":{"start":{"line":4,"column":0,"index":99},"end":{"line":16,"column":1,"index":300},"filename":"invalid-setState-in-useEffect-transitive.ts"},"fnName":"Component","memoSlots":2,"memoBlocks":2,"memoValues":2,"prunedMemoBlocks":0,"prunedMemoValues":0}
 ```
       
 ### Eval output

@@ -277,8 +277,14 @@ export default class ReactFlightWebpackPlugin {
             chunkGroup.chunks.forEach(function (c) {
               // eslint-disable-next-line no-for-of-loops/no-for-of-loops
               for (const file of c.files) {
-                if (!file.endsWith('.js')) return;
-                if (file.endsWith('.hot-update.js')) return;
+                if (!(file.endsWith('.js') || file.endsWith('.mjs'))) {
+                  return;
+                }
+                if (
+                  file.endsWith('.hot-update.js') ||
+                  file.endsWith('.hot-update.mjs')
+                )
+                  return;
                 chunks.push(c.id, file);
                 break;
               }

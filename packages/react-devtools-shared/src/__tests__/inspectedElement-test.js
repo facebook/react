@@ -815,6 +815,130 @@ describe('InspectedElement', () => {
     `);
   });
 
+  it('should support Thenables in React 19', async () => {
+    const Example = () => null;
+
+    class SubclassedPromise extends Promise {}
+
+    const plainThenable = {then() {}};
+    const subclassedPromise = new SubclassedPromise(() => {});
+    const unusedPromise = Promise.resolve();
+    const usedFulfilledPromise = Promise.resolve();
+    const usedFulfilledRichPromise = Promise.resolve({
+      some: {
+        deeply: {
+          nested: {
+            object: {
+              string: 'test',
+              fn: () => {},
+            },
+          },
+        },
+      },
+    });
+    const usedPendingPromise = new Promise(resolve => {});
+    const usedRejectedPromise = Promise.reject(
+      new Error('test-error-do-not-surface'),
+    );
+
+    function Use({value}) {
+      React.use(value);
+    }
+
+    await utils.actAsync(() =>
+      render(
+        <>
+          <Example
+            plainThenable={plainThenable}
+            subclassedPromise={subclassedPromise}
+            unusedPromise={unusedPromise}
+            usedFulfilledPromise={usedFulfilledPromise}
+            usedFulfilledRichPromise={usedFulfilledRichPromise}
+            usedPendingPromise={usedPendingPromise}
+            usedRejectedPromise={usedRejectedPromise}
+          />
+          <React.Suspense>
+            <Use value={usedPendingPromise} />
+          </React.Suspense>
+          <React.Suspense>
+            <Use value={usedFulfilledPromise} />
+          </React.Suspense>
+          <React.Suspense>
+            <Use value={usedFulfilledRichPromise} />
+          </React.Suspense>
+          <ErrorBoundary>
+            <React.Suspense>
+              <Use value={usedRejectedPromise} />
+            </React.Suspense>
+          </ErrorBoundary>
+        </>,
+      ),
+    );
+
+    const inspectedElement = await inspectElementAtIndex(0);
+
+    expect(inspectedElement.props).toMatchInlineSnapshot(`
+      {
+        "plainThenable": Dehydrated {
+          "preview_short": Thenable,
+          "preview_long": Thenable,
+        },
+        "subclassedPromise": Dehydrated {
+          "preview_short": SubclassedPromise,
+          "preview_long": SubclassedPromise,
+        },
+        "unusedPromise": Dehydrated {
+          "preview_short": Promise,
+          "preview_long": Promise,
+        },
+        "usedFulfilledPromise": {
+          "value": undefined,
+        },
+        "usedFulfilledRichPromise": {
+          "value": Dehydrated {
+            "preview_short": {…},
+            "preview_long": {some: {…}},
+          },
+        },
+        "usedPendingPromise": Dehydrated {
+          "preview_short": pending Promise,
+          "preview_long": pending Promise,
+        },
+        "usedRejectedPromise": {
+          "reason": Dehydrated {
+            "preview_short": Error: test-error-do-not-surface,
+            "preview_long": Error: test-error-do-not-surface,
+          },
+        },
+      }
+    `);
+  });
+
+  it('should support Promises in React 18', async () => {
+    const Example = () => null;
+
+    const unusedPromise = Promise.resolve();
+
+    await utils.actAsync(() =>
+      render(
+        <>
+          <Example unusedPromise={unusedPromise} />
+        </>,
+      ),
+    );
+
+    const inspectedElement = await inspectElementAtIndex(0);
+
+    expect(inspectedElement.props).toMatchInlineSnapshot(`
+    {
+      "unusedPromise": Dehydrated {
+        "preview_short": Promise,
+        "preview_long": Promise,
+      },
+    }
+  `);
+  });
+
   it('should not consume iterables while inspecting', async () => {
     const Example = () => null;
 

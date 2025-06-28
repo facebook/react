@@ -259,6 +259,9 @@ export type InspectedElement = {
 
   // UI plugins/visualizations for the inspected element.
   plugins: Plugins,
+
+  // React Native only.
+  nativeTag: number | null,
 };
 
 // TODO: Add profiling type

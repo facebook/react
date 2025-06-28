@@ -198,7 +198,10 @@ describe('ReactLazy', () => {
 
     await resolveFakeImport(Foo);
 
-    await waitForAll(['Foo']);
+    await waitForAll([
+      'Foo',
+      ...(gate('alwaysThrottleRetries') ? [] : ['Foo']),
+    ]);
     expect(root).not.toMatchRenderedOutput('FooBar');
 
     await act(() => resolveFakeImport(Bar));
@@ -326,8 +329,8 @@ describe('ReactLazy', () => {
     await waitForAll([
       'Suspend! [LazyChildA]',
       'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [LazyChildB]'] : []),
+      // pre-warming
+      'Suspend! [LazyChildB]',
     ]);
     expect(root).not.toMatchRenderedOutput('AB');
 
@@ -339,21 +342,12 @@ describe('ReactLazy', () => {
       // we can unwrap the result synchronously if it already loaded. Like `use`.
       await waitFor([
         'A',
-
-        // When enableSiblingPrerendering is on, LazyChildB was already
-        // initialized. So it also already resolved when we called
-        // resolveFakeImport above. So it doesn't suspend again.
-        ...(gate('enableSiblingPrerendering')
-          ? ['B']
-          : ['Suspend! [LazyChildB]']),
+        // pre-warming: LazyChildB was already initialized. So it also already resolved
+        // when we called resolveFakeImport above. So it doesn't suspend again.
+        'B',
       ]);
     });
-    assertLog([
-      ...(gate('enableSiblingPrerendering') ? [] : ['A', 'B']),
-
-      'Did mount: A',
-      'Did mount: B',
-    ]);
+    assertLog(['Did mount: A', 'Did mount: B']);
     expect(root).toMatchRenderedOutput('AB');
 
     // Swap the position of A and B
@@ -947,15 +941,11 @@ describe('ReactLazy', () => {
       </Suspense>,
     );
     await waitForThrow(
-      gate('enableRenderableContext')
-        ? 'Element type is invalid. Received a promise that resolves to: Context.Provider. ' +
-            'Lazy element type must resolve to a class or function.'
-        : 'Element type is invalid. Received a promise that resolves to: Context.Consumer. ' +
-            'Lazy element type must resolve to a class or function.',
+      'Element type is invalid. Received a promise that resolves to: Context. ' +
+        'Lazy element type must resolve to a class or function.',
     );
   });
 
-  // @gate enableRenderableContext
   it('throws with a useful error when wrapping Context.Consumer with lazy()', async () => {
     const Context = React.createContext(null);
     const BadLazy = lazy(() => fakeImport(Context.Consumer));
@@ -1612,7 +1602,11 @@ describe('ReactLazy', () => {
     expect(ref.current).toBe(null);
 
     await act(() => resolveFakeImport(Foo));
-    assertLog(['Foo', ...(gate('enableSiblingPrerendering') ? ['Foo'] : [])]);
+    assertLog([
+      'Foo',
+      // pre-warming
+      'Foo',
+    ]);
 
     await act(() => resolveFakeImport(ForwardRefBar));
     assertLog(['Foo', 'forwardRef', 'Bar']);
@@ -1910,17 +1904,16 @@ describe('ReactLazy', () => {
     await waitForAll([
       'Init A',
       'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Init B'] : []),
+      // pre-warming
+      'Init B',
     ]);
     expect(root).not.toMatchRenderedOutput('AB');
 
     await act(() => resolveFakeImport(ChildA));
     assertLog([
       'A',
-
-      // When enableSiblingPrerendering is on, B was already initialized.
-      ...(gate('enableSiblingPrerendering') ? ['A'] : ['Init B']),
+      // pre-warming
+      'A',
     ]);
 
     await act(() => resolveFakeImport(ChildB));

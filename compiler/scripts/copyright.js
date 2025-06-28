@@ -51,6 +51,9 @@ if (hasErrors) {
 }
 
 function processFile(file) {
+  if (fs.lstatSync(file).isDirectory()) {
+    return;
+  }
   let source = fs.readFileSync(file, 'utf8');
 
   if (source.indexOf(META_COPYRIGHT_COMMENT_BLOCK) === 0) {

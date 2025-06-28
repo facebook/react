@@ -21,3 +21,10 @@
   border-radius: 5px;
   padding: 10px;
 }
+
+.portal {
+  position: fixed;
+  top: 10px;
+  left: 360px;
+  border: 1px solid #ccc;
+}

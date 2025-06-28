@@ -907,10 +907,9 @@ describe('StrictEffectsMode', () => {
       'Child suspended',
       'Fallback',
       'Fallback',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['Child rendered', 'Child suspended']
-        : []),
+      // pre-warming
+      'Child rendered',
+      'Child suspended',
     ]);
 
     log = [];
@@ -932,10 +931,9 @@ describe('StrictEffectsMode', () => {
       'Fallback',
       'Parent dep destroy',
       'Parent dep create',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['Child rendered', 'Child suspended']
-        : []),
+      // pre-warming
+      'Child rendered',
+      'Child suspended',
     ]);
 
     log = [];

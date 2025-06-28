@@ -36,7 +36,6 @@ export const enableUseEffectEventHook = false;
 export const favorSafetyOverHydrationPerf = true;
 export const enableLegacyFBSupport = false;
 export const enableMoveBefore = false;
-export const enableFabricCompleteRootInCommitPhase = false;
 export const enableHiddenSubtreeInsertionEffectCleanup = false;
 export const enableHydrationLaneScheduling = true;
 
@@ -50,7 +49,6 @@ export const enableLegacyHidden = false;
 
 export const enableTransitionTracing = false;
 
-export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFizzExternalRuntime = true;
 
 export const alwaysThrottleRetries = true;
@@ -62,17 +60,20 @@ export const disableClientCache = true;
 export const enableInfiniteRenderLoopDetection = false;
 
 export const renameElementSymbol = true;
-export const enableShallowPropDiffing = false;
-export const enableSiblingPrerendering = true;
+export const enableEagerAlternateStateNodeCleanup = true;
 
 export const enableYieldingBeforePassive = true;
 
 export const enableThrottledScheduling = false;
 export const enableViewTransition = false;
-export const enableSwipeTransition = false;
-export const enableFastAddPropertiesInDiffing = true;
+export const enableGestureTransition = false;
 export const enableLazyPublicInstanceInFabric = false;
 export const enableScrollEndPolyfill = true;
+export const enableSuspenseyImages = false;
+export const enableFizzBlockingRender = true;
+export const enableSrcObject = false;
+export const enableHydrationChangeEvent = false;
+export const enableDefaultTransitionIndicator = false;
 export const ownerStackLimit = 1e4;
 
 export const enableFragmentRefs = false;
@@ -87,7 +88,6 @@ export const enableFragmentRefs = false;
 export const disableLegacyMode = true;
 export const disableLegacyContext = true;
 export const disableLegacyContextForFunctionComponents = true;
-export const enableRenderableContext = true;
 export const enableReactTestRendererWarning = true;
 export const disableDefaultPropsExceptForClasses = true;
 

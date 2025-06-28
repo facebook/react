@@ -53,7 +53,7 @@ import {
   getUnmaskedContext,
   hasContextChanged,
   emptyContextObject,
-} from './ReactFiberContext';
+} from './ReactFiberLegacyContext';
 import {readContext, checkIfContextChanged} from './ReactFiberNewContext';
 import {requestUpdateLane, scheduleUpdateOnFiber} from './ReactFiberWorkLoop';
 import {
@@ -180,7 +180,7 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
-      startUpdateTimerByLane(lane);
+      startUpdateTimerByLane(lane, 'this.setState()');
       scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitions(root, fiber, lane);
     }
@@ -206,7 +206,7 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
-      startUpdateTimerByLane(lane);
+      startUpdateTimerByLane(lane, 'this.replaceState()');
       scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitions(root, fiber, lane);
     }
@@ -232,7 +232,7 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
-      startUpdateTimerByLane(lane);
+      startUpdateTimerByLane(lane, 'this.forceUpdate()');
       scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitions(root, fiber, lane);
     }
@@ -695,7 +695,7 @@ function constructClassInstance(
   }
 
   // Cache unmasked context so we can avoid recreating masked context unless necessary.
-  // ReactFiberContext usually updates this cache but can't for newly-created instances.
+  // ReactFiberLegacyContext usually updates this cache but can't for newly-created instances.
   if (isLegacyContextConsumer) {
     cacheContext(workInProgress, unmaskedContext, context);
   }

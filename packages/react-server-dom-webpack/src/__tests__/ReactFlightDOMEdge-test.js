@@ -32,11 +32,12 @@ let webpackModuleLoading;
 let React;
 let ReactServer;
 let ReactDOMServer;
+let ReactDOMFizzStatic;
 let ReactServerDOMServer;
 let ReactServerDOMStaticServer;
 let ReactServerDOMClient;
 let use;
-let reactServerAct;
+let serverAct;
 let assertConsoleErrorDev;
 
 function normalizeCodeLocInfo(str) {
@@ -66,7 +67,7 @@ describe('ReactFlightDOMEdge', () => {
 
     jest.resetModules();
 
-    reactServerAct = require('internal-test-utils').serverAct;
+    serverAct = require('internal-test-utils').serverAct;
     assertConsoleErrorDev =
       require('internal-test-utils').assertConsoleErrorDev;
 
@@ -102,20 +103,10 @@ describe('ReactFlightDOMEdge', () => {
     );
     React = require('react');
     ReactDOMServer = require('react-dom/server.edge');
+    ReactDOMFizzStatic = require('react-dom/static.edge');
     ReactServerDOMClient = require('react-server-dom-webpack/client');
     use = React.use;
   });
-
-  async function serverAct(callback) {
-    let maybePromise;
-    await reactServerAct(() => {
-      maybePromise = callback();
-      if (maybePromise && typeof maybePromise.catch === 'function') {
-        maybePromise.catch(() => {});
-      }
-    });
-    return maybePromise;
-  }
 
   function passThrough(stream) {
     // Simulate more realistic network by splitting up and rejoining some chunks.
@@ -160,6 +151,61 @@ describe('ReactFlightDOMEdge', () => {
     });
   }
 
+  function dripStream(input) {
+    const reader = input.getReader();
+    let nextDrop = 0;
+    let controller = null;
+    let streamDone = false;
+    const buffer = [];
+    function flush() {
+      if (controller === null || nextDrop === 0) {
+        return;
+      }
+      while (buffer.length > 0 && nextDrop > 0) {
+        const nextChunk = buffer[0];
+        if (nextChunk.byteLength <= nextDrop) {
+          nextDrop -= nextChunk.byteLength;
+          controller.enqueue(nextChunk);
+          buffer.shift();
+          if (streamDone && buffer.length === 0) {
+            controller.done();
+          }
+        } else {
+          controller.enqueue(nextChunk.subarray(0, nextDrop));
+          buffer[0] = nextChunk.subarray(nextDrop);
+          nextDrop = 0;
+        }
+      }
+    }
+    const output = new ReadableStream({
+      start(c) {
+        controller = c;
+        async function pump() {
+          for (;;) {
+            const {value, done} = await reader.read();
+            if (done) {
+              streamDone = true;
+              break;
+            }
+            buffer.push(value);
+            flush();
+          }
+        }
+        pump();
+      },
+      pull() {},
+      cancel(reason) {
+        reader.cancel(reason);
+      },
+    });
+    function drip(n) {
+      nextDrop += n;
+      flush();
+    }
+
+    return [output, drip];
+  }
+
   async function readResult(stream) {
     const reader = stream.getReader();
     let result = '';
@@ -182,6 +228,30 @@ describe('ReactFlightDOMEdge', () => {
       }
       length += value.byteLength;
     }
+  }
+
+  async function createBufferedUnclosingStream(
+    prelude: ReadableStream<Uint8Array>,
+  ): ReadableStream<Uint8Array> {
+    const chunks: Array<Uint8Array> = [];
+    const reader = prelude.getReader();
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) {
+        break;
+      } else {
+        chunks.push(value);
+      }
+    }
+
+    let i = 0;
+    return new ReadableStream({
+      async pull(controller) {
+        if (i < chunks.length) {
+          controller.enqueue(chunks[i++]);
+        }
+      },
+    });
   }
 
   it('should allow an alternative module mapping to be used for SSR', async () => {
@@ -574,6 +644,105 @@ describe('ReactFlightDOMEdge', () => {
     const serializedContent = await readResult(stream);
     const expectedDebugInfoSize = __DEV__ ? 320 * 20 : 0;
     expect(serializedContent.length).toBeLessThan(150 + expectedDebugInfoSize);
+  });
+
+  it('should break up large sync components by outlining into streamable elements', async () => {
+    const paragraphs = [];
+    for (let i = 0; i < 20; i++) {
+      const text =
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris' +
+        'porttitor tortor ac lectus faucibus, eget eleifend elit hendrerit.' +
+        'Integer porttitor nisi in leo congue rutrum. Morbi sed ante posuere,' +
+        'aliquam lorem ac, imperdiet orci. Duis malesuada gravida pharetra. Cras' +
+        'facilisis arcu diam, id dictum lorem imperdiet a. Suspendisse aliquet' +
+        'tempus tortor et ultricies. Aliquam libero velit, posuere tempus ante' +
+        'sed, pellentesque tincidunt lorem. Nullam iaculis, eros a varius' +
+        'aliquet, tortor felis tempor metus, nec cursus felis eros aliquam nulla.' +
+        'Vivamus ut orci sed mauris congue lacinia. Cras eget blandit neque.' +
+        'Pellentesque a massa in turpis ullamcorper volutpat vel at massa. Sed' +
+        'ante est, auctor non diam non, vulputate ultrices metus. Maecenas dictum' +
+        'fermentum quam id aliquam. Donec porta risus vitae pretium posuere.' +
+        'Fusce facilisis eros in lacus tincidunt congue.' +
+        i; /* trick dedupe */
+      paragraphs.push(<p key={i}>{text}</p>);
+    }
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(paragraphs),
+    );
+
+    const [stream2, drip] = dripStream(stream);
+
+    // Allow some of the content through.
+    drip(__DEV__ ? 7500 : 5000);
+
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      stream2,
+      {
+        serverConsumerManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
+
+    // We should have resolved enough to be able to get the array even though some
+    // of the items inside are still lazy.
+    expect(result.length).toBe(20);
+
+    // Unblock the rest
+    drip(Infinity);
+
+    // Use the SSR render to resolve any lazy elements
+    const ssrStream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(result),
+    );
+    const html = await readResult(ssrStream);
+
+    const ssrStream2 = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(paragraphs),
+    );
+    const html2 = await readResult(ssrStream2);
+
+    expect(html).toBe(html2);
+  });
+
+  it('regression: should not leak serialized size', async () => {
+    const MAX_ROW_SIZE = 3200;
+    // This test case is a bit convoluted and may no longer trigger the original bug.
+    // Originally, the size of `promisedText` was not cleaned up so the sync portion
+    // ended up being deferred immediately when we called `renderToReadableStream` again
+    // i.e. `result2.syncText` became a Lazy element on the second request.
+    const longText = 'd'.repeat(MAX_ROW_SIZE);
+    const promisedText = Promise.resolve(longText);
+    const model = {syncText: <p>{longText}</p>, promisedText};
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(model),
+    );
+
+    const result = await ReactServerDOMClient.createFromReadableStream(stream, {
+      serverConsumerManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+
+    const stream2 = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(model),
+    );
+
+    const result2 = await ReactServerDOMClient.createFromReadableStream(
+      stream2,
+      {
+        serverConsumerManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
+
+    expect(result2.syncText).toEqual(result.syncText);
   });
 
   it('should be able to serialize any kind of typed array', async () => {
@@ -1047,7 +1216,6 @@ describe('ReactFlightDOMEdge', () => {
       const greetInfo = expect.objectContaining({
         name: 'Greeting',
         env: 'Server',
-        owner: null,
       });
       expect(lazyWrapper._debugInfo).toEqual([
         {time: 12},
@@ -1353,5 +1521,396 @@ describe('ReactFlightDOMEdge', () => {
     }
     expect(error).not.toBe(null);
     expect(error.message).toBe('Connection closed.');
+  });
+
+  // @gate experimental
+  it('should be able to handle a rejected promise in unstable_prerender', async () => {
+    const expectedError = new Error('Bam!');
+    const errors = [];
+
+    const {prelude} = await ReactServerDOMStaticServer.unstable_prerender(
+      Promise.reject(expectedError),
+      webpackMap,
+      {
+        onError(err) {
+          errors.push(err);
+        },
+      },
+    );
+
+    expect(errors).toEqual([expectedError]);
+
+    const response = ReactServerDOMClient.createFromReadableStream(prelude, {
+      serverConsumerManifest: {
+        moduleMap: {},
+        moduleLoading: {},
+      },
+    });
+
+    let error = null;
+    try {
+      await response;
+    } catch (x) {
+      error = x;
+    }
+
+    const expectedMessage = __DEV__
+      ? expectedError.message
+      : 'An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.';
+
+    expect(error).not.toBe(null);
+    expect(error.message).toBe(expectedMessage);
+  });
+
+  // @gate experimental
+  it('should be able to handle an erroring async iterable in unstable_prerender', async () => {
+    const expectedError = new Error('Bam!');
+    const errors = [];
+
+    const {prelude} = await ReactServerDOMStaticServer.unstable_prerender(
+      {
+        async *[Symbol.asyncIterator]() {
+          await serverAct(() => {
+            throw expectedError;
+          });
+        },
+      },
+      webpackMap,
+      {
+        onError(err) {
+          errors.push(err);
+        },
+      },
+    );
+
+    expect(errors).toEqual([expectedError]);
+
+    const response = ReactServerDOMClient.createFromReadableStream(prelude, {
+      serverConsumerManifest: {
+        moduleMap: {},
+        moduleLoading: {},
+      },
+    });
+
+    let error = null;
+    try {
+      const result = await response;
+      const iterator = result[Symbol.asyncIterator]();
+      await iterator.next();
+    } catch (x) {
+      error = x;
+    }
+
+    const expectedMessage = __DEV__
+      ? expectedError.message
+      : 'An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.';
+
+    expect(error).not.toBe(null);
+    expect(error.message).toBe(expectedMessage);
+  });
+
+  // @gate experimental
+  it('should be able to handle an erroring readable stream in unstable_prerender', async () => {
+    const expectedError = new Error('Bam!');
+    const errors = [];
+
+    const {prelude} = await ReactServerDOMStaticServer.unstable_prerender(
+      new ReadableStream({
+        async start(controller) {
+          await serverAct(() => {
+            setTimeout(() => {
+              controller.error(expectedError);
+            });
+          });
+        },
+      }),
+      webpackMap,
+      {
+        onError(err) {
+          errors.push(err);
+        },
+      },
+    );
+
+    expect(errors).toEqual([expectedError]);
+
+    const response = ReactServerDOMClient.createFromReadableStream(prelude, {
+      serverConsumerManifest: {
+        moduleMap: {},
+        moduleLoading: {},
+      },
+    });
+
+    let error = null;
+    try {
+      const stream = await response;
+      await stream.getReader().read();
+    } catch (x) {
+      error = x;
+    }
+
+    const expectedMessage = __DEV__
+      ? expectedError.message
+      : 'An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.';
+
+    expect(error).not.toBe(null);
+    expect(error.message).toBe(expectedMessage);
+  });
+
+  // @gate experimental
+  it('can prerender an async iterable', async () => {
+    const errors = [];
+
+    const {prelude} = await ReactServerDOMStaticServer.unstable_prerender(
+      {
+        async *[Symbol.asyncIterator]() {
+          yield 'hello';
+          yield ' ';
+          yield 'world';
+        },
+      },
+      webpackMap,
+      {
+        onError(err) {
+          errors.push(err);
+        },
+      },
+    );
+
+    expect(errors).toEqual([]);
+
+    const response = ReactServerDOMClient.createFromReadableStream(prelude, {
+      serverConsumerManifest: {
+        moduleMap: {},
+        moduleLoading: {},
+      },
+    });
+
+    let text = '';
+    const result = await response;
+    const iterator = result[Symbol.asyncIterator]();
+
+    while (true) {
+      const {done, value} = await iterator.next();
+      if (done) {
+        break;
+      }
+      text += value;
+    }
+
+    expect(text).toBe('hello world');
+  });
+
+  // @gate experimental
+  it('can prerender a readable stream', async () => {
+    const errors = [];
+
+    const {prelude} = await ReactServerDOMStaticServer.unstable_prerender(
+      new ReadableStream({
+        start(controller) {
+          controller.enqueue('hello world');
+          controller.close();
+        },
+      }),
+      webpackMap,
+      {
+        onError(err) {
+          errors.push(err);
+        },
+      },
+    );
+
+    expect(errors).toEqual([]);
+
+    const response = ReactServerDOMClient.createFromReadableStream(prelude, {
+      serverConsumerManifest: {
+        moduleMap: {},
+        moduleLoading: {},
+      },
+    });
+
+    const stream = await response;
+    const result = await readResult(stream);
+
+    expect(result).toBe('hello world');
+  });
+
+  // @gate experimental
+  it('does not return a prerender prelude early when an error is emitted and there are still pending tasks', async () => {
+    let rejectPromise;
+    const rejectingPromise = new Promise(
+      (resolve, reject) => (rejectPromise = reject),
+    );
+    const expectedError = new Error('Boom!');
+    const errors = [];
+
+    const {prelude} = await ReactServerDOMStaticServer.unstable_prerender(
+      [
+        rejectingPromise,
+        {
+          async *[Symbol.asyncIterator]() {
+            yield 'hello';
+            yield ' ';
+            await serverAct(() => {
+              rejectPromise(expectedError);
+            });
+            yield 'world';
+          },
+        },
+      ],
+      webpackMap,
+      {
+        onError(err) {
+          errors.push(err);
+        },
+      },
+    );
+
+    expect(errors).toEqual([expectedError]);
+
+    const response = ReactServerDOMClient.createFromReadableStream(prelude, {
+      serverConsumerManifest: {
+        moduleMap: {},
+        moduleLoading: {},
+      },
+    });
+
+    let text = '';
+    const [promise, iterable] = await response;
+    const iterator = iterable[Symbol.asyncIterator]();
+
+    while (true) {
+      const {done, value} = await iterator.next();
+      if (done) {
+        break;
+      }
+      text += value;
+    }
+
+    expect(text).toBe('hello world');
+
+    let error = null;
+    try {
+      await promise;
+    } catch (x) {
+      error = x;
+    }
+
+    const expectedMessage = __DEV__
+      ? expectedError.message
+      : 'An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.';
+
+    expect(error).not.toBe(null);
+    expect(error.message).toBe(expectedMessage);
+  });
+
+  // @gate enableHalt
+  it('does not include source locations in component stacks for halted components', async () => {
+    // We only support adding source locations for halted components in the Node.js builds.
+
+    async function Component() {
+      await new Promise(() => {});
+      return null;
+    }
+
+    function App() {
+      return ReactServer.createElement(
+        'html',
+        null,
+        ReactServer.createElement(
+          'body',
+          null,
+          ReactServer.createElement(
+            ReactServer.Suspense,
+            {fallback: 'Loading...'},
+            ReactServer.createElement(Component, null),
+          ),
+        ),
+      );
+    }
+
+    const serverAbortController = new AbortController();
+    const errors = [];
+    const prerenderResult = ReactServerDOMStaticServer.unstable_prerender(
+      ReactServer.createElement(App, null),
+      webpackMap,
+      {
+        signal: serverAbortController.signal,
+        onError(err) {
+          errors.push(err);
+        },
+      },
+    );
+
+    await new Promise(resolve => {
+      setImmediate(() => {
+        serverAbortController.abort();
+        resolve();
+      });
+    });
+
+    const {prelude} = await prerenderResult;
+
+    expect(errors).toEqual([]);
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const prerenderResponse = ReactServerDOMClient.createFromReadableStream(
+      await createBufferedUnclosingStream(prelude),
+      {
+        serverConsumerManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
+
+    let componentStack;
+    let ownerStack;
+
+    const clientAbortController = new AbortController();
+
+    const fizzPrerenderStreamResult = ReactDOMFizzStatic.prerender(
+      React.createElement(ClientRoot, {response: prerenderResponse}),
+      {
+        signal: clientAbortController.signal,
+        onError(error, errorInfo) {
+          componentStack = errorInfo.componentStack;
+          ownerStack = React.captureOwnerStack
+            ? React.captureOwnerStack()
+            : null;
+        },
+      },
+    );
+
+    await new Promise(resolve => {
+      setImmediate(() => {
+        clientAbortController.abort();
+        resolve();
+      });
+    });
+
+    const fizzPrerenderStream = await fizzPrerenderStreamResult;
+    const prerenderHTML = await readResult(fizzPrerenderStream.prelude);
+
+    expect(prerenderHTML).toContain('Loading...');
+
+    if (__DEV__) {
+      expect(normalizeCodeLocInfo(componentStack)).toBe(
+        '\n    in Component\n    in Suspense\n    in body\n    in html\n    in ClientRoot (at **)',
+      );
+    } else {
+      expect(normalizeCodeLocInfo(componentStack)).toBe(
+        '\n    in Suspense\n    in body\n    in html\n    in ClientRoot (at **)',
+      );
+    }
+
+    if (__DEV__) {
+      expect(normalizeCodeLocInfo(ownerStack)).toBe('\n    in App (at **)');
+    } else {
+      expect(ownerStack).toBeNull();
+    }
   });
 });

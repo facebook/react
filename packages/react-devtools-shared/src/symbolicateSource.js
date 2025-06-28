@@ -7,7 +7,6 @@
  * @flow
  */
 
-import {normalizeUrl} from 'react-devtools-shared/src/utils';
 import SourceMapConsumer from 'react-devtools-shared/src/hooks/SourceMapConsumer';
 
 import type {Source} from 'react-devtools-shared/src/shared/types';
@@ -91,9 +90,8 @@ export async function symbolicateSource(
           try {
             // sourceMapURL = https://react.dev/script.js.map
             void new URL(possiblyURL); // test if it is a valid URL
-            const normalizedURL = normalizeUrl(possiblyURL);
 
-            return {sourceURL: normalizedURL, line, column};
+            return {sourceURL: possiblyURL, line, column};
           } catch (e) {
             // This is not valid URL
             if (

@@ -44,7 +44,7 @@ import {
   getHookKind,
   makeIdentifierName,
 } from '../HIR/HIR';
-import {printIdentifier, printPlace} from '../HIR/PrintHIR';
+import {printIdentifier, printInstruction, printPlace} from '../HIR/PrintHIR';
 import {eachPatternOperand} from '../HIR/visitors';
 import {Err, Ok, Result} from '../Utils/Result';
 import {GuardKind} from '../Utils/RuntimeDiagnosticConstants';
@@ -349,11 +349,9 @@ function codegenReactiveFunction(
   fn: ReactiveFunction,
 ): Result<CodegenFunction, CompilerError> {
   for (const param of fn.params) {
-    if (param.kind === 'Identifier') {
-      cx.temp.set(param.identifier.declarationId, null);
-    } else {
-      cx.temp.set(param.place.identifier.declarationId, null);
-    }
+    const place = param.kind === 'Identifier' ? param : param.place;
+    cx.temp.set(place.identifier.declarationId, null);
+    cx.declare(place.identifier);
   }
 
   const params = fn.params.map(param => convertParameter(param));
@@ -1000,6 +998,14 @@ function codegenTerminal(
           lval = codegenLValue(cx, iterableItem.value.lvalue.pattern);
           break;
         }
+        case 'StoreContext': {
+          CompilerError.throwTodo({
+            reason: 'Support non-trivial for..in inits',
+            description: null,
+            loc: terminal.init.loc,
+            suggestions: null,
+          });
+        }
         default:
           CompilerError.invariant(false, {
             reason: `Expected a StoreLocal or Destructure to be assigned to the collection`,
@@ -1092,6 +1098,14 @@ function codegenTerminal(
           lval = codegenLValue(cx, iterableItem.value.lvalue.pattern);
           break;
         }
+        case 'StoreContext': {
+          CompilerError.throwTodo({
+            reason: 'Support non-trivial for..of inits',
+            description: null,
+            loc: terminal.init.loc,
+            suggestions: null,
+          });
+        }
         default:
           CompilerError.invariant(false, {
             reason: `Expected a StoreLocal or Destructure to be assigned to the collection`,
@@ -1167,7 +1181,7 @@ function codegenTerminal(
               ? codegenPlaceToExpression(cx, case_.test)
               : null;
           const block = codegenBlock(cx, case_.block!);
-          return t.switchCase(test, [block]);
+          return t.switchCase(test, block.body.length === 0 ? [] : [block]);
         }),
       );
     }
@@ -1294,7 +1308,7 @@ function codegenInstructionNullable(
         });
         CompilerError.invariant(value?.type === 'FunctionExpression', {
           reason: 'Expected a function as a function declaration value',
-          description: null,
+          description: `Got ${value == null ? String(value) : value.type} at ${printInstruction(instr)}`,
           loc: instr.value.loc,
           suggestions: null,
         });
@@ -1710,7 +1724,7 @@ function codegenInstructionValue(
     }
     case 'UnaryExpression': {
       value = t.unaryExpression(
-        instrValue.operator as 'throw', // todo
+        instrValue.operator,
         codegenPlaceToExpression(cx, instrValue.value),
       );
       break;
@@ -2311,9 +2325,12 @@ function codegenInstructionValue(
  * u0080 to u009F: C1 control codes
  * u00A0 to uFFFF: All non-basic Latin characters
  * https://en.wikipedia.org/wiki/List_of_Unicode_characters#Control_codes
+ *
+ * u010000 to u10FFFF: Astral plane characters
+ * https://mathiasbynens.be/notes/javascript-unicode
  */
 const STRING_REQUIRES_EXPR_CONTAINER_PATTERN =
-  /[\u{0000}-\u{001F}\u{007F}\u{0080}-\u{FFFF}]|"|\\/u;
+  /[\u{0000}-\u{001F}\u{007F}\u{0080}-\u{FFFF}\u{010000}-\u{10FFFF}]|"|\\/u;
 function codegenJsxAttribute(
   cx: Context,
   attribute: JsxAttribute,
@@ -2563,7 +2580,16 @@ function codegenValue(
   value: boolean | number | string | null | undefined,
 ): t.Expression {
   if (typeof value === 'number') {
-    return t.numericLiteral(value);
+    if (value < 0) {
+      /**
+       * Babel's code generator produces invalid JS for negative numbers when
+       * run with { compact: true }.
+       * See repro https://codesandbox.io/p/devbox/5d47fr
+       */
+      return t.unaryExpression('-', t.numericLiteral(-value), false);
+    } else {
+      return t.numericLiteral(value);
+    }
   } else if (typeof value === 'boolean') {
     return t.booleanLiteral(value);
   } else if (typeof value === 'string') {

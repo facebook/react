@@ -23,6 +23,7 @@ import type {Element as ElementType} from 'react-devtools-shared/src/frontend/ty
 
 import styles from './Element.css';
 import Icon from '../Icon';
+import {useChangeOwnerAction} from './OwnersListContext';
 
 type Props = {
   data: ItemData,
@@ -66,9 +67,10 @@ export default function Element({data, index, style}: Props): React.Node {
     warningCount: number,
   }>(errorsAndWarningsSubscription);
 
+  const changeOwnerAction = useChangeOwnerAction();
   const handleDoubleClick = () => {
     if (id !== null) {
-      dispatch({type: 'SELECT_OWNER', payload: id});
+      changeOwnerAction(id);
     }
   };
 

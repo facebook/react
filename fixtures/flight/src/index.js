@@ -42,17 +42,43 @@ function Shell({data}) {
 }
 
 async function hydrateApp() {
-  const {root, returnValue, formState} = await createFromFetch(
-    fetch('/', {
-      headers: {
-        Accept: 'text/x-component',
-      },
-    }),
-    {
-      callServer,
-      findSourceMapURL,
-    }
-  );
+  let response;
+  if (
+    process.env.NODE_ENV === 'development' &&
+    typeof WebSocketStream === 'function'
+  ) {
+    const requestId = crypto.randomUUID();
+    const wss = new WebSocketStream(
+      'ws://localhost:3001/debug-channel?' + requestId
+    );
+    const debugChannel = await wss.opened;
+    response = createFromFetch(
+      fetch('/', {
+        headers: {
+          Accept: 'text/x-component',
+          'rsc-request-id': requestId,
+        },
+      }),
+      {
+        callServer,
+        debugChannel,
+        findSourceMapURL,
+      }
+    );
+  } else {
+    response = createFromFetch(
+      fetch('/', {
+        headers: {
+          Accept: 'text/x-component',
+        },
+      }),
+      {
+        callServer,
+        findSourceMapURL,
+      }
+    );
+  }
+  const {root, returnValue, formState} = await response;
 
   ReactDOM.hydrateRoot(
     document,

@@ -41,7 +41,7 @@ export const FIXTURE_ENTRYPOINT = {
 > 10 |     }
      | ^^^^^^^^^^^^^^^^
 > 11 |   }, [propA, propB.x.y]);
-     | ^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected (5:11)
+     | ^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `propB`, but the source dependencies were [propA, propB.x.y]. Inferred less specific property than source (5:11)
   12 | }
   13 |
   14 | export const FIXTURE_ENTRYPOINT = {

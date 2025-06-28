@@ -496,6 +496,7 @@ module.exports = {
         'packages/react-devtools-shared/src/devtools/views/**/*.js',
         'packages/react-devtools-shared/src/hook.js',
         'packages/react-devtools-shared/src/backend/console.js',
+        'packages/react-devtools-shared/src/backend/fiber/renderer.js',
         'packages/react-devtools-shared/src/backend/shared/DevToolsComponentStackFrame.js',
         'packages/react-devtools-shared/src/frontend/utils/withPermissionsCheck.js',
       ],
@@ -504,6 +505,7 @@ module.exports = {
         __IS_FIREFOX__: 'readonly',
         __IS_EDGE__: 'readonly',
         __IS_NATIVE__: 'readonly',
+        __IS_INTERNAL_MCP_BUILD__: 'readonly',
         __IS_INTERNAL_VERSION__: 'readonly',
         chrome: 'readonly',
       },
@@ -559,6 +561,7 @@ module.exports = {
     ConsoleTask: 'readonly', // TOOD: Figure out what the official name of this will be.
     ReturnType: 'readonly',
     AnimationFrameID: 'readonly',
+    WeakRef: 'readonly',
     // For Flow type annotation. Only `BigInt` is valid at runtime.
     bigint: 'readonly',
     BigInt: 'readonly',
@@ -579,6 +582,7 @@ module.exports = {
     JSONValue: 'readonly',
     JSResourceReference: 'readonly',
     MouseEventHandler: 'readonly',
+    NavigateEvent: 'readonly',
     PropagationPhases: 'readonly',
     PropertyDescriptor: 'readonly',
     React$AbstractComponent: 'readonly',
@@ -608,6 +612,7 @@ module.exports = {
     TimeoutID: 'readonly',
     WheelEventHandler: 'readonly',
     FinalizationRegistry: 'readonly',
+    Exclude: 'readonly',
     Omit: 'readonly',
     Keyframe: 'readonly',
     PropertyIndexedKeyframes: 'readonly',
@@ -615,6 +620,8 @@ module.exports = {
     GetAnimationsOptions: 'readonly',
     Animatable: 'readonly',
     ScrollTimeline: 'readonly',
+    EventListenerOptionsOrUseCapture: 'readonly',
+    FocusOptions: 'readonly',
 
     spyOnDev: 'readonly',
     spyOnDevAndProd: 'readonly',
@@ -632,5 +639,6 @@ module.exports = {
     AsyncLocalStorage: 'readonly',
     async_hooks: 'readonly',
     globalThis: 'readonly',
+    navigation: 'readonly',
   },
 };

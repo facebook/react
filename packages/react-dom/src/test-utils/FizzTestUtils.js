@@ -150,7 +150,10 @@ function getVisibleChildren(element: Element): React$Node {
         node.tagName !== 'TEMPLATE' &&
         node.tagName !== 'template' &&
         !node.hasAttribute('hidden') &&
-        !node.hasAttribute('aria-hidden')
+        !node.hasAttribute('aria-hidden') &&
+        // Ignore the render blocking expect
+        (node.getAttribute('rel') !== 'expect' ||
+          node.getAttribute('blocking') !== 'render')
       ) {
         const props: any = {};
         const attributes = node.attributes;
@@ -164,7 +167,10 @@ function getVisibleChildren(element: Element): React$Node {
           }
           props[attributes[i].name] = attributes[i].value;
         }
-        props.children = getVisibleChildren(node);
+        const nestedChildren = getVisibleChildren(node);
+        if (nestedChildren !== undefined) {
+          props.children = nestedChildren;
+        }
         children.push(
           require('react').createElement(node.tagName.toLowerCase(), props),
         );

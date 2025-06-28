@@ -32,6 +32,7 @@ type __MeasureLayoutOnSuccessCallback = (
 type __ReactNativeBaseComponentViewConfig = any;
 type __ViewConfigGetter = any;
 type __ViewConfig = any;
+type __AttributeConfiguration = any;
 
 // libdefs cannot actually import. This is supposed to be the type imported
 // from 'react-native-renderer/src/legacy-events/TopLevelEventTypes';
@@ -49,6 +50,10 @@ type RawEventEmitterEvent = $ReadOnly<{
   // and a stateNode of the native element/Fiber the event was emitted to.
   nativeEvent: {[string]: mixed, ...},
 }>;
+
+declare opaque type __PublicInstance;
+declare opaque type __PublicTextInstance;
+declare opaque type __PublicRootInstance;
 
 declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface' {
   declare export function deepDiffer(
@@ -158,9 +163,9 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     emit: (channel: string, event: RawEventEmitterEvent) => string,
     ...
   };
-  declare export opaque type PublicInstance;
-  declare export opaque type PublicTextInstance;
-  declare export opaque type PublicRootInstance;
+  declare export type PublicInstance = __PublicInstance;
+  declare export type PublicTextInstance = __PublicTextInstance;
+  declare export type PublicRootInstance = __PublicRootInstance;
   declare export type MeasureOnSuccessCallback = __MeasureOnSuccessCallback;
   declare export type MeasureInWindowOnSuccessCallback =
     __MeasureInWindowOnSuccessCallback;
@@ -199,9 +204,25 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
   declare export function getInternalInstanceHandleFromPublicInstance(
     publicInstance: PublicInstance,
   ): ?Object;
+  declare export function createAttributePayload(
+    props: Object,
+    validAttributes: __AttributeConfiguration,
+  ): null | Object;
+  declare export function diffAttributePayloads(
+    prevProps: Object,
+    nextProps: Object,
+    validAttributes: __AttributeConfiguration,
+  ): null | Object;
 }
 
 declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInitializeCore' {
+}
+
+declare module 'react-native' {
+  declare export type HostInstance = __PublicInstance;
+  declare export type PublicTextInstance = __PublicTextInstance;
+  declare export type PublicRootInstance = __PublicRootInstance;
+  declare export type MeasureOnSuccessCallback = __MeasureOnSuccessCallback;
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -277,6 +298,8 @@ declare const nativeFabricUIManager: {
   ) => void,
   unstable_DefaultEventPriority: number,
   unstable_DiscreteEventPriority: number,
+  unstable_ContinuousEventPriority: number,
+  unstable_IdleEventPriority: number,
   unstable_getCurrentEventPriority: () => number,
   ...
 };

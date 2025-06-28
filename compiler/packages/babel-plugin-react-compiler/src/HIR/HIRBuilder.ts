@@ -106,11 +106,10 @@ export default class HIRBuilder {
   #current: WipBlock;
   #entry: BlockId;
   #scopes: Array<Scope> = [];
-  #context: Array<t.Identifier>;
+  #context: Map<t.Identifier, SourceLocation>;
   #bindings: Bindings;
   #env: Environment;
   #exceptionHandlerStack: Array<BlockId> = [];
-  parentFunction: NodePath<t.Function>;
   errors: CompilerError = new CompilerError();
   /**
    * Traversal context: counts the number of `fbt` tag parents
@@ -122,7 +121,7 @@ export default class HIRBuilder {
     return this.#env.nextIdentifierId;
   }
 
-  get context(): Array<t.Identifier> {
+  get context(): Map<t.Identifier, SourceLocation> {
     return this.#context;
   }
 
@@ -136,16 +135,17 @@ export default class HIRBuilder {
 
   constructor(
     env: Environment,
-    parentFunction: NodePath<t.Function>, // the outermost function being compiled
-    bindings: Bindings | null = null,
-    context: Array<t.Identifier> | null = null,
+    options?: {
+      bindings?: Bindings | null;
+      context?: Map<t.Identifier, SourceLocation>;
+      entryBlockKind?: BlockKind;
+    },
   ) {
     this.#env = env;
-    this.#bindings = bindings ?? new Map();
-    this.parentFunction = parentFunction;
-    this.#context = context ?? [];
+    this.#bindings = options?.bindings ?? new Map();
+    this.#context = options?.context ?? new Map();
     this.#entry = makeBlockId(env.nextBlockId);
-    this.#current = newBlock(this.#entry, 'block');
+    this.#current = newBlock(this.#entry, options?.entryBlockKind ?? 'block');
   }
 
   currentBlockKind(): BlockKind {
@@ -165,6 +165,7 @@ export default class HIRBuilder {
           handler: exceptionHandler,
           id: makeInstructionId(0),
           loc: instruction.loc,
+          effects: null,
         },
         continuationBlock,
       );
@@ -239,7 +240,7 @@ export default class HIRBuilder {
 
     // Check if the binding is from module scope
     const outerBinding =
-      this.parentFunction.scope.parent.getBinding(originalName);
+      this.#env.parentFunction.scope.parent.getBinding(originalName);
     if (babelBinding === outerBinding) {
       const path = babelBinding.path;
       if (path.isImportDefaultSpecifier()) {
@@ -293,7 +294,7 @@ export default class HIRBuilder {
     const binding = this.#resolveBabelBinding(path);
     if (binding) {
       // Check if the binding is from module scope, if so return null
-      const outerBinding = this.parentFunction.scope.parent.getBinding(
+      const outerBinding = this.#env.parentFunction.scope.parent.getBinding(
         path.node.name,
       );
       if (binding === outerBinding) {
@@ -376,7 +377,7 @@ export default class HIRBuilder {
   }
 
   // Terminate the current block w the given terminal, and start a new block
-  terminate(terminal: Terminal, nextBlockKind: BlockKind | null): void {
+  terminate(terminal: Terminal, nextBlockKind: BlockKind | null): BlockId {
     const {id: blockId, kind, instructions} = this.#current;
     this.#completed.set(blockId, {
       kind,
@@ -390,6 +391,7 @@ export default class HIRBuilder {
       const nextId = this.#env.nextBlockId;
       this.#current = newBlock(nextId, nextBlockKind);
     }
+    return blockId;
   }
 
   /*
@@ -746,6 +748,11 @@ function getReversePostorderedBlocks(func: HIR): HIR['blocks'] {
      * (eg bb2 then bb1), we ensure that they get reversed back to the correct order.
      */
     const block = func.blocks.get(blockId)!;
+    CompilerError.invariant(block != null, {
+      reason: '[HIRBuilder] Unexpected null block',
+      description: `expected block ${blockId} to exist`,
+      loc: GeneratedSource,
+    });
     const successors = [...eachTerminalSuccessor(block.terminal)].reverse();
     const fallthrough = terminalFallthrough(block.terminal);
 

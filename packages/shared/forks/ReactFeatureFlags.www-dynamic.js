@@ -17,11 +17,9 @@ export const alwaysThrottleRetries = __VARIANT__;
 export const disableDefaultPropsExceptForClasses = __VARIANT__;
 export const disableLegacyContextForFunctionComponents = __VARIANT__;
 export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
-export const enableDO_NOT_USE_disableStrictPassiveEffect = __VARIANT__;
 export const enableHiddenSubtreeInsertionEffectCleanup = __VARIANT__;
 export const enableNoCloningMemoCache = __VARIANT__;
 export const enableObjectFiber = __VARIANT__;
-export const enableRenderableContext = __VARIANT__;
 export const enableRetryLaneExpiration = __VARIANT__;
 export const enableTransitionTracing = __VARIANT__;
 export const favorSafetyOverHydrationPerf = __VARIANT__;
@@ -33,7 +31,6 @@ export const transitionLaneExpirationMs = 5000;
 export const enableSchedulingProfiler = __VARIANT__;
 
 export const enableInfiniteRenderLoopDetection = __VARIANT__;
-export const enableSiblingPrerendering = __VARIANT__;
 
 export const enableFastAddPropertiesInDiffing = __VARIANT__;
 export const enableLazyPublicInstanceInFabric = false;

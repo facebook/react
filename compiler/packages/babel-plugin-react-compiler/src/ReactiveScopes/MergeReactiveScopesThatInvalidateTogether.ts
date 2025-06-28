@@ -456,6 +456,7 @@ function canMergeScopes(
       new Set(
         [...current.scope.declarations.values()].map(declaration => ({
           identifier: declaration.identifier,
+          reactive: true,
           path: [],
         })),
       ),
