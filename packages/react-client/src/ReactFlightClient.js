@@ -10,11 +10,10 @@
 import type {
   Thenable,
   ReactDebugInfo,
+  ReactDebugInfoEntry,
   ReactComponentInfo,
-  ReactEnvironmentInfo,
   ReactAsyncInfo,
   ReactIOInfo,
-  ReactTimeInfo,
   ReactStackTrace,
   ReactFunctionLocation,
   ReactErrorInfoDev,
@@ -168,6 +167,7 @@ type PendingChunk<T> = {
   value: null | Array<InitializationReference | (T => mixed)>,
   reason: null | Array<InitializationReference | (mixed => mixed)>,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
+  _blockedDebugInfo?: null | SomeChunk<ReactDebugInfoEntry>, // DEV-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
@@ -176,6 +176,7 @@ type BlockedChunk<T> = {
   value: null | Array<InitializationReference | (T => mixed)>,
   reason: null | Array<InitializationReference | (mixed => mixed)>,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
+  _blockedDebugInfo?: null | SomeChunk<ReactDebugInfoEntry>, // DEV-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
@@ -184,6 +185,7 @@ type ResolvedModelChunk<T> = {
   value: UninitializedModel,
   reason: Response,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
+  _blockedDebugInfo?: null | SomeChunk<ReactDebugInfoEntry>, // DEV-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
@@ -192,6 +194,7 @@ type ResolvedModuleChunk<T> = {
   value: ClientReference<T>,
   reason: null,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
+  _blockedDebugInfo?: null | SomeChunk<ReactDebugInfoEntry>, // DEV-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
@@ -200,6 +203,7 @@ type InitializedChunk<T> = {
   value: T,
   reason: null | FlightStreamController,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
+  _blockedDebugInfo?: null | SomeChunk<ReactDebugInfoEntry>, // DEV-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
@@ -210,6 +214,7 @@ type InitializedStreamChunk<
   value: T,
   reason: FlightStreamController,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
+  _blockedDebugInfo?: null | SomeChunk<ReactDebugInfoEntry>, // DEV-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (ReadableStream) => mixed, reject?: (mixed) => mixed): void,
 };
@@ -218,6 +223,7 @@ type ErroredChunk<T> = {
   value: null,
   reason: mixed,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
+  _blockedDebugInfo?: null | SomeChunk<ReactDebugInfoEntry>, // DEV-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
@@ -226,6 +232,7 @@ type HaltedChunk<T> = {
   value: null,
   reason: null,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
+  _blockedDebugInfo?: null | SomeChunk<ReactDebugInfoEntry>, // DEV-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
@@ -247,6 +254,7 @@ function ReactPromise(status: any, value: any, reason: any) {
     this._children = [];
   }
   if (__DEV__) {
+    this._blockedDebugInfo = null;
     this._debugInfo = null;
   }
 }
@@ -3204,12 +3212,8 @@ function initializeFakeStack(
 
 function resolveDebugInfo(
   response: Response,
-  id: number,
-  debugInfo:
-    | ReactComponentInfo
-    | ReactEnvironmentInfo
-    | ReactAsyncInfo
-    | ReactTimeInfo,
+  chunk: SomeChunk<any>,
+  debugInfo: ReactDebugInfoEntry,
 ): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
@@ -3259,10 +3263,55 @@ function resolveDebugInfo(
     }
   }
 
-  const chunk = getChunk(response, id);
   const chunkDebugInfo: ReactDebugInfo =
     chunk._debugInfo || (chunk._debugInfo = []);
   chunkDebugInfo.push(debugInfo);
+}
+
+function resolveDebugModel(
+  response: Response,
+  id: number,
+  json: UninitializedModel,
+): void {
+  const parentChunk = getChunk(response, id);
+  const blockedChunk = parentChunk._blockedDebugInfo;
+  if (blockedChunk == null) {
+    // If we're not blocked on any other chunks, we can try to eagerly initialize
+    // this as a fast-path to avoid awaiting them.
+    const chunk: ResolvedModelChunk<ReactDebugInfoEntry> =
+      createResolvedModelChunk(response, json);
+    initializeModelChunk(chunk);
+    const initializedChunk: SomeChunk<ReactDebugInfoEntry> = chunk;
+    if (initializedChunk.status === INITIALIZED) {
+      resolveDebugInfo(response, parentChunk, initializedChunk.value);
+    } else {
+      chunk.then(
+        v => resolveDebugInfo(response, parentChunk, v),
+        e => {
+          // Ignore debug info errors for now. Unnecessary noise.
+        },
+      );
+      parentChunk._blockedDebugInfo = chunk;
+    }
+  } else {
+    // We're still waiting on a previous chunk so we can't enqueue quite yet.
+    const chunk: SomeChunk<ReactDebugInfoEntry> = createPendingChunk(response);
+    chunk.then(
+      v => resolveDebugInfo(response, parentChunk, v),
+      e => {
+        // Ignore debug info errors for now. Unnecessary noise.
+      },
+    );
+    parentChunk._blockedDebugInfo = chunk;
+    blockedChunk.then(function () {
+      if (parentChunk._blockedDebugInfo === chunk) {
+        // We were still the last chunk so we can now clear the queue and return
+        // to synchronous emitting.
+        parentChunk._blockedDebugInfo = null;
+      }
+      resolveModelChunk(response, chunk, json);
+    });
+  }
 }
 
 let currentOwnerInDEV: null | ReactComponentInfo = null;
@@ -3916,30 +3965,7 @@ function processFullStringRow(
     }
     case 68 /* "D" */: {
       if (__DEV__) {
-        const chunk: ResolvedModelChunk<
-          | ReactComponentInfo
-          | ReactEnvironmentInfo
-          | ReactAsyncInfo
-          | ReactTimeInfo,
-        > = createResolvedModelChunk(response, row);
-        initializeModelChunk(chunk);
-        const initializedChunk: SomeChunk<
-          | ReactComponentInfo
-          | ReactEnvironmentInfo
-          | ReactAsyncInfo
-          | ReactTimeInfo,
-        > = chunk;
-        if (initializedChunk.status === INITIALIZED) {
-          resolveDebugInfo(response, id, initializedChunk.value);
-        } else {
-          // TODO: This is not going to resolve in the right order if there's more than one.
-          chunk.then(
-            v => resolveDebugInfo(response, id, v),
-            e => {
-              // Ignore debug info errors for now. Unnecessary noise.
-            },
-          );
-        }
+        resolveDebugModel(response, id, row);
         return;
       }
       // Fallthrough to share the error with Console entries.
