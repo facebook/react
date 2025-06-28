@@ -422,7 +422,7 @@ function wakeChunk<T>(
   }
 }
 
-function rejectChunk<T>(
+function rejectChunk(
   listeners: Array<InitializationReference | (mixed => mixed)>,
   error: mixed,
 ): void {
@@ -436,6 +436,33 @@ function rejectChunk<T>(
   }
 }
 
+function resolveBlockedCycle<T>(
+  resolvedChunk: SomeChunk<T>,
+  reference: InitializationReference,
+): null | InitializationHandler {
+  const referencedChunk = reference.handler.chunk;
+  if (referencedChunk === null) {
+    return null;
+  }
+  if (referencedChunk === resolvedChunk) {
+    // We found the cycle. We can resolve the blocked cycle now.
+    return reference.handler;
+  }
+  const resolveListeners = referencedChunk.value;
+  if (resolveListeners !== null) {
+    for (let i = 0; i < resolveListeners.length; i++) {
+      const listener = resolveListeners[i];
+      if (typeof listener !== 'function') {
+        const foundHandler = resolveBlockedCycle(resolvedChunk, listener);
+        if (foundHandler !== null) {
+          return foundHandler;
+        }
+      }
+    }
+  }
+  return null;
+}
+
 function wakeChunkIfInitialized<T>(
   chunk: SomeChunk<T>,
   resolveListeners: Array<InitializationReference | (T => mixed)>,
@@ -445,8 +472,32 @@ function wakeChunkIfInitialized<T>(
     case INITIALIZED:
       wakeChunk(resolveListeners, chunk.value);
       break;
-    case PENDING:
     case BLOCKED:
+      // It is possible that we're blocked on our own chunk if it's a cycle.
+      // Before adding back the listeners to the chunk, let's check if it would
+      // result in a cycle.
+      for (let i = 0; i < resolveListeners.length; i++) {
+        const listener = resolveListeners[i];
+        if (typeof listener !== 'function') {
+          const reference: InitializationReference = listener;
+          const cyclicHandler = resolveBlockedCycle(chunk, reference);
+          if (cyclicHandler !== null) {
+            // This reference points back to this chunk. We can resolve the cycle by
+            // using the value from that handler.
+            fulfillReference(reference, cyclicHandler.value);
+            resolveListeners.splice(i, 1);
+            i--;
+            if (rejectListeners !== null) {
+              const rejectionIdx = rejectListeners.indexOf(reference);
+              if (rejectionIdx !== -1) {
+                rejectListeners.splice(rejectionIdx, 1);
+              }
+            }
+          }
+        }
+      }
+    // Fallthrough
+    case PENDING:
       if (chunk.value) {
         for (let i = 0; i < resolveListeners.length; i++) {
           chunk.value.push(resolveListeners[i]);
@@ -1063,7 +1114,22 @@ function fulfillReference(
             value = referencedChunk.value;
             continue;
           }
-          case BLOCKED:
+          case BLOCKED: {
+            // It is possible that we're blocked on our own chunk if it's a cycle.
+            // Before adding the listener to the inner chunk, let's check if it would
+            // result in a cycle.
+            const cyclicHandler = resolveBlockedCycle(
+              referencedChunk,
+              reference,
+            );
+            if (cyclicHandler !== null) {
+              // This reference points back to this chunk. We can resolve the cycle by
+              // using the value from that handler.
+              value = cyclicHandler.value;
+              continue;
+            }
+            // Fallthrough
+          }
           case PENDING: {
             // If we're not yet initialized we need to skip what we've already drilled
             // through and then wait for the next value to become available.
@@ -1152,7 +1218,7 @@ function rejectReference(
   reference: InitializationReference,
   error: mixed,
 ): void {
-  const {response, handler} = reference;
+  const {handler} = reference;
 
   if (handler.errored) {
     // We've already errored. We could instead build up an AggregateError
