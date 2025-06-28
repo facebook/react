@@ -362,6 +362,7 @@ type Response = {
   _debugRootTask?: null | ConsoleTask, // DEV-only
   _debugFindSourceMapURL?: void | FindSourceMapURLCallback, // DEV-only
   _debugChannel?: void | DebugChannelCallback, // DEV-only
+  _blockedConsole?: null | SomeChunk<ConsoleEntry>, // DEV-only
   _replayConsole: boolean, // DEV-only
   _rootEnvironmentName: string, // DEV-only, the requested environment name.
 };
@@ -2222,6 +2223,7 @@ function ResponseInstance(
     }
     this._debugFindSourceMapURL = findSourceMapURL;
     this._debugChannel = debugChannel;
+    this._blockedConsole = null;
     this._replayConsole = replayConsole;
     this._rootEnvironmentName = rootEnv;
     if (debugChannel) {
@@ -3329,12 +3331,14 @@ function getCurrentStackInDEV(): string {
 const replayConsoleWithCallStack = {
   react_stack_bottom_frame: function (
     response: Response,
-    methodName: string,
-    stackTrace: ReactStackTrace,
-    owner: null | ReactComponentInfo,
-    env: string,
-    args: Array<mixed>,
+    payload: ConsoleEntry,
   ): void {
+    const methodName = payload[0];
+    const stackTrace = payload[1];
+    const owner = payload[2];
+    const env = payload[3];
+    const args = payload.slice(4);
+
     // There really shouldn't be anything else on the stack atm.
     const prevStack = ReactSharedInternals.getCurrentStack;
     ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
@@ -3372,11 +3376,7 @@ const replayConsoleWithCallStack = {
 
 const replayConsoleWithCallStackInDEV: (
   response: Response,
-  methodName: string,
-  stackTrace: ReactStackTrace,
-  owner: null | ReactComponentInfo,
-  env: string,
-  args: Array<mixed>,
+  payload: ConsoleEntry,
 ) => void = __DEV__
   ? // We use this technique to trick minifiers to preserve the function name.
     (replayConsoleWithCallStack.react_stack_bottom_frame.bind(
@@ -3384,9 +3384,17 @@ const replayConsoleWithCallStackInDEV: (
     ): any)
   : (null: any);
 
+type ConsoleEntry = [
+  string,
+  ReactStackTrace,
+  null | ReactComponentInfo,
+  string,
+  mixed,
+];
+
 function resolveConsoleEntry(
   response: Response,
-  value: UninitializedModel,
+  json: UninitializedModel,
 ): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
@@ -3400,27 +3408,47 @@ function resolveConsoleEntry(
     return;
   }
 
-  const payload: [
-    string,
-    ReactStackTrace,
-    null | ReactComponentInfo,
-    string,
-    mixed,
-  ] = parseModel(response, value);
-  const methodName = payload[0];
-  const stackTrace = payload[1];
-  const owner = payload[2];
-  const env = payload[3];
-  const args = payload.slice(4);
-
-  replayConsoleWithCallStackInDEV(
-    response,
-    methodName,
-    stackTrace,
-    owner,
-    env,
-    args,
-  );
+  const blockedChunk = response._blockedConsole;
+  if (blockedChunk == null) {
+    // If we're not blocked on any other chunks, we can try to eagerly initialize
+    // this as a fast-path to avoid awaiting them.
+    const chunk: ResolvedModelChunk<ConsoleEntry> = createResolvedModelChunk(
+      response,
+      json,
+    );
+    initializeModelChunk(chunk);
+    const initializedChunk: SomeChunk<ConsoleEntry> = chunk;
+    if (initializedChunk.status === INITIALIZED) {
+      replayConsoleWithCallStackInDEV(response, initializedChunk.value);
+    } else {
+      chunk.then(
+        v => replayConsoleWithCallStackInDEV(response, v),
+        e => {
+          // Ignore console errors for now. Unnecessary noise.
+        },
+      );
+      response._blockedConsole = chunk;
+    }
+  } else {
+    // We're still waiting on a previous chunk so we can't enqueue quite yet.
+    const chunk: SomeChunk<ConsoleEntry> = createPendingChunk(response);
+    chunk.then(
+      v => replayConsoleWithCallStackInDEV(response, v),
+      e => {
+        // Ignore console errors for now. Unnecessary noise.
+      },
+    );
+    response._blockedConsole = chunk;
+    const unblock = () => {
+      if (response._blockedConsole === chunk) {
+        // We were still the last chunk so we can now clear the queue and return
+        // to synchronous emitting.
+        response._blockedConsole = null;
+      }
+      resolveModelChunk(response, chunk, json);
+    };
+    blockedChunk.then(unblock, unblock);
+  }
 }
 
 function initializeIOInfo(response: Response, ioInfo: ReactIOInfo): void {
