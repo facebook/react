@@ -3220,6 +3220,11 @@ function renderModelDestructive(
 
     if (existingReference !== undefined) {
       if (modelRoot === value) {
+        if (existingReference !== serializeByValueID(task.id)) {
+          // Turns out that we already have this root at a different reference.
+          // Use that after all.
+          return existingReference;
+        }
         // This is the ID we're currently emitting so we need to write it
         // once but if we discover it again, we refer to it by id.
         modelRoot = null;
