@@ -29,6 +29,7 @@ import {
 import {
   addValueToProperties,
   addObjectToProperties,
+  addObjectDiffToProperties,
 } from 'shared/ReactPerformanceTrackProperties';
 
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
@@ -36,25 +37,17 @@ import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 const supportsUserTiming =
   enableProfilerTimer &&
   typeof console !== 'undefined' &&
-  typeof console.timeStamp === 'function';
+  typeof console.timeStamp === 'function' &&
+  (!__DEV__ ||
+    // In DEV we also rely on performance.measure
+    (typeof performance !== 'undefined' &&
+      // $FlowFixMe[method-unbinding]
+      typeof performance.measure === 'function'));
 
 const COMPONENTS_TRACK = 'Components ⚛';
 const LANES_TRACK_GROUP = 'Scheduler ⚛';
 
 let currentTrack: string = 'Blocking'; // Lane
-
-const reusableLaneDevToolDetails = {
-  color: 'primary',
-  track: 'Blocking', // Lane
-  trackGroup: LANES_TRACK_GROUP,
-};
-const reusableLaneOptions = {
-  start: -0,
-  end: -0,
-  detail: {
-    devtools: reusableLaneDevToolDetails,
-  },
-};
 
 export function setCurrentTrackFromLanes(lanes: Lanes): void {
   currentTrack = getGroupNameOfHighestPriorityLane(lanes);
@@ -108,28 +101,22 @@ function logComponentTrigger(
   trigger: string,
 ) {
   if (supportsUserTiming) {
+    reusableComponentOptions.start = startTime;
+    reusableComponentOptions.end = endTime;
+    reusableComponentDevToolDetails.color = 'warning';
+    reusableComponentDevToolDetails.properties = null;
     const debugTask = fiber._debugTask;
     if (__DEV__ && debugTask) {
       debugTask.run(
-        console.timeStamp.bind(
-          console,
+        // $FlowFixMe[method-unbinding]
+        performance.measure.bind(
+          performance,
           trigger,
-          startTime,
-          endTime,
-          COMPONENTS_TRACK,
-          undefined,
-          'warning',
+          reusableComponentOptions,
         ),
       );
     } else {
-      console.timeStamp(
-        trigger,
-        startTime,
-        endTime,
-        COMPONENTS_TRACK,
-        undefined,
-        'warning',
-      );
+      performance.measure(trigger, reusableComponentOptions);
     }
   }
 }
@@ -166,6 +153,21 @@ export function logComponentDisappeared(
   logComponentTrigger(fiber, startTime, endTime, 'Disconnect');
 }
 
+const reusableComponentDevToolDetails = {
+  color: 'primary',
+  properties: (null: null | Array<[string, string]>),
+  track: COMPONENTS_TRACK,
+};
+const reusableComponentOptions = {
+  start: -0,
+  end: -0,
+  detail: {
+    devtools: reusableComponentDevToolDetails,
+  },
+};
+
+const resuableChangedPropsEntry = ['Changed Props', ''];
+
 export function logComponentRender(
   fiber: Fiber,
   startTime: number,
@@ -178,8 +180,9 @@ export function logComponentRender(
     return;
   }
   if (supportsUserTiming) {
+    const alternate = fiber.alternate;
     let selfTime: number = (fiber.actualDuration: any);
-    if (fiber.alternate === null || fiber.alternate.child !== fiber.child) {
+    if (alternate === null || alternate.child !== fiber.child) {
       for (let child = fiber.child; child !== null; child = child.sibling) {
         selfTime -= (child.actualDuration: any);
       }
@@ -200,6 +203,36 @@ export function logComponentRender(
             : 'error';
     const debugTask = fiber._debugTask;
     if (__DEV__ && debugTask) {
+      const props = fiber.memoizedProps;
+      if (
+        props !== null &&
+        alternate !== null &&
+        alternate.memoizedProps !== props
+      ) {
+        // If this is an update, we'll diff the props and emit which ones changed.
+        const properties: Array<[string, string]> = [resuableChangedPropsEntry];
+        addObjectDiffToProperties(
+          alternate.memoizedProps,
+          props,
+          properties,
+          0,
+        );
+        if (properties.length > 1) {
+          reusableComponentOptions.start = startTime;
+          reusableComponentOptions.end = endTime;
+          reusableComponentDevToolDetails.color = color;
+          reusableComponentDevToolDetails.properties = properties;
+          debugTask.run(
+            // $FlowFixMe[method-unbinding]
+            performance.measure.bind(
+              performance,
+              name,
+              reusableComponentOptions,
+            ),
+          );
+          return;
+        }
+      }
       debugTask.run(
         // $FlowFixMe[method-unbinding]
         console.timeStamp.bind(
@@ -237,12 +270,7 @@ export function logComponentErrored(
       // Skip
       return;
     }
-    if (
-      __DEV__ &&
-      typeof performance !== 'undefined' &&
-      // $FlowFixMe[method-unbinding]
-      typeof performance.measure === 'function'
-    ) {
+    if (__DEV__) {
       let debugTask: ?ConsoleTask = null;
       const properties: Array<[string, string]> = [];
       for (let i = 0; i < errors.length; i++) {
@@ -267,10 +295,10 @@ export function logComponentErrored(
         properties.push(['Error', message]);
       }
       if (fiber.key !== null) {
-        addValueToProperties('key', fiber.key, properties, 0);
+        addValueToProperties('key', fiber.key, properties, 0, '');
       }
       if (fiber.memoizedProps !== null) {
-        addObjectToProperties(fiber.memoizedProps, properties, 0);
+        addObjectToProperties(fiber.memoizedProps, properties, 0, '');
       }
       if (debugTask == null) {
         // If the captured values don't have a debug task, fallback to the
@@ -325,12 +353,7 @@ function logComponentEffectErrored(
       // Skip
       return;
     }
-    if (
-      __DEV__ &&
-      typeof performance !== 'undefined' &&
-      // $FlowFixMe[method-unbinding]
-      typeof performance.measure === 'function'
-    ) {
+    if (__DEV__) {
       const properties: Array<[string, string]> = [];
       for (let i = 0; i < errors.length; i++) {
         const capturedValue = errors[i];
@@ -346,10 +369,10 @@ function logComponentEffectErrored(
         properties.push(['Error', message]);
       }
       if (fiber.key !== null) {
-        addValueToProperties('key', fiber.key, properties, 0);
+        addValueToProperties('key', fiber.key, properties, 0, '');
       }
       if (fiber.memoizedProps !== null) {
-        addObjectToProperties(fiber.memoizedProps, properties, 0);
+        addObjectToProperties(fiber.memoizedProps, properties, 0, '');
       }
       const options = {
         start: startTime,
@@ -549,7 +572,8 @@ export function logBlockingStart(
     // If a blocking update was spawned within render or an effect, that's considered a cascading render.
     // If you have a second blocking update within the same event, that suggests multiple flushSync or
     // setState in a microtask which is also considered a cascade.
-    if (eventTime > 0 && eventType !== null) {
+    const eventEndTime = updateTime > 0 ? updateTime : renderStartTime;
+    if (eventTime > 0 && eventType !== null && eventEndTime > eventTime) {
       // Log the time from the event timeStamp until we called setState.
       const color = eventIsRepeat ? 'secondary-light' : 'warning';
       if (__DEV__ && debugTask) {
@@ -559,7 +583,7 @@ export function logBlockingStart(
             console,
             eventIsRepeat ? '' : 'Event: ' + eventType,
             eventTime,
-            updateTime > 0 ? updateTime : renderStartTime,
+            eventEndTime,
             currentTrack,
             LANES_TRACK_GROUP,
             color,
@@ -569,14 +593,14 @@ export function logBlockingStart(
         console.timeStamp(
           eventIsRepeat ? '' : 'Event: ' + eventType,
           eventTime,
-          updateTime > 0 ? updateTime : renderStartTime,
+          eventEndTime,
           currentTrack,
           LANES_TRACK_GROUP,
           color,
         );
       }
     }
-    if (updateTime > 0) {
+    if (updateTime > 0 && renderStartTime > updateTime) {
       // Log the time from when we called setState until we started rendering.
       const color = isSpawnedUpdate
         ? 'error'
@@ -629,15 +653,11 @@ export function logTransitionStart(
 ): void {
   if (supportsUserTiming) {
     currentTrack = 'Transition';
-    if (eventTime > 0 && eventType !== null) {
+    const eventEndTime =
+      startTime > 0 ? startTime : updateTime > 0 ? updateTime : renderStartTime;
+    if (eventTime > 0 && eventEndTime > eventTime && eventType !== null) {
       // Log the time from the event timeStamp until we started a transition.
       const color = eventIsRepeat ? 'secondary-light' : 'warning';
-      const endTime =
-        startTime > 0
-          ? startTime
-          : updateTime > 0
-            ? updateTime
-            : renderStartTime;
       if (__DEV__ && debugTask) {
         debugTask.run(
           // $FlowFixMe[method-unbinding]
@@ -645,7 +665,7 @@ export function logTransitionStart(
             console,
             eventIsRepeat ? '' : 'Event: ' + eventType,
             eventTime,
-            endTime,
+            eventEndTime,
             currentTrack,
             LANES_TRACK_GROUP,
             color,
@@ -655,14 +675,15 @@ export function logTransitionStart(
         console.timeStamp(
           eventIsRepeat ? '' : 'Event: ' + eventType,
           eventTime,
-          endTime,
+          eventEndTime,
           currentTrack,
           LANES_TRACK_GROUP,
           color,
         );
       }
     }
-    if (startTime > 0) {
+    const startEndTime = updateTime > 0 ? updateTime : renderStartTime;
+    if (startTime > 0 && startEndTime > startTime) {
       // Log the time from when we started an async transition until we called setState or started rendering.
       // TODO: Ideally this would use the debugTask of the startTransition call perhaps.
       if (__DEV__ && debugTask) {
@@ -672,7 +693,7 @@ export function logTransitionStart(
             console,
             'Action',
             startTime,
-            updateTime > 0 ? updateTime : renderStartTime,
+            startEndTime,
             currentTrack,
             LANES_TRACK_GROUP,
             'primary-dark',
@@ -682,14 +703,14 @@ export function logTransitionStart(
         console.timeStamp(
           'Action',
           startTime,
-          updateTime > 0 ? updateTime : renderStartTime,
+          startEndTime,
           currentTrack,
           LANES_TRACK_GROUP,
           'primary-dark',
         );
       }
     }
-    if (updateTime > 0) {
+    if (updateTime > 0 && renderStartTime > updateTime) {
       // Log the time from when we called setState until we started rendering.
       if (__DEV__ && debugTask) {
         debugTask.run(
@@ -815,12 +836,7 @@ export function logRecoveredRenderPhase(
   hydrationFailed: boolean,
 ): void {
   if (supportsUserTiming) {
-    if (
-      __DEV__ &&
-      typeof performance !== 'undefined' &&
-      // $FlowFixMe[method-unbinding]
-      typeof performance.measure === 'function'
-    ) {
+    if (__DEV__) {
       const properties: Array<[string, string]> = [];
       for (let i = 0; i < recoverableErrors.length; i++) {
         const capturedValue = recoverableErrors[i];
@@ -939,12 +955,7 @@ export function logCommitErrored(
   passive: boolean,
 ): void {
   if (supportsUserTiming) {
-    if (
-      __DEV__ &&
-      typeof performance !== 'undefined' &&
-      // $FlowFixMe[method-unbinding]
-      typeof performance.measure === 'function'
-    ) {
+    if (__DEV__) {
       const properties: Array<[string, string]> = [];
       for (let i = 0; i < errors.length; i++) {
         const capturedValue = errors[i];
@@ -997,8 +1008,6 @@ export function logCommitPhase(
     return;
   }
   if (supportsUserTiming) {
-    reusableLaneOptions.start = startTime;
-    reusableLaneOptions.end = endTime;
     console.timeStamp(
       'Commit',
       startTime,
