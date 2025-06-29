@@ -167,7 +167,7 @@ type PendingChunk<T> = {
   value: null | Array<InitializationReference | (T => mixed)>,
   reason: null | Array<InitializationReference | (mixed => mixed)>,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
-  _blockedDebugInfo?: null | SomeChunk<ReactDebugInfoEntry>, // DEV-only
+  _blockedDebugInfo?: any, // DEV-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
@@ -176,7 +176,7 @@ type BlockedChunk<T> = {
   value: null | Array<InitializationReference | (T => mixed)>,
   reason: null | Array<InitializationReference | (mixed => mixed)>,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
-  _blockedDebugInfo?: null | SomeChunk<ReactDebugInfoEntry>, // DEV-only
+  _blockedDebugInfo?: any, // DEV-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
@@ -185,7 +185,7 @@ type ResolvedModelChunk<T> = {
   value: UninitializedModel,
   reason: Response,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
-  _blockedDebugInfo?: null | SomeChunk<ReactDebugInfoEntry>, // DEV-only
+  _blockedDebugInfo?: any, // DEV-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
@@ -194,7 +194,7 @@ type ResolvedModuleChunk<T> = {
   value: ClientReference<T>,
   reason: null,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
-  _blockedDebugInfo?: null | SomeChunk<ReactDebugInfoEntry>, // DEV-only
+  _blockedDebugInfo?: any, // DEV-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
@@ -203,7 +203,7 @@ type InitializedChunk<T> = {
   value: T,
   reason: null | FlightStreamController,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
-  _blockedDebugInfo?: null | SomeChunk<ReactDebugInfoEntry>, // DEV-only
+  _blockedDebugInfo?: any, // DEV-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
@@ -214,7 +214,7 @@ type InitializedStreamChunk<
   value: T,
   reason: FlightStreamController,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
-  _blockedDebugInfo?: null | SomeChunk<ReactDebugInfoEntry>, // DEV-only
+  _blockedDebugInfo?: any, // DEV-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (ReadableStream) => mixed, reject?: (mixed) => mixed): void,
 };
@@ -223,7 +223,7 @@ type ErroredChunk<T> = {
   value: null,
   reason: mixed,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
-  _blockedDebugInfo?: null | SomeChunk<ReactDebugInfoEntry>, // DEV-only
+  _blockedDebugInfo?: any, // DEV-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
@@ -232,7 +232,7 @@ type HaltedChunk<T> = {
   value: null,
   reason: null,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
-  _blockedDebugInfo?: null | SomeChunk<ReactDebugInfoEntry>, // DEV-only
+  _blockedDebugInfo?: any, // DEV-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
