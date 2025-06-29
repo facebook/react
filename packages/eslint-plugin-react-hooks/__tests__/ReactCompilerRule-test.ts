@@ -248,6 +248,43 @@ const tests: CompilerTestCases = {
         },
       ],
     },
+    {
+      name: 'useDeepMemo accessing ref.current during render (JS)',
+      code: normalizeIndent`
+        import { equal } from "@wry/equality";
+        import * as React from "react";
+
+        function useDeepMemo(memoFn, deps) {
+          const ref = React.useRef();
+          if (!ref.current || !equal(ref.current.deps, deps)) {
+            ref.current = { value: memoFn(), deps };
+          }
+          return ref.current.value;
+        }
+      `,
+      errors: [
+        {
+          message:
+            'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
+          line: 7,
+        },
+        {
+          message:
+            'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
+          line: 7,
+        },
+        {
+          message:
+            'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
+          line: 8,
+        },
+        {
+          message:
+            'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
+          line: 10,
+        },
+      ],
+    },
   ],
 };
 
