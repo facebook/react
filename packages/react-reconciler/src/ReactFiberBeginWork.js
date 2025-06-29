@@ -117,7 +117,6 @@ import {
   enableCPUSuspense,
   enablePostpone,
   disableLegacyMode,
-  disableDefaultPropsExceptForClasses,
   enableHydrationLaneScheduling,
   enableViewTransition,
   enableFragmentRefs,
@@ -258,7 +257,6 @@ import {
   updateClassInstance,
   resolveClassComponentProps,
 } from './ReactFiberClassComponent';
-import {resolveDefaultPropsOnNonClassComponent} from './ReactFiberLazyComponent';
 import {
   createFiberFromTypeAndProps,
   createFiberFromFragment,
@@ -327,7 +325,6 @@ let didWarnAboutGetDerivedStateOnFunctionComponent;
 export let didWarnAboutReassigningProps: boolean;
 let didWarnAboutRevealOrder;
 let didWarnAboutTailOptions;
-let didWarnAboutDefaultPropsOnFunctionComponent;
 let didWarnAboutClassNameOnViewTransition;
 
 if (__DEV__) {
@@ -338,7 +335,6 @@ if (__DEV__) {
   didWarnAboutReassigningProps = false;
   didWarnAboutRevealOrder = ({}: {[string]: boolean});
   didWarnAboutTailOptions = ({}: {[string]: boolean});
-  didWarnAboutDefaultPropsOnFunctionComponent = ({}: {[string]: boolean});
   didWarnAboutClassNameOnViewTransition = ({}: {[string]: boolean});
 }
 
@@ -482,13 +478,7 @@ function updateMemoComponent(
 ): null | Fiber {
   if (current === null) {
     const type = Component.type;
-    if (
-      isSimpleFunctionComponent(type) &&
-      Component.compare === null &&
-      // SimpleMemoComponent codepath doesn't resolve outer props either.
-      (disableDefaultPropsExceptForClasses ||
-        Component.defaultProps === undefined)
-    ) {
+    if (isSimpleFunctionComponent(type) && Component.compare === null) {
       let resolvedType = type;
       if (__DEV__) {
         resolvedType = resolveFunctionForHotReloading(type);
@@ -508,21 +498,6 @@ function updateMemoComponent(
         nextProps,
         renderLanes,
       );
-    }
-    if (!disableDefaultPropsExceptForClasses) {
-      if (__DEV__) {
-        if (Component.defaultProps !== undefined) {
-          const componentName = getComponentNameFromType(type) || 'Unknown';
-          if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
-            console.error(
-              '%s: Support for defaultProps will be removed from memo components ' +
-                'in a future major release. Use JavaScript default parameters instead.',
-              componentName,
-            );
-            didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true;
-          }
-        }
-      }
     }
     const child = createFiberFromTypeAndProps(
       Component.type,
@@ -2072,9 +2047,6 @@ function mountLazyComponent(
         renderLanes,
       );
     } else {
-      const resolvedProps = disableDefaultPropsExceptForClasses
-        ? props
-        : resolveDefaultPropsOnNonClassComponent(Component, props);
       workInProgress.tag = FunctionComponent;
       if (__DEV__) {
         validateFunctionComponentInDev(workInProgress, Component);
@@ -2085,16 +2057,13 @@ function mountLazyComponent(
         null,
         workInProgress,
         Component,
-        resolvedProps,
+        props,
         renderLanes,
       );
     }
   } else if (Component !== undefined && Component !== null) {
     const $$typeof = Component.$$typeof;
     if ($$typeof === REACT_FORWARD_REF_TYPE) {
-      const resolvedProps = disableDefaultPropsExceptForClasses
-        ? props
-        : resolveDefaultPropsOnNonClassComponent(Component, props);
       workInProgress.tag = ForwardRef;
       if (__DEV__) {
         workInProgress.type = Component =
@@ -2104,24 +2073,16 @@ function mountLazyComponent(
         null,
         workInProgress,
         Component,
-        resolvedProps,
+        props,
         renderLanes,
       );
     } else if ($$typeof === REACT_MEMO_TYPE) {
-      const resolvedProps = disableDefaultPropsExceptForClasses
-        ? props
-        : resolveDefaultPropsOnNonClassComponent(Component, props);
       workInProgress.tag = MemoComponent;
       return updateMemoComponent(
         null,
         workInProgress,
         Component,
-        disableDefaultPropsExceptForClasses
-          ? resolvedProps
-          : resolveDefaultPropsOnNonClassComponent(
-              Component.type,
-              resolvedProps,
-            ), // The inner type can have defaults too
+        props,
         renderLanes,
       );
     }
@@ -2196,22 +2157,6 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
           '  %s.childContextTypes = ...',
         Component.displayName || Component.name || 'Component',
       );
-    }
-
-    if (
-      !disableDefaultPropsExceptForClasses &&
-      Component.defaultProps !== undefined
-    ) {
-      const componentName = getComponentNameFromType(Component) || 'Unknown';
-
-      if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
-        console.error(
-          '%s: Support for defaultProps will be removed from function components ' +
-            'in a future major release. Use JavaScript default parameters instead.',
-          componentName,
-        );
-        didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true;
-      }
     }
 
     if (typeof Component.getDerivedStateFromProps === 'function') {
@@ -4175,17 +4120,11 @@ function beginWork(
     }
     case FunctionComponent: {
       const Component = workInProgress.type;
-      const unresolvedProps = workInProgress.pendingProps;
-      const resolvedProps =
-        disableDefaultPropsExceptForClasses ||
-        workInProgress.elementType === Component
-          ? unresolvedProps
-          : resolveDefaultPropsOnNonClassComponent(Component, unresolvedProps);
       return updateFunctionComponent(
         current,
         workInProgress,
         Component,
-        resolvedProps,
+        workInProgress.pendingProps,
         renderLanes,
       );
     }
@@ -4226,18 +4165,11 @@ function beginWork(
     case HostPortal:
       return updatePortalComponent(current, workInProgress, renderLanes);
     case ForwardRef: {
-      const type = workInProgress.type;
-      const unresolvedProps = workInProgress.pendingProps;
-      const resolvedProps =
-        disableDefaultPropsExceptForClasses ||
-        workInProgress.elementType === type
-          ? unresolvedProps
-          : resolveDefaultPropsOnNonClassComponent(type, unresolvedProps);
       return updateForwardRef(
         current,
         workInProgress,
-        type,
-        resolvedProps,
+        workInProgress.type,
+        workInProgress.pendingProps,
         renderLanes,
       );
     }
@@ -4252,20 +4184,11 @@ function beginWork(
     case ContextConsumer:
       return updateContextConsumer(current, workInProgress, renderLanes);
     case MemoComponent: {
-      const type = workInProgress.type;
-      const unresolvedProps = workInProgress.pendingProps;
-      // Resolve outer props first, then resolve inner props.
-      let resolvedProps = disableDefaultPropsExceptForClasses
-        ? unresolvedProps
-        : resolveDefaultPropsOnNonClassComponent(type, unresolvedProps);
-      resolvedProps = disableDefaultPropsExceptForClasses
-        ? resolvedProps
-        : resolveDefaultPropsOnNonClassComponent(type.type, resolvedProps);
       return updateMemoComponent(
         current,
         workInProgress,
-        type,
-        resolvedProps,
+        workInProgress.type,
+        workInProgress.pendingProps,
         renderLanes,
       );
     }

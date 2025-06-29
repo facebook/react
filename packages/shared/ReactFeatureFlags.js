@@ -37,9 +37,6 @@ export const favorSafetyOverHydrationPerf = true;
 // Need to remove didTimeout argument from Scheduler before landing
 export const disableSchedulerTimeoutInWorkLoop = false;
 
-// TODO: Land at Meta before removing.
-export const disableDefaultPropsExceptForClasses = true;
-
 // -----------------------------------------------------------------------------
 // Slated for removal in the future (significant effort)
 //
