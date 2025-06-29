@@ -103,10 +103,10 @@ export function logComponentRender(
     if (__DEV__ && debugTask) {
       const properties: Array<[string, string]> = [];
       if (componentInfo.key != null) {
-        addValueToProperties('key', componentInfo.key, properties, 0);
+        addValueToProperties('key', componentInfo.key, properties, 0, '');
       }
       if (componentInfo.props != null) {
-        addObjectToProperties(componentInfo.props, properties, 0);
+        addObjectToProperties(componentInfo.props, properties, 0, '');
       }
       debugTask.run(
         // $FlowFixMe[method-unbinding]
@@ -158,10 +158,10 @@ export function logComponentAborted(
         ],
       ];
       if (componentInfo.key != null) {
-        addValueToProperties('key', componentInfo.key, properties, 0);
+        addValueToProperties('key', componentInfo.key, properties, 0, '');
       }
       if (componentInfo.props != null) {
-        addObjectToProperties(componentInfo.props, properties, 0);
+        addObjectToProperties(componentInfo.props, properties, 0, '');
       }
       performance.measure(entryName, {
         start: startTime < 0 ? 0 : startTime,
@@ -215,10 +215,10 @@ export function logComponentErrored(
             String(error);
       const properties = [['Error', message]];
       if (componentInfo.key != null) {
-        addValueToProperties('key', componentInfo.key, properties, 0);
+        addValueToProperties('key', componentInfo.key, properties, 0, '');
       }
       if (componentInfo.props != null) {
-        addObjectToProperties(componentInfo.props, properties, 0);
+        addObjectToProperties(componentInfo.props, properties, 0, '');
       }
       performance.measure(entryName, {
         start: startTime < 0 ? 0 : startTime,
@@ -423,9 +423,9 @@ export function logComponentAwait(
     if (__DEV__ && debugTask) {
       const properties: Array<[string, string]> = [];
       if (typeof value === 'object' && value !== null) {
-        addObjectToProperties(value, properties, 0);
+        addObjectToProperties(value, properties, 0, '');
       } else if (value !== undefined) {
-        addValueToProperties('Resolved', value, properties, 0);
+        addValueToProperties('Resolved', value, properties, 0, '');
       }
       debugTask.run(
         // $FlowFixMe[method-unbinding]
@@ -525,9 +525,9 @@ export function logIOInfo(
     if (__DEV__ && debugTask) {
       const properties: Array<[string, string]> = [];
       if (typeof value === 'object' && value !== null) {
-        addObjectToProperties(value, properties, 0);
+        addObjectToProperties(value, properties, 0, '');
       } else if (value !== undefined) {
-        addValueToProperties('Resolved', value, properties, 0);
+        addValueToProperties('Resolved', value, properties, 0, '');
       }
       debugTask.run(
         // $FlowFixMe[method-unbinding]
