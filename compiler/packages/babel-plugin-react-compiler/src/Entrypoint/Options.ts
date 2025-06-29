@@ -225,6 +225,7 @@ export type CompileErrorEvent = {
   kind: 'CompileError';
   fnLoc: t.SourceLocation | null;
   detail: CompilerErrorDetailOptions;
+  optedOut?: boolean;
 };
 export type CompileDiagnosticEvent = {
   kind: 'CompileDiagnostic';
