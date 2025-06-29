@@ -26,7 +26,6 @@ export const {
   enableRetryLaneExpiration,
   enableTransitionTracing,
   enableTrustedTypesIntegration,
-  favorSafetyOverHydrationPerf,
   renameElementSymbol,
   retryLaneExpirationMs,
   syncLaneExpirationMs,
