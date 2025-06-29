@@ -167,8 +167,8 @@ type PendingChunk<T> = {
   value: null | Array<InitializationReference | (T => mixed)>,
   reason: null | Array<InitializationReference | (mixed => mixed)>,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
-  _blockedDebugInfo?: any, // DEV-only
-  _debugInfo?: null | ReactDebugInfo, // DEV-only
+  _debugChunk: null | SomeChunk<ReactDebugInfoEntry>, // DEV-only
+  _debugInfo: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type BlockedChunk<T> = {
@@ -176,8 +176,8 @@ type BlockedChunk<T> = {
   value: null | Array<InitializationReference | (T => mixed)>,
   reason: null | Array<InitializationReference | (mixed => mixed)>,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
-  _blockedDebugInfo?: any, // DEV-only
-  _debugInfo?: null | ReactDebugInfo, // DEV-only
+  _debugChunk: null, // DEV-only
+  _debugInfo: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type ResolvedModelChunk<T> = {
@@ -185,8 +185,8 @@ type ResolvedModelChunk<T> = {
   value: UninitializedModel,
   reason: Response,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
-  _blockedDebugInfo?: any, // DEV-only
-  _debugInfo?: null | ReactDebugInfo, // DEV-only
+  _debugChunk: null | SomeChunk<ReactDebugInfoEntry>, // DEV-only
+  _debugInfo: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type ResolvedModuleChunk<T> = {
@@ -194,8 +194,8 @@ type ResolvedModuleChunk<T> = {
   value: ClientReference<T>,
   reason: null,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
-  _blockedDebugInfo?: any, // DEV-only
-  _debugInfo?: null | ReactDebugInfo, // DEV-only
+  _debugChunk: null, // DEV-only
+  _debugInfo: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type InitializedChunk<T> = {
@@ -203,8 +203,8 @@ type InitializedChunk<T> = {
   value: T,
   reason: null | FlightStreamController,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
-  _blockedDebugInfo?: any, // DEV-only
-  _debugInfo?: null | ReactDebugInfo, // DEV-only
+  _debugChunk: null, // DEV-only
+  _debugInfo: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type InitializedStreamChunk<
@@ -214,8 +214,8 @@ type InitializedStreamChunk<
   value: T,
   reason: FlightStreamController,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
-  _blockedDebugInfo?: any, // DEV-only
-  _debugInfo?: null | ReactDebugInfo, // DEV-only
+  _debugChunk: null, // DEV-only
+  _debugInfo: null | ReactDebugInfo, // DEV-only
   then(resolve: (ReadableStream) => mixed, reject?: (mixed) => mixed): void,
 };
 type ErroredChunk<T> = {
@@ -223,8 +223,8 @@ type ErroredChunk<T> = {
   value: null,
   reason: mixed,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
-  _blockedDebugInfo?: any, // DEV-only
-  _debugInfo?: null | ReactDebugInfo, // DEV-only
+  _debugChunk: null, // DEV-only
+  _debugInfo: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type HaltedChunk<T> = {
@@ -232,8 +232,8 @@ type HaltedChunk<T> = {
   value: null,
   reason: null,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
-  _blockedDebugInfo?: any, // DEV-only
-  _debugInfo?: null | ReactDebugInfo, // DEV-only
+  _debugChunk: null, // DEV-only
+  _debugInfo: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type SomeChunk<T> =
@@ -254,7 +254,7 @@ function ReactPromise(status: any, value: any, reason: any) {
     this._children = [];
   }
   if (__DEV__) {
-    this._blockedDebugInfo = null;
+    this._debugChunk = null;
     this._debugInfo = null;
   }
 }
@@ -625,6 +625,39 @@ function triggerErrorOnChunk<T>(
   }
   releasePendingChunk(response, chunk);
   const listeners = chunk.reason;
+
+  if (__DEV__ && chunk.status === PENDING) {
+    // Lazily initialize any debug info and block the initializing chunk on any unresolved entries.
+    if (chunk._debugChunk != null) {
+      const prevHandler = initializingHandler;
+      const prevChunk = initializingChunk;
+      initializingHandler = null;
+      const cyclicChunk: BlockedChunk<T> = (chunk: any);
+      cyclicChunk.status = BLOCKED;
+      cyclicChunk.value = null;
+      cyclicChunk.reason = null;
+      if (enableProfilerTimer && enableComponentPerformanceTrack) {
+        initializingChunk = cyclicChunk;
+      }
+      try {
+        initializeDebugChunk(response, chunk);
+        chunk._debugChunk = null;
+        if (initializingHandler !== null) {
+          if (initializingHandler.errored) {
+            // Ignore error parsing debug info, we'll report the original error instead.
+          } else if (initializingHandler.deps > 0) {
+            // TODO: Block the resolution of the error until all the debug info has loaded.
+            // We currently don't have a way to throw an error after all dependencies have
+            // loaded because we currently treat errors as immediately cancelling the handler.
+          }
+        }
+      } finally {
+        initializingHandler = prevHandler;
+        initializingChunk = prevChunk;
+      }
+    }
+  }
+
   const erroredChunk: ErroredChunk<T> = (chunk: any);
   erroredChunk.status = ERRORED;
   erroredChunk.reason = error;
@@ -756,6 +789,10 @@ function resolveModuleChunk<T>(
   const resolvedChunk: ResolvedModuleChunk<T> = (chunk: any);
   resolvedChunk.status = RESOLVED_MODULE;
   resolvedChunk.value = value;
+  if (__DEV__) {
+    // We don't expect to have any debug info for this row.
+    resolvedChunk._debugInfo = null;
+  }
   if (resolveListeners !== null) {
     initializeModuleChunk(resolvedChunk);
     wakeChunkIfInitialized(chunk, resolveListeners, rejectListeners);
@@ -779,11 +816,77 @@ type InitializationHandler = {
   parent: null | InitializationHandler,
   chunk: null | BlockedChunk<any>,
   value: any,
+  reason: any,
   deps: number,
   errored: boolean,
 };
 let initializingHandler: null | InitializationHandler = null;
 let initializingChunk: null | BlockedChunk<any> = null;
+
+function initializeDebugChunk(
+  response: Response,
+  chunk: ResolvedModelChunk<any> | PendingChunk<any>,
+): void {
+  const debugChunk = chunk._debugChunk;
+  if (debugChunk !== null) {
+    const debugInfo = chunk._debugInfo || (chunk._debugInfo = []);
+    try {
+      if (debugChunk.status === RESOLVED_MODEL) {
+        // Initializing the model for the first time.
+        initializeModelChunk(debugChunk);
+        const initializedChunk = ((debugChunk: any): SomeChunk<any>);
+        switch (initializedChunk.status) {
+          case INITIALIZED: {
+            debugInfo.push(
+              initializeDebugInfo(response, initializedChunk.value),
+            );
+            break;
+          }
+          case BLOCKED:
+          case PENDING: {
+            debugInfo.push(
+              waitForReference(
+                initializedChunk,
+                debugInfo,
+                '' + debugInfo.length, // eslint-disable-line react-internal/safe-string-coercion
+                response,
+                initializeDebugInfo,
+                [''], // path
+              ),
+            );
+            break;
+          }
+          default:
+            throw initializedChunk.reason;
+        }
+      } else {
+        switch (debugChunk.status) {
+          case INITIALIZED: {
+            // Already done.
+            break;
+          }
+          case BLOCKED:
+          case PENDING: {
+            // Signal to the caller that we need to wait.
+            waitForReference(
+              debugChunk,
+              {}, // noop, since we'll have already added an entry to debug info
+              '', // noop
+              response,
+              initializeDebugInfo,
+              [''], // path
+            );
+            break;
+          }
+          default:
+            throw debugChunk.reason;
+        }
+      }
+    } catch (error) {
+      triggerErrorOnChunk(response, chunk, error);
+    }
+  }
+}
 
 function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
   const prevHandler = initializingHandler;
@@ -806,14 +909,9 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
   }
 
   if (__DEV__) {
-    const blockingDebugChunk = chunk._blockedDebugInfo;
-    if (
-      blockingDebugChunk != null &&
-      (blockingDebugChunk.status === BLOCKED ||
-        blockingDebugChunk.status === PENDING)
-    ) {
-      waitForReference(blockingDebugChunk, {}, '', response, () => {}, ['']);
-    }
+    // Lazily initialize any debug info and block the initializing chunk on any unresolved entries.
+    initializeDebugChunk(response, chunk);
+    chunk._debugChunk = null;
   }
 
   try {
@@ -829,7 +927,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
     }
     if (initializingHandler !== null) {
       if (initializingHandler.errored) {
-        throw initializingHandler.value;
+        throw initializingHandler.reason;
       }
       if (initializingHandler.deps > 0) {
         // We discovered new dependencies on modules that are not yet resolved.
@@ -1103,7 +1201,7 @@ function createElement(
       // into a Lazy so that we can still render up until that Lazy is rendered.
       const erroredChunk: ErroredChunk<React$Element<any>> = createErrorChunk(
         response,
-        handler.value,
+        handler.reason,
       );
       if (__DEV__) {
         initializeElement(response, element);
@@ -1160,7 +1258,7 @@ function createLazyChunkWrapper<T>(
   if (__DEV__) {
     // Ensure we have a live array to track future debug info.
     const chunkDebugInfo: ReactDebugInfo =
-      chunk._debugInfo || (chunk._debugInfo = []);
+      chunk._debugInfo || (chunk._debugInfo = ([]: ReactDebugInfo));
     lazyType._debugInfo = chunkDebugInfo;
   }
   return lazyType;
@@ -1307,6 +1405,7 @@ function fulfillReference(
     const initializedChunk: InitializedChunk<any> = (chunk: any);
     initializedChunk.status = INITIALIZED;
     initializedChunk.value = handler.value;
+    initializedChunk.reason = handler.reason; // Used by streaming chunks
     if (resolveListeners !== null) {
       wakeChunk(resolveListeners, handler.value);
     }
@@ -1327,7 +1426,8 @@ function rejectReference(
   }
   const blockedValue = handler.value;
   handler.errored = true;
-  handler.value = error;
+  handler.value = null;
+  handler.reason = error;
   const chunk = handler.chunk;
   if (chunk === null || chunk.status !== BLOCKED) {
     return;
@@ -1402,6 +1502,7 @@ function waitForReference<T>(
       parent: null,
       chunk: null,
       value: null,
+      reason: null,
       deps: 1,
       errored: false,
     };
@@ -1488,6 +1589,7 @@ function loadServerReference<A: Iterable<any>, T>(
       parent: null,
       chunk: null,
       value: null,
+      reason: null,
       deps: 1,
       errored: false,
     };
@@ -1566,7 +1668,8 @@ function loadServerReference<A: Iterable<any>, T>(
     }
     const blockedValue = handler.value;
     handler.errored = true;
-    handler.value = error;
+    handler.value = null;
+    handler.reason = error;
     const chunk = handler.chunk;
     if (chunk === null || chunk.status !== BLOCKED) {
       return;
@@ -1676,6 +1779,7 @@ function getOutlinedModel<T>(
                   parent: null,
                   chunk: null,
                   value: null,
+                  reason: null,
                   deps: 1,
                   errored: false,
                 };
@@ -1687,12 +1791,14 @@ function getOutlinedModel<T>(
               // an initialization handler so that we can catch it at the nearest Element.
               if (initializingHandler) {
                 initializingHandler.errored = true;
-                initializingHandler.value = referencedChunk.reason;
+                initializingHandler.value = null;
+                initializingHandler.reason = referencedChunk.reason;
               } else {
                 initializingHandler = {
                   parent: null,
                   chunk: null,
-                  value: referencedChunk.reason,
+                  value: null,
+                  reason: referencedChunk.reason,
                   deps: 0,
                   errored: true,
                 };
@@ -1746,6 +1852,7 @@ function getOutlinedModel<T>(
           parent: null,
           chunk: null,
           value: null,
+          reason: null,
           deps: 1,
           errored: false,
         };
@@ -1757,12 +1864,14 @@ function getOutlinedModel<T>(
       // an initialization handler so that we can catch it at the nearest Element.
       if (initializingHandler) {
         initializingHandler.errored = true;
-        initializingHandler.value = chunk.reason;
+        initializingHandler.value = null;
+        initializingHandler.reason = chunk.reason;
       } else {
         initializingHandler = {
           parent: null,
           chunk: null,
-          value: chunk.reason,
+          value: null,
+          reason: chunk.reason,
           deps: 0,
           errored: true,
         };
@@ -1870,6 +1979,7 @@ function parseModelString(
           parent: initializingHandler,
           chunk: null,
           value: null,
+          reason: null,
           deps: 0,
           errored: false,
         };
@@ -2444,28 +2554,48 @@ function resolveStream<T: ReadableStream | $AsyncIterable<any, any, void>>(
     chunks.set(id, createInitializedStreamChunk(response, stream, controller));
     return;
   }
-  if (__DEV__) {
-    const blockedDebugInfo = chunk._blockedDebugInfo;
-    if (blockedDebugInfo != null) {
-      // If we're blocked on debug info, wait until it has loaded before we resolve.
-      const unblock = resolveStream.bind(
-        null,
-        response,
-        id,
-        stream,
-        controller,
-      );
-      blockedDebugInfo.then(unblock, unblock);
-      return;
-    }
-  }
-
   if (chunk.status !== PENDING) {
     // We already resolved. We didn't expect to see this.
     return;
   }
   releasePendingChunk(response, chunk);
+
   const resolveListeners = chunk.value;
+
+  if (__DEV__) {
+    // Lazily initialize any debug info and block the initializing chunk on any unresolved entries.
+    if (chunk._debugChunk != null) {
+      const prevHandler = initializingHandler;
+      const prevChunk = initializingChunk;
+      initializingHandler = null;
+      const cyclicChunk: BlockedChunk<T> = (chunk: any);
+      cyclicChunk.status = BLOCKED;
+      cyclicChunk.value = null;
+      cyclicChunk.reason = null;
+      if (enableProfilerTimer && enableComponentPerformanceTrack) {
+        initializingChunk = cyclicChunk;
+      }
+      try {
+        initializeDebugChunk(response, chunk);
+        chunk._debugChunk = null;
+        if (initializingHandler !== null) {
+          if (initializingHandler.errored) {
+            // Ignore error parsing debug info, we'll report the original error instead.
+          } else if (initializingHandler.deps > 0) {
+            // Leave blocked until we can resolve all the debug info.
+            initializingHandler.value = stream;
+            initializingHandler.reason = controller;
+            initializingHandler.chunk = cyclicChunk;
+            return;
+          }
+        }
+      } finally {
+        initializingHandler = prevHandler;
+        initializingChunk = prevChunk;
+      }
+    }
+  }
+
   const resolvedChunk: InitializedStreamChunk<T> = (chunk: any);
   resolvedChunk.status = INITIALIZED;
   resolvedChunk.value = stream;
@@ -2851,18 +2981,6 @@ function resolveErrorModel(
 ): void {
   const chunks = response._chunks;
   const chunk = chunks.get(id);
-  if (__DEV__ && chunk) {
-    if (__DEV__) {
-      const blockedDebugInfo = chunk._blockedDebugInfo;
-      if (blockedDebugInfo != null) {
-        // If we're blocked on debug info, wait until it has loaded before we resolve.
-        // TODO: Handle cycle if that model depends on this one.
-        const unblock = resolveErrorModel.bind(null, response, id, row);
-        blockedDebugInfo.then(unblock, unblock);
-        return;
-      }
-    }
-  }
   const errorInfo = JSON.parse(row);
   let error;
   if (__DEV__) {
@@ -3274,16 +3392,15 @@ function initializeFakeStack(
   }
 }
 
-function resolveDebugInfo(
+function initializeDebugInfo(
   response: Response,
-  chunk: SomeChunk<any>,
   debugInfo: ReactDebugInfoEntry,
-): void {
+): ReactDebugInfoEntry {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
     // eslint-disable-next-line react-internal/prod-error-codes
     throw new Error(
-      'resolveDebugInfo should never be called in production mode. This is a bug in React.',
+      'initializeDebugInfo should never be called in production mode. This is a bug in React.',
     );
   }
   if (debugInfo.stack !== undefined) {
@@ -3326,10 +3443,7 @@ function resolveDebugInfo(
       };
     }
   }
-
-  const chunkDebugInfo: ReactDebugInfo =
-    chunk._debugInfo || (chunk._debugInfo = []);
-  chunkDebugInfo.push(debugInfo);
+  return debugInfo;
 }
 
 function resolveDebugModel(
@@ -3338,26 +3452,24 @@ function resolveDebugModel(
   json: UninitializedModel,
 ): void {
   const parentChunk = getChunk(response, id);
-  // If we're not blocked on any other chunks, we can try to eagerly initialize
-  // this as a fast-path to avoid awaiting them.
-  const chunk: ResolvedModelChunk<ReactDebugInfoEntry> =
-    createResolvedModelChunk(response, json);
-  // The previous blocked chunk is now blocking this one.
-  chunk._blockedDebugInfo = parentChunk._blockedDebugInfo;
-  initializeModelChunk(chunk);
-  const initializedChunk: SomeChunk<ReactDebugInfoEntry> = chunk;
-  if (initializedChunk.status === INITIALIZED) {
-    resolveDebugInfo(response, parentChunk, initializedChunk.value);
-    parentChunk._blockedDebugInfo = null;
-  } else {
-    chunk.then(
-      v => resolveDebugInfo(response, parentChunk, v),
-      e => {
-        // Ignore debug info errors for now. Unnecessary noise.
-      },
-    );
-    parentChunk._blockedDebugInfo = chunk;
+  if (
+    parentChunk.status === INITIALIZED ||
+    parentChunk.status === ERRORED ||
+    parentChunk.status === HALTED ||
+    parentChunk.status === BLOCKED
+  ) {
+    // We shouldn't really get debug info late. It's too late to add it after we resolved.
+    return;
   }
+  if (parentChunk.status === RESOLVED_MODULE) {
+    // We don't expect to get debug info on modules.
+    return;
+  }
+  const previousChunk = parentChunk._debugChunk;
+  const debugChunk: ResolvedModelChunk<ReactDebugInfoEntry> =
+    createResolvedModelChunk(response, json);
+  debugChunk._debugChunk = previousChunk; // Linked list of the debug chunks
+  parentChunk._debugChunk = debugChunk;
 }
 
 let currentOwnerInDEV: null | ReactComponentInfo = null;
