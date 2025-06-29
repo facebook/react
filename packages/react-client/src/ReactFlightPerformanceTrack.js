@@ -371,7 +371,7 @@ function getIOLongName(
   rootEnv: string,
 ): string {
   const name = ioInfo.name;
-  const longName = description === '' ? name : name + '(' + description + ')';
+  const longName = description === '' ? name : name + ' (' + description + ')';
   const isPrimaryEnv = env === rootEnv;
   return isPrimaryEnv || env === undefined
     ? longName
@@ -393,7 +393,7 @@ function getIOShortName(
     const l = description.length;
     if (l > 0 && l <= descMaxLength) {
       // We can fit the full description
-      desc = '(' + description + ')';
+      desc = ' (' + description + ')';
     } else if (
       description.startsWith('http://') ||
       description.startsWith('https://') ||
@@ -412,7 +412,7 @@ function getIOShortName(
       const slashIdx = description.lastIndexOf('/', queryIdx - 1);
       if (queryIdx - slashIdx < descMaxLength) {
         // This may now be either the file name or the host.
-        desc = '(' + description.slice(slashIdx + 1, queryIdx) + ')';
+        desc = ' (' + description.slice(slashIdx + 1, queryIdx) + ')';
       }
     }
   }
