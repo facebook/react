@@ -25,6 +25,7 @@ import {
   InstructionKind,
   InstructionValue,
   isArrayType,
+  isJsxType,
   isMapType,
   isPrimitiveType,
   isRefOrRefValue,
@@ -1842,6 +1843,19 @@ function computeSignatureForInstruction(
             });
           }
         }
+        for (const prop of value.props) {
+          if (
+            prop.kind === 'JsxAttribute' &&
+            prop.place.identifier.type.kind === 'Function' &&
+            isJsxType(prop.place.identifier.type.return)
+          ) {
+            // Any props which return jsx are assumed to be called during render
+            effects.push({
+              kind: 'Render',
+              place: prop.place,
+            });
+          }
+        }
       }
       break;
     }
@@ -2470,10 +2484,47 @@ function computeEffectsForSignature(
         break;
       }
       case 'CreateFunction': {
-        CompilerError.throwTodo({
-          reason: `Support CreateFrom effects in signatures`,
-          loc: receiver.loc,
+        const applyInto = substitutions.get(effect.into.identifier.id);
+        if (applyInto == null || applyInto.length !== 1) {
+          return null;
+        }
+        const captures: Array<Place> = [];
+        for (let i = 0; i < effect.captures.length; i++) {
+          const substitution = substitutions.get(
+            effect.captures[i].identifier.id,
+          );
+          if (substitution == null || substitution.length !== 1) {
+            return null;
+          }
+          captures.push(substitution[0]);
+        }
+        const context: Array<Place> = [];
+        const originalContext = effect.function.loweredFunc.func.context;
+        for (let i = 0; i < originalContext.length; i++) {
+          const substitution = substitutions.get(
+            originalContext[i].identifier.id,
+          );
+          if (substitution == null || substitution.length !== 1) {
+            return null;
+          }
+          context.push(substitution[0]);
+        }
+        effects.push({
+          kind: 'CreateFunction',
+          into: applyInto[0],
+          function: {
+            ...effect.function,
+            loweredFunc: {
+              ...effect.function.loweredFunc,
+              func: {
+                ...effect.function.loweredFunc.func,
+                context,
+              },
+            },
+          },
+          captures,
         });
+        break;
       }
       default: {
         assertExhaustive(
