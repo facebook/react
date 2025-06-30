@@ -34,7 +34,7 @@ export type AttributeType<T, V> =
 export type AnyAttributeType = AttributeType<$FlowFixMe, $FlowFixMe>;
 
 export type AttributeConfiguration = $ReadOnly<{
-  [propName: string]: AnyAttributeType,
+  [propName: string]: AnyAttributeType | void,
   style?: $ReadOnly<{
     [propName: string]: AnyAttributeType,
     ...
