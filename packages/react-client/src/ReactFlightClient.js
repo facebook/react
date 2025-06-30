@@ -928,8 +928,8 @@ function createElement(
   type: mixed,
   key: mixed,
   props: mixed,
-  owner: null | ReactComponentInfo, // DEV-only
-  stack: null | ReactStackTrace, // DEV-only
+  owner: ?ReactComponentInfo, // DEV-only
+  stack: ?ReactStackTrace, // DEV-only
   validated: number, // DEV-only
 ):
   | React$Element<any>
@@ -942,7 +942,7 @@ function createElement(
       type,
       key,
       props,
-      _owner: owner,
+      _owner: owner === undefined ? null : owner,
     }: any);
     Object.defineProperty(element, 'ref', {
       enumerable: false,
@@ -984,7 +984,7 @@ function createElement(
       configurable: false,
       enumerable: false,
       writable: true,
-      value: stack,
+      value: stack === undefined ? null : stack,
     });
     Object.defineProperty(element, '_debugTask', {
       configurable: false,
