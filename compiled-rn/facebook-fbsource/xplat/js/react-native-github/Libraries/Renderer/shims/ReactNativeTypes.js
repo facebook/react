@@ -7,7 +7,7 @@
  * @noformat
  * @nolint
  * @flow strict
- * @generated SignedSource<<6166de7ecbfb5d83e56c11a3b6cde9ba>>
+ * @generated SignedSource<<deb7924d11c790f99448a1c2f0edddb9>>
  */
 
 import type {
@@ -35,7 +35,7 @@ export type AttributeType<T, V> =
 export type AnyAttributeType = AttributeType<$FlowFixMe, $FlowFixMe>;
 
 export type AttributeConfiguration = $ReadOnly<{
-  [propName: string]: AnyAttributeType,
+  [propName: string]: AnyAttributeType | void,
   style?: $ReadOnly<{
     [propName: string]: AnyAttributeType,
     ...
