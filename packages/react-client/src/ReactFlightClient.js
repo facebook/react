@@ -52,6 +52,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 
 import {
+  getSourceURL,
   resolveClientReference,
   resolveServerReference,
   preloadModule,
@@ -2772,12 +2773,12 @@ function createFakeFunction<T>(
       '\n//# sourceURL=rsc://React/' +
       encodeURIComponent(environmentName) +
       '/' +
-      encodeURI(filename) +
+      getSourceURL(filename) +
       '?' +
       fakeFunctionIdx++;
     code += '\n//# sourceMappingURL=' + sourceMap;
   } else if (filename) {
-    code += '\n//# sourceURL=' + encodeURI(filename);
+    code += '\n//# sourceURL=' + getSourceURL(filename);
   } else {
     code += '\n//# sourceURL=<anonymous>';
   }

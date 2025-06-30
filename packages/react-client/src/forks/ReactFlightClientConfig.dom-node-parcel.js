@@ -10,6 +10,7 @@
 export {default as rendererVersion} from 'shared/ReactVersion';
 export const rendererPackageName = 'react-server-dom-parcel';
 
+export * from 'react-client/src/ReactClientStackConfigWeb';
 export * from 'react-client/src/ReactFlightClientStreamConfigNode';
 export * from 'react-client/src/ReactClientConsoleConfigServer';
 export * from 'react-server-dom-parcel/src/client/ReactFlightClientConfigBundlerParcel';
