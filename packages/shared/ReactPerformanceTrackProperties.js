@@ -145,6 +145,40 @@ export function addValueToProperties(
             return;
           }
         }
+        if (objectName === 'Promise') {
+          if (value.status === 'fulfilled') {
+            // Print the inner value
+            const idx = properties.length;
+            addValueToProperties(propertyName, value.value, properties, indent);
+            if (properties.length > idx) {
+              // Wrap the value or type in Promise descriptor.
+              const insertedEntry = properties[idx];
+              insertedEntry[1] =
+                'Promise<' + (insertedEntry[1] || 'Object') + '>';
+              return;
+            }
+          } else if (value.status === 'rejected') {
+            // Print the inner error
+            const idx = properties.length;
+            addValueToProperties(
+              propertyName,
+              value.reason,
+              properties,
+              indent,
+            );
+            if (properties.length > idx) {
+              // Wrap the value or type in Promise descriptor.
+              const insertedEntry = properties[idx];
+              insertedEntry[1] = 'Rejected Promise<' + insertedEntry[1] + '>';
+              return;
+            }
+          }
+          properties.push([
+            '\xa0\xa0'.repeat(indent) + propertyName,
+            'Promise',
+          ]);
+          return;
+        }
         if (objectName === 'Object') {
           const proto: any = Object.getPrototypeOf(value);
           if (proto && typeof proto.constructor === 'function') {
