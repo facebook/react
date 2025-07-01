@@ -844,13 +844,13 @@ __DEV__ &&
             return null;
           };
     fnName = {
-      "react-stack-bottom-frame": function (callStackForError) {
+      react_stack_bottom_frame: function (callStackForError) {
         return callStackForError();
       }
     };
     var specialPropKeyWarningShown, didWarnAboutOldJSXRuntime;
     var didWarnAboutElementRef = {};
-    var unknownOwnerDebugStack = fnName["react-stack-bottom-frame"].bind(
+    var unknownOwnerDebugStack = fnName.react_stack_bottom_frame.bind(
       fnName,
       UnknownOwner
     )();
@@ -1479,7 +1479,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.2.0-www-classic-e9cab42e-20250630";
+    exports.version = "19.2.0-www-classic-91d097b2-20250701";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
