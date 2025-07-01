@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<09d42b26091115872821eae61ab2c6c7>>
+ * @generated SignedSource<<1accffa9591cb0c01015818d23f003c5>>
  */
 
 "use strict";
@@ -14328,8 +14328,7 @@ __DEV__ &&
       switch (unitOfWork.tag) {
         case 15:
         case 0:
-          var Component = unitOfWork.type,
-            resolvedProps = unitOfWork.pendingProps;
+          var Component = unitOfWork.type;
           var context = isContextProvider(Component)
             ? previousContext
             : contextStackCursor$1.current;
@@ -14337,7 +14336,7 @@ __DEV__ &&
           current = replayFunctionComponent(
             current,
             unitOfWork,
-            resolvedProps,
+            unitOfWork.pendingProps,
             Component,
             context,
             workInProgressRootRenderLanes
@@ -19067,10 +19066,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-91d097b2-20250701",
+        version: "19.2.0-native-fb-602917c8-20250701",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-91d097b2-20250701"
+        reconcilerVersion: "19.2.0-native-fb-602917c8-20250701"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

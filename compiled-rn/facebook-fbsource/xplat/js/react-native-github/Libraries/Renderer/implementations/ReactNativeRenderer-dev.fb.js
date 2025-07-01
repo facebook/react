@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<01cf69df53fad2cdbb1f000d0e5a0991>>
+ * @generated SignedSource<<cf24381df7660a1982c7619d7c2a1ca7>>
  */
 
 "use strict";
@@ -14773,8 +14773,7 @@ __DEV__ &&
       switch (unitOfWork.tag) {
         case 15:
         case 0:
-          var Component = unitOfWork.type,
-            resolvedProps = unitOfWork.pendingProps;
+          var Component = unitOfWork.type;
           var context = isContextProvider(Component)
             ? previousContext
             : contextStackCursor$1.current;
@@ -14782,7 +14781,7 @@ __DEV__ &&
           current = replayFunctionComponent(
             current,
             unitOfWork,
-            resolvedProps,
+            unitOfWork.pendingProps,
             Component,
             context,
             workInProgressRootRenderLanes
@@ -19400,11 +19399,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.2.0-native-fb-91d097b2-20250701" !== isomorphicReactPackageVersion)
+    if ("19.2.0-native-fb-602917c8-20250701" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.2.0-native-fb-91d097b2-20250701\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.2.0-native-fb-602917c8-20250701\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -19430,10 +19429,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-91d097b2-20250701",
+        version: "19.2.0-native-fb-602917c8-20250701",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-91d097b2-20250701"
+        reconcilerVersion: "19.2.0-native-fb-602917c8-20250701"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

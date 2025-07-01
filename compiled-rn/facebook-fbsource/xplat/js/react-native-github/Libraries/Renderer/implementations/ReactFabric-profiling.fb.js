@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3d439f64cc9a126419ddba68fc067323>>
+ * @generated SignedSource<<00a2b65cfbf10f3c769171ff5c3cf8af>>
  */
 
 "use strict";
@@ -1247,7 +1247,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_325 = {
+var injectedNamesToPlugins$jscomp$inline_313 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -1293,32 +1293,32 @@ var injectedNamesToPlugins$jscomp$inline_325 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_326 = !1,
-  pluginName$jscomp$inline_327;
-for (pluginName$jscomp$inline_327 in injectedNamesToPlugins$jscomp$inline_325)
+  isOrderingDirty$jscomp$inline_314 = !1,
+  pluginName$jscomp$inline_315;
+for (pluginName$jscomp$inline_315 in injectedNamesToPlugins$jscomp$inline_313)
   if (
-    injectedNamesToPlugins$jscomp$inline_325.hasOwnProperty(
-      pluginName$jscomp$inline_327
+    injectedNamesToPlugins$jscomp$inline_313.hasOwnProperty(
+      pluginName$jscomp$inline_315
     )
   ) {
-    var pluginModule$jscomp$inline_328 =
-      injectedNamesToPlugins$jscomp$inline_325[pluginName$jscomp$inline_327];
+    var pluginModule$jscomp$inline_316 =
+      injectedNamesToPlugins$jscomp$inline_313[pluginName$jscomp$inline_315];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_327) ||
-      namesToPlugins[pluginName$jscomp$inline_327] !==
-        pluginModule$jscomp$inline_328
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_315) ||
+      namesToPlugins[pluginName$jscomp$inline_315] !==
+        pluginModule$jscomp$inline_316
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_327])
+      if (namesToPlugins[pluginName$jscomp$inline_315])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_327 + "`.")
+            (pluginName$jscomp$inline_315 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_327] =
-        pluginModule$jscomp$inline_328;
-      isOrderingDirty$jscomp$inline_326 = !0;
+      namesToPlugins[pluginName$jscomp$inline_315] =
+        pluginModule$jscomp$inline_316;
+      isOrderingDirty$jscomp$inline_314 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_326 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_314 && recomputePluginOrdering();
 function batchedUpdatesImpl(fn, bookkeeping) {
   return fn(bookkeeping);
 }
@@ -7641,14 +7641,14 @@ function cutOffTailIfNeeded(renderState, hasRenderedATailFallback) {
       break;
     case "collapsed":
       lastTailNode = renderState.tail;
-      for (var lastTailNode$101 = null; null !== lastTailNode; )
-        null !== lastTailNode.alternate && (lastTailNode$101 = lastTailNode),
+      for (var lastTailNode$91 = null; null !== lastTailNode; )
+        null !== lastTailNode.alternate && (lastTailNode$91 = lastTailNode),
           (lastTailNode = lastTailNode.sibling);
-      null === lastTailNode$101
+      null === lastTailNode$91
         ? hasRenderedATailFallback || null === renderState.tail
           ? (renderState.tail = null)
           : (renderState.tail.sibling = null)
-        : (lastTailNode$101.sibling = null);
+        : (lastTailNode$91.sibling = null);
   }
 }
 function bubbleProperties(completedWork) {
@@ -7660,53 +7660,53 @@ function bubbleProperties(completedWork) {
   if (didBailout)
     if (0 !== (completedWork.mode & 2)) {
       for (
-        var treeBaseDuration$103 = completedWork.selfBaseDuration,
-          child$104 = completedWork.child;
-        null !== child$104;
+        var treeBaseDuration$93 = completedWork.selfBaseDuration,
+          child$94 = completedWork.child;
+        null !== child$94;
 
       )
-        (newChildLanes |= child$104.lanes | child$104.childLanes),
-          (subtreeFlags |= child$104.subtreeFlags & 65011712),
-          (subtreeFlags |= child$104.flags & 65011712),
-          (treeBaseDuration$103 += child$104.treeBaseDuration),
-          (child$104 = child$104.sibling);
-      completedWork.treeBaseDuration = treeBaseDuration$103;
+        (newChildLanes |= child$94.lanes | child$94.childLanes),
+          (subtreeFlags |= child$94.subtreeFlags & 65011712),
+          (subtreeFlags |= child$94.flags & 65011712),
+          (treeBaseDuration$93 += child$94.treeBaseDuration),
+          (child$94 = child$94.sibling);
+      completedWork.treeBaseDuration = treeBaseDuration$93;
     } else
       for (
-        treeBaseDuration$103 = completedWork.child;
-        null !== treeBaseDuration$103;
+        treeBaseDuration$93 = completedWork.child;
+        null !== treeBaseDuration$93;
 
       )
         (newChildLanes |=
-          treeBaseDuration$103.lanes | treeBaseDuration$103.childLanes),
-          (subtreeFlags |= treeBaseDuration$103.subtreeFlags & 65011712),
-          (subtreeFlags |= treeBaseDuration$103.flags & 65011712),
-          (treeBaseDuration$103.return = completedWork),
-          (treeBaseDuration$103 = treeBaseDuration$103.sibling);
+          treeBaseDuration$93.lanes | treeBaseDuration$93.childLanes),
+          (subtreeFlags |= treeBaseDuration$93.subtreeFlags & 65011712),
+          (subtreeFlags |= treeBaseDuration$93.flags & 65011712),
+          (treeBaseDuration$93.return = completedWork),
+          (treeBaseDuration$93 = treeBaseDuration$93.sibling);
   else if (0 !== (completedWork.mode & 2)) {
-    treeBaseDuration$103 = completedWork.actualDuration;
-    child$104 = completedWork.selfBaseDuration;
+    treeBaseDuration$93 = completedWork.actualDuration;
+    child$94 = completedWork.selfBaseDuration;
     for (var child = completedWork.child; null !== child; )
       (newChildLanes |= child.lanes | child.childLanes),
         (subtreeFlags |= child.subtreeFlags),
         (subtreeFlags |= child.flags),
-        (treeBaseDuration$103 += child.actualDuration),
-        (child$104 += child.treeBaseDuration),
+        (treeBaseDuration$93 += child.actualDuration),
+        (child$94 += child.treeBaseDuration),
         (child = child.sibling);
-    completedWork.actualDuration = treeBaseDuration$103;
-    completedWork.treeBaseDuration = child$104;
+    completedWork.actualDuration = treeBaseDuration$93;
+    completedWork.treeBaseDuration = child$94;
   } else
     for (
-      treeBaseDuration$103 = completedWork.child;
-      null !== treeBaseDuration$103;
+      treeBaseDuration$93 = completedWork.child;
+      null !== treeBaseDuration$93;
 
     )
       (newChildLanes |=
-        treeBaseDuration$103.lanes | treeBaseDuration$103.childLanes),
-        (subtreeFlags |= treeBaseDuration$103.subtreeFlags),
-        (subtreeFlags |= treeBaseDuration$103.flags),
-        (treeBaseDuration$103.return = completedWork),
-        (treeBaseDuration$103 = treeBaseDuration$103.sibling);
+        treeBaseDuration$93.lanes | treeBaseDuration$93.childLanes),
+        (subtreeFlags |= treeBaseDuration$93.subtreeFlags),
+        (subtreeFlags |= treeBaseDuration$93.flags),
+        (treeBaseDuration$93.return = completedWork),
+        (treeBaseDuration$93 = treeBaseDuration$93.sibling);
   completedWork.subtreeFlags |= subtreeFlags;
   completedWork.childLanes = newChildLanes;
   return didBailout;
@@ -8510,8 +8510,8 @@ function safelyCallComponentWillUnmount(
   } else
     try {
       instance.componentWillUnmount();
-    } catch (error$138) {
-      captureCommitPhaseError(current, nearestMountedAncestor, error$138);
+    } catch (error$128) {
+      captureCommitPhaseError(current, nearestMountedAncestor, error$128);
     }
 }
 function safelyAttachRef(current, nearestMountedAncestor) {
@@ -8580,8 +8580,8 @@ function safelyDetachRef(current, nearestMountedAncestor) {
             recordEffectDuration(current);
           }
         else ref(null);
-      } catch (error$139) {
-        captureCommitPhaseError(current, nearestMountedAncestor, error$139);
+      } catch (error$129) {
+        captureCommitPhaseError(current, nearestMountedAncestor, error$129);
       }
     else ref.current = null;
 }
@@ -8786,11 +8786,11 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
           } else
             try {
               finishedRoot.componentDidMount();
-            } catch (error$135) {
+            } catch (error$125) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$135
+                error$125
               );
             }
         else {
@@ -8807,11 +8807,11 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
                 current,
                 finishedRoot.__reactInternalSnapshotBeforeUpdate
               );
-            } catch (error$136) {
+            } catch (error$126) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$136
+                error$126
               );
             }
             recordEffectDuration();
@@ -8822,11 +8822,11 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
                 current,
                 finishedRoot.__reactInternalSnapshotBeforeUpdate
               );
-            } catch (error$137) {
+            } catch (error$127) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$137
+                error$127
               );
             }
         }
@@ -11430,8 +11430,8 @@ function renderRootSync(root, lanes, shouldYieldForPrerendering) {
       workLoopSync();
       memoizedUpdaters = workInProgressRootExitStatus;
       break;
-    } catch (thrownValue$171) {
-      handleThrow(root, thrownValue$171);
+    } catch (thrownValue$161) {
+      handleThrow(root, thrownValue$161);
     }
   while (1);
   lanes && root.shellSuspendCounter++;
@@ -11554,8 +11554,8 @@ function renderRootConcurrent(root, lanes) {
         }
       workLoopConcurrentByScheduler();
       break;
-    } catch (thrownValue$173) {
-      handleThrow(root, thrownValue$173);
+    } catch (thrownValue$163) {
+      handleThrow(root, thrownValue$163);
     }
   while (1);
   lastContextDependency = currentlyRenderingFiber$1 = null;
@@ -11599,8 +11599,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
   switch (next.tag) {
     case 15:
     case 0:
-      var Component = next.type,
-        resolvedProps = next.pendingProps;
+      var Component = next.type;
       var context = isContextProvider(Component)
         ? previousContext
         : contextStackCursor$1.current;
@@ -11608,7 +11607,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
       current = replayFunctionComponent(
         current,
         next,
-        resolvedProps,
+        next.pendingProps,
         Component,
         context,
         workInProgressRootRenderLanes
@@ -12930,20 +12929,20 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1490 = {
+  internals$jscomp$inline_1471 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-91d097b2-20250701",
+    version: "19.2.0-native-fb-602917c8-20250701",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-91d097b2-20250701"
+    reconcilerVersion: "19.2.0-native-fb-602917c8-20250701"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1490.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1490.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1471.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1471.getLaneLabelMap = function () {
   for (
-    var map = new Map(), lane = 1, index$177 = 0;
-    31 > index$177;
-    index$177++
+    var map = new Map(), lane = 1, index$165 = 0;
+    31 > index$165;
+    index$165++
   ) {
     var label = getLabelForLane(lane);
     map.set(lane, label);
@@ -12951,20 +12950,20 @@ internals$jscomp$inline_1490.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1490.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1471.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1811 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1792 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1811.isDisabled &&
-    hook$jscomp$inline_1811.supportsFiber
+    !hook$jscomp$inline_1792.isDisabled &&
+    hook$jscomp$inline_1792.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1811.inject(
-        internals$jscomp$inline_1490
+      (rendererID = hook$jscomp$inline_1792.inject(
+        internals$jscomp$inline_1471
       )),
-        (injectedHook = hook$jscomp$inline_1811);
+        (injectedHook = hook$jscomp$inline_1792);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
