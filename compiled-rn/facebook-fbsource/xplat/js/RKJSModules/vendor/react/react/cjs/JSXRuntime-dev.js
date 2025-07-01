@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ef8d1b87483c56d5f88b9980c7df8d3f>>
+ * @generated SignedSource<<261cf54b02203171467f326f0f8f18b7>>
  */
 
 "use strict";
@@ -316,13 +316,13 @@ __DEV__ &&
             return null;
           };
     React = {
-      "react-stack-bottom-frame": function (callStackForError) {
+      react_stack_bottom_frame: function (callStackForError) {
         return callStackForError();
       }
     };
     var specialPropKeyWarningShown;
     var didWarnAboutElementRef = {};
-    var unknownOwnerDebugStack = React["react-stack-bottom-frame"].bind(
+    var unknownOwnerDebugStack = React.react_stack_bottom_frame.bind(
       React,
       UnknownOwner
     )();

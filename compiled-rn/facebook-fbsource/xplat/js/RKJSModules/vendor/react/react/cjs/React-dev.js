@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3d81c5b97c52051d16bca8cc1bdecb4c>>
+ * @generated SignedSource<<4eabb3187bacba7b31f84634ddf7f842>>
  */
 
 "use strict";
@@ -768,13 +768,13 @@ __DEV__ &&
             return null;
           };
     fnName = {
-      "react-stack-bottom-frame": function (callStackForError) {
+      react_stack_bottom_frame: function (callStackForError) {
         return callStackForError();
       }
     };
     var specialPropKeyWarningShown, didWarnAboutOldJSXRuntime;
     var didWarnAboutElementRef = {};
-    var unknownOwnerDebugStack = fnName["react-stack-bottom-frame"].bind(
+    var unknownOwnerDebugStack = fnName.react_stack_bottom_frame.bind(
       fnName,
       UnknownOwner
     )();
@@ -1413,7 +1413,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.2.0-native-fb-1e0d12b6-20250630";
+    exports.version = "19.2.0-native-fb-91d097b2-20250701";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
