@@ -24,7 +24,7 @@ import {enableUseEffectCRUDOverload} from 'shared/ReactFeatureFlags';
 // TODO: Consider marking the whole bundle instead of these boundaries.
 
 const callComponent = {
-  'react-stack-bottom-frame': function <Props, Arg, R>(
+  react_stack_bottom_frame: function <Props, Arg, R>(
     Component: (p: Props, arg: Arg) => R,
     props: Props,
     secondArg: Arg,
@@ -46,7 +46,7 @@ export const callComponentInDEV: <Props, Arg, R>(
   secondArg: Arg,
 ) => R = __DEV__
   ? // We use this technique to trick minifiers to preserve the function name.
-    (callComponent['react-stack-bottom-frame'].bind(callComponent): any)
+    (callComponent.react_stack_bottom_frame.bind(callComponent): any)
   : (null: any);
 
 interface ClassInstance<R> {
@@ -62,7 +62,7 @@ interface ClassInstance<R> {
 }
 
 const callRender = {
-  'react-stack-bottom-frame': function <R>(instance: ClassInstance<R>): R {
+  react_stack_bottom_frame: function <R>(instance: ClassInstance<R>): R {
     const wasRendering = isRendering;
     setIsRendering(true);
     try {
@@ -77,11 +77,11 @@ const callRender = {
 export const callRenderInDEV: <R>(instance: ClassInstance<R>) => R => R =
   __DEV__
     ? // We use this technique to trick minifiers to preserve the function name.
-      (callRender['react-stack-bottom-frame'].bind(callRender): any)
+      (callRender.react_stack_bottom_frame.bind(callRender): any)
     : (null: any);
 
 const callComponentDidMount = {
-  'react-stack-bottom-frame': function (
+  react_stack_bottom_frame: function (
     finishedWork: Fiber,
     instance: ClassInstance<any>,
   ): void {
@@ -98,13 +98,13 @@ export const callComponentDidMountInDEV: (
   instance: ClassInstance<any>,
 ) => void = __DEV__
   ? // We use this technique to trick minifiers to preserve the function name.
-    (callComponentDidMount['react-stack-bottom-frame'].bind(
+    (callComponentDidMount.react_stack_bottom_frame.bind(
       callComponentDidMount,
     ): any)
   : (null: any);
 
 const callComponentDidUpdate = {
-  'react-stack-bottom-frame': function (
+  react_stack_bottom_frame: function (
     finishedWork: Fiber,
     instance: ClassInstance<any>,
     prevProps: Object,
@@ -127,13 +127,13 @@ export const callComponentDidUpdateInDEV: (
   snaphot: Object,
 ) => void = __DEV__
   ? // We use this technique to trick minifiers to preserve the function name.
-    (callComponentDidUpdate['react-stack-bottom-frame'].bind(
+    (callComponentDidUpdate.react_stack_bottom_frame.bind(
       callComponentDidUpdate,
     ): any)
   : (null: any);
 
 const callComponentDidCatch = {
-  'react-stack-bottom-frame': function (
+  react_stack_bottom_frame: function (
     instance: ClassInstance<any>,
     errorInfo: CapturedValue<mixed>,
   ): void {
@@ -150,13 +150,13 @@ export const callComponentDidCatchInDEV: (
   errorInfo: CapturedValue<mixed>,
 ) => void = __DEV__
   ? // We use this technique to trick minifiers to preserve the function name.
-    (callComponentDidCatch['react-stack-bottom-frame'].bind(
+    (callComponentDidCatch.react_stack_bottom_frame.bind(
       callComponentDidCatch,
     ): any)
   : (null: any);
 
 const callComponentWillUnmount = {
-  'react-stack-bottom-frame': function (
+  react_stack_bottom_frame: function (
     current: Fiber,
     nearestMountedAncestor: Fiber | null,
     instance: ClassInstance<any>,
@@ -175,13 +175,13 @@ export const callComponentWillUnmountInDEV: (
   instance: ClassInstance<any>,
 ) => void = __DEV__
   ? // We use this technique to trick minifiers to preserve the function name.
-    (callComponentWillUnmount['react-stack-bottom-frame'].bind(
+    (callComponentWillUnmount.react_stack_bottom_frame.bind(
       callComponentWillUnmount,
     ): any)
   : (null: any);
 
 const callCreate = {
-  'react-stack-bottom-frame': function (
+  react_stack_bottom_frame: function (
     effect: Effect,
   ): (() => void) | {...} | void | null {
     if (!enableUseEffectCRUDOverload) {
@@ -234,11 +234,11 @@ const callCreate = {
 
 export const callCreateInDEV: (effect: Effect) => (() => void) | void = __DEV__
   ? // We use this technique to trick minifiers to preserve the function name.
-    (callCreate['react-stack-bottom-frame'].bind(callCreate): any)
+    (callCreate.react_stack_bottom_frame.bind(callCreate): any)
   : (null: any);
 
 const callDestroy = {
-  'react-stack-bottom-frame': function (
+  react_stack_bottom_frame: function (
     current: Fiber,
     nearestMountedAncestor: Fiber | null,
     destroy: () => void,
@@ -257,11 +257,11 @@ export const callDestroyInDEV: (
   destroy: (() => void) | (({...}) => void),
 ) => void = __DEV__
   ? // We use this technique to trick minifiers to preserve the function name.
-    (callDestroy['react-stack-bottom-frame'].bind(callDestroy): any)
+    (callDestroy.react_stack_bottom_frame.bind(callDestroy): any)
   : (null: any);
 
 const callLazyInit = {
-  'react-stack-bottom-frame': function (lazy: LazyComponent<any, any>): any {
+  react_stack_bottom_frame: function (lazy: LazyComponent<any, any>): any {
     const payload = lazy._payload;
     const init = lazy._init;
     return init(payload);
@@ -270,5 +270,5 @@ const callLazyInit = {
 
 export const callLazyInitInDEV: (lazy: LazyComponent<any, any>) => any = __DEV__
   ? // We use this technique to trick minifiers to preserve the function name.
-    (callLazyInit['react-stack-bottom-frame'].bind(callLazyInit): any)
+    (callLazyInit.react_stack_bottom_frame.bind(callLazyInit): any)
   : (null: any);

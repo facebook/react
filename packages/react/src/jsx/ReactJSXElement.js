@@ -66,7 +66,7 @@ function UnknownOwner() {
   return (() => Error('react-stack-top-frame'))();
 }
 const createFakeCallStack = {
-  'react-stack-bottom-frame': function (callStackForError) {
+  react_stack_bottom_frame: function (callStackForError) {
     return callStackForError();
   },
 };
@@ -81,7 +81,7 @@ if (__DEV__) {
   didWarnAboutElementRef = {};
 
   // We use this technique to trick minifiers to preserve the function name.
-  unknownOwnerDebugStack = createFakeCallStack['react-stack-bottom-frame'].bind(
+  unknownOwnerDebugStack = createFakeCallStack.react_stack_bottom_frame.bind(
     createFakeCallStack,
     UnknownOwner,
   )();

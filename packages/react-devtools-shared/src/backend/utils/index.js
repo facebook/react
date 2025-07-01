@@ -358,7 +358,11 @@ function collectStackTrace(
   // We mirror how V8 serializes stack frames and how we later parse them.
   for (let i = 0; i < structuredStackTrace.length; i++) {
     const callSite = structuredStackTrace[i];
-    if (callSite.getFunctionName() === 'react-stack-bottom-frame') {
+    const name = callSite.getFunctionName();
+    if (
+      name.includes('react_stack_bottom_frame') ||
+      name.includes('react-stack-bottom-frame')
+    ) {
       // We pick the last frame that matches before the bottom frame since
       // that will be immediately inside the component as opposed to some helper.
       // If we don't find a bottom frame then we bail to string parsing.

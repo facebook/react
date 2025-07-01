@@ -2438,7 +2438,7 @@ function buildFakeTask(
 }
 
 const createFakeJSXCallStack = {
-  'react-stack-bottom-frame': function (
+  react_stack_bottom_frame: function (
     response: Response,
     stack: ReactStackTrace,
     environmentName: string,
@@ -2459,7 +2459,7 @@ const createFakeJSXCallStackInDEV: (
   environmentName: string,
 ) => Error = __DEV__
   ? // We use this technique to trick minifiers to preserve the function name.
-    (createFakeJSXCallStack['react-stack-bottom-frame'].bind(
+    (createFakeJSXCallStack.react_stack_bottom_frame.bind(
       createFakeJSXCallStack,
     ): any)
   : (null: any);
@@ -2563,7 +2563,7 @@ function getCurrentStackInDEV(): string {
 }
 
 const replayConsoleWithCallStack = {
-  'react-stack-bottom-frame': function (
+  react_stack_bottom_frame: function (
     response: Response,
     methodName: string,
     stackTrace: ReactStackTrace,
@@ -2614,7 +2614,7 @@ const replayConsoleWithCallStackInDEV: (
   args: Array<mixed>,
 ) => void = __DEV__
   ? // We use this technique to trick minifiers to preserve the function name.
-    (replayConsoleWithCallStack['react-stack-bottom-frame'].bind(
+    (replayConsoleWithCallStack.react_stack_bottom_frame.bind(
       replayConsoleWithCallStack,
     ): any)
   : (null: any);

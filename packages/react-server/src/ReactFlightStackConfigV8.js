@@ -45,7 +45,7 @@ export function parseStackTrace(
     // don't want/need.
     stack = stack.slice(29);
   }
-  let idx = stack.indexOf('react-stack-bottom-frame');
+  let idx = stack.indexOf('react_stack_bottom_frame');
   if (idx !== -1) {
     idx = stack.lastIndexOf('\n', idx);
   }
