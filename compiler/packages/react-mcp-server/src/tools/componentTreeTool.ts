@@ -1,6 +1,6 @@
 import puppeteer from 'puppeteer';
 
-export async function parseReactComponentTree(url: string): Promise<string> {
+export async function componentTreeTool(url: string): Promise<string> {
   try {
     const browser = await puppeteer.connect({
       browserURL: 'http://127.0.0.1:9222',

@@ -9,10 +9,13 @@ import {McpServer} from '@modelcontextprotocol/sdk/server/mcp.js';
 import {StdioServerTransport} from '@modelcontextprotocol/sdk/server/stdio.js';
 import {z} from 'zod';
 import assertExhaustive from './utils/assertExhaustive';
-import {measurePerformance} from './tools/runtimePerf';
-import {parseReactComponentTree} from './tools/componentTree';
-import compileTool from './tools/compileTool';
-import devDocsTool from './tools/devDocsTool';
+import {
+  runtimePerfTool,
+  componentTreeTool,
+  compileTool,
+  devDocsTool,
+} from './tools';
+export type {PassNameType} from './tools';
 
 function calculateMean(values: number[]): string {
   return values.length > 0
@@ -54,7 +57,7 @@ server.tool(
       default:
         assertExhaustive(result, `Unhandled result ${JSON.stringify(result)}`);
     }
-  }
+  },
 );
 
 server.tool(
@@ -156,7 +159,7 @@ server.tool(
   },
   async ({text, iterations}) => {
     try {
-      const results = await measurePerformance(text, iterations);
+      const results = await runtimePerfTool(text, iterations);
       const formattedResults = `
 # React Component Performance Results
 
@@ -215,7 +218,7 @@ server.tool(
   },
   async ({url}) => {
     try {
-      const componentTree = await parseReactComponentTree(url);
+      const componentTree = await componentTreeTool(url);
 
       return {
         content: [
@@ -323,3 +326,11 @@ main().catch(error => {
   console.error('Fatal error in main():', error);
   process.exit(1);
 });
+
+export {
+  compileTool,
+  componentTreeTool,
+  devDocsTool,
+  runtimePerfTool,
+  assertExhaustive,
+};

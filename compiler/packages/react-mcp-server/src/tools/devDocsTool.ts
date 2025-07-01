@@ -15,7 +15,7 @@ type DevDocsToolOutput = {
  * @param query The search query to look up in the React documentation
  * @returns A promise that resolves to the search results
  */
-export default async function devDocsTool(query: string): Promise<DevDocsToolOutput> {
+export async function devDocsTool(query: string): Promise<DevDocsToolOutput> {
   try {
     const pages = await queryAlgolia(query);
     if (pages.length === 0) {

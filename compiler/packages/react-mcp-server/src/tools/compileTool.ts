@@ -8,7 +8,7 @@ import {
 } from 'babel-plugin-react-compiler/src';
 import assertExhaustive from '../utils/assertExhaustive';
 
-type PassNameType = 'HIR' | 'ReactiveFunction' | 'All' | '@DEBUG' | undefined;
+export type PassNameType = 'HIR' | 'ReactiveFunction' | 'All' | '@DEBUG' | undefined;
 
 type CompilerToolOutput =
   | {
@@ -28,7 +28,7 @@ type CompilerToolOutput =
       text: string;
     };
 
-export default async function compileTool(
+export async function compileTool(
   text: string,
   passName: PassNameType,
 ): Promise<CompilerToolOutput> {

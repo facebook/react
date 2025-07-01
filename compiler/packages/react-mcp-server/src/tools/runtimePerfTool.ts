@@ -53,7 +53,7 @@ function delay(time: number) {
   });
 }
 
-export async function measurePerformance(
+export async function runtimePerfTool(
   code: string,
   iterations: number,
 ): Promise<PerformanceResults> {
@@ -69,7 +69,7 @@ export async function measurePerformance(
     throw new Error('Failed to parse code');
   }
 
-  const transformResult = await babel.transformFromAstAsync(parsed, undefined, {
+  const transformResult = await babel.transformFromAstAsync(parsed as babel.types.Node, undefined, {
     ...babelOptions,
     plugins: [
       () => ({
