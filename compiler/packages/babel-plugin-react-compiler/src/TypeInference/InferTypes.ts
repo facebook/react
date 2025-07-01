@@ -90,7 +90,8 @@ function apply(func: HIRFunction, unifier: Unifier): void {
       }
     }
   }
-  func.returnType = unifier.get(func.returnType);
+  const returns = func.returns.identifier;
+  returns.type = unifier.get(returns.type);
 }
 
 type TypeEquation = {
@@ -143,12 +144,12 @@ function* generate(
     }
   }
   if (returnTypes.length > 1) {
-    yield equation(func.returnType, {
+    yield equation(func.returns.identifier.type, {
       kind: 'Phi',
       operands: returnTypes,
     });
   } else if (returnTypes.length === 1) {
-    yield equation(func.returnType, returnTypes[0]!);
+    yield equation(func.returns.identifier.type, returnTypes[0]!);
   }
 }
 
@@ -407,7 +408,7 @@ function* generateInstructionTypes(
       yield equation(left, {
         kind: 'Function',
         shapeId: BuiltInFunctionId,
-        return: value.loweredFunc.func.returnType,
+        return: value.loweredFunc.func.returns.identifier.type,
         isConstructor: false,
       });
       break;

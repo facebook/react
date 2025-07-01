@@ -27,6 +27,7 @@ export {
   lazy,
   memo,
   cache,
+  cacheSignal,
   startTransition,
   unstable_Activity,
   unstable_postpone,

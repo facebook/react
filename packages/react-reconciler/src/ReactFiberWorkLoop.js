@@ -123,7 +123,6 @@ import {
   ConcurrentMode,
   StrictLegacyMode,
   StrictEffectsMode,
-  NoStrictPassiveEffectsMode,
 } from './ReactTypeOfMode';
 import {
   HostRoot,
@@ -358,7 +357,7 @@ import {
   flushSyncWorkOnLegacyRootsOnly,
   requestTransitionLane,
 } from './ReactFiberRootScheduler';
-import {getMaskedContext, getUnmaskedContext} from './ReactFiberContext';
+import {getMaskedContext, getUnmaskedContext} from './ReactFiberLegacyContext';
 import {logUncaughtError} from './ReactFiberErrorLogger';
 import {
   deleteScheduledGesture,
@@ -4607,21 +4606,13 @@ function recursivelyTraverseAndDoubleInvokeEffectsInDEV(
 }
 
 // Unconditionally disconnects and connects passive and layout effects.
-function doubleInvokeEffectsOnFiber(
-  root: FiberRoot,
-  fiber: Fiber,
-  shouldDoubleInvokePassiveEffects: boolean = true,
-) {
+function doubleInvokeEffectsOnFiber(root: FiberRoot, fiber: Fiber) {
   setIsStrictModeForDevtools(true);
   try {
     disappearLayoutEffects(fiber);
-    if (shouldDoubleInvokePassiveEffects) {
-      disconnectPassiveEffect(fiber);
-    }
+    disconnectPassiveEffect(fiber);
     reappearLayoutEffects(root, fiber.alternate, fiber, false);
-    if (shouldDoubleInvokePassiveEffects) {
-      reconnectPassiveEffects(root, fiber, NoLanes, null, false, 0);
-    }
+    reconnectPassiveEffects(root, fiber, NoLanes, null, false, 0);
   } finally {
     setIsStrictModeForDevtools(false);
   }
@@ -4640,13 +4631,7 @@ function doubleInvokeEffectsInDEVIfNecessary(
   if (fiber.tag !== OffscreenComponent) {
     if (fiber.flags & PlacementDEV) {
       if (isInStrictMode) {
-        runWithFiberInDEV(
-          fiber,
-          doubleInvokeEffectsOnFiber,
-          root,
-          fiber,
-          (fiber.mode & NoStrictPassiveEffectsMode) === NoMode,
-        );
+        runWithFiberInDEV(fiber, doubleInvokeEffectsOnFiber, root, fiber);
       }
     } else {
       recursivelyTraverseAndDoubleInvokeEffectsInDEV(

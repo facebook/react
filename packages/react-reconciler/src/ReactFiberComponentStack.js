@@ -79,7 +79,11 @@ export function getStackByFiberInDevAndProd(workInProgress: Fiber): string {
           for (let i = debugInfo.length - 1; i >= 0; i--) {
             const entry = debugInfo[i];
             if (typeof entry.name === 'string') {
-              info += describeDebugInfoFrame(entry.name, entry.env);
+              info += describeDebugInfoFrame(
+                entry.name,
+                entry.env,
+                entry.debugLocation,
+              );
             }
           }
         }

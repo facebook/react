@@ -51,6 +51,18 @@ function isObjectPrototype(object: any): boolean {
   return true;
 }
 
+export function isGetter(object: any, name: string): boolean {
+  const ObjectPrototype = Object.prototype;
+  if (object === ObjectPrototype || object === null) {
+    return false;
+  }
+  const descriptor = Object.getOwnPropertyDescriptor(object, name);
+  if (descriptor === undefined) {
+    return isGetter(getPrototypeOf(object), name);
+  }
+  return typeof descriptor.get === 'function';
+}
+
 export function isSimpleObject(object: any): boolean {
   if (!isObjectPrototype(getPrototypeOf(object))) {
     return false;
@@ -80,9 +92,8 @@ export function isSimpleObject(object: any): boolean {
 export function objectName(object: mixed): string {
   // $FlowFixMe[method-unbinding]
   const name = Object.prototype.toString.call(object);
-  return name.replace(/^\[object (.*)\]$/, function (m, p0) {
-    return p0;
-  });
+  // Extract 'Object' from '[object Object]':
+  return name.slice(8, name.length - 1);
 }
 
 function describeKeyForErrorMessage(key: string): string {

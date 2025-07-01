@@ -17,7 +17,6 @@ export const alwaysThrottleRetries = __VARIANT__;
 export const disableDefaultPropsExceptForClasses = __VARIANT__;
 export const disableLegacyContextForFunctionComponents = __VARIANT__;
 export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
-export const enableDO_NOT_USE_disableStrictPassiveEffect = __VARIANT__;
 export const enableHiddenSubtreeInsertionEffectCleanup = __VARIANT__;
 export const enableNoCloningMemoCache = __VARIANT__;
 export const enableObjectFiber = __VARIANT__;

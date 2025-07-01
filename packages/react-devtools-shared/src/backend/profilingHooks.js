@@ -329,21 +329,17 @@ export function createProfilingHooks({
   }
 
   function markComponentRenderStarted(fiber: Fiber): void {
-    if (isProfiling || supportsUserTimingV3) {
+    if (isProfiling) {
       const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
 
-      if (isProfiling) {
-        // TODO (timeline) Record and cache component stack
-        if (isProfiling) {
-          currentReactComponentMeasure = {
-            componentName,
-            duration: 0,
-            timestamp: getRelativeTime(),
-            type: 'render',
-            warning: null,
-          };
-        }
-      }
+      // TODO (timeline) Record and cache component stack
+      currentReactComponentMeasure = {
+        componentName,
+        duration: 0,
+        timestamp: getRelativeTime(),
+        type: 'render',
+        warning: null,
+      };
 
       if (supportsUserTimingV3) {
         markAndClear(`--component-render-start-${componentName}`);
@@ -374,21 +370,17 @@ export function createProfilingHooks({
   }
 
   function markComponentLayoutEffectMountStarted(fiber: Fiber): void {
-    if (isProfiling || supportsUserTimingV3) {
+    if (isProfiling) {
       const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
 
-      if (isProfiling) {
-        // TODO (timeline) Record and cache component stack
-        if (isProfiling) {
-          currentReactComponentMeasure = {
-            componentName,
-            duration: 0,
-            timestamp: getRelativeTime(),
-            type: 'layout-effect-mount',
-            warning: null,
-          };
-        }
-      }
+      // TODO (timeline) Record and cache component stack
+      currentReactComponentMeasure = {
+        componentName,
+        duration: 0,
+        timestamp: getRelativeTime(),
+        type: 'layout-effect-mount',
+        warning: null,
+      };
 
       if (supportsUserTimingV3) {
         markAndClear(`--component-layout-effect-mount-start-${componentName}`);
@@ -419,21 +411,17 @@ export function createProfilingHooks({
   }
 
   function markComponentLayoutEffectUnmountStarted(fiber: Fiber): void {
-    if (isProfiling || supportsUserTimingV3) {
+    if (isProfiling) {
       const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
 
-      if (isProfiling) {
-        // TODO (timeline) Record and cache component stack
-        if (isProfiling) {
-          currentReactComponentMeasure = {
-            componentName,
-            duration: 0,
-            timestamp: getRelativeTime(),
-            type: 'layout-effect-unmount',
-            warning: null,
-          };
-        }
-      }
+      // TODO (timeline) Record and cache component stack
+      currentReactComponentMeasure = {
+        componentName,
+        duration: 0,
+        timestamp: getRelativeTime(),
+        type: 'layout-effect-unmount',
+        warning: null,
+      };
 
       if (supportsUserTimingV3) {
         markAndClear(
@@ -466,21 +454,17 @@ export function createProfilingHooks({
   }
 
   function markComponentPassiveEffectMountStarted(fiber: Fiber): void {
-    if (isProfiling || supportsUserTimingV3) {
+    if (isProfiling) {
       const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
 
-      if (isProfiling) {
-        // TODO (timeline) Record and cache component stack
-        if (isProfiling) {
-          currentReactComponentMeasure = {
-            componentName,
-            duration: 0,
-            timestamp: getRelativeTime(),
-            type: 'passive-effect-mount',
-            warning: null,
-          };
-        }
-      }
+      // TODO (timeline) Record and cache component stack
+      currentReactComponentMeasure = {
+        componentName,
+        duration: 0,
+        timestamp: getRelativeTime(),
+        type: 'passive-effect-mount',
+        warning: null,
+      };
 
       if (supportsUserTimingV3) {
         markAndClear(`--component-passive-effect-mount-start-${componentName}`);
@@ -511,21 +495,17 @@ export function createProfilingHooks({
   }
 
   function markComponentPassiveEffectUnmountStarted(fiber: Fiber): void {
-    if (isProfiling || supportsUserTimingV3) {
+    if (isProfiling) {
       const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
 
-      if (isProfiling) {
-        // TODO (timeline) Record and cache component stack
-        if (isProfiling) {
-          currentReactComponentMeasure = {
-            componentName,
-            duration: 0,
-            timestamp: getRelativeTime(),
-            type: 'passive-effect-unmount',
-            warning: null,
-          };
-        }
-      }
+      // TODO (timeline) Record and cache component stack
+      currentReactComponentMeasure = {
+        componentName,
+        duration: 0,
+        timestamp: getRelativeTime(),
+        type: 'passive-effect-unmount',
+        warning: null,
+      };
 
       if (supportsUserTimingV3) {
         markAndClear(
@@ -562,7 +542,7 @@ export function createProfilingHooks({
     thrownValue: mixed,
     lanes: Lanes,
   ): void {
-    if (isProfiling || supportsUserTimingV3) {
+    if (isProfiling) {
       const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
       const phase = fiber.alternate === null ? 'mount' : 'update';
 
@@ -577,17 +557,15 @@ export function createProfilingHooks({
         message = thrownValue;
       }
 
-      if (isProfiling) {
-        // TODO (timeline) Record and cache component stack
-        if (currentTimelineData) {
-          currentTimelineData.thrownErrors.push({
-            componentName,
-            message,
-            phase,
-            timestamp: getRelativeTime(),
-            type: 'thrown-error',
-          });
-        }
+      // TODO (timeline) Record and cache component stack
+      if (currentTimelineData) {
+        currentTimelineData.thrownErrors.push({
+          componentName,
+          message,
+          phase,
+          timestamp: getRelativeTime(),
+          type: 'thrown-error',
+        });
       }
 
       if (supportsUserTimingV3) {
@@ -613,7 +591,7 @@ export function createProfilingHooks({
     wakeable: Wakeable,
     lanes: Lanes,
   ): void {
-    if (isProfiling || supportsUserTimingV3) {
+    if (isProfiling) {
       const eventType = wakeableIDs.has(wakeable) ? 'resuspend' : 'suspend';
       const id = getWakeableID(wakeable);
       const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
@@ -626,56 +604,54 @@ export function createProfilingHooks({
       const displayName = (wakeable: any).displayName || '';
 
       let suspenseEvent: SuspenseEvent | null = null;
-      if (isProfiling) {
-        // TODO (timeline) Record and cache component stack
-        suspenseEvent = {
-          componentName,
-          depth: 0,
-          duration: 0,
-          id: `${id}`,
-          phase,
-          promiseName: displayName,
-          resolution: 'unresolved',
-          timestamp: getRelativeTime(),
-          type: 'suspense',
-          warning: null,
-        };
+      // TODO (timeline) Record and cache component stack
+      suspenseEvent = {
+        componentName,
+        depth: 0,
+        duration: 0,
+        id: `${id}`,
+        phase,
+        promiseName: displayName,
+        resolution: 'unresolved',
+        timestamp: getRelativeTime(),
+        type: 'suspense',
+        warning: null,
+      };
 
-        if (currentTimelineData) {
-          currentTimelineData.suspenseEvents.push(suspenseEvent);
-        }
+      if (currentTimelineData) {
+        currentTimelineData.suspenseEvents.push(suspenseEvent);
       }
 
       if (supportsUserTimingV3) {
         markAndClear(
           `--suspense-${eventType}-${id}-${componentName}-${phase}-${lanes}-${displayName}`,
         );
+
+        wakeable.then(
+          () => {
+            if (suspenseEvent) {
+              suspenseEvent.duration =
+                getRelativeTime() - suspenseEvent.timestamp;
+              suspenseEvent.resolution = 'resolved';
+            }
+
+            if (supportsUserTimingV3) {
+              markAndClear(`--suspense-resolved-${id}-${componentName}`);
+            }
+          },
+          () => {
+            if (suspenseEvent) {
+              suspenseEvent.duration =
+                getRelativeTime() - suspenseEvent.timestamp;
+              suspenseEvent.resolution = 'rejected';
+            }
+
+            if (supportsUserTimingV3) {
+              markAndClear(`--suspense-rejected-${id}-${componentName}`);
+            }
+          },
+        );
       }
-
-      wakeable.then(
-        () => {
-          if (suspenseEvent) {
-            suspenseEvent.duration =
-              getRelativeTime() - suspenseEvent.timestamp;
-            suspenseEvent.resolution = 'resolved';
-          }
-
-          if (supportsUserTimingV3) {
-            markAndClear(`--suspense-resolved-${id}-${componentName}`);
-          }
-        },
-        () => {
-          if (suspenseEvent) {
-            suspenseEvent.duration =
-              getRelativeTime() - suspenseEvent.timestamp;
-            suspenseEvent.resolution = 'rejected';
-          }
-
-          if (supportsUserTimingV3) {
-            markAndClear(`--suspense-rejected-${id}-${componentName}`);
-          }
-        },
-      );
     }
   }
 
@@ -782,20 +758,18 @@ export function createProfilingHooks({
   }
 
   function markForceUpdateScheduled(fiber: Fiber, lane: Lane): void {
-    if (isProfiling || supportsUserTimingV3) {
+    if (isProfiling) {
       const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
 
-      if (isProfiling) {
-        // TODO (timeline) Record and cache component stack
-        if (currentTimelineData) {
-          currentTimelineData.schedulingEvents.push({
-            componentName,
-            lanes: laneToLanesArray(lane),
-            timestamp: getRelativeTime(),
-            type: 'schedule-force-update',
-            warning: null,
-          });
-        }
+      // TODO (timeline) Record and cache component stack
+      if (currentTimelineData) {
+        currentTimelineData.schedulingEvents.push({
+          componentName,
+          lanes: laneToLanesArray(lane),
+          timestamp: getRelativeTime(),
+          type: 'schedule-force-update',
+          warning: null,
+        });
       }
 
       if (supportsUserTimingV3) {
@@ -815,25 +789,23 @@ export function createProfilingHooks({
   }
 
   function markStateUpdateScheduled(fiber: Fiber, lane: Lane): void {
-    if (isProfiling || supportsUserTimingV3) {
+    if (isProfiling) {
       const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
 
-      if (isProfiling) {
-        // TODO (timeline) Record and cache component stack
-        if (currentTimelineData) {
-          const event: ReactScheduleStateUpdateEvent = {
-            componentName,
-            // Store the parent fibers so we can post process
-            // them after we finish profiling
-            lanes: laneToLanesArray(lane),
-            timestamp: getRelativeTime(),
-            type: 'schedule-state-update',
-            warning: null,
-          };
-          currentFiberStacks.set(event, getParentFibers(fiber));
-          // $FlowFixMe[incompatible-use] found when upgrading Flow
-          currentTimelineData.schedulingEvents.push(event);
-        }
+      // TODO (timeline) Record and cache component stack
+      if (currentTimelineData) {
+        const event: ReactScheduleStateUpdateEvent = {
+          componentName,
+          // Store the parent fibers so we can post process
+          // them after we finish profiling
+          lanes: laneToLanesArray(lane),
+          timestamp: getRelativeTime(),
+          type: 'schedule-state-update',
+          warning: null,
+        };
+        currentFiberStacks.set(event, getParentFibers(fiber));
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
+        currentTimelineData.schedulingEvents.push(event);
       }
 
       if (supportsUserTimingV3) {
