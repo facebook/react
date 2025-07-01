@@ -38,8 +38,6 @@
 var React = require("react"),
   ReactDOM = require("react-dom"),
   dynamicFeatureFlags = require("ReactFeatureFlags"),
-  disableDefaultPropsExceptForClasses =
-    dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
   enableViewTransition = dynamicFeatureFlags.enableViewTransition,
@@ -4203,18 +4201,6 @@ function finishFunctionComponent(
       : renderNodeDestructive(request, task, children, -1);
   task.keyPath = actionStateCount;
 }
-function resolveDefaultPropsOnNonClassComponent(Component, baseProps) {
-  if (disableDefaultPropsExceptForClasses) return baseProps;
-  if (Component && Component.defaultProps) {
-    baseProps = assign({}, baseProps);
-    Component = Component.defaultProps;
-    for (var propName in Component)
-      void 0 === baseProps[propName] &&
-        (baseProps[propName] = Component[propName]);
-    return baseProps;
-  }
-  return baseProps;
-}
 function renderElement(request, task, keyPath, type, props, ref) {
   if ("function" === typeof type)
     if (type.prototype && type.prototype.isReactComponent) {
@@ -4225,7 +4211,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
           "ref" !== propName && (newProps[propName] = props[propName]);
       }
       var defaultProps = type.defaultProps;
-      if (defaultProps && disableDefaultPropsExceptForClasses) {
+      if (defaultProps) {
         newProps === props && (newProps = assign({}, newProps, props));
         for (var propName$43 in defaultProps)
           void 0 === newProps[propName$43] &&
@@ -4870,12 +4856,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
           );
           return;
         case REACT_MEMO_TYPE:
-          var innerType = type.type,
-            resolvedProps = resolveDefaultPropsOnNonClassComponent(
-              innerType,
-              props
-            );
-          renderElement(request, task, keyPath, innerType, resolvedProps, ref);
+          renderElement(request, task, keyPath, type.type, props, ref);
           return;
         case REACT_CONTEXT_TYPE:
           var children$jscomp$2 = props.children,
@@ -4918,18 +4899,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
           var init = type._init;
           var Component = init(type._payload);
           if (12 === request.status) throw null;
-          var resolvedProps$jscomp$0 = resolveDefaultPropsOnNonClassComponent(
-            Component,
-            props
-          );
-          renderElement(
-            request,
-            task,
-            keyPath,
-            Component,
-            resolvedProps$jscomp$0,
-            ref
-          );
+          renderElement(request, task, keyPath, Component, props, ref);
           return;
       }
     throw Error(

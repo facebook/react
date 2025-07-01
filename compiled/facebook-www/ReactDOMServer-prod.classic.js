@@ -53,8 +53,6 @@ function formatProdErrorMessage(code) {
   );
 }
 var dynamicFeatureFlags = require("ReactFeatureFlags"),
-  disableDefaultPropsExceptForClasses =
-    dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
   disableLegacyContextForFunctionComponents =
     dynamicFeatureFlags.disableLegacyContextForFunctionComponents,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
@@ -2911,16 +2909,16 @@ function createRenderState(resumableState, generateStaticMarkup) {
       "\x3c/script>"
     ));
   bootstrapScriptContent = idPrefix + "P:";
-  var JSCompiler_object_inline_segmentPrefix_1876 = idPrefix + "S:";
+  var JSCompiler_object_inline_segmentPrefix_1874 = idPrefix + "S:";
   idPrefix += "B:";
-  var JSCompiler_object_inline_preconnects_1890 = new Set(),
-    JSCompiler_object_inline_fontPreloads_1891 = new Set(),
-    JSCompiler_object_inline_highImagePreloads_1892 = new Set(),
-    JSCompiler_object_inline_styles_1893 = new Map(),
-    JSCompiler_object_inline_bootstrapScripts_1894 = new Set(),
-    JSCompiler_object_inline_scripts_1895 = new Set(),
-    JSCompiler_object_inline_bulkPreloads_1896 = new Set(),
-    JSCompiler_object_inline_preloads_1897 = {
+  var JSCompiler_object_inline_preconnects_1888 = new Set(),
+    JSCompiler_object_inline_fontPreloads_1889 = new Set(),
+    JSCompiler_object_inline_highImagePreloads_1890 = new Set(),
+    JSCompiler_object_inline_styles_1891 = new Map(),
+    JSCompiler_object_inline_bootstrapScripts_1892 = new Set(),
+    JSCompiler_object_inline_scripts_1893 = new Set(),
+    JSCompiler_object_inline_bulkPreloads_1894 = new Set(),
+    JSCompiler_object_inline_preloads_1895 = {
       images: new Map(),
       stylesheets: new Map(),
       scripts: new Map(),
@@ -2957,7 +2955,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
       scriptConfig.moduleScriptResources[href] = null;
       scriptConfig = [];
       pushLinkImpl(scriptConfig, props);
-      JSCompiler_object_inline_bootstrapScripts_1894.add(scriptConfig);
+      JSCompiler_object_inline_bootstrapScripts_1892.add(scriptConfig);
       bootstrapChunks.push('<script src="', escapeTextForBrowser(src), '"');
       "string" === typeof integrity &&
         bootstrapChunks.push(
@@ -3004,7 +3002,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         (props.moduleScriptResources[scriptConfig] = null),
         (props = []),
         pushLinkImpl(props, integrity),
-        JSCompiler_object_inline_bootstrapScripts_1894.add(props),
+        JSCompiler_object_inline_bootstrapScripts_1892.add(props),
         bootstrapChunks.push(
           '<script type="module" src="',
           escapeTextForBrowser(i),
@@ -3026,7 +3024,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         bootstrapChunks.push(' async="">\x3c/script>');
   return {
     placeholderPrefix: bootstrapScriptContent,
-    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1876,
+    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1874,
     boundaryPrefix: idPrefix,
     startInlineScript: "<script",
     startInlineStyle: "<style",
@@ -3046,14 +3044,14 @@ function createRenderState(resumableState, generateStaticMarkup) {
     charsetChunks: [],
     viewportChunks: [],
     hoistableChunks: [],
-    preconnects: JSCompiler_object_inline_preconnects_1890,
-    fontPreloads: JSCompiler_object_inline_fontPreloads_1891,
-    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1892,
-    styles: JSCompiler_object_inline_styles_1893,
-    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1894,
-    scripts: JSCompiler_object_inline_scripts_1895,
-    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1896,
-    preloads: JSCompiler_object_inline_preloads_1897,
+    preconnects: JSCompiler_object_inline_preconnects_1888,
+    fontPreloads: JSCompiler_object_inline_fontPreloads_1889,
+    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1890,
+    styles: JSCompiler_object_inline_styles_1891,
+    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1892,
+    scripts: JSCompiler_object_inline_scripts_1893,
+    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1894,
+    preloads: JSCompiler_object_inline_preloads_1895,
     nonce: { script: void 0, style: void 0 },
     stylesToHoist: !1,
     generateStaticMarkup: generateStaticMarkup
@@ -4371,18 +4369,6 @@ function finishFunctionComponent(
       : renderNodeDestructive(request, task, children, -1);
   task.keyPath = actionStateCount;
 }
-function resolveDefaultPropsOnNonClassComponent(Component, baseProps) {
-  if (disableDefaultPropsExceptForClasses) return baseProps;
-  if (Component && Component.defaultProps) {
-    baseProps = assign({}, baseProps);
-    Component = Component.defaultProps;
-    for (var propName in Component)
-      void 0 === baseProps[propName] &&
-        (baseProps[propName] = Component[propName]);
-    return baseProps;
-  }
-  return baseProps;
-}
 function renderElement(request, task, keyPath, type, props, ref) {
   if ("function" === typeof type)
     if (type.prototype && type.prototype.isReactComponent) {
@@ -4393,7 +4379,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
           "ref" !== propName && (newProps[propName] = props[propName]);
       }
       var defaultProps = type.defaultProps;
-      if (defaultProps && disableDefaultPropsExceptForClasses) {
+      if (defaultProps) {
         newProps === props && (newProps = assign({}, newProps, props));
         for (var propName$43 in defaultProps)
           void 0 === newProps[propName$43] &&
@@ -5025,12 +5011,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
           );
           return;
         case REACT_MEMO_TYPE:
-          var innerType = type.type,
-            resolvedProps = resolveDefaultPropsOnNonClassComponent(
-              innerType,
-              props
-            );
-          renderElement(request, task, keyPath, innerType, resolvedProps, ref);
+          renderElement(request, task, keyPath, type.type, props, ref);
           return;
         case REACT_CONTEXT_TYPE:
           var children$jscomp$2 = props.children,
@@ -5070,18 +5051,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
           var init = type._init;
           var Component = init(type._payload);
           if (12 === request.status) throw null;
-          var resolvedProps$jscomp$0 = resolveDefaultPropsOnNonClassComponent(
-            Component,
-            props
-          );
-          renderElement(
-            request,
-            task,
-            keyPath,
-            Component,
-            resolvedProps$jscomp$0,
-            ref
-          );
+          renderElement(request, task, keyPath, Component, props, ref);
           return;
       }
     throw Error(
@@ -6888,4 +6858,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.2.0-www-classic-91d097b2-20250701";
+exports.version = "19.2.0-www-classic-602917c8-20250701";

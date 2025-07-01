@@ -6598,39 +6598,20 @@ __DEV__ &&
           null
         ));
     }
-    function resolveClassComponentProps(
-      Component,
-      baseProps,
-      alreadyResolvedDefaultProps
-    ) {
+    function resolveClassComponentProps(Component, baseProps) {
       var newProps = baseProps;
       if ("ref" in baseProps) {
         newProps = {};
         for (var propName in baseProps)
           "ref" !== propName && (newProps[propName] = baseProps[propName]);
       }
-      if (
-        (Component = Component.defaultProps) &&
-        (disableDefaultPropsExceptForClasses || !alreadyResolvedDefaultProps)
-      ) {
+      if ((Component = Component.defaultProps)) {
         newProps === baseProps && (newProps = assign({}, newProps));
         for (var _propName in Component)
           void 0 === newProps[_propName] &&
             (newProps[_propName] = Component[_propName]);
       }
       return newProps;
-    }
-    function resolveDefaultPropsOnNonClassComponent(Component, baseProps) {
-      if (disableDefaultPropsExceptForClasses) return baseProps;
-      if (Component && Component.defaultProps) {
-        baseProps = assign({}, baseProps);
-        Component = Component.defaultProps;
-        for (var propName in Component)
-          void 0 === baseProps[propName] &&
-            (baseProps[propName] = Component[propName]);
-        return baseProps;
-      }
-      return baseProps;
     }
     function defaultOnUncaughtError(error) {
       reportGlobalError(error);
@@ -7130,9 +7111,7 @@ __DEV__ &&
           "function" === typeof type &&
           !shouldConstruct(type) &&
           void 0 === type.defaultProps &&
-          null === Component.compare &&
-          (disableDefaultPropsExceptForClasses ||
-            void 0 === Component.defaultProps)
+          null === Component.compare
         )
           return (
             (Component = resolveFunctionForHotReloading(type)),
@@ -7147,16 +7126,7 @@ __DEV__ &&
               renderLanes
             )
           );
-        disableDefaultPropsExceptForClasses ||
-          void 0 === Component.defaultProps ||
-          ((current = getComponentNameFromType(type) || "Unknown"),
-          didWarnAboutDefaultPropsOnFunctionComponent[current] ||
-            (console.error(
-              "%s: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.",
-              current
-            ),
-            (didWarnAboutDefaultPropsOnFunctionComponent[current] = !0)));
-        nextProps = createFiberFromTypeAndProps(
+        current = createFiberFromTypeAndProps(
           Component.type,
           null,
           nextProps,
@@ -7164,9 +7134,9 @@ __DEV__ &&
           workInProgress.mode,
           renderLanes
         );
-        nextProps.ref = workInProgress.ref;
-        nextProps.return = workInProgress;
-        return (workInProgress.child = nextProps);
+        current.ref = workInProgress.ref;
+        current.return = workInProgress;
+        return (workInProgress.child = current);
       }
       type = current.child;
       if (!checkScheduledUpdateOrContext(current, renderLanes)) {
@@ -7184,10 +7154,10 @@ __DEV__ &&
           );
       }
       workInProgress.flags |= 1;
-      nextProps = createWorkInProgress(type, nextProps);
-      nextProps.ref = workInProgress.ref;
-      nextProps.return = workInProgress;
-      return (workInProgress.child = nextProps);
+      current = createWorkInProgress(type, nextProps);
+      current.ref = workInProgress.ref;
+      current.return = workInProgress;
+      return (workInProgress.child = current);
     }
     function updateSimpleMemoComponent(
       current,
@@ -7823,11 +7793,7 @@ __DEV__ &&
       } else if (null === current)
         (state = workInProgress.stateNode),
           (foundWillUpdateName = workInProgress.memoizedProps),
-          (lane = resolveClassComponentProps(
-            Component,
-            foundWillUpdateName,
-            workInProgress.type === workInProgress.elementType
-          )),
+          (lane = resolveClassComponentProps(Component, foundWillUpdateName)),
           (state.props = lane),
           (state$jscomp$0 = state.context),
           (context = Component.contextType),
@@ -7912,11 +7878,7 @@ __DEV__ &&
         state = workInProgress.stateNode;
         cloneUpdateQueue(current, workInProgress);
         lane = workInProgress.memoizedProps;
-        context = resolveClassComponentProps(
-          Component,
-          lane,
-          workInProgress.type === workInProgress.elementType
-        );
+        context = resolveClassComponentProps(Component, lane);
         state.props = context;
         addendum = workInProgress.pendingProps;
         foundWillUpdateName = state.context;
@@ -8099,15 +8061,6 @@ __DEV__ &&
           "childContextTypes cannot be defined on a function component.\n  %s.childContextTypes = ...",
           Component.displayName || Component.name || "Component"
         );
-      disableDefaultPropsExceptForClasses ||
-        void 0 === Component.defaultProps ||
-        ((workInProgress = getComponentNameFromType(Component) || "Unknown"),
-        didWarnAboutDefaultPropsOnFunctionComponent[workInProgress] ||
-          (console.error(
-            "%s: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.",
-            workInProgress
-          ),
-          (didWarnAboutDefaultPropsOnFunctionComponent[workInProgress] = !0)));
       "function" === typeof Component.getDerivedStateFromProps &&
         ((workInProgress = getComponentNameFromType(Component) || "Unknown"),
         didWarnAboutGetDerivedStateOnFunctionComponent[workInProgress] ||
@@ -9035,8 +8988,7 @@ __DEV__ &&
             shouldConstruct(current)
               ? ((returnFiber = resolveClassComponentProps(
                   current,
-                  returnFiber,
-                  !1
+                  returnFiber
                 )),
                 (workInProgress.tag = 1),
                 (workInProgress.type = current =
@@ -9048,13 +9000,7 @@ __DEV__ &&
                   returnFiber,
                   renderLanes
                 )))
-              : ((returnFiber = disableDefaultPropsExceptForClasses
-                  ? returnFiber
-                  : resolveDefaultPropsOnNonClassComponent(
-                      current,
-                      returnFiber
-                    )),
-                (workInProgress.tag = 0),
+              : ((workInProgress.tag = 0),
                 validateFunctionComponentInDev(workInProgress, current),
                 (workInProgress.type = current =
                   resolveFunctionForHotReloading(current)),
@@ -9071,12 +9017,6 @@ __DEV__ &&
                 ((prevSibling = current.$$typeof),
                 prevSibling === REACT_FORWARD_REF_TYPE)
               ) {
-                returnFiber = disableDefaultPropsExceptForClasses
-                  ? returnFiber
-                  : resolveDefaultPropsOnNonClassComponent(
-                      current,
-                      returnFiber
-                    );
                 workInProgress.tag = 11;
                 workInProgress.type = current =
                   resolveForwardRefForHotReloading(current);
@@ -9089,23 +9029,12 @@ __DEV__ &&
                 );
                 break a;
               } else if (prevSibling === REACT_MEMO_TYPE) {
-                returnFiber = disableDefaultPropsExceptForClasses
-                  ? returnFiber
-                  : resolveDefaultPropsOnNonClassComponent(
-                      current,
-                      returnFiber
-                    );
                 workInProgress.tag = 14;
                 workInProgress = updateMemoComponent(
                   null,
                   workInProgress,
                   current,
-                  disableDefaultPropsExceptForClasses
-                    ? returnFiber
-                    : resolveDefaultPropsOnNonClassComponent(
-                        current.type,
-                        returnFiber
-                      ),
+                  returnFiber,
                   renderLanes
                 );
                 break a;
@@ -9116,42 +9045,29 @@ __DEV__ &&
               current.$$typeof === REACT_LAZY_TYPE &&
               (workInProgress =
                 " Did you wrap a component in React.lazy() more than once?");
-            renderLanes = getComponentNameFromType(current) || current;
+            current = getComponentNameFromType(current) || current;
             throw Error(
               "Element type is invalid. Received a promise that resolves to: " +
-                renderLanes +
+                current +
                 ". Lazy element type must resolve to a class or function." +
                 workInProgress
             );
           }
           return workInProgress;
         case 0:
-          return (
-            (returnFiber = workInProgress.type),
-            (prevSibling = workInProgress.pendingProps),
-            (prevSibling =
-              disableDefaultPropsExceptForClasses ||
-              workInProgress.elementType === returnFiber
-                ? prevSibling
-                : resolveDefaultPropsOnNonClassComponent(
-                    returnFiber,
-                    prevSibling
-                  )),
-            updateFunctionComponent(
-              current,
-              workInProgress,
-              returnFiber,
-              prevSibling,
-              renderLanes
-            )
+          return updateFunctionComponent(
+            current,
+            workInProgress,
+            workInProgress.type,
+            workInProgress.pendingProps,
+            renderLanes
           );
         case 1:
           return (
             (returnFiber = workInProgress.type),
             (prevSibling = resolveClassComponentProps(
               returnFiber,
-              workInProgress.pendingProps,
-              workInProgress.elementType === returnFiber
+              workInProgress.pendingProps
             )),
             updateClassComponent(
               current,
@@ -9259,24 +9175,12 @@ __DEV__ &&
             workInProgress.child
           );
         case 11:
-          return (
-            (returnFiber = workInProgress.type),
-            (prevSibling = workInProgress.pendingProps),
-            (prevSibling =
-              disableDefaultPropsExceptForClasses ||
-              workInProgress.elementType === returnFiber
-                ? prevSibling
-                : resolveDefaultPropsOnNonClassComponent(
-                    returnFiber,
-                    prevSibling
-                  )),
-            updateForwardRef(
-              current,
-              workInProgress,
-              returnFiber,
-              prevSibling,
-              renderLanes
-            )
+          return updateForwardRef(
+            current,
+            workInProgress,
+            workInProgress.type,
+            workInProgress.pendingProps,
+            renderLanes
           );
         case 7:
           return (
@@ -9363,28 +9267,12 @@ __DEV__ &&
             workInProgress.child
           );
         case 14:
-          return (
-            (returnFiber = workInProgress.type),
-            (prevSibling = workInProgress.pendingProps),
-            (prevSibling = disableDefaultPropsExceptForClasses
-              ? prevSibling
-              : resolveDefaultPropsOnNonClassComponent(
-                  returnFiber,
-                  prevSibling
-                )),
-            (prevSibling = disableDefaultPropsExceptForClasses
-              ? prevSibling
-              : resolveDefaultPropsOnNonClassComponent(
-                  returnFiber.type,
-                  prevSibling
-                )),
-            updateMemoComponent(
-              current,
-              workInProgress,
-              returnFiber,
-              prevSibling,
-              renderLanes
-            )
+          return updateMemoComponent(
+            current,
+            workInProgress,
+            workInProgress.type,
+            workInProgress.pendingProps,
+            renderLanes
           );
         case 15:
           return updateSimpleMemoComponent(
@@ -9481,14 +9369,14 @@ __DEV__ &&
                   (workInProgress.flags |= 4096);
             }
           else
-            (renderLanes = updateWorkInProgressOffscreenFiber(current.child, {
+            (current = updateWorkInProgressOffscreenFiber(current.child, {
               mode: prevSibling.mode,
               children: prevSibling.children
             })),
-              (renderLanes.ref = workInProgress.ref),
-              (workInProgress.child = renderLanes),
-              (renderLanes.return = workInProgress),
-              (workInProgress = renderLanes);
+              (current.ref = workInProgress.ref),
+              (workInProgress.child = current),
+              (current.return = workInProgress),
+              (workInProgress = current);
           return workInProgress;
         case 22:
           return updateOffscreenComponent(
@@ -10751,8 +10639,7 @@ __DEV__ &&
     ) {
       instance.props = resolveClassComponentProps(
         current.type,
-        current.memoizedProps,
-        current.elementType === current.type
+        current.memoizedProps
       );
       instance.state = current.memoizedState;
       shouldProfile(current)
@@ -11485,8 +11372,7 @@ __DEV__ &&
             else {
               var prevProps = resolveClassComponentProps(
                 finishedWork.type,
-                current.memoizedProps,
-                finishedWork.elementType === finishedWork.type
+                current.memoizedProps
               );
               current = current.memoizedState;
               finishedWork.type.defaultProps ||
@@ -15361,16 +15247,7 @@ __DEV__ &&
       switch (unitOfWork.tag) {
         case 15:
         case 0:
-          var Component = unitOfWork.type,
-            unresolvedProps = unitOfWork.pendingProps;
-          unresolvedProps =
-            disableDefaultPropsExceptForClasses ||
-            unitOfWork.elementType === Component
-              ? unresolvedProps
-              : resolveDefaultPropsOnNonClassComponent(
-                  Component,
-                  unresolvedProps
-                );
+          var Component = unitOfWork.type;
           var context = isContextProvider(Component)
             ? previousContext
             : contextStackCursor$1.current;
@@ -15378,28 +15255,18 @@ __DEV__ &&
           current = replayFunctionComponent(
             current,
             unitOfWork,
-            unresolvedProps,
+            unitOfWork.pendingProps,
             Component,
             context,
             workInProgressRootRenderLanes
           );
           break;
         case 11:
-          Component = unitOfWork.type.render;
-          unresolvedProps = unitOfWork.pendingProps;
-          unresolvedProps =
-            disableDefaultPropsExceptForClasses ||
-            unitOfWork.elementType === Component
-              ? unresolvedProps
-              : resolveDefaultPropsOnNonClassComponent(
-                  Component,
-                  unresolvedProps
-                );
           current = replayFunctionComponent(
             current,
             unitOfWork,
-            unresolvedProps,
-            Component,
+            unitOfWork.pendingProps,
+            unitOfWork.type.render,
             unitOfWork.ref,
             workInProgressRootRenderLanes
           );
@@ -17065,8 +16932,6 @@ __DEV__ &&
       assign = Object.assign,
       dynamicFeatureFlags = require("ReactFeatureFlags"),
       alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
-      disableDefaultPropsExceptForClasses =
-        dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       disableLegacyContextForFunctionComponents =
         dynamicFeatureFlags.disableLegacyContextForFunctionComponents,
       disableSchedulerTimeoutInWorkLoop =
@@ -18907,7 +18772,6 @@ __DEV__ &&
     var didWarnAboutReassigningProps = !1;
     var didWarnAboutRevealOrder = {};
     var didWarnAboutTailOptions = {};
-    var didWarnAboutDefaultPropsOnFunctionComponent = {};
     var didWarnAboutClassNameOnViewTransition = {};
     var SUSPENDED_MARKER = {
         dehydrated: null,
@@ -19265,10 +19129,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-classic-91d097b2-20250701",
+        version: "19.2.0-www-classic-602917c8-20250701",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-91d097b2-20250701"
+        reconcilerVersion: "19.2.0-www-classic-602917c8-20250701"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -19302,7 +19166,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.2.0-www-classic-91d097b2-20250701";
+    exports.version = "19.2.0-www-classic-602917c8-20250701";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

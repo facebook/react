@@ -312,12 +312,6 @@ __DEV__ &&
         for (var propName in config)
           "key" !== propName && (maybeKey[propName] = config[propName]);
       } else maybeKey = config;
-      if (!disableDefaultPropsExceptForClasses && type && type.defaultProps) {
-        config = type.defaultProps;
-        for (var _propName2 in config)
-          void 0 === maybeKey[_propName2] &&
-            (maybeKey[_propName2] = config[_propName2]);
-      }
       children &&
         defineKeyPropWarningGetter(
           maybeKey,
@@ -744,8 +738,6 @@ __DEV__ &&
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
     var dynamicFeatureFlags = require("ReactFeatureFlags"),
-      disableDefaultPropsExceptForClasses =
-        dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
       enableViewTransition = dynamicFeatureFlags.enableViewTransition;
@@ -1098,37 +1090,21 @@ __DEV__ &&
         JSCompiler_inline_result && (owner = getOwner());
         hasValidKey(config) &&
           (checkKeyStringCoercion(config.key), (key = "" + config.key));
-        if (
-          !disableDefaultPropsExceptForClasses &&
-          element.type &&
-          element.type.defaultProps
-        )
-          var defaultProps = element.type.defaultProps;
         for (propName in config)
           !hasOwnProperty.call(config, propName) ||
             "key" === propName ||
             "__self" === propName ||
             "__source" === propName ||
             ("ref" === propName && void 0 === config.ref) ||
-            (props[propName] =
-              disableDefaultPropsExceptForClasses ||
-              void 0 !== config[propName] ||
-              void 0 === defaultProps
-                ? config[propName]
-                : defaultProps[propName]);
+            (props[propName] = config[propName]);
       }
       var propName = arguments.length - 2;
       if (1 === propName) props.children = children;
       else if (1 < propName) {
-        defaultProps = Array(propName);
-        for (
-          JSCompiler_inline_result = 0;
-          JSCompiler_inline_result < propName;
-          JSCompiler_inline_result++
-        )
-          defaultProps[JSCompiler_inline_result] =
-            arguments[JSCompiler_inline_result + 2];
-        props.children = defaultProps;
+        JSCompiler_inline_result = Array(propName);
+        for (var i = 0; i < propName; i++)
+          JSCompiler_inline_result[i] = arguments[i + 2];
+        props.children = JSCompiler_inline_result;
       }
       props = ReactElement(
         element.type,
@@ -1323,32 +1299,11 @@ __DEV__ &&
       );
     };
     exports.lazy = function (ctor) {
-      var lazyType = {
+      return {
         $$typeof: REACT_LAZY_TYPE,
         _payload: { _status: -1, _result: ctor },
         _init: lazyInitializer
       };
-      if (!disableDefaultPropsExceptForClasses) {
-        var defaultProps;
-        Object.defineProperties(lazyType, {
-          defaultProps: {
-            configurable: !0,
-            get: function () {
-              return defaultProps;
-            },
-            set: function (newDefaultProps) {
-              console.error(
-                "It is not supported to assign `defaultProps` to a lazy component import. Either specify them where the component is defined, or create a wrapping component around it."
-              );
-              defaultProps = newDefaultProps;
-              Object.defineProperty(lazyType, "defaultProps", {
-                enumerable: !0
-              });
-            }
-          }
-        });
-      }
-      return lazyType;
     };
     exports.memo = function (type, compare) {
       null == type &&
@@ -1479,7 +1434,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.2.0-www-modern-91d097b2-20250701";
+    exports.version = "19.2.0-www-modern-602917c8-20250701";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

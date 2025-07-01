@@ -4061,39 +4061,20 @@ module.exports = function ($$$config) {
     instance.state !== workInProgress &&
       classComponentUpdater.enqueueReplaceState(instance, instance.state, null);
   }
-  function resolveClassComponentProps(
-    Component,
-    baseProps,
-    alreadyResolvedDefaultProps
-  ) {
+  function resolveClassComponentProps(Component, baseProps) {
     var newProps = baseProps;
     if ("ref" in baseProps) {
       newProps = {};
       for (var propName in baseProps)
         "ref" !== propName && (newProps[propName] = baseProps[propName]);
     }
-    if (
-      (Component = Component.defaultProps) &&
-      (disableDefaultPropsExceptForClasses || !alreadyResolvedDefaultProps)
-    ) {
+    if ((Component = Component.defaultProps)) {
       newProps === baseProps && (newProps = assign({}, newProps));
       for (var propName$62 in Component)
         void 0 === newProps[propName$62] &&
           (newProps[propName$62] = Component[propName$62]);
     }
     return newProps;
-  }
-  function resolveDefaultPropsOnNonClassComponent(Component, baseProps) {
-    if (disableDefaultPropsExceptForClasses) return baseProps;
-    if (Component && Component.defaultProps) {
-      baseProps = assign({}, baseProps);
-      Component = Component.defaultProps;
-      for (var propName in Component)
-        void 0 === baseProps[propName] &&
-          (baseProps[propName] = Component[propName]);
-      return baseProps;
-    }
-    return baseProps;
   }
   function logUncaughtError(root, errorInfo) {
     try {
@@ -4520,9 +4501,7 @@ module.exports = function ($$$config) {
         "function" === typeof type &&
         !shouldConstruct(type) &&
         void 0 === type.defaultProps &&
-        null === Component.compare &&
-        (disableDefaultPropsExceptForClasses ||
-          void 0 === Component.defaultProps)
+        null === Component.compare
       )
         return (
           (workInProgress.tag = 15),
@@ -4895,8 +4874,7 @@ module.exports = function ($$$config) {
       var unresolvedOldProps = workInProgress.memoizedProps;
       isLegacyContextConsumer = resolveClassComponentProps(
         Component,
-        unresolvedOldProps,
-        workInProgress.type === workInProgress.elementType
+        unresolvedOldProps
       );
       unmaskedContext.props = isLegacyContextConsumer;
       var oldContext = unmaskedContext.context;
@@ -4983,11 +4961,7 @@ module.exports = function ($$$config) {
       unmaskedContext = workInProgress.stateNode;
       cloneUpdateQueue(current, workInProgress);
       isLegacyContextConsumer = workInProgress.memoizedProps;
-      context = resolveClassComponentProps(
-        Component,
-        isLegacyContextConsumer,
-        workInProgress.type === workInProgress.elementType
-      );
+      context = resolveClassComponentProps(Component, isLegacyContextConsumer);
       unmaskedContext.props = context;
       instance = workInProgress.pendingProps;
       unresolvedOldProps = unmaskedContext.context;
@@ -5776,9 +5750,9 @@ module.exports = function ($$$config) {
           );
         break;
       case 13:
-        var state$95 = workInProgress.memoizedState;
-        if (null !== state$95) {
-          if (null !== state$95.dehydrated)
+        var state$92 = workInProgress.memoizedState;
+        if (null !== state$92) {
+          if (null !== state$92.dehydrated)
             return (
               pushPrimaryTreeSuspenseHandler(workInProgress),
               (workInProgress.flags |= 128),
@@ -5802,17 +5776,17 @@ module.exports = function ($$$config) {
         break;
       case 19:
         var didSuspendBefore = 0 !== (current.flags & 128);
-        state$95 = 0 !== (renderLanes & workInProgress.childLanes);
-        state$95 ||
+        state$92 = 0 !== (renderLanes & workInProgress.childLanes);
+        state$92 ||
           (propagateParentContextChanges(
             current,
             workInProgress,
             renderLanes,
             !1
           ),
-          (state$95 = 0 !== (renderLanes & workInProgress.childLanes)));
+          (state$92 = 0 !== (renderLanes & workInProgress.childLanes)));
         if (didSuspendBefore) {
-          if (state$95)
+          if (state$92)
             return updateSuspenseListComponent(
               current,
               workInProgress,
@@ -5826,7 +5800,7 @@ module.exports = function ($$$config) {
           (didSuspendBefore.tail = null),
           (didSuspendBefore.lastEffect = null));
         push(suspenseStackCursor, suspenseStackCursor.current);
-        if (state$95) break;
+        if (state$92) break;
         else return null;
       case 22:
         return (
@@ -5843,8 +5817,8 @@ module.exports = function ($$$config) {
         break;
       case 25:
         if (enableTransitionTracing) {
-          state$95 = workInProgress.stateNode;
-          null !== state$95 && pushMarkerInstance(workInProgress, state$95);
+          state$92 = workInProgress.stateNode;
+          null !== state$92 && pushMarkerInstance(workInProgress, state$92);
           break;
         }
       case 23:
@@ -5891,103 +5865,81 @@ module.exports = function ($$$config) {
     switch (workInProgress.tag) {
       case 16:
         a: {
-          var props = workInProgress.pendingProps;
-          current = workInProgress.elementType;
-          var init = current._init;
-          current = init(current._payload);
-          workInProgress.type = current;
-          if ("function" === typeof current)
-            shouldConstruct(current)
-              ? ((props = resolveClassComponentProps(current, props, !1)),
+          current = workInProgress.pendingProps;
+          var lazyComponent = workInProgress.elementType,
+            init = lazyComponent._init;
+          lazyComponent = init(lazyComponent._payload);
+          workInProgress.type = lazyComponent;
+          if ("function" === typeof lazyComponent)
+            shouldConstruct(lazyComponent)
+              ? ((current = resolveClassComponentProps(lazyComponent, current)),
                 (workInProgress.tag = 1),
                 (workInProgress = updateClassComponent(
                   null,
                   workInProgress,
+                  lazyComponent,
                   current,
-                  props,
                   renderLanes
                 )))
-              : ((props = disableDefaultPropsExceptForClasses
-                  ? props
-                  : resolveDefaultPropsOnNonClassComponent(current, props)),
-                (workInProgress.tag = 0),
+              : ((workInProgress.tag = 0),
                 (workInProgress = updateFunctionComponent(
                   null,
                   workInProgress,
+                  lazyComponent,
                   current,
-                  props,
                   renderLanes
                 )));
           else {
-            if (void 0 !== current && null !== current)
+            if (void 0 !== lazyComponent && null !== lazyComponent)
               if (
-                ((init = current.$$typeof), init === REACT_FORWARD_REF_TYPE)
+                ((init = lazyComponent.$$typeof),
+                init === REACT_FORWARD_REF_TYPE)
               ) {
-                props = disableDefaultPropsExceptForClasses
-                  ? props
-                  : resolveDefaultPropsOnNonClassComponent(current, props);
                 workInProgress.tag = 11;
                 workInProgress = updateForwardRef(
                   null,
                   workInProgress,
+                  lazyComponent,
                   current,
-                  props,
                   renderLanes
                 );
                 break a;
               } else if (init === REACT_MEMO_TYPE) {
-                props = disableDefaultPropsExceptForClasses
-                  ? props
-                  : resolveDefaultPropsOnNonClassComponent(current, props);
                 workInProgress.tag = 14;
                 workInProgress = updateMemoComponent(
                   null,
                   workInProgress,
+                  lazyComponent,
                   current,
-                  disableDefaultPropsExceptForClasses
-                    ? props
-                    : resolveDefaultPropsOnNonClassComponent(
-                        current.type,
-                        props
-                      ),
                   renderLanes
                 );
                 break a;
               }
-            workInProgress = getComponentNameFromType(current) || current;
+            workInProgress =
+              getComponentNameFromType(lazyComponent) || lazyComponent;
             throw Error(formatProdErrorMessage(306, workInProgress, ""));
           }
         }
         return workInProgress;
       case 0:
-        return (
-          (props = workInProgress.type),
-          (init = workInProgress.pendingProps),
-          (init =
-            disableDefaultPropsExceptForClasses ||
-            workInProgress.elementType === props
-              ? init
-              : resolveDefaultPropsOnNonClassComponent(props, init)),
-          updateFunctionComponent(
-            current,
-            workInProgress,
-            props,
-            init,
-            renderLanes
-          )
+        return updateFunctionComponent(
+          current,
+          workInProgress,
+          workInProgress.type,
+          workInProgress.pendingProps,
+          renderLanes
         );
       case 1:
         return (
-          (props = workInProgress.type),
+          (lazyComponent = workInProgress.type),
           (init = resolveClassComponentProps(
-            props,
-            workInProgress.pendingProps,
-            workInProgress.elementType === props
+            lazyComponent,
+            workInProgress.pendingProps
           )),
           updateClassComponent(
             current,
             workInProgress,
-            props,
+            lazyComponent,
             init,
             renderLanes
           )
@@ -5998,7 +5950,7 @@ module.exports = function ($$$config) {
           if (null === current) throw Error(formatProdErrorMessage(387));
           var nextProps = workInProgress.pendingProps;
           init = workInProgress.memoizedState;
-          props = init.element;
+          lazyComponent = init.element;
           cloneUpdateQueue(current, workInProgress);
           processUpdateQueue(workInProgress, nextProps, null, renderLanes);
           var nextState = workInProgress.memoizedState;
@@ -6034,12 +5986,12 @@ module.exports = function ($$$config) {
                 renderLanes
               );
               break a;
-            } else if (nextProps !== props) {
-              props = createCapturedValueAtFiber(
+            } else if (nextProps !== lazyComponent) {
+              lazyComponent = createCapturedValueAtFiber(
                 Error(formatProdErrorMessage(424)),
                 workInProgress
               );
-              queueHydrationError(props);
+              queueHydrationError(lazyComponent);
               workInProgress = mountHostRootWithoutHydrating(
                 current,
                 workInProgress,
@@ -6072,7 +6024,7 @@ module.exports = function ($$$config) {
                   (renderLanes = renderLanes.sibling);
           else {
             resetHydrationState();
-            if (nextProps === props) {
+            if (nextProps === lazyComponent) {
               workInProgress = bailoutOnAlreadyFinishedWork(
                 current,
                 workInProgress,
@@ -6119,7 +6071,7 @@ module.exports = function ($$$config) {
             null === current &&
               supportsSingletons &&
               isHydrating &&
-              ((props = workInProgress.stateNode =
+              ((lazyComponent = workInProgress.stateNode =
                 resolveSingletonInstance(
                   workInProgress.type,
                   workInProgress.pendingProps,
@@ -6131,7 +6083,7 @@ module.exports = function ($$$config) {
               (rootOrSingletonContext = !0),
               (nextHydratableInstance = getFirstHydratableChildWithinSingleton(
                 workInProgress.type,
-                props,
+                lazyComponent,
                 nextHydratableInstance
               ))),
             reconcileChildren(
@@ -6151,17 +6103,18 @@ module.exports = function ($$$config) {
             workInProgress.pendingProps,
             contextStackCursor.current
           );
-          if ((init = props = nextHydratableInstance))
-            (props = canHydrateInstance(
-              props,
+          if ((init = lazyComponent = nextHydratableInstance))
+            (lazyComponent = canHydrateInstance(
+              lazyComponent,
               workInProgress.type,
               workInProgress.pendingProps,
               rootOrSingletonContext
             )),
-              null !== props
-                ? ((workInProgress.stateNode = props),
+              null !== lazyComponent
+                ? ((workInProgress.stateNode = lazyComponent),
                   (hydrationParentFiber = workInProgress),
-                  (nextHydratableInstance = getFirstHydratableChild(props)),
+                  (nextHydratableInstance =
+                    getFirstHydratableChild(lazyComponent)),
                   (rootOrSingletonContext = !1),
                   (init = !0))
                 : (init = !1);
@@ -6171,9 +6124,9 @@ module.exports = function ($$$config) {
         init = workInProgress.type;
         nextProps = workInProgress.pendingProps;
         nextState = null !== current ? current.memoizedProps : null;
-        props = nextProps.children;
+        lazyComponent = nextProps.children;
         shouldSetTextContent(init, nextProps)
-          ? (props = null)
+          ? (lazyComponent = null)
           : null !== nextState &&
             shouldSetTextContent(init, nextState) &&
             (workInProgress.flags |= 32);
@@ -6190,7 +6143,7 @@ module.exports = function ($$$config) {
             ? (HostTransitionContext._currentValue = init)
             : (HostTransitionContext._currentValue2 = init));
         markRef(current, workInProgress);
-        reconcileChildren(current, workInProgress, props, renderLanes);
+        reconcileChildren(current, workInProgress, lazyComponent, renderLanes);
         return workInProgress.child;
       case 6:
         if (null === current && isHydrating) {
@@ -6221,33 +6174,40 @@ module.exports = function ($$$config) {
             workInProgress,
             workInProgress.stateNode.containerInfo
           ),
-          (props = workInProgress.pendingProps),
+          (lazyComponent = workInProgress.pendingProps),
           null === current
             ? (workInProgress.child = reconcileChildFibers(
                 workInProgress,
                 null,
-                props,
+                lazyComponent,
                 renderLanes
               ))
-            : reconcileChildren(current, workInProgress, props, renderLanes),
+            : reconcileChildren(
+                current,
+                workInProgress,
+                lazyComponent,
+                renderLanes
+              ),
           workInProgress.child
         );
       case 11:
-        return (
-          (props = workInProgress.type),
-          (init = workInProgress.pendingProps),
-          (init =
-            disableDefaultPropsExceptForClasses ||
-            workInProgress.elementType === props
-              ? init
-              : resolveDefaultPropsOnNonClassComponent(props, init)),
-          updateForwardRef(current, workInProgress, props, init, renderLanes)
+        return updateForwardRef(
+          current,
+          workInProgress,
+          workInProgress.type,
+          workInProgress.pendingProps,
+          renderLanes
         );
       case 7:
         return (
-          (props = workInProgress.pendingProps),
+          (lazyComponent = workInProgress.pendingProps),
           enableFragmentRefs && markRef(current, workInProgress),
-          reconcileChildren(current, workInProgress, props, renderLanes),
+          reconcileChildren(
+            current,
+            workInProgress,
+            lazyComponent,
+            renderLanes
+          ),
           workInProgress.child
         );
       case 8:
@@ -6272,12 +6232,16 @@ module.exports = function ($$$config) {
         );
       case 10:
         return (
-          (props = workInProgress.pendingProps),
-          pushProvider(workInProgress, workInProgress.type, props.value),
+          (lazyComponent = workInProgress.pendingProps),
+          pushProvider(
+            workInProgress,
+            workInProgress.type,
+            lazyComponent.value
+          ),
           reconcileChildren(
             current,
             workInProgress,
-            props.children,
+            lazyComponent.children,
             renderLanes
           ),
           workInProgress.child
@@ -6285,25 +6249,26 @@ module.exports = function ($$$config) {
       case 9:
         return (
           (init = workInProgress.type._context),
-          (props = workInProgress.pendingProps.children),
+          (lazyComponent = workInProgress.pendingProps.children),
           prepareToReadContext(workInProgress),
           (init = readContext(init)),
-          (props = props(init)),
+          (lazyComponent = lazyComponent(init)),
           (workInProgress.flags |= 1),
-          reconcileChildren(current, workInProgress, props, renderLanes),
+          reconcileChildren(
+            current,
+            workInProgress,
+            lazyComponent,
+            renderLanes
+          ),
           workInProgress.child
         );
       case 14:
-        return (
-          (props = workInProgress.type),
-          (init = workInProgress.pendingProps),
-          (init = disableDefaultPropsExceptForClasses
-            ? init
-            : resolveDefaultPropsOnNonClassComponent(props, init)),
-          (init = disableDefaultPropsExceptForClasses
-            ? init
-            : resolveDefaultPropsOnNonClassComponent(props.type, init)),
-          updateMemoComponent(current, workInProgress, props, init, renderLanes)
+        return updateMemoComponent(
+          current,
+          workInProgress,
+          workInProgress.type,
+          workInProgress.pendingProps,
+          renderLanes
         );
       case 15:
         return updateSimpleMemoComponent(
@@ -6321,9 +6286,14 @@ module.exports = function ($$$config) {
         );
       case 21:
         return (
-          (props = workInProgress.pendingProps.children),
+          (lazyComponent = workInProgress.pendingProps.children),
           markRef(current, workInProgress),
-          reconcileChildren(current, workInProgress, props, renderLanes),
+          reconcileChildren(
+            current,
+            workInProgress,
+            lazyComponent,
+            renderLanes
+          ),
           workInProgress.child
         );
       case 31:
@@ -6363,9 +6333,11 @@ module.exports = function ($$$config) {
             workInProgress.lanes = 536870912;
             workInProgress = null;
           } else workInProgress = mountActivityChildren(workInProgress, init);
-        else if (((props = current.memoizedState), null !== props))
+        else if (
+          ((lazyComponent = current.memoizedState), null !== lazyComponent)
+        )
           if (
-            ((nextProps = props.dehydrated),
+            ((nextProps = lazyComponent.dehydrated),
             pushDehydratedActivitySuspenseHandler(workInProgress),
             nextState)
           )
@@ -6396,10 +6368,10 @@ module.exports = function ($$$config) {
             if (
               null !== init &&
               ((nextProps = getBumpedLaneForHydration(init, renderLanes)),
-              0 !== nextProps && nextProps !== props.retryLane)
+              0 !== nextProps && nextProps !== lazyComponent.retryLane)
             )
               throw (
-                ((props.retryLane = nextProps),
+                ((lazyComponent.retryLane = nextProps),
                 enqueueConcurrentRenderForLane(current, nextProps),
                 scheduleUpdateOnFiber(init, current, nextProps),
                 SelectiveHydrationException)
@@ -6411,7 +6383,7 @@ module.exports = function ($$$config) {
               renderLanes
             );
           } else
-            (renderLanes = props.treeContext),
+            (renderLanes = lazyComponent.treeContext),
               supportsHydration &&
                 ((nextHydratableInstance =
                   getFirstHydratableChildWithinActivityInstance(nextProps)),
@@ -6450,7 +6422,7 @@ module.exports = function ($$$config) {
       case 24:
         return (
           prepareToReadContext(workInProgress),
-          (props = readContext(CacheContext)),
+          (lazyComponent = readContext(CacheContext)),
           null === current
             ? ((init = peekCacheFromPool()),
               null === init &&
@@ -6460,7 +6432,10 @@ module.exports = function ($$$config) {
                 nextProps.refCount++,
                 null !== nextProps && (init.pooledCacheLanes |= renderLanes),
                 (init = nextProps)),
-              (workInProgress.memoizedState = { parent: props, cache: init }),
+              (workInProgress.memoizedState = {
+                parent: lazyComponent,
+                cache: init
+              }),
               initializeUpdateQueue(workInProgress),
               pushProvider(workInProgress, CacheContext, init))
             : (0 !== (current.lanes & renderLanes) &&
@@ -6469,17 +6444,17 @@ module.exports = function ($$$config) {
                 suspendIfUpdateReadFromEntangledAsyncAction()),
               (init = current.memoizedState),
               (nextProps = workInProgress.memoizedState),
-              init.parent !== props
-                ? ((init = { parent: props, cache: props }),
+              init.parent !== lazyComponent
+                ? ((init = { parent: lazyComponent, cache: lazyComponent }),
                   (workInProgress.memoizedState = init),
                   0 === workInProgress.lanes &&
                     (workInProgress.memoizedState =
                       workInProgress.updateQueue.baseState =
                         init),
-                  pushProvider(workInProgress, CacheContext, props))
-                : ((props = nextProps.cache),
-                  pushProvider(workInProgress, CacheContext, props),
-                  props !== init.cache &&
+                  pushProvider(workInProgress, CacheContext, lazyComponent))
+                : ((lazyComponent = nextProps.cache),
+                  pushProvider(workInProgress, CacheContext, lazyComponent),
+                  lazyComponent !== init.cache &&
                     propagateContextChanges(
                       workInProgress,
                       [CacheContext],
@@ -6498,7 +6473,7 @@ module.exports = function ($$$config) {
         if (enableTransitionTracing)
           return (
             enableTransitionTracing
-              ? ((props = workInProgress.pendingProps),
+              ? ((lazyComponent = workInProgress.pendingProps),
                 null === current &&
                   ((init = enableTransitionTracing
                     ? transitionStack.current
@@ -6508,7 +6483,7 @@ module.exports = function ($$$config) {
                       tag: 1,
                       transitions: new Set(init),
                       pendingBoundaries: null,
-                      name: props.name,
+                      name: lazyComponent.name,
                       aborts: null
                     }),
                     (workInProgress.stateNode = init),
@@ -6518,7 +6493,7 @@ module.exports = function ($$$config) {
                 reconcileChildren(
                   current,
                   workInProgress,
-                  props.children,
+                  lazyComponent.children,
                   renderLanes
                 ),
                 (workInProgress = workInProgress.child))
@@ -6529,17 +6504,18 @@ module.exports = function ($$$config) {
       case 30:
         if (enableViewTransition)
           return (
-            (props = workInProgress.pendingProps),
-            null != props.name && "auto" !== props.name
+            (lazyComponent = workInProgress.pendingProps),
+            null != lazyComponent.name && "auto" !== lazyComponent.name
               ? (workInProgress.flags |= null === current ? 18882560 : 18874368)
               : isHydrating && pushMaterializedTreeId(workInProgress),
-            null !== current && current.memoizedProps.name !== props.name
+            null !== current &&
+            current.memoizedProps.name !== lazyComponent.name
               ? (workInProgress.flags |= 4194816)
               : markRef(current, workInProgress),
             reconcileChildren(
               current,
               workInProgress,
-              props.children,
+              lazyComponent.children,
               renderLanes
             ),
             workInProgress.child
@@ -6706,44 +6682,44 @@ module.exports = function ($$$config) {
         needsVisibilityToggle = needsVisibilityToggle.sibling;
       }
     else if (supportsPersistence)
-      for (var node$105 = workInProgress.child; null !== node$105; ) {
-        if (5 === node$105.tag) {
-          var instance = node$105.stateNode;
+      for (var node$95 = workInProgress.child; null !== node$95; ) {
+        if (5 === node$95.tag) {
+          var instance = node$95.stateNode;
           needsVisibilityToggle &&
             isHidden &&
             (instance = cloneHiddenInstance(
               instance,
-              node$105.type,
-              node$105.memoizedProps
+              node$95.type,
+              node$95.memoizedProps
             ));
           appendInitialChild(parent, instance);
-        } else if (6 === node$105.tag)
-          (instance = node$105.stateNode),
+        } else if (6 === node$95.tag)
+          (instance = node$95.stateNode),
             needsVisibilityToggle &&
               isHidden &&
               (instance = cloneHiddenTextInstance(
                 instance,
-                node$105.memoizedProps
+                node$95.memoizedProps
               )),
             appendInitialChild(parent, instance);
-        else if (4 !== node$105.tag)
-          if (22 === node$105.tag && null !== node$105.memoizedState)
-            (instance = node$105.child),
-              null !== instance && (instance.return = node$105),
-              appendAllChildren(parent, node$105, !0, !0);
-          else if (null !== node$105.child) {
-            node$105.child.return = node$105;
-            node$105 = node$105.child;
+        else if (4 !== node$95.tag)
+          if (22 === node$95.tag && null !== node$95.memoizedState)
+            (instance = node$95.child),
+              null !== instance && (instance.return = node$95),
+              appendAllChildren(parent, node$95, !0, !0);
+          else if (null !== node$95.child) {
+            node$95.child.return = node$95;
+            node$95 = node$95.child;
             continue;
           }
-        if (node$105 === workInProgress) break;
-        for (; null === node$105.sibling; ) {
-          if (null === node$105.return || node$105.return === workInProgress)
+        if (node$95 === workInProgress) break;
+        for (; null === node$95.sibling; ) {
+          if (null === node$95.return || node$95.return === workInProgress)
             return;
-          node$105 = node$105.return;
+          node$95 = node$95.return;
         }
-        node$105.sibling.return = node$105.return;
-        node$105 = node$105.sibling;
+        node$95.sibling.return = node$95.return;
+        node$95 = node$95.sibling;
       }
   }
   function appendAllChildrenToContainer(
@@ -6813,31 +6789,31 @@ module.exports = function ($$$config) {
       current.memoizedProps !== newProps && markUpdate(workInProgress);
     else if (supportsPersistence) {
       var currentInstance = current.stateNode,
-        oldProps$108 = current.memoizedProps;
+        oldProps$98 = current.memoizedProps;
       if (
         (current = doesRequireClone(current, workInProgress)) ||
-        oldProps$108 !== newProps
+        oldProps$98 !== newProps
       ) {
         var currentHostContext = contextStackCursor.current;
-        oldProps$108 = cloneInstance(
+        oldProps$98 = cloneInstance(
           currentInstance,
           type,
-          oldProps$108,
+          oldProps$98,
           newProps,
           !current,
           null
         );
-        oldProps$108 === currentInstance
+        oldProps$98 === currentInstance
           ? (workInProgress.stateNode = currentInstance)
           : (finalizeInitialChildren(
-              oldProps$108,
+              oldProps$98,
               type,
               newProps,
               currentHostContext
             ) && markUpdate(workInProgress),
-            (workInProgress.stateNode = oldProps$108),
+            (workInProgress.stateNode = oldProps$98),
             current
-              ? appendAllChildren(oldProps$108, workInProgress, !1, !1)
+              ? appendAllChildren(oldProps$98, workInProgress, !1, !1)
               : markUpdate(workInProgress));
       } else workInProgress.stateNode = currentInstance;
     }
@@ -6904,15 +6880,15 @@ module.exports = function ($$$config) {
           break;
         case "collapsed":
           lastTailNode = renderState.tail;
-          for (var lastTailNode$110 = null; null !== lastTailNode; )
+          for (var lastTailNode$100 = null; null !== lastTailNode; )
             null !== lastTailNode.alternate &&
-              (lastTailNode$110 = lastTailNode),
+              (lastTailNode$100 = lastTailNode),
               (lastTailNode = lastTailNode.sibling);
-          null === lastTailNode$110
+          null === lastTailNode$100
             ? hasRenderedATailFallback || null === renderState.tail
               ? (renderState.tail = null)
               : (renderState.tail.sibling = null)
-            : (lastTailNode$110.sibling = null);
+            : (lastTailNode$100.sibling = null);
       }
   }
   function bubbleProperties(completedWork) {
@@ -6922,19 +6898,19 @@ module.exports = function ($$$config) {
       newChildLanes = 0,
       subtreeFlags = 0;
     if (didBailout)
-      for (var child$111 = completedWork.child; null !== child$111; )
-        (newChildLanes |= child$111.lanes | child$111.childLanes),
-          (subtreeFlags |= child$111.subtreeFlags & 65011712),
-          (subtreeFlags |= child$111.flags & 65011712),
-          (child$111.return = completedWork),
-          (child$111 = child$111.sibling);
+      for (var child$101 = completedWork.child; null !== child$101; )
+        (newChildLanes |= child$101.lanes | child$101.childLanes),
+          (subtreeFlags |= child$101.subtreeFlags & 65011712),
+          (subtreeFlags |= child$101.flags & 65011712),
+          (child$101.return = completedWork),
+          (child$101 = child$101.sibling);
     else
-      for (child$111 = completedWork.child; null !== child$111; )
-        (newChildLanes |= child$111.lanes | child$111.childLanes),
-          (subtreeFlags |= child$111.subtreeFlags),
-          (subtreeFlags |= child$111.flags),
-          (child$111.return = completedWork),
-          (child$111 = child$111.sibling);
+      for (child$101 = completedWork.child; null !== child$101; )
+        (newChildLanes |= child$101.lanes | child$101.childLanes),
+          (subtreeFlags |= child$101.subtreeFlags),
+          (subtreeFlags |= child$101.flags),
+          (child$101.return = completedWork),
+          (child$101 = child$101.sibling);
     completedWork.subtreeFlags |= subtreeFlags;
     completedWork.childLanes = newChildLanes;
     return didBailout;
@@ -7101,17 +7077,17 @@ module.exports = function ($$$config) {
                 nextResource
               ) && (workInProgress.flags |= 64);
           else {
-            var instance$121 = createInstance(
+            var instance$111 = createInstance(
               type,
               newProps,
               rootInstanceStackCursor.current,
               nextResource,
               workInProgress
             );
-            appendAllChildren(instance$121, workInProgress, !1, !1);
-            workInProgress.stateNode = instance$121;
+            appendAllChildren(instance$111, workInProgress, !1, !1);
+            workInProgress.stateNode = instance$111;
             finalizeInitialChildren(
-              instance$121,
+              instance$111,
               type,
               newProps,
               nextResource
@@ -7691,8 +7667,7 @@ module.exports = function ($$$config) {
   ) {
     instance.props = resolveClassComponentProps(
       current.type,
-      current.memoizedProps,
-      current.elementType === current.type
+      current.memoizedProps
     );
     instance.state = current.memoizedState;
     try {
@@ -7757,8 +7732,8 @@ module.exports = function ($$$config) {
       else if ("function" === typeof ref)
         try {
           ref(null);
-        } catch (error$147) {
-          captureCommitPhaseError(current, nearestMountedAncestor, error$147);
+        } catch (error$137) {
+          captureCommitPhaseError(current, nearestMountedAncestor, error$137);
         }
       else ref.current = null;
   }
@@ -8586,8 +8561,7 @@ module.exports = function ($$$config) {
           else {
             var prevProps = resolveClassComponentProps(
               finishedWork.type,
-              current.memoizedProps,
-              finishedWork.elementType === finishedWork.type
+              current.memoizedProps
             );
             current = current.memoizedState;
             try {
@@ -8596,11 +8570,11 @@ module.exports = function ($$$config) {
                 current,
                 finishedRoot.__reactInternalSnapshotBeforeUpdate
               );
-            } catch (error$145) {
+            } catch (error$135) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$145
+                error$135
               );
             }
           }
@@ -9721,25 +9695,25 @@ module.exports = function ($$$config) {
                 break;
               }
             case 5:
-              var parent$148 = hostParentFiber.stateNode;
+              var parent$138 = hostParentFiber.stateNode;
               hostParentFiber.flags & 32 &&
-                (resetTextContent(parent$148), (hostParentFiber.flags &= -33));
-              var before$149 = getHostSibling(finishedWork);
+                (resetTextContent(parent$138), (hostParentFiber.flags &= -33));
+              var before$139 = getHostSibling(finishedWork);
               insertOrAppendPlacementNode(
                 finishedWork,
-                before$149,
-                parent$148,
+                before$139,
+                parent$138,
                 parentFragmentInstances
               );
               break;
             case 3:
             case 4:
-              var parent$150 = hostParentFiber.stateNode.containerInfo,
-                before$151 = getHostSibling(finishedWork);
+              var parent$140 = hostParentFiber.stateNode.containerInfo,
+                before$141 = getHostSibling(finishedWork);
               insertOrAppendPlacementNodeIntoContainer(
                 finishedWork,
-                before$151,
-                parent$150,
+                before$141,
+                parent$140,
                 parentFragmentInstances
               );
               break;
@@ -10313,14 +10287,14 @@ module.exports = function ($$$config) {
           );
         break;
       case 22:
-        var instance$165 = finishedWork.stateNode,
-          current$166 = finishedWork.alternate;
+        var instance$155 = finishedWork.stateNode,
+          current$156 = finishedWork.alternate;
         null !== finishedWork.memoizedState
           ? (isViewTransitionEligible &&
-              null !== current$166 &&
-              null === current$166.memoizedState &&
-              restoreEnterOrExitViewTransitions(current$166),
-            instance$165._visibility & 2
+              null !== current$156 &&
+              null === current$156.memoizedState &&
+              restoreEnterOrExitViewTransitions(current$156),
+            instance$155._visibility & 2
               ? recursivelyTraversePassiveMountEffects(
                   finishedRoot,
                   finishedWork,
@@ -10332,17 +10306,17 @@ module.exports = function ($$$config) {
                   finishedWork
                 ))
           : (isViewTransitionEligible &&
-              null !== current$166 &&
-              null !== current$166.memoizedState &&
+              null !== current$156 &&
+              null !== current$156.memoizedState &&
               restoreEnterOrExitViewTransitions(finishedWork),
-            instance$165._visibility & 2
+            instance$155._visibility & 2
               ? recursivelyTraversePassiveMountEffects(
                   finishedRoot,
                   finishedWork,
                   committedLanes,
                   committedTransitions
                 )
-              : ((instance$165._visibility |= 2),
+              : ((instance$155._visibility |= 2),
                 recursivelyTraverseReconnectPassiveEffects(
                   finishedRoot,
                   finishedWork,
@@ -10352,9 +10326,9 @@ module.exports = function ($$$config) {
                 )));
         flags & 2048 &&
           commitOffscreenPassiveMountEffects(
-            current$166,
+            current$156,
             finishedWork,
-            instance$165
+            instance$155
           );
         break;
       case 24:
@@ -10449,9 +10423,9 @@ module.exports = function ($$$config) {
             );
           break;
         case 22:
-          var instance$169 = finishedWork.stateNode;
+          var instance$159 = finishedWork.stateNode;
           null !== finishedWork.memoizedState
-            ? instance$169._visibility & 2
+            ? instance$159._visibility & 2
               ? recursivelyTraverseReconnectPassiveEffects(
                   finishedRoot,
                   finishedWork,
@@ -10463,7 +10437,7 @@ module.exports = function ($$$config) {
                   finishedRoot,
                   finishedWork
                 )
-            : ((instance$169._visibility |= 2),
+            : ((instance$159._visibility |= 2),
               recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -10476,7 +10450,7 @@ module.exports = function ($$$config) {
             commitOffscreenPassiveMountEffects(
               finishedWork.alternate,
               finishedWork,
-              instance$169
+              instance$159
             );
           break;
         case 24:
@@ -11590,8 +11564,8 @@ module.exports = function ($$$config) {
         workLoopSync();
         exitStatus = workInProgressRootExitStatus;
         break;
-      } catch (thrownValue$186) {
-        handleThrow(root, thrownValue$186);
+      } catch (thrownValue$176) {
+        handleThrow(root, thrownValue$176);
       }
     while (1);
     lanes && root.shellSuspendCounter++;
@@ -11712,8 +11686,8 @@ module.exports = function ($$$config) {
         }
         workLoopConcurrentByScheduler();
         break;
-      } catch (thrownValue$188) {
-        handleThrow(root, thrownValue$188);
+      } catch (thrownValue$178) {
+        handleThrow(root, thrownValue$178);
       }
     while (1);
     lastContextDependency = currentlyRenderingFiber$1 = null;
@@ -11745,15 +11719,7 @@ module.exports = function ($$$config) {
     switch (next.tag) {
       case 15:
       case 0:
-        var Component = next.type,
-          unresolvedProps = next.pendingProps;
-        unresolvedProps =
-          disableDefaultPropsExceptForClasses || next.elementType === Component
-            ? unresolvedProps
-            : resolveDefaultPropsOnNonClassComponent(
-                Component,
-                unresolvedProps
-              );
+        var Component = next.type;
         var context = isContextProvider(Component)
           ? previousContext
           : contextStackCursor$1.current;
@@ -11761,27 +11727,18 @@ module.exports = function ($$$config) {
         next = replayFunctionComponent(
           current,
           next,
-          unresolvedProps,
+          next.pendingProps,
           Component,
           context,
           workInProgressRootRenderLanes
         );
         break;
       case 11:
-        Component = next.type.render;
-        unresolvedProps = next.pendingProps;
-        unresolvedProps =
-          disableDefaultPropsExceptForClasses || next.elementType === Component
-            ? unresolvedProps
-            : resolveDefaultPropsOnNonClassComponent(
-                Component,
-                unresolvedProps
-              );
         next = replayFunctionComponent(
           current,
           next,
-          unresolvedProps,
-          Component,
+          next.pendingProps,
+          next.type.render,
           next.ref,
           workInProgressRootRenderLanes
         );
@@ -12871,8 +12828,6 @@ module.exports = function ($$$config) {
     assign = Object.assign,
     dynamicFeatureFlags = require("ReactFeatureFlags"),
     alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
-    disableDefaultPropsExceptForClasses =
-      dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
     disableLegacyContextForFunctionComponents =
       dynamicFeatureFlags.disableLegacyContextForFunctionComponents,
     disableSchedulerTimeoutInWorkLoop =
@@ -14109,7 +14064,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-classic-91d097b2-20250701"
+      reconcilerVersion: "19.2.0-www-classic-602917c8-20250701"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

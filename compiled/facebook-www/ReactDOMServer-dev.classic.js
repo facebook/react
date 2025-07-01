@@ -5268,18 +5268,6 @@ __DEV__ &&
           : renderNodeDestructive(request, task, children, -1);
       task.keyPath = actionStateCount;
     }
-    function resolveDefaultPropsOnNonClassComponent(Component, baseProps) {
-      if (disableDefaultPropsExceptForClasses) return baseProps;
-      if (Component && Component.defaultProps) {
-        baseProps = assign({}, baseProps);
-        Component = Component.defaultProps;
-        for (var propName in Component)
-          void 0 === baseProps[propName] &&
-            (baseProps[propName] = Component[propName]);
-        return baseProps;
-      }
-      return baseProps;
-    }
     function renderElement(request, task, keyPath, type, props, ref) {
       if ("function" === typeof type)
         if (type.prototype && type.prototype.isReactComponent) {
@@ -5290,7 +5278,7 @@ __DEV__ &&
               "ref" !== propName && (newProps[propName] = props[propName]);
           }
           var defaultProps = type.defaultProps;
-          if (defaultProps && disableDefaultPropsExceptForClasses) {
+          if (defaultProps) {
             newProps === props && (newProps = assign({}, newProps, props));
             for (var _propName in defaultProps)
               void 0 === newProps[_propName] &&
@@ -5747,44 +5735,31 @@ __DEV__ &&
               "childContextTypes cannot be defined on a function component.\n  %s.childContextTypes = ...",
               type.displayName || type.name || "Component"
             );
-          if (
-            !disableDefaultPropsExceptForClasses &&
-            void 0 !== type.defaultProps
-          ) {
+          if ("function" === typeof type.getDerivedStateFromProps) {
             var componentName$jscomp$5 =
               getComponentNameFromType(type) || "Unknown";
-            didWarnAboutDefaultPropsOnFunctionComponent[
+            didWarnAboutGetDerivedStateOnFunctionComponent[
               componentName$jscomp$5
             ] ||
               (console.error(
-                "%s: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.",
+                "%s: Function components do not support getDerivedStateFromProps.",
                 componentName$jscomp$5
               ),
-              (didWarnAboutDefaultPropsOnFunctionComponent[
+              (didWarnAboutGetDerivedStateOnFunctionComponent[
                 componentName$jscomp$5
               ] = !0));
-          }
-          if ("function" === typeof type.getDerivedStateFromProps) {
-            var _componentName2 = getComponentNameFromType(type) || "Unknown";
-            didWarnAboutGetDerivedStateOnFunctionComponent[_componentName2] ||
-              (console.error(
-                "%s: Function components do not support getDerivedStateFromProps.",
-                _componentName2
-              ),
-              (didWarnAboutGetDerivedStateOnFunctionComponent[_componentName2] =
-                !0));
           }
           if (
             "object" === typeof type.contextType &&
             null !== type.contextType
           ) {
-            var _componentName3 = getComponentNameFromType(type) || "Unknown";
-            didWarnAboutContextTypeOnFunctionComponent[_componentName3] ||
+            var _componentName2 = getComponentNameFromType(type) || "Unknown";
+            didWarnAboutContextTypeOnFunctionComponent[_componentName2] ||
               (console.error(
                 "%s: Function components do not support contextType.",
-                _componentName3
+                _componentName2
               ),
-              (didWarnAboutContextTypeOnFunctionComponent[_componentName3] =
+              (didWarnAboutContextTypeOnFunctionComponent[_componentName2] =
                 !0));
           }
           finishFunctionComponent(
@@ -6295,19 +6270,7 @@ __DEV__ &&
               );
               return;
             case REACT_MEMO_TYPE:
-              var innerType = type.type,
-                resolvedProps$jscomp$0 = resolveDefaultPropsOnNonClassComponent(
-                  innerType,
-                  props
-                );
-              renderElement(
-                request,
-                task,
-                keyPath,
-                innerType,
-                resolvedProps$jscomp$0,
-                ref
-              );
+              renderElement(request, task, keyPath, type.type, props, ref);
               return;
             case REACT_CONTEXT_TYPE:
               var value$jscomp$0 = props.value,
@@ -6378,16 +6341,7 @@ __DEV__ &&
             case REACT_LAZY_TYPE:
               var Component = callLazyInitInDEV(type);
               if (12 === request.status) throw null;
-              var resolvedProps$jscomp$1 =
-                resolveDefaultPropsOnNonClassComponent(Component, props);
-              renderElement(
-                request,
-                task,
-                keyPath,
-                Component,
-                resolvedProps$jscomp$1,
-                ref
-              );
+              renderElement(request, task, keyPath, Component, props, ref);
               return;
           }
         var info = "";
@@ -8675,8 +8629,6 @@ __DEV__ &&
     var React = require("react"),
       ReactDOM = require("react-dom"),
       dynamicFeatureFlags = require("ReactFeatureFlags"),
-      disableDefaultPropsExceptForClasses =
-        dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       disableLegacyContextForFunctionComponents =
         dynamicFeatureFlags.disableLegacyContextForFunctionComponents,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
@@ -10152,7 +10104,6 @@ __DEV__ &&
       didWarnAboutContextTypeOnFunctionComponent = {},
       didWarnAboutGetDerivedStateOnFunctionComponent = {},
       didWarnAboutReassigningProps = !1,
-      didWarnAboutDefaultPropsOnFunctionComponent = {},
       didWarnAboutGenerators = !1,
       didWarnAboutMaps = !1,
       flushedByteSize = 0;
@@ -10172,5 +10123,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.2.0-www-classic-91d097b2-20250701";
+    exports.version = "19.2.0-www-classic-602917c8-20250701";
   })();

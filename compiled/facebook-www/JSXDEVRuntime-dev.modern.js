@@ -265,12 +265,6 @@ __DEV__ &&
         for (var propName in config)
           "key" !== propName && (maybeKey[propName] = config[propName]);
       } else maybeKey = config;
-      if (!disableDefaultPropsExceptForClasses && type && type.defaultProps) {
-        config = type.defaultProps;
-        for (var _propName2 in config)
-          void 0 === maybeKey[_propName2] &&
-            (maybeKey[_propName2] = config[_propName2]);
-      }
       children &&
         defineKeyPropWarningGetter(
           maybeKey,
@@ -298,8 +292,6 @@ __DEV__ &&
     }
     var React = require("react"),
       dynamicFeatureFlags = require("ReactFeatureFlags"),
-      disableDefaultPropsExceptForClasses =
-        dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
       enableViewTransition = dynamicFeatureFlags.enableViewTransition;

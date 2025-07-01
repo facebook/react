@@ -8636,39 +8636,20 @@ __DEV__ &&
           null
         ));
     }
-    function resolveClassComponentProps(
-      Component,
-      baseProps,
-      alreadyResolvedDefaultProps
-    ) {
+    function resolveClassComponentProps(Component, baseProps) {
       var newProps = baseProps;
       if ("ref" in baseProps) {
         newProps = {};
         for (var propName in baseProps)
           "ref" !== propName && (newProps[propName] = baseProps[propName]);
       }
-      if (
-        (Component = Component.defaultProps) &&
-        (disableDefaultPropsExceptForClasses || !alreadyResolvedDefaultProps)
-      ) {
+      if ((Component = Component.defaultProps)) {
         newProps === baseProps && (newProps = assign({}, newProps));
         for (var _propName in Component)
           void 0 === newProps[_propName] &&
             (newProps[_propName] = Component[_propName]);
       }
       return newProps;
-    }
-    function resolveDefaultPropsOnNonClassComponent(Component, baseProps) {
-      if (disableDefaultPropsExceptForClasses) return baseProps;
-      if (Component && Component.defaultProps) {
-        baseProps = assign({}, baseProps);
-        Component = Component.defaultProps;
-        for (var propName in Component)
-          void 0 === baseProps[propName] &&
-            (baseProps[propName] = Component[propName]);
-        return baseProps;
-      }
-      return baseProps;
     }
     function defaultOnUncaughtError(error) {
       reportGlobalError(error);
@@ -9215,9 +9196,7 @@ __DEV__ &&
           "function" === typeof type &&
           !shouldConstruct(type) &&
           void 0 === type.defaultProps &&
-          null === Component.compare &&
-          (disableDefaultPropsExceptForClasses ||
-            void 0 === Component.defaultProps)
+          null === Component.compare
         )
           return (
             (Component = resolveFunctionForHotReloading(type)),
@@ -9232,16 +9211,7 @@ __DEV__ &&
               renderLanes
             )
           );
-        disableDefaultPropsExceptForClasses ||
-          void 0 === Component.defaultProps ||
-          ((current = getComponentNameFromType(type) || "Unknown"),
-          didWarnAboutDefaultPropsOnFunctionComponent[current] ||
-            (console.error(
-              "%s: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.",
-              current
-            ),
-            (didWarnAboutDefaultPropsOnFunctionComponent[current] = !0)));
-        nextProps = createFiberFromTypeAndProps(
+        current = createFiberFromTypeAndProps(
           Component.type,
           null,
           nextProps,
@@ -9249,9 +9219,9 @@ __DEV__ &&
           workInProgress.mode,
           renderLanes
         );
-        nextProps.ref = workInProgress.ref;
-        nextProps.return = workInProgress;
-        return (workInProgress.child = nextProps);
+        current.ref = workInProgress.ref;
+        current.return = workInProgress;
+        return (workInProgress.child = current);
       }
       type = current.child;
       if (!checkScheduledUpdateOrContext(current, renderLanes)) {
@@ -9269,10 +9239,10 @@ __DEV__ &&
           );
       }
       workInProgress.flags |= 1;
-      nextProps = createWorkInProgress(type, nextProps);
-      nextProps.ref = workInProgress.ref;
-      nextProps.return = workInProgress;
-      return (workInProgress.child = nextProps);
+      current = createWorkInProgress(type, nextProps);
+      current.ref = workInProgress.ref;
+      current.return = workInProgress;
+      return (workInProgress.child = current);
     }
     function updateSimpleMemoComponent(
       current,
@@ -9869,11 +9839,7 @@ __DEV__ &&
       } else if (null === current) {
         _instance = workInProgress.stateNode;
         var unresolvedOldProps = workInProgress.memoizedProps;
-        lane = resolveClassComponentProps(
-          Component,
-          unresolvedOldProps,
-          workInProgress.type === workInProgress.elementType
-        );
+        lane = resolveClassComponentProps(Component, unresolvedOldProps);
         _instance.props = lane;
         var oldContext = _instance.context;
         foundWillUpdateName = Component.contextType;
@@ -9952,11 +9918,7 @@ __DEV__ &&
         _instance = workInProgress.stateNode;
         cloneUpdateQueue(current, workInProgress);
         state = workInProgress.memoizedProps;
-        foundWillUpdateName = resolveClassComponentProps(
-          Component,
-          state,
-          workInProgress.type === workInProgress.elementType
-        );
+        foundWillUpdateName = resolveClassComponentProps(Component, state);
         _instance.props = foundWillUpdateName;
         newApiName = workInProgress.pendingProps;
         oldState = _instance.context;
@@ -10125,15 +10087,6 @@ __DEV__ &&
           "childContextTypes cannot be defined on a function component.\n  %s.childContextTypes = ...",
           Component.displayName || Component.name || "Component"
         );
-      disableDefaultPropsExceptForClasses ||
-        void 0 === Component.defaultProps ||
-        ((workInProgress = getComponentNameFromType(Component) || "Unknown"),
-        didWarnAboutDefaultPropsOnFunctionComponent[workInProgress] ||
-          (console.error(
-            "%s: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.",
-            workInProgress
-          ),
-          (didWarnAboutDefaultPropsOnFunctionComponent[workInProgress] = !0)));
       "function" === typeof Component.getDerivedStateFromProps &&
         ((workInProgress = getComponentNameFromType(Component) || "Unknown"),
         didWarnAboutGetDerivedStateOnFunctionComponent[workInProgress] ||
@@ -10166,24 +10119,24 @@ __DEV__ &&
       return current;
     }
     function updateSuspenseComponent(current, workInProgress, renderLanes) {
-      var JSCompiler_object_inline_digest_3001;
-      var JSCompiler_object_inline_stack_3002 = workInProgress.pendingProps;
+      var JSCompiler_object_inline_digest_2998;
+      var JSCompiler_object_inline_stack_2999 = workInProgress.pendingProps;
       shouldSuspendImpl(workInProgress) && (workInProgress.flags |= 128);
-      var JSCompiler_object_inline_message_3000 = !1;
+      var JSCompiler_object_inline_message_2997 = !1;
       var didSuspend = 0 !== (workInProgress.flags & 128);
-      (JSCompiler_object_inline_digest_3001 = didSuspend) ||
-        (JSCompiler_object_inline_digest_3001 =
+      (JSCompiler_object_inline_digest_2998 = didSuspend) ||
+        (JSCompiler_object_inline_digest_2998 =
           null !== current && null === current.memoizedState
             ? !1
             : 0 !== (suspenseStackCursor.current & ForceSuspenseFallback));
-      JSCompiler_object_inline_digest_3001 &&
-        ((JSCompiler_object_inline_message_3000 = !0),
+      JSCompiler_object_inline_digest_2998 &&
+        ((JSCompiler_object_inline_message_2997 = !0),
         (workInProgress.flags &= -129));
-      JSCompiler_object_inline_digest_3001 = 0 !== (workInProgress.flags & 32);
+      JSCompiler_object_inline_digest_2998 = 0 !== (workInProgress.flags & 32);
       workInProgress.flags &= -33;
       if (null === current) {
         if (isHydrating) {
-          JSCompiler_object_inline_message_3000
+          JSCompiler_object_inline_message_2997
             ? pushPrimaryTreeSuspenseHandler(workInProgress)
             : reuseSuspenseHandlerOnStack(workInProgress);
           (current = nextHydratableInstance)
@@ -10196,18 +10149,18 @@ __DEV__ &&
                   ? renderLanes
                   : null),
               null !== renderLanes &&
-                ((JSCompiler_object_inline_digest_3001 = {
+                ((JSCompiler_object_inline_digest_2998 = {
                   dehydrated: renderLanes,
                   treeContext: getSuspendedTreeContext(),
                   retryLane: 536870912,
                   hydrationErrors: null
                 }),
                 (workInProgress.memoizedState =
-                  JSCompiler_object_inline_digest_3001),
-                (JSCompiler_object_inline_digest_3001 =
+                  JSCompiler_object_inline_digest_2998),
+                (JSCompiler_object_inline_digest_2998 =
                   createFiberFromDehydratedFragment(renderLanes)),
-                (JSCompiler_object_inline_digest_3001.return = workInProgress),
-                (workInProgress.child = JSCompiler_object_inline_digest_3001),
+                (JSCompiler_object_inline_digest_2998.return = workInProgress),
+                (workInProgress.child = JSCompiler_object_inline_digest_2998),
                 (hydrationParentFiber = workInProgress),
                 (nextHydratableInstance = null)))
             : (renderLanes = null);
@@ -10221,12 +10174,12 @@ __DEV__ &&
             : (workInProgress.lanes = 536870912);
           return null;
         }
-        var nextPrimaryChildren = JSCompiler_object_inline_stack_3002.children,
-          nextFallbackChildren = JSCompiler_object_inline_stack_3002.fallback;
-        if (JSCompiler_object_inline_message_3000)
+        var nextPrimaryChildren = JSCompiler_object_inline_stack_2999.children,
+          nextFallbackChildren = JSCompiler_object_inline_stack_2999.fallback;
+        if (JSCompiler_object_inline_message_2997)
           return (
             reuseSuspenseHandlerOnStack(workInProgress),
-            (JSCompiler_object_inline_stack_3002 =
+            (JSCompiler_object_inline_stack_2999 =
               mountSuspenseFallbackChildren(
                 workInProgress,
                 nextPrimaryChildren,
@@ -10238,7 +10191,7 @@ __DEV__ &&
               mountSuspenseOffscreenState(renderLanes)),
             (nextPrimaryChildren.childLanes = getRemainingWorkInPrimaryTree(
               current,
-              JSCompiler_object_inline_digest_3001,
+              JSCompiler_object_inline_digest_2998,
               renderLanes
             )),
             (workInProgress.memoizedState = SUSPENDED_MARKER),
@@ -10259,15 +10212,15 @@ __DEV__ &&
                     })
                   : ((renderLanes.transitions = workInProgress),
                     (renderLanes.markerInstances = current)))),
-            JSCompiler_object_inline_stack_3002
+            JSCompiler_object_inline_stack_2999
           );
         if (
           "number" ===
-          typeof JSCompiler_object_inline_stack_3002.unstable_expectedLoadTime
+          typeof JSCompiler_object_inline_stack_2999.unstable_expectedLoadTime
         )
           return (
             reuseSuspenseHandlerOnStack(workInProgress),
-            (JSCompiler_object_inline_stack_3002 =
+            (JSCompiler_object_inline_stack_2999 =
               mountSuspenseFallbackChildren(
                 workInProgress,
                 nextPrimaryChildren,
@@ -10279,12 +10232,12 @@ __DEV__ &&
               mountSuspenseOffscreenState(renderLanes)),
             (nextPrimaryChildren.childLanes = getRemainingWorkInPrimaryTree(
               current,
-              JSCompiler_object_inline_digest_3001,
+              JSCompiler_object_inline_digest_2998,
               renderLanes
             )),
             (workInProgress.memoizedState = SUSPENDED_MARKER),
             (workInProgress.lanes = 4194304),
-            JSCompiler_object_inline_stack_3002
+            JSCompiler_object_inline_stack_2999
           );
         pushPrimaryTreeSuspenseHandler(workInProgress);
         return mountSuspensePrimaryChildren(
@@ -10294,8 +10247,8 @@ __DEV__ &&
       }
       var prevState = current.memoizedState;
       if (null !== prevState) {
-        var JSCompiler_object_inline_componentStack_3003 = prevState.dehydrated;
-        if (null !== JSCompiler_object_inline_componentStack_3003) {
+        var JSCompiler_object_inline_componentStack_3000 = prevState.dehydrated;
+        if (null !== JSCompiler_object_inline_componentStack_3000) {
           if (didSuspend)
             workInProgress.flags & 256
               ? (pushPrimaryTreeSuspenseHandler(workInProgress),
@@ -10312,13 +10265,13 @@ __DEV__ &&
                   (workInProgress = null))
                 : (reuseSuspenseHandlerOnStack(workInProgress),
                   (nextPrimaryChildren =
-                    JSCompiler_object_inline_stack_3002.fallback),
+                    JSCompiler_object_inline_stack_2999.fallback),
                   (nextFallbackChildren = workInProgress.mode),
-                  (JSCompiler_object_inline_stack_3002 =
+                  (JSCompiler_object_inline_stack_2999 =
                     mountWorkInProgressOffscreenFiber(
                       {
                         mode: "visible",
-                        children: JSCompiler_object_inline_stack_3002.children
+                        children: JSCompiler_object_inline_stack_2999.children
                       },
                       nextFallbackChildren
                     )),
@@ -10329,24 +10282,24 @@ __DEV__ &&
                     null
                   )),
                   (nextPrimaryChildren.flags |= 2),
-                  (JSCompiler_object_inline_stack_3002.return = workInProgress),
+                  (JSCompiler_object_inline_stack_2999.return = workInProgress),
                   (nextPrimaryChildren.return = workInProgress),
-                  (JSCompiler_object_inline_stack_3002.sibling =
+                  (JSCompiler_object_inline_stack_2999.sibling =
                     nextPrimaryChildren),
-                  (workInProgress.child = JSCompiler_object_inline_stack_3002),
+                  (workInProgress.child = JSCompiler_object_inline_stack_2999),
                   reconcileChildFibers(
                     workInProgress,
                     current.child,
                     null,
                     renderLanes
                   ),
-                  (JSCompiler_object_inline_stack_3002 = workInProgress.child),
-                  (JSCompiler_object_inline_stack_3002.memoizedState =
+                  (JSCompiler_object_inline_stack_2999 = workInProgress.child),
+                  (JSCompiler_object_inline_stack_2999.memoizedState =
                     mountSuspenseOffscreenState(renderLanes)),
-                  (JSCompiler_object_inline_stack_3002.childLanes =
+                  (JSCompiler_object_inline_stack_2999.childLanes =
                     getRemainingWorkInPrimaryTree(
                       current,
-                      JSCompiler_object_inline_digest_3001,
+                      JSCompiler_object_inline_digest_2998,
                       renderLanes
                     )),
                   (workInProgress.memoizedState = SUSPENDED_MARKER),
@@ -10355,45 +10308,45 @@ __DEV__ &&
             (pushPrimaryTreeSuspenseHandler(workInProgress),
             warnIfHydrating(),
             isSuspenseInstanceFallback(
-              JSCompiler_object_inline_componentStack_3003
+              JSCompiler_object_inline_componentStack_3000
             ))
           ) {
-            JSCompiler_object_inline_digest_3001 =
-              JSCompiler_object_inline_componentStack_3003.nextSibling &&
-              JSCompiler_object_inline_componentStack_3003.nextSibling.dataset;
-            if (JSCompiler_object_inline_digest_3001) {
-              nextPrimaryChildren = JSCompiler_object_inline_digest_3001.dgst;
-              var message = JSCompiler_object_inline_digest_3001.msg;
-              nextFallbackChildren = JSCompiler_object_inline_digest_3001.stck;
-              var componentStack = JSCompiler_object_inline_digest_3001.cstck;
+            JSCompiler_object_inline_digest_2998 =
+              JSCompiler_object_inline_componentStack_3000.nextSibling &&
+              JSCompiler_object_inline_componentStack_3000.nextSibling.dataset;
+            if (JSCompiler_object_inline_digest_2998) {
+              nextPrimaryChildren = JSCompiler_object_inline_digest_2998.dgst;
+              var message = JSCompiler_object_inline_digest_2998.msg;
+              nextFallbackChildren = JSCompiler_object_inline_digest_2998.stck;
+              var componentStack = JSCompiler_object_inline_digest_2998.cstck;
             }
-            JSCompiler_object_inline_message_3000 = message;
-            JSCompiler_object_inline_digest_3001 = nextPrimaryChildren;
-            JSCompiler_object_inline_stack_3002 = nextFallbackChildren;
-            JSCompiler_object_inline_componentStack_3003 = componentStack;
-            nextPrimaryChildren = JSCompiler_object_inline_message_3000;
-            nextFallbackChildren = JSCompiler_object_inline_componentStack_3003;
+            JSCompiler_object_inline_message_2997 = message;
+            JSCompiler_object_inline_digest_2998 = nextPrimaryChildren;
+            JSCompiler_object_inline_stack_2999 = nextFallbackChildren;
+            JSCompiler_object_inline_componentStack_3000 = componentStack;
+            nextPrimaryChildren = JSCompiler_object_inline_message_2997;
+            nextFallbackChildren = JSCompiler_object_inline_componentStack_3000;
             nextPrimaryChildren = nextPrimaryChildren
               ? Error(nextPrimaryChildren)
               : Error(
                   "The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering."
                 );
             nextPrimaryChildren.stack =
-              JSCompiler_object_inline_stack_3002 || "";
-            nextPrimaryChildren.digest = JSCompiler_object_inline_digest_3001;
-            JSCompiler_object_inline_digest_3001 =
+              JSCompiler_object_inline_stack_2999 || "";
+            nextPrimaryChildren.digest = JSCompiler_object_inline_digest_2998;
+            JSCompiler_object_inline_digest_2998 =
               void 0 === nextFallbackChildren ? null : nextFallbackChildren;
-            JSCompiler_object_inline_stack_3002 = {
+            JSCompiler_object_inline_stack_2999 = {
               value: nextPrimaryChildren,
               source: null,
-              stack: JSCompiler_object_inline_digest_3001
+              stack: JSCompiler_object_inline_digest_2998
             };
-            "string" === typeof JSCompiler_object_inline_digest_3001 &&
+            "string" === typeof JSCompiler_object_inline_digest_2998 &&
               CapturedStacks.set(
                 nextPrimaryChildren,
-                JSCompiler_object_inline_stack_3002
+                JSCompiler_object_inline_stack_2999
               );
-            queueHydrationError(JSCompiler_object_inline_stack_3002);
+            queueHydrationError(JSCompiler_object_inline_stack_2999);
             workInProgress = retrySuspenseComponentWithoutHydrating(
               current,
               workInProgress,
@@ -10407,35 +10360,35 @@ __DEV__ &&
                 renderLanes,
                 !1
               ),
-            (JSCompiler_object_inline_digest_3001 =
+            (JSCompiler_object_inline_digest_2998 =
               0 !== (renderLanes & current.childLanes)),
-            didReceiveUpdate || JSCompiler_object_inline_digest_3001)
+            didReceiveUpdate || JSCompiler_object_inline_digest_2998)
           ) {
-            JSCompiler_object_inline_digest_3001 = workInProgressRoot;
+            JSCompiler_object_inline_digest_2998 = workInProgressRoot;
             if (
-              null !== JSCompiler_object_inline_digest_3001 &&
-              ((JSCompiler_object_inline_stack_3002 = getBumpedLaneForHydration(
-                JSCompiler_object_inline_digest_3001,
+              null !== JSCompiler_object_inline_digest_2998 &&
+              ((JSCompiler_object_inline_stack_2999 = getBumpedLaneForHydration(
+                JSCompiler_object_inline_digest_2998,
                 renderLanes
               )),
-              0 !== JSCompiler_object_inline_stack_3002 &&
-                JSCompiler_object_inline_stack_3002 !== prevState.retryLane)
+              0 !== JSCompiler_object_inline_stack_2999 &&
+                JSCompiler_object_inline_stack_2999 !== prevState.retryLane)
             )
               throw (
-                ((prevState.retryLane = JSCompiler_object_inline_stack_3002),
+                ((prevState.retryLane = JSCompiler_object_inline_stack_2999),
                 enqueueConcurrentRenderForLane(
                   current,
-                  JSCompiler_object_inline_stack_3002
+                  JSCompiler_object_inline_stack_2999
                 ),
                 scheduleUpdateOnFiber(
-                  JSCompiler_object_inline_digest_3001,
+                  JSCompiler_object_inline_digest_2998,
                   current,
-                  JSCompiler_object_inline_stack_3002
+                  JSCompiler_object_inline_stack_2999
                 ),
                 SelectiveHydrationException)
               );
             isSuspenseInstancePending(
-              JSCompiler_object_inline_componentStack_3003
+              JSCompiler_object_inline_componentStack_3000
             ) || renderDidSuspendDelayIfPossible();
             workInProgress = retrySuspenseComponentWithoutHydrating(
               current,
@@ -10444,14 +10397,14 @@ __DEV__ &&
             );
           } else
             isSuspenseInstancePending(
-              JSCompiler_object_inline_componentStack_3003
+              JSCompiler_object_inline_componentStack_3000
             )
               ? ((workInProgress.flags |= 192),
                 (workInProgress.child = current.child),
                 (workInProgress = null))
               : ((current = prevState.treeContext),
                 (nextHydratableInstance = getNextHydratable(
-                  JSCompiler_object_inline_componentStack_3003.nextSibling
+                  JSCompiler_object_inline_componentStack_3000.nextSibling
                 )),
                 (hydrationParentFiber = workInProgress),
                 (isHydrating = !0),
@@ -10463,32 +10416,32 @@ __DEV__ &&
                   restoreSuspendedTreeContext(workInProgress, current),
                 (workInProgress = mountSuspensePrimaryChildren(
                   workInProgress,
-                  JSCompiler_object_inline_stack_3002.children
+                  JSCompiler_object_inline_stack_2999.children
                 )),
                 (workInProgress.flags |= 4096));
           return workInProgress;
         }
       }
-      if (JSCompiler_object_inline_message_3000)
+      if (JSCompiler_object_inline_message_2997)
         return (
           reuseSuspenseHandlerOnStack(workInProgress),
-          (nextPrimaryChildren = JSCompiler_object_inline_stack_3002.fallback),
+          (nextPrimaryChildren = JSCompiler_object_inline_stack_2999.fallback),
           (nextFallbackChildren = workInProgress.mode),
           (componentStack = current.child),
-          (JSCompiler_object_inline_componentStack_3003 =
+          (JSCompiler_object_inline_componentStack_3000 =
             componentStack.sibling),
-          (JSCompiler_object_inline_stack_3002 = createWorkInProgress(
+          (JSCompiler_object_inline_stack_2999 = createWorkInProgress(
             componentStack,
             {
               mode: "hidden",
-              children: JSCompiler_object_inline_stack_3002.children
+              children: JSCompiler_object_inline_stack_2999.children
             }
           )),
-          (JSCompiler_object_inline_stack_3002.subtreeFlags =
+          (JSCompiler_object_inline_stack_2999.subtreeFlags =
             componentStack.subtreeFlags & 65011712),
-          null !== JSCompiler_object_inline_componentStack_3003
+          null !== JSCompiler_object_inline_componentStack_3000
             ? (nextPrimaryChildren = createWorkInProgress(
-                JSCompiler_object_inline_componentStack_3003,
+                JSCompiler_object_inline_componentStack_3000,
                 nextPrimaryChildren
               ))
             : ((nextPrimaryChildren = createFiberFromFragment(
@@ -10499,24 +10452,24 @@ __DEV__ &&
               )),
               (nextPrimaryChildren.flags |= 2)),
           (nextPrimaryChildren.return = workInProgress),
-          (JSCompiler_object_inline_stack_3002.return = workInProgress),
-          (JSCompiler_object_inline_stack_3002.sibling = nextPrimaryChildren),
-          (workInProgress.child = JSCompiler_object_inline_stack_3002),
-          (JSCompiler_object_inline_stack_3002 = nextPrimaryChildren),
+          (JSCompiler_object_inline_stack_2999.return = workInProgress),
+          (JSCompiler_object_inline_stack_2999.sibling = nextPrimaryChildren),
+          (workInProgress.child = JSCompiler_object_inline_stack_2999),
+          (JSCompiler_object_inline_stack_2999 = nextPrimaryChildren),
           (nextPrimaryChildren = workInProgress.child),
           (nextFallbackChildren = current.child.memoizedState),
           null === nextFallbackChildren
             ? (nextFallbackChildren = mountSuspenseOffscreenState(renderLanes))
             : ((componentStack = nextFallbackChildren.cachePool),
               null !== componentStack
-                ? ((JSCompiler_object_inline_componentStack_3003 =
+                ? ((JSCompiler_object_inline_componentStack_3000 =
                     CacheContext._currentValue),
                   (componentStack =
                     componentStack.parent !==
-                    JSCompiler_object_inline_componentStack_3003
+                    JSCompiler_object_inline_componentStack_3000
                       ? {
-                          parent: JSCompiler_object_inline_componentStack_3003,
-                          pool: JSCompiler_object_inline_componentStack_3003
+                          parent: JSCompiler_object_inline_componentStack_3000,
+                          pool: JSCompiler_object_inline_componentStack_3000
                         }
                       : componentStack))
                 : (componentStack = getSuspendedCache()),
@@ -10533,52 +10486,52 @@ __DEV__ &&
               ((componentStack = enableTransitionTracing
                 ? markerInstanceStack.current
                 : null),
-              (JSCompiler_object_inline_componentStack_3003 =
+              (JSCompiler_object_inline_componentStack_3000 =
                 nextPrimaryChildren.updateQueue),
-              (JSCompiler_object_inline_message_3000 = current.updateQueue),
-              null === JSCompiler_object_inline_componentStack_3003
+              (JSCompiler_object_inline_message_2997 = current.updateQueue),
+              null === JSCompiler_object_inline_componentStack_3000
                 ? (nextPrimaryChildren.updateQueue = {
                     transitions: nextFallbackChildren,
                     markerInstances: componentStack,
                     retryQueue: null
                   })
-                : JSCompiler_object_inline_componentStack_3003 ===
-                    JSCompiler_object_inline_message_3000
+                : JSCompiler_object_inline_componentStack_3000 ===
+                    JSCompiler_object_inline_message_2997
                   ? (nextPrimaryChildren.updateQueue = {
                       transitions: nextFallbackChildren,
                       markerInstances: componentStack,
                       retryQueue:
-                        null !== JSCompiler_object_inline_message_3000
-                          ? JSCompiler_object_inline_message_3000.retryQueue
+                        null !== JSCompiler_object_inline_message_2997
+                          ? JSCompiler_object_inline_message_2997.retryQueue
                           : null
                     })
-                  : ((JSCompiler_object_inline_componentStack_3003.transitions =
+                  : ((JSCompiler_object_inline_componentStack_3000.transitions =
                       nextFallbackChildren),
-                    (JSCompiler_object_inline_componentStack_3003.markerInstances =
+                    (JSCompiler_object_inline_componentStack_3000.markerInstances =
                       componentStack)))),
           (nextPrimaryChildren.childLanes = getRemainingWorkInPrimaryTree(
             current,
-            JSCompiler_object_inline_digest_3001,
+            JSCompiler_object_inline_digest_2998,
             renderLanes
           )),
           (workInProgress.memoizedState = SUSPENDED_MARKER),
-          JSCompiler_object_inline_stack_3002
+          JSCompiler_object_inline_stack_2999
         );
       pushPrimaryTreeSuspenseHandler(workInProgress);
       renderLanes = current.child;
       current = renderLanes.sibling;
       renderLanes = createWorkInProgress(renderLanes, {
         mode: "visible",
-        children: JSCompiler_object_inline_stack_3002.children
+        children: JSCompiler_object_inline_stack_2999.children
       });
       renderLanes.return = workInProgress;
       renderLanes.sibling = null;
       null !== current &&
-        ((JSCompiler_object_inline_digest_3001 = workInProgress.deletions),
-        null === JSCompiler_object_inline_digest_3001
+        ((JSCompiler_object_inline_digest_2998 = workInProgress.deletions),
+        null === JSCompiler_object_inline_digest_2998
           ? ((workInProgress.deletions = [current]),
             (workInProgress.flags |= 16))
-          : JSCompiler_object_inline_digest_3001.push(current));
+          : JSCompiler_object_inline_digest_2998.push(current));
       workInProgress.child = renderLanes;
       workInProgress.memoizedState = null;
       return renderLanes;
@@ -11166,8 +11119,7 @@ __DEV__ &&
               if (shouldConstruct(Component)) {
                 var resolvedProps = resolveClassComponentProps(
                   Component,
-                  props,
-                  !1
+                  props
                 );
                 workInProgress.tag = 1;
                 workInProgress.type = Component =
@@ -11179,29 +11131,22 @@ __DEV__ &&
                   resolvedProps,
                   renderLanes
                 );
-              } else {
-                var _resolvedProps = disableDefaultPropsExceptForClasses
-                  ? props
-                  : resolveDefaultPropsOnNonClassComponent(Component, props);
-                workInProgress.tag = 0;
-                validateFunctionComponentInDev(workInProgress, Component);
-                workInProgress.type = Component =
-                  resolveFunctionForHotReloading(Component);
-                JSCompiler_inline_result = updateFunctionComponent(
-                  null,
-                  workInProgress,
-                  Component,
-                  _resolvedProps,
-                  renderLanes
-                );
-              }
+              } else
+                (workInProgress.tag = 0),
+                  validateFunctionComponentInDev(workInProgress, Component),
+                  (workInProgress.type = Component =
+                    resolveFunctionForHotReloading(Component)),
+                  (JSCompiler_inline_result = updateFunctionComponent(
+                    null,
+                    workInProgress,
+                    Component,
+                    props,
+                    renderLanes
+                  ));
             else {
               if (void 0 !== Component && null !== Component) {
                 var $$typeof = Component.$$typeof;
                 if ($$typeof === REACT_FORWARD_REF_TYPE) {
-                  var _resolvedProps2 = disableDefaultPropsExceptForClasses
-                    ? props
-                    : resolveDefaultPropsOnNonClassComponent(Component, props);
                   workInProgress.tag = 11;
                   workInProgress.type = Component =
                     resolveForwardRefForHotReloading(Component);
@@ -11209,25 +11154,17 @@ __DEV__ &&
                     null,
                     workInProgress,
                     Component,
-                    _resolvedProps2,
+                    props,
                     renderLanes
                   );
                   break a;
                 } else if ($$typeof === REACT_MEMO_TYPE) {
-                  var _resolvedProps3 = disableDefaultPropsExceptForClasses
-                    ? props
-                    : resolveDefaultPropsOnNonClassComponent(Component, props);
                   workInProgress.tag = 14;
                   JSCompiler_inline_result = updateMemoComponent(
                     null,
                     workInProgress,
                     Component,
-                    disableDefaultPropsExceptForClasses
-                      ? _resolvedProps3
-                      : resolveDefaultPropsOnNonClassComponent(
-                          Component.type,
-                          _resolvedProps3
-                        ),
+                    props,
                     renderLanes
                   );
                   break a;
@@ -11251,35 +11188,24 @@ __DEV__ &&
           }
           return JSCompiler_inline_result;
         case 0:
-          var Component$jscomp$0 = workInProgress.type,
-            unresolvedProps = workInProgress.pendingProps,
-            resolvedProps$jscomp$0 =
-              disableDefaultPropsExceptForClasses ||
-              workInProgress.elementType === Component$jscomp$0
-                ? unresolvedProps
-                : resolveDefaultPropsOnNonClassComponent(
-                    Component$jscomp$0,
-                    unresolvedProps
-                  );
           return updateFunctionComponent(
             current,
             workInProgress,
-            Component$jscomp$0,
-            resolvedProps$jscomp$0,
+            workInProgress.type,
+            workInProgress.pendingProps,
             renderLanes
           );
         case 1:
           var _Component = workInProgress.type,
-            _resolvedProps4 = resolveClassComponentProps(
+            resolvedProps$jscomp$0 = resolveClassComponentProps(
               _Component,
-              workInProgress.pendingProps,
-              workInProgress.elementType === _Component
+              workInProgress.pendingProps
             );
           return updateClassComponent(
             current,
             workInProgress,
             _Component,
-            _resolvedProps4,
+            resolvedProps$jscomp$0,
             renderLanes
           );
         case 3:
@@ -11609,21 +11535,11 @@ __DEV__ &&
               );
           return workInProgress.child;
         case 11:
-          var type$jscomp$1 = workInProgress.type,
-            _unresolvedProps2 = workInProgress.pendingProps,
-            _resolvedProps5 =
-              disableDefaultPropsExceptForClasses ||
-              workInProgress.elementType === type$jscomp$1
-                ? _unresolvedProps2
-                : resolveDefaultPropsOnNonClassComponent(
-                    type$jscomp$1,
-                    _unresolvedProps2
-                  );
           return updateForwardRef(
             current,
             workInProgress,
-            type$jscomp$1,
-            _resolvedProps5,
+            workInProgress.type,
+            workInProgress.pendingProps,
             renderLanes
           );
         case 7:
@@ -11698,25 +11614,11 @@ __DEV__ &&
           reconcileChildren(current, workInProgress, newChildren, renderLanes);
           return workInProgress.child;
         case 14:
-          var _type = workInProgress.type,
-            _unresolvedProps3 = workInProgress.pendingProps,
-            _resolvedProps6 = disableDefaultPropsExceptForClasses
-              ? _unresolvedProps3
-              : resolveDefaultPropsOnNonClassComponent(
-                  _type,
-                  _unresolvedProps3
-                );
-          _resolvedProps6 = disableDefaultPropsExceptForClasses
-            ? _resolvedProps6
-            : resolveDefaultPropsOnNonClassComponent(
-                _type.type,
-                _resolvedProps6
-              );
           return updateMemoComponent(
             current,
             workInProgress,
-            _type,
-            _resolvedProps6,
+            workInProgress.type,
+            workInProgress.pendingProps,
             renderLanes
           );
         case 15:
@@ -13449,8 +13351,7 @@ __DEV__ &&
     ) {
       instance.props = resolveClassComponentProps(
         current.type,
-        current.memoizedProps,
-        current.elementType === current.type
+        current.memoizedProps
       );
       instance.state = current.memoizedState;
       shouldProfile(current)
@@ -14660,8 +14561,7 @@ __DEV__ &&
             else {
               var prevProps = resolveClassComponentProps(
                 finishedWork.type,
-                current.memoizedProps,
-                finishedWork.elementType === finishedWork.type
+                current.memoizedProps
               );
               current = current.memoizedState;
               finishedWork.type.defaultProps ||
@@ -19150,41 +19050,21 @@ __DEV__ &&
       switch (unitOfWork.tag) {
         case 15:
         case 0:
-          var Component = unitOfWork.type,
-            unresolvedProps = unitOfWork.pendingProps;
-          unresolvedProps =
-            disableDefaultPropsExceptForClasses ||
-            unitOfWork.elementType === Component
-              ? unresolvedProps
-              : resolveDefaultPropsOnNonClassComponent(
-                  Component,
-                  unresolvedProps
-                );
           current = replayFunctionComponent(
             current,
             unitOfWork,
-            unresolvedProps,
-            Component,
+            unitOfWork.pendingProps,
+            unitOfWork.type,
             void 0,
             workInProgressRootRenderLanes
           );
           break;
         case 11:
-          Component = unitOfWork.type.render;
-          unresolvedProps = unitOfWork.pendingProps;
-          unresolvedProps =
-            disableDefaultPropsExceptForClasses ||
-            unitOfWork.elementType === Component
-              ? unresolvedProps
-              : resolveDefaultPropsOnNonClassComponent(
-                  Component,
-                  unresolvedProps
-                );
           current = replayFunctionComponent(
             current,
             unitOfWork,
-            unresolvedProps,
-            Component,
+            unitOfWork.pendingProps,
+            unitOfWork.type.render,
             unitOfWork.ref,
             workInProgressRootRenderLanes
           );
@@ -27410,8 +27290,6 @@ __DEV__ &&
       assign = Object.assign,
       dynamicFeatureFlags = require("ReactFeatureFlags"),
       alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
-      disableDefaultPropsExceptForClasses =
-        dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       disableSchedulerTimeoutInWorkLoop =
         dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
       enableHiddenSubtreeInsertionEffectCleanup =
@@ -30177,7 +30055,6 @@ __DEV__ &&
     var didWarnAboutReassigningProps = !1;
     var didWarnAboutRevealOrder = {};
     var didWarnAboutTailOptions = {};
-    var didWarnAboutDefaultPropsOnFunctionComponent = {};
     var didWarnAboutClassNameOnViewTransition = {};
     var SUSPENDED_MARKER = {
         dehydrated: null,
@@ -31427,11 +31304,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-www-modern-91d097b2-20250701" !== isomorphicReactPackageVersion)
+      if ("19.2.0-www-modern-602917c8-20250701" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-www-modern-91d097b2-20250701\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-www-modern-602917c8-20250701\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -31474,10 +31351,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-www-modern-91d097b2-20250701",
+          version: "19.2.0-www-modern-602917c8-20250701",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-www-modern-91d097b2-20250701"
+          reconcilerVersion: "19.2.0-www-modern-602917c8-20250701"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -32077,7 +31954,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-www-modern-91d097b2-20250701";
+    exports.version = "19.2.0-www-modern-602917c8-20250701";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
