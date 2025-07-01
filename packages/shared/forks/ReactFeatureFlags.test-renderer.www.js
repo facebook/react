@@ -63,8 +63,6 @@ export const enableInfiniteRenderLoopDetection = false;
 export const enableReactTestRendererWarning = false;
 export const disableLegacyMode = true;
 
-export const disableDefaultPropsExceptForClasses = true;
-
 export const renameElementSymbol = false;
 
 export const enableObjectFiber = false;
