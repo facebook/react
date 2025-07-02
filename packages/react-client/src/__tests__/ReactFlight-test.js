@@ -1390,10 +1390,10 @@ describe('ReactFlight', () => {
             name: 'Error',
             stack: expect.stringContaining(
               'Error: This is an error\n' +
-                '    at eval (eval at testFunction (inspected-page.html:29:11),%20%3Canonymous%3E:1:35)\n' +
-                '    at ServerComponentError (file://~/(some)(really)(exotic-directory)/ReactFlight-test.js:1166:19)\n' +
-                '    at <anonymous> (file:///testing.js:42:3)\n' +
-                '    at <anonymous> (file:///testing.js:42:3)\n' +
+                '    at eval (eval at testFunction (rsc://React/Server/inspected-page.html:29:11),%20%3Canonymous%3E?2:1:35)\n' +
+                '    at ServerComponentError (rsc://React/Server/file://~/(some)(really)(exotic-directory)/ReactFlight-test.js?3:1166:19)\n' +
+                '    at <anonymous> (rsc://React/Server/file:///testing.js?4:42:3)\n' +
+                '    at <anonymous> (rsc://React/Server/file:///testing.js?4:42:3)\n' +
                 '    at div (<anonymous>',
             ),
             digest: 'a dev digest',
@@ -3119,12 +3119,12 @@ describe('ReactFlight', () => {
     await 0;
     await 0;
 
-    const expectedErrorStack = originalError.stack
-      // Test only the first rows since there's a lot of noise after that is eliminated.
-      .split('\n')
-      .slice(0, 4)
-      .join('\n')
-      .replaceAll(' (/', ' (file:///'); // The eval will end up normalizing these
+    // Expect adjusments to line/col and search params
+    const expectedErrorStack =
+      'Error: third-party-error' +
+      `\n    at bar (rsc://React/third-party/${__filename}?0:3076:13)` +
+      `\n    at foo (rsc://React/third-party/${__filename}?1:3080:13)` +
+      `\n    at Object.<anonymous> (rsc://React/third-party/${__filename}?2:3083:27)`;
 
     let sawReactPrefix = false;
     const environments = [];

@@ -10,7 +10,6 @@
 export {default as rendererVersion} from 'shared/ReactVersion';
 export const rendererPackageName = 'not-used';
 
-export * from 'react-client/src/ReactClientStackConfigWeb';
 export * from 'react-client/src/ReactFlightClientStreamConfigWeb';
 export * from 'react-client/src/ReactClientConsoleConfigBrowser';
 

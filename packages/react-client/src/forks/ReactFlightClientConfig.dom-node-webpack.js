@@ -9,7 +9,6 @@
 export {default as rendererVersion} from 'shared/ReactVersion';
 export const rendererPackageName = 'react-server-dom-webpack';
 
-export * from 'react-client/src/ReactClientStackConfigWeb';
 export * from 'react-client/src/ReactFlightClientStreamConfigNode';
 export * from 'react-client/src/ReactClientConsoleConfigServer';
 export * from 'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerWebpack';
