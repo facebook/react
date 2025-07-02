@@ -25358,14 +25358,79 @@ __DEV__ &&
           types: transitionTypes
         });
         ownerDocument.__reactViewTransition = transition;
-        transition.ready.then(spawnedWorkCallback, function (error) {
-          try {
-            (error = customizeViewTransitionError(error, !1)),
-              null !== error && errorCallback(error);
-          } finally {
-            mutationCallback(), layoutCallback(), spawnedWorkCallback();
+        transition.ready.then(
+          function () {
+            for (
+              var animations = ownerDocument.documentElement.getAnimations({
+                  subtree: !0
+                }),
+                i = 0;
+              i < animations.length;
+              i++
+            ) {
+              var effect = animations[i].effect,
+                pseudoElement = effect.pseudoElement;
+              if (
+                null != pseudoElement &&
+                pseudoElement.startsWith("::view-transition")
+              ) {
+                pseudoElement = effect.getKeyframes();
+                for (
+                  var width = void 0,
+                    height = void 0,
+                    unchangedDimensions = !0,
+                    j = 0;
+                  j < pseudoElement.length;
+                  j++
+                ) {
+                  var keyframe = pseudoElement[j],
+                    w = keyframe.width;
+                  if (void 0 === width) width = w;
+                  else if (width !== w) {
+                    unchangedDimensions = !1;
+                    break;
+                  }
+                  w = keyframe.height;
+                  if (void 0 === height) height = w;
+                  else if (height !== w) {
+                    unchangedDimensions = !1;
+                    break;
+                  }
+                  delete keyframe.width;
+                  delete keyframe.height;
+                  "none" === keyframe.transform && delete keyframe.transform;
+                }
+                unchangedDimensions &&
+                  void 0 !== width &&
+                  void 0 !== height &&
+                  (effect.setKeyframes(pseudoElement),
+                  (unchangedDimensions = getComputedStyle(
+                    effect.target,
+                    effect.pseudoElement
+                  )),
+                  unchangedDimensions.width !== width ||
+                    unchangedDimensions.height !== height) &&
+                  ((unchangedDimensions = pseudoElement[0]),
+                  (unchangedDimensions.width = width),
+                  (unchangedDimensions.height = height),
+                  (unchangedDimensions =
+                    pseudoElement[pseudoElement.length - 1]),
+                  (unchangedDimensions.width = width),
+                  (unchangedDimensions.height = height),
+                  effect.setKeyframes(pseudoElement));
+              }
+            }
+            spawnedWorkCallback();
+          },
+          function (error) {
+            try {
+              (error = customizeViewTransitionError(error, !1)),
+                null !== error && errorCallback(error);
+            } finally {
+              mutationCallback(), layoutCallback(), spawnedWorkCallback();
+            }
           }
-        });
+        );
         transition.finished.finally(function () {
           for (
             var scope = ownerDocument.documentElement,
@@ -31518,11 +31583,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-www-classic-73aa744b-20250702" !== isomorphicReactPackageVersion)
+      if ("19.2.0-www-classic-c0d151ce-20250702" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-www-classic-73aa744b-20250702\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-www-classic-c0d151ce-20250702\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -31565,10 +31630,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-www-classic-73aa744b-20250702",
+          version: "19.2.0-www-classic-c0d151ce-20250702",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-www-classic-73aa744b-20250702"
+          reconcilerVersion: "19.2.0-www-classic-c0d151ce-20250702"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -32168,7 +32233,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-www-classic-73aa744b-20250702";
+    exports.version = "19.2.0-www-classic-c0d151ce-20250702";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
