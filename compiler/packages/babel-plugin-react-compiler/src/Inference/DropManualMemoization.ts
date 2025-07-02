@@ -390,6 +390,10 @@ export function dropManualMemoization(func: HIRFunction): void {
             manualMemo.kind,
             sidemap,
           );
+          if (depsList && depsList.length > 0) {
+            // skip optimization, keep useMemo as is
+            continue;
+          }
           instr.value = getManualMemoizationReplacement(
             fnPlace,
             instr.value.loc,
