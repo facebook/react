@@ -850,9 +850,11 @@ function serializeThenable(
         request.abortableTasks.delete(newTask);
         if (enableHalt && request.type === PRERENDER) {
           haltTask(newTask, request);
+          finishHaltedTask(newTask, request);
         } else {
           const errorId: number = (request.fatalError: any);
           abortTask(newTask, request, errorId);
+          finishAbortedTask(newTask, request, errorId);
         }
         return newTask.id;
       }
@@ -5222,10 +5224,12 @@ function retryTask(request: Request, task: Task): void {
         // When aborting a prerener with halt semantics we don't emit
         // anything into the slot for a task that aborts, it remains unresolved
         haltTask(task, request);
+        finishHaltedTask(task, request);
       } else {
         // Otherwise we emit an error chunk into the task slot.
         const errorId: number = (request.fatalError: any);
         abortTask(task, request, errorId);
+        finishAbortedTask(task, request, errorId);
       }
       return;
     }
@@ -5309,11 +5313,22 @@ function performWork(request: Request): void {
 }
 
 function abortTask(task: Task, request: Request, errorId: number): void {
-  if (task.status === RENDERING) {
-    // This task will be aborted by the render
+  if (task.status !== PENDING) {
+    // If this is already completed/errored we don't abort it.
+    // If currently rendering it will be aborted by the render
     return;
   }
   task.status = ABORTED;
+}
+
+function finishAbortedTask(
+  task: Task,
+  request: Request,
+  errorId: number,
+): void {
+  if (task.status !== ABORTED) {
+    return;
+  }
   forwardDebugInfoFromAbortedTask(request, task);
   // Track when we aborted this task as its end time.
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
@@ -5329,11 +5344,18 @@ function abortTask(task: Task, request: Request, errorId: number): void {
 }
 
 function haltTask(task: Task, request: Request): void {
-  if (task.status === RENDERING) {
-    // this task will be halted by the render
+  if (task.status !== PENDING) {
+    // If this is already completed/errored we don't abort it.
+    // If currently rendering it will be aborted by the render
     return;
   }
   task.status = ABORTED;
+}
+
+function finishHaltedTask(task: Task, request: Request): void {
+  if (task.status !== ABORTED) {
+    return;
+  }
   forwardDebugInfoFromAbortedTask(request, task);
   // We don't actually emit anything for this task id because we are intentionally
   // leaving the reference unfulfilled.
@@ -5518,22 +5540,53 @@ export function stopFlowing(request: Request): void {
   request.destination = null;
 }
 
-export function abort(request: Request, reason: mixed): void {
+function finishHalt(request: Request, abortedTasks: Set<Task>): void {
   try {
-    // We define any status below OPEN as OPEN equivalent
-    if (request.status <= OPEN) {
-      request.status = ABORTING;
-      request.cacheController.abort(reason);
-      callOnAllReadyIfReady(request);
+    abortedTasks.forEach(task => finishHaltedTask(task, request));
+    const onAllReady = request.onAllReady;
+    onAllReady();
+    if (request.destination !== null) {
+      flushCompletedChunks(request, request.destination);
     }
+  } catch (error) {
+    logRecoverableError(request, error, null);
+    fatalError(request, error);
+  }
+}
+
+function finishAbort(
+  request: Request,
+  abortedTasks: Set<Task>,
+  errorId: number,
+): void {
+  try {
+    abortedTasks.forEach(task => finishAbortedTask(task, request, errorId));
+    const onAllReady = request.onAllReady;
+    onAllReady();
+    if (request.destination !== null) {
+      flushCompletedChunks(request, request.destination);
+    }
+  } catch (error) {
+    logRecoverableError(request, error, null);
+    fatalError(request, error);
+  }
+}
+
+export function abort(request: Request, reason: mixed): void {
+  // We define any status below OPEN as OPEN equivalent
+  if (request.status > OPEN) {
+    return;
+  }
+  try {
+    request.status = ABORTING;
+    request.cacheController.abort(reason);
     const abortableTasks = request.abortableTasks;
     if (abortableTasks.size > 0) {
       if (enableHalt && request.type === PRERENDER) {
         // When prerendering with halt semantics we simply halt the task
         // and leave the reference unfulfilled.
         abortableTasks.forEach(task => haltTask(task, request));
-        abortableTasks.clear();
-        callOnAllReadyIfReady(request);
+        scheduleWork(() => finishHalt(request, abortableTasks));
       } else if (
         enablePostpone &&
         typeof reason === 'object' &&
@@ -5549,8 +5602,7 @@ export function abort(request: Request, reason: mixed): void {
         request.pendingChunks++;
         emitPostponeChunk(request, errorId, postponeInstance);
         abortableTasks.forEach(task => abortTask(task, request, errorId));
-        abortableTasks.clear();
-        callOnAllReadyIfReady(request);
+        scheduleWork(() => finishAbort(request, abortableTasks, errorId));
       } else {
         const error =
           reason === undefined
@@ -5572,12 +5624,14 @@ export function abort(request: Request, reason: mixed): void {
         request.pendingChunks++;
         emitErrorChunk(request, errorId, digest, error, false);
         abortableTasks.forEach(task => abortTask(task, request, errorId));
-        abortableTasks.clear();
-        callOnAllReadyIfReady(request);
+        scheduleWork(() => finishAbort(request, abortableTasks, errorId));
       }
-    }
-    if (request.destination !== null) {
-      flushCompletedChunks(request, request.destination);
+    } else {
+      const onAllReady = request.onAllReady;
+      onAllReady();
+      if (request.destination !== null) {
+        flushCompletedChunks(request, request.destination);
+      }
     }
   } catch (error) {
     logRecoverableError(request, error, null);

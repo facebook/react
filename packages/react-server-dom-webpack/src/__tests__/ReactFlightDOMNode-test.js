@@ -560,7 +560,7 @@ describe('ReactFlightDOMNode', () => {
 
     controller.abort('boom');
     resolveGreeting();
-    const {prelude} = await pendingResult;
+    const {prelude} = await serverAct(() => pendingResult);
     expect(errors).toEqual([]);
 
     function ClientRoot({response}) {
