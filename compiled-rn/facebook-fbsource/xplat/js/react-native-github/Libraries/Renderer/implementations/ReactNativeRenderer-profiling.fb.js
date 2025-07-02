@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d23ac456eaf1eded4925cc740ca16228>>
+ * @generated SignedSource<<3272b4a251466e486b1c472f25e0dcc6>>
  */
 
 "use strict";
@@ -2443,7 +2443,9 @@ var objectIs = "function" === typeof Object.is ? Object.is : is,
         },
   hasOwnProperty = Object.prototype.hasOwnProperty,
   supportsUserTiming =
-    "undefined" !== typeof console && "function" === typeof console.timeStamp,
+    "undefined" !== typeof console &&
+    "function" === typeof console.timeStamp &&
+    !0,
   currentTrack = "Blocking";
 function setCurrentTrackFromLanes(lanes) {
   currentTrack =
@@ -2459,23 +2461,33 @@ function setCurrentTrackFromLanes(lanes) {
 }
 function logComponentTrigger(fiber, startTime, endTime, trigger) {
   supportsUserTiming &&
-    console.timeStamp(
-      trigger,
-      startTime,
-      endTime,
-      "Components \u269b",
-      void 0,
-      "warning"
-    );
+    ((reusableComponentOptions.start = startTime),
+    (reusableComponentOptions.end = endTime),
+    (reusableComponentDevToolDetails.color = "warning"),
+    (reusableComponentDevToolDetails.tooltipText = trigger),
+    (reusableComponentDevToolDetails.properties = null),
+    performance.measure(trigger, reusableComponentOptions));
 }
 function logComponentReappeared(fiber, startTime, endTime) {
   logComponentTrigger(fiber, startTime, endTime, "Reconnect");
 }
+var reusableComponentDevToolDetails = {
+    color: "primary",
+    properties: null,
+    tooltipText: "",
+    track: "Components \u269b"
+  },
+  reusableComponentOptions = {
+    start: -0,
+    end: -0,
+    detail: { devtools: reusableComponentDevToolDetails }
+  };
 function logComponentRender(fiber, startTime, endTime, wasHydrated) {
   var name = getComponentNameFromFiber(fiber);
   if (null !== name && supportsUserTiming) {
-    var selfTime = fiber.actualDuration;
-    if (null === fiber.alternate || fiber.alternate.child !== fiber.child)
+    var alternate = fiber.alternate,
+      selfTime = fiber.actualDuration;
+    if (null === alternate || alternate.child !== fiber.child)
       for (fiber = fiber.child; null !== fiber; fiber = fiber.sibling)
         selfTime -= fiber.actualDuration;
     console.timeStamp(
@@ -11583,21 +11595,25 @@ function prepareFreshStack(root, lanes) {
         eventIsRepeat = blockingEventIsRepeat,
         isSpawnedUpdate = blockingSpawnedUpdate,
         renderStartTime$jscomp$0 = renderStartTime;
-      supportsUserTiming &&
-        ((currentTrack = "Blocking"),
+      if (supportsUserTiming) {
+        currentTrack = "Blocking";
+        var eventEndTime =
+          0 < previousRenderStartTime
+            ? previousRenderStartTime
+            : renderStartTime$jscomp$0;
         0 < endTime &&
           null !== eventType &&
+          eventEndTime > endTime &&
           console.timeStamp(
             eventIsRepeat ? "" : "Event: " + eventType,
             endTime,
-            0 < previousRenderStartTime
-              ? previousRenderStartTime
-              : renderStartTime$jscomp$0,
+            eventEndTime,
             currentTrack,
             "Scheduler \u269b",
             eventIsRepeat ? "secondary-light" : "warning"
-          ),
+          );
         0 < previousRenderStartTime &&
+          renderStartTime$jscomp$0 > previousRenderStartTime &&
           console.timeStamp(
             isSpawnedUpdate
               ? "Cascading Update"
@@ -11613,7 +11629,8 @@ function prepareFreshStack(root, lanes) {
               : (lanes & 738197653) === lanes
                 ? "tertiary-light"
                 : "primary-light"
-          ));
+          );
+      }
       blockingSuspendedTime = blockingUpdateTime = -1.1;
       blockingEventIsRepeat = !0;
       blockingSpawnedUpdate = !1;
@@ -11627,7 +11644,7 @@ function prepareFreshStack(root, lanes) {
         0 <= transitionUpdateTime && transitionUpdateTime < transitionClampTime
           ? transitionClampTime
           : transitionUpdateTime),
-      (eventType =
+      (eventIsRepeat =
         0 <= transitionEventTime && transitionEventTime < transitionClampTime
           ? transitionClampTime
           : transitionEventTime),
@@ -11635,44 +11652,52 @@ function prepareFreshStack(root, lanes) {
         (setCurrentTrackFromLanes(lanes),
         logSuspendedWithDelayPhase(
           transitionSuspendedTime,
-          0 <= eventType ? eventType : 0 <= endTime ? endTime : renderStartTime,
+          0 <= eventIsRepeat
+            ? eventIsRepeat
+            : 0 <= endTime
+              ? endTime
+              : renderStartTime,
           lanes
         )),
-      (eventIsRepeat = transitionEventType),
-      (isSpawnedUpdate = transitionEventIsRepeat),
-      (renderStartTime$jscomp$0 = renderStartTime),
+      (isSpawnedUpdate = transitionEventType),
+      (renderStartTime$jscomp$0 = transitionEventIsRepeat),
+      (eventType = renderStartTime),
       supportsUserTiming &&
         ((currentTrack = "Transition"),
-        0 < eventType &&
-          null !== eventIsRepeat &&
+        (eventEndTime =
+          0 < previousRenderStartTime
+            ? previousRenderStartTime
+            : 0 < endTime
+              ? endTime
+              : eventType),
+        0 < eventIsRepeat &&
+          eventEndTime > eventIsRepeat &&
+          null !== isSpawnedUpdate &&
           console.timeStamp(
-            isSpawnedUpdate ? "" : "Event: " + eventIsRepeat,
-            eventType,
-            0 < previousRenderStartTime
-              ? previousRenderStartTime
-              : 0 < endTime
-                ? endTime
-                : renderStartTime$jscomp$0,
+            renderStartTime$jscomp$0 ? "" : "Event: " + isSpawnedUpdate,
+            eventIsRepeat,
+            eventEndTime,
             currentTrack,
             "Scheduler \u269b",
-            isSpawnedUpdate ? "secondary-light" : "warning"
+            renderStartTime$jscomp$0 ? "secondary-light" : "warning"
           ),
+        (eventIsRepeat = 0 < endTime ? endTime : eventType),
         0 < previousRenderStartTime &&
+          eventIsRepeat > previousRenderStartTime &&
           console.timeStamp(
             "Action",
             previousRenderStartTime,
-            0 < endTime ? endTime : renderStartTime$jscomp$0,
+            eventIsRepeat,
             currentTrack,
             "Scheduler \u269b",
             "primary-dark"
           ),
         0 < endTime &&
+          eventType > endTime &&
           console.timeStamp(
-            5 < renderStartTime$jscomp$0 - endTime
-              ? "Update Blocked"
-              : "Update",
+            5 < eventType - endTime ? "Update Blocked" : "Update",
             endTime,
-            renderStartTime$jscomp$0,
+            eventType,
             currentTrack,
             "Scheduler \u269b",
             "primary-light"
@@ -13111,11 +13136,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.2.0-native-fb-73aa744b-20250702" !== isomorphicReactPackageVersion)
+if ("19.2.0-native-fb-0b78161d-20250702" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.2.0-native-fb-73aa744b-20250702\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.2.0-native-fb-0b78161d-20250702\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -13163,16 +13188,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1527 = {
+  internals$jscomp$inline_1529 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-73aa744b-20250702",
+    version: "19.2.0-native-fb-0b78161d-20250702",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-73aa744b-20250702"
+    reconcilerVersion: "19.2.0-native-fb-0b78161d-20250702"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1527.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1527.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1529.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1529.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$171 = 0;
     31 > index$171;
@@ -13184,20 +13209,20 @@ internals$jscomp$inline_1527.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1527.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1529.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1875 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1877 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1875.isDisabled &&
-    hook$jscomp$inline_1875.supportsFiber
+    !hook$jscomp$inline_1877.isDisabled &&
+    hook$jscomp$inline_1877.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1875.inject(
-        internals$jscomp$inline_1527
+      (rendererID = hook$jscomp$inline_1877.inject(
+        internals$jscomp$inline_1529
       )),
-        (injectedHook = hook$jscomp$inline_1875);
+        (injectedHook = hook$jscomp$inline_1877);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
