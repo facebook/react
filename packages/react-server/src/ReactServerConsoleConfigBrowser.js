@@ -55,7 +55,7 @@ export function unbadgeConsole(
   ) {
     // Remove our badging from the arguments.
     args.splice(offset, 4, format.slice(badgeFormat.length));
-    return badge.slice(padLength, badge.length - padLength - padLength);
+    return badge.slice(padLength, badge.length - padLength);
   }
   return null;
 }
