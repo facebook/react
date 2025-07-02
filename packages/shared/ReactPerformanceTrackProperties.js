@@ -53,11 +53,12 @@ export function addObjectToProperties(
   object: Object,
   properties: Array<[string, string]>,
   indent: number,
+  prefix: string,
 ): void {
   for (const key in object) {
     if (hasOwnProperty.call(object, key) && key[0] !== '_') {
       const value = object[key];
-      addValueToProperties(key, value, properties, indent);
+      addValueToProperties(key, value, properties, indent, prefix);
     }
   }
 }
@@ -67,6 +68,7 @@ export function addValueToProperties(
   value: mixed,
   properties: Array<[string, string]>,
   indent: number,
+  prefix: string,
 ): void {
   let desc;
   switch (typeof value) {
@@ -94,11 +96,11 @@ export function addValueToProperties(
             break;
           }
           properties.push([
-            '\xa0\xa0'.repeat(indent) + propertyName,
+            prefix + '\xa0\xa0'.repeat(indent) + propertyName,
             '<' + typeName,
           ]);
           if (key !== null) {
-            addValueToProperties('key', key, properties, indent + 1);
+            addValueToProperties('key', key, properties, indent + 1, prefix);
           }
           let hasChildren = false;
           for (const propKey in props) {
@@ -118,6 +120,7 @@ export function addValueToProperties(
                 props[propKey],
                 properties,
                 indent + 1,
+                prefix,
               );
             }
           }
@@ -137,10 +140,19 @@ export function addValueToProperties(
             desc = JSON.stringify(array);
             break;
           } else if (kind === ENTRIES_ARRAY) {
-            properties.push(['\xa0\xa0'.repeat(indent) + propertyName, '']);
+            properties.push([
+              prefix + '\xa0\xa0'.repeat(indent) + propertyName,
+              '',
+            ]);
             for (let i = 0; i < array.length; i++) {
               const entry = array[i];
-              addValueToProperties(entry[0], entry[1], properties, indent + 1);
+              addValueToProperties(
+                entry[0],
+                entry[1],
+                properties,
+                indent + 1,
+                prefix,
+              );
             }
             return;
           }
@@ -186,11 +198,11 @@ export function addValueToProperties(
           }
         }
         properties.push([
-          '\xa0\xa0'.repeat(indent) + propertyName,
+          prefix + '\xa0\xa0'.repeat(indent) + propertyName,
           objectName === 'Object' ? (indent < 3 ? '' : '\u2026') : objectName,
         ]);
         if (indent < 3) {
-          addObjectToProperties(value, properties, indent + 1);
+          addObjectToProperties(value, properties, indent + 1, prefix);
         }
         return;
       }
@@ -218,5 +230,128 @@ export function addValueToProperties(
       // eslint-disable-next-line react-internal/safe-string-coercion
       desc = String(value);
   }
-  properties.push(['\xa0\xa0'.repeat(indent) + propertyName, desc]);
+  properties.push([prefix + '\xa0\xa0'.repeat(indent) + propertyName, desc]);
+}
+
+const REMOVED = '\u2013\xa0';
+const ADDED = '+\xa0';
+const UNCHANGED = '\u2007\xa0';
+
+export function addObjectDiffToProperties(
+  prev: Object,
+  next: Object,
+  properties: Array<[string, string]>,
+  indent: number,
+): void {
+  // Note: We diff even non-owned properties here but things that are shared end up just the same.
+  // If a property is added or removed, we just emit the property name and omit the value it had.
+  // Mainly for performance. We need to minimize to only relevant information.
+  for (const key in prev) {
+    if (!(key in next)) {
+      properties.push([REMOVED + '\xa0\xa0'.repeat(indent) + key, '\u2026']);
+    }
+  }
+  for (const key in next) {
+    if (key in prev) {
+      const prevValue = prev[key];
+      const nextValue = next[key];
+      if (prevValue !== nextValue) {
+        if (indent === 0 && key === 'children') {
+          // Omit any change inside the top level children prop since it's expected to change
+          // with any change to children of the component and their props will be logged
+          // elsewhere but still mark it as a cause of render.
+          const line = '\xa0\xa0'.repeat(indent) + key;
+          properties.push([REMOVED + line, '\u2026'], [ADDED + line, '\u2026']);
+          continue;
+        }
+        if (indent >= 3) {
+          // Just fallthrough to print the two values if we're deep.
+          // This will skip nested properties of the objects.
+        } else if (
+          typeof prevValue === 'object' &&
+          typeof nextValue === 'object' &&
+          prevValue !== null &&
+          nextValue !== null &&
+          prevValue.$$typeof === nextValue.$$typeof
+        ) {
+          if (nextValue.$$typeof === REACT_ELEMENT_TYPE) {
+            if (
+              prevValue.type === nextValue.type &&
+              prevValue.key === nextValue.key
+            ) {
+              // If the only thing that has changed is the props of a nested element, then
+              // we omit the props because it is likely to be represented as a diff elsewhere.
+              const typeName =
+                getComponentNameFromType(nextValue.type) || '\u2026';
+              const line = '\xa0\xa0'.repeat(indent) + key;
+              const desc = '<' + typeName + ' \u2026 />';
+              properties.push([REMOVED + line, desc], [ADDED + line, desc]);
+              continue;
+            }
+          } else {
+            // $FlowFixMe[method-unbinding]
+            const prevKind = Object.prototype.toString.call(prevValue);
+            // $FlowFixMe[method-unbinding]
+            const nextKind = Object.prototype.toString.call(nextValue);
+            if (
+              prevKind === nextKind &&
+              (nextKind === '[object Object]' || nextKind === '[object Array]')
+            ) {
+              // Diff nested object
+              const entry = [
+                UNCHANGED + '\xa0\xa0'.repeat(indent) + key,
+                nextKind === '[object Array]' ? 'Array' : '',
+              ];
+              properties.push(entry);
+              const prevLength = properties.length;
+              addObjectDiffToProperties(
+                prevValue,
+                nextValue,
+                properties,
+                indent + 1,
+              );
+              if (prevLength === properties.length) {
+                // Nothing notably changed inside the nested object. So this is only a change in reference
+                // equality. Let's note it.
+                entry[1] =
+                  'Referentially unequal but deeply equal objects. Consider memoization.';
+              }
+              continue;
+            }
+          }
+        } else if (
+          typeof prevValue === 'function' &&
+          typeof nextValue === 'function' &&
+          prevValue.name === nextValue.name &&
+          prevValue.length === nextValue.length
+        ) {
+          // $FlowFixMe[method-unbinding]
+          const prevSrc = Function.prototype.toString.call(prevValue);
+          // $FlowFixMe[method-unbinding]
+          const nextSrc = Function.prototype.toString.call(nextValue);
+          if (prevSrc === nextSrc) {
+            // This looks like it might be the same function but different closures.
+            let desc;
+            if (nextValue.name === '') {
+              desc = '() => {}';
+            } else {
+              desc = nextValue.name + '() {}';
+            }
+            properties.push([
+              UNCHANGED + '\xa0\xa0'.repeat(indent) + key,
+              desc +
+                ' Referentially unequal function closure. Consider memoization.',
+            ]);
+            continue;
+          }
+        }
+
+        // Otherwise, emit the change in property and the values.
+        addValueToProperties(key, prevValue, properties, indent, REMOVED);
+        addValueToProperties(key, nextValue, properties, indent, ADDED);
+      }
+    } else {
+      properties.push([ADDED + '\xa0\xa0'.repeat(indent) + key, '\u2026']);
+    }
+  }
 }
