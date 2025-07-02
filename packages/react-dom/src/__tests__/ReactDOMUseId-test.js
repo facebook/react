@@ -712,6 +712,8 @@ It can also happen if the client has a browser extension installed which changes
 
 https://react.dev/link/hydration-mismatch
 
+The following differences were found (+ marks client content, - marks server content):
+
   <Foo>
     <SuspenseList revealOrder="unstable_l..." tail="visible">
       <Bar>

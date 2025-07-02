@@ -374,6 +374,7 @@ export const HydrationMismatchException: mixed = new Error(
 
 function throwOnHydrationMismatch(fiber: Fiber, fromText: boolean = false) {
   let diff = '';
+  let diffExplainer = '';
   if (__DEV__) {
     // Consume the diff root for this mismatch.
     // Any other errors will get their own diffs.
@@ -381,6 +382,7 @@ function throwOnHydrationMismatch(fiber: Fiber, fromText: boolean = false) {
     if (diffRoot !== null) {
       hydrationDiffRootDEV = null;
       diff = describeDiff(diffRoot);
+      diffExplainer = `\n\nThe following differences were found (+ marks client content, - marks server content):`;
     }
   }
   const error = new Error(
@@ -396,6 +398,7 @@ function throwOnHydrationMismatch(fiber: Fiber, fromText: boolean = false) {
       'It can also happen if the client has a browser extension installed which changes the HTML before React loaded.\n' +
       '\n' +
       'https://react.dev/link/hydration-mismatch' +
+      diffExplainer +
       diff,
   );
   queueHydrationError(createCapturedValueAtFiber(error, fiber));
@@ -869,6 +872,7 @@ export function emitPendingHydrationWarnings() {
     if (diffRoot !== null) {
       hydrationDiffRootDEV = null;
       const diff = describeDiff(diffRoot);
+      const diffExplainer = `\n\nThe following differences were found (+ marks client content, - marks server content):`;
 
       // Just pick the DFS-first leaf as the owner.
       // Should be good enough since most warnings only have a single error.
@@ -890,8 +894,9 @@ export function emitPendingHydrationWarnings() {
             '\n' +
             'It can also happen if the client has a browser extension installed which changes the HTML before React loaded.\n' +
             '\n' +
-            '%s%s',
+            '%s%s%s',
           'https://react.dev/link/hydration-mismatch',
+          diffExplainer,
           diff,
         );
       });

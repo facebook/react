@@ -563,6 +563,7 @@ describe('ReactDOM HostSingleton', () => {
         '\n' +
         'https://react.dev/link/hydration-mismatch\n' +
         '\n' +
+        'The following differences were found (+ marks client content, - marks server content):\n\n' +
         '  <html\n' +
         '+   data-client-foo="foo"\n' +
         '-   data-client-foo={null}\n' +

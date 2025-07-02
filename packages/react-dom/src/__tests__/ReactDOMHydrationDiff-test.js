@@ -139,6 +139,8 @@ describe('ReactDOMServerHydration', () => {
 
           https://react.dev/link/hydration-mismatch
 
+          The following differences were found (+ marks client content, - marks server content):
+
             <Mismatch isClient={true}>
               <div className="parent">
                 <main className="child">
@@ -164,6 +166,8 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which changes the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+          The following differences were found (+ marks client content, - marks server content):
 
             <Mismatch isClient={true}>
               <div className="parent">
@@ -208,6 +212,8 @@ describe('ReactDOMServerHydration', () => {
 
           https://react.dev/link/hydration-mismatch
 
+          The following differences were found (+ marks client content, - marks server content):
+
             <Mismatch isClient={true}>
               <div>
           +     This markup contains an nbsp entity:   client text
@@ -232,6 +238,8 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which changes the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+          The following differences were found (+ marks client content, - marks server content):
 
             <Mismatch isClient={true}>
               <div>
@@ -276,6 +284,8 @@ describe('ReactDOMServerHydration', () => {
         It can also happen if the client has a browser extension installed which changes the HTML before React loaded.
 
         https://react.dev/link/hydration-mismatch
+
+        The following differences were found (+ marks client content, - marks server content):
 
           <Mismatch isClient={true}>
             <div className="parent">
@@ -322,6 +332,8 @@ describe('ReactDOMServerHydration', () => {
 
         https://react.dev/link/hydration-mismatch
 
+        The following differences were found (+ marks client content, - marks server content):
+
           <Mismatch isClient={true}>
             <div className="parent">
               <main
@@ -364,6 +376,8 @@ describe('ReactDOMServerHydration', () => {
         It can also happen if the client has a browser extension installed which changes the HTML before React loaded.
 
         https://react.dev/link/hydration-mismatch
+
+        The following differences were found (+ marks client content, - marks server content):
 
           <Mismatch isClient={true}>
             <div className="parent">
@@ -409,6 +423,8 @@ describe('ReactDOMServerHydration', () => {
 
         https://react.dev/link/hydration-mismatch
 
+        The following differences were found (+ marks client content, - marks server content):
+
           <Mismatch isClient={true}>
             <div className="parent">
               <main
@@ -452,6 +468,8 @@ describe('ReactDOMServerHydration', () => {
         It can also happen if the client has a browser extension installed which changes the HTML before React loaded.
 
         https://react.dev/link/hydration-mismatch
+
+        The following differences were found (+ marks client content, - marks server content):
 
           <Mismatch isClient={true}>
             <div className="parent">
@@ -497,6 +515,8 @@ describe('ReactDOMServerHydration', () => {
         It can also happen if the client has a browser extension installed which changes the HTML before React loaded.
 
         https://react.dev/link/hydration-mismatch
+
+        The following differences were found (+ marks client content, - marks server content):
 
           <Mismatch isClient={true}>
             <div className="parent">
@@ -554,6 +574,8 @@ describe('ReactDOMServerHydration', () => {
 
         https://react.dev/link/hydration-mismatch
 
+        The following differences were found (+ marks client content, - marks server content):
+
           <App isClient={true}>
             <LeftIndirection isClient={true}>
               <LeftMismatch isClient={true}>
@@ -607,6 +629,8 @@ describe('ReactDOMServerHydration', () => {
 
           https://react.dev/link/hydration-mismatch
 
+          The following differences were found (+ marks client content, - marks server content):
+
             <Mismatch isClient={true}>
               <div className="parent">
           +     <main className="only">
@@ -642,6 +666,8 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which changes the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+          The following differences were found (+ marks client content, - marks server content):
 
             <Mismatch isClient={true}>
               <div className="parent">
@@ -680,6 +706,8 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which changes the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+          The following differences were found (+ marks client content, - marks server content):
 
             <Mismatch isClient={true}>
               <div className="parent">
@@ -720,6 +748,8 @@ describe('ReactDOMServerHydration', () => {
 
           https://react.dev/link/hydration-mismatch
 
+          The following differences were found (+ marks client content, - marks server content):
+
             <Mismatch isClient={true}>
               <div className="parent">
                 <header>
@@ -755,6 +785,8 @@ describe('ReactDOMServerHydration', () => {
 
             https://react.dev/link/hydration-mismatch
 
+            The following differences were found (+ marks client content, - marks server content):
+
               <Mismatch isClient={true}>
                 <div className="parent">
             +     only
@@ -779,6 +811,8 @@ describe('ReactDOMServerHydration', () => {
             It can also happen if the client has a browser extension installed which changes the HTML before React loaded.
 
             https://react.dev/link/hydration-mismatch
+
+            The following differences were found (+ marks client content, - marks server content):
 
               <Mismatch isClient={true}>
                 <div className="parent">
@@ -817,6 +851,8 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which changes the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+          The following differences were found (+ marks client content, - marks server content):
 
             <Mismatch isClient={true}>
               <div className="parent">
@@ -857,6 +893,8 @@ describe('ReactDOMServerHydration', () => {
 
           https://react.dev/link/hydration-mismatch
 
+          The following differences were found (+ marks client content, - marks server content):
+
             <Mismatch isClient={true}>
               <div className="parent">
           +     first
@@ -894,6 +932,8 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which changes the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+          The following differences were found (+ marks client content, - marks server content):
 
             <Mismatch isClient={true}>
               <div className="parent">
@@ -935,6 +975,8 @@ describe('ReactDOMServerHydration', () => {
 
           https://react.dev/link/hydration-mismatch
 
+          The following differences were found (+ marks client content, - marks server content):
+
             <Mismatch isClient={true}>
               <div className="parent">
           -     <main className="only">
@@ -970,6 +1012,8 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which changes the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+          The following differences were found (+ marks client content, - marks server content):
 
             <Mismatch isClient={true}>
               <div className="parent">
@@ -1009,6 +1053,8 @@ describe('ReactDOMServerHydration', () => {
 
           https://react.dev/link/hydration-mismatch
 
+          The following differences were found (+ marks client content, - marks server content):
+
             <Mismatch isClient={true}>
               <div className="parent">
                 <header>
@@ -1047,6 +1093,8 @@ describe('ReactDOMServerHydration', () => {
 
           https://react.dev/link/hydration-mismatch
 
+          The following differences were found (+ marks client content, - marks server content):
+
             <Mismatch isClient={true}>
               <div className="parent">
           -     <footer className="3">
@@ -1078,6 +1126,8 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which changes the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+          The following differences were found (+ marks client content, - marks server content):
 
             <Mismatch isClient={true}>
               <div className="parent">
@@ -1114,6 +1164,8 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which changes the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+          The following differences were found (+ marks client content, - marks server content):
 
             <Mismatch isClient={true}>
               <div className="parent">
@@ -1153,6 +1205,8 @@ describe('ReactDOMServerHydration', () => {
 
           https://react.dev/link/hydration-mismatch
 
+          The following differences were found (+ marks client content, - marks server content):
+
             <Mismatch isClient={true}>
               <div className="parent">
                 <header>
@@ -1190,6 +1244,8 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which changes the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+          The following differences were found (+ marks client content, - marks server content):
 
             <Mismatch isClient={true}>
               <div className="parent">
@@ -1237,6 +1293,8 @@ describe('ReactDOMServerHydration', () => {
 
           https://react.dev/link/hydration-mismatch
 
+          The following differences were found (+ marks client content, - marks server content):
+
             <Mismatch isClient={true}>
               <div className="parent">
           +     <Suspense fallback={<p>}>
@@ -1274,6 +1332,8 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which changes the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+          The following differences were found (+ marks client content, - marks server content):
 
             <Mismatch isClient={true}>
               <div className="parent">
@@ -1314,6 +1374,8 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which changes the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+          The following differences were found (+ marks client content, - marks server content):
 
             <Mismatch isClient={true}>
               <div className="parent">
@@ -1359,6 +1421,8 @@ describe('ReactDOMServerHydration', () => {
 
           https://react.dev/link/hydration-mismatch
 
+          The following differences were found (+ marks client content, - marks server content):
+
             <Mismatch isClient={true}>
               <div className="parent">
           -     <Suspense>
@@ -1396,6 +1460,8 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which changes the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+          The following differences were found (+ marks client content, - marks server content):
 
             <Mismatch isClient={true}>
               <div className="parent">
@@ -1438,6 +1504,8 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which changes the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+          The following differences were found (+ marks client content, - marks server content):
 
             <Mismatch isClient={true}>
               <div className="parent">
@@ -1542,6 +1610,8 @@ describe('ReactDOMServerHydration', () => {
 
           https://react.dev/link/hydration-mismatch
 
+          The following differences were found (+ marks client content, - marks server content):
+
             <Mismatch isClient={true}>
               <div className="parent">
           +     <header className="1">
@@ -1582,6 +1652,8 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which changes the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+          The following differences were found (+ marks client content, - marks server content):
 
             <Mismatch isClient={true}>
               <div className="parent">
@@ -1646,6 +1718,8 @@ describe('ReactDOMServerHydration', () => {
         It can also happen if the client has a browser extension installed which changes the HTML before React loaded.
 
         https://react.dev/link/hydration-mismatch
+
+        The following differences were found (+ marks client content, - marks server content):
 
           <Mismatch isClient={true}>
             <ProfileSettings>
@@ -1712,6 +1786,8 @@ describe('ReactDOMServerHydration', () => {
         It can also happen if the client has a browser extension installed which changes the HTML before React loaded.
 
         https://react.dev/link/hydration-mismatch
+
+        The following differences were found (+ marks client content, - marks server content):
 
           <Mismatch isClient={true}>
             <ProfileSettings>

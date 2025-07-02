@@ -178,6 +178,7 @@ describe('ReactDOMRoot', () => {
         '\n' +
         'https://react.dev/link/hydration-mismatch\n' +
         '\n' +
+        'The following differences were found (+ marks client content, - marks server content):\n\n' +
         '  <div>\n' +
         '    <span\n' +
         '-     className="extra"\n' +

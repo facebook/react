@@ -160,6 +160,7 @@ describe('ReactDOMServerHydration', () => {
                 '\n' +
                 'https://react.dev/link/hydration-mismatch\n' +
                 '\n' +
+                'The following differences were found (+ marks client content, - marks server content):\n\n' +
                 '  <TestComponent name="y" ref={function ref}>\n' +
                 '    <span ref={{current:null}} onClick={function}>\n' +
                 '+     y\n' +
@@ -268,6 +269,7 @@ describe('ReactDOMServerHydration', () => {
               '\n' +
               'https://react.dev/link/hydration-mismatch\n' +
               '\n' +
+              'The following differences were found (+ marks client content, - marks server content):\n\n' +
               '  <button autoFocus={false} onFocus={function mockConstructor}>\n' +
               '+   client\n' +
               '-   server\n' +
@@ -308,6 +310,7 @@ describe('ReactDOMServerHydration', () => {
         '\n' +
         'https://react.dev/link/hydration-mismatch\n' +
         '\n' +
+        'The following differences were found (+ marks client content, - marks server content):\n\n' +
         '  <div\n    style={{\n+     textDecoration: "none"\n' +
         '+     color: "white"\n' +
         '-     color: "black"\n' +
@@ -374,6 +377,7 @@ describe('ReactDOMServerHydration', () => {
         '\n' +
         'https://react.dev/link/hydration-mismatch\n' +
         '\n' +
+        'The following differences were found (+ marks client content, - marks server content):\n\n' +
         '  <div\n' +
         '    style={{\n' +
         '+     textDecoration: "none"\n' +
@@ -646,6 +650,7 @@ describe('ReactDOMServerHydration', () => {
               '\n' +
               'https://react.dev/link/hydration-mismatch\n' +
               '\n' +
+              'The following differences were found (+ marks client content, - marks server content):\n\n' +
               '  <div dangerouslySetInnerHTML={undefined}>\n' +
               '    <p>\n' +
               '+     client\n' +

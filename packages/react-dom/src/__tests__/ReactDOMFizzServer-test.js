@@ -10239,6 +10239,7 @@ describe('ReactDOMFizzServer', () => {
           '\n' +
           '\nhttps://react.dev/link/hydration-mismatch' +
           '\n' +
+          '\nThe following differences were found (+ marks client content, - marks server content):\n' +
           '\n  <ClientApp>' +
           '\n    <Suspense>' +
           '\n      <html' +

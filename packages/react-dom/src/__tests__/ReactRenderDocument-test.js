@@ -305,6 +305,7 @@ describe('rendering React components at document', () => {
                 '\n' +
                 'https://react.dev/link/hydration-mismatch\n' +
                 '\n' +
+                'The following differences were found (+ marks client content, - marks server content):\n\n' +
                 '  <Component text="Hello world">\n' +
                 '    <html>\n' +
                 '      <head>\n' +

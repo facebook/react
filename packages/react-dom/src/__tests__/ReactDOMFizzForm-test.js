@@ -203,6 +203,7 @@ describe('ReactDOMFizzForm', () => {
         '- Invalid HTML tag nesting.\n\n' +
         'It can also happen if the client has a browser extension installed which changes the HTML before React loaded.\n\n' +
         'https://react.dev/link/hydration-mismatch\n\n' +
+        'The following differences were found (+ marks client content, - marks server content):\n\n' +
         '  <App isClient={true}>\n' +
         '    <form\n' +
         '+     action="action"\n' +
@@ -393,6 +394,7 @@ describe('ReactDOMFizzForm', () => {
         '- Invalid HTML tag nesting.\n\n' +
         'It can also happen if the client has a browser extension installed which changes the HTML before React loaded.\n\n' +
         'https://react.dev/link/hydration-mismatch\n\n' +
+        'The following differences were found (+ marks client content, - marks server content):\n\n' +
         '  <App>\n' +
         '    <form\n' +
         '      action={function action}\n' +
