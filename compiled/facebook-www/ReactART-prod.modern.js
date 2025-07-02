@@ -7410,8 +7410,7 @@ function commitBeforeMutationEffects_complete(
           try {
             var resolvedPrevProps = resolveClassComponentProps(
               fiber.type,
-              flags,
-              fiber.elementType === fiber.type
+              flags
             );
             isViewTransitionEligible = JSCompiler_temp.getSnapshotBeforeUpdate(
               resolvedPrevProps,
@@ -11014,10 +11013,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1583 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-602917c8-20250701",
+  version: "19.2.0-www-modern-73aa744b-20250702",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-602917c8-20250701"
+  reconcilerVersion: "19.2.0-www-modern-73aa744b-20250702"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1584 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11043,4 +11042,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.2.0-www-modern-602917c8-20250701";
+exports.version = "19.2.0-www-modern-73aa744b-20250702";

@@ -13319,8 +13319,7 @@ __DEV__ &&
       try {
         var resolvedPrevProps = resolveClassComponentProps(
           finishedWork.type,
-          prevProps,
-          finishedWork.elementType === finishedWork.type
+          prevProps
         );
         var snapshot = runWithFiberInDEV(
           finishedWork,
@@ -31304,11 +31303,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-www-modern-602917c8-20250701" !== isomorphicReactPackageVersion)
+      if ("19.2.0-www-modern-73aa744b-20250702" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-www-modern-602917c8-20250701\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-www-modern-73aa744b-20250702\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -31351,10 +31350,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-www-modern-602917c8-20250701",
+          version: "19.2.0-www-modern-73aa744b-20250702",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-www-modern-602917c8-20250701"
+          reconcilerVersion: "19.2.0-www-modern-73aa744b-20250702"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -31954,7 +31953,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-www-modern-602917c8-20250701";
+    exports.version = "19.2.0-www-modern-73aa744b-20250702";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

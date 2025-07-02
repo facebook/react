@@ -8481,8 +8481,7 @@ module.exports = function ($$$config) {
             try {
               var resolvedPrevProps = resolveClassComponentProps(
                 fiber.type,
-                flags,
-                fiber.elementType === fiber.type
+                flags
               );
               isViewTransitionEligible =
                 JSCompiler_temp.getSnapshotBeforeUpdate(
@@ -14064,7 +14063,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-classic-602917c8-20250701"
+      reconcilerVersion: "19.2.0-www-classic-73aa744b-20250702"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

@@ -11700,8 +11700,7 @@ __DEV__ &&
       try {
         var resolvedPrevProps = resolveClassComponentProps(
           finishedWork.type,
-          prevProps,
-          finishedWork.elementType === finishedWork.type
+          prevProps
         );
         var snapshot = runWithFiberInDEV(
           finishedWork,
@@ -21962,7 +21961,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-602917c8-20250701"
+        reconcilerVersion: "19.2.0-www-classic-73aa744b-20250702"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
