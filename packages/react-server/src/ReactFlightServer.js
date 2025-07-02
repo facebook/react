@@ -96,6 +96,7 @@ import {
   parseStackTrace,
   supportsComponentStorage,
   componentStorage,
+  unbadgeConsole,
 } from './ReactFlightServerConfig';
 
 import {
@@ -275,7 +276,15 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
         );
         request.pendingChunks++;
         const owner: null | ReactComponentInfo = resolveOwner();
-        emitConsoleChunk(request, methodName, owner, stack, arguments);
+        const args = Array.from(arguments);
+        // Extract the env if this is a console log that was replayed from another env.
+        let env = unbadgeConsole(methodName, args);
+        if (env === null) {
+          // Otherwise add the current environment.
+          env = (0, request.environmentName)();
+        }
+
+        emitConsoleChunk(request, methodName, owner, env, stack, args);
       }
       // $FlowFixMe[prop-missing]
       return originalMethod.apply(this, arguments);
@@ -4711,6 +4720,7 @@ function emitConsoleChunk(
   request: Request,
   methodName: string,
   owner: null | ReactComponentInfo,
+  env: string,
   stackTrace: ReactStackTrace,
   args: Array<any>,
 ): void {
@@ -4727,8 +4737,6 @@ function emitConsoleChunk(
     outlineComponentInfo(request, owner);
   }
 
-  // TODO: Don't double badge if this log came from another Flight Client.
-  const env = (0, request.environmentName)();
   const payload = [methodName, stackTrace, owner, env];
   // $FlowFixMe[method-unbinding]
   payload.push.apply(payload, args);

@@ -7,8 +7,7 @@
  * @flow
  */
 
-// Keep in sync with ReactServerConsoleConfig
-// This flips color using ANSI, then sets a color styling, then resets.
+// Keep in sync with ReactClientConsoleConfig
 const badgeFormat = '\x1b[0m\x1b[7m%c%s\x1b[0m%c ';
 // Same badge styling as DevTools.
 const badgeStyle =
@@ -19,16 +18,15 @@ const badgeStyle =
   'color: #000000;' +
   'color: light-dark(#000000, #ffffff);' +
   'border-radius: 2px';
-const resetStyle = '';
-const pad = ' ';
+const padLength = 1;
 
-const bind = Function.prototype.bind;
-
-export function bindToConsole(
+// This mutates the args to remove any badges that was added by a FlightClient and
+// returns the name in the badge. This is used when a FlightClient replays inside
+// a FlightServer and we capture those replays.
+export function unbadgeConsole(
   methodName: string,
   args: Array<any>,
-  badgeName: string,
-): () => any {
+): null | string {
   let offset = 0;
   switch (methodName) {
     case 'dir':
@@ -36,39 +34,27 @@ export function bindToConsole(
     case 'groupEnd':
     case 'table': {
       // These methods cannot be colorized because they don't take a formatting string.
+      // So we wouldn't have added any badge in the first place.
       // $FlowFixMe
-      return bind.apply(console[methodName], [console].concat(args)); // eslint-disable-line react-internal/no-production-logging
+      return null;
     }
     case 'assert': {
       // assert takes formatting options as the second argument.
       offset = 1;
     }
   }
-
-  const newArgs = args.slice(0);
-  if (typeof newArgs[offset] === 'string') {
-    newArgs.splice(
-      offset,
-      1,
-      badgeFormat + newArgs[offset],
-      badgeStyle,
-      pad + badgeName + pad,
-      resetStyle,
-    );
-  } else {
-    newArgs.splice(
-      offset,
-      0,
-      badgeFormat,
-      badgeStyle,
-      pad + badgeName + pad,
-      resetStyle,
-    );
+  const format = args[offset];
+  const style = args[offset + 1];
+  const badge = args[offset + 2];
+  if (
+    typeof format === 'string' &&
+    format.startsWith(badgeFormat) &&
+    style === badgeStyle &&
+    typeof badge === 'string'
+  ) {
+    // Remove our badging from the arguments.
+    args.splice(offset, 4, format.slice(badgeFormat.length));
+    return badge.slice(padLength, badge.length - padLength);
   }
-
-  // The "this" binding in the "bind";
-  newArgs.unshift(console);
-
-  // $FlowFixMe
-  return bind.apply(console[methodName], newArgs); // eslint-disable-line react-internal/no-production-logging
+  return null;
 }
