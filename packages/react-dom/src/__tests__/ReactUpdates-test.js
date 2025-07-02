@@ -20,6 +20,19 @@ let waitFor;
 let assertLog;
 let assertConsoleErrorDev;
 
+function normalizeCodeLocInfo(str) {
+  return (
+    str &&
+    str.replace(/^ +(?:at|in) ([\S]+)[^\n]*/gm, function (m, name) {
+      const dot = name.lastIndexOf('.');
+      if (dot !== -1) {
+        name = name.slice(dot + 1);
+      }
+      return '    in ' + name + (/\d/.test(m) ? ' (at **)' : '');
+    })
+  );
+}
+
 describe('ReactUpdates', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -1972,13 +1985,24 @@ describe('ReactUpdates', () => {
     }
 
     const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await expect(async () => {
-      await act(() => {
-        ReactDOM.flushSync(() => {
-          root.render(<NonTerminating />);
-        });
+    let errors = [];
+    const root = ReactDOMClient.createRoot(container, {
+      onUncaughtError: (error, errorInfo) => {
+        errors.push(
+          error.message,
+          normalizeCodeLocInfo(errorInfo.componentStack),
+        );
+      },
+    });
+    await act(() => {
+      ReactDOM.flushSync(() => {
+        root.render(<NonTerminating />);
       });
-    }).rejects.toThrow('Maximum update depth exceeded');
+    });
+
+    expect(errors).toEqual([
+      'Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops.',
+      '\n    in NonTerminating (at **)',
+    ]);
   });
 });
