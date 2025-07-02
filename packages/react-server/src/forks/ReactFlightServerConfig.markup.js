@@ -29,6 +29,7 @@ export const componentStorage: AsyncLocalStorage<ReactComponentInfo | void> =
 export * from '../ReactFlightServerConfigDebugNoop';
 
 export * from '../ReactFlightStackConfigV8';
+export * from '../ReactServerConsoleConfigPlain';
 
 export type ClientManifest = null;
 export opaque type ClientReference<T> = null; // eslint-disable-line no-unused-vars
