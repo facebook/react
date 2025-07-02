@@ -161,7 +161,13 @@ export function addValueToProperties(
           if (value.status === 'fulfilled') {
             // Print the inner value
             const idx = properties.length;
-            addValueToProperties(propertyName, value.value, properties, indent);
+            addValueToProperties(
+              propertyName,
+              value.value,
+              properties,
+              indent,
+              prefix,
+            );
             if (properties.length > idx) {
               // Wrap the value or type in Promise descriptor.
               const insertedEntry = properties[idx];
@@ -177,6 +183,7 @@ export function addValueToProperties(
               value.reason,
               properties,
               indent,
+              prefix,
             );
             if (properties.length > idx) {
               // Wrap the value or type in Promise descriptor.
@@ -242,13 +249,15 @@ export function addObjectDiffToProperties(
   next: Object,
   properties: Array<[string, string]>,
   indent: number,
-): void {
+): boolean {
   // Note: We diff even non-owned properties here but things that are shared end up just the same.
   // If a property is added or removed, we just emit the property name and omit the value it had.
   // Mainly for performance. We need to minimize to only relevant information.
+  let isDeeplyEqual = true;
   for (const key in prev) {
     if (!(key in next)) {
       properties.push([REMOVED + '\xa0\xa0'.repeat(indent) + key, '\u2026']);
+      isDeeplyEqual = false;
     }
   }
   for (const key in next) {
@@ -262,6 +271,7 @@ export function addObjectDiffToProperties(
           // elsewhere but still mark it as a cause of render.
           const line = '\xa0\xa0'.repeat(indent) + key;
           properties.push([REMOVED + line, '\u2026'], [ADDED + line, '\u2026']);
+          isDeeplyEqual = false;
           continue;
         }
         if (indent >= 3) {
@@ -286,6 +296,7 @@ export function addObjectDiffToProperties(
               const line = '\xa0\xa0'.repeat(indent) + key;
               const desc = '<' + typeName + ' \u2026 />';
               properties.push([REMOVED + line, desc], [ADDED + line, desc]);
+              isDeeplyEqual = false;
               continue;
             }
           } else {
@@ -304,13 +315,15 @@ export function addObjectDiffToProperties(
               ];
               properties.push(entry);
               const prevLength = properties.length;
-              addObjectDiffToProperties(
+              const nestedEqual = addObjectDiffToProperties(
                 prevValue,
                 nextValue,
                 properties,
                 indent + 1,
               );
-              if (prevLength === properties.length) {
+              if (!nestedEqual) {
+                isDeeplyEqual = false;
+              } else if (prevLength === properties.length) {
                 // Nothing notably changed inside the nested object. So this is only a change in reference
                 // equality. Let's note it.
                 entry[1] =
@@ -349,9 +362,12 @@ export function addObjectDiffToProperties(
         // Otherwise, emit the change in property and the values.
         addValueToProperties(key, prevValue, properties, indent, REMOVED);
         addValueToProperties(key, nextValue, properties, indent, ADDED);
+        isDeeplyEqual = false;
       }
     } else {
       properties.push([ADDED + '\xa0\xa0'.repeat(indent) + key, '\u2026']);
+      isDeeplyEqual = false;
     }
   }
+  return isDeeplyEqual;
 }
