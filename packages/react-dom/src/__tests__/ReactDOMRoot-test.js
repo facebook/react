@@ -174,7 +174,7 @@ describe('ReactDOMRoot', () => {
         '- External changing data without sending a snapshot of it along with the HTML.\n' +
         '- Invalid HTML tag nesting.\n' +
         '\n' +
-        'It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n' +
+        'It can also happen if the client has a browser extension installed which changes the HTML before React loaded.\n' +
         '\n' +
         'https://react.dev/link/hydration-mismatch\n' +
         '\n' +

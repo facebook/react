@@ -708,7 +708,7 @@ describe('useId', () => {
 - External changing data without sending a snapshot of it along with the HTML.
 - Invalid HTML tag nesting.
 
-It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+It can also happen if the client has a browser extension installed which changes the HTML before React loaded.
 
 https://react.dev/link/hydration-mismatch
 

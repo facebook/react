@@ -10235,7 +10235,7 @@ describe('ReactDOMFizzServer', () => {
           '\n- External changing data without sending a snapshot of it along with the HTML.' +
           '\n- Invalid HTML tag nesting.' +
           '\n' +
-          '\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.' +
+          '\nIt can also happen if the client has a browser extension installed which changes the HTML before React loaded.' +
           '\n' +
           '\nhttps://react.dev/link/hydration-mismatch' +
           '\n' +
