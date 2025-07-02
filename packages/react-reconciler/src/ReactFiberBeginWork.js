@@ -2033,7 +2033,7 @@ function mountLazyComponent(
 
   if (typeof Component === 'function') {
     if (isFunctionClassComponent(Component)) {
-      const resolvedProps = resolveClassComponentProps(Component, props, false);
+      const resolvedProps = resolveClassComponentProps(Component, props);
       workInProgress.tag = ClassComponent;
       if (__DEV__) {
         workInProgress.type = Component =
@@ -4134,7 +4134,6 @@ function beginWork(
       const resolvedProps = resolveClassComponentProps(
         Component,
         unresolvedProps,
-        workInProgress.elementType === Component,
       );
       return updateClassComponent(
         current,
@@ -4210,7 +4209,6 @@ function beginWork(
       const resolvedProps = resolveClassComponentProps(
         Component,
         unresolvedProps,
-        workInProgress.elementType === Component,
       );
       return mountIncompleteClassComponent(
         current,
@@ -4229,7 +4227,6 @@ function beginWork(
       const resolvedProps = resolveClassComponentProps(
         Component,
         unresolvedProps,
-        workInProgress.elementType === Component,
       );
       return mountIncompleteFunctionComponent(
         current,
