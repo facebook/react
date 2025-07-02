@@ -161,7 +161,13 @@ export function addValueToProperties(
           if (value.status === 'fulfilled') {
             // Print the inner value
             const idx = properties.length;
-            addValueToProperties(propertyName, value.value, properties, indent);
+            addValueToProperties(
+              propertyName,
+              value.value,
+              properties,
+              indent,
+              prefix,
+            );
             if (properties.length > idx) {
               // Wrap the value or type in Promise descriptor.
               const insertedEntry = properties[idx];
@@ -177,6 +183,7 @@ export function addValueToProperties(
               value.reason,
               properties,
               indent,
+              prefix,
             );
             if (properties.length > idx) {
               // Wrap the value or type in Promise descriptor.
