@@ -1125,13 +1125,19 @@ __DEV__ &&
       }
       return kind;
     }
-    function addObjectToProperties(object, properties, indent) {
+    function addObjectToProperties(object, properties, indent, prefix) {
       for (var key in object)
         hasOwnProperty.call(object, key) &&
           "_" !== key[0] &&
-          addValueToProperties(key, object[key], properties, indent);
+          addValueToProperties(key, object[key], properties, indent, prefix);
     }
-    function addValueToProperties(propertyName, value, properties, indent) {
+    function addValueToProperties(
+      propertyName,
+      value,
+      properties,
+      indent,
+      prefix
+    ) {
       switch (typeof value) {
         case "object":
           if (null === value) {
@@ -1158,11 +1164,17 @@ __DEV__ &&
                 break;
               }
               properties.push([
-                "\u00a0\u00a0".repeat(indent) + propertyName,
+                prefix + "\u00a0\u00a0".repeat(indent) + propertyName,
                 "<" + typeName
               ]);
               null !== key &&
-                addValueToProperties("key", key, properties, indent + 1);
+                addValueToProperties(
+                  "key",
+                  key,
+                  properties,
+                  indent + 1,
+                  prefix
+                );
               propertyName = !1;
               for (var propKey in value)
                 "children" === propKey
@@ -1176,7 +1188,8 @@ __DEV__ &&
                       propKey,
                       value[propKey],
                       properties,
-                      indent + 1
+                      indent + 1,
+                      prefix
                     );
               properties.push([
                 "",
@@ -1195,7 +1208,7 @@ __DEV__ &&
                 break;
               } else if (3 === propKey) {
                 properties.push([
-                  "\u00a0\u00a0".repeat(indent) + propertyName,
+                  prefix + "\u00a0\u00a0".repeat(indent) + propertyName,
                   ""
                 ]);
                 for (
@@ -1208,7 +1221,8 @@ __DEV__ &&
                       typeName[0],
                       typeName[1],
                       properties,
-                      indent + 1
+                      indent + 1,
+                      prefix
                     );
                 return;
               }
@@ -1220,7 +1234,8 @@ __DEV__ &&
                     propertyName,
                     value.value,
                     properties,
-                    indent
+                    indent,
+                    prefix
                   ),
                   properties.length > typeName)
                 ) {
@@ -1236,7 +1251,8 @@ __DEV__ &&
                   propertyName,
                   value.reason,
                   properties,
-                  indent
+                  indent,
+                  prefix
                 ),
                 properties.length > typeName)
               ) {
@@ -1255,10 +1271,11 @@ __DEV__ &&
               "function" === typeof propKey.constructor &&
               (typeName = propKey.constructor.name);
             properties.push([
-              "\u00a0\u00a0".repeat(indent) + propertyName,
+              prefix + "\u00a0\u00a0".repeat(indent) + propertyName,
               "Object" === typeName ? (3 > indent ? "" : "\u2026") : typeName
             ]);
-            3 > indent && addObjectToProperties(value, properties, indent + 1);
+            3 > indent &&
+              addObjectToProperties(value, properties, indent + 1, prefix);
             return;
           }
         case "function":
@@ -1280,7 +1297,127 @@ __DEV__ &&
         default:
           value = String(value);
       }
-      properties.push(["\u00a0\u00a0".repeat(indent) + propertyName, value]);
+      properties.push([
+        prefix + "\u00a0\u00a0".repeat(indent) + propertyName,
+        value
+      ]);
+    }
+    function addObjectDiffToProperties(prev, next, properties, indent) {
+      var isDeeplyEqual = !0;
+      for (key in prev)
+        key in next ||
+          (properties.push([
+            "\u2013\u00a0" + "\u00a0\u00a0".repeat(indent) + key,
+            "\u2026"
+          ]),
+          (isDeeplyEqual = !1));
+      for (var _key in next)
+        if (_key in prev) {
+          var key = prev[_key];
+          var nextValue = next[_key];
+          if (key !== nextValue) {
+            if (0 === indent && "children" === _key)
+              (isDeeplyEqual = "\u00a0\u00a0".repeat(indent) + _key),
+                properties.push(
+                  ["\u2013\u00a0" + isDeeplyEqual, "\u2026"],
+                  ["+\u00a0" + isDeeplyEqual, "\u2026"]
+                );
+            else {
+              if (!(3 <= indent))
+                if (
+                  "object" === typeof key &&
+                  "object" === typeof nextValue &&
+                  null !== key &&
+                  null !== nextValue &&
+                  key.$$typeof === nextValue.$$typeof
+                )
+                  if (nextValue.$$typeof === REACT_ELEMENT_TYPE) {
+                    if (
+                      key.type === nextValue.type &&
+                      key.key === nextValue.key
+                    ) {
+                      key =
+                        getComponentNameFromType(nextValue.type) || "\u2026";
+                      isDeeplyEqual = "\u00a0\u00a0".repeat(indent) + _key;
+                      key = "<" + key + " \u2026 />";
+                      properties.push(
+                        ["\u2013\u00a0" + isDeeplyEqual, key],
+                        ["+\u00a0" + isDeeplyEqual, key]
+                      );
+                      isDeeplyEqual = !1;
+                      continue;
+                    }
+                  } else {
+                    var prevKind = Object.prototype.toString.call(key),
+                      nextKind = Object.prototype.toString.call(nextValue);
+                    if (
+                      prevKind === nextKind &&
+                      ("[object Object]" === nextKind ||
+                        "[object Array]" === nextKind)
+                    ) {
+                      prevKind = [
+                        "\u2007\u00a0" + "\u00a0\u00a0".repeat(indent) + _key,
+                        "[object Array]" === nextKind ? "Array" : ""
+                      ];
+                      properties.push(prevKind);
+                      nextKind = properties.length;
+                      addObjectDiffToProperties(
+                        key,
+                        nextValue,
+                        properties,
+                        indent + 1
+                      )
+                        ? nextKind === properties.length &&
+                          (prevKind[1] =
+                            "Referentially unequal but deeply equal objects. Consider memoization.")
+                        : (isDeeplyEqual = !1);
+                      continue;
+                    }
+                  }
+                else if (
+                  "function" === typeof key &&
+                  "function" === typeof nextValue &&
+                  key.name === nextValue.name &&
+                  key.length === nextValue.length &&
+                  ((prevKind = Function.prototype.toString.call(key)),
+                  (nextKind = Function.prototype.toString.call(nextValue)),
+                  prevKind === nextKind)
+                ) {
+                  key =
+                    "" === nextValue.name
+                      ? "() => {}"
+                      : nextValue.name + "() {}";
+                  properties.push([
+                    "\u2007\u00a0" + "\u00a0\u00a0".repeat(indent) + _key,
+                    key +
+                      " Referentially unequal function closure. Consider memoization."
+                  ]);
+                  continue;
+                }
+              addValueToProperties(
+                _key,
+                key,
+                properties,
+                indent,
+                "\u2013\u00a0"
+              );
+              addValueToProperties(
+                _key,
+                nextValue,
+                properties,
+                indent,
+                "+\u00a0"
+              );
+            }
+            isDeeplyEqual = !1;
+          }
+        } else
+          properties.push([
+            "+\u00a0" + "\u00a0\u00a0".repeat(indent) + _key,
+            "\u2026"
+          ]),
+            (isDeeplyEqual = !1);
+      return isDeeplyEqual;
     }
     function setCurrentTrackFromLanes(lanes) {
       currentTrack =
@@ -1296,35 +1433,36 @@ __DEV__ &&
     }
     function logComponentTrigger(fiber, startTime, endTime, trigger) {
       supportsUserTiming &&
-        ((fiber = fiber._debugTask)
+        ((reusableComponentOptions.start = startTime),
+        (reusableComponentOptions.end = endTime),
+        (reusableComponentDevToolDetails.color = "warning"),
+        (reusableComponentDevToolDetails.tooltipText = trigger),
+        (reusableComponentDevToolDetails.properties = null),
+        (fiber = fiber._debugTask)
           ? fiber.run(
-              console.timeStamp.bind(
-                console,
+              performance.measure.bind(
+                performance,
                 trigger,
-                startTime,
-                endTime,
-                "Components \u269b",
-                void 0,
-                "warning"
+                reusableComponentOptions
               )
             )
-          : console.timeStamp(
-              trigger,
-              startTime,
-              endTime,
-              "Components \u269b",
-              void 0,
-              "warning"
-            ));
+          : performance.measure(trigger, reusableComponentOptions));
     }
     function logComponentReappeared(fiber, startTime, endTime) {
       logComponentTrigger(fiber, startTime, endTime, "Reconnect");
     }
-    function logComponentRender(fiber, startTime, endTime, wasHydrated) {
+    function logComponentRender(
+      fiber,
+      startTime,
+      endTime,
+      wasHydrated,
+      committedLanes
+    ) {
       var name = getComponentNameFromFiber(fiber);
       if (null !== name && supportsUserTiming) {
-        var selfTime = fiber.actualDuration;
-        if (null === fiber.alternate || fiber.alternate.child !== fiber.child)
+        var alternate = fiber.alternate,
+          selfTime = fiber.actualDuration;
+        if (null === alternate || alternate.child !== fiber.child)
           for (var child = fiber.child; null !== child; child = child.sibling)
             selfTime -= child.actualDuration;
         wasHydrated =
@@ -1341,142 +1479,154 @@ __DEV__ &&
                   ? "tertiary-dark"
                   : "primary-dark"
                 : "error";
-        (fiber = fiber._debugTask)
-          ? fiber.run(
-              console.timeStamp.bind(
-                console,
+        if ((selfTime = fiber._debugTask)) {
+          var props = fiber.memoizedProps;
+          if (
+            null !== props &&
+            null !== alternate &&
+            alternate.memoizedProps !== props &&
+            ((child = [resuableChangedPropsEntry]),
+            (props = addObjectDiffToProperties(
+              alternate.memoizedProps,
+              props,
+              child,
+              0
+            )),
+            1 < child.length)
+          ) {
+            props &&
+            !alreadyWarnedForDeepEquality &&
+            0 === (alternate.lanes & committedLanes) &&
+            100 < fiber.actualDuration
+              ? ((alreadyWarnedForDeepEquality = !0),
+                (child[0] = reusableDeeplyEqualPropsEntry),
+                (reusableComponentDevToolDetails.color = "warning"),
+                (reusableComponentDevToolDetails.tooltipText =
+                  "This component received deeply equal props. It might benefit from useMemo or the React Compiler in its owner."))
+              : ((reusableComponentDevToolDetails.color = wasHydrated),
+                (reusableComponentDevToolDetails.tooltipText = name));
+            reusableComponentDevToolDetails.properties = child;
+            reusableComponentOptions.start = startTime;
+            reusableComponentOptions.end = endTime;
+            selfTime.run(
+              performance.measure.bind(
+                performance,
                 name,
-                startTime,
-                endTime,
-                "Components \u269b",
-                void 0,
-                wasHydrated
+                reusableComponentOptions
               )
-            )
-          : console.timeStamp(
+            );
+            return;
+          }
+          selfTime.run(
+            console.timeStamp.bind(
+              console,
               name,
               startTime,
               endTime,
               "Components \u269b",
               void 0,
               wasHydrated
-            );
+            )
+          );
+        } else
+          console.timeStamp(
+            name,
+            startTime,
+            endTime,
+            "Components \u269b",
+            void 0,
+            wasHydrated
+          );
       }
     }
     function logComponentErrored(fiber, startTime, endTime, errors) {
       if (supportsUserTiming) {
         var name = getComponentNameFromFiber(fiber);
-        if (null !== name)
-          if (
-            "undefined" !== typeof performance &&
-            "function" === typeof performance.measure
+        if (null !== name) {
+          for (
+            var debugTask = null, properties = [], i = 0;
+            i < errors.length;
+            i++
           ) {
-            for (
-              var debugTask = null, properties = [], i = 0;
-              i < errors.length;
-              i++
-            ) {
-              var capturedValue = errors[i];
-              null == debugTask &&
-                null !== capturedValue.source &&
-                (debugTask = capturedValue.source._debugTask);
-              capturedValue = capturedValue.value;
-              properties.push([
-                "Error",
-                "object" === typeof capturedValue &&
-                null !== capturedValue &&
-                "string" === typeof capturedValue.message
-                  ? String(capturedValue.message)
-                  : String(capturedValue)
-              ]);
-            }
-            null !== fiber.key &&
-              addValueToProperties("key", fiber.key, properties, 0);
-            null !== fiber.memoizedProps &&
-              addObjectToProperties(fiber.memoizedProps, properties, 0);
-            null == debugTask && (debugTask = fiber._debugTask);
-            fiber = {
-              start: startTime,
-              end: endTime,
-              detail: {
-                devtools: {
-                  color: "error",
-                  track: "Components \u269b",
-                  tooltipText:
-                    13 === fiber.tag
-                      ? "Hydration failed"
-                      : "Error boundary caught an error",
-                  properties: properties
-                }
+            var capturedValue = errors[i];
+            null == debugTask &&
+              null !== capturedValue.source &&
+              (debugTask = capturedValue.source._debugTask);
+            capturedValue = capturedValue.value;
+            properties.push([
+              "Error",
+              "object" === typeof capturedValue &&
+              null !== capturedValue &&
+              "string" === typeof capturedValue.message
+                ? String(capturedValue.message)
+                : String(capturedValue)
+            ]);
+          }
+          null !== fiber.key &&
+            addValueToProperties("key", fiber.key, properties, 0, "");
+          null !== fiber.memoizedProps &&
+            addObjectToProperties(fiber.memoizedProps, properties, 0, "");
+          null == debugTask && (debugTask = fiber._debugTask);
+          fiber = {
+            start: startTime,
+            end: endTime,
+            detail: {
+              devtools: {
+                color: "error",
+                track: "Components \u269b",
+                tooltipText:
+                  13 === fiber.tag
+                    ? "Hydration failed"
+                    : "Error boundary caught an error",
+                properties: properties
               }
-            };
-            debugTask
-              ? debugTask.run(
-                  performance.measure.bind(performance, name, fiber)
-                )
-              : performance.measure(name, fiber);
-          } else
-            console.timeStamp(
-              name,
-              startTime,
-              endTime,
-              "Components \u269b",
-              void 0,
-              "error"
-            );
+            }
+          };
+          debugTask
+            ? debugTask.run(performance.measure.bind(performance, name, fiber))
+            : performance.measure(name, fiber);
+        }
       }
     }
     function logComponentEffect(fiber, startTime, endTime, selfTime, errors) {
       if (null !== errors) {
         if (supportsUserTiming) {
           var name = getComponentNameFromFiber(fiber);
-          if (null !== name)
-            if (
-              "undefined" !== typeof performance &&
-              "function" === typeof performance.measure
-            ) {
-              selfTime = [];
-              for (var i = 0; i < errors.length; i++) {
-                var error = errors[i].value;
-                selfTime.push([
-                  "Error",
-                  "object" === typeof error &&
-                  null !== error &&
-                  "string" === typeof error.message
-                    ? String(error.message)
-                    : String(error)
-                ]);
-              }
-              null !== fiber.key &&
-                addValueToProperties("key", fiber.key, selfTime, 0);
-              null !== fiber.memoizedProps &&
-                addObjectToProperties(fiber.memoizedProps, selfTime, 0);
-              startTime = {
-                start: startTime,
-                end: endTime,
-                detail: {
-                  devtools: {
-                    color: "error",
-                    track: "Components \u269b",
-                    tooltipText: "A lifecycle or effect errored",
-                    properties: selfTime
-                  }
+          if (null !== name) {
+            selfTime = [];
+            for (var i = 0; i < errors.length; i++) {
+              var error = errors[i].value;
+              selfTime.push([
+                "Error",
+                "object" === typeof error &&
+                null !== error &&
+                "string" === typeof error.message
+                  ? String(error.message)
+                  : String(error)
+              ]);
+            }
+            null !== fiber.key &&
+              addValueToProperties("key", fiber.key, selfTime, 0, "");
+            null !== fiber.memoizedProps &&
+              addObjectToProperties(fiber.memoizedProps, selfTime, 0, "");
+            startTime = {
+              start: startTime,
+              end: endTime,
+              detail: {
+                devtools: {
+                  color: "error",
+                  track: "Components \u269b",
+                  tooltipText: "A lifecycle or effect errored",
+                  properties: selfTime
                 }
-              };
-              (fiber = fiber._debugTask)
-                ? fiber.run(
-                    performance.measure.bind(performance, name, startTime)
-                  )
-                : performance.measure(name, startTime);
-            } else
-              console.timeStamp(
-                name,
-                startTime,
-                endTime,
-                "Components \u269b",
-                void 0,
-                "error"
-              );
+              }
+            };
+            (fiber = fiber._debugTask)
+              ? fiber.run(
+                  performance.measure.bind(performance, name, startTime)
+                )
+              : performance.measure(name, startTime);
+          }
         }
       } else
         (name = getComponentNameFromFiber(fiber)),
@@ -1540,47 +1690,35 @@ __DEV__ &&
       recoverableErrors,
       hydrationFailed
     ) {
-      if (supportsUserTiming)
-        if (
-          "undefined" !== typeof performance &&
-          "function" === typeof performance.measure
-        ) {
-          lanes = [];
-          for (var i = 0; i < recoverableErrors.length; i++) {
-            var error = recoverableErrors[i].value;
-            lanes.push([
-              "Recoverable Error",
-              "object" === typeof error &&
-              null !== error &&
-              "string" === typeof error.message
-                ? String(error.message)
-                : String(error)
-            ]);
-          }
-          performance.measure("Recovered", {
-            start: startTime,
-            end: endTime,
-            detail: {
-              devtools: {
-                color: "primary-dark",
-                track: currentTrack,
-                trackGroup: "Scheduler \u269b",
-                tooltipText: hydrationFailed
-                  ? "Hydration Failed"
-                  : "Recovered after Error",
-                properties: lanes
-              }
+      if (supportsUserTiming) {
+        lanes = [];
+        for (var i = 0; i < recoverableErrors.length; i++) {
+          var error = recoverableErrors[i].value;
+          lanes.push([
+            "Recoverable Error",
+            "object" === typeof error &&
+            null !== error &&
+            "string" === typeof error.message
+              ? String(error.message)
+              : String(error)
+          ]);
+        }
+        performance.measure("Recovered", {
+          start: startTime,
+          end: endTime,
+          detail: {
+            devtools: {
+              color: "primary-dark",
+              track: currentTrack,
+              trackGroup: "Scheduler \u269b",
+              tooltipText: hydrationFailed
+                ? "Hydration Failed"
+                : "Recovered after Error",
+              properties: lanes
             }
-          });
-        } else
-          console.timeStamp(
-            "Recovered",
-            startTime,
-            endTime,
-            currentTrack,
-            "Scheduler \u269b",
-            "error"
-          );
+          }
+        });
+      }
     }
     function logErroredRenderPhase(startTime, endTime) {
       supportsUserTiming &&
@@ -1594,46 +1732,34 @@ __DEV__ &&
         );
     }
     function logCommitErrored(startTime, endTime, errors, passive) {
-      if (supportsUserTiming)
-        if (
-          "undefined" !== typeof performance &&
-          "function" === typeof performance.measure
-        ) {
-          for (var properties = [], i = 0; i < errors.length; i++) {
-            var error = errors[i].value;
-            properties.push([
-              "Error",
-              "object" === typeof error &&
-              null !== error &&
-              "string" === typeof error.message
-                ? String(error.message)
-                : String(error)
-            ]);
-          }
-          performance.measure("Errored", {
-            start: startTime,
-            end: endTime,
-            detail: {
-              devtools: {
-                color: "error",
-                track: currentTrack,
-                trackGroup: "Scheduler \u269b",
-                tooltipText: passive
-                  ? "Remaining Effects Errored"
-                  : "Commit Errored",
-                properties: properties
-              }
+      if (supportsUserTiming) {
+        for (var properties = [], i = 0; i < errors.length; i++) {
+          var error = errors[i].value;
+          properties.push([
+            "Error",
+            "object" === typeof error &&
+            null !== error &&
+            "string" === typeof error.message
+              ? String(error.message)
+              : String(error)
+          ]);
+        }
+        performance.measure("Errored", {
+          start: startTime,
+          end: endTime,
+          detail: {
+            devtools: {
+              color: "error",
+              track: currentTrack,
+              trackGroup: "Scheduler \u269b",
+              tooltipText: passive
+                ? "Remaining Effects Errored"
+                : "Commit Errored",
+              properties: properties
             }
-          });
-        } else
-          console.timeStamp(
-            "Errored",
-            startTime,
-            endTime,
-            currentTrack,
-            "Scheduler \u269b",
-            "error"
-          );
+          }
+        });
+      }
     }
     function logPassiveCommitPhase(startTime, endTime, errors) {
       null !== errors
@@ -12892,6 +13018,7 @@ __DEV__ &&
       var prevEffectStart = pushComponentEffectStart(),
         prevEffectDuration = pushComponentEffectDuration(),
         prevEffectErrors = pushComponentEffectErrors(),
+        prevDeepEquality = alreadyWarnedForDeepEquality,
         isViewTransitionEligible = enableViewTransition
           ? (committedLanes & 335544064) === committedLanes
           : !1;
@@ -12913,7 +13040,8 @@ __DEV__ &&
               finishedWork,
               finishedWork.actualStartTime,
               endTime,
-              inHydratedSubtree
+              inHydratedSubtree,
+              committedLanes
             );
           recursivelyTraversePassiveMountEffects(
             finishedRoot,
@@ -12941,7 +13069,8 @@ __DEV__ &&
                   finishedWork,
                   finishedWork.actualStartTime,
                   endTime,
-                  inHydratedSubtree
+                  inHydratedSubtree,
+                  committedLanes
                 ));
           recursivelyTraversePassiveMountEffects(
             finishedRoot,
@@ -13297,6 +13426,7 @@ __DEV__ &&
       popComponentEffectStart(prevEffectStart);
       popComponentEffectDuration(prevEffectDuration);
       componentEffectErrors = prevEffectErrors;
+      alreadyWarnedForDeepEquality = prevDeepEquality;
     }
     function recursivelyTraverseReconnectPassiveEffects(
       finishedRoot,
@@ -13342,7 +13472,8 @@ __DEV__ &&
     ) {
       var prevEffectStart = pushComponentEffectStart(),
         prevEffectDuration = pushComponentEffectDuration(),
-        prevEffectErrors = pushComponentEffectErrors();
+        prevEffectErrors = pushComponentEffectErrors(),
+        prevDeepEquality = alreadyWarnedForDeepEquality;
       enableComponentPerformanceTrack &&
         0 !== (finishedWork.mode & 2) &&
         0 < finishedWork.actualStartTime &&
@@ -13351,7 +13482,8 @@ __DEV__ &&
           finishedWork,
           finishedWork.actualStartTime,
           endTime,
-          inHydratedSubtree
+          inHydratedSubtree,
+          committedLanes
         );
       var flags = finishedWork.flags;
       switch (finishedWork.tag) {
@@ -13474,6 +13606,7 @@ __DEV__ &&
       popComponentEffectStart(prevEffectStart);
       popComponentEffectDuration(prevEffectDuration);
       componentEffectErrors = prevEffectErrors;
+      alreadyWarnedForDeepEquality = prevDeepEquality;
     }
     function recursivelyTraverseAtomicPassiveEffects(
       finishedRoot,
@@ -13511,6 +13644,7 @@ __DEV__ &&
       committedTransitions,
       endTime
     ) {
+      var prevDeepEquality = alreadyWarnedForDeepEquality;
       enableComponentPerformanceTrack &&
         0 !== (finishedWork.mode & 2) &&
         0 < finishedWork.actualStartTime &&
@@ -13519,7 +13653,8 @@ __DEV__ &&
           finishedWork,
           finishedWork.actualStartTime,
           endTime,
-          inHydratedSubtree
+          inHydratedSubtree,
+          committedLanes
         );
       var flags = finishedWork.flags;
       switch (finishedWork.tag) {
@@ -13558,6 +13693,7 @@ __DEV__ &&
             endTime
           );
       }
+      alreadyWarnedForDeepEquality = prevDeepEquality;
     }
     function commitPassiveUnmountEffects(finishedWork) {
       resetComponentEffectTimers();
@@ -14644,7 +14780,15 @@ __DEV__ &&
             debugTask = blockingUpdateTask;
           if (supportsUserTiming) {
             currentTrack = "Blocking";
-            if (0 < clampedEventTime && null !== eventType) {
+            var eventEndTime =
+              0 < previousRenderStartTime
+                ? previousRenderStartTime
+                : renderStartTime$jscomp$0;
+            if (
+              0 < clampedEventTime &&
+              null !== eventType &&
+              eventEndTime > clampedEventTime
+            ) {
               var color = eventIsRepeat ? "secondary-light" : "warning";
               debugTask
                 ? debugTask.run(
@@ -14652,9 +14796,7 @@ __DEV__ &&
                       console,
                       eventIsRepeat ? "" : "Event: " + eventType,
                       clampedEventTime,
-                      0 < previousRenderStartTime
-                        ? previousRenderStartTime
-                        : renderStartTime$jscomp$0,
+                      eventEndTime,
                       currentTrack,
                       "Scheduler \u269b",
                       color
@@ -14663,15 +14805,14 @@ __DEV__ &&
                 : console.timeStamp(
                     eventIsRepeat ? "" : "Event: " + eventType,
                     clampedEventTime,
-                    0 < previousRenderStartTime
-                      ? previousRenderStartTime
-                      : renderStartTime$jscomp$0,
+                    eventEndTime,
                     currentTrack,
                     "Scheduler \u269b",
                     color
                   );
             }
             0 < previousRenderStartTime &&
+              renderStartTime$jscomp$0 > previousRenderStartTime &&
               ((clampedEventTime = endTime
                 ? "error"
                 : (lanes & 738197653) === lanes
@@ -14712,76 +14853,80 @@ __DEV__ &&
           blockingEventIsRepeat = !0;
           blockingSpawnedUpdate = !1;
         }
-        if (0 !== (lanes & 4194048)) {
-          previousRenderStartTime =
+        0 !== (lanes & 4194048) &&
+          ((previousRenderStartTime =
             0 <= transitionStartTime &&
             transitionStartTime < transitionClampTime
               ? transitionClampTime
-              : transitionStartTime;
-          endTime =
+              : transitionStartTime),
+          (endTime =
             0 <= transitionUpdateTime &&
             transitionUpdateTime < transitionClampTime
               ? transitionClampTime
-              : transitionUpdateTime;
-          renderStartTime$jscomp$0 =
+              : transitionUpdateTime),
+          (clampedEventTime =
             0 <= transitionEventTime &&
             transitionEventTime < transitionClampTime
               ? transitionClampTime
-              : transitionEventTime;
+              : transitionEventTime),
           0 <= transitionSuspendedTime &&
             (setCurrentTrackFromLanes(lanes),
             logSuspendedWithDelayPhase(
               transitionSuspendedTime,
-              0 <= renderStartTime$jscomp$0
-                ? renderStartTime$jscomp$0
+              0 <= clampedEventTime
+                ? clampedEventTime
                 : 0 <= endTime
                   ? endTime
                   : renderStartTime,
               lanes
-            ));
-          debugTask = transitionEventType;
-          clampedEventTime = transitionEventIsRepeat;
-          eventType = renderStartTime;
-          eventIsRepeat = transitionUpdateTask;
-          if (supportsUserTiming) {
-            currentTrack = "Transition";
-            if (0 < renderStartTime$jscomp$0 && null !== debugTask) {
-              color = clampedEventTime ? "secondary-light" : "warning";
-              var endTime$jscomp$0 =
-                0 < previousRenderStartTime
-                  ? previousRenderStartTime
-                  : 0 < endTime
-                    ? endTime
-                    : eventType;
-              eventIsRepeat
-                ? eventIsRepeat.run(
+            )),
+          (eventType = transitionEventType),
+          (eventIsRepeat = transitionEventIsRepeat),
+          (renderStartTime$jscomp$0 = renderStartTime),
+          (debugTask = transitionUpdateTask),
+          supportsUserTiming &&
+            ((currentTrack = "Transition"),
+            (eventEndTime =
+              0 < previousRenderStartTime
+                ? previousRenderStartTime
+                : 0 < endTime
+                  ? endTime
+                  : renderStartTime$jscomp$0),
+            0 < clampedEventTime &&
+              eventEndTime > clampedEventTime &&
+              null !== eventType &&
+              ((color = eventIsRepeat ? "secondary-light" : "warning"),
+              debugTask
+                ? debugTask.run(
                     console.timeStamp.bind(
                       console,
-                      clampedEventTime ? "" : "Event: " + debugTask,
-                      renderStartTime$jscomp$0,
-                      endTime$jscomp$0,
+                      eventIsRepeat ? "" : "Event: " + eventType,
+                      clampedEventTime,
+                      eventEndTime,
                       currentTrack,
                       "Scheduler \u269b",
                       color
                     )
                   )
                 : console.timeStamp(
-                    clampedEventTime ? "" : "Event: " + debugTask,
-                    renderStartTime$jscomp$0,
-                    endTime$jscomp$0,
+                    eventIsRepeat ? "" : "Event: " + eventType,
+                    clampedEventTime,
+                    eventEndTime,
                     currentTrack,
                     "Scheduler \u269b",
                     color
-                  );
-            }
+                  )),
+            (clampedEventTime =
+              0 < endTime ? endTime : renderStartTime$jscomp$0),
             0 < previousRenderStartTime &&
-              (eventIsRepeat
-                ? eventIsRepeat.run(
+              clampedEventTime > previousRenderStartTime &&
+              (debugTask
+                ? debugTask.run(
                     console.timeStamp.bind(
                       console,
                       "Action",
                       previousRenderStartTime,
-                      0 < endTime ? endTime : eventType,
+                      clampedEventTime,
                       currentTrack,
                       "Scheduler \u269b",
                       "primary-dark"
@@ -14790,38 +14935,41 @@ __DEV__ &&
                 : console.timeStamp(
                     "Action",
                     previousRenderStartTime,
-                    0 < endTime ? endTime : eventType,
+                    clampedEventTime,
                     currentTrack,
                     "Scheduler \u269b",
                     "primary-dark"
-                  ));
+                  )),
             0 < endTime &&
-              (eventIsRepeat
-                ? eventIsRepeat.run(
+              renderStartTime$jscomp$0 > endTime &&
+              (debugTask
+                ? debugTask.run(
                     console.timeStamp.bind(
                       console,
-                      5 < eventType - endTime ? "Update Blocked" : "Update",
+                      5 < renderStartTime$jscomp$0 - endTime
+                        ? "Update Blocked"
+                        : "Update",
                       endTime,
-                      eventType,
+                      renderStartTime$jscomp$0,
                       currentTrack,
                       "Scheduler \u269b",
                       "primary-light"
                     )
                   )
                 : console.timeStamp(
-                    5 < eventType - endTime ? "Update Blocked" : "Update",
+                    5 < renderStartTime$jscomp$0 - endTime
+                      ? "Update Blocked"
+                      : "Update",
                     endTime,
-                    eventType,
+                    renderStartTime$jscomp$0,
                     currentTrack,
                     "Scheduler \u269b",
                     "primary-light"
-                  ));
-          }
-          transitionUpdateTime = transitionStartTime = -1.1;
-          transitionUpdateTask = null;
-          transitionSuspendedTime = -1.1;
-          transitionEventIsRepeat = !0;
-        }
+                  ))),
+          (transitionUpdateTime = transitionStartTime = -1.1),
+          (transitionUpdateTask = null),
+          (transitionSuspendedTime = -1.1),
+          (transitionEventIsRepeat = !0));
       }
       previousRenderStartTime = root.timeoutHandle;
       -1 !== previousRenderStartTime &&
@@ -17104,8 +17252,27 @@ __DEV__ &&
       hasOwnProperty = Object.prototype.hasOwnProperty,
       supportsUserTiming =
         "undefined" !== typeof console &&
-        "function" === typeof console.timeStamp,
+        "function" === typeof console.timeStamp &&
+        "undefined" !== typeof performance &&
+        "function" === typeof performance.measure,
       currentTrack = "Blocking",
+      alreadyWarnedForDeepEquality = !1,
+      reusableComponentDevToolDetails = {
+        color: "primary",
+        properties: null,
+        tooltipText: "",
+        track: "Components \u269b"
+      },
+      reusableComponentOptions = {
+        start: -0,
+        end: -0,
+        detail: { devtools: reusableComponentDevToolDetails }
+      },
+      resuableChangedPropsEntry = ["Changed Props", ""],
+      reusableDeeplyEqualPropsEntry = [
+        "Changed Props",
+        "This component received deeply equal props. It might benefit from useMemo or the React Compiler in its owner."
+      ],
       disabledDepth = 0,
       prevLog,
       prevInfo,
@@ -19128,10 +19295,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-classic-c0d151ce-20250702",
+        version: "19.2.0-www-classic-0b78161d-20250702",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-c0d151ce-20250702"
+        reconcilerVersion: "19.2.0-www-classic-0b78161d-20250702"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -19165,7 +19332,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.2.0-www-classic-c0d151ce-20250702";
+    exports.version = "19.2.0-www-classic-0b78161d-20250702";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
