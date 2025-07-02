@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ee8bfe56e9e4e75c8a5c3501038a09d7>>
+ * @generated SignedSource<<32ad67fc1ac107059c56706c1c28603c>>
  */
 
 /*
@@ -9495,8 +9495,7 @@ function commitBeforeMutationEffects(root, firstChild) {
               try {
                 var resolvedPrevProps = resolveClassComponentProps(
                   JSCompiler_temp.type,
-                  anchorOffset,
-                  JSCompiler_temp.elementType === JSCompiler_temp.type
+                  anchorOffset
                 );
                 root = selection.getSnapshotBeforeUpdate(
                   resolvedPrevProps,
@@ -17120,14 +17119,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2004 = React.version;
 if (
-  "19.2.0-native-fb-602917c8-20250701" !==
+  "19.2.0-native-fb-73aa744b-20250702" !==
   isomorphicReactPackageVersion$jscomp$inline_2004
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2004,
-      "19.2.0-native-fb-602917c8-20250701"
+      "19.2.0-native-fb-73aa744b-20250702"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17149,10 +17148,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2523 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-602917c8-20250701",
+  version: "19.2.0-native-fb-73aa744b-20250702",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-602917c8-20250701"
+  reconcilerVersion: "19.2.0-native-fb-73aa744b-20250702"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2524 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17250,4 +17249,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.2.0-native-fb-602917c8-20250701";
+exports.version = "19.2.0-native-fb-73aa744b-20250702";

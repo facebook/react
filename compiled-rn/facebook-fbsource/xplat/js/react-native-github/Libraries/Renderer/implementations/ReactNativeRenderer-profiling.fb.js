@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<daab3c18038220eeed881effee5aec2f>>
+ * @generated SignedSource<<d23ac456eaf1eded4925cc740ca16228>>
  */
 
 "use strict";
@@ -8963,8 +8963,7 @@ function commitBeforeMutationEffects(root, firstChild) {
               try {
                 var resolvedPrevProps = resolveClassComponentProps(
                   finishedWork.type,
-                  prevProps,
-                  finishedWork.elementType === finishedWork.type
+                  prevProps
                 );
                 firstChild = instance.getSnapshotBeforeUpdate(
                   resolvedPrevProps,
@@ -13112,11 +13111,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.2.0-native-fb-602917c8-20250701" !== isomorphicReactPackageVersion)
+if ("19.2.0-native-fb-73aa744b-20250702" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.2.0-native-fb-602917c8-20250701\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.2.0-native-fb-73aa744b-20250702\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -13166,10 +13165,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1527 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-602917c8-20250701",
+    version: "19.2.0-native-fb-73aa744b-20250702",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-602917c8-20250701"
+    reconcilerVersion: "19.2.0-native-fb-73aa744b-20250702"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1527.rendererConfig = extraDevToolsConfig);

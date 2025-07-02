@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<00a2b65cfbf10f3c769171ff5c3cf8af>>
+ * @generated SignedSource<<09619cc8fb85e211462671f3aeca3fe8>>
  */
 
 "use strict";
@@ -8718,8 +8718,7 @@ function commitBeforeMutationEffects(root, firstChild) {
               try {
                 var resolvedPrevProps = resolveClassComponentProps(
                   finishedWork.type,
-                  prevProps,
-                  finishedWork.elementType === finishedWork.type
+                  prevProps
                 );
                 firstChild = instance.getSnapshotBeforeUpdate(
                   resolvedPrevProps,
@@ -12931,10 +12930,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1471 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-602917c8-20250701",
+    version: "19.2.0-native-fb-73aa744b-20250702",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-602917c8-20250701"
+    reconcilerVersion: "19.2.0-native-fb-73aa744b-20250702"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1471.rendererConfig = extraDevToolsConfig);

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1accffa9591cb0c01015818d23f003c5>>
+ * @generated SignedSource<<f1ec6e3df72817579201e9c7a70d2383>>
  */
 
 "use strict";
@@ -10793,8 +10793,7 @@ __DEV__ &&
       try {
         var resolvedPrevProps = resolveClassComponentProps(
           finishedWork.type,
-          prevProps,
-          finishedWork.elementType === finishedWork.type
+          prevProps
         );
         var snapshot = runWithFiberInDEV(
           finishedWork,
@@ -19066,10 +19065,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-602917c8-20250701",
+        version: "19.2.0-native-fb-73aa744b-20250702",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-602917c8-20250701"
+        reconcilerVersion: "19.2.0-native-fb-73aa744b-20250702"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<34d812ed66289d6b0c292ec3fce3ca5b>>
+ * @generated SignedSource<<33ab3f90cd1706de8dcb3e657efa734d>>
  */
 
 "use strict";
@@ -7187,8 +7187,7 @@ function commitBeforeMutationEffects(root, firstChild) {
               try {
                 var resolvedPrevProps = resolveClassComponentProps(
                   finishedWork.type,
-                  prevProps,
-                  finishedWork.elementType === finishedWork.type
+                  prevProps
                 );
                 firstChild = instance.getSnapshotBeforeUpdate(
                   resolvedPrevProps,
@@ -10524,10 +10523,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1241 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-602917c8-20250701",
+  version: "19.2.0-native-fb-73aa744b-20250702",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-602917c8-20250701",
+  reconcilerVersion: "19.2.0-native-fb-73aa744b-20250702",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$143 = 0;
@@ -10678,4 +10677,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.2.0-native-fb-602917c8-20250701";
+exports.version = "19.2.0-native-fb-73aa744b-20250702";
