@@ -5,6 +5,8 @@ import React, {
   unstable_startGestureTransition as startGestureTransition,
 } from 'react';
 
+import ScrollTimelinePolyfill from 'animation-timelines/scroll-timeline';
+
 // Example of a Component that can recognize swipe gestures using a ScrollTimeline
 // without scrolling its own content. Allowing it to be used as an inert gesture
 // recognizer to drive a View Transition.
@@ -25,14 +27,20 @@ export default function SwipeRecognizer({
     if (activeGesture.current !== null) {
       return;
     }
-    if (typeof ScrollTimeline !== 'function') {
-      return;
+
+    let scrollTimeline;
+    if (typeof ScrollTimeline === 'function') {
+      // eslint-disable-next-line no-undef
+      scrollTimeline = new ScrollTimeline({
+        source: scrollRef.current,
+        axis: axis,
+      });
+    } else {
+      scrollTimeline = new ScrollTimelinePolyfill({
+        source: scrollRef.current,
+        axis: axis,
+      });
     }
-    // eslint-disable-next-line no-undef
-    const scrollTimeline = new ScrollTimeline({
-      source: scrollRef.current,
-      axis: axis,
-    });
     activeGesture.current = startGestureTransition(
       scrollTimeline,
       () => {
