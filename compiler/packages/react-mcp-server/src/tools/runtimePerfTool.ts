@@ -69,23 +69,27 @@ export async function runtimePerfTool(
     throw new Error('Failed to parse code');
   }
 
-  const transformResult = await babel.transformFromAstAsync(parsed as babel.types.Node, undefined, {
-    ...babelOptions,
-    plugins: [
-      () => ({
-        visitor: {
-          ImportDeclaration(
-            path: babel.NodePath<babel.types.ImportDeclaration>,
-          ) {
-            const value = path.node.source.value;
-            if (value === 'react' || value === 'react-dom') {
-              path.remove();
-            }
+  const transformResult = await babel.transformFromAstAsync(
+    parsed as babel.types.Node,
+    undefined,
+    {
+      ...babelOptions,
+      plugins: [
+        () => ({
+          visitor: {
+            ImportDeclaration(
+              path: babel.NodePath<babel.types.ImportDeclaration>,
+            ) {
+              const value = path.node.source.value;
+              if (value === 'react' || value === 'react-dom') {
+                path.remove();
+              }
+            },
           },
-        },
-      }),
-    ],
-  });
+        }),
+      ],
+    },
+  );
 
   const transpiled = transformResult?.code || undefined;
   if (!transpiled) {

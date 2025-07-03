@@ -2,13 +2,15 @@ import * as cheerio from 'cheerio';
 import {convert} from 'html-to-text';
 import {queryAlgolia} from '../utils/algolia';
 
-type DevDocsToolOutput = {
-  kind: 'success';
-  content: Array<string>;
-} | {
-  kind: 'error';
-  text: string;
-}
+type DevDocsToolOutput =
+  | {
+      kind: 'success';
+      content: Array<string>;
+    }
+  | {
+      kind: 'error';
+      text: string;
+    };
 
 /**
  * Tool for querying React dev docs from react.dev
@@ -29,9 +31,9 @@ export async function devDocsTool(query: string): Promise<DevDocsToolOutput> {
       // react.dev should always have at least one <article> with the main content
       const article = $('article').html();
       if (article != null) {
-        return convert(article)
+        return convert(article);
       } else {
-        return convert($.html())
+        return convert($.html());
       }
     });
     return {

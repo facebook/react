@@ -8,7 +8,12 @@ import {
 } from 'babel-plugin-react-compiler/src';
 import assertExhaustive from '../utils/assertExhaustive';
 
-export type PassNameType = 'HIR' | 'ReactiveFunction' | 'All' | '@DEBUG' | undefined;
+export type PassNameType =
+  | 'HIR'
+  | 'ReactiveFunction'
+  | 'All'
+  | '@DEBUG'
+  | undefined;
 
 type CompilerToolOutput =
   | {
