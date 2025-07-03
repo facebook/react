@@ -195,6 +195,10 @@ export default class Store extends EventEmitter<{
   // Only used in browser extension for synchronization with built-in Elements panel.
   _lastSelectedHostInstanceElementId: Element['id'] | null = null;
 
+  // Maximum recorded node depth during the lifetime of this Store.
+  // Can only increase: not guaranteed to return maximal value for currently recorded elements.
+  _maximumRecordedDepth = 0;
+
   constructor(bridge: FrontendBridge, config?: Config) {
     super();
 
@@ -698,6 +702,50 @@ export default class Store extends EventEmitter<{
     return index;
   }
 
+  isDescendantOf(parentId: number, descendantId: number): boolean {
+    if (descendantId === 0) {
+      return false;
+    }
+
+    const descendant = this.getElementByID(descendantId);
+    if (descendant === null) {
+      return false;
+    }
+
+    if (descendant.parentID === parentId) {
+      return true;
+    }
+
+    const parent = this.getElementByID(parentId);
+    if (!parent || parent.depth >= descendant.depth) {
+      return false;
+    }
+
+    return this.isDescendantOf(parentId, descendant.parentID);
+  }
+
+  /**
+   * Returns index of the lowest descendant element, if available.
+   * May not be the deepest element, the lowest is used in a sense of bottom-most from UI Tree representation perspective.
+   */
+  getIndexOfLowestDescendantElement(element: Element): number | null {
+    let current: null | Element = element;
+    while (current !== null) {
+      if (current.isCollapsed || current.children.length === 0) {
+        if (current === element) {
+          return null;
+        }
+
+        return this.getIndexOfElementID(current.id);
+      } else {
+        const lastChildID = current.children[current.children.length - 1];
+        current = this.getElementByID(lastChildID);
+      }
+    }
+
+    return null;
+  }
+
   getOwnersListForElement(ownerID: number): Array<Element> {
     const list: Array<Element> = [];
     const element = this._idToElement.get(ownerID);
@@ -1089,9 +1137,15 @@ export default class Store extends EventEmitter<{
               compiledWithForget,
             } = parseElementDisplayNameFromBackend(displayName, type);
 
+            const elementDepth = parentElement.depth + 1;
+            this._maximumRecordedDepth = Math.max(
+              this._maximumRecordedDepth,
+              elementDepth,
+            );
+
             const element: Element = {
               children: [],
-              depth: parentElement.depth + 1,
+              depth: elementDepth,
               displayName: displayNameWithoutHOCs,
               hocDisplayNames,
               id,
@@ -1535,6 +1589,14 @@ export default class Store extends EventEmitter<{
       this._bridge.send('getHookSettings');
     }
   };
+
+  /**
+   * Maximum recorded node depth during the lifetime of this Store.
+   * Can only increase: not guaranteed to return maximal value for currently recorded elements.
+   */
+  getMaximumRecordedDepth(): number {
+    return this._maximumRecordedDepth;
+  }
 
   updateHookSettings: (settings: $ReadOnly<DevToolsHookSettings>) => void =
     settings => {
