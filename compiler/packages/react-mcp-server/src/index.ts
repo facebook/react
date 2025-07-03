@@ -322,10 +322,12 @@ async function main() {
   console.error('React Compiler MCP Server running on stdio');
 }
 
-main().catch(error => {
-  console.error('Fatal error in main():', error);
-  process.exit(1);
-});
+if (require.main !== module) {
+  main().catch(error => {
+    console.error('Fatal error in main():', error);
+    process.exit(1);
+  });
+}
 
 export {
   compileTool,

@@ -10,7 +10,7 @@ import {
 import yargs from 'yargs';
 import {hideBin} from 'yargs/helpers';
 
-yargs()
+yargs(hideBin(process.argv))
   .scriptName('react-tools-cli')
   .usage('$0 <cmd> [args]')
   .command(
@@ -61,7 +61,7 @@ yargs()
               }),
             }),
           );
-          break;
+          process.exit(1);
         }
         case 'error':
         case 'compile-error':
@@ -76,7 +76,7 @@ yargs()
               ],
             }),
           );
-          break;
+          process.exit(1);
         default:
           assertExhaustive(
             results,
@@ -127,6 +127,7 @@ yargs()
             `Unhandled result ${JSON.stringify(result)}`,
           );
       }
+      process.exit(1);
     },
   )
   .command(
@@ -162,6 +163,7 @@ yargs()
           }),
         );
       }
+      process.exit(1);
     },
   )
   .command(
@@ -225,10 +227,11 @@ ${calculateMean(results.renderTime)}
           }),
         );
       }
+      process.exit(1);
     },
   )
   .help()
-  .parse(hideBin(process.argv));
+  .parse();
 
 function calculateMean(values: number[]): string {
   return values.length > 0
