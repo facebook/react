@@ -4,6 +4,13 @@
 
 ---
 
+### 6.1.4
+July 4, 2025
+
+* feat: static Components panel layout ([hoxyq](https://github.com/hoxyq) in [#33696](https://github.com/facebook/react/pull/33696))
+
+---
+
 ### 6.1.3
 June 27, 2025
 
