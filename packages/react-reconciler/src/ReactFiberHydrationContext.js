@@ -30,7 +30,6 @@ import {
   SuspenseComponent,
   ActivityComponent,
 } from './ReactWorkTags';
-import {favorSafetyOverHydrationPerf} from 'shared/ReactFeatureFlags';
 
 import {createCapturedValueAtFiber} from './ReactCapturedValue';
 
@@ -558,7 +557,7 @@ function prepareToHydrateHostInstance(
     hostContext,
     fiber,
   );
-  if (!didHydrate && favorSafetyOverHydrationPerf) {
+  if (!didHydrate) {
     throwOnHydrationMismatch(fiber, true);
   }
 }
@@ -624,7 +623,7 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): void {
     fiber,
     parentProps,
   );
-  if (!didHydrate && favorSafetyOverHydrationPerf) {
+  if (!didHydrate) {
     throwOnHydrationMismatch(fiber, true);
   }
 }

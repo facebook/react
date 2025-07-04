@@ -124,8 +124,7 @@ describe('ReactDOMServerHydration', () => {
           </div>
         );
       }
-      if (gate(flags => flags.favorSafetyOverHydrationPerf)) {
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+      expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
             "Caught [Hydration failed because the server rendered text didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
@@ -150,33 +149,6 @@ describe('ReactDOMServerHydration', () => {
               in Mismatch (at **)",
           ]
         `);
-      } else {
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-          [
-            "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
-
-          - A server/client branch \`if (typeof window !== 'undefined')\`.
-          - Variable input such as \`Date.now()\` or \`Math.random()\` which changes each time it's called.
-          - Date formatting in a user's locale which doesn't match the server.
-          - External changing data without sending a snapshot of it along with the HTML.
-          - Invalid HTML tag nesting.
-
-          It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
-
-          https://react.dev/link/hydration-mismatch
-
-            <Mismatch isClient={true}>
-              <div className="parent">
-                <main className="child">
-          +       client
-          -       server
-
-            Owner Stack:
-              in main (at **)
-              in Mismatch (at **)",
-          ]
-        `);
-      }
     });
 
     // @gate __DEV__
@@ -193,8 +165,7 @@ describe('ReactDOMServerHydration', () => {
       }
 
       /* eslint-disable no-irregular-whitespace */
-      if (gate(flags => flags.favorSafetyOverHydrationPerf)) {
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+      expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
             "Caught [Hydration failed because the server rendered text didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
@@ -218,32 +189,6 @@ describe('ReactDOMServerHydration', () => {
               in Mismatch (at **)",
           ]
         `);
-      } else {
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-          [
-            "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
-
-          - A server/client branch \`if (typeof window !== 'undefined')\`.
-          - Variable input such as \`Date.now()\` or \`Math.random()\` which changes each time it's called.
-          - Date formatting in a user's locale which doesn't match the server.
-          - External changing data without sending a snapshot of it along with the HTML.
-          - Invalid HTML tag nesting.
-
-          It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
-
-          https://react.dev/link/hydration-mismatch
-
-            <Mismatch isClient={true}>
-              <div>
-          +     This markup contains an nbsp entity:   client text
-          -     This markup contains an nbsp entity:   server text
-
-            Owner Stack:
-              in div (at **)
-              in Mismatch (at **)",
-          ]
-        `);
-      }
       /* eslint-enable no-irregular-whitespace */
     });
 
@@ -740,8 +685,7 @@ describe('ReactDOMServerHydration', () => {
         function Mismatch({isClient}) {
           return <div className="parent">{isClient && 'only'}</div>;
         }
-        if (gate(flags => flags.favorSafetyOverHydrationPerf)) {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             [
               "Caught [Hydration failed because the server rendered text didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
@@ -765,32 +709,6 @@ describe('ReactDOMServerHydration', () => {
                 in Mismatch (at **)",
             ]
           `);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-            [
-              "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
-
-            - A server/client branch \`if (typeof window !== 'undefined')\`.
-            - Variable input such as \`Date.now()\` or \`Math.random()\` which changes each time it's called.
-            - Date formatting in a user's locale which doesn't match the server.
-            - External changing data without sending a snapshot of it along with the HTML.
-            - Invalid HTML tag nesting.
-
-            It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
-
-            https://react.dev/link/hydration-mismatch
-
-              <Mismatch isClient={true}>
-                <div className="parent">
-            +     only
-            -     
-
-              Owner Stack:
-                in div (at **)
-                in Mismatch (at **)",
-            ]
-          `);
-        }
       });
 
       // @gate __DEV__
