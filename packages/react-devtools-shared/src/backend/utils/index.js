@@ -360,8 +360,9 @@ function collectStackTrace(
     const callSite = structuredStackTrace[i];
     const name = callSite.getFunctionName();
     if (
-      name.includes('react_stack_bottom_frame') ||
-      name.includes('react-stack-bottom-frame')
+      name != null &&
+      (name.includes('react_stack_bottom_frame') ||
+        name.includes('react-stack-bottom-frame'))
     ) {
       // We pick the last frame that matches before the bottom frame since
       // that will be immediately inside the component as opposed to some helper.
