@@ -2054,8 +2054,9 @@ function visitAsyncNode(
   visited.add(node);
   // First visit anything that blocked this sequence to start in the first place.
   if (node.previous !== null && node.end > request.timeOrigin) {
-    // We ignore the return value here because if it wasn't awaited in user space, then we don't log it.
-    // It also means that it can just have been part of a previous component's render.
+    // We ignore the returned io nodes here because if it wasn't awaited in user space,
+    // then we don't log it. It also means that it can just have been part of a previous
+    // component's render.
     // TODO: This means that some I/O can get lost that was still blocking the sequence.
     const ioNode = visitAsyncNode(
       request,
@@ -2111,7 +2112,7 @@ function visitAsyncNode(
           }
         } else if (request.status === ABORTING) {
           if (node.start < request.abortTime && node.end > request.abortTime) {
-            // We aborted this render. If this Promise spaned the abort time it was probably the
+            // We aborted this render. If this Promise spanned the abort time it was probably the
             // Promise that was aborted. This won't necessarily have I/O associated with it but
             // it's a point of interest.
             if (filterStackTrace(request, node.stack).length > 0) {
@@ -4147,7 +4148,7 @@ function serializeIONode(
   const endTime =
     ioNode.tag === UNRESOLVED_PROMISE_NODE
       ? // Mark the end time as now. It's arbitrary since it's not resolved but this
-        // marks when we stopped trying.
+        // marks when we called abort and therefore stopped trying.
         request.abortTime
       : ioNode.end;
 
