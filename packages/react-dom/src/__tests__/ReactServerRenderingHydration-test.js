@@ -156,10 +156,11 @@ describe('ReactDOMServerHydration', () => {
                 "- Date formatting in a user's locale which doesn't match the server.\n" +
                 '- External changing data without sending a snapshot of it along with the HTML.\n' +
                 '- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension ' +
-                'installed which messes with the HTML before React loaded.\n' +
+                'installed which changes the HTML before React loaded.\n' +
                 '\n' +
                 'https://react.dev/link/hydration-mismatch\n' +
                 '\n' +
+                'The following differences were found (+ marks client content, - marks server content):\n\n' +
                 '  <TestComponent name="y" ref={function ref}>\n' +
                 '    <span ref={{current:null}} onClick={function}>\n' +
                 '+     y\n' +
@@ -264,10 +265,11 @@ describe('ReactDOMServerHydration', () => {
               "- Date formatting in a user's locale which doesn't match the server.\n" +
               '- External changing data without sending a snapshot of it along with the HTML.\n' +
               '- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension ' +
-              'installed which messes with the HTML before React loaded.\n' +
+              'installed which changes the HTML before React loaded.\n' +
               '\n' +
               'https://react.dev/link/hydration-mismatch\n' +
               '\n' +
+              'The following differences were found (+ marks client content, - marks server content):\n\n' +
               '  <button autoFocus={false} onFocus={function mockConstructor}>\n' +
               '+   client\n' +
               '-   server\n' +
@@ -304,10 +306,11 @@ describe('ReactDOMServerHydration', () => {
         "- Date formatting in a user's locale which doesn't match the server.\n" +
         '- External changing data without sending a snapshot of it along with the HTML.\n' +
         '- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension ' +
-        'installed which messes with the HTML before React loaded.\n' +
+        'installed which changes the HTML before React loaded.\n' +
         '\n' +
         'https://react.dev/link/hydration-mismatch\n' +
         '\n' +
+        'The following differences were found (+ marks client content, - marks server content):\n\n' +
         '  <div\n    style={{\n+     textDecoration: "none"\n' +
         '+     color: "white"\n' +
         '-     color: "black"\n' +
@@ -370,10 +373,11 @@ describe('ReactDOMServerHydration', () => {
         "- Date formatting in a user's locale which doesn't match the server.\n" +
         '- External changing data without sending a snapshot of it along with the HTML.\n' +
         '- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension ' +
-        'installed which messes with the HTML before React loaded.\n' +
+        'installed which changes the HTML before React loaded.\n' +
         '\n' +
         'https://react.dev/link/hydration-mismatch\n' +
         '\n' +
+        'The following differences were found (+ marks client content, - marks server content):\n\n' +
         '  <div\n' +
         '    style={{\n' +
         '+     textDecoration: "none"\n' +
@@ -642,10 +646,11 @@ describe('ReactDOMServerHydration', () => {
               "- Date formatting in a user's locale which doesn't match the server.\n" +
               '- External changing data without sending a snapshot of it along with the HTML.\n' +
               '- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension ' +
-              'installed which messes with the HTML before React loaded.\n' +
+              'installed which changes the HTML before React loaded.\n' +
               '\n' +
               'https://react.dev/link/hydration-mismatch\n' +
               '\n' +
+              'The following differences were found (+ marks client content, - marks server content):\n\n' +
               '  <div dangerouslySetInnerHTML={undefined}>\n' +
               '    <p>\n' +
               '+     client\n' +
