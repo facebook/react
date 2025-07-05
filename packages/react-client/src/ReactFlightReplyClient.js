@@ -1106,7 +1106,7 @@ function createFakeServerFunction<A: Iterable<any>, T>(
       '\n//# sourceURL=rsc://React/' +
       encodeURIComponent(environmentName) +
       '/' +
-      filename +
+      encodeURI(filename) +
       '?s' + // We add an extra s here to distinguish from the fake stack frames
       fakeServerFunctionIdx++;
     code += '\n//# sourceMappingURL=' + sourceMap;

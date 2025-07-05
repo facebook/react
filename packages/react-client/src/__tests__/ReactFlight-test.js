@@ -1306,6 +1306,9 @@ describe('ReactFlight', () => {
         '    at file:///testing.js:42:3',
         // async anon function (https://github.com/ChromeDevTools/devtools-frontend/blob/831be28facb4e85de5ee8c1acc4d98dfeda7a73b/test/unittests/front_end/panels/console/ErrorStackParser_test.ts#L130C9-L130C41)
         '    at async file:///testing.js:42:3',
+        // third-party RSC frame
+        // Ideally this would be a real frame produced by React not a mocked one.
+        '    at ThirdParty (rsc://React/ThirdParty/file:///code/%5Broot%2520of%2520the%2520server%5D.js?42:1:1)',
         // host component in parent stack
         '    at div (<anonymous>)',
         ...originalStackLines.slice(2),
@@ -1360,7 +1363,10 @@ describe('ReactFlight', () => {
           return functionName === 'div';
         }
         return (
-          !filename.startsWith('node:') && !filename.includes('node_modules')
+          !filename.startsWith('node:') &&
+          !filename.includes('node_modules') &&
+          // sourceURL from an ES module in `/code/[root of the server].js`
+          filename !== 'file:///code/[root%20of%20the%20server].js'
         );
       },
     });
