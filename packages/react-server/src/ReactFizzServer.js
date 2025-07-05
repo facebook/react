@@ -1019,6 +1019,7 @@ function pushHaltedAwaitOnComponentStack(
             stack: bestStack.debugStack,
           };
           task.debugTask = (bestStack.debugTask: any);
+          break;
         }
       }
     }
