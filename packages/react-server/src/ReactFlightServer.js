@@ -462,6 +462,7 @@ export type Request = {
   onFatalError: mixed => void,
   // Profiling-only
   timeOrigin: number,
+  abortTime: number,
   // DEV-only
   completedDebugChunks: Array<Chunk | BinaryChunk>,
   environmentName: () => string,
@@ -613,6 +614,7 @@ function RequestInstance(
         // $FlowFixMe[prop-missing]
         performance.timeOrigin,
     );
+    this.abortTime = -0.0;
   } else {
     timeOrigin = 0;
   }
@@ -2092,6 +2094,15 @@ function visitAsyncNode(
           } else {
             match = node;
           }
+        } else if (request.status === ABORTING) {
+          if (node.start < request.abortTime && node.end > request.abortTime) {
+            // We aborted this render. If this Promise spaned the abort time it was probably the
+            // Promise that was aborted. This won't necessarily have I/O associated with it but
+            // it's a point of interest.
+            if (filterStackTrace(request, node.stack).length > 0) {
+              match = node;
+            }
+          }
         }
       }
       // We need to forward after we visit awaited nodes because what ever I/O we requested that's
@@ -2147,6 +2158,11 @@ function visitAsyncNode(
               // If this await was fully filtered out, then it was inside third party code
               // such as in an external library. We return the I/O node and try another await.
               match = ioNode;
+            } else if (
+              request.status === ABORTING &&
+              startTime > request.abortTime
+            ) {
+              // This was awaited after aborting so we skip it.
             } else {
               // We found a user space await.
 
@@ -4105,7 +4121,7 @@ function serializeIONode(
     ioNode.tag === UNRESOLVED_PROMISE_NODE
       ? // Mark the end time as now. It's arbitrary since it's not resolved but this
         // marks when we stopped trying.
-        performance.now()
+        request.abortTime
       : ioNode.end;
 
   request.pendingChunks++;
@@ -4918,17 +4934,8 @@ function forwardDebugInfoFromAbortedTask(request: Request, task: Task): void {
       thenable = (model: any);
     } else if (model.$$typeof === REACT_LAZY_TYPE) {
       const payload = model._payload;
-      const init = model._init;
-      try {
-        init(payload);
-      } catch (x) {
-        if (
-          typeof x === 'object' &&
-          x !== null &&
-          typeof x.then === 'function'
-        ) {
-          thenable = (x: any);
-        }
+      if (typeof payload.then === 'function') {
+        thenable = payload;
       }
     }
     if (thenable !== null) {
@@ -4957,6 +4964,8 @@ function forwardDebugInfoFromAbortedTask(request: Request, task: Task): void {
           advanceTaskTime(request, task, task.time);
           emitDebugChunk(request, task.id, asyncInfo);
         } else {
+          // We have a resolved Promise. Its debug info can include both awaited data and rejected
+          // promises after the abort.
           emitAsyncSequence(request, task, sequence, debugInfo, null, null);
         }
       }
@@ -5007,7 +5016,7 @@ function markOperationEndTime(request: Request, task: Task, timestamp: number) {
   }
   // This is like advanceTaskTime() but always emits a timing chunk even if it doesn't advance.
   // This ensures that the end time of the previous entry isn't implied to be the start of the next one.
-  if (request.status === ABORTING) {
+  if (request.status === ABORTING && timestamp > request.abortTime) {
     // If we're aborting then we don't emit any end times that happened after.
     return;
   }
@@ -5333,7 +5342,7 @@ function finishAbortedTask(
   // Track when we aborted this task as its end time.
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     if (task.timed) {
-      markOperationEndTime(request, task, performance.now());
+      markOperationEndTime(request, task, request.abortTime);
     }
   }
   // Instead of emitting an error per task.id, we emit a model that only
@@ -5579,6 +5588,9 @@ export function abort(request: Request, reason: mixed): void {
   }
   try {
     request.status = ABORTING;
+    if (enableProfilerTimer && enableComponentPerformanceTrack) {
+      request.abortTime = performance.now();
+    }
     request.cacheController.abort(reason);
     const abortableTasks = request.abortableTasks;
     if (abortableTasks.size > 0) {
