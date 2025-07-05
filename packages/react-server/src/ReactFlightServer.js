@@ -2045,7 +2045,7 @@ function visitAsyncNode(
   node: AsyncSequence,
   visited: Set<AsyncSequence | ReactDebugInfo>,
   cutOff: number,
-): null | PromiseNode | IONode {
+): void | null | PromiseNode | IONode {
   if (visited.has(node)) {
     // It's possible to visit them same node twice when it's part of both an "awaited" path
     // and a "previous" path. This also gracefully handles cycles which would be a bug.
@@ -2057,7 +2057,18 @@ function visitAsyncNode(
     // We ignore the return value here because if it wasn't awaited in user space, then we don't log it.
     // It also means that it can just have been part of a previous component's render.
     // TODO: This means that some I/O can get lost that was still blocking the sequence.
-    visitAsyncNode(request, task, node.previous, visited, cutOff);
+    const ioNode = visitAsyncNode(
+      request,
+      task,
+      node.previous,
+      visited,
+      cutOff,
+    );
+    if (ioNode === undefined) {
+      // Undefined is used as a signal that we found a suitable aborted node and we don't have to find
+      // further aborted nodes.
+      return undefined;
+    }
   }
   switch (node.tag) {
     case IO_NODE: {
@@ -2077,7 +2088,11 @@ function visitAsyncNode(
       let match = null;
       if (awaited !== null) {
         const ioNode = visitAsyncNode(request, task, awaited, visited, cutOff);
-        if (ioNode !== null) {
+        if (ioNode === undefined) {
+          // Undefined is used as a signal that we found a suitable aborted node and we don't have to find
+          // further aborted nodes.
+          return undefined;
+        } else if (ioNode !== null) {
           // This Promise was blocked on I/O. That's a signal that this Promise is interesting to log.
           // We don't log it yet though. We return it to be logged by the point where it's awaited.
           // The ioNode might be another PromiseNode in the case where none of the AwaitNode had
@@ -2125,7 +2140,11 @@ function visitAsyncNode(
       let match = null;
       if (awaited !== null) {
         const ioNode = visitAsyncNode(request, task, awaited, visited, cutOff);
-        if (ioNode !== null) {
+        if (ioNode === undefined) {
+          // Undefined is used as a signal that we found a suitable aborted node and we don't have to find
+          // further aborted nodes.
+          return undefined;
+        } else if (ioNode !== null) {
           const startTime: number = node.start;
           const endTime: number = node.end;
           if (endTime <= request.timeOrigin) {
@@ -2188,6 +2207,11 @@ function visitAsyncNode(
               // Mark the end time of the await. If we're aborting then we don't emit this
               // to signal that this never resolved inside this render.
               markOperationEndTime(request, task, endTime);
+              if (request.status === ABORTING) {
+                // Undefined is used as a signal that we found a suitable aborted node and we don't have to find
+                // further aborted nodes.
+                match = undefined;
+              }
             }
           }
         }
@@ -2224,7 +2248,10 @@ function emitAsyncSequence(
     visited.add(alreadyForwardedDebugInfo);
   }
   const awaitedNode = visitAsyncNode(request, task, node, visited, task.time);
-  if (awaitedNode !== null) {
+  if (awaitedNode === undefined) {
+    // Undefined is used as a signal that we found an aborted await and that's good enough
+    // anything derived from that aborted node might be irrelevant.
+  } else if (awaitedNode !== null) {
     // Nothing in user space (unfiltered stack) awaited this.
     serializeIONode(request, awaitedNode, awaitedNode.promise);
     request.pendingChunks++;
