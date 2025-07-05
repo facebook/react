@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @validateRefAccessDuringRender false
+// @validateRefAccessDuringRender:false
 function VideoTab() {
   const ref = useRef();
   const t = ref.current;
@@ -18,7 +18,7 @@ function VideoTab() {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @validateRefAccessDuringRender false
+import { c as _c } from "react/compiler-runtime"; // @validateRefAccessDuringRender:false
 function VideoTab() {
   const $ = _c(1);
   const ref = useRef();
