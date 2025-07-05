@@ -204,7 +204,18 @@ function findCalledFunctionNameFromStackTrace(
     const callsite = stack[i];
     const functionName = callsite[0];
     const url = devirtualizeURL(callsite[1]);
-    if (filterStackFrame(url, functionName)) {
+    const lineNumber = callsite[2];
+    const columnNumber = callsite[3];
+    const enclosingLineNumber = callsite[4];
+    const enclosingColumnNumber = callsite[5];
+    if (
+      filterStackFrame(
+        url,
+        functionName,
+        enclosingLineNumber || lineNumber,
+        enclosingColumnNumber || columnNumber,
+      )
+    ) {
       if (bestMatch === '') {
         // If we had no good stack frames for internal calls, just use the last
         // first party function name.
@@ -235,8 +246,19 @@ function filterStackTrace(
   for (let i = 0; i < stack.length; i++) {
     const callsite = stack[i];
     const functionName = callsite[0];
+    const lineNumber = callsite[2];
+    const columnNumber = callsite[3];
+    const enclosingLineNumber = callsite[4];
+    const enclosingColumnNumber = callsite[5];
     const url = devirtualizeURL(callsite[1]);
-    if (filterStackFrame(url, functionName)) {
+    if (
+      filterStackFrame(
+        url,
+        functionName,
+        enclosingLineNumber || lineNumber,
+        enclosingColumnNumber || columnNumber,
+      )
+    ) {
       // Use a clone because the Flight protocol isn't yet resilient to deduping
       // objects in the debug info. TODO: Support deduping stacks.
       const clone: ReactCallSite = (callsite.slice(0): any);
@@ -465,7 +487,12 @@ export type Request = {
   // DEV-only
   completedDebugChunks: Array<Chunk | BinaryChunk>,
   environmentName: () => string,
-  filterStackFrame: (url: string, functionName: string) => boolean,
+  filterStackFrame: (
+    url: string,
+    functionName: string,
+    lineNumber: number,
+    columnNumber: number,
+  ) => boolean,
   didWarnForKey: null | WeakSet<ReactComponentInfo>,
   writtenDebugObjects: WeakMap<Reference, string>,
   deferredDebugObjects: null | DeferredDebugStore,
@@ -2139,7 +2166,16 @@ function visitAsyncNode(
               const callsite = fullStack[0];
               const functionName = callsite[0];
               const url = devirtualizeURL(callsite[1]);
-              isAwaitInUserspace = filterStackFrame(url, functionName);
+              const lineNumber = callsite[2];
+              const columnNumber = callsite[3];
+              const enclosingLineNumber = callsite[4];
+              const enclosingColumnNumber = callsite[5];
+              isAwaitInUserspace = filterStackFrame(
+                url,
+                functionName,
+                enclosingLineNumber || lineNumber,
+                enclosingColumnNumber || columnNumber,
+              );
             }
             if (!isAwaitInUserspace) {
               // If this await was fully filtered out, then it was inside third party code
