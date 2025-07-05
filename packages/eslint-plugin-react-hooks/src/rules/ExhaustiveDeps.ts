@@ -348,7 +348,7 @@ const rule = {
           // Only consider second value in initializing tuple stable.
           if (
             id.type === 'ArrayPattern' &&
-            id.elements.length === 2 &&
+            id.elements.length > 1 &&
             isArray(resolved.identifiers)
           ) {
             // Is second tuple value the same reference we're checking?
