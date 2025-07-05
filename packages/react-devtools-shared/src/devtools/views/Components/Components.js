@@ -176,7 +176,7 @@ function Components(_: {}) {
 
 const LOCAL_STORAGE_KEY = 'React::DevTools::createResizeReducer';
 const VERTICAL_MODE_MAX_WIDTH = 600;
-const MINIMUM_SIZE = 50;
+const MINIMUM_SIZE = 100;
 
 function initResizeState(): ResizeState {
   let horizontalPercentage = 0.65;
