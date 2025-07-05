@@ -1309,6 +1309,8 @@ describe('ReactFlight', () => {
         // third-party RSC frame
         // Ideally this would be a real frame produced by React not a mocked one.
         '    at ThirdParty (rsc://React/ThirdParty/file:///code/%5Broot%2520of%2520the%2520server%5D.js?42:1:1)',
+        // We'll later filter this out based on line/column in `filterStackFrame`.
+        '    at ThirdPartyModule (file:///file-with-index-source-map.js:52656:16374)',
         // host component in parent stack
         '    at div (<anonymous>)',
         ...originalStackLines.slice(2),
@@ -1357,7 +1359,10 @@ describe('ReactFlight', () => {
         }
         return `digest(${String(x)})`;
       },
-      filterStackFrame(filename, functionName) {
+      filterStackFrame(filename, functionName, lineNumber, columnNumber) {
+        if (lineNumber === 52656 && columnNumber === 16374) {
+          return false;
+        }
         if (!filename) {
           // Allow anonymous
           return functionName === 'div';
@@ -3682,7 +3687,7 @@ describe('ReactFlight', () => {
         onError(x) {
           return `digest("${x.message}")`;
         },
-        filterStackFrame(url, functionName) {
+        filterStackFrame(url, functionName, lineNumber, columnNumber) {
           return functionName !== 'intermediate';
         },
       },
