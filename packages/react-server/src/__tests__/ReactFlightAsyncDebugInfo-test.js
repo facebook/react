@@ -2331,7 +2331,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
               ],
               "start": 0,
               "value": {
-                "value": "HI, SEBBIE",
+                "value": undefined,
               },
             },
             "env": "Server",
@@ -2352,6 +2352,14 @@ describe('ReactFlightAsyncDebugInfo', () => {
               ],
             },
             "stack": [
+              [
+                "getData",
+                "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                2232,
+                23,
+                2231,
+                5,
+              ],
               [
                 "Component",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
