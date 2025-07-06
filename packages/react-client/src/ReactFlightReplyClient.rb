@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {
+ type {
   Thenable,
   PendingThenable,
   FulfilledThenable,
@@ -15,10 +15,10 @@ import type {
   ReactCustomFormAction,
   ReactFunctionLocation,
 } from 'shared/ReactTypes';
-import type {LazyComponent} from 'react/src/ReactLazy';
-import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
+ type {LazyComponent} from 'react/src/ReactLazy';
+ type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
 
-import {
+ {
   REACT_ELEMENT_TYPE,
   REACT_LAZY_TYPE,
   REACT_CONTEXT_TYPE,
@@ -26,20 +26,20 @@ import {
   ASYNC_ITERATOR,
 } from 'shared/ReactSymbols';
 
-import {
+ {
   describeObjectForErrorMessage,
   isSimpleObject,
   objectName,
 } from 'shared/ReactSerializationErrors';
 
-import {writeTemporaryReference} from './ReactFlightTemporaryReferences';
+ {writeTemporaryReference} from './ReactFlightTemporaryReferences';
 
-import isArray from 'shared/isArray';
-import getPrototypeOf from 'shared/getPrototypeOf';
+ isArray from 'shared/isArray';
+ getPrototypeOf from 'shared/getPrototypeOf';
 
 const ObjectPrototype = Object.prototype;
 
-import {usedWithSSR} from './ReactFlightClientConfig';
+       {usedWithSSR}      './ReactFlightClientConfig';
 
 type ReactJSONValue =
   | string
@@ -49,28 +49,28 @@ type ReactJSONValue =
   | $ReadOnlyArray<ReactJSONValue>
   | ReactServerObject;
 
-export opaque type ServerReference<T> = T;
+       opaque type ServerReference<T> = T;
 
-export type CallServerCallback = <A, T>(id: any, args: A) => Promise<T>;
+       type CallServerCallback = <A, T>(id: any, args: A) => Promise<T>;
 
-export type EncodeFormActionCallback = <A>(
+       type EncodeFormActionCallback = <A>(
   id: any,
   args: Promise<A>,
 ) => ReactCustomFormAction;
 
-export type ServerReferenceId = any;
+       type ServerReferenceId = any;
 
 type ServerReferenceClosure = {
   id: ServerReferenceId,
   originalBind: Function,
-  bound: null | Thenable<Array<any>>,
+  bound:      | Thenable<Array<any>>,
 };
 
-const knownServerReferences: WeakMap<Function, ServerReferenceClosure> =
-  new WeakMap();
+    knownServerReferences: WeakMap<Function, ServerReferenceClosure> =
+  novo WeakMap();
 
 // Serializable values
-export type ReactServerValue =
+       type ReactServerValue =
   // References are passed by their value
   | ServerReference<any>
   // The rest are passed as is. Sub-types can be passed in but lose their
@@ -78,8 +78,8 @@ export type ReactServerValue =
   | string
   | boolean
   | number
-  | null
-  | void
+  | 
+  | 
   | bigint
   | $AsyncIterable<ReactServerValue, ReactServerValue, void>
   | $AsyncIterator<ReactServerValue, ReactServerValue, void>
@@ -95,12 +95,12 @@ export type ReactServerValue =
 
 type ReactServerObject = {+[key: string]: ReactServerValue};
 
-function serializeByValueID(id: number): string {
-  return '$' + id.toString(16);
+       serializeByValueID(id: number): string {
+         '$' + id.toString(16);
 }
 
-function serializePromiseID(id: number): string {
-  return '$@' + id.toString(16);
+       serializePromiseID(id: number): string {
+          '$@' + id.toString(16);
 }
 
 function serializeServerReferenceID(id: number): string {
