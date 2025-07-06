@@ -2054,10 +2054,6 @@ function visitAsyncNode(
   visited.add(node);
   // First visit anything that blocked this sequence to start in the first place.
   if (node.previous !== null && node.end > request.timeOrigin) {
-    // We ignore the returned io nodes here because if it wasn't awaited in user space,
-    // then we don't log it. It also means that it can just have been part of a previous
-    // component's render.
-    // TODO: This means that some I/O can get lost that was still blocking the sequence.
     const ioNode = visitAsyncNode(
       request,
       task,
@@ -2069,6 +2065,25 @@ function visitAsyncNode(
       // Undefined is used as a signal that we found a suitable aborted node and we don't have to find
       // further aborted nodes.
       return undefined;
+    }
+    if (ioNode !== null) {
+      // Nothing in user space (unfiltered stack) awaited this.
+      if (ioNode.end < cutOff) {
+        // If we ended before the current sequence, then we weren't blocked on this. It might have
+        // happened in a previous component.
+      } else {
+        serializeIONode(request, ioNode, ioNode.promise);
+        request.pendingChunks++;
+        const env = (0, request.environmentName)();
+        const debugInfo: ReactAsyncInfo = {
+          awaited: ((ioNode: any): ReactIOInfo), // This is deduped by this reference.
+          env: env,
+        };
+        advanceTaskTime(request, task, ioNode.start);
+        emitDebugChunk(request, task.id, debugInfo);
+        // In effect, we awaited "previous" until we started the "next" node.
+        markOperationEndTime(request, task, node.start);
+      }
     }
   }
   switch (node.tag) {
