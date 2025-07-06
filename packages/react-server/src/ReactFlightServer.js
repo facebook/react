@@ -2052,38 +2052,20 @@ function visitAsyncNode(
     return null;
   }
   visited.add(node);
+  let previousIONode = null;
   // First visit anything that blocked this sequence to start in the first place.
   if (node.previous !== null && node.end > request.timeOrigin) {
-    const ioNode = visitAsyncNode(
+    previousIONode = visitAsyncNode(
       request,
       task,
       node.previous,
       visited,
       cutOff,
     );
-    if (ioNode === undefined) {
+    if (previousIONode === undefined) {
       // Undefined is used as a signal that we found a suitable aborted node and we don't have to find
       // further aborted nodes.
       return undefined;
-    }
-    if (ioNode !== null) {
-      // Nothing in user space (unfiltered stack) awaited this.
-      if (ioNode.end < cutOff) {
-        // If we ended before the current sequence, then we weren't blocked on this. It might have
-        // happened in a previous component.
-      } else {
-        serializeIONode(request, ioNode, ioNode.promise);
-        request.pendingChunks++;
-        const env = (0, request.environmentName)();
-        const debugInfo: ReactAsyncInfo = {
-          awaited: ((ioNode: any): ReactIOInfo), // This is deduped by this reference.
-          env: env,
-        };
-        advanceTaskTime(request, task, ioNode.start);
-        emitDebugChunk(request, task.id, debugInfo);
-        // In effect, we awaited "previous" until we started the "next" node.
-        markOperationEndTime(request, task, node.start);
-      }
     }
   }
   switch (node.tag) {
@@ -2091,17 +2073,17 @@ function visitAsyncNode(
       return node;
     }
     case UNRESOLVED_PROMISE_NODE: {
-      return null;
+      return previousIONode;
     }
     case PROMISE_NODE: {
       if (node.end <= request.timeOrigin) {
         // This was already resolved when we started this render. It must have been either something
         // that's part of a start up sequence or externally cached data. We exclude that information.
         // The technique for debugging the effects of uncached data on the render is to simply uncache it.
-        return null;
+        return previousIONode;
       }
       const awaited = node.awaited;
-      let match = null;
+      let match: void | null | PromiseNode | IONode = previousIONode;
       if (awaited !== null) {
         const ioNode = visitAsyncNode(request, task, awaited, visited, cutOff);
         if (ioNode === undefined) {
@@ -2149,11 +2131,11 @@ function visitAsyncNode(
       return match;
     }
     case UNRESOLVED_AWAIT_NODE: {
-      return null;
+      return previousIONode;
     }
     case AWAIT_NODE: {
       const awaited = node.awaited;
-      let match = null;
+      let match: void | null | PromiseNode | IONode = previousIONode;
       if (awaited !== null) {
         const ioNode = visitAsyncNode(request, task, awaited, visited, cutOff);
         if (ioNode === undefined) {

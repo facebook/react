@@ -2484,10 +2484,36 @@ describe('ReactFlightAsyncDebugInfo', () => {
               ],
               "start": 0,
               "value": {
-                "value": undefined,
+                "value": "HI, SEB",
               },
             },
             "env": "Server",
+            "owner": {
+              "env": "Server",
+              "key": null,
+              "name": "Component",
+              "props": {},
+              "stack": [
+                [
+                  "Object.<anonymous>",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  2397,
+                  40,
+                  2385,
+                  56,
+                ],
+              ],
+            },
+            "stack": [
+              [
+                "Component",
+                "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                2393,
+                20,
+                2392,
+                5,
+              ],
+            ],
           },
           {
             "time": 0,
