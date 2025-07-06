@@ -2163,13 +2163,21 @@ function visitAsyncNode(
           } else {
             let isAwaitInUserspace = false;
             const fullStack = node.stack;
-            if (fullStack.length > 0) {
+            let firstFrame = 0;
+            while (
+              fullStack.length > firstFrame &&
+              fullStack[firstFrame][0] === 'Promise.then'
+            ) {
+              // Skip Promise.then frame itself.
+              firstFrame++;
+            }
+            if (fullStack.length > firstFrame) {
               // Check if the very first stack frame that awaited this Promise was in user space.
               // TODO: This doesn't take into account wrapper functions such as our fake .then()
               // in FlightClient which will always be considered third party awaits if you call
               // .then directly.
               const filterStackFrame = request.filterStackFrame;
-              const callsite = fullStack[0];
+              const callsite = fullStack[firstFrame];
               const functionName = callsite[0];
               const url = devirtualizeURL(callsite[1]);
               isAwaitInUserspace = filterStackFrame(url, functionName);
