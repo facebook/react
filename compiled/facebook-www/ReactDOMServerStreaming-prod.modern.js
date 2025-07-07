@@ -3935,6 +3935,13 @@ function pushComponentStack(task) {
         task.componentStack = { parent: task.componentStack, type: node.type };
     }
 }
+function replaceSuspenseComponentStackWithSuspenseFallbackStack(
+  componentStack
+) {
+  return null === componentStack
+    ? null
+    : { parent: componentStack.parent, type: "Suspense Fallback" };
+}
 function getThrownInfo(node$jscomp$0) {
   var errorInfo = {};
   node$jscomp$0 &&
@@ -4684,7 +4691,8 @@ function renderElement(request, task, keyPath, type, props, ref) {
           );
           contentRootSegment.parentFlushed = !0;
           if (null !== request.trackedPostpones) {
-            var fallbackKeyPath = [keyPath[0], "Suspense Fallback", keyPath[2]],
+            var suspenseComponentStack = task.componentStack,
+              fallbackKeyPath = [keyPath[0], "Suspense Fallback", keyPath[2]],
               fallbackReplayNode = [
                 fallbackKeyPath[1],
                 fallbackKeyPath[2],
@@ -4703,6 +4711,10 @@ function renderElement(request, task, keyPath, type, props, ref) {
               request.resumableState,
               prevContext$jscomp$1
             );
+            task.componentStack =
+              replaceSuspenseComponentStackWithSuspenseFallbackStack(
+                suspenseComponentStack
+              );
             boundarySegment.status = 6;
             try {
               renderNode(request, task, fallback, -1),
@@ -4742,7 +4754,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
               task.context,
               task.treeContext,
               null,
-              task.componentStack
+              suspenseComponentStack
             );
             pushComponentStack(suspendedPrimaryTask);
             request.pingedTasks.push(suspendedPrimaryTask);
@@ -4821,7 +4833,9 @@ function renderElement(request, task, keyPath, type, props, ref) {
               task.context,
               task.treeContext,
               task.row,
-              task.componentStack
+              replaceSuspenseComponentStackWithSuspenseFallbackStack(
+                task.componentStack
+              )
             );
             pushComponentStack(suspendedFallbackTask);
             request.pingedTasks.push(suspendedFallbackTask);
@@ -5135,7 +5149,9 @@ function retryNode(request, task) {
                         task.context,
                         task.treeContext,
                         task.row,
-                        task.componentStack
+                        replaceSuspenseComponentStackWithSuspenseFallbackStack(
+                          task.componentStack
+                        )
                       );
                       pushComponentStack(childNodes);
                       request.pingedTasks.push(childNodes);

@@ -4931,6 +4931,18 @@ __DEV__ &&
               pushServerComponentStack(task, node._debugInfo);
         }
     }
+    function replaceSuspenseComponentStackWithSuspenseFallbackStack(
+      componentStack
+    ) {
+      return null === componentStack
+        ? null
+        : {
+            parent: componentStack.parent,
+            type: "Suspense Fallback",
+            owner: componentStack.owner,
+            stack: componentStack.stack
+          };
+    }
     function getThrownInfo(node$jscomp$0) {
       var errorInfo = {};
       node$jscomp$0 &&
@@ -6011,7 +6023,8 @@ __DEV__ &&
               );
               contentRootSegment.parentFlushed = !0;
               if (null !== request.trackedPostpones) {
-                var fallbackKeyPath = [
+                var suspenseComponentStack = task.componentStack,
+                  fallbackKeyPath = [
                     keyPath[0],
                     "Suspense Fallback",
                     keyPath[2]
@@ -6034,6 +6047,10 @@ __DEV__ &&
                   request.resumableState,
                   prevContext$jscomp$1
                 );
+                task.componentStack =
+                  replaceSuspenseComponentStackWithSuspenseFallbackStack(
+                    suspenseComponentStack
+                  );
                 boundarySegment.status = 6;
                 try {
                   renderNode(request, task, fallback, -1),
@@ -6074,7 +6091,7 @@ __DEV__ &&
                   task.context,
                   task.treeContext,
                   null,
-                  task.componentStack,
+                  suspenseComponentStack,
                   emptyContextObject,
                   task.debugTask
                 );
@@ -6172,7 +6189,9 @@ __DEV__ &&
                   task.context,
                   task.treeContext,
                   task.row,
-                  task.componentStack,
+                  replaceSuspenseComponentStackWithSuspenseFallbackStack(
+                    task.componentStack
+                  ),
                   emptyContextObject,
                   task.debugTask
                 );
@@ -6488,7 +6507,9 @@ __DEV__ &&
                 task.context,
                 task.treeContext,
                 task.row,
-                task.componentStack,
+                replaceSuspenseComponentStackWithSuspenseFallbackStack(
+                  task.componentStack
+                ),
                 emptyContextObject,
                 task.debugTask
               );
@@ -10052,5 +10073,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.2.0-www-modern-0b78161d-20250702";
+    exports.version = "19.2.0-www-modern-c932e457-20250707";
   })();

@@ -4673,6 +4673,18 @@ __DEV__ &&
               pushServerComponentStack(task, node._debugInfo);
         }
     }
+    function replaceSuspenseComponentStackWithSuspenseFallbackStack(
+      componentStack
+    ) {
+      return null === componentStack
+        ? null
+        : {
+            parent: componentStack.parent,
+            type: "Suspense Fallback",
+            owner: componentStack.owner,
+            stack: componentStack.stack
+          };
+    }
     function getThrownInfo(node$jscomp$0) {
       var errorInfo = {};
       node$jscomp$0 &&
@@ -5813,7 +5825,8 @@ __DEV__ &&
               );
               contentRootSegment.parentFlushed = !0;
               if (null !== request.trackedPostpones) {
-                var fallbackKeyPath = [
+                var suspenseComponentStack = task.componentStack,
+                  fallbackKeyPath = [
                     keyPath[0],
                     "Suspense Fallback",
                     keyPath[2]
@@ -5836,6 +5849,10 @@ __DEV__ &&
                   request.resumableState,
                   prevContext$jscomp$1
                 );
+                task.componentStack =
+                  replaceSuspenseComponentStackWithSuspenseFallbackStack(
+                    suspenseComponentStack
+                  );
                 boundarySegment.status = 6;
                 try {
                   renderNode(request, task, fallback, -1),
@@ -5875,7 +5892,7 @@ __DEV__ &&
                   task.context,
                   task.treeContext,
                   null,
-                  task.componentStack,
+                  suspenseComponentStack,
                   emptyContextObject,
                   task.debugTask
                 );
@@ -5970,7 +5987,9 @@ __DEV__ &&
                   task.context,
                   task.treeContext,
                   task.row,
-                  task.componentStack,
+                  replaceSuspenseComponentStackWithSuspenseFallbackStack(
+                    task.componentStack
+                  ),
                   emptyContextObject,
                   task.debugTask
                 );
@@ -6295,7 +6314,9 @@ __DEV__ &&
                 task.context,
                 task.treeContext,
                 task.row,
-                task.componentStack,
+                replaceSuspenseComponentStackWithSuspenseFallbackStack(
+                  task.componentStack
+                ),
                 emptyContextObject,
                 task.debugTask
               );
