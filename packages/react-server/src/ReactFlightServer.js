@@ -206,20 +206,11 @@ function findCalledFunctionNameFromStackTrace(
     const url = devirtualizeURL(callsite[1]);
     const lineNumber = callsite[2];
     const columnNumber = callsite[3];
-    const enclosingLineNumber = callsite[4];
-    const enclosingColumnNumber = callsite[5];
     if (functionName === 'new Promise') {
       // Ignore Promise constructors.
     } else if (url === 'node:internal/async_hooks') {
       // Ignore the stack frames from the async hooks themselves.
-    } else if (
-      filterStackFrame(
-        url,
-        functionName,
-        enclosingLineNumber || lineNumber,
-        enclosingColumnNumber || columnNumber,
-      )
-    ) {
+    } else if (filterStackFrame(url, functionName, lineNumber, columnNumber)) {
       if (bestMatch === '') {
         // If we had no good stack frames for internal calls, just use the last
         // first party function name.
@@ -249,16 +240,7 @@ function filterStackTrace(
     const url = devirtualizeURL(callsite[1]);
     const lineNumber = callsite[2];
     const columnNumber = callsite[3];
-    const enclosingLineNumber = callsite[4];
-    const enclosingColumnNumber = callsite[5];
-    if (
-      filterStackFrame(
-        url,
-        functionName,
-        enclosingLineNumber || lineNumber,
-        enclosingColumnNumber || columnNumber,
-      )
-    ) {
+    if (filterStackFrame(url, functionName, lineNumber, columnNumber)) {
       // Use a clone because the Flight protocol isn't yet resilient to deduping
       // objects in the debug info. TODO: Support deduping stacks.
       const clone: ReactCallSite = (callsite.slice(0): any);
@@ -2209,13 +2191,11 @@ function visitAsyncNode(
               const url = devirtualizeURL(callsite[1]);
               const lineNumber = callsite[2];
               const columnNumber = callsite[3];
-              const enclosingLineNumber = callsite[4];
-              const enclosingColumnNumber = callsite[5];
               isAwaitInUserspace = filterStackFrame(
                 url,
                 functionName,
-                enclosingLineNumber || lineNumber,
-                enclosingColumnNumber || columnNumber,
+                lineNumber,
+                columnNumber,
               );
             }
             if (!isAwaitInUserspace) {
