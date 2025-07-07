@@ -816,6 +816,52 @@ describe('ReactDOMFizzServer', () => {
     expect(loggedErrors).toEqual([theError]);
   });
 
+  it('should have special stacks if Suspense fallback', async () => {
+    const infinitePromise = new Promise(() => {});
+    const InfiniteComponent = React.lazy(() => {
+      return infinitePromise;
+    });
+
+    function Throw({text}) {
+      throw new Error(text);
+    }
+
+    function App() {
+      return (
+        <Suspense fallback="Loading">
+          <div>
+            <Suspense fallback={<Throw text="Bye" />}>
+              <InfiniteComponent text="Hi" />
+            </Suspense>
+          </div>
+        </Suspense>
+      );
+    }
+
+    const loggedErrors = [];
+    function onError(x, errorInfo) {
+      loggedErrors.push({
+        message: x.message,
+        componentStack: errorInfo.componentStack,
+      });
+      return 'Hash of (' + x.message + ')';
+    }
+    loggedErrors.length = 0;
+
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />, {
+        onError,
+      });
+      pipe(writable);
+    });
+
+    expect(loggedErrors.length).toBe(1);
+    expect(loggedErrors[0].message).toBe('Bye');
+    expect(normalizeCodeLocInfo(loggedErrors[0].componentStack)).toBe(
+      componentStack(['Throw', 'Suspense Fallback', 'div', 'Suspense', 'App']),
+    );
+  });
+
   it('should asynchronously load a lazy element', async () => {
     let resolveElement;
     const lazyElement = React.lazy(() => {
@@ -1797,7 +1843,7 @@ describe('ReactDOMFizzServer', () => {
   function normalizeCodeLocInfo(str) {
     return (
       str &&
-      String(str).replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function (m, name) {
+      String(str).replace(/\n +(?:at|in) ([^\(]+) [^\n]*/g, function (m, name) {
         return '\n    in ' + name + ' (at **)';
       })
     );
