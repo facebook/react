@@ -33,15 +33,13 @@ function Component(t0) {
   const $ = _c(2);
   const { propA } = t0;
   let t1;
-  let t2;
   if ($[0] !== propA) {
-    t2 = [propA];
+    t1 = [propA];
     $[0] = propA;
-    $[1] = t2;
+    $[1] = t1;
   } else {
-    t2 = $[1];
+    t1 = $[1];
   }
-  t1 = t2;
   return t1;
 }
 
