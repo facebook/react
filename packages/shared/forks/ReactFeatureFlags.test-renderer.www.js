@@ -35,7 +35,6 @@ export const enableSuspenseAvoidThisFallback = true;
 export const enableCPUSuspense = false;
 export const enableNoCloningMemoCache = false;
 export const enableUseEffectEventHook = false;
-export const favorSafetyOverHydrationPerf = true;
 export const enableLegacyFBSupport = false;
 export const enableMoveBefore = false;
 export const enableHiddenSubtreeInsertionEffectCleanup = true;
@@ -62,8 +61,6 @@ export const enableInfiniteRenderLoopDetection = false;
 
 export const enableReactTestRendererWarning = false;
 export const disableLegacyMode = true;
-
-export const disableDefaultPropsExceptForClasses = true;
 
 export const renameElementSymbol = false;
 

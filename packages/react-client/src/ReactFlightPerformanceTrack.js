@@ -17,10 +17,10 @@ import type {
 
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 
-import {OMITTED_PROP_ERROR} from './ReactFlightPropertyAccess';
-
-import hasOwnProperty from 'shared/hasOwnProperty';
-import isArray from 'shared/isArray';
+import {
+  addValueToProperties,
+  addObjectToProperties,
+} from 'shared/ReactPerformanceTrackProperties';
 
 const supportsUserTiming =
   enableProfilerTimer &&
@@ -32,127 +32,6 @@ const supportsUserTiming =
 
 const IO_TRACK = 'Server Requests ⚛';
 const COMPONENTS_TRACK = 'Server Components ⚛';
-
-const EMPTY_ARRAY = 0;
-const COMPLEX_ARRAY = 1;
-const PRIMITIVE_ARRAY = 2; // Primitive values only
-const ENTRIES_ARRAY = 3; // Tuple arrays of string and value (like Headers, Map, etc)
-function getArrayKind(array: Object): 0 | 1 | 2 | 3 {
-  let kind = EMPTY_ARRAY;
-  for (let i = 0; i < array.length; i++) {
-    const value = array[i];
-    if (typeof value === 'object' && value !== null) {
-      if (
-        isArray(value) &&
-        value.length === 2 &&
-        typeof value[0] === 'string'
-      ) {
-        // Key value tuple
-        if (kind !== EMPTY_ARRAY && kind !== ENTRIES_ARRAY) {
-          return COMPLEX_ARRAY;
-        }
-        kind = ENTRIES_ARRAY;
-      } else {
-        return COMPLEX_ARRAY;
-      }
-    } else if (typeof value === 'function') {
-      return COMPLEX_ARRAY;
-    } else if (typeof value === 'string' && value.length > 50) {
-      return COMPLEX_ARRAY;
-    } else if (kind !== EMPTY_ARRAY && kind !== PRIMITIVE_ARRAY) {
-      return COMPLEX_ARRAY;
-    } else {
-      kind = PRIMITIVE_ARRAY;
-    }
-  }
-  return kind;
-}
-
-function addObjectToProperties(
-  object: Object,
-  properties: Array<[string, string]>,
-  indent: number,
-): void {
-  for (const key in object) {
-    if (hasOwnProperty.call(object, key) && key[0] !== '_') {
-      const value = object[key];
-      addValueToProperties(key, value, properties, indent);
-    }
-  }
-}
-
-function addValueToProperties(
-  propertyName: string,
-  value: mixed,
-  properties: Array<[string, string]>,
-  indent: number,
-): void {
-  let desc;
-  switch (typeof value) {
-    case 'object':
-      if (value === null) {
-        desc = 'null';
-        break;
-      } else {
-        // $FlowFixMe[method-unbinding]
-        const objectToString = Object.prototype.toString.call(value);
-        let objectName = objectToString.slice(8, objectToString.length - 1);
-        if (objectName === 'Array') {
-          const array: Array<any> = (value: any);
-          const kind = getArrayKind(array);
-          if (kind === PRIMITIVE_ARRAY || kind === EMPTY_ARRAY) {
-            desc = JSON.stringify(array);
-            break;
-          } else if (kind === ENTRIES_ARRAY) {
-            properties.push(['\xa0\xa0'.repeat(indent) + propertyName, '']);
-            for (let i = 0; i < array.length; i++) {
-              const entry = array[i];
-              addValueToProperties(entry[0], entry[1], properties, indent + 1);
-            }
-            return;
-          }
-        }
-        if (objectName === 'Object') {
-          const proto: any = Object.getPrototypeOf(value);
-          if (proto && typeof proto.constructor === 'function') {
-            objectName = proto.constructor.name;
-          }
-        }
-        properties.push([
-          '\xa0\xa0'.repeat(indent) + propertyName,
-          objectName === 'Object' ? '' : objectName,
-        ]);
-        if (indent < 3) {
-          addObjectToProperties(value, properties, indent + 1);
-        }
-        return;
-      }
-    case 'function':
-      if (value.name === '') {
-        desc = '() => {}';
-      } else {
-        desc = value.name + '() {}';
-      }
-      break;
-    case 'string':
-      if (value === OMITTED_PROP_ERROR) {
-        desc = '...';
-      } else {
-        desc = JSON.stringify(value);
-      }
-      break;
-    case 'undefined':
-      desc = 'undefined';
-      break;
-    case 'boolean':
-      desc = value ? 'true' : 'false';
-      break;
-    default:
-      // eslint-disable-next-line react-internal/safe-string-coercion
-      desc = String(value);
-  }
-  properties.push(['\xa0\xa0'.repeat(indent) + propertyName, desc]);
-}
 
 export function markAllTracksInOrder() {
   if (supportsUserTiming) {
@@ -222,17 +101,27 @@ export function logComponentRender(
       isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']';
     const debugTask = componentInfo.debugTask;
     if (__DEV__ && debugTask) {
+      const properties: Array<[string, string]> = [];
+      if (componentInfo.key != null) {
+        addValueToProperties('key', componentInfo.key, properties, 0, '');
+      }
+      if (componentInfo.props != null) {
+        addObjectToProperties(componentInfo.props, properties, 0, '');
+      }
       debugTask.run(
         // $FlowFixMe[method-unbinding]
-        console.timeStamp.bind(
-          console,
-          entryName,
-          startTime < 0 ? 0 : startTime,
-          childrenEndTime,
-          trackNames[trackIdx],
-          COMPONENTS_TRACK,
-          color,
-        ),
+        performance.measure.bind(performance, entryName, {
+          start: startTime < 0 ? 0 : startTime,
+          end: childrenEndTime,
+          detail: {
+            devtools: {
+              color: color,
+              track: trackNames[trackIdx],
+              trackGroup: COMPONENTS_TRACK,
+              properties,
+            },
+          },
+        }),
       );
     } else {
       console.timeStamp(
@@ -268,6 +157,12 @@ export function logComponentAborted(
           'The stream was aborted before this Component finished rendering.',
         ],
       ];
+      if (componentInfo.key != null) {
+        addValueToProperties('key', componentInfo.key, properties, 0, '');
+      }
+      if (componentInfo.props != null) {
+        addObjectToProperties(componentInfo.props, properties, 0, '');
+      }
       performance.measure(entryName, {
         start: startTime < 0 ? 0 : startTime,
         end: childrenEndTime,
@@ -319,6 +214,12 @@ export function logComponentErrored(
           : // eslint-disable-next-line react-internal/safe-string-coercion
             String(error);
       const properties = [['Error', message]];
+      if (componentInfo.key != null) {
+        addValueToProperties('key', componentInfo.key, properties, 0, '');
+      }
+      if (componentInfo.props != null) {
+        addObjectToProperties(componentInfo.props, properties, 0, '');
+      }
       performance.measure(entryName, {
         start: startTime < 0 ? 0 : startTime,
         end: childrenEndTime,
@@ -399,6 +300,125 @@ function getIOColor(
   }
 }
 
+function getIODescription(value: any): string {
+  if (!__DEV__) {
+    return '';
+  }
+  try {
+    switch (typeof value) {
+      case 'object':
+        // Test the object for a bunch of common property names that are useful identifiers.
+        // While we only have the return value here, it should ideally be a name that
+        // describes the arguments requested.
+        if (value === null) {
+          return '';
+        } else if (value instanceof Error) {
+          // eslint-disable-next-line react-internal/safe-string-coercion
+          return String(value.message);
+        } else if (typeof value.url === 'string') {
+          return value.url;
+        } else if (typeof value.command === 'string') {
+          return value.command;
+        } else if (
+          typeof value.request === 'object' &&
+          typeof value.request.url === 'string'
+        ) {
+          return value.request.url;
+        } else if (
+          typeof value.response === 'object' &&
+          typeof value.response.url === 'string'
+        ) {
+          return value.response.url;
+        } else if (
+          typeof value.id === 'string' ||
+          typeof value.id === 'number' ||
+          typeof value.id === 'bigint'
+        ) {
+          // eslint-disable-next-line react-internal/safe-string-coercion
+          return String(value.id);
+        } else if (typeof value.name === 'string') {
+          return value.name;
+        } else {
+          const str = value.toString();
+          if (str.startWith('[object ') || str.length < 5 || str.length > 500) {
+            // This is probably not a useful description.
+            return '';
+          }
+          return str;
+        }
+      case 'string':
+        if (value.length < 5 || value.length > 500) {
+          return '';
+        }
+        return value;
+      case 'number':
+      case 'bigint':
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        return String(value);
+      default:
+        // Not useful descriptors.
+        return '';
+    }
+  } catch (x) {
+    return '';
+  }
+}
+
+function getIOLongName(
+  ioInfo: ReactIOInfo,
+  description: string,
+  env: void | string,
+  rootEnv: string,
+): string {
+  const name = ioInfo.name;
+  const longName = description === '' ? name : name + ' (' + description + ')';
+  const isPrimaryEnv = env === rootEnv;
+  return isPrimaryEnv || env === undefined
+    ? longName
+    : longName + ' [' + env + ']';
+}
+
+function getIOShortName(
+  ioInfo: ReactIOInfo,
+  description: string,
+  env: void | string,
+  rootEnv: string,
+): string {
+  const name = ioInfo.name;
+  const isPrimaryEnv = env === rootEnv;
+  const envSuffix = isPrimaryEnv || env === undefined ? '' : ' [' + env + ']';
+  let desc = '';
+  const descMaxLength = 30 - name.length - envSuffix.length;
+  if (descMaxLength > 1) {
+    const l = description.length;
+    if (l > 0 && l <= descMaxLength) {
+      // We can fit the full description
+      desc = ' (' + description + ')';
+    } else if (
+      description.startsWith('http://') ||
+      description.startsWith('https://') ||
+      description.startsWith('/')
+    ) {
+      // Looks like a URL. Let's see if we can extract something shorter.
+      // We don't have to do a full parse so let's try something cheaper.
+      let queryIdx = description.indexOf('?');
+      if (queryIdx === -1) {
+        queryIdx = description.length;
+      }
+      if (description.charCodeAt(queryIdx - 1) === 47 /* "/" */) {
+        // Ends with slash. Look before that.
+        queryIdx--;
+      }
+      const slashIdx = description.lastIndexOf('/', queryIdx - 1);
+      if (queryIdx - slashIdx < descMaxLength) {
+        // This may now be either the file name or the host.
+        desc = ' (' + description.slice(slashIdx + 1, queryIdx) + ')';
+      }
+    }
+  }
+  return name + desc + envSuffix;
+}
+
 export function logComponentAwaitAborted(
   asyncInfo: ReactAsyncInfo,
   trackIdx: number,
@@ -407,17 +427,16 @@ export function logComponentAwaitAborted(
   rootEnv: string,
 ): void {
   if (supportsUserTiming && endTime > 0) {
-    const env = asyncInfo.env;
-    const name = asyncInfo.awaited.name;
-    const isPrimaryEnv = env === rootEnv;
     const entryName =
-      'await ' +
-      (isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']');
+      'await ' + getIOShortName(asyncInfo.awaited, '', asyncInfo.env, rootEnv);
     const debugTask = asyncInfo.debugTask || asyncInfo.awaited.debugTask;
     if (__DEV__ && debugTask) {
       const properties = [
         ['Aborted', 'The stream was aborted before this Promise resolved.'],
       ];
+      const tooltipText =
+        getIOLongName(asyncInfo.awaited, '', asyncInfo.env, rootEnv) +
+        ' Aborted';
       debugTask.run(
         // $FlowFixMe[method-unbinding]
         performance.measure.bind(performance, entryName, {
@@ -429,7 +448,7 @@ export function logComponentAwaitAborted(
               track: trackNames[trackIdx],
               trackGroup: COMPONENTS_TRACK,
               properties,
-              tooltipText: entryName + ' Aborted',
+              tooltipText,
             },
           },
         }),
@@ -456,12 +475,10 @@ export function logComponentAwaitErrored(
   error: mixed,
 ): void {
   if (supportsUserTiming && endTime > 0) {
-    const env = asyncInfo.env;
-    const name = asyncInfo.awaited.name;
-    const isPrimaryEnv = env === rootEnv;
+    const description = getIODescription(error);
     const entryName =
       'await ' +
-      (isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']');
+      getIOShortName(asyncInfo.awaited, description, asyncInfo.env, rootEnv);
     const debugTask = asyncInfo.debugTask || asyncInfo.awaited.debugTask;
     if (__DEV__ && debugTask) {
       const message =
@@ -473,6 +490,9 @@ export function logComponentAwaitErrored(
           : // eslint-disable-next-line react-internal/safe-string-coercion
             String(error);
       const properties = [['Rejected', message]];
+      const tooltipText =
+        getIOLongName(asyncInfo.awaited, description, asyncInfo.env, rootEnv) +
+        ' Rejected';
       debugTask.run(
         // $FlowFixMe[method-unbinding]
         performance.measure.bind(performance, entryName, {
@@ -484,7 +504,7 @@ export function logComponentAwaitErrored(
               track: trackNames[trackIdx],
               trackGroup: COMPONENTS_TRACK,
               properties,
-              tooltipText: entryName + ' Rejected',
+              tooltipText,
             },
           },
         }),
@@ -511,21 +531,29 @@ export function logComponentAwait(
   value: mixed,
 ): void {
   if (supportsUserTiming && endTime > 0) {
-    const env = asyncInfo.env;
-    const name = asyncInfo.awaited.name;
-    const isPrimaryEnv = env === rootEnv;
+    const description = getIODescription(value);
+    const name = getIOShortName(
+      asyncInfo.awaited,
+      description,
+      asyncInfo.env,
+      rootEnv,
+    );
+    const entryName = 'await ' + name;
     const color = getIOColor(name);
-    const entryName =
-      'await ' +
-      (isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']');
     const debugTask = asyncInfo.debugTask || asyncInfo.awaited.debugTask;
     if (__DEV__ && debugTask) {
       const properties: Array<[string, string]> = [];
       if (typeof value === 'object' && value !== null) {
-        addObjectToProperties(value, properties, 0);
+        addObjectToProperties(value, properties, 0, '');
       } else if (value !== undefined) {
-        addValueToProperties('Resolved', value, properties, 0);
+        addValueToProperties('Resolved', value, properties, 0, '');
       }
+      const tooltipText = getIOLongName(
+        asyncInfo.awaited,
+        description,
+        asyncInfo.env,
+        rootEnv,
+      );
       debugTask.run(
         // $FlowFixMe[method-unbinding]
         performance.measure.bind(performance, entryName, {
@@ -537,6 +565,7 @@ export function logComponentAwait(
               track: trackNames[trackIdx],
               trackGroup: COMPONENTS_TRACK,
               properties,
+              tooltipText,
             },
           },
         }),
@@ -562,11 +591,8 @@ export function logIOInfoErrored(
   const startTime = ioInfo.start;
   const endTime = ioInfo.end;
   if (supportsUserTiming && endTime >= 0) {
-    const name = ioInfo.name;
-    const env = ioInfo.env;
-    const isPrimaryEnv = env === rootEnv;
-    const entryName =
-      isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']';
+    const description = getIODescription(error);
+    const entryName = getIOShortName(ioInfo, description, ioInfo.env, rootEnv);
     const debugTask = ioInfo.debugTask;
     if (__DEV__ && debugTask) {
       const message =
@@ -578,6 +604,8 @@ export function logIOInfoErrored(
           : // eslint-disable-next-line react-internal/safe-string-coercion
             String(error);
       const properties = [['Rejected', message]];
+      const tooltipText =
+        getIOLongName(ioInfo, description, ioInfo.env, rootEnv) + ' Rejected';
       debugTask.run(
         // $FlowFixMe[method-unbinding]
         performance.measure.bind(performance, entryName, {
@@ -588,7 +616,7 @@ export function logIOInfoErrored(
               color: 'error',
               track: IO_TRACK,
               properties,
-              tooltipText: entryName + ' Rejected',
+              tooltipText,
             },
           },
         }),
@@ -614,20 +642,23 @@ export function logIOInfo(
   const startTime = ioInfo.start;
   const endTime = ioInfo.end;
   if (supportsUserTiming && endTime >= 0) {
-    const name = ioInfo.name;
-    const env = ioInfo.env;
-    const isPrimaryEnv = env === rootEnv;
-    const entryName =
-      isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']';
+    const description = getIODescription(value);
+    const entryName = getIOShortName(ioInfo, description, ioInfo.env, rootEnv);
+    const color = getIOColor(entryName);
     const debugTask = ioInfo.debugTask;
-    const color = getIOColor(name);
     if (__DEV__ && debugTask) {
       const properties: Array<[string, string]> = [];
       if (typeof value === 'object' && value !== null) {
-        addObjectToProperties(value, properties, 0);
+        addObjectToProperties(value, properties, 0, '');
       } else if (value !== undefined) {
-        addValueToProperties('Resolved', value, properties, 0);
+        addValueToProperties('Resolved', value, properties, 0, '');
       }
+      const tooltipText = getIOLongName(
+        ioInfo,
+        description,
+        ioInfo.env,
+        rootEnv,
+      );
       debugTask.run(
         // $FlowFixMe[method-unbinding]
         performance.measure.bind(performance, entryName, {
@@ -638,6 +669,7 @@ export function logIOInfo(
               color: color,
               track: IO_TRACK,
               properties,
+              tooltipText,
             },
           },
         }),

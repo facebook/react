@@ -257,7 +257,36 @@ export function initAsyncDebugInfo(): void {
             // the trigger that we originally stored wasn't actually the dependency.
             // Instead, the current execution context is what ultimately unblocked it.
             const awaited = pendingOperations.get(currentAsyncId);
-            resolvedNode.awaited = awaited === undefined ? null : awaited;
+            if (resolvedNode.tag === PROMISE_NODE) {
+              // For a Promise we just override the await. We're not interested in
+              // what created the Promise itself.
+              resolvedNode.awaited = awaited === undefined ? null : awaited;
+            } else {
+              // For an await, there's really two things awaited here. It's the trigger
+              // that .then() was called on but there seems to also be something else
+              // in the .then() callback that blocked the returned Promise from resolving
+              // immediately. We create a fork node which essentially represents an await
+              // of the Promise returned from the .then() callback. That Promise was blocked
+              // on the original awaited thing which we stored as "previous".
+              if (awaited !== undefined) {
+                const clonedNode: AwaitNode = {
+                  tag: AWAIT_NODE,
+                  owner: resolvedNode.owner,
+                  stack: resolvedNode.stack,
+                  start: resolvedNode.start,
+                  end: resolvedNode.end,
+                  promise: resolvedNode.promise,
+                  awaited: resolvedNode.awaited,
+                  previous: resolvedNode.previous,
+                };
+                // We started awaiting on the callback when the original .then() resolved.
+                resolvedNode.start = resolvedNode.end;
+                // It resolved now. We could use the end time of "awaited" maybe.
+                resolvedNode.end = performance.now();
+                resolvedNode.previous = clonedNode;
+                resolvedNode.awaited = awaited;
+              }
+            }
           }
         }
       },

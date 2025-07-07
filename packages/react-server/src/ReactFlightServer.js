@@ -96,6 +96,7 @@ import {
   parseStackTrace,
   supportsComponentStorage,
   componentStorage,
+  unbadgeConsole,
 } from './ReactFlightServerConfig';
 
 import {
@@ -183,10 +184,10 @@ function devirtualizeURL(url: string): string {
     // We need to reverse it back into the original location by stripping its prefix
     // and suffix. We don't need the environment name because it's available on the
     // parent object that will contain the stack.
-    const envIdx = url.indexOf('/', 12);
+    const envIdx = url.indexOf('/', 'rsc://React/'.length);
     const suffixIdx = url.lastIndexOf('?');
     if (envIdx > -1 && suffixIdx > -1) {
-      return url.slice(envIdx + 1, suffixIdx);
+      return decodeURI(url.slice(envIdx + 1, suffixIdx));
     }
   }
   return url;
@@ -203,17 +204,19 @@ function findCalledFunctionNameFromStackTrace(
     const callsite = stack[i];
     const functionName = callsite[0];
     const url = devirtualizeURL(callsite[1]);
-    if (filterStackFrame(url, functionName)) {
+    const lineNumber = callsite[2];
+    const columnNumber = callsite[3];
+    if (functionName === 'new Promise') {
+      // Ignore Promise constructors.
+    } else if (url === 'node:internal/async_hooks') {
+      // Ignore the stack frames from the async hooks themselves.
+    } else if (filterStackFrame(url, functionName, lineNumber, columnNumber)) {
       if (bestMatch === '') {
         // If we had no good stack frames for internal calls, just use the last
         // first party function name.
         return functionName;
       }
       return bestMatch;
-    } else if (functionName === 'new Promise') {
-      // Ignore Promise constructors.
-    } else if (url === 'node:internal/async_hooks') {
-      // Ignore the stack frames from the async hooks themselves.
     } else {
       bestMatch = functionName;
     }
@@ -235,7 +238,9 @@ function filterStackTrace(
     const callsite = stack[i];
     const functionName = callsite[0];
     const url = devirtualizeURL(callsite[1]);
-    if (filterStackFrame(url, functionName)) {
+    const lineNumber = callsite[2];
+    const columnNumber = callsite[3];
+    if (filterStackFrame(url, functionName, lineNumber, columnNumber)) {
       // Use a clone because the Flight protocol isn't yet resilient to deduping
       // objects in the debug info. TODO: Support deduping stacks.
       const clone: ReactCallSite = (callsite.slice(0): any);
@@ -273,9 +278,17 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
           request,
           parseStackTrace(new Error('react-stack-top-frame'), 1),
         );
-        request.pendingChunks++;
+        request.pendingDebugChunks++;
         const owner: null | ReactComponentInfo = resolveOwner();
-        emitConsoleChunk(request, methodName, owner, stack, arguments);
+        const args = Array.from(arguments);
+        // Extract the env if this is a console log that was replayed from another env.
+        let env = unbadgeConsole(methodName, args);
+        if (env === null) {
+          // Otherwise add the current environment.
+          env = (0, request.environmentName)();
+        }
+
+        emitConsoleChunk(request, methodName, owner, env, stack, args);
       }
       // $FlowFixMe[prop-missing]
       return originalMethod.apply(this, arguments);
@@ -453,9 +466,17 @@ export type Request = {
   onFatalError: mixed => void,
   // Profiling-only
   timeOrigin: number,
+  abortTime: number,
   // DEV-only
+  pendingDebugChunks: number,
+  completedDebugChunks: Array<Chunk | BinaryChunk>,
   environmentName: () => string,
-  filterStackFrame: (url: string, functionName: string) => boolean,
+  filterStackFrame: (
+    url: string,
+    functionName: string,
+    lineNumber: number,
+    columnNumber: number,
+  ) => boolean,
   didWarnForKey: null | WeakSet<ReactComponentInfo>,
   writtenDebugObjects: WeakMap<Reference, string>,
   deferredDebugObjects: null | DeferredDebugStore,
@@ -567,6 +588,8 @@ function RequestInstance(
   this.onFatalError = onFatalError;
 
   if (__DEV__) {
+    this.pendingDebugChunks = 0;
+    this.completedDebugChunks = ([]: Array<Chunk>);
     this.environmentName =
       environmentName === undefined
         ? () => 'Server'
@@ -602,6 +625,7 @@ function RequestInstance(
         // $FlowFixMe[prop-missing]
         performance.timeOrigin,
     );
+    this.abortTime = -0.0;
   } else {
     timeOrigin = 0;
   }
@@ -703,7 +727,7 @@ function serializeDebugThenable(
   thenable: Thenable<any>,
 ): string {
   // Like serializeThenable but for renderDebugModel
-  request.pendingChunks++;
+  request.pendingDebugChunks++;
   const id = request.nextChunkId++;
   const ref = serializePromiseID(id);
   request.writtenDebugObjects.set(thenable, ref);
@@ -715,20 +739,9 @@ function serializeDebugThenable(
     }
     case 'rejected': {
       const x = thenable.reason;
-      if (
-        enablePostpone &&
-        typeof x === 'object' &&
-        x !== null &&
-        (x: any).$$typeof === REACT_POSTPONE_TYPE
-      ) {
-        const postponeInstance: Postpone = (x: any);
-        // We don't log this postpone.
-        emitPostponeChunk(request, id, postponeInstance);
-      } else {
-        // We don't log these errors since they didn't actually throw into Flight.
-        const digest = '';
-        emitErrorChunk(request, id, digest, x);
-      }
+      // We don't log these errors since they didn't actually throw into Flight.
+      const digest = '';
+      emitErrorChunk(request, id, digest, x, true);
       return ref;
     }
   }
@@ -765,20 +778,9 @@ function serializeDebugThenable(
         enqueueFlush(request);
         return;
       }
-      if (
-        enablePostpone &&
-        typeof reason === 'object' &&
-        reason !== null &&
-        (reason: any).$$typeof === REACT_POSTPONE_TYPE
-      ) {
-        const postponeInstance: Postpone = (reason: any);
-        // We don't log this postpone.
-        emitPostponeChunk(request, id, postponeInstance);
-      } else {
-        // We don't log these errors since they didn't actually throw into Flight.
-        const digest = '';
-        emitErrorChunk(request, id, digest, reason);
-      }
+      // We don't log these errors since they didn't actually throw into Flight.
+      const digest = '';
+      emitErrorChunk(request, id, digest, reason, true);
       enqueueFlush(request);
     },
   );
@@ -839,9 +841,11 @@ function serializeThenable(
         request.abortableTasks.delete(newTask);
         if (enableHalt && request.type === PRERENDER) {
           haltTask(newTask, request);
+          finishHaltedTask(newTask, request);
         } else {
           const errorId: number = (request.fatalError: any);
           abortTask(newTask, request, errorId);
+          finishAbortedTask(newTask, request, errorId);
         }
         return newTask.id;
       }
@@ -1421,7 +1425,7 @@ function renderFunctionComponent<Props>(
       const componentName =
         (Component: any).displayName || Component.name || '';
       const componentEnv = (0, request.environmentName)();
-      request.pendingChunks++;
+      request.pendingDebugChunks++;
       componentDebugInfo = ({
         name: componentName,
         env: componentEnv,
@@ -1776,25 +1780,32 @@ function renderClientElement(
   } else if (keyPath !== null) {
     key = keyPath + ',' + key;
   }
+  let debugOwner = null;
+  let debugStack = null;
   if (__DEV__) {
-    if (task.debugOwner !== null) {
+    debugOwner = task.debugOwner;
+    if (debugOwner !== null) {
       // Ensure we outline this owner if it is the first time we see it.
       // So that we can refer to it directly.
-      outlineComponentInfo(request, task.debugOwner);
+      outlineComponentInfo(request, debugOwner);
+    }
+    if (task.debugStack !== null) {
+      // Outline the debug stack so that we write to the completedDebugChunks instead.
+      debugStack = filterStackTrace(
+        request,
+        parseStackTrace(task.debugStack, 1),
+      );
+      const id = outlineDebugModel(
+        request,
+        {objectLimit: debugStack.length * 2 + 1},
+        debugStack,
+      );
+      // We also store this in the main dedupe set so that it can be referenced by inline React Elements.
+      request.writtenObjects.set(debugStack, serializeByValueID(id));
     }
   }
   const element = __DEV__
-    ? [
-        REACT_ELEMENT_TYPE,
-        type,
-        key,
-        props,
-        task.debugOwner,
-        task.debugStack === null
-          ? null
-          : filterStackTrace(request, parseStackTrace(task.debugStack, 1)),
-        validated,
-      ]
+    ? [REACT_ELEMENT_TYPE, type, key, props, debugOwner, debugStack, validated]
     : [REACT_ELEMENT_TYPE, type, key, props];
   if (task.implicitSlot && key !== null) {
     // The root Server Component had no key so it was in an implicit slot.
@@ -2023,39 +2034,52 @@ function visitAsyncNode(
   node: AsyncSequence,
   visited: Set<AsyncSequence | ReactDebugInfo>,
   cutOff: number,
-): null | PromiseNode | IONode {
+): void | null | PromiseNode | IONode {
   if (visited.has(node)) {
     // It's possible to visit them same node twice when it's part of both an "awaited" path
     // and a "previous" path. This also gracefully handles cycles which would be a bug.
     return null;
   }
   visited.add(node);
+  let previousIONode = null;
   // First visit anything that blocked this sequence to start in the first place.
   if (node.previous !== null && node.end > request.timeOrigin) {
-    // We ignore the return value here because if it wasn't awaited in user space, then we don't log it.
-    // It also means that it can just have been part of a previous component's render.
-    // TODO: This means that some I/O can get lost that was still blocking the sequence.
-    visitAsyncNode(request, task, node.previous, visited, cutOff);
+    previousIONode = visitAsyncNode(
+      request,
+      task,
+      node.previous,
+      visited,
+      cutOff,
+    );
+    if (previousIONode === undefined) {
+      // Undefined is used as a signal that we found a suitable aborted node and we don't have to find
+      // further aborted nodes.
+      return undefined;
+    }
   }
   switch (node.tag) {
     case IO_NODE: {
       return node;
     }
     case UNRESOLVED_PROMISE_NODE: {
-      return null;
+      return previousIONode;
     }
     case PROMISE_NODE: {
       if (node.end <= request.timeOrigin) {
         // This was already resolved when we started this render. It must have been either something
         // that's part of a start up sequence or externally cached data. We exclude that information.
         // The technique for debugging the effects of uncached data on the render is to simply uncache it.
-        return null;
+        return previousIONode;
       }
       const awaited = node.awaited;
-      let match = null;
+      let match: void | null | PromiseNode | IONode = previousIONode;
       if (awaited !== null) {
         const ioNode = visitAsyncNode(request, task, awaited, visited, cutOff);
-        if (ioNode !== null) {
+        if (ioNode === undefined) {
+          // Undefined is used as a signal that we found a suitable aborted node and we don't have to find
+          // further aborted nodes.
+          return undefined;
+        } else if (ioNode !== null) {
           // This Promise was blocked on I/O. That's a signal that this Promise is interesting to log.
           // We don't log it yet though. We return it to be logged by the point where it's awaited.
           // The ioNode might be another PromiseNode in the case where none of the AwaitNode had
@@ -2072,6 +2096,15 @@ function visitAsyncNode(
           } else {
             match = node;
           }
+        } else if (request.status === ABORTING) {
+          if (node.start < request.abortTime && node.end > request.abortTime) {
+            // We aborted this render. If this Promise spanned the abort time it was probably the
+            // Promise that was aborted. This won't necessarily have I/O associated with it but
+            // it's a point of interest.
+            if (filterStackTrace(request, node.stack).length > 0) {
+              match = node;
+            }
+          }
         }
       }
       // We need to forward after we visit awaited nodes because what ever I/O we requested that's
@@ -2087,14 +2120,18 @@ function visitAsyncNode(
       return match;
     }
     case UNRESOLVED_AWAIT_NODE: {
-      return null;
+      return previousIONode;
     }
     case AWAIT_NODE: {
       const awaited = node.awaited;
-      let match = null;
+      let match: void | null | PromiseNode | IONode = previousIONode;
       if (awaited !== null) {
         const ioNode = visitAsyncNode(request, task, awaited, visited, cutOff);
-        if (ioNode !== null) {
+        if (ioNode === undefined) {
+          // Undefined is used as a signal that we found a suitable aborted node and we don't have to find
+          // further aborted nodes.
+          return undefined;
+        } else if (ioNode !== null) {
           const startTime: number = node.start;
           const endTime: number = node.end;
           if (endTime <= request.timeOrigin) {
@@ -2112,21 +2149,41 @@ function visitAsyncNode(
           } else {
             let isAwaitInUserspace = false;
             const fullStack = node.stack;
-            if (fullStack.length > 0) {
+            let firstFrame = 0;
+            while (
+              fullStack.length > firstFrame &&
+              fullStack[firstFrame][0] === 'Promise.then'
+            ) {
+              // Skip Promise.then frame itself.
+              firstFrame++;
+            }
+            if (fullStack.length > firstFrame) {
               // Check if the very first stack frame that awaited this Promise was in user space.
               // TODO: This doesn't take into account wrapper functions such as our fake .then()
               // in FlightClient which will always be considered third party awaits if you call
               // .then directly.
               const filterStackFrame = request.filterStackFrame;
-              const callsite = fullStack[0];
+              const callsite = fullStack[firstFrame];
               const functionName = callsite[0];
               const url = devirtualizeURL(callsite[1]);
-              isAwaitInUserspace = filterStackFrame(url, functionName);
+              const lineNumber = callsite[2];
+              const columnNumber = callsite[3];
+              isAwaitInUserspace = filterStackFrame(
+                url,
+                functionName,
+                lineNumber,
+                columnNumber,
+              );
             }
             if (!isAwaitInUserspace) {
               // If this await was fully filtered out, then it was inside third party code
               // such as in an external library. We return the I/O node and try another await.
               match = ioNode;
+            } else if (
+              request.status === ABORTING &&
+              startTime > request.abortTime
+            ) {
+              // This was awaited after aborting so we skip it.
             } else {
               // We found a user space await.
 
@@ -2142,7 +2199,7 @@ function visitAsyncNode(
               const env = (0, request.environmentName)();
               advanceTaskTime(request, task, startTime);
               // Then emit a reference to us awaiting it in the current task.
-              request.pendingChunks++;
+              request.pendingDebugChunks++;
               emitDebugChunk(request, task.id, {
                 awaited: ((ioNode: any): ReactIOInfo), // This is deduped by this reference.
                 env: env,
@@ -2152,6 +2209,11 @@ function visitAsyncNode(
               // Mark the end time of the await. If we're aborting then we don't emit this
               // to signal that this never resolved inside this render.
               markOperationEndTime(request, task, endTime);
+              if (request.status === ABORTING) {
+                // Undefined is used as a signal that we found a suitable aborted node and we don't have to find
+                // further aborted nodes.
+                match = undefined;
+              }
             }
           }
         }
@@ -2188,10 +2250,13 @@ function emitAsyncSequence(
     visited.add(alreadyForwardedDebugInfo);
   }
   const awaitedNode = visitAsyncNode(request, task, node, visited, task.time);
-  if (awaitedNode !== null) {
+  if (awaitedNode === undefined) {
+    // Undefined is used as a signal that we found an aborted await and that's good enough
+    // anything derived from that aborted node might be irrelevant.
+  } else if (awaitedNode !== null) {
     // Nothing in user space (unfiltered stack) awaited this.
     serializeIONode(request, awaitedNode, awaitedNode.promise);
-    request.pendingChunks++;
+    request.pendingDebugChunks++;
     // We log the environment at the time when we ping which may be later than what the
     // environment was when we actually started awaiting.
     const env = (0, request.environmentName)();
@@ -2372,7 +2437,7 @@ function serializeDeferredObject(
     // This client supports a long lived connection. We can assign this object
     // an ID to be lazy loaded later.
     // This keeps the connection alive until we ask for it or release it.
-    request.pendingChunks++;
+    request.pendingDebugChunks++;
     const id = request.nextChunkId++;
     deferredDebugObjects.existing.set(value, id);
     deferredDebugObjects.retained.set(id, value);
@@ -2461,7 +2526,7 @@ function serializeClientReference(
       resolveClientReferenceMetadata(request.bundlerConfig, clientReference);
     request.pendingChunks++;
     const importId = request.nextChunkId++;
-    emitImportChunk(request, importId, clientReferenceMetadata);
+    emitImportChunk(request, importId, clientReferenceMetadata, false);
     writtenClientReferences.set(clientReferenceKey, importId);
     if (parent[0] === REACT_ELEMENT_TYPE && parentPropertyName === '1') {
       // If we're encoding the "type" of an element, we can refer
@@ -2476,7 +2541,56 @@ function serializeClientReference(
     request.pendingChunks++;
     const errorId = request.nextChunkId++;
     const digest = logRecoverableError(request, x, null);
-    emitErrorChunk(request, errorId, digest, x);
+    emitErrorChunk(request, errorId, digest, x, false);
+    return serializeByValueID(errorId);
+  }
+}
+
+function serializeDebugClientReference(
+  request: Request,
+  parent:
+    | {+[propertyName: string | number]: ReactClientValue}
+    | $ReadOnlyArray<ReactClientValue>,
+  parentPropertyName: string,
+  clientReference: ClientReference<any>,
+): string {
+  // Like serializeDebugClientReference but it doesn't dedupe in the regular set
+  // and it writes to completedDebugChunk instead of imports.
+  const clientReferenceKey: ClientReferenceKey =
+    getClientReferenceKey(clientReference);
+  const writtenClientReferences = request.writtenClientReferences;
+  const existingId = writtenClientReferences.get(clientReferenceKey);
+  if (existingId !== undefined) {
+    if (parent[0] === REACT_ELEMENT_TYPE && parentPropertyName === '1') {
+      // If we're encoding the "type" of an element, we can refer
+      // to that by a lazy reference instead of directly since React
+      // knows how to deal with lazy values. This lets us suspend
+      // on this component rather than its parent until the code has
+      // loaded.
+      return serializeLazyID(existingId);
+    }
+    return serializeByValueID(existingId);
+  }
+  try {
+    const clientReferenceMetadata: ClientReferenceMetadata =
+      resolveClientReferenceMetadata(request.bundlerConfig, clientReference);
+    request.pendingDebugChunks++;
+    const importId = request.nextChunkId++;
+    emitImportChunk(request, importId, clientReferenceMetadata, true);
+    if (parent[0] === REACT_ELEMENT_TYPE && parentPropertyName === '1') {
+      // If we're encoding the "type" of an element, we can refer
+      // to that by a lazy reference instead of directly since React
+      // knows how to deal with lazy values. This lets us suspend
+      // on this component rather than its parent until the code has
+      // loaded.
+      return serializeLazyID(importId);
+    }
+    return serializeByValueID(importId);
+  } catch (x) {
+    request.pendingDebugChunks++;
+    const errorId = request.nextChunkId++;
+    const digest = logRecoverableError(request, x, null);
+    emitErrorChunk(request, errorId, digest, x, true);
     return serializeByValueID(errorId);
   }
 }
@@ -2571,7 +2685,14 @@ function serializeTemporaryReference(
 function serializeLargeTextString(request: Request, text: string): string {
   request.pendingChunks++;
   const textId = request.nextChunkId++;
-  emitTextChunk(request, textId, text);
+  emitTextChunk(request, textId, text, false);
+  return serializeByValueID(textId);
+}
+
+function serializeDebugLargeTextString(request: Request, text: string): string {
+  request.pendingDebugChunks++;
+  const textId = request.nextChunkId++;
+  emitTextChunk(request, textId, text, true);
   return serializeByValueID(textId);
 }
 
@@ -2587,6 +2708,16 @@ function serializeMap(
 function serializeFormData(request: Request, formData: FormData): string {
   const entries = Array.from(formData.entries());
   const id = outlineModel(request, (entries: any));
+  return '$K' + id.toString(16);
+}
+
+function serializeDebugFormData(request: Request, formData: FormData): string {
+  const entries = Array.from(formData.entries());
+  const id = outlineDebugModel(
+    request,
+    {objectLimit: entries.length * 2 + 1},
+    (entries: any),
+  );
   return '$K' + id.toString(16);
 }
 
@@ -2659,8 +2790,54 @@ function serializeTypedArray(
 ): string {
   request.pendingChunks++;
   const bufferId = request.nextChunkId++;
-  emitTypedArrayChunk(request, bufferId, tag, typedArray);
+  emitTypedArrayChunk(request, bufferId, tag, typedArray, false);
   return serializeByValueID(bufferId);
+}
+
+function serializeDebugTypedArray(
+  request: Request,
+  tag: string,
+  typedArray: $ArrayBufferView,
+): string {
+  request.pendingDebugChunks++;
+  const bufferId = request.nextChunkId++;
+  emitTypedArrayChunk(request, bufferId, tag, typedArray, true);
+  return serializeByValueID(bufferId);
+}
+
+function serializeDebugBlob(request: Request, blob: Blob): string {
+  const model: Array<string | Uint8Array> = [blob.type];
+  const reader = blob.stream().getReader();
+  request.pendingDebugChunks++;
+  const id = request.nextChunkId++;
+  function progress(
+    entry: {done: false, value: Uint8Array} | {done: true, value: void},
+  ): Promise<void> | void {
+    if (entry.done) {
+      emitOutlinedDebugModelChunk(
+        request,
+        id,
+        {objectLimit: model.length + 2},
+        model,
+      );
+      enqueueFlush(request);
+      return;
+    }
+    // TODO: Emit the chunk early and refer to it later by dedupe.
+    model.push(entry.value);
+    // $FlowFixMe[incompatible-call]
+    return reader.read().then(progress).catch(error);
+  }
+  function error(reason: mixed) {
+    const digest = '';
+    emitErrorChunk(request, id, digest, reason, true);
+    enqueueFlush(request);
+    // $FlowFixMe should be able to pass mixed
+    reader.cancel(reason).then(noop, noop);
+  }
+  // $FlowFixMe[incompatible-call]
+  reader.read().then(progress).catch(error);
+  return '$B' + id.toString(16);
 }
 
 function serializeBlob(request: Request, blob: Blob): string {
@@ -2849,7 +3026,7 @@ function renderModel(
       emitPostponeChunk(request, errorId, postponeInstance);
     } else {
       const digest = logRecoverableError(request, x, task);
-      emitErrorChunk(request, errorId, digest, x);
+      emitErrorChunk(request, errorId, digest, x, false);
     }
     if (wasReactNode) {
       // We'll replace this element with a lazy reference that throws on the client
@@ -3100,6 +3277,11 @@ function renderModelDestructive(
 
     if (existingReference !== undefined) {
       if (modelRoot === value) {
+        if (existingReference !== serializeByValueID(task.id)) {
+          // Turns out that we already have this root at a different reference.
+          // Use that after all.
+          return existingReference;
+        }
         // This is the ID we're currently emitting so we need to write it
         // once but if we discover it again, we refer to it by id.
         modelRoot = null;
@@ -3600,11 +3782,48 @@ function serializeErrorValue(request: Request, error: Error): string {
   }
 }
 
+function serializeDebugErrorValue(request: Request, error: Error): string {
+  if (__DEV__) {
+    let name: string = 'Error';
+    let message: string;
+    let stack: ReactStackTrace;
+    let env = (0, request.environmentName)();
+    try {
+      name = error.name;
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      message = String(error.message);
+      stack = filterStackTrace(request, parseStackTrace(error, 0));
+      const errorEnv = (error: any).environmentName;
+      if (typeof errorEnv === 'string') {
+        // This probably came from another FlightClient as a pass through.
+        // Keep the environment name.
+        env = errorEnv;
+      }
+    } catch (x) {
+      message = 'An error occurred but serializing the error message failed.';
+      stack = [];
+    }
+    const errorInfo: ReactErrorInfoDev = {name, message, stack, env};
+    const id = outlineDebugModel(
+      request,
+      {objectLimit: stack.length * 2 + 1},
+      errorInfo,
+    );
+    return '$Z' + id.toString(16);
+  } else {
+    // In prod we don't emit any information about this Error object to avoid
+    // unintentional leaks. Since this doesn't actually throw on the server
+    // we don't go through onError and so don't register any digest neither.
+    return '$Z';
+  }
+}
+
 function emitErrorChunk(
   request: Request,
   id: number,
   digest: string,
   error: mixed,
+  debug: boolean,
 ): void {
   let errorInfo: ReactErrorInfo;
   if (__DEV__) {
@@ -3642,19 +3861,28 @@ function emitErrorChunk(
   }
   const row = serializeRowHeader('E', id) + stringify(errorInfo) + '\n';
   const processedChunk = stringToChunk(row);
-  request.completedErrorChunks.push(processedChunk);
+  if (__DEV__ && debug) {
+    request.completedDebugChunks.push(processedChunk);
+  } else {
+    request.completedErrorChunks.push(processedChunk);
+  }
 }
 
 function emitImportChunk(
   request: Request,
   id: number,
   clientReferenceMetadata: ClientReferenceMetadata,
+  debug: boolean,
 ): void {
   // $FlowFixMe[incompatible-type] stringify can return null
   const json: string = stringify(clientReferenceMetadata);
   const row = serializeRowHeader('I', id) + json + '\n';
   const processedChunk = stringToChunk(row);
-  request.completedImportChunks.push(processedChunk);
+  if (__DEV__ && debug) {
+    request.completedDebugChunks.push(processedChunk);
+  } else {
+    request.completedImportChunks.push(processedChunk);
+  }
 }
 
 function emitHintChunk<Code: HintCode>(
@@ -3692,7 +3920,7 @@ function emitDebugHaltChunk(request: Request, id: number): void {
   // even when the client stream is closed. We use just the lack of data to indicate this.
   const row = id.toString(16) + ':\n';
   const processedChunk = stringToChunk(row);
-  request.completedRegularChunks.push(processedChunk);
+  request.completedDebugChunks.push(processedChunk);
 }
 
 function emitDebugChunk(
@@ -3715,7 +3943,7 @@ function emitDebugChunk(
   const json: string = serializeDebugModel(request, 500, debugInfo);
   const row = serializeRowHeader('D', id) + json + '\n';
   const processedChunk = stringToChunk(row);
-  request.completedRegularChunks.push(processedChunk);
+  request.completedDebugChunks.push(processedChunk);
 }
 
 function outlineComponentInfo(
@@ -3839,7 +4067,7 @@ function emitIOInfoChunk(
   const json: string = serializeDebugModel(request, objectLimit, debugIOInfo);
   const row = id.toString(16) + ':J' + json + '\n';
   const processedChunk = stringToChunk(row);
-  request.completedRegularChunks.push(processedChunk);
+  request.completedDebugChunks.push(processedChunk);
 }
 
 function outlineIOInfo(request: Request, ioInfo: ReactIOInfo): void {
@@ -3848,7 +4076,7 @@ function outlineIOInfo(request: Request, ioInfo: ReactIOInfo): void {
     return;
   }
   // We can't serialize the ConsoleTask/Error objects so we need to omit them before serializing.
-  request.pendingChunks++;
+  request.pendingDebugChunks++;
   const id = request.nextChunkId++;
   const owner = ioInfo.owner;
   // Ensure the owner is already outlined.
@@ -3922,11 +4150,11 @@ function serializeIONode(
   const endTime =
     ioNode.tag === UNRESOLVED_PROMISE_NODE
       ? // Mark the end time as now. It's arbitrary since it's not resolved but this
-        // marks when we stopped trying.
-        performance.now()
+        // marks when we called abort and therefore stopped trying.
+        request.abortTime
       : ioNode.end;
 
-  request.pendingChunks++;
+  request.pendingDebugChunks++;
   const id = request.nextChunkId++;
   emitIOInfoChunk(
     request,
@@ -3949,6 +4177,7 @@ function emitTypedArrayChunk(
   id: number,
   tag: string,
   typedArray: $ArrayBufferView,
+  debug: boolean,
 ): void {
   if (enableTaint) {
     if (TaintRegistryByteLengths.has(typedArray.byteLength)) {
@@ -3962,28 +4191,49 @@ function emitTypedArrayChunk(
       }
     }
   }
-  request.pendingChunks++; // Extra chunk for the header.
+  if (debug) {
+    request.pendingDebugChunks++;
+  } else {
+    request.pendingChunks++; // Extra chunk for the header.
+  }
   // TODO: Convert to little endian if that's not the server default.
   const binaryChunk = typedArrayToBinaryChunk(typedArray);
   const binaryLength = byteLengthOfBinaryChunk(binaryChunk);
   const row = id.toString(16) + ':' + tag + binaryLength.toString(16) + ',';
   const headerChunk = stringToChunk(row);
-  request.completedRegularChunks.push(headerChunk, binaryChunk);
+  if (__DEV__ && debug) {
+    request.completedDebugChunks.push(headerChunk, binaryChunk);
+  } else {
+    request.completedRegularChunks.push(headerChunk, binaryChunk);
+  }
 }
 
-function emitTextChunk(request: Request, id: number, text: string): void {
+function emitTextChunk(
+  request: Request,
+  id: number,
+  text: string,
+  debug: boolean,
+): void {
   if (byteLengthOfChunk === null) {
     // eslint-disable-next-line react-internal/prod-error-codes
     throw new Error(
       'Existence of byteLengthOfChunk should have already been checked. This is a bug in React.',
     );
   }
-  request.pendingChunks++; // Extra chunk for the header.
+  if (debug) {
+    request.pendingDebugChunks++;
+  } else {
+    request.pendingChunks++; // Extra chunk for the header.
+  }
   const textChunk = stringToChunk(text);
   const binaryLength = byteLengthOfChunk(textChunk);
   const row = id.toString(16) + ':T' + binaryLength.toString(16) + ',';
   const headerChunk = stringToChunk(row);
-  request.completedRegularChunks.push(headerChunk, textChunk);
+  if (__DEV__ && debug) {
+    request.completedDebugChunks.push(headerChunk, textChunk);
+  } else {
+    request.completedRegularChunks.push(headerChunk, textChunk);
+  }
 }
 
 function serializeEval(source: string): string {
@@ -4027,7 +4277,7 @@ function renderDebugModel(
       // This might be confusing though because on the Server it won't actually
       // be this value, so if you're debugging client references maybe you'd be
       // better with a place holder.
-      return serializeClientReference(
+      return serializeDebugClientReference(
         request,
         parent,
         parentPropertyName,
@@ -4191,65 +4441,65 @@ function renderDebugModel(
     }
     // TODO: FormData is not available in old Node. Remove the typeof later.
     if (typeof FormData === 'function' && value instanceof FormData) {
-      return serializeFormData(request, value);
+      return serializeDebugFormData(request, value);
     }
     if (value instanceof Error) {
-      return serializeErrorValue(request, value);
+      return serializeDebugErrorValue(request, value);
     }
     if (value instanceof ArrayBuffer) {
-      return serializeTypedArray(request, 'A', new Uint8Array(value));
+      return serializeDebugTypedArray(request, 'A', new Uint8Array(value));
     }
     if (value instanceof Int8Array) {
       // char
-      return serializeTypedArray(request, 'O', value);
+      return serializeDebugTypedArray(request, 'O', value);
     }
     if (value instanceof Uint8Array) {
       // unsigned char
-      return serializeTypedArray(request, 'o', value);
+      return serializeDebugTypedArray(request, 'o', value);
     }
     if (value instanceof Uint8ClampedArray) {
       // unsigned clamped char
-      return serializeTypedArray(request, 'U', value);
+      return serializeDebugTypedArray(request, 'U', value);
     }
     if (value instanceof Int16Array) {
       // sort
-      return serializeTypedArray(request, 'S', value);
+      return serializeDebugTypedArray(request, 'S', value);
     }
     if (value instanceof Uint16Array) {
       // unsigned short
-      return serializeTypedArray(request, 's', value);
+      return serializeDebugTypedArray(request, 's', value);
     }
     if (value instanceof Int32Array) {
       // long
-      return serializeTypedArray(request, 'L', value);
+      return serializeDebugTypedArray(request, 'L', value);
     }
     if (value instanceof Uint32Array) {
       // unsigned long
-      return serializeTypedArray(request, 'l', value);
+      return serializeDebugTypedArray(request, 'l', value);
     }
     if (value instanceof Float32Array) {
       // float
-      return serializeTypedArray(request, 'G', value);
+      return serializeDebugTypedArray(request, 'G', value);
     }
     if (value instanceof Float64Array) {
       // double
-      return serializeTypedArray(request, 'g', value);
+      return serializeDebugTypedArray(request, 'g', value);
     }
     if (value instanceof BigInt64Array) {
       // number
-      return serializeTypedArray(request, 'M', value);
+      return serializeDebugTypedArray(request, 'M', value);
     }
     if (value instanceof BigUint64Array) {
       // unsigned number
       // We use "m" instead of "n" since JSON can start with "null"
-      return serializeTypedArray(request, 'm', value);
+      return serializeDebugTypedArray(request, 'm', value);
     }
     if (value instanceof DataView) {
-      return serializeTypedArray(request, 'V', value);
+      return serializeDebugTypedArray(request, 'V', value);
     }
     // TODO: Blob is not available in old Node. Remove the typeof check later.
     if (typeof Blob === 'function' && value instanceof Blob) {
-      return serializeBlob(request, value);
+      return serializeDebugBlob(request, value);
     }
 
     const iteratorFn = getIteratorFn(value);
@@ -4310,7 +4560,7 @@ function renderDebugModel(
       // For large strings, we encode them outside the JSON payload so that we
       // don't have to double encode and double parse the strings. This can also
       // be more compact in case the string has a lot of escaped characters.
-      return serializeLargeTextString(request, value);
+      return serializeDebugLargeTextString(request, value);
     }
     return escapeStringValue(value);
   }
@@ -4329,7 +4579,7 @@ function renderDebugModel(
 
   if (typeof value === 'function') {
     if (isClientReference(value)) {
-      return serializeClientReference(
+      return serializeDebugClientReference(
         request,
         parent,
         parentPropertyName,
@@ -4359,10 +4609,10 @@ function renderDebugModel(
       // $FlowFixMe[method-unbinding]
       '(' + Function.prototype.toString.call(value) + ')',
     );
-    request.pendingChunks++;
+    request.pendingDebugChunks++;
     const id = request.nextChunkId++;
     const processedChunk = encodeReferenceChunk(request, id, serializedValue);
-    request.completedRegularChunks.push(processedChunk);
+    request.completedDebugChunks.push(processedChunk);
     const reference = serializeByValueID(id);
     writtenDebugObjects.set(value, reference);
     return reference;
@@ -4500,7 +4750,7 @@ function emitOutlinedDebugModelChunk(
 
   const row = id.toString(16) + ':' + json + '\n';
   const processedChunk = stringToChunk(row);
-  request.completedRegularChunks.push(processedChunk);
+  request.completedDebugChunks.push(processedChunk);
 }
 
 function outlineDebugModel(
@@ -4517,7 +4767,7 @@ function outlineDebugModel(
   }
 
   const id = request.nextChunkId++;
-  request.pendingChunks++;
+  request.pendingDebugChunks++;
   emitOutlinedDebugModelChunk(request, id, counter, model);
   return id;
 }
@@ -4526,6 +4776,7 @@ function emitConsoleChunk(
   request: Request,
   methodName: string,
   owner: null | ReactComponentInfo,
+  env: string,
   stackTrace: ReactStackTrace,
   args: Array<any>,
 ): void {
@@ -4542,8 +4793,6 @@ function emitConsoleChunk(
     outlineComponentInfo(request, owner);
   }
 
-  // TODO: Don't double badge if this log came from another Flight Client.
-  const env = (0, request.environmentName)();
   const payload = [methodName, stackTrace, owner, env];
   // $FlowFixMe[method-unbinding]
   payload.push.apply(payload, args);
@@ -4560,18 +4809,18 @@ function emitConsoleChunk(
   }
   const row = ':W' + json + '\n';
   const processedChunk = stringToChunk(row);
-  request.completedRegularChunks.push(processedChunk);
+  request.completedDebugChunks.push(processedChunk);
 }
 
 function emitTimeOriginChunk(request: Request, timeOrigin: number): void {
   // We emit the time origin once. All ReactTimeInfo timestamps later in the stream
   // are relative to this time origin. This allows for more compact number encoding
   // and lower precision loss.
-  request.pendingChunks++;
+  request.pendingDebugChunks++;
   const row = ':N' + timeOrigin + '\n';
   const processedChunk = stringToChunk(row);
   // TODO: Move to its own priority queue.
-  request.completedRegularChunks.push(processedChunk);
+  request.completedDebugChunks.push(processedChunk);
 }
 
 function forwardDebugInfo(
@@ -4594,7 +4843,7 @@ function forwardDebugInfo(
         // being no references to this as an owner.
         outlineComponentInfo(request, (info: any));
         // Emit a reference to the outlined one.
-        request.pendingChunks++;
+        request.pendingDebugChunks++;
         emitDebugChunk(request, id, info);
       } else if (info.awaited) {
         const ioInfo = info.awaited;
@@ -4635,11 +4884,11 @@ function forwardDebugInfo(
             // $FlowFixMe[cannot-write]
             debugAsyncInfo.stack = debugStack;
           }
-          request.pendingChunks++;
+          request.pendingDebugChunks++;
           emitDebugChunk(request, id, debugAsyncInfo);
         }
       } else {
-        request.pendingChunks++;
+        request.pendingDebugChunks++;
         emitDebugChunk(request, id, info);
       }
     }
@@ -4723,17 +4972,8 @@ function forwardDebugInfoFromAbortedTask(request: Request, task: Task): void {
       thenable = (model: any);
     } else if (model.$$typeof === REACT_LAZY_TYPE) {
       const payload = model._payload;
-      const init = model._init;
-      try {
-        init(payload);
-      } catch (x) {
-        if (
-          typeof x === 'object' &&
-          x !== null &&
-          typeof x.then === 'function'
-        ) {
-          thenable = (x: any);
-        }
+      if (typeof payload.then === 'function') {
+        thenable = payload;
       }
     }
     if (thenable !== null) {
@@ -4750,7 +4990,7 @@ function forwardDebugInfoFromAbortedTask(request: Request, task: Task): void {
           // complete in time before aborting.
           // The best we can do is try to emit the stack of where this Promise was created.
           serializeIONode(request, node, null);
-          request.pendingChunks++;
+          request.pendingDebugChunks++;
           const env = (0, request.environmentName)();
           const asyncInfo: ReactAsyncInfo = {
             awaited: ((node: any): ReactIOInfo), // This is deduped by this reference.
@@ -4762,6 +5002,8 @@ function forwardDebugInfoFromAbortedTask(request: Request, task: Task): void {
           advanceTaskTime(request, task, task.time);
           emitDebugChunk(request, task.id, asyncInfo);
         } else {
+          // We have a resolved Promise. Its debug info can include both awaited data and rejected
+          // promises after the abort.
           emitAsyncSequence(request, task, sequence, debugInfo, null, null);
         }
       }
@@ -4777,13 +5019,13 @@ function emitTimingChunk(
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
     return;
   }
-  request.pendingChunks++;
+  request.pendingDebugChunks++;
   const relativeTimestamp = timestamp - request.timeOrigin;
   const row =
     serializeRowHeader('D', id) + '{"time":' + relativeTimestamp + '}\n';
   const processedChunk = stringToChunk(row);
   // TODO: Move to its own priority queue.
-  request.completedRegularChunks.push(processedChunk);
+  request.completedDebugChunks.push(processedChunk);
 }
 
 function advanceTaskTime(
@@ -4812,7 +5054,7 @@ function markOperationEndTime(request: Request, task: Task, timestamp: number) {
   }
   // This is like advanceTaskTime() but always emits a timing chunk even if it doesn't advance.
   // This ensures that the end time of the previous entry isn't implied to be the start of the next one.
-  if (request.status === ABORTING) {
+  if (request.status === ABORTING && timestamp > request.abortTime) {
     // If we're aborting then we don't emit any end times that happened after.
     return;
   }
@@ -4839,71 +5081,71 @@ function emitChunk(
         throwTaintViolation(tainted.message);
       }
     }
-    emitTextChunk(request, id, value);
+    emitTextChunk(request, id, value, false);
     return;
   }
   if (value instanceof ArrayBuffer) {
-    emitTypedArrayChunk(request, id, 'A', new Uint8Array(value));
+    emitTypedArrayChunk(request, id, 'A', new Uint8Array(value), false);
     return;
   }
   if (value instanceof Int8Array) {
     // char
-    emitTypedArrayChunk(request, id, 'O', value);
+    emitTypedArrayChunk(request, id, 'O', value, false);
     return;
   }
   if (value instanceof Uint8Array) {
     // unsigned char
-    emitTypedArrayChunk(request, id, 'o', value);
+    emitTypedArrayChunk(request, id, 'o', value, false);
     return;
   }
   if (value instanceof Uint8ClampedArray) {
     // unsigned clamped char
-    emitTypedArrayChunk(request, id, 'U', value);
+    emitTypedArrayChunk(request, id, 'U', value, false);
     return;
   }
   if (value instanceof Int16Array) {
     // sort
-    emitTypedArrayChunk(request, id, 'S', value);
+    emitTypedArrayChunk(request, id, 'S', value, false);
     return;
   }
   if (value instanceof Uint16Array) {
     // unsigned short
-    emitTypedArrayChunk(request, id, 's', value);
+    emitTypedArrayChunk(request, id, 's', value, false);
     return;
   }
   if (value instanceof Int32Array) {
     // long
-    emitTypedArrayChunk(request, id, 'L', value);
+    emitTypedArrayChunk(request, id, 'L', value, false);
     return;
   }
   if (value instanceof Uint32Array) {
     // unsigned long
-    emitTypedArrayChunk(request, id, 'l', value);
+    emitTypedArrayChunk(request, id, 'l', value, false);
     return;
   }
   if (value instanceof Float32Array) {
     // float
-    emitTypedArrayChunk(request, id, 'G', value);
+    emitTypedArrayChunk(request, id, 'G', value, false);
     return;
   }
   if (value instanceof Float64Array) {
     // double
-    emitTypedArrayChunk(request, id, 'g', value);
+    emitTypedArrayChunk(request, id, 'g', value, false);
     return;
   }
   if (value instanceof BigInt64Array) {
     // number
-    emitTypedArrayChunk(request, id, 'M', value);
+    emitTypedArrayChunk(request, id, 'M', value, false);
     return;
   }
   if (value instanceof BigUint64Array) {
     // unsigned number
     // We use "m" instead of "n" since JSON can start with "null"
-    emitTypedArrayChunk(request, id, 'm', value);
+    emitTypedArrayChunk(request, id, 'm', value, false);
     return;
   }
   if (value instanceof DataView) {
-    emitTypedArrayChunk(request, id, 'V', value);
+    emitTypedArrayChunk(request, id, 'V', value, false);
     return;
   }
   // For anything else we need to try to serialize it using JSON.
@@ -4930,7 +5172,7 @@ function erroredTask(request: Request, task: Task, error: mixed): void {
     emitPostponeChunk(request, task.id, postponeInstance);
   } else {
     const digest = logRecoverableError(request, error, task);
-    emitErrorChunk(request, task.id, digest, error);
+    emitErrorChunk(request, task.id, digest, error, false);
   }
   request.abortableTasks.delete(task);
   callOnAllReadyIfReady(request);
@@ -4989,7 +5231,7 @@ function retryTask(request: Request, task: Task): void {
     if (__DEV__) {
       const currentEnv = (0, request.environmentName)();
       if (currentEnv !== task.environmentName) {
-        request.pendingChunks++;
+        request.pendingDebugChunks++;
         // The environment changed since we last emitted any debug information for this
         // task. We emit an entry that just includes the environment name change.
         emitDebugChunk(request, task.id, {env: currentEnv});
@@ -5029,10 +5271,12 @@ function retryTask(request: Request, task: Task): void {
         // When aborting a prerener with halt semantics we don't emit
         // anything into the slot for a task that aborts, it remains unresolved
         haltTask(task, request);
+        finishHaltedTask(task, request);
       } else {
         // Otherwise we emit an error chunk into the task slot.
         const errorId: number = (request.fatalError: any);
         abortTask(task, request, errorId);
+        finishAbortedTask(task, request, errorId);
       }
       return;
     }
@@ -5116,16 +5360,27 @@ function performWork(request: Request): void {
 }
 
 function abortTask(task: Task, request: Request, errorId: number): void {
-  if (task.status === RENDERING) {
-    // This task will be aborted by the render
+  if (task.status !== PENDING) {
+    // If this is already completed/errored we don't abort it.
+    // If currently rendering it will be aborted by the render
     return;
   }
   task.status = ABORTED;
+}
+
+function finishAbortedTask(
+  task: Task,
+  request: Request,
+  errorId: number,
+): void {
+  if (task.status !== ABORTED) {
+    return;
+  }
   forwardDebugInfoFromAbortedTask(request, task);
   // Track when we aborted this task as its end time.
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     if (task.timed) {
-      markOperationEndTime(request, task, performance.now());
+      markOperationEndTime(request, task, request.abortTime);
     }
   }
   // Instead of emitting an error per task.id, we emit a model that only
@@ -5136,11 +5391,18 @@ function abortTask(task: Task, request: Request, errorId: number): void {
 }
 
 function haltTask(task: Task, request: Request): void {
-  if (task.status === RENDERING) {
-    // this task will be halted by the render
+  if (task.status !== PENDING) {
+    // If this is already completed/errored we don't abort it.
+    // If currently rendering it will be aborted by the render
     return;
   }
   task.status = ABORTED;
+}
+
+function finishHaltedTask(task: Task, request: Request): void {
+  if (task.status !== ABORTED) {
+    return;
+  }
   forwardDebugInfoFromAbortedTask(request, task);
   // We don't actually emit anything for this task id because we are intentionally
   // leaving the reference unfulfilled.
@@ -5183,6 +5445,24 @@ function flushCompletedChunks(
     }
     hintChunks.splice(0, i);
 
+    // Debug meta data comes before the model data because it will often end up blocking the model from
+    // completing since the JSX will reference the debug data.
+    if (__DEV__) {
+      const debugChunks = request.completedDebugChunks;
+      i = 0;
+      for (; i < debugChunks.length; i++) {
+        request.pendingDebugChunks--;
+        const chunk = debugChunks[i];
+        const keepWriting: boolean = writeChunkAndReturn(destination, chunk);
+        if (!keepWriting) {
+          request.destination = null;
+          i++;
+          break;
+        }
+      }
+      debugChunks.splice(0, i);
+    }
+
     // Next comes model data.
     const regularChunks = request.completedRegularChunks;
     i = 0;
@@ -5219,7 +5499,10 @@ function flushCompletedChunks(
     completeWriting(destination);
   }
   flushBuffered(destination);
-  if (request.pendingChunks === 0) {
+  if (
+    request.pendingChunks === 0 &&
+    (!__DEV__ || request.pendingDebugChunks === 0)
+  ) {
     // We're done.
     if (enableTaint) {
       cleanupTaintQueue(request);
@@ -5307,22 +5590,56 @@ export function stopFlowing(request: Request): void {
   request.destination = null;
 }
 
-export function abort(request: Request, reason: mixed): void {
+function finishHalt(request: Request, abortedTasks: Set<Task>): void {
   try {
-    // We define any status below OPEN as OPEN equivalent
-    if (request.status <= OPEN) {
-      request.status = ABORTING;
-      request.cacheController.abort(reason);
-      callOnAllReadyIfReady(request);
+    abortedTasks.forEach(task => finishHaltedTask(task, request));
+    const onAllReady = request.onAllReady;
+    onAllReady();
+    if (request.destination !== null) {
+      flushCompletedChunks(request, request.destination);
     }
+  } catch (error) {
+    logRecoverableError(request, error, null);
+    fatalError(request, error);
+  }
+}
+
+function finishAbort(
+  request: Request,
+  abortedTasks: Set<Task>,
+  errorId: number,
+): void {
+  try {
+    abortedTasks.forEach(task => finishAbortedTask(task, request, errorId));
+    const onAllReady = request.onAllReady;
+    onAllReady();
+    if (request.destination !== null) {
+      flushCompletedChunks(request, request.destination);
+    }
+  } catch (error) {
+    logRecoverableError(request, error, null);
+    fatalError(request, error);
+  }
+}
+
+export function abort(request: Request, reason: mixed): void {
+  // We define any status below OPEN as OPEN equivalent
+  if (request.status > OPEN) {
+    return;
+  }
+  try {
+    request.status = ABORTING;
+    if (enableProfilerTimer && enableComponentPerformanceTrack) {
+      request.abortTime = performance.now();
+    }
+    request.cacheController.abort(reason);
     const abortableTasks = request.abortableTasks;
     if (abortableTasks.size > 0) {
       if (enableHalt && request.type === PRERENDER) {
         // When prerendering with halt semantics we simply halt the task
         // and leave the reference unfulfilled.
         abortableTasks.forEach(task => haltTask(task, request));
-        abortableTasks.clear();
-        callOnAllReadyIfReady(request);
+        scheduleWork(() => finishHalt(request, abortableTasks));
       } else if (
         enablePostpone &&
         typeof reason === 'object' &&
@@ -5338,8 +5655,7 @@ export function abort(request: Request, reason: mixed): void {
         request.pendingChunks++;
         emitPostponeChunk(request, errorId, postponeInstance);
         abortableTasks.forEach(task => abortTask(task, request, errorId));
-        abortableTasks.clear();
-        callOnAllReadyIfReady(request);
+        scheduleWork(() => finishAbort(request, abortableTasks, errorId));
       } else {
         const error =
           reason === undefined
@@ -5359,14 +5675,16 @@ export function abort(request: Request, reason: mixed): void {
         const errorId = request.nextChunkId++;
         request.fatalError = errorId;
         request.pendingChunks++;
-        emitErrorChunk(request, errorId, digest, error);
+        emitErrorChunk(request, errorId, digest, error, false);
         abortableTasks.forEach(task => abortTask(task, request, errorId));
-        abortableTasks.clear();
-        callOnAllReadyIfReady(request);
+        scheduleWork(() => finishAbort(request, abortableTasks, errorId));
       }
-    }
-    if (request.destination !== null) {
-      flushCompletedChunks(request, request.destination);
+    } else {
+      const onAllReady = request.onAllReady;
+      onAllReady();
+      if (request.destination !== null) {
+        flushCompletedChunks(request, request.destination);
+      }
     }
   } catch (error) {
     logRecoverableError(request, error, null);
@@ -5403,7 +5721,7 @@ export function resolveDebugMessage(request: Request, message: string): void {
         const retainedValue = deferredDebugObjects.retained.get(id);
         if (retainedValue !== undefined) {
           // We're no longer blocked on this. We won't emit it.
-          request.pendingChunks--;
+          request.pendingDebugChunks--;
           deferredDebugObjects.retained.delete(id);
           deferredDebugObjects.existing.delete(retainedValue);
           enqueueFlush(request);
@@ -5446,7 +5764,7 @@ export function closeDebugChannel(request: Request): void {
     );
   }
   deferredDebugObjects.retained.forEach((value, id) => {
-    request.pendingChunks--;
+    request.pendingDebugChunks--;
     deferredDebugObjects.retained.delete(id);
     deferredDebugObjects.existing.delete(value);
   });

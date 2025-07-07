@@ -178,7 +178,6 @@ import {
   enableScopeAPI,
   enablePostpone,
   enableHalt,
-  disableDefaultPropsExceptForClasses,
   enableAsyncIterableChildren,
   enableViewTransition,
   enableFizzBlockingRender,
@@ -1020,6 +1019,7 @@ function pushHaltedAwaitOnComponentStack(
             stack: bestStack.debugStack,
           };
           task.debugTask = (bestStack.debugTask: any);
+          break;
         }
       }
     }
@@ -1105,8 +1105,8 @@ function pushComponentStack(task: Task): void {
 function createComponentStackFromType(
   parent: null | ComponentStackNode,
   type: Function | string | symbol,
-  owner: null | ReactComponentInfo | ComponentStackNode, // DEV only
-  stack: null | Error, // DEV only
+  owner: void | null | ReactComponentInfo | ComponentStackNode, // DEV only
+  stack: void | null | string | Error, // DEV only
 ): ComponentStackNode {
   if (__DEV__) {
     return {
@@ -1120,6 +1120,20 @@ function createComponentStackFromType(
     parent,
     type,
   };
+}
+
+function replaceSuspenseComponentStackWithSuspenseFallbackStack(
+  componentStack: null | ComponentStackNode,
+): null | ComponentStackNode {
+  if (componentStack === null) {
+    return null;
+  }
+  return createComponentStackFromType(
+    componentStack.parent,
+    'Suspense Fallback',
+    __DEV__ ? componentStack.owner : null,
+    __DEV__ ? componentStack.stack : null,
+  );
 }
 
 type ThrownInfo = {
@@ -1350,6 +1364,8 @@ function renderSuspenseBoundary(
   contentRootSegment.parentFlushed = true;
 
   if (request.trackedPostpones !== null) {
+    // Stash the original stack frame.
+    const suspenseComponentStack = task.componentStack;
     // This is a prerender. In this mode we want to render the fallback synchronously and schedule
     // the content to render later. This is the opposite of what we do during a normal render
     // where we try to skip rendering the fallback if the content itself can render synchronously
@@ -1374,6 +1390,10 @@ function renderSuspenseBoundary(
       request.resumableState,
       prevContext,
     );
+    task.componentStack =
+      replaceSuspenseComponentStackWithSuspenseFallbackStack(
+        suspenseComponentStack,
+      );
     boundarySegment.status = RENDERING;
     try {
       renderNode(request, task, fallback, -1);
@@ -1419,7 +1439,7 @@ function renderSuspenseBoundary(
       task.context,
       task.treeContext,
       null, // The row gets reset inside the Suspense boundary.
-      task.componentStack,
+      suspenseComponentStack,
       !disableLegacyContext ? task.legacyContext : emptyContextObject,
       __DEV__ ? task.debugTask : null,
     );
@@ -1572,7 +1592,9 @@ function renderSuspenseBoundary(
       task.context,
       task.treeContext,
       task.row,
-      task.componentStack,
+      replaceSuspenseComponentStackWithSuspenseFallbackStack(
+        task.componentStack,
+      ),
       !disableLegacyContext ? task.legacyContext : emptyContextObject,
       __DEV__ ? task.debugTask : null,
     );
@@ -1744,7 +1766,7 @@ function replaySuspenseBoundary(
     task.context,
     task.treeContext,
     task.row,
-    task.componentStack,
+    replaceSuspenseComponentStackWithSuspenseFallbackStack(task.componentStack),
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
     __DEV__ ? task.debugTask : null,
   );
@@ -2399,12 +2421,7 @@ export function resolveClassComponentProps(
 
   // Resolve default props.
   const defaultProps = Component.defaultProps;
-  if (
-    defaultProps &&
-    // If disableDefaultPropsExceptForClasses is true, we always resolve
-    // default props here, rather than in the JSX runtime.
-    disableDefaultPropsExceptForClasses
-  ) {
+  if (defaultProps) {
     // We may have already copied the props object above to remove ref. If so,
     // we can modify that. Otherwise, copy the props object with Object.assign.
     if (newProps === baseProps) {
@@ -2453,7 +2470,6 @@ const didWarnAboutContextTypes: {[string]: boolean} = {};
 const didWarnAboutContextTypeOnFunctionComponent: {[string]: boolean} = {};
 const didWarnAboutGetDerivedStateOnFunctionComponent: {[string]: boolean} = {};
 let didWarnAboutReassigningProps = false;
-const didWarnAboutDefaultPropsOnFunctionComponent: {[string]: boolean} = {};
 let didWarnAboutGenerators = false;
 let didWarnAboutMaps = false;
 
@@ -2610,22 +2626,6 @@ function validateFunctionComponentInDev(Component: any): void {
       );
     }
 
-    if (
-      !disableDefaultPropsExceptForClasses &&
-      Component.defaultProps !== undefined
-    ) {
-      const componentName = getComponentNameFromType(Component) || 'Unknown';
-
-      if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
-        console.error(
-          '%s: Support for defaultProps will be removed from function components ' +
-            'in a future major release. Use JavaScript default parameters instead.',
-          componentName,
-        );
-        didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true;
-      }
-    }
-
     if (typeof Component.getDerivedStateFromProps === 'function') {
       const componentName = getComponentNameFromType(Component) || 'Unknown';
 
@@ -2653,29 +2653,6 @@ function validateFunctionComponentInDev(Component: any): void {
       }
     }
   }
-}
-
-function resolveDefaultPropsOnNonClassComponent(
-  Component: any,
-  baseProps: Object,
-): Object {
-  if (disableDefaultPropsExceptForClasses) {
-    // Support for defaultProps is removed in React 19 for all types
-    // except classes.
-    return baseProps;
-  }
-  if (Component && Component.defaultProps) {
-    // Resolve default props. Taken from ReactElement
-    const props = assign({}, baseProps);
-    const defaultProps = Component.defaultProps;
-    for (const propName in defaultProps) {
-      if (props[propName] === undefined) {
-        props[propName] = defaultProps[propName];
-      }
-    }
-    return props;
-  }
-  return baseProps;
 }
 
 function renderForwardRef(
@@ -2735,11 +2712,7 @@ function renderMemo(
   ref: any,
 ): void {
   const innerType = type.type;
-  const resolvedProps = resolveDefaultPropsOnNonClassComponent(
-    innerType,
-    props,
-  );
-  renderElement(request, task, keyPath, innerType, resolvedProps, ref);
+  renderElement(request, task, keyPath, innerType, props, ref);
 }
 
 function renderContextConsumer(
@@ -2819,11 +2792,7 @@ function renderLazyComponent(
     // eslint-disable-next-line no-throw-literal
     throw null;
   }
-  const resolvedProps = resolveDefaultPropsOnNonClassComponent(
-    Component,
-    props,
-  );
-  renderElement(request, task, keyPath, Component, resolvedProps, ref);
+  renderElement(request, task, keyPath, Component, props, ref);
 }
 
 function renderActivity(
@@ -4661,10 +4630,12 @@ function abortTask(task: Task, request: Request, error: mixed): void {
     if (node !== null && typeof node === 'object') {
       // Push a fake component stack frame that represents the await.
       pushHaltedAwaitOnComponentStack(task, node._debugInfo);
+      /*
       if (task.thenableState !== null) {
         // TODO: If we were stalled inside use() of a Client Component then we should
         // rerender to get the stack trace from the use() call.
       }
+      */
     }
   }
 
