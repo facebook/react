@@ -4553,9 +4553,7 @@ __DEV__ &&
           null != props.onClick && (didHydrate.onclick = noop$1),
           (didHydrate = !0))
         : (didHydrate = !1);
-      !didHydrate &&
-        favorSafetyOverHydrationPerf &&
-        throwOnHydrationMismatch(fiber, !0);
+      didHydrate || throwOnHydrationMismatch(fiber, !0);
     }
     function popToNextHostParent(fiber) {
       for (hydrationParentFiber = fiber.return; hydrationParentFiber; )
@@ -12856,9 +12854,7 @@ __DEV__ &&
                 checkForUnmatchedText(current.nodeValue, renderLanes)
                   ? !0
                   : !1;
-              !current &&
-                favorSafetyOverHydrationPerf &&
-                throwOnHydrationMismatch(workInProgress, !0);
+              current || throwOnHydrationMismatch(workInProgress, !0);
             } else
               (type = renderLanes.ancestorInfo.current),
                 null != type &&
@@ -27723,8 +27719,6 @@ __DEV__ &&
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableTrustedTypesIntegration =
         dynamicFeatureFlags.enableTrustedTypesIntegration,
-      favorSafetyOverHydrationPerf =
-        dynamicFeatureFlags.favorSafetyOverHydrationPerf,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
       retryLaneExpirationMs = dynamicFeatureFlags.retryLaneExpirationMs,
       syncLaneExpirationMs = dynamicFeatureFlags.syncLaneExpirationMs,
@@ -31750,11 +31744,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-www-classic-c932e457-20250707" !== isomorphicReactPackageVersion)
+      if ("19.2.0-www-classic-e4314a0a-20250707" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-www-classic-c932e457-20250707\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-www-classic-e4314a0a-20250707\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -31797,10 +31791,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-www-classic-c932e457-20250707",
+          version: "19.2.0-www-classic-e4314a0a-20250707",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-www-classic-c932e457-20250707"
+          reconcilerVersion: "19.2.0-www-classic-e4314a0a-20250707"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -32400,7 +32394,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-www-classic-c932e457-20250707";
+    exports.version = "19.2.0-www-classic-e4314a0a-20250707";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

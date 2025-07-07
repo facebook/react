@@ -919,15 +919,13 @@ module.exports = function ($$$config) {
   }
   function prepareToHydrateHostInstance(fiber, hostContext) {
     if (!supportsHydration) throw Error(formatProdErrorMessage(175));
-    !hydrateInstance(
+    hydrateInstance(
       fiber.stateNode,
       fiber.type,
       fiber.memoizedProps,
       hostContext,
       fiber
-    ) &&
-      favorSafetyOverHydrationPerf &&
-      throwOnHydrationMismatch(fiber, !0);
+    ) || throwOnHydrationMismatch(fiber, !0);
   }
   function popToNextHostParent(fiber) {
     for (hydrationParentFiber = fiber.return; hydrationParentFiber; )
@@ -6904,14 +6902,12 @@ module.exports = function ($$$config) {
                 case 5:
                   newProps = type.memoizedProps;
               }
-            !hydrateTextInstance(
+            hydrateTextInstance(
               current,
               renderLanes,
               workInProgress,
               newProps
-            ) &&
-              favorSafetyOverHydrationPerf &&
-              throwOnHydrationMismatch(workInProgress, !0);
+            ) || throwOnHydrationMismatch(workInProgress, !0);
           } else
             workInProgress.stateNode = createTextInstance(
               newProps,
@@ -12559,8 +12555,6 @@ module.exports = function ($$$config) {
     enableObjectFiber = dynamicFeatureFlags.enableObjectFiber,
     enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
     enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-    favorSafetyOverHydrationPerf =
-      dynamicFeatureFlags.favorSafetyOverHydrationPerf,
     renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
     retryLaneExpirationMs = dynamicFeatureFlags.retryLaneExpirationMs,
     syncLaneExpirationMs = dynamicFeatureFlags.syncLaneExpirationMs,
@@ -13780,7 +13774,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-modern-c932e457-20250707"
+      reconcilerVersion: "19.2.0-www-modern-e4314a0a-20250707"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
