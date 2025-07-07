@@ -92,21 +92,27 @@ function getDebugInfo(obj) {
   return debugInfo;
 }
 
-const heldValues = [];
-let finalizationCallback;
+const finalizationRegistries = [];
 function FinalizationRegistryMock(callback) {
-  finalizationCallback = callback;
+  this._heldValues = [];
+  this._callback = callback;
+  finalizationRegistries.push(this);
 }
 FinalizationRegistryMock.prototype.register = function (target, heldValue) {
-  heldValues.push(heldValue);
+  this._heldValues.push(heldValue);
 };
 global.FinalizationRegistry = FinalizationRegistryMock;
 
 function gc() {
-  for (let i = 0; i < heldValues.length; i++) {
-    finalizationCallback(heldValues[i]);
+  for (let i = 0; i < finalizationRegistries.length; i++) {
+    const registry = finalizationRegistries[i];
+    const callback = registry._callback;
+    const heldValues = registry._heldValues;
+    for (let j = 0; j < heldValues.length; j++) {
+      callback(heldValues[j]);
+    }
+    heldValues.length = 0;
   }
-  heldValues.length = 0;
 }
 
 let act;
