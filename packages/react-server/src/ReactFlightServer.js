@@ -5400,6 +5400,7 @@ function flushCompletedChunks(
   request: Request,
   destination: Destination,
 ): void {
+  const hadPendingChunks = __DEV__ ? request.pendingChunks > 0 : false;
   beginWriting(destination);
   try {
     // We emit module chunks first in the stream so that
@@ -5486,20 +5487,32 @@ function flushCompletedChunks(
     completeWriting(destination);
   }
   flushBuffered(destination);
-  if (request.pendingChunks === 0 && (!__DEV__ || request.pendingDebugChunks === 0)) {
-    // We're done.
-    if (enableTaint) {
-      cleanupTaintQueue(request);
+  if (request.pendingChunks === 0) {
+    if (__DEV__ && request.pendingDebugChunks > 0) {
+      if (hadPendingChunks) {
+        // We just flushed the last regular chunk but we still have debug info to send.
+        // We send a signal to indicate that the main channel is now closed and it's only
+        // the debug channel that's still open.
+        beginWriting(destination);
+        writeChunkAndReturn(destination, stringToChunk(':Y\n'));
+        completeWriting(destination);
+        flushBuffered(destination);
+      }
+    } else {
+      // We're done.
+      if (enableTaint) {
+        cleanupTaintQueue(request);
+      }
+      if (request.status < ABORTING) {
+        const abortReason = new Error(
+          'This render completed successfully. All cacheSignals are now aborted to allow clean up of any unused resources.',
+        );
+        request.cacheController.abort(abortReason);
+      }
+      request.status = CLOSED;
+      close(destination);
+      request.destination = null;
     }
-    if (request.status < ABORTING) {
-      const abortReason = new Error(
-        'This render completed successfully. All cacheSignals are now aborted to allow clean up of any unused resources.',
-      );
-      request.cacheController.abort(abortReason);
-    }
-    request.status = CLOSED;
-    close(destination);
-    request.destination = null;
   }
 }
 

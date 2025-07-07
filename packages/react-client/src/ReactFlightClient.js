@@ -767,6 +767,10 @@ function initializeModuleChunk<T>(chunk: ResolvedModuleChunk<T>): void {
 // Report that any missing chunks in the model is now going to throw this
 // error upon read. Also notify any pending promises.
 export function reportGlobalError(response: Response, error: Error): void {
+  if (response._closed) {
+    // Already closed. Ignore further errors.
+    return;
+  }
   response._closed = true;
   response._closedReason = error;
   response._chunks.forEach(chunk => {
@@ -3698,6 +3702,26 @@ function processFullStringRow(
       resolveText(response, id, row);
       return;
     }
+    case 82 /* "R" */: {
+      startReadableStream(response, id, undefined);
+      return;
+    }
+    case 114 /* "r" */: {
+      startReadableStream(response, id, 'bytes');
+      return;
+    }
+    case 88 /* "X" */: {
+      startAsyncIterable(response, id, false);
+      return;
+    }
+    case 120 /* "x" */: {
+      startAsyncIterable(response, id, true);
+      return;
+    }
+    case 67 /* "C" */: {
+      stopStream(response, id, row);
+      return;
+    }
     case 78 /* "N" */: {
       if (enableProfilerTimer && enableComponentPerformanceTrack) {
         // Track the time origin for future debug info. We track it relative
@@ -3741,6 +3765,16 @@ function processFullStringRow(
       }
       // Fallthrough to share the error with Console entries.
     }
+    case 89 /* "Y" */: {
+      if (__DEV__) {
+        // In the case where debug info is coming through the same channel as the main channel
+        // this indicates that the main channel is now done and anything remaining is just debug
+        // info.
+        closeMainChannel(response);
+        return;
+      }
+      // Fallthrough to share the error with Console entries.
+    }
     case 74 /* "J" */: {
       if (
         enableProfilerTimer &&
@@ -3762,30 +3796,6 @@ function processFullStringRow(
           'on the server while using a production version on the client. Always use ' +
           'matching versions on the server and the client.',
       );
-    }
-    case 82 /* "R" */: {
-      startReadableStream(response, id, undefined);
-      return;
-    }
-    // Fallthrough
-    case 114 /* "r" */: {
-      startReadableStream(response, id, 'bytes');
-      return;
-    }
-    // Fallthrough
-    case 88 /* "X" */: {
-      startAsyncIterable(response, id, false);
-      return;
-    }
-    // Fallthrough
-    case 120 /* "x" */: {
-      startAsyncIterable(response, id, true);
-      return;
-    }
-    // Fallthrough
-    case 67 /* "C" */: {
-      stopStream(response, id, row);
-      return;
     }
     // Fallthrough
     case 80 /* "P" */: {
@@ -4098,6 +4108,24 @@ function createFromJSONCallback(response: Response) {
     }
     return value;
   };
+}
+
+export function closeMainChannel(response: Response) {
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if (response._replayConsole) {
+      markAllTracksInOrder();
+      flushComponentPerformance(
+        response,
+        getChunk(response, 0),
+        0,
+        -Infinity,
+        -Infinity,
+      );
+    }
+    // We don't expect to get any more console entries. This also ensures that we
+    // don't call flushComponentPerformance again when the debug stream errors/closes. 
+    response._replayConsole = false;
+  }
 }
 
 export function close(response: Response): void {
