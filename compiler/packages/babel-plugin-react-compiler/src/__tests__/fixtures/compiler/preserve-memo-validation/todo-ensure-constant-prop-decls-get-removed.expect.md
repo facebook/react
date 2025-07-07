@@ -40,14 +40,12 @@ function useFoo() {
   const $ = _c(1);
   const constVal = 0;
   let t0;
-  let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = [0];
-    $[0] = t1;
+    t0 = [0];
+    $[0] = t0;
   } else {
-    t1 = $[0];
+    t0 = $[0];
   }
-  t0 = t1;
   return t0;
 }
 

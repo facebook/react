@@ -36,15 +36,14 @@ import { useMemo } from "react";
 function Component(props) {
   const $ = _c(2);
   let t0;
-  let t1;
   if ($[0] !== props.value) {
-    t1 = { value: props.value };
+    t0 = { value: props.value };
     $[0] = props.value;
-    $[1] = t1;
+    $[1] = t0;
   } else {
-    t1 = $[1];
+    t0 = $[1];
   }
-  const handlers = t1;
+  const handlers = t0;
   bb0: switch (props.test) {
     case true: {
       console.log(handlers.value);
@@ -52,9 +51,7 @@ function Component(props) {
     }
     default:
   }
-
-  t0 = handlers;
-  const outerHandlers = t0;
+  const outerHandlers = handlers;
   return outerHandlers;
 }
 

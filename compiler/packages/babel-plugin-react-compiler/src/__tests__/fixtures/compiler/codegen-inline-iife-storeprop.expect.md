@@ -37,11 +37,9 @@ function useTest() {
 
     const t1 = (w.x = 42);
     const t2 = w.x;
-    let t3;
 
     w.x = 999;
-    t3 = 2;
-    t0 = makeArray(t1, t2, t3);
+    t0 = makeArray(t1, t2, 2);
     $[0] = t0;
   } else {
     t0 = $[0];
