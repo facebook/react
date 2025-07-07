@@ -1985,12 +1985,11 @@ describe('ReactUpdates', () => {
     }
 
     const container = document.createElement('div');
-    let errors = [];
+    const errors = [];
     const root = ReactDOMClient.createRoot(container, {
       onUncaughtError: (error, errorInfo) => {
         errors.push(
-          error.message,
-          normalizeCodeLocInfo(errorInfo.componentStack),
+          `${error.message}${normalizeCodeLocInfo(errorInfo.componentStack)}`,
         );
       },
     });
@@ -2001,18 +2000,17 @@ describe('ReactUpdates', () => {
     });
 
     expect(errors).toEqual([
-      'Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops.',
-      '\n    in NonTerminating (at **)',
+      'Maximum update depth exceeded. ' +
+        'This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. ' +
+        'React limits the number of nested updates to prevent infinite loops.' +
+        '\n    in NonTerminating (at **)',
     ]);
   });
 
   it('prevents infinite update loop triggered by too many updates in ref callbacks', async () => {
-    // Ignore flushSync warning
-    spyOnDev(console, 'error').mockImplementation(() => {});
-
     let scheduleUpdate;
-    function NonTerminating() {
-      const [_, _scheduleUpdate] = React.useReducer(count => count + 1, 0);
+    function TooManyRefUpdates() {
+      const [count, _scheduleUpdate] = React.useReducer(c => c + 1, 0);
       scheduleUpdate = _scheduleUpdate;
 
       return (
@@ -2021,28 +2019,31 @@ describe('ReactUpdates', () => {
             for (let i = 0; i < 50; i++) {
               scheduleUpdate(1);
             }
-          }}
-        />
+          }}>
+          {count}
+        </div>
       );
     }
 
     const container = document.createElement('div');
-    let errors = [];
+    const errors = [];
     const root = ReactDOMClient.createRoot(container, {
       onUncaughtError: (error, errorInfo) => {
         errors.push(
-          error.message,
-          normalizeCodeLocInfo(errorInfo.componentStack),
+          `${error.message}${normalizeCodeLocInfo(errorInfo.componentStack)}`,
         );
       },
     });
     await act(() => {
-      root.render(<NonTerminating />);
+      root.render(<TooManyRefUpdates />);
     });
 
     expect(errors).toEqual([
-      'Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops.',
-      '\n    in div' + '\n    in NonTerminating (at **)',
+      'Maximum update depth exceeded. ' +
+        'This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. ' +
+        'React limits the number of nested updates to prevent infinite loops.' +
+        '\n    in div' +
+        '\n    in TooManyRefUpdates (at **)',
     ]);
   });
 });
