@@ -2061,20 +2061,17 @@ function visitAsyncNode(
     return null;
   }
   visited.add(node);
+  let previousIONode = null;
   // First visit anything that blocked this sequence to start in the first place.
   if (node.previous !== null && node.end > request.timeOrigin) {
-    // We ignore the returned io nodes here because if it wasn't awaited in user space,
-    // then we don't log it. It also means that it can just have been part of a previous
-    // component's render.
-    // TODO: This means that some I/O can get lost that was still blocking the sequence.
-    const ioNode = visitAsyncNode(
+    previousIONode = visitAsyncNode(
       request,
       task,
       node.previous,
       visited,
       cutOff,
     );
-    if (ioNode === undefined) {
+    if (previousIONode === undefined) {
       // Undefined is used as a signal that we found a suitable aborted node and we don't have to find
       // further aborted nodes.
       return undefined;
@@ -2085,17 +2082,17 @@ function visitAsyncNode(
       return node;
     }
     case UNRESOLVED_PROMISE_NODE: {
-      return null;
+      return previousIONode;
     }
     case PROMISE_NODE: {
       if (node.end <= request.timeOrigin) {
         // This was already resolved when we started this render. It must have been either something
         // that's part of a start up sequence or externally cached data. We exclude that information.
         // The technique for debugging the effects of uncached data on the render is to simply uncache it.
-        return null;
+        return previousIONode;
       }
       const awaited = node.awaited;
-      let match = null;
+      let match: void | null | PromiseNode | IONode = previousIONode;
       if (awaited !== null) {
         const ioNode = visitAsyncNode(request, task, awaited, visited, cutOff);
         if (ioNode === undefined) {
@@ -2143,11 +2140,11 @@ function visitAsyncNode(
       return match;
     }
     case UNRESOLVED_AWAIT_NODE: {
-      return null;
+      return previousIONode;
     }
     case AWAIT_NODE: {
       const awaited = node.awaited;
-      let match = null;
+      let match: void | null | PromiseNode | IONode = previousIONode;
       if (awaited !== null) {
         const ioNode = visitAsyncNode(request, task, awaited, visited, cutOff);
         if (ioNode === undefined) {
