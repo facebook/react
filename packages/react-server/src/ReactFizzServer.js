@@ -1105,8 +1105,8 @@ function pushComponentStack(task: Task): void {
 function createComponentStackFromType(
   parent: null | ComponentStackNode,
   type: Function | string | symbol,
-  owner: null | ReactComponentInfo | ComponentStackNode, // DEV only
-  stack: null | Error, // DEV only
+  owner: void | null | ReactComponentInfo | ComponentStackNode, // DEV only
+  stack: void | null | string | Error, // DEV only
 ): ComponentStackNode {
   if (__DEV__) {
     return {
@@ -1120,6 +1120,20 @@ function createComponentStackFromType(
     parent,
     type,
   };
+}
+
+function replaceSuspenseComponentStackWithSuspenseFallbackStack(
+  componentStack: null | ComponentStackNode,
+): null | ComponentStackNode {
+  if (componentStack === null) {
+    return null;
+  }
+  return createComponentStackFromType(
+    componentStack.parent,
+    'Suspense Fallback',
+    __DEV__ ? componentStack.owner : null,
+    __DEV__ ? componentStack.stack : null,
+  );
 }
 
 type ThrownInfo = {
@@ -1350,6 +1364,8 @@ function renderSuspenseBoundary(
   contentRootSegment.parentFlushed = true;
 
   if (request.trackedPostpones !== null) {
+    // Stash the original stack frame.
+    const suspenseComponentStack = task.componentStack;
     // This is a prerender. In this mode we want to render the fallback synchronously and schedule
     // the content to render later. This is the opposite of what we do during a normal render
     // where we try to skip rendering the fallback if the content itself can render synchronously
@@ -1374,6 +1390,10 @@ function renderSuspenseBoundary(
       request.resumableState,
       prevContext,
     );
+    task.componentStack =
+      replaceSuspenseComponentStackWithSuspenseFallbackStack(
+        suspenseComponentStack,
+      );
     boundarySegment.status = RENDERING;
     try {
       renderNode(request, task, fallback, -1);
@@ -1419,7 +1439,7 @@ function renderSuspenseBoundary(
       task.context,
       task.treeContext,
       null, // The row gets reset inside the Suspense boundary.
-      task.componentStack,
+      suspenseComponentStack,
       !disableLegacyContext ? task.legacyContext : emptyContextObject,
       __DEV__ ? task.debugTask : null,
     );
@@ -1572,7 +1592,9 @@ function renderSuspenseBoundary(
       task.context,
       task.treeContext,
       task.row,
-      task.componentStack,
+      replaceSuspenseComponentStackWithSuspenseFallbackStack(
+        task.componentStack,
+      ),
       !disableLegacyContext ? task.legacyContext : emptyContextObject,
       __DEV__ ? task.debugTask : null,
     );
@@ -1744,7 +1766,7 @@ function replaySuspenseBoundary(
     task.context,
     task.treeContext,
     task.row,
-    task.componentStack,
+    replaceSuspenseComponentStackWithSuspenseFallbackStack(task.componentStack),
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
     __DEV__ ? task.debugTask : null,
   );
