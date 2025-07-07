@@ -3494,12 +3494,6 @@ function flushComponentPerformance(
     return previousResult;
   }
   const children = root._children;
-  if (root.status === RESOLVED_MODEL) {
-    // If the model is not initialized by now, do that now so we can find its
-    // children. This part is a little sketchy since it significantly changes
-    // the performance characteristics of the app by profiling.
-    initializeModelChunk(root);
-  }
 
   // First find the start time of the first component to know if it was running
   // in parallel with the previous.
