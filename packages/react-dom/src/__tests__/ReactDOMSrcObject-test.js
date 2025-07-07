@@ -201,8 +201,9 @@ describe('ReactDOMSrcObject', () => {
         "- Date formatting in a user's locale which doesn't match the server.\n" +
         '- External changing data without sending a snapshot of it along with the HTML.\n' +
         '- Invalid HTML tag nesting.\n\n' +
-        'It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n' +
+        'It can also happen if the client has a browser extension installed which changes the HTML before React loaded.\n\n' +
         'https://react.dev/link/hydration-mismatch\n\n' +
+        'The following differences were found (+ marks client content, - marks server content):\n\n' +
         '  <img\n' +
         '+   src={Blob:image/jpeg}\n' +
         '-   src="data:image/jpeg;base64,ReactURL"\n' +
