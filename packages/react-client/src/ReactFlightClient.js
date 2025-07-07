@@ -351,6 +351,7 @@ type Response = {
   _closedReason: mixed,
   _tempRefs: void | TemporaryReferenceSet, // the set temporary references can be resolved from
   _timeOrigin: number, // Profiling-only
+  _pendingInitialRender: null | TimeoutID, // Profiling-only,
   _pendingChunks: number, // DEV-only
   _weakResponse: WeakResponse, // DEV-only
   _debugRootOwner?: null | ReactComponentInfo, // DEV-only
@@ -444,8 +445,13 @@ export function getRoot<T>(weakResponse: WeakResponse): Thenable<T> {
 function createPendingChunk<T>(response: Response): PendingChunk<T> {
   if (__DEV__) {
     // Retain a strong reference to the Response while we wait for the result.
-    response._pendingChunks++;
-    response._weakResponse.response = response;
+    if (response._pendingChunks++ === 0) {
+      response._weakResponse.response = response;
+      if (response._pendingInitialRender !== null) {
+        clearTimeout(response._pendingInitialRender);
+        response._pendingInitialRender = null;
+      }
+    }
   }
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
   return new ReactPromise(PENDING, null, null);
@@ -457,6 +463,14 @@ function releasePendingChunk(response: Response, chunk: SomeChunk<any>): void {
       // We're no longer waiting for any more chunks. We can release the strong reference
       // to the response. We'll regain it if we ask for any more data later on.
       response._weakResponse.response = null;
+      // Wait a short period to see if any more chunks get asked for. E.g. by a React render.
+      // These chunks might discover more pending chunks.
+      // If we don't ask for more then we assume that those chunks weren't blocking initial
+      // render and are excluded from the performance track.
+      response._pendingInitialRender = setTimeout(
+        flushInitialRenderPerformance.bind(null, response),
+        100,
+      );
     }
   }
 }
@@ -866,18 +880,6 @@ export function reportGlobalError(
       // more neither. So we close the writable side.
       debugChannel('');
       response._debugChannel = undefined;
-    }
-  }
-  if (enableProfilerTimer && enableComponentPerformanceTrack) {
-    if (response._replayConsole) {
-      markAllTracksInOrder();
-      flushComponentPerformance(
-        response,
-        getChunk(response, 0),
-        0,
-        -Infinity,
-        -Infinity,
-      );
     }
   }
 }
@@ -2105,6 +2107,7 @@ function ResponseInstance(
   this._tempRefs = temporaryReferences;
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     this._timeOrigin = 0;
+    this._pendingInitialRender = null;
   }
   if (__DEV__) {
     this._pendingChunks = 0;
@@ -3491,12 +3494,6 @@ function flushComponentPerformance(
     return previousResult;
   }
   const children = root._children;
-  if (root.status === RESOLVED_MODEL) {
-    // If the model is not initialized by now, do that now so we can find its
-    // children. This part is a little sketchy since it significantly changes
-    // the performance characteristics of the app by profiling.
-    initializeModelChunk(root);
-  }
 
   // First find the start time of the first component to know if it was running
   // in parallel with the previous.
@@ -3701,6 +3698,20 @@ function flushComponentPerformance(
   }
   result.endTime = childrenEndTime;
   return result;
+}
+
+function flushInitialRenderPerformance(response: Response): void {
+  if (
+    enableProfilerTimer &&
+    enableComponentPerformanceTrack &&
+    response._replayConsole
+  ) {
+    const rootChunk = getChunk(response, 0);
+    if (isArray(rootChunk._children)) {
+      markAllTracksInOrder();
+      flushComponentPerformance(response, rootChunk, 0, -Infinity, -Infinity);
+    }
+  }
 }
 
 function processFullBinaryRow(
