@@ -4656,7 +4656,6 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // @gate favorSafetyOverHydrationPerf
   it('#24384: Suspending should halt hydration warnings but still emit hydration warnings after unsuspending if mismatches are genuine', async () => {
     const makeApp = () => {
       let resolve, resolved;
@@ -4740,7 +4739,6 @@ describe('ReactDOMFizzServer', () => {
     await waitForAll([]);
   });
 
-  // @gate favorSafetyOverHydrationPerf
   it('only warns once on hydration mismatch while within a suspense boundary', async () => {
     const App = ({text}) => {
       return (
@@ -10248,75 +10246,19 @@ describe('ReactDOMFizzServer', () => {
       },
     });
     await waitForAll([]);
-    if (gate(flags => flags.favorSafetyOverHydrationPerf)) {
-      expect(getVisibleChildren(document)).toEqual(
-        <html data-y="client">
-          <head data-y="client">
-            <meta itemprop="" name="client" />
-          </head>
-          <body data-y="client">client</body>
-        </html>,
-      );
-      expect(recoverableErrors).toEqual([
-        expect.stringContaining(
-          "Hydration failed because the server rendered text didn't match the client.",
-        ),
-      ]);
-    } else {
-      expect(getVisibleChildren(document)).toEqual(
-        <html data-x="server">
-          <head data-x="server">
-            <meta itemprop="" content="server" />
-          </head>
-          <body data-x="server">server</body>
-        </html>,
-      );
-      expect(recoverableErrors).toEqual([]);
-      assertConsoleErrorDev([
-        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:" +
-          '\n' +
-          "\n- A server/client branch `if (typeof window !== 'undefined')`." +
-          "\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called." +
-          "\n- Date formatting in a user's locale which doesn't match the server." +
-          '\n- External changing data without sending a snapshot of it along with the HTML.' +
-          '\n- Invalid HTML tag nesting.' +
-          '\n' +
-          '\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.' +
-          '\n' +
-          '\nhttps://react.dev/link/hydration-mismatch' +
-          '\n' +
-          '\n  <ClientApp>' +
-          '\n    <Suspense>' +
-          '\n      <html' +
-          '\n+       data-y="client"' +
-          '\n-       data-y={null}' +
-          '\n-       data-x="server"' +
-          '\n      >' +
-          '\n        <head' +
-          '\n+         data-y="client"' +
-          '\n-         data-y={null}' +
-          '\n-         data-x="server"' +
-          '\n        >' +
-          '\n          <meta' +
-          '\n            itemProp=""' +
-          '\n+           name="client"' +
-          '\n-           name={null}' +
-          '\n-           content="server"' +
-          '\n          >' +
-          '\n        <body' +
-          '\n+         data-y="client"' +
-          '\n-         data-y={null}' +
-          '\n-         data-x="server"' +
-          '\n        >' +
-          '\n+         client' +
-          '\n-         server' +
-          '\n+         client' +
-          '\n-         server' +
-          '\n' +
-          '\n    in meta (at **)' +
-          '\n    in ClientApp (at **)',
-      ]);
-    }
+    expect(getVisibleChildren(document)).toEqual(
+      <html data-y="client">
+        <head data-y="client">
+          <meta itemprop="" name="client" />
+        </head>
+        <body data-y="client">client</body>
+      </html>,
+    );
+    expect(recoverableErrors).toEqual([
+      expect.stringContaining(
+        "Hydration failed because the server rendered text didn't match the client.",
+      ),
+    ]);
 
     root.unmount();
     expect(getVisibleChildren(document)).toEqual(
