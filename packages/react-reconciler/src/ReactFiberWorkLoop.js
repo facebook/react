@@ -46,7 +46,6 @@ import {
   alwaysThrottleRetries,
   enableInfiniteRenderLoopDetection,
   disableLegacyMode,
-  disableDefaultPropsExceptForClasses,
   enableComponentPerformanceTrack,
   enableYieldingBeforePassive,
   enableThrottledScheduling,
@@ -123,7 +122,6 @@ import {
   ConcurrentMode,
   StrictLegacyMode,
   StrictEffectsMode,
-  NoStrictPassiveEffectsMode,
 } from './ReactTypeOfMode';
 import {
   HostRoot,
@@ -350,7 +348,6 @@ import {
   getSuspenseHandler,
   getShellBoundary,
 } from './ReactFiberSuspenseContext';
-import {resolveDefaultPropsOnNonClassComponent} from './ReactFiberLazyComponent';
 import {resetChildReconcilerOnUnwind} from './ReactChildFiber';
 import {
   ensureRootIsScheduled,
@@ -358,7 +355,7 @@ import {
   flushSyncWorkOnLegacyRootsOnly,
   requestTransitionLane,
 } from './ReactFiberRootScheduler';
-import {getMaskedContext, getUnmaskedContext} from './ReactFiberContext';
+import {getMaskedContext, getUnmaskedContext} from './ReactFiberLegacyContext';
 import {logUncaughtError} from './ReactFiberErrorLogger';
 import {
   deleteScheduledGesture,
@@ -2859,12 +2856,6 @@ function replayBeginWork(unitOfWork: Fiber): null | Fiber {
       // could maybe use this as an opportunity to say `use` doesn't work with
       // `defaultProps` :)
       const Component = unitOfWork.type;
-      const unresolvedProps = unitOfWork.pendingProps;
-      const resolvedProps =
-        disableDefaultPropsExceptForClasses ||
-        unitOfWork.elementType === Component
-          ? unresolvedProps
-          : resolveDefaultPropsOnNonClassComponent(Component, unresolvedProps);
       let context: any;
       if (!disableLegacyContext) {
         const unmaskedContext = getUnmaskedContext(unitOfWork, Component, true);
@@ -2873,7 +2864,7 @@ function replayBeginWork(unitOfWork: Fiber): null | Fiber {
       next = replayFunctionComponent(
         current,
         unitOfWork,
-        resolvedProps,
+        unitOfWork.pendingProps,
         Component,
         context,
         workInProgressRootRenderLanes,
@@ -2886,17 +2877,10 @@ function replayBeginWork(unitOfWork: Fiber): null | Fiber {
       // could maybe use this as an opportunity to say `use` doesn't work with
       // `defaultProps` :)
       const Component = unitOfWork.type.render;
-      const unresolvedProps = unitOfWork.pendingProps;
-      const resolvedProps =
-        disableDefaultPropsExceptForClasses ||
-        unitOfWork.elementType === Component
-          ? unresolvedProps
-          : resolveDefaultPropsOnNonClassComponent(Component, unresolvedProps);
-
       next = replayFunctionComponent(
         current,
         unitOfWork,
-        resolvedProps,
+        unitOfWork.pendingProps,
         Component,
         unitOfWork.ref,
         workInProgressRootRenderLanes,
@@ -4607,21 +4591,13 @@ function recursivelyTraverseAndDoubleInvokeEffectsInDEV(
 }
 
 // Unconditionally disconnects and connects passive and layout effects.
-function doubleInvokeEffectsOnFiber(
-  root: FiberRoot,
-  fiber: Fiber,
-  shouldDoubleInvokePassiveEffects: boolean = true,
-) {
+function doubleInvokeEffectsOnFiber(root: FiberRoot, fiber: Fiber) {
   setIsStrictModeForDevtools(true);
   try {
     disappearLayoutEffects(fiber);
-    if (shouldDoubleInvokePassiveEffects) {
-      disconnectPassiveEffect(fiber);
-    }
+    disconnectPassiveEffect(fiber);
     reappearLayoutEffects(root, fiber.alternate, fiber, false);
-    if (shouldDoubleInvokePassiveEffects) {
-      reconnectPassiveEffects(root, fiber, NoLanes, null, false, 0);
-    }
+    reconnectPassiveEffects(root, fiber, NoLanes, null, false, 0);
   } finally {
     setIsStrictModeForDevtools(false);
   }
@@ -4640,13 +4616,7 @@ function doubleInvokeEffectsInDEVIfNecessary(
   if (fiber.tag !== OffscreenComponent) {
     if (fiber.flags & PlacementDEV) {
       if (isInStrictMode) {
-        runWithFiberInDEV(
-          fiber,
-          doubleInvokeEffectsOnFiber,
-          root,
-          fiber,
-          (fiber.mode & NoStrictPassiveEffectsMode) === NoMode,
-        );
+        runWithFiberInDEV(fiber, doubleInvokeEffectsOnFiber, root, fiber);
       }
     } else {
       recursivelyTraverseAndDoubleInvokeEffectsInDEV(

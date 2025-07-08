@@ -116,9 +116,7 @@ import {
   enableLegacyHidden,
   enableCPUSuspense,
   enablePostpone,
-  enableRenderableContext,
   disableLegacyMode,
-  disableDefaultPropsExceptForClasses,
   enableHydrationLaneScheduling,
   enableViewTransition,
   enableFragmentRefs,
@@ -237,7 +235,7 @@ import {
   isContextProvider as isLegacyContextProvider,
   pushTopLevelContextObject,
   invalidateContextProvider,
-} from './ReactFiberContext';
+} from './ReactFiberLegacyContext';
 import {
   getIsHydrating,
   enterHydrationState,
@@ -259,7 +257,6 @@ import {
   updateClassInstance,
   resolveClassComponentProps,
 } from './ReactFiberClassComponent';
-import {resolveDefaultPropsOnNonClassComponent} from './ReactFiberLazyComponent';
 import {
   createFiberFromTypeAndProps,
   createFiberFromFragment,
@@ -328,7 +325,6 @@ let didWarnAboutGetDerivedStateOnFunctionComponent;
 export let didWarnAboutReassigningProps: boolean;
 let didWarnAboutRevealOrder;
 let didWarnAboutTailOptions;
-let didWarnAboutDefaultPropsOnFunctionComponent;
 let didWarnAboutClassNameOnViewTransition;
 
 if (__DEV__) {
@@ -339,7 +335,6 @@ if (__DEV__) {
   didWarnAboutReassigningProps = false;
   didWarnAboutRevealOrder = ({}: {[string]: boolean});
   didWarnAboutTailOptions = ({}: {[string]: boolean});
-  didWarnAboutDefaultPropsOnFunctionComponent = ({}: {[string]: boolean});
   didWarnAboutClassNameOnViewTransition = ({}: {[string]: boolean});
 }
 
@@ -483,13 +478,7 @@ function updateMemoComponent(
 ): null | Fiber {
   if (current === null) {
     const type = Component.type;
-    if (
-      isSimpleFunctionComponent(type) &&
-      Component.compare === null &&
-      // SimpleMemoComponent codepath doesn't resolve outer props either.
-      (disableDefaultPropsExceptForClasses ||
-        Component.defaultProps === undefined)
-    ) {
+    if (isSimpleFunctionComponent(type) && Component.compare === null) {
       let resolvedType = type;
       if (__DEV__) {
         resolvedType = resolveFunctionForHotReloading(type);
@@ -509,21 +498,6 @@ function updateMemoComponent(
         nextProps,
         renderLanes,
       );
-    }
-    if (!disableDefaultPropsExceptForClasses) {
-      if (__DEV__) {
-        if (Component.defaultProps !== undefined) {
-          const componentName = getComponentNameFromType(type) || 'Unknown';
-          if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
-            console.error(
-              '%s: Support for defaultProps will be removed from memo components ' +
-                'in a future major release. Use JavaScript default parameters instead.',
-              componentName,
-            );
-            didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true;
-          }
-        }
-      }
     }
     const child = createFiberFromTypeAndProps(
       Component.type,
@@ -2059,7 +2033,7 @@ function mountLazyComponent(
 
   if (typeof Component === 'function') {
     if (isFunctionClassComponent(Component)) {
-      const resolvedProps = resolveClassComponentProps(Component, props, false);
+      const resolvedProps = resolveClassComponentProps(Component, props);
       workInProgress.tag = ClassComponent;
       if (__DEV__) {
         workInProgress.type = Component =
@@ -2073,9 +2047,6 @@ function mountLazyComponent(
         renderLanes,
       );
     } else {
-      const resolvedProps = disableDefaultPropsExceptForClasses
-        ? props
-        : resolveDefaultPropsOnNonClassComponent(Component, props);
       workInProgress.tag = FunctionComponent;
       if (__DEV__) {
         validateFunctionComponentInDev(workInProgress, Component);
@@ -2086,16 +2057,13 @@ function mountLazyComponent(
         null,
         workInProgress,
         Component,
-        resolvedProps,
+        props,
         renderLanes,
       );
     }
   } else if (Component !== undefined && Component !== null) {
     const $$typeof = Component.$$typeof;
     if ($$typeof === REACT_FORWARD_REF_TYPE) {
-      const resolvedProps = disableDefaultPropsExceptForClasses
-        ? props
-        : resolveDefaultPropsOnNonClassComponent(Component, props);
       workInProgress.tag = ForwardRef;
       if (__DEV__) {
         workInProgress.type = Component =
@@ -2105,24 +2073,16 @@ function mountLazyComponent(
         null,
         workInProgress,
         Component,
-        resolvedProps,
+        props,
         renderLanes,
       );
     } else if ($$typeof === REACT_MEMO_TYPE) {
-      const resolvedProps = disableDefaultPropsExceptForClasses
-        ? props
-        : resolveDefaultPropsOnNonClassComponent(Component, props);
       workInProgress.tag = MemoComponent;
       return updateMemoComponent(
         null,
         workInProgress,
         Component,
-        disableDefaultPropsExceptForClasses
-          ? resolvedProps
-          : resolveDefaultPropsOnNonClassComponent(
-              Component.type,
-              resolvedProps,
-            ), // The inner type can have defaults too
+        props,
         renderLanes,
       );
     }
@@ -2197,22 +2157,6 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
           '  %s.childContextTypes = ...',
         Component.displayName || Component.name || 'Component',
       );
-    }
-
-    if (
-      !disableDefaultPropsExceptForClasses &&
-      Component.defaultProps !== undefined
-    ) {
-      const componentName = getComponentNameFromType(Component) || 'Unknown';
-
-      if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
-        console.error(
-          '%s: Support for defaultProps will be removed from function components ' +
-            'in a future major release. Use JavaScript default parameters instead.',
-          componentName,
-        );
-        didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true;
-      }
     }
 
     if (typeof Component.getDerivedStateFromProps === 'function') {
@@ -3342,6 +3286,7 @@ function initSuspenseListRenderState(
   tail: null | Fiber,
   lastContentRow: null | Fiber,
   tailMode: SuspenseListTailMode,
+  treeForkCount: number,
 ): void {
   const renderState: null | SuspenseListRenderState =
     workInProgress.memoizedState;
@@ -3353,6 +3298,7 @@ function initSuspenseListRenderState(
       last: lastContentRow,
       tail: tail,
       tailMode: tailMode,
+      treeForkCount: treeForkCount,
     }: SuspenseListRenderState);
   } else {
     // We can reuse the existing object from previous renders.
@@ -3362,6 +3308,7 @@ function initSuspenseListRenderState(
     renderState.last = lastContentRow;
     renderState.tail = tail;
     renderState.tailMode = tailMode;
+    renderState.treeForkCount = treeForkCount;
   }
 }
 
@@ -3404,6 +3351,8 @@ function updateSuspenseListComponent(
   validateSuspenseListChildren(newChildren, revealOrder);
 
   reconcileChildren(current, workInProgress, newChildren, renderLanes);
+  // Read how many children forks this set pushed so we can push it every time we retry.
+  const treeForkCount = getIsHydrating() ? getForksAtLevel(workInProgress) : 0;
 
   if (!shouldForceFallback) {
     const didSuspendBefore =
@@ -3446,6 +3395,7 @@ function updateSuspenseListComponent(
           tail,
           lastContentRow,
           tailMode,
+          treeForkCount,
         );
         break;
       }
@@ -3478,6 +3428,7 @@ function updateSuspenseListComponent(
           tail,
           null, // last
           tailMode,
+          treeForkCount,
         );
         break;
       }
@@ -3488,6 +3439,7 @@ function updateSuspenseListComponent(
           null, // tail
           null, // last
           undefined,
+          treeForkCount,
         );
         break;
       }
@@ -3583,12 +3535,7 @@ function updateContextProvider(
   workInProgress: Fiber,
   renderLanes: Lanes,
 ) {
-  let context: ReactContext<any>;
-  if (enableRenderableContext) {
-    context = workInProgress.type;
-  } else {
-    context = workInProgress.type._context;
-  }
+  const context: ReactContext<any> = workInProgress.type;
   const newProps = workInProgress.pendingProps;
   const newValue = newProps.value;
 
@@ -3615,18 +3562,8 @@ function updateContextConsumer(
   workInProgress: Fiber,
   renderLanes: Lanes,
 ) {
-  let context: ReactContext<any>;
-  if (enableRenderableContext) {
-    const consumerType: ReactConsumerType<any> = workInProgress.type;
-    context = consumerType._context;
-  } else {
-    context = workInProgress.type;
-    if (__DEV__) {
-      if ((context: any)._context !== undefined) {
-        context = (context: any)._context;
-      }
-    }
-  }
+  const consumerType: ReactConsumerType<any> = workInProgress.type;
+  const context: ReactContext<any> = consumerType._context;
   const newProps = workInProgress.pendingProps;
   const render = newProps.children;
 
@@ -3870,12 +3807,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       break;
     case ContextProvider: {
       const newValue = workInProgress.memoizedProps.value;
-      let context: ReactContext<any>;
-      if (enableRenderableContext) {
-        context = workInProgress.type;
-      } else {
-        context = workInProgress.type._context;
-      }
+      const context: ReactContext<any> = workInProgress.type;
       pushProvider(workInProgress, context, newValue);
       break;
     }
@@ -4188,17 +4120,11 @@ function beginWork(
     }
     case FunctionComponent: {
       const Component = workInProgress.type;
-      const unresolvedProps = workInProgress.pendingProps;
-      const resolvedProps =
-        disableDefaultPropsExceptForClasses ||
-        workInProgress.elementType === Component
-          ? unresolvedProps
-          : resolveDefaultPropsOnNonClassComponent(Component, unresolvedProps);
       return updateFunctionComponent(
         current,
         workInProgress,
         Component,
-        resolvedProps,
+        workInProgress.pendingProps,
         renderLanes,
       );
     }
@@ -4208,7 +4134,6 @@ function beginWork(
       const resolvedProps = resolveClassComponentProps(
         Component,
         unresolvedProps,
-        workInProgress.elementType === Component,
       );
       return updateClassComponent(
         current,
@@ -4239,18 +4164,11 @@ function beginWork(
     case HostPortal:
       return updatePortalComponent(current, workInProgress, renderLanes);
     case ForwardRef: {
-      const type = workInProgress.type;
-      const unresolvedProps = workInProgress.pendingProps;
-      const resolvedProps =
-        disableDefaultPropsExceptForClasses ||
-        workInProgress.elementType === type
-          ? unresolvedProps
-          : resolveDefaultPropsOnNonClassComponent(type, unresolvedProps);
       return updateForwardRef(
         current,
         workInProgress,
-        type,
-        resolvedProps,
+        workInProgress.type,
+        workInProgress.pendingProps,
         renderLanes,
       );
     }
@@ -4265,20 +4183,11 @@ function beginWork(
     case ContextConsumer:
       return updateContextConsumer(current, workInProgress, renderLanes);
     case MemoComponent: {
-      const type = workInProgress.type;
-      const unresolvedProps = workInProgress.pendingProps;
-      // Resolve outer props first, then resolve inner props.
-      let resolvedProps = disableDefaultPropsExceptForClasses
-        ? unresolvedProps
-        : resolveDefaultPropsOnNonClassComponent(type, unresolvedProps);
-      resolvedProps = disableDefaultPropsExceptForClasses
-        ? resolvedProps
-        : resolveDefaultPropsOnNonClassComponent(type.type, resolvedProps);
       return updateMemoComponent(
         current,
         workInProgress,
-        type,
-        resolvedProps,
+        workInProgress.type,
+        workInProgress.pendingProps,
         renderLanes,
       );
     }
@@ -4300,7 +4209,6 @@ function beginWork(
       const resolvedProps = resolveClassComponentProps(
         Component,
         unresolvedProps,
-        workInProgress.elementType === Component,
       );
       return mountIncompleteClassComponent(
         current,
@@ -4319,7 +4227,6 @@ function beginWork(
       const resolvedProps = resolveClassComponentProps(
         Component,
         unresolvedProps,
-        workInProgress.elementType === Component,
       );
       return mountIncompleteFunctionComponent(
         current,

@@ -358,7 +358,12 @@ function collectStackTrace(
   // We mirror how V8 serializes stack frames and how we later parse them.
   for (let i = 0; i < structuredStackTrace.length; i++) {
     const callSite = structuredStackTrace[i];
-    if (callSite.getFunctionName() === 'react-stack-bottom-frame') {
+    const name = callSite.getFunctionName();
+    if (
+      name != null &&
+      (name.includes('react_stack_bottom_frame') ||
+        name.includes('react-stack-bottom-frame'))
+    ) {
       // We pick the last frame that matches before the bottom frame since
       // that will be immediately inside the component as opposed to some helper.
       // If we don't find a bottom frame then we bail to string parsing.
@@ -376,7 +381,7 @@ function collectStackTrace(
         // $FlowFixMe[prop-missing]
         typeof callSite.getEnclosingColumnNumber === 'function'
           ? (callSite: any).getEnclosingColumnNumber()
-          : callSite.getLineNumber();
+          : callSite.getColumnNumber();
       if (!sourceURL || !line || !col) {
         // Skip eval etc. without source url. They don't have location.
         continue;
@@ -407,11 +412,18 @@ export function parseSourceFromOwnerStack(error: Error): Source | null {
   let stack;
   try {
     stack = error.stack;
+  } catch (e) {
+    // $FlowFixMe[incompatible-type] It does accept undefined.
+    Error.prepareStackTrace = undefined;
+    stack = error.stack;
   } finally {
     Error.prepareStackTrace = previousPrepare;
   }
   if (collectedLocation !== null) {
     return collectedLocation;
+  }
+  if (stack == null) {
+    return null;
   }
   // Fallback to parsing the string form.
   const componentStack = formatOwnerStackString(stack);

@@ -18,13 +18,10 @@ import type {
 import type {LazyComponent} from 'react/src/ReactLazy';
 import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
 
-import {enableRenderableContext} from 'shared/ReactFeatureFlags';
-
 import {
   REACT_ELEMENT_TYPE,
   REACT_LAZY_TYPE,
   REACT_CONTEXT_TYPE,
-  REACT_PROVIDER_TYPE,
   getIteratorFn,
   ASYNC_ITERATOR,
 } from 'shared/ReactSymbols';
@@ -699,10 +696,7 @@ export function processReply(
         return serializeTemporaryReferenceMarker();
       }
       if (__DEV__) {
-        if (
-          (value: any).$$typeof ===
-          (enableRenderableContext ? REACT_CONTEXT_TYPE : REACT_PROVIDER_TYPE)
-        ) {
+        if ((value: any).$$typeof === REACT_CONTEXT_TYPE) {
           console.error(
             'React Context Providers cannot be passed to Server Functions from the Client.%s',
             describeObjectForErrorMessage(parent, key),
@@ -1112,7 +1106,7 @@ function createFakeServerFunction<A: Iterable<any>, T>(
       '\n//# sourceURL=rsc://React/' +
       encodeURIComponent(environmentName) +
       '/' +
-      filename +
+      encodeURI(filename) +
       '?s' + // We add an extra s here to distinguish from the fake stack frames
       fakeServerFunctionIdx++;
     code += '\n//# sourceMappingURL=' + sourceMap;

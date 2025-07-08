@@ -33,7 +33,6 @@ export const enableSuspenseAvoidThisFallback = false;
 export const enableCPUSuspense = false;
 export const enableNoCloningMemoCache = false;
 export const enableUseEffectEventHook = false;
-export const favorSafetyOverHydrationPerf = true;
 export const enableLegacyFBSupport = false;
 export const enableMoveBefore = false;
 export const enableHiddenSubtreeInsertionEffectCleanup = false;
@@ -49,7 +48,6 @@ export const enableLegacyHidden = false;
 
 export const enableTransitionTracing = false;
 
-export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFizzExternalRuntime = true;
 
 export const alwaysThrottleRetries = true;
@@ -89,9 +87,7 @@ export const enableFragmentRefs = false;
 export const disableLegacyMode = true;
 export const disableLegacyContext = true;
 export const disableLegacyContextForFunctionComponents = true;
-export const enableRenderableContext = true;
 export const enableReactTestRendererWarning = true;
-export const disableDefaultPropsExceptForClasses = true;
 
 export const enableObjectFiber = false;
 

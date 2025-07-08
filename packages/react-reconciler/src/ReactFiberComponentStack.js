@@ -34,7 +34,7 @@ import {
 } from 'shared/ReactComponentStackFrame';
 import {formatOwnerStack} from 'shared/ReactOwnerStackFrames';
 
-function describeFiber(fiber: Fiber): string {
+function describeFiber(fiber: Fiber, childFiber: null | Fiber): string {
   switch (fiber.tag) {
     case HostHoistable:
     case HostSingleton:
@@ -44,6 +44,10 @@ function describeFiber(fiber: Fiber): string {
       // TODO: When we support Thenables as component types we should rename this.
       return describeBuiltInComponentFrame('Lazy');
     case SuspenseComponent:
+      if (fiber.child !== childFiber && childFiber !== null) {
+        // If we came from the second Fiber then we're in the Suspense Fallback.
+        return describeBuiltInComponentFrame('Suspense Fallback');
+      }
       return describeBuiltInComponentFrame('Suspense');
     case SuspenseListComponent:
       return describeBuiltInComponentFrame('SuspenseList');
@@ -70,8 +74,9 @@ export function getStackByFiberInDevAndProd(workInProgress: Fiber): string {
   try {
     let info = '';
     let node: Fiber = workInProgress;
+    let previous: null | Fiber = null;
     do {
-      info += describeFiber(node);
+      info += describeFiber(node, previous);
       if (__DEV__) {
         // Add any Server Component stack frames in reverse order.
         const debugInfo = node._debugInfo;
@@ -79,11 +84,16 @@ export function getStackByFiberInDevAndProd(workInProgress: Fiber): string {
           for (let i = debugInfo.length - 1; i >= 0; i--) {
             const entry = debugInfo[i];
             if (typeof entry.name === 'string') {
-              info += describeDebugInfoFrame(entry.name, entry.env);
+              info += describeDebugInfoFrame(
+                entry.name,
+                entry.env,
+                entry.debugLocation,
+              );
             }
           }
         }
       }
+      previous = node;
       // $FlowFixMe[incompatible-type] we bail out when we get a null
       node = node.return;
     } while (node);

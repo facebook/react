@@ -21,7 +21,6 @@ import {
   makeBlockId,
   makeIdentifierName,
   makeInstructionId,
-  makeType,
   ObjectProperty,
   Place,
   promoteTemporary,
@@ -297,6 +296,7 @@ function emitOutlinedJsx(
       },
       loc: GeneratedSource,
     },
+    effects: null,
   };
   promoteTemporaryJsxTag(loadJsx.lvalue.identifier);
   const jsxExpr: Instruction = {
@@ -312,6 +312,7 @@ function emitOutlinedJsx(
       openingLoc: GeneratedSource,
       closingLoc: GeneratedSource,
     },
+    effects: null,
   };
 
   return [loadJsx, jsxExpr];
@@ -353,6 +354,7 @@ function emitOutlinedFn(
       kind: 'return',
       loc: GeneratedSource,
       value: instructions.at(-1)!.lvalue,
+      effects: null,
     },
     preds: new Set(),
     phis: new Set(),
@@ -365,7 +367,7 @@ function emitOutlinedFn(
     env,
     params: [propsObj],
     returnTypeAnnotation: null,
-    returnType: makeType(),
+    returns: createTemporaryPlace(env, GeneratedSource),
     context: [],
     effects: null,
     body: {
@@ -517,6 +519,7 @@ function emitDestructureProps(
       loc: GeneratedSource,
       value: propsObj,
     },
+    effects: null,
   };
   return destructurePropsInstr;
 }

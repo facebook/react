@@ -34,16 +34,7 @@ export type AttributeType<T, V> =
 export type AnyAttributeType = AttributeType<$FlowFixMe, $FlowFixMe>;
 
 export type AttributeConfiguration = $ReadOnly<{
-  [propName: string]: AnyAttributeType,
-  style: $ReadOnly<{
-    [propName: string]: AnyAttributeType,
-    ...
-  }>,
-  ...
-}>;
-
-export type PartialAttributeConfiguration = $ReadOnly<{
-  [propName: string]: AnyAttributeType,
+  [propName: string]: AnyAttributeType | void,
   style?: $ReadOnly<{
     [propName: string]: AnyAttributeType,
     ...
@@ -83,7 +74,7 @@ export type PartialViewConfig = $ReadOnly<{
   directEventTypes?: ViewConfig['directEventTypes'],
   supportsRawText?: boolean,
   uiViewClassName: string,
-  validAttributes?: PartialAttributeConfiguration,
+  validAttributes?: AttributeConfiguration,
 }>;
 
 type InspectorDataProps = $ReadOnly<{

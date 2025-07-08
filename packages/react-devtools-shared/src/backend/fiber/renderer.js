@@ -5831,11 +5831,19 @@ export function attach(
   }
 
   function getSourceForInstance(instance: DevToolsInstance): Source | null {
-    const unresolvedSource = instance.source;
+    let unresolvedSource = instance.source;
     if (unresolvedSource === null) {
       // We don't have any source yet. We can try again later in case an owned child mounts later.
       // TODO: We won't have any information here if the child is filtered.
       return null;
+    }
+
+    if (instance.kind === VIRTUAL_INSTANCE) {
+      // We might have found one on the virtual instance.
+      const debugLocation = instance.data.debugLocation;
+      if (debugLocation != null) {
+        unresolvedSource = debugLocation;
+      }
     }
 
     // If we have the debug stack (the creation stack of the JSX) for any owned child of this

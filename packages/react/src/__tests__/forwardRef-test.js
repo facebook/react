@@ -76,45 +76,6 @@ describe('forwardRef', () => {
     expect(ref.current).toBe(null);
   });
 
-  // @gate !disableDefaultPropsExceptForClasses
-  it('should support defaultProps', async () => {
-    function FunctionComponent({forwardedRef, optional, required}) {
-      return (
-        <div ref={forwardedRef}>
-          {optional}
-          {required}
-        </div>
-      );
-    }
-
-    const RefForwardingComponent = React.forwardRef(
-      function NamedFunction(props, ref) {
-        return <FunctionComponent {...props} forwardedRef={ref} />;
-      },
-    );
-    RefForwardingComponent.defaultProps = {
-      optional: 'default',
-    };
-
-    const ref = React.createRef();
-
-    ReactNoop.render(
-      <RefForwardingComponent ref={ref} optional="foo" required="bar" />,
-    );
-    await waitForAll([]);
-    expect(ref.current.children).toEqual([
-      {text: 'foo', hidden: false},
-      {text: 'bar', hidden: false},
-    ]);
-
-    ReactNoop.render(<RefForwardingComponent ref={ref} required="foo" />);
-    await waitForAll([]);
-    expect(ref.current.children).toEqual([
-      {text: 'default', hidden: false},
-      {text: 'foo', hidden: false},
-    ]);
-  });
-
   it('should warn if not provided a callback during creation', () => {
     React.forwardRef(undefined);
     assertConsoleErrorDev(

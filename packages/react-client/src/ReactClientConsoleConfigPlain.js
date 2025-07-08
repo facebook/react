@@ -7,6 +7,7 @@
  * @flow
  */
 
+// Keep in sync with ReactServerConsoleConfig
 const badgeFormat = '[%s] ';
 const pad = ' ';
 
