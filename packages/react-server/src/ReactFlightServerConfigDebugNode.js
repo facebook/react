@@ -149,10 +149,11 @@ export function initAsyncDebugInfo(): void {
               previous: current === undefined ? null : current, // The path that led us here.
             }: UnresolvedAwaitNode);
           } else {
+            const owner = resolveOwner();
             node = ({
               tag: UNRESOLVED_PROMISE_NODE,
-              owner: resolveOwner(),
-              stack: parseStackTrace(new Error(), 5),
+              owner: owner,
+              stack: owner === null ? null : parseStackTrace(new Error(), 5),
               start: performance.now(),
               end: -1.1, // Set when we resolve.
               promise: new WeakRef((resource: Promise<any>)),
@@ -170,10 +171,11 @@ export function initAsyncDebugInfo(): void {
         ) {
           if (trigger === undefined) {
             // We have begun a new I/O sequence.
+            const owner = resolveOwner();
             node = ({
               tag: IO_NODE,
-              owner: resolveOwner(),
-              stack: null,
+              owner: owner,
+              stack: owner === null ? parseStackTrace(new Error(), 3) : null,
               start: performance.now(),
               end: -1.1, // Only set when pinged.
               promise: null,
@@ -185,10 +187,11 @@ export function initAsyncDebugInfo(): void {
             trigger.tag === UNRESOLVED_AWAIT_NODE
           ) {
             // We have begun a new I/O sequence after the await.
+            const owner = resolveOwner();
             node = ({
               tag: IO_NODE,
-              owner: resolveOwner(),
-              stack: null,
+              owner: owner,
+              stack: owner === null ? parseStackTrace(new Error(), 3) : null,
               start: performance.now(),
               end: -1.1, // Only set when pinged.
               promise: null,
