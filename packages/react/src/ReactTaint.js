@@ -21,8 +21,6 @@ const {
   TaintRegistryPendingRequests,
 } = ReactSharedInternals;
 
-interface Reference {}
-
 // This is the shared constructor of all typed arrays.
 const TypedArrayConstructor = getPrototypeOf(Uint32Array.prototype).constructor;
 
@@ -45,18 +43,34 @@ function cleanup(entryValue: string | bigint): void {
   }
 }
 
-// If FinalizationRegistry doesn't exist, we assume that objects life forever.
+// If FinalizationRegistry doesn't exist, we assume that objects live forever.
 // E.g. the whole VM is just the lifetime of a request.
 const finalizationRegistry =
   typeof FinalizationRegistry === 'function'
     ? new FinalizationRegistry(cleanup)
     : null;
 
+if (finalizationRegistry === null) {
+  // Warn developers in non-supporting environments about potential memory issues.
+  if (typeof console !== 'undefined' && typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production') {
+    console.warn(
+      'Warning: FinalizationRegistry is not available in this environment. Taint tracking cleanup will not occur, which may lead to memory leaks.'
+    );
+  }
+}
+
+/**
+ * Taints a unique value (string, bigint, or typed array) to prevent it from being serialized to the client.
+ * Throws if tainting is disabled or if the value type is unsupported.
+ * @param {?string} message - Optional custom message for the taint.
+ * @param {object} lifetime - An object that defines the lifetime of the taint.
+ * @param {string|bigint|$ArrayBufferView} value - The value to taint.
+ */
 export function taintUniqueValue(
-  message: ?string,
-  lifetime: Reference,
-  value: string | bigint | $ArrayBufferView,
-): void {
+  message,
+  lifetime,
+  value,
+) {
   if (!enableTaint) {
     throw new Error('Not implemented.');
   }
@@ -112,10 +126,16 @@ export function taintUniqueValue(
   }
 }
 
+/**
+ * Taints an object reference to prevent it from being serialized to the client.
+ * Throws if tainting is disabled or if the object is not a valid reference.
+ * @param {?string} message - Optional custom message for the taint.
+ * @param {object} object - The object to taint.
+ */
 export function taintObjectReference(
-  message: ?string,
-  object: Reference,
-): void {
+  message,
+  object,
+) {
   if (!enableTaint) {
     throw new Error('Not implemented.');
   }

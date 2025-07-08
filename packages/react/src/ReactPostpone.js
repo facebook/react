@@ -9,15 +9,14 @@
 
 import {REACT_POSTPONE_TYPE} from 'shared/ReactSymbols';
 
-declare class Postpone extends Error {
-  $$typeof: symbol;
-}
-
-export type {Postpone};
-
-export function postpone(reason: string): void {
+/**
+ * Creates and throws a postponement error with a special React symbol.
+ * @param {string} reason - The reason for postponement.
+ * @throws {Error & {$$typeof: symbol}}
+ */
+export function postpone(reason) {
   // eslint-disable-next-line react-internal/prod-error-codes
-  const postponeInstance: Postpone = (new Error(reason): any);
+  const postponeInstance = new Error(reason);
   postponeInstance.$$typeof = REACT_POSTPONE_TYPE;
   throw postponeInstance;
 }
