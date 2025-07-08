@@ -2206,7 +2206,7 @@ function renderSuspenseList(
 
 function renderPreamble(
   request: Request,
-  task: Task,
+  task: RenderTask,
   blockedSegment: Segment,
   node: ReactNodeList,
 ): void {
@@ -2219,28 +2219,21 @@ function renderPreamble(
     false,
   );
   blockedSegment.preambleChildren.push(preambleSegment);
-  // @TODO we can just attempt to render in the current task rather than spawning a new one
-  const preambleTask = createRenderTask(
-    request,
-    null,
-    node,
-    -1,
-    task.blockedBoundary,
-    preambleSegment,
-    task.blockedPreamble,
-    task.hoistableState,
-    request.abortableTasks,
-    task.keyPath,
-    task.formatContext,
-    task.context,
-    task.treeContext,
-    task.row,
-    task.componentStack,
-    !disableLegacyContext ? task.legacyContext : emptyContextObject,
-    __DEV__ ? task.debugTask : null,
-  );
-  pushComponentStack(preambleTask);
-  request.pingedTasks.push(preambleTask);
+  task.blockedSegment = preambleSegment;
+  try {
+    preambleSegment.status = RENDERING;
+    renderNode(request, task, node, -1);
+    pushSegmentFinale(
+      preambleSegment.chunks,
+      request.renderState,
+      preambleSegment.lastPushedText,
+      preambleSegment.textEmbedded,
+    );
+    preambleSegment.status = COMPLETED;
+    finishedSegment(request, task.blockedBoundary, preambleSegment);
+  } finally {
+    task.blockedSegment = blockedSegment;
+  }
 }
 
 function renderHostElement(
@@ -2292,7 +2285,8 @@ function renderHostElement(
       props,
     ));
     if (isPreambleContext(newContext)) {
-      renderPreamble(request, task, segment, children);
+      // $FlowFixMe: Refined
+      renderPreamble(request, (task: RenderTask), segment, children);
     } else {
       // We use the non-destructive form because if something suspends, we still
       // need to pop back up and finish this subtree of HTML.
