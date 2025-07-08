@@ -110,10 +110,11 @@ export function initAsyncDebugInfo(): void {
             }
             // If the thing we're waiting on is another Await we still track that sequence
             // so that we can later pick the best stack trace in user space.
+            const owner = resolveOwner();
             node = ({
               tag: UNRESOLVED_AWAIT_NODE,
-              owner: resolveOwner(),
-              stack: parseStackTrace(new Error(), 5),
+              owner: owner,
+              stack: owner === null ? null : parseStackTrace(new Error(), 5),
               start: performance.now(),
               end: -1.1, // set when resolved.
               promise: new WeakRef((resource: Promise<any>)),
