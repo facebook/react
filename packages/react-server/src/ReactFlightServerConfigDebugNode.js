@@ -29,7 +29,7 @@ import {resolveOwner} from './flight/ReactFlightCurrentOwner';
 import {resolveRequest, isAwaitInUserspace} from './ReactFlightServer';
 import {createHook, executionAsyncId, AsyncResource} from 'async_hooks';
 import {enableAsyncDebugInfo} from 'shared/ReactFeatureFlags';
-import {parseStackTrace} from './ReactFlightServerConfig';
+import {parseStackTracePrivate} from './ReactFlightServerConfig';
 
 // $FlowFixMe[method-unbinding]
 const getAsyncId = AsyncResource.prototype.asyncId;
@@ -129,8 +129,8 @@ export function initAsyncDebugInfo(): void {
               if (request === null) {
                 // We don't collect stacks for awaits that weren't in the scope of a specific render.
               } else {
-                stack = parseStackTrace(new Error(), 5);
-                if (!isAwaitInUserspace(request, stack)) {
+                stack = parseStackTracePrivate(new Error(), 5);
+                if (stack !== null && !isAwaitInUserspace(request, stack)) {
                   // If this await was not done directly in user space, then clear the stack. We won't use it
                   // anyway. This lets future awaits on this await know that we still need to get their stacks
                   // until we find one in user space.
@@ -153,7 +153,8 @@ export function initAsyncDebugInfo(): void {
             node = ({
               tag: UNRESOLVED_PROMISE_NODE,
               owner: owner,
-              stack: owner === null ? null : parseStackTrace(new Error(), 5),
+              stack:
+                owner === null ? null : parseStackTracePrivate(new Error(), 5),
               start: performance.now(),
               end: -1.1, // Set when we resolve.
               promise: new WeakRef((resource: Promise<any>)),
@@ -175,7 +176,8 @@ export function initAsyncDebugInfo(): void {
             node = ({
               tag: IO_NODE,
               owner: owner,
-              stack: owner === null ? parseStackTrace(new Error(), 3) : null,
+              stack:
+                owner === null ? parseStackTracePrivate(new Error(), 3) : null,
               start: performance.now(),
               end: -1.1, // Only set when pinged.
               promise: null,
@@ -191,7 +193,8 @@ export function initAsyncDebugInfo(): void {
             node = ({
               tag: IO_NODE,
               owner: owner,
-              stack: owner === null ? parseStackTrace(new Error(), 3) : null,
+              stack:
+                owner === null ? parseStackTracePrivate(new Error(), 3) : null,
               start: performance.now(),
               end: -1.1, // Only set when pinged.
               promise: null,
