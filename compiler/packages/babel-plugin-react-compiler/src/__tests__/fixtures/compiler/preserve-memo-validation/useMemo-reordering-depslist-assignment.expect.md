@@ -50,15 +50,13 @@ function useFoo(arr1, arr2) {
     y = $[4];
   }
   let t1;
-  let t2;
   if ($[5] !== y) {
-    t2 = { y };
+    t1 = { y };
     $[5] = y;
-    $[6] = t2;
+    $[6] = t1;
   } else {
-    t2 = $[6];
+    t1 = $[6];
   }
-  t1 = t2;
   return t1;
 }
 

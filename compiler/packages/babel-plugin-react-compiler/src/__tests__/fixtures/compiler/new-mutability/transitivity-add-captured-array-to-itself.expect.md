@@ -52,24 +52,20 @@ import {
 } from "shared-runtime";
 
 function Component(t0) {
-  const $ = _c(20);
+  const $ = _c(19);
   const { a, b } = t0;
   let t1;
-  let t2;
   if ($[0] !== a) {
-    t2 = { a };
+    t1 = { a };
     $[0] = a;
-    $[1] = t2;
+    $[1] = t1;
   } else {
-    t2 = $[1];
+    t1 = $[1];
   }
-  t1 = t2;
   const o = t1;
-  let t3;
   let x;
   if ($[2] !== b || $[3] !== o) {
-    t3 = [o];
-    x = t3;
+    x = [o];
     const y = typedCapture(x);
     const z = typedCapture(y);
     x.push(z);
@@ -77,60 +73,58 @@ function Component(t0) {
     $[2] = b;
     $[3] = o;
     $[4] = x;
-    $[5] = t3;
   } else {
     x = $[4];
-    t3 = $[5];
+  }
+  let t2;
+  if ($[5] !== a) {
+    t2 = [a];
+    $[5] = a;
+    $[6] = t2;
+  } else {
+    t2 = $[6];
+  }
+  let t3;
+  if ($[7] !== o || $[8] !== t2) {
+    t3 = <ValidateMemoization inputs={t2} output={o} />;
+    $[7] = o;
+    $[8] = t2;
+    $[9] = t3;
+  } else {
+    t3 = $[9];
   }
   let t4;
-  if ($[6] !== a) {
-    t4 = [a];
-    $[6] = a;
-    $[7] = t4;
+  if ($[10] !== a || $[11] !== b) {
+    t4 = [a, b];
+    $[10] = a;
+    $[11] = b;
+    $[12] = t4;
   } else {
-    t4 = $[7];
+    t4 = $[12];
   }
   let t5;
-  if ($[8] !== o || $[9] !== t4) {
-    t5 = <ValidateMemoization inputs={t4} output={o} />;
-    $[8] = o;
-    $[9] = t4;
-    $[10] = t5;
+  if ($[13] !== t4 || $[14] !== x) {
+    t5 = <ValidateMemoization inputs={t4} output={x} />;
+    $[13] = t4;
+    $[14] = x;
+    $[15] = t5;
   } else {
-    t5 = $[10];
+    t5 = $[15];
   }
   let t6;
-  if ($[11] !== a || $[12] !== b) {
-    t6 = [a, b];
-    $[11] = a;
-    $[12] = b;
-    $[13] = t6;
-  } else {
-    t6 = $[13];
-  }
-  let t7;
-  if ($[14] !== t6 || $[15] !== x) {
-    t7 = <ValidateMemoization inputs={t6} output={x} />;
-    $[14] = t6;
-    $[15] = x;
-    $[16] = t7;
-  } else {
-    t7 = $[16];
-  }
-  let t8;
-  if ($[17] !== t5 || $[18] !== t7) {
-    t8 = (
+  if ($[16] !== t3 || $[17] !== t5) {
+    t6 = (
       <>
-        {t5};{t7};
+        {t3};{t5};
       </>
     );
+    $[16] = t3;
     $[17] = t5;
-    $[18] = t7;
-    $[19] = t8;
+    $[18] = t6;
   } else {
-    t8 = $[19];
+    t6 = $[18];
   }
-  return t8;
+  return t6;
 }
 
 export const FIXTURE_ENTRYPOINT = {
