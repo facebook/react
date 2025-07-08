@@ -58,6 +58,7 @@ export const enablePersistedModeClonedFlag = false;
 export const disableClientCache = true;
 
 export const enableInfiniteRenderLoopDetection = false;
+export const logInfiniteRenderLoopDetectionWarning: null | ((string) => void) = null;
 
 export const enableReactTestRendererWarning = false;
 export const disableLegacyMode = true;

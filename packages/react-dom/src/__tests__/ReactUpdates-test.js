@@ -53,6 +53,10 @@ describe('ReactUpdates', () => {
     assertLog = InternalTestUtils.assertLog;
   });
 
+  afterEach(() => {
+    __TEST_LOGS__ = [];
+  })
+
   // Note: This is based on a similar component we use in www. We can delete
   // once the extra div wrapper is no longer necessary.
   function LegacyHiddenDiv({children, mode}) {
@@ -1808,14 +1812,18 @@ describe('ReactUpdates', () => {
     if (gate(flags => !flags.enableInfiniteRenderLoopDetection)) {
       return;
     }
+
     let setState;
-    function App() {
-      const [, _setState] = React.useState(0);
+    function App({eventuallySettle = false}) {
+      const [state, _setState] = React.useState(0);
       setState = _setState;
+      if (eventuallySettle) {
+        return state < 55 ? <Child /> : null;
+      }
       return <Child />;
     }
 
-    function Child(step) {
+    function Child() {
       // This will cause an infinite update loop, and a warning in dev.
       setState(n => n + 1);
       return null;
@@ -1833,6 +1841,13 @@ describe('ReactUpdates', () => {
         'follow the stack trace as described in https://react.dev/link/setstate-in-render\n' +
         '    in App (at **)',
     ]);
+    expect(__TEST_LOGS__.length).toBe(1);
+    expect(__TEST_LOGS__[0]).toContain('Potential infinite loop detected.');
+    await act(() =>
+      ReactDOM.flushSync(() => root.render(<App eventuallySettle={true} />)),
+    );
+    expect(__TEST_LOGS__.length).toBe(2);
+    expect(__TEST_LOGS__[1]).toContain('Potential infinite loop detected');
   });
 
   it("does not infinite loop if there's an async render phase update on another component", async () => {
@@ -1840,13 +1855,16 @@ describe('ReactUpdates', () => {
       return;
     }
     let setState;
-    function App() {
-      const [, _setState] = React.useState(0);
+    function App({eventuallySettle = false}) {
+      const [state, _setState] = React.useState(0);
       setState = _setState;
+      if (eventuallySettle) {
+        return state < 80 ? <Child /> : null;
+      }
       return <Child />;
     }
 
-    function Child(step) {
+    function Child() {
       // This will cause an infinite update loop, and a warning in dev.
       setState(n => n + 1);
       return null;
@@ -1867,6 +1885,14 @@ describe('ReactUpdates', () => {
         'follow the stack trace as described in https://react.dev/link/setstate-in-render\n' +
         '    in App (at **)',
     ]);
+    expect(__TEST_LOGS__.length).toBe(1);
+    expect(__TEST_LOGS__[0]).toContain('Potential infinite loop detected.');
+
+    await act(() => {
+      React.startTransition(() => root.render(<App eventuallySettle={true} />));
+    });
+    expect(__TEST_LOGS__.length).toBe(2);
+    expect(__TEST_LOGS__[1]).toContain('Potential infinite loop detected');
   });
 
   // TODO: Replace this branch with @gate pragmas

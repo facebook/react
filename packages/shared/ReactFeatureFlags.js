@@ -150,6 +150,13 @@ export const transitionLaneExpirationMs = 5000;
  * by setState or similar outside of the component owning the state.
  */
 export const enableInfiniteRenderLoopDetection = false;
+/**
+ * Experimental warning logger for enableInfiniteRenderLoopDetection
+ * This is a function that will be called with a warning string and connect
+ * to a production logger.
+ * If null, no warning will be logged.
+ */
+export const logInfiniteRenderLoopDetectionWarning: null | ((string) => void) = null;
 
 export const enableLazyPublicInstanceInFabric = false;
 

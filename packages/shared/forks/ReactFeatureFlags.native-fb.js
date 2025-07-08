@@ -47,6 +47,7 @@ export const enableMoveBefore = true;
 export const enableFizzExternalRuntime = true;
 export const enableHalt = false;
 export const enableInfiniteRenderLoopDetection = false;
+export const logInfiniteRenderLoopDetectionWarning: null | ((string) => void) = null;
 export const enableLegacyCache = false;
 export const enableLegacyFBSupport = false;
 export const enableLegacyHidden = false;

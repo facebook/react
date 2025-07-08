@@ -29,6 +29,7 @@ export const transitionLaneExpirationMs = 5000;
 export const enableSchedulingProfiler = __VARIANT__;
 
 export const enableInfiniteRenderLoopDetection = __VARIANT__;
+export const logInfiniteRenderLoopDetectionWarning = __LOGGER__;
 
 export const enableFastAddPropertiesInDiffing = __VARIANT__;
 export const enableLazyPublicInstanceInFabric = false;

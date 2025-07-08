@@ -20,6 +20,9 @@ global.__EXPERIMENTAL__ =
 
 global.__VARIANT__ = !!process.env.VARIANT;
 
+global.__TEST_LOGS__ = [];
+global.__LOGGER__ = !!process.env.VARIANT ? (message) => {__TEST_LOGS__.push(message)} : null;
+
 if (typeof window !== 'undefined') {
 } else {
   global.AbortController =
