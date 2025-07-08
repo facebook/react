@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<8e98f9380eef35f26401f575917c3fd4>>
+ * @generated SignedSource<<11c701821a63844c339e1f1e10f64598>>
  */
 
 'use strict';
@@ -27641,7 +27641,7 @@ function printInstructionValue(instrValue) {
             break;
         }
         case 'FinishMemoize': {
-            value = `FinishMemoize decl=${printPlace(instrValue.decl)}`;
+            value = `FinishMemoize decl=${printPlace(instrValue.decl)}${instrValue.pruned ? ' pruned' : ''}`;
             break;
         }
         default: {
@@ -39547,6 +39547,17 @@ function mergeConsecutiveBlocks(fn) {
         merged.merge(block.id, predecessorId);
         fn.body.blocks.delete(block.id);
     }
+    for (const [, block] of fn.body.blocks) {
+        for (const phi of block.phis) {
+            for (const [predecessorId, operand] of phi.operands) {
+                const mapped = merged.get(predecessorId);
+                if (mapped !== predecessorId) {
+                    phi.operands.delete(predecessorId);
+                    phi.operands.set(mapped, operand);
+                }
+            }
+        }
+    }
     markPredecessors(fn.body);
     for (const [, { terminal }] of fn.body.blocks) {
         if (terminalHasFallthrough(terminal)) {
@@ -48816,6 +48827,13 @@ class PruneScopesTransform extends ReactiveFunctionTransform {
             const ids = getOrInsertDefault(this.reassignments, value.lvalue.place.identifier.declarationId, new Set());
             ids.add(value.value.identifier);
         }
+        else if (value.kind === 'LoadLocal' &&
+            value.place.identifier.scope != null &&
+            instruction.lvalue != null &&
+            instruction.lvalue.identifier.scope == null) {
+            const ids = getOrInsertDefault(this.reassignments, instruction.lvalue.identifier.declarationId, new Set());
+            ids.add(value.place.identifier);
+        }
         else if (value.kind === 'FinishMemoize') {
             let decls;
             if (value.decl.identifier.scope == null) {
@@ -52689,21 +52707,60 @@ function inlineImmediatelyInvokedFunctionExpressions(fn) {
                         };
                         fn.body.blocks.set(continuationBlockId, continuationBlock);
                         block.instructions.length = ii;
-                        const newTerminal = {
-                            block: body.loweredFunc.func.body.entry,
-                            id: makeInstructionId(0),
-                            kind: 'label',
-                            fallthrough: continuationBlockId,
-                            loc: block.terminal.loc,
-                        };
-                        block.terminal = newTerminal;
-                        const result = instr.lvalue;
-                        declareTemporary(fn.env, block, result);
-                        promoteTemporary(result.identifier);
-                        for (const [id, block] of body.loweredFunc.func.body.blocks) {
-                            block.preds.clear();
-                            rewriteBlock(fn.env, block, continuationBlockId, result);
-                            fn.body.blocks.set(id, block);
+                        if (hasSingleExitReturnTerminal(body.loweredFunc.func)) {
+                            block.terminal = {
+                                kind: 'goto',
+                                block: body.loweredFunc.func.body.entry,
+                                id: block.terminal.id,
+                                loc: block.terminal.loc,
+                                variant: GotoVariant.Break,
+                            };
+                            for (const block of body.loweredFunc.func.body.blocks.values()) {
+                                if (block.terminal.kind === 'return') {
+                                    block.instructions.push({
+                                        id: makeInstructionId(0),
+                                        loc: block.terminal.loc,
+                                        lvalue: instr.lvalue,
+                                        value: {
+                                            kind: 'LoadLocal',
+                                            loc: block.terminal.loc,
+                                            place: block.terminal.value,
+                                        },
+                                        effects: null,
+                                    });
+                                    block.terminal = {
+                                        kind: 'goto',
+                                        block: continuationBlockId,
+                                        id: block.terminal.id,
+                                        loc: block.terminal.loc,
+                                        variant: GotoVariant.Break,
+                                    };
+                                }
+                            }
+                            for (const [id, block] of body.loweredFunc.func.body.blocks) {
+                                block.preds.clear();
+                                fn.body.blocks.set(id, block);
+                            }
+                        }
+                        else {
+                            const newTerminal = {
+                                block: body.loweredFunc.func.body.entry,
+                                id: makeInstructionId(0),
+                                kind: 'label',
+                                fallthrough: continuationBlockId,
+                                loc: block.terminal.loc,
+                            };
+                            block.terminal = newTerminal;
+                            const result = instr.lvalue;
+                            declareTemporary(fn.env, block, result);
+                            if (result.identifier.name == null) {
+                                promoteTemporary(result.identifier);
+                            }
+                            for (const [id, block] of body.loweredFunc.func.body.blocks) {
+                                block.preds.clear();
+                                rewriteBlock(fn.env, block, continuationBlockId, result);
+                                fn.body.blocks.set(id, block);
+                            }
                         }
                         queue.push(continuationBlock);
                         continue queue;
@@ -52718,13 +52775,25 @@ function inlineImmediatelyInvokedFunctionExpressions(fn) {
         }
     }
     if (inlinedFunctions.size !== 0) {
-        for (const [, block] of fn.body.blocks) {
+        for (const block of fn.body.blocks.values()) {
             retainWhere(block.instructions, instr => !inlinedFunctions.has(instr.lvalue.identifier.id));
         }
         reversePostorderBlocks(fn.body);
         markInstructionIds(fn.body);
         markPredecessors(fn.body);
+        mergeConsecutiveBlocks(fn);
     }
+}
+function hasSingleExitReturnTerminal(fn) {
+    let hasReturn = false;
+    let exitCount = 0;
+    for (const [, block] of fn.body.blocks) {
+        if (block.terminal.kind === 'return' || block.terminal.kind === 'throw') {
+            hasReturn || (hasReturn = block.terminal.kind === 'return');
+            exitCount++;
+        }
+    }
+    return exitCount === 1 && hasReturn;
 }
 function rewriteBlock(env, block, returnTarget, returnValue) {
     const { terminal } = block;
@@ -57161,6 +57230,14 @@ class Visitor extends ReactiveFunctionVisitor {
             state.manualMemoState != null) {
             const ids = getOrInsertDefault(state.manualMemoState.reassignments, value.lvalue.place.identifier.declarationId, new Set());
             ids.add(value.value.identifier);
+        }
+        if (value.kind === 'LoadLocal' &&
+            value.place.identifier.scope != null &&
+            instruction.lvalue != null &&
+            instruction.lvalue.identifier.scope == null &&
+            state.manualMemoState != null) {
+            const ids = getOrInsertDefault(state.manualMemoState.reassignments, instruction.lvalue.identifier.declarationId, new Set());
+            ids.add(value.place.identifier);
         }
         if (value.kind === 'StartMemoize') {
             let depsFromSource = null;
