@@ -26,7 +26,7 @@ type PromiseWithDebugInfo = interface extends Promise<any> {
 export type IONode = {
   tag: 0,
   owner: null | ReactComponentInfo,
-  stack: null, // callsite that spawned the I/O
+  stack: null | ReactStackTrace, // callsite that spawned the I/O
   start: number, // start time when the first part of the I/O sequence started
   end: number, // we typically don't use this. only when there's no promise intermediate.
   promise: null, // not used on I/O
