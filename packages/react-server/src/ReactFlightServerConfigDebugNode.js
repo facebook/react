@@ -173,7 +173,7 @@ export function initAsyncDebugInfo(): void {
             node = ({
               tag: IO_NODE,
               owner: resolveOwner(),
-              stack: parseStackTrace(new Error(), 3), // This is only used if no native promises are used.
+              stack: null,
               start: performance.now(),
               end: -1.1, // Only set when pinged.
               promise: null,
@@ -188,7 +188,7 @@ export function initAsyncDebugInfo(): void {
             node = ({
               tag: IO_NODE,
               owner: resolveOwner(),
-              stack: parseStackTrace(new Error(), 3),
+              stack: null,
               start: performance.now(),
               end: -1.1, // Only set when pinged.
               promise: null,
