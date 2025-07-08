@@ -4387,25 +4387,20 @@ function renderElement(request, task, keyPath, type, props, ref) {
           !1
         );
         segment.preambleChildren.push(preambleSegment);
-        var preambleTask = createRenderTask(
-          request,
-          null,
-          children$40,
-          -1,
-          task.blockedBoundary,
-          preambleSegment,
-          task.blockedPreamble,
-          task.hoistableState,
-          request.abortableTasks,
-          task.keyPath,
-          task.formatContext,
-          task.context,
-          task.treeContext,
-          task.row,
-          task.componentStack
-        );
-        pushComponentStack(preambleTask);
-        request.pingedTasks.push(preambleTask);
+        task.blockedSegment = preambleSegment;
+        try {
+          (preambleSegment.status = 6),
+            renderNode(request, task, children$40, -1),
+            pushSegmentFinale(
+              preambleSegment.chunks,
+              request.renderState,
+              preambleSegment.lastPushedText,
+              preambleSegment.textEmbedded
+            ),
+            (preambleSegment.status = 1);
+        } finally {
+          task.blockedSegment = segment;
+        }
       } else renderNode(request, task, children$40, -1);
       task.formatContext = prevContext$41;
       task.keyPath = prevKeyPath$42;

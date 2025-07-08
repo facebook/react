@@ -5512,27 +5512,20 @@ __DEV__ &&
               !1
             );
             segment.preambleChildren.push(preambleSegment);
-            var preambleTask = createRenderTask(
-              request,
-              null,
-              _children,
-              -1,
-              task.blockedBoundary,
-              preambleSegment,
-              task.blockedPreamble,
-              task.hoistableState,
-              request.abortableTasks,
-              task.keyPath,
-              task.formatContext,
-              task.context,
-              task.treeContext,
-              task.row,
-              task.componentStack,
-              emptyContextObject,
-              task.debugTask
-            );
-            pushComponentStack(preambleTask);
-            request.pingedTasks.push(preambleTask);
+            task.blockedSegment = preambleSegment;
+            try {
+              (preambleSegment.status = 6),
+                renderNode(request, task, _children, -1),
+                pushSegmentFinale(
+                  preambleSegment.chunks,
+                  request.renderState,
+                  preambleSegment.lastPushedText,
+                  preambleSegment.textEmbedded
+                ),
+                (preambleSegment.status = 1);
+            } finally {
+              task.blockedSegment = segment;
+            }
           } else renderNode(request, task, _children, -1);
           task.formatContext = _prevContext2;
           task.keyPath = _prevKeyPath3;
