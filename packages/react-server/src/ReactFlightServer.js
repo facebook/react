@@ -251,6 +251,46 @@ function filterStackTrace(
   return filteredStack;
 }
 
+function hasUnfilteredFrame(request: Request, stack: ReactStackTrace): boolean {
+  const filterStackFrame = request.filterStackFrame;
+  for (let i = 0; i < stack.length; i++) {
+    const callsite = stack[i];
+    const functionName = callsite[0];
+    const url = devirtualizeURL(callsite[1]);
+    const lineNumber = callsite[2];
+    const columnNumber = callsite[3];
+    if (filterStackFrame(url, functionName, lineNumber, columnNumber)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function isAwaitInUserspace(
+  request: Request,
+  stack: ReactStackTrace,
+): boolean {
+  let firstFrame = 0;
+  while (stack.length > firstFrame && stack[firstFrame][0] === 'Promise.then') {
+    // Skip Promise.then frame itself.
+    firstFrame++;
+  }
+  if (stack.length > firstFrame) {
+    // Check if the very first stack frame that awaited this Promise was in user space.
+    // TODO: This doesn't take into account wrapper functions such as our fake .then()
+    // in FlightClient which will always be considered third party awaits if you call
+    // .then directly.
+    const filterStackFrame = request.filterStackFrame;
+    const callsite = stack[firstFrame];
+    const functionName = callsite[0];
+    const url = devirtualizeURL(callsite[1]);
+    const lineNumber = callsite[2];
+    const columnNumber = callsite[3];
+    return filterStackFrame(url, functionName, lineNumber, columnNumber);
+  }
+  return false;
+}
+
 initAsyncDebugInfo();
 
 function patchConsole(consoleInst: typeof console, methodName: string) {
@@ -2090,7 +2130,7 @@ function visitAsyncNode(
             match = ioNode;
           } else if (
             node.stack === null ||
-            filterStackTrace(request, node.stack).length === 0
+            !hasUnfilteredFrame(request, node.stack)
           ) {
             // If this Promise was created inside only third party code, then try to use
             // the inner I/O node instead. This could happen if third party calls into first
@@ -2106,7 +2146,7 @@ function visitAsyncNode(
             // it's a point of interest.
             if (
               node.stack !== null &&
-              filterStackTrace(request, node.stack).length > 0
+              hasUnfilteredFrame(request, node.stack)
             ) {
               match = node;
             }
@@ -2153,36 +2193,10 @@ function visitAsyncNode(
             // just part of a previous component's rendering.
             match = ioNode;
           } else {
-            let isAwaitInUserspace = false;
-            const fullStack = node.stack;
-            let firstFrame = 0;
-            while (
-              fullStack !== null &&
-              fullStack.length > firstFrame &&
-              fullStack[firstFrame][0] === 'Promise.then'
+            if (
+              node.stack === null ||
+              !isAwaitInUserspace(request, node.stack)
             ) {
-              // Skip Promise.then frame itself.
-              firstFrame++;
-            }
-            if (fullStack !== null && fullStack.length > firstFrame) {
-              // Check if the very first stack frame that awaited this Promise was in user space.
-              // TODO: This doesn't take into account wrapper functions such as our fake .then()
-              // in FlightClient which will always be considered third party awaits if you call
-              // .then directly.
-              const filterStackFrame = request.filterStackFrame;
-              const callsite = fullStack[firstFrame];
-              const functionName = callsite[0];
-              const url = devirtualizeURL(callsite[1]);
-              const lineNumber = callsite[2];
-              const columnNumber = callsite[3];
-              isAwaitInUserspace = filterStackFrame(
-                url,
-                functionName,
-                lineNumber,
-                columnNumber,
-              );
-            }
-            if (!isAwaitInUserspace) {
               // If this await was fully filtered out, then it was inside third party code
               // such as in an external library. We return the I/O node and try another await.
               match = ioNode;
