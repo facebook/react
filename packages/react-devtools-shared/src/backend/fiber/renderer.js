@@ -3313,10 +3313,23 @@ export function attach(
           elementType === ElementTypeForwardRef
         ) {
           // Otherwise if this is a traced ancestor, flag for the nearest host descendant(s).
-          traceNearestHostComponentUpdate = didFiberRender(
-            prevFiber,
-            nextFiber,
-          );
+          // Add a condition to prevent calling didFiberRender if the fiber itself hasn't changed
+          // and its parent is a HostComponent (like a div).
+          // This addresses the false positive where a parent HostComponent re-renders,
+          // but its child FunctionComponent (like Greeting) does not actually re-render itself.
+          if (
+            prevFiber === nextFiber &&
+            nextFiber.return != null &&
+            (nextFiber.return.tag === HostComponent || nextFiber.return.tag === HostSingleton)
+          ) {
+            traceNearestHostComponentUpdate = false; // No actual render for this component
+          } else {
+            // Otherwise if this is a traced ancestor, flag for the nearest host descendant(s).
+            traceNearestHostComponentUpdate = didFiberRender(
+              prevFiber,
+              nextFiber,
+            );
+          }
         }
       }
     }
@@ -3330,6 +3343,13 @@ export function attach(
       if (
         mostRecentlyInspectedElement !== null &&
         mostRecentlyInspectedElement.id === fiberInstance.id &&
+        // Add the same condition here to prevent unnecessary re-inspection
+        // if the fiber itself hasn't changed and its parent is a HostComponent.
+        !(
+          prevFiber === nextFiber &&
+          nextFiber.return != null &&
+          (nextFiber.return.tag === HostComponent || nextFiber.return.tag === HostSingleton)
+        ) &&
         didFiberRender(prevFiber, nextFiber)
       ) {
         // If this Fiber has updated, clear cached inspected data.
