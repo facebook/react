@@ -755,7 +755,7 @@ module.exports = function ($$$config) {
       ? describeBuiltInComponentFrame(previousPrepareStackTrace)
       : "";
   }
-  function describeFiber(fiber) {
+  function describeFiber(fiber, childFiber) {
     switch (fiber.tag) {
       case 26:
       case 27:
@@ -764,7 +764,9 @@ module.exports = function ($$$config) {
       case 16:
         return describeBuiltInComponentFrame("Lazy");
       case 13:
-        return describeBuiltInComponentFrame("Suspense");
+        return fiber.child !== childFiber && null !== childFiber
+          ? describeBuiltInComponentFrame("Suspense Fallback")
+          : describeBuiltInComponentFrame("Suspense");
       case 19:
         return describeBuiltInComponentFrame("SuspenseList");
       case 0:
@@ -785,9 +787,11 @@ module.exports = function ($$$config) {
   }
   function getStackByFiberInDevAndProd(workInProgress) {
     try {
-      var info = "";
+      var info = "",
+        previous = null;
       do
-        (info += describeFiber(workInProgress)),
+        (info += describeFiber(workInProgress, previous)),
+          (previous = workInProgress),
           (workInProgress = workInProgress.return);
       while (workInProgress);
       return info;
@@ -13774,7 +13778,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-modern-e43986f1-20250707"
+      reconcilerVersion: "19.2.0-www-modern-b44a99bf-20250708"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
