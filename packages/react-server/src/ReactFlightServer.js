@@ -4820,10 +4820,15 @@ function emitConsoleChunk(
   const payload = [methodName, stackTrace, owner, env];
   // $FlowFixMe[method-unbinding]
   payload.push.apply(payload, args);
-  let json = serializeDebugModel(request, 500, payload);
+  const objectLimit = request.deferredDebugObjects === null ? 500 : 10;
+  let json = serializeDebugModel(
+    request,
+    objectLimit + stackTrace.length,
+    payload,
+  );
   if (json[0] !== '[') {
     // This looks like an error. Try a simpler object.
-    json = serializeDebugModel(request, 500, [
+    json = serializeDebugModel(request, 10 + stackTrace.length, [
       methodName,
       stackTrace,
       owner,
@@ -5760,6 +5765,8 @@ export function resolveDebugMessage(request: Request, message: string): void {
         if (retainedValue !== undefined) {
           // If we still have this object, and haven't emitted it before, emit it on the stream.
           const counter = {objectLimit: 10};
+          deferredDebugObjects.retained.delete(id);
+          deferredDebugObjects.existing.delete(retainedValue);
           emitOutlinedDebugModelChunk(request, id, counter, retainedValue);
           enqueueFlush(request);
         }
