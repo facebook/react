@@ -2088,7 +2088,10 @@ function visitAsyncNode(
             // If the ioNode was a Promise, then that means we found one in user space since otherwise
             // we would've returned an IO node. We assume this has the best stack.
             match = ioNode;
-          } else if (filterStackTrace(request, node.stack).length === 0) {
+          } else if (
+            node.stack === null ||
+            filterStackTrace(request, node.stack).length === 0
+          ) {
             // If this Promise was created inside only third party code, then try to use
             // the inner I/O node instead. This could happen if third party calls into first
             // party to perform some I/O.
@@ -2101,7 +2104,10 @@ function visitAsyncNode(
             // We aborted this render. If this Promise spanned the abort time it was probably the
             // Promise that was aborted. This won't necessarily have I/O associated with it but
             // it's a point of interest.
-            if (filterStackTrace(request, node.stack).length > 0) {
+            if (
+              node.stack !== null &&
+              filterStackTrace(request, node.stack).length > 0
+            ) {
               match = node;
             }
           }
@@ -2151,13 +2157,14 @@ function visitAsyncNode(
             const fullStack = node.stack;
             let firstFrame = 0;
             while (
+              fullStack !== null &&
               fullStack.length > firstFrame &&
               fullStack[firstFrame][0] === 'Promise.then'
             ) {
               // Skip Promise.then frame itself.
               firstFrame++;
             }
-            if (fullStack.length > firstFrame) {
+            if (fullStack !== null && fullStack.length > firstFrame) {
               // Check if the very first stack frame that awaited this Promise was in user space.
               // TODO: This doesn't take into account wrapper functions such as our fake .then()
               // in FlightClient which will always be considered third party awaits if you call
@@ -2204,7 +2211,10 @@ function visitAsyncNode(
                 awaited: ((ioNode: any): ReactIOInfo), // This is deduped by this reference.
                 env: env,
                 owner: node.owner,
-                stack: filterStackTrace(request, node.stack),
+                stack:
+                  node.stack === null
+                    ? null
+                    : filterStackTrace(request, node.stack),
               });
               // Mark the end time of the await. If we're aborting then we don't emit this
               // to signal that this never resolved inside this render.
