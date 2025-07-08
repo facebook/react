@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<94637a21e82695eb3ad0d2a3cdba28eb>>
+ * @generated SignedSource<<0a6f8dcf4afd01d77e90e786a3c50057>>
  */
 
 "use strict";
@@ -930,7 +930,7 @@ function describeNativeComponentFrame(fn, construct) {
     ? describeBuiltInComponentFrame(previousPrepareStackTrace)
     : "";
 }
-function describeFiber(fiber) {
+function describeFiber(fiber, childFiber) {
   switch (fiber.tag) {
     case 26:
     case 27:
@@ -939,7 +939,9 @@ function describeFiber(fiber) {
     case 16:
       return describeBuiltInComponentFrame("Lazy");
     case 13:
-      return describeBuiltInComponentFrame("Suspense");
+      return fiber.child !== childFiber && null !== childFiber
+        ? describeBuiltInComponentFrame("Suspense Fallback")
+        : describeBuiltInComponentFrame("Suspense");
     case 19:
       return describeBuiltInComponentFrame("SuspenseList");
     case 0:
@@ -957,9 +959,11 @@ function describeFiber(fiber) {
 }
 function getStackByFiberInDevAndProd(workInProgress) {
   try {
-    var info = "";
+    var info = "",
+      previous = null;
     do
-      (info += describeFiber(workInProgress)),
+      (info += describeFiber(workInProgress, previous)),
+        (previous = workInProgress),
         (workInProgress = workInProgress.return);
     while (workInProgress);
     return info;
@@ -9903,10 +9907,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1434 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-0b78161d-20250702",
+  version: "19.2.0-native-fb-b44a99bf-20250708",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-0b78161d-20250702"
+  reconcilerVersion: "19.2.0-native-fb-b44a99bf-20250708"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1435 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10042,4 +10046,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.2.0-native-fb-0b78161d-20250702";
+exports.version = "19.2.0-native-fb-b44a99bf-20250708";
