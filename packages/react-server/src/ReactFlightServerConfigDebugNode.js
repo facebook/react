@@ -37,19 +37,6 @@ const getAsyncId = AsyncResource.prototype.asyncId;
 const pendingOperations: Map<number, AsyncSequence> =
   __DEV__ && enableAsyncDebugInfo ? new Map() : (null: any);
 
-// This is a weird one. This map, keeps a dependent Promise alive if the child Promise is still alive.
-// A PromiseNode/AwaitNode cannot hold a strong reference to its own Promise because then it'll never get
-// GC:ed. We only need it if a dependent AwaitNode points to it. We could put a reference in the Node
-// but that would require a GC pass between every Node that gets destroyed. I.e. the root gets destroy()
-// called on it and then that release it from the pendingOperations map which allows the next one to GC
-// and so on. By putting this relationship in a WeakMap this could be done as a single pass in the VM.
-// We don't actually ever have to read from this map since we have WeakRef reference to these Promises
-// if they're still alive. It's also optional information so we could just expose only if GC didn't run.
-const awaitedPromise: WeakMap<
-  Promise<any>,
-  Promise<any> | [Promise<any>, Promise<any>],
-> = __DEV__ && enableAsyncDebugInfo ? new WeakMap() : (null: any);
-
 // Keep the last resolved await as a workaround for async functions missing data.
 let lastRanAwait: null | AwaitNode = null;
 
@@ -92,38 +79,6 @@ export function initAsyncDebugInfo(): void {
               // We don't track awaits on things that started outside our tracked scope.
               return;
             }
-            let retain: null | Promise<any> | [Promise<any>, Promise<any>] =
-              null;
-            const triggerPromiseRef = trigger.promise;
-            if (triggerPromiseRef !== null) {
-              const triggerPromise = triggerPromiseRef.deref();
-              if (triggerPromise !== undefined) {
-                // Keep the awaited Promise alive as long as the child is alive so we can
-                // trace its value at the end.
-                retain = triggerPromise;
-              }
-            }
-
-            const current = pendingOperations.get(currentAsyncId);
-            if (current !== undefined) {
-              const currentPromiseRef = current.promise;
-              if (currentPromiseRef !== null) {
-                const currentPromise = currentPromiseRef.deref();
-                if (currentPromise !== undefined) {
-                  // Keep the previous Promise alive as long as the child is alive so we can
-                  // trace its value at the end.
-                  if (retain === null) {
-                    retain = currentPromise;
-                  } else {
-                    retain = [(retain: any), currentPromise];
-                  }
-                }
-              }
-            }
-
-            if (retain !== null) {
-              awaitedPromise.set(resource, retain);
-            }
             // If the thing we're waiting on is another Await we still track that sequence
             // so that we can later pick the best stack trace in user space.
             let stack = null;
@@ -158,6 +113,7 @@ export function initAsyncDebugInfo(): void {
                 }
               }
             }
+            const current = pendingOperations.get(currentAsyncId);
             node = ({
               tag: UNRESOLVED_AWAIT_NODE,
               owner: resolveOwner(),
