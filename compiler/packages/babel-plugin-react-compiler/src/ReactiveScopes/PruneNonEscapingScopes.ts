@@ -829,12 +829,14 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<
         };
       }
       case 'UnsupportedNode': {
-        CompilerError.invariant(false, {
-          reason: `Unexpected unsupported node`,
-          description: null,
-          loc: value.loc,
-          suggestions: null,
-        });
+        const lvalues = [];
+        if (lvalue !== null) {
+          lvalues.push({place: lvalue, level: MemoizationLevel.Never});
+        }
+        return {
+          lvalues,
+          rvalues: [],
+        };
       }
       default: {
         assertExhaustive(
