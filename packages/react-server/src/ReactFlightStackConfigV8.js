@@ -63,7 +63,9 @@ function collectStackTracePrivate(
       // Skip everything after the bottom frame since it'll be internals.
       break;
     } else if (callSite.isNative()) {
-      result.push([name, '', 0, 0, 0, 0]);
+      // $FlowFixMe[prop-missing]
+      const isAsync = callSite.isAsync();
+      result.push([name, '', 0, 0, 0, 0, isAsync]);
     } else {
       // We encode complex function calls as if they're part of the function
       // name since we cannot simulate the complex ones and they look the same
@@ -98,7 +100,17 @@ function collectStackTracePrivate(
         typeof callSite.getEnclosingColumnNumber === 'function'
           ? (callSite: any).getEnclosingColumnNumber() || 0
           : 0;
-      result.push([name, filename, line, col, enclosingLine, enclosingCol]);
+      // $FlowFixMe[prop-missing]
+      const isAsync = callSite.isAsync();
+      result.push([
+        name,
+        filename,
+        line,
+        col,
+        enclosingLine,
+        enclosingCol,
+        isAsync,
+      ]);
     }
   }
   collectedStackTrace = result;
@@ -221,8 +233,12 @@ export function parseStackTrace(
       continue;
     }
     let name = parsed[1] || '';
+    let isAsync = parsed[8] === 'async ';
     if (name === '<anonymous>') {
       name = '';
+    } else if (name.startsWith('async ')) {
+      name = name.slice(5);
+      isAsync = true;
     }
     let filename = parsed[2] || parsed[5] || '';
     if (filename === '<anonymous>') {
@@ -230,7 +246,7 @@ export function parseStackTrace(
     }
     const line = +(parsed[3] || parsed[6]);
     const col = +(parsed[4] || parsed[7]);
-    parsedFrames.push([name, filename, line, col, 0, 0]);
+    parsedFrames.push([name, filename, line, col, 0, 0, isAsync]);
   }
   stackTraceCache.set(error, parsedFrames);
   return parsedFrames;

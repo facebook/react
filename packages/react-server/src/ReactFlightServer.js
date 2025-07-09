@@ -260,7 +260,15 @@ function hasUnfilteredFrame(request: Request, stack: ReactStackTrace): boolean {
     const url = devirtualizeURL(callsite[1]);
     const lineNumber = callsite[2];
     const columnNumber = callsite[3];
-    if (filterStackFrame(url, functionName, lineNumber, columnNumber)) {
+    // Ignore async stack frames because they're not "real". We'd expect to have at least
+    // one non-async frame if we're actually executing inside a first party function.
+    // Otherwise we might just be in the resume of a third party function that resumed
+    // inside a first party stack.
+    const isAsync = callsite[6];
+    if (
+      !isAsync &&
+      filterStackFrame(url, functionName, lineNumber, columnNumber)
+    ) {
       return true;
     }
   }
