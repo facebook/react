@@ -44,6 +44,7 @@ import {
   PrintedCompilerPipelineValue,
 } from './Output';
 import {transformFromAstSync} from '@babel/core';
+import {LoggerEvent} from 'babel-plugin-react-compiler/dist/Entrypoint';
 
 function parseInput(
   input: string,
@@ -210,7 +211,11 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
       },
       logger: {
         debugLogIRs: logIR,
-        logEvent: () => {},
+        logEvent: (_filename: string | null, event: LoggerEvent) => {
+          if (event.kind === 'CompileError') {
+            error.details.push(new CompilerErrorDetail(event.detail));
+          }
+        },
       },
     });
     transformOutput = invokeCompiler(source, language, opts);
