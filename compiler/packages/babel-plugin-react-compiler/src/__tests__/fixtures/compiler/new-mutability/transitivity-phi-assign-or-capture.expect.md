@@ -50,21 +50,19 @@ import {
 } from "shared-runtime";
 
 function Component(t0) {
-  const $ = _c(12);
+  const $ = _c(11);
   const { a, b } = t0;
   let t1;
-  let t2;
   if ($[0] !== a) {
-    t2 = { a };
+    t1 = { a };
     $[0] = a;
-    $[1] = t2;
+    $[1] = t1;
   } else {
-    t2 = $[1];
+    t1 = $[1];
   }
   let x;
-  if ($[2] !== b || $[3] !== t2) {
-    t1 = [t2];
-    x = t1;
+  if ($[2] !== b || $[3] !== t1) {
+    x = [t1];
     let z;
     if (b) {
       z = x;
@@ -74,32 +72,30 @@ function Component(t0) {
 
     typedMutate(z, b);
     $[2] = b;
-    $[3] = t2;
+    $[3] = t1;
     $[4] = x;
-    $[5] = t1;
   } else {
     x = $[4];
-    t1 = $[5];
+  }
+  let t2;
+  if ($[5] !== a || $[6] !== b) {
+    t2 = [a, b];
+    $[5] = a;
+    $[6] = b;
+    $[7] = t2;
+  } else {
+    t2 = $[7];
   }
   let t3;
-  if ($[6] !== a || $[7] !== b) {
-    t3 = [a, b];
-    $[6] = a;
-    $[7] = b;
-    $[8] = t3;
+  if ($[8] !== t2 || $[9] !== x) {
+    t3 = <ValidateMemoization inputs={t2} output={x} />;
+    $[8] = t2;
+    $[9] = x;
+    $[10] = t3;
   } else {
-    t3 = $[8];
+    t3 = $[10];
   }
-  let t4;
-  if ($[9] !== t3 || $[10] !== x) {
-    t4 = <ValidateMemoization inputs={t3} output={x} />;
-    $[9] = t3;
-    $[10] = x;
-    $[11] = t4;
-  } else {
-    t4 = $[11];
-  }
-  return t4;
+  return t3;
 }
 
 export const FIXTURE_ENTRYPOINT = {

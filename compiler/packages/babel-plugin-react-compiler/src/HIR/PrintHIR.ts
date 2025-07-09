@@ -715,7 +715,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       break;
     }
     case 'FinishMemoize': {
-      value = `FinishMemoize decl=${printPlace(instrValue.decl)}`;
+      value = `FinishMemoize decl=${printPlace(instrValue.decl)}${instrValue.pruned ? ' pruned' : ''}`;
       break;
     }
     default: {

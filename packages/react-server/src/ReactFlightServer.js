@@ -94,6 +94,7 @@ import {
   getCurrentAsyncSequence,
   getAsyncSequenceFromPromise,
   parseStackTrace,
+  parseStackTracePrivate,
   supportsComponentStorage,
   componentStorage,
   unbadgeConsole,
@@ -251,6 +252,54 @@ function filterStackTrace(
   return filteredStack;
 }
 
+function hasUnfilteredFrame(request: Request, stack: ReactStackTrace): boolean {
+  const filterStackFrame = request.filterStackFrame;
+  for (let i = 0; i < stack.length; i++) {
+    const callsite = stack[i];
+    const functionName = callsite[0];
+    const url = devirtualizeURL(callsite[1]);
+    const lineNumber = callsite[2];
+    const columnNumber = callsite[3];
+    // Ignore async stack frames because they're not "real". We'd expect to have at least
+    // one non-async frame if we're actually executing inside a first party function.
+    // Otherwise we might just be in the resume of a third party function that resumed
+    // inside a first party stack.
+    const isAsync = callsite[6];
+    if (
+      !isAsync &&
+      filterStackFrame(url, functionName, lineNumber, columnNumber)
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function isAwaitInUserspace(
+  request: Request,
+  stack: ReactStackTrace,
+): boolean {
+  let firstFrame = 0;
+  while (stack.length > firstFrame && stack[firstFrame][0] === 'Promise.then') {
+    // Skip Promise.then frame itself.
+    firstFrame++;
+  }
+  if (stack.length > firstFrame) {
+    // Check if the very first stack frame that awaited this Promise was in user space.
+    // TODO: This doesn't take into account wrapper functions such as our fake .then()
+    // in FlightClient which will always be considered third party awaits if you call
+    // .then directly.
+    const filterStackFrame = request.filterStackFrame;
+    const callsite = stack[firstFrame];
+    const functionName = callsite[0];
+    const url = devirtualizeURL(callsite[1]);
+    const lineNumber = callsite[2];
+    const columnNumber = callsite[3];
+    return filterStackFrame(url, functionName, lineNumber, columnNumber);
+  }
+  return false;
+}
+
 initAsyncDebugInfo();
 
 function patchConsole(consoleInst: typeof console, methodName: string) {
@@ -276,7 +325,7 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
         // one stack frame but keeping it simple for now and include all frames.
         const stack = filterStackTrace(
           request,
-          parseStackTrace(new Error('react-stack-top-frame'), 1),
+          parseStackTracePrivate(new Error('react-stack-top-frame'), 1) || [],
         );
         request.pendingDebugChunks++;
         const owner: null | ReactComponentInfo = resolveOwner();
@@ -752,6 +801,19 @@ function serializeDebugThenable(
     return ref;
   }
 
+  const deferredDebugObjects = request.deferredDebugObjects;
+  if (deferredDebugObjects !== null) {
+    // For Promises that are not yet resolved, we always defer them. They are async anyway so it's
+    // safe to defer them. This also ensures that we don't eagerly call .then() on a Promise that
+    // otherwise wouldn't have initialized. It also ensures that we don't "handle" a rejection
+    // that otherwise would have triggered unhandled rejection.
+    deferredDebugObjects.retained.set(id, (thenable: any));
+    const deferredRef = '$Y@' + id.toString(16);
+    // We can now refer to the deferred object in the future.
+    request.writtenDebugObjects.set(thenable, deferredRef);
+    return deferredRef;
+  }
+
   let cancelled = false;
 
   thenable.then(
@@ -802,6 +864,36 @@ function serializeDebugThenable(
   });
 
   return ref;
+}
+
+function emitRequestedDebugThenable(
+  request: Request,
+  id: number,
+  counter: {objectLimit: number},
+  thenable: Thenable<any>,
+): void {
+  thenable.then(
+    value => {
+      if (request.status === ABORTING) {
+        emitDebugHaltChunk(request, id);
+        enqueueFlush(request);
+        return;
+      }
+      emitOutlinedDebugModelChunk(request, id, counter, value);
+      enqueueFlush(request);
+    },
+    reason => {
+      if (request.status === ABORTING) {
+        emitDebugHaltChunk(request, id);
+        enqueueFlush(request);
+        return;
+      }
+      // We don't log these errors since they didn't actually throw into Flight.
+      const digest = '';
+      emitErrorChunk(request, id, digest, reason, true);
+      enqueueFlush(request);
+    },
+  );
 }
 
 function serializeThenable(
@@ -987,8 +1079,9 @@ function serializeReadableStream(
     signal.removeEventListener('abort', abortStream);
     const reason = signal.reason;
     if (enableHalt && request.type === PRERENDER) {
-      haltTask(streamTask, request);
       request.abortableTasks.delete(streamTask);
+      haltTask(streamTask, request);
+      finishHaltedTask(streamTask, request);
     } else {
       // TODO: Make this use abortTask() instead.
       erroredTask(request, streamTask, reason);
@@ -1116,8 +1209,9 @@ function serializeAsyncIterable(
     signal.removeEventListener('abort', abortIterable);
     const reason = signal.reason;
     if (enableHalt && request.type === PRERENDER) {
-      haltTask(streamTask, request);
       request.abortableTasks.delete(streamTask);
+      haltTask(streamTask, request);
+      finishHaltedTask(streamTask, request);
     } else {
       // TODO: Make this use abortTask() instead.
       erroredTask(request, streamTask, signal.reason);
@@ -2088,7 +2182,10 @@ function visitAsyncNode(
             // If the ioNode was a Promise, then that means we found one in user space since otherwise
             // we would've returned an IO node. We assume this has the best stack.
             match = ioNode;
-          } else if (filterStackTrace(request, node.stack).length === 0) {
+          } else if (
+            node.stack === null ||
+            !hasUnfilteredFrame(request, node.stack)
+          ) {
             // If this Promise was created inside only third party code, then try to use
             // the inner I/O node instead. This could happen if third party calls into first
             // party to perform some I/O.
@@ -2101,7 +2198,10 @@ function visitAsyncNode(
             // We aborted this render. If this Promise spanned the abort time it was probably the
             // Promise that was aborted. This won't necessarily have I/O associated with it but
             // it's a point of interest.
-            if (filterStackTrace(request, node.stack).length > 0) {
+            if (
+              node.stack !== null &&
+              hasUnfilteredFrame(request, node.stack)
+            ) {
               match = node;
             }
           }
@@ -2147,35 +2247,10 @@ function visitAsyncNode(
             // just part of a previous component's rendering.
             match = ioNode;
           } else {
-            let isAwaitInUserspace = false;
-            const fullStack = node.stack;
-            let firstFrame = 0;
-            while (
-              fullStack.length > firstFrame &&
-              fullStack[firstFrame][0] === 'Promise.then'
+            if (
+              node.stack === null ||
+              !isAwaitInUserspace(request, node.stack)
             ) {
-              // Skip Promise.then frame itself.
-              firstFrame++;
-            }
-            if (fullStack.length > firstFrame) {
-              // Check if the very first stack frame that awaited this Promise was in user space.
-              // TODO: This doesn't take into account wrapper functions such as our fake .then()
-              // in FlightClient which will always be considered third party awaits if you call
-              // .then directly.
-              const filterStackFrame = request.filterStackFrame;
-              const callsite = fullStack[firstFrame];
-              const functionName = callsite[0];
-              const url = devirtualizeURL(callsite[1]);
-              const lineNumber = callsite[2];
-              const columnNumber = callsite[3];
-              isAwaitInUserspace = filterStackFrame(
-                url,
-                functionName,
-                lineNumber,
-                columnNumber,
-              );
-            }
-            if (!isAwaitInUserspace) {
               // If this await was fully filtered out, then it was inside third party code
               // such as in an external library. We return the I/O node and try another await.
               match = ioNode;
@@ -2204,7 +2279,10 @@ function visitAsyncNode(
                 awaited: ((ioNode: any): ReactIOInfo), // This is deduped by this reference.
                 env: env,
                 owner: node.owner,
-                stack: filterStackTrace(request, node.stack),
+                stack:
+                  node.stack === null
+                    ? null
+                    : filterStackTrace(request, node.stack),
               });
               // Mark the end time of the await. If we're aborting then we don't emit this
               // to signal that this never resolved inside this render.
@@ -2892,7 +2970,9 @@ function serializeBlob(request: Request, blob: Blob): string {
     signal.removeEventListener('abort', abortBlob);
     const reason = signal.reason;
     if (enableHalt && request.type === PRERENDER) {
+      request.abortableTasks.delete(newTask);
       haltTask(newTask, request);
+      finishHaltedTask(newTask, request);
     } else {
       // TODO: Make this use abortTask() instead.
       erroredTask(request, newTask, reason);
@@ -4048,10 +4128,6 @@ function emitIOInfoChunk(
     start: relativeStartTimestamp,
     end: relativeEndTimestamp,
   };
-  if (value !== undefined) {
-    // $FlowFixMe[cannot-write]
-    debugIOInfo.value = value;
-  }
   if (env != null) {
     // $FlowFixMe[cannot-write]
     debugIOInfo.env = env;
@@ -4063,6 +4139,10 @@ function emitIOInfoChunk(
   if (owner != null) {
     // $FlowFixMe[cannot-write]
     debugIOInfo.owner = owner;
+  }
+  if (value !== undefined) {
+    // $FlowFixMe[cannot-write]
+    debugIOInfo.value = value;
   }
   const json: string = serializeDebugModel(request, objectLimit, debugIOInfo);
   const row = id.toString(16) + ':J' + json + '\n';
@@ -4321,6 +4401,12 @@ function renderDebugModel(
       if (parentReference !== undefined) {
         // If the parent has a reference, we can refer to this object indirectly
         // through the property name inside that parent.
+        if (counter.objectLimit <= 0 && !doNotLimit.has(value)) {
+          // If we are going to defer this, don't dedupe it since then we'd dedupe it to be
+          // deferred in future reference.
+          return serializeDeferredObject(request, value);
+        }
+
         let propertyName = parentPropertyName;
         if (isArray(parent) && parent[0] === REACT_ELEMENT_TYPE) {
           // For elements, we've converted it to an array but we'll have converted
@@ -4345,8 +4431,15 @@ function renderDebugModel(
       } else if (debugNoOutline !== value) {
         // If this isn't the root object (like meta data) and we don't have an id for it, outline
         // it so that we can dedupe it by reference later.
-        const outlinedId = outlineDebugModel(request, counter, value);
-        return serializeByValueID(outlinedId);
+        // $FlowFixMe[method-unbinding]
+        if (typeof value.then === 'function') {
+          // If this is a Promise we're going to assign it an external ID anyway which can be deduped.
+          const thenable: Thenable<any> = (value: any);
+          return serializeDebugThenable(request, counter, thenable);
+        } else {
+          const outlinedId = outlineDebugModel(request, counter, value);
+          return serializeByValueID(outlinedId);
+        }
       }
     }
 
@@ -4796,10 +4889,15 @@ function emitConsoleChunk(
   const payload = [methodName, stackTrace, owner, env];
   // $FlowFixMe[method-unbinding]
   payload.push.apply(payload, args);
-  let json = serializeDebugModel(request, 500, payload);
+  const objectLimit = request.deferredDebugObjects === null ? 500 : 10;
+  let json = serializeDebugModel(
+    request,
+    objectLimit + stackTrace.length,
+    payload,
+  );
   if (json[0] !== '[') {
     // This looks like an error. Try a simpler object.
-    json = serializeDebugModel(request, 500, [
+    json = serializeDebugModel(request, 10 + stackTrace.length, [
       methodName,
       stackTrace,
       owner,
@@ -5736,8 +5834,29 @@ export function resolveDebugMessage(request: Request, message: string): void {
         if (retainedValue !== undefined) {
           // If we still have this object, and haven't emitted it before, emit it on the stream.
           const counter = {objectLimit: 10};
+          deferredDebugObjects.retained.delete(id);
+          deferredDebugObjects.existing.delete(retainedValue);
           emitOutlinedDebugModelChunk(request, id, counter, retainedValue);
           enqueueFlush(request);
+        }
+      }
+      break;
+    case 80 /* "P" */:
+      // Query Promise IDs
+      for (let i = 0; i < ids.length; i++) {
+        const id = ids[i];
+        const retainedValue = deferredDebugObjects.retained.get(id);
+        if (retainedValue !== undefined) {
+          // If we still have this Promise, and haven't emitted it before, wait for it
+          // and then emit it on the stream.
+          const counter = {objectLimit: 10};
+          deferredDebugObjects.retained.delete(id);
+          emitRequestedDebugThenable(
+            request,
+            id,
+            counter,
+            (retainedValue: any),
+          );
         }
       }
       break;

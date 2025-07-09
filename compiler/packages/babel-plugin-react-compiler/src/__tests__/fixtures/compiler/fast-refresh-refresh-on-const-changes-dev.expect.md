@@ -74,23 +74,21 @@ function Component() {
 
   unsafeUpdateConst();
   let t0;
-  let t1;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = [{ pretendConst }];
-    $[1] = t1;
+    t0 = [{ pretendConst }];
+    $[1] = t0;
   } else {
-    t1 = $[1];
+    t0 = $[1];
   }
-  t0 = t1;
   const value = t0;
-  let t2;
+  let t1;
   if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-    t2 = <ValidateMemoization inputs={[pretendConst]} output={value} />;
-    $[2] = t2;
+    t1 = <ValidateMemoization inputs={[pretendConst]} output={value} />;
+    $[2] = t1;
   } else {
-    t2 = $[2];
+    t1 = $[2];
   }
-  return t2;
+  return t1;
 }
 function _temp() {
   unsafeResetConst();

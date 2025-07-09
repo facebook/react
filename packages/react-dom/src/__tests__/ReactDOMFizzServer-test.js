@@ -9544,6 +9544,102 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
+  it('will attempt to render the preamble inline to allow rendering before a later abort in the same task', async () => {
+    const promise = new Promise(() => {});
+    function Pending() {
+      React.use(promise);
+    }
+
+    const controller = new AbortController();
+    function Abort() {
+      controller.abort();
+      return <Comp />;
+    }
+
+    function Comp() {
+      return null;
+    }
+
+    function App() {
+      return (
+        <html>
+          <head>
+            <meta content="here" />
+          </head>
+          <body>
+            <main>hello</main>
+            <Suspense>
+              <Pending />
+            </Suspense>
+            <Abort />
+          </body>
+        </html>
+      );
+    }
+
+    const signal = controller.signal;
+
+    let thrownError = null;
+    const errors = [];
+    try {
+      await act(() => {
+        const {pipe, abort} = renderToPipeableStream(<App />, {
+          onError(e, ei) {
+            errors.push({
+              error: e,
+              componentStack: normalizeCodeLocInfo(ei.componentStack),
+            });
+          },
+        });
+        signal.addEventListener('abort', () => abort('boom'));
+        pipe(writable);
+      });
+    } catch (e) {
+      thrownError = e;
+    }
+
+    expect(thrownError).toBe('boom');
+    // TODO there should actually be three errors. One for the pending Suspense, one for the fallback task, and one for the task
+    // that does the abort itself. At the moment abort will flush queues and if there is no pending tasks will close the request before
+    // the task which initiated the abort can even be processed. This is a bug but not one that I am fixing with the current change
+    // so I am asserting the current behavior
+    expect(errors).toEqual([
+      {
+        error: 'boom',
+        componentStack: componentStack([
+          'Pending',
+          'Suspense',
+          'body',
+          'html',
+          'App',
+        ]),
+      },
+      {
+        error: 'boom',
+        componentStack: componentStack([
+          'Suspense Fallback',
+          'body',
+          'html',
+          'App',
+        ]),
+        // }, {
+        //   error: 'boom',
+        //   componentStack: componentStack(['Abort', 'body', 'html', 'App'])
+      },
+    ]);
+
+    // We expect the render to throw before streaming anything so the default
+    // document is still loaded
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div id="container" />
+        </body>
+      </html>,
+    );
+  });
+
   it('Will wait to flush Document chunks until all boundaries which might contain a preamble are errored or resolved', async () => {
     let rejectFirst;
     const firstPromise = new Promise((_, reject) => {
