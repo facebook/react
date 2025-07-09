@@ -29,30 +29,13 @@ import {resolveOwner} from './flight/ReactFlightCurrentOwner';
 import {resolveRequest, isAwaitInUserspace} from './ReactFlightServer';
 import {createHook, executionAsyncId, AsyncResource} from 'async_hooks';
 import {enableAsyncDebugInfo} from 'shared/ReactFeatureFlags';
-import {parseStackTrace} from './ReactFlightServerConfig';
+import {parseStackTracePrivate} from './ReactFlightServerConfig';
 
 // $FlowFixMe[method-unbinding]
 const getAsyncId = AsyncResource.prototype.asyncId;
 
 const pendingOperations: Map<number, AsyncSequence> =
   __DEV__ && enableAsyncDebugInfo ? new Map() : (null: any);
-
-// This is a weird one. This map, keeps a dependent Promise alive if the child Promise is still alive.
-// A PromiseNode/AwaitNode cannot hold a strong reference to its own Promise because then it'll never get
-// GC:ed. We only need it if a dependent AwaitNode points to it. We could put a reference in the Node
-// but that would require a GC pass between every Node that gets destroyed. I.e. the root gets destroy()
-// called on it and then that release it from the pendingOperations map which allows the next one to GC
-// and so on. By putting this relationship in a WeakMap this could be done as a single pass in the VM.
-// We don't actually ever have to read from this map since we have WeakRef reference to these Promises
-// if they're still alive. It's also optional information so we could just expose only if GC didn't run.
-const awaitedPromise: WeakMap<Promise<any>, Promise<any>> = __DEV__ &&
-enableAsyncDebugInfo
-  ? new WeakMap()
-  : (null: any);
-const previousPromise: WeakMap<Promise<any>, Promise<any>> = __DEV__ &&
-enableAsyncDebugInfo
-  ? new WeakMap()
-  : (null: any);
 
 // Keep the last resolved await as a workaround for async functions missing data.
 let lastRanAwait: null | AwaitNode = null;
@@ -88,14 +71,6 @@ export function initAsyncDebugInfo(): void {
         const trigger = pendingOperations.get(triggerAsyncId);
         let node: AsyncSequence;
         if (type === 'PROMISE') {
-          if (trigger !== undefined && trigger.promise !== null) {
-            const triggerPromise = trigger.promise.deref();
-            if (triggerPromise !== undefined) {
-              // Keep the awaited Promise alive as long as the child is alive so we can
-              // trace its value at the end.
-              awaitedPromise.set(resource, triggerPromise);
-            }
-          }
           const currentAsyncId = executionAsyncId();
           if (currentAsyncId !== triggerAsyncId) {
             // When you call .then() on a native Promise, or await/Promise.all() a thenable,
@@ -104,18 +79,10 @@ export function initAsyncDebugInfo(): void {
               // We don't track awaits on things that started outside our tracked scope.
               return;
             }
-            const current = pendingOperations.get(currentAsyncId);
-            if (current !== undefined && current.promise !== null) {
-              const currentPromise = current.promise.deref();
-              if (currentPromise !== undefined) {
-                // Keep the previous Promise alive as long as the child is alive so we can
-                // trace its value at the end.
-                previousPromise.set(resource, currentPromise);
-              }
-            }
             // If the thing we're waiting on is another Await we still track that sequence
             // so that we can later pick the best stack trace in user space.
             let stack = null;
+            let promiseRef: WeakRef<Promise<any>>;
             if (
               trigger.stack !== null &&
               (trigger.tag === AWAIT_NODE ||
@@ -124,13 +91,21 @@ export function initAsyncDebugInfo(): void {
               // We already had a stack for an await. In a chain of awaits we'll only need one good stack.
               // We mark it with an empty stack to signal to any await on this await that we have a stack.
               stack = emptyStack;
+              if (resource._debugInfo !== undefined) {
+                // We may need to forward this debug info at the end so we need to retain this promise.
+                promiseRef = new WeakRef((resource: Promise<any>));
+              } else {
+                // Otherwise, we can just refer to the inner one since that's the one we'll log anyway.
+                promiseRef = trigger.promise;
+              }
             } else {
+              promiseRef = new WeakRef((resource: Promise<any>));
               const request = resolveRequest();
               if (request === null) {
                 // We don't collect stacks for awaits that weren't in the scope of a specific render.
               } else {
-                stack = parseStackTrace(new Error(), 5);
-                if (!isAwaitInUserspace(request, stack)) {
+                stack = parseStackTracePrivate(new Error(), 5);
+                if (stack !== null && !isAwaitInUserspace(request, stack)) {
                   // If this await was not done directly in user space, then clear the stack. We won't use it
                   // anyway. This lets future awaits on this await know that we still need to get their stacks
                   // until we find one in user space.
@@ -138,13 +113,14 @@ export function initAsyncDebugInfo(): void {
                 }
               }
             }
+            const current = pendingOperations.get(currentAsyncId);
             node = ({
               tag: UNRESOLVED_AWAIT_NODE,
               owner: resolveOwner(),
               stack: stack,
               start: performance.now(),
               end: -1.1, // set when resolved.
-              promise: new WeakRef((resource: Promise<any>)),
+              promise: promiseRef,
               awaited: trigger, // The thing we're awaiting on. Might get overrriden when we resolve.
               previous: current === undefined ? null : current, // The path that led us here.
             }: UnresolvedAwaitNode);
@@ -153,7 +129,8 @@ export function initAsyncDebugInfo(): void {
             node = ({
               tag: UNRESOLVED_PROMISE_NODE,
               owner: owner,
-              stack: owner === null ? null : parseStackTrace(new Error(), 5),
+              stack:
+                owner === null ? null : parseStackTracePrivate(new Error(), 5),
               start: performance.now(),
               end: -1.1, // Set when we resolve.
               promise: new WeakRef((resource: Promise<any>)),
@@ -175,7 +152,8 @@ export function initAsyncDebugInfo(): void {
             node = ({
               tag: IO_NODE,
               owner: owner,
-              stack: owner === null ? parseStackTrace(new Error(), 3) : null,
+              stack:
+                owner === null ? parseStackTracePrivate(new Error(), 3) : null,
               start: performance.now(),
               end: -1.1, // Only set when pinged.
               promise: null,
@@ -191,7 +169,8 @@ export function initAsyncDebugInfo(): void {
             node = ({
               tag: IO_NODE,
               owner: owner,
-              stack: owner === null ? parseStackTrace(new Error(), 3) : null,
+              stack:
+                owner === null ? parseStackTracePrivate(new Error(), 3) : null,
               start: performance.now(),
               end: -1.1, // Only set when pinged.
               promise: null,

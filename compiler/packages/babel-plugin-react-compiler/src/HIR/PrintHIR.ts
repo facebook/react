@@ -466,7 +466,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       break;
     }
     case 'UnsupportedNode': {
-      value = `UnsupportedNode(${generate(instrValue.node).code})`;
+      value = `UnsupportedNode ${instrValue.node.type}`;
       break;
     }
     case 'LoadLocal': {

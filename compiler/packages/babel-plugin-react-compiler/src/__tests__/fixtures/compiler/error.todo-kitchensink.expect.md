@@ -84,7 +84,7 @@ let moduleLocal = false;
 > 3 |   var x = [];
     |   ^^^^^^^^^^^ Todo: (BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration (3:3)
 
-Todo: (BuildHIR::lowerStatement) Handle ClassDeclaration statements (5:10)
+Todo: Support nested class declarations (5:10)
 
 Todo: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement (20:22)
 
