@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import generate from '@babel/generator';
 import {CompilerError} from '../CompilerError';
 import {printReactiveScopeSummary} from '../ReactiveScopes/PrintReactiveFunction';
 import DisjointSet from '../Utils/DisjointSet';
