@@ -1079,8 +1079,9 @@ function serializeReadableStream(
     signal.removeEventListener('abort', abortStream);
     const reason = signal.reason;
     if (enableHalt && request.type === PRERENDER) {
-      haltTask(streamTask, request);
       request.abortableTasks.delete(streamTask);
+      haltTask(streamTask, request);
+      finishHaltedTask(streamTask, request);
     } else {
       // TODO: Make this use abortTask() instead.
       erroredTask(request, streamTask, reason);
@@ -1208,8 +1209,9 @@ function serializeAsyncIterable(
     signal.removeEventListener('abort', abortIterable);
     const reason = signal.reason;
     if (enableHalt && request.type === PRERENDER) {
-      haltTask(streamTask, request);
       request.abortableTasks.delete(streamTask);
+      haltTask(streamTask, request);
+      finishHaltedTask(streamTask, request);
     } else {
       // TODO: Make this use abortTask() instead.
       erroredTask(request, streamTask, signal.reason);
@@ -2968,7 +2970,9 @@ function serializeBlob(request: Request, blob: Blob): string {
     signal.removeEventListener('abort', abortBlob);
     const reason = signal.reason;
     if (enableHalt && request.type === PRERENDER) {
+      request.abortableTasks.delete(newTask);
       haltTask(newTask, request);
+      finishHaltedTask(newTask, request);
     } else {
       // TODO: Make this use abortTask() instead.
       erroredTask(request, newTask, reason);
