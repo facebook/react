@@ -65,7 +65,7 @@ function Component(props) {
 ## Logs
 
 ```
-{"kind":"CompileError","detail":{"options":{"reason":"Unexpected JSX element within a try statement. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary)","description":null,"severity":"InvalidReact","loc":{"start":{"line":11,"column":11,"index":222},"end":{"line":11,"column":32,"index":243},"filename":"invalid-jsx-in-catch-in-outer-try-with-catch.ts"}}},"fnLoc":null}
+{"kind":"CompileError","detail":{"reason":"Unexpected JSX element within a try statement. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary)","description":null,"severity":"InvalidReact","loc":{"start":{"line":11,"column":11,"index":222},"end":{"line":11,"column":32,"index":243},"filename":"invalid-jsx-in-catch-in-outer-try-with-catch.ts"}},"fnLoc":null}
 {"kind":"CompileSuccess","fnLoc":{"start":{"line":4,"column":0,"index":91},"end":{"line":17,"column":1,"index":298},"filename":"invalid-jsx-in-catch-in-outer-try-with-catch.ts"},"fnName":"Component","memoSlots":4,"memoBlocks":2,"memoValues":2,"prunedMemoBlocks":0,"prunedMemoValues":0}
 ```
       

@@ -11,6 +11,7 @@ function Component(props) {}
 ## Error
 
 ```
+Found 1 errors:
 InvalidConfig: Invalid environment config: the 'disableMemoizationForDebugging' and 'enableChangeDetectionForDebugging' options cannot be used together
 ```
           
