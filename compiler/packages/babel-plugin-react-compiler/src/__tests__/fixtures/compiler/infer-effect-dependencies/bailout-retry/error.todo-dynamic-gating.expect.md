@@ -30,10 +30,16 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
+Found 1 errors:
+InvalidReact: Cannot infer dependencies of this effect. This will break your build!
+
+To resolve, either pass a dependency array or fix reported compiler bailout diagnostics.
+
+error.todo-dynamic-gating.ts:12:2
   10 |   'use memo if(getTrue)';
   11 |   const arr = [];
 > 12 |   useEffectWrapper(() => arr.push(foo));
-     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ InvalidReact: [InferEffectDependencies] React Compiler is unable to infer dependencies of this effect. This will break your build! To resolve, either pass your own dependency array or fix reported compiler bailout diagnostics. (12:12)
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot infer dependencies
   13 |   arr.push(2);
   14 |   return arr;
   15 | }
