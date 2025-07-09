@@ -1359,7 +1359,7 @@ function lowerStatement(
       builder.errors.push({
         reason: `JavaScript 'with' syntax is not supported`,
         description: `'with' syntax is considered deprecated and removed from JavaScript standards, consider alternatives`,
-        severity: ErrorSeverity.InvalidJS,
+        severity: ErrorSeverity.UnsupportedJS,
         loc: stmtPath.node.loc ?? null,
         suggestions: null,
       });
@@ -1371,13 +1371,15 @@ function lowerStatement(
       return;
     }
     case 'ClassDeclaration': {
-      /*
-       * We can in theory support nested classes, similarly to functions where we track values
-       * captured by the class and consider mutations of the instances to mutate the class itself
+      /**
+       * In theory we could support inline class declarations, but this is rare enough in practice
+       * and complex enough to support that we don't anticipate supporting anytime soon. Developers
+       * are encouraged to lift classes out of component/hook declarations.
        */
       builder.errors.push({
-        reason: `Support nested class declarations`,
-        severity: ErrorSeverity.Todo,
+        reason: 'Inline `class` declarations are not supported',
+        description: `Move class declarations outside of components/hooks`,
+        severity: ErrorSeverity.UnsupportedJS,
         loc: stmtPath.node.loc ?? null,
         suggestions: null,
       });
@@ -3560,7 +3562,7 @@ function lowerIdentifier(
           reason: `The 'eval' function is not supported`,
           description:
             'Eval is an anti-pattern in JavaScript, and the code executed cannot be evaluated by React Compiler',
-          severity: ErrorSeverity.InvalidJS,
+          severity: ErrorSeverity.UnsupportedJS,
           loc: exprPath.node.loc ?? null,
           suggestions: null,
         });
