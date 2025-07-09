@@ -4023,9 +4023,19 @@ function emitDebugChunk(
   }
 
   const json: string = serializeDebugModel(request, 500, debugInfo);
-  const row = serializeRowHeader('D', id) + json + '\n';
-  const processedChunk = stringToChunk(row);
-  request.completedRegularChunks.push(processedChunk);
+  if (request.debugDestination !== null) {
+    // Outline the actual timing information to the debug channel.
+    const outlinedId = request.nextChunkId++;
+    const debugRow = outlinedId.toString(16) + ':' + json + '\n';
+    request.pendingDebugChunks++;
+    request.completedDebugChunks.push(stringToChunk(debugRow));
+    const row =
+      serializeRowHeader('D', id) + '"$' + outlinedId.toString(16) + '"\n';
+    request.completedRegularChunks.push(stringToChunk(row));
+  } else {
+    const row = serializeRowHeader('D', id) + json + '\n';
+    request.completedRegularChunks.push(stringToChunk(row));
+  }
 }
 
 function outlineComponentInfo(
@@ -5121,11 +5131,20 @@ function emitTimingChunk(
   }
   request.pendingChunks++;
   const relativeTimestamp = timestamp - request.timeOrigin;
-  const row =
-    serializeRowHeader('D', id) + '{"time":' + relativeTimestamp + '}\n';
-  const processedChunk = stringToChunk(row);
-  // TODO: Move to its own priority queue.
-  request.completedRegularChunks.push(processedChunk);
+  const json = '{"time":' + relativeTimestamp + '}';
+  if (request.debugDestination !== null) {
+    // Outline the actual timing information to the debug channel.
+    const outlinedId = request.nextChunkId++;
+    const debugRow = outlinedId.toString(16) + ':' + json + '\n';
+    request.pendingDebugChunks++;
+    request.completedDebugChunks.push(stringToChunk(debugRow));
+    const row =
+      serializeRowHeader('D', id) + '"$' + outlinedId.toString(16) + '"\n';
+    request.completedRegularChunks.push(stringToChunk(row));
+  } else {
+    const row = serializeRowHeader('D', id) + json + '\n';
+    request.completedRegularChunks.push(stringToChunk(row));
+  }
 }
 
 function advanceTaskTime(
