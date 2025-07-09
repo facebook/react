@@ -44,6 +44,7 @@ import {
   PrintedCompilerPipelineValue,
 } from './Output';
 import {transformFromAstSync} from '@babel/core';
+import {LoggerEvent} from 'babel-plugin-react-compiler/dist/Entrypoint';
 
 function parseInput(
   input: string,
@@ -143,6 +144,7 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
 function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
   const results = new Map<string, Array<PrintedCompilerPipelineValue>>();
   const error = new CompilerError();
+  const otherErrors: Array<CompilerErrorDetail> = [];
   const upsert: (result: PrintedCompilerPipelineValue) => void = result => {
     const entry = results.get(result.name);
     if (Array.isArray(entry)) {
@@ -210,7 +212,11 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
       },
       logger: {
         debugLogIRs: logIR,
-        logEvent: () => {},
+        logEvent: (_filename: string | null, event: LoggerEvent) => {
+          if (event.kind === 'CompileError') {
+            otherErrors.push(new CompilerErrorDetail(event.detail));
+          }
+        },
       },
     });
     transformOutput = invokeCompiler(source, language, opts);
@@ -236,6 +242,10 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
         }),
       );
     }
+  }
+  // Only include logger errors if there weren't other errors
+  if (!error.hasErrors() && otherErrors.length !== 0) {
+    otherErrors.forEach(e => error.push(e));
   }
   if (error.hasErrors()) {
     return [{kind: 'err', results, error: error}, language];
