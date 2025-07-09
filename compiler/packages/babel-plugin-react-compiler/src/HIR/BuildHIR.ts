@@ -1388,10 +1388,13 @@ function lowerStatement(
       });
       return;
     }
-    case 'TypeAlias':
-    case 'TSInterfaceDeclaration':
-    case 'TSTypeAliasDeclaration': {
-      // We do not preserve type annotations/syntax through transformation
+    case 'EnumDeclaration':
+    case 'TSEnumDeclaration': {
+      lowerValueToTemporary(builder, {
+        kind: 'UnsupportedNode',
+        loc: stmtPath.node.loc ?? GeneratedSource,
+        node: stmtPath.node,
+      });
       return;
     }
     case 'DeclareClass':
@@ -1404,15 +1407,19 @@ function lowerStatement(
     case 'DeclareOpaqueType':
     case 'DeclareTypeAlias':
     case 'DeclareVariable':
-    case 'EnumDeclaration':
+    case 'InterfaceDeclaration':
+    case 'OpaqueType':
+    case 'TSDeclareFunction':
+    case 'TSInterfaceDeclaration':
+    case 'TSTypeAliasDeclaration':
+    case 'TypeAlias': {
+      // We do not preserve type annotations/syntax through transformation
+      return;
+    }
     case 'ExportAllDeclaration':
     case 'ExportDefaultDeclaration':
     case 'ExportNamedDeclaration':
     case 'ImportDeclaration':
-    case 'InterfaceDeclaration':
-    case 'OpaqueType':
-    case 'TSDeclareFunction':
-    case 'TSEnumDeclaration':
     case 'TSExportAssignment':
     case 'TSImportEqualsDeclaration':
     case 'TSModuleDeclaration':
