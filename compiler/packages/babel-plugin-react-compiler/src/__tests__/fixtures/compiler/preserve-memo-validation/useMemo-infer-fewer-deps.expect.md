@@ -29,15 +29,13 @@ import { useMemo } from "react";
 function useFoo(a, b) {
   const $ = _c(2);
   let t0;
-  let t1;
   if ($[0] !== a) {
-    t1 = [a];
+    t0 = [a];
     $[0] = a;
-    $[1] = t1;
+    $[1] = t0;
   } else {
-    t1 = $[1];
+    t0 = $[1];
   }
-  t0 = t1;
   return t0;
 }
 

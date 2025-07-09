@@ -445,17 +445,34 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
      */
     this.recordTemporaries(instruction, state);
     const value = instruction.value;
+    // Track reassignments from inlining of manual memo
     if (
       value.kind === 'StoreLocal' &&
       value.lvalue.kind === 'Reassign' &&
       state.manualMemoState != null
     ) {
+      // Complex cases of inlining end up with a temporary that is reassigned
       const ids = getOrInsertDefault(
         state.manualMemoState.reassignments,
         value.lvalue.place.identifier.declarationId,
         new Set(),
       );
       ids.add(value.value.identifier);
+    }
+    if (
+      value.kind === 'LoadLocal' &&
+      value.place.identifier.scope != null &&
+      instruction.lvalue != null &&
+      instruction.lvalue.identifier.scope == null &&
+      state.manualMemoState != null
+    ) {
+      // Simpler cases of inlining assign to the original IIFE lvalue
+      const ids = getOrInsertDefault(
+        state.manualMemoState.reassignments,
+        instruction.lvalue.identifier.declarationId,
+        new Set(),
+      );
+      ids.add(value.place.identifier);
     }
     if (value.kind === 'StartMemoize') {
       let depsFromSource: Array<ManualMemoDependency> | null = null;

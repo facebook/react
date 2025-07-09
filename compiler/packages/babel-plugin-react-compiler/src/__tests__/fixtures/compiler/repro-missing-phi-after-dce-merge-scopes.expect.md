@@ -2,19 +2,25 @@
 ## Input
 
 ```javascript
-function Foo() {
-  return (function t() {
-    let x = {};
-    return function a(x = () => {}) {
-      return x;
-    };
-  })();
+function Component() {
+  let v3, v4, acc;
+  v3 = false;
+  v4 = v3;
+  acc = v3;
+  if (acc) {
+    acc = true;
+    v3 = acc;
+  }
+  if (acc) {
+    v3 = v4;
+  }
+  v4 = v3;
+  return [acc, v3, v4];
 }
 
 export const FIXTURE_ENTRYPOINT = {
-  fn: Foo,
+  fn: Component,
   params: [],
-  isComponent: false,
 };
 
 ```
@@ -23,27 +29,24 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime";
-function Foo() {
+function Component() {
   const $ = _c(1);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = function a(t1) {
-      const x_0 = t1 === undefined ? _temp : t1;
-      return x_0;
-    };
+    t0 = [false, false, false];
     $[0] = t0;
   } else {
     t0 = $[0];
   }
   return t0;
 }
-function _temp() {}
 
 export const FIXTURE_ENTRYPOINT = {
-  fn: Foo,
+  fn: Component,
   params: [],
-  isComponent: false,
 };
 
 ```
       
+### Eval output
+(kind: ok) [false,false,false]

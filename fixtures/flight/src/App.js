@@ -120,9 +120,68 @@ async function ServerComponent({noCache}) {
   return await fetchThirdParty(noCache);
 }
 
+let veryDeepObject = [
+  {
+    bar: {
+      baz: {
+        a: {},
+      },
+    },
+  },
+  {
+    bar: {
+      baz: {
+        a: {},
+      },
+    },
+  },
+  {
+    bar: {
+      baz: {
+        a: {},
+      },
+    },
+  },
+  {
+    bar: {
+      baz: {
+        a: {
+          b: {
+            c: {
+              d: {
+                e: {
+                  f: {
+                    g: {
+                      h: {
+                        i: {
+                          j: {
+                            k: {
+                              l: {
+                                m: {
+                                  yay: 'You reached the end',
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+];
+
 export default async function App({prerender, noCache}) {
   const res = await fetch('http://localhost:3001/todos');
   const todos = await res.json();
+
+  console.log('Expand me:', veryDeepObject);
 
   const dedupedChild = <ServerComponent noCache={noCache} />;
   const message = getServerState();

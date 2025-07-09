@@ -62,20 +62,18 @@ function Component() {
   }
   const filtered = t2;
   let t3;
-  let t4;
   if ($[6] !== filtered) {
-    t4 = filtered.map();
+    t3 = filtered.map();
     $[6] = filtered;
-    $[7] = t4;
+    $[7] = t3;
   } else {
-    t4 = $[7];
+    t3 = $[7];
   }
-  t3 = t4;
   const map = t3;
   const index = filtered.findIndex(_temp3);
-  let t5;
+  let t4;
   if ($[8] !== index || $[9] !== map) {
-    t5 = (
+    t4 = (
       <div>
         {map}
         {index}
@@ -83,11 +81,11 @@ function Component() {
     );
     $[8] = index;
     $[9] = map;
-    $[10] = t5;
+    $[10] = t4;
   } else {
-    t5 = $[10];
+    t4 = $[10];
   }
-  return t5;
+  return t4;
 }
 function _temp3(x) {
   return x === null;

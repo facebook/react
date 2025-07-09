@@ -1064,12 +1064,29 @@ class PruneScopesTransform extends ReactiveFunctionTransform<
 
     const value = instruction.value;
     if (value.kind === 'StoreLocal' && value.lvalue.kind === 'Reassign') {
+      // Complex cases of useMemo inlining result in a temporary that is reassigned
       const ids = getOrInsertDefault(
         this.reassignments,
         value.lvalue.place.identifier.declarationId,
         new Set(),
       );
       ids.add(value.value.identifier);
+    } else if (
+      value.kind === 'LoadLocal' &&
+      value.place.identifier.scope != null &&
+      instruction.lvalue != null &&
+      instruction.lvalue.identifier.scope == null
+    ) {
+      /*
+       * Simpler cases result in a direct assignment to the original lvalue, with a
+       * LoadLocal
+       */
+      const ids = getOrInsertDefault(
+        this.reassignments,
+        instruction.lvalue.identifier.declarationId,
+        new Set(),
+      );
+      ids.add(value.place.identifier);
     } else if (value.kind === 'FinishMemoize') {
       let decls;
       if (value.decl.identifier.scope == null) {
