@@ -2048,6 +2048,18 @@ function parseModelString(
           if (value.length > 2) {
             const debugChannel = response._debugChannel;
             if (debugChannel) {
+              if (value[2] === '@') {
+                // This is a deferred Promise.
+                const ref = value.slice(3); // We assume this doesn't have a path just id.
+                const id = parseInt(ref, 16);
+                if (!response._chunks.has(id)) {
+                  // We haven't seen this id before. Query the server to start sending it.
+                  debugChannel('P:' + ref);
+                }
+                // Start waiting. This now creates a pending chunk if it doesn't already exist.
+                // This is the actual Promise we're waiting for.
+                return getChunk(response, id);
+              }
               const ref = value.slice(2); // We assume this doesn't have a path just id.
               const id = parseInt(ref, 16);
               if (!response._chunks.has(id)) {
