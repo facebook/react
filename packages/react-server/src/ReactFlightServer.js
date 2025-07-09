@@ -1521,7 +1521,7 @@ function renderFunctionComponent<Props>(
       const componentName =
         (Component: any).displayName || Component.name || '';
       const componentEnv = (0, request.environmentName)();
-      request.pendingDebugChunks++;
+      request.pendingChunks++;
       componentDebugInfo = ({
         name: componentName,
         env: componentEnv,
@@ -2276,7 +2276,7 @@ function visitAsyncNode(
               const env = (0, request.environmentName)();
               advanceTaskTime(request, task, startTime);
               // Then emit a reference to us awaiting it in the current task.
-              request.pendingDebugChunks++;
+              request.pendingChunks++;
               emitDebugChunk(request, task.id, {
                 awaited: ((ioNode: any): ReactIOInfo), // This is deduped by this reference.
                 env: env,
@@ -2336,7 +2336,7 @@ function emitAsyncSequence(
   } else if (awaitedNode !== null) {
     // Nothing in user space (unfiltered stack) awaited this.
     serializeIONode(request, awaitedNode, awaitedNode.promise);
-    request.pendingDebugChunks++;
+    request.pendingChunks++;
     // We log the environment at the time when we ping which may be later than what the
     // environment was when we actually started awaiting.
     const env = (0, request.environmentName)();
@@ -4025,7 +4025,7 @@ function emitDebugChunk(
   const json: string = serializeDebugModel(request, 500, debugInfo);
   const row = serializeRowHeader('D', id) + json + '\n';
   const processedChunk = stringToChunk(row);
-  request.completedDebugChunks.push(processedChunk);
+  request.completedRegularChunks.push(processedChunk);
 }
 
 function outlineComponentInfo(
@@ -4943,7 +4943,7 @@ function forwardDebugInfo(
         // being no references to this as an owner.
         outlineComponentInfo(request, (info: any));
         // Emit a reference to the outlined one.
-        request.pendingDebugChunks++;
+        request.pendingChunks++;
         emitDebugChunk(request, id, info);
       } else if (info.awaited) {
         const ioInfo = info.awaited;
@@ -4984,11 +4984,11 @@ function forwardDebugInfo(
             // $FlowFixMe[cannot-write]
             debugAsyncInfo.stack = debugStack;
           }
-          request.pendingDebugChunks++;
+          request.pendingChunks++;
           emitDebugChunk(request, id, debugAsyncInfo);
         }
       } else {
-        request.pendingDebugChunks++;
+        request.pendingChunks++;
         emitDebugChunk(request, id, info);
       }
     }
@@ -5090,7 +5090,7 @@ function forwardDebugInfoFromAbortedTask(request: Request, task: Task): void {
           // complete in time before aborting.
           // The best we can do is try to emit the stack of where this Promise was created.
           serializeIONode(request, node, null);
-          request.pendingDebugChunks++;
+          request.pendingChunks++;
           const env = (0, request.environmentName)();
           const asyncInfo: ReactAsyncInfo = {
             awaited: ((node: any): ReactIOInfo), // This is deduped by this reference.
@@ -5119,13 +5119,13 @@ function emitTimingChunk(
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
     return;
   }
-  request.pendingDebugChunks++;
+  request.pendingChunks++;
   const relativeTimestamp = timestamp - request.timeOrigin;
   const row =
     serializeRowHeader('D', id) + '{"time":' + relativeTimestamp + '}\n';
   const processedChunk = stringToChunk(row);
   // TODO: Move to its own priority queue.
-  request.completedDebugChunks.push(processedChunk);
+  request.completedRegularChunks.push(processedChunk);
 }
 
 function advanceTaskTime(
@@ -5331,7 +5331,7 @@ function retryTask(request: Request, task: Task): void {
     if (__DEV__) {
       const currentEnv = (0, request.environmentName)();
       if (currentEnv !== task.environmentName) {
-        request.pendingDebugChunks++;
+        request.pendingChunks++;
         // The environment changed since we last emitted any debug information for this
         // task. We emit an entry that just includes the environment name change.
         emitDebugChunk(request, task.id, {env: currentEnv});
