@@ -1774,6 +1774,40 @@ function applyConstructor(
   return undefined;
 }
 
+function defineLazyGetter<T>(
+  response: Response,
+  chunk: SomeChunk<T>,
+  parentObject: Object,
+  key: string,
+): any {
+  // We don't immediately initialize it even if it's resolved.
+  // Instead, we wait for the getter to get accessed.
+  Object.defineProperty(parentObject, key, {
+    get: function () {
+      if (chunk.status === RESOLVED_MODEL) {
+        // If it was now resolved, then we initialize it. This may then discover
+        // a new set of lazy references that are then asked for eagerly in case
+        // we get that deep.
+        initializeModelChunk(chunk);
+      }
+      switch (chunk.status) {
+        case INITIALIZED: {
+          return chunk.value;
+        }
+        case ERRORED:
+          throw chunk.reason;
+      }
+      // Otherwise, we didn't have enough time to load the object before it was
+      // accessed or the connection closed. So we just log that it was omitted.
+      // TODO: We should ideally throw here to indicate a difference.
+      return OMITTED_PROP_ERROR;
+    },
+    enumerable: true,
+    configurable: false,
+  });
+  return null;
+}
+
 function extractIterator(response: Response, model: Array<any>): Iterator<any> {
   // $FlowFixMe[incompatible-use]: This uses raw Symbols because we're extracting from a native array.
   return model[Symbol.iterator]();
@@ -2014,8 +2048,19 @@ function parseModelString(
           if (value.length > 2) {
             const debugChannel = response._debugChannel;
             if (debugChannel) {
-              const ref = value.slice(2);
-              debugChannel('R:' + ref); // Release this reference immediately
+              const ref = value.slice(2); // We assume this doesn't have a path just id.
+              const id = parseInt(ref, 16);
+              if (!response._chunks.has(id)) {
+                // We haven't seen this id before. Query the server to start sending it.
+                debugChannel('Q:' + ref);
+              }
+              // Start waiting. This now creates a pending chunk if it doesn't already exist.
+              const chunk = getChunk(response, id);
+              if (chunk.status === INITIALIZED) {
+                // We already loaded this before. We can just use the real value.
+                return chunk.value;
+              }
+              return defineLazyGetter(response, chunk, parentObject, key);
             }
           }
 

@@ -251,6 +251,46 @@ function filterStackTrace(
   return filteredStack;
 }
 
+function hasUnfilteredFrame(request: Request, stack: ReactStackTrace): boolean {
+  const filterStackFrame = request.filterStackFrame;
+  for (let i = 0; i < stack.length; i++) {
+    const callsite = stack[i];
+    const functionName = callsite[0];
+    const url = devirtualizeURL(callsite[1]);
+    const lineNumber = callsite[2];
+    const columnNumber = callsite[3];
+    if (filterStackFrame(url, functionName, lineNumber, columnNumber)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function isAwaitInUserspace(
+  request: Request,
+  stack: ReactStackTrace,
+): boolean {
+  let firstFrame = 0;
+  while (stack.length > firstFrame && stack[firstFrame][0] === 'Promise.then') {
+    // Skip Promise.then frame itself.
+    firstFrame++;
+  }
+  if (stack.length > firstFrame) {
+    // Check if the very first stack frame that awaited this Promise was in user space.
+    // TODO: This doesn't take into account wrapper functions such as our fake .then()
+    // in FlightClient which will always be considered third party awaits if you call
+    // .then directly.
+    const filterStackFrame = request.filterStackFrame;
+    const callsite = stack[firstFrame];
+    const functionName = callsite[0];
+    const url = devirtualizeURL(callsite[1]);
+    const lineNumber = callsite[2];
+    const columnNumber = callsite[3];
+    return filterStackFrame(url, functionName, lineNumber, columnNumber);
+  }
+  return false;
+}
+
 initAsyncDebugInfo();
 
 function patchConsole(consoleInst: typeof console, methodName: string) {
@@ -2088,7 +2128,10 @@ function visitAsyncNode(
             // If the ioNode was a Promise, then that means we found one in user space since otherwise
             // we would've returned an IO node. We assume this has the best stack.
             match = ioNode;
-          } else if (filterStackTrace(request, node.stack).length === 0) {
+          } else if (
+            node.stack === null ||
+            !hasUnfilteredFrame(request, node.stack)
+          ) {
             // If this Promise was created inside only third party code, then try to use
             // the inner I/O node instead. This could happen if third party calls into first
             // party to perform some I/O.
@@ -2101,7 +2144,10 @@ function visitAsyncNode(
             // We aborted this render. If this Promise spanned the abort time it was probably the
             // Promise that was aborted. This won't necessarily have I/O associated with it but
             // it's a point of interest.
-            if (filterStackTrace(request, node.stack).length > 0) {
+            if (
+              node.stack !== null &&
+              hasUnfilteredFrame(request, node.stack)
+            ) {
               match = node;
             }
           }
@@ -2147,35 +2193,10 @@ function visitAsyncNode(
             // just part of a previous component's rendering.
             match = ioNode;
           } else {
-            let isAwaitInUserspace = false;
-            const fullStack = node.stack;
-            let firstFrame = 0;
-            while (
-              fullStack.length > firstFrame &&
-              fullStack[firstFrame][0] === 'Promise.then'
+            if (
+              node.stack === null ||
+              !isAwaitInUserspace(request, node.stack)
             ) {
-              // Skip Promise.then frame itself.
-              firstFrame++;
-            }
-            if (fullStack.length > firstFrame) {
-              // Check if the very first stack frame that awaited this Promise was in user space.
-              // TODO: This doesn't take into account wrapper functions such as our fake .then()
-              // in FlightClient which will always be considered third party awaits if you call
-              // .then directly.
-              const filterStackFrame = request.filterStackFrame;
-              const callsite = fullStack[firstFrame];
-              const functionName = callsite[0];
-              const url = devirtualizeURL(callsite[1]);
-              const lineNumber = callsite[2];
-              const columnNumber = callsite[3];
-              isAwaitInUserspace = filterStackFrame(
-                url,
-                functionName,
-                lineNumber,
-                columnNumber,
-              );
-            }
-            if (!isAwaitInUserspace) {
               // If this await was fully filtered out, then it was inside third party code
               // such as in an external library. We return the I/O node and try another await.
               match = ioNode;
@@ -2204,7 +2225,10 @@ function visitAsyncNode(
                 awaited: ((ioNode: any): ReactIOInfo), // This is deduped by this reference.
                 env: env,
                 owner: node.owner,
-                stack: filterStackTrace(request, node.stack),
+                stack:
+                  node.stack === null
+                    ? null
+                    : filterStackTrace(request, node.stack),
               });
               // Mark the end time of the await. If we're aborting then we don't emit this
               // to signal that this never resolved inside this render.
@@ -4048,10 +4072,6 @@ function emitIOInfoChunk(
     start: relativeStartTimestamp,
     end: relativeEndTimestamp,
   };
-  if (value !== undefined) {
-    // $FlowFixMe[cannot-write]
-    debugIOInfo.value = value;
-  }
   if (env != null) {
     // $FlowFixMe[cannot-write]
     debugIOInfo.env = env;
@@ -4063,6 +4083,10 @@ function emitIOInfoChunk(
   if (owner != null) {
     // $FlowFixMe[cannot-write]
     debugIOInfo.owner = owner;
+  }
+  if (value !== undefined) {
+    // $FlowFixMe[cannot-write]
+    debugIOInfo.value = value;
   }
   const json: string = serializeDebugModel(request, objectLimit, debugIOInfo);
   const row = id.toString(16) + ':J' + json + '\n';
@@ -4796,10 +4820,15 @@ function emitConsoleChunk(
   const payload = [methodName, stackTrace, owner, env];
   // $FlowFixMe[method-unbinding]
   payload.push.apply(payload, args);
-  let json = serializeDebugModel(request, 500, payload);
+  const objectLimit = request.deferredDebugObjects === null ? 500 : 10;
+  let json = serializeDebugModel(
+    request,
+    objectLimit + stackTrace.length,
+    payload,
+  );
   if (json[0] !== '[') {
     // This looks like an error. Try a simpler object.
-    json = serializeDebugModel(request, 500, [
+    json = serializeDebugModel(request, 10 + stackTrace.length, [
       methodName,
       stackTrace,
       owner,
@@ -5736,6 +5765,8 @@ export function resolveDebugMessage(request: Request, message: string): void {
         if (retainedValue !== undefined) {
           // If we still have this object, and haven't emitted it before, emit it on the stream.
           const counter = {objectLimit: 10};
+          deferredDebugObjects.retained.delete(id);
+          deferredDebugObjects.existing.delete(retainedValue);
           emitOutlinedDebugModelChunk(request, id, counter, retainedValue);
           enqueueFlush(request);
         }
