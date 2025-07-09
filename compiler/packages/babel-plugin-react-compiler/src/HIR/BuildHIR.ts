@@ -1397,6 +1397,41 @@ function lowerStatement(
       });
       return;
     }
+    case 'ExportAllDeclaration':
+    case 'ExportDefaultDeclaration':
+    case 'ExportNamedDeclaration':
+    case 'ImportDeclaration':
+    case 'TSExportAssignment':
+    case 'TSImportEqualsDeclaration': {
+      builder.errors.push({
+        reason:
+          'JavaScript `import` and `export` statements may only appear at the top level of a module',
+        severity: ErrorSeverity.InvalidJS,
+        loc: stmtPath.node.loc ?? null,
+        suggestions: null,
+      });
+      lowerValueToTemporary(builder, {
+        kind: 'UnsupportedNode',
+        loc: stmtPath.node.loc ?? GeneratedSource,
+        node: stmtPath.node,
+      });
+      return;
+    }
+    case 'TSNamespaceExportDeclaration': {
+      builder.errors.push({
+        reason:
+          'TypeScript `namespace` statements may only appear at the top level of a module',
+        severity: ErrorSeverity.InvalidJS,
+        loc: stmtPath.node.loc ?? null,
+        suggestions: null,
+      });
+      lowerValueToTemporary(builder, {
+        kind: 'UnsupportedNode',
+        loc: stmtPath.node.loc ?? GeneratedSource,
+        node: stmtPath.node,
+      });
+      return;
+    }
     case 'DeclareClass':
     case 'DeclareExportAllDeclaration':
     case 'DeclareExportDeclaration':
@@ -1411,30 +1446,10 @@ function lowerStatement(
     case 'OpaqueType':
     case 'TSDeclareFunction':
     case 'TSInterfaceDeclaration':
+    case 'TSModuleDeclaration':
     case 'TSTypeAliasDeclaration':
     case 'TypeAlias': {
       // We do not preserve type annotations/syntax through transformation
-      return;
-    }
-    case 'ExportAllDeclaration':
-    case 'ExportDefaultDeclaration':
-    case 'ExportNamedDeclaration':
-    case 'ImportDeclaration':
-    case 'TSExportAssignment':
-    case 'TSImportEqualsDeclaration':
-    case 'TSModuleDeclaration':
-    case 'TSNamespaceExportDeclaration': {
-      builder.errors.push({
-        reason: `(BuildHIR::lowerStatement) Handle ${stmtPath.type} statements`,
-        severity: ErrorSeverity.Todo,
-        loc: stmtPath.node.loc ?? null,
-        suggestions: null,
-      });
-      lowerValueToTemporary(builder, {
-        kind: 'UnsupportedNode',
-        loc: stmtPath.node.loc ?? GeneratedSource,
-        node: stmtPath.node,
-      });
       return;
     }
     default: {
