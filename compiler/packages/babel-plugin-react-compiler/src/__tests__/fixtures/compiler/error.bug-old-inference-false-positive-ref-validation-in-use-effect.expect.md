@@ -36,8 +36,10 @@ function Component() {
 ## Error
 
 ```
-Found 2 errors:
-Error: This argument is a function which may reassign or mutate local variables after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead
+Found 1 error:
+Error: Cannot modify local variables after render completes
+
+This argument is a function which may reassign or mutate local variables after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead
 
 error.bug-old-inference-false-positive-ref-validation-in-use-effect.ts:20:12
   18 |   );
@@ -51,24 +53,19 @@ error.bug-old-inference-false-positive-ref-validation-in-use-effect.ts:20:12
 > 23 |     }
      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 > 24 |   }, [update]);
-     | ^^^^ This argument is a function which may reassign or mutate local variables after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead
+     | ^^^^ This function may (indirectly) reassign or modify local variables after render
   25 |
   26 |   return 'ok';
   27 | }
-
-
-Error: The function modifies a local variable here
 
 error.bug-old-inference-false-positive-ref-validation-in-use-effect.ts:14:6
   12 |         ...partialParams,
   13 |       };
 > 14 |       nextParams.param = 'value';
-     |       ^^^^^^^^^^ The function modifies a local variable here
+     |       ^^^^^^^^^^ This modifies a local variable
   15 |       console.log(nextParams);
   16 |     },
   17 |     [params]
-
-
 ```
           
       
