@@ -666,7 +666,6 @@ export function resumeRequest(
   request.nextSegmentId = postponedState.nextSegmentId;
 
   if (typeof postponedState.replaySlots === 'number') {
-    const resumedId = postponedState.replaySlots;
     // We have a resume slot at the very root. This is effectively just a full rerender.
     const rootSegment = createPendingSegment(
       request,
@@ -677,7 +676,6 @@ export function resumeRequest(
       false,
       false,
     );
-    rootSegment.id = resumedId;
     // There is no parent so conceptually, we're unblocked to flush this segment.
     rootSegment.parentFlushed = true;
     const rootTask = createRenderTask(
@@ -6326,6 +6324,7 @@ export function getPostponedState(request: Request): null | PostponedState {
     return null;
   }
   let replaySlots: ResumeSlots;
+  let nextSegmentId: number;
   if (
     request.completedRootSegment !== null &&
     // The Root postponed
@@ -6333,17 +6332,21 @@ export function getPostponedState(request: Request): null | PostponedState {
       // Or the Preamble was not available
       request.completedPreambleSegments === null)
   ) {
-    // This is necessary for the pending preamble case and is idempotent for the
-    // postponed root case
-    replaySlots = request.completedRootSegment.id;
+    nextSegmentId = 0;
+    // We need to ensure that on resume we retry the root. We use a number
+    // type for the replaySlots to signify this (see resumeRequest).
+    // The value -1 represents an unassigned ID but is not functionally meaningful
+    // for resuming at the root.
+    replaySlots = -1;
     // We either postponed the root or we did not have a preamble to flush
     resetResumableState(request.resumableState, request.renderState);
   } else {
+    nextSegmentId = request.nextSegmentId;
     replaySlots = trackedPostpones.rootSlots;
     completeResumableState(request.resumableState);
   }
   return {
-    nextSegmentId: request.nextSegmentId,
+    nextSegmentId,
     rootFormatContext: request.rootFormatContext,
     progressiveChunkSize: request.progressiveChunkSize,
     resumableState: request.resumableState,
