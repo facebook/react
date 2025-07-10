@@ -127,7 +127,7 @@ function startReadingFromStream(
 }
 
 export type Options = {
-  debugChannel?: {writable?: WritableStream, ...},
+  debugChannel?: {writable?: WritableStream, readable?: ReadableStream, ...},
   temporaryReferences?: TemporaryReferenceSet,
   replayConsoleLogs?: boolean,
   environmentName?: string,
@@ -159,6 +159,14 @@ export function createFromReadableStream<T>(
       ? createDebugCallbackFromWritableStream(options.debugChannel.writable)
       : undefined,
   );
+  if (
+    __DEV__ &&
+    options &&
+    options.debugChannel &&
+    options.debugChannel.readable
+  ) {
+    startReadingFromStream(response, options.debugChannel.readable);
+  }
   startReadingFromStream(response, stream);
   return getRoot(response);
 }
@@ -191,6 +199,14 @@ export function createFromFetch<T>(
   );
   promiseForResponse.then(
     function (r) {
+      if (
+        __DEV__ &&
+        options &&
+        options.debugChannel &&
+        options.debugChannel.readable
+      ) {
+        startReadingFromStream(response, options.debugChannel.readable);
+      }
       startReadingFromStream(response, (r.body: any));
     },
     function (e) {

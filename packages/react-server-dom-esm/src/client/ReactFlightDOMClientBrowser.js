@@ -45,7 +45,7 @@ type CallServerCallback = <A, T>(string, args: A) => Promise<T>;
 export type Options = {
   moduleBaseURL?: string,
   callServer?: CallServerCallback,
-  debugChannel?: {writable?: WritableStream, ...},
+  debugChannel?: {writable?: WritableStream, readable?: ReadableStream, ...},
   temporaryReferences?: TemporaryReferenceSet,
   findSourceMapURL?: FindSourceMapURLCallback,
   replayConsoleLogs?: boolean,
@@ -130,6 +130,14 @@ function createFromReadableStream<T>(
   options?: Options,
 ): Thenable<T> {
   const response: FlightResponse = createResponseFromOptions(options);
+  if (
+    __DEV__ &&
+    options &&
+    options.debugChannel &&
+    options.debugChannel.readable
+  ) {
+    startReadingFromStream(response, options.debugChannel.readable);
+  }
   startReadingFromStream(response, stream);
   return getRoot(response);
 }
@@ -141,6 +149,14 @@ function createFromFetch<T>(
   const response: FlightResponse = createResponseFromOptions(options);
   promiseForResponse.then(
     function (r) {
+      if (
+        __DEV__ &&
+        options &&
+        options.debugChannel &&
+        options.debugChannel.readable
+      ) {
+        startReadingFromStream(response, options.debugChannel.readable);
+      }
       startReadingFromStream(response, (r.body: any));
     },
     function (e) {
