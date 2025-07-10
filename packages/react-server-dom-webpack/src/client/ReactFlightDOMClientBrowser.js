@@ -23,6 +23,7 @@ import {
   getRoot,
   reportGlobalError,
   processBinaryChunk,
+  processStringChunk,
   close,
   injectIntoDevTools,
 } from 'react-client/src/ReactFlightClient';
@@ -96,6 +97,44 @@ function createResponseFromOptions(options: void | Options) {
   );
 }
 
+function startReadingFromUniversalStream(
+  response: FlightResponse,
+  stream: ReadableStream,
+): void {
+  // This is the same as startReadingFromStream except this allows WebSocketStreams which
+  // return ArrayBuffer and string chunks instead of Uint8Array chunks. We could potentially
+  // always allow streams with variable chunk types.
+  const streamState = createStreamState();
+  const reader = stream.getReader();
+  function progress({
+    done,
+    value,
+  }: {
+    done: boolean,
+    value: ?any,
+    ...
+  }): void | Promise<void> {
+    if (done) {
+      close(response);
+      return;
+    }
+    if (value instanceof ArrayBuffer) {
+      // WebSockets can produce ArrayBuffer values in ReadableStreams.
+      processBinaryChunk(response, streamState, new Uint8Array(value));
+    } else if (typeof value === 'string') {
+      // WebSockets can produce string values in ReadableStreams.
+      processStringChunk(response, streamState, value);
+    } else {
+      processBinaryChunk(response, streamState, value);
+    }
+    return reader.read().then(progress).catch(error);
+  }
+  function error(e: any) {
+    reportGlobalError(response, e);
+  }
+  reader.read().then(progress).catch(error);
+}
+
 function startReadingFromStream(
   response: FlightResponse,
   stream: ReadableStream,
@@ -135,7 +174,7 @@ function createFromReadableStream<T>(
     options.debugChannel &&
     options.debugChannel.readable
   ) {
-    startReadingFromStream(response, options.debugChannel.readable);
+    startReadingFromUniversalStream(response, options.debugChannel.readable);
   }
   startReadingFromStream(response, stream);
   return getRoot(response);
