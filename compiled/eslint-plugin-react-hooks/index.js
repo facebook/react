@@ -30936,7 +30936,7 @@ function lower$1(func, env, bindings = null, capturedRefs = new Map()) {
     });
 }
 function lowerStatement(builder, stmtPath, label = null) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, _21, _22, _23, _24, _25, _26, _27, _28, _29;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33;
     const stmtNode = stmtPath.node;
     switch (stmtNode.type) {
         case 'ThrowStatement': {
@@ -31823,12 +31823,40 @@ function lowerStatement(builder, stmtPath, label = null) {
             }, continuationBlock);
             return;
         }
+        case 'WithStatement': {
+            builder.errors.push({
+                reason: `JavaScript 'with' syntax is not supported`,
+                description: `'with' syntax is considered deprecated and removed from JavaScript standards, consider alternatives`,
+                severity: ErrorSeverity.InvalidJS,
+                loc: (_28 = stmtPath.node.loc) !== null && _28 !== void 0 ? _28 : null,
+                suggestions: null,
+            });
+            lowerValueToTemporary(builder, {
+                kind: 'UnsupportedNode',
+                loc: (_29 = stmtPath.node.loc) !== null && _29 !== void 0 ? _29 : GeneratedSource,
+                node: stmtPath.node,
+            });
+            return;
+        }
+        case 'ClassDeclaration': {
+            builder.errors.push({
+                reason: `Support nested class declarations`,
+                severity: ErrorSeverity.Todo,
+                loc: (_30 = stmtPath.node.loc) !== null && _30 !== void 0 ? _30 : null,
+                suggestions: null,
+            });
+            lowerValueToTemporary(builder, {
+                kind: 'UnsupportedNode',
+                loc: (_31 = stmtPath.node.loc) !== null && _31 !== void 0 ? _31 : GeneratedSource,
+                node: stmtPath.node,
+            });
+            return;
+        }
         case 'TypeAlias':
         case 'TSInterfaceDeclaration':
         case 'TSTypeAliasDeclaration': {
             return;
         }
-        case 'ClassDeclaration':
         case 'DeclareClass':
         case 'DeclareExportAllDeclaration':
         case 'DeclareExportDeclaration':
@@ -31851,17 +31879,16 @@ function lowerStatement(builder, stmtPath, label = null) {
         case 'TSExportAssignment':
         case 'TSImportEqualsDeclaration':
         case 'TSModuleDeclaration':
-        case 'TSNamespaceExportDeclaration':
-        case 'WithStatement': {
+        case 'TSNamespaceExportDeclaration': {
             builder.errors.push({
                 reason: `(BuildHIR::lowerStatement) Handle ${stmtPath.type} statements`,
                 severity: ErrorSeverity.Todo,
-                loc: (_28 = stmtPath.node.loc) !== null && _28 !== void 0 ? _28 : null,
+                loc: (_32 = stmtPath.node.loc) !== null && _32 !== void 0 ? _32 : null,
                 suggestions: null,
             });
             lowerValueToTemporary(builder, {
                 kind: 'UnsupportedNode',
-                loc: (_29 = stmtPath.node.loc) !== null && _29 !== void 0 ? _29 : GeneratedSource,
+                loc: (_33 = stmtPath.node.loc) !== null && _33 !== void 0 ? _33 : GeneratedSource,
                 node: stmtPath.node,
             });
             return;
@@ -33634,7 +33661,7 @@ function lowerValueToTemporary(builder, value) {
     return place;
 }
 function lowerIdentifier(builder, exprPath) {
-    var _a;
+    var _a, _b;
     const exprNode = exprPath.node;
     const exprLoc = (_a = exprNode.loc) !== null && _a !== void 0 ? _a : GeneratedSource;
     const binding = builder.resolveIdentifier(exprPath);
@@ -33650,6 +33677,15 @@ function lowerIdentifier(builder, exprPath) {
             return place;
         }
         default: {
+            if (binding.kind === 'Global' && binding.name === 'eval') {
+                builder.errors.push({
+                    reason: `The 'eval' function is not supported`,
+                    description: 'Eval is an anti-pattern in JavaScript, and the code executed cannot be evaluated by React Compiler',
+                    severity: ErrorSeverity.InvalidJS,
+                    loc: (_b = exprPath.node.loc) !== null && _b !== void 0 ? _b : null,
+                    suggestions: null,
+                });
+            }
             return lowerValueToTemporary(builder, {
                 kind: 'LoadGlobal',
                 binding,
