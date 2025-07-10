@@ -342,11 +342,6 @@ type Response = {
   _chunks: Map<number, SomeChunk<any>>,
   _fromJSON: (key: string, value: JSONValue) => any,
   _stringDecoder: StringDecoder,
-  _rowState: RowParserState,
-  _rowID: number, // parts of a row ID parsed so far
-  _rowTag: number, // 0 indicates that we're currently parsing the row ID
-  _rowLength: number, // remaining bytes in the row. 0 indicates that we're looking for a newline.
-  _buffer: Array<Uint8Array>, // chunks received so far as part of this row
   _closed: boolean,
   _closedReason: mixed,
   _tempRefs: void | TemporaryReferenceSet, // the set temporary references can be resolved from
@@ -2154,11 +2149,6 @@ function ResponseInstance(
   this._chunks = chunks;
   this._stringDecoder = createStringDecoder();
   this._fromJSON = (null: any);
-  this._rowState = 0;
-  this._rowID = 0;
-  this._rowTag = 0;
-  this._rowLength = 0;
-  this._buffer = [];
   this._closed = false;
   this._closedReason = null;
   this._tempRefs = temporaryReferences;
@@ -2257,6 +2247,24 @@ export function createResponse(
       debugChannel,
     ),
   );
+}
+
+export type StreamState = {
+  _rowState: RowParserState,
+  _rowID: number, // parts of a row ID parsed so far
+  _rowTag: number, // 0 indicates that we're currently parsing the row ID
+  _rowLength: number, // remaining bytes in the row. 0 indicates that we're looking for a newline.
+  _buffer: Array<Uint8Array>, // chunks received so far as part of this row
+};
+
+export function createStreamState(): StreamState {
+  return {
+    _rowState: 0,
+    _rowID: 0,
+    _rowTag: 0,
+    _rowLength: 0,
+    _buffer: [],
+  };
 }
 
 function resolveDebugHalt(response: Response, id: number): void {
@@ -3995,6 +4003,7 @@ function processFullStringRow(
 
 export function processBinaryChunk(
   weakResponse: WeakResponse,
+  streamState: StreamState,
   chunk: Uint8Array,
 ): void {
   if (hasGCedResponse(weakResponse)) {
@@ -4003,11 +4012,11 @@ export function processBinaryChunk(
   }
   const response = unwrapWeakResponse(weakResponse);
   let i = 0;
-  let rowState = response._rowState;
-  let rowID = response._rowID;
-  let rowTag = response._rowTag;
-  let rowLength = response._rowLength;
-  const buffer = response._buffer;
+  let rowState = streamState._rowState;
+  let rowID = streamState._rowID;
+  let rowTag = streamState._rowTag;
+  let rowLength = streamState._rowLength;
+  const buffer = streamState._buffer;
   const chunkLength = chunk.length;
   while (i < chunkLength) {
     let lastIdx = -1;
@@ -4112,14 +4121,15 @@ export function processBinaryChunk(
       break;
     }
   }
-  response._rowState = rowState;
-  response._rowID = rowID;
-  response._rowTag = rowTag;
-  response._rowLength = rowLength;
+  streamState._rowState = rowState;
+  streamState._rowID = rowID;
+  streamState._rowTag = rowTag;
+  streamState._rowLength = rowLength;
 }
 
 export function processStringChunk(
   weakResponse: WeakResponse,
+  streamState: StreamState,
   chunk: string,
 ): void {
   if (hasGCedResponse(weakResponse)) {
@@ -4136,11 +4146,11 @@ export function processStringChunk(
   // here. Basically, only if Flight Server gave you this string as a chunk,
   // you can use it here.
   let i = 0;
-  let rowState = response._rowState;
-  let rowID = response._rowID;
-  let rowTag = response._rowTag;
-  let rowLength = response._rowLength;
-  const buffer = response._buffer;
+  let rowState = streamState._rowState;
+  let rowID = streamState._rowID;
+  let rowTag = streamState._rowTag;
+  let rowLength = streamState._rowLength;
+  const buffer = streamState._buffer;
   const chunkLength = chunk.length;
   while (i < chunkLength) {
     let lastIdx = -1;
@@ -4264,10 +4274,10 @@ export function processStringChunk(
       );
     }
   }
-  response._rowState = rowState;
-  response._rowID = rowID;
-  response._rowTag = rowTag;
-  response._rowLength = rowLength;
+  streamState._rowState = rowState;
+  streamState._rowID = rowID;
+  streamState._rowTag = rowTag;
+  streamState._rowLength = rowLength;
 }
 
 function parseModel<T>(response: Response, json: UninitializedModel): T {
