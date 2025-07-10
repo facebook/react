@@ -17,6 +17,12 @@ function useHook(maybeRef, shouldRead) {
 ## Error
 
 ```
+Found 1 error:
+Memoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected
+
+The inferred dependency was `maybeRef.current`, but the source dependencies were [shouldRead, maybeRef]. Differences in ref.current access.
+
+error.maybe-invalid-useMemo-read-maybeRef.ts:5:17
   3 |
   4 | function useHook(maybeRef, shouldRead) {
 > 5 |   return useMemo(() => {
@@ -24,9 +30,11 @@ function useHook(maybeRef, shouldRead) {
 > 6 |     return () => [maybeRef.current];
     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 > 7 |   }, [shouldRead, maybeRef]);
-    | ^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `maybeRef.current`, but the source dependencies were [shouldRead, maybeRef]. Differences in ref.current access (5:7)
+    | ^^^^ React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected
   8 | }
   9 |
+
+
 ```
           
       
