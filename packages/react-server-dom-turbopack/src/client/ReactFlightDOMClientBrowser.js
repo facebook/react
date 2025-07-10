@@ -111,7 +111,7 @@ function startReadingFromUniversalStream(
     value,
   }: {
     done: boolean,
-    value: ?any,
+    value: any,
     ...
   }): void | Promise<void> {
     if (done) {
@@ -138,6 +138,7 @@ function startReadingFromUniversalStream(
 function startReadingFromStream(
   response: FlightResponse,
   stream: ReadableStream,
+  isSecondaryStream: boolean,
 ): void {
   const streamState = createStreamState();
   const reader = stream.getReader();
@@ -150,7 +151,10 @@ function startReadingFromStream(
     ...
   }): void | Promise<void> {
     if (done) {
-      close(response);
+      // If we're the secondary stream, then we don't close the response until the debug channel closes.
+      if (!isSecondaryStream) {
+        close(response);
+      }
       return;
     }
     const buffer: Uint8Array = (value: any);
@@ -175,8 +179,10 @@ function createFromReadableStream<T>(
     options.debugChannel.readable
   ) {
     startReadingFromUniversalStream(response, options.debugChannel.readable);
+    startReadingFromStream(response, stream, true);
+  } else {
+    startReadingFromStream(response, stream, false);
   }
-  startReadingFromStream(response, stream);
   return getRoot(response);
 }
 
@@ -193,9 +199,14 @@ function createFromFetch<T>(
         options.debugChannel &&
         options.debugChannel.readable
       ) {
-        startReadingFromStream(response, options.debugChannel.readable);
+        startReadingFromUniversalStream(
+          response,
+          options.debugChannel.readable,
+        );
+        startReadingFromStream(response, (r.body: any), true);
+      } else {
+        startReadingFromStream(response, (r.body: any), false);
       }
-      startReadingFromStream(response, (r.body: any));
     },
     function (e) {
       reportGlobalError(response, e);
