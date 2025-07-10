@@ -29,13 +29,19 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
+Found 1 error:
+Error: Updating a value previously passed as an argument to a hook is not allowed. Consider moving the mutation before calling the hook
+
+error.hook-call-freezes-captured-memberexpr.ts:13:2
   11 |   });
   12 |
 > 13 |   x.value += count;
-     |   ^ InvalidReact: Updating a value previously passed as an argument to a hook is not allowed. Consider moving the mutation before calling the hook (13:13)
+     |   ^ Updating a value previously passed as an argument to a hook is not allowed. Consider moving the mutation before calling the hook
   14 |   return <Stringify x={x} cb={cb} />;
   15 | }
   16 |
+
+
 ```
           
       

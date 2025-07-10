@@ -42,13 +42,19 @@ component Component() {
 ## Error
 
 ```
+Found 1 error:
+Memoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.
+
+undefined:18:20
   16 |   // We infer that getIsEnabled returns a mutable value, such that
   17 |   // isEnabled is mutable
 > 18 |   const isEnabled = useMemo(() => getIsEnabled(), [getIsEnabled]);
-     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output. (18:18)
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.
   19 |
   20 |   // We then infer getLoggingData as capturing that mutable value,
   21 |   // so any calls to this function are then inferred as extending
+
+
 ```
           
       
