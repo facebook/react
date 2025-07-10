@@ -26,13 +26,19 @@ function useKeyedState({key, init}) {
 ## Error
 
 ```
+Found 1 error:
+Error: Calling setState from useMemo may trigger an infinite loop. (https://react.dev/reference/react/useState)
+
+error.invalid-setState-in-useMemo-indirect-useCallback.ts:13:4
   11 |
   12 |   useMemo(() => {
 > 13 |     fn();
-     |     ^^ InvalidReact: Calling setState from useMemo may trigger an infinite loop. (https://react.dev/reference/react/useState) (13:13)
+     |     ^^ Calling setState from useMemo may trigger an infinite loop. (https://react.dev/reference/react/useState)
   14 |   }, [key, init]);
   15 |
   16 |   return state;
+
+
 ```
           
       

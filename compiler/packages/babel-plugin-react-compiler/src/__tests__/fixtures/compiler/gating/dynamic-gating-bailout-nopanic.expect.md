@@ -58,7 +58,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Logs
 
 ```
-{"kind":"CompileError","fnLoc":{"start":{"line":6,"column":0,"index":206},"end":{"line":16,"column":1,"index":433},"filename":"dynamic-gating-bailout-nopanic.ts"},"detail":{"reason":"React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected","description":"The inferred dependency was `value`, but the source dependencies were []. Inferred dependency not present in source","severity":"CannotPreserveMemoization","suggestions":null,"loc":{"start":{"line":9,"column":31,"index":288},"end":{"line":9,"column":52,"index":309},"filename":"dynamic-gating-bailout-nopanic.ts"}}}
+{"kind":"CompileError","fnLoc":{"start":{"line":6,"column":0,"index":206},"end":{"line":16,"column":1,"index":433},"filename":"dynamic-gating-bailout-nopanic.ts"},"detail":{"options":{"reason":"React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected","description":"The inferred dependency was `value`, but the source dependencies were []. Inferred dependency not present in source","severity":"CannotPreserveMemoization","suggestions":null,"loc":{"start":{"line":9,"column":31,"index":288},"end":{"line":9,"column":52,"index":309},"filename":"dynamic-gating-bailout-nopanic.ts"}}}}
 ```
       
 ### Eval output
