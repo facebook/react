@@ -55210,13 +55210,15 @@ const rule = {
                 }
             },
             Identifier(node) {
-                if (lastEffect == null &&
-                    useEffectEventFunctions.has(node) &&
-                    node.parent.type !== 'CallExpression') {
+                if (lastEffect == null && useEffectEventFunctions.has(node)) {
+                    const message = `\`${getSourceCode().getText(node)}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
+                        'the same component.' +
+                        (node.parent.type === 'CallExpression'
+                            ? ''
+                            : ' They cannot be assigned to variables or passed down.');
                     context.report({
                         node,
-                        message: `\`${getSourceCode().getText(node)}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-                            'the same component. They cannot be assigned to variables or passed down.',
+                        message,
                     });
                 }
             },
