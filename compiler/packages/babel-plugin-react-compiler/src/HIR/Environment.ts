@@ -779,7 +779,7 @@ export class Environment {
     for (const error of errors.unwrapErr().details) {
       this.logger.logEvent(this.filename, {
         kind: 'CompileError',
-        detail: error,
+        detail: error.options,
         fnLoc: null,
       });
     }
