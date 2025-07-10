@@ -5808,6 +5808,10 @@ export function resolveDebugMessage(request: Request, message: string): void {
       "resolveDebugMessage/closeDebugChannel should not be called for a Request that wasn't kept alive. This is a bug in React.",
     );
   }
+  if (message === '') {
+    closeDebugChannel(request);
+    return;
+  }
   // This function lets the client ask for more data lazily through the debug channel.
   const command = message.charCodeAt(0);
   const ids = message.slice(2).split(',').map(fromHex);
