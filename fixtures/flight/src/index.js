@@ -92,7 +92,7 @@ async function hydrateApp() {
       }),
       {
         callServer,
-        debugChannel,
+        // debugChannel,
         findSourceMapURL,
       }
     );
