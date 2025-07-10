@@ -28,6 +28,10 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
+Found 1 error:
+Memoization: React Compiler has skipped optimizing this component because the effect dependencies could not be memoized. Unmemoized effect dependencies can trigger an infinite loop or other unexpected behavior
+
+error.validate-memoized-effect-deps-invalidated-dep-value.ts:11:2
    9 |   const y = [x];
   10 |
 > 11 |   useEffect(() => {
@@ -35,10 +39,12 @@ export const FIXTURE_ENTRYPOINT = {
 > 12 |     console.log(y);
      | ^^^^^^^^^^^^^^^^^^^
 > 13 |   }, [y]);
-     | ^^^^^^^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the effect dependencies could not be memoized. Unmemoized effect dependencies can trigger an infinite loop or other unexpected behavior (11:13)
+     | ^^^^^^^^^^ React Compiler has skipped optimizing this component because the effect dependencies could not be memoized. Unmemoized effect dependencies can trigger an infinite loop or other unexpected behavior
   14 | }
   15 |
   16 | export const FIXTURE_ENTRYPOINT = {
+
+
 ```
           
       

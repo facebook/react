@@ -15,13 +15,19 @@ function Foo() {
 ## Error
 
 ```
+Found 1 error:
+Error: Writing to a variable defined outside a component or hook is not allowed. Consider using an effect
+
+error.store-property-in-global.ts:4:2
   2 |
   3 | function Foo() {
 > 4 |   wat.test = 1;
-    |   ^^^ InvalidReact: Writing to a variable defined outside a component or hook is not allowed. Consider using an effect (4:4)
+    |   ^^^ Writing to a variable defined outside a component or hook is not allowed. Consider using an effect
   5 |   return wat;
   6 | }
   7 |
+
+
 ```
           
       

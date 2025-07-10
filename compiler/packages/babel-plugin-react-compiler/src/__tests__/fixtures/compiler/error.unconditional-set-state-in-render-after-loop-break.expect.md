@@ -22,13 +22,19 @@ function Component(props) {
 ## Error
 
 ```
+Found 1 error:
+Error: This is an unconditional set state during render, which will trigger an infinite loop. (https://react.dev/reference/react/useState)
+
+error.unconditional-set-state-in-render-after-loop-break.ts:11:2
    9 |     }
   10 |   }
 > 11 |   setState(true);
-     |   ^^^^^^^^ InvalidReact: This is an unconditional set state during render, which will trigger an infinite loop. (https://react.dev/reference/react/useState) (11:11)
+     |   ^^^^^^^^ This is an unconditional set state during render, which will trigger an infinite loop. (https://react.dev/reference/react/useState)
   12 |   return state;
   13 | }
   14 |
+
+
 ```
           
       
