@@ -226,10 +226,13 @@ export function renderToPipeableStream(
           'The destination stream errored while writing data.',
         ),
       );
-      destination.on(
-        'close',
-        createCancelHandler(request, 'The destination stream closed early.'),
-      );
+      // We don't close until the debug channel closes.
+      if (!__DEV__ || debugChannelReadable === undefined) {
+        destination.on(
+          'close',
+          createCancelHandler(request, 'The destination stream closed early.'),
+        );
+      }
       return destination;
     },
     abort(reason: mixed) {
