@@ -47,20 +47,18 @@ function Component() {
 
 ```
 Found 1 error:
-Error: Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead
+Error: Cannot reassign a variable after render completes
 
-Variable `local` cannot be reassigned after render.
+Reassigning variable `local` after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead
 
 error.invalid-nested-function-reassign-local-variable-in-effect.ts:7:6
    5 |     // Create the reassignment function inside another function, then return it
    6 |     const reassignLocal = newValue => {
 >  7 |       local = newValue;
-     |       ^^^^^ Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead
+     |       ^^^^^ Cannot reassign variable after render completes
    8 |     };
    9 |     return reassignLocal;
   10 |   };
-
-
 ```
           
       
