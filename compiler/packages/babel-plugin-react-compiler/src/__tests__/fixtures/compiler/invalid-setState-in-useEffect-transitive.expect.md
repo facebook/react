@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @loggerTestOnly @validateNoSetStateInPassiveEffects
+// @loggerTestOnly @validateNoSetStateInEffects
 import {useEffect, useState} from 'react';
 
 function Component() {
@@ -24,7 +24,7 @@ function Component() {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @loggerTestOnly @validateNoSetStateInPassiveEffects
+import { c as _c } from "react/compiler-runtime"; // @loggerTestOnly @validateNoSetStateInEffects
 import { useEffect, useState } from "react";
 
 function Component() {
