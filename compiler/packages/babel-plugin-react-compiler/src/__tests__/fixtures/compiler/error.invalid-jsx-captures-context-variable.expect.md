@@ -50,13 +50,21 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
+Found 1 error:
+Error: Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX
+
+Found mutation of `i`.
+
+error.invalid-jsx-captures-context-variable.ts:22:2
   20 |     />
   21 |   );
 > 22 |   i = i + 1;
-     |   ^ InvalidReact: Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX. Found mutation of `i` (22:22)
+     |   ^ Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX
   23 |   items.push(
   24 |     <Stringify
   25 |       key={i}
+
+
 ```
           
       

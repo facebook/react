@@ -24,13 +24,21 @@ function Component(props) {
 ## Error
 
 ```
+Found 1 error:
+Error: Mutating a value returned from 'useContext()', which should not be mutated
+
+Found mutation of `FooContext`.
+
+error.invalid-mutate-context-in-callback.ts:12:4
   10 |   // independently
   11 |   const onClick = () => {
 > 12 |     FooContext.current = true;
-     |     ^^^^^^^^^^ InvalidReact: Mutating a value returned from 'useContext()', which should not be mutated. Found mutation of `FooContext` (12:12)
+     |     ^^^^^^^^^^ Mutating a value returned from 'useContext()', which should not be mutated
   13 |   };
   14 |   return <div onClick={onClick} />;
   15 | }
+
+
 ```
           
       
