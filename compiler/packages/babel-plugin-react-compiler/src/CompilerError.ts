@@ -16,6 +16,11 @@ export enum ErrorSeverity {
    */
   InvalidJS = 'InvalidJS',
   /**
+   * JS syntax that is not supported and which we do not plan to support. Developers should
+   * rewrite to use supported forms.
+   */
+  UnsupportedJS = 'UnsupportedJS',
+  /**
    * Code that breaks the rules of React.
    */
   InvalidReact = 'InvalidReact',
@@ -241,12 +246,16 @@ export class CompilerError extends Error {
         case ErrorSeverity.InvalidJS:
         case ErrorSeverity.InvalidReact:
         case ErrorSeverity.InvalidConfig:
+        case ErrorSeverity.UnsupportedJS: {
           return true;
+        }
         case ErrorSeverity.CannotPreserveMemoization:
-        case ErrorSeverity.Todo:
+        case ErrorSeverity.Todo: {
           return false;
-        default:
+        }
+        default: {
           assertExhaustive(detail.severity, 'Unhandled error severity');
+        }
       }
     });
   }
