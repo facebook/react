@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import {codeFrameColumns} from '@babel/code-frame';
 import type {SourceLocation} from './HIR';
 import {Err, Ok, Result} from './Utils/Result';
 import {assertExhaustive} from './Utils/utils';
@@ -44,6 +45,40 @@ export enum ErrorSeverity {
   Invariant = 'Invariant',
 }
 
+export type CompilerDiagnosticOptions = {
+  severity: ErrorSeverity;
+  category: string;
+  description: string;
+  details: Array<CompilerDiagnosticDetail>;
+  suggestions?: Array<CompilerSuggestion> | null | undefined;
+};
+
+export type CompilerDiagnosticDetail =
+  /**
+   * Additional information not coupled to a specific location,
+   * generally linking to documentation.
+   */
+  | {
+      kind: 'info';
+      message: string;
+    }
+  /**
+   * The (a) source of the error
+   */
+  | {
+      kind: 'error';
+      loc: SourceLocation;
+      message: string;
+    }
+  /**
+   * A related part of the source code that does not directly contribute to the error
+   */
+  | {
+      kind: 'related';
+      loc: SourceLocation;
+      message: string;
+    };
+
 export enum CompilerSuggestionOperation {
   InsertBefore,
   InsertAfter,
@@ -74,6 +109,73 @@ export type CompilerErrorDetailOptions = {
   suggestions?: Array<CompilerSuggestion> | null | undefined;
 };
 
+export class CompilerDiagnostic {
+  options: CompilerDiagnosticOptions;
+
+  constructor(options: CompilerDiagnosticOptions) {
+    this.options = options;
+  }
+
+  get category(): CompilerDiagnosticOptions['category'] {
+    return this.options.category;
+  }
+  get description(): CompilerDiagnosticOptions['description'] {
+    return this.options.description;
+  }
+  get severity(): CompilerDiagnosticOptions['severity'] {
+    return this.options.severity;
+  }
+  get suggestions(): CompilerDiagnosticOptions['suggestions'] {
+    return this.options.suggestions;
+  }
+
+  printErrorMessage(source: string): string {
+    const buffer = [`${this.severity}: ${this.category}\n\n`, this.description];
+    for (const detail of this.options.details) {
+      switch (detail.kind) {
+        case 'error':
+        case 'related': {
+          const loc = detail.loc;
+          if (typeof loc === 'symbol') {
+            continue;
+          }
+          let codeFrame: string;
+          try {
+            codeFrame = codeFrameColumns(
+              source,
+              {
+                start: {
+                  line: loc.start.line,
+                  column: loc.start.column + 1,
+                },
+                end: {
+                  line: loc.end.line,
+                  column: loc.end.column + 1,
+                },
+              },
+              {
+                message: detail.message,
+              },
+            );
+          } catch (e) {
+            codeFrame = detail.message;
+          }
+          buffer.push(
+            `\n\n${loc.filename}:${loc.start.line}:${loc.start.column}\n`,
+          );
+          buffer.push(codeFrame);
+        }
+      }
+    }
+    return buffer.join('');
+  }
+
+  toString(): string {
+    const buffer = [`${this.severity}: ${this.category}\n\n`, this.description];
+    return buffer.join('');
+  }
+}
+
 /*
  * Each bailout or invariant in HIR lowering creates an {@link CompilerErrorDetail}, which is then
  * aggregated into a single {@link CompilerError} later.
@@ -101,24 +203,58 @@ export class CompilerErrorDetail {
     return this.options.suggestions;
   }
 
-  printErrorMessage(): string {
+  printErrorMessage(source: string): string {
     const buffer = [`${this.severity}: ${this.reason}`];
     if (this.description != null) {
-      buffer.push(`. ${this.description}`);
+      buffer.push(`\n\n${this.description}.`);
     }
-    if (this.loc != null && typeof this.loc !== 'symbol') {
-      buffer.push(` (${this.loc.start.line}:${this.loc.end.line})`);
+    const loc = this.loc;
+    if (loc != null && typeof loc !== 'symbol') {
+      let codeFrame: string;
+      try {
+        codeFrame = codeFrameColumns(
+          source,
+          {
+            start: {
+              line: loc.start.line,
+              column: loc.start.column + 1,
+            },
+            end: {
+              line: loc.end.line,
+              column: loc.end.column + 1,
+            },
+          },
+          {
+            message: this.reason,
+          },
+        );
+      } catch (e) {
+        codeFrame = '';
+      }
+      buffer.push(
+        `\n\n${loc.filename}:${loc.start.line}:${loc.start.column}\n`,
+      );
+      buffer.push(codeFrame);
+      buffer.push('\n\n');
     }
     return buffer.join('');
   }
 
   toString(): string {
-    return this.printErrorMessage();
+    const buffer = [`${this.severity}: ${this.reason}`];
+    if (this.description != null) {
+      buffer.push(`. ${this.description}.`);
+    }
+    const loc = this.loc;
+    if (loc != null && typeof loc !== 'symbol') {
+      buffer.push(` (${loc.start.line}:${loc.start.column})`);
+    }
+    return buffer.join('');
   }
 }
 
 export class CompilerError extends Error {
-  details: Array<CompilerErrorDetail> = [];
+  details: Array<CompilerErrorDetail | CompilerDiagnostic> = [];
 
   static invariant(
     condition: unknown,
@@ -134,6 +270,12 @@ export class CompilerError extends Error {
       );
       throw errors;
     }
+  }
+
+  static throwDiagnostic(options: CompilerDiagnosticOptions): never {
+    const errors = new CompilerError();
+    errors.pushDiagnostic(new CompilerDiagnostic(options));
+    throw errors;
   }
 
   static throwTodo(
@@ -208,6 +350,21 @@ export class CompilerError extends Error {
       return this.details.map(detail => detail.toString()).join('\n\n');
     }
     return this.name;
+  }
+
+  printErrorMessage(source: string): string {
+    return (
+      `Found ${this.details.length} errors:\n` +
+      this.details.map(detail => detail.printErrorMessage(source)).join('\n')
+    );
+  }
+
+  merge(other: CompilerError): void {
+    this.details.push(...other.details);
+  }
+
+  pushDiagnostic(diagnostic: CompilerDiagnostic): void {
+    this.details.push(diagnostic);
   }
 
   push(options: CompilerErrorDetailOptions): CompilerErrorDetail {
