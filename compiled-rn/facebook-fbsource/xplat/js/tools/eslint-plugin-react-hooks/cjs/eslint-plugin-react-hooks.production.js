@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<85ce0ff2972753253a94ea787ba0dbc5>>
+ * @generated SignedSource<<30d570b42bb03e2b1bd6df9e6d3061fd>>
  */
 
 'use strict';
@@ -54990,13 +54990,15 @@ const rule = {
                 }
             },
             Identifier(node) {
-                if (lastEffect == null &&
-                    useEffectEventFunctions.has(node) &&
-                    node.parent.type !== 'CallExpression') {
+                if (lastEffect == null && useEffectEventFunctions.has(node)) {
+                    const message = `\`${getSourceCode().getText(node)}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
+                        'the same component.' +
+                        (node.parent.type === 'CallExpression'
+                            ? ''
+                            : ' They cannot be assigned to variables or passed down.');
                     context.report({
                         node,
-                        message: `\`${getSourceCode().getText(node)}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-                            'the same component. They cannot be assigned to variables or passed down.',
+                        message,
                     });
                 }
             },

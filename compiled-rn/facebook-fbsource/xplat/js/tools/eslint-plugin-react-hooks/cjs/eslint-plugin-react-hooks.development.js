@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<974d03ba476b591ae502c12572adf1a7>>
+ * @generated SignedSource<<e7a6d81bd31c10ba7c77205c75f347c2>>
  */
 
 'use strict';
@@ -55211,13 +55211,15 @@ const rule = {
                 }
             },
             Identifier(node) {
-                if (lastEffect == null &&
-                    useEffectEventFunctions.has(node) &&
-                    node.parent.type !== 'CallExpression') {
+                if (lastEffect == null && useEffectEventFunctions.has(node)) {
+                    const message = `\`${getSourceCode().getText(node)}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
+                        'the same component.' +
+                        (node.parent.type === 'CallExpression'
+                            ? ''
+                            : ' They cannot be assigned to variables or passed down.');
                     context.report({
                         node,
-                        message: `\`${getSourceCode().getText(node)}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-                            'the same component. They cannot be assigned to variables or passed down.',
+                        message,
                     });
                 }
             },
