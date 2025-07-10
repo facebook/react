@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import {codeFrameColumns} from '@babel/code-frame';
 import type {SourceLocation} from './HIR';
 import {Err, Ok, Result} from './Utils/Result';
 import {assertExhaustive} from './Utils/utils';
@@ -44,6 +45,24 @@ export enum ErrorSeverity {
   Invariant = 'Invariant',
 }
 
+export type CompilerDiagnosticOptions = {
+  severity: ErrorSeverity;
+  category: string;
+  description: string;
+  details: Array<CompilerDiagnosticDetail>;
+  suggestions?: Array<CompilerSuggestion> | null | undefined;
+};
+
+export type CompilerDiagnosticDetail =
+  /**
+   * A/the source of the error
+   */
+  {
+    kind: 'error';
+    loc: SourceLocation;
+    message: string;
+  };
+
 export enum CompilerSuggestionOperation {
   InsertBefore,
   InsertAfter,
@@ -74,6 +93,94 @@ export type CompilerErrorDetailOptions = {
   suggestions?: Array<CompilerSuggestion> | null | undefined;
 };
 
+export class CompilerDiagnostic {
+  options: CompilerDiagnosticOptions;
+
+  constructor(options: CompilerDiagnosticOptions) {
+    this.options = options;
+  }
+
+  get category(): CompilerDiagnosticOptions['category'] {
+    return this.options.category;
+  }
+  get description(): CompilerDiagnosticOptions['description'] {
+    return this.options.description;
+  }
+  get severity(): CompilerDiagnosticOptions['severity'] {
+    return this.options.severity;
+  }
+  get suggestions(): CompilerDiagnosticOptions['suggestions'] {
+    return this.options.suggestions;
+  }
+
+  primaryLocation(): SourceLocation | null {
+    return this.options.details.filter(d => d.kind === 'error')[0]?.loc ?? null;
+  }
+
+  printErrorMessage(source: string): string {
+    const buffer = [
+      printErrorSummary(this.severity, this.category),
+      '\n\n',
+      this.description,
+    ];
+    for (const detail of this.options.details) {
+      switch (detail.kind) {
+        case 'error': {
+          const loc = detail.loc;
+          if (typeof loc === 'symbol') {
+            continue;
+          }
+          let codeFrame: string;
+          try {
+            codeFrame = codeFrameColumns(
+              source,
+              {
+                start: {
+                  line: loc.start.line,
+                  column: loc.start.column + 1,
+                },
+                end: {
+                  line: loc.end.line,
+                  column: loc.end.column + 1,
+                },
+              },
+              {
+                message: detail.message,
+              },
+            );
+          } catch (e) {
+            codeFrame = detail.message;
+          }
+          buffer.push(
+            `\n\n${loc.filename}:${loc.start.line}:${loc.start.column}\n`,
+          );
+          buffer.push(codeFrame);
+          break;
+        }
+        default: {
+          assertExhaustive(
+            detail.kind,
+            `Unexpected detail kind ${(detail as any).kind}`,
+          );
+        }
+      }
+    }
+    return buffer.join('');
+  }
+
+  toString(): string {
+    const buffer = [printErrorSummary(this.severity, this.category)];
+    if (this.description != null) {
+      buffer.push(`. ${this.description}.`);
+    }
+    const loc = this.primaryLocation();
+    if (loc != null && typeof loc !== 'symbol') {
+      buffer.push(` (${loc.start.line}:${loc.start.column})`);
+    }
+    return buffer.join('');
+  }
+}
+
 /*
  * Each bailout or invariant in HIR lowering creates an {@link CompilerErrorDetail}, which is then
  * aggregated into a single {@link CompilerError} later.
@@ -101,24 +208,62 @@ export class CompilerErrorDetail {
     return this.options.suggestions;
   }
 
-  printErrorMessage(): string {
-    const buffer = [`${this.severity}: ${this.reason}`];
+  primaryLocation(): SourceLocation | null {
+    return this.loc;
+  }
+
+  printErrorMessage(source: string): string {
+    const buffer = [printErrorSummary(this.severity, this.reason)];
     if (this.description != null) {
-      buffer.push(`. ${this.description}`);
+      buffer.push(`\n\n${this.description}.`);
     }
-    if (this.loc != null && typeof this.loc !== 'symbol') {
-      buffer.push(` (${this.loc.start.line}:${this.loc.end.line})`);
+    const loc = this.loc;
+    if (loc != null && typeof loc !== 'symbol') {
+      let codeFrame: string;
+      try {
+        codeFrame = codeFrameColumns(
+          source,
+          {
+            start: {
+              line: loc.start.line,
+              column: loc.start.column + 1,
+            },
+            end: {
+              line: loc.end.line,
+              column: loc.end.column + 1,
+            },
+          },
+          {
+            message: this.reason,
+          },
+        );
+      } catch (e) {
+        codeFrame = '';
+      }
+      buffer.push(
+        `\n\n${loc.filename}:${loc.start.line}:${loc.start.column}\n`,
+      );
+      buffer.push(codeFrame);
+      buffer.push('\n\n');
     }
     return buffer.join('');
   }
 
   toString(): string {
-    return this.printErrorMessage();
+    const buffer = [printErrorSummary(this.severity, this.reason)];
+    if (this.description != null) {
+      buffer.push(`. ${this.description}.`);
+    }
+    const loc = this.loc;
+    if (loc != null && typeof loc !== 'symbol') {
+      buffer.push(` (${loc.start.line}:${loc.start.column})`);
+    }
+    return buffer.join('');
   }
 }
 
 export class CompilerError extends Error {
-  details: Array<CompilerErrorDetail> = [];
+  details: Array<CompilerErrorDetail | CompilerDiagnostic> = [];
 
   static invariant(
     condition: unknown,
@@ -134,6 +279,12 @@ export class CompilerError extends Error {
       );
       throw errors;
     }
+  }
+
+  static throwDiagnostic(options: CompilerDiagnosticOptions): never {
+    const errors = new CompilerError();
+    errors.pushDiagnostic(new CompilerDiagnostic(options));
+    throw errors;
   }
 
   static throwTodo(
@@ -210,6 +361,21 @@ export class CompilerError extends Error {
     return this.name;
   }
 
+  printErrorMessage(source: string): string {
+    return (
+      `Found ${this.details.length} error${this.details.length === 1 ? '' : 's'}:\n` +
+      this.details.map(detail => detail.printErrorMessage(source)).join('\n')
+    );
+  }
+
+  merge(other: CompilerError): void {
+    this.details.push(...other.details);
+  }
+
+  pushDiagnostic(diagnostic: CompilerDiagnostic): void {
+    this.details.push(diagnostic);
+  }
+
   push(options: CompilerErrorDetailOptions): CompilerErrorDetail {
     const detail = new CompilerErrorDetail({
       reason: options.reason,
@@ -259,4 +425,33 @@ export class CompilerError extends Error {
       }
     });
   }
+}
+
+function printErrorSummary(severity: ErrorSeverity, message: string): string {
+  let severityCategory: string;
+  switch (severity) {
+    case ErrorSeverity.InvalidConfig:
+    case ErrorSeverity.InvalidJS:
+    case ErrorSeverity.InvalidReact:
+    case ErrorSeverity.UnsupportedJS: {
+      severityCategory = 'Error';
+      break;
+    }
+    case ErrorSeverity.CannotPreserveMemoization: {
+      severityCategory = 'Memoization';
+      break;
+    }
+    case ErrorSeverity.Invariant: {
+      severityCategory = 'Invariant';
+      break;
+    }
+    case ErrorSeverity.Todo: {
+      severityCategory = 'Todo';
+      break;
+    }
+    default: {
+      assertExhaustive(severity, `Unexpected severity '${severity}'`);
+    }
+  }
+  return `${severityCategory}: ${message}`;
 }

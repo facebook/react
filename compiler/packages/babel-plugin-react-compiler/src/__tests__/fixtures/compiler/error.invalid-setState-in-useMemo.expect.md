@@ -20,15 +20,31 @@ function useKeyedState({key, init}) {
 ## Error
 
 ```
+Found 2 errors:
+Error: Calling setState from useMemo may trigger an infinite loop. (https://react.dev/reference/react/useState)
+
+error.invalid-setState-in-useMemo.ts:6:4
   4 |
   5 |   useMemo(() => {
 > 6 |     setPrevKey(key);
-    |     ^^^^^^^^^^ InvalidReact: Calling setState from useMemo may trigger an infinite loop. (https://react.dev/reference/react/useState) (6:6)
-
-InvalidReact: Calling setState from useMemo may trigger an infinite loop. (https://react.dev/reference/react/useState) (7:7)
+    |     ^^^^^^^^^^ Calling setState from useMemo may trigger an infinite loop. (https://react.dev/reference/react/useState)
   7 |     setState(init);
   8 |   }, [key, init]);
   9 |
+
+
+Error: Calling setState from useMemo may trigger an infinite loop. (https://react.dev/reference/react/useState)
+
+error.invalid-setState-in-useMemo.ts:7:4
+   5 |   useMemo(() => {
+   6 |     setPrevKey(key);
+>  7 |     setState(init);
+     |     ^^^^^^^^ Calling setState from useMemo may trigger an infinite loop. (https://react.dev/reference/react/useState)
+   8 |   }, [key, init]);
+   9 |
+  10 |   return state;
+
+
 ```
           
       

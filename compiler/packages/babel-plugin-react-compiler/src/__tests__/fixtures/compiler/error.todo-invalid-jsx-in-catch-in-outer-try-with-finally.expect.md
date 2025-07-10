@@ -26,6 +26,10 @@ function Component(props) {
 ## Error
 
 ```
+Found 1 error:
+Todo: (BuildHIR::lowerStatement) Handle TryStatement without a catch clause
+
+error.todo-invalid-jsx-in-catch-in-outer-try-with-finally.ts:6:2
    4 | function Component(props) {
    5 |   let el;
 >  6 |   try {
@@ -47,10 +51,12 @@ function Component(props) {
 > 14 |     console.log(el);
      | ^^^^^^^^^^^^^^
 > 15 |   }
-     | ^^^^ Todo: (BuildHIR::lowerStatement) Handle TryStatement without a catch clause (6:15)
+     | ^^^^ (BuildHIR::lowerStatement) Handle TryStatement without a catch clause
   16 |   return el;
   17 | }
   18 |
+
+
 ```
           
       
