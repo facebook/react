@@ -1355,13 +1355,45 @@ function lowerStatement(
 
       return;
     }
+    case 'WithStatement': {
+      builder.errors.push({
+        reason: `JavaScript 'with' syntax is not supported`,
+        description: `'with' syntax is considered deprecated and removed from JavaScript standards, consider alternatives`,
+        severity: ErrorSeverity.InvalidJS,
+        loc: stmtPath.node.loc ?? null,
+        suggestions: null,
+      });
+      lowerValueToTemporary(builder, {
+        kind: 'UnsupportedNode',
+        loc: stmtPath.node.loc ?? GeneratedSource,
+        node: stmtPath.node,
+      });
+      return;
+    }
+    case 'ClassDeclaration': {
+      /*
+       * We can in theory support nested classes, similarly to functions where we track values
+       * captured by the class and consider mutations of the instances to mutate the class itself
+       */
+      builder.errors.push({
+        reason: `Support nested class declarations`,
+        severity: ErrorSeverity.Todo,
+        loc: stmtPath.node.loc ?? null,
+        suggestions: null,
+      });
+      lowerValueToTemporary(builder, {
+        kind: 'UnsupportedNode',
+        loc: stmtPath.node.loc ?? GeneratedSource,
+        node: stmtPath.node,
+      });
+      return;
+    }
     case 'TypeAlias':
     case 'TSInterfaceDeclaration':
     case 'TSTypeAliasDeclaration': {
       // We do not preserve type annotations/syntax through transformation
       return;
     }
-    case 'ClassDeclaration':
     case 'DeclareClass':
     case 'DeclareExportAllDeclaration':
     case 'DeclareExportDeclaration':
@@ -1384,8 +1416,7 @@ function lowerStatement(
     case 'TSExportAssignment':
     case 'TSImportEqualsDeclaration':
     case 'TSModuleDeclaration':
-    case 'TSNamespaceExportDeclaration':
-    case 'WithStatement': {
+    case 'TSNamespaceExportDeclaration': {
       builder.errors.push({
         reason: `(BuildHIR::lowerStatement) Handle ${stmtPath.type} statements`,
         severity: ErrorSeverity.Todo,
@@ -3502,6 +3533,16 @@ function lowerIdentifier(
       return place;
     }
     default: {
+      if (binding.kind === 'Global' && binding.name === 'eval') {
+        builder.errors.push({
+          reason: `The 'eval' function is not supported`,
+          description:
+            'Eval is an anti-pattern in JavaScript, and the code executed cannot be evaluated by React Compiler',
+          severity: ErrorSeverity.InvalidJS,
+          loc: exprPath.node.loc ?? null,
+          suggestions: null,
+        });
+      }
       return lowerValueToTemporary(builder, {
         kind: 'LoadGlobal',
         binding,
