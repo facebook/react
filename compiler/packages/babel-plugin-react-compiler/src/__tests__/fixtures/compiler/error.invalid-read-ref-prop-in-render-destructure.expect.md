@@ -18,6 +18,10 @@ function Component({ref}) {
   2 | function Component({ref}) {
 > 3 |   const value = ref.current;
     |                 ^^^^^^^^^^^ InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef) (3:3)
+
+InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef). Cannot access ref value `value` (4:4)
+
+InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef) (4:4)
   4 |   return <div>{value}</div>;
   5 | }
   6 |

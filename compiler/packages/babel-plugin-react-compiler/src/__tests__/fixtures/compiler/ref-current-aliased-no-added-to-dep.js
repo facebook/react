@@ -1,4 +1,4 @@
-// @validateRefAccessDuringRender false
+// @validateRefAccessDuringRender:false
 function VideoTab() {
   const ref = useRef();
   const t = ref.current;
