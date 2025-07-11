@@ -23,13 +23,13 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 1 error:
-Error: Writing to a variable defined outside a component or hook is not allowed. Consider using an effect
+Error: Modifying a variable defined outside a component or hook is not allowed. Consider using an effect
 
 error.object-capture-global-mutation.ts:4:4
   2 | function Foo() {
   3 |   const x = () => {
 > 4 |     window.href = 'foo';
-    |     ^^^^^^ Writing to a variable defined outside a component or hook is not allowed. Consider using an effect
+    |     ^^^^^^ Modifying a variable defined outside a component or hook is not allowed. Consider using an effect
   5 |   };
   6 |   const y = {x};
   7 |   return <Bar y={y} />;
