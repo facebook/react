@@ -22,6 +22,7 @@ function Component({foo}) {
 
 ```
 Found 1 error:
+
 Todo: Support destructuring of context variables
 
 error.todo-reassign-const.ts:3:20
@@ -32,8 +33,6 @@ error.todo-reassign-const.ts:3:20
   4 |   let bar = foo.bar;
   5 |   return (
   6 |     <Stringify
-
-
 ```
           
       

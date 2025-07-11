@@ -20,6 +20,7 @@ function useLabeledBlock() {
 
 ```
 Found 1 error:
+
 Error: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
 
 error.invalid-rules-of-hooks-49d341e5d68f.ts:8:4
@@ -30,8 +31,6 @@ error.invalid-rules-of-hooks-49d341e5d68f.ts:8:4
    9 |   }
   10 | }
   11 |
-
-
 ```
           
       

@@ -19,6 +19,7 @@ function Component(props) {
 
 ```
 Found 1 error:
+
 Todo: Support value blocks (conditional, logical, optional chaining, etc) within a try/catch statement
 
 error.todo-logical-expression-within-try-catch.ts:4:13
@@ -29,8 +30,6 @@ error.todo-logical-expression-within-try-catch.ts:4:13
   5 |   } catch (e) {
   6 |     console.log(e);
   7 |   }
-
-
 ```
           
       

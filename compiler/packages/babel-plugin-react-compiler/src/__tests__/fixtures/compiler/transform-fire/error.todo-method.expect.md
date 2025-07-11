@@ -23,6 +23,7 @@ function Component(props) {
 
 ```
 Found 1 error:
+
 Error: Cannot compile `fire`
 
 `fire()` can only receive a function call such as `fire(fn(a,b)). Method calls and other expressions are not allowed.
@@ -35,8 +36,6 @@ error.todo-method.ts:9:4
   10 |   });
   11 |
   12 |   return null;
-
-
 ```
           
       

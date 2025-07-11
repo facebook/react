@@ -16,6 +16,7 @@ function Component(props) {
 
 ```
 Found 1 error:
+
 Error: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)
 
 error.invalid-access-ref-during-render.ts:4:16
@@ -26,8 +27,6 @@ error.invalid-access-ref-during-render.ts:4:16
   5 |   return value;
   6 | }
   7 |
-
-
 ```
           
       

@@ -20,9 +20,9 @@ component Component(disableLocalRef, ref) {
 
 ```
 Found 1 error:
+
 Error: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)
 
-undefined:7:44
    5 |   const localRef = useFooRef();
    6 |   const mergedRef = useMemo(() => {
 >  7 |     return disableLocalRef ? ref : identity(ref, localRef);
@@ -30,8 +30,6 @@ undefined:7:44
    8 |   }, [disableLocalRef, ref, localRef]);
    9 |   return <div ref={mergedRef} />;
   10 | }
-
-
 ```
           
       

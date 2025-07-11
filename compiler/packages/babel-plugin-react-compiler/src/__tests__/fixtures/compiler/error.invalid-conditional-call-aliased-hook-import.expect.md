@@ -19,6 +19,7 @@ function Component(props) {
 
 ```
 Found 1 error:
+
 Error: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
 
 error.invalid-conditional-call-aliased-hook-import.ts:6:11
@@ -29,8 +30,6 @@ error.invalid-conditional-call-aliased-hook-import.ts:6:11
   7 |   }
   8 |   return data;
   9 | }
-
-
 ```
           
       

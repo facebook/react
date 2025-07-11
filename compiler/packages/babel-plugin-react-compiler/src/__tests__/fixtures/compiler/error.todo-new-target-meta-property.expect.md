@@ -16,6 +16,7 @@ function foo() {
 
 ```
 Found 1 error:
+
 Todo: (BuildHIR::lowerExpression) Handle MetaProperty expressions other than import.meta
 
 error.todo-new-target-meta-property.ts:4:13
@@ -26,8 +27,6 @@ error.todo-new-target-meta-property.ts:4:13
   5 |   return <Stringify value={nt} />;
   6 | }
   7 |
-
-
 ```
           
       

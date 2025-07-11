@@ -28,6 +28,7 @@ function Component(props) {
 
 ```
 Found 1 error:
+
 Error: Cannot compile `fire`
 
 All uses of foo must be either used with a fire() call in this effect or not used with a fire() call at all. foo was used with fire() on line 10:10 in this effect.
@@ -40,8 +41,6 @@ error.invalid-mix-fire-and-no-fire.ts:11:6
   12 |     }
   13 |
   14 |     nested();
-
-
 ```
           
       

@@ -29,6 +29,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 1 error:
+
 Error: Expected the dependency list for useMemo to be an array literal
 
 error.useMemo-non-literal-depslist.ts:10:4
@@ -39,8 +40,6 @@ error.useMemo-non-literal-depslist.ts:10:4
   11 |   );
   12 |   return resolvedText;
   13 | }
-
-
 ```
           
       

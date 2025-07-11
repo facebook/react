@@ -18,6 +18,7 @@ function useHook() {
 
 ```
 Found 1 error:
+
 Todo: Bailing out due to blocklisted import
 
 Import from module DangerousImport.
@@ -29,8 +30,6 @@ error.validate-blocklisted-imports.ts:2:0
   3 | import {useIdentity} from 'shared-runtime';
   4 |
   5 | function useHook() {
-
-
 ```
           
       

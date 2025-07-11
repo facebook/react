@@ -17,6 +17,7 @@ function Foo() {
 
 ```
 Found 1 error:
+
 Todo: Support value blocks (conditional, logical, optional chaining, etc) within a try/catch statement
 
 error.todo-repro-declaration-for-all-identifiers.ts:5:20
@@ -27,8 +28,6 @@ error.todo-repro-declaration-for-all-identifiers.ts:5:20
   6 |   } catch {}
   7 | }
   8 |
-
-
 ```
           
       

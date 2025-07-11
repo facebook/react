@@ -28,6 +28,7 @@ function Component({prop1}) {
 
 ```
 Found 1 error:
+
 Error: Cannot infer dependencies of this effect. This will break your build!
 
 To resolve, either pass a dependency array or fix reported compiler bailout diagnostics. Todo: (BuildHIR::lowerStatement) Handle TryStatement without a catch clause (11:4)
