@@ -50,10 +50,17 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
+Found 1 error:
+
+Todo: Support local variables named `fbt`
+
+Local variables named `fbt` may conflict with the fbt plugin and are not yet supported
+
+error.todo-fbt-as-local.ts:18:19
   16 |
   17 | function Foo(props) {
 > 18 |   const getText1 = fbt =>
-     |                    ^^^ Todo: Support local variables named "fbt" (18:18)
+     |                    ^^^ Rename to avoid conflict with fbt plugin
   19 |     fbt(
   20 |       `Hello, ${fbt.param('(key) name', identity(props.name))}!`,
   21 |       '(description) Greeting'

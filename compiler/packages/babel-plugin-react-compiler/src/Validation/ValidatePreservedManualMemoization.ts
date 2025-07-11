@@ -5,7 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, ErrorSeverity} from '../CompilerError';
+import {
+  CompilerDiagnostic,
+  CompilerError,
+  ErrorSeverity,
+} from '../CompilerError';
 import {
   DeclarationId,
   Effect,
@@ -275,27 +279,37 @@ function validateInferredDep(
       errorDiagnostic = merge(errorDiagnostic ?? compareResult, compareResult);
     }
   }
-  errorState.push({
-    severity: ErrorSeverity.CannotPreserveMemoization,
-    reason:
-      'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected',
-    description:
-      DEBUG ||
-      // If the dependency is a named variable then we can report it. Otherwise only print in debug mode
-      (dep.identifier.name != null && dep.identifier.name.kind === 'named')
-        ? `The inferred dependency was \`${prettyPrintScopeDependency(
-            dep,
-          )}\`, but the source dependencies were [${validDepsInMemoBlock
-            .map(dep => printManualMemoDependency(dep, true))
-            .join(', ')}]. ${
-            errorDiagnostic
-              ? getCompareDependencyResultDescription(errorDiagnostic)
-              : 'Inferred dependency not present in source'
-          }`
-        : null,
-    loc: memoLocation,
-    suggestions: null,
-  });
+  errorState.pushDiagnostic(
+    CompilerDiagnostic.create({
+      severity: ErrorSeverity.CannotPreserveMemoization,
+      category:
+        'Compilation skipped because existing memoization could not be preserved',
+      description: [
+        'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. ',
+        'The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. ',
+        DEBUG ||
+        // If the dependency is a named variable then we can report it. Otherwise only print in debug mode
+        (dep.identifier.name != null && dep.identifier.name.kind === 'named')
+          ? `The inferred dependency was \`${prettyPrintScopeDependency(
+              dep,
+            )}\`, but the source dependencies were [${validDepsInMemoBlock
+              .map(dep => printManualMemoDependency(dep, true))
+              .join(', ')}]. ${
+              errorDiagnostic
+                ? getCompareDependencyResultDescription(errorDiagnostic)
+                : 'Inferred dependency not present in source'
+            }.`
+          : '',
+      ]
+        .join('')
+        .trim(),
+      suggestions: null,
+    }).withDetail({
+      kind: 'error',
+      loc: memoLocation,
+      message: 'Could not preserve existing manual memoization',
+    }),
+  );
 }
 
 class Visitor extends ReactiveFunctionVisitor<VisitorState> {
@@ -519,14 +533,21 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
           !this.scopes.has(identifier.scope.id) &&
           !this.prunedScopes.has(identifier.scope.id)
         ) {
-          state.errors.push({
-            reason:
-              'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This dependency may be mutated later, which could cause the value to change unexpectedly',
-            description: null,
-            severity: ErrorSeverity.CannotPreserveMemoization,
-            loc,
-            suggestions: null,
-          });
+          state.errors.pushDiagnostic(
+            CompilerDiagnostic.create({
+              severity: ErrorSeverity.CannotPreserveMemoization,
+              category:
+                'Compilation skipped because existing memoization could not be preserved',
+              description: [
+                'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. ',
+                'This dependency may be mutated later, which could cause the value to change unexpectedly.',
+              ].join(''),
+            }).withDetail({
+              kind: 'error',
+              loc,
+              message: 'This dependency may be modified later',
+            }),
+          );
         }
       }
     }
@@ -560,16 +581,25 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
 
           for (const identifier of decls) {
             if (isUnmemoized(identifier, this.scopes)) {
-              state.errors.push({
-                reason:
-                  'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.',
-                description: DEBUG
-                  ? `${printIdentifier(identifier)} was not memoized`
-                  : null,
-                severity: ErrorSeverity.CannotPreserveMemoization,
-                loc,
-                suggestions: null,
-              });
+              state.errors.pushDiagnostic(
+                CompilerDiagnostic.create({
+                  severity: ErrorSeverity.CannotPreserveMemoization,
+                  category:
+                    'Compilation skipped because existing memoization could not be preserved',
+                  description: [
+                    'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output. ',
+                    DEBUG
+                      ? `${printIdentifier(identifier)} was not memoized.`
+                      : '',
+                  ]
+                    .join('')
+                    .trim(),
+                }).withDetail({
+                  kind: 'error',
+                  loc,
+                  message: 'Could not preserve existing memoization',
+                }),
+              );
             }
           }
         }

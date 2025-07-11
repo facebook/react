@@ -9,9 +9,12 @@ export {runBabelPluginReactCompiler} from './Babel/RunReactCompilerBabelPlugin';
 export {
   CompilerError,
   CompilerErrorDetail,
+  CompilerDiagnostic,
   CompilerSuggestionOperation,
   ErrorSeverity,
   type CompilerErrorDetailOptions,
+  type CompilerDiagnosticOptions,
+  type CompilerDiagnosticDetail,
 } from './CompilerError';
 export {
   compileFn as compile,

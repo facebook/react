@@ -5,7 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, ErrorSeverity} from '../CompilerError';
+import {
+  CompilerDiagnostic,
+  CompilerError,
+  ErrorSeverity,
+} from '../CompilerError';
 import {HIRFunction, IdentifierId, SourceLocation} from '../HIR';
 import {Result} from '../Utils/Result';
 
@@ -59,20 +63,23 @@ export function validateStaticComponents(
               value.tag.identifier.id,
             );
             if (location != null) {
-              error.push({
-                reason: `Components created during render will reset their state each time they are created. Declare components outside of render. `,
-                severity: ErrorSeverity.InvalidReact,
-                loc: value.tag.loc,
-                description: null,
-                suggestions: null,
-              });
-              error.push({
-                reason: `The component may be created during render`,
-                severity: ErrorSeverity.InvalidReact,
-                loc: location,
-                description: null,
-                suggestions: null,
-              });
+              error.pushDiagnostic(
+                CompilerDiagnostic.create({
+                  severity: ErrorSeverity.InvalidReact,
+                  category: 'Cannot create components during render',
+                  description: `Components created during render will reset their state each time they are created. Declare components outside of render. `,
+                })
+                  .withDetail({
+                    kind: 'error',
+                    loc: value.tag.loc,
+                    message: 'This component is created during render',
+                  })
+                  .withDetail({
+                    kind: 'error',
+                    loc: location,
+                    message: 'The component is created during render here',
+                  }),
+              );
             }
           }
         }
