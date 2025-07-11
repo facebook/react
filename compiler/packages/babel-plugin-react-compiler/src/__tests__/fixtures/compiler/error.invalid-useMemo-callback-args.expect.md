@@ -21,7 +21,7 @@ useMemo() callbacks are called by React to cache calculations across re-renders.
 error.invalid-useMemo-callback-args.ts:2:18
   1 | function component(a, b) {
 > 2 |   let x = useMemo(c => a, []);
-    |                   ^
+    |                   ^ Callbacks with parameters are not supported
   3 |   return x;
   4 | }
   5 |

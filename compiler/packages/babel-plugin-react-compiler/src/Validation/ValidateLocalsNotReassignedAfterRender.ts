@@ -29,15 +29,20 @@ export function validateLocalsNotReassignedAfterRender(fn: HIRFunction): void {
   );
   if (reassignment !== null) {
     const errors = new CompilerError();
+    const variable =
+      reassignment.identifier.name != null &&
+      reassignment.identifier.name.kind === 'named'
+        ? `\`${reassignment.identifier.name.value}\``
+        : 'variable';
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
         severity: ErrorSeverity.InvalidReact,
-        category: 'Cannot reassign a variable after render completes',
-        description: `Reassigning ${reassignment.identifier.name != null && reassignment.identifier.name.kind === 'named' ? `variable \`${reassignment.identifier.name.value}\`` : 'a variable'} after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead`,
+        category: 'Cannot reassign variable after render completes',
+        description: `Reassigning ${variable} after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.`,
       }).withDetail({
         kind: 'error',
         loc: reassignment.loc,
-        message: 'Cannot reassign variable after render completes',
+        message: `Cannot reassign ${variable} after render completes`,
       }),
     );
     throw errors;
