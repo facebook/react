@@ -17,18 +17,18 @@ function Component(props) {
 
 ```
 Found 1 error:
-Error: Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX
+Error: This value cannot be modified
+
+Modifying a value used previously in JSX is not allowed. Consider moving the modification before the JSX
 
 error.invalid-computed-store-to-frozen-value.ts:5:2
   3 |   // freeze
   4 |   <div>{x}</div>;
 > 5 |   x[0] = true;
-    |   ^ Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX
+    |   ^ This value cannot be modified
   6 |   return x;
   7 | }
   8 |
-
-
 ```
           
       

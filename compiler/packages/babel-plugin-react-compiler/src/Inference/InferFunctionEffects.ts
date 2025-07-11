@@ -326,26 +326,26 @@ function isEffectSafeOutsideRender(effect: FunctionEffect): boolean {
 
 export function getWriteErrorReason(abstractValue: AbstractValue): string {
   if (abstractValue.reason.has(ValueReason.Global)) {
-    return 'Writing to a variable defined outside a component or hook is not allowed. Consider using an effect';
+    return 'Modifying a variable defined outside a component or hook is not allowed. Consider using an effect';
   } else if (abstractValue.reason.has(ValueReason.JsxCaptured)) {
-    return 'Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX';
+    return 'Modifying a value used previously in JSX is not allowed. Consider moving the modification before the JSX';
   } else if (abstractValue.reason.has(ValueReason.Context)) {
-    return `Mutating a value returned from 'useContext()', which should not be mutated`;
+    return `Modifying a value returned from 'useContext()' is not allowed.`;
   } else if (abstractValue.reason.has(ValueReason.KnownReturnSignature)) {
-    return 'Mutating a value returned from a function whose return value should not be mutated';
+    return 'Modifying a value returned from a function whose return value should not be mutated';
   } else if (abstractValue.reason.has(ValueReason.ReactiveFunctionArgument)) {
-    return 'Mutating component props or hook arguments is not allowed. Consider using a local variable instead';
+    return 'Modifying component props or hook arguments is not allowed. Consider using a local variable instead';
   } else if (abstractValue.reason.has(ValueReason.State)) {
-    return "Mutating a value returned from 'useState()', which should not be mutated. Use the setter function to update instead";
+    return "Modifying a value returned from 'useState()', which should not be modified directly. Use the setter function to update instead";
   } else if (abstractValue.reason.has(ValueReason.ReducerState)) {
-    return "Mutating a value returned from 'useReducer()', which should not be mutated. Use the dispatch function to update instead";
+    return "Modifying a value returned from 'useReducer()', which should not be modified directly. Use the dispatch function to update instead";
   } else if (abstractValue.reason.has(ValueReason.Effect)) {
-    return 'Updating a value used previously in an effect function or as an effect dependency is not allowed. Consider moving the mutation before calling useEffect()';
+    return 'Modifying a value used previously in an effect function or as an effect dependency is not allowed. Consider moving the modification before calling useEffect()';
   } else if (abstractValue.reason.has(ValueReason.HookCaptured)) {
-    return 'Updating a value previously passed as an argument to a hook is not allowed. Consider moving the mutation before calling the hook';
+    return 'Modifying a value previously passed as an argument to a hook is not allowed. Consider moving the modification before calling the hook';
   } else if (abstractValue.reason.has(ValueReason.HookReturn)) {
-    return 'Updating a value returned from a hook is not allowed. Consider moving the mutation into the hook where the value is constructed';
+    return 'Modifying a value returned from a hook is not allowed. Consider moving the modification into the hook where the value is constructed';
   } else {
-    return 'This mutates a variable that React considers immutable';
+    return 'This modifies a variable that React considers immutable';
   }
 }

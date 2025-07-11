@@ -17,18 +17,18 @@ function Foo() {
 
 ```
 Found 1 error:
-Error: Mutating a value returned from 'useReducer()', which should not be mutated. Use the dispatch function to update instead
+Error: This value cannot be modified
+
+Modifying a value returned from 'useReducer()', which should not be modified directly. Use the dispatch function to update instead
 
 error.modify-useReducer-state.ts:5:2
   3 | function Foo() {
   4 |   let [state, setState] = useReducer({foo: 1});
 > 5 |   state.foo = 1;
-    |   ^^^^^ Mutating a value returned from 'useReducer()', which should not be mutated. Use the dispatch function to update instead
+    |   ^^^^^ This value cannot be modified
   6 |   return state;
   7 | }
   8 |
-
-
 ```
           
       
