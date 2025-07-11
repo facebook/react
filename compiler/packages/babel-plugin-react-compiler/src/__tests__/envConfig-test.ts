@@ -20,7 +20,7 @@ describe('parseConfigPragma()', () => {
         validateHooksUsage: 1,
       } as any);
     }).toThrowErrorMatchingInlineSnapshot(
-      `"InvalidConfig: Could not validate environment config. Update React Compiler config to fix the error. Validation error: Expected boolean, received number at "validateHooksUsage""`,
+      `"Error: Could not validate environment config. Update React Compiler config to fix the error. Validation error: Expected boolean, received number at "validateHooksUsage"."`,
     );
   });
 
@@ -38,7 +38,7 @@ describe('parseConfigPragma()', () => {
         ],
       } as any);
     }).toThrowErrorMatchingInlineSnapshot(
-      `"InvalidConfig: Could not validate environment config. Update React Compiler config to fix the error. Validation error: numRequiredArgs must be > 0 at "inferEffectDependencies[0].numRequiredArgs""`,
+      `"Error: Could not validate environment config. Update React Compiler config to fix the error. Validation error: numRequiredArgs must be > 0 at "inferEffectDependencies[0].numRequiredArgs"."`,
     );
   });
 

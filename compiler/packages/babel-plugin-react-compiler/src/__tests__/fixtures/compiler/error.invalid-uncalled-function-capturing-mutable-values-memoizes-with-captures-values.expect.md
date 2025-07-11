@@ -47,6 +47,12 @@ hook useMemoMap<TInput: interface {}, TOutput>(
 ## Error
 
 ```
+Found 1 error:
+Error: Cannot modify local variables after render completes
+
+This argument is a function which may reassign or mutate local variables after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead
+
+undefined:21:9
   19 |   map: TInput => TOutput
   20 | ): TInput => TOutput {
 > 21 |   return useMemo(() => {
@@ -82,11 +88,18 @@ hook useMemoMap<TInput: interface {}, TOutput>(
 > 36 |     };
      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 > 37 |   }, [map]);
-     | ^^^^^^^^^^^^ InvalidReact: This argument is a function which may reassign or mutate local variables after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead (21:37)
-
-InvalidReact: The function modifies a local variable here (33:33)
+     | ^^^^^^^^^^^^ This function may (indirectly) reassign or modify local variables after render
   38 | }
   39 |
+
+undefined:33:8
+  31 |       if (output == null) {
+  32 |         output = map(input);
+> 33 |         cache.set(input, output);
+     |         ^^^^^ This modifies a local variable
+  34 |       }
+  35 |       return output;
+  36 |     };
 ```
           
       
