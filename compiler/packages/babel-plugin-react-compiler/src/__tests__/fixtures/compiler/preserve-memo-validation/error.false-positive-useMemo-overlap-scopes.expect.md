@@ -41,18 +41,18 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 1 error:
-Memoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This dependency may be mutated later, which could cause the value to change unexpectedly
+Memoization: Compilation skipped because existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This dependency may be mutated later, which could cause the value to change unexpectedly.
 
 error.false-positive-useMemo-overlap-scopes.ts:23:9
   21 |   const result = useMemo(() => {
   22 |     return [Math.max(x[1], a)];
 > 23 |   }, [a, x]);
-     |          ^ React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This dependency may be mutated later, which could cause the value to change unexpectedly
+     |          ^ This dependency may be modified later
   24 |   arrayPush(y, 3);
   25 |   return {result, y};
   26 | }
-
-
 ```
           
       
