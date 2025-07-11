@@ -80,6 +80,7 @@ let moduleLocal = false;
 
 ```
 Found 10 errors:
+
 Todo: (BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration
 
 error.todo-kitchensink.ts:3:2
@@ -90,7 +91,6 @@ error.todo-kitchensink.ts:3:2
   4 |
   5 |   class Bar {
   6 |     #secretSauce = 42;
-
 
 Error: Inline `class` declarations are not supported
 
@@ -115,7 +115,6 @@ error.todo-kitchensink.ts:5:2
   12 |   const g = {b() {}, c: () => {}};
   13 |   const {z, aa = 'aa'} = useCustom();
 
-
 Todo: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement
 
 error.todo-kitchensink.ts:20:2
@@ -130,7 +129,6 @@ error.todo-kitchensink.ts:20:2
   23 |   for (; i < 3; ) {
   24 |     break;
   25 |   }
-
 
 Todo: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement
 
@@ -147,7 +145,6 @@ error.todo-kitchensink.ts:23:2
   27 |     break;
   28 |   }
 
-
 Todo: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement
 
 error.todo-kitchensink.ts:26:2
@@ -162,7 +159,6 @@ error.todo-kitchensink.ts:26:2
   29 |
   30 |   graphql`
   31 |     ${g}
-
 
 Todo: (BuildHIR::lowerStatement) Handle empty test in ForStatement
 
@@ -179,7 +175,6 @@ error.todo-kitchensink.ts:26:2
   30 |   graphql`
   31 |     ${g}
 
-
 Todo: (BuildHIR::lowerExpression) Handle tagged template with interpolations
 
 error.todo-kitchensink.ts:30:2
@@ -195,7 +190,6 @@ error.todo-kitchensink.ts:30:2
   34 |   graphql`\\t\n`;
   35 |
 
-
 Todo: (BuildHIR::lowerExpression) Handle tagged template where cooked value is different from raw value
 
 error.todo-kitchensink.ts:34:2
@@ -206,7 +200,6 @@ error.todo-kitchensink.ts:34:2
   35 |
   36 |   for (c of [1, 2]) {
   37 |   }
-
 
 Todo: (BuildHIR::node.lowerReorderableExpression) Expression type `MemberExpression` cannot be safely reordered
 
@@ -219,7 +212,6 @@ error.todo-kitchensink.ts:57:9
   59 |     default: {
   60 |     }
 
-
 Todo: (BuildHIR::node.lowerReorderableExpression) Expression type `BinaryExpression` cannot be safely reordered
 
 error.todo-kitchensink.ts:53:9
@@ -230,8 +222,6 @@ error.todo-kitchensink.ts:53:9
   54 |     }
   55 |     case foo(): {
   56 |     }
-
-
 ```
           
       

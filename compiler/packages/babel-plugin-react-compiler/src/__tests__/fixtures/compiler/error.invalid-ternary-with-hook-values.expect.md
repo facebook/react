@@ -14,6 +14,7 @@ function Component(props) {
 
 ```
 Found 4 errors:
+
 Error: Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values
 
 error.invalid-ternary-with-hook-values.ts:2:25
@@ -23,7 +24,6 @@ error.invalid-ternary-with-hook-values.ts:2:25
   3 |   return x();
   4 | }
   5 |
-
 
 Error: Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values
 
@@ -35,7 +35,6 @@ error.invalid-ternary-with-hook-values.ts:2:32
   4 | }
   5 |
 
-
 Error: Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values
 
 error.invalid-ternary-with-hook-values.ts:2:12
@@ -46,7 +45,6 @@ error.invalid-ternary-with-hook-values.ts:2:12
   4 | }
   5 |
 
-
 Error: Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values
 
 error.invalid-ternary-with-hook-values.ts:3:9
@@ -56,8 +54,6 @@ error.invalid-ternary-with-hook-values.ts:3:9
     |          ^ Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values
   4 | }
   5 |
-
-
 ```
           
       

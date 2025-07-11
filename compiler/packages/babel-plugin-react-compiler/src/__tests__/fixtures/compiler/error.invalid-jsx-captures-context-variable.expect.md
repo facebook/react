@@ -51,9 +51,10 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 1 error:
+
 Error: This value cannot be modified
 
-Modifying a value used previously in JSX is not allowed. Consider moving the modification before the JSX
+Modifying a value used previously in JSX is not allowed. Consider moving the modification before the JSX.
 
 error.invalid-jsx-captures-context-variable.ts:22:2
   20 |     />

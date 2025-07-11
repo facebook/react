@@ -16,6 +16,7 @@ function NoHooks() {
 
 ```
 Found 1 error:
+
 Todo: (BuildHIR::lowerExpression) Support UpdateExpression where argument is a global
 
 error.mutate-global-increment-op-invalid-react.ts:4:2
@@ -26,8 +27,6 @@ error.mutate-global-increment-op-invalid-react.ts:4:2
   5 |   return <div />;
   6 | }
   7 |
-
-
 ```
           
       

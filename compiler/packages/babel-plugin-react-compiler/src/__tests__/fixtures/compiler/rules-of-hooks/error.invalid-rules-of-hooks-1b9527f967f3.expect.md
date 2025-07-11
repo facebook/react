@@ -26,6 +26,7 @@ function useHookInLoops() {
 
 ```
 Found 4 errors:
+
 Error: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
 
 error.invalid-rules-of-hooks-1b9527f967f3.ts:7:4
@@ -36,7 +37,6 @@ error.invalid-rules-of-hooks-1b9527f967f3.ts:7:4
    8 |     if (b) return;
    9 |     useHook2();
   10 |   }
-
 
 Error: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
 
@@ -49,7 +49,6 @@ error.invalid-rules-of-hooks-1b9527f967f3.ts:9:4
   11 |   while (c) {
   12 |     useHook3();
 
-
 Error: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
 
 error.invalid-rules-of-hooks-1b9527f967f3.ts:12:4
@@ -61,7 +60,6 @@ error.invalid-rules-of-hooks-1b9527f967f3.ts:12:4
   14 |     useHook4();
   15 |   }
 
-
 Error: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
 
 error.invalid-rules-of-hooks-1b9527f967f3.ts:14:4
@@ -72,8 +70,6 @@ error.invalid-rules-of-hooks-1b9527f967f3.ts:14:4
   15 |   }
   16 | }
   17 |
-
-
 ```
           
       

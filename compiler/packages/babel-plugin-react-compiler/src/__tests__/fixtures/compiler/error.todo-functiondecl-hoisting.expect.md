@@ -32,6 +32,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 1 error:
+
 Todo: [PruneHoistedContexts] Rewrite hoisted function references
 
 error.todo-functiondecl-hoisting.ts:12:17
@@ -42,8 +43,6 @@ error.todo-functiondecl-hoisting.ts:12:17
   13 |   function bar() {
   14 |     return {value};
   15 |   }
-
-
 ```
           
       

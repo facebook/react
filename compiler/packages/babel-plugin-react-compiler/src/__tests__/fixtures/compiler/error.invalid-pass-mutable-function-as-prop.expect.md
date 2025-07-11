@@ -18,15 +18,16 @@ function Component() {
 
 ```
 Found 1 error:
+
 Error: Cannot modify local variables after render completes
 
-This argument is a function which may reassign or mutate local variables after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead
+This argument is a function which may reassign or mutate `cache` after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.
 
 error.invalid-pass-mutable-function-as-prop.ts:7:18
   5 |     cache.set('key', 'value');
   6 |   };
 > 7 |   return <Foo fn={fn} />;
-    |                   ^^ This function may (indirectly) reassign or modify local variables after render
+    |                   ^^ This function may (indirectly) reassign or modify `cache` after render
   8 | }
   9 |
 
@@ -34,7 +35,7 @@ error.invalid-pass-mutable-function-as-prop.ts:5:4
   3 |   const cache = new Map();
   4 |   const fn = () => {
 > 5 |     cache.set('key', 'value');
-    |     ^^^^^ This modifies a local variable
+    |     ^^^^^ This modifies `cache`
   6 |   };
   7 |   return <Foo fn={fn} />;
   8 | }

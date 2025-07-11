@@ -20,6 +20,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 1 error:
+
 Todo: [hoisting] EnterSSA: Expected identifier to be defined before being used
 
 Identifier x$1 is undefined.
@@ -32,8 +33,6 @@ error.dont-hoist-inline-reference.ts:3:2
   4 |   return x;
   5 | }
   6 |
-
-
 ```
           
       

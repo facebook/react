@@ -202,7 +202,7 @@ const rule: Rule.RuleModule = {
               end: endLoc,
             };
             context.report({
-              message: `${detail.printErrorMessage(sourceCode.text)} ${locStr}`,
+              message: `${detail.printErrorMessage(sourceCode.text, {eslint: true})} ${locStr}`,
               loc: firstLineLoc,
               suggest,
             });
@@ -225,7 +225,9 @@ const rule: Rule.RuleModule = {
           }
           if (loc != null) {
             context.report({
-              message: detail.printErrorMessage(sourceCode.text),
+              message: detail.printErrorMessage(sourceCode.text, {
+                eslint: true,
+              }),
               loc,
               suggest,
             });

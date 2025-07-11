@@ -20,6 +20,7 @@ function Component(props) {
 
 ```
 Found 1 error:
+
 Todo: (BuildHIR::lowerStatement) Handle TryStatement without a catch clause
 
 error.todo-invalid-jsx-in-try-with-finally.ts:4:2
@@ -38,8 +39,6 @@ error.todo-invalid-jsx-in-try-with-finally.ts:4:2
    9 |   return el;
   10 | }
   11 |
-
-
 ```
           
       
