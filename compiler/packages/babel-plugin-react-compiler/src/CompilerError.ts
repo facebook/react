@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import * as t from '@babel/types';
 import {codeFrameColumns} from '@babel/code-frame';
 import type {SourceLocation} from './HIR';
 import {Err, Ok, Result} from './Utils/Result';
@@ -151,22 +152,7 @@ export class CompilerDiagnostic {
           }
           let codeFrame: string;
           try {
-            codeFrame = codeFrameColumns(
-              source,
-              {
-                start: {
-                  line: loc.start.line,
-                  column: loc.start.column + 1,
-                },
-                end: {
-                  line: loc.end.line,
-                  column: loc.end.column + 1,
-                },
-              },
-              {
-                message: detail.message,
-              },
-            );
+            codeFrame = printCodeFrame(source, loc, detail.message);
           } catch (e) {
             codeFrame = detail.message;
           }
@@ -245,22 +231,7 @@ export class CompilerErrorDetail {
     if (loc != null && typeof loc !== 'symbol') {
       let codeFrame: string;
       try {
-        codeFrame = codeFrameColumns(
-          source,
-          {
-            start: {
-              line: loc.start.line,
-              column: loc.start.column + 1,
-            },
-            end: {
-              line: loc.end.line,
-              column: loc.end.column + 1,
-            },
-          },
-          {
-            message: this.reason,
-          },
-        );
+        codeFrame = printCodeFrame(source, loc, this.reason);
       } catch (e) {
         codeFrame = '';
       }
@@ -457,6 +428,29 @@ export class CompilerError extends Error {
       }
     });
   }
+}
+
+function printCodeFrame(
+  source: string,
+  loc: t.SourceLocation,
+  message: string,
+): string {
+  return codeFrameColumns(
+    source,
+    {
+      start: {
+        line: loc.start.line,
+        column: loc.start.column + 1,
+      },
+      end: {
+        line: loc.end.line,
+        column: loc.end.column + 1,
+      },
+    },
+    {
+      message,
+    },
+  );
 }
 
 function printErrorSummary(severity: ErrorSeverity, message: string): string {
