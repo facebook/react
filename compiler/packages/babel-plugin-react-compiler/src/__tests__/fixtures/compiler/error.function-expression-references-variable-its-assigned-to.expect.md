@@ -16,15 +16,15 @@ function Component() {
 
 ```
 Found 1 error:
-Error: Cannot reassign a variable after render completes
+Error: Cannot reassign variable after render completes
 
-Reassigning variable `callback` after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead
+Reassigning `callback` after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.
 
 error.function-expression-references-variable-its-assigned-to.ts:3:4
   1 | function Component() {
   2 |   let callback = () => {
 > 3 |     callback = null;
-    |     ^^^^^^^^ Cannot reassign variable after render completes
+    |     ^^^^^^^^ Cannot reassign `callback` after render completes
   4 |   };
   5 |   return <div onClick={callback} />;
   6 | }
