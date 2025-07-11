@@ -61,7 +61,7 @@ const tests: CompilerTestCases = {
       `,
       errors: [
         {
-          message: /Mutating a value returned from 'useState\(\)'/,
+          message: /Modifying a value returned from 'useState\(\)'/,
           line: 7,
         },
       ],

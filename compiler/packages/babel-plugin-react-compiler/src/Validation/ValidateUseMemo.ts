@@ -82,7 +82,7 @@ export function validateUseMemo(fn: HIRFunction): Result<void, CompilerError> {
               }).withDetail({
                 kind: 'error',
                 loc,
-                message: '',
+                message: 'Callbacks with parameters are not supported',
               }),
             );
           }
@@ -92,9 +92,9 @@ export function validateUseMemo(fn: HIRFunction): Result<void, CompilerError> {
               CompilerDiagnostic.create({
                 severity: ErrorSeverity.InvalidReact,
                 category:
-                  'useMemo callbacks may not be async or generator functions',
+                  'useMemo() callbacks may not be async or generator functions',
                 description:
-                  'useMemo() callbacks are called once and must synchronously return a value',
+                  'useMemo() callbacks are called once and must synchronously return a value.',
                 suggestions: null,
               }).withDetail({
                 kind: 'error',

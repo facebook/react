@@ -57,22 +57,28 @@ export function validateNoFreezingKnownMutableFunctions(
     if (operand.effect === Effect.Freeze) {
       const effect = contextMutationEffects.get(operand.identifier.id);
       if (effect != null) {
+        const place = [...effect.places][0];
+        const variable =
+          place != null &&
+          place.identifier.name != null &&
+          place.identifier.name.kind === 'named'
+            ? `\`${place.identifier.name.value}\``
+            : 'a local variable';
         errors.pushDiagnostic(
           CompilerDiagnostic.create({
             severity: ErrorSeverity.InvalidReact,
             category: 'Cannot modify local variables after render completes',
-            description: `This argument is a function which may reassign or mutate local variables after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead`,
+            description: `This argument is a function which may reassign or mutate ${variable} after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.`,
           })
             .withDetail({
               kind: 'error',
               loc: operand.loc,
-              message:
-                'This function may (indirectly) reassign or modify local variables after render',
+              message: `This function may (indirectly) reassign or modify ${variable} after render`,
             })
             .withDetail({
               kind: 'error',
               loc: effect.loc,
-              message: 'This modifies a local variable',
+              message: `This modifies ${variable}`,
             }),
         );
       }
