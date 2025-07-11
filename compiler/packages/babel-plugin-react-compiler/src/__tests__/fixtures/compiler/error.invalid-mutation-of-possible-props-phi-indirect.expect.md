@@ -22,7 +22,7 @@ function Component(props) {
 Found 1 error:
 Error: This value cannot be modified
 
-Modifying a variable defined outside a component or hook is not allowed. Consider using an effect
+Modifying a variable defined outside a component or hook is not allowed. Consider using an effect.
 
 error.invalid-mutation-of-possible-props-phi-indirect.ts:4:4
   2 |   let x = cond ? someGlobal : props.foo;
