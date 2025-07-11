@@ -31,18 +31,18 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 1 error:
-Memoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.
+Memoization: Compilation skipped because existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.
 
 error.false-positive-useMemo-dropped-infer-always-invalidating.ts:15:9
   13 |   x.push(props);
   14 |
 > 15 |   return useMemo(() => [x], [x]);
-     |          ^^^^^^^^^^^^^^^^^^^^^^^ React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.
+     |          ^^^^^^^^^^^^^^^^^^^^^^^ Could not preserve existing memoization
   16 | }
   17 |
   18 | export const FIXTURE_ENTRYPOINT = {
-
-
 ```
           
       

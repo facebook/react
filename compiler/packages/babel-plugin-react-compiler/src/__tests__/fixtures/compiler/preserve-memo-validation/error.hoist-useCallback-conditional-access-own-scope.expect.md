@@ -27,9 +27,9 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 1 error:
-Memoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected
+Memoization: Compilation skipped because existing memoization could not be preserved
 
-The inferred dependency was `propB`, but the source dependencies were [propA, propB.x.y]. Inferred less specific property than source.
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `propB`, but the source dependencies were [propA, propB.x.y]. Inferred less specific property than source.
 
 error.hoist-useCallback-conditional-access-own-scope.ts:5:21
    3 |
@@ -47,12 +47,10 @@ error.hoist-useCallback-conditional-access-own-scope.ts:5:21
 > 10 |     }
      | ^^^^^^^^^^^^^^^^
 > 11 |   }, [propA, propB.x.y]);
-     | ^^^^ React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected
+     | ^^^^ Could not preserve existing manual memoization
   12 | }
   13 |
   14 | export const FIXTURE_ENTRYPOINT = {
-
-
 ```
           
       
