@@ -23,6 +23,7 @@ export const FIXTURE_ENTRYPONT = {
 
 ```
 Found 1 error:
+
 Todo: Unexpected terminal kind `optional` for optional fallthrough block
 
 error.todo-optional-call-chain-in-optional.ts:3:21
@@ -33,8 +34,6 @@ error.todo-optional-call-chain-in-optional.ts:3:21
   4 | }
   5 |
   6 | function createArray<T>(...args: Array<T>): Array<T> {
-
-
 ```
           
       

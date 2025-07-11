@@ -26,6 +26,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 1 error:
+
 Todo: (BuildHIR::lowerExpression) Handle set functions in ObjectExpression
 
 error.todo-object-expression-set-syntax.ts:4:4
@@ -40,8 +41,6 @@ error.todo-object-expression-set-syntax.ts:4:4
   7 |   };
   8 |   object.value = props.value;
   9 |   return <div>{value}</div>;
-
-
 ```
           
       

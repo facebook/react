@@ -33,6 +33,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 4 errors:
+
 Error: This function accesses a ref value (the `current` property), which may not be accessed during render. (https://react.dev/reference/react/useRef)
 
 error.capture-ref-for-mutation.ts:12:13
@@ -43,7 +44,6 @@ error.capture-ref-for-mutation.ts:12:13
   13 |   };
   14 |   const moveRight = {
   15 |     handler: handleKey('right')(),
-
 
 Error: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)
 
@@ -56,7 +56,6 @@ error.capture-ref-for-mutation.ts:12:13
   14 |   const moveRight = {
   15 |     handler: handleKey('right')(),
 
-
 Error: This function accesses a ref value (the `current` property), which may not be accessed during render. (https://react.dev/reference/react/useRef)
 
 error.capture-ref-for-mutation.ts:15:13
@@ -68,7 +67,6 @@ error.capture-ref-for-mutation.ts:15:13
   17 |   return [moveLeft, moveRight];
   18 | }
 
-
 Error: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)
 
 error.capture-ref-for-mutation.ts:15:13
@@ -79,8 +77,6 @@ error.capture-ref-for-mutation.ts:15:13
   16 |   };
   17 |   return [moveLeft, moveRight];
   18 | }
-
-
 ```
           
       

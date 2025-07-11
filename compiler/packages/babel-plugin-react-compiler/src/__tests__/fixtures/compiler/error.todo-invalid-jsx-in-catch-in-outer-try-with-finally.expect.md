@@ -27,6 +27,7 @@ function Component(props) {
 
 ```
 Found 1 error:
+
 Todo: (BuildHIR::lowerStatement) Handle TryStatement without a catch clause
 
 error.todo-invalid-jsx-in-catch-in-outer-try-with-finally.ts:6:2
@@ -55,8 +56,6 @@ error.todo-invalid-jsx-in-catch-in-outer-try-with-finally.ts:6:2
   16 |   return el;
   17 | }
   18 |
-
-
 ```
           
       

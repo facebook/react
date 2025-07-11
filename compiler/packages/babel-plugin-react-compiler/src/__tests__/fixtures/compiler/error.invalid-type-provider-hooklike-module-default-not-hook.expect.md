@@ -15,6 +15,7 @@ function Component() {
 
 ```
 Found 1 error:
+
 Error: Invalid type configuration for module
 
 Expected type for `import ... from 'useDefaultExportNotTypedAsHook'` to be a hook based on the module name.
@@ -26,8 +27,6 @@ error.invalid-type-provider-hooklike-module-default-not-hook.ts:4:15
     |                ^^^ Invalid type configuration for module
   5 | }
   6 |
-
-
 ```
           
       

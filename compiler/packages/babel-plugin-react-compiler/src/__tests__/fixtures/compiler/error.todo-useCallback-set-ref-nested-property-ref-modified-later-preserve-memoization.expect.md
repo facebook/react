@@ -32,6 +32,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 1 error:
+
 Error: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)
 
 error.todo-useCallback-set-ref-nested-property-ref-modified-later-preserve-memoization.ts:14:2
@@ -42,8 +43,6 @@ error.todo-useCallback-set-ref-nested-property-ref-modified-later-preserve-memoi
   15 |
   16 |   return <input onChange={onChange} />;
   17 | }
-
-
 ```
           
       

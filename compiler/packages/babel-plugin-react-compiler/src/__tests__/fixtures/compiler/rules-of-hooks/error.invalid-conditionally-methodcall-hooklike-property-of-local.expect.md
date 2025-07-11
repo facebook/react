@@ -18,6 +18,7 @@ function Component(props) {
 
 ```
 Found 1 error:
+
 Error: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
 
 error.invalid-conditionally-methodcall-hooklike-property-of-local.ts:6:4
@@ -28,8 +29,6 @@ error.invalid-conditionally-methodcall-hooklike-property-of-local.ts:6:4
   7 |   }
   8 | }
   9 |
-
-
 ```
           
       

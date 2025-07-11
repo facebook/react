@@ -24,6 +24,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 2 errors:
+
 Error: Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values
 
 error.hook-property-load-local-hook.ts:7:12
@@ -35,7 +36,6 @@ error.hook-property-load-local-hook.ts:7:12
    9 | }
   10 |
 
-
 Error: Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values
 
 error.hook-property-load-local-hook.ts:8:9
@@ -46,8 +46,6 @@ error.hook-property-load-local-hook.ts:8:9
    9 | }
   10 |
   11 | export const FIXTURE_ENTRYPOINT = {
-
-
 ```
           
       

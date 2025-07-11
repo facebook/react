@@ -20,6 +20,7 @@ function Component({a, b}) {
 
 ```
 Found 1 error:
+
 Todo: Support duplicate fbt tags
 
 Support `<fbt>` tags with multiple `<fbt:enum>` values

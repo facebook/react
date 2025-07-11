@@ -16,6 +16,7 @@ function Component() {
 
 ```
 Found 1 error:
+
 Todo: Support functions with unreachable code that may contain hoisted declarations
 
 error.todo-hoist-function-decls.ts:3:2
@@ -29,8 +30,6 @@ error.todo-hoist-function-decls.ts:3:2
     | ^^^^ Support functions with unreachable code that may contain hoisted declarations
   6 | }
   7 |
-
-
 ```
           
       

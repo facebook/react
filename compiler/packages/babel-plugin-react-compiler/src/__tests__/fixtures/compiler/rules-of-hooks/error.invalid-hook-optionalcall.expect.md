@@ -14,6 +14,7 @@ function Component() {
 
 ```
 Found 1 error:
+
 Error: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
 
 error.invalid-hook-optionalcall.ts:2:19
@@ -23,8 +24,6 @@ error.invalid-hook-optionalcall.ts:2:19
   3 |   return result;
   4 | }
   5 |
-
-
 ```
           
       

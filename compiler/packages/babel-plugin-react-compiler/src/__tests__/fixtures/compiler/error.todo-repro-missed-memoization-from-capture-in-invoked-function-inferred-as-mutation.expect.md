@@ -43,11 +43,11 @@ component Component() {
 
 ```
 Found 1 error:
+
 Memoization: Compilation skipped because existing memoization could not be preserved
 
 React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.
 
-undefined:18:20
   16 |   // We infer that getIsEnabled returns a mutable value, such that
   17 |   // isEnabled is mutable
 > 18 |   const isEnabled = useMemo(() => getIsEnabled(), [getIsEnabled]);
