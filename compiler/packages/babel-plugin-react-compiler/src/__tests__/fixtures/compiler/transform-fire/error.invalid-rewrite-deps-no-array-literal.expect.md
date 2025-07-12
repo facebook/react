@@ -25,10 +25,17 @@ function Component(props) {
 ## Error
 
 ```
+Found 1 error:
+
+Invariant: Cannot compile `fire`
+
+You must use an array literal for an effect dependency array when that effect uses `fire()`.
+
+error.invalid-rewrite-deps-no-array-literal.ts:13:5
   11 |   useEffect(() => {
   12 |     fire(foo(props));
 > 13 |   }, deps);
-     |      ^^^^ Invariant: Cannot compile `fire`. You must use an array literal for an effect dependency array when that effect uses `fire()` (13:13)
+     |      ^^^^ Cannot compile `fire`
   14 |
   15 |   return null;
   16 | }

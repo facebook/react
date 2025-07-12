@@ -16,10 +16,15 @@ function Component() {
 ## Error
 
 ```
+Found 1 error:
+
+Todo: Support functions with unreachable code that may contain hoisted declarations
+
+error.todo-hoisted-function-in-unreachable-code.ts:6:2
   4 |
   5 |   // This is unreachable from a control-flow perspective, but it gets hoisted
 > 6 |   function Foo() {}
-    |   ^^^^^^^^^^^^^^^^^ Todo: Support functions with unreachable code that may contain hoisted declarations (6:6)
+    |   ^^^^^^^^^^^^^^^^^ Support functions with unreachable code that may contain hoisted declarations
   7 | }
   8 |
 ```

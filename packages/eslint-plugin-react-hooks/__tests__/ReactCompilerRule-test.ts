@@ -106,8 +106,7 @@ const tests: CompilerTestCases = {
         }`,
       errors: [
         {
-          message:
-            '(BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration',
+          message: /Handle var kinds in VariableDeclaration/,
         },
       ],
     },
@@ -121,8 +120,7 @@ const tests: CompilerTestCases = {
   }`,
       errors: [
         {
-          message:
-            'React Compiler has skipped optimizing this component because one or more React ESLint rules were disabled. React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior',
+          message: /React Compiler has skipped optimizing this component/,
           suggestions: [
             {
               output: normalizeIndent`
@@ -160,12 +158,10 @@ const tests: CompilerTestCases = {
         }`,
       errors: [
         {
-          message:
-            '(BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration',
+          message: /Handle var kinds in VariableDeclaration/,
         },
         {
-          message:
-            'Mutating component props or hook arguments is not allowed. Consider using a local variable instead',
+          message: /Modifying component props or hook arguments is not allowed/,
         },
       ],
     },
@@ -184,8 +180,7 @@ const tests: CompilerTestCases = {
         }`,
       errors: [
         {
-          message:
-            '[ReactCompilerBailout] (BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration (@:3:2)',
+          message: /Handle var kinds in VariableDeclaration/,
         },
       ],
     },
@@ -202,7 +197,7 @@ const tests: CompilerTestCases = {
       errors: [
         {
           message:
-            'Unexpected reassignment of a variable which was defined outside of the component. Components and hooks should be pure and side-effect free, but variable reassignment is a form of side-effect. If this variable is used in rendering, use useState instead. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render)',
+            /Cannot reassign variables declared outside of the component\/hook/,
         },
       ],
     },
@@ -248,6 +243,37 @@ const tests: CompilerTestCases = {
         },
       ],
     },
+    {
+      name: 'Pipeline errors are reported',
+      code: normalizeIndent`
+        import useMyEffect from 'useMyEffect';
+        function Component({a}) {
+          'use no memo';
+          useMyEffect(() => console.log(a.b));
+          return <div>Hello world</div>;
+        }
+      `,
+      options: [
+        {
+          environment: {
+            inferEffectDependencies: [
+              {
+                function: {
+                  source: 'useMyEffect',
+                  importSpecifierName: 'default',
+                },
+                numRequiredArgs: 1,
+              },
+            ],
+          },
+        },
+      ],
+      errors: [
+        {
+          message: /Cannot infer dependencies of this effect/,
+        },
+      ],
+    },
   ],
 };
 
@@ -259,4 +285,4 @@ const eslintTester = new ESLintTesterV8({
     enableExperimentalComponentSyntax: true,
   },
 });
-eslintTester.run('react-compiler - eslint: v8', ReactCompilerRule, tests);
+eslintTester.run('react-compiler', ReactCompilerRule, tests);

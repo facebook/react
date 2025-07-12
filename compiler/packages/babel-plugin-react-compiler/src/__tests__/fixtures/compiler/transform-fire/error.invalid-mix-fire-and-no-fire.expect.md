@@ -27,10 +27,17 @@ function Component(props) {
 ## Error
 
 ```
+Found 1 error:
+
+Error: Cannot compile `fire`
+
+All uses of foo must be either used with a fire() call in this effect or not used with a fire() call at all. foo was used with fire() on line 10:10 in this effect.
+
+error.invalid-mix-fire-and-no-fire.ts:11:6
    9 |     function nested() {
   10 |       fire(foo(props));
 > 11 |       foo(props);
-     |       ^^^ InvalidReact: Cannot compile `fire`. All uses of foo must be either used with a fire() call in this effect or not used with a fire() call at all. foo was used with fire() on line 10:10 in this effect (11:11)
+     |       ^^^ Cannot compile `fire`
   12 |     }
   13 |
   14 |     nested();

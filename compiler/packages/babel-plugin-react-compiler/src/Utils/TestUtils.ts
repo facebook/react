@@ -113,8 +113,13 @@ function* splitPragma(
  */
 function parseConfigPragmaEnvironmentForTest(
   pragma: string,
+  defaultConfig: PartialEnvironmentConfig,
 ): EnvironmentConfig {
-  const maybeConfig: Partial<Record<keyof EnvironmentConfig, unknown>> = {};
+  // throw early if the defaults are invalid
+  EnvironmentConfigSchema.parse(defaultConfig);
+
+  const maybeConfig: Partial<Record<keyof EnvironmentConfig, unknown>> =
+    defaultConfig;
 
   for (const {key, value: val} of splitPragma(pragma)) {
     if (!hasOwnProperty(EnvironmentConfigSchema.shape, key)) {
@@ -174,9 +179,13 @@ export function parseConfigPragmaForTests(
   pragma: string,
   defaults: {
     compilationMode: CompilationMode;
+    environment?: PartialEnvironmentConfig;
   },
 ): PluginOptions {
-  const environment = parseConfigPragmaEnvironmentForTest(pragma);
+  const environment = parseConfigPragmaEnvironmentForTest(
+    pragma,
+    defaults.environment ?? {},
+  );
   const options: Record<keyof PluginOptions, unknown> = {
     ...defaultOptions,
     panicThreshold: 'all_errors',
