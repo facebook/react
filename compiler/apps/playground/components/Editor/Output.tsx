@@ -206,7 +206,11 @@ function Output({store, compilerOutput}: Props): JSX.Element {
           <pre
             className="p-4 basis-full text-red-600 overflow-y-scroll whitespace-pre-wrap"
             style={{width: 'calc(100vw - 650px)', height: '150px'}}>
-            <code>{compilerOutput.error.toString()}</code>
+            <code>
+              {compilerOutput.error.printErrorMessage(store.source, {
+                eslint: false,
+              })}
+            </code>
           </pre>
         </div>
       ) : null}
