@@ -177,6 +177,19 @@ function Output({store, compilerOutput}: Props): JSX.Element {
   const [tabs, setTabs] = useState<Map<string, React.ReactNode>>(
     () => new Map(),
   );
+
+  /*
+   * Update the active tab back to the output or errors tab when the compilation state
+   * changes between success/failure.
+   */
+  const [previousOutputKind, setPreviousOutputKind] = useState(
+    compilerOutput.kind,
+  );
+  if (compilerOutput.kind !== previousOutputKind) {
+    setPreviousOutputKind(compilerOutput.kind);
+    setTabsOpen(new Set([compilerOutput.kind === 'ok' ? 'JS' : 'Errors']));
+  }
+
   useEffect(() => {
     tabify(store.source, compilerOutput).then(tabs => {
       setTabs(tabs);
