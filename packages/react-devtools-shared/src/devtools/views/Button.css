@@ -6,21 +6,31 @@
   border-radius: 0.25rem;
   flex: 0 0 auto;
   cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
+
 .ButtonContent {
   display: inline-flex;
   align-items: center;
   border-radius: 0.25rem;
   padding: 0.25rem;
+  transition: all 0.15s ease-in-out;
 }
 
 .Button:hover {
   color: var(--color-button-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
+
 .Button:active {
   color: var(--color-button-focus);
   outline: none;
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
+
 .Button:focus,
 .ButtonContent:focus {
   outline: none;
@@ -28,6 +38,7 @@
 
 .Button:focus > .ButtonContent {
   background: var(--color-button-background-focus);
+  box-shadow: 0 0 0 2px var(--color-button-focus);
 }
 
 .Button:disabled,
@@ -35,4 +46,36 @@
   background: var(--color-button-background);
   color: var(--color-button-disabled);
   cursor: default;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Primary button variant */
+.Button.primary {
+  background: var(--color-button-primary-background, #007bff);
+  color: var(--color-button-primary-text, white);
+}
+
+.Button.primary:hover {
+  background: var(--color-button-primary-hover, #0056b3);
+}
+
+/* Secondary button variant */
+.Button.secondary {
+  background: var(--color-button-secondary-background, #6c757d);
+  color: var(--color-button-secondary-text, white);
+}
+
+.Button.secondary:hover {
+  background: var(--color-button-secondary-hover, #545b62);
+}
+
+/* Danger button variant */
+.Button.danger {
+  background: var(--color-button-danger-background, #dc3545);
+  color: var(--color-button-danger-text, white);
+}
+
+.Button.danger:hover {
+  background: var(--color-button-danger-hover, #c82333);
 }

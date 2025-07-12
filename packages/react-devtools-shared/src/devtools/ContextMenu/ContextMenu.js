@@ -98,7 +98,7 @@ export default function ContextMenu({
 
       ownerWindow.removeEventListener('resize', hide);
     };
-  }, []);
+  }, [hide, items, ownerDocument, position.x, position.y, ref]);
 
   if (portalContainer == null || items.length === 0) {
     return null;

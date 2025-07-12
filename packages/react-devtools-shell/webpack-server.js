@@ -20,13 +20,8 @@ if (!NODE_ENV) {
 
 const EDITOR_URL = process.env.EDITOR_URL || null;
 
-const builtModulesDir = resolve(
-  __dirname,
-  '..',
-  '..',
-  'build',
-  'oss-experimental',
-);
+// Use npm versions instead of build directory
+const builtModulesDir = resolve(__dirname, 'node_modules');
 
 const __DEV__ = NODE_ENV === 'development';
 
@@ -127,13 +122,14 @@ const app = makeConfig(
     'perf-regression-devtools': './src/perf-regression/devtools.js',
   },
   {
-    react: resolve(builtModulesDir, 'react'),
-    'react-debug-tools': resolve(builtModulesDir, 'react-debug-tools'),
+    // Use npm versions instead of build directory
+    react: 'react',
+    'react-debug-tools': 'react-debug-tools',
     'react-devtools-feature-flags': resolveFeatureFlags('shell'),
-    'react-dom/client': resolve(builtModulesDir, 'react-dom/unstable_testing'),
-    'react-dom': resolve(builtModulesDir, 'react-dom'),
-    'react-is': resolve(builtModulesDir, 'react-is'),
-    scheduler: resolve(builtModulesDir, 'scheduler'),
+    'react-dom/client': 'react-dom/client',
+    'react-dom': 'react-dom',
+    'react-is': 'react-is',
+    scheduler: 'scheduler',
   },
 );
 
