@@ -195,7 +195,7 @@ export function inferMutationAliasingRanges(
           effect.kind === 'MutateGlobal' ||
           effect.kind === 'Impure'
         ) {
-          errors.push(effect.error);
+          errors.pushDiagnostic(effect.error);
           functionEffects.push(effect);
         } else if (effect.kind === 'Render') {
           renders.push({index: index++, place: effect.place});
@@ -549,7 +549,7 @@ function appendFunctionErrors(errors: CompilerError, fn: HIRFunction): void {
       case 'Impure':
       case 'MutateFrozen':
       case 'MutateGlobal': {
-        errors.push(effect.error);
+        errors.pushDiagnostic(effect.error);
         break;
       }
     }

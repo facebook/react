@@ -16,10 +16,17 @@ function Component({a, b}) {
 ## Error
 
 ```
+Found 1 error:
+
+Error: This value cannot be modified
+
+Modifying a value previously passed as an argument to a hook is not allowed. Consider moving the modification before calling the hook.
+
+error.mutate-frozen-value.ts:5:2
   3 |   const x = {a};
   4 |   useFreeze(x);
 > 5 |   x.y = true;
-    |   ^ InvalidReact: Updating a value previously passed as an argument to a hook is not allowed. Consider moving the mutation before calling the hook (5:5)
+    |   ^ value cannot be modified
   6 |   return <div>error</div>;
   7 | }
   8 |

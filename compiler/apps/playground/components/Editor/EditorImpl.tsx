@@ -11,6 +11,7 @@ import * as t from '@babel/types';
 import BabelPluginReactCompiler, {
   CompilerError,
   CompilerErrorDetail,
+  CompilerDiagnostic,
   Effect,
   ErrorSeverity,
   parseConfigPragmaForTests,
@@ -144,7 +145,7 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
 function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
   const results = new Map<string, Array<PrintedCompilerPipelineValue>>();
   const error = new CompilerError();
-  const otherErrors: Array<CompilerErrorDetail> = [];
+  const otherErrors: Array<CompilerErrorDetail | CompilerDiagnostic> = [];
   const upsert: (result: PrintedCompilerPipelineValue) => void = result => {
     const entry = results.get(result.name);
     if (Array.isArray(entry)) {
@@ -214,7 +215,7 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
         debugLogIRs: logIR,
         logEvent: (_filename: string | null, event: LoggerEvent) => {
           if (event.kind === 'CompileError') {
-            otherErrors.push(new CompilerErrorDetail(event.detail));
+            otherErrors.push(event.detail);
           }
         },
       },
@@ -226,7 +227,7 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
      * (i.e. object shape that is not CompilerError)
      */
     if (err instanceof CompilerError && err.details.length > 0) {
-      error.details.push(...err.details);
+      error.merge(err);
     } else {
       /**
        * Handle unexpected failures by logging (to get a stack trace)
@@ -245,7 +246,7 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
   }
   // Only include logger errors if there weren't other errors
   if (!error.hasErrors() && otherErrors.length !== 0) {
-    otherErrors.forEach(e => error.push(e));
+    otherErrors.forEach(e => error.details.push(e));
   }
   if (error.hasErrors()) {
     return [{kind: 'err', results, error: error}, language];
