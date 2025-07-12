@@ -142,7 +142,10 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
   ],
 ];
 
-function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
+function compile(
+  source: string,
+  mode: 'compiler' | 'linter',
+): [CompilerOutput, 'flow' | 'typescript'] {
   const results = new Map<string, Array<PrintedCompilerPipelineValue>>();
   const error = new CompilerError();
   const otherErrors: Array<CompilerErrorDetail | CompilerDiagnostic> = [];
@@ -204,6 +207,22 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
     };
     const parsedOptions = parseConfigPragmaForTests(pragma, {
       compilationMode: 'infer',
+      environment:
+        mode === 'linter'
+          ? {
+              // enabled in compiler
+              validateRefAccessDuringRender: false,
+              // enabled in linter
+              validateNoSetStateInRender: true,
+              validateNoSetStateInEffects: true,
+              validateNoJSXInTryStatements: true,
+              validateNoImpureFunctionsInRender: true,
+              validateStaticComponents: true,
+              validateNoFreezingKnownMutableFunctions: true,
+            }
+          : {
+              /* use defaults for compiler mode */
+            },
     });
     const opts: PluginOptions = parsePluginOptions({
       ...parsedOptions,
@@ -249,9 +268,12 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
     otherErrors.forEach(e => error.details.push(e));
   }
   if (error.hasErrors()) {
-    return [{kind: 'err', results, error: error}, language];
+    return [{kind: 'err', results, error}, language];
   }
-  return [{kind: 'ok', results, transformOutput}, language];
+  return [
+    {kind: 'ok', results, transformOutput, errors: error.details},
+    language,
+  ];
 }
 
 export default function Editor(): JSX.Element {
@@ -260,7 +282,11 @@ export default function Editor(): JSX.Element {
   const dispatchStore = useStoreDispatch();
   const {enqueueSnackbar} = useSnackbar();
   const [compilerOutput, language] = useMemo(
-    () => compile(deferredStore.source),
+    () => compile(deferredStore.source, 'compiler'),
+    [deferredStore.source],
+  );
+  const [linterOutput] = useMemo(
+    () => compile(deferredStore.source, 'linter'),
     [deferredStore.source],
   );
 
@@ -286,19 +312,26 @@ export default function Editor(): JSX.Element {
     });
   });
 
+  let mergedOutput: CompilerOutput;
+  let errors: Array<CompilerErrorDetail | CompilerDiagnostic>;
+  if (compilerOutput.kind === 'ok') {
+    errors = linterOutput.kind === 'ok' ? [] : linterOutput.error.details;
+    mergedOutput = {
+      ...compilerOutput,
+      errors,
+    };
+  } else {
+    mergedOutput = compilerOutput;
+    errors = compilerOutput.error.details;
+  }
   return (
     <>
       <div className="relative flex basis top-14">
         <div className={clsx('relative sm:basis-1/4')}>
-          <Input
-            language={language}
-            errors={
-              compilerOutput.kind === 'err' ? compilerOutput.error.details : []
-            }
-          />
+          <Input language={language} errors={errors} />
         </div>
         <div className={clsx('flex sm:flex flex-wrap')}>
-          <Output store={deferredStore} compilerOutput={compilerOutput} />
+          <Output store={deferredStore} compilerOutput={mergedOutput} />
         </div>
       </div>
     </>
