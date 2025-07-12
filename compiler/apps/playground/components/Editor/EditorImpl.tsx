@@ -204,6 +204,17 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
     };
     const parsedOptions = parseConfigPragmaForTests(pragma, {
       compilationMode: 'infer',
+      environment: {
+        // enabled in compiler
+        validateRefAccessDuringRender: true,
+        // enabled in linter
+        validateNoSetStateInRender: true,
+        validateNoSetStateInEffects: true,
+        validateNoJSXInTryStatements: true,
+        validateNoImpureFunctionsInRender: true,
+        validateStaticComponents: true,
+        validateNoFreezingKnownMutableFunctions: true,
+      },
     });
     const opts: PluginOptions = parsePluginOptions({
       ...parsedOptions,
