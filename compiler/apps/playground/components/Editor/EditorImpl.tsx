@@ -142,7 +142,10 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
   ],
 ];
 
-function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
+function compile(
+  source: string,
+  mode: 'compiler' | 'linter',
+): [CompilerOutput, 'flow' | 'typescript'] {
   const results = new Map<string, Array<PrintedCompilerPipelineValue>>();
   const error = new CompilerError();
   const otherErrors: Array<CompilerErrorDetail | CompilerDiagnostic> = [];
@@ -204,6 +207,22 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
     };
     const parsedOptions = parseConfigPragmaForTests(pragma, {
       compilationMode: 'infer',
+      environment:
+        mode === 'linter'
+          ? {
+              // enabled in compiler
+              validateRefAccessDuringRender: false,
+              // enabled in linter
+              validateNoSetStateInRender: true,
+              validateNoSetStateInEffects: true,
+              validateNoJSXInTryStatements: true,
+              validateNoImpureFunctionsInRender: true,
+              validateStaticComponents: true,
+              validateNoFreezingKnownMutableFunctions: true,
+            }
+          : {
+              /* use defaults for compiler mode */
+            },
     });
     const opts: PluginOptions = parsePluginOptions({
       ...parsedOptions,
@@ -260,7 +279,11 @@ export default function Editor(): JSX.Element {
   const dispatchStore = useStoreDispatch();
   const {enqueueSnackbar} = useSnackbar();
   const [compilerOutput, language] = useMemo(
-    () => compile(deferredStore.source),
+    () => compile(deferredStore.source, 'compiler'),
+    [deferredStore.source],
+  );
+  const [linterOutput] = useMemo(
+    () => compile(deferredStore.source, 'linter'),
     [deferredStore.source],
   );
 
@@ -286,16 +309,17 @@ export default function Editor(): JSX.Element {
     });
   });
 
+  let errors = [];
+  if (compilerOutput.kind === 'err') {
+    errors = compilerOutput.error.details;
+  } else if (linterOutput.kind === 'err') {
+    errors = linterOutput.error.details;
+  }
   return (
     <>
       <div className="relative flex basis top-14">
         <div className={clsx('relative sm:basis-1/4')}>
-          <Input
-            language={language}
-            errors={
-              compilerOutput.kind === 'err' ? compilerOutput.error.details : []
-            }
-          />
+          <Input language={language} errors={errors} />
         </div>
         <div className={clsx('flex sm:flex flex-wrap')}>
           <Output store={deferredStore} compilerOutput={compilerOutput} />
