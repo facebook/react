@@ -485,10 +485,7 @@ export function checkIfContextChanged(
   return false;
 }
 
-export function prepareToReadContext(
-  workInProgress: Fiber,
-  renderLanes: Lanes,
-): void {
+export function prepareToReadContext(workInProgress: Fiber): void {
   currentlyRenderingFiber = workInProgress;
   lastContextDependency = null;
 
@@ -518,10 +515,9 @@ export function readContext<T>(context: ReactContext<T>): T {
 export function readContextDuringReconciliation<T>(
   consumer: Fiber,
   context: ReactContext<T>,
-  renderLanes: Lanes,
 ): T {
   if (currentlyRenderingFiber === null) {
-    prepareToReadContext(consumer, renderLanes);
+    prepareToReadContext(consumer);
   }
   return readContextForConsumer(consumer, context);
 }
