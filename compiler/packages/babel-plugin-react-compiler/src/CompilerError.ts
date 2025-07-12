@@ -262,6 +262,7 @@ export class CompilerErrorDetail {
 
 export class CompilerError extends Error {
   details: Array<CompilerErrorDetail | CompilerDiagnostic> = [];
+  printedMessage: string | null = null;
 
   static invariant(
     condition: unknown,
@@ -347,16 +348,27 @@ export class CompilerError extends Error {
   }
 
   override get message(): string {
-    return this.toString();
+    return this.printedMessage ?? this.toString();
   }
 
   override set message(_message: string) {}
 
   override toString(): string {
+    if (this.printedMessage) {
+      return this.printedMessage;
+    }
     if (Array.isArray(this.details)) {
       return this.details.map(detail => detail.toString()).join('\n\n');
     }
     return this.name;
+  }
+
+  withPrintedMessage(
+    source: string,
+    options: PrintErrorMessageOptions,
+  ): CompilerError {
+    this.printedMessage = this.printErrorMessage(source, options);
+    return this;
   }
 
   printErrorMessage(source: string, options: PrintErrorMessageOptions): string {
