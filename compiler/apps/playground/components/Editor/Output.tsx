@@ -11,7 +11,11 @@ import {
   InformationCircleIcon,
 } from '@heroicons/react/outline';
 import MonacoEditor, {DiffEditor} from '@monaco-editor/react';
-import {type CompilerError} from 'babel-plugin-react-compiler';
+import {
+  CompilerErrorDetail,
+  CompilerDiagnostic,
+  type CompilerError,
+} from 'babel-plugin-react-compiler';
 import parserBabel from 'prettier/plugins/babel';
 import * as prettierPluginEstree from 'prettier/plugins/estree';
 import * as prettier from 'prettier/standalone';
@@ -44,6 +48,7 @@ export type CompilerOutput =
       kind: 'ok';
       transformOutput: CompilerTransformOutput;
       results: Map<string, Array<PrintedCompilerPipelineValue>>;
+      errors: Array<CompilerErrorDetail | CompilerDiagnostic>;
     }
   | {
       kind: 'err';
@@ -123,10 +128,30 @@ async function tabify(
       parser: transformOutput.language === 'flow' ? 'babel-flow' : 'babel-ts',
       plugins: [parserBabel, prettierPluginEstree],
     });
+
+    let output: string;
+    if (compilerOutput.errors.length === 0) {
+      output = code;
+    } else {
+      output = `
+# Compilation succeeded with errors
+
+## Output
+\`\`\`js
+${code}
+\`\`\`
+
+## ${compilerOutput.errors.length} Errors
+\`\`\`
+${compilerOutput.errors.map(e => e.printErrorMessage(source, {eslint: false})).join('\n\n')}
+\`\`\`
+`.trim();
+    }
+
     reorderedTabs.set(
-      'JS',
+      'Output',
       <TextTabContent
-        output={code}
+        output={output}
         diff={null}
         showInfoPanel={false}></TextTabContent>,
     );
@@ -147,7 +172,7 @@ async function tabify(
       eslint: false,
     });
     reorderedTabs.set(
-      'Errors',
+      'Output',
       <TextTabContent
         output={errors}
         diff={null}
@@ -173,7 +198,9 @@ function getSourceMapUrl(code: string, map: string): string | null {
 }
 
 function Output({store, compilerOutput}: Props): JSX.Element {
-  const [tabsOpen, setTabsOpen] = useState<Set<string>>(() => new Set(['JS']));
+  const [tabsOpen, setTabsOpen] = useState<Set<string>>(
+    () => new Set(['Output']),
+  );
   const [tabs, setTabs] = useState<Map<string, React.ReactNode>>(
     () => new Map(),
   );
@@ -187,7 +214,7 @@ function Output({store, compilerOutput}: Props): JSX.Element {
   );
   if (compilerOutput.kind !== previousOutputKind) {
     setPreviousOutputKind(compilerOutput.kind);
-    setTabsOpen(new Set([compilerOutput.kind === 'ok' ? 'JS' : 'Errors']));
+    setTabsOpen(new Set(['Output']));
   }
 
   useEffect(() => {
@@ -196,7 +223,7 @@ function Output({store, compilerOutput}: Props): JSX.Element {
     });
   }, [store.source, compilerOutput]);
 
-  const changedPasses: Set<string> = new Set(['JS', 'HIR']); // Initial and final passes should always be bold
+  const changedPasses: Set<string> = new Set(['Output', 'HIR']); // Initial and final passes should always be bold
   let lastResult: string = '';
   for (const [passName, results] of compilerOutput.results) {
     for (const result of results) {
