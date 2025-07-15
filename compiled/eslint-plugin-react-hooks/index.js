@@ -24221,6 +24221,8 @@ function isReorderableExpression(builder, expr, allowLocalIdentifiers) {
                 }
             }
         }
+        case 'TSAsExpression':
+        case 'TSNonNullExpression':
         case 'TypeCastExpression': {
             return isReorderableExpression(builder, expr.get('expression'), allowLocalIdentifiers);
         }
