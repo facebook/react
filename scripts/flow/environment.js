@@ -150,7 +150,7 @@ declare const __webpack_require__: ((id: string) => any) & {
   u: string => string,
 };
 
-declare function __turbopack_load__(id: string): Promise<mixed>;
+declare function __turbopack_load_by_url__(id: string): Promise<mixed>;
 declare const __turbopack_require__: ((id: string) => any) & {
   u: string => string,
 };
