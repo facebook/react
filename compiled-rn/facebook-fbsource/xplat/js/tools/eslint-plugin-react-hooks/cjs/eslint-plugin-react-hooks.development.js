@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<e7a6d81bd31c10ba7c77205c75f347c2>>
+ * @generated SignedSource<<24d58c7f3edf4b1587a53208b9c60643>>
  */
 
 'use strict';
@@ -24222,6 +24222,8 @@ function isReorderableExpression(builder, expr, allowLocalIdentifiers) {
                 }
             }
         }
+        case 'TSAsExpression':
+        case 'TSNonNullExpression':
         case 'TypeCastExpression': {
             return isReorderableExpression(builder, expr.get('expression'), allowLocalIdentifiers);
         }
