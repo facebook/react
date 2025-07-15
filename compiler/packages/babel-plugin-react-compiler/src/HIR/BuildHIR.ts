@@ -3001,6 +3001,8 @@ function isReorderableExpression(
         }
       }
     }
+    case 'TSAsExpression':
+    case 'TSNonNullExpression':
     case 'TypeCastExpression': {
       return isReorderableExpression(
         builder,
