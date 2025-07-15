@@ -474,7 +474,7 @@ module.exports = {
     {
       files: ['packages/react-server-dom-turbopack/**/*.js'],
       globals: {
-        __turbopack_load__: 'readonly',
+        __turbopack_load_by_url__: 'readonly',
         __turbopack_require__: 'readonly',
       },
     },
