@@ -1353,6 +1353,26 @@ function waitForReference<T>(
   map: (response: Response, model: any, parentObject: Object, key: string) => T,
   path: Array<string>,
 ): T {
+  if (
+    __DEV__ &&
+    // TODO: This should check for the existence of the "readable" side, not the "writable".
+    response._debugChannel === undefined
+  ) {
+    if (
+      referencedChunk.status === PENDING &&
+      parentObject[0] === REACT_ELEMENT_TYPE &&
+      (key === '4' || key === '5')
+    ) {
+      // If the parent object is an unparsed React element tuple, and this is a reference
+      // to the owner or debug stack. Then we expect the chunk to have been emitted earlier
+      // in the stream. It might be blocked on other things but chunk should no longer be pending.
+      // If it's still pending that suggests that it was referencing an object in the debug
+      // channel, but no debug channel was wired up so it's missing. In this case we can just
+      // drop the debug info instead of halting the whole stream.
+      return (null: any);
+    }
+  }
+
   let handler: InitializationHandler;
   if (initializingHandler) {
     handler = initializingHandler;
