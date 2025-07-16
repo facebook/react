@@ -1,5 +1,5 @@
 // @inferEffectDependencies
-import {useEffect, useEffectEvent} from 'react';
+import {useEffect, useEffectEvent, AUTODEPS} from 'react';
 import {print} from 'shared-runtime';
 
 /**
@@ -7,5 +7,5 @@ import {print} from 'shared-runtime';
  */
 function NonReactiveEffectEvent() {
   const fn = useEffectEvent(() => print('hello world'));
-  useEffect(() => fn());
+  useEffect(() => fn(), AUTODEPS);
 }

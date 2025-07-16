@@ -4,10 +4,11 @@
 ```javascript
 // @inferEffectDependencies
 import {print, useSpecialEffect} from 'shared-runtime';
+import {AUTODEPS} from 'react';
 
 function CustomConfig({propVal}) {
   // Insertion
-  useSpecialEffect(() => print(propVal), [propVal]);
+  useSpecialEffect(() => print(propVal), [propVal], AUTODEPS);
   // No insertion
   useSpecialEffect(() => print(propVal), [propVal], [propVal]);
 }
@@ -19,6 +20,7 @@ function CustomConfig({propVal}) {
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @inferEffectDependencies
 import { print, useSpecialEffect } from "shared-runtime";
+import { AUTODEPS } from "react";
 
 function CustomConfig(t0) {
   const $ = _c(7);

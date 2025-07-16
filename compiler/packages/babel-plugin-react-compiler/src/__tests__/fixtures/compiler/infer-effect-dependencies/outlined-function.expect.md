@@ -3,7 +3,7 @@
 
 ```javascript
 // @inferEffectDependencies
-import {useEffect} from 'react';
+import {useEffect, AUTODEPS} from 'react';
 import {print} from 'shared-runtime';
 /**
  * This compiled output is technically incorrect but this is currently the same
@@ -14,7 +14,7 @@ import {print} from 'shared-runtime';
  * before OutlineFunctions
  */
 function OutlinedFunctionInEffect() {
-  useEffect(() => print('hello world!'));
+  useEffect(() => print('hello world!'), AUTODEPS);
 }
 
 ```
@@ -23,7 +23,7 @@ function OutlinedFunctionInEffect() {
 
 ```javascript
 // @inferEffectDependencies
-import { useEffect } from "react";
+import { useEffect, AUTODEPS } from "react";
 import { print } from "shared-runtime";
 /**
  * This compiled output is technically incorrect but this is currently the same
