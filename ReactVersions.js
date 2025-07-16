@@ -18,7 +18,7 @@
 //
 //   0.0.0-experimental-241c4467e-20200129
 
-const ReactVersion = '19.2.0';
+const ReactVersion = '19.1.1';
 
 // The label used by the @canary channel. Represents the upcoming release's
 // stability. Most of the time, this will be "canary", but we may temporarily
