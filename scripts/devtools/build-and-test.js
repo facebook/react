@@ -4,6 +4,7 @@
 
 const chalk = require('chalk');
 const {exec} = require('child-process-promise');
+const {remove} = require('fs-extra');
 const inquirer = require('inquirer');
 const {homedir} = require('os');
 const {join, relative} = require('path');
@@ -115,7 +116,7 @@ async function buildAndTestStandalonePackage() {
   const corePackagePath = join(ROOT_PATH, 'packages', 'react-devtools-core');
   const corePackageDest = join(corePackagePath, 'dist');
 
-  await exec(`rm -rf ${corePackageDest}`);
+  await remove(corePackageDest);
   const buildCorePromise = exec('yarn build', {cwd: corePackagePath});
 
   await logger(
@@ -158,7 +159,7 @@ async function buildAndTestInlinePackage() {
   );
   const inlinePackageDest = join(inlinePackagePath, 'dist');
 
-  await exec(`rm -rf ${inlinePackageDest}`);
+  await remove(corePackageDest);
   const buildPromise = exec('yarn build', {cwd: inlinePackagePath});
 
   await logger(
