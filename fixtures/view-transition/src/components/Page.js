@@ -13,12 +13,12 @@ import React, {
 
 import {createPortal} from 'react-dom';
 
-import SwipeRecognizer from './SwipeRecognizer';
+import SwipeRecognizer from './SwipeRecognizer.js';
 
 import './Page.css';
 
 import transitions from './Transitions.module.css';
-import NestedReveal from './NestedReveal';
+import NestedReveal from './NestedReveal.js';
 
 async function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));

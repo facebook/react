@@ -92,21 +92,27 @@ function getDebugInfo(obj) {
   return debugInfo;
 }
 
-const heldValues = [];
-let finalizationCallback;
+const finalizationRegistries = [];
 function FinalizationRegistryMock(callback) {
-  finalizationCallback = callback;
+  this._heldValues = [];
+  this._callback = callback;
+  finalizationRegistries.push(this);
 }
 FinalizationRegistryMock.prototype.register = function (target, heldValue) {
-  heldValues.push(heldValue);
+  this._heldValues.push(heldValue);
 };
 global.FinalizationRegistry = FinalizationRegistryMock;
 
 function gc() {
-  for (let i = 0; i < heldValues.length; i++) {
-    finalizationCallback(heldValues[i]);
+  for (let i = 0; i < finalizationRegistries.length; i++) {
+    const registry = finalizationRegistries[i];
+    const callback = registry._callback;
+    const heldValues = registry._heldValues;
+    for (let j = 0; j < heldValues.length; j++) {
+      callback(heldValues[j]);
+    }
+    heldValues.length = 0;
   }
-  heldValues.length = 0;
 }
 
 let act;
@@ -1306,6 +1312,11 @@ describe('ReactFlight', () => {
         '    at file:///testing.js:42:3',
         // async anon function (https://github.com/ChromeDevTools/devtools-frontend/blob/831be28facb4e85de5ee8c1acc4d98dfeda7a73b/test/unittests/front_end/panels/console/ErrorStackParser_test.ts#L130C9-L130C41)
         '    at async file:///testing.js:42:3',
+        // third-party RSC frame
+        // Ideally this would be a real frame produced by React not a mocked one.
+        '    at ThirdParty (rsc://React/ThirdParty/file:///code/%5Broot%2520of%2520the%2520server%5D.js?42:1:1)',
+        // We'll later filter this out based on line/column in `filterStackFrame`.
+        '    at ThirdPartyModule (file:///file-with-index-source-map.js:52656:16374)',
         // host component in parent stack
         '    at div (<anonymous>)',
         ...originalStackLines.slice(2),
@@ -1354,13 +1365,19 @@ describe('ReactFlight', () => {
         }
         return `digest(${String(x)})`;
       },
-      filterStackFrame(filename, functionName) {
+      filterStackFrame(filename, functionName, lineNumber, columnNumber) {
+        if (lineNumber === 52656 && columnNumber === 16374) {
+          return false;
+        }
         if (!filename) {
           // Allow anonymous
           return functionName === 'div';
         }
         return (
-          !filename.startsWith('node:') && !filename.includes('node_modules')
+          !filename.startsWith('node:') &&
+          !filename.includes('node_modules') &&
+          // sourceURL from an ES module in `/code/[root of the server].js`
+          filename !== 'file:///code/[root%20of%20the%20server].js'
         );
       },
     });
@@ -3676,7 +3693,7 @@ describe('ReactFlight', () => {
         onError(x) {
           return `digest("${x.message}")`;
         },
-        filterStackFrame(url, functionName) {
+        filterStackFrame(url, functionName, lineNumber, columnNumber) {
           return functionName !== 'intermediate';
         },
       },

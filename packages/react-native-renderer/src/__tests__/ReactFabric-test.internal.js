@@ -184,6 +184,10 @@ describe('ReactFabric', () => {
       nativeFabricUIManager.cloneNodeWithNewChildrenAndProps,
     ).not.toBeCalled();
 
+    jest
+      .spyOn(ReactNativePrivateInterface, 'diffAttributePayloads')
+      .mockReturnValue({bar: 'b'});
+
     await act(() => {
       ReactFabric.render(
         <Text foo="a" bar="b">
@@ -203,6 +207,9 @@ describe('ReactFabric', () => {
  RCTText {"foo":"a","bar":"b"}
    RCTRawText {"text":"1"}`);
 
+    jest
+      .spyOn(ReactNativePrivateInterface, 'diffAttributePayloads')
+      .mockReturnValue({foo: 'b'});
     await act(() => {
       ReactFabric.render(
         <Text foo="b" bar="b">
@@ -612,7 +619,7 @@ describe('ReactFabric', () => {
       ReactFabric.render(<Component chars={before} />, 11, null, true);
     });
     expect(nativeFabricUIManager.__dumpHierarchyForJestTestsOnly()).toBe(`11
- RCTView null
+ RCTView {}
    RCTView {"title":"a"}
    RCTView {"title":"b"}
    RCTView {"title":"c"}
@@ -638,7 +645,7 @@ describe('ReactFabric', () => {
       ReactFabric.render(<Component chars={after} />, 11, null, true);
     });
     expect(nativeFabricUIManager.__dumpHierarchyForJestTestsOnly()).toBe(`11
- RCTView null
+ RCTView {}
    RCTView {"title":"m"}
    RCTView {"title":"x"}
    RCTView {"title":"h"}
@@ -700,8 +707,8 @@ describe('ReactFabric', () => {
     });
     expect(nativeFabricUIManager.__dumpHierarchyForJestTestsOnly()).toBe(
       `11
- RCTView null
-   RCTView null
+ RCTView {}
+   RCTView {}
      RCTView {"title":"a"}
      RCTView {"title":"b"}
      RCTView {"title":"c"}
@@ -732,8 +739,8 @@ describe('ReactFabric', () => {
       });
     });
     expect(nativeFabricUIManager.__dumpHierarchyForJestTestsOnly()).toBe(`11
- RCTView null
-   RCTView null
+ RCTView {}
+   RCTView {}
      RCTView {"title":"m"}
      RCTView {"title":"x"}
      RCTView {"title":"h"}

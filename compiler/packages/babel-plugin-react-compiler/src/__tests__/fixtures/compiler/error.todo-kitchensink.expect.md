@@ -84,7 +84,7 @@ let moduleLocal = false;
 > 3 |   var x = [];
     |   ^^^^^^^^^^^ Todo: (BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration (3:3)
 
-Todo: (BuildHIR::lowerStatement) Handle ClassDeclaration statements (5:10)
+UnsupportedJS: Inline `class` declarations are not supported. Move class declarations outside of components/hooks (5:10)
 
 Todo: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement (20:22)
 

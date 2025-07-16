@@ -21,6 +21,7 @@ import type {
   ReactFormState,
   ReactComponentInfo,
   ReactDebugInfo,
+  ReactAsyncInfo,
   ViewTransitionProps,
   ActivityProps,
   SuspenseProps,
@@ -107,7 +108,7 @@ import {
   getMaskedContext,
   processChildContext,
   emptyContextObject,
-} from './ReactFizzContext';
+} from './ReactFizzLegacyContext';
 import {
   readContext,
   rootContextSnapshot,
@@ -177,10 +178,10 @@ import {
   enableScopeAPI,
   enablePostpone,
   enableHalt,
-  disableDefaultPropsExceptForClasses,
   enableAsyncIterableChildren,
   enableViewTransition,
   enableFizzBlockingRender,
+  enableAsyncDebugInfo,
 } from 'shared/ReactFeatureFlags';
 
 import assign from 'shared/assign';
@@ -665,7 +666,6 @@ export function resumeRequest(
   request.nextSegmentId = postponedState.nextSegmentId;
 
   if (typeof postponedState.replaySlots === 'number') {
-    const resumedId = postponedState.replaySlots;
     // We have a resume slot at the very root. This is effectively just a full rerender.
     const rootSegment = createPendingSegment(
       request,
@@ -676,7 +676,6 @@ export function resumeRequest(
       false,
       false,
     );
-    rootSegment.id = resumedId;
     // There is no parent so conceptually, we're unblocked to flush this segment.
     rootSegment.parentFlushed = true;
     const rootTask = createRenderTask(
@@ -985,6 +984,46 @@ function getStackFromNode(stackNode: ComponentStackNode): string {
   return getStackByComponentStackNode(stackNode);
 }
 
+function pushHaltedAwaitOnComponentStack(
+  task: Task,
+  debugInfo: void | null | ReactDebugInfo,
+): void {
+  if (!__DEV__) {
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'pushHaltedAwaitOnComponentStack should never be called in production. This is a bug in React.',
+    );
+  }
+  if (debugInfo != null) {
+    for (let i = debugInfo.length - 1; i >= 0; i--) {
+      const info = debugInfo[i];
+      if (typeof info.name === 'string') {
+        // This is a Server Component. Any awaits in previous Server Components already resolved.
+        break;
+      }
+      if (typeof info.time === 'number') {
+        // This had an end time. Any awaits before this must have already resolved.
+        break;
+      }
+      if (info.awaited != null) {
+        const asyncInfo: ReactAsyncInfo = (info: any);
+        const bestStack =
+          asyncInfo.debugStack == null ? asyncInfo.awaited : asyncInfo;
+        if (bestStack.debugStack !== undefined) {
+          task.componentStack = {
+            parent: task.componentStack,
+            type: asyncInfo,
+            owner: bestStack.owner,
+            stack: bestStack.debugStack,
+          };
+          task.debugTask = (bestStack.debugTask: any);
+          break;
+        }
+      }
+    }
+  }
+}
+
 function pushServerComponentStack(
   task: Task,
   debugInfo: void | null | ReactDebugInfo,
@@ -1064,8 +1103,8 @@ function pushComponentStack(task: Task): void {
 function createComponentStackFromType(
   parent: null | ComponentStackNode,
   type: Function | string | symbol,
-  owner: null | ReactComponentInfo | ComponentStackNode, // DEV only
-  stack: null | Error, // DEV only
+  owner: void | null | ReactComponentInfo | ComponentStackNode, // DEV only
+  stack: void | null | string | Error, // DEV only
 ): ComponentStackNode {
   if (__DEV__) {
     return {
@@ -1079,6 +1118,20 @@ function createComponentStackFromType(
     parent,
     type,
   };
+}
+
+function replaceSuspenseComponentStackWithSuspenseFallbackStack(
+  componentStack: null | ComponentStackNode,
+): null | ComponentStackNode {
+  if (componentStack === null) {
+    return null;
+  }
+  return createComponentStackFromType(
+    componentStack.parent,
+    'Suspense Fallback',
+    __DEV__ ? componentStack.owner : null,
+    __DEV__ ? componentStack.stack : null,
+  );
 }
 
 type ThrownInfo = {
@@ -1309,6 +1362,8 @@ function renderSuspenseBoundary(
   contentRootSegment.parentFlushed = true;
 
   if (request.trackedPostpones !== null) {
+    // Stash the original stack frame.
+    const suspenseComponentStack = task.componentStack;
     // This is a prerender. In this mode we want to render the fallback synchronously and schedule
     // the content to render later. This is the opposite of what we do during a normal render
     // where we try to skip rendering the fallback if the content itself can render synchronously
@@ -1333,6 +1388,10 @@ function renderSuspenseBoundary(
       request.resumableState,
       prevContext,
     );
+    task.componentStack =
+      replaceSuspenseComponentStackWithSuspenseFallbackStack(
+        suspenseComponentStack,
+      );
     boundarySegment.status = RENDERING;
     try {
       renderNode(request, task, fallback, -1);
@@ -1378,7 +1437,7 @@ function renderSuspenseBoundary(
       task.context,
       task.treeContext,
       null, // The row gets reset inside the Suspense boundary.
-      task.componentStack,
+      suspenseComponentStack,
       !disableLegacyContext ? task.legacyContext : emptyContextObject,
       __DEV__ ? task.debugTask : null,
     );
@@ -1531,7 +1590,9 @@ function renderSuspenseBoundary(
       task.context,
       task.treeContext,
       task.row,
-      task.componentStack,
+      replaceSuspenseComponentStackWithSuspenseFallbackStack(
+        task.componentStack,
+      ),
       !disableLegacyContext ? task.legacyContext : emptyContextObject,
       __DEV__ ? task.debugTask : null,
     );
@@ -1703,7 +1764,7 @@ function replaySuspenseBoundary(
     task.context,
     task.treeContext,
     task.row,
-    task.componentStack,
+    replaceSuspenseComponentStackWithSuspenseFallbackStack(task.componentStack),
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
     __DEV__ ? task.debugTask : null,
   );
@@ -2143,7 +2204,7 @@ function renderSuspenseList(
 
 function renderPreamble(
   request: Request,
-  task: Task,
+  task: RenderTask,
   blockedSegment: Segment,
   node: ReactNodeList,
 ): void {
@@ -2156,28 +2217,21 @@ function renderPreamble(
     false,
   );
   blockedSegment.preambleChildren.push(preambleSegment);
-  // @TODO we can just attempt to render in the current task rather than spawning a new one
-  const preambleTask = createRenderTask(
-    request,
-    null,
-    node,
-    -1,
-    task.blockedBoundary,
-    preambleSegment,
-    task.blockedPreamble,
-    task.hoistableState,
-    request.abortableTasks,
-    task.keyPath,
-    task.formatContext,
-    task.context,
-    task.treeContext,
-    task.row,
-    task.componentStack,
-    !disableLegacyContext ? task.legacyContext : emptyContextObject,
-    __DEV__ ? task.debugTask : null,
-  );
-  pushComponentStack(preambleTask);
-  request.pingedTasks.push(preambleTask);
+  task.blockedSegment = preambleSegment;
+  try {
+    preambleSegment.status = RENDERING;
+    renderNode(request, task, node, -1);
+    pushSegmentFinale(
+      preambleSegment.chunks,
+      request.renderState,
+      preambleSegment.lastPushedText,
+      preambleSegment.textEmbedded,
+    );
+    preambleSegment.status = COMPLETED;
+    finishedSegment(request, task.blockedBoundary, preambleSegment);
+  } finally {
+    task.blockedSegment = blockedSegment;
+  }
 }
 
 function renderHostElement(
@@ -2229,7 +2283,8 @@ function renderHostElement(
       props,
     ));
     if (isPreambleContext(newContext)) {
-      renderPreamble(request, task, segment, children);
+      // $FlowFixMe: Refined
+      renderPreamble(request, (task: RenderTask), segment, children);
     } else {
       // We use the non-destructive form because if something suspends, we still
       // need to pop back up and finish this subtree of HTML.
@@ -2358,12 +2413,7 @@ export function resolveClassComponentProps(
 
   // Resolve default props.
   const defaultProps = Component.defaultProps;
-  if (
-    defaultProps &&
-    // If disableDefaultPropsExceptForClasses is true, we always resolve
-    // default props here, rather than in the JSX runtime.
-    disableDefaultPropsExceptForClasses
-  ) {
+  if (defaultProps) {
     // We may have already copied the props object above to remove ref. If so,
     // we can modify that. Otherwise, copy the props object with Object.assign.
     if (newProps === baseProps) {
@@ -2412,7 +2462,6 @@ const didWarnAboutContextTypes: {[string]: boolean} = {};
 const didWarnAboutContextTypeOnFunctionComponent: {[string]: boolean} = {};
 const didWarnAboutGetDerivedStateOnFunctionComponent: {[string]: boolean} = {};
 let didWarnAboutReassigningProps = false;
-const didWarnAboutDefaultPropsOnFunctionComponent: {[string]: boolean} = {};
 let didWarnAboutGenerators = false;
 let didWarnAboutMaps = false;
 
@@ -2569,22 +2618,6 @@ function validateFunctionComponentInDev(Component: any): void {
       );
     }
 
-    if (
-      !disableDefaultPropsExceptForClasses &&
-      Component.defaultProps !== undefined
-    ) {
-      const componentName = getComponentNameFromType(Component) || 'Unknown';
-
-      if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
-        console.error(
-          '%s: Support for defaultProps will be removed from function components ' +
-            'in a future major release. Use JavaScript default parameters instead.',
-          componentName,
-        );
-        didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true;
-      }
-    }
-
     if (typeof Component.getDerivedStateFromProps === 'function') {
       const componentName = getComponentNameFromType(Component) || 'Unknown';
 
@@ -2612,29 +2645,6 @@ function validateFunctionComponentInDev(Component: any): void {
       }
     }
   }
-}
-
-function resolveDefaultPropsOnNonClassComponent(
-  Component: any,
-  baseProps: Object,
-): Object {
-  if (disableDefaultPropsExceptForClasses) {
-    // Support for defaultProps is removed in React 19 for all types
-    // except classes.
-    return baseProps;
-  }
-  if (Component && Component.defaultProps) {
-    // Resolve default props. Taken from ReactElement
-    const props = assign({}, baseProps);
-    const defaultProps = Component.defaultProps;
-    for (const propName in defaultProps) {
-      if (props[propName] === undefined) {
-        props[propName] = defaultProps[propName];
-      }
-    }
-    return props;
-  }
-  return baseProps;
 }
 
 function renderForwardRef(
@@ -2694,11 +2704,7 @@ function renderMemo(
   ref: any,
 ): void {
   const innerType = type.type;
-  const resolvedProps = resolveDefaultPropsOnNonClassComponent(
-    innerType,
-    props,
-  );
-  renderElement(request, task, keyPath, innerType, resolvedProps, ref);
+  renderElement(request, task, keyPath, innerType, props, ref);
 }
 
 function renderContextConsumer(
@@ -2778,11 +2784,7 @@ function renderLazyComponent(
     // eslint-disable-next-line no-throw-literal
     throw null;
   }
-  const resolvedProps = resolveDefaultPropsOnNonClassComponent(
-    Component,
-    props,
-  );
-  renderElement(request, task, keyPath, Component, resolvedProps, ref);
+  renderElement(request, task, keyPath, Component, props, ref);
 }
 
 function renderActivity(
@@ -4612,6 +4614,22 @@ function abortTask(task: Task, request: Request, error: mixed): void {
   }
 
   const errorInfo = getThrownInfo(task.componentStack);
+  if (__DEV__ && enableAsyncDebugInfo) {
+    // If the task is not rendering, then this is an async abort. Conceptually it's as if
+    // the abort happened inside the async gap. The abort reason's stack frame won't have that
+    // on the stack so instead we use the owner stack and debug task of any halted async debug info.
+    const node: any = task.node;
+    if (node !== null && typeof node === 'object') {
+      // Push a fake component stack frame that represents the await.
+      pushHaltedAwaitOnComponentStack(task, node._debugInfo);
+      /*
+      if (task.thenableState !== null) {
+        // TODO: If we were stalled inside use() of a Client Component then we should
+        // rerender to get the stack trace from the use() call.
+      }
+      */
+    }
+  }
 
   if (boundary === null) {
     if (request.status !== CLOSING && request.status !== CLOSED) {
@@ -4631,7 +4649,12 @@ function abortTask(task: Task, request: Request, error: mixed): void {
           if (trackedPostpones !== null && segment !== null) {
             // We are prerendering. We don't want to fatal when the shell postpones
             // we just need to mark it as postponed.
-            logPostpone(request, postponeInstance.message, errorInfo, null);
+            logPostpone(
+              request,
+              postponeInstance.message,
+              errorInfo,
+              task.debugTask,
+            );
             trackPostpone(request, trackedPostpones, task, segment);
             finishedTask(request, null, task.row, segment);
           } else {
@@ -4639,8 +4662,8 @@ function abortTask(task: Task, request: Request, error: mixed): void {
               'The render was aborted with postpone when the shell is incomplete. Reason: ' +
                 postponeInstance.message,
             );
-            logRecoverableError(request, fatal, errorInfo, null);
-            fatalError(request, fatal, errorInfo, null);
+            logRecoverableError(request, fatal, errorInfo, task.debugTask);
+            fatalError(request, fatal, errorInfo, task.debugTask);
           }
         } else if (
           enableHalt &&
@@ -4650,12 +4673,12 @@ function abortTask(task: Task, request: Request, error: mixed): void {
           const trackedPostpones = request.trackedPostpones;
           // We are aborting a prerender and must treat the shell as halted
           // We log the error but we still resolve the prerender
-          logRecoverableError(request, error, errorInfo, null);
+          logRecoverableError(request, error, errorInfo, task.debugTask);
           trackPostpone(request, trackedPostpones, task, segment);
           finishedTask(request, null, task.row, segment);
         } else {
-          logRecoverableError(request, error, errorInfo, null);
-          fatalError(request, error, errorInfo, null);
+          logRecoverableError(request, error, errorInfo, task.debugTask);
+          fatalError(request, error, errorInfo, task.debugTask);
         }
         return;
       } else {
@@ -4672,7 +4695,12 @@ function abortTask(task: Task, request: Request, error: mixed): void {
             error.$$typeof === REACT_POSTPONE_TYPE
           ) {
             const postponeInstance: Postpone = (error: any);
-            logPostpone(request, postponeInstance.message, errorInfo, null);
+            logPostpone(
+              request,
+              postponeInstance.message,
+              errorInfo,
+              task.debugTask,
+            );
             // TODO: Figure out a better signal than a magic digest value.
             errorDigest = 'POSTPONE';
           } else {
@@ -4710,11 +4738,16 @@ function abortTask(task: Task, request: Request, error: mixed): void {
             error.$$typeof === REACT_POSTPONE_TYPE
           ) {
             const postponeInstance: Postpone = (error: any);
-            logPostpone(request, postponeInstance.message, errorInfo, null);
+            logPostpone(
+              request,
+              postponeInstance.message,
+              errorInfo,
+              task.debugTask,
+            );
           } else {
             // We are aborting a prerender and must halt this boundary.
             // We treat this like other postpones during prerendering
-            logRecoverableError(request, error, errorInfo, null);
+            logRecoverableError(request, error, errorInfo, task.debugTask);
           }
           trackPostpone(request, trackedPostpones, task, segment);
           // If this boundary was still pending then we haven't already cancelled its fallbacks.
@@ -4737,7 +4770,12 @@ function abortTask(task: Task, request: Request, error: mixed): void {
         error.$$typeof === REACT_POSTPONE_TYPE
       ) {
         const postponeInstance: Postpone = (error: any);
-        logPostpone(request, postponeInstance.message, errorInfo, null);
+        logPostpone(
+          request,
+          postponeInstance.message,
+          errorInfo,
+          task.debugTask,
+        );
         if (request.trackedPostpones !== null && segment !== null) {
           trackPostpone(request, request.trackedPostpones, task, segment);
           finishedTask(request, task.blockedBoundary, task.row, segment);
@@ -4753,7 +4791,12 @@ function abortTask(task: Task, request: Request, error: mixed): void {
         // TODO: Figure out a better signal than a magic digest value.
         errorDigest = 'POSTPONE';
       } else {
-        errorDigest = logRecoverableError(request, error, errorInfo, null);
+        errorDigest = logRecoverableError(
+          request,
+          error,
+          errorInfo,
+          task.debugTask,
+        );
       }
       boundary.status = CLIENT_RENDERED;
       encodeErrorForBoundary(boundary, errorDigest, error, errorInfo, true);
@@ -6281,6 +6324,7 @@ export function getPostponedState(request: Request): null | PostponedState {
     return null;
   }
   let replaySlots: ResumeSlots;
+  let nextSegmentId: number;
   if (
     request.completedRootSegment !== null &&
     // The Root postponed
@@ -6288,17 +6332,21 @@ export function getPostponedState(request: Request): null | PostponedState {
       // Or the Preamble was not available
       request.completedPreambleSegments === null)
   ) {
-    // This is necessary for the pending preamble case and is idempotent for the
-    // postponed root case
-    replaySlots = request.completedRootSegment.id;
+    nextSegmentId = 0;
+    // We need to ensure that on resume we retry the root. We use a number
+    // type for the replaySlots to signify this (see resumeRequest).
+    // The value -1 represents an unassigned ID but is not functionally meaningful
+    // for resuming at the root.
+    replaySlots = -1;
     // We either postponed the root or we did not have a preamble to flush
     resetResumableState(request.resumableState, request.renderState);
   } else {
+    nextSegmentId = request.nextSegmentId;
     replaySlots = trackedPostpones.rootSlots;
     completeResumableState(request.resumableState);
   }
   return {
-    nextSegmentId: request.nextSegmentId,
+    nextSegmentId,
     rootFormatContext: request.rootFormatContext,
     progressiveChunkSize: request.progressiveChunkSize,
     resumableState: request.resumableState,

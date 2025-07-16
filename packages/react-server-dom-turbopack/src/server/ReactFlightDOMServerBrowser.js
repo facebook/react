@@ -20,6 +20,7 @@ import {
   createPrerenderRequest,
   startWork,
   startFlowing,
+  startFlowingDebug,
   stopFlowing,
   abort,
   resolveDebugMessage,
@@ -56,7 +57,7 @@ export {createTemporaryReferenceSet} from 'react-server/src/ReactFlightServerTem
 export type {TemporaryReferenceSet};
 
 type Options = {
-  debugChannel?: {readable?: ReadableStream, ...},
+  debugChannel?: {readable?: ReadableStream, writable?: WritableStream, ...},
   environmentName?: string | (() => string),
   filterStackFrame?: (url: string, functionName: string) => boolean,
   identifierPrefix?: string,
@@ -116,6 +117,10 @@ function renderToReadableStream(
     __DEV__ && options && options.debugChannel
       ? options.debugChannel.readable
       : undefined;
+  const debugChannelWritable =
+    __DEV__ && options && options.debugChannel
+      ? options.debugChannel.writable
+      : undefined;
   const request = createRequest(
     model,
     turbopackMap,
@@ -138,6 +143,19 @@ function renderToReadableStream(
       };
       signal.addEventListener('abort', listener);
     }
+  }
+  if (debugChannelWritable !== undefined) {
+    const debugStream = new ReadableStream(
+      {
+        type: 'bytes',
+        pull: (controller): ?Promise<void> => {
+          startFlowingDebug(request, controller);
+        },
+      },
+      // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
+      {highWaterMark: 0},
+    );
+    debugStream.pipeTo(debugChannelWritable);
   }
   if (debugChannelReadable !== undefined) {
     startReadingFromDebugChannelReadableStream(request, debugChannelReadable);

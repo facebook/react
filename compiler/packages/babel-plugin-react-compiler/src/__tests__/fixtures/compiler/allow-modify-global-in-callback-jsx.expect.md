@@ -52,15 +52,13 @@ function Component(t0) {
   }
   const onClick = t1;
   let t2;
-  let t3;
   if ($[2] !== onClick) {
-    t3 = <div onClick={onClick}>{someGlobal.value}</div>;
+    t2 = <div onClick={onClick}>{someGlobal.value}</div>;
     $[2] = onClick;
-    $[3] = t3;
+    $[3] = t2;
   } else {
-    t3 = $[3];
+    t2 = $[3];
   }
-  t2 = t3;
   return t2;
 }
 

@@ -2133,6 +2133,84 @@ export function startViewTransition(
     });
     // $FlowFixMe[prop-missing]
     ownerDocument.__reactViewTransition = transition;
+
+    const readyCallback = () => {
+      const documentElement: Element = (ownerDocument.documentElement: any);
+      // Loop through all View Transition Animations.
+      const animations = documentElement.getAnimations({subtree: true});
+      for (let i = 0; i < animations.length; i++) {
+        const animation = animations[i];
+        const effect: KeyframeEffect = (animation.effect: any);
+        // $FlowFixMe
+        const pseudoElement: ?string = effect.pseudoElement;
+        if (
+          pseudoElement != null &&
+          pseudoElement.startsWith('::view-transition')
+        ) {
+          const keyframes = effect.getKeyframes();
+          // Next, we're going to try to optimize this animation in case the auto-generated
+          // width/height keyframes are unnecessary.
+          let width;
+          let height;
+          let unchangedDimensions = true;
+          for (let j = 0; j < keyframes.length; j++) {
+            const keyframe = keyframes[j];
+            const w = keyframe.width;
+            if (width === undefined) {
+              width = w;
+            } else if (width !== w) {
+              unchangedDimensions = false;
+              break;
+            }
+            const h = keyframe.height;
+            if (height === undefined) {
+              height = h;
+            } else if (height !== h) {
+              unchangedDimensions = false;
+              break;
+            }
+            // We're clearing the keyframes in case we are going to apply the optimization.
+            delete keyframe.width;
+            delete keyframe.height;
+            if (keyframe.transform === 'none') {
+              delete keyframe.transform;
+            }
+          }
+          if (
+            unchangedDimensions &&
+            width !== undefined &&
+            height !== undefined
+          ) {
+            // Replace the keyframes with ones that don't animate the width/height.
+            // $FlowFixMe
+            effect.setKeyframes(keyframes);
+            // Read back the new animation to see what the underlying width/height of the pseudo-element was.
+            const computedStyle = getComputedStyle(
+              // $FlowFixMe
+              effect.target,
+              // $FlowFixMe
+              effect.pseudoElement,
+            );
+            if (
+              computedStyle.width !== width ||
+              computedStyle.height !== height
+            ) {
+              // Oops. Turns out that the pseudo-element had a different width/height so we need to let it
+              // be overridden. Add it back.
+              const first = keyframes[0];
+              first.width = width;
+              first.height = height;
+              const last = keyframes[keyframes.length - 1];
+              last.width = width;
+              last.height = height;
+              // $FlowFixMe
+              effect.setKeyframes(keyframes);
+            }
+          }
+        }
+      }
+      spawnedWorkCallback();
+    };
     const handleError = (error: mixed) => {
       try {
         error = customizeViewTransitionError(error, false);
@@ -2150,7 +2228,7 @@ export function startViewTransition(
         spawnedWorkCallback();
       }
     };
-    transition.ready.then(spawnedWorkCallback, handleError);
+    transition.ready.then(readyCallback, handleError);
     transition.finished.finally(() => {
       cancelAllViewTransitionAnimations((ownerDocument.documentElement: any));
       // $FlowFixMe[prop-missing]
@@ -2213,17 +2291,33 @@ function animateGesture(
   keyframes: any,
   targetElement: Element,
   pseudoElement: string,
-  timeline: AnimationTimeline,
+  timeline: GestureTimeline,
+  customTimelineCleanup: Array<() => void>,
   rangeStart: number,
   rangeEnd: number,
   moveFirstFrameIntoViewport: boolean,
   moveAllFramesIntoViewport: boolean,
 ) {
+  let width;
+  let height;
+  let unchangedDimensions = true;
   for (let i = 0; i < keyframes.length; i++) {
     const keyframe = keyframes[i];
     // Delete any easing since we always apply linear easing to gestures.
     delete keyframe.easing;
     delete keyframe.computedOffset;
+    const w = keyframe.width;
+    if (width === undefined) {
+      width = w;
+    } else if (width !== w) {
+      unchangedDimensions = false;
+    }
+    const h = keyframe.height;
+    if (height === undefined) {
+      height = h;
+    } else if (height !== h) {
+      unchangedDimensions = false;
+    }
     // Chrome returns "auto" for width/height which is not a valid value to
     // animate to. Similarly, transform: "none" is actually lack of transform.
     if (keyframe.width === 'auto') {
@@ -2272,26 +2366,64 @@ function animateGesture(
     // keyframe. Otherwise it applies to every keyframe.
     moveOldFrameIntoViewport(keyframes[0]);
   }
+  if (unchangedDimensions && width !== undefined && height !== undefined) {
+    // Read the underlying width/height of the pseudo-element. The previous animation
+    // should have already been cancelled so we should observe the underlying element.
+    const computedStyle = getComputedStyle(targetElement, pseudoElement);
+    if (computedStyle.width === width && computedStyle.height === height) {
+      for (let i = 0; i < keyframes.length; i++) {
+        const keyframe = keyframes[i];
+        delete keyframe.width;
+        delete keyframe.height;
+      }
+    }
+  }
+
   // TODO: Reverse the reverse if the original direction is reverse.
   const reverse = rangeStart > rangeEnd;
-  targetElement.animate(keyframes, {
-    pseudoElement: pseudoElement,
-    // Set the timeline to the current gesture timeline to drive the updates.
-    timeline: timeline,
-    // We reset all easing functions to linear so that it feels like you
-    // have direct impact on the transition and to avoid double bouncing
-    // from scroll bouncing.
-    easing: 'linear',
-    // We fill in both direction for overscroll.
-    fill: 'both', // TODO: Should we preserve the fill instead?
-    // We play all gestures in reverse, except if we're in reverse direction
-    // in which case we need to play it in reverse of the reverse.
-    direction: reverse ? 'normal' : 'reverse',
-    // Range start needs to be higher than range end. If it goes in reverse
-    // we reverse the whole animation below.
-    rangeStart: (reverse ? rangeEnd : rangeStart) + '%',
-    rangeEnd: (reverse ? rangeStart : rangeEnd) + '%',
-  });
+  if (timeline instanceof AnimationTimeline) {
+    // Native Timeline
+    targetElement.animate(keyframes, {
+      pseudoElement: pseudoElement,
+      // Set the timeline to the current gesture timeline to drive the updates.
+      timeline: timeline,
+      // We reset all easing functions to linear so that it feels like you
+      // have direct impact on the transition and to avoid double bouncing
+      // from scroll bouncing.
+      easing: 'linear',
+      // We fill in both direction for overscroll.
+      fill: 'both', // TODO: Should we preserve the fill instead?
+      // We play all gestures in reverse, except if we're in reverse direction
+      // in which case we need to play it in reverse of the reverse.
+      direction: reverse ? 'normal' : 'reverse',
+      // Range start needs to be higher than range end. If it goes in reverse
+      // we reverse the whole animation below.
+      rangeStart: (reverse ? rangeEnd : rangeStart) + '%',
+      rangeEnd: (reverse ? rangeStart : rangeEnd) + '%',
+    });
+  } else {
+    // Custom Timeline
+    const animation = targetElement.animate(keyframes, {
+      pseudoElement: pseudoElement,
+      // We reset all easing functions to linear so that it feels like you
+      // have direct impact on the transition and to avoid double bouncing
+      // from scroll bouncing.
+      easing: 'linear',
+      // We fill in both direction for overscroll.
+      fill: 'both', // TODO: Should we preserve the fill instead?
+      // We play all gestures in reverse, except if we're in reverse direction
+      // in which case we need to play it in reverse of the reverse.
+      direction: reverse ? 'normal' : 'reverse',
+      // We set the delay and duration to represent the span of the range.
+      delay: reverse ? rangeEnd : rangeStart,
+      duration: reverse ? rangeStart - rangeEnd : rangeEnd - rangeStart,
+    });
+    // Let the custom timeline take control of driving the animation.
+    const cleanup = timeline.animate(animation);
+    if (cleanup) {
+      customTimelineCleanup.push(cleanup);
+    }
+  }
 }
 
 export function startGestureTransition(
@@ -2320,6 +2452,7 @@ export function startGestureTransition(
     });
     // $FlowFixMe[prop-missing]
     ownerDocument.__reactViewTransition = transition;
+    const customTimelineCleanup: Array<() => void> = []; // Cleanup Animations started in a CustomTimeline
     const readyCallback = () => {
       const documentElement: Element = (ownerDocument.documentElement: any);
       // Loop through all View Transition Animations.
@@ -2419,6 +2552,7 @@ export function startGestureTransition(
             effect.target,
             pseudoElement,
             timeline,
+            customTimelineCleanup,
             adjustedRangeStart,
             adjustedRangeEnd,
             isGeneratedGroupAnim,
@@ -2445,6 +2579,7 @@ export function startGestureTransition(
                 effect.target,
                 pseudoElementName,
                 timeline,
+                customTimelineCleanup,
                 rangeStart,
                 rangeEnd,
                 false,
@@ -2494,6 +2629,10 @@ export function startGestureTransition(
     transition.ready.then(readyForAnimations, handleError);
     transition.finished.finally(() => {
       cancelAllViewTransitionAnimations((ownerDocument.documentElement: any));
+      for (let i = 0; i < customTimelineCleanup.length; i++) {
+        const cleanup = customTimelineCleanup[i];
+        cleanup();
+      }
       // $FlowFixMe[prop-missing]
       if (ownerDocument.__reactViewTransition === transition) {
         // $FlowFixMe[prop-missing]
@@ -2597,10 +2736,15 @@ export function createViewTransitionInstance(
   };
 }
 
-export type GestureTimeline = AnimationTimeline; // TODO: More provider types.
+interface CustomTimeline {
+  currentTime: number;
+  animate(animation: Animation): void | (() => void);
+}
 
-export function getCurrentGestureOffset(provider: GestureTimeline): number {
-  const time = provider.currentTime;
+export type GestureTimeline = AnimationTimeline | CustomTimeline;
+
+export function getCurrentGestureOffset(timeline: GestureTimeline): number {
+  const time = timeline.currentTime;
   if (time === null) {
     throw new Error(
       'Cannot start a gesture with a disconnected AnimationTimeline.',

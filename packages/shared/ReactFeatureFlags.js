@@ -31,14 +31,8 @@ export const enableHydrationLaneScheduling = true;
 // like migrating internal callers or performance testing.
 // -----------------------------------------------------------------------------
 
-// TODO: Finish rolling out in www
-export const favorSafetyOverHydrationPerf = true;
-
 // Need to remove didTimeout argument from Scheduler before landing
 export const disableSchedulerTimeoutInWorkLoop = false;
-
-// TODO: Land at Meta before removing.
-export const disableDefaultPropsExceptForClasses = true;
 
 // -----------------------------------------------------------------------------
 // Slated for removal in the future (significant effort)

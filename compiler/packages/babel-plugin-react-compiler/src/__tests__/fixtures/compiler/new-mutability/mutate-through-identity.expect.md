@@ -34,42 +34,38 @@ import { useMemo } from "react";
 import { identity, ValidateMemoization } from "shared-runtime";
 
 function Component(t0) {
-  const $ = _c(10);
+  const $ = _c(9);
   const { a, b } = t0;
-  let t1;
   let x;
   if ($[0] !== a || $[1] !== b) {
-    t1 = { a };
-    x = t1;
+    x = { a };
     const x2 = identity(x);
     x2.b = b;
     $[0] = a;
     $[1] = b;
     $[2] = x;
-    $[3] = t1;
   } else {
     x = $[2];
-    t1 = $[3];
+  }
+  let t1;
+  if ($[3] !== a || $[4] !== b) {
+    t1 = [a, b];
+    $[3] = a;
+    $[4] = b;
+    $[5] = t1;
+  } else {
+    t1 = $[5];
   }
   let t2;
-  if ($[4] !== a || $[5] !== b) {
-    t2 = [a, b];
-    $[4] = a;
-    $[5] = b;
-    $[6] = t2;
+  if ($[6] !== t1 || $[7] !== x) {
+    t2 = <ValidateMemoization inputs={t1} output={x} />;
+    $[6] = t1;
+    $[7] = x;
+    $[8] = t2;
   } else {
-    t2 = $[6];
+    t2 = $[8];
   }
-  let t3;
-  if ($[7] !== t2 || $[8] !== x) {
-    t3 = <ValidateMemoization inputs={t2} output={x} />;
-    $[7] = t2;
-    $[8] = x;
-    $[9] = t3;
-  } else {
-    t3 = $[9];
-  }
-  return t3;
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {

@@ -279,7 +279,6 @@ export type HIRFunction = {
   env: Environment;
   params: Array<Place | SpreadPattern>;
   returnTypeAnnotation: t.FlowType | t.TSType | null;
-  returnType: Type;
   returns: Place;
   context: Array<Place>;
   effects: Array<FunctionEffect> | null;

@@ -53,6 +53,15 @@ const React = require('react');
 const activeDebugChannels =
   process.env.NODE_ENV === 'development' ? new Map() : null;
 
+function filterStackFrame(sourceURL, functionName) {
+  return (
+    sourceURL !== '' &&
+    !sourceURL.startsWith('node:') &&
+    !sourceURL.includes('node_modules') &&
+    !sourceURL.endsWith('library.js')
+  );
+}
+
 function getDebugChannel(req) {
   if (process.env.NODE_ENV !== 'development') {
     return undefined;
@@ -123,6 +132,7 @@ async function renderApp(
   const payload = {root, returnValue, formState};
   const {pipe} = renderToPipeableStream(payload, moduleMap, {
     debugChannel: await promiseForDebugChannel,
+    filterStackFrame,
   });
   pipe(res);
 }
@@ -178,7 +188,9 @@ async function prerenderApp(res, returnValue, formState, noCache) {
   );
   // For client-invoked server actions we refresh the tree and return a return value.
   const payload = {root, returnValue, formState};
-  const {prelude} = await prerenderToNodeStream(payload, moduleMap);
+  const {prelude} = await prerenderToNodeStream(payload, moduleMap, {
+    filterStackFrame,
+  });
   prelude.pipe(res);
 }
 

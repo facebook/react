@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import generate from '@babel/generator';
 import {CompilerError} from '../CompilerError';
 import {printReactiveScopeSummary} from '../ReactiveScopes/PrintReactiveFunction';
 import DisjointSet from '../Utils/DisjointSet';
@@ -54,6 +53,8 @@ export function printFunction(fn: HIRFunction): string {
   let definition = '';
   if (fn.id !== null) {
     definition += fn.id;
+  } else {
+    definition += '<<anonymous>>';
   }
   if (fn.params.length !== 0) {
     definition +=
@@ -71,10 +72,8 @@ export function printFunction(fn: HIRFunction): string {
   } else {
     definition += '()';
   }
-  if (definition.length !== 0) {
-    output.push(definition);
-  }
-  output.push(`: ${printType(fn.returnType)} @ ${printPlace(fn.returns)}`);
+  definition += `: ${printPlace(fn.returns)}`;
+  output.push(definition);
   output.push(...fn.directives);
   output.push(printHIR(fn.body));
   return output.join('\n');
@@ -466,7 +465,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       break;
     }
     case 'UnsupportedNode': {
-      value = `UnsupportedNode(${generate(instrValue.node).code})`;
+      value = `UnsupportedNode ${instrValue.node.type}`;
       break;
     }
     case 'LoadLocal': {
@@ -715,7 +714,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       break;
     }
     case 'FinishMemoize': {
-      value = `FinishMemoize decl=${printPlace(instrValue.decl)}`;
+      value = `FinishMemoize decl=${printPlace(instrValue.decl)}${instrValue.pruned ? ' pruned' : ''}`;
       break;
     }
     default: {

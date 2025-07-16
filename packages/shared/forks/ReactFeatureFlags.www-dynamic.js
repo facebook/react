@@ -14,7 +14,6 @@
 // with the __VARIANT__ set to `true`, and once set to `false`.
 
 export const alwaysThrottleRetries = __VARIANT__;
-export const disableDefaultPropsExceptForClasses = __VARIANT__;
 export const disableLegacyContextForFunctionComponents = __VARIANT__;
 export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
 export const enableHiddenSubtreeInsertionEffectCleanup = __VARIANT__;
@@ -22,7 +21,6 @@ export const enableNoCloningMemoCache = __VARIANT__;
 export const enableObjectFiber = __VARIANT__;
 export const enableRetryLaneExpiration = __VARIANT__;
 export const enableTransitionTracing = __VARIANT__;
-export const favorSafetyOverHydrationPerf = __VARIANT__;
 export const renameElementSymbol = __VARIANT__;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;

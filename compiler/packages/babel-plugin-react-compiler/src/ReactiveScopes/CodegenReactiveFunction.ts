@@ -349,11 +349,9 @@ function codegenReactiveFunction(
   fn: ReactiveFunction,
 ): Result<CodegenFunction, CompilerError> {
   for (const param of fn.params) {
-    if (param.kind === 'Identifier') {
-      cx.temp.set(param.identifier.declarationId, null);
-    } else {
-      cx.temp.set(param.place.identifier.declarationId, null);
-    }
+    const place = param.kind === 'Identifier' ? param : param.place;
+    cx.temp.set(place.identifier.declarationId, null);
+    cx.declare(place.identifier);
   }
 
   const params = fn.params.map(param => convertParameter(param));
@@ -1183,7 +1181,7 @@ function codegenTerminal(
               ? codegenPlaceToExpression(cx, case_.test)
               : null;
           const block = codegenBlock(cx, case_.block!);
-          return t.switchCase(test, [block]);
+          return t.switchCase(test, block.body.length === 0 ? [] : [block]);
         }),
       );
     }

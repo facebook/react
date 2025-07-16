@@ -18,6 +18,7 @@ import {
   ValueKind,
   ValueReason,
   Place,
+  isPrimitiveType,
 } from '../HIR/HIR';
 import {
   eachInstructionLValue,
@@ -471,15 +472,15 @@ export function inferMutationAliasingRanges(
    * Here we populate an effect to create the return value as well as populating alias/capture
    * effects for how data flows between the params, context vars, and return.
    */
+  const returns = fn.returns.identifier;
   functionEffects.push({
     kind: 'Create',
     into: fn.returns,
-    value:
-      fn.returnType.kind === 'Primitive'
-        ? ValueKind.Primitive
-        : isJsxType(fn.returnType)
-          ? ValueKind.Frozen
-          : ValueKind.Mutable,
+    value: isPrimitiveType(returns)
+      ? ValueKind.Primitive
+      : isJsxType(returns.type)
+        ? ValueKind.Frozen
+        : ValueKind.Mutable,
     reason: ValueReason.KnownReturnSignature,
   });
   /**

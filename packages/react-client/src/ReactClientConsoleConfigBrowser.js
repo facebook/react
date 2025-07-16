@@ -7,6 +7,7 @@
  * @flow
  */
 
+// Keep in sync with ReactServerConsoleConfig
 const badgeFormat = '%c%s%c ';
 // Same badge styling as DevTools.
 const badgeStyle =

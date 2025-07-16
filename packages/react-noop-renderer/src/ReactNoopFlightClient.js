@@ -24,35 +24,36 @@ type Source = Array<Uint8Array>;
 
 const decoderOptions = {stream: true};
 
-const {createResponse, processBinaryChunk, getRoot, close} = ReactFlightClient({
-  createStringDecoder() {
-    return new TextDecoder();
-  },
-  readPartialStringChunk(decoder: TextDecoder, buffer: Uint8Array): string {
-    return decoder.decode(buffer, decoderOptions);
-  },
-  readFinalStringChunk(decoder: TextDecoder, buffer: Uint8Array): string {
-    return decoder.decode(buffer);
-  },
-  resolveClientReference(bundlerConfig: null, idx: string) {
-    return idx;
-  },
-  prepareDestinationForModule(moduleLoading: null, metadata: string) {},
-  preloadModule(idx: string) {},
-  requireModule(idx: string) {
-    return readModule(idx);
-  },
-  parseModel(response: Response, json) {
-    return JSON.parse(json, response._fromJSON);
-  },
-  bindToConsole(methodName, args, badgeName) {
-    return Function.prototype.bind.apply(
-      // eslint-disable-next-line react-internal/no-production-logging
-      console[methodName],
-      [console].concat(args),
-    );
-  },
-});
+const {createResponse, createStreamState, processBinaryChunk, getRoot, close} =
+  ReactFlightClient({
+    createStringDecoder() {
+      return new TextDecoder();
+    },
+    readPartialStringChunk(decoder: TextDecoder, buffer: Uint8Array): string {
+      return decoder.decode(buffer, decoderOptions);
+    },
+    readFinalStringChunk(decoder: TextDecoder, buffer: Uint8Array): string {
+      return decoder.decode(buffer);
+    },
+    resolveClientReference(bundlerConfig: null, idx: string) {
+      return idx;
+    },
+    prepareDestinationForModule(moduleLoading: null, metadata: string) {},
+    preloadModule(idx: string) {},
+    requireModule(idx: string) {
+      return readModule(idx);
+    },
+    parseModel(response: Response, json) {
+      return JSON.parse(json, response._fromJSON);
+    },
+    bindToConsole(methodName, args, badgeName) {
+      return Function.prototype.bind.apply(
+        // eslint-disable-next-line react-internal/no-production-logging
+        console[methodName],
+        [console].concat(args),
+      );
+    },
+  });
 
 type ReadOptions = {|
   findSourceMapURL?: FindSourceMapURLCallback,
@@ -76,8 +77,9 @@ function read<T>(source: Source, options: ReadOptions): Thenable<T> {
       ? options.debugChannel.onMessage
       : undefined,
   );
+  const streamState = createStreamState();
   for (let i = 0; i < source.length; i++) {
-    processBinaryChunk(response, source[i], 0);
+    processBinaryChunk(response, streamState, source[i], 0);
   }
   if (options !== undefined && options.close) {
     close(response);
