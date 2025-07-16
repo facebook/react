@@ -15241,6 +15241,7 @@ __DEV__ &&
         prevEffectErrors = pushComponentEffectErrors(),
         prevDeepEquality = alreadyWarnedForDeepEquality;
       enableComponentPerformanceTrack &&
+        includeWorkInProgressEffects &&
         (finishedWork.mode & 2) !== NoMode &&
         0 < finishedWork.actualStartTime &&
         0 !== (finishedWork.flags & 1) &&
@@ -21906,7 +21907,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-fe813143-20250715"
+        reconcilerVersion: "19.2.0-www-modern-9fec565a-20250716"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
