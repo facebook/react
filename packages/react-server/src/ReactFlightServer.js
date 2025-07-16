@@ -314,13 +314,44 @@ function hasUnfilteredFrame(request: Request, stack: ReactStackTrace): boolean {
   return false;
 }
 
+function isPromiseAwaitInternal(url: string, functionName: string): boolean {
+  // Various internals of the JS VM can await internally on a Promise. If those are at
+  // the top of the stack then we don't want to consider them as internal frames. The
+  // true "await" conceptually is the thing that called the helper.
+  // Ideally we'd also include common third party helpers for this.
+  if (url === 'node:internal/async_hooks') {
+    // Ignore the stack frames from the async hooks themselves.
+    return true;
+  }
+  if (url !== '') {
+    return false;
+  }
+  switch (functionName) {
+    case 'Promise.then':
+    case 'Promise.catch':
+    case 'Promise.finally':
+    case 'Function.reject':
+    case 'Function.resolve':
+    case 'Function.all':
+    case 'Function.allSettled':
+    case 'Function.race':
+    case 'Function.try':
+      return true;
+    default:
+      return false;
+  }
+}
+
 export function isAwaitInUserspace(
   request: Request,
   stack: ReactStackTrace,
 ): boolean {
   let firstFrame = 0;
-  while (stack.length > firstFrame && stack[firstFrame][0] === 'Promise.then') {
-    // Skip Promise.then frame itself.
+  while (
+    stack.length > firstFrame &&
+    isPromiseAwaitInternal(stack[firstFrame][1], stack[firstFrame][0])
+  ) {
+    // Skip the internal frame that awaits itself.
     firstFrame++;
   }
   if (stack.length > firstFrame) {
