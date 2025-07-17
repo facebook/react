@@ -3,7 +3,7 @@
 
 ```javascript
 // @inferEffectDependencies @panicThreshold:"none"
-import {useEffect} from 'react';
+import {useEffect, AUTODEPS} from 'react';
 
 /**
  * Error on non-inlined effect functions:
@@ -21,7 +21,7 @@ function Component({foo}) {
   }
 
   // No inferred dep array, the argument is not a lambda
-  useEffect(f);
+  useEffect(f, AUTODEPS);
 }
 
 ```
@@ -32,8 +32,8 @@ function Component({foo}) {
 ```
   18 |
   19 |   // No inferred dep array, the argument is not a lambda
-> 20 |   useEffect(f);
-     |   ^^^^^^^^^^^^ InvalidReact: [InferEffectDependencies] React Compiler is unable to infer dependencies of this effect. This will break your build! To resolve, either pass your own dependency array or fix reported compiler bailout diagnostics. (20:20)
+> 20 |   useEffect(f, AUTODEPS);
+     |   ^^^^^^^^^^^^^^^^^^^^^^ InvalidReact: [InferEffectDependencies] React Compiler is unable to infer dependencies of this effect. This will break your build! To resolve, either pass your own dependency array or fix reported compiler bailout diagnostics. (20:20)
   21 | }
   22 |
 ```
