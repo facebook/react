@@ -3,7 +3,7 @@
 
 ```javascript
 // @inferEffectDependencies
-import {useRef, useEffect} from 'react';
+import {useRef, useEffect, AUTODEPS} from 'react';
 import {print, mutate} from 'shared-runtime';
 
 function Component({cond}) {
@@ -14,7 +14,7 @@ function Component({cond}) {
   useEffect(() => {
     mutate(derived.current);
     print(derived.current);
-  });
+  }, AUTODEPS);
   return arr;
 }
 
@@ -24,7 +24,7 @@ function Component({cond}) {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @inferEffectDependencies
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, AUTODEPS } from "react";
 import { print, mutate } from "shared-runtime";
 
 function Component(t0) {

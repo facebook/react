@@ -5,13 +5,14 @@
 // @inferEffectDependencies @noEmit @panicThreshold:"none" @loggerTestOnly
 import {print} from 'shared-runtime';
 import useEffectWrapper from 'useEffectWrapper';
+import {AUTODEPS} from 'react';
 
 function Foo({propVal}) {
   const arr = [propVal];
-  useEffectWrapper(() => print(arr));
+  useEffectWrapper(() => print(arr), AUTODEPS);
 
   const arr2 = [];
-  useEffectWrapper(() => arr2.push(propVal));
+  useEffectWrapper(() => arr2.push(propVal), AUTODEPS);
   arr2.push(2);
   return {arr, arr2};
 }
@@ -30,13 +31,14 @@ export const FIXTURE_ENTRYPOINT = {
 // @inferEffectDependencies @noEmit @panicThreshold:"none" @loggerTestOnly
 import { print } from "shared-runtime";
 import useEffectWrapper from "useEffectWrapper";
+import { AUTODEPS } from "react";
 
 function Foo({ propVal }) {
   const arr = [propVal];
-  useEffectWrapper(() => print(arr));
+  useEffectWrapper(() => print(arr), AUTODEPS);
 
   const arr2 = [];
-  useEffectWrapper(() => arr2.push(propVal));
+  useEffectWrapper(() => arr2.push(propVal), AUTODEPS);
   arr2.push(2);
   return { arr, arr2 };
 }
@@ -52,10 +54,10 @@ export const FIXTURE_ENTRYPOINT = {
 ## Logs
 
 ```
-{"kind":"CompileError","fnLoc":{"start":{"line":5,"column":0,"index":163},"end":{"line":13,"column":1,"index":357},"filename":"retry-no-emit.ts"},"detail":{"reason":"Updating a value previously passed as an argument to a hook is not allowed. Consider moving the mutation before calling the hook","description":null,"severity":"InvalidReact","suggestions":null,"loc":{"start":{"line":11,"column":2,"index":320},"end":{"line":11,"column":6,"index":324},"filename":"retry-no-emit.ts","identifierName":"arr2"}}}
-{"kind":"AutoDepsDecorations","fnLoc":{"start":{"line":7,"column":2,"index":216},"end":{"line":7,"column":36,"index":250},"filename":"retry-no-emit.ts"},"decorations":[{"start":{"line":7,"column":31,"index":245},"end":{"line":7,"column":34,"index":248},"filename":"retry-no-emit.ts","identifierName":"arr"}]}
-{"kind":"AutoDepsDecorations","fnLoc":{"start":{"line":10,"column":2,"index":274},"end":{"line":10,"column":44,"index":316},"filename":"retry-no-emit.ts"},"decorations":[{"start":{"line":10,"column":25,"index":297},"end":{"line":10,"column":29,"index":301},"filename":"retry-no-emit.ts","identifierName":"arr2"},{"start":{"line":10,"column":25,"index":297},"end":{"line":10,"column":29,"index":301},"filename":"retry-no-emit.ts","identifierName":"arr2"},{"start":{"line":10,"column":35,"index":307},"end":{"line":10,"column":42,"index":314},"filename":"retry-no-emit.ts","identifierName":"propVal"}]}
-{"kind":"CompileSuccess","fnLoc":{"start":{"line":5,"column":0,"index":163},"end":{"line":13,"column":1,"index":357},"filename":"retry-no-emit.ts"},"fnName":"Foo","memoSlots":0,"memoBlocks":0,"memoValues":0,"prunedMemoBlocks":0,"prunedMemoValues":0}
+{"kind":"CompileError","fnLoc":{"start":{"line":6,"column":0,"index":195},"end":{"line":14,"column":1,"index":409},"filename":"retry-no-emit.ts"},"detail":{"reason":"Updating a value previously passed as an argument to a hook is not allowed. Consider moving the mutation before calling the hook","description":null,"severity":"InvalidReact","suggestions":null,"loc":{"start":{"line":12,"column":2,"index":372},"end":{"line":12,"column":6,"index":376},"filename":"retry-no-emit.ts","identifierName":"arr2"}}}
+{"kind":"AutoDepsDecorations","fnLoc":{"start":{"line":8,"column":2,"index":248},"end":{"line":8,"column":46,"index":292},"filename":"retry-no-emit.ts"},"decorations":[{"start":{"line":8,"column":31,"index":277},"end":{"line":8,"column":34,"index":280},"filename":"retry-no-emit.ts","identifierName":"arr"}]}
+{"kind":"AutoDepsDecorations","fnLoc":{"start":{"line":11,"column":2,"index":316},"end":{"line":11,"column":54,"index":368},"filename":"retry-no-emit.ts"},"decorations":[{"start":{"line":11,"column":25,"index":339},"end":{"line":11,"column":29,"index":343},"filename":"retry-no-emit.ts","identifierName":"arr2"},{"start":{"line":11,"column":25,"index":339},"end":{"line":11,"column":29,"index":343},"filename":"retry-no-emit.ts","identifierName":"arr2"},{"start":{"line":11,"column":35,"index":349},"end":{"line":11,"column":42,"index":356},"filename":"retry-no-emit.ts","identifierName":"propVal"}]}
+{"kind":"CompileSuccess","fnLoc":{"start":{"line":6,"column":0,"index":195},"end":{"line":14,"column":1,"index":409},"filename":"retry-no-emit.ts"},"fnName":"Foo","memoSlots":0,"memoBlocks":0,"memoValues":0,"prunedMemoBlocks":0,"prunedMemoValues":0}
 ```
       
 ### Eval output
