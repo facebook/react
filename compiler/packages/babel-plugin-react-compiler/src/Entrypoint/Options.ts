@@ -7,7 +7,12 @@
 
 import * as t from '@babel/types';
 import {z} from 'zod';
-import {CompilerError, CompilerErrorDetailOptions} from '../CompilerError';
+import {
+  CompilerDiagnostic,
+  CompilerError,
+  CompilerErrorDetail,
+  CompilerErrorDetailOptions,
+} from '../CompilerError';
 import {
   EnvironmentConfig,
   ExternalFunction,
@@ -224,7 +229,7 @@ export type LoggerEvent =
 export type CompileErrorEvent = {
   kind: 'CompileError';
   fnLoc: t.SourceLocation | null;
-  detail: CompilerErrorDetailOptions;
+  detail: CompilerErrorDetail | CompilerDiagnostic;
 };
 export type CompileDiagnosticEvent = {
   kind: 'CompileDiagnostic';

@@ -17,13 +17,19 @@ function Foo() {
 ## Error
 
 ```
+Found 1 error:
+Error: Mutating a value returned from 'useState()', which should not be mutated. Use the setter function to update instead
+
+error.modify-state-2.ts:6:2
   4 |   const [state, setState] = useState({foo: {bar: 3}});
   5 |   const foo = state.foo;
 > 6 |   foo.bar = 1;
-    |   ^^^ InvalidReact: Mutating a value returned from 'useState()', which should not be mutated. Use the setter function to update instead (6:6)
+    |   ^^^ Mutating a value returned from 'useState()', which should not be mutated. Use the setter function to update instead
   7 |   return state;
   8 | }
   9 |
+
+
 ```
           
       

@@ -24,13 +24,19 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
+Found 1 error:
+Error: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)
+
+undefined:8:4
    6 |   if (r.current == null) {
    7 |     r.current = 42;
 >  8 |     r.current = 42;
-     |     ^^^^^^^^^ InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef) (8:8)
+     |     ^^^^^^^^^ Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)
    9 |   }
   10 | }
   11 |
+
+
 ```
           
       
