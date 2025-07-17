@@ -19,10 +19,17 @@ function useHook(x) {
 ## Error
 
 ```
+Found 1 error:
+
+Memoization: Compilation skipped because existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `x`, but the source dependencies were [aliasedX, aliasedProp]. Inferred different dependency than source.
+
+error.useMemo-aliased-var.ts:9:17
    7 |   const aliasedProp = x.y.z;
    8 |
 >  9 |   return useMemo(() => [x, x.y.z], [aliasedX, aliasedProp]);
-     |                  ^^^^^^^^^^^^^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `x`, but the source dependencies were [aliasedX, aliasedProp]. Inferred different dependency than source (9:9)
+     |                  ^^^^^^^^^^^^^^^^ Could not preserve existing manual memoization
   10 | }
   11 |
 ```

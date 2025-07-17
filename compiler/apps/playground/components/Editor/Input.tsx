@@ -36,13 +36,18 @@ export default function Input({errors, language}: Props): JSX.Element {
     const uri = monaco.Uri.parse(`file:///index.js`);
     const model = monaco.editor.getModel(uri);
     invariant(model, 'Model must exist for the selected input file.');
-    renderReactCompilerMarkers({monaco, model, details: errors});
+    renderReactCompilerMarkers({
+      monaco,
+      model,
+      details: errors,
+      source: store.source,
+    });
     /**
      * N.B. that `tabSize` is a model property, not an editor property.
      * So, the tab size has to be set per model.
      */
     model.updateOptions({tabSize: 2});
-  }, [monaco, errors]);
+  }, [monaco, errors, store.source]);
 
   useEffect(() => {
     /**
