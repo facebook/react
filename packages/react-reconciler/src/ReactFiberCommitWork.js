@@ -4155,6 +4155,7 @@ export function reconnectPassiveEffects(
   if (
     enableProfilerTimer &&
     enableComponentPerformanceTrack &&
+    includeWorkInProgressEffects &&
     (finishedWork.mode & ProfileMode) !== NoMode &&
     ((finishedWork.actualStartTime: any): number) > 0 &&
     (finishedWork.flags & PerformedWork) !== NoFlags

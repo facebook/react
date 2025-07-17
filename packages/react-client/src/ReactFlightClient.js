@@ -342,11 +342,6 @@ type Response = {
   _chunks: Map<number, SomeChunk<any>>,
   _fromJSON: (key: string, value: JSONValue) => any,
   _stringDecoder: StringDecoder,
-  _rowState: RowParserState,
-  _rowID: number, // parts of a row ID parsed so far
-  _rowTag: number, // 0 indicates that we're currently parsing the row ID
-  _rowLength: number, // remaining bytes in the row. 0 indicates that we're looking for a newline.
-  _buffer: Array<Uint8Array>, // chunks received so far as part of this row
   _closed: boolean,
   _closedReason: mixed,
   _tempRefs: void | TemporaryReferenceSet, // the set temporary references can be resolved from
@@ -1358,6 +1353,26 @@ function waitForReference<T>(
   map: (response: Response, model: any, parentObject: Object, key: string) => T,
   path: Array<string>,
 ): T {
+  if (
+    __DEV__ &&
+    // TODO: This should check for the existence of the "readable" side, not the "writable".
+    response._debugChannel === undefined
+  ) {
+    if (
+      referencedChunk.status === PENDING &&
+      parentObject[0] === REACT_ELEMENT_TYPE &&
+      (key === '4' || key === '5')
+    ) {
+      // If the parent object is an unparsed React element tuple, and this is a reference
+      // to the owner or debug stack. Then we expect the chunk to have been emitted earlier
+      // in the stream. It might be blocked on other things but chunk should no longer be pending.
+      // If it's still pending that suggests that it was referencing an object in the debug
+      // channel, but no debug channel was wired up so it's missing. In this case we can just
+      // drop the debug info instead of halting the whole stream.
+      return (null: any);
+    }
+  }
+
   let handler: InitializationHandler;
   if (initializingHandler) {
     handler = initializingHandler;
@@ -2048,6 +2063,18 @@ function parseModelString(
           if (value.length > 2) {
             const debugChannel = response._debugChannel;
             if (debugChannel) {
+              if (value[2] === '@') {
+                // This is a deferred Promise.
+                const ref = value.slice(3); // We assume this doesn't have a path just id.
+                const id = parseInt(ref, 16);
+                if (!response._chunks.has(id)) {
+                  // We haven't seen this id before. Query the server to start sending it.
+                  debugChannel('P:' + ref);
+                }
+                // Start waiting. This now creates a pending chunk if it doesn't already exist.
+                // This is the actual Promise we're waiting for.
+                return getChunk(response, id);
+              }
               const ref = value.slice(2); // We assume this doesn't have a path just id.
               const id = parseInt(ref, 16);
               if (!response._chunks.has(id)) {
@@ -2142,11 +2169,6 @@ function ResponseInstance(
   this._chunks = chunks;
   this._stringDecoder = createStringDecoder();
   this._fromJSON = (null: any);
-  this._rowState = 0;
-  this._rowID = 0;
-  this._rowTag = 0;
-  this._rowLength = 0;
-  this._buffer = [];
   this._closed = false;
   this._closedReason = null;
   this._tempRefs = temporaryReferences;
@@ -2245,6 +2267,24 @@ export function createResponse(
       debugChannel,
     ),
   );
+}
+
+export type StreamState = {
+  _rowState: RowParserState,
+  _rowID: number, // parts of a row ID parsed so far
+  _rowTag: number, // 0 indicates that we're currently parsing the row ID
+  _rowLength: number, // remaining bytes in the row. 0 indicates that we're looking for a newline.
+  _buffer: Array<Uint8Array>, // chunks received so far as part of this row
+};
+
+export function createStreamState(): StreamState {
+  return {
+    _rowState: 0,
+    _rowID: 0,
+    _rowTag: 0,
+    _rowLength: 0,
+    _buffer: [],
+  };
 }
 
 function resolveDebugHalt(response: Response, id: number): void {
@@ -3983,6 +4023,7 @@ function processFullStringRow(
 
 export function processBinaryChunk(
   weakResponse: WeakResponse,
+  streamState: StreamState,
   chunk: Uint8Array,
 ): void {
   if (hasGCedResponse(weakResponse)) {
@@ -3991,11 +4032,11 @@ export function processBinaryChunk(
   }
   const response = unwrapWeakResponse(weakResponse);
   let i = 0;
-  let rowState = response._rowState;
-  let rowID = response._rowID;
-  let rowTag = response._rowTag;
-  let rowLength = response._rowLength;
-  const buffer = response._buffer;
+  let rowState = streamState._rowState;
+  let rowID = streamState._rowID;
+  let rowTag = streamState._rowTag;
+  let rowLength = streamState._rowLength;
+  const buffer = streamState._buffer;
   const chunkLength = chunk.length;
   while (i < chunkLength) {
     let lastIdx = -1;
@@ -4100,14 +4141,15 @@ export function processBinaryChunk(
       break;
     }
   }
-  response._rowState = rowState;
-  response._rowID = rowID;
-  response._rowTag = rowTag;
-  response._rowLength = rowLength;
+  streamState._rowState = rowState;
+  streamState._rowID = rowID;
+  streamState._rowTag = rowTag;
+  streamState._rowLength = rowLength;
 }
 
 export function processStringChunk(
   weakResponse: WeakResponse,
+  streamState: StreamState,
   chunk: string,
 ): void {
   if (hasGCedResponse(weakResponse)) {
@@ -4124,11 +4166,11 @@ export function processStringChunk(
   // here. Basically, only if Flight Server gave you this string as a chunk,
   // you can use it here.
   let i = 0;
-  let rowState = response._rowState;
-  let rowID = response._rowID;
-  let rowTag = response._rowTag;
-  let rowLength = response._rowLength;
-  const buffer = response._buffer;
+  let rowState = streamState._rowState;
+  let rowID = streamState._rowID;
+  let rowTag = streamState._rowTag;
+  let rowLength = streamState._rowLength;
+  const buffer = streamState._buffer;
   const chunkLength = chunk.length;
   while (i < chunkLength) {
     let lastIdx = -1;
@@ -4252,10 +4294,10 @@ export function processStringChunk(
       );
     }
   }
-  response._rowState = rowState;
-  response._rowID = rowID;
-  response._rowTag = rowTag;
-  response._rowLength = rowLength;
+  streamState._rowState = rowState;
+  streamState._rowID = rowID;
+  streamState._rowTag = rowTag;
+  streamState._rowLength = rowLength;
 }
 
 function parseModel<T>(response: Response, json: UninitializedModel): T {

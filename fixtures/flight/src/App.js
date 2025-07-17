@@ -24,6 +24,7 @@ import {GenerateImage} from './GenerateImage.js';
 import {like, greet, increment} from './actions.js';
 
 import {getServerState} from './ServerState.js';
+import {sdkMethod} from './library.js';
 
 const promisedText = new Promise(resolve =>
   setTimeout(() => resolve('deferred text'), 50)
@@ -180,6 +181,7 @@ let veryDeepObject = [
 export default async function App({prerender, noCache}) {
   const res = await fetch('http://localhost:3001/todos');
   const todos = await res.json();
+  await sdkMethod('http://localhost:3001/todos');
 
   console.log('Expand me:', veryDeepObject);
 
