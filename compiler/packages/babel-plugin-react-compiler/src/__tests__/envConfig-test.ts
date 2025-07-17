@@ -33,12 +33,12 @@ describe('parseConfigPragma()', () => {
               source: 'react',
               importSpecifierName: 'useEffect',
             },
-            numRequiredArgs: 0,
+            autodepsIndex: 0,
           },
         ],
       } as any);
     }).toThrowErrorMatchingInlineSnapshot(
-      `"InvalidConfig: Could not validate environment config. Update React Compiler config to fix the error. Validation error: numRequiredArgs must be > 0 at "inferEffectDependencies[0].numRequiredArgs""`,
+      `"InvalidConfig: Could not validate environment config. Update React Compiler config to fix the error. Validation error: autodepsIndex must be > 0 at "inferEffectDependencies[0].autodepsIndex""`,
     );
   });
 

@@ -75,21 +75,21 @@ const testComplexConfigDefaults: PartialEnvironmentConfig = {
         source: 'react',
         importSpecifierName: 'useEffect',
       },
-      numRequiredArgs: 1,
+      autodepsIndex: 1,
     },
     {
       function: {
         source: 'shared-runtime',
         importSpecifierName: 'useSpecialEffect',
       },
-      numRequiredArgs: 2,
+      autodepsIndex: 2,
     },
     {
       function: {
         source: 'useEffectWrapper',
         importSpecifierName: 'default',
       },
-      numRequiredArgs: 1,
+      autodepsIndex: 1,
     },
   ],
 };

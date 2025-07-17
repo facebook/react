@@ -7,7 +7,7 @@ import React from 'react';
 
 function NonReactiveDepInEffect() {
   const obj = makeObject_Primitives();
-  React.useEffect(() => print(obj));
+  React.useEffect(() => print(obj), React.AUTODEPS);
 }
 
 ```
@@ -18,8 +18,8 @@ function NonReactiveDepInEffect() {
 ```
   4 | function NonReactiveDepInEffect() {
   5 |   const obj = makeObject_Primitives();
-> 6 |   React.useEffect(() => print(obj));
-    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ InvalidReact: [InferEffectDependencies] React Compiler is unable to infer dependencies of this effect. This will break your build! To resolve, either pass your own dependency array or fix reported compiler bailout diagnostics. (6:6)
+> 6 |   React.useEffect(() => print(obj), React.AUTODEPS);
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ InvalidReact: [InferEffectDependencies] React Compiler is unable to infer dependencies of this effect. This will break your build! To resolve, either pass your own dependency array or fix reported compiler bailout diagnostics. (6:6)
   7 | }
   8 |
 ```
