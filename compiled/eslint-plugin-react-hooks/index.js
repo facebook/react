@@ -20860,6 +20860,7 @@ const BuiltInFireId = 'BuiltInFire';
 const BuiltInFireFunctionId = 'BuiltInFireFunction';
 const BuiltInUseEffectEventId = 'BuiltInUseEffectEvent';
 const BuiltinEffectEventId = 'BuiltInEffectEventFunction';
+const BuiltInAutodepsId = 'BuiltInAutoDepsId';
 const ReanimatedSharedValueId = 'ReanimatedSharedValueId';
 const BUILTIN_SHAPES = new Map();
 addObject(BUILTIN_SHAPES, BuiltInPropsId, [
@@ -29728,6 +29729,7 @@ const REACT_APIS = [
             returnValueKind: ValueKind.Frozen,
         }, BuiltInUseEffectEventId),
     ],
+    ['AUTODEPS', addObject(DEFAULT_SHAPES, BuiltInAutodepsId, [])],
 ];
 TYPED_GLOBALS.push([
     'React',
@@ -45235,7 +45237,12 @@ function inferEffectDependencies(fn) {
             else if (value.kind === 'CallExpression' ||
                 value.kind === 'MethodCall') {
                 const callee = value.kind === 'CallExpression' ? value.callee : value.property;
-                if (value.args.length === autodepFnLoads.get(callee.identifier.id) &&
+                const autodepsArgIndex = value.args.findIndex(arg => arg.kind === 'Identifier' &&
+                    arg.identifier.type.kind === 'Object' &&
+                    arg.identifier.type.shapeId === BuiltInAutodepsId);
+                if (value.args.length > 1 &&
+                    autodepsArgIndex > 0 &&
+                    autodepFnLoads.has(callee.identifier.id) &&
                     value.args[0].kind === 'Identifier') {
                     const effectDeps = [];
                     const deps = {
@@ -45302,7 +45309,7 @@ function inferEffectDependencies(fn) {
                                 effects: null,
                             },
                         });
-                        value.args.push(Object.assign(Object.assign({}, depsPlace), { effect: Effect.Freeze }));
+                        value.args[autodepsArgIndex] = Object.assign(Object.assign({}, depsPlace), { effect: Effect.Freeze });
                         fn.env.inferredEffectLocations.add(callee.loc);
                     }
                     else if (loadGlobals.has(value.args[0].identifier.id)) {
@@ -45317,7 +45324,7 @@ function inferEffectDependencies(fn) {
                                 effects: null,
                             },
                         });
-                        value.args.push(Object.assign(Object.assign({}, depsPlace), { effect: Effect.Freeze }));
+                        value.args[autodepsArgIndex] = Object.assign(Object.assign({}, depsPlace), { effect: Effect.Freeze });
                         fn.env.inferredEffectLocations.add(callee.loc);
                     }
                 }
@@ -45351,6 +45358,7 @@ function inferEffectDependencies(fn) {
         markPredecessors(fn.body);
         markInstructionIds(fn.body);
         fixScopeAndIdentifierRanges(fn.body);
+        deadCodeElimination(fn);
         fn.env.hasInferredEffect = true;
     }
 }
@@ -45387,7 +45395,7 @@ function rewriteSplices(originalBlock, splices, rewriteBlocks) {
         if (rewrite.kind === 'instr') {
             currBlock.instructions.push(rewrite.value);
         }
-        else {
+        else if (rewrite.kind === 'block') {
             const { entry, blocks } = rewrite.value;
             const entryBlock = blocks.get(entry);
             currBlock.instructions.push(...entryBlock.instructions);
