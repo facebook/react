@@ -11,20 +11,22 @@ import {
   IdentifierId,
   isSetStateType,
   isUseEffectHookType,
+  isUseInsertionEffectHookType,
+  isUseLayoutEffectHookType,
   Place,
 } from '../HIR';
 import {eachInstructionValueOperand} from '../HIR/visitors';
 import {Result} from '../Utils/Result';
 
 /**
- * Validates against calling setState in the body of a *passive* effect (useEffect),
+ * Validates against calling setState in the body of an effect (useEffect and friends),
  * while allowing calling setState in callbacks scheduled by the effect.
  *
  * Calling setState during execution of a useEffect triggers a re-render, which is
  * often bad for performance and frequently has more efficient and straightforward
  * alternatives. See https://react.dev/learn/you-might-not-need-an-effect for examples.
  */
-export function validateNoSetStateInPassiveEffects(
+export function validateNoSetStateInEffects(
   fn: HIRFunction,
 ): Result<void, CompilerError> {
   const setStateFunctions: Map<IdentifierId, Place> = new Map();
@@ -79,7 +81,11 @@ export function validateNoSetStateInPassiveEffects(
             instr.value.kind === 'MethodCall'
               ? instr.value.receiver
               : instr.value.callee;
-          if (isUseEffectHookType(callee.identifier)) {
+          if (
+            isUseEffectHookType(callee.identifier) ||
+            isUseLayoutEffectHookType(callee.identifier) ||
+            isUseInsertionEffectHookType(callee.identifier)
+          ) {
             const arg = instr.value.args[0];
             if (arg !== undefined && arg.kind === 'Identifier') {
               const setState = setStateFunctions.get(arg.identifier.id);

@@ -109,6 +109,12 @@ const COMPILER_OPTIONS: Partial<PluginOptions> = {
   flowSuppressions: false,
   environment: validateEnvironmentConfig({
     validateRefAccessDuringRender: false,
+    validateNoSetStateInRender: true,
+    validateNoSetStateInEffects: true,
+    validateNoJSXInTryStatements: true,
+    validateNoImpureFunctionsInRender: true,
+    validateStaticComponents: true,
+    validateNoFreezingKnownMutableFunctions: true,
   }),
 };
 
