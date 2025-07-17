@@ -94,7 +94,7 @@ import {validateLocalsNotReassignedAfterRender} from '../Validation/ValidateLoca
 import {outlineFunctions} from '../Optimization/OutlineFunctions';
 import {propagatePhiTypes} from '../TypeInference/PropagatePhiTypes';
 import {lowerContextAccess} from '../Optimization/LowerContextAccess';
-import {validateNoSetStateInPassiveEffects} from '../Validation/ValidateNoSetStateInPassiveEffects';
+import {validateNoSetStateInEffects} from '../Validation/ValidateNoSetStateInEffects';
 import {validateNoJSXInTryStatement} from '../Validation/ValidateNoJSXInTryStatement';
 import {propagateScopeDependenciesHIR} from '../HIR/PropagateScopeDependenciesHIR';
 import {outlineJSX} from '../Optimization/OutlineJsx';
@@ -292,8 +292,8 @@ function runWithEnvironment(
       validateNoSetStateInRender(hir).unwrap();
     }
 
-    if (env.config.validateNoSetStateInPassiveEffects) {
-      env.logErrors(validateNoSetStateInPassiveEffects(hir));
+    if (env.config.validateNoSetStateInEffects) {
+      env.logErrors(validateNoSetStateInEffects(hir));
     }
 
     if (env.config.validateNoJSXInTryStatements) {

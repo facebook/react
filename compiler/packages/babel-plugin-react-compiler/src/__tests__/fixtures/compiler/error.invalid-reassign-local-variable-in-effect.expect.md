@@ -47,13 +47,21 @@ function Component() {
 ## Error
 
 ```
+Found 1 error:
+Error: Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead
+
+Variable `local` cannot be reassigned after render.
+
+error.invalid-reassign-local-variable-in-effect.ts:7:4
    5 |
    6 |   const reassignLocal = newValue => {
 >  7 |     local = newValue;
-     |     ^^^^^ InvalidReact: Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead. Variable `local` cannot be reassigned after render (7:7)
+     |     ^^^^^ Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead
    8 |   };
    9 |
   10 |   const onMount = newValue => {
+
+
 ```
           
       

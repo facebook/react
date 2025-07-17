@@ -2271,11 +2271,17 @@ function lowerExpression(
         });
         for (const [name, locations] of Object.entries(fbtLocations)) {
           if (locations.length > 1) {
-            CompilerError.throwTodo({
-              reason: `Support <${tagName}> tags with multiple <${tagName}:${name}> values`,
-              loc: locations.at(-1) ?? GeneratedSource,
-              description: null,
-              suggestions: null,
+            CompilerError.throwDiagnostic({
+              severity: ErrorSeverity.Todo,
+              category: 'Support duplicate fbt tags',
+              description: `Support \`<${tagName}>\` tags with multiple \`<${tagName}:${name}>\` values`,
+              details: locations.map(loc => {
+                return {
+                  kind: 'error',
+                  message: `Multiple \`<${tagName}:${name}>\` tags found`,
+                  loc,
+                };
+              }),
             });
           }
         }
@@ -3503,9 +3509,8 @@ function lowerFunction(
   );
   let loweredFunc: HIRFunction;
   if (lowering.isErr()) {
-    lowering
-      .unwrapErr()
-      .details.forEach(detail => builder.errors.pushErrorDetail(detail));
+    const functionErrors = lowering.unwrapErr();
+    builder.errors.merge(functionErrors);
     return null;
   }
   loweredFunc = lowering.unwrap();

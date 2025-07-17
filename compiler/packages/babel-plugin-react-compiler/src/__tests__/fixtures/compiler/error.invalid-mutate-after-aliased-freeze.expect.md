@@ -25,13 +25,19 @@ function Component(props) {
 ## Error
 
 ```
+Found 1 error:
+Error: Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX
+
+error.invalid-mutate-after-aliased-freeze.ts:13:2
   11 |   // y is MaybeFrozen at this point, since it may alias to x
   12 |   // (which is the above line freezes)
 > 13 |   y.push(props.p2);
-     |   ^ InvalidReact: Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX (13:13)
+     |   ^ Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX
   14 |
   15 |   return <Component x={x} y={y} />;
   16 | }
+
+
 ```
           
       

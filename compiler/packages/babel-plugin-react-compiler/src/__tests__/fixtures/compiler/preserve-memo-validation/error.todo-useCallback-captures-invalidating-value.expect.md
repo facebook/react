@@ -28,13 +28,19 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
+Found 1 error:
+Memoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.
+
+error.todo-useCallback-captures-invalidating-value.ts:13:21
   11 |   x.push(props);
   12 |
 > 13 |   return useCallback(() => [x], [x]);
-     |                      ^^^^^^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output. (13:13)
+     |                      ^^^^^^^^^ React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.
   14 | }
   15 |
   16 | export const FIXTURE_ENTRYPOINT = {
+
+
 ```
           
       
