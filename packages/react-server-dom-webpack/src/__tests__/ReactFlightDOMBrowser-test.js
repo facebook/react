@@ -2661,4 +2661,36 @@ describe('ReactFlightDOMBrowser', () => {
       '{"shared":{"id":42},"map":[[42,{"id":42}]]}',
     );
   });
+
+  it('should resolve a cycle between debug info and the value it produces', async () => {
+    function Inner({style}) {
+      return <div style={style} />;
+    }
+
+    function Component({style}) {
+      return <Inner style={style} />;
+    }
+
+    const style = {};
+    const element = <Component style={style} />;
+    style.element = element;
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(element, webpackMap),
+    );
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<ClientRoot response={response} />);
+    });
+
+    expect(container.innerHTML).toBe('<div></div>');
+  });
 });
