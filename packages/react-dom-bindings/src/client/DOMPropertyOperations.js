@@ -42,7 +42,6 @@ export function getValueForAttribute(
       }
       return expected === undefined ? undefined : null;
     }
-
     const tagName = node.tagName.toLowerCase();
     const scriptNonce = tagName === "script" && name === "nonce";
     const value = scriptNonce ? node.nonce : node.getAttribute(name);
