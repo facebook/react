@@ -50,13 +50,19 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
+Found 1 error:
+Memoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.
+
+error.todo-repro-unmemoized-callback-captured-in-context-variable.ts:11:12
    9 |   const a = useHook();
   10 |   // Because b is also part of that same mutable range, it can't be memoized either
 > 11 |   const b = useMemo(() => ({}), []);
-     |             ^^^^^^^^^^^^^^^^^^^^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output. (11:11)
+     |             ^^^^^^^^^^^^^^^^^^^^^^^ React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.
   12 |
   13 |   // Conditional assignment without a subsequent mutation normally doesn't create a mutable
   14 |   // range, but in this case we're reassigning a context variable
+
+
 ```
           
       
