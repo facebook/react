@@ -1808,14 +1808,20 @@ describe('ReactUpdates', () => {
     if (gate(flags => !flags.enableInfiniteRenderLoopDetection)) {
       return;
     }
+    spyOnProd(console, 'error').mockImplementation(e => {
+      expect(e).toContain('Potential infinite loop detected');
+    });
     let setState;
-    function App() {
-      const [, _setState] = React.useState(0);
+    function App({eventuallySettle = false}) {
+      const [state, _setState] = React.useState(0);
       setState = _setState;
+      if (eventuallySettle) {
+        return state < 55 ? <Child /> : null;
+      }
       return <Child />;
     }
 
-    function Child(step) {
+    function Child() {
       // This will cause an infinite update loop, and a warning in dev.
       setState(n => n + 1);
       return null;
@@ -1832,21 +1838,45 @@ describe('ReactUpdates', () => {
         'To locate the bad setState() call inside `Child`, ' +
         'follow the stack trace as described in https://react.dev/link/setstate-in-render\n' +
         '    in App (at **)',
+      'Potential infinite loop detected. This can happen when a component ' +
+        'repeatedly calls setState in render. React limits the number of nested ' +
+        'updates to prevent infinite loops.',
     ]);
+    if (!__DEV__) {
+      expect(console.error.mock.calls.length).toBe(1);
+    }
+    await act(() =>
+      ReactDOM.flushSync(() => root.render(<App eventuallySettle={true} />)),
+    );
+    assertConsoleErrorDev([
+      'Potential infinite loop detected. This can happen when a component ' +
+        'repeatedly calls setState in render. React limits the number of nested ' +
+        'updates to prevent infinite loops.',
+    ]);
+    if (!__DEV__) {
+      expect(console.error.mock.calls.length).toBe(2);
+      console.error.mockRestore();
+    }
   });
 
   it("does not infinite loop if there's an async render phase update on another component", async () => {
     if (gate(flags => !flags.enableInfiniteRenderLoopDetection)) {
       return;
     }
+    spyOnProd(console, 'error').mockImplementation(e => {
+      expect(e).toContain('Potential infinite loop detected');
+    });
     let setState;
-    function App() {
-      const [, _setState] = React.useState(0);
+    function App({eventuallySettle = false}) {
+      const [state, _setState] = React.useState(0);
       setState = _setState;
+      if (eventuallySettle) {
+        return state < 80 ? <Child /> : null;
+      }
       return <Child />;
     }
 
-    function Child(step) {
+    function Child() {
       // This will cause an infinite update loop, and a warning in dev.
       setState(n => n + 1);
       return null;
@@ -1866,7 +1896,26 @@ describe('ReactUpdates', () => {
         'To locate the bad setState() call inside `Child`, ' +
         'follow the stack trace as described in https://react.dev/link/setstate-in-render\n' +
         '    in App (at **)',
+      'Potential infinite loop detected. This can happen when a component ' +
+        'repeatedly calls setState in render. React limits the number of nested ' +
+        'updates to prevent infinite loops.',
     ]);
+    if (!__DEV__) {
+      expect(console.error.mock.calls.length).toBe(1);
+    }
+
+    await act(() => {
+      React.startTransition(() => root.render(<App eventuallySettle={true} />));
+    });
+    assertConsoleErrorDev([
+      'Potential infinite loop detected. This can happen when a component ' +
+        'repeatedly calls setState in render. React limits the number of nested ' +
+        'updates to prevent infinite loops.',
+    ]);
+    if (!__DEV__) {
+      expect(console.error.mock.calls.length).toBe(2);
+      console.error.mockRestore();
+    }
   });
 
   // TODO: Replace this branch with @gate pragmas
