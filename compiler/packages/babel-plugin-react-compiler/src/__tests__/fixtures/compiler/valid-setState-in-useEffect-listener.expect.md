@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @validateNoSetStateInPassiveEffects
+// @validateNoSetStateInEffects
 import {useEffect, useState} from 'react';
 
 function Component() {
@@ -23,7 +23,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @validateNoSetStateInPassiveEffects
+import { c as _c } from "react/compiler-runtime"; // @validateNoSetStateInEffects
 import { useEffect, useState } from "react";
 
 function Component() {
