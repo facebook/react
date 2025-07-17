@@ -19,10 +19,15 @@ function Component(props) {
 ## Error
 
 ```
+Found 1 error:
+
+Error: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)
+
+error.invalid-aliased-ref-in-callback-invoked-during-render-.ts:9:33
    7 |     return <Foo item={item} current={current} />;
    8 |   };
 >  9 |   return <Items>{props.items.map(item => renderItem(item))}</Items>;
-     |                                  ^^^^^^^^^^^^^^^^^^^^^^^^ InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef) (9:9)
+     |                                  ^^^^^^^^^^^^^^^^^^^^^^^^ Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)
   10 | }
   11 |
 ```

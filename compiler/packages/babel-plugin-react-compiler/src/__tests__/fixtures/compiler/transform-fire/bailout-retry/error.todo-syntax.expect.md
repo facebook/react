@@ -29,10 +29,17 @@ function Component({prop1}) {
 ## Error
 
 ```
+Found 1 error:
+
+Error: [Fire] Untransformed reference to compiler-required feature.
+
+ Todo: (BuildHIR::lowerStatement) Handle TryStatement without a catch clause (11:4)
+
+error.todo-syntax.ts:18:4
   16 |   };
   17 |   useEffect(() => {
 > 18 |     fire(foo());
-     |     ^^^^ InvalidReact: [Fire] Untransformed reference to compiler-required feature. Either remove this `fire` call or ensure it is successfully transformed by the compiler. (Bailout reason: Todo: (BuildHIR::lowerStatement) Handle TryStatement without a catch clause (11:15)) (18:18)
+     |     ^^^^ Untransformed `fire` call
   19 |   });
   20 | }
   21 |

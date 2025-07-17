@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, ErrorSeverity} from '..';
+import {CompilerDiagnostic, CompilerError, ErrorSeverity} from '..';
 import {HIRFunction} from '../HIR';
 import {getFunctionCallSignature} from '../Inference/InferReferenceEffects';
 import {Result} from '../Utils/Result';
@@ -34,17 +34,22 @@ export function validateNoImpureFunctionsInRender(
           callee.identifier.type,
         );
         if (signature != null && signature.impure === true) {
-          errors.push({
-            reason:
-              'Calling an impure function can produce unstable results. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent)',
-            description:
-              signature.canonicalName != null
-                ? `\`${signature.canonicalName}\` is an impure function whose results may change on every call`
-                : null,
-            severity: ErrorSeverity.InvalidReact,
-            loc: callee.loc,
-            suggestions: null,
-          });
+          errors.pushDiagnostic(
+            CompilerDiagnostic.create({
+              category: 'Cannot call impure function during render',
+              description:
+                (signature.canonicalName != null
+                  ? `\`${signature.canonicalName}\` is an impure function. `
+                  : '') +
+                'Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent)',
+              severity: ErrorSeverity.InvalidReact,
+              suggestions: null,
+            }).withDetail({
+              kind: 'error',
+              loc: callee.loc,
+              message: 'Cannot call impure function',
+            }),
+          );
         }
       }
     }

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerErrorDetailOptions} from '../CompilerError';
+import {CompilerDiagnostic} from '../CompilerError';
 import {
   FunctionExpression,
   GeneratedSource,
@@ -133,19 +133,19 @@ export type AliasingEffect =
   /**
    * Mutation of a value known to be immutable
    */
-  | {kind: 'MutateFrozen'; place: Place; error: CompilerErrorDetailOptions}
+  | {kind: 'MutateFrozen'; place: Place; error: CompilerDiagnostic}
   /**
    * Mutation of a global
    */
   | {
       kind: 'MutateGlobal';
       place: Place;
-      error: CompilerErrorDetailOptions;
+      error: CompilerDiagnostic;
     }
   /**
    * Indicates a side-effect that is not safe during render
    */
-  | {kind: 'Impure'; place: Place; error: CompilerErrorDetailOptions}
+  | {kind: 'Impure'; place: Place; error: CompilerDiagnostic}
   /**
    * Indicates that a given place is accessed during render. Used to distingush
    * hook arguments that are known to be called immediately vs those used for
@@ -211,9 +211,9 @@ export function hashEffect(effect: AliasingEffect): string {
         effect.kind,
         effect.place.identifier.id,
         effect.error.severity,
-        effect.error.reason,
+        effect.error.category,
         effect.error.description,
-        printSourceLocation(effect.error.loc ?? GeneratedSource),
+        printSourceLocation(effect.error.primaryLocation() ?? GeneratedSource),
       ].join(':');
     }
     case 'Mutate':

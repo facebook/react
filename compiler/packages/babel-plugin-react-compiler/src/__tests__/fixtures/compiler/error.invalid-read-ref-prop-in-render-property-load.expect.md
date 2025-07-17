@@ -14,10 +14,15 @@ function Component(props) {
 ## Error
 
 ```
+Found 1 error:
+
+Error: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)
+
+error.invalid-read-ref-prop-in-render-property-load.ts:3:16
   1 | // @validateRefAccessDuringRender @compilationMode:"infer"
   2 | function Component(props) {
 > 3 |   const value = props.ref.current;
-    |                 ^^^^^^^^^^^^^^^^^ InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef) (3:3)
+    |                 ^^^^^^^^^^^^^^^^^ Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)
   4 |   return <div>{value}</div>;
   5 | }
   6 |
