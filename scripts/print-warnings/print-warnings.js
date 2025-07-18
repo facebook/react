@@ -1,22 +1,23 @@
 /**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
+ * Copyright (c) Meta Platforms, Inc.
+ * Licensed under the MIT license.
  */
+
 'use strict';
 
 const {
   parse,
-  SimpleTraverser: {traverse},
+  SimpleTraverser: { traverse },
 } = require('hermes-parser');
 const fs = require('fs');
 const through = require('through2');
 const gs = require('glob-stream');
+const path = require('path');
 
-const {evalStringConcat} = require('../shared/evalToString');
+const { evalStringConcat } = require('../shared/evalToString');
 
-const warnings = new Set();
+// Store warnings/errors with metadata
+const warnings = [];
 
 function transform(file, enc, cb) {
   fs.readFile(file.path, 'utf8', function (err, source) {
@@ -27,7 +28,7 @@ function transform(file, enc, cb) {
 
     let ast;
     try {
-      ast = parse(source);
+      ast = parse(source, { sourceFilename: file.path });
     } catch (error) {
       console.error('Failed to parse source file:', file.path);
       throw error;
@@ -36,9 +37,8 @@ function transform(file, enc, cb) {
     traverse(ast, {
       enter() {},
       leave(node) {
-        if (node.type !== 'CallExpression') {
-          return;
-        }
+        if (node.type !== 'CallExpression') return;
+
         const callee = node.callee;
         if (
           callee.type === 'MemberExpression' &&
@@ -47,15 +47,18 @@ function transform(file, enc, cb) {
           callee.property.type === 'Identifier' &&
           (callee.property.name === 'warn' || callee.property.name === 'error')
         ) {
-          // warning messages can be concatenated (`+`) at runtime, so here's
-          // a trivial partial evaluator that interprets the literal value
           try {
-            const warningMsgLiteral = evalStringConcat(node.arguments[0]);
-            warnings.add(warningMsgLiteral);
+            const msg = evalStringConcat(node.arguments[0]);
+            if (!msg) return;
+
+            warnings.push({
+              type: callee.property.name,
+              message: msg,
+              file: path.relative(process.cwd(), file.path),
+              line: node.loc?.start.line ?? null,
+            });
           } catch {
-            // Silently skip over this call. We have a lint rule to enforce
-            // that all calls are extractable, so if this one fails, assume
-            // it's intentional.
+            // Ignore messages that can't be statically evaluated
           }
         }
       },
@@ -74,21 +77,21 @@ gs([
   '!**/node_modules/**/*.js',
 ]).pipe(
   through.obj(transform, cb => {
-    const warningsArray = Array.from(warnings);
-    warningsArray.sort();
+    const sorted = warnings.sort((a, b) => {
+      if (a.file === b.file) return a.line - b.line;
+      return a.file.localeCompare(b.file);
+    });
+
     process.stdout.write(
       `/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
+ * Auto-generated warning/error index.
  *
  * @flow strict
  * @noformat
  * @oncall react_core
  */
 
-export default ${JSON.stringify(warningsArray, null, 2)};
+export default ${JSON.stringify(sorted, null, 2)};
 `
     );
     cb();
