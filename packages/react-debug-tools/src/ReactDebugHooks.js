@@ -1344,7 +1344,6 @@ export function inspectHooksOfFiber(
     currentFiber = null;
     currentHook = null;
     currentContextDependency = null;
-
     restoreContexts(contextMap);
   }
 }
