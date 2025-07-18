@@ -101,6 +101,7 @@ export const HooksDispatcher: Dispatcher = {
   useCacheRefresh(): <T>(?() => T, ?T) => void {
     return unsupportedRefresh;
   },
+  useSetStateWithCallback: unsupportedSetStateWithCallback,
 };
 if (enableUseEffectEventHook) {
   HooksDispatcher.useEffectEvent = (unsupportedHook: any);
@@ -118,6 +119,10 @@ function unsupportedRefresh(): void {
 
 function unsupportedContext(): void {
   throw new Error('Cannot read a Client Context from a Server Component.');
+}
+
+function unsupportedSetStateWithCallback() {
+  throw new Error('useSetStateWithCallback is not supported in Server Components.');
 }
 
 function useId(): string {
