@@ -749,6 +749,10 @@ function useEffectEvent<Args, F: (...Array<Args>) => mixed>(callback: F): F {
   return callback;
 }
 
+function unsupportedSetStateWithCallback() {
+  throw new Error('useSetStateWithCallback is not supported in React Debug Tools.');
+}
+
 const Dispatcher: DispatcherType = {
   readContext,
 
@@ -775,6 +779,7 @@ const Dispatcher: DispatcherType = {
   useMemoCache,
   useCacheRefresh,
   useEffectEvent,
+  useSetStateWithCallback: unsupportedSetStateWithCallback,
 };
 
 // create a proxy to throw a custom error

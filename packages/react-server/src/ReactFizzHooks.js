@@ -804,6 +804,10 @@ function clientHookNotSupported() {
   );
 }
 
+function unsupportedSetStateWithCallback() {
+  throw new Error('useSetStateWithCallback is not supported in Server Components.');
+}
+
 export const HooksDispatcher: Dispatcher = supportsClientAPIs
   ? {
       readContext,
@@ -833,6 +837,7 @@ export const HooksDispatcher: Dispatcher = supportsClientAPIs
       useHostTransitionStatus,
       useMemoCache,
       useCacheRefresh,
+      useSetStateWithCallback: unsupportedSetStateWithCallback,
     }
   : {
       readContext,
@@ -858,6 +863,7 @@ export const HooksDispatcher: Dispatcher = supportsClientAPIs
       useOptimistic,
       useMemoCache,
       useCacheRefresh,
+      useSetStateWithCallback: unsupportedSetStateWithCallback,
     };
 
 if (enableUseEffectEventHook) {
