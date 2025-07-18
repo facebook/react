@@ -4438,6 +4438,66 @@ describe('ReactDOMFizzServer', () => {
     });
   });
 
+  it('should correctly handle different promises in React.use() across lazy components', async () => {
+    const promise1 = Promise.resolve('value1');
+    const promise2 = Promise.resolve('value2');
+
+    let component1Rendered = false;
+    let component2Rendered = false;
+
+    function Component1() {
+      const data = React.use(promise1);
+      component1Rendered = true;
+      return (
+        <div>
+          Component1: {data}
+          <React.Suspense fallback="Loading Component2...">
+            <Component2Lazy />
+          </React.Suspense>
+        </div>
+      );
+    }
+
+    function Component2() {
+      const data = React.use(promise2);
+      component2Rendered = true;
+      return <div>Component2: {data}</div>;
+    }
+
+    const Component2Lazy = React.lazy(async () => ({default: Component2}));
+
+    function App() {
+      return (
+        <div>
+          <React.Suspense fallback="Loading...">
+            <Component1 />
+          </React.Suspense>
+        </div>
+      );
+    }
+
+    await act(async () => {
+      const {pipe} = renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+
+    // Wait for the stream to complete
+    await act(() => {});
+
+    expect(component1Rendered).toBe(true);
+    expect(component2Rendered).toBe(true);
+
+    // Verify both components received the correct values
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <div>
+          Component1: value1
+          <div>Component2: value2</div>
+        </div>
+      </div>,
+    );
+  });
+
   describe('<style> textContent escaping', () => {
     it('the "S" in "</?[Ss]style" strings are replaced with unicode escaped lowercase s or S depending on case, preserving case sensitivity of nearby characters', async () => {
       await act(() => {

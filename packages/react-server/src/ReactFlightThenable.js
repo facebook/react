@@ -59,13 +59,14 @@ export function trackUsedThenable<T>(
     }
   } else {
     if (previous !== thenable) {
-      // Reuse the previous thenable, and drop the new one. We can assume
-      // they represent the same value, because components are idempotent.
-
-      // Avoid an unhandled rejection errors for the Promises that we'll
-      // intentionally ignore.
-      thenable.then(noop, noop);
-      thenable = previous;
+      // Update the array to use the new thenable
+      thenableState[index] = thenable;
+      if (__DEV__ && enableAsyncDebugInfo) {
+        const stacks: Array<Error> = (thenableState: any)._stacks;
+        if (stacks !== undefined) {
+          stacks[index] = new Error();
+        }
+      }
     }
   }
 
