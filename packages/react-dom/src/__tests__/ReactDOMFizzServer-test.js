@@ -6341,48 +6341,35 @@ describe('ReactDOMFizzServer', () => {
   });
 
   it('should correctly handle different promises in React.use() across lazy components', async () => {
-    const promise1 = new Promise(r => setTimeout(() => r('value1'), 50));
-    const promise2 = new Promise(r => setTimeout(() => r('value2'), 300));
-    // const promise1 = Promise.resolve('value1');
-    // const promise2 = Promise.resolve('value2');
-
-    let component1Rendered = false;
-    let component2Rendered = false;
+    let promise1;
+    let promise2;
+    let promiseLazy;
 
     function Component1() {
+      promise1 ??= new Promise(r => setTimeout(() => r('value1'), 50));
       const data = React.use(promise1);
-      component1Rendered = true;
       return (
         <div>
           {data}
           <Component2Lazy />
-          {/* <React.Suspense fallback="Loading Component2...">
-          </React.Suspense> */}
         </div>
       );
     }
 
     function Component2() {
+      promise2 ??= new Promise(r => setTimeout(() => r('value2'), 50));
       const data = React.use(promise2);
-      component2Rendered = true;
       return <div>{data}</div>;
     }
 
-    let promiseLazy;
     const Component2Lazy = React.lazy(async () => {
-      promiseLazy ??= new Promise(r => setTimeout(r, 100));
+      promiseLazy ??= new Promise(r => setTimeout(r, 50));
       await promiseLazy;
       return {default: Component2};
     });
 
     function App() {
-      return (
-        <div>
-          <Component1 />
-          {/* <React.Suspense fallback="Loading...">
-          </React.Suspense> */}
-        </div>
-      );
+      return <Component1 />;
     }
 
     await act(async () => {
@@ -6390,7 +6377,7 @@ describe('ReactDOMFizzServer', () => {
       pipe(writable);
     });
 
-    // Wait for the stream to complete
+    // Wait for promise to resolve
     await act(async () => {
       await promise1;
     });
@@ -6400,20 +6387,12 @@ describe('ReactDOMFizzServer', () => {
     await act(async () => {
       await promise2;
     });
-    // await act(() => {});
-
-    expect(component1Rendered).toBe(true);
-    expect(component2Rendered).toBe(true);
 
     // Verify both components received the correct values
     expect(getVisibleChildren(container)).toEqual(
       <div>
-        <div>
-          value1
-          <div>
-            value2
-          </div>
-        </div>
+        value1
+        <div>value2</div>
       </div>,
     );
   });
