@@ -622,10 +622,10 @@ describe('ReactFlightAsyncDebugInfo', () => {
             "name": "await getData (…/test)",
           },
           {
-            "name": "await getData",
+            "name": "await getData (…/75897c2dcd…13d22b4b16b4)",
           },
           {
-            "name": "await getData",
+            "name": "await getData (/this-is-a-…what-happens)",
           },
           {
             "name": "await getData (/this-is-not)",
