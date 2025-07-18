@@ -671,6 +671,10 @@ export function isLikelyComponentType(type: any): boolean {
             // This looks like a class.
             return false;
           }
+          // class fields like `class Foo { value = 'foo'; }`
+          if (/^\s*class\s/.test(type.toString())) {
+            return false;
+          }
           // eslint-disable-next-line no-proto
           if (type.prototype.__proto__ !== Object.prototype) {
             // It has a superclass.
