@@ -6340,6 +6340,63 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual('Hi');
   });
 
+  it('should correctly handle different promises in React.use() across lazy components', async () => {
+    let promise1;
+    let promise2;
+    let promiseLazy;
+
+    function Component1() {
+      promise1 ??= new Promise(r => setTimeout(() => r('value1'), 50));
+      const data = React.use(promise1);
+      return (
+        <div>
+          {data}
+          <Component2Lazy />
+        </div>
+      );
+    }
+
+    function Component2() {
+      promise2 ??= new Promise(r => setTimeout(() => r('value2'), 50));
+      const data = React.use(promise2);
+      return <div>{data}</div>;
+    }
+
+    const Component2Lazy = React.lazy(async () => {
+      promiseLazy ??= new Promise(r => setTimeout(r, 50));
+      await promiseLazy;
+      return {default: Component2};
+    });
+
+    function App() {
+      return <Component1 />;
+    }
+
+    await act(async () => {
+      const {pipe} = renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+
+    // Wait for promise to resolve
+    await act(async () => {
+      await promise1;
+    });
+    await act(async () => {
+      await promiseLazy;
+    });
+    await act(async () => {
+      await promise2;
+    });
+
+    // Verify both components received the correct values
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        value1
+        <div>value2</div>
+      </div>,
+    );
+  });
+
   it('useActionState hydrates without a mismatch', async () => {
     // This is testing an implementation detail: useActionState emits comment
     // nodes into the SSR stream, so this checks that they are handled correctly
