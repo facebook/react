@@ -3109,4 +3109,32 @@ describe('ReactDOMInput', () => {
     expect(log).toEqual(['']);
     expect(node.value).toBe('a');
   });
+  // Remove your custom warning tests (they're not needed since React already warns)
+// Keep the existing Symbol/Function value tests but update the assertions:
+
+it('treats initial Symbol value as an empty string', async () => {
+  const container = document.createElement('div');
+  const root = ReactDOMClient.createRoot(container);
+  await act(() => {
+    root.render(<input value={Symbol('test')} />);
+  });
+  assertConsoleErrorDev([
+    'Invalid value for prop `value` on <input> tag. Either remove it from the element, or pass a string or number value to keep it in the DOM. For details, see https://react.dev/link/attribute-behavior \n    in input (at **)',
+    'You provided a `value` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultValue`. Otherwise, set either `onChange` or `readOnly`.\n    in input (at **)',
+  ]);
+  expect(container.firstChild.value).toBe('');
+});
+
+it('treats initial function value as an empty string', async () => {
+  const container = document.createElement('div');
+  const root = ReactDOMClient.createRoot(container);
+  await act(() => {
+    root.render(<input value={() => {}} />);
+  });
+  assertConsoleErrorDev([
+    'Invalid value for prop `value` on <input> tag. Either remove it from the element, or pass a string or number value to keep it in the DOM. For details, see https://react.dev/link/attribute-behavior \n    in input (at **)',
+    'You provided a `value` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultValue`. Otherwise, set either `onChange` or `readOnly`.\n    in input (at **)',
+  ]);
+  expect(container.firstChild.value).toBe('');
+});
 });
