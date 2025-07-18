@@ -414,6 +414,11 @@ function getIOShortName(
         // This may now be either the file name or the host.
         // Include the slash to make it more obvious what we trimmed.
         desc = ' (…' + description.slice(slashIdx, queryIdx) + ')';
+      } else {
+        // cut out the middle to not exceed the max length
+        const start = description.slice(slashIdx, slashIdx + descMaxLength / 2);
+        const end = description.slice(queryIdx - descMaxLength / 2, queryIdx);
+        desc = ' (' + (slashIdx > 0 ? '…' : '') + start + '…' + end + ')';
       }
     }
   }
