@@ -4491,8 +4491,12 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <div>
-          Component1: value1
-          <div>Component2: value2</div>
+          Component1:
+          value1
+          <div>
+            Component2:
+            value2
+          </div>
         </div>
       </div>,
     );
