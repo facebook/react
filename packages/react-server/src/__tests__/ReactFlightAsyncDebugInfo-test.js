@@ -491,7 +491,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
               ],
               "start": 0,
               "value": {
-                "status": "halted",
+                "value": undefined,
               },
             },
             "env": "Server",
