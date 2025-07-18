@@ -78,6 +78,7 @@ export type Config = {
   supportsReloadAndProfile?: boolean,
   supportsTimeline?: boolean,
   supportsTraceUpdates?: boolean,
+  supportsNativeInspection?: boolean,
 };
 
 export type Capabilities = {
