@@ -1,5 +1,5 @@
 // @inferEffectDependencies
-import {useEffect} from 'react';
+import {useEffect, AUTODEPS} from 'react';
 import {print} from 'shared-runtime';
 
 /**
@@ -15,7 +15,7 @@ function RefsInEffects() {
   useEffect(() => {
     print(ref.current);
     print(wrapped.foo.current);
-  });
+  }, AUTODEPS);
 }
 
 function useRefHelper() {

@@ -57,6 +57,8 @@ import {
 } from '../HIR/visitors';
 import {empty} from '../Utils/Stack';
 import {getOrInsertWith} from '../Utils/utils';
+import {deadCodeElimination} from '../Optimization';
+import {BuiltInAutodepsId} from '../HIR/ObjectShape';
 
 /**
  * Infers reactive dependencies captured by useEffect lambdas and adds them as
@@ -135,7 +137,6 @@ export function inferEffectDependencies(fn: HIRFunction): void {
         }
       } else if (value.kind === 'LoadGlobal') {
         loadGlobals.add(lvalue.identifier.id);
-
         /*
          * TODO: Handle properties on default exports, like
          * import React from 'react';
@@ -169,8 +170,17 @@ export function inferEffectDependencies(fn: HIRFunction): void {
       ) {
         const callee =
           value.kind === 'CallExpression' ? value.callee : value.property;
+
+        const autodepsArgIndex = value.args.findIndex(
+          arg =>
+            arg.kind === 'Identifier' &&
+            arg.identifier.type.kind === 'Object' &&
+            arg.identifier.type.shapeId === BuiltInAutodepsId,
+        );
         if (
-          value.args.length === autodepFnLoads.get(callee.identifier.id) &&
+          value.args.length > 1 &&
+          autodepsArgIndex > 0 &&
+          autodepFnLoads.has(callee.identifier.id) &&
           value.args[0].kind === 'Identifier'
         ) {
           // We have a useEffect call with no deps array, so we need to infer the deps
@@ -260,7 +270,10 @@ export function inferEffectDependencies(fn: HIRFunction): void {
                 effects: null,
               },
             });
-            value.args.push({...depsPlace, effect: Effect.Freeze});
+            value.args[autodepsArgIndex] = {
+              ...depsPlace,
+              effect: Effect.Freeze,
+            };
             fn.env.inferredEffectLocations.add(callee.loc);
           } else if (loadGlobals.has(value.args[0].identifier.id)) {
             // Global functions have no reactive dependencies, so we can insert an empty array
@@ -275,7 +288,10 @@ export function inferEffectDependencies(fn: HIRFunction): void {
                 effects: null,
               },
             });
-            value.args.push({...depsPlace, effect: Effect.Freeze});
+            value.args[autodepsArgIndex] = {
+              ...depsPlace,
+              effect: Effect.Freeze,
+            };
             fn.env.inferredEffectLocations.add(callee.loc);
           }
         } else if (
@@ -323,6 +339,7 @@ export function inferEffectDependencies(fn: HIRFunction): void {
     // Renumber instructions and fix scope ranges
     markInstructionIds(fn.body);
     fixScopeAndIdentifierRanges(fn.body);
+    deadCodeElimination(fn);
 
     fn.env.hasInferredEffect = true;
   }
@@ -408,6 +425,7 @@ function rewriteSplices(
   rewriteBlocks.push(currBlock);
 
   let cursor = 0;
+
   for (const rewrite of splices) {
     while (originalInstrs[cursor].id < rewrite.location) {
       CompilerError.invariant(
@@ -429,7 +447,7 @@ function rewriteSplices(
 
     if (rewrite.kind === 'instr') {
       currBlock.instructions.push(rewrite.value);
-    } else {
+    } else if (rewrite.kind === 'block') {
       const {entry, blocks} = rewrite.value;
       const entryBlock = blocks.get(entry)!;
       // splice in all instructions from the entry block
