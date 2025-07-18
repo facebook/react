@@ -74,7 +74,6 @@ export const enableYieldingBeforePassive = false;
 export const enableThrottledScheduling = false;
 export const enableViewTransition = false;
 export const enableGestureTransition = false;
-export const enableLazyPublicInstanceInFabric = false;
 export const enableScrollEndPolyfill = true;
 export const enableSuspenseyImages = false;
 export const enableFizzBlockingRender = true;

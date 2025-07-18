@@ -15,6 +15,7 @@ import {
   ReactNativeViewConfigRegistry,
   UIManager,
   deepFreezeAndThrowOnMutationInDev,
+  createPublicInstance,
   type PublicRootInstance,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
@@ -285,8 +286,26 @@ export function getChildHostContext(
 
 export function getPublicInstance(instance: Instance): PublicInstance {
   // $FlowExpectedError[prop-missing] For compatibility with Fabric
-  if (instance.canonical != null && instance.canonical.publicInstance != null) {
-    // $FlowFixMe[incompatible-return]
+  if (instance.canonical != null) {
+    if (instance.canonical.publicInstance == null) {
+      // $FlowExpectedError[incompatible-use]
+      instance.canonical.publicInstance = createPublicInstance(
+        // $FlowExpectedError[incompatible-use]
+        instance.canonical.nativeTag,
+        // $FlowExpectedError[incompatible-use]
+        instance.canonical.viewConfig,
+        // $FlowExpectedError[incompatible-use]
+        instance.canonical.internalInstanceHandle,
+        // $FlowExpectedError[incompatible-use]
+        instance.canonical.publicRootInstance ?? null,
+      );
+      // This was only necessary to create the public instance.
+      // $FlowExpectedError[prop-missing]
+      instance.canonical.publicRootInstance = null;
+    }
+
+    // $FlowExpectedError[prop-missing]
+    // $FlowExpectedError[incompatible-return]
     return instance.canonical.publicInstance;
   }
 

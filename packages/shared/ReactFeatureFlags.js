@@ -151,8 +151,6 @@ export const transitionLaneExpirationMs = 5000;
  */
 export const enableInfiniteRenderLoopDetection = false;
 
-export const enableLazyPublicInstanceInFabric = false;
-
 export const enableFragmentRefs = __EXPERIMENTAL__;
 
 // -----------------------------------------------------------------------------

@@ -102,8 +102,6 @@ export const disableLegacyMode = true;
 
 export const enableEagerAlternateStateNodeCleanup = true;
 
-export const enableLazyPublicInstanceInFabric = false;
-
 export const enableGestureTransition = false;
 
 export const enableSuspenseyImages = false;
