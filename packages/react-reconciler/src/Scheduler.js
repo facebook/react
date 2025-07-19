@@ -25,7 +25,7 @@ export const UserBlockingPriority = Scheduler.unstable_UserBlockingPriority;
 export const NormalPriority = Scheduler.unstable_NormalPriority;
 export const LowPriority = Scheduler.unstable_LowPriority;
 export const IdlePriority = Scheduler.unstable_IdlePriority;
-export type SchedulerCallback = (isSync: boolean) => SchedulerCallback | null;
+export type {Callback as SchedulerCallback} from 'scheduler';
 
 // this doesn't actually exist on the scheduler, but it *does*
 // on scheduler/unstable_mock, which we'll need for internal testing
