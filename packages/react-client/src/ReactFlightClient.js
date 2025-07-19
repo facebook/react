@@ -3470,6 +3470,7 @@ function resolveDebugModel(
     createResolvedModelChunk(response, json);
   debugChunk._debugChunk = previousChunk; // Linked list of the debug chunks
   parentChunk._debugChunk = debugChunk;
+  initializeDebugChunk(response, parentChunk);
 }
 
 let currentOwnerInDEV: null | ReactComponentInfo = null;
