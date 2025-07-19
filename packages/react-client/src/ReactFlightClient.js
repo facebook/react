@@ -832,27 +832,35 @@ function initializeDebugChunk(
     const debugInfo = chunk._debugInfo || (chunk._debugInfo = []);
     try {
       if (debugChunk.status === RESOLVED_MODEL) {
+        // Find the index of this debug info by walking the linked list.
+        let idx = debugInfo.length;
+        let c = debugChunk._debugChunk;
+        while (c !== null) {
+          if (c.status !== INITIALIZED) {
+            idx++;
+          }
+          c = c._debugChunk;
+        }
         // Initializing the model for the first time.
         initializeModelChunk(debugChunk);
         const initializedChunk = ((debugChunk: any): SomeChunk<any>);
         switch (initializedChunk.status) {
           case INITIALIZED: {
-            debugInfo.push(
-              initializeDebugInfo(response, initializedChunk.value),
+            debugInfo[idx] = initializeDebugInfo(
+              response,
+              initializedChunk.value,
             );
             break;
           }
           case BLOCKED:
           case PENDING: {
-            debugInfo.push(
-              waitForReference(
-                initializedChunk,
-                debugInfo,
-                '' + debugInfo.length, // eslint-disable-line react-internal/safe-string-coercion
-                response,
-                initializeDebugInfo,
-                [''], // path
-              ),
+            waitForReference(
+              initializedChunk,
+              debugInfo,
+              '' + idx,
+              response,
+              initializeDebugInfo,
+              [''], // path
             );
             break;
           }
