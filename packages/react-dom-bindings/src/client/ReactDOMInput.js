@@ -8,21 +8,21 @@
  */
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
+import { getCurrentFiberOwnerNameInDevOrNull } from 'react-reconciler/src/ReactCurrentFiber';
 
-import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
-import {getToStringValue, toString} from './ToStringValue';
-import {track, trackHydrated, updateValueIfChanged} from './inputValueTracking';
+import { getFiberCurrentPropsFromNode } from './ReactDOMComponentTree';
+import { getToStringValue, toString } from './ToStringValue';
+import { track, trackHydrated, updateValueIfChanged } from './inputValueTracking';
 import getActiveElement from './getActiveElement';
 import {
   disableInputAttributeSyncing,
   enableHydrationChangeEvent,
 } from 'shared/ReactFeatureFlags';
-import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
+import { checkAttributeStringCoercion } from 'shared/CheckStringCoercion';
 
-import type {ToStringValue} from './ToStringValue';
+import type { ToStringValue } from './ToStringValue';
 import escapeSelectorAttributeValueInsideDoubleQuotes from './escapeSelectorAttributeValueInsideDoubleQuotes';
-import {queueChangeEvent} from '../events/ReactDOMEventReplaying';
+import { queueChangeEvent } from '../events/ReactDOMEventReplaying';
 
 let didWarnValueDefaultValue = false;
 let didWarnCheckedDefaultChecked = false;
@@ -56,11 +56,11 @@ export function validateInputProps(element: Element, props: Object) {
     ) {
       console.error(
         '%s contains an input of type %s with both checked and defaultChecked props. ' +
-          'Input elements must be either controlled or uncontrolled ' +
-          '(specify either the checked prop, or the defaultChecked prop, but not ' +
-          'both). Decide between using a controlled or uncontrolled input ' +
-          'element and remove one of these props. More info: ' +
-          'https://react.dev/link/controlled-components',
+        'Input elements must be either controlled or uncontrolled ' +
+        '(specify either the checked prop, or the defaultChecked prop, but not ' +
+        'both). Decide between using a controlled or uncontrolled input ' +
+        'element and remove one of these props. More info: ' +
+        'https://react.dev/link/controlled-components',
         getCurrentFiberOwnerNameInDevOrNull() || 'A component',
         props.type,
       );
@@ -73,11 +73,11 @@ export function validateInputProps(element: Element, props: Object) {
     ) {
       console.error(
         '%s contains an input of type %s with both value and defaultValue props. ' +
-          'Input elements must be either controlled or uncontrolled ' +
-          '(specify either the value prop, or the defaultValue prop, but not ' +
-          'both). Decide between using a controlled or uncontrolled input ' +
-          'element and remove one of these props. More info: ' +
-          'https://react.dev/link/controlled-components',
+        'Input elements must be either controlled or uncontrolled ' +
+        '(specify either the value prop, or the defaultValue prop, but not ' +
+        'both). Decide between using a controlled or uncontrolled input ' +
+        'element and remove one of these props. More info: ' +
+        'https://react.dev/link/controlled-components',
         getCurrentFiberOwnerNameInDevOrNull() || 'A component',
         props.type,
       );
@@ -97,6 +97,14 @@ export function updateInput(
   name: ?string,
 ) {
   const node: HTMLInputElement = (element: any);
+
+  // Skip if value or defaultValue is a Symbol or Function
+  if (
+    typeof value === 'symbol' || typeof value === 'function' ||
+    typeof defaultValue === 'symbol' || typeof defaultValue === 'function'
+  ) {
+    return;
+  }
 
   // Temporarily disconnect the input from any radio buttons.
   // Changing the type or name as the same time as changing the checked value
@@ -214,6 +222,14 @@ export function initInput(
   isHydrating: boolean,
 ) {
   const node: HTMLInputElement = (element: any);
+
+  // Skip if value or defaultValue is a Symbol or Function
+  if (
+    typeof value === 'symbol' || typeof value === 'function' ||
+    typeof defaultValue === 'symbol' || typeof defaultValue === 'function'
+  ) {
+    return;
+  }
 
   if (
     type != null &&
@@ -412,8 +428,8 @@ export function restoreControlledInputState(element: Element, props: Object) {
     }
     const group = queryRoot.querySelectorAll(
       'input[name="' +
-        escapeSelectorAttributeValueInsideDoubleQuotes('' + name) +
-        '"][type="radio"]',
+      escapeSelectorAttributeValueInsideDoubleQuotes('' + name) +
+      '"][type="radio"]',
     );
 
     for (let i = 0; i < group.length; i++) {
@@ -430,7 +446,7 @@ export function restoreControlledInputState(element: Element, props: Object) {
       if (!otherProps) {
         throw new Error(
           'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
-            'same `name` is not supported.',
+          'same `name` is not supported.',
         );
       }
 
