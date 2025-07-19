@@ -96,15 +96,15 @@ export function updateInput(
   type: ?string,
   name: ?string,
 ) {
-  const node: HTMLInputElement = (element: any);
-
-  // Skip if value or defaultValue is a Symbol or Function
-  if (
-    typeof value === 'symbol' || typeof value === 'function' ||
-    typeof defaultValue === 'symbol' || typeof defaultValue === 'function'
-  ) {
-    return;
+  // Sanitize value/defaultValue for Symbols or functions
+  if (typeof value === 'symbol' || typeof value === 'function') {
+    value = '';
   }
+  if (typeof defaultValue === 'symbol' || typeof defaultValue === 'function') {
+    defaultValue = '';
+  }
+
+  const node: HTMLInputElement = (element: any);
 
   // Temporarily disconnect the input from any radio buttons.
   // Changing the type or name as the same time as changing the checked value
@@ -221,15 +221,13 @@ export function initInput(
   name: ?string,
   isHydrating: boolean,
 ) {
-  const node: HTMLInputElement = (element: any);
-
-  // Skip if value or defaultValue is a Symbol or Function
-  if (
-    typeof value === 'symbol' || typeof value === 'function' ||
-    typeof defaultValue === 'symbol' || typeof defaultValue === 'function'
-  ) {
-    return;
+  if (typeof value === 'symbol' || typeof value === 'function') {
+    value = '';
   }
+  if (typeof defaultValue === 'symbol' || typeof defaultValue === 'function') {
+    defaultValue = '';
+  }
+  const node: HTMLInputElement = (element: any);
 
   if (
     type != null &&
