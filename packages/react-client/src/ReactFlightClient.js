@@ -3471,6 +3471,26 @@ function resolveDebugModel(
   debugChunk._debugChunk = previousChunk; // Linked list of the debug chunks
   parentChunk._debugChunk = debugChunk;
   initializeDebugChunk(response, parentChunk);
+  if (
+    __DEV__ &&
+    ((debugChunk: any): SomeChunk<any>).status === BLOCKED &&
+    // TODO: This should check for the existence of the "readable" side, not the "writable".
+    response._debugChannel === undefined
+  ) {
+    if (json[0] === '"' && json[1] === '$') {
+      const path = json.slice(2, json.length - 1).split(':');
+      const outlinedId = parseInt(path[0], 16);
+      const chunk = getChunk(response, outlinedId);
+      if (chunk.status === PENDING) {
+        // We expect the debug chunk to have been emitted earlier in the stream. It might be
+        // blocked on other things but chunk should no longer be pending.
+        // If it's still pending that suggests that it was referencing an object in the debug
+        // channel, but no debug channel was wired up so it's missing. In this case we can just
+        // drop the debug info instead of halting the whole stream.
+        parentChunk._debugChunk = null;
+      }
+    }
+  }
 }
 
 let currentOwnerInDEV: null | ReactComponentInfo = null;
