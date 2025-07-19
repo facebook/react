@@ -429,11 +429,11 @@ export const Hello = () => {
 _c = Hello;
 export let Bar = props => <Hello />;
 _c2 = Bar;
-export default (() => {
+export default () => {
   // This one should be ignored.
   // You should name your components.
   return <Hello />;
-});
+};
 var _c, _c2;
 $RefreshReg$(_c, "Hello");
 $RefreshReg$(_c2, "Bar");
