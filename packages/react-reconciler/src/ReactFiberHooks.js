@@ -1960,6 +1960,7 @@ function mountOptimistic<S, A>(
   // This is different than the normal setState function.
   const dispatch: A => void = (dispatchOptimisticSetState.bind(
     null,
+    'setOptimistic()',
     currentlyRenderingFiber,
     true,
     queue,
@@ -2397,6 +2398,7 @@ function mountActionState<S, P>(
   const pendingStateHook = mountStateImpl((false: Thenable<boolean> | boolean));
   const setPendingState: boolean => void = (dispatchOptimisticSetState.bind(
     null,
+    'useActionState()',
     currentlyRenderingFiber,
     false,
     ((pendingStateHook.queue: any): UpdateQueue<
@@ -3115,7 +3117,7 @@ function startTransition<S>(
   // diverges; for example, both an optimistic update and this one should
   // share the same lane.
   ReactSharedInternals.T = currentTransition;
-  dispatchOptimisticSetState(fiber, false, queue, pendingState);
+  dispatchOptimisticSetState('useTransition()', fiber, false, queue, pendingState);
 
   try {
     const returnValue = callback();
@@ -3680,6 +3682,7 @@ function dispatchSetStateInternal<S, A>(
 }
 
 function dispatchOptimisticSetState<S, A>(
+  label: string,
   fiber: Fiber,
   throwIfDuringRender: boolean,
   queue: UpdateQueue<S, A>,
@@ -3764,7 +3767,7 @@ function dispatchOptimisticSetState<S, A>(
       // will never be attempted before the optimistic update. This currently
       // holds because the optimistic update is always synchronous. If we ever
       // change that, we'll need to account for this.
-      startUpdateTimerByLane(lane, 'setOptimistic()');
+      startUpdateTimerByLane(lane, label);
       scheduleUpdateOnFiber(root, fiber, lane);
       // Optimistic updates are always synchronous, so we don't need to call
       // entangleTransitionUpdate here.
