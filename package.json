@@ -51,7 +51,6 @@
     "abortcontroller-polyfill": "^1.7.5",
     "art": "0.10.1",
     "babel-plugin-syntax-trailing-function-commas": "^6.5.0",
-    "chalk": "^3.0.0",
     "cli-table": "^0.3.1",
     "coffee-script": "^1.12.7",
     "confusing-browser-globals": "^1.0.9",
@@ -153,5 +152,8 @@
     "react-is": "npm:react-is",
     "jsdom": "22.1.0"
   },
-  "packageManager": "yarn@1.22.22"
+  "packageManager": "yarn@1.22.22",
+  "dependencies": {
+    "chalk": "4.1.2"
+  }
 }

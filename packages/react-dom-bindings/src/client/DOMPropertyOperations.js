@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -12,6 +12,16 @@ import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
 import {trackHostMutation} from 'react-reconciler/src/ReactFiberMutationTracking';
+
+/**
+ * Safe check for object property ownership to avoid method-unbinding error.
+ */
+function hasOwn(obj: mixed, key: string): boolean %checks {
+  return typeof obj === 'object' &&
+    obj !== null &&
+    typeof (obj: any).hasOwnProperty === 'function' &&
+    (obj: any).hasOwnProperty(key);
+}
 
 /**
  * Get the value for a attribute on a node. Only used in DEV for SSR validation.
@@ -28,7 +38,6 @@ export function getValueForAttribute(
       return;
     }
     if (!node.hasAttribute(name)) {
-      // shouldRemoveAttribute
       switch (typeof expected) {
         case 'function':
         case 'symbol':
@@ -63,13 +72,9 @@ export function getValueForAttributeOnCustomComponent(
       return;
     }
     if (!node.hasAttribute(name)) {
-      // shouldRemoveAttribute
       switch (typeof expected) {
         case 'symbol':
         case 'object':
-          // Symbols and objects are ignored when they're emitted so
-          // it would be expected that they end up not having an attribute.
-          return expected;
         case 'function':
           return expected;
         case 'boolean':
@@ -101,7 +106,6 @@ export function setValueForAttribute(
   value: mixed,
 ) {
   if (isAttributeNameSafe(name)) {
-    // Fix: Skip value/defaultValue if value is a symbol or function
     if (
       (name === 'value' || name === 'defaultValue') &&
       (typeof value === 'function' || typeof value === 'symbol')
@@ -110,7 +114,6 @@ export function setValueForAttribute(
       return;
     }
 
-    // shouldRemoveAttribute
     if (value === null) {
       node.removeAttribute(name);
       return;
@@ -205,14 +208,18 @@ export function setValueForPropertyOnCustomComponent(
 ) {
   if (name[0] === 'o' && name[1] === 'n') {
     const useCapture = name.endsWith('Capture');
-    const eventName = name.slice(2, useCapture ? name.length - 7 : undefined);
+    const eventName: string = name.slice(2, useCapture ? name.length - 7 : undefined).toLowerCase();
 
     const prevProps = getFiberCurrentPropsFromNode(node);
-    const prevValue = prevProps != null ? prevProps[name] : null;
-    if (typeof prevValue === 'function') {
-      node.removeEventListener(eventName, prevValue, useCapture);
+    let prevValue = null;
+    if (prevProps != null && hasOwn(prevProps, name)) {
+      prevValue = ((prevProps: any)[name]: mixed);
     }
-    if (typeof value === 'function') {
+
+    if (typeof prevValue === 'function' && typeof eventName === 'string') {
+      (node: any).removeEventListener(eventName, prevValue, useCapture);
+    }
+    if (typeof value === 'function' && typeof eventName === 'string') {
       if (typeof prevValue !== 'function' && prevValue !== null) {
         if (name in (node: any)) {
           (node: any)[name] = null;
@@ -220,7 +227,7 @@ export function setValueForPropertyOnCustomComponent(
           node.removeAttribute(name);
         }
       }
-      node.addEventListener(eventName, (value: EventListener), useCapture);
+      (node: any).addEventListener(eventName, (value: any), useCapture);
       return;
     }
   }
@@ -237,6 +244,5 @@ export function setValueForPropertyOnCustomComponent(
     return;
   }
 
-  // From here, it's the same as any attribute
   setValueForAttribute(node, name, value);
 }
