@@ -58,11 +58,10 @@ import type {
   FulfilledThenable,
   RejectedThenable,
   ReactDebugInfo,
+  ReactDebugInfoEntry,
   ReactComponentInfo,
-  ReactEnvironmentInfo,
   ReactIOInfo,
   ReactAsyncInfo,
-  ReactTimeInfo,
   ReactStackTrace,
   ReactCallSite,
   ReactFunctionLocation,
@@ -1193,18 +1192,18 @@ function serializeAsyncIterable(
     __DEV__ ? task.debugTask : null,
   );
 
-  // The task represents the Stop row. This adds a Start row.
-  request.pendingChunks++;
-  const startStreamRow =
-    streamTask.id.toString(16) + ':' + (isIterator ? 'x' : 'X') + '\n';
-  request.completedRegularChunks.push(stringToChunk(startStreamRow));
-
   if (__DEV__) {
     const debugInfo: ?ReactDebugInfo = (iterable: any)._debugInfo;
     if (debugInfo) {
       forwardDebugInfo(request, streamTask, debugInfo);
     }
   }
+
+  // The task represents the Stop row. This adds a Start row.
+  request.pendingChunks++;
+  const startStreamRow =
+    streamTask.id.toString(16) + ':' + (isIterator ? 'x' : 'X') + '\n';
+  request.completedRegularChunks.push(stringToChunk(startStreamRow));
 
   function progress(
     entry:
@@ -4078,11 +4077,7 @@ function emitDebugHaltChunk(request: Request, id: number): void {
 function emitDebugChunk(
   request: Request,
   id: number,
-  debugInfo:
-    | ReactComponentInfo
-    | ReactAsyncInfo
-    | ReactEnvironmentInfo
-    | ReactTimeInfo,
+  debugInfo: ReactDebugInfoEntry,
 ): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
