@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<40c5a6b50e477c8c0db2dea0f977b9c6>>
+ * @generated SignedSource<<937f755edbb2776bc87ce75c6e3a89a9>>
  */
 
 "use strict";
@@ -29,8 +29,6 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
     dynamicFlagsUntyped.enableEagerAlternateStateNodeCleanup,
   passChildrenWhenCloningPersistedNodes =
     dynamicFlagsUntyped.passChildrenWhenCloningPersistedNodes,
-  enableLazyPublicInstanceInFabric =
-    dynamicFlagsUntyped.enableLazyPublicInstanceInFabric,
   renameElementSymbol = dynamicFlagsUntyped.renameElementSymbol,
   enableFragmentRefs = dynamicFlagsUntyped.enableFragmentRefs,
   assign = Object.assign,
@@ -7351,49 +7349,31 @@ function completeWork(current, workInProgress, renderLanes) {
           bubbleProperties(workInProgress);
           return null;
         }
-        renderLanes = rootInstanceStackCursor.current;
-        current = nextReactTag;
+        current = rootInstanceStackCursor.current;
+        renderLanes = nextReactTag;
         nextReactTag += 2;
         type = getViewConfigForType(type);
         oldProps = ReactNativePrivateInterface.createAttributePayload(
           newProps,
           type.validAttributes
         );
-        oldProps = createNode(
-          current,
-          type.uiViewClassName,
-          renderLanes.containerTag,
-          oldProps,
-          workInProgress
-        );
-        enableLazyPublicInstanceInFabric
-          ? (current = {
-              node: oldProps,
-              canonical: {
-                nativeTag: current,
-                viewConfig: type,
-                currentProps: newProps,
-                internalInstanceHandle: workInProgress,
-                publicInstance: null,
-                publicRootInstance: renderLanes.publicInstance
-              }
-            })
-          : ((renderLanes = ReactNativePrivateInterface.createPublicInstance(
-              current,
-              type,
-              workInProgress,
-              renderLanes.publicInstance
-            )),
-            (current = {
-              node: oldProps,
-              canonical: {
-                nativeTag: current,
-                viewConfig: type,
-                currentProps: newProps,
-                internalInstanceHandle: workInProgress,
-                publicInstance: renderLanes
-              }
-            }));
+        current = {
+          node: createNode(
+            renderLanes,
+            type.uiViewClassName,
+            current.containerTag,
+            oldProps,
+            workInProgress
+          ),
+          canonical: {
+            nativeTag: renderLanes,
+            viewConfig: type,
+            currentProps: newProps,
+            internalInstanceHandle: workInProgress,
+            publicInstance: null,
+            publicRootInstance: current.publicInstance
+          }
+        };
         markCloned(workInProgress);
         appendAllChildren(current, workInProgress, !1, !1);
         workInProgress.stateNode = current;
@@ -11029,26 +11009,26 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1238 = {
+  internals$jscomp$inline_1237 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-dffacc7b-20250717",
+    version: "19.2.0-native-fb-e9638c33-20250721",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-dffacc7b-20250717"
+    reconcilerVersion: "19.2.0-native-fb-e9638c33-20250721"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1238.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1237.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1557 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1556 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1557.isDisabled &&
-    hook$jscomp$inline_1557.supportsFiber
+    !hook$jscomp$inline_1556.isDisabled &&
+    hook$jscomp$inline_1556.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1557.inject(
-        internals$jscomp$inline_1238
+      (rendererID = hook$jscomp$inline_1556.inject(
+        internals$jscomp$inline_1237
       )),
-        (injectedHook = hook$jscomp$inline_1557);
+        (injectedHook = hook$jscomp$inline_1556);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

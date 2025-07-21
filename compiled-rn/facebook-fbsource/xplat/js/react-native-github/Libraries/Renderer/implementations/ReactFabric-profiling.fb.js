@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c34f6a18162d8d6fdf10a46ea1e308f5>>
+ * @generated SignedSource<<dd42b43d1b3e351b0168d225cc09caa8>>
  */
 
 "use strict";
@@ -33,8 +33,6 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
     dynamicFlagsUntyped.enableEagerAlternateStateNodeCleanup,
   passChildrenWhenCloningPersistedNodes =
     dynamicFlagsUntyped.passChildrenWhenCloningPersistedNodes,
-  enableLazyPublicInstanceInFabric =
-    dynamicFlagsUntyped.enableLazyPublicInstanceInFabric,
   renameElementSymbol = dynamicFlagsUntyped.renameElementSymbol,
   enableFragmentRefs = dynamicFlagsUntyped.enableFragmentRefs,
   enableComponentPerformanceTrack =
@@ -7845,49 +7843,31 @@ function completeWork(current, workInProgress, renderLanes) {
           bubbleProperties(workInProgress);
           return null;
         }
-        renderLanes = rootInstanceStackCursor.current;
-        current = nextReactTag;
+        current = rootInstanceStackCursor.current;
+        renderLanes = nextReactTag;
         nextReactTag += 2;
         type = getViewConfigForType(type);
         oldProps = ReactNativePrivateInterface.createAttributePayload(
           newProps,
           type.validAttributes
         );
-        oldProps = createNode(
-          current,
-          type.uiViewClassName,
-          renderLanes.containerTag,
-          oldProps,
-          workInProgress
-        );
-        enableLazyPublicInstanceInFabric
-          ? (current = {
-              node: oldProps,
-              canonical: {
-                nativeTag: current,
-                viewConfig: type,
-                currentProps: newProps,
-                internalInstanceHandle: workInProgress,
-                publicInstance: null,
-                publicRootInstance: renderLanes.publicInstance
-              }
-            })
-          : ((renderLanes = ReactNativePrivateInterface.createPublicInstance(
-              current,
-              type,
-              workInProgress,
-              renderLanes.publicInstance
-            )),
-            (current = {
-              node: oldProps,
-              canonical: {
-                nativeTag: current,
-                viewConfig: type,
-                currentProps: newProps,
-                internalInstanceHandle: workInProgress,
-                publicInstance: renderLanes
-              }
-            }));
+        current = {
+          node: createNode(
+            renderLanes,
+            type.uiViewClassName,
+            current.containerTag,
+            oldProps,
+            workInProgress
+          ),
+          canonical: {
+            nativeTag: renderLanes,
+            viewConfig: type,
+            currentProps: newProps,
+            internalInstanceHandle: workInProgress,
+            publicInstance: null,
+            publicRootInstance: current.publicInstance
+          }
+        };
         markCloned(workInProgress);
         appendAllChildren(current, workInProgress, !1, !1);
         workInProgress.stateNode = current;
@@ -12958,16 +12938,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1473 = {
+  internals$jscomp$inline_1472 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-dffacc7b-20250717",
+    version: "19.2.0-native-fb-e9638c33-20250721",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-dffacc7b-20250717"
+    reconcilerVersion: "19.2.0-native-fb-e9638c33-20250721"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1473.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1473.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1472.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1472.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$165 = 0;
     31 > index$165;
@@ -12979,20 +12959,20 @@ internals$jscomp$inline_1473.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1473.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1472.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1794 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1793 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1794.isDisabled &&
-    hook$jscomp$inline_1794.supportsFiber
+    !hook$jscomp$inline_1793.isDisabled &&
+    hook$jscomp$inline_1793.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1794.inject(
-        internals$jscomp$inline_1473
+      (rendererID = hook$jscomp$inline_1793.inject(
+        internals$jscomp$inline_1472
       )),
-        (injectedHook = hook$jscomp$inline_1794);
+        (injectedHook = hook$jscomp$inline_1793);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

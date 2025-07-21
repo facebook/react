@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cd1c537659775c08a6ce8a7533bf1160>>
+ * @generated SignedSource<<181df4e43d45d66e2c10cab2de6a9fd0>>
  */
 
 "use strict";
@@ -10081,23 +10081,23 @@ __DEV__ &&
               _oldProps !== newProps
             ) {
               requiredContext(contextStackCursor.current);
-              var newChildSet = null;
-              _type2 = !1;
+              var newChildSet = null,
+                hasOffscreenComponentChild = !1;
               current &&
                 passChildrenWhenCloningPersistedNodes &&
                 (markCloned(workInProgress),
                 (newChildSet = passChildrenWhenCloningPersistedNodes
                   ? []
                   : createChildNodeSet()),
-                (_type2 = appendAllChildrenToContainer(
+                (hasOffscreenComponentChild = appendAllChildrenToContainer(
                   newChildSet,
                   workInProgress,
                   !1,
                   !1
                 )));
               b: {
-                var keepChildren = !current;
-                newChildSet = _type2 ? void 0 : newChildSet;
+                _type2 = !current;
+                newChildSet = hasOffscreenComponentChild ? void 0 : newChildSet;
                 _oldProps = ReactNativePrivateInterface.diffAttributePayloads(
                   _oldProps,
                   newProps,
@@ -10105,7 +10105,7 @@ __DEV__ &&
                 );
                 renderLanes.canonical.currentProps = newProps;
                 newProps = renderLanes.node;
-                if (keepChildren)
+                if (_type2)
                   if (null !== _oldProps)
                     newProps = cloneNodeWithNewProps(newProps, _oldProps);
                   else {
@@ -10132,7 +10132,8 @@ __DEV__ &&
                 : (markCloned(workInProgress),
                   (workInProgress.stateNode = newProps),
                   current
-                    ? (passChildrenWhenCloningPersistedNodes && !_type2) ||
+                    ? (passChildrenWhenCloningPersistedNodes &&
+                        !hasOffscreenComponentChild) ||
                       appendAllChildren(newProps, workInProgress, !1, !1)
                     : enablePersistedModeClonedFlag ||
                       (workInProgress.flags |= 4));
@@ -10147,55 +10148,37 @@ __DEV__ &&
               return null;
             }
             requiredContext(contextStackCursor.current);
-            renderLanes = requiredContext(rootInstanceStackCursor.current);
-            current = nextReactTag;
+            current = requiredContext(rootInstanceStackCursor.current);
+            renderLanes = nextReactTag;
             nextReactTag += 2;
             _type2 = getViewConfigForType(_type2);
-            for (keepChildren in _type2.validAttributes)
-              newProps.hasOwnProperty(keepChildren) &&
+            for (hasOffscreenComponentChild in _type2.validAttributes)
+              newProps.hasOwnProperty(hasOffscreenComponentChild) &&
                 ReactNativePrivateInterface.deepFreezeAndThrowOnMutationInDev(
-                  newProps[keepChildren]
+                  newProps[hasOffscreenComponentChild]
                 );
-            keepChildren = ReactNativePrivateInterface.createAttributePayload(
-              newProps,
-              _type2.validAttributes
-            );
-            keepChildren = createNode(
-              current,
-              _type2.uiViewClassName,
-              renderLanes.containerTag,
-              keepChildren,
-              workInProgress
-            );
-            enableLazyPublicInstanceInFabric
-              ? (current = {
-                  node: keepChildren,
-                  canonical: {
-                    nativeTag: current,
-                    viewConfig: _type2,
-                    currentProps: newProps,
-                    internalInstanceHandle: workInProgress,
-                    publicInstance: null,
-                    publicRootInstance: renderLanes.publicInstance
-                  }
-                })
-              : ((renderLanes =
-                  ReactNativePrivateInterface.createPublicInstance(
-                    current,
-                    _type2,
-                    workInProgress,
-                    renderLanes.publicInstance
-                  )),
-                (current = {
-                  node: keepChildren,
-                  canonical: {
-                    nativeTag: current,
-                    viewConfig: _type2,
-                    currentProps: newProps,
-                    internalInstanceHandle: workInProgress,
-                    publicInstance: renderLanes
-                  }
-                }));
+            hasOffscreenComponentChild =
+              ReactNativePrivateInterface.createAttributePayload(
+                newProps,
+                _type2.validAttributes
+              );
+            current = {
+              node: createNode(
+                renderLanes,
+                _type2.uiViewClassName,
+                current.containerTag,
+                hasOffscreenComponentChild,
+                workInProgress
+              ),
+              canonical: {
+                nativeTag: renderLanes,
+                viewConfig: _type2,
+                currentProps: newProps,
+                internalInstanceHandle: workInProgress,
+                publicInstance: null,
+                publicRootInstance: current.publicInstance
+              }
+            };
             markCloned(workInProgress);
             appendAllChildren(current, workInProgress, !1, !1);
             workInProgress.stateNode = current;
@@ -10287,8 +10270,11 @@ __DEV__ &&
             (null !== current.memoizedState &&
               null !== current.memoizedState.dehydrated)
           ) {
-            _type2 = newProps;
-            if (null !== _type2 && null !== _type2.dehydrated) {
+            hasOffscreenComponentChild = newProps;
+            if (
+              null !== hasOffscreenComponentChild &&
+              null !== hasOffscreenComponentChild.dehydrated
+            ) {
               if (null === current) {
                 throw Error(
                   "A dehydrated suspense component was completed without a hydrated node. This is probably a bug in React."
@@ -10299,22 +10285,26 @@ __DEV__ &&
               }
               emitPendingHydrationWarnings();
               0 === (workInProgress.flags & 128) &&
-                (_type2 = workInProgress.memoizedState = null);
+                (hasOffscreenComponentChild = workInProgress.memoizedState =
+                  null);
               workInProgress.flags |= 4;
               bubbleProperties(workInProgress);
               0 !== (workInProgress.mode & 2) &&
-                null !== _type2 &&
-                ((_type2 = workInProgress.child),
-                null !== _type2 &&
-                  (workInProgress.treeBaseDuration -= _type2.treeBaseDuration));
-              _type2 = !1;
+                null !== hasOffscreenComponentChild &&
+                ((hasOffscreenComponentChild = workInProgress.child),
+                null !== hasOffscreenComponentChild &&
+                  (workInProgress.treeBaseDuration -=
+                    hasOffscreenComponentChild.treeBaseDuration));
+              hasOffscreenComponentChild = !1;
             } else
-              (_type2 = upgradeHydrationErrorsToRecoverable()),
+              (hasOffscreenComponentChild =
+                upgradeHydrationErrorsToRecoverable()),
                 null !== current &&
                   null !== current.memoizedState &&
-                  (current.memoizedState.hydrationErrors = _type2),
-                (_type2 = !0);
-            if (!_type2) {
+                  (current.memoizedState.hydrationErrors =
+                    hasOffscreenComponentChild),
+                (hasOffscreenComponentChild = !0);
+            if (!hasOffscreenComponentChild) {
               if (workInProgress.flags & 256)
                 return popSuspenseHandler(workInProgress), workInProgress;
               popSuspenseHandler(workInProgress);
@@ -10333,16 +10323,18 @@ __DEV__ &&
           current = null !== current && null !== current.memoizedState;
           newProps &&
             ((renderLanes = workInProgress.child),
-            (_type2 = null),
+            (hasOffscreenComponentChild = null),
             null !== renderLanes.alternate &&
               null !== renderLanes.alternate.memoizedState &&
               null !== renderLanes.alternate.memoizedState.cachePool &&
-              (_type2 = renderLanes.alternate.memoizedState.cachePool.pool),
-            (keepChildren = null),
+              (hasOffscreenComponentChild =
+                renderLanes.alternate.memoizedState.cachePool.pool),
+            (_type2 = null),
             null !== renderLanes.memoizedState &&
               null !== renderLanes.memoizedState.cachePool &&
-              (keepChildren = renderLanes.memoizedState.cachePool.pool),
-            keepChildren !== _type2 && (renderLanes.flags |= 2048));
+              (_type2 = renderLanes.memoizedState.cachePool.pool),
+            _type2 !== hasOffscreenComponentChild &&
+              (renderLanes.flags |= 2048));
           newProps !== current &&
             newProps &&
             (workInProgress.child.flags |= 8192);
@@ -10379,23 +10371,24 @@ __DEV__ &&
           );
         case 19:
           pop(suspenseStackCursor, workInProgress);
-          _type2 = workInProgress.memoizedState;
-          if (null === _type2) return bubbleProperties(workInProgress), null;
+          hasOffscreenComponentChild = workInProgress.memoizedState;
+          if (null === hasOffscreenComponentChild)
+            return bubbleProperties(workInProgress), null;
           newProps = 0 !== (workInProgress.flags & 128);
-          keepChildren = _type2.rendering;
-          if (null === keepChildren)
-            if (newProps) cutOffTailIfNeeded(_type2, !1);
+          _type2 = hasOffscreenComponentChild.rendering;
+          if (null === _type2)
+            if (newProps) cutOffTailIfNeeded(hasOffscreenComponentChild, !1);
             else {
               if (
                 workInProgressRootExitStatus !== RootInProgress ||
                 (null !== current && 0 !== (current.flags & 128))
               )
                 for (current = workInProgress.child; null !== current; ) {
-                  keepChildren = findFirstSuspended(current);
-                  if (null !== keepChildren) {
+                  _type2 = findFirstSuspended(current);
+                  if (null !== _type2) {
                     workInProgress.flags |= 128;
-                    cutOffTailIfNeeded(_type2, !1);
-                    current = keepChildren.updateQueue;
+                    cutOffTailIfNeeded(hasOffscreenComponentChild, !1);
+                    current = _type2.updateQueue;
                     workInProgress.updateQueue = current;
                     scheduleRetryEffect(workInProgress, current);
                     workInProgress.subtreeFlags = 0;
@@ -10414,53 +10407,51 @@ __DEV__ &&
                   }
                   current = current.sibling;
                 }
-              null !== _type2.tail &&
+              null !== hasOffscreenComponentChild.tail &&
                 now$1() > workInProgressRootRenderTargetTime &&
                 ((workInProgress.flags |= 128),
                 (newProps = !0),
-                cutOffTailIfNeeded(_type2, !1),
+                cutOffTailIfNeeded(hasOffscreenComponentChild, !1),
                 (workInProgress.lanes = 4194304));
             }
           else {
             if (!newProps)
-              if (
-                ((current = findFirstSuspended(keepChildren)), null !== current)
-              ) {
+              if (((current = findFirstSuspended(_type2)), null !== current)) {
                 if (
                   ((workInProgress.flags |= 128),
                   (newProps = !0),
                   (current = current.updateQueue),
                   (workInProgress.updateQueue = current),
                   scheduleRetryEffect(workInProgress, current),
-                  cutOffTailIfNeeded(_type2, !0),
-                  null === _type2.tail &&
-                    "hidden" === _type2.tailMode &&
-                    !keepChildren.alternate)
+                  cutOffTailIfNeeded(hasOffscreenComponentChild, !0),
+                  null === hasOffscreenComponentChild.tail &&
+                    "hidden" === hasOffscreenComponentChild.tailMode &&
+                    !_type2.alternate)
                 )
                   return bubbleProperties(workInProgress), null;
               } else
-                2 * now$1() - _type2.renderingStartTime >
+                2 * now$1() - hasOffscreenComponentChild.renderingStartTime >
                   workInProgressRootRenderTargetTime &&
                   536870912 !== renderLanes &&
                   ((workInProgress.flags |= 128),
                   (newProps = !0),
-                  cutOffTailIfNeeded(_type2, !1),
+                  cutOffTailIfNeeded(hasOffscreenComponentChild, !1),
                   (workInProgress.lanes = 4194304));
-            _type2.isBackwards
-              ? ((keepChildren.sibling = workInProgress.child),
-                (workInProgress.child = keepChildren))
-              : ((current = _type2.last),
+            hasOffscreenComponentChild.isBackwards
+              ? ((_type2.sibling = workInProgress.child),
+                (workInProgress.child = _type2))
+              : ((current = hasOffscreenComponentChild.last),
                 null !== current
-                  ? (current.sibling = keepChildren)
-                  : (workInProgress.child = keepChildren),
-                (_type2.last = keepChildren));
+                  ? (current.sibling = _type2)
+                  : (workInProgress.child = _type2),
+                (hasOffscreenComponentChild.last = _type2));
           }
-          if (null !== _type2.tail)
+          if (null !== hasOffscreenComponentChild.tail)
             return (
-              (current = _type2.tail),
-              (_type2.rendering = current),
-              (_type2.tail = current.sibling),
-              (_type2.renderingStartTime = now$1()),
+              (current = hasOffscreenComponentChild.tail),
+              (hasOffscreenComponentChild.rendering = current),
+              (hasOffscreenComponentChild.tail = current.sibling),
+              (hasOffscreenComponentChild.renderingStartTime = now$1()),
               (current.sibling = null),
               (renderLanes = suspenseStackCursor.current),
               (renderLanes = newProps
@@ -16380,8 +16371,6 @@ __DEV__ &&
         dynamicFlagsUntyped.enableEagerAlternateStateNodeCleanup,
       passChildrenWhenCloningPersistedNodes =
         dynamicFlagsUntyped.passChildrenWhenCloningPersistedNodes,
-      enableLazyPublicInstanceInFabric =
-        dynamicFlagsUntyped.enableLazyPublicInstanceInFabric,
       renameElementSymbol = dynamicFlagsUntyped.renameElementSymbol,
       enableFragmentRefs = dynamicFlagsUntyped.enableFragmentRefs,
       enableComponentPerformanceTrack =
@@ -19237,10 +19226,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-dffacc7b-20250717",
+        version: "19.2.0-native-fb-e9638c33-20250721",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-dffacc7b-20250717"
+        reconcilerVersion: "19.2.0-native-fb-e9638c33-20250721"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

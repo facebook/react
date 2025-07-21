@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2d9b5ece5ad0e98ab22897cb2460189a>>
+ * @generated SignedSource<<9d9c608130a6c8e28d4afafc62aa8dcc>>
  */
 
 "use strict";
@@ -289,16 +289,16 @@ __DEV__ &&
                 } else {
                   try {
                     Fake.call();
-                  } catch (x$0) {
-                    control = x$0;
+                  } catch (x$1) {
+                    control = x$1;
                   }
                   fn.call(Fake.prototype);
                 }
               } else {
                 try {
                   throw Error();
-                } catch (x$1) {
-                  control = x$1;
+                } catch (x$2) {
+                  control = x$2;
                 }
                 (Fake = fn()) &&
                   "function" === typeof Fake.catch &&
@@ -2150,10 +2150,24 @@ __DEV__ &&
       return !1;
     }
     function getPublicInstance(instance) {
-      return null != instance.canonical &&
-        null != instance.canonical.publicInstance
-        ? instance.canonical.publicInstance
-        : instance;
+      if (null != instance.canonical) {
+        if (null == instance.canonical.publicInstance) {
+          var $jscomp$nullish$tmp0;
+          instance.canonical.publicInstance =
+            ReactNativePrivateInterface.createPublicInstance(
+              instance.canonical.nativeTag,
+              instance.canonical.viewConfig,
+              instance.canonical.internalInstanceHandle,
+              null !=
+                ($jscomp$nullish$tmp0 = instance.canonical.publicRootInstance)
+                ? $jscomp$nullish$tmp0
+                : null
+            );
+          instance.canonical.publicRootInstance = null;
+        }
+        return instance.canonical.publicInstance;
+      }
+      return instance;
     }
     function commitTextUpdate(textInstance, oldText, newText) {
       ReactNativePrivateInterface.UIManager.updateView(
@@ -6735,8 +6749,8 @@ __DEV__ &&
         try {
           (currentTransition = action(prevState, payload)),
             handleActionReturnValue(actionQueue, node, currentTransition);
-        } catch (error$2) {
-          onActionError(actionQueue, node, error$2);
+        } catch (error$3) {
+          onActionError(actionQueue, node, error$3);
         }
     }
     function handleActionReturnValue(actionQueue, node, returnValue) {
@@ -11218,8 +11232,8 @@ __DEV__ &&
                 recordEffectDuration(current);
               }
             else runWithFiberInDEV(current, ref, null);
-          } catch (error$3) {
-            captureCommitPhaseError(current, nearestMountedAncestor, error$3);
+          } catch (error$4) {
+            captureCommitPhaseError(current, nearestMountedAncestor, error$4);
           }
         else ref.current = null;
     }
@@ -14700,8 +14714,8 @@ __DEV__ &&
           workLoopSync();
           memoizedUpdaters = workInProgressRootExitStatus;
           break;
-        } catch (thrownValue$4) {
-          handleThrow(root, thrownValue$4);
+        } catch (thrownValue$5) {
+          handleThrow(root, thrownValue$5);
         }
       while (1);
       lanes && root.shellSuspendCounter++;
@@ -14864,8 +14878,8 @@ __DEV__ &&
             ? workLoopSync()
             : workLoopConcurrentByScheduler();
           break;
-        } catch (thrownValue$5) {
-          handleThrow(root, thrownValue$5);
+        } catch (thrownValue$6) {
+          handleThrow(root, thrownValue$6);
         }
       while (1);
       resetContextDependencies();
@@ -16415,7 +16429,7 @@ __DEV__ &&
       try {
         testStringCoercion(key);
         var JSCompiler_inline_result = !1;
-      } catch (e$6) {
+      } catch (e$7) {
         JSCompiler_inline_result = !0;
       }
       JSCompiler_inline_result &&
@@ -19570,11 +19584,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.2.0-native-fb-dffacc7b-20250717" !== isomorphicReactPackageVersion)
+    if ("19.2.0-native-fb-e9638c33-20250721" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.2.0-native-fb-dffacc7b-20250717\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.2.0-native-fb-e9638c33-20250721\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -19600,10 +19614,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-dffacc7b-20250717",
+        version: "19.2.0-native-fb-e9638c33-20250721",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-dffacc7b-20250717"
+        reconcilerVersion: "19.2.0-native-fb-e9638c33-20250721"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
