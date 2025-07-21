@@ -124,7 +124,7 @@ function createBridgeAndStore() {
   };
 
   const viewElementSourceFunction = (source, symbolicatedSource) => {
-    const {sourceURL, line, column} = symbolicatedSource
+    const [, sourceURL, line, column] = symbolicatedSource
       ? symbolicatedSource
       : source;
 

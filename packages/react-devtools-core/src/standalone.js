@@ -150,8 +150,9 @@ function canViewElementSourceFunction(
   if (symbolicatedSource == null) {
     return false;
   }
+  const [, sourceURL, ,] = symbolicatedSource;
 
-  return doesFilePathExist(symbolicatedSource.sourceURL, projectRoots);
+  return doesFilePathExist(sourceURL, projectRoots);
 }
 
 function viewElementSourceFunction(
@@ -162,11 +163,8 @@ function viewElementSourceFunction(
     return;
   }
 
-  launchEditor(
-    symbolicatedSource.sourceURL,
-    symbolicatedSource.line,
-    projectRoots,
-  );
+  const [, sourceURL, line] = symbolicatedSource;
+  launchEditor(sourceURL, line, projectRoots);
 }
 
 function onDisconnected() {

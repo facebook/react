@@ -299,7 +299,7 @@ function parseSourceFromChromeStack(
       continue;
     }
 
-    const {sourceURL, line = '1', column = '1'} = location;
+    const [, sourceURL, line = '1', column = '1'] = location;
 
     return {
       sourceURL,
@@ -329,7 +329,7 @@ function parseSourceFromFirefoxStack(
       continue;
     }
 
-    const {sourceURL, line = '1', column = '1'} = location;
+    const [, sourceURL, line = '1', column = '1'] = location;
 
     return {
       sourceURL,

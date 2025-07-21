@@ -62,7 +62,7 @@ function InspectedElementSourcePanel({
 function CopySourceButton({source, symbolicatedSourcePromise}: Props) {
   const symbolicatedSource = React.use(symbolicatedSourcePromise);
   if (symbolicatedSource == null) {
-    const {sourceURL, line, column} = source;
+    const [, sourceURL, line, column] = source;
     const handleCopy = withPermissionsCheck(
       {permissions: ['clipboardWrite']},
       () => copy(`${sourceURL}:${line}:${column}`),
@@ -75,7 +75,7 @@ function CopySourceButton({source, symbolicatedSourcePromise}: Props) {
     );
   }
 
-  const {sourceURL, line, column} = symbolicatedSource;
+  const [, sourceURL, line, column] = symbolicatedSource;
   const handleCopy = withPermissionsCheck(
     {permissions: ['clipboardWrite']},
     () => copy(`${sourceURL}:${line}:${column}`),
@@ -109,14 +109,8 @@ function FormattedSourceString({source, symbolicatedSourcePromise}: Props) {
     }
   }, [source, symbolicatedSource]);
 
-  let sourceURL, line;
-  if (symbolicatedSource == null) {
-    sourceURL = source.sourceURL;
-    line = source.line;
-  } else {
-    sourceURL = symbolicatedSource.sourceURL;
-    line = symbolicatedSource.line;
-  }
+  const [, sourceURL, line] =
+    symbolicatedSource == null ? source : symbolicatedSource;
 
   return (
     <div

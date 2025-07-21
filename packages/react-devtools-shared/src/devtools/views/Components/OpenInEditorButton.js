@@ -26,7 +26,7 @@ function checkConditions(
   try {
     const url = new URL(editorURL);
 
-    let sourceURL = source.sourceURL;
+    let [, sourceURL, ,] = source;
 
     // Check if sourceURL is a correct URL, which has a protocol specified
     if (sourceURL.includes('://')) {

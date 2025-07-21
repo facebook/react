@@ -58,7 +58,7 @@ export default function InspectedElementWrapper(_: Props): React.Node {
       const {source} = inspectedElement;
       if (source == null) return Promise.resolve(null);
 
-      const {sourceURL, line, column} = source;
+      const [, sourceURL, line, column] = source;
       return symbolicateSourceWithCache(
         fetchFileWithCaching,
         sourceURL,
