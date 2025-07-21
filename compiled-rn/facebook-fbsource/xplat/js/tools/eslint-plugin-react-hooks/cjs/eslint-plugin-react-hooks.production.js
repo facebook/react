@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<edb548dbaf9002130b0f087072940691>>
+ * @generated SignedSource<<10dfc473171da37ca7e8575e59c9d826>>
  */
 
 'use strict';
@@ -29891,7 +29891,7 @@ const EnvironmentConfigSchema = zod.z.object({
     inferEffectDependencies: zod.z
         .nullable(zod.z.array(zod.z.object({
         function: ExternalFunctionSchema,
-        numRequiredArgs: zod.z.number().min(1, 'numRequiredArgs must be > 0'),
+        autodepsIndex: zod.z.number().min(1, 'autodepsIndex must be > 0'),
     })))
         .default(null),
     inlineJsxTransform: ReactElementSymbolSchema.nullable().default(null),
@@ -44958,7 +44958,7 @@ function inferEffectDependencies(fn) {
     const autodepFnConfigs = new Map();
     for (const effectTarget of fn.env.config.inferEffectDependencies) {
         const moduleTargets = getOrInsertWith(autodepFnConfigs, effectTarget.function.source, () => new Map());
-        moduleTargets.set(effectTarget.function.importSpecifierName, effectTarget.numRequiredArgs);
+        moduleTargets.set(effectTarget.function.importSpecifierName, effectTarget.autodepsIndex);
     }
     const autodepFnLoads = new Map();
     const autodepModuleLoads = new Map();
@@ -45020,8 +45020,10 @@ function inferEffectDependencies(fn) {
                 const autodepsArgIndex = value.args.findIndex(arg => arg.kind === 'Identifier' &&
                     arg.identifier.type.kind === 'Object' &&
                     arg.identifier.type.shapeId === BuiltInAutodepsId);
-                if (value.args.length > 1 &&
-                    autodepsArgIndex > 0 &&
+                const autodepsArgExpectedIndex = autodepFnLoads.get(callee.identifier.id);
+                if (value.args.length > 0 &&
+                    autodepsArgExpectedIndex != null &&
+                    autodepsArgIndex === autodepsArgExpectedIndex &&
                     autodepFnLoads.has(callee.identifier.id) &&
                     value.args[0].kind === 'Identifier') {
                     const effectDeps = [];
@@ -51370,7 +51372,30 @@ function throwInvalidReact(options, { logger, filename }) {
     });
     CompilerError.throw(detail);
 }
-function assertValidEffectImportReference(numArgs, paths, context) {
+function isAutodepsSigil(arg) {
+    if (arg.isIdentifier() && arg.node.name === 'AUTODEPS') {
+        const binding = arg.scope.getBinding(arg.node.name);
+        if (binding && binding.path.isImportSpecifier()) {
+            const importSpecifier = binding.path.node;
+            if (importSpecifier.imported.type === 'Identifier') {
+                return importSpecifier.imported.name === 'AUTODEPS';
+            }
+        }
+        return false;
+    }
+    if (arg.isMemberExpression() && !arg.node.computed) {
+        const object = arg.get('object');
+        const property = arg.get('property');
+        if (object.isIdentifier() &&
+            object.node.name === 'React' &&
+            property.isIdentifier() &&
+            property.node.name === 'AUTODEPS') {
+            return true;
+        }
+    }
+    return false;
+}
+function assertValidEffectImportReference(autodepsIndex, paths, context) {
     var _a;
     for (const path of paths) {
         const parent = path.parentPath;
@@ -51379,7 +51404,8 @@ function assertValidEffectImportReference(numArgs, paths, context) {
             const maybeCalleeLoc = path.node.loc;
             const hasInferredEffect = maybeCalleeLoc != null &&
                 context.inferredEffectLocations.has(maybeCalleeLoc);
-            if (args.length === numArgs && !hasInferredEffect) {
+            const hasAutodepsArg = args.some(isAutodepsSigil);
+            if (hasAutodepsArg && !hasInferredEffect) {
                 const maybeErrorDiagnostic = matchCompilerDiagnostic(path, context.transformErrors);
                 throwInvalidReact({
                     reason: '[InferEffectDependencies] React Compiler is unable to infer dependencies of this effect. ' +
@@ -51417,9 +51443,9 @@ function validateNoUntransformedReferences(path, filename, logger, env, compileR
         }
     }
     if (env.inferEffectDependencies) {
-        for (const { function: { source, importSpecifierName }, numRequiredArgs, } of env.inferEffectDependencies) {
+        for (const { function: { source, importSpecifierName }, autodepsIndex, } of env.inferEffectDependencies) {
             const module = getOrInsertWith(moduleLoadChecks, source, () => new Map());
-            module.set(importSpecifierName, assertValidEffectImportReference.bind(null, numRequiredArgs));
+            module.set(importSpecifierName, assertValidEffectImportReference.bind(null, autodepsIndex));
         }
     }
     if (moduleLoadChecks.size > 0) {
