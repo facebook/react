@@ -14,7 +14,7 @@ import Button from '../Button';
 import ViewElementSourceContext from './ViewElementSourceContext';
 import Skeleton from './Skeleton';
 
-import type {Source as InspectedElementSource} from 'react-devtools-shared/src/shared/types';
+import type {ReactFunctionLocation} from 'shared/ReactTypes';
 import type {
   CanViewElementSource,
   ViewElementSource,

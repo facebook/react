@@ -35,7 +35,7 @@ import type {
 } from 'react-devtools-shared/src/frontend/types';
 import type {HookNames} from 'react-devtools-shared/src/frontend/types';
 import type {ToggleParseHookNames} from './InspectedElementContext';
-import type {Source} from 'react-devtools-shared/src/shared/types';
+import type {ReactFunctionLocation} from 'shared/ReactTypes';
 
 type Props = {
   element: Element,

@@ -18,7 +18,7 @@ import type {
   Dehydrated,
   Unserializable,
 } from 'react-devtools-shared/src/hydration';
-import type {Source} from 'react-devtools-shared/src/shared/types';
+import type {ReactFunctionLocation} from 'shared/ReactTypes';
 
 export type BrowserTheme = 'dark' | 'light';
 

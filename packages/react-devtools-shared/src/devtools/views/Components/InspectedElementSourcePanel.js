@@ -19,7 +19,7 @@ import {withPermissionsCheck} from 'react-devtools-shared/src/frontend/utils/wit
 
 import ViewElementSourceContext from './ViewElementSourceContext';
 
-import type {Source as InspectedElementSource} from 'react-devtools-shared/src/shared/types';
+import type {ReactFunctionLocation} from 'shared/ReactTypes';
 import styles from './InspectedElementSourcePanel.css';
 
 type Props = {

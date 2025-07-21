@@ -9,7 +9,7 @@
 
 import SourceMapConsumer from 'react-devtools-shared/src/hooks/SourceMapConsumer';
 
-import type {Source} from 'react-devtools-shared/src/shared/types';
+import type {ReactFunctionLocation} from 'shared/ReactTypes';
 import type {FetchFileWithCaching} from 'react-devtools-shared/src/devtools/views/Components/FetchFileWithCachingContext';
 
 const symbolicationCache: Map<string, Promise<Source | null>> = new Map();

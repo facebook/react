@@ -12,7 +12,7 @@ import {compareVersions} from 'compare-versions';
 import {dehydrate} from 'react-devtools-shared/src/hydration';
 import isArray from 'shared/isArray';
 
-import type {Source} from 'react-devtools-shared/src/shared/types';
+import type {ReactFunctionLocation} from 'shared/ReactTypes';
 import type {DehydratedData} from 'react-devtools-shared/src/frontend/types';
 
 export {default as formatWithStyles} from './formatWithStyles';
