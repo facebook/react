@@ -2327,6 +2327,21 @@ function visitAsyncNode(
             // then this gets I/O ignored, which is what we want because it means it was likely
             // just part of a previous component's rendering.
             match = ioNode;
+            if (
+              node.stack !== null &&
+              isAwaitInUserspace(request, node.stack)
+            ) {
+              // This await happened earlier but it was done in user space. This is the first time
+              // that user space saw the value of the I/O. We know we'll emit the I/O eventually
+              // but if we do it now we can override the promise value of the I/O entry to the
+              // one observed by this await which will be a better value than the internals of
+              // the I/O entry. If it's still alive that is.
+              const promise =
+                awaited.promise === null ? undefined : awaited.promise.deref();
+              if (promise !== undefined) {
+                serializeIONode(request, ioNode, awaited.promise);
+              }
+            }
           } else {
             if (
               node.stack === null ||
