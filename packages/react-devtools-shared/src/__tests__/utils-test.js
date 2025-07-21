@@ -12,7 +12,7 @@ import {
   getDisplayNameForReactElement,
   isPlainObject,
 } from 'react-devtools-shared/src/utils';
-import {stackToComponentSources} from 'react-devtools-shared/src/devtools/utils';
+import {stackToComponentLocations} from 'react-devtools-shared/src/devtools/utils';
 import {
   formatConsoleArguments,
   formatConsoleArgumentsToSingleString,
@@ -63,14 +63,17 @@ describe('utils', () => {
 
     it('should parse a component stack trace', () => {
       expect(
-        stackToComponentSources(`
+        stackToComponentLocations(`
     at Foobar (http://localhost:3000/static/js/bundle.js:103:74)
     at a
     at header
     at div
     at App`),
       ).toEqual([
-        ['Foobar', ['http://localhost:3000/static/js/bundle.js', 103, 74]],
+        [
+          'Foobar',
+          ['Foobar', 'http://localhost:3000/static/js/bundle.js', 103, 74],
+        ],
         ['a', null],
         ['header', null],
         ['div', null],
