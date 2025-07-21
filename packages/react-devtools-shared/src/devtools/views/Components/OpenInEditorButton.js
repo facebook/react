@@ -15,13 +15,13 @@ import type {ReactFunctionLocation} from 'shared/ReactTypes';
 
 type Props = {
   editorURL: string,
-  source: Source,
-  symbolicatedSourcePromise: Promise<Source | null>,
+  source: ReactFunctionLocation,
+  symbolicatedSourcePromise: Promise<ReactFunctionLocation | null>,
 };
 
 function checkConditions(
   editorURL: string,
-  source: Source,
+  source: ReactFunctionLocation,
 ): {url: URL | null, shouldDisableButton: boolean} {
   try {
     const url = new URL(editorURL);

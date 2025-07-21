@@ -280,7 +280,9 @@ function extractLocation(
 }
 
 const CHROME_STACK_REGEXP = /^\s*at .*(\S+:\d+|\(native\))/m;
-function parseSourceFromChromeStack(stack: string): Source | null {
+function parseSourceFromChromeStack(
+  stack: string,
+): ReactFunctionLocation | null {
   const frames = stack.split('\n');
   // eslint-disable-next-line no-for-of-loops/no-for-of-loops
   for (const frame of frames) {
@@ -309,7 +311,9 @@ function parseSourceFromChromeStack(stack: string): Source | null {
   return null;
 }
 
-function parseSourceFromFirefoxStack(stack: string): Source | null {
+function parseSourceFromFirefoxStack(
+  stack: string,
+): ReactFunctionLocation | null {
   const frames = stack.split('\n');
   // eslint-disable-next-line no-for-of-loops/no-for-of-loops
   for (const frame of frames) {
@@ -339,7 +343,7 @@ function parseSourceFromFirefoxStack(stack: string): Source | null {
 
 export function parseSourceFromComponentStack(
   componentStack: string,
-): Source | null {
+): ReactFunctionLocation | null {
   if (componentStack.match(CHROME_STACK_REGEXP)) {
     return parseSourceFromChromeStack(componentStack);
   }
@@ -347,13 +351,13 @@ export function parseSourceFromComponentStack(
   return parseSourceFromFirefoxStack(componentStack);
 }
 
-let collectedLocation: Source | null = null;
+let collectedLocation: ReactFunctionLocation | null = null;
 
 function collectStackTrace(
   error: Error,
   structuredStackTrace: CallSite[],
 ): string {
-  let result: null | Source = null;
+  let result: null | ReactFunctionLocation = null;
   // Collect structured stack traces from the callsites.
   // We mirror how V8 serializes stack frames and how we later parse them.
   for (let i = 0; i < structuredStackTrace.length; i++) {
@@ -404,7 +408,9 @@ function collectStackTrace(
   return stack;
 }
 
-export function parseSourceFromOwnerStack(error: Error): Source | null {
+export function parseSourceFromOwnerStack(
+  error: Error,
+): ReactFunctionLocation | null {
   // First attempt to collected the structured data using prepareStackTrace.
   collectedLocation = null;
   const previousPrepare = Error.prepareStackTrace;

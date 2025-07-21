@@ -55,16 +55,16 @@ import type {ReactFunctionLocation} from 'shared/ReactTypes';
 export type TabID = 'components' | 'profiler';
 
 export type ViewElementSource = (
-  source: Source,
-  symbolicatedSource: Source | null,
+  source: ReactFunctionLocation,
+  symbolicatedSource: ReactFunctionLocation | null,
 ) => void;
 export type ViewAttributeSource = (
   id: number,
   path: Array<string | number>,
 ) => void;
 export type CanViewElementSource = (
-  source: Source,
-  symbolicatedSource: Source | null,
+  source: ReactFunctionLocation,
+  symbolicatedSource: ReactFunctionLocation | null,
 ) => boolean;
 
 export type Props = {

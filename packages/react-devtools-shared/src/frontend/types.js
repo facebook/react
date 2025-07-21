@@ -246,7 +246,7 @@ export type InspectedElement = {
   owners: Array<SerializedElement> | null,
 
   // Location of component in source code.
-  source: Source | null,
+  source: ReactFunctionLocation | null,
 
   type: ElementType,
 

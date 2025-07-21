@@ -50,7 +50,7 @@ export default function InspectedElementWrapper(_: Props): React.Node {
 
   const fetchFileWithCaching = useContext(FetchFileWithCachingContext);
 
-  const symbolicatedSourcePromise: null | Promise<Source | null> =
+  const symbolicatedSourcePromise: null | Promise<ReactFunctionLocation | null> =
     React.useMemo(() => {
       if (inspectedElement == null) return null;
       if (fetchFileWithCaching == null) return Promise.resolve(null);

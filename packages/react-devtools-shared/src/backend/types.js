@@ -281,7 +281,7 @@ export type InspectedElement = {
 
   // List of owners
   owners: Array<SerializedElement> | null,
-  source: Source | null,
+  source: ReactFunctionLocation | null,
 
   type: ElementType,
 

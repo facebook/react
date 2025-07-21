@@ -12,14 +12,17 @@ import SourceMapConsumer from 'react-devtools-shared/src/hooks/SourceMapConsumer
 import type {ReactFunctionLocation} from 'shared/ReactTypes';
 import type {FetchFileWithCaching} from 'react-devtools-shared/src/devtools/views/Components/FetchFileWithCachingContext';
 
-const symbolicationCache: Map<string, Promise<Source | null>> = new Map();
+const symbolicationCache: Map<
+  string,
+  Promise<ReactFunctionLocation | null>,
+> = new Map();
 
 export async function symbolicateSourceWithCache(
   fetchFileWithCaching: FetchFileWithCaching,
   sourceURL: string,
   line: number, // 1-based
   column: number, // 1-based
-): Promise<Source | null> {
+): Promise<ReactFunctionLocation | null> {
   const key = `${sourceURL}:${line}:${column}`;
   const cachedPromise = symbolicationCache.get(key);
   if (cachedPromise != null) {
@@ -43,7 +46,7 @@ export async function symbolicateSource(
   sourceURL: string,
   lineNumber: number, // 1-based
   columnNumber: number, // 1-based
-): Promise<Source | null> {
+): Promise<ReactFunctionLocation | null> {
   const resource = await fetchFileWithCaching(sourceURL).catch(() => null);
   if (resource == null) {
     return null;

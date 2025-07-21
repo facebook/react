@@ -144,8 +144,8 @@ async function fetchFileWithCaching(url: string) {
 }
 
 function canViewElementSourceFunction(
-  _source: Source,
-  symbolicatedSource: Source | null,
+  _source: ReactFunctionLocation,
+  symbolicatedSource: ReactFunctionLocation | null,
 ): boolean {
   if (symbolicatedSource == null) {
     return false;
@@ -155,8 +155,8 @@ function canViewElementSourceFunction(
 }
 
 function viewElementSourceFunction(
-  _source: Source,
-  symbolicatedSource: Source | null,
+  _source: ReactFunctionLocation,
+  symbolicatedSource: ReactFunctionLocation | null,
 ): void {
   if (symbolicatedSource == null) {
     return;

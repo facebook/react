@@ -23,8 +23,8 @@ import type {ReactFunctionLocation} from 'shared/ReactTypes';
 import styles from './InspectedElementSourcePanel.css';
 
 type Props = {
-  source: InspectedElementSource,
-  symbolicatedSourcePromise: Promise<InspectedElementSource | null>,
+  source: ReactFunctionLocation,
+  symbolicatedSourcePromise: Promise<ReactFunctionLocation | null>,
 };
 
 function InspectedElementSourcePanel({
