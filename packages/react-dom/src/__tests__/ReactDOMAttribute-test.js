@@ -6,7 +6,6 @@
  *
  * @emails react-core
  */
-
 'use strict';
 
 describe('ReactDOM unknown attribute', () => {
@@ -27,7 +26,6 @@ describe('ReactDOM unknown attribute', () => {
   async function testUnknownAttributeRemoval(givenValue) {
     const el = document.createElement('div');
     const root = ReactDOMClient.createRoot(el);
-
     await act(() => {
       root.render(<div unknown="something" />);
     });
@@ -44,7 +42,6 @@ describe('ReactDOM unknown attribute', () => {
   async function testUnknownAttributeAssignment(givenValue, expectedDOMValue) {
     const el = document.createElement('div');
     const root = ReactDOMClient.createRoot(el);
-
     await act(() => {
       root.render(<div unknown="something" />);
     });
@@ -63,7 +60,6 @@ describe('ReactDOM unknown attribute', () => {
       await testUnknownAttributeRemoval(null);
       await testUnknownAttributeRemoval(undefined);
     });
-
     it('changes values true, false to null, and also warns once', async () => {
       await testUnknownAttributeAssignment(true, null);
       assertConsoleErrorDev([
@@ -160,8 +156,6 @@ describe('ReactDOM unknown attribute', () => {
     it('throws with Temporal-like objects', async () => {
       class TemporalLike {
         valueOf() {
-          // Throwing here is the behavior of ECMAScript "Temporal" date/time API.
-          // See https://tc39.es/proposal-temporal/docs/plaindate.html#valueOf
           throw new TypeError('prod message');
         }
         toString() {
@@ -180,7 +174,8 @@ describe('ReactDOM unknown attribute', () => {
     });
 
     it('removes symbols and warns', async () => {
-      await testUnknownAttributeRemoval(Symbol('foo'));
+      const symbol = Symbol('foo');
+      await testUnknownAttributeRemoval(symbol);
       assertConsoleErrorDev([
         'Invalid value for prop `unknown` on <div> tag. Either remove it ' +
           'from the element, or pass a string or number value to keep it ' +
@@ -190,7 +185,7 @@ describe('ReactDOM unknown attribute', () => {
     });
 
     it('removes functions and warns', async () => {
-      await testUnknownAttributeRemoval(function someFunction() {});
+      await testUnknownAttributeRemoval(function testFn() {});
       assertConsoleErrorDev([
         'Invalid value for prop `unknown` on <div> tag. Either remove ' +
           'it from the element, or pass a string or number value to ' +
