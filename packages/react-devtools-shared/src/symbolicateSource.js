@@ -78,6 +78,7 @@ export async function symbolicateSource(
         try {
           const parsedSourceMap = JSON.parse(sourceMap);
           const consumer = SourceMapConsumer(parsedSourceMap);
+          const functionName = ''; // TODO: Parse function name from sourceContent.
           const {
             sourceURL: possiblyURL,
             line,
@@ -94,7 +95,7 @@ export async function symbolicateSource(
             // sourceMapURL = https://react.dev/script.js.map
             void new URL(possiblyURL); // test if it is a valid URL
 
-            return {sourceURL: possiblyURL, line, column};
+            return [functionName, possiblyURL, line, column];
           } catch (e) {
             // This is not valid URL
             if (
@@ -104,7 +105,7 @@ export async function symbolicateSource(
               possiblyURL.slice(1).startsWith(':\\\\')
             ) {
               // This is an absolute path
-              return {sourceURL: possiblyURL, line, column};
+              return [functionName, possiblyURL, line, column];
             }
 
             // This is a relative path
@@ -113,7 +114,7 @@ export async function symbolicateSource(
               possiblyURL,
               sourceMapURL,
             ).toString();
-            return {sourceURL: absoluteSourcePath, line, column};
+            return [functionName, absoluteSourcePath, line, column];
           }
         } catch (e) {
           return null;
