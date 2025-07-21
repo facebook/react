@@ -1717,6 +1717,16 @@ function renderFunctionComponent<Props>(
   // Apply special cases.
   result = processServerComponentReturnValue(request, task, Component, result);
 
+  if (__DEV__) {
+    // From this point on, the parent is the component we just rendered until we
+    // hit another JSX element.
+    task.debugOwner = componentDebugInfo;
+    // Unfortunately, we don't have a stack frame for this position. Conceptually
+    // it would be the location of the `return` inside component that just rendered.
+    task.debugStack = null;
+    task.debugTask = null;
+  }
+
   // Track this element's key on the Server Component on the keyPath context..
   const prevKeyPath = task.keyPath;
   const prevImplicitSlot = task.implicitSlot;
@@ -2416,13 +2426,32 @@ function emitAsyncSequence(
       env: env,
     };
     if (__DEV__) {
-      if (owner != null) {
-        // $FlowFixMe[cannot-write]
-        debugInfo.owner = owner;
-      }
-      if (stack != null) {
-        // $FlowFixMe[cannot-write]
-        debugInfo.stack = filterStackTrace(request, parseStackTrace(stack, 1));
+      if (owner === null && stack === null) {
+        // We have no location for the await. We can use the JSX callsite of the parent
+        // as the await if this was just passed as a prop.
+        if (task.debugOwner !== null) {
+          // $FlowFixMe[cannot-write]
+          debugInfo.owner = task.debugOwner;
+        }
+        if (task.debugStack !== null) {
+          // $FlowFixMe[cannot-write]
+          debugInfo.stack = filterStackTrace(
+            request,
+            parseStackTrace(task.debugStack, 1),
+          );
+        }
+      } else {
+        if (owner != null) {
+          // $FlowFixMe[cannot-write]
+          debugInfo.owner = owner;
+        }
+        if (stack != null) {
+          // $FlowFixMe[cannot-write]
+          debugInfo.stack = filterStackTrace(
+            request,
+            parseStackTrace(stack, 1),
+          );
+        }
       }
     }
     // We don't have a start time for this await but in case there was no start time emitted
