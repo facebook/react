@@ -258,9 +258,12 @@ export const isReactNativeEnvironment = (): boolean => {
   return window.document == null;
 };
 
-function extractLocation(
-  url: string,
-): null | {sourceURL: string, line?: string, column?: string} {
+function extractLocation(url: string): null | {
+  functionName?: string,
+  sourceURL: string,
+  line?: string,
+  column?: string,
+} {
   if (url.indexOf(':') === -1) {
     return null;
   }
@@ -275,8 +278,9 @@ function extractLocation(
     return null;
   }
 
+  const functionName = ''; // TODO: Parse this in the regexp.
   const [, , sourceURL, line, column] = locationParts;
-  return {sourceURL, line, column};
+  return {functionName, sourceURL, line, column};
 }
 
 const CHROME_STACK_REGEXP = /^\s*at .*(\S+:\d+|\(native\))/m;
@@ -299,13 +303,14 @@ function parseSourceFromChromeStack(
       continue;
     }
 
-    const [, sourceURL, line = '1', column = '1'] = location;
+    const {functionName, sourceURL, line = '1', column = '1'} = location;
 
-    return {
+    return [
+      functionName || '',
       sourceURL,
-      line: parseInt(line, 10),
-      column: parseInt(column, 10),
-    };
+      parseInt(line, 10),
+      parseInt(column, 10),
+    ];
   }
 
   return null;
@@ -329,13 +334,14 @@ function parseSourceFromFirefoxStack(
       continue;
     }
 
-    const [, sourceURL, line = '1', column = '1'] = location;
+    const {functionName, sourceURL, line = '1', column = '1'} = location;
 
-    return {
+    return [
+      functionName || '',
       sourceURL,
-      line: parseInt(line, 10),
-      column: parseInt(column, 10),
-    };
+      parseInt(line, 10),
+      parseInt(column, 10),
+    ];
   }
 
   return null;
@@ -390,11 +396,7 @@ function collectStackTrace(
         // Skip eval etc. without source url. They don't have location.
         continue;
       }
-      result = {
-        sourceURL,
-        line: line,
-        column: col,
-      };
+      result = [name, sourceURL, line, col];
     }
   }
   // At the same time we generate a string stack trace just in case someone
