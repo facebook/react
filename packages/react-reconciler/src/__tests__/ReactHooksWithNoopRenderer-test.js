@@ -1518,6 +1518,28 @@ describe('ReactHooksWithNoopRenderer', () => {
         await waitForAll(['Count: 0']);
       });
 
+      it('should cleanup useEffect on unmount', () => {
+  let didCleanup = false;
+
+  function TestComponent() {
+    React.useEffect(() => {
+      return () => {
+        didCleanup = true;
+      };
+    }, []);
+
+    return null;
+  }
+
+  const root = ReactNoop.createRoot();
+  root.render(<TestComponent />);
+  Scheduler.unstable_flushAll();
+
+  root.unmount();
+  expect(didCleanup).toBe(true);
+});
+
+
       await act(async () => {
         ReactNoop.render(<Counter count={1} />, () =>
           Scheduler.log('Sync effect'),
