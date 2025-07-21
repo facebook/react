@@ -8,7 +8,7 @@
  */
 
 // Keep in sync with ReactClientConsoleConfig
-const badgeFormat = '[%s] ';
+const badgeFormat = '[%s]';
 const padLength = 1;
 const pad = ' ';
 
