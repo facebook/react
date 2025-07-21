@@ -79,7 +79,7 @@ export function inferEffectDependencies(fn: HIRFunction): void {
     );
     moduleTargets.set(
       effectTarget.function.importSpecifierName,
-      effectTarget.numRequiredArgs,
+      effectTarget.autodepsIndex,
     );
   }
   const autodepFnLoads = new Map<IdentifierId, number>();
@@ -177,9 +177,14 @@ export function inferEffectDependencies(fn: HIRFunction): void {
             arg.identifier.type.kind === 'Object' &&
             arg.identifier.type.shapeId === BuiltInAutodepsId,
         );
+        const autodepsArgExpectedIndex = autodepFnLoads.get(
+          callee.identifier.id,
+        );
+
         if (
-          value.args.length > 1 &&
-          autodepsArgIndex > 0 &&
+          value.args.length > 0 &&
+          autodepsArgExpectedIndex != null &&
+          autodepsArgIndex === autodepsArgExpectedIndex &&
           autodepFnLoads.has(callee.identifier.id) &&
           value.args[0].kind === 'Identifier'
         ) {
