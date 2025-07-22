@@ -152,11 +152,12 @@ function createBridgeAndStore() {
         bridge,
         browserTheme: getBrowserTheme(),
         componentsPortalContainer,
+        profilerPortalContainer,
+        editorPortalContainer,
         enabledInspectedElementContextMenu: true,
         fetchFileWithCaching,
         hookNamesModuleLoaderFunction,
         overrideTab,
-        profilerPortalContainer,
         showTabBar: false,
         store,
         warnIfUnsupportedVersionDetected: true,
@@ -255,6 +256,53 @@ function createProfilerPanel() {
       });
     },
   );
+}
+
+function createSourcesEditorPanel() {
+  if (editorPortalContainer) {
+    // Panel is created and user opened it at least once
+    ensureInitialHTMLIsCleared(editorPortalContainer);
+    render();
+
+    return;
+  }
+
+  if (editorPane) {
+    // Panel is created, but wasn't opened yet, so no document is present for it
+    return;
+  }
+
+  const sourcesPanel = chrome.devtools.panels.sources;
+  if (!sourcesPanel) {
+    // Firefox doesn't currently support extending the source panel.
+    return;
+  }
+
+  sourcesPanel.createSidebarPane('Code Editor ⚛', createdPane => {
+    editorPane = createdPane;
+
+    createdPane.setPage('panel.html');
+    createdPane.setHeight('100px');
+
+    createdPane.onShown.addListener(portal => {
+      editorPortalContainer = portal.container;
+      if (editorPortalContainer != null && render) {
+        ensureInitialHTMLIsCleared(editorPortalContainer);
+
+        render();
+        portal.injectStyles(cloneStyleTags);
+
+        logEvent({event_name: 'selected-editor-pane'});
+      }
+    });
+
+    createdPane.onShown.addListener(() => {
+      bridge.emit('extensionEditorPaneShown');
+    });
+    createdPane.onHidden.addListener(() => {
+      bridge.emit('extensionEditorPaneHidden');
+    });
+  });
 }
 
 function performInTabNavigationCleanup() {
@@ -356,6 +404,7 @@ function mountReactDevTools() {
 
   createComponentsPanel();
   createProfilerPanel();
+  createSourcesEditorPanel();
 }
 
 let reactPollingInstance = null;
@@ -394,8 +443,10 @@ let profilingData = null;
 
 let componentsPanel = null;
 let profilerPanel = null;
+let editorPane = null;
 let componentsPortalContainer = null;
 let profilerPortalContainer = null;
+let editorPortalContainer = null;
 
 let mostRecentOverrideTab = null;
 let render = null;
