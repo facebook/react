@@ -52,6 +52,7 @@ import type {HookNamesModuleLoaderFunction} from 'react-devtools-shared/src/devt
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {BrowserTheme} from 'react-devtools-shared/src/frontend/types';
 import type {ReactFunctionLocation} from 'shared/ReactTypes';
+import type {SourceSelection} from './Editor/EditorPane';
 
 export type TabID = 'components' | 'profiler';
 
@@ -99,6 +100,7 @@ export type Props = {
   componentsPortalContainer?: Element,
   profilerPortalContainer?: Element,
   editorPortalContainer?: Element,
+  currentSelectedSource?: null | SourceSelection,
 
   // Loads and parses source maps for function components
   // and extracts hook "names" based on the variables the hook return values get assigned to.
@@ -130,6 +132,7 @@ export default function DevTools({
   componentsPortalContainer,
   profilerPortalContainer,
   editorPortalContainer,
+  currentSelectedSource,
   defaultTab = 'components',
   enabledInspectedElementContextMenu = false,
   fetchFileWithCaching,
@@ -321,6 +324,7 @@ export default function DevTools({
                                 </div>
                                 {editorPortalContainer ? (
                                   <EditorPane
+                                    selectedSource={currentSelectedSource}
                                     portalContainer={editorPortalContainer}
                                   />
                                 ) : null}

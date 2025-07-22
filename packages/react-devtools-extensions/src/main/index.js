@@ -1,5 +1,7 @@
 /* global chrome */
 
+import type {SourceSelection} from 'react-devtools-shared/src/devtools/views/Editor/EditorPane';
+
 import {createElement} from 'react';
 import {flushSync} from 'react-dom';
 import {createRoot} from 'react-dom/client';
@@ -73,12 +75,48 @@ function createBridge() {
     );
   });
 
+  const sourcesPanel = chrome.devtools.panels.sources;
+
   const onBrowserElementSelectionChanged = () =>
     setReactSelectionFromBrowser(bridge);
+  const onBrowserSourceSelectionChanged = (location: {
+    url: string,
+    startLine: number,
+    startColumn: number,
+    endLine: number,
+    endColumn: number,
+  }) => {
+    if (
+      currentSelectedSource === null ||
+      currentSelectedSource.url !== location.url
+    ) {
+      currentSelectedSource = {
+        url: location.url,
+        selectionRef: {
+          // We use 1-based line and column, Chrome provides them 0-based.
+          line: location.startLine + 1,
+          column: location.startColumn + 1,
+        },
+      };
+      // Rerender with the new file selection.
+      render();
+    } else {
+      // Update the ref to the latest position without updating the url. No need to rerender.
+      const selectionRef = currentSelectedSource.selectionRef;
+      selectionRef.line = location.startLine + 1;
+      selectionRef.column = location.startColumn + 1;
+    }
+  };
   const onBridgeShutdown = () => {
     chrome.devtools.panels.elements.onSelectionChanged.removeListener(
       onBrowserElementSelectionChanged,
     );
+    if (sourcesPanel) {
+      currentSelectedSource = null;
+      sourcesPanel.onSelectionChanged.removeListener(
+        onBrowserSourceSelectionChanged,
+      );
+    }
   };
 
   bridge.addListener('shutdown', onBridgeShutdown);
@@ -86,6 +124,11 @@ function createBridge() {
   chrome.devtools.panels.elements.onSelectionChanged.addListener(
     onBrowserElementSelectionChanged,
   );
+  if (sourcesPanel) {
+    sourcesPanel.onSelectionChanged.addListener(
+      onBrowserSourceSelectionChanged,
+    );
+  }
 }
 
 function createBridgeAndStore() {
@@ -154,6 +197,7 @@ function createBridgeAndStore() {
         componentsPortalContainer,
         profilerPortalContainer,
         editorPortalContainer,
+        currentSelectedSource,
         enabledInspectedElementContextMenu: true,
         fetchFileWithCaching,
         hookNamesModuleLoaderFunction,
@@ -451,6 +495,8 @@ let editorPortalContainer = null;
 let mostRecentOverrideTab = null;
 let render = null;
 let root = null;
+
+let currentSelectedSource: null | SourceSelection = null;
 
 let port = null;
 

@@ -12,7 +12,16 @@ import portaledContent from '../portaledContent';
 
 import styles from './EditorPane.css';
 
-function EditorPane(_: {}) {
+export type SourceSelection = {
+  url: string,
+  // The selection is a ref so that we don't have to rerender every keystroke.
+  selectionRef: {
+    line: number,
+    column: number,
+  },
+};
+
+function EditorPane(props: {selectedSource: ?SourceSelection}) {
   return <div className={styles.EditorPane}>Hello World</div>;
 }
 export default (portaledContent(EditorPane): React$ComponentType<{}>);
