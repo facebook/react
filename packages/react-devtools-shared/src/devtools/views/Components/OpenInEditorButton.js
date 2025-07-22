@@ -14,63 +14,13 @@ import ButtonIcon from 'react-devtools-shared/src/devtools/views/ButtonIcon';
 
 import type {ReactFunctionLocation} from 'shared/ReactTypes';
 
+import {checkConditions} from '../Editor/utils';
+
 type Props = {
   editorURL: string,
   source: ReactFunctionLocation,
   symbolicatedSourcePromise: Promise<ReactFunctionLocation | null>,
 };
-
-function checkConditions(
-  editorURL: string,
-  source: ReactFunctionLocation,
-): {url: URL | null, shouldDisableButton: boolean} {
-  try {
-    const url = new URL(editorURL);
-
-    const [, sourceURL, line] = source;
-    let filePath;
-
-    // Check if sourceURL is a correct URL, which has a protocol specified
-    if (sourceURL.startsWith('file:///')) {
-      filePath = new URL(sourceURL).pathname;
-    } else if (sourceURL.includes('://')) {
-      // $FlowFixMe[cannot-resolve-name]
-      if (!__IS_INTERNAL_VERSION__) {
-        // In this case, we can't really determine the path to a file, disable a button
-        return {url: null, shouldDisableButton: true};
-      } else {
-        const endOfSourceMapURLPattern = '.js/';
-        const endOfSourceMapURLIndex = sourceURL.lastIndexOf(
-          endOfSourceMapURLPattern,
-        );
-
-        if (endOfSourceMapURLIndex === -1) {
-          return {url: null, shouldDisableButton: true};
-        } else {
-          filePath = sourceURL.slice(
-            endOfSourceMapURLIndex + endOfSourceMapURLPattern.length,
-            sourceURL.length,
-          );
-        }
-      }
-    } else {
-      filePath = sourceURL;
-    }
-
-    const lineNumberAsString = String(line);
-
-    url.href = url.href
-      .replace('{path}', filePath)
-      .replace('{line}', lineNumberAsString)
-      .replace('%7Bpath%7D', filePath)
-      .replace('%7Bline%7D', lineNumberAsString);
-
-    return {url, shouldDisableButton: false};
-  } catch (e) {
-    // User has provided incorrect editor url
-    return {url: null, shouldDisableButton: true};
-  }
-}
 
 function OpenInEditorButton({
   editorURL,
