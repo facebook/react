@@ -1,0 +1,68 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
+
+import * as React from 'react';
+
+import Button from 'react-devtools-shared/src/devtools/views/Button';
+import ButtonIcon from 'react-devtools-shared/src/devtools/views/ButtonIcon';
+
+import type {SourceSelection} from './EditorPane';
+import type {ReactFunctionLocation} from 'shared/ReactTypes';
+
+import {checkConditions} from './utils';
+
+type Props = {
+  editorURL: string,
+  source: ?SourceSelection,
+};
+
+function OpenInEditorButton({editorURL, source}: Props): React.Node {
+  let disable;
+  if (source == null) {
+    disable = true;
+  } else {
+    const staleLocation: ReactFunctionLocation = [
+      '',
+      source.url,
+      // This is not live but we just use any line/column to validate whether this can be opened.
+      // We'll call checkConditions again when we click it to get the latest line number.
+      source.selectionRef.line,
+      source.selectionRef.column,
+    ];
+    disable = checkConditions(editorURL, staleLocation).shouldDisableButton;
+  }
+  return (
+    <Button
+      disabled={disable}
+      onClick={() => {
+        if (source == null) {
+          return;
+        }
+        const latestLocation: ReactFunctionLocation = [
+          '',
+          source.url,
+          // These might have changed since we last read it.
+          source.selectionRef.line,
+          source.selectionRef.column,
+        ];
+        const {url, shouldDisableButton} = checkConditions(
+          editorURL,
+          latestLocation,
+        );
+        if (!shouldDisableButton) {
+          window.open(url);
+        }
+      }}
+      title="Open in editor">
+      <ButtonIcon type="editor" /> Open in editor
+    </Button>
+  );
+}
+
+export default OpenInEditorButton;

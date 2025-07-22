@@ -8,9 +8,15 @@
  */
 
 import * as React from 'react';
+import {useSyncExternalStore} from 'react';
+
 import portaledContent from '../portaledContent';
 
 import styles from './EditorPane.css';
+
+import OpenInEditorButton from './OpenInEditorButton';
+import {getOpenInEditorURL} from '../../../utils';
+import {LOCAL_STORAGE_OPEN_IN_EDITOR_URL} from '../../../constants';
 
 export type SourceSelection = {
   url: string,
@@ -21,7 +27,25 @@ export type SourceSelection = {
   },
 };
 
-function EditorPane(props: {selectedSource: ?SourceSelection}) {
-  return <div className={styles.EditorPane}>Hello World</div>;
+export type Props = {selectedSource: ?SourceSelection};
+
+function EditorPane({selectedSource}: Props) {
+  const editorURL = useSyncExternalStore(
+    function subscribe(callback) {
+      window.addEventListener(LOCAL_STORAGE_OPEN_IN_EDITOR_URL, callback);
+      return function unsubscribe() {
+        window.removeEventListener(LOCAL_STORAGE_OPEN_IN_EDITOR_URL, callback);
+      };
+    },
+    function getState() {
+      return getOpenInEditorURL();
+    },
+  );
+
+  return (
+    <div className={styles.EditorPane}>
+      <OpenInEditorButton editorURL={editorURL} source={selectedSource} />
+    </div>
+  );
 }
 export default (portaledContent(EditorPane): React$ComponentType<{}>);
