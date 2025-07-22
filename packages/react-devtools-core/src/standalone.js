@@ -26,7 +26,7 @@ import {
 import {localStorageSetItem} from 'react-devtools-shared/src/storage';
 
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
-import type {Source} from 'react-devtools-shared/src/shared/types';
+import type {ReactFunctionLocation} from 'shared/ReactTypes';
 
 export type StatusTypes = 'server-connected' | 'devtools-connected' | 'error';
 export type StatusListener = (message: string, status: StatusTypes) => void;
@@ -144,29 +144,27 @@ async function fetchFileWithCaching(url: string) {
 }
 
 function canViewElementSourceFunction(
-  _source: Source,
-  symbolicatedSource: Source | null,
+  _source: ReactFunctionLocation,
+  symbolicatedSource: ReactFunctionLocation | null,
 ): boolean {
   if (symbolicatedSource == null) {
     return false;
   }
+  const [, sourceURL, ,] = symbolicatedSource;
 
-  return doesFilePathExist(symbolicatedSource.sourceURL, projectRoots);
+  return doesFilePathExist(sourceURL, projectRoots);
 }
 
 function viewElementSourceFunction(
-  _source: Source,
-  symbolicatedSource: Source | null,
+  _source: ReactFunctionLocation,
+  symbolicatedSource: ReactFunctionLocation | null,
 ): void {
   if (symbolicatedSource == null) {
     return;
   }
 
-  launchEditor(
-    symbolicatedSource.sourceURL,
-    symbolicatedSource.line,
-    projectRoots,
-  );
+  const [, sourceURL, line] = symbolicatedSource;
+  launchEditor(sourceURL, line, projectRoots);
 }
 
 function onDisconnected() {

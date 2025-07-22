@@ -50,21 +50,21 @@ import type {FetchFileWithCaching} from './Components/FetchFileWithCachingContex
 import type {HookNamesModuleLoaderFunction} from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {BrowserTheme} from 'react-devtools-shared/src/frontend/types';
-import type {Source} from 'react-devtools-shared/src/shared/types';
+import type {ReactFunctionLocation} from 'shared/ReactTypes';
 
 export type TabID = 'components' | 'profiler';
 
 export type ViewElementSource = (
-  source: Source,
-  symbolicatedSource: Source | null,
+  source: ReactFunctionLocation,
+  symbolicatedSource: ReactFunctionLocation | null,
 ) => void;
 export type ViewAttributeSource = (
   id: number,
   path: Array<string | number>,
 ) => void;
 export type CanViewElementSource = (
-  source: Source,
-  symbolicatedSource: Source | null,
+  source: ReactFunctionLocation,
+  symbolicatedSource: ReactFunctionLocation | null,
 ) => boolean;
 
 export type Props = {

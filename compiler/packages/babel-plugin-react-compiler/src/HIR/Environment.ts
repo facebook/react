@@ -265,21 +265,19 @@ export const EnvironmentConfigSchema = z.object({
    *   {
    *     module: 'react',
    *     imported: 'useEffect',
-   *     numRequiredArgs: 1,
+   *     autodepsIndex: 1,
    *   },{
    *     module: 'MyExperimentalEffectHooks',
    *     imported: 'useExperimentalEffect',
-   *     numRequiredArgs: 2,
+   *     autodepsIndex: 2,
    *   },
    * ]
    * would insert dependencies for calls of `useEffect` imported from `react` and calls of
    * useExperimentalEffect` from `MyExperimentalEffectHooks`.
    *
-   * `numRequiredArgs` tells the compiler the amount of arguments required to append a dependency
-   *  array to the end of the call. With the configuration above, we'd insert dependencies for
-   *  `useEffect` if it is only given a single argument and it would be appended to the argument list.
-   *
-   * numRequiredArgs must always be greater than 0, otherwise there is no function to analyze for dependencies
+   * `autodepsIndex` tells the compiler which index we expect the AUTODEPS to appear in.
+   *  With the configuration above, we'd insert dependencies for `useEffect` if it has two
+   *  arguments, and the second is AUTODEPS.
    *
    * Still experimental.
    */
@@ -288,7 +286,7 @@ export const EnvironmentConfigSchema = z.object({
       z.array(
         z.object({
           function: ExternalFunctionSchema,
-          numRequiredArgs: z.number().min(1, 'numRequiredArgs must be > 0'),
+          autodepsIndex: z.number().min(1, 'autodepsIndex must be > 0'),
         }),
       ),
     )

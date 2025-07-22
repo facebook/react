@@ -14,7 +14,7 @@ import Button from '../Button';
 import ViewElementSourceContext from './ViewElementSourceContext';
 import Skeleton from './Skeleton';
 
-import type {Source as InspectedElementSource} from 'react-devtools-shared/src/shared/types';
+import type {ReactFunctionLocation} from 'shared/ReactTypes';
 import type {
   CanViewElementSource,
   ViewElementSource,
@@ -24,8 +24,8 @@ const {useCallback, useContext} = React;
 
 type Props = {
   canViewSource: ?boolean,
-  source: ?InspectedElementSource,
-  symbolicatedSourcePromise: Promise<InspectedElementSource | null> | null,
+  source: ?ReactFunctionLocation,
+  symbolicatedSourcePromise: Promise<ReactFunctionLocation | null> | null,
 };
 
 function InspectedElementViewSourceButton({
@@ -52,8 +52,8 @@ function InspectedElementViewSourceButton({
 
 type ActualSourceButtonProps = {
   canViewSource: ?boolean,
-  source: ?InspectedElementSource,
-  symbolicatedSourcePromise: Promise<InspectedElementSource | null> | null,
+  source: ?ReactFunctionLocation,
+  symbolicatedSourcePromise: Promise<ReactFunctionLocation | null> | null,
   canViewElementSourceFunction: CanViewElementSource | null,
   viewElementSourceFunction: ViewElementSource | null,
 };

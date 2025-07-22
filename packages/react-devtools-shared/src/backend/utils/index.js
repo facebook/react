@@ -12,7 +12,7 @@ import {compareVersions} from 'compare-versions';
 import {dehydrate} from 'react-devtools-shared/src/hydration';
 import isArray from 'shared/isArray';
 
-import type {Source} from 'react-devtools-shared/src/shared/types';
+import type {ReactFunctionLocation} from 'shared/ReactTypes';
 import type {DehydratedData} from 'react-devtools-shared/src/frontend/types';
 
 export {default as formatWithStyles} from './formatWithStyles';
@@ -258,9 +258,12 @@ export const isReactNativeEnvironment = (): boolean => {
   return window.document == null;
 };
 
-function extractLocation(
-  url: string,
-): null | {sourceURL: string, line?: string, column?: string} {
+function extractLocation(url: string): null | {
+  functionName?: string,
+  sourceURL: string,
+  line?: string,
+  column?: string,
+} {
   if (url.indexOf(':') === -1) {
     return null;
   }
@@ -275,12 +278,15 @@ function extractLocation(
     return null;
   }
 
+  const functionName = ''; // TODO: Parse this in the regexp.
   const [, , sourceURL, line, column] = locationParts;
-  return {sourceURL, line, column};
+  return {functionName, sourceURL, line, column};
 }
 
 const CHROME_STACK_REGEXP = /^\s*at .*(\S+:\d+|\(native\))/m;
-function parseSourceFromChromeStack(stack: string): Source | null {
+function parseSourceFromChromeStack(
+  stack: string,
+): ReactFunctionLocation | null {
   const frames = stack.split('\n');
   // eslint-disable-next-line no-for-of-loops/no-for-of-loops
   for (const frame of frames) {
@@ -297,19 +303,22 @@ function parseSourceFromChromeStack(stack: string): Source | null {
       continue;
     }
 
-    const {sourceURL, line = '1', column = '1'} = location;
+    const {functionName, sourceURL, line = '1', column = '1'} = location;
 
-    return {
+    return [
+      functionName || '',
       sourceURL,
-      line: parseInt(line, 10),
-      column: parseInt(column, 10),
-    };
+      parseInt(line, 10),
+      parseInt(column, 10),
+    ];
   }
 
   return null;
 }
 
-function parseSourceFromFirefoxStack(stack: string): Source | null {
+function parseSourceFromFirefoxStack(
+  stack: string,
+): ReactFunctionLocation | null {
   const frames = stack.split('\n');
   // eslint-disable-next-line no-for-of-loops/no-for-of-loops
   for (const frame of frames) {
@@ -325,13 +334,14 @@ function parseSourceFromFirefoxStack(stack: string): Source | null {
       continue;
     }
 
-    const {sourceURL, line = '1', column = '1'} = location;
+    const {functionName, sourceURL, line = '1', column = '1'} = location;
 
-    return {
+    return [
+      functionName || '',
       sourceURL,
-      line: parseInt(line, 10),
-      column: parseInt(column, 10),
-    };
+      parseInt(line, 10),
+      parseInt(column, 10),
+    ];
   }
 
   return null;
@@ -339,7 +349,7 @@ function parseSourceFromFirefoxStack(stack: string): Source | null {
 
 export function parseSourceFromComponentStack(
   componentStack: string,
-): Source | null {
+): ReactFunctionLocation | null {
   if (componentStack.match(CHROME_STACK_REGEXP)) {
     return parseSourceFromChromeStack(componentStack);
   }
@@ -347,13 +357,13 @@ export function parseSourceFromComponentStack(
   return parseSourceFromFirefoxStack(componentStack);
 }
 
-let collectedLocation: Source | null = null;
+let collectedLocation: ReactFunctionLocation | null = null;
 
 function collectStackTrace(
   error: Error,
   structuredStackTrace: CallSite[],
 ): string {
-  let result: null | Source = null;
+  let result: null | ReactFunctionLocation = null;
   // Collect structured stack traces from the callsites.
   // We mirror how V8 serializes stack frames and how we later parse them.
   for (let i = 0; i < structuredStackTrace.length; i++) {
@@ -386,11 +396,7 @@ function collectStackTrace(
         // Skip eval etc. without source url. They don't have location.
         continue;
       }
-      result = {
-        sourceURL,
-        line: line,
-        column: col,
-      };
+      result = [name, sourceURL, line, col];
     }
   }
   // At the same time we generate a string stack trace just in case someone
@@ -404,7 +410,9 @@ function collectStackTrace(
   return stack;
 }
 
-export function parseSourceFromOwnerStack(error: Error): Source | null {
+export function parseSourceFromOwnerStack(
+  error: Error,
+): ReactFunctionLocation | null {
   // First attempt to collected the structured data using prepareStackTrace.
   collectedLocation = null;
   const previousPrepare = Error.prepareStackTrace;

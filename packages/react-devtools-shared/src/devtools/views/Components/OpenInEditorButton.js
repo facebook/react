@@ -11,22 +11,22 @@ import * as React from 'react';
 import Button from 'react-devtools-shared/src/devtools/views/Button';
 import ButtonIcon from 'react-devtools-shared/src/devtools/views/ButtonIcon';
 
-import type {Source} from 'react-devtools-shared/src/shared/types';
+import type {ReactFunctionLocation} from 'shared/ReactTypes';
 
 type Props = {
   editorURL: string,
-  source: Source,
-  symbolicatedSourcePromise: Promise<Source | null>,
+  source: ReactFunctionLocation,
+  symbolicatedSourcePromise: Promise<ReactFunctionLocation | null>,
 };
 
 function checkConditions(
   editorURL: string,
-  source: Source,
+  source: ReactFunctionLocation,
 ): {url: URL | null, shouldDisableButton: boolean} {
   try {
     const url = new URL(editorURL);
 
-    let sourceURL = source.sourceURL;
+    let [, sourceURL, ,] = source;
 
     // Check if sourceURL is a correct URL, which has a protocol specified
     if (sourceURL.includes('://')) {
