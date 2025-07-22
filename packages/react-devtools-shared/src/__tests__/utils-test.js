@@ -12,7 +12,7 @@ import {
   getDisplayNameForReactElement,
   isPlainObject,
 } from 'react-devtools-shared/src/utils';
-import {stackToComponentSources} from 'react-devtools-shared/src/devtools/utils';
+import {stackToComponentLocations} from 'react-devtools-shared/src/devtools/utils';
 import {
   formatConsoleArguments,
   formatConsoleArgumentsToSingleString,
@@ -63,14 +63,17 @@ describe('utils', () => {
 
     it('should parse a component stack trace', () => {
       expect(
-        stackToComponentSources(`
+        stackToComponentLocations(`
     at Foobar (http://localhost:3000/static/js/bundle.js:103:74)
     at a
     at header
     at div
     at App`),
       ).toEqual([
-        ['Foobar', ['http://localhost:3000/static/js/bundle.js', 103, 74]],
+        [
+          'Foobar',
+          ['Foobar', 'http://localhost:3000/static/js/bundle.js', 103, 74],
+        ],
         ['a', null],
         ['header', null],
         ['div', null],
@@ -315,12 +318,12 @@ describe('utils', () => {
             'at f (https://react.dev/_next/static/chunks/pages/%5B%5B...markdownPath%5D%5D-af2ed613aedf1d57.js:1:8519)\n' +
             'at r (https://react.dev/_next/static/chunks/pages/_app-dd0b77ea7bd5b246.js:1:498)\n',
         ),
-      ).toEqual({
-        sourceURL:
-          'https://react.dev/_next/static/chunks/main-78a3b4c2aa4e4850.js',
-        line: 1,
-        column: 10389,
-      });
+      ).toEqual([
+        '',
+        'https://react.dev/_next/static/chunks/main-78a3b4c2aa4e4850.js',
+        1,
+        10389,
+      ]);
     });
 
     it('should construct the source from highest available frame', () => {
@@ -338,12 +341,12 @@ describe('utils', () => {
             '    at tt (https://react.dev/_next/static/chunks/363-3c5f1b553b6be118.js:1:165520)\n' +
             '    at f (https://react.dev/_next/static/chunks/pages/%5B%5B...markdownPath%5D%5D-af2ed613aedf1d57.js:1:8519)',
         ),
-      ).toEqual({
-        sourceURL:
-          'https://react.dev/_next/static/chunks/848-122f91e9565d9ffa.js',
-        line: 5,
-        column: 9236,
-      });
+      ).toEqual([
+        '',
+        'https://react.dev/_next/static/chunks/848-122f91e9565d9ffa.js',
+        5,
+        9236,
+      ]);
     });
 
     it('should construct the source from frame, which has only url specified', () => {
@@ -353,12 +356,12 @@ describe('utils', () => {
             '    at a\n' +
             '    at https://react.dev/_next/static/chunks/848-122f91e9565d9ffa.js:5:9236\n',
         ),
-      ).toEqual({
-        sourceURL:
-          'https://react.dev/_next/static/chunks/848-122f91e9565d9ffa.js',
-        line: 5,
-        column: 9236,
-      });
+      ).toEqual([
+        '',
+        'https://react.dev/_next/static/chunks/848-122f91e9565d9ffa.js',
+        5,
+        9236,
+      ]);
     });
 
     it('should parse sourceURL correctly if it includes parentheses', () => {
@@ -368,12 +371,12 @@ describe('utils', () => {
             '    at Router (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/app-router.js:181:11)\n' +
             '    at ErrorBoundaryHandler (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/error-boundary.js:114:9)',
         ),
-      ).toEqual({
-        sourceURL:
-          'webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/hot-reloader-client.js',
-        line: 307,
-        column: 11,
-      });
+      ).toEqual([
+        '',
+        'webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/hot-reloader-client.js',
+        307,
+        11,
+      ]);
     });
 
     it('should support Firefox stack', () => {
@@ -383,12 +386,12 @@ describe('utils', () => {
             'f@https://react.dev/_next/static/chunks/pages/%5B%5B...markdownPath%5D%5D-af2ed613aedf1d57.js:1:8535\n' +
             'r@https://react.dev/_next/static/chunks/pages/_app-dd0b77ea7bd5b246.js:1:513',
         ),
-      ).toEqual({
-        sourceURL:
-          'https://react.dev/_next/static/chunks/363-3c5f1b553b6be118.js',
-        line: 1,
-        column: 165558,
-      });
+      ).toEqual([
+        '',
+        'https://react.dev/_next/static/chunks/363-3c5f1b553b6be118.js',
+        1,
+        165558,
+      ]);
     });
   });
 
@@ -398,11 +401,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.f = f;
 function f() { }
 //# sourceMappingURL=`;
-    const result = {
-      column: 16,
-      line: 1,
-      sourceURL: 'http://test/a.mts',
-    };
+    const result = ['', 'http://test/a.mts', 1, 16];
     const fs = {
       'http://test/a.mts': `export function f() {}`,
       'http://test/a.mjs.map': `{"version":3,"file":"a.mjs","sourceRoot":"","sources":["a.mts"],"names":[],"mappings":";;AAAA,cAAsB;AAAtB,SAAgB,CAAC,KAAI,CAAC"}`,
