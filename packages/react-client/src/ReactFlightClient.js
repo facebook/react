@@ -52,6 +52,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 
 import {
+  getSourceURL,
   resolveClientReference,
   resolveServerReference,
   preloadModule,
@@ -2752,14 +2753,6 @@ function createFakeFunction<T>(
     code = comment + code;
   }
 
-  if (filename.startsWith('/')) {
-    // If the filename starts with `/` we assume that it is a file system file
-    // rather than relative to the current host. Since on the server fully qualified
-    // stack traces use the file path.
-    // TODO: What does this look like on Windows?
-    filename = 'file://' + filename;
-  }
-
   if (sourceMap) {
     // We use the prefix rsc://React/ to separate these from other files listed in
     // the Chrome DevTools. We need a "host name" and not just a protocol because
@@ -2777,7 +2770,7 @@ function createFakeFunction<T>(
       fakeFunctionIdx++;
     code += '\n//# sourceMappingURL=' + sourceMap;
   } else if (filename) {
-    code += '\n//# sourceURL=' + encodeURI(filename);
+    code += '\n//# sourceURL=' + getSourceURL(filename);
   } else {
     code += '\n//# sourceURL=<anonymous>';
   }

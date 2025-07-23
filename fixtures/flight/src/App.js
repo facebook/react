@@ -21,9 +21,10 @@ import {Note} from './cjs/Note.js';
 
 import {GenerateImage} from './GenerateImage.js';
 
-import {like, greet, increment} from './actions.js';
+import {like, greet, increment, triggerServerReplayError} from './actions.js';
 
 import {getServerState} from './ServerState.js';
+import {ReplayServerErrorOnDemand} from './ReplayServerErrorOnDemand.js';
 
 const promisedText = new Promise(resolve =>
   setTimeout(() => resolve('deferred text'), 50)
@@ -149,6 +150,7 @@ export default async function App({prerender, noCache}) {
           <Counter incrementAction={increment} />
           <Counter2 incrementAction={increment} />
           <Counter3 incrementAction={increment} />
+          <ReplayServerErrorOnDemand action={triggerServerReplayError} />
           <ul>
             {todos.map(todo => (
               <li key={todo.id}>{todo.text}</li>

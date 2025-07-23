@@ -52,3 +52,5 @@ export const bindToConsole = $$$config.bindToConsole;
 
 export const rendererVersion = $$$config.rendererVersion;
 export const rendererPackageName = $$$config.rendererPackageName;
+
+export const getSourceURL = $$$config.getSourceURL;

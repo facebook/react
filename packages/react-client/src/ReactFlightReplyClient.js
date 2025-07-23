@@ -39,7 +39,7 @@ import getPrototypeOf from 'shared/getPrototypeOf';
 
 const ObjectPrototype = Object.prototype;
 
-import {usedWithSSR} from './ReactFlightClientConfig';
+import {getSourceURL, usedWithSSR} from './ReactFlightClientConfig';
 
 type ReactJSONValue =
   | string
@@ -1086,14 +1086,6 @@ function createFakeServerFunction<A: Iterable<any>, T>(
       '})';
   }
 
-  if (filename.startsWith('/')) {
-    // If the filename starts with `/` we assume that it is a file system file
-    // rather than relative to the current host. Since on the server fully qualified
-    // stack traces use the file path.
-    // TODO: What does this look like on Windows?
-    filename = 'file://' + filename;
-  }
-
   if (sourceMap) {
     // We use the prefix rsc://React/ to separate these from other files listed in
     // the Chrome DevTools. We need a "host name" and not just a protocol because
@@ -1111,7 +1103,7 @@ function createFakeServerFunction<A: Iterable<any>, T>(
       fakeServerFunctionIdx++;
     code += '\n//# sourceMappingURL=' + sourceMap;
   } else if (filename) {
-    code += '\n//# sourceURL=' + filename;
+    code += '\n//# sourceURL=' + getSourceURL(filename);
   }
 
   try {
