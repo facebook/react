@@ -11,10 +11,19 @@ import * as React from 'react';
 
 import styles from './EditorSettings.css';
 
+import CodeEditorOptions from '../Settings/CodeEditorOptions';
+
 type Props = {};
 
 function EditorSettings(_: Props): React.Node {
-  return <div className={styles.EditorSettings}>Settings</div>;
+  return (
+    <div className={styles.EditorSettings}>
+      <label>
+        <div className={styles.EditorLabel}>Editor</div>
+        <CodeEditorOptions />
+      </label>
+    </div>
+  );
 }
 
 export default EditorSettings;
