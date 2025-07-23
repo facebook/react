@@ -26,10 +26,6 @@
   margin: 0.125rem 0.25rem 0.125rem 0;
 }
 
-.OpenInURLSetting {
-  margin: 0.5rem 0;
-}
-
 .OptionGroup {
   display: inline-flex;
   flex-direction: row;

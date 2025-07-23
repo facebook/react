@@ -1,0 +1,28 @@
+.EditorPane {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-family-sans);
+  align-items: center;
+  padding: 0.5rem;
+}
+
+.EditorPane, .EditorPane * {
+  box-sizing: border-box;
+  -webkit-font-smoothing: var(--font-smoothing);
+}
+
+.VRule {
+  height: 20px;
+  width: 1px;
+  flex: 0 0 1px;
+  margin: 0 0.5rem;
+  background-color: var(--color-border);
+}
+
+.WideButton {
+  flex: 1 0 auto;
+  display: flex;
+}

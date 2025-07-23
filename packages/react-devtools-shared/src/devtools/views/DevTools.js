@@ -24,6 +24,7 @@ import {
 import Components from './Components/Components';
 import Profiler from './Profiler/Profiler';
 import TabBar from './TabBar';
+import EditorPane from './Editor/EditorPane';
 import {SettingsContextController} from './Settings/SettingsContext';
 import {TreeContextController} from './Components/TreeContext';
 import ViewElementSourceContext from './Components/ViewElementSourceContext';
@@ -51,6 +52,7 @@ import type {HookNamesModuleLoaderFunction} from 'react-devtools-shared/src/devt
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {BrowserTheme} from 'react-devtools-shared/src/frontend/types';
 import type {ReactFunctionLocation} from 'shared/ReactTypes';
+import type {SourceSelection} from './Editor/EditorPane';
 
 export type TabID = 'components' | 'profiler';
 
@@ -97,6 +99,8 @@ export type Props = {
   // but individual tabs (e.g. Components, Profiling) can be rendered into portals within their browser panels.
   componentsPortalContainer?: Element,
   profilerPortalContainer?: Element,
+  editorPortalContainer?: Element,
+  currentSelectedSource?: null | SourceSelection,
 
   // Loads and parses source maps for function components
   // and extracts hook "names" based on the variables the hook return values get assigned to.
@@ -126,12 +130,14 @@ export default function DevTools({
   browserTheme = 'light',
   canViewElementSourceFunction,
   componentsPortalContainer,
+  profilerPortalContainer,
+  editorPortalContainer,
+  currentSelectedSource,
   defaultTab = 'components',
   enabledInspectedElementContextMenu = false,
   fetchFileWithCaching,
   hookNamesModuleLoaderFunction,
   overrideTab,
-  profilerPortalContainer,
   showTabBar = false,
   store,
   warnIfLegacyBackendDetected = false,
@@ -316,6 +322,12 @@ export default function DevTools({
                                     />
                                   </div>
                                 </div>
+                                {editorPortalContainer ? (
+                                  <EditorPane
+                                    selectedSource={currentSelectedSource}
+                                    portalContainer={editorPortalContainer}
+                                  />
+                                ) : null}
                               </ThemeProvider>
                             </InspectedElementContextController>
                           </TimelineContextController>
