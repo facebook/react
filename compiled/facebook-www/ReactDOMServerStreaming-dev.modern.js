@@ -4374,7 +4374,7 @@ __DEV__ &&
           : error.splice(
               0,
               0,
-              "%c%s%c ",
+              "%c%s%c",
               "background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px",
               " " + JSCompiler_inline_result + " ",
               ""
