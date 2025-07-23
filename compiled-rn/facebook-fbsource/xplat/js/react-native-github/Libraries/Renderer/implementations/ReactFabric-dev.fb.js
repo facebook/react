@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<01d71e06c8af6997c756b4ceb736bfa3>>
+ * @generated SignedSource<<ee346f84cfe6cb08574ff4e7aacf6dd4>>
  */
 
 "use strict";
@@ -16336,7 +16336,7 @@ __DEV__ &&
             ].slice(0)),
             "string" === typeof error[0]
               ? error.splice(0, 1, "[%s] " + error[0], " " + errorInfo + " ")
-              : error.splice(0, 0, "[%s] ", " " + errorInfo + " "),
+              : error.splice(0, 0, "[%s]", " " + errorInfo + " "),
             error.unshift(console),
             (error = bind.apply(console.error, error)),
             error())
@@ -19226,10 +19226,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-074e9277-20250721",
+        version: "19.2.0-native-fb-f6fb1a07-20250723",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-074e9277-20250721"
+        reconcilerVersion: "19.2.0-native-fb-f6fb1a07-20250723"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
