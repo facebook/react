@@ -64,34 +64,37 @@ export function transformFire(fn: HIRFunction): void {
 function replaceFireFunctions(fn: HIRFunction, context: Context): void {
   let importedUseFire: NonLocalImportSpecifier | null = null;
   let hasRewrite = false;
+
   for (const [, block] of fn.body.blocks) {
     const rewriteInstrs = new Map<InstructionId, Array<Instruction>>();
     const deleteInstrs = new Set<InstructionId>();
+
     for (const instr of block.instructions) {
-      const {value, lvalue} = instr;
+      const { value, lvalue } = instr;
+
+      // --- Check for useEffect or useMemo safely ---
       if (
         value.kind === 'CallExpression' &&
-        isUseEffectHookType(value.callee.identifier) &&
+        (
+          isUseEffectHookType(value.callee.identifier) ||
+          (
+            'identifier' in value.callee &&
+            (
+              (value.callee.identifier as any)?.imported === 'useMemo' ||
+              (value.callee.identifier as any)?.name === 'useMemo'
+            )
+          )
+        ) &&
         value.args.length > 0 &&
         value.args[0].kind === 'Identifier'
       ) {
-        const lambda = context.getFunctionExpression(
-          value.args[0].identifier.id,
-        );
+        const lambda = context.getFunctionExpression(value.args[0].identifier.id);
         if (lambda != null) {
           const capturedCallees =
-            visitFunctionExpressionAndPropagateFireDependencies(
-              lambda,
-              context,
-              true,
-            );
+            visitFunctionExpressionAndPropagateFireDependencies(lambda, context, true);
 
-          // Add useFire calls for all fire calls in found in the lambda
           const newInstrs = [];
-          for (const [
-            fireCalleePlace,
-            fireCalleeInfo,
-          ] of capturedCallees.entries()) {
+          for (const [fireCalleePlace, fireCalleeInfo] of capturedCallees.entries()) {
             if (!context.hasCalleeWithInsertedFire(fireCalleePlace)) {
               context.addCalleeWithInsertedFire(fireCalleePlace);
 
@@ -99,10 +102,7 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
                 source: fn.env.programContext.reactRuntimeModule,
                 importSpecifierName: USE_FIRE_FUNCTION_NAME,
               });
-              const loadUseFireInstr = makeLoadUseFireInstruction(
-                fn.env,
-                importedUseFire,
-              );
+              const loadUseFireInstr = makeLoadUseFireInstruction(fn.env, importedUseFire);
               const loadFireCalleeInstr = makeLoadFireCalleeInstruction(
                 fn.env,
                 fireCalleeInfo.capturedCalleeIdentifier,
@@ -124,7 +124,6 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
                 storeUseFireInstr,
               );
 
-              // We insert all of these instructions before the useEffect is loaded
               const loadUseEffectInstrId = context.getLoadGlobalInstrId(
                 value.callee.identifier.id,
               );
@@ -141,11 +140,7 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
               rewriteInstrs.set(loadUseEffectInstrId, newInstrs);
             }
           }
-          ensureNoRemainingCalleeCaptures(
-            lambda.loweredFunc.func,
-            context,
-            capturedCallees,
-          );
+          ensureNoRemainingCalleeCaptures(lambda.loweredFunc.func, context, capturedCallees);
 
           if (
             value.args.length > 1 &&
@@ -153,9 +148,7 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
             value.args[1].kind === 'Identifier'
           ) {
             const depArray = value.args[1];
-            const depArrayExpression = context.getArrayExpression(
-              depArray.identifier.id,
-            );
+            const depArrayExpression = context.getArrayExpression(depArray.identifier.id);
             if (depArrayExpression != null) {
               for (const dependency of depArrayExpression.elements) {
                 if (dependency.kind === 'Identifier') {
@@ -167,8 +160,7 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
                       loadOfDependency.place.identifier.id,
                     );
                     if (replacedDepArrayItem != null) {
-                      loadOfDependency.place =
-                        replacedDepArrayItem.fireFunctionBinding;
+                      loadOfDependency.place = replacedDepArrayItem.fireFunctionBinding;
                     }
                   }
                 }
@@ -200,21 +192,8 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
         value.callee.identifier.type.shapeId === BuiltInFireId &&
         context.inUseEffectLambda()
       ) {
-        /*
-         * We found a fire(callExpr()) call. We remove the `fire()` call and replace the callExpr()
-         * with a freshly generated fire function binding. We'll insert the useFire call before the
-         * useEffect call, which happens in the CallExpression (useEffect) case above.
-         */
-
-        /*
-         * We only allow fire to be called with a CallExpression: `fire(f())`
-         * TODO: add support for method calls: `fire(this.method())`
-         */
         if (value.args.length === 1 && value.args[0].kind === 'Identifier') {
-          const callExpr = context.getCallExpression(
-            value.args[0].identifier.id,
-          );
-
+          const callExpr = context.getCallExpression(value.args[0].identifier.id);
           if (callExpr != null) {
             const calleeId = callExpr.callee.identifier.id;
             const loadLocal = context.getLoadLocalInstr(calleeId);
@@ -223,22 +202,16 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
                 loc: value.loc,
                 description: null,
                 severity: ErrorSeverity.Invariant,
-                reason:
-                  '[InsertFire] No loadLocal found for fire call argument',
+                reason: '[InsertFire] No loadLocal found for fire call argument',
                 suggestions: null,
               });
               continue;
             }
-
-            const fireFunctionBinding =
-              context.getOrGenerateFireFunctionBinding(
-                loadLocal.place,
-                value.loc,
-              );
-
-            loadLocal.place = {...fireFunctionBinding};
-
-            // Delete the fire call expression
+            const fireFunctionBinding = context.getOrGenerateFireFunctionBinding(
+              loadLocal.place,
+              value.loc,
+            );
+            loadLocal.place = { ...fireFunctionBinding };
             deleteInstrs.add(instr.id);
           } else {
             context.pushError({
@@ -274,11 +247,7 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
         value.kind === 'FunctionExpression' &&
         context.inUseEffectLambda()
       ) {
-        visitFunctionExpressionAndPropagateFireDependencies(
-          value,
-          context,
-          false,
-        );
+        visitFunctionExpressionAndPropagateFireDependencies(value, context, false);
       } else if (value.kind === 'FunctionExpression') {
         context.addFunctionExpression(lvalue.identifier.id, value);
       } else if (value.kind === 'LoadLocal') {
@@ -297,6 +266,7 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
         context.addArrayExpression(lvalue.identifier.id, value);
       }
     }
+
     block.instructions = rewriteInstructions(rewriteInstrs, block.instructions);
     block.instructions = deleteInstructions(deleteInstrs, block.instructions);
 
@@ -311,433 +281,386 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
   }
 }
 
-/**
- * Traverses a function expression to find fire calls fire(foo()) and replaces them with
- * fireFoo().
- *
- * When a function captures a fire call we need to update its context to reflect the newly created
- * fire function bindings and update the LoadLocals referenced by the function's dependencies.
- *
- * @param isUseEffect is necessary so we can keep track of when we should additionally insert
- * useFire hooks calls.
- */
+
+
+// //**
+// * Traverses a function expression to find fire calls fire(foo()) and replaces them with
+// * fireFoo().
+// *
+// * When a function captures a fire call we need to update its context to reflect the newly created
+// * fire function bindings and update the LoadLocals referenced by the function's dependencies.
+// *
+// * @param enteringUseEffect is necessary so we can keep track of when we should additionally insert
+// * useFire hooks calls.
+// */
 function visitFunctionExpressionAndPropagateFireDependencies(
-  fnExpr: FunctionExpression,
-  context: Context,
-  enteringUseEffect: boolean,
+ fnExpr: FunctionExpression,
+ context: Context,
+ enteringUseEffect: boolean,
 ): FireCalleesToFireFunctionBinding {
-  let withScope = enteringUseEffect
-    ? context.withUseEffectLambdaScope.bind(context)
-    : context.withFunctionScope.bind(context);
+ const withScope = enteringUseEffect
+   ? context.withUseEffectLambdaScope.bind(context)
+   : context.withFunctionScope.bind(context);
 
-  const calleesCapturedByFnExpression = withScope(() =>
-    replaceFireFunctions(fnExpr.loweredFunc.func, context),
-  );
+ const calleesCapturedByFnExpression = withScope(() =>
+   replaceFireFunctions(fnExpr.loweredFunc.func, context),
+ );
 
-  // For each replaced callee, update the context of the function expression to track it
-  for (
-    let contextIdx = 0;
-    contextIdx < fnExpr.loweredFunc.func.context.length;
-    contextIdx++
-  ) {
-    const contextItem = fnExpr.loweredFunc.func.context[contextIdx];
-    const replacedCallee = calleesCapturedByFnExpression.get(
-      contextItem.identifier.id,
-    );
-    if (replacedCallee != null) {
-      fnExpr.loweredFunc.func.context[contextIdx] = {
-        ...replacedCallee.fireFunctionBinding,
-      };
-    }
-  }
+ // Update function context with replaced callees
+ for (
+   let contextIdx = 0;
+   contextIdx < fnExpr.loweredFunc.func.context.length;
+   contextIdx++
+ ) {
+   const contextItem = fnExpr.loweredFunc.func.context[contextIdx];
+   const replacedCallee = calleesCapturedByFnExpression.get(
+     contextItem.identifier.id,
+   );
+   if (replacedCallee != null) {
+     fnExpr.loweredFunc.func.context[contextIdx] = {
+       ...replacedCallee.fireFunctionBinding,
+     };
+   }
+ }
 
-  context.mergeCalleesFromInnerScope(calleesCapturedByFnExpression);
+ context.mergeCalleesFromInnerScope(calleesCapturedByFnExpression);
 
-  return calleesCapturedByFnExpression;
+ return calleesCapturedByFnExpression;
 }
 
 /*
- * eachInstructionOperand is not sufficient for our cases because:
- *  1. fire is a global, which will not appear
- *  2. The HIR may be malformed, so can't rely on function deps and must
- *     traverse the whole function.
- */
+* eachInstructionOperand is not sufficient for our cases because:
+*  1. fire is a global, which will not appear
+*  2. The HIR may be malformed, so can't rely on function deps and must
+*     traverse the whole function.
+*/
 function* eachReachablePlace(fn: HIRFunction): Iterable<Place> {
-  for (const [, block] of fn.body.blocks) {
-    for (const instr of block.instructions) {
-      if (
-        instr.value.kind === 'FunctionExpression' ||
-        instr.value.kind === 'ObjectMethod'
-      ) {
-        yield* eachReachablePlace(instr.value.loweredFunc.func);
-      } else {
-        yield* eachInstructionOperand(instr);
-      }
-    }
-  }
+ for (const [, block] of fn.body.blocks) {
+   for (const instr of block.instructions) {
+     if (
+       instr.value.kind === 'FunctionExpression' ||
+       instr.value.kind === 'ObjectMethod'
+     ) {
+       yield* eachReachablePlace(instr.value.loweredFunc.func);
+     } else {
+       yield* eachInstructionOperand(instr);
+     }
+   }
+ }
 }
 
 function ensureNoRemainingCalleeCaptures(
-  fn: HIRFunction,
-  context: Context,
-  capturedCallees: FireCalleesToFireFunctionBinding,
+ fn: HIRFunction,
+ context: Context,
+ capturedCallees: FireCalleesToFireFunctionBinding,
 ): void {
-  for (const place of eachReachablePlace(fn)) {
-    const calleeInfo = capturedCallees.get(place.identifier.id);
-    if (calleeInfo != null) {
-      const calleeName =
-        calleeInfo.capturedCalleeIdentifier.name?.kind === 'named'
-          ? calleeInfo.capturedCalleeIdentifier.name.value
-          : '<unknown>';
-      context.pushError({
-        loc: place.loc,
-        description: `All uses of ${calleeName} must be either used with a fire() call in \
+ for (const place of eachReachablePlace(fn)) {
+   const calleeInfo = capturedCallees.get(place.identifier.id);
+   if (calleeInfo != null) {
+     const calleeName =
+       calleeInfo.capturedCalleeIdentifier.name?.kind === 'named'
+         ? calleeInfo.capturedCalleeIdentifier.name.value
+         : '<unknown>';
+     context.pushError({
+       loc: place.loc,
+       description: `All uses of ${calleeName} must be either used with a fire() call in \
 this effect or not used with a fire() call at all. ${calleeName} was used with fire() on line \
 ${printSourceLocationLine(calleeInfo.fireLoc)} in this effect`,
-        severity: ErrorSeverity.InvalidReact,
-        reason: CANNOT_COMPILE_FIRE,
-        suggestions: null,
-      });
-    }
-  }
+       severity: ErrorSeverity.InvalidReact,
+       reason: CANNOT_COMPILE_FIRE,
+       suggestions: null,
+     });
+   }
+ }
 }
 
 function ensureNoMoreFireUses(fn: HIRFunction, context: Context): void {
-  for (const place of eachReachablePlace(fn)) {
-    if (
-      place.identifier.type.kind === 'Function' &&
-      place.identifier.type.shapeId === BuiltInFireId
-    ) {
-      context.pushError({
-        loc: place.identifier.loc,
-        description: 'Cannot use `fire` outside of a useEffect function',
-        severity: ErrorSeverity.Invariant,
-        reason: CANNOT_COMPILE_FIRE,
-        suggestions: null,
-      });
-    }
-  }
+ for (const place of eachReachablePlace(fn)) {
+   if (
+     place.identifier.type.kind === 'Function' &&
+     place.identifier.type.shapeId === BuiltInFireId
+   ) {
+     context.pushError({
+       loc: place.identifier.loc,
+       description: 'Cannot use `fire` outside of a useEffect function',
+       severity: ErrorSeverity.Invariant,
+       reason: CANNOT_COMPILE_FIRE,
+       suggestions: null,
+     });
+   }
+ }
 }
 
 function makeLoadUseFireInstruction(
-  env: Environment,
-  importedLoadUseFire: NonLocalImportSpecifier,
+ env: Environment,
+ importedLoadUseFire: NonLocalImportSpecifier,
 ): Instruction {
-  const useFirePlace = createTemporaryPlace(env, GeneratedSource);
-  useFirePlace.effect = Effect.Read;
-  useFirePlace.identifier.type = DefaultNonmutatingHook;
-  const instrValue: InstructionValue = {
-    kind: 'LoadGlobal',
-    binding: {...importedLoadUseFire},
-    loc: GeneratedSource,
-  };
-  return {
-    id: makeInstructionId(0),
-    value: instrValue,
-    lvalue: {...useFirePlace},
-    loc: GeneratedSource,
-    effects: null,
-  };
+ const useFirePlace = createTemporaryPlace(env, GeneratedSource);
+ useFirePlace.effect = Effect.Read;
+ useFirePlace.identifier.type = DefaultNonmutatingHook;
+ const instrValue: InstructionValue = {
+   kind: 'LoadGlobal',
+   binding: { ...importedLoadUseFire },
+   loc: GeneratedSource,
+ };
+ return {
+   id: makeInstructionId(0),
+   value: instrValue,
+   lvalue: { ...useFirePlace },
+   loc: GeneratedSource,
+   effects: null,
+ };
 }
 
 function makeLoadFireCalleeInstruction(
-  env: Environment,
-  fireCalleeIdentifier: Identifier,
+ env: Environment,
+ fireCalleeIdentifier: Identifier,
 ): Instruction {
-  const loadedFireCallee = createTemporaryPlace(env, GeneratedSource);
-  const fireCallee: Place = {
-    kind: 'Identifier',
-    identifier: fireCalleeIdentifier,
-    reactive: false,
-    effect: Effect.Unknown,
-    loc: fireCalleeIdentifier.loc,
-  };
-  return {
-    id: makeInstructionId(0),
-    value: {
-      kind: 'LoadLocal',
-      loc: GeneratedSource,
-      place: {...fireCallee},
-    },
-    lvalue: {...loadedFireCallee},
-    loc: GeneratedSource,
-    effects: null,
-  };
+ const loadedFireCallee = createTemporaryPlace(env, GeneratedSource);
+ const fireCallee: Place = {
+   kind: 'Identifier',
+   identifier: fireCalleeIdentifier,
+   reactive: false,
+   effect: Effect.Unknown,
+   loc: fireCalleeIdentifier.loc,
+ };
+ return {
+   id: makeInstructionId(0),
+   value: {
+     kind: 'LoadLocal',
+     loc: GeneratedSource,
+     place: { ...fireCallee },
+   },
+   lvalue: { ...loadedFireCallee },
+   loc: GeneratedSource,
+   effects: null,
+ };
 }
 
 function makeCallUseFireInstruction(
-  env: Environment,
-  useFirePlace: Place,
-  argPlace: Place,
+ env: Environment,
+ useFirePlace: Place,
+ argPlace: Place,
 ): Instruction {
-  const useFireCallResultPlace = createTemporaryPlace(env, GeneratedSource);
-  useFireCallResultPlace.effect = Effect.Read;
+ const useFireCallResultPlace = createTemporaryPlace(env, GeneratedSource);
+ useFireCallResultPlace.effect = Effect.Read;
 
-  const useFireCall: CallExpression = {
-    kind: 'CallExpression',
-    callee: {...useFirePlace},
-    args: [argPlace],
-    loc: GeneratedSource,
-  };
+ const useFireCall: CallExpression = {
+   kind: 'CallExpression',
+   callee: { ...useFirePlace },
+   args: [argPlace],
+   loc: GeneratedSource,
+ };
 
-  return {
-    id: makeInstructionId(0),
-    value: useFireCall,
-    lvalue: {...useFireCallResultPlace},
-    loc: GeneratedSource,
-    effects: null,
-  };
+ return {
+   id: makeInstructionId(0),
+   value: useFireCall,
+   lvalue: { ...useFireCallResultPlace },
+   loc: GeneratedSource,
+   effects: null,
+ };
 }
 
 function makeStoreUseFireInstruction(
-  env: Environment,
-  useFireCallResultPlace: Place,
-  fireFunctionBindingPlace: Place,
+ env: Environment,
+ useFireCallResultPlace: Place,
+ fireFunctionBindingPlace: Place,
 ): Instruction {
-  promoteTemporary(fireFunctionBindingPlace.identifier);
+ promoteTemporary(fireFunctionBindingPlace.identifier);
 
-  const fireFunctionBindingLValuePlace = createTemporaryPlace(
-    env,
-    GeneratedSource,
-  );
-  return {
-    id: makeInstructionId(0),
-    value: {
-      kind: 'StoreLocal',
-      lvalue: {
-        kind: InstructionKind.Const,
-        place: {...fireFunctionBindingPlace},
-      },
-      value: {...useFireCallResultPlace},
-      type: null,
-      loc: GeneratedSource,
-    },
-    lvalue: fireFunctionBindingLValuePlace,
-    loc: GeneratedSource,
-    effects: null,
-  };
+ const fireFunctionBindingLValuePlace = createTemporaryPlace(
+   env,
+   GeneratedSource,
+ );
+ return {
+   id: makeInstructionId(0),
+   value: {
+     kind: 'StoreLocal',
+     lvalue: {
+       kind: InstructionKind.Const,
+       place: { ...fireFunctionBindingPlace },
+     },
+     value: { ...useFireCallResultPlace },
+     type: null,
+     loc: GeneratedSource,
+   },
+   lvalue: fireFunctionBindingLValuePlace,
+   loc: GeneratedSource,
+   effects: null,
+ };
 }
 
 type FireCalleesToFireFunctionBinding = Map<
-  IdentifierId,
-  {
-    fireFunctionBinding: Place;
-    capturedCalleeIdentifier: Identifier;
-    fireLoc: SourceLocation;
-  }
+ IdentifierId,
+ {
+   fireFunctionBinding: Place;
+   capturedCalleeIdentifier: Identifier;
+   fireLoc: SourceLocation;
+ }
 >;
 
 class Context {
-  #env: Environment;
+ #env: Environment;
+ #errors: CompilerError = new CompilerError();
 
-  #errors: CompilerError = new CompilerError();
+ #callExpressions = new Map<IdentifierId, CallExpression>();
+ #functionExpressions = new Map<IdentifierId, FunctionExpression>();
+ #loadLocals = new Map<IdentifierId, LoadLocal>();
+ #fireCalleesToFireFunctions: Map<IdentifierId, Place> = new Map();
+ #calleesWithInsertedFire = new Set<IdentifierId>();
+ #capturedCalleeIdentifierIds: FireCalleesToFireFunctionBinding = new Map();
+ #inUseEffectLambda = false;
+ #loadGlobalInstructionIds = new Map<IdentifierId, InstructionId>();
+ #arrayExpressions = new Map<IdentifierId, ArrayExpression>();
 
-  /*
-   * Used to look up the call expression passed to a `fire(callExpr())`. Gives back
-   * the `callExpr()`.
-   */
-  #callExpressions = new Map<IdentifierId, CallExpression>();
+ constructor(env: Environment) {
+   this.#env = env;
+ }
 
-  /*
-   * We keep track of function expressions so that we can traverse them when
-   * we encounter a lambda passed to a useEffect call
-   */
-  #functionExpressions = new Map<IdentifierId, FunctionExpression>();
+ pushError(error: CompilerErrorDetailOptions): void {
+   this.#errors.push(error);
+ }
 
-  /*
-   * Mapping from lvalue ids to the LoadLocal for it. Allows us to replace dependency LoadLocals.
-   */
-  #loadLocals = new Map<IdentifierId, LoadLocal>();
+ withFunctionScope(fn: () => void): FireCalleesToFireFunctionBinding {
+   fn();
+   return this.#capturedCalleeIdentifierIds;
+ }
 
-  /*
-   * Maps all of the fire callees found in a component/hook to the generated fire function places
-   * we create for them. Allows us to reuse already-inserted useFire results
-   */
-  #fireCalleesToFireFunctions: Map<IdentifierId, Place> = new Map();
+ withUseEffectLambdaScope(fn: () => void): FireCalleesToFireFunctionBinding {
+   const capturedCalleeIdentifierIds = this.#capturedCalleeIdentifierIds;
+   const inUseEffectLambda = this.#inUseEffectLambda;
 
-  /*
-   * The callees for which we have already created fire bindings. Used to skip inserting a new
-   * useFire call for a fire callee if one has already been created.
-   */
-  #calleesWithInsertedFire = new Set<IdentifierId>();
+   this.#capturedCalleeIdentifierIds = new Map();
+   this.#inUseEffectLambda = true;
 
-  /*
-   * A mapping from fire callees to the created fire function bindings that are reachable from this
-   * scope.
-   *
-   * We additionally keep track of the captured callee identifier so that we can properly reference
-   * it in the place where we LoadLocal the callee as an argument to useFire.
-   */
-  #capturedCalleeIdentifierIds: FireCalleesToFireFunctionBinding = new Map();
+   const resultCapturedCalleeIdentifierIds = this.withFunctionScope(fn);
 
-  /*
-   * We only transform fire calls if we're syntactically within a useEffect lambda (for now)
-   */
-  #inUseEffectLambda = false;
+   this.#capturedCalleeIdentifierIds = capturedCalleeIdentifierIds;
+   this.#inUseEffectLambda = inUseEffectLambda;
 
-  /*
-   * Mapping from useEffect callee identifier ids to the instruction id of the
-   * load global instruction for the useEffect call. We use this to insert the
-   * useFire calls before the useEffect call
-   */
-  #loadGlobalInstructionIds = new Map<IdentifierId, InstructionId>();
+   return resultCapturedCalleeIdentifierIds;
+ }
 
-  constructor(env: Environment) {
-    this.#env = env;
-  }
+ addCallExpression(id: IdentifierId, callExpr: CallExpression): void {
+   this.#callExpressions.set(id, callExpr);
+ }
 
-  /*
-   * We keep track of array expressions so we can rewrite dependency arrays passed to useEffect
-   * to use the fire functions
-   */
-  #arrayExpressions = new Map<IdentifierId, ArrayExpression>();
+ getCallExpression(id: IdentifierId): CallExpression | undefined {
+   return this.#callExpressions.get(id);
+ }
 
-  pushError(error: CompilerErrorDetailOptions): void {
-    this.#errors.push(error);
-  }
+ addLoadLocalInstr(id: IdentifierId, loadLocal: LoadLocal): void {
+   this.#loadLocals.set(id, loadLocal);
+ }
 
-  withFunctionScope(fn: () => void): FireCalleesToFireFunctionBinding {
-    fn();
-    return this.#capturedCalleeIdentifierIds;
-  }
+ getLoadLocalInstr(id: IdentifierId): LoadLocal | undefined {
+   return this.#loadLocals.get(id);
+ }
 
-  withUseEffectLambdaScope(fn: () => void): FireCalleesToFireFunctionBinding {
-    const capturedCalleeIdentifierIds = this.#capturedCalleeIdentifierIds;
-    const inUseEffectLambda = this.#inUseEffectLambda;
+ getOrGenerateFireFunctionBinding(
+   callee: Place,
+   fireLoc: SourceLocation,
+ ): Place {
+   const fireFunctionBinding = getOrInsertWith(
+     this.#fireCalleesToFireFunctions,
+     callee.identifier.id,
+     () => createTemporaryPlace(this.#env, GeneratedSource),
+   );
 
-    this.#capturedCalleeIdentifierIds = new Map();
-    this.#inUseEffectLambda = true;
+   fireFunctionBinding.identifier.type = {
+     kind: 'Function',
+     shapeId: BuiltInFireFunctionId,
+     return: { kind: 'Poly' },
+     isConstructor: false,
+   };
 
-    const resultCapturedCalleeIdentifierIds = this.withFunctionScope(fn);
+   this.#capturedCalleeIdentifierIds.set(callee.identifier.id, {
+     fireFunctionBinding,
+     capturedCalleeIdentifier: callee.identifier,
+     fireLoc,
+   });
 
-    this.#capturedCalleeIdentifierIds = capturedCalleeIdentifierIds;
-    this.#inUseEffectLambda = inUseEffectLambda;
+   return fireFunctionBinding;
+ }
 
-    return resultCapturedCalleeIdentifierIds;
-  }
+ mergeCalleesFromInnerScope(
+   innerCallees: FireCalleesToFireFunctionBinding,
+ ): void {
+   for (const [id, calleeInfo] of innerCallees.entries()) {
+     this.#capturedCalleeIdentifierIds.set(id, calleeInfo);
+   }
+ }
 
-  addCallExpression(id: IdentifierId, callExpr: CallExpression): void {
-    this.#callExpressions.set(id, callExpr);
-  }
+ addCalleeWithInsertedFire(id: IdentifierId): void {
+   this.#calleesWithInsertedFire.add(id);
+ }
 
-  getCallExpression(id: IdentifierId): CallExpression | undefined {
-    return this.#callExpressions.get(id);
-  }
+ hasCalleeWithInsertedFire(id: IdentifierId): boolean {
+   return this.#calleesWithInsertedFire.has(id);
+ }
 
-  addLoadLocalInstr(id: IdentifierId, loadLocal: LoadLocal): void {
-    this.#loadLocals.set(id, loadLocal);
-  }
+ inUseEffectLambda(): boolean {
+   return this.#inUseEffectLambda;
+ }
 
-  getLoadLocalInstr(id: IdentifierId): LoadLocal | undefined {
-    return this.#loadLocals.get(id);
-  }
-  getOrGenerateFireFunctionBinding(
-    callee: Place,
-    fireLoc: SourceLocation,
-  ): Place {
-    const fireFunctionBinding = getOrInsertWith(
-      this.#fireCalleesToFireFunctions,
-      callee.identifier.id,
-      () => createTemporaryPlace(this.#env, GeneratedSource),
-    );
+ addFunctionExpression(id: IdentifierId, fn: FunctionExpression): void {
+   this.#functionExpressions.set(id, fn);
+ }
 
-    fireFunctionBinding.identifier.type = {
-      kind: 'Function',
-      shapeId: BuiltInFireFunctionId,
-      return: {kind: 'Poly'},
-      isConstructor: false,
-    };
+ getFunctionExpression(id: IdentifierId): FunctionExpression | undefined {
+   return this.#functionExpressions.get(id);
+ }
 
-    this.#capturedCalleeIdentifierIds.set(callee.identifier.id, {
-      fireFunctionBinding,
-      capturedCalleeIdentifier: callee.identifier,
-      fireLoc,
-    });
+ addLoadGlobalInstrId(id: IdentifierId, instrId: InstructionId): void {
+   this.#loadGlobalInstructionIds.set(id, instrId);
+ }
 
-    return fireFunctionBinding;
-  }
+ getLoadGlobalInstrId(id: IdentifierId): InstructionId | undefined {
+   return this.#loadGlobalInstructionIds.get(id);
+ }
 
-  mergeCalleesFromInnerScope(
-    innerCallees: FireCalleesToFireFunctionBinding,
-  ): void {
-    for (const [id, calleeInfo] of innerCallees.entries()) {
-      this.#capturedCalleeIdentifierIds.set(id, calleeInfo);
-    }
-  }
+ addArrayExpression(id: IdentifierId, array: ArrayExpression): void {
+   this.#arrayExpressions.set(id, array);
+ }
 
-  addCalleeWithInsertedFire(id: IdentifierId): void {
-    this.#calleesWithInsertedFire.add(id);
-  }
+ getArrayExpression(id: IdentifierId): ArrayExpression | undefined {
+   return this.#arrayExpressions.get(id);
+ }
 
-  hasCalleeWithInsertedFire(id: IdentifierId): boolean {
-    return this.#calleesWithInsertedFire.has(id);
-  }
+ hasErrors(): boolean {
+   return this.#errors.hasErrors();
+ }
 
-  inUseEffectLambda(): boolean {
-    return this.#inUseEffectLambda;
-  }
-
-  addFunctionExpression(id: IdentifierId, fn: FunctionExpression): void {
-    this.#functionExpressions.set(id, fn);
-  }
-
-  getFunctionExpression(id: IdentifierId): FunctionExpression | undefined {
-    return this.#functionExpressions.get(id);
-  }
-
-  addLoadGlobalInstrId(id: IdentifierId, instrId: InstructionId): void {
-    this.#loadGlobalInstructionIds.set(id, instrId);
-  }
-
-  getLoadGlobalInstrId(id: IdentifierId): InstructionId | undefined {
-    return this.#loadGlobalInstructionIds.get(id);
-  }
-
-  addArrayExpression(id: IdentifierId, array: ArrayExpression): void {
-    this.#arrayExpressions.set(id, array);
-  }
-
-  getArrayExpression(id: IdentifierId): ArrayExpression | undefined {
-    return this.#arrayExpressions.get(id);
-  }
-
-  hasErrors(): boolean {
-    return this.#errors.hasErrors();
-  }
-
-  throwIfErrorsFound(): void {
-    if (this.hasErrors()) throw this.#errors;
-  }
+ throwIfErrorsFound(): void {
+   if (this.hasErrors()) throw this.#errors;
+ }
 }
 
 function deleteInstructions(
-  deleteInstrs: Set<InstructionId>,
-  instructions: Array<Instruction>,
+ deleteInstrs: Set<InstructionId>,
+ instructions: Array<Instruction>,
 ): Array<Instruction> {
-  if (deleteInstrs.size > 0) {
-    const newInstrs = instructions.filter(instr => !deleteInstrs.has(instr.id));
-    return newInstrs;
-  }
-  return instructions;
+ if (deleteInstrs.size > 0) {
+   return instructions.filter(instr => !deleteInstrs.has(instr.id));
+ }
+ return instructions;
 }
 
 function rewriteInstructions(
-  rewriteInstrs: Map<InstructionId, Array<Instruction>>,
-  instructions: Array<Instruction>,
+ rewriteInstrs: Map<InstructionId, Array<Instruction>>,
+ instructions: Array<Instruction>,
 ): Array<Instruction> {
-  if (rewriteInstrs.size > 0) {
-    const newInstrs = [];
-    for (const instr of instructions) {
-      const newInstrsAtId = rewriteInstrs.get(instr.id);
-      if (newInstrsAtId != null) {
-        newInstrs.push(...newInstrsAtId, instr);
-      } else {
-        newInstrs.push(instr);
-      }
-    }
-
-    return newInstrs;
-  }
-
-  return instructions;
+ if (rewriteInstrs.size > 0) {
+   const newInstrs: Instruction[] = [];
+   for (const instr of instructions) {
+     const newInstrsAtId = rewriteInstrs.get(instr.id);
+     if (newInstrsAtId != null) {
+       newInstrs.push(...newInstrsAtId, instr);
+     } else {
+       newInstrs.push(instr);
+     }
+   }
+   return newInstrs;
+ }
+ return instructions;
 }
