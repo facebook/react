@@ -9,6 +9,7 @@
 
 import JSON5 from 'json5';
 
+import type {ReactFunctionLocation} from 'shared/ReactTypes';
 import type {Element} from 'react-devtools-shared/src/frontend/types';
 import type {StateContext} from './views/Components/TreeContext';
 import type Store from './store';
@@ -188,16 +189,13 @@ export function smartStringify(value: any): string {
   return JSON.stringify(value);
 }
 
-// [url, row, column]
-export type Stack = [string, number, number];
-
 const STACK_DELIMETER = /\n\s+at /;
 const STACK_SOURCE_LOCATION = /([^\s]+) \((.+):(.+):(.+)\)/;
 
-export function stackToComponentSources(
+export function stackToComponentLocations(
   stack: string,
-): Array<[string, ?Stack]> {
-  const out: Array<[string, ?Stack]> = [];
+): Array<[string, ?ReactFunctionLocation]> {
+  const out: Array<[string, ?ReactFunctionLocation]> = [];
   stack
     .split(STACK_DELIMETER)
     .slice(1)
@@ -205,7 +203,10 @@ export function stackToComponentSources(
       const match = STACK_SOURCE_LOCATION.exec(entry);
       if (match) {
         const [, component, url, row, column] = match;
-        out.push([component, [url, parseInt(row, 10), parseInt(column, 10)]]);
+        out.push([
+          component,
+          [component, url, parseInt(row, 10), parseInt(column, 10)],
+        ]);
       } else {
         out.push([entry, null]);
       }

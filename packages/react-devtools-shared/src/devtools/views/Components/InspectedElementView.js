@@ -35,7 +35,7 @@ import type {
 } from 'react-devtools-shared/src/frontend/types';
 import type {HookNames} from 'react-devtools-shared/src/frontend/types';
 import type {ToggleParseHookNames} from './InspectedElementContext';
-import type {Source} from 'react-devtools-shared/src/shared/types';
+import type {ReactFunctionLocation} from 'shared/ReactTypes';
 
 type Props = {
   element: Element,
@@ -43,7 +43,7 @@ type Props = {
   inspectedElement: InspectedElement,
   parseHookNames: boolean,
   toggleParseHookNames: ToggleParseHookNames,
-  symbolicatedSourcePromise: Promise<Source | null>,
+  symbolicatedSourcePromise: Promise<ReactFunctionLocation | null>,
 };
 
 export default function InspectedElementView({
