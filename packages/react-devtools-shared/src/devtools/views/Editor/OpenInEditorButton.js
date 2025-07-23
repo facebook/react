@@ -11,6 +11,7 @@ import * as React from 'react';
 
 import Button from 'react-devtools-shared/src/devtools/views/Button';
 import ButtonIcon from 'react-devtools-shared/src/devtools/views/ButtonIcon';
+import ButtonLabel from 'react-devtools-shared/src/devtools/views/ButtonLabel';
 
 import type {SourceSelection} from './EditorPane';
 import type {ReactFunctionLocation} from 'shared/ReactTypes';
@@ -20,9 +21,10 @@ import {checkConditions} from './utils';
 type Props = {
   editorURL: string,
   source: ?SourceSelection,
+  className?: string,
 };
 
-function OpenInEditorButton({editorURL, source}: Props): React.Node {
+function OpenInEditorButton({editorURL, source, className}: Props): React.Node {
   let disable;
   if (source == null) {
     disable = true;
@@ -40,6 +42,7 @@ function OpenInEditorButton({editorURL, source}: Props): React.Node {
   return (
     <Button
       disabled={disable}
+      className={className}
       onClick={() => {
         if (source == null) {
           return;
@@ -58,9 +61,9 @@ function OpenInEditorButton({editorURL, source}: Props): React.Node {
         if (!shouldDisableButton) {
           window.open(url);
         }
-      }}
-      title="Open in editor">
-      <ButtonIcon type="editor" /> Open in editor
+      }}>
+      <ButtonIcon type="editor" />
+      <ButtonLabel>Open in editor</ButtonLabel>
     </Button>
   );
 }

@@ -326,7 +326,7 @@ function createSourcesEditorPanel() {
     editorPane = createdPane;
 
     createdPane.setPage('panel.html');
-    createdPane.setHeight('100px');
+    createdPane.setHeight('42px');
 
     createdPane.onShown.addListener(portal => {
       editorPortalContainer = portal.container;

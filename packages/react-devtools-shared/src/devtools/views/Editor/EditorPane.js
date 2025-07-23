@@ -8,15 +8,20 @@
  */
 
 import * as React from 'react';
-import {useSyncExternalStore} from 'react';
+import {useSyncExternalStore, useState, startTransition} from 'react';
 
 import portaledContent from '../portaledContent';
 
 import styles from './EditorPane.css';
 
+import Button from 'react-devtools-shared/src/devtools/views/Button';
+import ButtonIcon from 'react-devtools-shared/src/devtools/views/ButtonIcon';
+
 import OpenInEditorButton from './OpenInEditorButton';
 import {getOpenInEditorURL} from '../../../utils';
 import {LOCAL_STORAGE_OPEN_IN_EDITOR_URL} from '../../../constants';
+
+import EditorSettings from './EditorSettings';
 
 export type SourceSelection = {
   url: string,
@@ -30,6 +35,8 @@ export type SourceSelection = {
 export type Props = {selectedSource: ?SourceSelection};
 
 function EditorPane({selectedSource}: Props) {
+  const [showSettings, setShowSettings] = useState(false);
+
   const editorURL = useSyncExternalStore(
     function subscribe(callback) {
       window.addEventListener(LOCAL_STORAGE_OPEN_IN_EDITOR_URL, callback);
@@ -42,9 +49,34 @@ function EditorPane({selectedSource}: Props) {
     },
   );
 
+  if (showSettings) {
+    return (
+      <div className={styles.EditorPane}>
+        <EditorSettings />
+        <div className={styles.VRule} />
+        <Button onClick={() => startTransition(() => setShowSettings(false))}>
+          <ButtonIcon type="close" />
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.EditorPane}>
-      <OpenInEditorButton editorURL={editorURL} source={selectedSource} />
+      <OpenInEditorButton
+        className={styles.WideButton}
+        editorURL={editorURL}
+        source={selectedSource}
+      />
+      <div className={styles.VRule} />
+      <Button
+        onClick={() => startTransition(() => setShowSettings(true))}
+        // We don't use the title here because we don't have enough space to show it.
+        // Once we expand this pane we can add it.
+        // title="Configure code editor"
+      >
+        <ButtonIcon type="settings" />
+      </Button>
     </div>
   );
 }
