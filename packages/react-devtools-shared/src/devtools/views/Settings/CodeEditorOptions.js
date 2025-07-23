@@ -34,8 +34,7 @@ export default function ComponentsSettings({
   );
 
   return (
-    <label className={styles.OpenInURLSetting}>
-      Open in Editor URL:{' '}
+    <>
       <select
         value={openInEditorURLPreset}
         onChange={({currentTarget}) => {
@@ -61,6 +60,6 @@ export default function ComponentsSettings({
           }}
         />
       )}
-    </label>
+    </>
   );
 }

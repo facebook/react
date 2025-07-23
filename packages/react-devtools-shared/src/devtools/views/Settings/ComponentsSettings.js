@@ -23,7 +23,6 @@ import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import Toggle from '../Toggle';
 import {SettingsContext} from '../Settings/SettingsContext';
-import CodeEditorOptions from './CodeEditorOptions';
 import {
   ComponentFilterDisplayName,
   ComponentFilterElementType,
@@ -350,8 +349,6 @@ export default function ComponentsSettings({
           <span className={styles.Warning}>(may be slow)</span>
         </label>
       </div>
-
-      <CodeEditorOptions />
 
       <div className={styles.Header}>Hide components where...</div>
 
