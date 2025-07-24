@@ -33,8 +33,8 @@ const canaryChannelLabel = 'canary';
 const rcNumber = 0;
 
 const stablePackages = {
-  'eslint-plugin-react-hooks': '6.1.0',
-  'jest-react': '0.17.0',
+  'eslint-plugin-react-hooks': '5.2.0',
+  'jest-react': '0.16.0',
   react: ReactVersion,
   'react-art': ReactVersion,
   'react-dom': ReactVersion,
@@ -42,12 +42,12 @@ const stablePackages = {
   'react-server-dom-turbopack': ReactVersion,
   'react-server-dom-parcel': ReactVersion,
   'react-is': ReactVersion,
-  'react-reconciler': '0.33.0',
-  'react-refresh': '0.18.0',
+  'react-reconciler': '0.32.0',
+  'react-refresh': '0.17.0',
   'react-test-renderer': ReactVersion,
-  'use-subscription': '1.12.0',
-  'use-sync-external-store': '1.6.0',
-  scheduler: '0.27.0',
+  'use-subscription': '1.11.0',
+  'use-sync-external-store': '1.5.0',
+  scheduler: '0.26.0',
 };
 
 // These packages do not exist in the @canary or @latest channel, only
