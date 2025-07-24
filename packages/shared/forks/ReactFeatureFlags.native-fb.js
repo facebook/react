@@ -25,7 +25,6 @@ export const {
   enablePersistedModeClonedFlag,
   enableEagerAlternateStateNodeCleanup,
   passChildrenWhenCloningPersistedNodes,
-  enableLazyPublicInstanceInFabric,
   renameElementSymbol,
   enableFragmentRefs,
 } = dynamicFlags;
@@ -66,7 +65,6 @@ export const enableTransitionTracing = false;
 export const enableTrustedTypesIntegration = false;
 export const enableUpdaterTracking = __PROFILE__;
 export const enableUseEffectEventHook = false;
-export const favorSafetyOverHydrationPerf = true;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;

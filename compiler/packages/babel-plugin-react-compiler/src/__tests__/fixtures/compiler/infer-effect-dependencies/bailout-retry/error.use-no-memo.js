@@ -1,7 +1,7 @@
 // @inferEffectDependencies @panicThreshold:"none"
-import {useEffect} from 'react';
+import {useEffect, AUTODEPS} from 'react';
 
 function Component({propVal}) {
   'use no memo';
-  useEffect(() => [propVal]);
+  useEffect(() => [propVal], AUTODEPS);
 }

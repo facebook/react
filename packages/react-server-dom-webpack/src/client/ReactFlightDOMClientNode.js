@@ -30,6 +30,7 @@ import type {Readable} from 'stream';
 
 import {
   createResponse,
+  createStreamState,
   getRoot,
   reportGlobalError,
   processStringChunk,
@@ -81,11 +82,12 @@ function createFromNodeStream<T>(
       ? options.environmentName
       : undefined,
   );
+  const streamState = createStreamState();
   stream.on('data', chunk => {
     if (typeof chunk === 'string') {
-      processStringChunk(response, chunk);
+      processStringChunk(response, streamState, chunk);
     } else {
-      processBinaryChunk(response, chunk);
+      processBinaryChunk(response, streamState, chunk);
     }
   });
   stream.on('error', error => {

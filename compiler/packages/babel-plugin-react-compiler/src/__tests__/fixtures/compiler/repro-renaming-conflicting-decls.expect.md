@@ -45,87 +45,83 @@ import { Stringify, identity, makeArray, toJSON } from "shared-runtime";
 import { useMemo } from "react";
 
 function Component(props) {
-  const $ = _c(13);
+  const $ = _c(12);
   let t0;
   let t1;
-  let t2;
   if ($[0] !== props) {
-    t2 = Symbol.for("react.early_return_sentinel");
+    t1 = Symbol.for("react.early_return_sentinel");
     bb0: {
-      t0 = toJSON(props);
-      const propsString = t0;
+      const propsString = toJSON(props);
       if (propsString.length <= 2) {
-        t2 = null;
+        t1 = null;
         break bb0;
       }
 
-      t1 = identity(propsString);
+      t0 = identity(propsString);
     }
     $[0] = props;
-    $[1] = t1;
-    $[2] = t2;
+    $[1] = t0;
+    $[2] = t1;
+  } else {
+    t0 = $[1];
+    t1 = $[2];
+  }
+  if (t1 !== Symbol.for("react.early_return_sentinel")) {
+    return t1;
+  }
+  let t2;
+  if ($[3] !== t0) {
+    t2 = { url: t0 };
     $[3] = t0;
+    $[4] = t2;
   } else {
-    t1 = $[1];
-    t2 = $[2];
-    t0 = $[3];
+    t2 = $[4];
   }
-  if (t2 !== Symbol.for("react.early_return_sentinel")) {
-    return t2;
-  }
+  const linkProps = t2;
   let t3;
-  if ($[4] !== t1) {
-    t3 = { url: t1 };
-    $[4] = t1;
-    $[5] = t3;
-  } else {
-    t3 = $[5];
-  }
-  const linkProps = t3;
-  let t4;
-  if ($[6] !== linkProps) {
+  if ($[5] !== linkProps) {
     const x = {};
+    let t4;
     let t5;
     let t6;
     let t7;
     let t8;
-    let t9;
-    if ($[8] === Symbol.for("react.memo_cache_sentinel")) {
-      t5 = [1];
-      t6 = [2];
-      t7 = [3];
-      t8 = [4];
-      t9 = [5];
+    if ($[7] === Symbol.for("react.memo_cache_sentinel")) {
+      t4 = [1];
+      t5 = [2];
+      t6 = [3];
+      t7 = [4];
+      t8 = [5];
+      $[7] = t4;
       $[8] = t5;
       $[9] = t6;
       $[10] = t7;
       $[11] = t8;
-      $[12] = t9;
     } else {
+      t4 = $[7];
       t5 = $[8];
       t6 = $[9];
       t7 = $[10];
       t8 = $[11];
-      t9 = $[12];
     }
-    t4 = (
+    t3 = (
       <Stringify
         link={linkProps}
-        val1={t5}
-        val2={t6}
-        val3={t7}
-        val4={t8}
-        val5={t9}
+        val1={t4}
+        val2={t5}
+        val3={t6}
+        val4={t7}
+        val5={t8}
       >
         {makeArray(x, 2)}
       </Stringify>
     );
-    $[6] = linkProps;
-    $[7] = t4;
+    $[5] = linkProps;
+    $[6] = t3;
   } else {
-    t4 = $[7];
+    t3 = $[6];
   }
-  return t4;
+  return t3;
 }
 
 export const FIXTURE_ENTRYPOINT = {

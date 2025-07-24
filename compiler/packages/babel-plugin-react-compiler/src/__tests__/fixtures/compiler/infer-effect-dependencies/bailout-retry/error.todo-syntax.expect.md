@@ -4,6 +4,7 @@
 ```javascript
 // @inferEffectDependencies @panicThreshold:"none"
 import {useSpecialEffect} from 'shared-runtime';
+import {AUTODEPS} from 'react';
 
 /**
  * Note that a react compiler-based transform still has limitations on JS syntax.
@@ -11,13 +12,17 @@ import {useSpecialEffect} from 'shared-runtime';
  */
 function Component({prop1}) {
   'use memo';
-  useSpecialEffect(() => {
-    try {
-      console.log(prop1);
-    } finally {
-      console.log('exiting');
-    }
-  }, [prop1]);
+  useSpecialEffect(
+    () => {
+      try {
+        console.log(prop1);
+      } finally {
+        console.log('exiting');
+      }
+    },
+    [prop1],
+    AUTODEPS
+  );
   return <div>{prop1}</div>;
 }
 
@@ -27,25 +32,33 @@ function Component({prop1}) {
 ## Error
 
 ```
-   8 | function Component({prop1}) {
-   9 |   'use memo';
-> 10 |   useSpecialEffect(() => {
-     |   ^^^^^^^^^^^^^^^^^^^^^^^^
-> 11 |     try {
-     | ^^^^^^^^^
-> 12 |       console.log(prop1);
-     | ^^^^^^^^^
-> 13 |     } finally {
-     | ^^^^^^^^^
-> 14 |       console.log('exiting');
-     | ^^^^^^^^^
-> 15 |     }
-     | ^^^^^^^^^
-> 16 |   }, [prop1]);
-     | ^^^^^^^^^^^^^^ InvalidReact: [InferEffectDependencies] React Compiler is unable to infer dependencies of this effect. This will break your build! To resolve, either pass your own dependency array or fix reported compiler bailout diagnostics.. (Bailout reason: Todo: (BuildHIR::lowerStatement) Handle TryStatement without a catch clause (11:15)) (10:16)
-  17 |   return <div>{prop1}</div>;
-  18 | }
-  19 |
+   9 | function Component({prop1}) {
+  10 |   'use memo';
+> 11 |   useSpecialEffect(
+     |   ^^^^^^^^^^^^^^^^^
+> 12 |     () => {
+     | ^^^^^^^^^^^
+> 13 |       try {
+     | ^^^^^^^^^^^
+> 14 |         console.log(prop1);
+     | ^^^^^^^^^^^
+> 15 |       } finally {
+     | ^^^^^^^^^^^
+> 16 |         console.log('exiting');
+     | ^^^^^^^^^^^
+> 17 |       }
+     | ^^^^^^^^^^^
+> 18 |     },
+     | ^^^^^^^^^^^
+> 19 |     [prop1],
+     | ^^^^^^^^^^^
+> 20 |     AUTODEPS
+     | ^^^^^^^^^^^
+> 21 |   );
+     | ^^^^ InvalidReact: [InferEffectDependencies] React Compiler is unable to infer dependencies of this effect. This will break your build! To resolve, either pass your own dependency array or fix reported compiler bailout diagnostics.. (Bailout reason: Todo: (BuildHIR::lowerStatement) Handle TryStatement without a catch clause (13:17)) (11:21)
+  22 |   return <div>{prop1}</div>;
+  23 | }
+  24 |
 ```
           
       

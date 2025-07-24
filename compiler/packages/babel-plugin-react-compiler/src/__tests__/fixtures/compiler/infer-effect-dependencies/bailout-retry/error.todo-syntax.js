@@ -1,5 +1,6 @@
 // @inferEffectDependencies @panicThreshold:"none"
 import {useSpecialEffect} from 'shared-runtime';
+import {AUTODEPS} from 'react';
 
 /**
  * Note that a react compiler-based transform still has limitations on JS syntax.
@@ -7,12 +8,16 @@ import {useSpecialEffect} from 'shared-runtime';
  */
 function Component({prop1}) {
   'use memo';
-  useSpecialEffect(() => {
-    try {
-      console.log(prop1);
-    } finally {
-      console.log('exiting');
-    }
-  }, [prop1]);
+  useSpecialEffect(
+    () => {
+      try {
+        console.log(prop1);
+      } finally {
+        console.log('exiting');
+      }
+    },
+    [prop1],
+    AUTODEPS
+  );
   return <div>{prop1}</div>;
 }

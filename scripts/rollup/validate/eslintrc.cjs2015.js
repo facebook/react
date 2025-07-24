@@ -62,7 +62,7 @@ module.exports = {
     __webpack_require__: 'readonly',
 
     // Flight Turbopack
-    __turbopack_load__: 'readonly',
+    __turbopack_load_by_url__: 'readonly',
     __turbopack_require__: 'readonly',
 
     // Flight Parcel

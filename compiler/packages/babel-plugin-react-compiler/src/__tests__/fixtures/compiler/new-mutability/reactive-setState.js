@@ -1,5 +1,5 @@
 // @inferEffectDependencies @enableNewMutationAliasingModel
-import {useEffect, useState} from 'react';
+import {useEffect, useState, AUTODEPS} from 'react';
 import {print} from 'shared-runtime';
 
 /*
@@ -14,5 +14,5 @@ function ReactiveRefInEffect(props) {
   } else {
     setState = setState2;
   }
-  useEffect(() => print(setState));
+  useEffect(() => print(setState), AUTODEPS);
 }

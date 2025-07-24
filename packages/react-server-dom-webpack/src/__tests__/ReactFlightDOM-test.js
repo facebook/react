@@ -2876,7 +2876,9 @@ describe('ReactFlightDOM', () => {
       };
     });
 
-    controller.abort('boom');
+    await serverAct(() => {
+      controller.abort('boom');
+    });
     resolveGreeting();
     const {prelude} = await pendingResult;
 

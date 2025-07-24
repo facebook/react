@@ -1355,13 +1355,85 @@ function lowerStatement(
 
       return;
     }
-    case 'TypeAlias':
-    case 'TSInterfaceDeclaration':
-    case 'TSTypeAliasDeclaration': {
-      // We do not preserve type annotations/syntax through transformation
+    case 'WithStatement': {
+      builder.errors.push({
+        reason: `JavaScript 'with' syntax is not supported`,
+        description: `'with' syntax is considered deprecated and removed from JavaScript standards, consider alternatives`,
+        severity: ErrorSeverity.UnsupportedJS,
+        loc: stmtPath.node.loc ?? null,
+        suggestions: null,
+      });
+      lowerValueToTemporary(builder, {
+        kind: 'UnsupportedNode',
+        loc: stmtPath.node.loc ?? GeneratedSource,
+        node: stmtPath.node,
+      });
       return;
     }
-    case 'ClassDeclaration':
+    case 'ClassDeclaration': {
+      /**
+       * In theory we could support inline class declarations, but this is rare enough in practice
+       * and complex enough to support that we don't anticipate supporting anytime soon. Developers
+       * are encouraged to lift classes out of component/hook declarations.
+       */
+      builder.errors.push({
+        reason: 'Inline `class` declarations are not supported',
+        description: `Move class declarations outside of components/hooks`,
+        severity: ErrorSeverity.UnsupportedJS,
+        loc: stmtPath.node.loc ?? null,
+        suggestions: null,
+      });
+      lowerValueToTemporary(builder, {
+        kind: 'UnsupportedNode',
+        loc: stmtPath.node.loc ?? GeneratedSource,
+        node: stmtPath.node,
+      });
+      return;
+    }
+    case 'EnumDeclaration':
+    case 'TSEnumDeclaration': {
+      lowerValueToTemporary(builder, {
+        kind: 'UnsupportedNode',
+        loc: stmtPath.node.loc ?? GeneratedSource,
+        node: stmtPath.node,
+      });
+      return;
+    }
+    case 'ExportAllDeclaration':
+    case 'ExportDefaultDeclaration':
+    case 'ExportNamedDeclaration':
+    case 'ImportDeclaration':
+    case 'TSExportAssignment':
+    case 'TSImportEqualsDeclaration': {
+      builder.errors.push({
+        reason:
+          'JavaScript `import` and `export` statements may only appear at the top level of a module',
+        severity: ErrorSeverity.InvalidJS,
+        loc: stmtPath.node.loc ?? null,
+        suggestions: null,
+      });
+      lowerValueToTemporary(builder, {
+        kind: 'UnsupportedNode',
+        loc: stmtPath.node.loc ?? GeneratedSource,
+        node: stmtPath.node,
+      });
+      return;
+    }
+    case 'TSNamespaceExportDeclaration': {
+      builder.errors.push({
+        reason:
+          'TypeScript `namespace` statements may only appear at the top level of a module',
+        severity: ErrorSeverity.InvalidJS,
+        loc: stmtPath.node.loc ?? null,
+        suggestions: null,
+      });
+      lowerValueToTemporary(builder, {
+        kind: 'UnsupportedNode',
+        loc: stmtPath.node.loc ?? GeneratedSource,
+        node: stmtPath.node,
+      });
+      return;
+    }
     case 'DeclareClass':
     case 'DeclareExportAllDeclaration':
     case 'DeclareExportDeclaration':
@@ -1372,31 +1444,14 @@ function lowerStatement(
     case 'DeclareOpaqueType':
     case 'DeclareTypeAlias':
     case 'DeclareVariable':
-    case 'EnumDeclaration':
-    case 'ExportAllDeclaration':
-    case 'ExportDefaultDeclaration':
-    case 'ExportNamedDeclaration':
-    case 'ImportDeclaration':
     case 'InterfaceDeclaration':
     case 'OpaqueType':
     case 'TSDeclareFunction':
-    case 'TSEnumDeclaration':
-    case 'TSExportAssignment':
-    case 'TSImportEqualsDeclaration':
+    case 'TSInterfaceDeclaration':
     case 'TSModuleDeclaration':
-    case 'TSNamespaceExportDeclaration':
-    case 'WithStatement': {
-      builder.errors.push({
-        reason: `(BuildHIR::lowerStatement) Handle ${stmtPath.type} statements`,
-        severity: ErrorSeverity.Todo,
-        loc: stmtPath.node.loc ?? null,
-        suggestions: null,
-      });
-      lowerValueToTemporary(builder, {
-        kind: 'UnsupportedNode',
-        loc: stmtPath.node.loc ?? GeneratedSource,
-        node: stmtPath.node,
-      });
+    case 'TSTypeAliasDeclaration':
+    case 'TypeAlias': {
+      // We do not preserve type annotations/syntax through transformation
       return;
     }
     default: {
@@ -2946,6 +3001,8 @@ function isReorderableExpression(
         }
       }
     }
+    case 'TSAsExpression':
+    case 'TSNonNullExpression':
     case 'TypeCastExpression': {
       return isReorderableExpression(
         builder,
@@ -3502,6 +3559,16 @@ function lowerIdentifier(
       return place;
     }
     default: {
+      if (binding.kind === 'Global' && binding.name === 'eval') {
+        builder.errors.push({
+          reason: `The 'eval' function is not supported`,
+          description:
+            'Eval is an anti-pattern in JavaScript, and the code executed cannot be evaluated by React Compiler',
+          severity: ErrorSeverity.UnsupportedJS,
+          loc: exprPath.node.loc ?? null,
+          suggestions: null,
+        });
+      }
       return lowerValueToTemporary(builder, {
         kind: 'LoadGlobal',
         binding,

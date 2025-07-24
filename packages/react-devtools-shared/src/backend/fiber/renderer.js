@@ -145,7 +145,7 @@ import type {
   ElementType,
   Plugins,
 } from 'react-devtools-shared/src/frontend/types';
-import type {Source} from 'react-devtools-shared/src/shared/types';
+import type {ReactFunctionLocation} from 'shared/ReactTypes';
 import {getSourceLocationByFiber} from './DevToolsFiberComponentStack';
 import {formatOwnerStack} from '../shared/DevToolsOwnerStack';
 
@@ -162,7 +162,7 @@ type FiberInstance = {
   parent: null | DevToolsInstance,
   firstChild: null | DevToolsInstance,
   nextSibling: null | DevToolsInstance,
-  source: null | string | Error | Source, // source location of this component function, or owned child stack
+  source: null | string | Error | ReactFunctionLocation, // source location of this component function, or owned child stack
   logCount: number, // total number of errors/warnings last seen
   treeBaseDuration: number, // the profiled time of the last render of this subtree
   data: Fiber, // one of a Fiber pair
@@ -190,7 +190,7 @@ type FilteredFiberInstance = {
   parent: null | DevToolsInstance,
   firstChild: null | DevToolsInstance,
   nextSibling: null | DevToolsInstance,
-  source: null | string | Error | Source, // always null here.
+  source: null | string | Error | ReactFunctionLocation, // always null here.
   logCount: number, // total number of errors/warnings last seen
   treeBaseDuration: number, // the profiled time of the last render of this subtree
   data: Fiber, // one of a Fiber pair
@@ -222,7 +222,7 @@ type VirtualInstance = {
   parent: null | DevToolsInstance,
   firstChild: null | DevToolsInstance,
   nextSibling: null | DevToolsInstance,
-  source: null | string | Error | Source, // source location of this server component, or owned child stack
+  source: null | string | Error | ReactFunctionLocation, // source location of this server component, or owned child stack
   logCount: number, // total number of errors/warnings last seen
   treeBaseDuration: number, // the profiled time of the last render of this subtree
   // The latest info for this instance. This can be updated over time and the
@@ -5805,7 +5805,7 @@ export function attach(
 
   function getSourceForFiberInstance(
     fiberInstance: FiberInstance,
-  ): Source | null {
+  ): ReactFunctionLocation | null {
     // Favor the owner source if we have one.
     const ownerSource = getSourceForInstance(fiberInstance);
     if (ownerSource !== null) {
@@ -5830,7 +5830,9 @@ export function attach(
     return source;
   }
 
-  function getSourceForInstance(instance: DevToolsInstance): Source | null {
+  function getSourceForInstance(
+    instance: DevToolsInstance,
+  ): ReactFunctionLocation | null {
     let unresolvedSource = instance.source;
     if (unresolvedSource === null) {
       // We don't have any source yet. We can try again later in case an owned child mounts later.

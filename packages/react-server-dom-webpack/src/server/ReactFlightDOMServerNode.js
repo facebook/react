@@ -29,6 +29,7 @@ import {
   createPrerenderRequest,
   startWork,
   startFlowing,
+  startFlowingDebug,
   stopFlowing,
   abort,
   resolveDebugMessage,
@@ -145,7 +146,7 @@ function startReadingFromDebugChannelReadable(
 }
 
 type Options = {
-  debugChannel?: Readable | Duplex | WebSocket,
+  debugChannel?: Readable | Writable | Duplex | WebSocket,
   environmentName?: string | (() => string),
   filterStackFrame?: (url: string, functionName: string) => boolean,
   onError?: (error: mixed) => void,
@@ -165,6 +166,24 @@ function renderToPipeableStream(
   options?: Options,
 ): PipeableStream {
   const debugChannel = __DEV__ && options ? options.debugChannel : undefined;
+  const debugChannelReadable: void | Readable | WebSocket =
+    __DEV__ &&
+    debugChannel !== undefined &&
+    // $FlowFixMe[method-unbinding]
+    (typeof debugChannel.read === 'function' ||
+      typeof debugChannel.readyState === 'number')
+      ? (debugChannel: any)
+      : undefined;
+  const debugChannelWritable: void | Writable =
+    __DEV__ && debugChannel !== undefined
+      ? // $FlowFixMe[method-unbinding]
+        typeof debugChannel.write === 'function'
+        ? (debugChannel: any)
+        : // $FlowFixMe[method-unbinding]
+          typeof debugChannel.send === 'function'
+          ? createFakeWritableFromWebSocket((debugChannel: any))
+          : undefined
+      : undefined;
   const request = createRequest(
     model,
     webpackMap,
@@ -174,12 +193,15 @@ function renderToPipeableStream(
     options ? options.temporaryReferences : undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
-    debugChannel !== undefined,
+    debugChannelReadable !== undefined,
   );
   let hasStartedFlowing = false;
   startWork(request);
-  if (debugChannel !== undefined) {
-    startReadingFromDebugChannelReadable(request, debugChannel);
+  if (debugChannelWritable !== undefined) {
+    startFlowingDebug(request, debugChannelWritable);
+  }
+  if (debugChannelReadable !== undefined) {
+    startReadingFromDebugChannelReadable(request, debugChannelReadable);
   }
   return {
     pipe<T: Writable>(destination: T): T {
@@ -198,16 +220,41 @@ function renderToPipeableStream(
           'The destination stream errored while writing data.',
         ),
       );
-      destination.on(
-        'close',
-        createCancelHandler(request, 'The destination stream closed early.'),
-      );
+      // We don't close until the debug channel closes.
+      if (!__DEV__ || debugChannelReadable === undefined) {
+        destination.on(
+          'close',
+          createCancelHandler(request, 'The destination stream closed early.'),
+        );
+      }
       return destination;
     },
     abort(reason: mixed) {
       abort(request, reason);
     },
   };
+}
+
+function createFakeWritableFromWebSocket(webSocket: WebSocket): Writable {
+  return ({
+    write(chunk: string | Uint8Array) {
+      webSocket.send((chunk: any));
+      return true;
+    },
+    end() {
+      webSocket.close();
+    },
+    destroy(reason) {
+      if (typeof reason === 'object' && reason !== null) {
+        reason = reason.message;
+      }
+      if (typeof reason === 'string') {
+        webSocket.close(1011, reason);
+      } else {
+        webSocket.close(1011);
+      }
+    },
+  }: any);
 }
 
 function createFakeWritableFromReadableStreamController(
@@ -284,13 +331,17 @@ function renderToReadableStream(
   model: ReactClientValue,
   webpackMap: ClientManifest,
   options?: Omit<Options, 'debugChannel'> & {
-    debugChannel?: {readable?: ReadableStream, ...},
+    debugChannel?: {readable?: ReadableStream, writable?: WritableStream, ...},
     signal?: AbortSignal,
   },
 ): ReadableStream {
   const debugChannelReadable =
     __DEV__ && options && options.debugChannel
       ? options.debugChannel.readable
+      : undefined;
+  const debugChannelWritable =
+    __DEV__ && options && options.debugChannel
+      ? options.debugChannel.writable
       : undefined;
   const request = createRequest(
     model,
@@ -314,6 +365,24 @@ function renderToReadableStream(
       };
       signal.addEventListener('abort', listener);
     }
+  }
+  if (debugChannelWritable !== undefined) {
+    let debugWritable: Writable;
+    const debugStream = new ReadableStream(
+      {
+        type: 'bytes',
+        start: (controller): ?Promise<void> => {
+          debugWritable =
+            createFakeWritableFromReadableStreamController(controller);
+        },
+        pull: (controller): ?Promise<void> => {
+          startFlowingDebug(request, debugWritable);
+        },
+      },
+      // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
+      {highWaterMark: 0},
+    );
+    debugStream.pipeTo(debugChannelWritable);
   }
   if (debugChannelReadable !== undefined) {
     startReadingFromDebugChannelReadableStream(request, debugChannelReadable);

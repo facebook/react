@@ -188,6 +188,7 @@ export type ReactCallSite = [
   number, // column number
   number, // enclosing line number
   number, // enclosing column number
+  boolean, // async resume
 ];
 
 export type ReactStackTrace = Array<ReactCallSite>;
@@ -258,9 +259,13 @@ export type ReactTimeInfo = {
   +time: number, // performance.now
 };
 
-export type ReactDebugInfo = Array<
-  ReactComponentInfo | ReactEnvironmentInfo | ReactAsyncInfo | ReactTimeInfo,
->;
+export type ReactDebugInfoEntry =
+  | ReactComponentInfo
+  | ReactEnvironmentInfo
+  | ReactAsyncInfo
+  | ReactTimeInfo;
+
+export type ReactDebugInfo = Array<ReactDebugInfoEntry>;
 
 // Intrinsic ViewTransitionInstance. This type varies by Environment whether a particular
 // renderer supports it.

@@ -17,9 +17,11 @@ import type {ServerReferenceId} from '../client/ReactFlightClientConfigBundlerPa
 
 import {
   createResponse,
+  createStreamState,
   getRoot,
   reportGlobalError,
   processBinaryChunk,
+  processStringChunk,
   close,
   injectIntoDevTools,
 } from 'react-client/src/ReactFlightClient';
@@ -97,10 +99,50 @@ function createDebugCallbackFromWritableStream(
   };
 }
 
-function startReadingFromStream(
+function startReadingFromUniversalStream(
   response: FlightResponse,
   stream: ReadableStream,
 ): void {
+  // This is the same as startReadingFromStream except this allows WebSocketStreams which
+  // return ArrayBuffer and string chunks instead of Uint8Array chunks. We could potentially
+  // always allow streams with variable chunk types.
+  const streamState = createStreamState();
+  const reader = stream.getReader();
+  function progress({
+    done,
+    value,
+  }: {
+    done: boolean,
+    value: any,
+    ...
+  }): void | Promise<void> {
+    if (done) {
+      close(response);
+      return;
+    }
+    if (value instanceof ArrayBuffer) {
+      // WebSockets can produce ArrayBuffer values in ReadableStreams.
+      processBinaryChunk(response, streamState, new Uint8Array(value));
+    } else if (typeof value === 'string') {
+      // WebSockets can produce string values in ReadableStreams.
+      processStringChunk(response, streamState, value);
+    } else {
+      processBinaryChunk(response, streamState, value);
+    }
+    return reader.read().then(progress).catch(error);
+  }
+  function error(e: any) {
+    reportGlobalError(response, e);
+  }
+  reader.read().then(progress).catch(error);
+}
+
+function startReadingFromStream(
+  response: FlightResponse,
+  stream: ReadableStream,
+  isSecondaryStream: boolean,
+): void {
+  const streamState = createStreamState();
   const reader = stream.getReader();
   function progress({
     done,
@@ -111,11 +153,14 @@ function startReadingFromStream(
     ...
   }): void | Promise<void> {
     if (done) {
-      close(response);
+      // If we're the secondary stream, then we don't close the response until the debug channel closes.
+      if (!isSecondaryStream) {
+        close(response);
+      }
       return;
     }
     const buffer: Uint8Array = (value: any);
-    processBinaryChunk(response, buffer);
+    processBinaryChunk(response, streamState, buffer);
     return reader.read().then(progress).catch(error);
   }
   function error(e: any) {
@@ -125,7 +170,7 @@ function startReadingFromStream(
 }
 
 export type Options = {
-  debugChannel?: {writable?: WritableStream, ...},
+  debugChannel?: {writable?: WritableStream, readable?: ReadableStream, ...},
   temporaryReferences?: TemporaryReferenceSet,
   replayConsoleLogs?: boolean,
   environmentName?: string,
@@ -157,7 +202,17 @@ export function createFromReadableStream<T>(
       ? createDebugCallbackFromWritableStream(options.debugChannel.writable)
       : undefined,
   );
-  startReadingFromStream(response, stream);
+  if (
+    __DEV__ &&
+    options &&
+    options.debugChannel &&
+    options.debugChannel.readable
+  ) {
+    startReadingFromUniversalStream(response, options.debugChannel.readable);
+    startReadingFromStream(response, stream, true);
+  } else {
+    startReadingFromStream(response, stream, false);
+  }
   return getRoot(response);
 }
 
@@ -189,7 +244,20 @@ export function createFromFetch<T>(
   );
   promiseForResponse.then(
     function (r) {
-      startReadingFromStream(response, (r.body: any));
+      if (
+        __DEV__ &&
+        options &&
+        options.debugChannel &&
+        options.debugChannel.readable
+      ) {
+        startReadingFromUniversalStream(
+          response,
+          options.debugChannel.readable,
+        );
+        startReadingFromStream(response, (r.body: any), true);
+      } else {
+        startReadingFromStream(response, (r.body: any), false);
+      }
     },
     function (e) {
       reportGlobalError(response, e);

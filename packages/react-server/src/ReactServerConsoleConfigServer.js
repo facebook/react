@@ -8,7 +8,7 @@
  */
 
 // Keep in sync with ReactClientConsoleConfig
-const badgeFormat = '\x1b[0m\x1b[7m%c%s\x1b[0m%c ';
+const badgeFormat = '\x1b[0m\x1b[7m%c%s\x1b[0m%c';
 // Same badge styling as DevTools.
 const badgeStyle =
   // We use a fixed background if light-dark is not supported, otherwise
@@ -53,7 +53,12 @@ export function unbadgeConsole(
     typeof badge === 'string'
   ) {
     // Remove our badging from the arguments.
-    args.splice(offset, 4, format.slice(badgeFormat.length));
+    let unbadgedFormat = format.slice(badgeFormat.length);
+    if (unbadgedFormat[0] === ' ') {
+      // Spacing added on the Client if the original argument was a string.
+      unbadgedFormat = unbadgedFormat.slice(1);
+    }
+    args.splice(offset, 4, unbadgedFormat);
     return badge.slice(padLength, badge.length - padLength);
   }
   return null;

@@ -1437,7 +1437,9 @@ describe('ReactFlightDOMEdge', () => {
       };
     });
 
-    controller.abort('boom');
+    await serverAct(() => {
+      controller.abort('boom');
+    });
     resolveGreeting();
     const {prelude} = await pendingResult;
 
@@ -1497,7 +1499,7 @@ describe('ReactFlightDOMEdge', () => {
     });
 
     controller.abort();
-    const {prelude} = await pendingResult;
+    const {prelude} = await serverAct(() => pendingResult);
 
     expect(errors).toEqual([]);
 

@@ -66,10 +66,7 @@ import {
   getInspectorDataForInstance,
 } from './ReactNativeFiberInspector';
 
-import {
-  passChildrenWhenCloningPersistedNodes,
-  enableLazyPublicInstanceInFabric,
-} from 'shared/ReactFeatureFlags';
+import {passChildrenWhenCloningPersistedNodes} from 'shared/ReactFeatureFlags';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import type {ReactContext} from 'shared/ReactTypes';
 
@@ -204,37 +201,17 @@ export function createInstance(
     internalInstanceHandle, // internalInstanceHandle
   );
 
-  if (enableLazyPublicInstanceInFabric) {
-    return {
-      node: node,
-      canonical: {
-        nativeTag: tag,
-        viewConfig,
-        currentProps: props,
-        internalInstanceHandle,
-        publicInstance: null,
-        publicRootInstance: rootContainerInstance.publicInstance,
-      },
-    };
-  } else {
-    const component = createPublicInstance(
-      tag,
+  return {
+    node: node,
+    canonical: {
+      nativeTag: tag,
       viewConfig,
+      currentProps: props,
       internalInstanceHandle,
-      rootContainerInstance.publicInstance,
-    );
-
-    return {
-      node: node,
-      canonical: {
-        nativeTag: tag,
-        viewConfig,
-        currentProps: props,
-        internalInstanceHandle,
-        publicInstance: component,
-      },
-    };
-  }
+      publicInstance: null,
+      publicRootInstance: rootContainerInstance.publicInstance,
+    },
+  };
 }
 
 export function createTextInstance(
