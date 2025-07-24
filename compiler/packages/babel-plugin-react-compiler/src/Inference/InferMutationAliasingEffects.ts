@@ -36,8 +36,8 @@ import {
   ValueReason,
 } from '../HIR';
 import {
-  eachInstructionValueLValue,
   eachInstructionValueOperand,
+  eachPatternItem,
   eachTerminalOperand,
   eachTerminalSuccessor,
 } from '../HIR/visitors';
@@ -1864,19 +1864,34 @@ function computeSignatureForInstruction(
       break;
     }
     case 'Destructure': {
-      for (const patternLValue of eachInstructionValueLValue(value)) {
-        if (isPrimitiveType(patternLValue.identifier)) {
+      for (const patternItem of eachPatternItem(value.lvalue.pattern)) {
+        const place =
+          patternItem.kind === 'Identifier' ? patternItem : patternItem.place;
+        if (isPrimitiveType(place.identifier)) {
           effects.push({
             kind: 'Create',
-            into: patternLValue,
+            into: place,
             value: ValueKind.Primitive,
             reason: ValueReason.Other,
           });
-        } else {
+        } else if (patternItem.kind === 'Identifier') {
           effects.push({
             kind: 'CreateFrom',
             from: value.value,
-            into: patternLValue,
+            into: place,
+          });
+        } else {
+          // Spread creates a new object/array that captures from the RValue
+          effects.push({
+            kind: 'Create',
+            into: place,
+            reason: ValueReason.Other,
+            value: ValueKind.Mutable,
+          });
+          effects.push({
+            kind: 'Capture',
+            from: value.value,
+            into: place,
           });
         }
       }
