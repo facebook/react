@@ -19,6 +19,7 @@ function useHook({bar}) {
 
 ```
 Found 3 errors:
+
 Error: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
 
 error.invalid-rules-of-hooks-f69800950ff0.ts:6:20
@@ -29,7 +30,6 @@ error.invalid-rules-of-hooks-f69800950ff0.ts:6:20
   7 |   let foo2 = bar || useState();
   8 |   let foo3 = bar ?? useState();
   9 | }
-
 
 Error: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
 
@@ -42,7 +42,6 @@ error.invalid-rules-of-hooks-f69800950ff0.ts:7:20
    9 | }
   10 |
 
-
 Error: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
 
 error.invalid-rules-of-hooks-f69800950ff0.ts:8:20
@@ -52,8 +51,6 @@ error.invalid-rules-of-hooks-f69800950ff0.ts:8:20
      |                     ^^^^^^^^ Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
    9 | }
   10 |
-
-
 ```
           
       

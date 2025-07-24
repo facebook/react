@@ -25,6 +25,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 1 error:
+
 Todo: Support functions with unreachable code that may contain hoisted declarations
 
 error.hoisting-simple-function-declaration.ts:6:2
@@ -39,8 +40,6 @@ error.hoisting-simple-function-declaration.ts:6:2
    9 | }
   10 |
   11 | export const FIXTURE_ENTRYPOINT = {
-
-
 ```
           
       

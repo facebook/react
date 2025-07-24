@@ -20,6 +20,7 @@ function Component(props) {
 
 ```
 Found 1 error:
+
 Error: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)
 
 error.invalid-aliased-ref-in-callback-invoked-during-render-.ts:9:33
@@ -29,8 +30,6 @@ error.invalid-aliased-ref-in-callback-invoked-during-render-.ts:9:33
      |                                  ^^^^^^^^^^^^^^^^^^^^^^^^ Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)
   10 | }
   11 |
-
-
 ```
           
       

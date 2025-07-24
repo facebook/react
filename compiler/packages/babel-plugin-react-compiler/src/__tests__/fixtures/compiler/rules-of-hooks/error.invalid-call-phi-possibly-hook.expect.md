@@ -19,6 +19,7 @@ function Component(props) {
 
 ```
 Found 3 errors:
+
 Error: Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values
 
 error.invalid-call-phi-possibly-hook.ts:3:31
@@ -29,7 +30,6 @@ error.invalid-call-phi-possibly-hook.ts:3:31
   4 |
   5 |   // Ideally we would report a "conditional hook call" error here.
   6 |   // It's an unconditional call, but the value may or may not be a hook.
-
 
 Error: Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values
 
@@ -42,7 +42,6 @@ error.invalid-call-phi-possibly-hook.ts:3:18
   5 |   // Ideally we would report a "conditional hook call" error here.
   6 |   // It's an unconditional call, but the value may or may not be a hook.
 
-
 Error: Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values
 
 error.invalid-call-phi-possibly-hook.ts:8:9
@@ -52,8 +51,6 @@ error.invalid-call-phi-possibly-hook.ts:8:9
      |          ^^^^^^^ Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values
    9 | }
   10 |
-
-
 ```
           
       

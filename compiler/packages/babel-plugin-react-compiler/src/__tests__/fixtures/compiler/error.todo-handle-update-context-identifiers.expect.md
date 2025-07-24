@@ -23,6 +23,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 1 error:
+
 Todo: (BuildHIR::lowerExpression) Handle UpdateExpression to variables captured within lambdas.
 
 error.todo-handle-update-context-identifiers.ts:4:11
@@ -33,8 +34,6 @@ error.todo-handle-update-context-identifiers.ts:4:11
   5 |   };
   6 |
   7 |   return fn();
-
-
 ```
           
       

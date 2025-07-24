@@ -51,6 +51,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 1 error:
+
 Todo: Support local variables named `fbt`
 
 Local variables named `fbt` may conflict with the fbt plugin and are not yet supported

@@ -18,15 +18,16 @@ function Component(props) {
 
 ```
 Found 1 error:
+
 Error: This value cannot be modified
 
-Modifying component props or hook arguments is not allowed. Consider using a local variable instead
+Modifying component props or hook arguments is not allowed. Consider using a local variable instead.
 
 error.invalid-mutate-props-via-for-of-iterator.ts:4:4
   2 |   const items = [];
   3 |   for (const x of props.items) {
 > 4 |     x.modified = true;
-    |     ^ This value cannot be modified
+    |     ^ value cannot be modified
   5 |     items.push(x);
   6 |   }
   7 |   return items;

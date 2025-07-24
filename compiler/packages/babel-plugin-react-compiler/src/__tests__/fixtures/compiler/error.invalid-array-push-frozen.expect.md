@@ -16,15 +16,16 @@ function Component(props) {
 
 ```
 Found 1 error:
+
 Error: This value cannot be modified
 
-Modifying a value used previously in JSX is not allowed. Consider moving the modification before the JSX
+Modifying a value used previously in JSX is not allowed. Consider moving the modification before the JSX.
 
 error.invalid-array-push-frozen.ts:4:2
   2 |   const x = [];
   3 |   <div>{x}</div>;
 > 4 |   x.push(props.value);
-    |   ^ This value cannot be modified
+    |   ^ value cannot be modified
   5 |   return x;
   6 | }
   7 |

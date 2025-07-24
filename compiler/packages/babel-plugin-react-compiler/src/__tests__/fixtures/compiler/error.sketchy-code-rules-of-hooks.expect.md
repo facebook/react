@@ -22,6 +22,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 1 error:
+
 Error: React Compiler has skipped optimizing this component because one or more React ESLint rules were disabled. React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior
 
 eslint-disable react-hooks/rules-of-hooks.
@@ -32,8 +33,6 @@ error.sketchy-code-rules-of-hooks.ts:1:0
   2 | function lowercasecomponent() {
   3 |   const x = [];
   4 |   return <div>{x}</div>;
-
-
 ```
           
       

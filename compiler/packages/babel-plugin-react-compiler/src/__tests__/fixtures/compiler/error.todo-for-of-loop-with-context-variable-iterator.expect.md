@@ -32,6 +32,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 1 error:
+
 Todo: Support non-trivial for..of inits
 
 error.todo-for-of-loop-with-context-variable-iterator.ts:8:2
@@ -56,8 +57,6 @@ error.todo-for-of-loop-with-context-variable-iterator.ts:8:2
   16 |   return <div>{items}</div>;
   17 | }
   18 |
-
-
 ```
           
       
