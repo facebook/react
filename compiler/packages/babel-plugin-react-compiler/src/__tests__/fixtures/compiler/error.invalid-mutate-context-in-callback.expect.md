@@ -25,20 +25,18 @@ function Component(props) {
 
 ```
 Found 1 error:
-Error: Mutating a value returned from 'useContext()', which should not be mutated
+Error: This value cannot be modified
 
-Found mutation of `FooContext`.
+Modifying a value returned from 'useContext()' is not allowed.
 
 error.invalid-mutate-context-in-callback.ts:12:4
   10 |   // independently
   11 |   const onClick = () => {
 > 12 |     FooContext.current = true;
-     |     ^^^^^^^^^^ Mutating a value returned from 'useContext()', which should not be mutated
+     |     ^^^^^^^^^^ `FooContext` cannot be modified
   13 |   };
   14 |   return <div onClick={onClick} />;
   15 | }
-
-
 ```
           
       

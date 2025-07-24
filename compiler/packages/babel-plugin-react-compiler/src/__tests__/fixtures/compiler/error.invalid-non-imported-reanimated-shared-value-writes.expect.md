@@ -25,20 +25,18 @@ function SomeComponent() {
 
 ```
 Found 1 error:
-Error: Updating a value returned from a hook is not allowed. Consider moving the mutation into the hook where the value is constructed
+Error: This value cannot be modified
 
-Found mutation of `sharedVal`.
+Modifying a value returned from a hook is not allowed. Consider moving the modification into the hook where the value is constructed
 
 error.invalid-non-imported-reanimated-shared-value-writes.ts:11:22
    9 |   return (
   10 |     <Button
 > 11 |       onPress={() => (sharedVal.value = Math.random())}
-     |                       ^^^^^^^^^ Updating a value returned from a hook is not allowed. Consider moving the mutation into the hook where the value is constructed
+     |                       ^^^^^^^^^ `sharedVal` cannot be modified
   12 |       title="Randomize"
   13 |     />
   14 |   );
-
-
 ```
           
       
