@@ -317,7 +317,7 @@ function createSourcesEditorPanel() {
   }
 
   const sourcesPanel = chrome.devtools.panels.sources;
-  if (!sourcesPanel) {
+  if (!sourcesPanel || !sourcesPanel.createSidebarPane) {
     // Firefox doesn't currently support extending the source panel.
     return;
   }
