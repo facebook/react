@@ -8,6 +8,7 @@
 import {NodePath} from '@babel/core';
 import * as t from '@babel/types';
 import {
+  CompilerDiagnostic,
   CompilerError,
   CompilerErrorDetail,
   CompilerSuggestionOperation,
@@ -181,12 +182,11 @@ export function suppressionsToCompilerError(
           'Unhandled suppression source',
         );
     }
-    error.pushErrorDetail(
-      new CompilerErrorDetail({
-        reason: `${reason}. React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior`,
-        description: suppressionRange.disableComment.value.trim(),
+    error.pushDiagnostic(
+      CompilerDiagnostic.create({
+        category: reason,
+        description: `React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior. Found suppression \`${suppressionRange.disableComment.value.trim()}\``,
         severity: ErrorSeverity.InvalidReact,
-        loc: suppressionRange.disableComment.loc ?? null,
         suggestions: [
           {
             description: suggestion,
@@ -197,6 +197,10 @@ export function suppressionsToCompilerError(
             op: CompilerSuggestionOperation.Remove,
           },
         ],
+      }).withDetail({
+        kind: 'error',
+        loc: suppressionRange.disableComment.loc ?? null,
+        message: 'Found React rule suppression',
       }),
     );
   }
