@@ -16,6 +16,7 @@ function useFoo(props) {
 
 ```
 Found 1 error:
+
 Todo: Encountered conflicting global in generated program
 
 Conflict from local binding __DEV__.
@@ -28,8 +29,6 @@ error.emit-freeze-conflicting-global.ts:3:8
   4 |   console.log(__DEV__);
   5 |   return foo(props.x);
   6 | }
-
-
 ```
           
       

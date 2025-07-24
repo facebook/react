@@ -26,6 +26,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 1 error:
+
 Todo: (BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration
 
 error.todo-hoisting-simple-var-declaration.ts:7:2
@@ -36,8 +37,6 @@ error.todo-hoisting-simple-var-declaration.ts:7:2
    8 |
    9 |   return result; // OK: returns NaN. The code is semantically wrong but technically correct
   10 | }
-
-
 ```
           
       

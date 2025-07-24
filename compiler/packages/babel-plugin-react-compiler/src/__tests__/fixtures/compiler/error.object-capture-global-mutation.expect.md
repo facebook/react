@@ -23,6 +23,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 1 error:
+
 Error: Modifying a variable defined outside a component or hook is not allowed. Consider using an effect
 
 error.object-capture-global-mutation.ts:4:4
@@ -33,8 +34,6 @@ error.object-capture-global-mutation.ts:4:4
   5 |   };
   6 |   const y = {x};
   7 |   return <Bar y={y} />;
-
-
 ```
           
       

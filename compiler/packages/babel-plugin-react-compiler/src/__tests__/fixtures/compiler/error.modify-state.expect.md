@@ -17,15 +17,16 @@ function Foo() {
 
 ```
 Found 1 error:
+
 Error: This value cannot be modified
 
-Modifying a value returned from 'useState()', which should not be modified directly. Use the setter function to update instead
+Modifying a value returned from 'useState()', which should not be modified directly. Use the setter function to update instead.
 
 error.modify-state.ts:5:2
   3 | function Foo() {
   4 |   let [state, setState] = useState({});
 > 5 |   state.foo = 1;
-    |   ^^^^^ This value cannot be modified
+    |   ^^^^^ value cannot be modified
   6 |   return state;
   7 | }
   8 |

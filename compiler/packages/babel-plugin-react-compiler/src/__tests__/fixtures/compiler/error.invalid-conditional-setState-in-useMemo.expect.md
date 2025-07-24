@@ -23,6 +23,7 @@ function Component({item, cond}) {
 
 ```
 Found 2 errors:
+
 Error: Calling setState from useMemo may trigger an infinite loop
 
 Each time the memo callback is evaluated it will change state. This can cause a memoization dependency to change, running the memo function again and causing an infinite loop. Instead of setting state in useMemo(), prefer deriving the value during render. (https://react.dev/reference/react/useState)
@@ -35,6 +36,7 @@ error.invalid-conditional-setState-in-useMemo.ts:7:6
    8 |       setState(0);
    9 |     }
   10 |   }, [cond, key, init]);
+
 Error: Calling setState from useMemo may trigger an infinite loop
 
 Each time the memo callback is evaluated it will change state. This can cause a memoization dependency to change, running the memo function again and causing an infinite loop. Instead of setting state in useMemo(), prefer deriving the value during render. (https://react.dev/reference/react/useState)

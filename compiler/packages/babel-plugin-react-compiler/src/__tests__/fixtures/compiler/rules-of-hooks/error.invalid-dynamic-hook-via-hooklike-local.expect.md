@@ -15,6 +15,7 @@ function Component() {
 
 ```
 Found 1 error:
+
 Error: Hooks must be the same function on every render, but this value may change over time to a different function. See https://react.dev/reference/rules/react-calls-components-and-hooks#dont-dynamically-use-hooks
 
 error.invalid-dynamic-hook-via-hooklike-local.ts:4:2
@@ -24,8 +25,6 @@ error.invalid-dynamic-hook-via-hooklike-local.ts:4:2
     |   ^^^^^^^^^^^^^^^^^^^^^^^^^ Hooks must be the same function on every render, but this value may change over time to a different function. See https://react.dev/reference/rules/react-calls-components-and-hooks#dont-dynamically-use-hooks
   5 | }
   6 |
-
-
 ```
           
       

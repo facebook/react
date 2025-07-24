@@ -15,6 +15,7 @@ function Component(props) {
 
 ```
 Found 1 error:
+
 Invariant: Const declaration cannot be referenced as an expression
 
 error.call-args-destructuring-asignment-complex.ts:3:9
@@ -25,8 +26,6 @@ error.call-args-destructuring-asignment-complex.ts:3:9
   4 |   return x;
   5 | }
   6 |
-
-
 ```
           
       

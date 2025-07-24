@@ -23,6 +23,7 @@ function Component(props) {
 
 ```
 Found 1 error:
+
 Error: Cannot compile `fire`
 
 fire() can only take in a single call expression as an argument but received a spread argument.
@@ -35,8 +36,6 @@ error.invalid-spread.ts:9:4
   10 |   });
   11 |
   12 |   return null;
-
-
 ```
           
       

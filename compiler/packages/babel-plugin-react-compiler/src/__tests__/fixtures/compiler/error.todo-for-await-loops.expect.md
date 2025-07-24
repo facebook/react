@@ -17,6 +17,7 @@ async function Component({items}) {
 
 ```
 Found 1 error:
+
 Todo: (BuildHIR::lowerStatement) Handle for-await loops
 
 error.todo-for-await-loops.ts:3:2
@@ -31,8 +32,6 @@ error.todo-for-await-loops.ts:3:2
   6 |   return x;
   7 | }
   8 |
-
-
 ```
           
       

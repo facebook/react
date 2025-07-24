@@ -14,6 +14,7 @@ function Component() {
 
 ```
 Found 2 errors:
+
 Error: Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values
 
 error.propertyload-hook.ts:2:12
@@ -24,7 +25,6 @@ error.propertyload-hook.ts:2:12
   4 | }
   5 |
 
-
 Error: Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values
 
 error.propertyload-hook.ts:3:9
@@ -34,8 +34,6 @@ error.propertyload-hook.ts:3:9
     |          ^ Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values
   4 | }
   5 |
-
-
 ```
           
       

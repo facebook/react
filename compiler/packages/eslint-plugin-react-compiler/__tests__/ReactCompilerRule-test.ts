@@ -159,7 +159,7 @@ const tests: CompilerTestCases = {
           message: /Handle var kinds in VariableDeclaration/,
         },
         {
-          message: /Mutating component props or hook arguments is not allowed/,
+          message: /Modifying component props or hook arguments is not allowed/,
         },
       ],
     },
@@ -195,7 +195,7 @@ const tests: CompilerTestCases = {
       errors: [
         {
           message:
-            /Unexpected reassignment of a variable which was defined outside of the component/,
+            /Cannot reassign variables declared outside of the component\/hook/,
         },
       ],
     },

@@ -54,6 +54,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 1 error:
+
 Todo: Support duplicate fbt tags
 
 Support `<fbt>` tags with multiple `<fbt:plural>` values

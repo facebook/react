@@ -447,23 +447,22 @@ function applySignature(
               reason: value.reason,
               context: new Set(),
             });
-            const message =
+            const variable =
               effect.value.identifier.name !== null &&
               effect.value.identifier.name.kind === 'named'
-                ? `\`${effect.value.identifier.name.value}\` cannot be modified`
-                : 'This value cannot be modified';
+                ? `\`${effect.value.identifier.name.value}\``
+                : 'value';
             effects.push({
               kind: 'MutateFrozen',
               place: effect.value,
               error: CompilerDiagnostic.create({
                 severity: ErrorSeverity.InvalidReact,
                 category: 'This value cannot be modified',
-                description: reason,
-                suggestions: null,
+                description: `${reason}.`,
               }).withDetail({
                 kind: 'error',
                 loc: effect.value.loc,
-                message,
+                message: `${variable} cannot be modified`,
               }),
             });
           }
@@ -1018,30 +1017,30 @@ function applyEffect(
             effect.value.identifier.declarationId,
           )
         ) {
-          const description =
+          const variable =
             effect.value.identifier.name !== null &&
             effect.value.identifier.name.kind === 'named'
-              ? `Variable \`${effect.value.identifier.name.value}\``
-              : 'This variable';
+              ? `\`${effect.value.identifier.name.value}\``
+              : null;
           const hoistedAccess = context.hoistedContextDeclarations.get(
             effect.value.identifier.declarationId,
           );
           const diagnostic = CompilerDiagnostic.create({
             severity: ErrorSeverity.InvalidReact,
             category: 'Cannot access variable before it is declared',
-            description: `${description} is accessed before it is declared, which prevents the earlier access from updating when this value changes over time`,
+            description: `${variable ?? 'This variable'} is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.`,
           });
           if (hoistedAccess != null && hoistedAccess.loc != effect.value.loc) {
             diagnostic.withDetail({
               kind: 'error',
               loc: hoistedAccess.loc,
-              message: 'Variable accessed before it is declared',
+              message: `${variable ?? 'variable'} accessed before it is declared`,
             });
           }
           diagnostic.withDetail({
             kind: 'error',
             loc: effect.value.loc,
-            message: 'The variable is declared here',
+            message: `${variable ?? 'variable'} is declared here`,
           });
 
           applyEffect(
@@ -1061,11 +1060,11 @@ function applyEffect(
             reason: value.reason,
             context: new Set(),
           });
-          const message =
+          const variable =
             effect.value.identifier.name !== null &&
             effect.value.identifier.name.kind === 'named'
-              ? `\`${effect.value.identifier.name.value}\` cannot be modified`
-              : 'This value cannot be modified';
+              ? `\`${effect.value.identifier.name.value}\``
+              : 'value';
           applyEffect(
             context,
             state,
@@ -1078,11 +1077,11 @@ function applyEffect(
               error: CompilerDiagnostic.create({
                 severity: ErrorSeverity.InvalidReact,
                 category: 'This value cannot be modified',
-                description: reason,
+                description: `${reason}.`,
               }).withDetail({
                 kind: 'error',
                 loc: effect.value.loc,
-                message,
+                message: `${variable} cannot be modified`,
               }),
             },
             initialized,
@@ -2002,6 +2001,7 @@ function computeSignatureForInstruction(
       break;
     }
     case 'StoreGlobal': {
+      const variable = `\`${value.name}\``;
       effects.push({
         kind: 'MutateGlobal',
         place: value.value,
@@ -2009,13 +2009,11 @@ function computeSignatureForInstruction(
           severity: ErrorSeverity.InvalidReact,
           category:
             'Cannot reassign variables declared outside of the component/hook',
-          description:
-            'Reassigning a variable declared outside of the component/hook is a form of side effect, which can cause unpredictable behavior depending on when the component happens to re-render. If this variable is used in rendering, use useState instead. Otherwise, consider updating it in an effect (https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render)',
-          suggestions: null,
+          description: `Variable ${variable} is declared outside of the component/hook. Reassigning this value during render is a form of side effect, which can cause unpredictable behavior depending on when the component happens to re-render. If this variable is used in rendering, use useState instead. Otherwise, consider updating it in an effect. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render)`,
         }).withDetail({
           kind: 'error',
           loc: instr.loc,
-          message: 'Cannot reassign variable',
+          message: `${variable} cannot be reassigned`,
         }),
       });
       effects.push({kind: 'Assign', from: value.value, into: lvalue});
@@ -2114,7 +2112,6 @@ function computeEffectsForLegacySignature(
             ? `\`${signature.canonicalName}\` is an impure function. `
             : '') +
           'Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent)',
-        suggestions: null,
       }).withDetail({
         kind: 'error',
         loc,

@@ -25,9 +25,10 @@ function SomeComponent() {
 
 ```
 Found 1 error:
+
 Error: This value cannot be modified
 
-Modifying a value returned from a hook is not allowed. Consider moving the modification into the hook where the value is constructed
+Modifying a value returned from a hook is not allowed. Consider moving the modification into the hook where the value is constructed.
 
 error.invalid-non-imported-reanimated-shared-value-writes.ts:11:22
    9 |   return (

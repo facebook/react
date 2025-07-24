@@ -15,6 +15,7 @@ function Component(props) {
 
 ```
 Found 3 errors:
+
 Error: Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values
 
 error.invalid-hook-reassigned-in-conditional.ts:3:20
@@ -25,7 +26,6 @@ error.invalid-hook-reassigned-in-conditional.ts:3:20
   4 |   return y();
   5 | }
   6 |
-
 
 Error: Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values
 
@@ -38,7 +38,6 @@ error.invalid-hook-reassigned-in-conditional.ts:3:16
   5 | }
   6 |
 
-
 Error: Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values
 
 error.invalid-hook-reassigned-in-conditional.ts:4:9
@@ -48,8 +47,6 @@ error.invalid-hook-reassigned-in-conditional.ts:4:9
     |          ^ Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values
   5 | }
   6 |
-
-
 ```
           
       
