@@ -12,7 +12,6 @@ import type {SchedulingEvent} from 'react-devtools-timeline/src/types';
 import * as React from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
-import ViewElementSourceContext from '../Components/ViewElementSourceContext';
 import {useContext} from 'react';
 import {TimelineContext} from 'react-devtools-timeline/src/TimelineContext';
 import {
@@ -22,6 +21,7 @@ import {
 import {stackToComponentLocations} from 'react-devtools-shared/src/devtools/utils';
 import {copy} from 'clipboard-js';
 import {withPermissionsCheck} from 'react-devtools-shared/src/frontend/utils/withPermissionsCheck';
+import useOpenResource from '../useOpenResource';
 
 import styles from './SidebarEventInfo.css';
 
@@ -32,9 +32,6 @@ type SchedulingEventProps = {
 };
 
 function SchedulingEventInfo({eventInfo}: SchedulingEventProps) {
-  const {canViewElementSourceFunction, viewElementSourceFunction} = useContext(
-    ViewElementSourceContext,
-  );
   const {componentName, timestamp} = eventInfo;
   const componentStack = eventInfo.componentStack || null;
 
@@ -79,15 +76,10 @@ function SchedulingEventInfo({eventInfo}: SchedulingEventProps) {
 
                     // TODO: We should support symbolication here as well, but
                     // symbolicating the whole stack can be expensive
-                    const canViewSource =
-                      canViewElementSourceFunction == null ||
-                      canViewElementSourceFunction(location, null);
-
-                    const viewSource =
-                      !canViewSource || viewElementSourceFunction == null
-                        ? () => null
-                        : () => viewElementSourceFunction(location, null);
-
+                    const [canViewSource, viewSource] = useOpenResource(
+                      location,
+                      null,
+                    );
                     return (
                       <li key={index}>
                         <Button

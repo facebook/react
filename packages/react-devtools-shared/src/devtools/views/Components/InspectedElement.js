@@ -271,8 +271,7 @@ export default function InspectedElementWrapper(_: Props): React.Node {
 
         {!hideViewSourceAction && (
           <InspectedElementViewSourceButton
-            canViewSource={inspectedElement?.canViewSource}
-            source={inspectedElement?.source}
+            source={inspectedElement ? inspectedElement.source : null}
             symbolicatedSourcePromise={symbolicatedSourcePromise}
           />
         )}
