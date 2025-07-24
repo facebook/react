@@ -687,6 +687,7 @@ function applyEffect(
       }
       break;
     }
+    case 'MaybeAlias':
     case 'Alias':
     case 'Capture': {
       CompilerError.invariant(
@@ -951,7 +952,7 @@ function applyEffect(
             context,
             state,
             // OK: recording information flow
-            {kind: 'Alias', from: operand, into: effect.into},
+            {kind: 'MaybeAlias', from: operand, into: effect.into},
             initialized,
             effects,
           );
@@ -1325,7 +1326,7 @@ class InferenceState {
             return 'mutate-global';
           }
           case ValueKind.MaybeFrozen: {
-            return 'none';
+            return 'mutate-frozen';
           }
           default: {
             assertExhaustive(kind, `Unexpected kind ${kind}`);
@@ -2357,6 +2358,7 @@ function computeEffectsForSignature(
   // Apply substitutions
   for (const effect of signature.effects) {
     switch (effect.kind) {
+      case 'MaybeAlias':
       case 'Assign':
       case 'ImmutableCapture':
       case 'Alias':
