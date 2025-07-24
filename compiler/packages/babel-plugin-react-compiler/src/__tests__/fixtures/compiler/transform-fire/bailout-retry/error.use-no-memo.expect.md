@@ -31,6 +31,7 @@ function Component({props, bar}) {
 
 ```
 Found 1 error:
+
 Error: [Fire] Untransformed reference to compiler-required feature.
 
  null

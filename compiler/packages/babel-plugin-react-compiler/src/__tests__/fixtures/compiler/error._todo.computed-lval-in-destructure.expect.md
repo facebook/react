@@ -16,6 +16,7 @@ function Component(props) {
 
 ```
 Found 1 error:
+
 Todo: (BuildHIR::lowerAssignment) Handle computed properties in ObjectPattern
 
 error._todo.computed-lval-in-destructure.ts:3:9
@@ -26,8 +27,6 @@ error._todo.computed-lval-in-destructure.ts:3:9
   4 |
   5 |   return x;
   6 | }
-
-
 ```
           
       

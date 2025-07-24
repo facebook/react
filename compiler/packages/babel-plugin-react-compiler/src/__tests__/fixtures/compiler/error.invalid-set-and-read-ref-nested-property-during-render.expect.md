@@ -16,6 +16,7 @@ function Component(props) {
 
 ```
 Found 2 errors:
+
 Error: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)
 
 error.invalid-set-and-read-ref-nested-property-during-render.ts:4:2
@@ -27,7 +28,6 @@ error.invalid-set-and-read-ref-nested-property-during-render.ts:4:2
   6 | }
   7 |
 
-
 Error: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)
 
 error.invalid-set-and-read-ref-nested-property-during-render.ts:5:9
@@ -37,8 +37,6 @@ error.invalid-set-and-read-ref-nested-property-during-render.ts:5:9
     |          ^^^^^^^^^^^^^^^^^ Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)
   6 | }
   7 |
-
-
 ```
           
       

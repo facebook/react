@@ -19,6 +19,7 @@ function normalFunctionWithConditionalHook() {
 
 ```
 Found 1 error:
+
 Error: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
 
 error.invalid-rules-of-hooks-d740d54e9c21.ts:7:4
@@ -29,8 +30,6 @@ error.invalid-rules-of-hooks-d740d54e9c21.ts:7:4
    8 |   }
    9 | }
   10 |
-
-
 ```
           
       

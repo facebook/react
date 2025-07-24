@@ -14,6 +14,7 @@ function Component() {
 
 ```
 Found 1 error:
+
 Error: Cannot reassign a `const` variable
 
 `x` is declared as const.
@@ -25,8 +26,6 @@ error.invalid-reassign-const.ts:3:2
     |   ^ Cannot reassign a `const` variable
   4 | }
   5 |
-
-
 ```
           
       

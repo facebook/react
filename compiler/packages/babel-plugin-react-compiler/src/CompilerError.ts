@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import * as t from '@babel/types';
 import {codeFrameColumns} from '@babel/code-frame';
 import type {SourceLocation} from './HIR';
 import {Err, Ok, Result} from './Utils/Result';
@@ -93,6 +94,14 @@ export type CompilerErrorDetailOptions = {
   suggestions?: Array<CompilerSuggestion> | null | undefined;
 };
 
+export type PrintErrorMessageOptions = {
+  /**
+   * ESLint uses 1-indexed columns and prints one error at a time
+   * So it doesn't require the "Found # error(s)" text
+   */
+  eslint: boolean;
+};
+
 export class CompilerDiagnostic {
   options: CompilerDiagnosticOptions;
 
@@ -128,7 +137,7 @@ export class CompilerDiagnostic {
     return this.options.details.filter(d => d.kind === 'error')[0]?.loc ?? null;
   }
 
-  printErrorMessage(source: string): string {
+  printErrorMessage(source: string, options: PrintErrorMessageOptions): string {
     const buffer = [
       printErrorSummary(this.severity, this.category),
       '\n\n',
@@ -143,28 +152,18 @@ export class CompilerDiagnostic {
           }
           let codeFrame: string;
           try {
-            codeFrame = codeFrameColumns(
-              source,
-              {
-                start: {
-                  line: loc.start.line,
-                  column: loc.start.column + 1,
-                },
-                end: {
-                  line: loc.end.line,
-                  column: loc.end.column + 1,
-                },
-              },
-              {
-                message: detail.message,
-              },
-            );
+            codeFrame = printCodeFrame(source, loc, detail.message);
           } catch (e) {
             codeFrame = detail.message;
           }
-          buffer.push(
-            `\n\n${loc.filename}:${loc.start.line}:${loc.start.column}\n`,
-          );
+          buffer.push('\n\n');
+          if (loc.filename != null) {
+            const line = loc.start.line;
+            const column = options.eslint
+              ? loc.start.column + 1
+              : loc.start.column;
+            buffer.push(`${loc.filename}:${line}:${column}\n`);
+          }
           buffer.push(codeFrame);
           break;
         }
@@ -223,7 +222,7 @@ export class CompilerErrorDetail {
     return this.loc;
   }
 
-  printErrorMessage(source: string): string {
+  printErrorMessage(source: string, options: PrintErrorMessageOptions): string {
     const buffer = [printErrorSummary(this.severity, this.reason)];
     if (this.description != null) {
       buffer.push(`\n\n${this.description}.`);
@@ -232,28 +231,16 @@ export class CompilerErrorDetail {
     if (loc != null && typeof loc !== 'symbol') {
       let codeFrame: string;
       try {
-        codeFrame = codeFrameColumns(
-          source,
-          {
-            start: {
-              line: loc.start.line,
-              column: loc.start.column + 1,
-            },
-            end: {
-              line: loc.end.line,
-              column: loc.end.column + 1,
-            },
-          },
-          {
-            message: this.reason,
-          },
-        );
+        codeFrame = printCodeFrame(source, loc, this.reason);
       } catch (e) {
         codeFrame = '';
       }
-      buffer.push(
-        `\n\n${loc.filename}:${loc.start.line}:${loc.start.column}\n`,
-      );
+      buffer.push(`\n\n`);
+      if (loc.filename != null) {
+        const line = loc.start.line;
+        const column = options.eslint ? loc.start.column + 1 : loc.start.column;
+        buffer.push(`${loc.filename}:${line}:${column}\n`);
+      }
       buffer.push(codeFrame);
       buffer.push('\n\n');
     }
@@ -372,10 +359,15 @@ export class CompilerError extends Error {
     return this.name;
   }
 
-  printErrorMessage(source: string): string {
+  printErrorMessage(source: string, options: PrintErrorMessageOptions): string {
+    if (options.eslint && this.details.length === 1) {
+      return this.details[0].printErrorMessage(source, options);
+    }
     return (
-      `Found ${this.details.length} error${this.details.length === 1 ? '' : 's'}:\n` +
-      this.details.map(detail => detail.printErrorMessage(source)).join('\n')
+      `Found ${this.details.length} error${this.details.length === 1 ? '' : 's'}:\n\n` +
+      this.details
+        .map(detail => detail.printErrorMessage(source, options).trim())
+        .join('\n\n')
     );
   }
 
@@ -436,6 +428,29 @@ export class CompilerError extends Error {
       }
     });
   }
+}
+
+function printCodeFrame(
+  source: string,
+  loc: t.SourceLocation,
+  message: string,
+): string {
+  return codeFrameColumns(
+    source,
+    {
+      start: {
+        line: loc.start.line,
+        column: loc.start.column + 1,
+      },
+      end: {
+        line: loc.end.line,
+        column: loc.end.column + 1,
+      },
+    },
+    {
+      message,
+    },
+  );
 }
 
 function printErrorSummary(severity: ErrorSeverity, message: string): string {

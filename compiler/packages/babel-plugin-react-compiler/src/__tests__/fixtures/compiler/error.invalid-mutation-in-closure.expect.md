@@ -17,9 +17,10 @@ function useInvalidMutation(options) {
 
 ```
 Found 1 error:
+
 Error: This value cannot be modified
 
-Modifying component props or hook arguments is not allowed. Consider using a local variable instead
+Modifying component props or hook arguments is not allowed. Consider using a local variable instead.
 
 error.invalid-mutation-in-closure.ts:4:4
   2 |   function test() {

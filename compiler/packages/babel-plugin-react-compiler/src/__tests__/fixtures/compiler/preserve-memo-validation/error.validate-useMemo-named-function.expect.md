@@ -21,6 +21,7 @@ function Component(props) {
 
 ```
 Found 1 error:
+
 Error: Expected the first argument to be an inline function expression
 
 error.validate-useMemo-named-function.ts:9:20
@@ -31,8 +32,6 @@ error.validate-useMemo-named-function.ts:9:20
   10 |   return x;
   11 | }
   12 |
-
-
 ```
           
       

@@ -25,9 +25,9 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 2 errors:
+
 Error: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)
 
-undefined:6:16
   4 | component C() {
   5 |   const r = useRef(null);
 > 6 |   const guard = r.current == null;
@@ -36,12 +36,10 @@ undefined:6:16
   8 |     r.current = 1;
   9 |   }
 
-
 Error: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)
 
 Cannot access ref value `guard`.
 
-undefined:7:6
    5 |   const r = useRef(null);
    6 |   const guard = r.current == null;
 >  7 |   if (guard) {
@@ -49,8 +47,6 @@ undefined:7:6
    8 |     r.current = 1;
    9 |   }
   10 | }
-
-
 ```
           
       

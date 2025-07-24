@@ -30,6 +30,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 1 error:
+
 Error: Cannot infer dependencies of this effect. This will break your build!
 
 To resolve, either pass a dependency array or fix reported compiler bailout diagnostics.
