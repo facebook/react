@@ -137,9 +137,9 @@ async function tabify(
     } else {
       language = 'markdown';
       output = `
-# Output
+# Summary
 
-React Compiler compiled this function sucessfully, but there are lint errors that indicate potential issues with the original code.
+React Compiler compiled this function successfully, but there are lint errors that indicate potential issues with the original code.
 
 ## ${compilerOutput.errors.length} Lint Errors
 
@@ -181,7 +181,7 @@ ${code}
       'Output',
       <TextTabContent
         output={errors}
-        language="plaintext"
+        language="markdown"
         diff={null}
         showInfoPanel={false}></TextTabContent>,
     );
