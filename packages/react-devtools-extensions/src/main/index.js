@@ -111,7 +111,7 @@ function createBridge() {
     chrome.devtools.panels.elements.onSelectionChanged.removeListener(
       onBrowserElementSelectionChanged,
     );
-    if (sourcesPanel) {
+    if (sourcesPanel && sourcesPanel.onSelectionChanged) {
       currentSelectedSource = null;
       sourcesPanel.onSelectionChanged.removeListener(
         onBrowserSourceSelectionChanged,
@@ -124,7 +124,7 @@ function createBridge() {
   chrome.devtools.panels.elements.onSelectionChanged.addListener(
     onBrowserElementSelectionChanged,
   );
-  if (sourcesPanel) {
+  if (sourcesPanel && sourcesPanel.onSelectionChanged) {
     sourcesPanel.onSelectionChanged.addListener(
       onBrowserSourceSelectionChanged,
     );
@@ -317,7 +317,7 @@ function createSourcesEditorPanel() {
   }
 
   const sourcesPanel = chrome.devtools.panels.sources;
-  if (!sourcesPanel) {
+  if (!sourcesPanel || !sourcesPanel.createSidebarPane) {
     // Firefox doesn't currently support extending the source panel.
     return;
   }
