@@ -140,7 +140,7 @@ export function inferMutationAliasingRanges(
         } else if (effect.kind === 'CreateFunction') {
           state.create(effect.into, {
             kind: 'Function',
-            function: effect.function.loweredFunc.func,
+            effect,
           });
         } else if (effect.kind === 'CreateFrom') {
           state.createFrom(index++, effect.from, effect.into);
@@ -155,7 +155,7 @@ export function inferMutationAliasingRanges(
            * invariant here.
            */
           if (!state.nodes.has(effect.into.identifier)) {
-            state.create(effect.into, {kind: 'Object'});
+            state.create(effect.into, {kind: 'Assign'});
           }
           state.assign(index++, effect.from, effect.into);
         } else if (effect.kind === 'Alias') {
@@ -465,6 +465,99 @@ export function inferMutationAliasingRanges(
     }
   }
 
+  const tracked: Array<Place> = [];
+  for (const param of [...fn.params, ...fn.context, fn.returns]) {
+    const place = param.kind === 'Identifier' ? param : param.place;
+    tracked.push(place);
+  }
+
+  const returned: Set<Node> = new Set();
+  const queue: Array<Node> = [state.nodes.get(fn.returns.identifier)!];
+  const seen: Set<Node> = new Set();
+  while (queue.length !== 0) {
+    const node = queue.pop()!;
+    if (seen.has(node)) {
+      continue;
+    }
+    seen.add(node);
+    for (const id of node.aliases.keys()) {
+      queue.push(state.nodes.get(id)!);
+    }
+    for (const id of node.createdFrom.keys()) {
+      queue.push(state.nodes.get(id)!);
+    }
+    if (node.id.id === fn.returns.identifier.id) {
+      continue;
+    }
+    switch (node.value.kind) {
+      case 'Assign':
+      case 'CreateFrom': {
+        break;
+      }
+      case 'Phi':
+      case 'Object':
+      case 'Function': {
+        returned.add(node);
+        break;
+      }
+      default: {
+        assertExhaustive(
+          node.value,
+          `Unexpected node value kind '${(node.value as any).kind}'`,
+        );
+      }
+    }
+  }
+  const returnedValues = [...returned];
+  if (
+    returnedValues.length === 1 &&
+    returnedValues[0].value.kind === 'Object' &&
+    tracked.some(place => place.identifier.id === returnedValues[0].id.id)
+  ) {
+    const from = tracked.find(
+      place => place.identifier.id === returnedValues[0].id.id,
+    )!;
+    functionEffects.push({
+      kind: 'Assign',
+      from,
+      into: fn.returns,
+    });
+  } else if (
+    returnedValues.length === 1 &&
+    returnedValues[0].value.kind === 'Function'
+  ) {
+    const outerContext = new Set(fn.context.map(p => p.identifier.id));
+    const effect = returnedValues[0].value.effect;
+    functionEffects.push({
+      kind: 'CreateFunction',
+      function: {
+        ...effect.function,
+        loweredFunc: {
+          func: {
+            ...effect.function.loweredFunc.func,
+            context: effect.function.loweredFunc.func.context.filter(p =>
+              outerContext.has(p.identifier.id),
+            ),
+          },
+        },
+      },
+      captures: effect.captures.filter(p => outerContext.has(p.identifier.id)),
+      into: fn.returns,
+    });
+  } else {
+    const returns = fn.returns.identifier;
+    functionEffects.push({
+      kind: 'Create',
+      into: fn.returns,
+      value: isPrimitiveType(returns)
+        ? ValueKind.Primitive
+        : isJsxType(returns.type)
+          ? ValueKind.Frozen
+          : ValueKind.Mutable,
+      reason: ValueReason.KnownReturnSignature,
+    });
+  }
+
   /**
    * Part 3
    * Finish populating the externally visible effects. Above we bubble-up the side effects
@@ -472,28 +565,12 @@ export function inferMutationAliasingRanges(
    * Here we populate an effect to create the return value as well as populating alias/capture
    * effects for how data flows between the params, context vars, and return.
    */
-  const returns = fn.returns.identifier;
-  functionEffects.push({
-    kind: 'Create',
-    into: fn.returns,
-    value: isPrimitiveType(returns)
-      ? ValueKind.Primitive
-      : isJsxType(returns.type)
-        ? ValueKind.Frozen
-        : ValueKind.Mutable,
-    reason: ValueReason.KnownReturnSignature,
-  });
   /**
    * Determine precise data-flow effects by simulating transitive mutations of the params/
    * captures and seeing what other params/context variables are affected. Anything that
    * would be transitively mutated needs a capture relationship.
    */
-  const tracked: Array<Place> = [];
   const ignoredErrors = new CompilerError();
-  for (const param of [...fn.params, ...fn.context, fn.returns]) {
-    const place = param.kind === 'Identifier' ? param : param.place;
-    tracked.push(place);
-  }
   for (const into of tracked) {
     const mutationIndex = index++;
     state.mutate(
@@ -572,9 +649,14 @@ type Node = {
   local: {kind: MutationKind; loc: SourceLocation} | null;
   lastMutated: number;
   value:
+    | {kind: 'Assign'}
+    | {kind: 'CreateFrom'}
     | {kind: 'Object'}
     | {kind: 'Phi'}
-    | {kind: 'Function'; function: HIRFunction};
+    | {
+        kind: 'Function';
+        effect: Extract<AliasingEffect, {kind: 'CreateFunction'}>;
+      };
 };
 class AliasingState {
   nodes: Map<Identifier, Node> = new Map();
@@ -594,7 +676,7 @@ class AliasingState {
   }
 
   createFrom(index: number, from: Place, into: Place): void {
-    this.create(into, {kind: 'Object'});
+    this.create(into, {kind: 'CreateFrom'});
     const fromNode = this.nodes.get(from.identifier);
     const toNode = this.nodes.get(into.identifier);
     if (fromNode == null || toNode == null) {
@@ -644,7 +726,10 @@ class AliasingState {
         continue;
       }
       if (node.value.kind === 'Function') {
-        appendFunctionErrors(errors, node.value.function);
+        appendFunctionErrors(
+          errors,
+          node.value.effect.function.loweredFunc.func,
+        );
       }
       for (const [alias, when] of node.createdFrom) {
         if (when >= index) {
@@ -704,7 +789,10 @@ class AliasingState {
         node.transitive == null &&
         node.local == null
       ) {
-        appendFunctionErrors(errors, node.value.function);
+        appendFunctionErrors(
+          errors,
+          node.value.effect.function.loweredFunc.func,
+        );
       }
       if (transitive) {
         if (node.transitive == null || node.transitive.kind < kind) {
