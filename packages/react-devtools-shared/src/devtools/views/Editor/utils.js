@@ -7,11 +7,11 @@
  * @flow
  */
 
-import type {ReactFunctionLocation} from 'shared/ReactTypes';
+import type {ReactFunctionLocation, ReactCallSite} from 'shared/ReactTypes';
 
 export function checkConditions(
   editorURL: string,
-  source: ReactFunctionLocation,
+  source: ReactFunctionLocation | ReactCallSite,
 ): {url: URL | null, shouldDisableButton: boolean} {
   try {
     const url = new URL(editorURL);

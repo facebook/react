@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactFunctionLocation} from 'shared/ReactTypes';
+import type {ReactFunctionLocation, ReactCallSite} from 'shared/ReactTypes';
 
 import {useCallback, useContext, useSyncExternalStore} from 'react';
 
@@ -22,8 +22,8 @@ import {
 import {checkConditions} from './Editor/utils';
 
 const useOpenResource = (
-  source: null | ReactFunctionLocation,
-  symbolicatedSource: null | ReactFunctionLocation,
+  source: null | ReactFunctionLocation | ReactCallSite,
+  symbolicatedSource: null | ReactFunctionLocation | ReactCallSite,
 ): [
   boolean, // isEnabled
   () => void, // Open Resource
