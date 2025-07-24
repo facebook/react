@@ -23,18 +23,18 @@ function Component(props) {
 
 ```
 Found 1 error:
-Error: This is an unconditional set state during render, which will trigger an infinite loop. (https://react.dev/reference/react/useState)
+Error: Calling setState during render may trigger an infinite loop
+
+Calling setState during render will trigger another render, and can lead to infinite loops. (https://react.dev/reference/react/useState)
 
 error.unconditional-set-state-in-render-after-loop-break.ts:11:2
    9 |     }
   10 |   }
 > 11 |   setState(true);
-     |   ^^^^^^^^ This is an unconditional set state during render, which will trigger an infinite loop. (https://react.dev/reference/react/useState)
+     |   ^^^^^^^^ Found setState() within useMemo()
   12 |   return state;
   13 | }
   14 |
-
-
 ```
           
       

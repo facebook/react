@@ -16,20 +16,18 @@ function useFoo() {
 
 ```
 Found 1 error:
-Error: Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead
+Error: Cannot reassign a variable after render completes
 
-Variable `x` cannot be reassigned after render.
+Reassigning variable `x` after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead
 
 error.invalid-reassign-local-in-hook-return-value.ts:4:4
   2 |   let x = 0;
   3 |   return value => {
 > 4 |     x = value;
-    |     ^ Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead
+    |     ^ Cannot reassign variable after render completes
   5 |   };
   6 | }
   7 |
-
-
 ```
           
       

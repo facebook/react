@@ -33,20 +33,18 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 1 error:
-Error: Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead
+Error: Cannot reassign a variable after render completes
 
-Variable `a` cannot be reassigned after render.
+Reassigning variable `a` after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead
 
 error.mutable-range-shared-inner-outer-function.ts:8:6
    6 |   const f = () => {
    7 |     if (cond) {
 >  8 |       a = {};
-     |       ^ Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead
+     |       ^ Cannot reassign variable after render completes
    9 |       b = [];
   10 |     } else {
   11 |       a = {};
-
-
 ```
           
       
