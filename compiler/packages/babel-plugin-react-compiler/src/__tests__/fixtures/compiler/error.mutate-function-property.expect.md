@@ -16,18 +16,18 @@ export function ViewModeSelector(props) {
 
 ```
 Found 1 error:
-Error: This mutates a variable that React considers immutable
+Error: This value cannot be modified
+
+This modifies a variable that React considers immutable
 
 error.mutate-function-property.ts:3:2
   1 | export function ViewModeSelector(props) {
   2 |   const renderIcon = () => <AcceptIcon />;
 > 3 |   renderIcon.displayName = 'AcceptIcon';
-    |   ^^^^^^^^^^ This mutates a variable that React considers immutable
+    |   ^^^^^^^^^^ This value cannot be modified
   4 |
   5 |   return <Dropdown checkableIndicator={{children: renderIcon}} />;
   6 | }
-
-
 ```
           
       

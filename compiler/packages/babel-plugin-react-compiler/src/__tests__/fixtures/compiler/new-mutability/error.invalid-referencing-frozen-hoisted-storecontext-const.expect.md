@@ -31,35 +31,28 @@ function Component({content, refetch}) {
 ## Error
 
 ```
-Found 2 errors:
-Error: This variable is accessed before it is declared, which may prevent it from updating as the assigned value changes over time
+Found 1 error:
+Error: Cannot access variable before it is declared
 
-Variable `data` is accessed before it is declared.
+Variable `data` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time
 
 undefined:11:12
    9 |   // TDZ violation!
   10 |   const onRefetch = useCallback(() => {
 > 11 |     refetch(data);
-     |             ^^^^ This variable is accessed before it is declared, which may prevent it from updating as the assigned value changes over time
+     |             ^^^^ Variable accessed before it is declared
   12 |   }, [refetch]);
   13 |
   14 |   // The context variable gets frozen here since it's passed to a hook
-
-
-Error: This variable is accessed before it is declared, which prevents the earlier access from updating when this value changes over time
-
-Variable `data` is accessed before it is declared.
 
 undefined:19:9
   17 |   // This has to error: onRefetch needs to memoize with `content` as a
   18 |   // dependency, but the dependency comes later
 > 19 |   const {data = null} = content;
-     |          ^^^^^^^^^^^ This variable is accessed before it is declared, which prevents the earlier access from updating when this value changes over time
+     |          ^^^^^^^^^^^ The variable is declared here
   20 |
   21 |   return <Foo data={data} onSubmit={onSubmit} />;
   22 | }
-
-
 ```
           
       

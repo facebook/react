@@ -26,20 +26,18 @@ function Component(props) {
 
 ```
 Found 1 error:
-Error: Mutating component props or hook arguments is not allowed. Consider using a local variable instead
+Error: This value cannot be modified
 
-Found mutation of `y`.
+Modifying component props or hook arguments is not allowed. Consider using a local variable instead
 
 error.invalid-mutate-props-in-effect-fixpoint.ts:10:4
    8 |   let y = x;
    9 |   let mutateProps = () => {
 > 10 |     y.foo = true;
-     |     ^ Mutating component props or hook arguments is not allowed. Consider using a local variable instead
+     |     ^ `y` cannot be modified
   11 |   };
   12 |   let mutatePropsIndirect = () => {
   13 |     mutateProps();
-
-
 ```
           
       

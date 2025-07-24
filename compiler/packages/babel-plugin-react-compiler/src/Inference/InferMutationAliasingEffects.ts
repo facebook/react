@@ -6,6 +6,7 @@
  */
 
 import {
+  CompilerDiagnostic,
   CompilerError,
   Effect,
   ErrorSeverity,
@@ -446,20 +447,24 @@ function applySignature(
               reason: value.reason,
               context: new Set(),
             });
+            const message =
+              effect.value.identifier.name !== null &&
+              effect.value.identifier.name.kind === 'named'
+                ? `\`${effect.value.identifier.name.value}\` cannot be modified`
+                : 'This value cannot be modified';
             effects.push({
               kind: 'MutateFrozen',
               place: effect.value,
-              error: {
+              error: CompilerDiagnostic.create({
                 severity: ErrorSeverity.InvalidReact,
-                reason,
-                description:
-                  effect.value.identifier.name !== null &&
-                  effect.value.identifier.name.kind === 'named'
-                    ? `Found mutation of \`${effect.value.identifier.name.value}\``
-                    : null,
-                loc: effect.value.loc,
+                category: 'This value cannot be modified',
+                description: reason,
                 suggestions: null,
-              },
+              }).withDetail({
+                kind: 'error',
+                loc: effect.value.loc,
+                message,
+              }),
             });
           }
         }
@@ -1016,30 +1021,28 @@ function applyEffect(
           const description =
             effect.value.identifier.name !== null &&
             effect.value.identifier.name.kind === 'named'
-              ? `Variable \`${effect.value.identifier.name.value}\` is accessed before it is declared`
-              : null;
+              ? `Variable \`${effect.value.identifier.name.value}\``
+              : 'This variable';
           const hoistedAccess = context.hoistedContextDeclarations.get(
             effect.value.identifier.declarationId,
           );
+          const diagnostic = CompilerDiagnostic.create({
+            severity: ErrorSeverity.InvalidReact,
+            category: 'Cannot access variable before it is declared',
+            description: `${description} is accessed before it is declared, which prevents the earlier access from updating when this value changes over time`,
+          });
           if (hoistedAccess != null && hoistedAccess.loc != effect.value.loc) {
-            applyEffect(
-              context,
-              state,
-              {
-                kind: 'MutateFrozen',
-                place: effect.value,
-                error: {
-                  severity: ErrorSeverity.InvalidReact,
-                  reason: `This variable is accessed before it is declared, which may prevent it from updating as the assigned value changes over time`,
-                  description,
-                  loc: hoistedAccess.loc,
-                  suggestions: null,
-                },
-              },
-              initialized,
-              effects,
-            );
+            diagnostic.withDetail({
+              kind: 'error',
+              loc: hoistedAccess.loc,
+              message: 'Variable accessed before it is declared',
+            });
           }
+          diagnostic.withDetail({
+            kind: 'error',
+            loc: effect.value.loc,
+            message: 'The variable is declared here',
+          });
 
           applyEffect(
             context,
@@ -1047,13 +1050,7 @@ function applyEffect(
             {
               kind: 'MutateFrozen',
               place: effect.value,
-              error: {
-                severity: ErrorSeverity.InvalidReact,
-                reason: `This variable is accessed before it is declared, which prevents the earlier access from updating when this value changes over time`,
-                description,
-                loc: effect.value.loc,
-                suggestions: null,
-              },
+              error: diagnostic,
             },
             initialized,
             effects,
@@ -1064,11 +1061,11 @@ function applyEffect(
             reason: value.reason,
             context: new Set(),
           });
-          const description =
+          const message =
             effect.value.identifier.name !== null &&
             effect.value.identifier.name.kind === 'named'
-              ? `Found mutation of \`${effect.value.identifier.name.value}\``
-              : null;
+              ? `\`${effect.value.identifier.name.value}\` cannot be modified`
+              : 'This value cannot be modified';
           applyEffect(
             context,
             state,
@@ -1078,13 +1075,15 @@ function applyEffect(
                   ? 'MutateFrozen'
                   : 'MutateGlobal',
               place: effect.value,
-              error: {
+              error: CompilerDiagnostic.create({
                 severity: ErrorSeverity.InvalidReact,
-                reason,
-                description,
+                category: 'This value cannot be modified',
+                description: reason,
+              }).withDetail({
+                kind: 'error',
                 loc: effect.value.loc,
-                suggestions: null,
-              },
+                message,
+              }),
             },
             initialized,
             effects,
@@ -2006,13 +2005,18 @@ function computeSignatureForInstruction(
       effects.push({
         kind: 'MutateGlobal',
         place: value.value,
-        error: {
-          reason:
-            'Unexpected reassignment of a variable which was defined outside of the component. Components and hooks should be pure and side-effect free, but variable reassignment is a form of side-effect. If this variable is used in rendering, use useState instead. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render)',
-          loc: instr.loc,
-          suggestions: null,
+        error: CompilerDiagnostic.create({
           severity: ErrorSeverity.InvalidReact,
-        },
+          category:
+            'Cannot reassign variables declared outside of the component/hook',
+          description:
+            'Reassigning a variable declared outside of the component/hook is a form of side effect, which can cause unpredictable behavior depending on when the component happens to re-render. If this variable is used in rendering, use useState instead. Otherwise, consider updating it in an effect (https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render)',
+          suggestions: null,
+        }).withDetail({
+          kind: 'error',
+          loc: instr.loc,
+          message: 'Cannot reassign variable',
+        }),
       });
       effects.push({kind: 'Assign', from: value.value, into: lvalue});
       break;
@@ -2102,17 +2106,20 @@ function computeEffectsForLegacySignature(
     effects.push({
       kind: 'Impure',
       place: receiver,
-      error: {
-        reason:
-          'Calling an impure function can produce unstable results. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent)',
-        description:
-          signature.canonicalName != null
-            ? `\`${signature.canonicalName}\` is an impure function whose results may change on every call`
-            : null,
+      error: CompilerDiagnostic.create({
         severity: ErrorSeverity.InvalidReact,
-        loc,
+        category: 'Cannot call impure function during render',
+        description:
+          (signature.canonicalName != null
+            ? `\`${signature.canonicalName}\` is an impure function. `
+            : '') +
+          'Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent)',
         suggestions: null,
-      },
+      }).withDetail({
+        kind: 'error',
+        loc,
+        message: 'Cannot call impure function',
+      }),
     });
   }
   const stores: Array<Place> = [];

@@ -15,18 +15,18 @@ function Component(props) {
 
 ```
 Found 1 error:
-Error: Mutating a value returned from 'useContext()', which should not be mutated
+Error: This value cannot be modified
+
+Modifying a value returned from 'useContext()' is not allowed.
 
 error.invalid-mutate-context.ts:3:2
   1 | function Component(props) {
   2 |   const context = useContext(FooContext);
 > 3 |   context.value = props.value;
-    |   ^^^^^^^ Mutating a value returned from 'useContext()', which should not be mutated
+    |   ^^^^^^^ This value cannot be modified
   4 |   return context.value;
   5 | }
   6 |
-
-
 ```
           
       
