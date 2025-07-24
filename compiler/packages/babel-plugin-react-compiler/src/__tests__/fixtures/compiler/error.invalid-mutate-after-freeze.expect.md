@@ -20,18 +20,18 @@ function Component(props) {
 
 ```
 Found 1 error:
-Error: Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX
+Error: This value cannot be modified
+
+Modifying a value used previously in JSX is not allowed. Consider moving the modification before the JSX
 
 error.invalid-mutate-after-freeze.ts:7:2
    5 |
    6 |   // x is Frozen at this point
 >  7 |   x.push(props.p2);
-     |   ^ Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX
+     |   ^ This value cannot be modified
    8 |
    9 |   return <div>{_}</div>;
   10 | }
-
-
 ```
           
       
