@@ -22,6 +22,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 1 error:
+
 Todo: (BuildHIR::lowerAssignment) Handle computed properties in ObjectPattern
 
 todo.error.object-pattern-computed-key.ts:5:9
@@ -32,8 +33,6 @@ todo.error.object-pattern-computed-key.ts:5:9
   6 |   return value;
   7 | }
   8 |
-
-
 ```
           
       

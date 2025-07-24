@@ -21,6 +21,7 @@ export const FIXTURE_ENTRYPONT = {
 
 ```
 Found 1 error:
+
 Todo: Unexpected terminal kind `optional` for logical test block
 
 error.todo-optional-call-chain-in-logical-expr.ts:5:30
@@ -31,8 +32,6 @@ error.todo-optional-call-chain-in-logical-expr.ts:5:30
   6 | }
   7 |
   8 | export const FIXTURE_ENTRYPONT = {
-
-
 ```
           
       

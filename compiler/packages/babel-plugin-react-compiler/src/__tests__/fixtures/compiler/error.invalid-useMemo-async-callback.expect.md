@@ -16,9 +16,10 @@ function component(a, b) {
 
 ```
 Found 1 error:
-Error: useMemo callbacks may not be async or generator functions
 
-useMemo() callbacks are called once and must synchronously return a value
+Error: useMemo() callbacks may not be async or generator functions
+
+useMemo() callbacks are called once and must synchronously return a value.
 
 error.invalid-useMemo-async-callback.ts:2:18
   1 | function component(a, b) {

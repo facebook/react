@@ -21,6 +21,7 @@ function Component(props) {
 
 ```
 Found 1 error:
+
 Memoization: React Compiler has skipped optimizing this component because the effect dependencies could not be memoized. Unmemoized effect dependencies can trigger an infinite loop or other unexpected behavior
 
 error.invalid-useLayoutEffect-dep-not-memoized.ts:6:2
@@ -35,8 +36,6 @@ error.invalid-useLayoutEffect-dep-not-memoized.ts:6:2
    9 |   mutate(data);
   10 |   return data;
   11 | }
-
-
 ```
           
       

@@ -17,6 +17,7 @@ function Foo(props) {
 
 ```
 Found 1 error:
+
 Error: React Compiler has skipped optimizing this component because one or more React rule violations were reported by Flow. React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior
 
 $FlowFixMe[react-rule-hook].
@@ -29,8 +30,6 @@ error.bailout-on-flow-suppression.ts:4:2
   5 |   useX();
   6 |   return null;
   7 | }
-
-
 ```
           
       

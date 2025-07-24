@@ -107,10 +107,9 @@ export function lower(
       if (binding.kind !== 'Identifier') {
         builder.errors.pushDiagnostic(
           CompilerDiagnostic.create({
-            category: 'Could not find binding',
-            description: `[BuildHIR] Could not find binding for param \`${param.node.name}\``,
             severity: ErrorSeverity.Invariant,
-            suggestions: null,
+            category: 'Could not find binding',
+            description: `[BuildHIR] Could not find binding for param \`${param.node.name}\`.`,
           }).withDetail({
             kind: 'error',
             loc: param.node.loc ?? null,
@@ -172,10 +171,9 @@ export function lower(
     } else {
       builder.errors.pushDiagnostic(
         CompilerDiagnostic.create({
-          category: `Handle ${param.node.type} parameters`,
-          description: `[BuildHIR] Add support for ${param.node.type} parameters`,
           severity: ErrorSeverity.Todo,
-          suggestions: null,
+          category: `Handle ${param.node.type} parameters`,
+          description: `[BuildHIR] Add support for ${param.node.type} parameters.`,
         }).withDetail({
           kind: 'error',
           loc: param.node.loc ?? null,
@@ -205,8 +203,7 @@ export function lower(
       CompilerDiagnostic.create({
         severity: ErrorSeverity.InvalidJS,
         category: `Unexpected function body kind`,
-        description: `Expected function body to be an expression or a block statement, got \`${body.type}\``,
-        suggestions: null,
+        description: `Expected function body to be an expression or a block statement, got \`${body.type}\`.`,
       }).withDetail({
         kind: 'error',
         loc: body.node.loc ?? null,
