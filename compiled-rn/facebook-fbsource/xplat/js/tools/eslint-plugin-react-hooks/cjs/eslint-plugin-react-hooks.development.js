@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<c53cfbb071c13d01aa1b2af9ffa6cba9>>
+ * @generated SignedSource<<5a43a06e6286bc4b746dbf1be55a235b>>
  */
 
 'use strict';
@@ -19099,6 +19099,44 @@ function* eachPatternOperand(pattern) {
                 }
                 else if (property.kind === 'Spread') {
                     yield property.place;
+                }
+                else {
+                    assertExhaustive$1(property, `Unexpected item kind \`${property.kind}\``);
+                }
+            }
+            break;
+        }
+        default: {
+            assertExhaustive$1(pattern, `Unexpected pattern kind \`${pattern.kind}\``);
+        }
+    }
+}
+function* eachPatternItem(pattern) {
+    switch (pattern.kind) {
+        case 'ArrayPattern': {
+            for (const item of pattern.items) {
+                if (item.kind === 'Identifier') {
+                    yield item;
+                }
+                else if (item.kind === 'Spread') {
+                    yield item;
+                }
+                else if (item.kind === 'Hole') {
+                    continue;
+                }
+                else {
+                    assertExhaustive$1(item, `Unexpected item kind \`${item.kind}\``);
+                }
+            }
+            break;
+        }
+        case 'ObjectPattern': {
+            for (const property of pattern.properties) {
+                if (property.kind === 'ObjectProperty') {
+                    yield property.place;
+                }
+                else if (property.kind === 'Spread') {
+                    yield property;
                 }
                 else {
                     assertExhaustive$1(property, `Unexpected item kind \`${property.kind}\``);
@@ -41880,20 +41918,34 @@ function computeSignatureForInstruction(context, env, instr) {
             break;
         }
         case 'Destructure': {
-            for (const patternLValue of eachInstructionValueLValue(value)) {
-                if (isPrimitiveType(patternLValue.identifier)) {
+            for (const patternItem of eachPatternItem(value.lvalue.pattern)) {
+                const place = patternItem.kind === 'Identifier' ? patternItem : patternItem.place;
+                if (isPrimitiveType(place.identifier)) {
                     effects.push({
                         kind: 'Create',
-                        into: patternLValue,
+                        into: place,
                         value: ValueKind.Primitive,
                         reason: ValueReason.Other,
                     });
                 }
-                else {
+                else if (patternItem.kind === 'Identifier') {
                     effects.push({
                         kind: 'CreateFrom',
                         from: value.value,
-                        into: patternLValue,
+                        into: place,
+                    });
+                }
+                else {
+                    effects.push({
+                        kind: 'Create',
+                        into: place,
+                        reason: ValueReason.Other,
+                        value: ValueKind.Mutable,
+                    });
+                    effects.push({
+                        kind: 'Capture',
+                        from: value.value,
+                        into: place,
                     });
                 }
             }
@@ -46560,6 +46612,12 @@ function* generateInstructionTypes(env, names, instr) {
                                 kind: 'literal',
                                 value: makePropertyLiteral(propertyName),
                             },
+                        });
+                    }
+                    else if (item.kind === 'Spread') {
+                        yield equation(item.place.identifier.type, {
+                            kind: 'Object',
+                            shapeId: BuiltInArrayId,
                         });
                     }
                     else {
