@@ -360,6 +360,12 @@ function* generateInstructionTypes(
                 value: makePropertyLiteral(propertyName),
               },
             });
+          } else if (item.kind === 'Spread') {
+            // Array pattern spread always creates an array
+            yield equation(item.place.identifier.type, {
+              kind: 'Object',
+              shapeId: BuiltInArrayId,
+            });
           } else {
             break;
           }
