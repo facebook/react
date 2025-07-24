@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<5a43a06e6286bc4b746dbf1be55a235b>>
+ * @generated SignedSource<<490baa41314db82569ec29035323af5a>>
  */
 
 'use strict';
@@ -30157,7 +30157,7 @@ const EnvironmentConfigSchema = zod.z.object({
     validateHooksUsage: zod.z.boolean().default(true),
     validateRefAccessDuringRender: zod.z.boolean().default(true),
     validateNoSetStateInRender: zod.z.boolean().default(true),
-    validateNoSetStateInPassiveEffects: zod.z.boolean().default(false),
+    validateNoSetStateInEffects: zod.z.boolean().default(false),
     validateNoJSXInTryStatements: zod.z.boolean().default(false),
     validateStaticComponents: zod.z.boolean().default(false),
     validateMemoizedEffectDependencies: zod.z.boolean().default(false),
@@ -48865,7 +48865,7 @@ function emitArrayInstr(elements, env) {
     return arrayInstr;
 }
 
-function validateNoSetStateInPassiveEffects(fn) {
+function validateNoSetStateInEffects(fn) {
     const setStateFunctions = new Map();
     const errors = new CompilerError();
     for (const [, block] of fn.body.blocks) {
@@ -48899,7 +48899,9 @@ function validateNoSetStateInPassiveEffects(fn) {
                     const callee = instr.value.kind === 'MethodCall'
                         ? instr.value.receiver
                         : instr.value.callee;
-                    if (isUseEffectHookType(callee.identifier)) {
+                    if (isUseEffectHookType(callee.identifier) ||
+                        isUseLayoutEffectHookType(callee.identifier) ||
+                        isUseInsertionEffectHookType(callee.identifier)) {
                         const arg = instr.value.args[0];
                         if (arg !== undefined && arg.kind === 'Identifier') {
                             const setState = setStateFunctions.get(arg.identifier.id);
@@ -50119,8 +50121,8 @@ function runWithEnvironment(func, env) {
         if (env.config.validateNoSetStateInRender) {
             validateNoSetStateInRender(hir).unwrap();
         }
-        if (env.config.validateNoSetStateInPassiveEffects) {
-            env.logErrors(validateNoSetStateInPassiveEffects(hir));
+        if (env.config.validateNoSetStateInEffects) {
+            env.logErrors(validateNoSetStateInEffects(hir));
         }
         if (env.config.validateNoJSXInTryStatements) {
             env.logErrors(validateNoJSXInTryStatement(hir));
@@ -51948,6 +51950,12 @@ const COMPILER_OPTIONS = {
     flowSuppressions: false,
     environment: validateEnvironmentConfig({
         validateRefAccessDuringRender: false,
+        validateNoSetStateInRender: true,
+        validateNoSetStateInEffects: true,
+        validateNoJSXInTryStatements: true,
+        validateNoImpureFunctionsInRender: true,
+        validateStaticComponents: true,
+        validateNoFreezingKnownMutableFunctions: true,
     }),
 };
 const rule$1 = {
