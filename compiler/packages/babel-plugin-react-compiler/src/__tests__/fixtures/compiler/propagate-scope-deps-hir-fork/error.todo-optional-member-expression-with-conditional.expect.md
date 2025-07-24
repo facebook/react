@@ -24,6 +24,12 @@ function Component(props) {
 ## Error
 
 ```
+Found 1 error:
+Memoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected
+
+The inferred dependency was `props.items`, but the source dependencies were [props?.items, props.cond]. Inferred different dependency than source.
+
+error.todo-optional-member-expression-with-conditional.ts:4:23
    2 | import {ValidateMemoization} from 'shared-runtime';
    3 | function Component(props) {
 >  4 |   const data = useMemo(() => {
@@ -41,10 +47,12 @@ function Component(props) {
 > 10 |     return x;
      | ^^^^^^^^^^^^^^^^^
 > 11 |   }, [props?.items, props.cond]);
-     | ^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `props.items`, but the source dependencies were [props?.items, props.cond]. Inferred different dependency than source (4:11)
+     | ^^^^ React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected
   12 |   return (
   13 |     <ValidateMemoization inputs={[props?.items, props.cond]} output={data} />
   14 |   );
+
+
 ```
           
       
