@@ -174,6 +174,7 @@ function logError(
     filename: string | null;
   },
   fnLoc: t.SourceLocation | null,
+  optedOut: boolean,
 ): void {
   if (context.opts.logger) {
     if (err instanceof CompilerError) {
@@ -182,6 +183,7 @@ function logError(
           kind: 'CompileError',
           fnLoc,
           detail: detail.options,
+          optedOut,
         });
       }
     } else {
@@ -208,7 +210,7 @@ function handleError(
   },
   fnLoc: t.SourceLocation | null,
 ): void {
-  logError(err, context, fnLoc);
+  logError(err, context, fnLoc, false);
   if (
     context.opts.panicThreshold === 'all_errors' ||
     (context.opts.panicThreshold === 'critical_errors' &&
@@ -592,7 +594,7 @@ function processFn(
   const compileResult = tryCompileFunction(fn, fnType, programContext);
   if (compileResult.kind === 'error') {
     if (directives.optOut != null) {
-      logError(compileResult.error, programContext, fn.node.loc ?? null);
+      logError(compileResult.error, programContext, fn.node.loc ?? null, true);
     } else {
       handleError(compileResult.error, programContext, fn.node.loc ?? null);
     }
