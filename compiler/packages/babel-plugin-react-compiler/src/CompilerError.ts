@@ -59,7 +59,7 @@ export type CompilerDiagnosticDetail =
    */
   {
     kind: 'error';
-    loc: SourceLocation;
+    loc: SourceLocation | null;
     message: string;
   };
 
@@ -100,6 +100,12 @@ export class CompilerDiagnostic {
     this.options = options;
   }
 
+  static create(
+    options: Omit<CompilerDiagnosticOptions, 'details'>,
+  ): CompilerDiagnostic {
+    return new CompilerDiagnostic({...options, details: []});
+  }
+
   get category(): CompilerDiagnosticOptions['category'] {
     return this.options.category;
   }
@@ -111,6 +117,11 @@ export class CompilerDiagnostic {
   }
   get suggestions(): CompilerDiagnosticOptions['suggestions'] {
     return this.options.suggestions;
+  }
+
+  withDetail(detail: CompilerDiagnosticDetail): CompilerDiagnostic {
+    this.options.details.push(detail);
+    return this;
   }
 
   primaryLocation(): SourceLocation | null {
@@ -127,7 +138,7 @@ export class CompilerDiagnostic {
       switch (detail.kind) {
         case 'error': {
           const loc = detail.loc;
-          if (typeof loc === 'symbol') {
+          if (loc == null || typeof loc === 'symbol') {
             continue;
           }
           let codeFrame: string;

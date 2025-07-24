@@ -18,20 +18,18 @@ function Component() {
 
 ```
 Found 1 error:
-Error: Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead
+Error: Cannot reassign a variable after render completes
 
-Variable `x` cannot be reassigned after render.
+Reassigning variable `x` after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead
 
 error.declare-reassign-variable-in-function-declaration.ts:4:4
   2 |   let x = null;
   3 |   function foo() {
 > 4 |     x = 9;
-    |     ^ Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead
+    |     ^ Cannot reassign variable after render completes
   5 |   }
   6 |   const y = bar(foo);
   7 |   return <Child y={y} />;
-
-
 ```
           
       
