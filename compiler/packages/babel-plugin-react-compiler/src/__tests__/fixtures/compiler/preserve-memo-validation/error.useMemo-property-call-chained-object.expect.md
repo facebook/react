@@ -20,9 +20,9 @@ function Component({propA}) {
 
 ```
 Found 1 error:
-Memoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected
+Memoization: Compilation skipped because existing memoization could not be preserved
 
-The inferred dependency was `propA`, but the source dependencies were [propA.x]. Inferred less specific property than source.
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `propA`, but the source dependencies were [propA.x]. Inferred less specific property than source.
 
 error.useMemo-property-call-chained-object.ts:5:17
    3 |
@@ -36,11 +36,9 @@ error.useMemo-property-call-chained-object.ts:5:17
 >  8 |     };
      | ^^^^^^^^^^^^
 >  9 |   }, [propA.x]);
-     | ^^^^ React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected
+     | ^^^^ Could not preserve existing manual memoization
   10 | }
   11 |
-
-
 ```
           
       

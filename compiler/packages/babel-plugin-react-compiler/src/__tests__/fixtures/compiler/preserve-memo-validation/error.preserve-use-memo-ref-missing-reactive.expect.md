@@ -29,9 +29,9 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 1 error:
-Memoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected
+Memoization: Compilation skipped because existing memoization could not be preserved
 
-The inferred dependency was `ref`, but the source dependencies were []. Inferred dependency not present in source.
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `ref`, but the source dependencies were []. Inferred dependency not present in source.
 
 error.preserve-use-memo-ref-missing-reactive.ts:9:21
    7 |   const ref = cond ? ref1 : ref2;
@@ -45,12 +45,10 @@ error.preserve-use-memo-ref-missing-reactive.ts:9:21
 > 12 |     }
      | ^^^^^^^^^^^^^^^^^^^^^^
 > 13 |   }, []);
-     | ^^^^ React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected
+     | ^^^^ Could not preserve existing manual memoization
   14 | }
   15 |
   16 | export const FIXTURE_ENTRYPOINT = {
-
-
 ```
           
       

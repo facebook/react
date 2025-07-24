@@ -25,9 +25,9 @@ function Component(props) {
 
 ```
 Found 1 error:
-Memoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected
+Memoization: Compilation skipped because existing memoization could not be preserved
 
-The inferred dependency was `props.items`, but the source dependencies were [props?.items, props.cond]. Inferred different dependency than source.
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `props.items`, but the source dependencies were [props?.items, props.cond]. Inferred different dependency than source.
 
 error.hoist-optional-member-expression-with-conditional.ts:4:23
    2 | import {ValidateMemoization} from 'shared-runtime';
@@ -47,12 +47,10 @@ error.hoist-optional-member-expression-with-conditional.ts:4:23
 > 10 |     return x;
      | ^^^^^^^^^^^^^^^^^
 > 11 |   }, [props?.items, props.cond]);
-     | ^^^^ React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected
+     | ^^^^ Could not preserve existing manual memoization
   12 |   return (
   13 |     <ValidateMemoization inputs={[props?.items, props.cond]} output={data} />
   14 |   );
-
-
 ```
           
       

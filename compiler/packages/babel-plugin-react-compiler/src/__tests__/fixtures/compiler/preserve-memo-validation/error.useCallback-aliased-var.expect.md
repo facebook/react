@@ -20,19 +20,17 @@ function useHook(x) {
 
 ```
 Found 1 error:
-Memoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected
+Memoization: Compilation skipped because existing memoization could not be preserved
 
-The inferred dependency was `aliasedX`, but the source dependencies were [x, aliasedProp]. Inferred different dependency than source.
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `aliasedX`, but the source dependencies were [x, aliasedProp]. Inferred different dependency than source.
 
 error.useCallback-aliased-var.ts:9:21
    7 |   const aliasedProp = x.y.z;
    8 |
 >  9 |   return useCallback(() => [aliasedX, x.y.z], [x, aliasedProp]);
-     |                      ^^^^^^^^^^^^^^^^^^^^^^^ React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected
+     |                      ^^^^^^^^^^^^^^^^^^^^^^^ Could not preserve existing manual memoization
   10 | }
   11 |
-
-
 ```
           
       
