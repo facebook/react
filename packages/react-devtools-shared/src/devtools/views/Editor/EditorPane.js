@@ -22,6 +22,7 @@ import {getOpenInEditorURL} from '../../../utils';
 import {LOCAL_STORAGE_OPEN_IN_EDITOR_URL} from '../../../constants';
 
 import EditorSettings from './EditorSettings';
+import CodeEditorByDefault from '../Settings/CodeEditorByDefault';
 
 export type SourceSelection = {
   url: string,
@@ -49,9 +50,10 @@ function EditorPane({selectedSource}: Props) {
     },
   );
 
+  let editorToolbar;
   if (showSettings) {
-    return (
-      <div className={styles.EditorPane}>
+    editorToolbar = (
+      <div className={styles.EditorToolbar}>
         <EditorSettings />
         <div className={styles.VRule} />
         <Button onClick={() => startTransition(() => setShowSettings(false))}>
@@ -59,24 +61,37 @@ function EditorPane({selectedSource}: Props) {
         </Button>
       </div>
     );
+  } else {
+    editorToolbar = (
+      <div className={styles.EditorToolbar}>
+        <OpenInEditorButton
+          className={styles.WideButton}
+          editorURL={editorURL}
+          source={selectedSource}
+        />
+        <div className={styles.VRule} />
+        <Button
+          onClick={() => startTransition(() => setShowSettings(true))}
+          // We don't use the title here because we don't have enough space to show it.
+          // Once we expand this pane we can add it.
+          // title="Configure code editor"
+        >
+          <ButtonIcon type="settings" />
+        </Button>
+      </div>
+    );
   }
 
   return (
     <div className={styles.EditorPane}>
-      <OpenInEditorButton
-        className={styles.WideButton}
-        editorURL={editorURL}
-        source={selectedSource}
-      />
-      <div className={styles.VRule} />
-      <Button
-        onClick={() => startTransition(() => setShowSettings(true))}
-        // We don't use the title here because we don't have enough space to show it.
-        // Once we expand this pane we can add it.
-        // title="Configure code editor"
-      >
-        <ButtonIcon type="settings" />
-      </Button>
+      {editorToolbar}
+      <div className={styles.EditorInfo}>
+        {editorURL ? (
+          <CodeEditorByDefault />
+        ) : (
+          'Configure an external editor to open local files.'
+        )}
+      </div>
     </div>
   );
 }

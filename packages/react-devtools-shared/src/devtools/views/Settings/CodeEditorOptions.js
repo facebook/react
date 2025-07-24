@@ -19,7 +19,7 @@ import styles from './SettingsShared.css';
 
 const vscodeFilepath = 'vscode://file/{path}:{line}';
 
-export default function ComponentsSettings({
+export default function CodeEditorOptions({
   environmentNames,
 }: {
   environmentNames: Promise<Array<string>>,

@@ -16,6 +16,7 @@ import {isInternalFacebookBuild} from 'react-devtools-feature-flags';
 import CodeEditorOptions from './CodeEditorOptions';
 
 import styles from './SettingsShared.css';
+import CodeEditorByDefault from './CodeEditorByDefault';
 
 function getChangeLogUrl(version: ?string): string | null {
   if (!version) {
@@ -82,6 +83,22 @@ export default function GeneralSettings(_: {}): React.Node {
           <div className={styles.RadioLabel}>Open in Editor URL</div>
           <CodeEditorOptions />
         </label>
+      </div>
+
+      <div className={styles.SettingWrapper}>
+        <CodeEditorByDefault />
+      </div>
+
+      <div className={styles.SettingWrapper}>
+        <div className={styles.RadioLabel}>Display density</div>
+        <select
+          value={displayDensity}
+          onChange={({currentTarget}) =>
+            setDisplayDensity(currentTarget.value)
+          }>
+          <option value="compact">Compact</option>
+          <option value="comfortable">Comfortable</option>
+        </select>
       </div>
 
       {supportsTraceUpdates && (

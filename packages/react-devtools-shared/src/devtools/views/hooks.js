@@ -207,21 +207,9 @@ export function useLocalStorage<T>(
       }
     };
 
-    const onLocalChange = () => {
-      const newValue = getValueFromLocalStorage();
-      if (storedValue !== newValue) {
-        setValue(newValue);
-      }
-    };
-
     window.addEventListener('storage', onStorage);
-
-    // Also listen to changes from other components in the same window.
-    window.addEventListener(key, onLocalChange);
-
     return () => {
       window.removeEventListener('storage', onStorage);
-      window.removeEventListener(key, onLocalChange);
     };
   }, [getValueFromLocalStorage, key, storedValue, setValue]);
 
