@@ -19,6 +19,7 @@ function component(a, b) {
 
 ```
 Found 1 error:
+
 Todo: (BuildHIR::lowerExpression) Handle YieldExpression expressions
 
 error.useMemo-callback-generator.ts:6:4
@@ -29,8 +30,6 @@ error.useMemo-callback-generator.ts:6:4
   7 |   }, []);
   8 |   return x;
   9 | }
-
-
 ```
           
       

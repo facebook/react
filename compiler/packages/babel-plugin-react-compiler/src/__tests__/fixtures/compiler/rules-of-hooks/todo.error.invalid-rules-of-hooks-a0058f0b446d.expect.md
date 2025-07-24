@@ -20,6 +20,7 @@ function ComponentWithConditionalHook() {
 
 ```
 Found 1 error:
+
 Error: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
 
 todo.error.invalid-rules-of-hooks-a0058f0b446d.ts:8:4
@@ -30,8 +31,6 @@ todo.error.invalid-rules-of-hooks-a0058f0b446d.ts:8:4
    9 |   }
   10 | }
   11 |
-
-
 ```
           
       

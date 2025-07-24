@@ -49,15 +49,16 @@ function Component() {
 
 ```
 Found 1 error:
-Error: Cannot reassign a variable after render completes
 
-Reassigning variable `local` after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead
+Error: Cannot reassign variable after render completes
+
+Reassigning `local` after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.
 
 error.invalid-reassign-local-variable-in-hook-argument.ts:8:4
    6 |
    7 |   const reassignLocal = newValue => {
 >  8 |     local = newValue;
-     |     ^^^^^ Cannot reassign variable after render completes
+     |     ^^^^^ Cannot reassign `local` after render completes
    9 |   };
   10 |
   11 |   const callback = newValue => {

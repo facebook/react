@@ -19,6 +19,7 @@ function Component(props) {
 
 ```
 Found 1 error:
+
 Todo: (BuildHIR::lowerStatement) Support ThrowStatement inside of try/catch
 
 error.todo.try-catch-with-throw.ts:4:4
@@ -29,8 +30,6 @@ error.todo.try-catch-with-throw.ts:4:4
   5 |   } catch (e) {
   6 |     x.push(e);
   7 |   }
-
-
 ```
           
       

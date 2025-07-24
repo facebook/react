@@ -24,6 +24,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 1 error:
+
 Error: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)
 
 error.maybe-mutable-ref-not-preserved.ts:8:33
@@ -34,8 +35,6 @@ error.maybe-mutable-ref-not-preserved.ts:8:33
    9 | }
   10 |
   11 | export const FIXTURE_ENTRYPOINT = {
-
-
 ```
           
       

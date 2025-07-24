@@ -53,11 +53,11 @@ component Component(id) {
 
 ```
 Found 3 errors:
+
 Memoization: Compilation skipped because existing memoization could not be preserved
 
 React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.
 
-undefined:11:18
    9 |   const [index, setIndex] = useState(0);
   10 |
 > 11 |   const logData = useMemo(() => {
@@ -75,11 +75,11 @@ undefined:11:18
   17 |
   18 |   const setCurrentIndex = useCallback(
   19 |     (index: number) => {
+
 Memoization: Compilation skipped because existing memoization could not be preserved
 
 React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This dependency may be mutated later, which could cause the value to change unexpectedly.
 
-undefined:28:12
   26 |       setIndex(index);
   27 |     },
 > 28 |     [index, logData, items]
@@ -87,11 +87,11 @@ undefined:28:12
   29 |   );
   30 |
   31 |   if (prevId !== id) {
+
 Memoization: Compilation skipped because existing memoization could not be preserved
 
 React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.
 
-undefined:19:4
   17 |
   18 |   const setCurrentIndex = useCallback(
 > 19 |     (index: number) => {

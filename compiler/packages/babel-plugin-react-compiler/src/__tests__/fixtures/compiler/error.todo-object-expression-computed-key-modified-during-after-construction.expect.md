@@ -25,6 +25,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 1 error:
+
 Todo: (BuildHIR::lowerExpression) Expected Identifier, got CallExpression key in ObjectExpression
 
 error.todo-object-expression-computed-key-modified-during-after-construction.ts:6:5
@@ -35,8 +36,6 @@ error.todo-object-expression-computed-key-modified-during-after-construction.ts:
   7 |   };
   8 |   mutate(key);
   9 |   return context;
-
-
 ```
           
       

@@ -23,6 +23,7 @@ function useHook() {
 
 ```
 Found 1 error:
+
 Error: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
 
 error.invalid-rules-of-hooks-f3d6c5e9c83d.ts:12:2
@@ -32,8 +33,6 @@ error.invalid-rules-of-hooks-f3d6c5e9c83d.ts:12:2
      |   ^^^^^^^^ Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
   13 | }
   14 |
-
-
 ```
           
       

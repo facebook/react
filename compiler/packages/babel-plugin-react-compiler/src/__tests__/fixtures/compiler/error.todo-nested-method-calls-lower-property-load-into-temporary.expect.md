@@ -23,6 +23,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 1 error:
+
 Invariant: [Codegen] Internal error: MethodCall::property must be an unpromoted + unmemoized MemberExpression. Got a `Identifier`
 
 error.todo-nested-method-calls-lower-property-load-into-temporary.ts:6:14
@@ -33,8 +34,6 @@ error.todo-nested-method-calls-lower-property-load-into-temporary.ts:6:14
   7 |   return max;
   8 | }
   9 |
-
-
 ```
           
       

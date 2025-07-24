@@ -22,6 +22,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 1 error:
+
 Todo: Support spread syntax for hook arguments
 
 error.todo-hook-call-spreads-mutable-iterator.ts:5:24
@@ -32,8 +33,6 @@ error.todo-hook-call-spreads-mutable-iterator.ts:5:24
   6 | }
   7 |
   8 | export const FIXTURE_ENTRYPOINT = {
-
-
 ```
           
       

@@ -35,6 +35,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 2 errors:
+
 Error: This function accesses a ref value (the `current` property), which may not be accessed during render. (https://react.dev/reference/react/useRef)
 
 error.useCallback-accesses-ref-mutated-later-via-function-preserve-memoization.ts:17:2
@@ -46,7 +47,6 @@ error.useCallback-accesses-ref-mutated-later-via-function-preserve-memoization.t
   19 |   return <input onChange={onChange} />;
   20 | }
 
-
 Error: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)
 
 error.useCallback-accesses-ref-mutated-later-via-function-preserve-memoization.ts:17:2
@@ -57,8 +57,6 @@ error.useCallback-accesses-ref-mutated-later-via-function-preserve-memoization.t
   18 |
   19 |   return <input onChange={onChange} />;
   20 | }
-
-
 ```
           
       
