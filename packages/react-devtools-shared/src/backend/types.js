@@ -264,9 +264,6 @@ export type InspectedElement = {
   // Is this Suspense, and can its value be overridden now?
   canToggleSuspense: boolean,
 
-  // Can view component source location.
-  canViewSource: boolean,
-
   // Does the component have legacy context attached to it.
   hasLegacyContext: boolean,
 

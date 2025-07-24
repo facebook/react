@@ -4374,8 +4374,6 @@ export function attach(
           (fiber.alternate !== null &&
             forceFallbackForFibers.has(fiber.alternate))),
 
-      // Can view component source location.
-      canViewSource,
       source,
 
       // Does the component have legacy context attached to it.
@@ -4416,7 +4414,6 @@ export function attach(
   function inspectVirtualInstanceRaw(
     virtualInstance: VirtualInstance,
   ): InspectedElement | null {
-    const canViewSource = true;
     const source = getSourceForInstance(virtualInstance);
 
     const componentInfo = virtualInstance.data;
@@ -4470,8 +4467,6 @@ export function attach(
 
       canToggleSuspense: supportsTogglingSuspense && hasSuspenseBoundary,
 
-      // Can view component source location.
-      canViewSource,
       source,
 
       // Does the component have legacy context attached to it.
