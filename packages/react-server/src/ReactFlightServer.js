@@ -179,12 +179,12 @@ function defaultFilterStackFrame(
 }
 
 function devirtualizeURL(url: string): string {
-  if (url.startsWith('rsc://React/')) {
+  if (url.startsWith('about://React/')) {
     // This callsite is a virtual fake callsite that came from another Flight client.
     // We need to reverse it back into the original location by stripping its prefix
     // and suffix. We don't need the environment name because it's available on the
     // parent object that will contain the stack.
-    const envIdx = url.indexOf('/', 'rsc://React/'.length);
+    const envIdx = url.indexOf('/', 'about://React/'.length);
     const suffixIdx = url.lastIndexOf('?');
     if (envIdx > -1 && suffixIdx > -1) {
       return decodeURI(url.slice(envIdx + 1, suffixIdx));
