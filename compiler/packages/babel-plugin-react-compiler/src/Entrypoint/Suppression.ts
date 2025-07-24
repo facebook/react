@@ -10,7 +10,6 @@ import * as t from '@babel/types';
 import {
   CompilerDiagnostic,
   CompilerError,
-  CompilerErrorDetail,
   CompilerSuggestionOperation,
   ErrorSeverity,
 } from '../CompilerError';
