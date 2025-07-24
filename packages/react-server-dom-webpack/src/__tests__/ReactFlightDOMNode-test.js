@@ -863,4 +863,46 @@ describe('ReactFlightDOMNode', () => {
       expect(ownerStack).toBeNull();
     }
   });
+
+  // @gate experimental
+  // @gate enableHalt
+  it('can handle an empty prelude when prerendering', async () => {
+    function App() {
+      return null;
+    }
+
+    const serverAbortController = new AbortController();
+    serverAbortController.abort();
+    const errors = [];
+    const {pendingResult} = await serverAct(async () => {
+      // destructure trick to avoid the act scope from awaiting the returned value
+      return {
+        pendingResult: ReactServerDOMStaticServer.unstable_prerender(
+          ReactServer.createElement(App, null),
+          webpackMap,
+          {
+            signal: serverAbortController.signal,
+            onError(error) {
+              errors.push(error);
+            },
+          },
+        ),
+      };
+    });
+
+    expect(errors).toEqual([]);
+
+    const {prelude} = await pendingResult;
+
+    const reader = prelude.getReader();
+    while (true) {
+      const {done} = await reader.read();
+      if (done) {
+        break;
+      }
+    }
+
+    // We don't really have an assertion other than to make sure
+    // the stream doesn't hang.
+  });
 });

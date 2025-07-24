@@ -5762,6 +5762,7 @@ function flushCompletedChunks(request: Request): void {
           // TODO: If this destination is not currently flowing we'll not close it when it resumes flowing.
           // We should keep a separate status for this.
           if (request.destination !== null) {
+            request.status = CLOSED;
             close(request.destination);
             request.destination = null;
           }
@@ -5779,8 +5780,8 @@ function flushCompletedChunks(request: Request): void {
       );
       request.cacheController.abort(abortReason);
     }
-    request.status = CLOSED;
     if (request.destination !== null) {
+      request.status = CLOSED;
       close(request.destination);
       request.destination = null;
     }
