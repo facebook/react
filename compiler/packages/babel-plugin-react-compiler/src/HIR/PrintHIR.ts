@@ -943,7 +943,10 @@ export function printAliasingEffect(effect: AliasingEffect): string {
       return `Assign ${printPlaceForAliasEffect(effect.into)} = ${printPlaceForAliasEffect(effect.from)}`;
     }
     case 'Alias': {
-      return `Alias ${printPlaceForAliasEffect(effect.into)} = ${printPlaceForAliasEffect(effect.from)}`;
+      return `Alias ${printPlaceForAliasEffect(effect.into)} <- ${printPlaceForAliasEffect(effect.from)}`;
+    }
+    case 'MaybeAlias': {
+      return `MaybeAlias ${printPlaceForAliasEffect(effect.into)} <- ${printPlaceForAliasEffect(effect.from)}`;
     }
     case 'Capture': {
       return `Capture ${printPlaceForAliasEffect(effect.into)} <- ${printPlaceForAliasEffect(effect.from)}`;

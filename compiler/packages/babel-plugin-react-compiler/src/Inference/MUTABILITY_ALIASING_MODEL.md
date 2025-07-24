@@ -153,6 +153,10 @@ This is somewhat the inverse of `Capture`. The `CreateFrom` effect describes tha
 
 Describes immutable data flow from one value to another. This is not currently used for anything, but is intended to eventually power a more sophisticated escape analysis.
 
+### MaybeAlias
+
+Describes potential data flow that the compiler knows may occur behind a function call, but cannot be sure about. For example, `foo(x)` _may_ be the identity function and return `x`, or `cond(a, b, c)` may conditionally return `b` or `c` depending on the value of `a`, but those functions could just as easily return new mutable values and not capture any information from their arguments. MaybeAlias represents that we have to consider the potential for data flow when deciding mutable ranges, but should be conservative about reporting errors. For example, `foo(someFrozenValue).property = true` should not error since we don't know for certain that foo returns its input.
+
 ### State-Changing Effects
 
 The following effects describe state changes to specific values, not data flow. In many cases, JavaScript semantics will involve a combination of both data-flow effects *and* state-change effects. For example, `object.property = value` has data flow (`Capture object <- value`) and mutation (`Mutate object`).
@@ -345,6 +349,17 @@ mutate(a); // clearly can transitively mutate b
 const a = {};
 a.b = b; // capture
 mutate(a); // can transitively mutate b
+```
+
+### MaybeAlias makes mutation conditional
+
+Because we don't know for certain that the aliasing occurs, we consider the mutation conditional against the source.
+
+```
+MaybeAlias a <- b
+Mutate a
+=>
+MutateConditional b
 ```
 
 ### Freeze Does Not Freeze the Value
