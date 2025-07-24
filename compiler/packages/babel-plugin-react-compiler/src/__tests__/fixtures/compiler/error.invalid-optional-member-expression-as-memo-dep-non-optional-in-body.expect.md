@@ -19,9 +19,9 @@ function Component(props) {
 
 ```
 Found 1 error:
-Memoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected
+Memoization: Compilation skipped because existing memoization could not be preserved
 
-The inferred dependency was `props.items.edges.nodes`, but the source dependencies were [props.items?.edges?.nodes]. Inferred different dependency than source.
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `props.items.edges.nodes`, but the source dependencies were [props.items?.edges?.nodes]. Inferred different dependency than source.
 
 error.invalid-optional-member-expression-as-memo-dep-non-optional-in-body.ts:3:23
    1 | // @validatePreserveExistingMemoizationGuarantees
@@ -35,12 +35,10 @@ error.invalid-optional-member-expression-as-memo-dep-non-optional-in-body.ts:3:2
 >  6 |     // deps are optional
      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >  7 |   }, [props.items?.edges?.nodes]);
-     | ^^^^ React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected
+     | ^^^^ Could not preserve existing manual memoization
    8 |   return <Foo data={data} />;
    9 | }
   10 |
-
-
 ```
           
       

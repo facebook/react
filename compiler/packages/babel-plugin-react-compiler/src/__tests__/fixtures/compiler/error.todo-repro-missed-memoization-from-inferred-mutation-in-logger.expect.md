@@ -53,7 +53,9 @@ component Component(id) {
 
 ```
 Found 3 errors:
-Memoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.
+Memoization: Compilation skipped because existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.
 
 undefined:11:18
    9 |   const [index, setIndex] = useState(0);
@@ -69,25 +71,25 @@ undefined:11:18
 > 15 |     };
      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 > 16 |   }, [index, items]);
-     | ^^^^^^^^^^^^^^^^^^^^^ React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.
+     | ^^^^^^^^^^^^^^^^^^^^^ Could not preserve existing memoization
   17 |
   18 |   const setCurrentIndex = useCallback(
   19 |     (index: number) => {
+Memoization: Compilation skipped because existing memoization could not be preserved
 
-
-Memoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This dependency may be mutated later, which could cause the value to change unexpectedly
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This dependency may be mutated later, which could cause the value to change unexpectedly.
 
 undefined:28:12
   26 |       setIndex(index);
   27 |     },
 > 28 |     [index, logData, items]
-     |             ^^^^^^^ React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This dependency may be mutated later, which could cause the value to change unexpectedly
+     |             ^^^^^^^ This dependency may be modified later
   29 |   );
   30 |
   31 |   if (prevId !== id) {
+Memoization: Compilation skipped because existing memoization could not be preserved
 
-
-Memoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.
 
 undefined:19:4
   17 |
@@ -109,12 +111,10 @@ undefined:19:4
 > 26 |       setIndex(index);
      | ^^^^^^^^^^^^^^^^^^^^^^
 > 27 |     },
-     | ^^^^^^ React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.
+     | ^^^^^^ Could not preserve existing memoization
   28 |     [index, logData, items]
   29 |   );
   30 |
-
-
 ```
           
       
