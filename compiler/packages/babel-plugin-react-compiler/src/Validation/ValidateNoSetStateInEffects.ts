@@ -5,7 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, ErrorSeverity} from '../CompilerError';
+import {
+  CompilerDiagnostic,
+  CompilerError,
+  ErrorSeverity,
+} from '../CompilerError';
 import {
   HIRFunction,
   IdentifierId,
@@ -90,14 +94,21 @@ export function validateNoSetStateInEffects(
             if (arg !== undefined && arg.kind === 'Identifier') {
               const setState = setStateFunctions.get(arg.identifier.id);
               if (setState !== undefined) {
-                errors.push({
-                  reason:
-                    'Calling setState directly within a useEffect causes cascading renders and is not recommended. Consider alternatives to useEffect. (https://react.dev/learn/you-might-not-need-an-effect)',
-                  description: null,
-                  severity: ErrorSeverity.InvalidReact,
-                  loc: setState.loc,
-                  suggestions: null,
-                });
+                errors.pushDiagnostic(
+                  CompilerDiagnostic.create({
+                    category:
+                      'Calling setState within an effect can trigger cascading renders',
+                    description:
+                      'Calling setState directly within a useEffect causes cascading renders that can hurt performance, and is not recommended. Consider alternatives to useEffect. (https://react.dev/learn/you-might-not-need-an-effect)',
+                    severity: ErrorSeverity.InvalidReact,
+                    suggestions: null,
+                  }).withDetail({
+                    kind: 'error',
+                    loc: setState.loc,
+                    message:
+                      'Avoid calling setState() in the top-level of an effect',
+                  }),
+                );
               }
             }
           }

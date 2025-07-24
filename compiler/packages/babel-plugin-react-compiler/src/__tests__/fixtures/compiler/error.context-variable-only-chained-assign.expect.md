@@ -29,20 +29,18 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 Found 1 error:
-Error: Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead
+Error: Cannot reassign a variable after render completes
 
-Variable `x` cannot be reassigned after render.
+Reassigning variable `x` after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead
 
 error.context-variable-only-chained-assign.ts:10:19
    8 |   };
    9 |   const fn2 = () => {
 > 10 |     const copy2 = (x = 4);
-     |                    ^ Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead
+     |                    ^ Cannot reassign variable after render completes
   11 |     return [invoke(fn1), copy2, identity(copy2)];
   12 |   };
   13 |   return invoke(fn2);
-
-
 ```
           
       

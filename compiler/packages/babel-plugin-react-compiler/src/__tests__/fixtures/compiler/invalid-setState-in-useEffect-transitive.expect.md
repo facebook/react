@@ -65,7 +65,7 @@ function _temp(s) {
 ## Logs
 
 ```
-{"kind":"CompileError","detail":{"options":{"reason":"Calling setState directly within a useEffect causes cascading renders and is not recommended. Consider alternatives to useEffect. (https://react.dev/learn/you-might-not-need-an-effect)","description":null,"severity":"InvalidReact","suggestions":null,"loc":{"start":{"line":13,"column":4,"index":265},"end":{"line":13,"column":5,"index":266},"filename":"invalid-setState-in-useEffect-transitive.ts","identifierName":"g"}}},"fnLoc":null}
+{"kind":"CompileError","detail":{"options":{"category":"Calling setState within an effect can trigger cascading renders","description":"Calling setState directly within a useEffect causes cascading renders that can hurt performance, and is not recommended. Consider alternatives to useEffect. (https://react.dev/learn/you-might-not-need-an-effect)","severity":"InvalidReact","suggestions":null,"details":[{"kind":"error","loc":{"start":{"line":13,"column":4,"index":265},"end":{"line":13,"column":5,"index":266},"filename":"invalid-setState-in-useEffect-transitive.ts","identifierName":"g"},"message":"Avoid calling setState() in the top-level of an effect"}]}},"fnLoc":null}
 {"kind":"CompileSuccess","fnLoc":{"start":{"line":4,"column":0,"index":92},"end":{"line":16,"column":1,"index":293},"filename":"invalid-setState-in-useEffect-transitive.ts"},"fnName":"Component","memoSlots":2,"memoBlocks":2,"memoValues":2,"prunedMemoBlocks":0,"prunedMemoValues":0}
 ```
       
