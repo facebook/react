@@ -221,8 +221,7 @@ function processStable(buildDir) {
       );
     }
 
-    const rnVersionString =
-      ReactVersion + '-native-fb-' + sha + '-' + dateString;
+    const rnVersionString = ReactVersion + '-native-fb-' + sha + '-' + dateString;
     if (fs.existsSync(buildDir + '/facebook-react-native')) {
       updatePlaceholderReactVersionInCompiledArtifacts(
         buildDir + '/facebook-react-native',
@@ -231,9 +230,16 @@ function processStable(buildDir) {
     }
 
     if (fs.existsSync(buildDir + '/react-native')) {
-      updatePlaceholderReactVersionInCompiledArtifactsFb(
+      updatePlaceholderReactVersionInCompiledArtifacts(
         buildDir + '/react-native',
-        rnVersionString
+        rnVersionString,
+        (filename) => filename.endsWith('.fb.js')
+      );
+
+      updatePlaceholderReactVersionInCompiledArtifacts(
+        buildDir + '/react-native',
+        ReactVersion,
+        (filename) => !filename.endsWith('.fb.js') && filename.endsWith('.js')
       );
     }
 
@@ -340,9 +346,16 @@ function processExperimental(buildDir, version) {
   }
 
   if (fs.existsSync(buildDir + '/react-native')) {
-    updatePlaceholderReactVersionInCompiledArtifactsFb(
+    updatePlaceholderReactVersionInCompiledArtifacts(
       buildDir + '/react-native',
-      rnVersionString
+      rnVersionString,
+      (filename) => filename.endsWith('.fb.js')
+    );
+
+    updatePlaceholderReactVersionInCompiledArtifacts(
+      buildDir + '/react-native',
+      ReactVersion,
+      (filename) => !filename.endsWith('.fb.js') && filename.endsWith('.js')
     );
   }
 
@@ -437,10 +450,15 @@ function updatePackageVersions(
 
 function updatePlaceholderReactVersionInCompiledArtifacts(
   artifactsDirectory,
-  newVersion
+  newVersion,
+  filteringClosure
 ) {
   // Update the version of React in the compiled artifacts by searching for
   // the placeholder string and replacing it with a new one.
+  if (filteringClosure == null) {
+    filteringClosure = filename => filename.endsWith('.js')
+  }
+
   const artifactFilenames = String(
     spawnSync('grep', [
       '-lr',
@@ -451,7 +469,7 @@ function updatePlaceholderReactVersionInCompiledArtifacts(
   )
     .trim()
     .split('\n')
-    .filter(filename => filename.endsWith('.js'));
+    .filter(filteringClosure);
 
   for (const artifactFilename of artifactFilenames) {
     const originalText = fs.readFileSync(artifactFilename, 'utf8');
@@ -463,33 +481,6 @@ function updatePlaceholderReactVersionInCompiledArtifacts(
   }
 }
 
-function updatePlaceholderReactVersionInCompiledArtifactsFb(
-  artifactsDirectory,
-  newVersion
-) {
-  // Update the version of React in the compiled artifacts by searching for
-  // the placeholder string and replacing it with a new one.
-  const artifactFilenames = String(
-    spawnSync('grep', [
-      '-lr',
-      PLACEHOLDER_REACT_VERSION,
-      '--',
-      artifactsDirectory,
-    ]).stdout
-  )
-    .trim()
-    .split('\n')
-    .filter(filename => filename.endsWith('.fb.js'));
-
-  for (const artifactFilename of artifactFilenames) {
-    const originalText = fs.readFileSync(artifactFilename, 'utf8');
-    const replacedText = originalText.replaceAll(
-      PLACEHOLDER_REACT_VERSION,
-      newVersion
-    );
-    fs.writeFileSync(artifactFilename, replacedText);
-  }
-}
 
 /**
  * cross-platform alternative to `rsync -ar`
