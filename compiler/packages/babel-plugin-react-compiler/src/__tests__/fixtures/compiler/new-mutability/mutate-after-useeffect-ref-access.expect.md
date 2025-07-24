@@ -47,7 +47,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Logs
 
 ```
-{"kind":"CompileError","fnLoc":{"start":{"line":6,"column":0,"index":190},"end":{"line":11,"column":1,"index":363},"filename":"mutate-after-useeffect-ref-access.ts"},"detail":{"reason":"Mutating component props or hook arguments is not allowed. Consider using a local variable instead","description":null,"severity":"InvalidReact","suggestions":null,"loc":{"start":{"line":9,"column":2,"index":321},"end":{"line":9,"column":16,"index":335},"filename":"mutate-after-useeffect-ref-access.ts"}}}
+{"kind":"CompileError","fnLoc":{"start":{"line":6,"column":0,"index":190},"end":{"line":11,"column":1,"index":363},"filename":"mutate-after-useeffect-ref-access.ts"},"detail":{"options":{"severity":"InvalidReact","category":"This value cannot be modified","description":"Modifying component props or hook arguments is not allowed. Consider using a local variable instead.","details":[{"kind":"error","loc":{"start":{"line":9,"column":2,"index":321},"end":{"line":9,"column":16,"index":335},"filename":"mutate-after-useeffect-ref-access.ts"},"message":"value cannot be modified"}]}}}
 {"kind":"AutoDepsDecorations","fnLoc":{"start":{"line":8,"column":2,"index":269},"end":{"line":8,"column":50,"index":317},"filename":"mutate-after-useeffect-ref-access.ts"},"decorations":[{"start":{"line":8,"column":24,"index":291},"end":{"line":8,"column":30,"index":297},"filename":"mutate-after-useeffect-ref-access.ts","identifierName":"arrRef"}]}
 {"kind":"CompileSuccess","fnLoc":{"start":{"line":6,"column":0,"index":190},"end":{"line":11,"column":1,"index":363},"filename":"mutate-after-useeffect-ref-access.ts"},"fnName":"Component","memoSlots":0,"memoBlocks":0,"memoValues":0,"prunedMemoBlocks":0,"prunedMemoValues":0}
 ```

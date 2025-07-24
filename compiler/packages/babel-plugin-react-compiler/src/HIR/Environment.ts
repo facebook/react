@@ -318,10 +318,10 @@ export const EnvironmentConfigSchema = z.object({
   validateNoSetStateInRender: z.boolean().default(true),
 
   /**
-   * Validates that setState is not called directly within a passive effect (useEffect).
+   * Validates that setState is not called synchronously within an effect (useEffect and friends).
    * Scheduling a setState (with an event listener, subscription, etc) is valid.
    */
-  validateNoSetStateInPassiveEffects: z.boolean().default(false),
+  validateNoSetStateInEffects: z.boolean().default(false),
 
   /**
    * Validates against creating JSX within a try block and recommends using an error boundary

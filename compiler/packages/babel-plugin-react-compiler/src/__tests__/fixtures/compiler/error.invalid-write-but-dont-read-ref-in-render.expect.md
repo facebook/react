@@ -17,10 +17,15 @@ function useHook({value}) {
 ## Error
 
 ```
+Found 1 error:
+
+Error: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)
+
+error.invalid-write-but-dont-read-ref-in-render.ts:5:2
   3 |   const ref = useRef(null);
   4 |   // Writing to a ref in render is against the rules:
 > 5 |   ref.current = value;
-    |   ^^^^^^^^^^^ InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef) (5:5)
+    |   ^^^^^^^^^^^ Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)
   6 |   // returning a ref is allowed, so this alone doesn't trigger an error:
   7 |   return ref;
   8 | }

@@ -30,10 +30,17 @@ function Component({props, bar}) {
 ## Error
 
 ```
+Found 1 error:
+
+Error: [Fire] Untransformed reference to compiler-required feature.
+
+ null
+
+error.use-no-memo.ts:15:4
   13 |   };
   14 |   useEffect(() => {
 > 15 |     fire(foo(props));
-     |     ^^^^ InvalidReact: [Fire] Untransformed reference to compiler-required feature. Either remove this `fire` call or ensure it is successfully transformed by the compiler (15:15)
+     |     ^^^^ Untransformed `fire` call
   16 |     fire(foo());
   17 |     fire(bar());
   18 |   });

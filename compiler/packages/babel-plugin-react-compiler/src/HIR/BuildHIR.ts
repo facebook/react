@@ -9,6 +9,7 @@ import {NodePath, Scope} from '@babel/traverse';
 import * as t from '@babel/types';
 import invariant from 'invariant';
 import {
+  CompilerDiagnostic,
   CompilerError,
   CompilerSuggestionOperation,
   ErrorSeverity,
@@ -104,12 +105,17 @@ export function lower(
     if (param.isIdentifier()) {
       const binding = builder.resolveIdentifier(param);
       if (binding.kind !== 'Identifier') {
-        builder.errors.push({
-          reason: `(BuildHIR::lower) Could not find binding for param \`${param.node.name}\``,
-          severity: ErrorSeverity.Invariant,
-          loc: param.node.loc ?? null,
-          suggestions: null,
-        });
+        builder.errors.pushDiagnostic(
+          CompilerDiagnostic.create({
+            severity: ErrorSeverity.Invariant,
+            category: 'Could not find binding',
+            description: `[BuildHIR] Could not find binding for param \`${param.node.name}\`.`,
+          }).withDetail({
+            kind: 'error',
+            loc: param.node.loc ?? null,
+            message: 'Could not find binding',
+          }),
+        );
         return;
       }
       const place: Place = {
@@ -163,12 +169,17 @@ export function lower(
         'Assignment',
       );
     } else {
-      builder.errors.push({
-        reason: `(BuildHIR::lower) Handle ${param.node.type} params`,
-        severity: ErrorSeverity.Todo,
-        loc: param.node.loc ?? null,
-        suggestions: null,
-      });
+      builder.errors.pushDiagnostic(
+        CompilerDiagnostic.create({
+          severity: ErrorSeverity.Todo,
+          category: `Handle ${param.node.type} parameters`,
+          description: `[BuildHIR] Add support for ${param.node.type} parameters.`,
+        }).withDetail({
+          kind: 'error',
+          loc: param.node.loc ?? null,
+          message: 'Unsupported parameter type',
+        }),
+      );
     }
   });
 
@@ -188,13 +199,17 @@ export function lower(
     lowerStatement(builder, body);
     directives = body.get('directives').map(d => d.node.value.value);
   } else {
-    builder.errors.push({
-      severity: ErrorSeverity.InvalidJS,
-      reason: `Unexpected function body kind`,
-      description: `Expected function body to be an expression or a block statement, got \`${body.type}\``,
-      loc: body.node.loc ?? null,
-      suggestions: null,
-    });
+    builder.errors.pushDiagnostic(
+      CompilerDiagnostic.create({
+        severity: ErrorSeverity.InvalidJS,
+        category: `Unexpected function body kind`,
+        description: `Expected function body to be an expression or a block statement, got \`${body.type}\`.`,
+      }).withDetail({
+        kind: 'error',
+        loc: body.node.loc ?? null,
+        message: 'Expected a block statement or expression',
+      }),
+    );
   }
 
   if (builder.errors.hasErrors()) {
@@ -2271,11 +2286,17 @@ function lowerExpression(
         });
         for (const [name, locations] of Object.entries(fbtLocations)) {
           if (locations.length > 1) {
-            CompilerError.throwTodo({
-              reason: `Support <${tagName}> tags with multiple <${tagName}:${name}> values`,
-              loc: locations.at(-1) ?? GeneratedSource,
-              description: null,
-              suggestions: null,
+            CompilerError.throwDiagnostic({
+              severity: ErrorSeverity.Todo,
+              category: 'Support duplicate fbt tags',
+              description: `Support \`<${tagName}>\` tags with multiple \`<${tagName}:${name}>\` values`,
+              details: locations.map(loc => {
+                return {
+                  kind: 'error',
+                  message: `Multiple \`<${tagName}:${name}>\` tags found`,
+                  loc,
+                };
+              }),
             });
           }
         }
@@ -3503,9 +3524,8 @@ function lowerFunction(
   );
   let loweredFunc: HIRFunction;
   if (lowering.isErr()) {
-    lowering
-      .unwrapErr()
-      .details.forEach(detail => builder.errors.pushErrorDetail(detail));
+    const functionErrors = lowering.unwrapErr();
+    builder.errors.merge(functionErrors);
     return null;
   }
   loweredFunc = lowering.unwrap();

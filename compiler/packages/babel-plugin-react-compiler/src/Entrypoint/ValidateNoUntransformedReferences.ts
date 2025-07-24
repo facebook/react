@@ -8,32 +8,27 @@
 import {NodePath} from '@babel/core';
 import * as t from '@babel/types';
 
-import {
-  CompilerError,
-  CompilerErrorDetailOptions,
-  EnvironmentConfig,
-  ErrorSeverity,
-  Logger,
-} from '..';
+import {CompilerError, EnvironmentConfig, ErrorSeverity, Logger} from '..';
 import {getOrInsertWith} from '../Utils/utils';
-import {Environment} from '../HIR';
+import {Environment, GeneratedSource} from '../HIR';
 import {DEFAULT_EXPORT} from '../HIR/Environment';
 import {CompileProgramMetadata} from './Program';
+import {CompilerDiagnostic, CompilerDiagnosticOptions} from '../CompilerError';
 
 function throwInvalidReact(
-  options: Omit<CompilerErrorDetailOptions, 'severity'>,
+  options: Omit<CompilerDiagnosticOptions, 'severity'>,
   {logger, filename}: TraversalState,
 ): never {
-  const detail: CompilerErrorDetailOptions = {
-    ...options,
+  const detail: CompilerDiagnosticOptions = {
     severity: ErrorSeverity.InvalidReact,
+    ...options,
   };
   logger?.logEvent(filename, {
     kind: 'CompileError',
     fnLoc: null,
-    detail,
+    detail: new CompilerDiagnostic(detail),
   });
-  CompilerError.throw(detail);
+  CompilerError.throwDiagnostic(detail);
 }
 
 function isAutodepsSigil(
@@ -97,14 +92,18 @@ function assertValidEffectImportReference(
          */
         throwInvalidReact(
           {
-            reason:
-              '[InferEffectDependencies] React Compiler is unable to infer dependencies of this effect. ' +
-              'This will break your build! ' +
-              'To resolve, either pass your own dependency array or fix reported compiler bailout diagnostics.',
-            description: maybeErrorDiagnostic
-              ? `(Bailout reason: ${maybeErrorDiagnostic})`
-              : null,
-            loc: parent.node.loc ?? null,
+            category:
+              'Cannot infer dependencies of this effect. This will break your build!',
+            description:
+              'To resolve, either pass a dependency array or fix reported compiler bailout diagnostics.' +
+              (maybeErrorDiagnostic ? ` ${maybeErrorDiagnostic}` : ''),
+            details: [
+              {
+                kind: 'error',
+                message: 'Cannot infer dependencies',
+                loc: parent.node.loc ?? GeneratedSource,
+              },
+            ],
           },
           context,
         );
@@ -124,13 +123,20 @@ function assertValidFireImportReference(
     );
     throwInvalidReact(
       {
-        reason:
-          '[Fire] Untransformed reference to compiler-required feature. ' +
-          'Either remove this `fire` call or ensure it is successfully transformed by the compiler',
-        description: maybeErrorDiagnostic
-          ? `(Bailout reason: ${maybeErrorDiagnostic})`
-          : null,
-        loc: paths[0].node.loc ?? null,
+        category:
+          '[Fire] Untransformed reference to compiler-required feature.',
+        description:
+          'Either remove this `fire` call or ensure it is successfully transformed by the compiler' +
+          maybeErrorDiagnostic
+            ? ` ${maybeErrorDiagnostic}`
+            : '',
+        details: [
+          {
+            kind: 'error',
+            message: 'Untransformed `fire` call',
+            loc: paths[0].node.loc ?? GeneratedSource,
+          },
+        ],
       },
       context,
     );

@@ -5,7 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, ErrorSeverity} from '..';
+import {
+  CompilerDiagnostic,
+  CompilerError,
+  ErrorSeverity,
+} from '../CompilerError';
 import {FunctionExpression, HIRFunction, IdentifierId} from '../HIR';
 import {Result} from '../Utils/Result';
 
@@ -63,24 +67,41 @@ export function validateUseMemo(fn: HIRFunction): Result<void, CompilerError> {
           }
 
           if (body.loweredFunc.func.params.length > 0) {
-            errors.push({
-              severity: ErrorSeverity.InvalidReact,
-              reason: 'useMemo callbacks may not accept any arguments',
-              description: null,
-              loc: body.loc,
-              suggestions: null,
-            });
+            const firstParam = body.loweredFunc.func.params[0];
+            const loc =
+              firstParam.kind === 'Identifier'
+                ? firstParam.loc
+                : firstParam.place.loc;
+            errors.pushDiagnostic(
+              CompilerDiagnostic.create({
+                severity: ErrorSeverity.InvalidReact,
+                category: 'useMemo() callbacks may not accept parameters',
+                description:
+                  'useMemo() callbacks are called by React to cache calculations across re-renders. They should not take parameters. Instead, directly reference the props, state, or local variables needed for the computation.',
+                suggestions: null,
+              }).withDetail({
+                kind: 'error',
+                loc,
+                message: 'Callbacks with parameters are not supported',
+              }),
+            );
           }
 
           if (body.loweredFunc.func.async || body.loweredFunc.func.generator) {
-            errors.push({
-              severity: ErrorSeverity.InvalidReact,
-              reason:
-                'useMemo callbacks may not be async or generator functions',
-              description: null,
-              loc: body.loc,
-              suggestions: null,
-            });
+            errors.pushDiagnostic(
+              CompilerDiagnostic.create({
+                severity: ErrorSeverity.InvalidReact,
+                category:
+                  'useMemo() callbacks may not be async or generator functions',
+                description:
+                  'useMemo() callbacks are called once and must synchronously return a value.',
+                suggestions: null,
+              }).withDetail({
+                kind: 'error',
+                loc: body.loc,
+                message: 'Async and generator functions are not supported',
+              }),
+            );
           }
 
           break;

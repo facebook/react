@@ -29,10 +29,17 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
+Found 1 error:
+
+Error: Cannot infer dependencies of this effect. This will break your build!
+
+To resolve, either pass a dependency array or fix reported compiler bailout diagnostics.
+
+error.todo-gating.ts:11:2
    9 | function Component({foo}) {
   10 |   const arr = [];
 > 11 |   useEffectWrapper(() => arr.push(foo), AUTODEPS);
-     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ InvalidReact: [InferEffectDependencies] React Compiler is unable to infer dependencies of this effect. This will break your build! To resolve, either pass your own dependency array or fix reported compiler bailout diagnostics. (11:11)
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot infer dependencies
   12 |   arr.push(2);
   13 |   return arr;
   14 | }

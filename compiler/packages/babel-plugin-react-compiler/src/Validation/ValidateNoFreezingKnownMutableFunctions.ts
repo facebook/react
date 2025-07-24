@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, Effect, ErrorSeverity} from '..';
+import {CompilerDiagnostic, CompilerError, Effect, ErrorSeverity} from '..';
 import {
   FunctionEffect,
   HIRFunction,
@@ -57,16 +57,30 @@ export function validateNoFreezingKnownMutableFunctions(
     if (operand.effect === Effect.Freeze) {
       const effect = contextMutationEffects.get(operand.identifier.id);
       if (effect != null) {
-        errors.push({
-          reason: `This argument is a function which may reassign or mutate local variables after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead`,
-          loc: operand.loc,
-          severity: ErrorSeverity.InvalidReact,
-        });
-        errors.push({
-          reason: `The function modifies a local variable here`,
-          loc: effect.loc,
-          severity: ErrorSeverity.InvalidReact,
-        });
+        const place = [...effect.places][0];
+        const variable =
+          place != null &&
+          place.identifier.name != null &&
+          place.identifier.name.kind === 'named'
+            ? `\`${place.identifier.name.value}\``
+            : 'a local variable';
+        errors.pushDiagnostic(
+          CompilerDiagnostic.create({
+            severity: ErrorSeverity.InvalidReact,
+            category: 'Cannot modify local variables after render completes',
+            description: `This argument is a function which may reassign or mutate ${variable} after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.`,
+          })
+            .withDetail({
+              kind: 'error',
+              loc: operand.loc,
+              message: `This function may (indirectly) reassign or modify ${variable} after render`,
+            })
+            .withDetail({
+              kind: 'error',
+              loc: effect.loc,
+              message: `This modifies ${variable}`,
+            }),
+        );
       }
     }
   }

@@ -32,6 +32,13 @@ function Component({prop1}) {
 ## Error
 
 ```
+Found 1 error:
+
+Error: Cannot infer dependencies of this effect. This will break your build!
+
+To resolve, either pass a dependency array or fix reported compiler bailout diagnostics. Todo: (BuildHIR::lowerStatement) Handle TryStatement without a catch clause (13:6)
+
+error.todo-syntax.ts:11:2
    9 | function Component({prop1}) {
   10 |   'use memo';
 > 11 |   useSpecialEffect(
@@ -55,7 +62,7 @@ function Component({prop1}) {
 > 20 |     AUTODEPS
      | ^^^^^^^^^^^
 > 21 |   );
-     | ^^^^ InvalidReact: [InferEffectDependencies] React Compiler is unable to infer dependencies of this effect. This will break your build! To resolve, either pass your own dependency array or fix reported compiler bailout diagnostics.. (Bailout reason: Todo: (BuildHIR::lowerStatement) Handle TryStatement without a catch clause (13:17)) (11:21)
+     | ^^^^ Cannot infer dependencies
   22 |   return <div>{prop1}</div>;
   23 | }
   24 |
