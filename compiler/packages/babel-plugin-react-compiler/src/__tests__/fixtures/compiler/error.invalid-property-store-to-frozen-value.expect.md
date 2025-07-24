@@ -16,13 +16,19 @@ function Component(props) {
 ## Error
 
 ```
+Found 1 error:
+Error: Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX
+
+error.invalid-property-store-to-frozen-value.ts:5:2
   3 |   // freeze
   4 |   <div>{x}</div>;
 > 5 |   x.y = true;
-    |   ^ InvalidReact: Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX (5:5)
+    |   ^ Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX
   6 |   return x;
   7 | }
   8 |
+
+
 ```
           
       
