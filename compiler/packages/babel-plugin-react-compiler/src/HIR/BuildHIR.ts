@@ -178,6 +178,7 @@ export function lower(
     const fallthrough = builder.reserve('block');
     const terminal: ReturnTerminal = {
       kind: 'return',
+      returnVariant: 'Implicit',
       loc: GeneratedSource,
       value: lowerExpressionToTemporary(builder, body),
       id: makeInstructionId(0),
@@ -204,6 +205,7 @@ export function lower(
   builder.terminate(
     {
       kind: 'return',
+      returnVariant: 'Void',
       loc: GeneratedSource,
       value: lowerValueToTemporary(builder, {
         kind: 'Primitive',
@@ -287,6 +289,7 @@ function lowerStatement(
       }
       const terminal: ReturnTerminal = {
         kind: 'return',
+        returnVariant: 'Explicit',
         loc: stmt.node.loc ?? GeneratedSource,
         value,
         id: makeInstructionId(0),

@@ -237,6 +237,7 @@ function emitSelectorFn(env: Environment, keys: Array<string>): Instruction {
     terminal: {
       id: makeInstructionId(0),
       kind: 'return',
+      returnVariant: 'Explicit',
       loc: GeneratedSource,
       value: arrayInstr.lvalue,
       effects: null,
