@@ -84,9 +84,7 @@ export default function BabelPluginReactCompiler(
             }
           } catch (e) {
             if (e instanceof CompilerError) {
-              throw new Error(
-                e.printErrorMessage(pass.file.code, {eslint: false}),
-              );
+              throw e.withPrintedMessage(pass.file.code, {eslint: false});
             }
             throw e;
           }
