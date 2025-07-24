@@ -9,6 +9,7 @@ import {Effect, ValueKind, ValueReason} from './HIR';
 import {
   BUILTIN_SHAPES,
   BuiltInArrayId,
+  BuiltInAutodepsId,
   BuiltInFireFunctionId,
   BuiltInFireId,
   BuiltInMapId,
@@ -644,6 +645,41 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
         calleeEffect: Effect.Read,
         hookKind: 'useEffect',
         returnValueKind: ValueKind.Frozen,
+        aliasing: {
+          receiver: '@receiver',
+          params: [],
+          rest: '@rest',
+          returns: '@returns',
+          temporaries: ['@effect'],
+          effects: [
+            // Freezes the function and deps
+            {
+              kind: 'Freeze',
+              value: '@rest',
+              reason: ValueReason.Effect,
+            },
+            // Internally creates an effect object that captures the function and deps
+            {
+              kind: 'Create',
+              into: '@effect',
+              value: ValueKind.Frozen,
+              reason: ValueReason.KnownReturnSignature,
+            },
+            // The effect stores the function and dependencies
+            {
+              kind: 'Capture',
+              from: '@rest',
+              into: '@effect',
+            },
+            // Returns undefined
+            {
+              kind: 'Create',
+              into: '@returns',
+              value: ValueKind.Primitive,
+              reason: ValueReason.KnownReturnSignature,
+            },
+          ],
+        },
       },
       BuiltInUseEffectHookId,
     ),
@@ -745,6 +781,7 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
       BuiltInUseEffectEventId,
     ),
   ],
+  ['AUTODEPS', addObject(DEFAULT_SHAPES, BuiltInAutodepsId, [])],
 ];
 
 TYPED_GLOBALS.push(
@@ -870,6 +907,7 @@ export function installTypeConfig(
         noAlias: typeConfig.noAlias === true,
         mutableOnlyIfOperandsAreMutable:
           typeConfig.mutableOnlyIfOperandsAreMutable === true,
+        aliasing: typeConfig.aliasing,
       });
     }
     case 'hook': {
@@ -887,6 +925,7 @@ export function installTypeConfig(
         ),
         returnValueKind: typeConfig.returnValueKind ?? ValueKind.Frozen,
         noAlias: typeConfig.noAlias === true,
+        aliasing: typeConfig.aliasing,
       });
     }
     case 'object': {

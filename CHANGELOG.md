@@ -19,11 +19,11 @@ An Owner Stack is a string representing the components that are directly respons
 * Updated `useId` to use valid CSS selectors, changing format from `:r123:` to `«r123»`. [#32001](https://github.com/facebook/react/pull/32001)
 * Added a dev-only warning for null/undefined created in useEffect, useInsertionEffect, and useLayoutEffect. [#32355](https://github.com/facebook/react/pull/32355)
 * Fixed a bug where dev-only methods were exported in production builds. React.act is no longer available in production builds. [#32200](https://github.com/facebook/react/pull/32200)
-* Improved consistency across prod and dev to improve compatibility with Google Closure Complier and bindings [#31808](https://github.com/facebook/react/pull/31808)
+* Improved consistency across prod and dev to improve compatibility with Google Closure Compiler and bindings [#31808](https://github.com/facebook/react/pull/31808)
 * Improve passive effect scheduling for consistent task yielding. [#31785](https://github.com/facebook/react/pull/31785)
 * Fixed asserts in React Native when passChildrenWhenCloningPersistedNodes is enabled for OffscreenComponent rendering. [#32528](https://github.com/facebook/react/pull/32528)
 * Fixed component name resolution for Portal [#32640](https://github.com/facebook/react/pull/32640)
-* Added support for beforetoggle and toggle events on the dialog element. #32479 [#32479](https://github.com/facebook/react/pull/32479)
+* Added support for beforetoggle and toggle events on the dialog element. [#32479](https://github.com/facebook/react/pull/32479)
 
 ### React DOM
 * Fixed double warning when the `href` attribute is an empty string [#31783](https://github.com/facebook/react/pull/31783)

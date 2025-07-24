@@ -13,6 +13,7 @@ import {SettingsContext} from './SettingsContext';
 import {StoreContext} from '../context';
 import {CHANGE_LOG_URL} from 'react-devtools-shared/src/devtools/constants';
 import {isInternalFacebookBuild} from 'react-devtools-feature-flags';
+import CodeEditorOptions from './CodeEditorOptions';
 
 import styles from './SettingsShared.css';
 
@@ -74,6 +75,13 @@ export default function GeneralSettings(_: {}): React.Node {
           <option value="compact">Compact</option>
           <option value="comfortable">Comfortable</option>
         </select>
+      </div>
+
+      <div className={styles.SettingWrapper}>
+        <label className={styles.SettingRow}>
+          <div className={styles.RadioLabel}>Open in Editor URL</div>
+          <CodeEditorOptions />
+        </label>
       </div>
 
       {supportsTraceUpdates && (

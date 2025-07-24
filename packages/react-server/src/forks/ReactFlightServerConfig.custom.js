@@ -15,6 +15,7 @@ export * from '../ReactFlightServerConfigBundlerCustom';
 export * from '../ReactFlightServerConfigDebugNoop';
 
 export * from '../ReactFlightStackConfigV8';
+export * from '../ReactServerConsoleConfigPlain';
 
 export type Hints = any;
 export type HintCode = any;

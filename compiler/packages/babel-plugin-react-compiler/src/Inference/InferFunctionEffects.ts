@@ -324,7 +324,7 @@ function isEffectSafeOutsideRender(effect: FunctionEffect): boolean {
   return effect.kind === 'GlobalMutation';
 }
 
-function getWriteErrorReason(abstractValue: AbstractValue): string {
+export function getWriteErrorReason(abstractValue: AbstractValue): string {
   if (abstractValue.reason.has(ValueReason.Global)) {
     return 'Writing to a variable defined outside a component or hook is not allowed. Consider using an effect';
   } else if (abstractValue.reason.has(ValueReason.JsxCaptured)) {
@@ -339,6 +339,12 @@ function getWriteErrorReason(abstractValue: AbstractValue): string {
     return "Mutating a value returned from 'useState()', which should not be mutated. Use the setter function to update instead";
   } else if (abstractValue.reason.has(ValueReason.ReducerState)) {
     return "Mutating a value returned from 'useReducer()', which should not be mutated. Use the dispatch function to update instead";
+  } else if (abstractValue.reason.has(ValueReason.Effect)) {
+    return 'Updating a value used previously in an effect function or as an effect dependency is not allowed. Consider moving the mutation before calling useEffect()';
+  } else if (abstractValue.reason.has(ValueReason.HookCaptured)) {
+    return 'Updating a value previously passed as an argument to a hook is not allowed. Consider moving the mutation before calling the hook';
+  } else if (abstractValue.reason.has(ValueReason.HookReturn)) {
+    return 'Updating a value returned from a hook is not allowed. Consider moving the mutation into the hook where the value is constructed';
   } else {
     return 'This mutates a variable that React considers immutable';
   }

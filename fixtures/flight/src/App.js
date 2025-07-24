@@ -24,6 +24,7 @@ import {GenerateImage} from './GenerateImage.js';
 import {like, greet, increment} from './actions.js';
 
 import {getServerState} from './ServerState.js';
+import {sdkMethod} from './library.js';
 
 const promisedText = new Promise(resolve =>
   setTimeout(() => resolve('deferred text'), 50)
@@ -33,12 +34,22 @@ function Foo({children}) {
   return <div>{children}</div>;
 }
 
+async function delayedError(text, ms) {
+  return new Promise((_, reject) =>
+    setTimeout(() => reject(new Error(text)), ms)
+  );
+}
+
 async function delay(text, ms) {
   return new Promise(resolve => setTimeout(() => resolve(text), ms));
 }
 
 async function delayTwice() {
-  await delay('', 20);
+  try {
+    await delayedError('Delayed exception', 20);
+  } catch (x) {
+    // Ignored
+  }
   await delay('', 10);
 }
 
@@ -110,9 +121,69 @@ async function ServerComponent({noCache}) {
   return await fetchThirdParty(noCache);
 }
 
+let veryDeepObject = [
+  {
+    bar: {
+      baz: {
+        a: {},
+      },
+    },
+  },
+  {
+    bar: {
+      baz: {
+        a: {},
+      },
+    },
+  },
+  {
+    bar: {
+      baz: {
+        a: {},
+      },
+    },
+  },
+  {
+    bar: {
+      baz: {
+        a: {
+          b: {
+            c: {
+              d: {
+                e: {
+                  f: {
+                    g: {
+                      h: {
+                        i: {
+                          j: {
+                            k: {
+                              l: {
+                                m: {
+                                  yay: 'You reached the end',
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+];
+
 export default async function App({prerender, noCache}) {
   const res = await fetch('http://localhost:3001/todos');
   const todos = await res.json();
+  await sdkMethod('http://localhost:3001/todos');
+
+  console.log('Expand me:', veryDeepObject);
 
   const dedupedChild = <ServerComponent noCache={noCache} />;
   const message = getServerState();

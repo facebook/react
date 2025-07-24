@@ -88,6 +88,7 @@ function writeNonOptionalDependency(
     },
     id: makeInstructionId(1),
     loc: loc,
+    effects: null,
   });
 
   /**
@@ -118,6 +119,7 @@ function writeNonOptionalDependency(
       },
       id: makeInstructionId(1),
       loc: loc,
+      effects: null,
     });
     curr = next;
   }

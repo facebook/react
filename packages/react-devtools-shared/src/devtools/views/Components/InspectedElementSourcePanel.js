@@ -8,6 +8,7 @@
  */
 
 import * as React from 'react';
+import {useCallback, useContext} from 'react';
 import {copy} from 'clipboard-js';
 import {toNormalUrl} from 'jsc-safe-url';
 
@@ -16,12 +17,14 @@ import ButtonIcon from '../ButtonIcon';
 import Skeleton from './Skeleton';
 import {withPermissionsCheck} from 'react-devtools-shared/src/frontend/utils/withPermissionsCheck';
 
-import type {Source as InspectedElementSource} from 'react-devtools-shared/src/shared/types';
+import ViewElementSourceContext from './ViewElementSourceContext';
+
+import type {ReactFunctionLocation} from 'shared/ReactTypes';
 import styles from './InspectedElementSourcePanel.css';
 
 type Props = {
-  source: InspectedElementSource,
-  symbolicatedSourcePromise: Promise<InspectedElementSource | null>,
+  source: ReactFunctionLocation,
+  symbolicatedSourcePromise: Promise<ReactFunctionLocation | null>,
 };
 
 function InspectedElementSourcePanel({
@@ -59,7 +62,7 @@ function InspectedElementSourcePanel({
 function CopySourceButton({source, symbolicatedSourcePromise}: Props) {
   const symbolicatedSource = React.use(symbolicatedSourcePromise);
   if (symbolicatedSource == null) {
-    const {sourceURL, line, column} = source;
+    const [, sourceURL, line, column] = source;
     const handleCopy = withPermissionsCheck(
       {permissions: ['clipboardWrite']},
       () => copy(`${sourceURL}:${line}:${column}`),
@@ -72,7 +75,7 @@ function CopySourceButton({source, symbolicatedSourcePromise}: Props) {
     );
   }
 
-  const {sourceURL, line, column} = symbolicatedSource;
+  const [, sourceURL, line, column] = symbolicatedSource;
   const handleCopy = withPermissionsCheck(
     {permissions: ['clipboardWrite']},
     () => copy(`${sourceURL}:${line}:${column}`),
@@ -87,25 +90,39 @@ function CopySourceButton({source, symbolicatedSourcePromise}: Props) {
 
 function FormattedSourceString({source, symbolicatedSourcePromise}: Props) {
   const symbolicatedSource = React.use(symbolicatedSourcePromise);
-  if (symbolicatedSource == null) {
-    const {sourceURL, line} = source;
 
-    return (
-      <div
-        className={styles.SourceOneLiner}
-        data-testname="InspectedElementView-FormattedSourceString">
-        {formatSourceForDisplay(sourceURL, line)}
-      </div>
-    );
-  }
+  const {canViewElementSourceFunction, viewElementSourceFunction} = useContext(
+    ViewElementSourceContext,
+  );
 
-  const {sourceURL, line} = symbolicatedSource;
+  // In some cases (e.g. FB internal usage) the standalone shell might not be able to view the source.
+  // To detect this case, we defer to an injected helper function (if present).
+  const linkIsEnabled =
+    viewElementSourceFunction != null &&
+    source != null &&
+    (canViewElementSourceFunction == null ||
+      canViewElementSourceFunction(source, symbolicatedSource));
+
+  const viewSource = useCallback(() => {
+    if (viewElementSourceFunction != null && source != null) {
+      viewElementSourceFunction(source, symbolicatedSource);
+    }
+  }, [source, symbolicatedSource]);
+
+  const [, sourceURL, line] =
+    symbolicatedSource == null ? source : symbolicatedSource;
 
   return (
     <div
       className={styles.SourceOneLiner}
       data-testname="InspectedElementView-FormattedSourceString">
-      {formatSourceForDisplay(sourceURL, line)}
+      {linkIsEnabled ? (
+        <span className={styles.Link} onClick={viewSource}>
+          {formatSourceForDisplay(sourceURL, line)}
+        </span>
+      ) : (
+        formatSourceForDisplay(sourceURL, line)
+      )}
     </div>
   );
 }

@@ -35,7 +35,6 @@ export const enableSuspenseAvoidThisFallback = true;
 export const enableCPUSuspense = false;
 export const enableNoCloningMemoCache = false;
 export const enableUseEffectEventHook = false;
-export const favorSafetyOverHydrationPerf = true;
 export const enableLegacyFBSupport = false;
 export const enableMoveBefore = false;
 export const enableHiddenSubtreeInsertionEffectCleanup = true;
@@ -50,7 +49,6 @@ export const enableLegacyHidden = false;
 
 export const enableTransitionTracing = false;
 
-export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFizzExternalRuntime = false;
 
 export const alwaysThrottleRetries = true;
@@ -64,8 +62,6 @@ export const enableInfiniteRenderLoopDetection = false;
 export const enableReactTestRendererWarning = false;
 export const disableLegacyMode = true;
 
-export const disableDefaultPropsExceptForClasses = true;
-
 export const renameElementSymbol = false;
 
 export const enableObjectFiber = false;
@@ -78,7 +74,6 @@ export const enableYieldingBeforePassive = false;
 export const enableThrottledScheduling = false;
 export const enableViewTransition = false;
 export const enableGestureTransition = false;
-export const enableLazyPublicInstanceInFabric = false;
 export const enableScrollEndPolyfill = true;
 export const enableSuspenseyImages = false;
 export const enableFizzBlockingRender = true;

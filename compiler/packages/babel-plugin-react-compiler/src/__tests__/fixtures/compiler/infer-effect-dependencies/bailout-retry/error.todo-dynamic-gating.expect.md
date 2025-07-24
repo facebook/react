@@ -5,6 +5,7 @@
 // @dynamicGating:{"source":"shared-runtime"} @inferEffectDependencies @panicThreshold:"none"
 
 import useEffectWrapper from 'useEffectWrapper';
+import {AUTODEPS} from 'react';
 
 /**
  * TODO: run the non-forget enabled version through the effect inference
@@ -13,7 +14,7 @@ import useEffectWrapper from 'useEffectWrapper';
 function Component({foo}) {
   'use memo if(getTrue)';
   const arr = [];
-  useEffectWrapper(() => arr.push(foo));
+  useEffectWrapper(() => arr.push(foo), AUTODEPS);
   arr.push(2);
   return arr;
 }
@@ -30,13 +31,13 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
-  10 |   'use memo if(getTrue)';
-  11 |   const arr = [];
-> 12 |   useEffectWrapper(() => arr.push(foo));
-     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ InvalidReact: [InferEffectDependencies] React Compiler is unable to infer dependencies of this effect. This will break your build! To resolve, either pass your own dependency array or fix reported compiler bailout diagnostics. (12:12)
-  13 |   arr.push(2);
-  14 |   return arr;
-  15 | }
+  11 |   'use memo if(getTrue)';
+  12 |   const arr = [];
+> 13 |   useEffectWrapper(() => arr.push(foo), AUTODEPS);
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ InvalidReact: [InferEffectDependencies] React Compiler is unable to infer dependencies of this effect. This will break your build! To resolve, either pass your own dependency array or fix reported compiler bailout diagnostics. (13:13)
+  14 |   arr.push(2);
+  15 |   return arr;
+  16 | }
 ```
           
       

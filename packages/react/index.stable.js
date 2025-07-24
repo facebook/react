@@ -27,6 +27,7 @@ export {
   lazy,
   memo,
   cache,
+  cacheSignal,
   unstable_useCacheRefresh,
   startTransition,
   useId,

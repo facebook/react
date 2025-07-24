@@ -3,12 +3,12 @@
 
 ```javascript
 // @inferEffectDependencies
-import {useEffect} from 'react';
+import {useEffect, AUTODEPS} from 'react';
 import {print} from 'shared-runtime';
 
 function ReactiveVariable({propVal}) {
   const arr = [propVal];
-  useEffect(() => print(arr));
+  useEffect(() => print(arr), AUTODEPS);
 }
 
 ```
@@ -17,7 +17,7 @@ function ReactiveVariable({propVal}) {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @inferEffectDependencies
-import { useEffect } from "react";
+import { useEffect, AUTODEPS } from "react";
 import { print } from "shared-runtime";
 
 function ReactiveVariable(t0) {

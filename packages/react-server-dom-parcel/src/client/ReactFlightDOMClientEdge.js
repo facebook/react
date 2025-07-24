@@ -14,6 +14,7 @@ import type {ReactServerValue} from 'react-client/src/ReactFlightReplyClient';
 
 import {
   createResponse,
+  createStreamState,
   getRoot,
   reportGlobalError,
   processBinaryChunk,
@@ -100,6 +101,7 @@ function startReadingFromStream(
   response: FlightResponse,
   stream: ReadableStream,
 ): void {
+  const streamState = createStreamState();
   const reader = stream.getReader();
   function progress({
     done,
@@ -114,7 +116,7 @@ function startReadingFromStream(
       return;
     }
     const buffer: Uint8Array = (value: any);
-    processBinaryChunk(response, buffer);
+    processBinaryChunk(response, streamState, buffer);
     return reader.read().then(progress).catch(error);
   }
   function error(e: any) {

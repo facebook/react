@@ -1,8 +1,8 @@
 // @inferEffectDependencies
-import {useEffect} from 'react';
+import {useEffect, AUTODEPS} from 'react';
 import {print} from 'shared-runtime';
 
 function ReactiveVariable({propVal}) {
   const arr = [propVal];
-  useEffect(() => print(arr));
+  useEffect(() => print(arr), AUTODEPS);
 }

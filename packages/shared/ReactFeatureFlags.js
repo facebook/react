@@ -31,14 +31,8 @@ export const enableHydrationLaneScheduling = true;
 // like migrating internal callers or performance testing.
 // -----------------------------------------------------------------------------
 
-// TODO: Finish rolling out in www
-export const favorSafetyOverHydrationPerf = true;
-
 // Need to remove didTimeout argument from Scheduler before landing
 export const disableSchedulerTimeoutInWorkLoop = false;
-
-// TODO: Land at Meta before removing.
-export const disableDefaultPropsExceptForClasses = true;
 
 // -----------------------------------------------------------------------------
 // Slated for removal in the future (significant effort)
@@ -157,8 +151,6 @@ export const transitionLaneExpirationMs = 5000;
  */
 export const enableInfiniteRenderLoopDetection = false;
 
-export const enableLazyPublicInstanceInFabric = false;
-
 export const enableFragmentRefs = __EXPERIMENTAL__;
 
 // -----------------------------------------------------------------------------
@@ -259,8 +251,5 @@ export const enableAsyncDebugInfo = __EXPERIMENTAL__;
 
 // Track which Fiber(s) schedule render work.
 export const enableUpdaterTracking = __PROFILE__;
-
-// Internal only.
-export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 
 export const ownerStackLimit = 1e4;
