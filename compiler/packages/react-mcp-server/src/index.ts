@@ -22,6 +22,11 @@ import assertExhaustive from './utils/assertExhaustive';
 import {convert} from 'html-to-text';
 import {measurePerformance} from './tools/runtimePerf';
 import {parseReactComponentTree} from './tools/componentTree';
+import {
+  beginPerfRecording,
+  getPerfData,
+  interpretData,
+} from './tools/recordReactPerf';
 
 function calculateMean(values: number[]): string {
   return values.length > 0
@@ -406,6 +411,163 @@ server.tool(
   },
 );
 
+server.tool(
+  'start-react-performance-recording',
+  `
+  This tool begins captuning data passed to console.timeStamp calls in a browser.
+  This means it will get the data that creates the 2 custom tracks in the React Performance panel in Chrome DevTools Components track and Scheduler track.
+  It connects to a browser using puppeteer, patches the console.timeStamp method to capture the data.
+
+  This tool will not return the data itself, it will add some simple UI to the react app that notifies the user that the tool is running and allows the user to
+  stop the recording with a button. After stopping the data will be saved and can be prepared for analysis by calling process-react-performance-data.
+
+  <requirements>
+  - The url should be a full url with the protocol (http:// or https://) and the domain name (e.g. localhost:3000).
+  - The user should be running a Chrome browser in debug mode on port 9222. If you receive an error message, advise the user to run
+  the following command in the terminal:
+  MacOS: "/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir=/tmp/chrome"
+  Windows: "chrome.exe --remote-debugging-port=9222 --user-data-dir=C:\temp\chrome"
+  </requirements>
+
+  <usage>
+  - You should use this tool when the user wants to get performance data from their app
+  - You should ideally not use process-react-performance-data or interpret-react-performance-data tool directly
+  - Verify the response from this tool is successful and notify the user performance data is being recorded on their app
+  - Prompt them to interact with the app to gather data and wait for the user to request the data on a follow up prompt using the react-perfarmance-data tool
+  </usage>
+  `,
+  {
+    url: z.string().optional().default('http://localhost:3000'),
+  },
+  async ({url}) => {
+    try {
+      const capturedData = await beginPerfRecording(url);
+
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify(capturedData, null, 2),
+          },
+        ],
+      };
+    } catch (err) {
+      return {
+        isError: true,
+        content: [{type: 'text' as const, text: `Error: ${err.stack}`}],
+      };
+    }
+  },
+);
+
+server.tool(
+  'process-react-performance-data',
+  `
+  This tool retrieves the performance data recorded by the start-react-performance-recording tool,
+  converts it to CSV format, and saves it to a file in the artifacts directory.
+  It processes the data that was captured from console.timeStamp calls in the browser, which includes information from
+  the React Performance panel in Chrome DevTools (Components track and Scheduler track).
+
+  <requirements>
+  - The url should be a full url with the protocol (http:// or https://) and the domain name (e.g. localhost:3000).
+  - The user should be running a Chrome browser in debug mode on port 9222. If you receive an error message, advise the user to run
+  the following command in the terminal:
+  MacOS: "/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir=/tmp/chrome"
+  Windows: "chrome.exe --remote-debugging-port=9222 --user-data-dir=C:\temp\chrome"
+  - You must have previously run the start-react-performance-recording tool to capture performance data.
+  - The data will be available after the user has interacted with their app while recording was active.
+  </requirements>
+
+  <usage>
+  - Use this tool after running start-react-performance-recording and having the user interact with their app.
+  - The tool will save the performance data as a CSV file in the artifacts directory.
+  - Then you should call the interpret-react-performance-data tool to analyze the data and provide insights and solutions to the user.
+  </usage>
+  `,
+  {
+    url: z.string().optional().default('http://localhost:3000'),
+  },
+  async ({url}) => {
+    try {
+      const result = await getPerfData(url);
+
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: result.join('\n'),
+          },
+        ],
+      };
+    } catch (err) {
+      return {
+        isError: true,
+        content: [{type: 'text' as const, text: `Error: ${err.stack}`}],
+      };
+    }
+  },
+);
+
+server.tool(
+  'interpret-react-performance-data',
+  `
+  <description>
+  Pass in a SQL query to analyze the performance data captured by the start-react-performance-recording tool.
+  The query will be executed against a DuckDB database containing the performance data.
+  Your queries should be focused and specific to extract meaningful insights from the data.
+  </description>
+
+  <requirements>
+  - On your first iteration your query should just try to understand the structure of the tables
+  - The query should return a result set that provides meaningful analysis
+  - Queries should be well-structured and optimized for performance
+  - Remember to ask yourself 10 questions about the data and then narrow down to the 5 most important about the dataset
+  </requirements>
+
+  Allowed Actions
+    1. Print Results: Output will be displayed as the query result.
+
+  Prohibited Actions
+    1. Modifying the database schema or data: Queries should be read-only.
+    2. Creating Charts: Chart generation is not permitted.
+
+  When using this tool you are a senior React Performance Engineer tasked with performing exploratory data analysis on a dataset of React performance data. Your goal is to provide insightful analysis while ensuring stability and manageable result sizes.
+
+  <usage>
+    Your SQL query will be executed against a DuckDB database containing the following tables:
+    - component_track: Contains data from the Components track in React DevTools
+    - scheduler_track: Contains data from the Scheduler track in React DevTools
+
+    Example queries:
+    - "SELECT * FROM component_track LIMIT 10" - View the first 10 rows of the component track data
+    - "SELECT name, COUNT(*) as render_count FROM component_track GROUP BY name ORDER BY render_count DESC LIMIT 10" - Find the components with the most renders
+    - "SELECT name, AVG(endTime - startTime) as avg_duration FROM component_track GROUP BY name ORDER BY avg_duration DESC LIMIT 10" - Find the components with the longest average render time
+  </usage>
+  `,
+  {
+    script: z.string(),
+  },
+  async ({script}) => {
+    try {
+      const result = await interpretData(script);
+
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: result,
+          },
+        ],
+      };
+    } catch (err) {
+      return {
+        isError: true,
+        content: [{type: 'text' as const, text: `Error: ${err.stack}`}],
+      };
+    }
+  },
+);
+
 server.prompt('review-react-code', () => ({
   messages: [
     {
@@ -446,6 +608,18 @@ Server Components - Shift data-heavy logic to the server whenever possible. Brea
 ## Available Tools
 - 'docs': Look up documentation from react.dev. Returns text as a string.
 - 'compile': Run the user's code through React Compiler. Returns optimized JS/TS code with potential diagnostics.
+- 'parse-react-component-tree': Get the component tree of a React App. Returns a string representation of the component tree.
+
+## Performance Analysis Tools:
+- 'start-react-performance-recording': Starts capturing performance data from the browser.
+- 'process-react-performance-data': Processes and loads the captured performance data and saves it to a file.
+- 'interpret-react-performance-data': Allows you to access the dataset through scripts which let you obtain and interpret the already loaded dataset.
+
+When using these tools you become a React Performance expert, your goal is to provide insightful analysis while ensuring stability and manageable result sizes.
+Follow these steps carefully when analyzing performance:
+1. Record the performance with 'start-react-performance-recording'
+2. Load the dataset with 'process-react-performance-data'
+3. Call 'interpret-react-performance-data' as many times as needed, you should gain more and more information about the dataset by using dataForge and answer questions you come up about the dataset
 
 ## Process
 1. Analyze the user's code for optimization opportunities:
