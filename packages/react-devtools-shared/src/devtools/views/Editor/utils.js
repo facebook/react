@@ -16,7 +16,7 @@ export function checkConditions(
   try {
     const url = new URL(editorURL);
 
-    const [, sourceURL, line] = source;
+    const [, sourceURL, line, column] = source;
     let filePath;
 
     // Check if sourceURL is a correct URL, which has a protocol specified
@@ -47,12 +47,15 @@ export function checkConditions(
     }
 
     const lineNumberAsString = String(line);
+    const columnNumberAsString = String(column);
 
     url.href = url.href
       .replace('{path}', filePath)
       .replace('{line}', lineNumberAsString)
+      .replace('{column}', columnNumberAsString)
       .replace('%7Bpath%7D', filePath)
-      .replace('%7Bline%7D', lineNumberAsString);
+      .replace('%7Bline%7D', lineNumberAsString)
+      .replace('%7Bcolumn%7D', columnNumberAsString);
 
     return {url, shouldDisableButton: false};
   } catch (e) {
