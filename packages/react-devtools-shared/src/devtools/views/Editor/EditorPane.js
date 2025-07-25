@@ -8,7 +8,7 @@
  */
 
 import * as React from 'react';
-import {useSyncExternalStore, useState, startTransition} from 'react';
+import {useState, startTransition} from 'react';
 
 import portaledContent from '../portaledContent';
 
@@ -18,8 +18,7 @@ import Button from 'react-devtools-shared/src/devtools/views/Button';
 import ButtonIcon from 'react-devtools-shared/src/devtools/views/ButtonIcon';
 
 import OpenInEditorButton from './OpenInEditorButton';
-import {getOpenInEditorURL} from '../../../utils';
-import {LOCAL_STORAGE_OPEN_IN_EDITOR_URL} from '../../../constants';
+import useEditorURL from '../useEditorURL';
 
 import EditorSettings from './EditorSettings';
 import CodeEditorByDefault from '../Settings/CodeEditorByDefault';
@@ -39,17 +38,7 @@ function EditorPane({selectedSource}: Props) {
   const [showSettings, setShowSettings] = useState(false);
   const [showLinkInfo, setShowLinkInfo] = useState(false);
 
-  const editorURL = useSyncExternalStore(
-    function subscribe(callback) {
-      window.addEventListener(LOCAL_STORAGE_OPEN_IN_EDITOR_URL, callback);
-      return function unsubscribe() {
-        window.removeEventListener(LOCAL_STORAGE_OPEN_IN_EDITOR_URL, callback);
-      };
-    },
-    function getState() {
-      return getOpenInEditorURL();
-    },
-  );
+  const editorURL = useEditorURL();
 
   if (showLinkInfo) {
     return (

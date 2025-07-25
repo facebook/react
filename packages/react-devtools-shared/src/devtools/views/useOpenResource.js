@@ -13,11 +13,9 @@ import {useCallback, useContext, useSyncExternalStore} from 'react';
 
 import ViewElementSourceContext from './Components/ViewElementSourceContext';
 
-import {getOpenInEditorURL, getAlwaysOpenInEditor} from '../../utils';
-import {
-  LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
-  LOCAL_STORAGE_ALWAYS_OPEN_IN_EDITOR,
-} from '../../constants';
+import {getAlwaysOpenInEditor} from '../../utils';
+import useEditorURL from './useEditorURL';
+import {LOCAL_STORAGE_ALWAYS_OPEN_IN_EDITOR} from '../../constants';
 
 import {checkConditions} from './Editor/utils';
 
@@ -32,15 +30,7 @@ const useOpenResource = (
     ViewElementSourceContext,
   );
 
-  const editorURL = useSyncExternalStore(
-    useCallback(function subscribe(callback) {
-      window.addEventListener(LOCAL_STORAGE_OPEN_IN_EDITOR_URL, callback);
-      return function unsubscribe() {
-        window.removeEventListener(LOCAL_STORAGE_OPEN_IN_EDITOR_URL, callback);
-      };
-    }, []),
-    getOpenInEditorURL,
-  );
+  const editorURL = useEditorURL();
 
   const alwaysOpenInEditor = useSyncExternalStore(
     useCallback(function subscribe(callback) {
