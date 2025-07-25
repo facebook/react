@@ -249,6 +249,7 @@ export function inferMutationAliasingRanges(
   }
   for (const param of [...fn.context, ...fn.params]) {
     const place = param.kind === 'Identifier' ? param : param.place;
+
     const node = state.nodes.get(place.identifier);
     if (node == null) {
       continue;
