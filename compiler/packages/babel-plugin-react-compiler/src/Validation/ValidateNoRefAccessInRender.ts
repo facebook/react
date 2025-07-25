@@ -432,11 +432,7 @@ function validateNoRefAccessInRenderImpl(
                  * By default we check that function call operands are not refs,
                  * ref values, or functions that can access refs.
                  */
-                if (
-                  isRefLValue ||
-                  interpolatedAsJsx.has(instr.lvalue.identifier.id) ||
-                  hookKind != null
-                ) {
+                if (isRefLValue || hookKind != null) {
                   /**
                    * Special cases:
                    *
@@ -452,18 +448,21 @@ function validateNoRefAccessInRenderImpl(
                    *
                    * Eg `const mergedRef = mergeRefs(ref1, ref2)`
                    *
-                   * 2) the lvalue is passed as a jsx child
-                   *
-                   * For example `<Foo>{renderHelper(ref)}</Foo>`. Here we have more
-                   * context and infer that the ref is being passed to a component-like
-                   * render function which attempts to obey the rules.
-                   *
                    * 3) hooks
                    *
                    * Hooks are independently checked to ensure they don't access refs
                    * during render.
                    */
                   validateNoDirectRefValueAccess(errors, operand, env);
+                } else if (interpolatedAsJsx.has(instr.lvalue.identifier.id)) {
+                  /**
+                   * 2) the lvalue is passed as a jsx child
+                   *
+                   * For example `<Foo>{renderHelper(ref)}</Foo>`. Here we have more
+                   * context and infer that the ref is being passed to a component-like
+                   * render function which attempts to obey the rules.
+                   */
+                  validateNoRefValueAccess(errors, env, operand);
                 } else {
                   validateNoRefPassedToFunction(
                     errors,
