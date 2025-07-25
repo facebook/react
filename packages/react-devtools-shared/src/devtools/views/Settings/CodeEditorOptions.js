@@ -17,7 +17,7 @@ import {getDefaultOpenInEditorURL} from 'react-devtools-shared/src/utils';
 
 import styles from './SettingsShared.css';
 
-const vscodeFilepath = 'vscode://file/{path}:{line}';
+const vscodeFilepath = 'vscode://file/{path}:{line}:{column}';
 
 export default function CodeEditorOptions({
   environmentNames,
