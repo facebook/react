@@ -466,7 +466,36 @@ function* generateInstructionTypes(
       yield equation(left, returnType);
       break;
     }
-    case 'PropertyStore':
+    case 'PropertyStore': {
+      /**
+       * Infer types based on assignments to known object properties
+       * This is important for refs, where assignment to `<maybeRef>.current`
+       * can help us infer that an object itself is a ref
+       */
+      yield equation(
+        /**
+         * Our property type declarations are best-effort and we haven't tested
+         * using them to drive inference of rvalues from lvalues. We want to emit
+         * a Property type in order to infer refs from `.current` accesses, but
+         * stay conservative by not otherwise inferring anything about rvalues.
+         * So we use a dummy type here.
+         *
+         * TODO: consider using the rvalue type here
+         */
+        makeType(),
+        // unify() only handles properties in the second position
+        {
+          kind: 'Property',
+          objectType: value.object.identifier.type,
+          objectName: getName(names, value.object.identifier.id),
+          propertyName: {
+            kind: 'literal',
+            value: value.property,
+          },
+        },
+      );
+      break;
+    }
     case 'DeclareLocal':
     case 'RegExpLiteral':
     case 'MetaProperty':
