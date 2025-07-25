@@ -847,6 +847,9 @@ export function attach(
       errors,
       warnings,
 
+      // Not supported in legacy renderers.
+      suspendedBy: [],
+
       // List of owners
       owners,
 

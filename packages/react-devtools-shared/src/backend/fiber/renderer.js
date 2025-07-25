@@ -7,7 +7,11 @@
  * @flow
  */
 
-import type {ReactComponentInfo, ReactDebugInfo} from 'shared/ReactTypes';
+import type {
+  ReactComponentInfo,
+  ReactDebugInfo,
+  ReactAsyncInfo,
+} from 'shared/ReactTypes';
 
 import {
   ComponentFilterDisplayName,
@@ -135,6 +139,7 @@ import type {
   ReactRenderer,
   RendererInterface,
   SerializedElement,
+  SerializedAsyncInfo,
   WorkTagMap,
   CurrentDispatcherRef,
   LegacyDispatcherRef,
@@ -4051,6 +4056,42 @@ export function attach(
     return null;
   }
 
+  function serializeAsyncInfo(
+    asyncInfo: ReactAsyncInfo,
+    index: number,
+    parentInstance: DevToolsInstance,
+  ): SerializedAsyncInfo {
+    const ioInfo = asyncInfo.awaited;
+    const ioOwnerInstance = findNearestOwnerInstance(
+      parentInstance,
+      ioInfo.owner,
+    );
+    const awaitOwnerInstance = findNearestOwnerInstance(
+      parentInstance,
+      asyncInfo.owner,
+    );
+    return {
+      awaited: {
+        name: ioInfo.name,
+        start: ioInfo.start,
+        end: ioInfo.end,
+        value: ioInfo.value == null ? null : ioInfo.value,
+        env: ioInfo.env == null ? null : ioInfo.env,
+        owner:
+          ioOwnerInstance === null
+            ? null
+            : instanceToSerializedElement(ioOwnerInstance),
+        stack: ioInfo.stack == null ? null : ioInfo.stack,
+      },
+      env: asyncInfo.env == null ? null : asyncInfo.env,
+      owner:
+        awaitOwnerInstance === null
+          ? null
+          : instanceToSerializedElement(awaitOwnerInstance),
+      stack: asyncInfo.stack == null ? null : asyncInfo.stack,
+    };
+  }
+
   // Fast path props lookup for React Native style editor.
   // Could use inspectElementRaw() but that would require shallow rendering hooks components,
   // and could also mess with memoization.
@@ -4398,6 +4439,9 @@ export function attach(
           ? []
           : Array.from(componentLogsEntry.warnings.entries()),
 
+      // TODO
+      suspendedBy: [],
+
       // List of owners
       owners,
 
@@ -4451,6 +4495,9 @@ export function attach(
     const componentLogsEntry =
       componentInfoToComponentLogsMap.get(componentInfo);
 
+    // TODO
+    const suspendedBy: Array<ReactAsyncInfo> = [];
+
     return {
       id: virtualInstance.id,
 
@@ -4490,6 +4537,12 @@ export function attach(
         componentLogsEntry === undefined
           ? []
           : Array.from(componentLogsEntry.warnings.entries()),
+
+      // Things that Suspended this Server Component
+      suspendedBy: suspendedBy.map((info, index) =>
+        serializeAsyncInfo(info, index, virtualInstance),
+      ),
+
       // List of owners
       owners,
 
@@ -4534,7 +4587,7 @@ export function attach(
 
   function createIsPathAllowed(
     key: string | null,
-    secondaryCategory: 'hooks' | null,
+    secondaryCategory: 'suspendedBy' | 'hooks' | null,
   ) {
     // This function helps prevent previously-inspected paths from being dehydrated in updates.
     // This is important to avoid a bad user experience where expanded toggles collapse on update.
@@ -4563,6 +4616,13 @@ export function attach(
             // Dehydrating the 'subHooks' property makes the HooksTree UI a lot more complicated,
             // so it's easiest for now if we just don't break on this boundary.
             // We can always dehydrate a level deeper (in the value object).
+            return true;
+          }
+          break;
+        case 'suspendedBy':
+          if (path.length < 5) {
+            // Never dehydrate anything above suspendedBy[index].awaited.value
+            // Those are part of the internal meta data. We only dehydrate inside the Promise.
             return true;
           }
           break;
@@ -4789,35 +4849,41 @@ export function attach(
         type: 'not-found',
       };
     }
+    const inspectedElement = mostRecentlyInspectedElement;
 
     // Any time an inspected element has an update,
     // we should update the selected $r value as wel.
     // Do this before dehydration (cleanForBridge).
-    updateSelectedElement(mostRecentlyInspectedElement);
+    updateSelectedElement(inspectedElement);
 
     // Clone before cleaning so that we preserve the full data.
     // This will enable us to send patches without re-inspecting if hydrated paths are requested.
     // (Reducing how often we shallow-render is a better DX for function components that use hooks.)
-    const cleanedInspectedElement = {...mostRecentlyInspectedElement};
+    const cleanedInspectedElement = {...inspectedElement};
     // $FlowFixMe[prop-missing] found when upgrading Flow
     cleanedInspectedElement.context = cleanForBridge(
-      cleanedInspectedElement.context,
+      inspectedElement.context,
       createIsPathAllowed('context', null),
     );
     // $FlowFixMe[prop-missing] found when upgrading Flow
     cleanedInspectedElement.hooks = cleanForBridge(
-      cleanedInspectedElement.hooks,
+      inspectedElement.hooks,
       createIsPathAllowed('hooks', 'hooks'),
     );
     // $FlowFixMe[prop-missing] found when upgrading Flow
     cleanedInspectedElement.props = cleanForBridge(
-      cleanedInspectedElement.props,
+      inspectedElement.props,
       createIsPathAllowed('props', null),
     );
     // $FlowFixMe[prop-missing] found when upgrading Flow
     cleanedInspectedElement.state = cleanForBridge(
-      cleanedInspectedElement.state,
+      inspectedElement.state,
       createIsPathAllowed('state', null),
+    );
+    // $FlowFixMe[prop-missing] found when upgrading Flow
+    cleanedInspectedElement.suspendedBy = cleanForBridge(
+      inspectedElement.suspendedBy,
+      createIsPathAllowed('suspendedBy', 'suspendedBy'),
     );
 
     return {
