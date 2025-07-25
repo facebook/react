@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, SourceLocation} from '..';
+import {CompilerError, ErrorSeverity, SourceLocation} from '..';
 import {
   CallExpression,
   Effect,
@@ -30,6 +30,7 @@ import {
   makeInstructionId,
 } from '../HIR';
 import {createTemporaryPlace, markInstructionIds} from '../HIR/HIRBuilder';
+import {Result} from '../Utils/Result';
 
 type ManualMemoCallee = {
   kind: 'useMemo' | 'useCallback';
@@ -283,26 +284,33 @@ function extractManualMemoizationArgs(
   instr: TInstruction<CallExpression> | TInstruction<MethodCall>,
   kind: 'useCallback' | 'useMemo',
   sidemap: IdentifierSidemap,
+  errors: CompilerError,
 ): {
-  fnPlace: Place;
+  fnPlace: Place | null;
   depsList: Array<ManualMemoDependency> | null;
 } {
   const [fnPlace, depsListPlace] = instr.value.args as Array<
     Place | SpreadPattern | undefined
   >;
   if (fnPlace == null) {
-    CompilerError.throwInvalidReact({
+    errors.push({
       reason: `Expected a callback function to be passed to ${kind}`,
+      severity: ErrorSeverity.InvalidReact,
       loc: instr.value.loc,
       suggestions: null,
+      description: null,
     });
+    return {fnPlace: null, depsList: null};
   }
   if (fnPlace.kind === 'Spread' || depsListPlace?.kind === 'Spread') {
-    CompilerError.throwInvalidReact({
+    errors.push({
       reason: `Unexpected spread argument to ${kind}`,
+      severity: ErrorSeverity.InvalidReact,
       loc: instr.value.loc,
       suggestions: null,
+      description: null,
     });
+    return {fnPlace: null, depsList: null};
   }
   let depsList: Array<ManualMemoDependency> | null = null;
   if (depsListPlace != null) {
@@ -310,23 +318,30 @@ function extractManualMemoizationArgs(
       depsListPlace.identifier.id,
     );
     if (maybeDepsList == null) {
-      CompilerError.throwInvalidReact({
+      errors.push({
         reason: `Expected the dependency list for ${kind} to be an array literal`,
+        severity: ErrorSeverity.InvalidReact,
         suggestions: null,
         loc: depsListPlace.loc,
+        description: null,
       });
+      return {fnPlace, depsList: null};
     }
-    depsList = maybeDepsList.map(dep => {
+    depsList = [];
+    for (const dep of maybeDepsList) {
       const maybeDep = sidemap.maybeDeps.get(dep.identifier.id);
       if (maybeDep == null) {
-        CompilerError.throwInvalidReact({
+        errors.push({
           reason: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
+          severity: ErrorSeverity.InvalidReact,
           suggestions: null,
           loc: dep.loc,
+          description: null,
         });
+      } else {
+        depsList.push(maybeDep);
       }
-      return maybeDep;
-    });
+    }
   }
   return {
     fnPlace,
@@ -341,8 +356,14 @@ function extractManualMemoizationArgs(
  * rely on type inference to find useMemo/useCallback invocations, and instead does basic tracking
  * of globals and property loads to find both direct calls as well as usage via the React namespace,
  * eg `React.useMemo()`.
+ *
+ * This pass also validates that useMemo callbacks return a value (not void), ensuring that useMemo
+ * is only used for memoizing values and not for running arbitrary side effects.
  */
-export function dropManualMemoization(func: HIRFunction): void {
+export function dropManualMemoization(
+  func: HIRFunction,
+): Result<void, CompilerError> {
+  const errors = new CompilerError();
   const isValidationEnabled =
     func.env.config.validatePreserveExistingMemoizationGuarantees ||
     func.env.config.validateNoSetStateInRender ||
@@ -389,7 +410,42 @@ export function dropManualMemoization(func: HIRFunction): void {
             instr as TInstruction<CallExpression> | TInstruction<MethodCall>,
             manualMemo.kind,
             sidemap,
+            errors,
           );
+
+          if (fnPlace == null) {
+            continue;
+          }
+
+          /**
+           * Bailout on void return useMemos. This is an anti-pattern where code might be using
+           * useMemo like useEffect: running arbirtary side-effects synced to changes in specific
+           * values.
+           */
+          if (
+            func.env.config.enableValidateNoVoidUseMemo &&
+            manualMemo.kind === 'useMemo'
+          ) {
+            const funcToCheck = sidemap.functions.get(
+              fnPlace.identifier.id,
+            )?.value;
+            if (funcToCheck !== undefined && funcToCheck.loweredFunc.func) {
+              if (doesFunctionHaveVoidReturn(funcToCheck.loweredFunc.func)) {
+                errors.push({
+                  severity: ErrorSeverity.InvalidReact,
+                  reason: `React Compiler has skipped optimizing this component because ${
+                    manualMemo.loadInstr.value.kind === 'PropertyLoad'
+                      ? 'React.useMemo'
+                      : 'useMemo'
+                  } doesn't return a value. useMemo should only be used for memoizing values, not running arbitrary side effects.`,
+                  loc: instr.value.loc,
+                  suggestions: null,
+                  description: null,
+                });
+              }
+            }
+          }
+
           instr.value = getManualMemoizationReplacement(
             fnPlace,
             instr.value.loc,
@@ -410,11 +466,14 @@ export function dropManualMemoization(func: HIRFunction): void {
              * is rare and likely sketchy.
              */
             if (!sidemap.functions.has(fnPlace.identifier.id)) {
-              CompilerError.throwInvalidReact({
+              errors.push({
                 reason: `Expected the first argument to be an inline function expression`,
+                severity: ErrorSeverity.InvalidReact,
                 suggestions: [],
                 loc: fnPlace.loc,
+                description: null,
               });
+              continue;
             }
             const memoDecl: Place =
               manualMemo.kind === 'useMemo'
@@ -486,6 +545,8 @@ export function dropManualMemoization(func: HIRFunction): void {
       markInstructionIds(func.body);
     }
   }
+
+  return errors.asResult();
 }
 
 function findOptionalPlaces(fn: HIRFunction): Set<IdentifierId> {
@@ -529,4 +590,18 @@ function findOptionalPlaces(fn: HIRFunction): Set<IdentifierId> {
     }
   }
   return optionals;
+}
+
+function doesFunctionHaveVoidReturn(func: HIRFunction): boolean {
+  for (const [, block] of func.body.blocks) {
+    if (block.terminal.kind === 'return') {
+      if (
+        block.terminal.returnVariant === 'Explicit' ||
+        block.terminal.returnVariant === 'Implicit'
+      ) {
+        return false;
+      }
+    }
+  }
+  return true;
 }

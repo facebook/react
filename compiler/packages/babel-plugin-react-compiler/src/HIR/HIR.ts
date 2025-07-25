@@ -446,8 +446,20 @@ export type ThrowTerminal = {
 };
 export type Case = {test: Place | null; block: BlockId};
 
+export type ReturnVariant = 'Void' | 'Implicit' | 'Explicit';
 export type ReturnTerminal = {
   kind: 'return';
+  /**
+   * Void:
+   *   () => { ... }
+   *   function() { ... }
+   * Implicit (ArrowFunctionExpression only):
+   *   () => foo
+   * Explicit:
+   *   () => { return ... }
+   *   function () { return ... }
+   */
+  returnVariant: ReturnVariant;
   loc: SourceLocation;
   value: Place;
   id: InstructionId;
