@@ -153,6 +153,7 @@ function mockDynamicallyFeatureFlags() {
 }
 // Set the globals to string values to output them to the table.
 global.__VARIANT__ = 'gk';
+global.__LOGGER__ = 'gk';
 global.__PROFILE__ = 'profile';
 global.__DEV__ = 'dev';
 global.__EXPERIMENTAL__ = 'experimental';
