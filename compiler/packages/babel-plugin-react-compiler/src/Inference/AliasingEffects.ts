@@ -90,6 +90,23 @@ export type AliasingEffect =
    * c could be mutating a.
    */
   | {kind: 'Alias'; from: Place; into: Place}
+
+  /**
+   * Indicates the potential for information flow from `from` to `into`. This is used for a specific
+   * case: functions with unknown signatures. If the compiler sees a call such as `foo(x)`, it has to
+   * consider several possibilities (which may depend on the arguments):
+   * - foo(x) returns a new mutable value that does not capture any information from x.
+   * - foo(x) returns a new mutable value that *does* capture information from x.
+   * - foo(x) returns x itself, ie foo is the identity function
+   *
+   * The same is true of functions that take multiple arguments: `cond(a, b, c)` could conditionally
+   * return b or c depending on the value of a.
+   *
+   * To represent this case, MaybeAlias represents the fact that an aliasing relationship could exist.
+   * Any mutations that flow through this relationship automatically become conditional.
+   */
+  | {kind: 'MaybeAlias'; from: Place; into: Place}
+
   /**
    * Records direct assignment: `into = from`.
    */
@@ -183,7 +200,8 @@ export function hashEffect(effect: AliasingEffect): string {
     case 'ImmutableCapture':
     case 'Assign':
     case 'Alias':
-    case 'Capture': {
+    case 'Capture':
+    case 'MaybeAlias': {
       return [
         effect.kind,
         effect.from.identifier.id,

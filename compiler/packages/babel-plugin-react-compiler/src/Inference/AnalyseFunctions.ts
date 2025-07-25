@@ -85,7 +85,8 @@ function lowerWithMutationAliasing(fn: HIRFunction): void {
       case 'Assign':
       case 'Alias':
       case 'Capture':
-      case 'CreateFrom': {
+      case 'CreateFrom':
+      case 'MaybeAlias': {
         capturedOrMutated.add(effect.from.identifier.id);
         break;
       }
