@@ -10,14 +10,25 @@
 import {useCallback, useSyncExternalStore} from 'react';
 
 import {getOpenInEditorURL} from '../../utils';
-import {LOCAL_STORAGE_OPEN_IN_EDITOR_URL} from '../../constants';
+import {
+  LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
+  LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET,
+} from '../../constants';
 
 const useEditorURL = (): string => {
   const editorURL = useSyncExternalStore(
     useCallback(function subscribe(callback) {
       window.addEventListener(LOCAL_STORAGE_OPEN_IN_EDITOR_URL, callback);
+      window.addEventListener(
+        LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET,
+        callback,
+      );
       return function unsubscribe() {
         window.removeEventListener(LOCAL_STORAGE_OPEN_IN_EDITOR_URL, callback);
+        window.removeEventListener(
+          LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET,
+          callback,
+        );
       };
     }, []),
     getOpenInEditorURL,

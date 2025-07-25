@@ -35,6 +35,7 @@ import {
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
   LOCAL_STORAGE_COMPONENT_FILTER_PREFERENCES_KEY,
   LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
+  LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET,
   LOCAL_STORAGE_ALWAYS_OPEN_IN_EDITOR,
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
   SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
@@ -385,6 +386,8 @@ export function filterOutLocationComponentFilters(
   return componentFilters.filter(f => f.type !== ComponentFilterLocation);
 }
 
+const vscodeFilepath = 'vscode://file/{path}:{line}:{column}';
+
 export function getDefaultOpenInEditorURL(): string {
   return typeof process.env.EDITOR_URL === 'string'
     ? process.env.EDITOR_URL
@@ -393,6 +396,13 @@ export function getDefaultOpenInEditorURL(): string {
 
 export function getOpenInEditorURL(): string {
   try {
+    const rawPreset = localStorageGetItem(
+      LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET,
+    );
+    switch (rawPreset) {
+      case '"vscode"':
+        return vscodeFilepath;
+    }
     const raw = localStorageGetItem(LOCAL_STORAGE_OPEN_IN_EDITOR_URL);
     if (raw != null) {
       return JSON.parse(raw);

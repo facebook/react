@@ -17,8 +17,6 @@ import {getDefaultOpenInEditorURL} from 'react-devtools-shared/src/utils';
 
 import styles from './SettingsShared.css';
 
-const vscodeFilepath = 'vscode://file/{path}:{line}:{column}';
-
 export default function CodeEditorOptions({
   environmentNames,
 }: {
@@ -40,11 +38,6 @@ export default function CodeEditorOptions({
         onChange={({currentTarget}) => {
           const selectedValue = currentTarget.value;
           setOpenInEditorURLPreset(selectedValue);
-          if (selectedValue === 'vscode') {
-            setOpenInEditorURL(vscodeFilepath);
-          } else if (selectedValue === 'custom') {
-            setOpenInEditorURL('');
-          }
         }}>
         <option value="vscode">VS Code</option>
         <option value="custom">Custom</option>
