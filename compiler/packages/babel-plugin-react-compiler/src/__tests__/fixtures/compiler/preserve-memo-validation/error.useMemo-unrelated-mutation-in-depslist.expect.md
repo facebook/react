@@ -30,6 +30,13 @@ function useFoo(input1) {
 ## Error
 
 ```
+Found 1 error:
+
+Memoization: Compilation skipped because existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `input1`, but the source dependencies were [y]. Inferred different dependency than source.
+
+error.useMemo-unrelated-mutation-in-depslist.ts:16:27
   14 |   const x = {};
   15 |   const y = [input1];
 > 16 |   const memoized = useMemo(() => {
@@ -37,7 +44,7 @@ function useFoo(input1) {
 > 17 |     return [y];
      | ^^^^^^^^^^^^^^^
 > 18 |   }, [(mutate(x), y)]);
-     | ^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `input1`, but the source dependencies were [y]. Inferred different dependency than source (16:18)
+     | ^^^^ Could not preserve existing manual memoization
   19 |
   20 |   return [x, memoized];
   21 | }

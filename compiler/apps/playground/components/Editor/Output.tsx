@@ -11,7 +11,11 @@ import {
   InformationCircleIcon,
 } from '@heroicons/react/outline';
 import MonacoEditor, {DiffEditor} from '@monaco-editor/react';
-import {type CompilerError} from 'babel-plugin-react-compiler';
+import {
+  CompilerErrorDetail,
+  CompilerDiagnostic,
+  type CompilerError,
+} from 'babel-plugin-react-compiler';
 import parserBabel from 'prettier/plugins/babel';
 import * as prettierPluginEstree from 'prettier/plugins/estree';
 import * as prettier from 'prettier/standalone';
@@ -44,6 +48,7 @@ export type CompilerOutput =
       kind: 'ok';
       transformOutput: CompilerTransformOutput;
       results: Map<string, Array<PrintedCompilerPipelineValue>>;
+      errors: Array<CompilerErrorDetail | CompilerDiagnostic>;
     }
   | {
       kind: 'err';
@@ -123,10 +128,36 @@ async function tabify(
       parser: transformOutput.language === 'flow' ? 'babel-flow' : 'babel-ts',
       plugins: [parserBabel, prettierPluginEstree],
     });
+
+    let output: string;
+    let language: string;
+    if (compilerOutput.errors.length === 0) {
+      output = code;
+      language = 'javascript';
+    } else {
+      language = 'markdown';
+      output = `
+# Summary
+
+React Compiler compiled this function successfully, but there are lint errors that indicate potential issues with the original code.
+
+## ${compilerOutput.errors.length} Lint Errors
+
+${compilerOutput.errors.map(e => e.printErrorMessage(source, {eslint: false})).join('\n\n')}
+
+## Output
+
+\`\`\`js
+${code}
+\`\`\`
+`.trim();
+    }
+
     reorderedTabs.set(
-      'JS',
+      'Output',
       <TextTabContent
-        output={code}
+        output={output}
+        language={language}
         diff={null}
         showInfoPanel={false}></TextTabContent>,
     );
@@ -142,6 +173,18 @@ async function tabify(
         </>,
       );
     }
+  } else if (compilerOutput.kind === 'err') {
+    const errors = compilerOutput.error.printErrorMessage(source, {
+      eslint: false,
+    });
+    reorderedTabs.set(
+      'Output',
+      <TextTabContent
+        output={errors}
+        language="markdown"
+        diff={null}
+        showInfoPanel={false}></TextTabContent>,
+    );
   }
   tabs.forEach((tab, name) => {
     reorderedTabs.set(name, tab);
@@ -162,17 +205,32 @@ function getSourceMapUrl(code: string, map: string): string | null {
 }
 
 function Output({store, compilerOutput}: Props): JSX.Element {
-  const [tabsOpen, setTabsOpen] = useState<Set<string>>(() => new Set(['JS']));
+  const [tabsOpen, setTabsOpen] = useState<Set<string>>(
+    () => new Set(['Output']),
+  );
   const [tabs, setTabs] = useState<Map<string, React.ReactNode>>(
     () => new Map(),
   );
+
+  /*
+   * Update the active tab back to the output or errors tab when the compilation state
+   * changes between success/failure.
+   */
+  const [previousOutputKind, setPreviousOutputKind] = useState(
+    compilerOutput.kind,
+  );
+  if (compilerOutput.kind !== previousOutputKind) {
+    setPreviousOutputKind(compilerOutput.kind);
+    setTabsOpen(new Set(['Output']));
+  }
+
   useEffect(() => {
     tabify(store.source, compilerOutput).then(tabs => {
       setTabs(tabs);
     });
   }, [store.source, compilerOutput]);
 
-  const changedPasses: Set<string> = new Set(['JS', 'HIR']); // Initial and final passes should always be bold
+  const changedPasses: Set<string> = new Set(['Output', 'HIR']); // Initial and final passes should always be bold
   let lastResult: string = '';
   for (const [passName, results] of compilerOutput.results) {
     for (const result of results) {
@@ -196,20 +254,6 @@ function Output({store, compilerOutput}: Props): JSX.Element {
         tabs={tabs}
         changedPasses={changedPasses}
       />
-      {compilerOutput.kind === 'err' ? (
-        <div
-          className="flex flex-wrap absolute bottom-0 bg-white grow border-y border-grey-200 transition-all ease-in"
-          style={{width: 'calc(100vw - 650px)'}}>
-          <div className="w-full p-4 basis-full border-b">
-            <h2>COMPILER ERRORS</h2>
-          </div>
-          <pre
-            className="p-4 basis-full text-red-600 overflow-y-scroll whitespace-pre-wrap"
-            style={{width: 'calc(100vw - 650px)', height: '150px'}}>
-            <code>{compilerOutput.error.toString()}</code>
-          </pre>
-        </div>
-      ) : null}
     </>
   );
 }
@@ -218,10 +262,12 @@ function TextTabContent({
   output,
   diff,
   showInfoPanel,
+  language,
 }: {
   output: string;
   diff: string | null;
   showInfoPanel: boolean;
+  language: string;
 }): JSX.Element {
   const [diffMode, setDiffMode] = useState(false);
   return (
@@ -272,7 +318,7 @@ function TextTabContent({
         />
       ) : (
         <MonacoEditor
-          defaultLanguage="javascript"
+          language={language ?? 'javascript'}
           value={output}
           options={{
             ...monacoOptions,

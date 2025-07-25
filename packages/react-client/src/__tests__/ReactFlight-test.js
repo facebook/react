@@ -1314,7 +1314,7 @@ describe('ReactFlight', () => {
         '    at async file:///testing.js:42:3',
         // third-party RSC frame
         // Ideally this would be a real frame produced by React not a mocked one.
-        '    at ThirdParty (rsc://React/ThirdParty/file:///code/%5Broot%2520of%2520the%2520server%5D.js?42:1:1)',
+        '    at ThirdParty (about://React/ThirdParty/file:///code/%5Broot%2520of%2520the%2520server%5D.js?42:1:1)',
         // We'll later filter this out based on line/column in `filterStackFrame`.
         '    at ThirdPartyModule (file:///file-with-index-source-map.js:52656:16374)',
         // host component in parent stack
@@ -3073,7 +3073,7 @@ describe('ReactFlight', () => {
         ReactNoopFlightClient.read(transport, {
           findSourceMapURL(url) {
             // By giving a source map url we're saying that we can't use the original
-            // file as the sourceURL, which gives stack traces a rsc://React/ prefix.
+            // file as the sourceURL, which gives stack traces a about://React/ prefix.
             return 'source-map://' + url;
           },
         }),
@@ -3147,7 +3147,7 @@ describe('ReactFlight', () => {
           expectedErrorStack={expectedErrorStack}>
           {ReactNoopFlightClient.read(transport, {
             findSourceMapURL(url, environmentName) {
-              if (url.startsWith('rsc://React/')) {
+              if (url.startsWith('about://React/')) {
                 // We don't expect to see any React prefixed URLs here.
                 sawReactPrefix = true;
               }

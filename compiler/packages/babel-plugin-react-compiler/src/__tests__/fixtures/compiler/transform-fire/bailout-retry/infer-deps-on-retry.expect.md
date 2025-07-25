@@ -3,7 +3,7 @@
 
 ```javascript
 // @inferEffectDependencies @panicThreshold:"none"
-import {useRef} from 'react';
+import {useRef, AUTODEPS} from 'react';
 import {useSpecialEffect} from 'shared-runtime';
 
 /**
@@ -14,9 +14,13 @@ import {useSpecialEffect} from 'shared-runtime';
 function useFoo({cond}) {
   const ref = useRef();
   const derived = cond ? ref.current : makeObject();
-  useSpecialEffect(() => {
-    log(derived);
-  }, [derived]);
+  useSpecialEffect(
+    () => {
+      log(derived);
+    },
+    [derived],
+    AUTODEPS
+  );
   return ref;
 }
 
@@ -26,7 +30,7 @@ function useFoo({cond}) {
 
 ```javascript
 // @inferEffectDependencies @panicThreshold:"none"
-import { useRef } from "react";
+import { useRef, AUTODEPS } from "react";
 import { useSpecialEffect } from "shared-runtime";
 
 /**

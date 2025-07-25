@@ -6,6 +6,12 @@ on:
   pull_request:
     paths-ignore:
       - compiler/**
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        required: false
+        type: string
+        default: ''
 
 permissions: {}
 
@@ -28,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event.inputs.commit_sha != '' && github.event.inputs.commit_sha || github.event.pull_request.head.sha || github.sha }}
       - name: Check cache hit
         uses: actions/cache/restore@v4
         id: node_modules
@@ -69,7 +75,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event.inputs.commit_sha != '' && github.event.inputs.commit_sha || github.event.pull_request.head.sha || github.sha }}
       - name: Check cache hit
         uses: actions/cache/restore@v4
         id: node_modules
@@ -117,7 +123,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event.inputs.commit_sha != '' && github.event.inputs.commit_sha || github.event.pull_request.head.sha || github.sha }}
       - uses: actions/github-script@v7
         id: set-matrix
         with:
@@ -136,7 +142,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event.inputs.commit_sha != '' && github.event.inputs.commit_sha || github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
@@ -166,7 +172,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event.inputs.commit_sha != '' && github.event.inputs.commit_sha || github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
@@ -198,7 +204,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event.inputs.commit_sha != '' && github.event.inputs.commit_sha || github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
@@ -254,7 +260,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event.inputs.commit_sha != '' && github.event.inputs.commit_sha || github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
@@ -325,7 +331,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event.inputs.commit_sha != '' && github.event.inputs.commit_sha || github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
@@ -420,7 +426,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event.inputs.commit_sha != '' && github.event.inputs.commit_sha || github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
@@ -465,7 +471,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event.inputs.commit_sha != '' && github.event.inputs.commit_sha || github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
@@ -493,7 +499,7 @@ jobs:
           merge-multiple: true
       - name: Display structure of build
         run: ls -R build
-      - run: echo ${{ github.event.pull_request.head.sha || github.sha }} >> build/COMMIT_SHA
+      - run: echo ${{ github.event.inputs.commit_sha != '' && github.event.inputs.commit_sha || github.event.pull_request.head.sha || github.sha }} >> build/COMMIT_SHA
       - name: Scrape warning messages
         run: |
           mkdir -p ./build/__test_utils__
@@ -530,7 +536,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event.inputs.commit_sha != '' && github.event.inputs.commit_sha || github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
@@ -570,7 +576,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event.inputs.commit_sha != '' && github.event.inputs.commit_sha || github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
@@ -607,7 +613,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event.inputs.commit_sha != '' && github.event.inputs.commit_sha || github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
@@ -648,7 +654,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event.inputs.commit_sha != '' && github.event.inputs.commit_sha || github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
@@ -722,7 +728,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event.inputs.commit_sha != '' && github.event.inputs.commit_sha || github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
@@ -779,7 +785,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event.inputs.commit_sha != '' && github.event.inputs.commit_sha || github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
@@ -824,7 +830,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event.inputs.commit_sha != '' && github.event.inputs.commit_sha || github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
@@ -873,7 +879,7 @@ jobs:
           node ./scripts/print-warnings/print-warnings.js > build/__test_utils__/ReactAllWarnings.js
       - name: Display structure of build for PR
         run: ls -R build
-      - run: echo ${{ github.event.pull_request.head.sha || github.sha }} >> build/COMMIT_SHA
+      - run: echo ${{ github.event.inputs.commit_sha != '' && github.event.inputs.commit_sha || github.event.pull_request.head.sha || github.sha }} >> build/COMMIT_SHA
       - run: node ./scripts/tasks/danger
       - name: Archive sizebot results
         uses: actions/upload-artifact@v4

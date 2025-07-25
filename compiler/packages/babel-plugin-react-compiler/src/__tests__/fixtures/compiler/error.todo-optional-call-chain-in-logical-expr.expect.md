@@ -20,10 +20,15 @@ export const FIXTURE_ENTRYPONT = {
 ## Error
 
 ```
+Found 1 error:
+
+Todo: Unexpected terminal kind `optional` for logical test block
+
+error.todo-optional-call-chain-in-logical-expr.ts:5:30
   3 | function useFoo(props: {value: {x: string; y: string} | null}) {
   4 |   const value = props.value;
 > 5 |   return useNoAlias(value?.x, value?.y) ?? {};
-    |                               ^^^^^^^^ Todo: Unexpected terminal kind `optional` for logical test block (5:5)
+    |                               ^^^^^^^^ Unexpected terminal kind `optional` for logical test block
   6 | }
   7 |
   8 | export const FIXTURE_ENTRYPONT = {

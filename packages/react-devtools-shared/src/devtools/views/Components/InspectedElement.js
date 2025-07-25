@@ -28,7 +28,7 @@ import Skeleton from './Skeleton';
 
 import styles from './InspectedElement.css';
 
-import type {Source} from 'react-devtools-shared/src/shared/types';
+import type {ReactFunctionLocation} from 'shared/ReactTypes';
 
 export type Props = {};
 
@@ -50,7 +50,7 @@ export default function InspectedElementWrapper(_: Props): React.Node {
 
   const fetchFileWithCaching = useContext(FetchFileWithCachingContext);
 
-  const symbolicatedSourcePromise: null | Promise<Source | null> =
+  const symbolicatedSourcePromise: null | Promise<ReactFunctionLocation | null> =
     React.useMemo(() => {
       if (inspectedElement == null) return null;
       if (fetchFileWithCaching == null) return Promise.resolve(null);
@@ -58,7 +58,7 @@ export default function InspectedElementWrapper(_: Props): React.Node {
       const {source} = inspectedElement;
       if (source == null) return Promise.resolve(null);
 
-      const {sourceURL, line, column} = source;
+      const [, sourceURL, line, column] = source;
       return symbolicateSourceWithCache(
         fetchFileWithCaching,
         sourceURL,

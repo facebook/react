@@ -199,7 +199,7 @@ export function getOwnerStackByFiberInDev(
       if (typeof owner.tag === 'number') {
         const fiber: Fiber = (owner: any);
         owner = fiber._debugOwner;
-        let debugStack = fiber._debugStack;
+        let debugStack: void | null | string | Error = fiber._debugStack;
         // If we don't actually print the stack if there is no owner of this JSX element.
         // In a real app it's typically not useful since the root app is always controlled
         // by the framework. These also tend to have noisy stacks because they're not rooted

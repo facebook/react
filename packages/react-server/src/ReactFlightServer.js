@@ -58,11 +58,10 @@ import type {
   FulfilledThenable,
   RejectedThenable,
   ReactDebugInfo,
+  ReactDebugInfoEntry,
   ReactComponentInfo,
-  ReactEnvironmentInfo,
   ReactIOInfo,
   ReactAsyncInfo,
-  ReactTimeInfo,
   ReactStackTrace,
   ReactCallSite,
   ReactFunctionLocation,
@@ -180,18 +179,61 @@ function defaultFilterStackFrame(
 }
 
 function devirtualizeURL(url: string): string {
-  if (url.startsWith('rsc://React/')) {
+  if (url.startsWith('about://React/')) {
     // This callsite is a virtual fake callsite that came from another Flight client.
     // We need to reverse it back into the original location by stripping its prefix
     // and suffix. We don't need the environment name because it's available on the
     // parent object that will contain the stack.
-    const envIdx = url.indexOf('/', 'rsc://React/'.length);
+    const envIdx = url.indexOf('/', 'about://React/'.length);
     const suffixIdx = url.lastIndexOf('?');
     if (envIdx > -1 && suffixIdx > -1) {
       return decodeURI(url.slice(envIdx + 1, suffixIdx));
     }
   }
   return url;
+}
+
+function isPromiseCreationInternal(url: string, functionName: string): boolean {
+  // Various internals of the JS VM can create Promises but the call frame of the
+  // internals are not very interesting for our purposes so we need to skip those.
+  if (url === 'node:internal/async_hooks') {
+    // Ignore the stack frames from the async hooks themselves.
+    return true;
+  }
+  if (url !== '') {
+    return false;
+  }
+  switch (functionName) {
+    case 'new Promise':
+    case 'Function.withResolvers':
+    case 'Function.reject':
+    case 'Function.resolve':
+    case 'Function.all':
+    case 'Function.allSettled':
+    case 'Function.race':
+    case 'Function.try':
+      return true;
+    default:
+      return false;
+  }
+}
+
+function stripLeadingPromiseCreationFrames(
+  stack: ReactStackTrace,
+): ReactStackTrace {
+  for (let i = 0; i < stack.length; i++) {
+    const callsite = stack[i];
+    const functionName = callsite[0];
+    const url = callsite[1];
+    if (!isPromiseCreationInternal(url, functionName)) {
+      if (i > 0) {
+        return stack.slice(i);
+      } else {
+        return stack;
+      }
+    }
+  }
+  return [];
 }
 
 function findCalledFunctionNameFromStackTrace(
@@ -207,11 +249,7 @@ function findCalledFunctionNameFromStackTrace(
     const url = devirtualizeURL(callsite[1]);
     const lineNumber = callsite[2];
     const columnNumber = callsite[3];
-    if (functionName === 'new Promise') {
-      // Ignore Promise constructors.
-    } else if (url === 'node:internal/async_hooks') {
-      // Ignore the stack frames from the async hooks themselves.
-    } else if (filterStackFrame(url, functionName, lineNumber, columnNumber)) {
+    if (filterStackFrame(url, functionName, lineNumber, columnNumber)) {
       if (bestMatch === '') {
         // If we had no good stack frames for internal calls, just use the last
         // first party function name.
@@ -275,13 +313,44 @@ function hasUnfilteredFrame(request: Request, stack: ReactStackTrace): boolean {
   return false;
 }
 
+function isPromiseAwaitInternal(url: string, functionName: string): boolean {
+  // Various internals of the JS VM can await internally on a Promise. If those are at
+  // the top of the stack then we don't want to consider them as internal frames. The
+  // true "await" conceptually is the thing that called the helper.
+  // Ideally we'd also include common third party helpers for this.
+  if (url === 'node:internal/async_hooks') {
+    // Ignore the stack frames from the async hooks themselves.
+    return true;
+  }
+  if (url !== '') {
+    return false;
+  }
+  switch (functionName) {
+    case 'Promise.then':
+    case 'Promise.catch':
+    case 'Promise.finally':
+    case 'Function.reject':
+    case 'Function.resolve':
+    case 'Function.all':
+    case 'Function.allSettled':
+    case 'Function.race':
+    case 'Function.try':
+      return true;
+    default:
+      return false;
+  }
+}
+
 export function isAwaitInUserspace(
   request: Request,
   stack: ReactStackTrace,
 ): boolean {
   let firstFrame = 0;
-  while (stack.length > firstFrame && stack[firstFrame][0] === 'Promise.then') {
-    // Skip Promise.then frame itself.
+  while (
+    stack.length > firstFrame &&
+    isPromiseAwaitInternal(stack[firstFrame][1], stack[firstFrame][0])
+  ) {
+    // Skip the internal frame that awaits itself.
     firstFrame++;
   }
   if (stack.length > firstFrame) {
@@ -1123,18 +1192,18 @@ function serializeAsyncIterable(
     __DEV__ ? task.debugTask : null,
   );
 
-  // The task represents the Stop row. This adds a Start row.
-  request.pendingChunks++;
-  const startStreamRow =
-    streamTask.id.toString(16) + ':' + (isIterator ? 'x' : 'X') + '\n';
-  request.completedRegularChunks.push(stringToChunk(startStreamRow));
-
   if (__DEV__) {
     const debugInfo: ?ReactDebugInfo = (iterable: any)._debugInfo;
     if (debugInfo) {
       forwardDebugInfo(request, streamTask, debugInfo);
     }
   }
+
+  // The task represents the Stop row. This adds a Start row.
+  request.pendingChunks++;
+  const startStreamRow =
+    streamTask.id.toString(16) + ':' + (isIterator ? 'x' : 'X') + '\n';
+  request.completedRegularChunks.push(stringToChunk(startStreamRow));
 
   function progress(
     entry:
@@ -1647,6 +1716,16 @@ function renderFunctionComponent<Props>(
 
   // Apply special cases.
   result = processServerComponentReturnValue(request, task, Component, result);
+
+  if (__DEV__) {
+    // From this point on, the parent is the component we just rendered until we
+    // hit another JSX element.
+    task.debugOwner = componentDebugInfo;
+    // Unfortunately, we don't have a stack frame for this position. Conceptually
+    // it would be the location of the `return` inside component that just rendered.
+    task.debugStack = null;
+    task.debugTask = null;
+  }
 
   // Track this element's key on the Server Component on the keyPath context..
   const prevKeyPath = task.keyPath;
@@ -2248,6 +2327,21 @@ function visitAsyncNode(
             // then this gets I/O ignored, which is what we want because it means it was likely
             // just part of a previous component's rendering.
             match = ioNode;
+            if (
+              node.stack !== null &&
+              isAwaitInUserspace(request, node.stack)
+            ) {
+              // This await happened earlier but it was done in user space. This is the first time
+              // that user space saw the value of the I/O. We know we'll emit the I/O eventually
+              // but if we do it now we can override the promise value of the I/O entry to the
+              // one observed by this await which will be a better value than the internals of
+              // the I/O entry. If it's still alive that is.
+              const promise =
+                awaited.promise === null ? undefined : awaited.promise.deref();
+              if (promise !== undefined) {
+                serializeIONode(request, ioNode, awaited.promise);
+              }
+            }
           } else {
             if (
               node.stack === null ||
@@ -2347,13 +2441,32 @@ function emitAsyncSequence(
       env: env,
     };
     if (__DEV__) {
-      if (owner != null) {
-        // $FlowFixMe[cannot-write]
-        debugInfo.owner = owner;
-      }
-      if (stack != null) {
-        // $FlowFixMe[cannot-write]
-        debugInfo.stack = filterStackTrace(request, parseStackTrace(stack, 1));
+      if (owner === null && stack === null) {
+        // We have no location for the await. We can use the JSX callsite of the parent
+        // as the await if this was just passed as a prop.
+        if (task.debugOwner !== null) {
+          // $FlowFixMe[cannot-write]
+          debugInfo.owner = task.debugOwner;
+        }
+        if (task.debugStack !== null) {
+          // $FlowFixMe[cannot-write]
+          debugInfo.stack = filterStackTrace(
+            request,
+            parseStackTrace(task.debugStack, 1),
+          );
+        }
+      } else {
+        if (owner != null) {
+          // $FlowFixMe[cannot-write]
+          debugInfo.owner = owner;
+        }
+        if (stack != null) {
+          // $FlowFixMe[cannot-write]
+          debugInfo.stack = filterStackTrace(
+            request,
+            parseStackTrace(stack, 1),
+          );
+        }
       }
     }
     // We don't have a start time for this await but in case there was no start time emitted
@@ -4008,11 +4121,7 @@ function emitDebugHaltChunk(request: Request, id: number): void {
 function emitDebugChunk(
   request: Request,
   id: number,
-  debugInfo:
-    | ReactComponentInfo
-    | ReactAsyncInfo
-    | ReactEnvironmentInfo
-    | ReactTimeInfo,
+  debugInfo: ReactDebugInfoEntry,
 ): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
@@ -4213,7 +4322,8 @@ function serializeIONode(
   let stack = null;
   let name = '';
   if (ioNode.stack !== null) {
-    const fullStack = ioNode.stack;
+    // The stack can contain some leading internal frames for the construction of the promise that we skip.
+    const fullStack = stripLeadingPromiseCreationFrames(ioNode.stack);
     stack = filterStackTrace(request, fullStack);
     name = findCalledFunctionNameFromStackTrace(request, fullStack);
     // The name can include the object that this was called on but sometimes that's

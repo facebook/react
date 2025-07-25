@@ -10,6 +10,9 @@ import {transformFromAstSync} from '@babel/core';
 import PluginProposalPrivateMethods from '@babel/plugin-proposal-private-methods';
 import type {SourceLocation as BabelSourceLocation} from '@babel/types';
 import BabelPluginReactCompiler, {
+  CompilerDiagnostic,
+  CompilerDiagnosticOptions,
+  CompilerErrorDetail,
   CompilerErrorDetailOptions,
   CompilerSuggestionOperation,
   ErrorSeverity,
@@ -18,14 +21,10 @@ import BabelPluginReactCompiler, {
   OPT_OUT_DIRECTIVES,
   type PluginOptions,
 } from 'babel-plugin-react-compiler/src';
-import {Logger} from 'babel-plugin-react-compiler/src/Entrypoint';
+import {Logger, LoggerEvent} from 'babel-plugin-react-compiler/src/Entrypoint';
 import type {Rule} from 'eslint';
 import {Statement} from 'estree';
 import * as HermesParser from 'hermes-parser';
-
-type CompilerErrorDetailWithLoc = Omit<CompilerErrorDetailOptions, 'loc'> & {
-  loc: BabelSourceLocation;
-};
 
 function assertExhaustive(_: never, errorMsg: string): never {
   throw new Error(errorMsg);
@@ -38,19 +37,15 @@ const DEFAULT_REPORTABLE_LEVELS = new Set([
 let reportableLevels = DEFAULT_REPORTABLE_LEVELS;
 
 function isReportableDiagnostic(
-  detail: CompilerErrorDetailOptions,
-): detail is CompilerErrorDetailWithLoc {
-  return (
-    reportableLevels.has(detail.severity) &&
-    detail.loc != null &&
-    typeof detail.loc !== 'symbol'
-  );
+  detail: CompilerErrorDetail | CompilerDiagnostic,
+): boolean {
+  return reportableLevels.has(detail.severity);
 }
 
 function makeSuggestions(
-  detail: CompilerErrorDetailOptions,
+  detail: CompilerErrorDetailOptions | CompilerDiagnosticOptions,
 ): Array<Rule.SuggestionReportDescriptor> {
-  let suggest: Array<Rule.SuggestionReportDescriptor> = [];
+  const suggest: Array<Rule.SuggestionReportDescriptor> = [];
   if (Array.isArray(detail.suggestions)) {
     for (const suggestion of detail.suggestions) {
       switch (suggestion.op) {
@@ -107,6 +102,12 @@ const COMPILER_OPTIONS: Partial<PluginOptions> = {
   flowSuppressions: false,
   environment: validateEnvironmentConfig({
     validateRefAccessDuringRender: false,
+    validateNoSetStateInRender: true,
+    validateNoSetStateInEffects: true,
+    validateNoJSXInTryStatements: true,
+    validateNoImpureFunctionsInRender: true,
+    validateStaticComponents: true,
+    validateNoFreezingKnownMutableFunctions: true,
   }),
 };
 
@@ -128,10 +129,10 @@ const rule: Rule.RuleModule = {
     const filename = context.filename ?? context.getFilename();
     const userOpts = context.options[0] ?? {};
     if (
-      userOpts['reportableLevels'] != null &&
-      userOpts['reportableLevels'] instanceof Set
+      userOpts.reportableLevels != null &&
+      userOpts.reportableLevels instanceof Set
     ) {
-      reportableLevels = userOpts['reportableLevels'];
+      reportableLevels = userOpts.reportableLevels;
     } else {
       reportableLevels = DEFAULT_REPORTABLE_LEVELS;
     }
@@ -144,11 +145,11 @@ const rule: Rule.RuleModule = {
      */
     let __unstable_donotuse_reportAllBailouts: boolean = false;
     if (
-      userOpts['__unstable_donotuse_reportAllBailouts'] != null &&
-      typeof userOpts['__unstable_donotuse_reportAllBailouts'] === 'boolean'
+      userOpts.__unstable_donotuse_reportAllBailouts != null &&
+      typeof userOpts.__unstable_donotuse_reportAllBailouts === 'boolean'
     ) {
       __unstable_donotuse_reportAllBailouts =
-        userOpts['__unstable_donotuse_reportAllBailouts'];
+        userOpts.__unstable_donotuse_reportAllBailouts;
     }
 
     let shouldReportUnusedOptOutDirective = true;
@@ -162,16 +163,17 @@ const rule: Rule.RuleModule = {
     });
     const userLogger: Logger | null = options.logger;
     options.logger = {
-      logEvent: (filename, event): void => {
-        userLogger?.logEvent(filename, event);
+      logEvent: (eventFilename, event): void => {
+        userLogger?.logEvent(eventFilename, event);
         if (event.kind === 'CompileError') {
           shouldReportUnusedOptOutDirective = false;
           const detail = event.detail;
-          const suggest = makeSuggestions(detail);
+          const suggest = makeSuggestions(detail.options);
           if (__unstable_donotuse_reportAllBailouts && event.fnLoc != null) {
+            const loc = detail.primaryLocation();
             const locStr =
-              detail.loc != null && typeof detail.loc !== 'symbol'
-                ? ` (@:${detail.loc.start.line}:${detail.loc.start.column})`
+              loc != null && typeof loc !== 'symbol'
+                ? ` (@:${loc.start.line}:${loc.start.column})`
                 : '';
             /**
              * Report bailouts with a smaller span (just the first line).
@@ -187,10 +189,10 @@ const rule: Rule.RuleModule = {
               endLoc = {
                 line: event.fnLoc.start.line,
                 // Babel loc line numbers are 1-indexed
-                column: sourceCode.text.split(
-                  /\r?\n|\r|\n/g,
-                  event.fnLoc.start.line,
-                )[event.fnLoc.start.line - 1].length,
+                column:
+                  sourceCode.text.split(/\r?\n|\r|\n/g)[
+                    event.fnLoc.start.line - 1
+                  ]?.length ?? 0,
               };
             }
             const firstLineLoc = {
@@ -198,29 +200,32 @@ const rule: Rule.RuleModule = {
               end: endLoc,
             };
             context.report({
-              message: `[ReactCompilerBailout] ${detail.reason}${locStr}`,
+              message: `${detail.printErrorMessage(sourceCode.text, {eslint: true})} ${locStr}`,
               loc: firstLineLoc,
               suggest,
             });
           }
 
-          if (!isReportableDiagnostic(detail)) {
+          const loc = detail.primaryLocation();
+          if (
+            !isReportableDiagnostic(detail) ||
+            loc == null ||
+            typeof loc === 'symbol'
+          ) {
             return;
           }
           if (
-            hasFlowSuppression(detail.loc, 'react-rule-hook') ||
-            hasFlowSuppression(detail.loc, 'react-rule-unsafe-ref')
+            hasFlowSuppression(loc, 'react-rule-hook') ||
+            hasFlowSuppression(loc, 'react-rule-unsafe-ref')
           ) {
             // If Flow already caught this error, we don't need to report it again.
             return;
           }
-          const loc =
-            detail.loc == null || typeof detail.loc == 'symbol'
-              ? event.fnLoc
-              : detail.loc;
           if (loc != null) {
             context.report({
-              message: detail.reason,
+              message: detail.printErrorMessage(sourceCode.text, {
+                eslint: true,
+              }),
               loc,
               suggest,
             });
@@ -233,8 +238,8 @@ const rule: Rule.RuleModule = {
       options.environment = validateEnvironmentConfig(
         options.environment ?? {},
       );
-    } catch (err) {
-      options.logger?.logEvent('', err);
+    } catch (err: unknown) {
+      options.logger?.logEvent('', err as LoggerEvent);
     }
 
     function hasFlowSuppression(

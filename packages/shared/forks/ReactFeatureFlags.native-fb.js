@@ -25,7 +25,6 @@ export const {
   enablePersistedModeClonedFlag,
   enableEagerAlternateStateNodeCleanup,
   passChildrenWhenCloningPersistedNodes,
-  enableLazyPublicInstanceInFabric,
   renameElementSymbol,
   enableFragmentRefs,
 } = dynamicFlags;
