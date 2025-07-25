@@ -608,7 +608,7 @@ export const EnvironmentConfigSchema = z.object({
    *
    * Here the variables `ref` and `myRef` will be typed as Refs.
    */
-  enableTreatRefLikeIdentifiersAsRefs: z.boolean().default(false),
+  enableTreatRefLikeIdentifiersAsRefs: z.boolean().default(true),
 
   /*
    * If specified a value, the compiler lowers any calls to `useContext` to use
