@@ -37,6 +37,7 @@ export type Props = {selectedSource: ?SourceSelection};
 
 function EditorPane({selectedSource}: Props) {
   const [showSettings, setShowSettings] = useState(false);
+  const [showLinkInfo, setShowLinkInfo] = useState(false);
 
   const editorURL = useSyncExternalStore(
     function subscribe(callback) {
@@ -49,6 +50,30 @@ function EditorPane({selectedSource}: Props) {
       return getOpenInEditorURL();
     },
   );
+
+  if (showLinkInfo) {
+    return (
+      <div className={styles.EditorPane}>
+        <div className={styles.EditorToolbar}>
+          <div style={{display: 'flex', flex: '1 1 auto'}}>
+            To enable link handling in your browser's DevTools settings, look
+            for the option Extension -> Link Handling. Select "React Developer
+            Tools".
+          </div>
+          <div className={styles.VRule} />
+          <Button
+            onClick={() =>
+              startTransition(() => {
+                setShowLinkInfo(false);
+                setShowSettings(false);
+              })
+            }>
+            <ButtonIcon type="close" />
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   let editorToolbar;
   if (showSettings) {
@@ -87,7 +112,13 @@ function EditorPane({selectedSource}: Props) {
       {editorToolbar}
       <div className={styles.EditorInfo}>
         {editorURL ? (
-          <CodeEditorByDefault />
+          <CodeEditorByDefault
+            onChange={alwaysOpenInEditor => {
+              if (alwaysOpenInEditor) {
+                startTransition(() => setShowLinkInfo(true));
+              }
+            }}
+          />
         ) : (
           'Configure an external editor to open local files.'
         )}
