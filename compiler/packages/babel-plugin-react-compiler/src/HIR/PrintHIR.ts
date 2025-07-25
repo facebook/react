@@ -215,7 +215,7 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
       break;
     }
     case 'return': {
-      value = `[${terminal.id}] Return${
+      value = `[${terminal.id}] Return ${terminal.returnVariant}${
         terminal.value != null ? ' ' + printPlace(terminal.value) : ''
       }`;
       if (terminal.effects != null) {
