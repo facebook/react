@@ -407,15 +407,28 @@ function validateNoRefAccessInRenderImpl(
                 );
               }
             }
+            /*
+             * If we already reported an error on this instruction, don't report
+             * duplicate errors
+             */
             if (!didError) {
-              /*
-               * If we already reported an error on this instruction, don't report
-               * duplicate errors
-               */
+              const isRefLValue = isUseRefType(instr.lvalue.identifier);
               for (const operand of eachInstructionValueOperand(instr.value)) {
                 if (hookKind != null) {
                   validateNoDirectRefValueAccess(errors, operand, env);
-                } else {
+                } else if (!isRefLValue) {
+                  /**
+                   * In general passing a ref to a function may access that ref
+                   * value during render, so we disallow it.
+                   *
+                   * The main exception is the "mergeRefs" pattern, ie a function
+                   * that accepts multiple refs as arguments (or an array of refs)
+                   * and returns a new, aggregated ref. If the lvalue is a ref,
+                   * we assume that the user is doing this pattern and allow passing
+                   * refs.
+                   *
+                   * Eg `const mergedRef = mergeRefs(ref1, ref2)`
+                   */
                   validateNoRefPassedToFunction(
                     errors,
                     env,
