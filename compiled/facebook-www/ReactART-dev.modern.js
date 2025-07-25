@@ -1417,7 +1417,7 @@ __DEV__ &&
             selfTime.run(
               performance.measure.bind(
                 performance,
-                name,
+                "\u200b" + name,
                 reusableComponentOptions
               )
             );
@@ -1489,8 +1489,10 @@ __DEV__ &&
             }
           };
           debugTask
-            ? debugTask.run(performance.measure.bind(performance, name, fiber))
-            : performance.measure(name, fiber);
+            ? debugTask.run(
+                performance.measure.bind(performance, "\u200b" + name, fiber)
+              )
+            : performance.measure("\u200b" + name, fiber);
         }
       }
     }
@@ -1529,9 +1531,13 @@ __DEV__ &&
             };
             (fiber = fiber._debugTask)
               ? fiber.run(
-                  performance.measure.bind(performance, name, startTime)
+                  performance.measure.bind(
+                    performance,
+                    "\u200b" + name,
+                    startTime
+                  )
                 )
-              : performance.measure(name, startTime);
+              : performance.measure("\u200b" + name, startTime);
           }
         }
       } else
@@ -19070,10 +19076,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-modern-0d39496e-20250724",
+        version: "19.2.0-www-modern-19baee81-20250725",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-0d39496e-20250724"
+        reconcilerVersion: "19.2.0-www-modern-19baee81-20250725"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -19107,7 +19113,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.2.0-www-modern-0d39496e-20250724";
+    exports.version = "19.2.0-www-modern-19baee81-20250725";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
