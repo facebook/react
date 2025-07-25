@@ -18,16 +18,14 @@ import Toggle from '../Toggle';
 import {ElementTypeSuspense} from 'react-devtools-shared/src/frontend/types';
 import InspectedElementView from './InspectedElementView';
 import {InspectedElementContext} from './InspectedElementContext';
-import {getOpenInEditorURL, getAlwaysOpenInEditor} from '../../../utils';
-import {
-  LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
-  LOCAL_STORAGE_ALWAYS_OPEN_IN_EDITOR,
-} from '../../../constants';
+import {getAlwaysOpenInEditor} from '../../../utils';
+import {LOCAL_STORAGE_ALWAYS_OPEN_IN_EDITOR} from '../../../constants';
 import FetchFileWithCachingContext from './FetchFileWithCachingContext';
 import {symbolicateSourceWithCache} from 'react-devtools-shared/src/symbolicateSource';
 import OpenInEditorButton from './OpenInEditorButton';
 import InspectedElementViewSourceButton from './InspectedElementViewSourceButton';
 import Skeleton from './Skeleton';
+import useEditorURL from '../useEditorURL';
 
 import styles from './InspectedElement.css';
 
@@ -134,12 +132,7 @@ export default function InspectedElementWrapper(_: Props): React.Node {
     getAlwaysOpenInEditor,
   );
 
-  const editorURL = useSyncExternalStore(function subscribe(callback) {
-    window.addEventListener(LOCAL_STORAGE_OPEN_IN_EDITOR_URL, callback);
-    return function unsubscribe() {
-      window.removeEventListener(LOCAL_STORAGE_OPEN_IN_EDITOR_URL, callback);
-    };
-  }, getOpenInEditorURL);
+  const editorURL = useEditorURL();
 
   const toggleErrored = useCallback(() => {
     if (inspectedElement == null) {
