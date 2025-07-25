@@ -13,7 +13,11 @@ import {useLocalStorage} from '../hooks';
 
 import styles from './SettingsShared.css';
 
-export default function CodeEditorByDefault(_: {}): React.Node {
+export default function CodeEditorByDefault({
+  onChange,
+}: {
+  onChange?: boolean => void,
+}): React.Node {
   const [alwaysOpenInEditor, setAlwaysOpenInEditor] = useLocalStorage<boolean>(
     LOCAL_STORAGE_ALWAYS_OPEN_IN_EDITOR,
     false,
@@ -24,9 +28,12 @@ export default function CodeEditorByDefault(_: {}): React.Node {
       <input
         type="checkbox"
         checked={alwaysOpenInEditor}
-        onChange={({currentTarget}) =>
-          setAlwaysOpenInEditor(currentTarget.checked)
-        }
+        onChange={({currentTarget}) => {
+          setAlwaysOpenInEditor(currentTarget.checked);
+          if (onChange) {
+            onChange(currentTarget.checked);
+          }
+        }}
         className={styles.SettingRowCheckbox}
       />
       Open local files directly in your code editor
