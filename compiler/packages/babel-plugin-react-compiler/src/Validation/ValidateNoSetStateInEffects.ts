@@ -97,16 +97,21 @@ export function validateNoSetStateInEffects(
                 errors.pushDiagnostic(
                   CompilerDiagnostic.create({
                     category:
-                      'Calling setState within an effect can trigger cascading renders',
+                      'Calling setState synchronously within an effect can trigger cascading renders',
                     description:
-                      'Calling setState directly within a useEffect causes cascading renders that can hurt performance, and is not recommended. Consider alternatives to useEffect. (https://react.dev/learn/you-might-not-need-an-effect)',
+                      'Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. ' +
+                      'In general, the body of an effect should do one or both of the following:\n' +
+                      '* Update external systems with the latest state from React.\n' +
+                      '* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\n' +
+                      'Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. ' +
+                      '(https://react.dev/learn/you-might-not-need-an-effect)',
                     severity: ErrorSeverity.InvalidReact,
                     suggestions: null,
                   }).withDetail({
                     kind: 'error',
                     loc: setState.loc,
                     message:
-                      'Avoid calling setState() in the top-level of an effect',
+                      'Avoid calling setState() directly within an effect',
                   }),
                 );
               }
