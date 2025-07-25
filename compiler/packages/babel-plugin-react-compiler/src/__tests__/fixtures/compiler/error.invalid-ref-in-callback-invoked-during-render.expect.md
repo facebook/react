@@ -28,7 +28,7 @@ error.invalid-ref-in-callback-invoked-during-render.ts:8:33
    6 |     return <Foo item={item} current={current} />;
    7 |   };
 >  8 |   return <Items>{props.items.map(item => renderItem(item))}</Items>;
-     |                                  ^^^^^^^^^^^^^^^^^^^^^^^^ Passing a ref to a function may read its value during render
+     |                                  ^^^^^^^^^^^^^^^^^^^^^^^^ Cannot access ref value during render
    9 | }
   10 |
 ```
