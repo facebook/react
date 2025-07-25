@@ -610,7 +610,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
       expect(entries).toMatchInlineSnapshot(`
         [
           {
-            "name": "Component",
+            "name": "\u200bComponent",
           },
           {
             "name": "await getData (…/pulls)",

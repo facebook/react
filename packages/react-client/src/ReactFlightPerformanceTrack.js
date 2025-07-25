@@ -110,7 +110,7 @@ export function logComponentRender(
       }
       debugTask.run(
         // $FlowFixMe[method-unbinding]
-        performance.measure.bind(performance, entryName, {
+        performance.measure.bind(performance, '\u200b' + entryName, {
           start: startTime < 0 ? 0 : startTime,
           end: childrenEndTime,
           detail: {
@@ -125,7 +125,7 @@ export function logComponentRender(
       );
     } else {
       console.timeStamp(
-        entryName,
+        '\u200b' + entryName,
         startTime < 0 ? 0 : startTime,
         childrenEndTime,
         trackNames[trackIdx],
@@ -163,7 +163,7 @@ export function logComponentAborted(
       if (componentInfo.props != null) {
         addObjectToProperties(componentInfo.props, properties, 0, '');
       }
-      performance.measure(entryName, {
+      performance.measure('\u200b' + entryName, {
         start: startTime < 0 ? 0 : startTime,
         end: childrenEndTime,
         detail: {
@@ -220,7 +220,7 @@ export function logComponentErrored(
       if (componentInfo.props != null) {
         addObjectToProperties(componentInfo.props, properties, 0, '');
       }
-      performance.measure(entryName, {
+      performance.measure('\u200b' + entryName, {
         start: startTime < 0 ? 0 : startTime,
         end: childrenEndTime,
         detail: {
@@ -614,7 +614,7 @@ export function logIOInfoErrored(
         getIOLongName(ioInfo, description, ioInfo.env, rootEnv) + ' Rejected';
       debugTask.run(
         // $FlowFixMe[method-unbinding]
-        performance.measure.bind(performance, entryName, {
+        performance.measure.bind(performance, '\u200b' + entryName, {
           start: startTime < 0 ? 0 : startTime,
           end: endTime,
           detail: {
@@ -667,7 +667,7 @@ export function logIOInfo(
       );
       debugTask.run(
         // $FlowFixMe[method-unbinding]
-        performance.measure.bind(performance, entryName, {
+        performance.measure.bind(performance, '\u200b' + entryName, {
           start: startTime < 0 ? 0 : startTime,
           end: endTime,
           detail: {
