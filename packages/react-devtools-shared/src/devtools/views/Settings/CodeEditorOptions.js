@@ -13,7 +13,10 @@ import {
   LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET,
 } from '../../../constants';
 import {useLocalStorage} from '../hooks';
-import {getDefaultOpenInEditorURL} from 'react-devtools-shared/src/utils';
+import {
+  getDefaultPreset,
+  getDefaultOpenInEditorURL,
+} from 'react-devtools-shared/src/utils';
 
 import styles from './SettingsShared.css';
 
@@ -24,7 +27,7 @@ export default function CodeEditorOptions({
 }): React.Node {
   const [openInEditorURLPreset, setOpenInEditorURLPreset] = useLocalStorage<
     'vscode' | 'custom',
-  >(LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET, 'custom');
+  >(LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET, getDefaultPreset());
 
   const [openInEditorURL, setOpenInEditorURL] = useLocalStorage<string>(
     LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
@@ -46,7 +49,7 @@ export default function CodeEditorOptions({
         <input
           className={styles.Input}
           type="text"
-          placeholder={process.env.EDITOR_URL ? process.env.EDITOR_URL : ''}
+          placeholder={getDefaultOpenInEditorURL()}
           value={openInEditorURL}
           onChange={event => {
             setOpenInEditorURL(event.target.value);

@@ -388,10 +388,14 @@ export function filterOutLocationComponentFilters(
 
 const vscodeFilepath = 'vscode://file/{path}:{line}:{column}';
 
+export function getDefaultPreset(): 'custom' | 'vscode' {
+  return typeof process.env.EDITOR_URL === 'string' ? 'custom' : 'vscode';
+}
+
 export function getDefaultOpenInEditorURL(): string {
   return typeof process.env.EDITOR_URL === 'string'
     ? process.env.EDITOR_URL
-    : '';
+    : vscodeFilepath;
 }
 
 export function getOpenInEditorURL(): string {
