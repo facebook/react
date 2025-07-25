@@ -24,7 +24,13 @@ import {
   throwIfInfiniteUpdateLoopDetected,
   getWorkInProgressRoot,
 } from './ReactFiberWorkLoop';
-import {NoLane, NoLanes, mergeLanes, markHiddenUpdate} from './ReactFiberLane';
+import {
+  NoLane,
+  NoLanes,
+  mergeLanes,
+  markHiddenUpdate,
+  DefaultLane,
+} from './ReactFiberLane';
 import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
 import {HostRoot, OffscreenComponent} from './ReactWorkTags';
 import {OffscreenVisible} from './ReactFiberOffscreenComponent';
@@ -78,6 +84,8 @@ export function finishQueueingConcurrentUpdates(): void {
 
     if (lane !== NoLane) {
       markUpdateLaneFromFiberToRoot(fiber, update, lane);
+    } else if (typeof update.action === 'function') {
+      markUpdateLaneFromFiberToRoot(fiber, update, DefaultLane);
     }
   }
 }
