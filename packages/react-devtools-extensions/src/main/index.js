@@ -18,7 +18,12 @@ import {
   LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
 } from 'react-devtools-shared/src/constants';
 import {logEvent} from 'react-devtools-shared/src/Logger';
-import {normalizeUrlIfValid} from 'react-devtools-shared/src/utils';
+import {
+  getAlwaysOpenInEditor,
+  getOpenInEditorURL,
+  normalizeUrlIfValid,
+} from 'react-devtools-shared/src/utils';
+import {checkConditions} from 'react-devtools-shared/src/devtools/views/Editor/utils';
 
 import {
   setBrowserSelectionFromReact,
@@ -326,7 +331,7 @@ function createSourcesEditorPanel() {
     editorPane = createdPane;
 
     createdPane.setPage('panel.html');
-    createdPane.setHeight('42px');
+    createdPane.setHeight('75px');
 
     createdPane.onShown.addListener(portal => {
       editorPortalContainer = portal.container;
@@ -530,3 +535,45 @@ if (__IS_FIREFOX__) {
 connectExtensionPort();
 
 mountReactDevToolsWhenReactHasLoaded();
+
+function onThemeChanged(themeName) {
+  // Rerender with the new theme
+  render();
+}
+
+if (chrome.devtools.panels.setThemeChangeHandler) {
+  // Chrome
+  chrome.devtools.panels.setThemeChangeHandler(onThemeChanged);
+} else if (chrome.devtools.panels.onThemeChanged) {
+  // Firefox
+  chrome.devtools.panels.onThemeChanged.addListener(onThemeChanged);
+}
+
+// Firefox doesn't support resources handlers yet.
+if (chrome.devtools.panels.setOpenResourceHandler) {
+  chrome.devtools.panels.setOpenResourceHandler(
+    (
+      resource,
+      lineNumber = 1,
+      // The column is a new feature so we have to specify a default if it doesn't exist
+      columnNumber = 1,
+    ) => {
+      const alwaysOpenInEditor = getAlwaysOpenInEditor();
+      const editorURL = getOpenInEditorURL();
+      if (alwaysOpenInEditor && editorURL) {
+        const location = ['', resource.url, lineNumber, columnNumber];
+        const {url, shouldDisableButton} = checkConditions(editorURL, location);
+        if (!shouldDisableButton) {
+          window.open(url);
+          return;
+        }
+      }
+      // Otherwise fallback to the built-in behavior.
+      chrome.devtools.panels.openResource(
+        resource.url,
+        lineNumber - 1,
+        columnNumber - 1,
+      );
+    },
+  );
+}

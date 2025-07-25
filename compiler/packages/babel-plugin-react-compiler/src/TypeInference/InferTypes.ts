@@ -466,7 +466,31 @@ function* generateInstructionTypes(
       yield equation(left, returnType);
       break;
     }
-    case 'PropertyStore':
+    case 'PropertyStore': {
+      /**
+       * Infer types based on assignments to known object properties
+       * This is important for refs, where assignment to `<maybeRef>.current`
+       * can help us infer that an object itself is a ref
+       */
+      yield equation(
+        {
+          kind: 'Property',
+          objectType: value.object.identifier.type,
+          objectName: getName(names, value.object.identifier.id),
+          propertyName: {
+            kind: 'literal',
+            value: value.property,
+          },
+        },
+        /**
+         * We don't want the rvalue to be assigned a RefValue type just
+         * because it was assigned as the ref's value, since that twill trigger
+         * additional errors about accessing ref values during render.
+         */
+        makeType(),
+      );
+      break;
+    }
     case 'DeclareLocal':
     case 'RegExpLiteral':
     case 'MetaProperty':

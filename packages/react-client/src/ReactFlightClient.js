@@ -3647,7 +3647,7 @@ function initializeIOInfo(response: Response, ioInfo: ReactIOInfo): void {
   // $FlowFixMe[cannot-write]
   ioInfo.end += response._timeOrigin;
 
-  if (response._replayConsole) {
+  if (enableComponentPerformanceTrack && response._replayConsole) {
     const env = response._rootEnvironmentName;
     const promise = ioInfo.value;
     if (promise) {
@@ -4149,7 +4149,10 @@ function processFullStringRow(
       return;
     }
     case 78 /* "N" */: {
-      if (enableProfilerTimer && enableComponentPerformanceTrack) {
+      if (
+        enableProfilerTimer &&
+        (enableComponentPerformanceTrack || enableAsyncDebugInfo)
+      ) {
         // Track the time origin for future debug info. We track it relative
         // to the current environment's time space.
         const timeOrigin: number = +row;
@@ -4169,11 +4172,7 @@ function processFullStringRow(
       // Fallthrough to share the error with Console entries.
     }
     case 74 /* "J" */: {
-      if (
-        enableProfilerTimer &&
-        enableComponentPerformanceTrack &&
-        enableAsyncDebugInfo
-      ) {
+      if (enableProfilerTimer && enableAsyncDebugInfo) {
         resolveIOInfo(response, id, row);
         return;
       }

@@ -272,7 +272,7 @@ export function logComponentRender(
             // $FlowFixMe[method-unbinding]
             performance.measure.bind(
               performance,
-              name,
+              '\u200b' + name,
               reusableComponentOptions,
             ),
           );
@@ -369,10 +369,10 @@ export function logComponentErrored(
       if (__DEV__ && debugTask) {
         debugTask.run(
           // $FlowFixMe[method-unbinding]
-          performance.measure.bind(performance, name, options),
+          performance.measure.bind(performance, '\u200b' + name, options),
         );
       } else {
-        performance.measure(name, options);
+        performance.measure('\u200b' + name, options);
       }
     } else {
       console.timeStamp(
@@ -436,10 +436,10 @@ function logComponentEffectErrored(
       if (debugTask) {
         debugTask.run(
           // $FlowFixMe[method-unbinding]
-          performance.measure.bind(performance, name, options),
+          performance.measure.bind(performance, '\u200b' + name, options),
         );
       } else {
-        performance.measure(name, options);
+        performance.measure('\u200b' + name, options);
       }
     } else {
       console.timeStamp(

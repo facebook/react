@@ -2898,7 +2898,7 @@ describe('ReactFlight', () => {
     );
   });
 
-  // @gate enableAsyncIterableChildren
+  // @gate enableAsyncIterableChildren && enableComponentPerformanceTrack
   it('preserves debug info for server-to-server pass through of async iterables', async () => {
     let resolve;
     const iteratorPromise = new Promise(r => (resolve = r));
@@ -3727,7 +3727,7 @@ describe('ReactFlight', () => {
     expect(caughtError.digest).toBe('digest("my-error")');
   });
 
-  // @gate __DEV__ && enableComponentPerformanceTrack
+  // @gate __DEV__  && enableComponentPerformanceTrack
   it('can render deep but cut off JSX in debug info', async () => {
     function createDeepJSX(n) {
       if (n <= 0) {
