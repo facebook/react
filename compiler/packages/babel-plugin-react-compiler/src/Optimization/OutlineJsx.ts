@@ -352,6 +352,7 @@ function emitOutlinedFn(
     terminal: {
       id: makeInstructionId(0),
       kind: 'return',
+      returnVariant: 'Explicit',
       loc: GeneratedSource,
       value: instructions.at(-1)!.lvalue,
       effects: null,
