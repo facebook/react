@@ -530,3 +530,16 @@ if (__IS_FIREFOX__) {
 connectExtensionPort();
 
 mountReactDevToolsWhenReactHasLoaded();
+
+function onThemeChanged(themeName) {
+  // Rerender with the new theme
+  render();
+}
+
+if (chrome.devtools.panels.setThemeChangeHandler) {
+  // Chrome
+  chrome.devtools.panels.setThemeChangeHandler(onThemeChanged);
+} else if (chrome.devtools.panels.onThemeChanged) {
+  // Firefox
+  chrome.devtools.panels.onThemeChanged.addListener(onThemeChanged);
+}
