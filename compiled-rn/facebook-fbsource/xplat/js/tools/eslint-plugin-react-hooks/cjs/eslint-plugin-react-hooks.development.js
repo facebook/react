@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<490baa41314db82569ec29035323af5a>>
+ * @generated SignedSource<<fe1270cdb826a01c40880b4459f1e2be>>
  */
 
 'use strict';
@@ -1503,7 +1503,7 @@ function requireInvariant () {
 var invariantExports = requireInvariant();
 var invariant = /*@__PURE__*/getDefaultExportFromCjs(invariantExports);
 
-var lib$2 = {};
+var lib$3 = {};
 
 var isReactComponent = {};
 
@@ -4560,7 +4560,7 @@ function requireIs () {
 
 var isValidIdentifier = {};
 
-var lib$1 = {};
+var lib$2 = {};
 
 var identifier = {};
 
@@ -4685,11 +4685,11 @@ function requireKeyword () {
 	return keyword;
 }
 
-var hasRequiredLib$2;
+var hasRequiredLib$3;
 
-function requireLib$2 () {
-	if (hasRequiredLib$2) return lib$1;
-	hasRequiredLib$2 = 1;
+function requireLib$3 () {
+	if (hasRequiredLib$3) return lib$2;
+	hasRequiredLib$3 = 1;
 	(function (exports) {
 
 		Object.defineProperty(exports, "__esModule", {
@@ -4747,8 +4747,8 @@ function requireLib$2 () {
 		var _keyword = requireKeyword();
 
 		
-} (lib$1));
-	return lib$1;
+} (lib$2));
+	return lib$2;
 }
 
 var hasRequiredIsValidIdentifier;
@@ -4761,7 +4761,7 @@ function requireIsValidIdentifier () {
 	  value: true
 	});
 	isValidIdentifier.default = isValidIdentifier$1;
-	var _helperValidatorIdentifier = requireLib$2();
+	var _helperValidatorIdentifier = requireLib$3();
 	function isValidIdentifier$1(name, reserved = true) {
 	  if (typeof name !== "string") return false;
 	  if (reserved) {
@@ -4776,20 +4776,20 @@ function requireIsValidIdentifier () {
 	return isValidIdentifier;
 }
 
-var lib = {};
+var lib$1 = {};
 
-var hasRequiredLib$1;
+var hasRequiredLib$2;
 
-function requireLib$1 () {
-	if (hasRequiredLib$1) return lib;
-	hasRequiredLib$1 = 1;
+function requireLib$2 () {
+	if (hasRequiredLib$2) return lib$1;
+	hasRequiredLib$2 = 1;
 
-	Object.defineProperty(lib, "__esModule", {
+	Object.defineProperty(lib$1, "__esModule", {
 	  value: true
 	});
-	lib.readCodePoint = readCodePoint;
-	lib.readInt = readInt;
-	lib.readStringContents = readStringContents;
+	lib$1.readCodePoint = readCodePoint;
+	lib$1.readInt = readInt;
+	lib$1.readStringContents = readStringContents;
 	var _isDigit = function isDigit(code) {
 	  return code >= 48 && code <= 57;
 	};
@@ -5077,7 +5077,7 @@ function requireLib$1 () {
 	}
 
 	
-	return lib;
+	return lib$1;
 }
 
 var constants = {};
@@ -5411,8 +5411,8 @@ function requireCore () {
 	core.patternLikeCommon = core.importAttributes = core.functionTypeAnnotationCommon = core.functionDeclarationCommon = core.functionCommon = core.classMethodOrPropertyCommon = core.classMethodOrDeclareMethodCommon = void 0;
 	var _is = requireIs();
 	var _isValidIdentifier = requireIsValidIdentifier();
-	var _helperValidatorIdentifier = requireLib$2();
-	var _helperStringParser = requireLib$1();
+	var _helperValidatorIdentifier = requireLib$3();
+	var _helperStringParser = requireLib$2();
 	var _index = requireConstants();
 	var _utils = requireUtils();
 	const defineType = (0, _utils.defineAliasedType)("Standardized");
@@ -11471,7 +11471,7 @@ function requireCleanJSXElementLiteralChild () {
 	});
 	cleanJSXElementLiteralChild.default = cleanJSXElementLiteralChild$1;
 	var _index = requireGenerated$2();
-	var _index2 = requireLib();
+	var _index2 = requireLib$1();
 	function cleanJSXElementLiteralChild$1(child, args) {
 	  const lines = child.value.split(/\r\n|\n|\r/);
 	  let lastNonEmptyLine = 0;
@@ -15172,7 +15172,7 @@ function requireToIdentifier () {
 	});
 	toIdentifier.default = toIdentifier$1;
 	var _isValidIdentifier = requireIsValidIdentifier();
-	var _helperValidatorIdentifier = requireLib$2();
+	var _helperValidatorIdentifier = requireLib$3();
 	function toIdentifier$1(input) {
 	  input = input + "";
 	  let name = "";
@@ -15618,7 +15618,7 @@ function requirePrependToMemberExpression () {
 	});
 	prependToMemberExpression.default = prependToMemberExpression$1;
 	var _index = requireGenerated$2();
-	var _index2 = requireLib();
+	var _index2 = requireLib$1();
 	function prependToMemberExpression$1(member, prepend) {
 	  if ((0, _index2.isSuper)(member.object)) {
 	    throw new Error("Cannot prepend node to super property access (`super.foo`).");
@@ -16428,11 +16428,11 @@ function requireToSequenceExpression () {
 	return toSequenceExpression;
 }
 
-var hasRequiredLib;
+var hasRequiredLib$1;
 
-function requireLib () {
-	if (hasRequiredLib) return lib$2;
-	hasRequiredLib = 1;
+function requireLib$1 () {
+	if (hasRequiredLib$1) return lib$3;
+	hasRequiredLib$1 = 1;
 	(function (exports) {
 
 		Object.defineProperty(exports, "__esModule", {
@@ -17028,8 +17028,357 @@ function requireLib () {
 		}
 
 		
-} (lib$2));
-	return lib$2;
+} (lib$3));
+	return lib$3;
+}
+
+var libExports$1 = requireLib$1();
+
+var lib = {};
+
+var picocolorsExports = {};
+var picocolors = {
+  get exports(){ return picocolorsExports; },
+  set exports(v){ picocolorsExports = v; },
+};
+
+var hasRequiredPicocolors;
+
+function requirePicocolors () {
+	if (hasRequiredPicocolors) return picocolorsExports;
+	hasRequiredPicocolors = 1;
+	let p = process || {}, argv = p.argv || [], env = p.env || {};
+	let isColorSupported =
+		!(!!env.NO_COLOR || argv.includes("--no-color")) &&
+		(!!env.FORCE_COLOR || argv.includes("--color") || p.platform === "win32" || ((p.stdout || {}).isTTY && env.TERM !== "dumb") || !!env.CI);
+
+	let formatter = (open, close, replace = open) =>
+		input => {
+			let string = "" + input, index = string.indexOf(close, open.length);
+			return ~index ? open + replaceClose(string, close, replace, index) + close : open + string + close
+		};
+
+	let replaceClose = (string, close, replace, index) => {
+		let result = "", cursor = 0;
+		do {
+			result += string.substring(cursor, index) + replace;
+			cursor = index + close.length;
+			index = string.indexOf(close, cursor);
+		} while (~index)
+		return result + string.substring(cursor)
+	};
+
+	let createColors = (enabled = isColorSupported) => {
+		let f = enabled ? formatter : () => String;
+		return {
+			isColorSupported: enabled,
+			reset: f("\x1b[0m", "\x1b[0m"),
+			bold: f("\x1b[1m", "\x1b[22m", "\x1b[22m\x1b[1m"),
+			dim: f("\x1b[2m", "\x1b[22m", "\x1b[22m\x1b[2m"),
+			italic: f("\x1b[3m", "\x1b[23m"),
+			underline: f("\x1b[4m", "\x1b[24m"),
+			inverse: f("\x1b[7m", "\x1b[27m"),
+			hidden: f("\x1b[8m", "\x1b[28m"),
+			strikethrough: f("\x1b[9m", "\x1b[29m"),
+
+			black: f("\x1b[30m", "\x1b[39m"),
+			red: f("\x1b[31m", "\x1b[39m"),
+			green: f("\x1b[32m", "\x1b[39m"),
+			yellow: f("\x1b[33m", "\x1b[39m"),
+			blue: f("\x1b[34m", "\x1b[39m"),
+			magenta: f("\x1b[35m", "\x1b[39m"),
+			cyan: f("\x1b[36m", "\x1b[39m"),
+			white: f("\x1b[37m", "\x1b[39m"),
+			gray: f("\x1b[90m", "\x1b[39m"),
+
+			bgBlack: f("\x1b[40m", "\x1b[49m"),
+			bgRed: f("\x1b[41m", "\x1b[49m"),
+			bgGreen: f("\x1b[42m", "\x1b[49m"),
+			bgYellow: f("\x1b[43m", "\x1b[49m"),
+			bgBlue: f("\x1b[44m", "\x1b[49m"),
+			bgMagenta: f("\x1b[45m", "\x1b[49m"),
+			bgCyan: f("\x1b[46m", "\x1b[49m"),
+			bgWhite: f("\x1b[47m", "\x1b[49m"),
+
+			blackBright: f("\x1b[90m", "\x1b[39m"),
+			redBright: f("\x1b[91m", "\x1b[39m"),
+			greenBright: f("\x1b[92m", "\x1b[39m"),
+			yellowBright: f("\x1b[93m", "\x1b[39m"),
+			blueBright: f("\x1b[94m", "\x1b[39m"),
+			magentaBright: f("\x1b[95m", "\x1b[39m"),
+			cyanBright: f("\x1b[96m", "\x1b[39m"),
+			whiteBright: f("\x1b[97m", "\x1b[39m"),
+
+			bgBlackBright: f("\x1b[100m", "\x1b[49m"),
+			bgRedBright: f("\x1b[101m", "\x1b[49m"),
+			bgGreenBright: f("\x1b[102m", "\x1b[49m"),
+			bgYellowBright: f("\x1b[103m", "\x1b[49m"),
+			bgBlueBright: f("\x1b[104m", "\x1b[49m"),
+			bgMagentaBright: f("\x1b[105m", "\x1b[49m"),
+			bgCyanBright: f("\x1b[106m", "\x1b[49m"),
+			bgWhiteBright: f("\x1b[107m", "\x1b[49m"),
+		}
+	};
+
+	picocolors.exports = createColors();
+	picocolorsExports.createColors = createColors;
+	return picocolorsExports;
+}
+
+var jsTokens = {};
+
+var hasRequiredJsTokens;
+
+function requireJsTokens () {
+	if (hasRequiredJsTokens) return jsTokens;
+	hasRequiredJsTokens = 1;
+	// Copyright 2014, 2015, 2016, 2017, 2018 Simon Lydell
+	// License: MIT. (See LICENSE.)
+
+	Object.defineProperty(jsTokens, "__esModule", {
+	  value: true
+	});
+
+	// This regex comes from regex.coffee, and is inserted here by generate-index.js
+	// (run `npm run build`).
+	jsTokens.default = /((['"])(?:(?!\2|\\).|\\(?:\r\n|[\s\S]))*(\2)?|`(?:[^`\\$]|\\[\s\S]|\$(?!\{)|\$\{(?:[^{}]|\{[^}]*\}?)*\}?)*(`)?)|(\/\/.*)|(\/\*(?:[^*]|\*(?!\/))*(\*\/)?)|(\/(?!\*)(?:\[(?:(?![\]\\]).|\\.)*\]|(?![\/\]\\]).|\\.)+\/(?:(?!\s*(?:\b|[\u0080-\uFFFF$\\'"~({]|[+\-!](?!=)|\.?\d))|[gmiyus]{1,6}\b(?![\u0080-\uFFFF$\\]|\s*(?:[+\-*%&|^<>!=?({]|\/(?![\/*])))))|(0[xX][\da-fA-F]+|0[oO][0-7]+|0[bB][01]+|(?:\d*\.\d+|\d+\.?)(?:[eE][+-]?\d+)?)|((?!\d)(?:(?!\s)[$\w\u0080-\uFFFF]|\\u[\da-fA-F]{4}|\\u\{[\da-fA-F]+\})+)|(--|\+\+|&&|\|\||=>|\.{3}|(?:[+\-\/%&|^]|\*{1,2}|<{1,2}|>{1,3}|!=?|={1,2})=?|[?~.,:;[\](){}])|(\s+)|(^$|[\s\S])/g;
+
+	jsTokens.matchToToken = function(match) {
+	  var token = {type: "invalid", value: match[0], closed: undefined};
+	       if (match[ 1]) token.type = "string" , token.closed = !!(match[3] || match[4]);
+	  else if (match[ 5]) token.type = "comment";
+	  else if (match[ 6]) token.type = "comment", token.closed = !!match[7];
+	  else if (match[ 8]) token.type = "regex";
+	  else if (match[ 9]) token.type = "number";
+	  else if (match[10]) token.type = "name";
+	  else if (match[11]) token.type = "punctuator";
+	  else if (match[12]) token.type = "whitespace";
+	  return token
+	};
+	return jsTokens;
+}
+
+var hasRequiredLib;
+
+function requireLib () {
+	if (hasRequiredLib) return lib;
+	hasRequiredLib = 1;
+
+	Object.defineProperty(lib, '__esModule', { value: true });
+
+	var picocolors = requirePicocolors();
+	var jsTokens = requireJsTokens();
+	var helperValidatorIdentifier = requireLib$3();
+
+	function isColorSupported() {
+	  return (typeof process === "object" && (process.env.FORCE_COLOR === "0" || process.env.FORCE_COLOR === "false") ? false : picocolors.isColorSupported
+	  );
+	}
+	const compose = (f, g) => v => f(g(v));
+	function buildDefs(colors) {
+	  return {
+	    keyword: colors.cyan,
+	    capitalized: colors.yellow,
+	    jsxIdentifier: colors.yellow,
+	    punctuator: colors.yellow,
+	    number: colors.magenta,
+	    string: colors.green,
+	    regex: colors.magenta,
+	    comment: colors.gray,
+	    invalid: compose(compose(colors.white, colors.bgRed), colors.bold),
+	    gutter: colors.gray,
+	    marker: compose(colors.red, colors.bold),
+	    message: compose(colors.red, colors.bold),
+	    reset: colors.reset
+	  };
+	}
+	const defsOn = buildDefs(picocolors.createColors(true));
+	const defsOff = buildDefs(picocolors.createColors(false));
+	function getDefs(enabled) {
+	  return enabled ? defsOn : defsOff;
+	}
+
+	const sometimesKeywords = new Set(["as", "async", "from", "get", "of", "set"]);
+	const NEWLINE$1 = /\r\n|[\n\r\u2028\u2029]/;
+	const BRACKET = /^[()[\]{}]$/;
+	let tokenize;
+	{
+	  const JSX_TAG = /^[a-z][\w-]*$/i;
+	  const getTokenType = function (token, offset, text) {
+	    if (token.type === "name") {
+	      if (helperValidatorIdentifier.isKeyword(token.value) || helperValidatorIdentifier.isStrictReservedWord(token.value, true) || sometimesKeywords.has(token.value)) {
+	        return "keyword";
+	      }
+	      if (JSX_TAG.test(token.value) && (text[offset - 1] === "<" || text.slice(offset - 2, offset) === "</")) {
+	        return "jsxIdentifier";
+	      }
+	      if (token.value[0] !== token.value[0].toLowerCase()) {
+	        return "capitalized";
+	      }
+	    }
+	    if (token.type === "punctuator" && BRACKET.test(token.value)) {
+	      return "bracket";
+	    }
+	    if (token.type === "invalid" && (token.value === "@" || token.value === "#")) {
+	      return "punctuator";
+	    }
+	    return token.type;
+	  };
+	  tokenize = function* (text) {
+	    let match;
+	    while (match = jsTokens.default.exec(text)) {
+	      const token = jsTokens.matchToToken(match);
+	      yield {
+	        type: getTokenType(token, match.index, text),
+	        value: token.value
+	      };
+	    }
+	  };
+	}
+	function highlight(text) {
+	  if (text === "") return "";
+	  const defs = getDefs(true);
+	  let highlighted = "";
+	  for (const {
+	    type,
+	    value
+	  } of tokenize(text)) {
+	    if (type in defs) {
+	      highlighted += value.split(NEWLINE$1).map(str => defs[type](str)).join("\n");
+	    } else {
+	      highlighted += value;
+	    }
+	  }
+	  return highlighted;
+	}
+
+	let deprecationWarningShown = false;
+	const NEWLINE = /\r\n|[\n\r\u2028\u2029]/;
+	function getMarkerLines(loc, source, opts) {
+	  const startLoc = Object.assign({
+	    column: 0,
+	    line: -1
+	  }, loc.start);
+	  const endLoc = Object.assign({}, startLoc, loc.end);
+	  const {
+	    linesAbove = 2,
+	    linesBelow = 3
+	  } = opts || {};
+	  const startLine = startLoc.line;
+	  const startColumn = startLoc.column;
+	  const endLine = endLoc.line;
+	  const endColumn = endLoc.column;
+	  let start = Math.max(startLine - (linesAbove + 1), 0);
+	  let end = Math.min(source.length, endLine + linesBelow);
+	  if (startLine === -1) {
+	    start = 0;
+	  }
+	  if (endLine === -1) {
+	    end = source.length;
+	  }
+	  const lineDiff = endLine - startLine;
+	  const markerLines = {};
+	  if (lineDiff) {
+	    for (let i = 0; i <= lineDiff; i++) {
+	      const lineNumber = i + startLine;
+	      if (!startColumn) {
+	        markerLines[lineNumber] = true;
+	      } else if (i === 0) {
+	        const sourceLength = source[lineNumber - 1].length;
+	        markerLines[lineNumber] = [startColumn, sourceLength - startColumn + 1];
+	      } else if (i === lineDiff) {
+	        markerLines[lineNumber] = [0, endColumn];
+	      } else {
+	        const sourceLength = source[lineNumber - i].length;
+	        markerLines[lineNumber] = [0, sourceLength];
+	      }
+	    }
+	  } else {
+	    if (startColumn === endColumn) {
+	      if (startColumn) {
+	        markerLines[startLine] = [startColumn, 0];
+	      } else {
+	        markerLines[startLine] = true;
+	      }
+	    } else {
+	      markerLines[startLine] = [startColumn, endColumn - startColumn];
+	    }
+	  }
+	  return {
+	    start,
+	    end,
+	    markerLines
+	  };
+	}
+	function codeFrameColumns(rawLines, loc, opts = {}) {
+	  const shouldHighlight = opts.forceColor || isColorSupported() && opts.highlightCode;
+	  const defs = getDefs(shouldHighlight);
+	  const lines = rawLines.split(NEWLINE);
+	  const {
+	    start,
+	    end,
+	    markerLines
+	  } = getMarkerLines(loc, lines, opts);
+	  const hasColumns = loc.start && typeof loc.start.column === "number";
+	  const numberMaxWidth = String(end).length;
+	  const highlightedLines = shouldHighlight ? highlight(rawLines) : rawLines;
+	  let frame = highlightedLines.split(NEWLINE, end).slice(start, end).map((line, index) => {
+	    const number = start + 1 + index;
+	    const paddedNumber = ` ${number}`.slice(-numberMaxWidth);
+	    const gutter = ` ${paddedNumber} |`;
+	    const hasMarker = markerLines[number];
+	    const lastMarkerLine = !markerLines[number + 1];
+	    if (hasMarker) {
+	      let markerLine = "";
+	      if (Array.isArray(hasMarker)) {
+	        const markerSpacing = line.slice(0, Math.max(hasMarker[0] - 1, 0)).replace(/[^\t]/g, " ");
+	        const numberOfMarkers = hasMarker[1] || 1;
+	        markerLine = ["\n ", defs.gutter(gutter.replace(/\d/g, " ")), " ", markerSpacing, defs.marker("^").repeat(numberOfMarkers)].join("");
+	        if (lastMarkerLine && opts.message) {
+	          markerLine += " " + defs.message(opts.message);
+	        }
+	      }
+	      return [defs.marker(">"), defs.gutter(gutter), line.length > 0 ? ` ${line}` : "", markerLine].join("");
+	    } else {
+	      return ` ${defs.gutter(gutter)}${line.length > 0 ? ` ${line}` : ""}`;
+	    }
+	  }).join("\n");
+	  if (opts.message && !hasColumns) {
+	    frame = `${" ".repeat(numberMaxWidth + 1)}${opts.message}\n${frame}`;
+	  }
+	  if (shouldHighlight) {
+	    return defs.reset(frame);
+	  } else {
+	    return frame;
+	  }
+	}
+	function index (rawLines, lineNumber, colNumber, opts = {}) {
+	  if (!deprecationWarningShown) {
+	    deprecationWarningShown = true;
+	    const message = "Passing lineNumber and colNumber is deprecated to @babel/code-frame. Please use `codeFrameColumns`.";
+	    if (process.emitWarning) {
+	      process.emitWarning(message, "DeprecationWarning");
+	    } else {
+	      const deprecationError = new Error(message);
+	      deprecationError.name = "DeprecationWarning";
+	      console.warn(new Error(message));
+	    }
+	  }
+	  colNumber = Math.max(colNumber, 0);
+	  const location = {
+	    start: {
+	      column: colNumber,
+	      line: lineNumber
+	    }
+	  };
+	  return codeFrameColumns(rawLines, location, opts);
+	}
+
+	lib.codeFrameColumns = codeFrameColumns;
+	lib.default = index;
+	lib.highlight = highlight;
+	
+	return lib;
 }
 
 var libExports = requireLib();
@@ -17278,6 +17627,83 @@ var CompilerSuggestionOperation;
     CompilerSuggestionOperation[CompilerSuggestionOperation["Remove"] = 2] = "Remove";
     CompilerSuggestionOperation[CompilerSuggestionOperation["Replace"] = 3] = "Replace";
 })(CompilerSuggestionOperation || (CompilerSuggestionOperation = {}));
+class CompilerDiagnostic {
+    constructor(options) {
+        this.options = options;
+    }
+    static create(options) {
+        return new CompilerDiagnostic(Object.assign(Object.assign({}, options), { details: [] }));
+    }
+    get category() {
+        return this.options.category;
+    }
+    get description() {
+        return this.options.description;
+    }
+    get severity() {
+        return this.options.severity;
+    }
+    get suggestions() {
+        return this.options.suggestions;
+    }
+    withDetail(detail) {
+        this.options.details.push(detail);
+        return this;
+    }
+    primaryLocation() {
+        var _a, _b;
+        return (_b = (_a = this.options.details.filter(d => d.kind === 'error')[0]) === null || _a === void 0 ? void 0 : _a.loc) !== null && _b !== void 0 ? _b : null;
+    }
+    printErrorMessage(source, options) {
+        const buffer = [
+            printErrorSummary(this.severity, this.category),
+            '\n\n',
+            this.description,
+        ];
+        for (const detail of this.options.details) {
+            switch (detail.kind) {
+                case 'error': {
+                    const loc = detail.loc;
+                    if (loc == null || typeof loc === 'symbol') {
+                        continue;
+                    }
+                    let codeFrame;
+                    try {
+                        codeFrame = printCodeFrame(source, loc, detail.message);
+                    }
+                    catch (e) {
+                        codeFrame = detail.message;
+                    }
+                    buffer.push('\n\n');
+                    if (loc.filename != null) {
+                        const line = loc.start.line;
+                        const column = options.eslint
+                            ? loc.start.column + 1
+                            : loc.start.column;
+                        buffer.push(`${loc.filename}:${line}:${column}\n`);
+                    }
+                    buffer.push(codeFrame);
+                    break;
+                }
+                default: {
+                    assertExhaustive$1(detail.kind, `Unexpected detail kind ${detail.kind}`);
+                }
+            }
+        }
+        return buffer.join('');
+    }
+    toString() {
+        const buffer = [printErrorSummary(this.severity, this.category)];
+        if (this.description != null) {
+            buffer.push(`. ${this.description}.`);
+        }
+        const loc = this.primaryLocation();
+        if (loc != null && typeof loc !== 'symbol') {
+            buffer.push(` (${loc.start.line}:${loc.start.column})`);
+        }
+        return buffer.join('');
+    }
+}
 class CompilerErrorDetail {
     constructor(options) {
         this.options = options;
@@ -17297,18 +17723,44 @@ class CompilerErrorDetail {
     get suggestions() {
         return this.options.suggestions;
     }
-    printErrorMessage() {
-        const buffer = [`${this.severity}: ${this.reason}`];
+    primaryLocation() {
+        return this.loc;
+    }
+    printErrorMessage(source, options) {
+        const buffer = [printErrorSummary(this.severity, this.reason)];
         if (this.description != null) {
-            buffer.push(`. ${this.description}`);
+            buffer.push(`\n\n${this.description}.`);
         }
-        if (this.loc != null && typeof this.loc !== 'symbol') {
-            buffer.push(` (${this.loc.start.line}:${this.loc.end.line})`);
+        const loc = this.loc;
+        if (loc != null && typeof loc !== 'symbol') {
+            let codeFrame;
+            try {
+                codeFrame = printCodeFrame(source, loc, this.reason);
+            }
+            catch (e) {
+                codeFrame = '';
+            }
+            buffer.push(`\n\n`);
+            if (loc.filename != null) {
+                const line = loc.start.line;
+                const column = options.eslint ? loc.start.column + 1 : loc.start.column;
+                buffer.push(`${loc.filename}:${line}:${column}\n`);
+            }
+            buffer.push(codeFrame);
+            buffer.push('\n\n');
         }
         return buffer.join('');
     }
     toString() {
-        return this.printErrorMessage();
+        const buffer = [printErrorSummary(this.severity, this.reason)];
+        if (this.description != null) {
+            buffer.push(`. ${this.description}.`);
+        }
+        const loc = this.loc;
+        if (loc != null && typeof loc !== 'symbol') {
+            buffer.push(` (${loc.start.line}:${loc.start.column})`);
+        }
+        return buffer.join('');
     }
 }
 class CompilerError extends Error {
@@ -17318,6 +17770,11 @@ class CompilerError extends Error {
             errors.pushErrorDetail(new CompilerErrorDetail(Object.assign(Object.assign({}, options), { severity: ErrorSeverity.Invariant })));
             throw errors;
         }
+    }
+    static throwDiagnostic(options) {
+        const errors = new CompilerError();
+        errors.pushDiagnostic(new CompilerDiagnostic(options));
+        throw errors;
     }
     static throwTodo(options) {
         const errors = new CompilerError();
@@ -17347,18 +17804,42 @@ class CompilerError extends Error {
     constructor(...args) {
         super(...args);
         this.details = [];
+        this.printedMessage = null;
         this.name = 'ReactCompilerError';
         this.details = [];
     }
     get message() {
-        return this.toString();
+        var _a;
+        return (_a = this.printedMessage) !== null && _a !== void 0 ? _a : this.toString();
     }
     set message(_message) { }
     toString() {
+        if (this.printedMessage) {
+            return this.printedMessage;
+        }
         if (Array.isArray(this.details)) {
             return this.details.map(detail => detail.toString()).join('\n\n');
         }
         return this.name;
+    }
+    withPrintedMessage(source, options) {
+        this.printedMessage = this.printErrorMessage(source, options);
+        return this;
+    }
+    printErrorMessage(source, options) {
+        if (options.eslint && this.details.length === 1) {
+            return this.details[0].printErrorMessage(source, options);
+        }
+        return (`Found ${this.details.length} error${this.details.length === 1 ? '' : 's'}:\n\n` +
+            this.details
+                .map(detail => detail.printErrorMessage(source, options).trim())
+                .join('\n\n'));
+    }
+    merge(other) {
+        this.details.push(...other.details);
+    }
+    pushDiagnostic(diagnostic) {
+        this.details.push(diagnostic);
     }
     push(options) {
         var _a;
@@ -17402,6 +17883,48 @@ class CompilerError extends Error {
         });
     }
 }
+function printCodeFrame(source, loc, message) {
+    return libExports.codeFrameColumns(source, {
+        start: {
+            line: loc.start.line,
+            column: loc.start.column + 1,
+        },
+        end: {
+            line: loc.end.line,
+            column: loc.end.column + 1,
+        },
+    }, {
+        message,
+    });
+}
+function printErrorSummary(severity, message) {
+    let severityCategory;
+    switch (severity) {
+        case ErrorSeverity.InvalidConfig:
+        case ErrorSeverity.InvalidJS:
+        case ErrorSeverity.InvalidReact:
+        case ErrorSeverity.UnsupportedJS: {
+            severityCategory = 'Error';
+            break;
+        }
+        case ErrorSeverity.CannotPreserveMemoization: {
+            severityCategory = 'Memoization';
+            break;
+        }
+        case ErrorSeverity.Invariant: {
+            severityCategory = 'Invariant';
+            break;
+        }
+        case ErrorSeverity.Todo: {
+            severityCategory = 'Todo';
+            break;
+        }
+        default: {
+            assertExhaustive$1(severity, `Unexpected severity '${severity}'`);
+        }
+    }
+    return `${severityCategory}: ${message}`;
+}
 
 function insertAdditionalFunctionDeclaration(fnPath, compiled, programContext, gatingFunctionIdentifierName) {
     var _a, _b;
@@ -17416,9 +17939,9 @@ function insertAdditionalFunctionDeclaration(fnPath, compiled, programContext, g
         reason: 'Expected React Compiler optimized function declarations to have the same number of parameters as source',
         loc: (_b = fnPath.node.loc) !== null && _b !== void 0 ? _b : null,
     });
-    const gatingCondition = libExports.identifier(programContext.newUid(`${gatingFunctionIdentifierName}_result`));
-    const unoptimizedFnName = libExports.identifier(programContext.newUid(`${originalFnName.name}_unoptimized`));
-    const optimizedFnName = libExports.identifier(programContext.newUid(`${originalFnName.name}_optimized`));
+    const gatingCondition = libExports$1.identifier(programContext.newUid(`${gatingFunctionIdentifierName}_result`));
+    const unoptimizedFnName = libExports$1.identifier(programContext.newUid(`${originalFnName.name}_unoptimized`));
+    const optimizedFnName = libExports$1.identifier(programContext.newUid(`${originalFnName.name}_optimized`));
     compiled.id.name = optimizedFnName.name;
     fnPath.get('id').replaceInline(unoptimizedFnName);
     const newParams = [];
@@ -17426,19 +17949,19 @@ function insertAdditionalFunctionDeclaration(fnPath, compiled, programContext, g
     for (let i = 0; i < originalFnParams.length; i++) {
         const argName = `arg${i}`;
         if (originalFnParams[i].type === 'RestElement') {
-            newParams.push(libExports.restElement(libExports.identifier(argName)));
-            genNewArgs.push(() => libExports.spreadElement(libExports.identifier(argName)));
+            newParams.push(libExports$1.restElement(libExports$1.identifier(argName)));
+            genNewArgs.push(() => libExports$1.spreadElement(libExports$1.identifier(argName)));
         }
         else {
-            newParams.push(libExports.identifier(argName));
-            genNewArgs.push(() => libExports.identifier(argName));
+            newParams.push(libExports$1.identifier(argName));
+            genNewArgs.push(() => libExports$1.identifier(argName));
         }
     }
-    fnPath.insertAfter(libExports.functionDeclaration(originalFnName, newParams, libExports.blockStatement([
-        libExports.ifStatement(gatingCondition, libExports.returnStatement(libExports.callExpression(compiled.id, genNewArgs.map(fn => fn()))), libExports.returnStatement(libExports.callExpression(unoptimizedFnName, genNewArgs.map(fn => fn())))),
+    fnPath.insertAfter(libExports$1.functionDeclaration(originalFnName, newParams, libExports$1.blockStatement([
+        libExports$1.ifStatement(gatingCondition, libExports$1.returnStatement(libExports$1.callExpression(compiled.id, genNewArgs.map(fn => fn()))), libExports$1.returnStatement(libExports$1.callExpression(unoptimizedFnName, genNewArgs.map(fn => fn())))),
     ])));
-    fnPath.insertBefore(libExports.variableDeclaration('const', [
-        libExports.variableDeclarator(gatingCondition, libExports.callExpression(libExports.identifier(gatingFunctionIdentifierName), [])),
+    fnPath.insertBefore(libExports$1.variableDeclaration('const', [
+        libExports$1.variableDeclarator(gatingCondition, libExports$1.callExpression(libExports$1.identifier(gatingFunctionIdentifierName), [])),
     ]));
     fnPath.insertBefore(compiled);
 }
@@ -17454,20 +17977,20 @@ function insertGatedFunctionDeclaration(fnPath, compiled, programContext, gating
         insertAdditionalFunctionDeclaration(fnPath, compiled, programContext, gatingImportedName);
     }
     else {
-        const gatingExpression = libExports.conditionalExpression(libExports.callExpression(libExports.identifier(gatingImportedName), []), buildFunctionExpression(compiled), buildFunctionExpression(fnPath.node));
+        const gatingExpression = libExports$1.conditionalExpression(libExports$1.callExpression(libExports$1.identifier(gatingImportedName), []), buildFunctionExpression(compiled), buildFunctionExpression(fnPath.node));
         if (fnPath.parentPath.node.type !== 'ExportDefaultDeclaration' &&
             fnPath.node.type === 'FunctionDeclaration' &&
             fnPath.node.id != null) {
-            fnPath.replaceWith(libExports.variableDeclaration('const', [
-                libExports.variableDeclarator(fnPath.node.id, gatingExpression),
+            fnPath.replaceWith(libExports$1.variableDeclaration('const', [
+                libExports$1.variableDeclarator(fnPath.node.id, gatingExpression),
             ]));
         }
         else if (fnPath.parentPath.node.type === 'ExportDefaultDeclaration' &&
             fnPath.node.type !== 'ArrowFunctionExpression' &&
             fnPath.node.id != null) {
-            fnPath.insertAfter(libExports.exportDefaultDeclaration(libExports.identifier(fnPath.node.id.name)));
-            fnPath.parentPath.replaceWith(libExports.variableDeclaration('const', [
-                libExports.variableDeclarator(libExports.identifier(fnPath.node.id.name), gatingExpression),
+            fnPath.insertAfter(libExports$1.exportDefaultDeclaration(libExports$1.identifier(fnPath.node.id.name)));
+            fnPath.parentPath.replaceWith(libExports$1.variableDeclaration('const', [
+                libExports$1.variableDeclarator(libExports$1.identifier(fnPath.node.id.name), gatingExpression),
             ]));
         }
         else {
@@ -17634,7 +18157,7 @@ function forkTemporaryIdentifier(id, source) {
     return Object.assign(Object.assign({}, source), { mutableRange: { start: makeInstructionId(0), end: makeInstructionId(0) }, id });
 }
 function makeIdentifierName(name) {
-    CompilerError.invariant(libExports.isValidIdentifier(name), {
+    CompilerError.invariant(libExports$1.isValidIdentifier(name), {
         reason: `Expected a valid identifier name`,
         loc: GeneratedSource,
         description: `\`${name}\` is not a valid JavaScript identifier`,
@@ -18720,7 +19243,10 @@ function printAliasingEffect(effect) {
             return `Assign ${printPlaceForAliasEffect(effect.into)} = ${printPlaceForAliasEffect(effect.from)}`;
         }
         case 'Alias': {
-            return `Alias ${printPlaceForAliasEffect(effect.into)} = ${printPlaceForAliasEffect(effect.from)}`;
+            return `Alias ${printPlaceForAliasEffect(effect.into)} <- ${printPlaceForAliasEffect(effect.from)}`;
+        }
+        case 'MaybeAlias': {
+            return `MaybeAlias ${printPlaceForAliasEffect(effect.into)} <- ${printPlaceForAliasEffect(effect.from)}`;
         }
         case 'Capture': {
             return `Capture ${printPlaceForAliasEffect(effect.into)} <- ${printPlaceForAliasEffect(effect.from)}`;
@@ -18773,13 +19299,13 @@ function printAliasingEffect(effect) {
             return `${effect.kind} ${printPlaceForAliasEffect(effect.value)}`;
         }
         case 'MutateFrozen': {
-            return `MutateFrozen ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.reason)}`;
+            return `MutateFrozen ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.category)}`;
         }
         case 'MutateGlobal': {
-            return `MutateGlobal ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.reason)}`;
+            return `MutateGlobal ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.category)}`;
         }
         case 'Impure': {
-            return `Impure ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.reason)}`;
+            return `Impure ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.category)}`;
         }
         case 'Render': {
             return `Render ${printPlaceForAliasEffect(effect.place)}`;
@@ -20283,9 +20809,17 @@ class HIRBuilder {
     resolveBinding(node) {
         var _a, _b;
         if (node.name === 'fbt') {
-            CompilerError.throwTodo({
-                reason: 'Support local variables named "fbt"',
-                loc: (_a = node.loc) !== null && _a !== void 0 ? _a : null,
+            CompilerError.throwDiagnostic({
+                severity: ErrorSeverity.Todo,
+                category: 'Support local variables named `fbt`',
+                description: 'Local variables named `fbt` may conflict with the fbt plugin and are not yet supported',
+                details: [
+                    {
+                        kind: 'error',
+                        message: 'Rename to avoid conflict with fbt plugin',
+                        loc: (_a = node.loc) !== null && _a !== void 0 ? _a : GeneratedSource,
+                    },
+                ],
             });
         }
         const originalName = node.name;
@@ -21797,12 +22331,15 @@ function lower$1(func, env, bindings = null, capturedRefs = new Map()) {
         if (param.isIdentifier()) {
             const binding = builder.resolveIdentifier(param);
             if (binding.kind !== 'Identifier') {
-                builder.errors.push({
-                    reason: `(BuildHIR::lower) Could not find binding for param \`${param.node.name}\``,
+                builder.errors.pushDiagnostic(CompilerDiagnostic.create({
                     severity: ErrorSeverity.Invariant,
+                    category: 'Could not find binding',
+                    description: `[BuildHIR] Could not find binding for param \`${param.node.name}\`.`,
+                }).withDetail({
+                    kind: 'error',
                     loc: (_a = param.node.loc) !== null && _a !== void 0 ? _a : null,
-                    suggestions: null,
-                });
+                    message: 'Could not find binding',
+                }));
                 return;
             }
             const place = {
@@ -21843,12 +22380,15 @@ function lower$1(func, env, bindings = null, capturedRefs = new Map()) {
             lowerAssignment(builder, (_h = param.node.loc) !== null && _h !== void 0 ? _h : GeneratedSource, InstructionKind.Let, param.get('argument'), place, 'Assignment');
         }
         else {
-            builder.errors.push({
-                reason: `(BuildHIR::lower) Handle ${param.node.type} params`,
+            builder.errors.pushDiagnostic(CompilerDiagnostic.create({
                 severity: ErrorSeverity.Todo,
+                category: `Handle ${param.node.type} parameters`,
+                description: `[BuildHIR] Add support for ${param.node.type} parameters.`,
+            }).withDetail({
+                kind: 'error',
                 loc: (_j = param.node.loc) !== null && _j !== void 0 ? _j : null,
-                suggestions: null,
-            });
+                message: 'Unsupported parameter type',
+            }));
         }
     });
     let directives = [];
@@ -21869,13 +22409,15 @@ function lower$1(func, env, bindings = null, capturedRefs = new Map()) {
         directives = body.get('directives').map(d => d.node.value.value);
     }
     else {
-        builder.errors.push({
+        builder.errors.pushDiagnostic(CompilerDiagnostic.create({
             severity: ErrorSeverity.InvalidJS,
-            reason: `Unexpected function body kind`,
-            description: `Expected function body to be an expression or a block statement, got \`${body.type}\``,
+            category: `Unexpected function body kind`,
+            description: `Expected function body to be an expression or a block statement, got \`${body.type}\`.`,
+        }).withDetail({
+            kind: 'error',
             loc: (_a = body.node.loc) !== null && _a !== void 0 ? _a : null,
-            suggestions: null,
-        });
+            message: 'Expected a block statement or expression',
+        }));
     }
     if (builder.errors.hasErrors()) {
         return Err(builder.errors);
@@ -22951,7 +23493,7 @@ function lowerObjectPropertyKey(builder, property) {
     return null;
 }
 function lowerExpression(builder, exprPath) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, _21, _22, _23, _24;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, _21, _22, _23;
     const exprNode = exprPath.node;
     const exprLoc = (_a = exprNode.loc) !== null && _a !== void 0 ? _a : GeneratedSource;
     switch (exprNode.type) {
@@ -23636,11 +24178,17 @@ function lowerExpression(builder, exprPath) {
                 });
                 for (const [name, locations] of Object.entries(fbtLocations)) {
                     if (locations.length > 1) {
-                        CompilerError.throwTodo({
-                            reason: `Support <${tagName}> tags with multiple <${tagName}:${name}> values`,
-                            loc: (_5 = locations.at(-1)) !== null && _5 !== void 0 ? _5 : GeneratedSource,
-                            description: null,
-                            suggestions: null,
+                        CompilerError.throwDiagnostic({
+                            severity: ErrorSeverity.Todo,
+                            category: 'Support duplicate fbt tags',
+                            description: `Support \`<${tagName}>\` tags with multiple \`<${tagName}:${name}>\` values`,
+                            details: locations.map(loc => {
+                                return {
+                                    kind: 'error',
+                                    message: `Multiple \`<${tagName}:${name}>\` tags found`,
+                                    loc,
+                                };
+                            }),
                         });
                     }
                 }
@@ -23658,7 +24206,7 @@ function lowerExpression(builder, exprPath) {
                 children: children.length === 0 ? null : children,
                 loc: exprLoc,
                 openingLoc: openingLoc,
-                closingLoc: (_7 = (_6 = expr.get('closingElement').node) === null || _6 === void 0 ? void 0 : _6.loc) !== null && _7 !== void 0 ? _7 : GeneratedSource,
+                closingLoc: (_6 = (_5 = expr.get('closingElement').node) === null || _5 === void 0 ? void 0 : _5.loc) !== null && _6 !== void 0 ? _6 : GeneratedSource,
             };
         }
         case 'JSXFragment': {
@@ -23684,7 +24232,7 @@ function lowerExpression(builder, exprPath) {
                 builder.errors.push({
                     reason: '(BuildHIR::lowerExpression) Handle tagged template with interpolations',
                     severity: ErrorSeverity.Todo,
-                    loc: (_8 = exprPath.node.loc) !== null && _8 !== void 0 ? _8 : null,
+                    loc: (_7 = exprPath.node.loc) !== null && _7 !== void 0 ? _7 : null,
                     suggestions: null,
                 });
                 return { kind: 'UnsupportedNode', node: exprNode, loc: exprLoc };
@@ -23692,7 +24240,7 @@ function lowerExpression(builder, exprPath) {
             CompilerError.invariant(expr.get('quasi').get('quasis').length == 1, {
                 reason: "there should be only one quasi as we don't support interpolations yet",
                 description: null,
-                loc: (_9 = expr.node.loc) !== null && _9 !== void 0 ? _9 : null,
+                loc: (_8 = expr.node.loc) !== null && _8 !== void 0 ? _8 : null,
                 suggestions: null,
             });
             const value = expr.get('quasi').get('quasis').at(0).node.value;
@@ -23700,7 +24248,7 @@ function lowerExpression(builder, exprPath) {
                 builder.errors.push({
                     reason: '(BuildHIR::lowerExpression) Handle tagged template where cooked value is different from raw value',
                     severity: ErrorSeverity.Todo,
-                    loc: (_10 = exprPath.node.loc) !== null && _10 !== void 0 ? _10 : null,
+                    loc: (_9 = exprPath.node.loc) !== null && _9 !== void 0 ? _9 : null,
                     suggestions: null,
                 });
                 return { kind: 'UnsupportedNode', node: exprNode, loc: exprLoc };
@@ -23720,7 +24268,7 @@ function lowerExpression(builder, exprPath) {
                 builder.errors.push({
                     reason: `Unexpected quasi and subexpression lengths in template literal`,
                     severity: ErrorSeverity.InvalidJS,
-                    loc: (_11 = exprPath.node.loc) !== null && _11 !== void 0 ? _11 : null,
+                    loc: (_10 = exprPath.node.loc) !== null && _10 !== void 0 ? _10 : null,
                     suggestions: null,
                 });
                 return { kind: 'UnsupportedNode', node: exprNode, loc: exprLoc };
@@ -23729,7 +24277,7 @@ function lowerExpression(builder, exprPath) {
                 builder.errors.push({
                     reason: `(BuildHIR::lowerAssignment) Handle TSType in TemplateLiteral.`,
                     severity: ErrorSeverity.Todo,
-                    loc: (_12 = exprPath.node.loc) !== null && _12 !== void 0 ? _12 : null,
+                    loc: (_11 = exprPath.node.loc) !== null && _11 !== void 0 ? _11 : null,
                     suggestions: null,
                 });
                 return { kind: 'UnsupportedNode', node: exprNode, loc: exprLoc };
@@ -23769,7 +24317,7 @@ function lowerExpression(builder, exprPath) {
                     builder.errors.push({
                         reason: `Only object properties can be deleted`,
                         severity: ErrorSeverity.InvalidJS,
-                        loc: (_13 = expr.node.loc) !== null && _13 !== void 0 ? _13 : null,
+                        loc: (_12 = expr.node.loc) !== null && _12 !== void 0 ? _12 : null,
                         suggestions: [
                             {
                                 description: 'Remove this line',
@@ -23785,7 +24333,7 @@ function lowerExpression(builder, exprPath) {
                 builder.errors.push({
                     reason: `Throw expressions are not supported`,
                     severity: ErrorSeverity.InvalidJS,
-                    loc: (_14 = expr.node.loc) !== null && _14 !== void 0 ? _14 : null,
+                    loc: (_13 = expr.node.loc) !== null && _13 !== void 0 ? _13 : null,
                     suggestions: [
                         {
                             description: 'Remove this line',
@@ -23866,7 +24414,7 @@ function lowerExpression(builder, exprPath) {
                         value: 1,
                         loc: GeneratedSource,
                     }),
-                    loc: (_15 = leftExpr.node.loc) !== null && _15 !== void 0 ? _15 : GeneratedSource,
+                    loc: (_14 = leftExpr.node.loc) !== null && _14 !== void 0 ? _14 : GeneratedSource,
                 });
                 let newValuePlace;
                 if (typeof property === 'string' || typeof property === 'number') {
@@ -23875,7 +24423,7 @@ function lowerExpression(builder, exprPath) {
                         object: Object.assign({}, object),
                         property: makePropertyLiteral(property),
                         value: Object.assign({}, updatedValue),
-                        loc: (_16 = leftExpr.node.loc) !== null && _16 !== void 0 ? _16 : GeneratedSource,
+                        loc: (_15 = leftExpr.node.loc) !== null && _15 !== void 0 ? _15 : GeneratedSource,
                     });
                 }
                 else {
@@ -23884,7 +24432,7 @@ function lowerExpression(builder, exprPath) {
                         object: Object.assign({}, object),
                         property: Object.assign({}, property),
                         value: Object.assign({}, updatedValue),
-                        loc: (_17 = leftExpr.node.loc) !== null && _17 !== void 0 ? _17 : GeneratedSource,
+                        loc: (_16 = leftExpr.node.loc) !== null && _16 !== void 0 ? _16 : GeneratedSource,
                     });
                 }
                 return {
@@ -23898,7 +24446,7 @@ function lowerExpression(builder, exprPath) {
                 builder.errors.push({
                     reason: `(BuildHIR::lowerExpression) Handle UpdateExpression with ${argument.type} argument`,
                     severity: ErrorSeverity.Todo,
-                    loc: (_18 = exprPath.node.loc) !== null && _18 !== void 0 ? _18 : null,
+                    loc: (_17 = exprPath.node.loc) !== null && _17 !== void 0 ? _17 : null,
                     suggestions: null,
                 });
                 return { kind: 'UnsupportedNode', node: exprNode, loc: exprLoc };
@@ -23907,12 +24455,12 @@ function lowerExpression(builder, exprPath) {
                 builder.errors.push({
                     reason: `(BuildHIR::lowerExpression) Handle UpdateExpression to variables captured within lambdas.`,
                     severity: ErrorSeverity.Todo,
-                    loc: (_19 = exprPath.node.loc) !== null && _19 !== void 0 ? _19 : null,
+                    loc: (_18 = exprPath.node.loc) !== null && _18 !== void 0 ? _18 : null,
                     suggestions: null,
                 });
                 return { kind: 'UnsupportedNode', node: exprNode, loc: exprLoc };
             }
-            const lvalue = lowerIdentifierForAssignment(builder, (_20 = argument.node.loc) !== null && _20 !== void 0 ? _20 : GeneratedSource, InstructionKind.Reassign, argument);
+            const lvalue = lowerIdentifierForAssignment(builder, (_19 = argument.node.loc) !== null && _19 !== void 0 ? _19 : GeneratedSource, InstructionKind.Reassign, argument);
             if (lvalue === null) {
                 if (!builder.errors.hasErrors()) {
                     builder.errors.push({
@@ -23959,7 +24507,7 @@ function lowerExpression(builder, exprPath) {
                 kind: 'RegExpLiteral',
                 pattern: expr.node.pattern,
                 flags: expr.node.flags,
-                loc: (_21 = expr.node.loc) !== null && _21 !== void 0 ? _21 : GeneratedSource,
+                loc: (_20 = expr.node.loc) !== null && _20 !== void 0 ? _20 : GeneratedSource,
             };
         }
         case 'TSInstantiationExpression':
@@ -23975,13 +24523,13 @@ function lowerExpression(builder, exprPath) {
                     kind: 'MetaProperty',
                     meta: expr.node.meta.name,
                     property: expr.node.property.name,
-                    loc: (_22 = expr.node.loc) !== null && _22 !== void 0 ? _22 : GeneratedSource,
+                    loc: (_21 = expr.node.loc) !== null && _21 !== void 0 ? _21 : GeneratedSource,
                 };
             }
             builder.errors.push({
                 reason: `(BuildHIR::lowerExpression) Handle MetaProperty expressions other than import.meta`,
                 severity: ErrorSeverity.Todo,
-                loc: (_23 = exprPath.node.loc) !== null && _23 !== void 0 ? _23 : null,
+                loc: (_22 = exprPath.node.loc) !== null && _22 !== void 0 ? _22 : null,
                 suggestions: null,
             });
             return { kind: 'UnsupportedNode', node: exprNode, loc: exprLoc };
@@ -23990,7 +24538,7 @@ function lowerExpression(builder, exprPath) {
             builder.errors.push({
                 reason: `(BuildHIR::lowerExpression) Handle ${exprPath.type} expressions`,
                 severity: ErrorSeverity.Todo,
-                loc: (_24 = exprPath.node.loc) !== null && _24 !== void 0 ? _24 : null,
+                loc: (_23 = exprPath.node.loc) !== null && _23 !== void 0 ? _23 : null,
                 suggestions: null,
             });
             return { kind: 'UnsupportedNode', node: exprNode, loc: exprLoc };
@@ -24628,9 +25176,8 @@ function lowerFunction(builder, expr) {
     const lowering = lower$1(expr, builder.environment, builder.bindings, new Map([...builder.context, ...capturedContext]));
     let loweredFunc;
     if (lowering.isErr()) {
-        lowering
-            .unwrapErr()
-            .details.forEach(detail => builder.errors.pushErrorDetail(detail));
+        const functionErrors = lowering.unwrapErr();
+        builder.errors.merge(functionErrors);
         return null;
     }
     loweredFunc = lowering.unwrap();
@@ -29969,7 +30516,7 @@ function getReanimatedModuleType(registry) {
 const ObjectPropertiesSchema = zod.z
     .record(zod.z.string(), zod.z.lazy(() => TypeSchema))
     .refine(record => {
-    return Object.keys(record).every(key => key === '*' || key === 'default' || libExports.isValidIdentifier(key));
+    return Object.keys(record).every(key => key === '*' || key === 'default' || libExports$1.isValidIdentifier(key));
 }, 'Expected all "object" property names to be valid identifier, `*` to match any property, of `default` to define a module default export');
 const ObjectTypeSchema = zod.z.object({
     kind: zod.z.literal('object'),
@@ -31847,7 +32394,7 @@ function evaluateInstruction(constants, instr) {
             if (property !== null &&
                 property.kind === 'Primitive' &&
                 ((typeof property.value === 'string' &&
-                    libExports.isValidIdentifier(property.value)) ||
+                    libExports$1.isValidIdentifier(property.value)) ||
                     typeof property.value === 'number')) {
                 const nextValue = {
                     kind: 'PropertyLoad',
@@ -31864,7 +32411,7 @@ function evaluateInstruction(constants, instr) {
             if (property !== null &&
                 property.kind === 'Primitive' &&
                 ((typeof property.value === 'string' &&
-                    libExports.isValidIdentifier(property.value)) ||
+                    libExports$1.isValidIdentifier(property.value)) ||
                     typeof property.value === 'number')) {
                 const nextValue = {
                     kind: 'PropertyStore',
@@ -34954,7 +35501,7 @@ function codegenFunction(fn, { uniqueIdentifiers, fbtOperands, }) {
     const compiled = compileResult.unwrap();
     const hookGuard = fn.env.config.enableEmitHookGuards;
     if (hookGuard != null && fn.env.isInferredMemoEnabled) {
-        compiled.body = libExports.blockStatement([
+        compiled.body = libExports$1.blockStatement([
             createHookGuard(hookGuard, fn.env.programContext, compiled.body.body, GuardKind.PushHookGuard, GuardKind.PopHookGuard),
         ]);
     }
@@ -34962,20 +35509,20 @@ function codegenFunction(fn, { uniqueIdentifiers, fbtOperands, }) {
     if (cacheCount !== 0) {
         const preface = [];
         const useMemoCacheIdentifier = fn.env.programContext.addMemoCacheImport().name;
-        preface.push(libExports.variableDeclaration('const', [
-            libExports.variableDeclarator(libExports.identifier(cx.synthesizeName('$')), libExports.callExpression(libExports.identifier(useMemoCacheIdentifier), [
-                libExports.numericLiteral(cacheCount),
+        preface.push(libExports$1.variableDeclaration('const', [
+            libExports$1.variableDeclarator(libExports$1.identifier(cx.synthesizeName('$')), libExports$1.callExpression(libExports$1.identifier(useMemoCacheIdentifier), [
+                libExports$1.numericLiteral(cacheCount),
             ])),
         ]));
         if (fastRefreshState !== null) {
             const index = cx.synthesizeName('$i');
-            preface.push(libExports.ifStatement(libExports.binaryExpression('!==', libExports.memberExpression(libExports.identifier(cx.synthesizeName('$')), libExports.numericLiteral(fastRefreshState.cacheIndex), true), libExports.stringLiteral(fastRefreshState.hash)), libExports.blockStatement([
-                libExports.forStatement(libExports.variableDeclaration('let', [
-                    libExports.variableDeclarator(libExports.identifier(index), libExports.numericLiteral(0)),
-                ]), libExports.binaryExpression('<', libExports.identifier(index), libExports.numericLiteral(cacheCount)), libExports.assignmentExpression('+=', libExports.identifier(index), libExports.numericLiteral(1)), libExports.blockStatement([
-                    libExports.expressionStatement(libExports.assignmentExpression('=', libExports.memberExpression(libExports.identifier(cx.synthesizeName('$')), libExports.identifier(index), true), libExports.callExpression(libExports.memberExpression(libExports.identifier('Symbol'), libExports.identifier('for')), [libExports.stringLiteral(MEMO_CACHE_SENTINEL)]))),
+            preface.push(libExports$1.ifStatement(libExports$1.binaryExpression('!==', libExports$1.memberExpression(libExports$1.identifier(cx.synthesizeName('$')), libExports$1.numericLiteral(fastRefreshState.cacheIndex), true), libExports$1.stringLiteral(fastRefreshState.hash)), libExports$1.blockStatement([
+                libExports$1.forStatement(libExports$1.variableDeclaration('let', [
+                    libExports$1.variableDeclarator(libExports$1.identifier(index), libExports$1.numericLiteral(0)),
+                ]), libExports$1.binaryExpression('<', libExports$1.identifier(index), libExports$1.numericLiteral(cacheCount)), libExports$1.assignmentExpression('+=', libExports$1.identifier(index), libExports$1.numericLiteral(1)), libExports$1.blockStatement([
+                    libExports$1.expressionStatement(libExports$1.assignmentExpression('=', libExports$1.memberExpression(libExports$1.identifier(cx.synthesizeName('$')), libExports$1.identifier(index), true), libExports$1.callExpression(libExports$1.memberExpression(libExports$1.identifier('Symbol'), libExports$1.identifier('for')), [libExports$1.stringLiteral(MEMO_CACHE_SENTINEL)]))),
                 ])),
-                libExports.expressionStatement(libExports.assignmentExpression('=', libExports.memberExpression(libExports.identifier(cx.synthesizeName('$')), libExports.numericLiteral(fastRefreshState.cacheIndex), true), libExports.stringLiteral(fastRefreshState.hash))),
+                libExports$1.expressionStatement(libExports$1.assignmentExpression('=', libExports$1.memberExpression(libExports$1.identifier(cx.synthesizeName('$')), libExports$1.numericLiteral(fastRefreshState.cacheIndex), true), libExports$1.stringLiteral(fastRefreshState.hash))),
             ])));
         }
         compiled.body.body.unshift(...preface);
@@ -34985,10 +35532,10 @@ function codegenFunction(fn, { uniqueIdentifiers, fbtOperands, }) {
         fn.id != null &&
         fn.env.isInferredMemoEnabled) {
         const gating = emitInstrumentForget.gating != null
-            ? libExports.identifier(fn.env.programContext.addImportSpecifier(emitInstrumentForget.gating).name)
+            ? libExports$1.identifier(fn.env.programContext.addImportSpecifier(emitInstrumentForget.gating).name)
             : null;
         const globalGating = emitInstrumentForget.globalGating != null
-            ? libExports.identifier(emitInstrumentForget.globalGating)
+            ? libExports$1.identifier(emitInstrumentForget.globalGating)
             : null;
         if (emitInstrumentForget.globalGating != null) {
             const assertResult = fn.env.programContext.assertGlobalBinding(emitInstrumentForget.globalGating);
@@ -34998,7 +35545,7 @@ function codegenFunction(fn, { uniqueIdentifiers, fbtOperands, }) {
         }
         let ifTest;
         if (gating != null && globalGating != null) {
-            ifTest = libExports.logicalExpression('&&', globalGating, gating);
+            ifTest = libExports$1.logicalExpression('&&', globalGating, gating);
         }
         else if (gating != null) {
             ifTest = gating;
@@ -35012,9 +35559,9 @@ function codegenFunction(fn, { uniqueIdentifiers, fbtOperands, }) {
             ifTest = globalGating;
         }
         const instrumentFnIdentifier = fn.env.programContext.addImportSpecifier(emitInstrumentForget.fn).name;
-        const test = libExports.ifStatement(ifTest, libExports.expressionStatement(libExports.callExpression(libExports.identifier(instrumentFnIdentifier), [
-            libExports.stringLiteral(fn.id),
-            libExports.stringLiteral((_b = fn.env.filename) !== null && _b !== void 0 ? _b : ''),
+        const test = libExports$1.ifStatement(ifTest, libExports$1.expressionStatement(libExports$1.callExpression(libExports$1.identifier(instrumentFnIdentifier), [
+            libExports$1.stringLiteral(fn.id),
+            libExports$1.stringLiteral((_b = fn.env.filename) !== null && _b !== void 0 ? _b : ''),
         ])));
         compiled.body.body.unshift(test);
     }
@@ -35042,7 +35589,7 @@ function codegenReactiveFunction(cx, fn) {
     }
     const params = fn.params.map(param => convertParameter(param));
     const body = codegenBlock(cx, fn.body);
-    body.directives = fn.directives.map(d => libExports.directive(libExports.directiveLiteral(d)));
+    body.directives = fn.directives.map(d => libExports$1.directive(libExports$1.directiveLiteral(d)));
     const statements = body.body;
     if (statements.length !== 0) {
         const last = statements[statements.length - 1];
@@ -35058,7 +35605,7 @@ function codegenReactiveFunction(cx, fn) {
     return Ok({
         type: 'CodegenFunction',
         loc: fn.loc,
-        id: fn.id !== null ? libExports.identifier(fn.id) : null,
+        id: fn.id !== null ? libExports$1.identifier(fn.id) : null,
         params,
         body,
         generator: fn.generator,
@@ -35099,7 +35646,7 @@ function convertParameter(param) {
         return convertIdentifier(param.identifier);
     }
     else {
-        return libExports.restElement(convertIdentifier(param.place.identifier));
+        return libExports$1.restElement(convertIdentifier(param.place.identifier));
     }
 }
 let Context$2 = class Context {
@@ -35189,7 +35736,7 @@ function codegenBlockNoReset(cx, block) {
                     const block = statement.type === 'BlockStatement' && statement.body.length === 1
                         ? statement.body[0]
                         : statement;
-                    statements.push(libExports.labeledStatement(libExports.identifier(codegenLabel(item.label.id)), block));
+                    statements.push(libExports$1.labeledStatement(libExports$1.identifier(codegenLabel(item.label.id)), block));
                 }
                 else if (statement.type === 'BlockStatement') {
                     statements.push(...statement.body);
@@ -35204,7 +35751,7 @@ function codegenBlockNoReset(cx, block) {
             }
         }
     }
-    return libExports.blockStatement(statements);
+    return libExports$1.blockStatement(statements);
 }
 function wrapCacheDep(cx, value) {
     if (cx.env.config.enableEmitFreeze != null && cx.env.isInferredMemoEnabled) {
@@ -35212,9 +35759,9 @@ function wrapCacheDep(cx, value) {
         cx.env.programContext
             .assertGlobalBinding(EMIT_FREEZE_GLOBAL_GATING, cx.env.scope)
             .unwrap();
-        return libExports.conditionalExpression(libExports.identifier(EMIT_FREEZE_GLOBAL_GATING), libExports.callExpression(libExports.identifier(emitFreezeIdentifier), [
+        return libExports$1.conditionalExpression(libExports$1.identifier(EMIT_FREEZE_GLOBAL_GATING), libExports$1.callExpression(libExports$1.identifier(emitFreezeIdentifier), [
             value,
-            libExports.stringLiteral(cx.fnName),
+            libExports$1.stringLiteral(cx.fnName),
         ]), value);
     }
     else {
@@ -35231,18 +35778,18 @@ function codegenReactiveScope(cx, statements, scope, block) {
     for (const dep of [...scope.dependencies].sort(compareScopeDependency)) {
         const index = cx.nextCacheIndex;
         changeExpressionComments.push(printDependencyComment(dep));
-        const comparison = libExports.binaryExpression('!==', libExports.memberExpression(libExports.identifier(cx.synthesizeName('$')), libExports.numericLiteral(index), true), codegenDependency(cx, dep));
+        const comparison = libExports$1.binaryExpression('!==', libExports$1.memberExpression(libExports$1.identifier(cx.synthesizeName('$')), libExports$1.numericLiteral(index), true), codegenDependency(cx, dep));
         if (cx.env.config.enableChangeVariableCodegen) {
-            const changeIdentifier = libExports.identifier(cx.synthesizeName(`c_${index}`));
-            statements.push(libExports.variableDeclaration('const', [
-                libExports.variableDeclarator(changeIdentifier, comparison),
+            const changeIdentifier = libExports$1.identifier(cx.synthesizeName(`c_${index}`));
+            statements.push(libExports$1.variableDeclaration('const', [
+                libExports$1.variableDeclarator(changeIdentifier, comparison),
             ]));
             changeExpressions.push(changeIdentifier);
         }
         else {
             changeExpressions.push(comparison);
         }
-        cacheStoreStatements.push(libExports.expressionStatement(libExports.assignmentExpression('=', libExports.memberExpression(libExports.identifier(cx.synthesizeName('$')), libExports.numericLiteral(index), true), codegenDependency(cx, dep))));
+        cacheStoreStatements.push(libExports$1.expressionStatement(libExports$1.assignmentExpression('=', libExports$1.memberExpression(libExports$1.identifier(cx.synthesizeName('$')), libExports$1.numericLiteral(index), true), codegenDependency(cx, dep))));
     }
     let firstOutputIndex = null;
     for (const [, { identifier }] of [...scope.declarations].sort(([, a], [, b]) => compareScopeDeclaration(a, b))) {
@@ -35259,7 +35806,7 @@ function codegenReactiveScope(cx, statements, scope, block) {
         const name = convertIdentifier(identifier);
         outputComments.push(name.name);
         if (!cx.hasDeclared(identifier)) {
-            statements.push(libExports.variableDeclaration('let', [libExports.variableDeclarator(name)]));
+            statements.push(libExports$1.variableDeclaration('let', [libExports$1.variableDeclarator(name)]));
         }
         cacheLoads.push({ name, index, value: wrapCacheDep(cx, name) });
         cx.declare(identifier);
@@ -35277,7 +35824,7 @@ function codegenReactiveScope(cx, statements, scope, block) {
         if (acc == null) {
             return ident;
         }
-        return libExports.logicalExpression('||', acc, ident);
+        return libExports$1.logicalExpression('||', acc, ident);
     }, null);
     if (testCondition === null) {
         CompilerError.invariant(firstOutputIndex !== null, {
@@ -35286,7 +35833,7 @@ function codegenReactiveScope(cx, statements, scope, block) {
             loc: null,
             suggestions: null,
         });
-        testCondition = libExports.binaryExpression('===', libExports.memberExpression(libExports.identifier(cx.synthesizeName('$')), libExports.numericLiteral(firstOutputIndex), true), libExports.callExpression(libExports.memberExpression(libExports.identifier('Symbol'), libExports.identifier('for')), [libExports.stringLiteral(MEMO_CACHE_SENTINEL)]));
+        testCondition = libExports$1.binaryExpression('===', libExports$1.memberExpression(libExports$1.identifier(cx.synthesizeName('$')), libExports$1.numericLiteral(firstOutputIndex), true), libExports$1.callExpression(libExports$1.memberExpression(libExports$1.identifier('Symbol'), libExports$1.identifier('for')), [libExports$1.stringLiteral(MEMO_CACHE_SENTINEL)]));
     }
     if (cx.env.config.disableMemoizationForDebugging) {
         CompilerError.invariant(cx.env.config.enableChangeDetectionForDebugging == null, {
@@ -35294,7 +35841,7 @@ function codegenReactiveScope(cx, statements, scope, block) {
             description: `Incompatible config options`,
             loc: null,
         });
-        testCondition = libExports.logicalExpression('||', testCondition, libExports.booleanLiteral(true));
+        testCondition = libExports$1.logicalExpression('||', testCondition, libExports$1.booleanLiteral(true));
     }
     let computationBlock = codegenBlock(cx, block);
     let memoStatement;
@@ -35309,42 +35856,42 @@ function codegenReactiveScope(cx, statements, scope, block) {
         const idempotenceDetectionStatements = [];
         for (const { name, index, value } of cacheLoads) {
             const loadName = cx.synthesizeName(`old$${name.name}`);
-            const slot = libExports.memberExpression(libExports.identifier(cx.synthesizeName('$')), libExports.numericLiteral(index), true);
-            cacheStoreStatements.push(libExports.expressionStatement(libExports.assignmentExpression('=', slot, value)));
-            cacheLoadOldValueStatements.push(libExports.variableDeclaration('let', [
-                libExports.variableDeclarator(libExports.identifier(loadName), slot),
+            const slot = libExports$1.memberExpression(libExports$1.identifier(cx.synthesizeName('$')), libExports$1.numericLiteral(index), true);
+            cacheStoreStatements.push(libExports$1.expressionStatement(libExports$1.assignmentExpression('=', slot, value)));
+            cacheLoadOldValueStatements.push(libExports$1.variableDeclaration('let', [
+                libExports$1.variableDeclarator(libExports$1.identifier(loadName), slot),
             ]));
-            changeDetectionStatements.push(libExports.expressionStatement(libExports.callExpression(libExports.identifier(importedDetectionFunctionIdentifier), [
-                libExports.identifier(loadName),
-                libExports.cloneNode(name, true),
-                libExports.stringLiteral(name.name),
-                libExports.stringLiteral(cx.fnName),
-                libExports.stringLiteral('cached'),
-                libExports.stringLiteral(loc),
+            changeDetectionStatements.push(libExports$1.expressionStatement(libExports$1.callExpression(libExports$1.identifier(importedDetectionFunctionIdentifier), [
+                libExports$1.identifier(loadName),
+                libExports$1.cloneNode(name, true),
+                libExports$1.stringLiteral(name.name),
+                libExports$1.stringLiteral(cx.fnName),
+                libExports$1.stringLiteral('cached'),
+                libExports$1.stringLiteral(loc),
             ])));
-            idempotenceDetectionStatements.push(libExports.expressionStatement(libExports.callExpression(libExports.identifier(importedDetectionFunctionIdentifier), [
-                libExports.cloneNode(slot, true),
-                libExports.cloneNode(name, true),
-                libExports.stringLiteral(name.name),
-                libExports.stringLiteral(cx.fnName),
-                libExports.stringLiteral('recomputed'),
-                libExports.stringLiteral(loc),
+            idempotenceDetectionStatements.push(libExports$1.expressionStatement(libExports$1.callExpression(libExports$1.identifier(importedDetectionFunctionIdentifier), [
+                libExports$1.cloneNode(slot, true),
+                libExports$1.cloneNode(name, true),
+                libExports$1.stringLiteral(name.name),
+                libExports$1.stringLiteral(cx.fnName),
+                libExports$1.stringLiteral('recomputed'),
+                libExports$1.stringLiteral(loc),
             ])));
-            idempotenceDetectionStatements.push(libExports.expressionStatement(libExports.assignmentExpression('=', name, slot)));
+            idempotenceDetectionStatements.push(libExports$1.expressionStatement(libExports$1.assignmentExpression('=', name, slot)));
         }
         const condition = cx.synthesizeName('condition');
-        const recomputationBlock = libExports.cloneNode(computationBlock, true);
-        memoStatement = libExports.blockStatement([
+        const recomputationBlock = libExports$1.cloneNode(computationBlock, true);
+        memoStatement = libExports$1.blockStatement([
             ...computationBlock.body,
-            libExports.variableDeclaration('let', [
-                libExports.variableDeclarator(libExports.identifier(condition), testCondition),
+            libExports$1.variableDeclaration('let', [
+                libExports$1.variableDeclarator(libExports$1.identifier(condition), testCondition),
             ]),
-            libExports.ifStatement(libExports.unaryExpression('!', libExports.identifier(condition)), libExports.blockStatement([
+            libExports$1.ifStatement(libExports$1.unaryExpression('!', libExports$1.identifier(condition)), libExports$1.blockStatement([
                 ...cacheLoadOldValueStatements,
                 ...changeDetectionStatements,
             ])),
             ...cacheStoreStatements,
-            libExports.ifStatement(libExports.identifier(condition), libExports.blockStatement([
+            libExports$1.ifStatement(libExports$1.identifier(condition), libExports$1.blockStatement([
                 ...recomputationBlock.body,
                 ...idempotenceDetectionStatements,
             ])),
@@ -35352,26 +35899,26 @@ function codegenReactiveScope(cx, statements, scope, block) {
     }
     else {
         for (const { name, index, value } of cacheLoads) {
-            cacheStoreStatements.push(libExports.expressionStatement(libExports.assignmentExpression('=', libExports.memberExpression(libExports.identifier(cx.synthesizeName('$')), libExports.numericLiteral(index), true), value)));
-            cacheLoadStatements.push(libExports.expressionStatement(libExports.assignmentExpression('=', name, libExports.memberExpression(libExports.identifier(cx.synthesizeName('$')), libExports.numericLiteral(index), true))));
+            cacheStoreStatements.push(libExports$1.expressionStatement(libExports$1.assignmentExpression('=', libExports$1.memberExpression(libExports$1.identifier(cx.synthesizeName('$')), libExports$1.numericLiteral(index), true), value)));
+            cacheLoadStatements.push(libExports$1.expressionStatement(libExports$1.assignmentExpression('=', name, libExports$1.memberExpression(libExports$1.identifier(cx.synthesizeName('$')), libExports$1.numericLiteral(index), true))));
         }
         computationBlock.body.push(...cacheStoreStatements);
-        memoStatement = libExports.ifStatement(testCondition, computationBlock, libExports.blockStatement(cacheLoadStatements));
+        memoStatement = libExports$1.ifStatement(testCondition, computationBlock, libExports$1.blockStatement(cacheLoadStatements));
     }
     if (cx.env.config.enableMemoizationComments) {
         if (changeExpressionComments.length) {
-            libExports.addComment(memoStatement, 'leading', ` check if ${printDelimitedCommentList(changeExpressionComments, 'or')} changed`, true);
-            libExports.addComment(memoStatement, 'leading', ` "useMemo" for ${printDelimitedCommentList(outputComments, 'and')}:`, true);
+            libExports$1.addComment(memoStatement, 'leading', ` check if ${printDelimitedCommentList(changeExpressionComments, 'or')} changed`, true);
+            libExports$1.addComment(memoStatement, 'leading', ` "useMemo" for ${printDelimitedCommentList(outputComments, 'and')}:`, true);
         }
         else {
-            libExports.addComment(memoStatement, 'leading', ' cache value with no dependencies', true);
-            libExports.addComment(memoStatement, 'leading', ` "useMemo" for ${printDelimitedCommentList(outputComments, 'and')}:`, true);
+            libExports$1.addComment(memoStatement, 'leading', ' cache value with no dependencies', true);
+            libExports$1.addComment(memoStatement, 'leading', ` "useMemo" for ${printDelimitedCommentList(outputComments, 'and')}:`, true);
         }
         if (computationBlock.body.length > 0) {
-            libExports.addComment(computationBlock.body[0], 'leading', ` Inputs changed, recompute`, true);
+            libExports$1.addComment(computationBlock.body[0], 'leading', ` Inputs changed, recompute`, true);
         }
         if (cacheLoadStatements.length > 0) {
-            libExports.addComment(cacheLoadStatements[0], 'leading', ` Inputs did not change, use cached value`, true);
+            libExports$1.addComment(cacheLoadStatements[0], 'leading', ` Inputs did not change, use cached value`, true);
         }
     }
     statements.push(memoStatement);
@@ -35385,7 +35932,7 @@ function codegenReactiveScope(cx, statements, scope, block) {
             suggestions: null,
         });
         const name = earlyReturnValue.value.name.value;
-        statements.push(libExports.ifStatement(libExports.binaryExpression('!==', libExports.identifier(name), libExports.callExpression(libExports.memberExpression(libExports.identifier('Symbol'), libExports.identifier('for')), [libExports.stringLiteral(EARLY_RETURN_SENTINEL)])), libExports.blockStatement([libExports.returnStatement(libExports.identifier(name))])));
+        statements.push(libExports$1.ifStatement(libExports$1.binaryExpression('!==', libExports$1.identifier(name), libExports$1.callExpression(libExports$1.memberExpression(libExports$1.identifier('Symbol'), libExports$1.identifier('for')), [libExports$1.stringLiteral(EARLY_RETURN_SENTINEL)])), libExports$1.blockStatement([libExports$1.returnStatement(libExports$1.identifier(name))])));
     }
 }
 function codegenTerminal(cx, terminal) {
@@ -35394,20 +35941,20 @@ function codegenTerminal(cx, terminal) {
             if (terminal.targetKind === 'implicit') {
                 return null;
             }
-            return libExports.breakStatement(terminal.targetKind === 'labeled'
-                ? libExports.identifier(codegenLabel(terminal.target))
+            return libExports$1.breakStatement(terminal.targetKind === 'labeled'
+                ? libExports$1.identifier(codegenLabel(terminal.target))
                 : null);
         }
         case 'continue': {
             if (terminal.targetKind === 'implicit') {
                 return null;
             }
-            return libExports.continueStatement(terminal.targetKind === 'labeled'
-                ? libExports.identifier(codegenLabel(terminal.target))
+            return libExports$1.continueStatement(terminal.targetKind === 'labeled'
+                ? libExports$1.identifier(codegenLabel(terminal.target))
                 : null);
         }
         case 'for': {
-            return libExports.forStatement(codegenForInit(cx, terminal.init), codegenInstructionValueToExpression(cx, terminal.test), terminal.update !== null
+            return libExports$1.forStatement(codegenForInit(cx, terminal.init), codegenInstructionValueToExpression(cx, terminal.test), terminal.update !== null
                 ? codegenInstructionValueToExpression(cx, terminal.update)
                 : null, codegenBlock(cx, terminal.loop));
         }
@@ -35483,8 +36030,8 @@ function codegenTerminal(cx, terminal) {
                 default:
                     assertExhaustive$1(iterableItem.value.lvalue.kind, `Unhandled lvalue kind: ${iterableItem.value.lvalue.kind}`);
             }
-            return libExports.forInStatement(createVariableDeclaration(iterableItem.value.loc, varDeclKind, [
-                libExports.variableDeclarator(lval, null),
+            return libExports$1.forInStatement(createVariableDeclaration(iterableItem.value.loc, varDeclKind, [
+                libExports$1.variableDeclarator(lval, null),
             ]), codegenInstructionValueToExpression(cx, iterableCollection.value), codegenBlock(cx, terminal.loop));
         }
         case 'for-of': {
@@ -35561,8 +36108,8 @@ function codegenTerminal(cx, terminal) {
                 default:
                     assertExhaustive$1(iterableItem.value.lvalue.kind, `Unhandled lvalue kind: ${iterableItem.value.lvalue.kind}`);
             }
-            return libExports.forOfStatement(createVariableDeclaration(iterableItem.value.loc, varDeclKind, [
-                libExports.variableDeclarator(lval, null),
+            return libExports$1.forOfStatement(createVariableDeclaration(iterableItem.value.loc, varDeclKind, [
+                libExports$1.variableDeclarator(lval, null),
             ]), codegenInstructionValueToExpression(cx, iterableCollection), codegenBlock(cx, terminal.loop));
         }
         case 'if': {
@@ -35575,34 +36122,34 @@ function codegenTerminal(cx, terminal) {
                     alternate = block;
                 }
             }
-            return libExports.ifStatement(test, consequent, alternate);
+            return libExports$1.ifStatement(test, consequent, alternate);
         }
         case 'return': {
             const value = codegenPlaceToExpression(cx, terminal.value);
             if (value.type === 'Identifier' && value.name === 'undefined') {
-                return libExports.returnStatement();
+                return libExports$1.returnStatement();
             }
-            return libExports.returnStatement(value);
+            return libExports$1.returnStatement(value);
         }
         case 'switch': {
-            return libExports.switchStatement(codegenPlaceToExpression(cx, terminal.test), terminal.cases.map(case_ => {
+            return libExports$1.switchStatement(codegenPlaceToExpression(cx, terminal.test), terminal.cases.map(case_ => {
                 const test = case_.test !== null
                     ? codegenPlaceToExpression(cx, case_.test)
                     : null;
                 const block = codegenBlock(cx, case_.block);
-                return libExports.switchCase(test, block.body.length === 0 ? [] : [block]);
+                return libExports$1.switchCase(test, block.body.length === 0 ? [] : [block]);
             }));
         }
         case 'throw': {
-            return libExports.throwStatement(codegenPlaceToExpression(cx, terminal.value));
+            return libExports$1.throwStatement(codegenPlaceToExpression(cx, terminal.value));
         }
         case 'do-while': {
             const test = codegenInstructionValueToExpression(cx, terminal.test);
-            return libExports.doWhileStatement(test, codegenBlock(cx, terminal.loop));
+            return libExports$1.doWhileStatement(test, codegenBlock(cx, terminal.loop));
         }
         case 'while': {
             const test = codegenInstructionValueToExpression(cx, terminal.test);
-            return libExports.whileStatement(test, codegenBlock(cx, terminal.loop));
+            return libExports$1.whileStatement(test, codegenBlock(cx, terminal.loop));
         }
         case 'label': {
             return codegenBlock(cx, terminal.block);
@@ -35613,7 +36160,7 @@ function codegenTerminal(cx, terminal) {
                 catchParam = convertIdentifier(terminal.handlerBinding.identifier);
                 cx.temp.set(terminal.handlerBinding.identifier.declarationId, null);
             }
-            return libExports.tryStatement(codegenBlock(cx, terminal.block), libExports.catchClause(catchParam, codegenBlock(cx, terminal.handler)));
+            return libExports$1.tryStatement(codegenBlock(cx, terminal.block), libExports$1.catchClause(catchParam, codegenBlock(cx, terminal.handler)));
         }
         default: {
             assertExhaustive$1(terminal, `Unexpected terminal kind \`${terminal.kind}\``);
@@ -35684,7 +36231,7 @@ function codegenInstructionNullable(cx, instr) {
                     suggestions: null,
                 });
                 return createVariableDeclaration(instr.loc, 'const', [
-                    libExports.variableDeclarator(codegenLValue(cx, lvalue), value),
+                    libExports$1.variableDeclarator(codegenLValue(cx, lvalue), value),
                 ]);
             }
             case InstructionKind.Function: {
@@ -35717,7 +36264,7 @@ function codegenInstructionNullable(cx, instr) {
                     suggestions: null,
                 });
                 return createVariableDeclaration(instr.loc, 'let', [
-                    libExports.variableDeclarator(codegenLValue(cx, lvalue), value),
+                    libExports$1.variableDeclarator(codegenLValue(cx, lvalue), value),
                 ]);
             }
             case InstructionKind.Reassign: {
@@ -35727,7 +36274,7 @@ function codegenInstructionNullable(cx, instr) {
                     loc: instr.value.loc,
                     suggestions: null,
                 });
-                const expr = libExports.assignmentExpression('=', codegenLValue(cx, lvalue), value);
+                const expr = libExports$1.assignmentExpression('=', codegenLValue(cx, lvalue), value);
                 if (instr.lvalue !== null) {
                     if (instr.value.kind !== 'StoreContext') {
                         cx.temp.set(instr.lvalue.identifier.declarationId, expr);
@@ -35746,7 +36293,7 @@ function codegenInstructionNullable(cx, instr) {
                 }
             }
             case InstructionKind.Catch: {
-                return libExports.emptyStatement();
+                return libExports$1.emptyStatement();
             }
             case InstructionKind.HoistedLet:
             case InstructionKind.HoistedConst:
@@ -35768,7 +36315,7 @@ function codegenInstructionNullable(cx, instr) {
         return null;
     }
     else if (instr.value.kind === 'Debugger') {
-        return libExports.debuggerStatement();
+        return libExports$1.debuggerStatement();
     }
     else if (instr.value.kind === 'ObjectMethod') {
         CompilerError.invariant(instr.lvalue, {
@@ -35828,7 +36375,7 @@ function codegenForInit(cx, init) {
             description: null,
             suggestions: null,
         });
-        return libExports.variableDeclaration(kind, declarators);
+        return libExports$1.variableDeclaration(kind, declarators);
     }
     else {
         return codegenInstructionValueToExpression(cx, init);
@@ -35872,14 +36419,14 @@ function codegenDependency(cx, dependency) {
         const hasOptional = dependency.path.some(path => path.optional);
         for (const path of dependency.path) {
             const property = typeof path.property === 'string'
-                ? libExports.identifier(path.property)
-                : libExports.numericLiteral(path.property);
+                ? libExports$1.identifier(path.property)
+                : libExports$1.numericLiteral(path.property);
             const isComputed = typeof path.property !== 'string';
             if (hasOptional) {
-                object = libExports.optionalMemberExpression(object, property, isComputed, path.optional);
+                object = libExports$1.optionalMemberExpression(object, property, isComputed, path.optional);
             }
             else {
-                object = libExports.memberExpression(object, property, isComputed);
+                object = libExports$1.memberExpression(object, property, isComputed);
             }
         }
     }
@@ -35894,42 +36441,42 @@ function withLoc(fn) {
         return node;
     };
 }
-const createBinaryExpression = withLoc(libExports.binaryExpression);
-const createExpressionStatement = withLoc(libExports.expressionStatement);
-const createVariableDeclaration = withLoc(libExports.variableDeclaration);
-const createFunctionDeclaration = withLoc(libExports.functionDeclaration);
-const createTaggedTemplateExpression = withLoc(libExports.taggedTemplateExpression);
-const createLogicalExpression = withLoc(libExports.logicalExpression);
-const createSequenceExpression = withLoc(libExports.sequenceExpression);
-const createConditionalExpression = withLoc(libExports.conditionalExpression);
-const createTemplateLiteral = withLoc(libExports.templateLiteral);
-const createJsxNamespacedName = withLoc(libExports.jsxNamespacedName);
-const createJsxElement = withLoc(libExports.jsxElement);
-const createJsxAttribute = withLoc(libExports.jsxAttribute);
-const createJsxIdentifier = withLoc(libExports.jsxIdentifier);
-const createJsxExpressionContainer = withLoc(libExports.jsxExpressionContainer);
-const createJsxText = withLoc(libExports.jsxText);
-const createJsxClosingElement = withLoc(libExports.jsxClosingElement);
-const createJsxOpeningElement = withLoc(libExports.jsxOpeningElement);
-const createStringLiteral = withLoc(libExports.stringLiteral);
+const createBinaryExpression = withLoc(libExports$1.binaryExpression);
+const createExpressionStatement = withLoc(libExports$1.expressionStatement);
+const createVariableDeclaration = withLoc(libExports$1.variableDeclaration);
+const createFunctionDeclaration = withLoc(libExports$1.functionDeclaration);
+const createTaggedTemplateExpression = withLoc(libExports$1.taggedTemplateExpression);
+const createLogicalExpression = withLoc(libExports$1.logicalExpression);
+const createSequenceExpression = withLoc(libExports$1.sequenceExpression);
+const createConditionalExpression = withLoc(libExports$1.conditionalExpression);
+const createTemplateLiteral = withLoc(libExports$1.templateLiteral);
+const createJsxNamespacedName = withLoc(libExports$1.jsxNamespacedName);
+const createJsxElement = withLoc(libExports$1.jsxElement);
+const createJsxAttribute = withLoc(libExports$1.jsxAttribute);
+const createJsxIdentifier = withLoc(libExports$1.jsxIdentifier);
+const createJsxExpressionContainer = withLoc(libExports$1.jsxExpressionContainer);
+const createJsxText = withLoc(libExports$1.jsxText);
+const createJsxClosingElement = withLoc(libExports$1.jsxClosingElement);
+const createJsxOpeningElement = withLoc(libExports$1.jsxOpeningElement);
+const createStringLiteral = withLoc(libExports$1.stringLiteral);
 function createHookGuard(guard, context, stmts, before, after) {
     const guardFnName = context.addImportSpecifier(guard).name;
     function createHookGuardImpl(kind) {
-        return libExports.expressionStatement(libExports.callExpression(libExports.identifier(guardFnName), [libExports.numericLiteral(kind)]));
+        return libExports$1.expressionStatement(libExports$1.callExpression(libExports$1.identifier(guardFnName), [libExports$1.numericLiteral(kind)]));
     }
-    return libExports.tryStatement(libExports.blockStatement([createHookGuardImpl(before), ...stmts]), null, libExports.blockStatement([createHookGuardImpl(after)]));
+    return libExports$1.tryStatement(libExports$1.blockStatement([createHookGuardImpl(before), ...stmts]), null, libExports$1.blockStatement([createHookGuardImpl(after)]));
 }
 function createCallExpression(env, callee, args, loc, isHook) {
-    const callExpr = libExports.callExpression(callee, args);
+    const callExpr = libExports$1.callExpression(callee, args);
     if (loc != null && loc != GeneratedSource) {
         callExpr.loc = loc;
     }
     const hookGuard = env.config.enableEmitHookGuards;
     if (hookGuard != null && isHook && env.isInferredMemoEnabled) {
-        const iife = libExports.functionExpression(null, [], libExports.blockStatement([
-            createHookGuard(hookGuard, env.programContext, [libExports.returnStatement(callExpr)], GuardKind.AllowHook, GuardKind.DisallowHook),
+        const iife = libExports$1.functionExpression(null, [], libExports$1.blockStatement([
+            createHookGuard(hookGuard, env.programContext, [libExports$1.returnStatement(callExpr)], GuardKind.AllowHook, GuardKind.DisallowHook),
         ]));
-        return libExports.callExpression(iife, []);
+        return libExports$1.callExpression(iife, []);
     }
     else {
         return callExpr;
@@ -35939,24 +36486,24 @@ function codegenLabel(id) {
     return `bb${id}`;
 }
 function codegenInstruction(cx, instr, value) {
-    if (libExports.isStatement(value)) {
+    if (libExports$1.isStatement(value)) {
         return value;
     }
     if (instr.lvalue === null) {
-        return libExports.expressionStatement(convertValueToExpression(value));
+        return libExports$1.expressionStatement(convertValueToExpression(value));
     }
     if (instr.lvalue.identifier.name === null) {
         cx.temp.set(instr.lvalue.identifier.declarationId, value);
-        return libExports.emptyStatement();
+        return libExports$1.emptyStatement();
     }
     else {
         const expressionValue = convertValueToExpression(value);
         if (cx.hasDeclared(instr.lvalue.identifier)) {
-            return createExpressionStatement(instr.loc, libExports.assignmentExpression('=', convertIdentifier(instr.lvalue.identifier), expressionValue));
+            return createExpressionStatement(instr.loc, libExports$1.assignmentExpression('=', convertIdentifier(instr.lvalue.identifier), expressionValue));
         }
         else {
             return createVariableDeclaration(instr.loc, 'const', [
-                libExports.variableDeclarator(convertIdentifier(instr.lvalue.identifier), expressionValue),
+                libExports$1.variableDeclarator(convertIdentifier(instr.lvalue.identifier), expressionValue),
             ]);
         }
     }
@@ -35981,13 +36528,13 @@ function codegenInstructionValue(cx, instrValue) {
                     return codegenPlaceToExpression(cx, element);
                 }
                 else if (element.kind === 'Spread') {
-                    return libExports.spreadElement(codegenPlaceToExpression(cx, element.place));
+                    return libExports$1.spreadElement(codegenPlaceToExpression(cx, element.place));
                 }
                 else {
                     return null;
                 }
             });
-            value = libExports.arrayExpression(elements);
+            value = libExports$1.arrayExpression(elements);
             break;
         }
         case 'BinaryExpression': {
@@ -35997,7 +36544,7 @@ function codegenInstructionValue(cx, instrValue) {
             break;
         }
         case 'UnaryExpression': {
-            value = libExports.unaryExpression(instrValue.operator, codegenPlaceToExpression(cx, instrValue.value));
+            value = libExports$1.unaryExpression(instrValue.operator, codegenPlaceToExpression(cx, instrValue.value));
             break;
         }
         case 'Primitive': {
@@ -36008,9 +36555,9 @@ function codegenInstructionValue(cx, instrValue) {
             if (cx.env.config.enableForest) {
                 const callee = codegenPlaceToExpression(cx, instrValue.callee);
                 const args = instrValue.args.map(arg => codegenArgument(cx, arg));
-                value = libExports.callExpression(callee, args);
+                value = libExports$1.callExpression(callee, args);
                 if (instrValue.typeArguments != null) {
-                    value.typeArguments = libExports.typeParameterInstantiation(instrValue.typeArguments);
+                    value.typeArguments = libExports$1.typeParameterInstantiation(instrValue.typeArguments);
                 }
                 break;
             }
@@ -36025,25 +36572,25 @@ function codegenInstructionValue(cx, instrValue) {
             switch (optionalValue.type) {
                 case 'OptionalCallExpression':
                 case 'CallExpression': {
-                    CompilerError.invariant(libExports.isExpression(optionalValue.callee), {
+                    CompilerError.invariant(libExports$1.isExpression(optionalValue.callee), {
                         reason: 'v8 intrinsics are validated during lowering',
                         description: null,
                         loc: (_a = optionalValue.callee.loc) !== null && _a !== void 0 ? _a : null,
                         suggestions: null,
                     });
-                    value = libExports.optionalCallExpression(optionalValue.callee, optionalValue.arguments, instrValue.optional);
+                    value = libExports$1.optionalCallExpression(optionalValue.callee, optionalValue.arguments, instrValue.optional);
                     break;
                 }
                 case 'OptionalMemberExpression':
                 case 'MemberExpression': {
                     const property = optionalValue.property;
-                    CompilerError.invariant(libExports.isExpression(property), {
+                    CompilerError.invariant(libExports$1.isExpression(property), {
                         reason: 'Private names are validated during lowering',
                         description: null,
                         loc: (_b = property.loc) !== null && _b !== void 0 ? _b : null,
                         suggestions: null,
                     });
-                    value = libExports.optionalMemberExpression(optionalValue.object, property, optionalValue.computed, instrValue.optional);
+                    value = libExports$1.optionalMemberExpression(optionalValue.object, property, optionalValue.computed, instrValue.optional);
                     break;
                 }
                 default: {
@@ -36060,15 +36607,15 @@ function codegenInstructionValue(cx, instrValue) {
         case 'MethodCall': {
             const isHook = getHookKind(cx.env, instrValue.property.identifier) != null;
             const memberExpr = codegenPlaceToExpression(cx, instrValue.property);
-            CompilerError.invariant(libExports.isMemberExpression(memberExpr) ||
-                libExports.isOptionalMemberExpression(memberExpr), {
+            CompilerError.invariant(libExports$1.isMemberExpression(memberExpr) ||
+                libExports$1.isOptionalMemberExpression(memberExpr), {
                 reason: '[Codegen] Internal error: MethodCall::property must be an unpromoted + unmemoized MemberExpression. ' +
                     `Got a \`${memberExpr.type}\``,
                 description: null,
                 loc: (_c = memberExpr.loc) !== null && _c !== void 0 ? _c : null,
                 suggestions: null,
             });
-            CompilerError.invariant(libExports.isNodesEquivalent(memberExpr.object, codegenPlaceToExpression(cx, instrValue.receiver)), {
+            CompilerError.invariant(libExports$1.isNodesEquivalent(memberExpr.object, codegenPlaceToExpression(cx, instrValue.receiver)), {
                 reason: '[Codegen] Internal error: Forget should always generate MethodCall::property ' +
                     'as a MemberExpression of MethodCall::receiver',
                 description: null,
@@ -36082,7 +36629,7 @@ function codegenInstructionValue(cx, instrValue) {
         case 'NewExpression': {
             const callee = codegenPlaceToExpression(cx, instrValue.callee);
             const args = instrValue.args.map(arg => codegenArgument(cx, arg));
-            value = libExports.newExpression(callee, args);
+            value = libExports$1.newExpression(callee, args);
             break;
         }
         case 'ObjectExpression': {
@@ -36093,7 +36640,7 @@ function codegenInstructionValue(cx, instrValue) {
                     switch (property.type) {
                         case 'property': {
                             const value = codegenPlaceToExpression(cx, property.place);
-                            properties.push(libExports.objectProperty(key, value, property.key.kind === 'computed', key.type === 'Identifier' &&
+                            properties.push(libExports$1.objectProperty(key, value, property.key.kind === 'computed', key.type === 'Identifier' &&
                                 value.type === 'Identifier' &&
                                 value.name === key.name));
                             break;
@@ -36110,7 +36657,7 @@ function codegenInstructionValue(cx, instrValue) {
                             pruneUnusedLabels(reactiveFunction);
                             pruneUnusedLValues(reactiveFunction);
                             const fn = codegenReactiveFunction(new Context$2(cx.env, (_e = reactiveFunction.id) !== null && _e !== void 0 ? _e : '[[ anonymous ]]', cx.uniqueIdentifiers, cx.fbtOperands, cx.temp), reactiveFunction).unwrap();
-                            const babelNode = libExports.objectMethod('method', key, fn.params, fn.body, false);
+                            const babelNode = libExports$1.objectMethod('method', key, fn.params, fn.body, false);
                             babelNode.async = fn.async;
                             babelNode.generator = fn.generator;
                             properties.push(babelNode);
@@ -36121,10 +36668,10 @@ function codegenInstructionValue(cx, instrValue) {
                     }
                 }
                 else {
-                    properties.push(libExports.spreadElement(codegenPlaceToExpression(cx, property.place)));
+                    properties.push(libExports$1.spreadElement(codegenPlaceToExpression(cx, property.place)));
                 }
             }
-            value = libExports.objectExpression(properties);
+            value = libExports$1.objectExpression(properties);
             break;
         }
         case 'JSXText': {
@@ -36138,7 +36685,7 @@ function codegenInstructionValue(cx, instrValue) {
             }
             let tagValue = instrValue.tag.kind === 'Identifier'
                 ? codegenPlaceToExpression(cx, instrValue.tag)
-                : libExports.stringLiteral(instrValue.tag.name);
+                : libExports$1.stringLiteral(instrValue.tag.name);
             let tag;
             if (tagValue.type === 'Identifier') {
                 tag = createJsxIdentifier(instrValue.tag.loc, tagValue.name);
@@ -36184,12 +36731,12 @@ function codegenInstructionValue(cx, instrValue) {
             break;
         }
         case 'JsxFragment': {
-            value = libExports.jsxFragment(libExports.jsxOpeningFragment(), libExports.jsxClosingFragment(), instrValue.children.map(child => codegenJsxElement(cx, child)));
+            value = libExports$1.jsxFragment(libExports$1.jsxOpeningFragment(), libExports$1.jsxClosingFragment(), instrValue.children.map(child => codegenJsxElement(cx, child)));
             break;
         }
         case 'UnsupportedNode': {
             const node = instrValue.node;
-            if (!libExports.isExpression(node)) {
+            if (!libExports$1.isExpression(node)) {
                 return node;
             }
             value = node;
@@ -36200,34 +36747,34 @@ function codegenInstructionValue(cx, instrValue) {
         case 'PropertyDelete': {
             let memberExpr;
             if (typeof instrValue.property === 'string') {
-                memberExpr = libExports.memberExpression(codegenPlaceToExpression(cx, instrValue.object), libExports.identifier(instrValue.property));
+                memberExpr = libExports$1.memberExpression(codegenPlaceToExpression(cx, instrValue.object), libExports$1.identifier(instrValue.property));
             }
             else {
-                memberExpr = libExports.memberExpression(codegenPlaceToExpression(cx, instrValue.object), libExports.numericLiteral(instrValue.property), true);
+                memberExpr = libExports$1.memberExpression(codegenPlaceToExpression(cx, instrValue.object), libExports$1.numericLiteral(instrValue.property), true);
             }
             if (instrValue.kind === 'PropertyStore') {
-                value = libExports.assignmentExpression('=', memberExpr, codegenPlaceToExpression(cx, instrValue.value));
+                value = libExports$1.assignmentExpression('=', memberExpr, codegenPlaceToExpression(cx, instrValue.value));
             }
             else if (instrValue.kind === 'PropertyLoad') {
                 value = memberExpr;
             }
             else {
-                value = libExports.unaryExpression('delete', memberExpr);
+                value = libExports$1.unaryExpression('delete', memberExpr);
             }
             break;
         }
         case 'ComputedStore': {
-            value = libExports.assignmentExpression('=', libExports.memberExpression(codegenPlaceToExpression(cx, instrValue.object), codegenPlaceToExpression(cx, instrValue.property), true), codegenPlaceToExpression(cx, instrValue.value));
+            value = libExports$1.assignmentExpression('=', libExports$1.memberExpression(codegenPlaceToExpression(cx, instrValue.object), codegenPlaceToExpression(cx, instrValue.property), true), codegenPlaceToExpression(cx, instrValue.value));
             break;
         }
         case 'ComputedLoad': {
             const object = codegenPlaceToExpression(cx, instrValue.object);
             const property = codegenPlaceToExpression(cx, instrValue.property);
-            value = libExports.memberExpression(object, property, true);
+            value = libExports$1.memberExpression(object, property, true);
             break;
         }
         case 'ComputedDelete': {
-            value = libExports.unaryExpression('delete', libExports.memberExpression(codegenPlaceToExpression(cx, instrValue.object), codegenPlaceToExpression(cx, instrValue.property), true));
+            value = libExports$1.unaryExpression('delete', libExports$1.memberExpression(codegenPlaceToExpression(cx, instrValue.object), codegenPlaceToExpression(cx, instrValue.property), true));
             break;
         }
         case 'LoadLocal':
@@ -36250,28 +36797,28 @@ function codegenInstructionValue(cx, instrValue) {
                         body = stmt.argument;
                     }
                 }
-                value = libExports.arrowFunctionExpression(fn.params, body, fn.async);
+                value = libExports$1.arrowFunctionExpression(fn.params, body, fn.async);
             }
             else {
-                value = libExports.functionExpression((_h = fn.id) !== null && _h !== void 0 ? _h : (instrValue.name != null ? libExports.identifier(instrValue.name) : null), fn.params, fn.body, fn.generator, fn.async);
+                value = libExports$1.functionExpression((_h = fn.id) !== null && _h !== void 0 ? _h : (instrValue.name != null ? libExports$1.identifier(instrValue.name) : null), fn.params, fn.body, fn.generator, fn.async);
             }
             break;
         }
         case 'TaggedTemplateExpression': {
-            value = createTaggedTemplateExpression(instrValue.loc, codegenPlaceToExpression(cx, instrValue.tag), libExports.templateLiteral([libExports.templateElement(instrValue.value)], []));
+            value = createTaggedTemplateExpression(instrValue.loc, codegenPlaceToExpression(cx, instrValue.tag), libExports$1.templateLiteral([libExports$1.templateElement(instrValue.value)], []));
             break;
         }
         case 'TypeCastExpression': {
-            if (libExports.isTSType(instrValue.typeAnnotation)) {
+            if (libExports$1.isTSType(instrValue.typeAnnotation)) {
                 if (instrValue.typeAnnotationKind === 'satisfies') {
-                    value = libExports.tsSatisfiesExpression(codegenPlaceToExpression(cx, instrValue.value), instrValue.typeAnnotation);
+                    value = libExports$1.tsSatisfiesExpression(codegenPlaceToExpression(cx, instrValue.value), instrValue.typeAnnotation);
                 }
                 else {
-                    value = libExports.tsAsExpression(codegenPlaceToExpression(cx, instrValue.value), instrValue.typeAnnotation);
+                    value = libExports$1.tsAsExpression(codegenPlaceToExpression(cx, instrValue.value), instrValue.typeAnnotation);
                 }
             }
             else {
-                value = libExports.typeCastExpression(codegenPlaceToExpression(cx, instrValue.value), libExports.typeAnnotation(instrValue.typeAnnotation));
+                value = libExports$1.typeCastExpression(codegenPlaceToExpression(cx, instrValue.value), libExports$1.typeAnnotation(instrValue.typeAnnotation));
             }
             break;
         }
@@ -36294,7 +36841,7 @@ function codegenInstructionValue(cx, instrValue) {
                     return stmt.expression;
                 }
                 else {
-                    if (libExports.isVariableDeclaration(stmt)) {
+                    if (libExports$1.isVariableDeclaration(stmt)) {
                         const declarator = stmt.declarations[0];
                         cx.errors.push({
                             reason: `(CodegenReactiveFunction::codegenInstructionValue) Cannot declare variables in a value block, tried to declare '${declarator.id.name}'`,
@@ -36302,7 +36849,7 @@ function codegenInstructionValue(cx, instrValue) {
                             loc: (_a = declarator.loc) !== null && _a !== void 0 ? _a : null,
                             suggestions: null,
                         });
-                        return libExports.stringLiteral(`TODO handle ${declarator.id}`);
+                        return libExports$1.stringLiteral(`TODO handle ${declarator.id}`);
                     }
                     else {
                         cx.errors.push({
@@ -36311,7 +36858,7 @@ function codegenInstructionValue(cx, instrValue) {
                             loc: (_b = stmt.loc) !== null && _b !== void 0 ? _b : null,
                             suggestions: null,
                         });
-                        return libExports.stringLiteral(`TODO handle ${stmt.type}`);
+                        return libExports$1.stringLiteral(`TODO handle ${stmt.type}`);
                     }
                 }
             });
@@ -36327,23 +36874,23 @@ function codegenInstructionValue(cx, instrValue) {
             break;
         }
         case 'TemplateLiteral': {
-            value = createTemplateLiteral(instrValue.loc, instrValue.quasis.map(q => libExports.templateElement(q)), instrValue.subexprs.map(p => codegenPlaceToExpression(cx, p)));
+            value = createTemplateLiteral(instrValue.loc, instrValue.quasis.map(q => libExports$1.templateElement(q)), instrValue.subexprs.map(p => codegenPlaceToExpression(cx, p)));
             break;
         }
         case 'LoadGlobal': {
-            value = libExports.identifier(instrValue.binding.name);
+            value = libExports$1.identifier(instrValue.binding.name);
             break;
         }
         case 'RegExpLiteral': {
-            value = libExports.regExpLiteral(instrValue.pattern, instrValue.flags);
+            value = libExports$1.regExpLiteral(instrValue.pattern, instrValue.flags);
             break;
         }
         case 'MetaProperty': {
-            value = libExports.metaProperty(libExports.identifier(instrValue.meta), libExports.identifier(instrValue.property));
+            value = libExports$1.metaProperty(libExports$1.identifier(instrValue.meta), libExports$1.identifier(instrValue.property));
             break;
         }
         case 'Await': {
-            value = libExports.awaitExpression(codegenPlaceToExpression(cx, instrValue.value));
+            value = libExports$1.awaitExpression(codegenPlaceToExpression(cx, instrValue.value));
             break;
         }
         case 'GetIterator': {
@@ -36359,11 +36906,11 @@ function codegenInstructionValue(cx, instrValue) {
             break;
         }
         case 'PostfixUpdate': {
-            value = libExports.updateExpression(instrValue.operation, codegenPlaceToExpression(cx, instrValue.lvalue), false);
+            value = libExports$1.updateExpression(instrValue.operation, codegenPlaceToExpression(cx, instrValue.lvalue), false);
             break;
         }
         case 'PrefixUpdate': {
-            value = libExports.updateExpression(instrValue.operation, codegenPlaceToExpression(cx, instrValue.lvalue), true);
+            value = libExports$1.updateExpression(instrValue.operation, codegenPlaceToExpression(cx, instrValue.lvalue), true);
             break;
         }
         case 'StoreLocal': {
@@ -36373,11 +36920,11 @@ function codegenInstructionValue(cx, instrValue) {
                 loc: instrValue.loc,
                 suggestions: null,
             });
-            value = libExports.assignmentExpression('=', codegenLValue(cx, instrValue.lvalue.place), codegenPlaceToExpression(cx, instrValue.value));
+            value = libExports$1.assignmentExpression('=', codegenLValue(cx, instrValue.lvalue.place), codegenPlaceToExpression(cx, instrValue.value));
             break;
         }
         case 'StoreGlobal': {
-            value = libExports.assignmentExpression('=', libExports.identifier(instrValue.name), codegenPlaceToExpression(cx, instrValue.value));
+            value = libExports$1.assignmentExpression('=', libExports$1.identifier(instrValue.name), codegenPlaceToExpression(cx, instrValue.value));
             break;
         }
         case 'StartMemoize':
@@ -36432,7 +36979,7 @@ function codegenJsxAttribute(cx, attribute) {
             return createJsxAttribute(attribute.place.loc, propName, value);
         }
         case 'JsxSpreadAttribute': {
-            return libExports.jsxSpreadAttribute(codegenPlaceToExpression(cx, attribute.argument));
+            return libExports$1.jsxSpreadAttribute(codegenPlaceToExpression(cx, attribute.argument));
         }
         default: {
             assertExhaustive$1(attribute, `Unexpected attribute kind \`${attribute.kind}\``);
@@ -36478,9 +37025,9 @@ function convertMemberExpressionToJsx(expr) {
         loc: (_a = expr.loc) !== null && _a !== void 0 ? _a : null,
         suggestions: null,
     });
-    const property = libExports.jsxIdentifier(expr.property.name);
+    const property = libExports$1.jsxIdentifier(expr.property.name);
     if (expr.object.type === 'Identifier') {
-        return libExports.jsxMemberExpression(libExports.jsxIdentifier(expr.object.name), property);
+        return libExports$1.jsxMemberExpression(libExports$1.jsxIdentifier(expr.object.name), property);
     }
     else {
         CompilerError.invariant(expr.object.type === 'MemberExpression', {
@@ -36490,20 +37037,20 @@ function convertMemberExpressionToJsx(expr) {
             suggestions: null,
         });
         const object = convertMemberExpressionToJsx(expr.object);
-        return libExports.jsxMemberExpression(object, property);
+        return libExports$1.jsxMemberExpression(object, property);
     }
 }
 function codegenObjectPropertyKey(cx, key) {
     switch (key.kind) {
         case 'string': {
-            return libExports.stringLiteral(key.name);
+            return libExports$1.stringLiteral(key.name);
         }
         case 'identifier': {
-            return libExports.identifier(key.name);
+            return libExports$1.identifier(key.name);
         }
         case 'computed': {
             const expr = codegenPlace(cx, key.name);
-            CompilerError.invariant(libExports.isExpression(expr), {
+            CompilerError.invariant(libExports$1.isExpression(expr), {
                 reason: 'Expected object property key to be an expression',
                 description: null,
                 loc: key.name.loc,
@@ -36512,14 +37059,14 @@ function codegenObjectPropertyKey(cx, key) {
             return expr;
         }
         case 'number': {
-            return libExports.numericLiteral(key.name);
+            return libExports$1.numericLiteral(key.name);
         }
     }
 }
 function codegenArrayPattern(cx, pattern) {
     const hasHoles = !pattern.items.every(e => e.kind !== 'Hole');
     if (hasHoles) {
-        const result = libExports.arrayPattern([]);
+        const result = libExports$1.arrayPattern([]);
         for (const item of pattern.items) {
             if (item.kind === 'Hole') {
                 result.elements.push(null);
@@ -36531,7 +37078,7 @@ function codegenArrayPattern(cx, pattern) {
         return result;
     }
     else {
-        return libExports.arrayPattern(pattern.items.map(item => {
+        return libExports$1.arrayPattern(pattern.items.map(item => {
             if (item.kind === 'Hole') {
                 return null;
             }
@@ -36545,21 +37092,21 @@ function codegenLValue(cx, pattern) {
             return codegenArrayPattern(cx, pattern);
         }
         case 'ObjectPattern': {
-            return libExports.objectPattern(pattern.properties.map(property => {
+            return libExports$1.objectPattern(pattern.properties.map(property => {
                 if (property.kind === 'ObjectProperty') {
                     const key = codegenObjectPropertyKey(cx, property.key);
                     const value = codegenLValue(cx, property.place);
-                    return libExports.objectProperty(key, value, property.key.kind === 'computed', key.type === 'Identifier' &&
+                    return libExports$1.objectProperty(key, value, property.key.kind === 'computed', key.type === 'Identifier' &&
                         value.type === 'Identifier' &&
                         value.name === key.name);
                 }
                 else {
-                    return libExports.restElement(codegenLValue(cx, property.place));
+                    return libExports$1.restElement(codegenLValue(cx, property.place));
                 }
             }));
         }
         case 'Spread': {
-            return libExports.restElement(codegenLValue(cx, pattern.place));
+            return libExports$1.restElement(codegenLValue(cx, pattern.place));
         }
         case 'Identifier': {
             return convertIdentifier(pattern.identifier);
@@ -36572,23 +37119,23 @@ function codegenLValue(cx, pattern) {
 function codegenValue(cx, loc, value) {
     if (typeof value === 'number') {
         if (value < 0) {
-            return libExports.unaryExpression('-', libExports.numericLiteral(-value), false);
+            return libExports$1.unaryExpression('-', libExports$1.numericLiteral(-value), false);
         }
         else {
-            return libExports.numericLiteral(value);
+            return libExports$1.numericLiteral(value);
         }
     }
     else if (typeof value === 'boolean') {
-        return libExports.booleanLiteral(value);
+        return libExports$1.booleanLiteral(value);
     }
     else if (typeof value === 'string') {
         return createStringLiteral(loc, value);
     }
     else if (value === null) {
-        return libExports.nullLiteral();
+        return libExports$1.nullLiteral();
     }
     else if (value === undefined) {
-        return libExports.identifier('undefined');
+        return libExports$1.identifier('undefined');
     }
     else {
         assertExhaustive$1(value, 'Unexpected primitive value kind');
@@ -36599,7 +37146,7 @@ function codegenArgument(cx, arg) {
         return codegenPlaceToExpression(cx, arg);
     }
     else {
-        return libExports.spreadElement(codegenPlaceToExpression(cx, arg.place));
+        return libExports$1.spreadElement(codegenPlaceToExpression(cx, arg.place));
     }
 }
 function codegenPlaceToExpression(cx, place) {
@@ -36628,7 +37175,7 @@ function convertIdentifier(identifier) {
         description: `identifier ${identifier.id} is unnamed`,
         suggestions: null,
     });
-    return libExports.identifier(identifier.name.value);
+    return libExports$1.identifier(identifier.name.value);
 }
 function compareScopeDependency(a, b) {
     var _a, _b;
@@ -37857,37 +38404,37 @@ function isEffectSafeOutsideRender(effect) {
 }
 function getWriteErrorReason(abstractValue) {
     if (abstractValue.reason.has(ValueReason.Global)) {
-        return 'Writing to a variable defined outside a component or hook is not allowed. Consider using an effect';
+        return 'Modifying a variable defined outside a component or hook is not allowed. Consider using an effect';
     }
     else if (abstractValue.reason.has(ValueReason.JsxCaptured)) {
-        return 'Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX';
+        return 'Modifying a value used previously in JSX is not allowed. Consider moving the modification before the JSX';
     }
     else if (abstractValue.reason.has(ValueReason.Context)) {
-        return `Mutating a value returned from 'useContext()', which should not be mutated`;
+        return `Modifying a value returned from 'useContext()' is not allowed.`;
     }
     else if (abstractValue.reason.has(ValueReason.KnownReturnSignature)) {
-        return 'Mutating a value returned from a function whose return value should not be mutated';
+        return 'Modifying a value returned from a function whose return value should not be mutated';
     }
     else if (abstractValue.reason.has(ValueReason.ReactiveFunctionArgument)) {
-        return 'Mutating component props or hook arguments is not allowed. Consider using a local variable instead';
+        return 'Modifying component props or hook arguments is not allowed. Consider using a local variable instead';
     }
     else if (abstractValue.reason.has(ValueReason.State)) {
-        return "Mutating a value returned from 'useState()', which should not be mutated. Use the setter function to update instead";
+        return "Modifying a value returned from 'useState()', which should not be modified directly. Use the setter function to update instead";
     }
     else if (abstractValue.reason.has(ValueReason.ReducerState)) {
-        return "Mutating a value returned from 'useReducer()', which should not be mutated. Use the dispatch function to update instead";
+        return "Modifying a value returned from 'useReducer()', which should not be modified directly. Use the dispatch function to update instead";
     }
     else if (abstractValue.reason.has(ValueReason.Effect)) {
-        return 'Updating a value used previously in an effect function or as an effect dependency is not allowed. Consider moving the mutation before calling useEffect()';
+        return 'Modifying a value used previously in an effect function or as an effect dependency is not allowed. Consider moving the modification before calling useEffect()';
     }
     else if (abstractValue.reason.has(ValueReason.HookCaptured)) {
-        return 'Updating a value previously passed as an argument to a hook is not allowed. Consider moving the mutation before calling the hook';
+        return 'Modifying a value previously passed as an argument to a hook is not allowed. Consider moving the modification before calling the hook';
     }
     else if (abstractValue.reason.has(ValueReason.HookReturn)) {
-        return 'Updating a value returned from a hook is not allowed. Consider moving the mutation into the hook where the value is constructed';
+        return 'Modifying a value returned from a hook is not allowed. Consider moving the modification into the hook where the value is constructed';
     }
     else {
-        return 'This mutates a variable that React considers immutable';
+        return 'This modifies a variable that React considers immutable';
     }
 }
 
@@ -40615,7 +41162,8 @@ function hashEffect(effect) {
         case 'ImmutableCapture':
         case 'Assign':
         case 'Alias':
-        case 'Capture': {
+        case 'Capture':
+        case 'MaybeAlias': {
             return [
                 effect.kind,
                 effect.from.identifier.id,
@@ -40643,9 +41191,9 @@ function hashEffect(effect) {
                 effect.kind,
                 effect.place.identifier.id,
                 effect.error.severity,
-                effect.error.reason,
+                effect.error.category,
                 effect.error.description,
-                printSourceLocation((_a = effect.error.loc) !== null && _a !== void 0 ? _a : GeneratedSource),
+                printSourceLocation((_a = effect.error.primaryLocation()) !== null && _a !== void 0 ? _a : GeneratedSource),
             ].join(':');
         }
         case 'Mutate':
@@ -40907,19 +41455,22 @@ function applySignature(context, state, signature, instruction) {
                             reason: value.reason,
                             context: new Set(),
                         });
+                        const variable = effect.value.identifier.name !== null &&
+                            effect.value.identifier.name.kind === 'named'
+                            ? `\`${effect.value.identifier.name.value}\``
+                            : 'value';
                         effects.push({
                             kind: 'MutateFrozen',
                             place: effect.value,
-                            error: {
+                            error: CompilerDiagnostic.create({
                                 severity: ErrorSeverity.InvalidReact,
-                                reason,
-                                description: effect.value.identifier.name !== null &&
-                                    effect.value.identifier.name.kind === 'named'
-                                    ? `Found mutation of \`${effect.value.identifier.name.value}\``
-                                    : null,
+                                category: 'This value cannot be modified',
+                                description: `${reason}.`,
+                            }).withDetail({
+                                kind: 'error',
                                 loc: effect.value.loc,
-                                suggestions: null,
-                            },
+                                message: `${variable} cannot be modified`,
+                            }),
                         });
                     }
                 }
@@ -41088,6 +41639,7 @@ function applyEffect(context, state, _effect, initialized, effects) {
             }
             break;
         }
+        case 'MaybeAlias':
         case 'Alias':
         case 'Capture': {
             CompilerError.invariant(effect.kind === 'Capture' || initialized.has(effect.into.identifier.id), {
@@ -41252,7 +41804,7 @@ function applyEffect(context, state, _effect, initialized, effects) {
                     if (mutateIterator) {
                         applyEffect(context, state, mutateIterator, initialized, effects);
                     }
-                    applyEffect(context, state, { kind: 'Alias', from: operand, into: effect.into }, initialized, effects);
+                    applyEffect(context, state, { kind: 'MaybeAlias', from: operand, into: effect.into }, initialized, effects);
                     for (const otherArg of [
                         effect.receiver,
                         effect.function,
@@ -41289,34 +41841,32 @@ function applyEffect(context, state, _effect, initialized, effects) {
                 const value = state.kind(effect.value);
                 if (mutationKind === 'mutate-frozen' &&
                     context.hoistedContextDeclarations.has(effect.value.identifier.declarationId)) {
-                    const description = effect.value.identifier.name !== null &&
+                    const variable = effect.value.identifier.name !== null &&
                         effect.value.identifier.name.kind === 'named'
-                        ? `Variable \`${effect.value.identifier.name.value}\` is accessed before it is declared`
+                        ? `\`${effect.value.identifier.name.value}\``
                         : null;
                     const hoistedAccess = context.hoistedContextDeclarations.get(effect.value.identifier.declarationId);
+                    const diagnostic = CompilerDiagnostic.create({
+                        severity: ErrorSeverity.InvalidReact,
+                        category: 'Cannot access variable before it is declared',
+                        description: `${variable !== null && variable !== void 0 ? variable : 'This variable'} is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.`,
+                    });
                     if (hoistedAccess != null && hoistedAccess.loc != effect.value.loc) {
-                        applyEffect(context, state, {
-                            kind: 'MutateFrozen',
-                            place: effect.value,
-                            error: {
-                                severity: ErrorSeverity.InvalidReact,
-                                reason: `This variable is accessed before it is declared, which may prevent it from updating as the assigned value changes over time`,
-                                description,
-                                loc: hoistedAccess.loc,
-                                suggestions: null,
-                            },
-                        }, initialized, effects);
+                        diagnostic.withDetail({
+                            kind: 'error',
+                            loc: hoistedAccess.loc,
+                            message: `${variable !== null && variable !== void 0 ? variable : 'variable'} accessed before it is declared`,
+                        });
                     }
+                    diagnostic.withDetail({
+                        kind: 'error',
+                        loc: effect.value.loc,
+                        message: `${variable !== null && variable !== void 0 ? variable : 'variable'} is declared here`,
+                    });
                     applyEffect(context, state, {
                         kind: 'MutateFrozen',
                         place: effect.value,
-                        error: {
-                            severity: ErrorSeverity.InvalidReact,
-                            reason: `This variable is accessed before it is declared, which prevents the earlier access from updating when this value changes over time`,
-                            description,
-                            loc: effect.value.loc,
-                            suggestions: null,
-                        },
+                        error: diagnostic,
                     }, initialized, effects);
                 }
                 else {
@@ -41325,22 +41875,24 @@ function applyEffect(context, state, _effect, initialized, effects) {
                         reason: value.reason,
                         context: new Set(),
                     });
-                    const description = effect.value.identifier.name !== null &&
+                    const variable = effect.value.identifier.name !== null &&
                         effect.value.identifier.name.kind === 'named'
-                        ? `Found mutation of \`${effect.value.identifier.name.value}\``
-                        : null;
+                        ? `\`${effect.value.identifier.name.value}\``
+                        : 'value';
                     applyEffect(context, state, {
                         kind: value.kind === ValueKind.Frozen
                             ? 'MutateFrozen'
                             : 'MutateGlobal',
                         place: effect.value,
-                        error: {
+                        error: CompilerDiagnostic.create({
                             severity: ErrorSeverity.InvalidReact,
-                            reason,
-                            description,
+                            category: 'This value cannot be modified',
+                            description: `${reason}.`,
+                        }).withDetail({
+                            kind: 'error',
                             loc: effect.value.loc,
-                            suggestions: null,
-                        },
+                            message: `${variable} cannot be modified`,
+                        }),
                     }, initialized, effects);
                 }
             }
@@ -41518,7 +42070,7 @@ class InferenceState {
                         return 'mutate-global';
                     }
                     case ValueKind.MaybeFrozen: {
-                        return 'none';
+                        return 'mutate-frozen';
                     }
                     default: {
                         assertExhaustive$1(kind, `Unexpected kind ${kind}`);
@@ -42031,15 +42583,19 @@ function computeSignatureForInstruction(context, env, instr) {
             break;
         }
         case 'StoreGlobal': {
+            const variable = `\`${value.name}\``;
             effects.push({
                 kind: 'MutateGlobal',
                 place: value.value,
-                error: {
-                    reason: 'Unexpected reassignment of a variable which was defined outside of the component. Components and hooks should be pure and side-effect free, but variable reassignment is a form of side-effect. If this variable is used in rendering, use useState instead. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render)',
-                    loc: instr.loc,
-                    suggestions: null,
+                error: CompilerDiagnostic.create({
                     severity: ErrorSeverity.InvalidReact,
-                },
+                    category: 'Cannot reassign variables declared outside of the component/hook',
+                    description: `Variable ${variable} is declared outside of the component/hook. Reassigning this value during render is a form of side effect, which can cause unpredictable behavior depending on when the component happens to re-render. If this variable is used in rendering, use useState instead. Otherwise, consider updating it in an effect. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render)`,
+                }).withDetail({
+                    kind: 'error',
+                    loc: instr.loc,
+                    message: `${variable} cannot be reassigned`,
+                }),
             });
             effects.push({ kind: 'Assign', from: value.value, into: lvalue });
             break;
@@ -42113,15 +42669,18 @@ function computeEffectsForLegacySignature(state, signature, lvalue, receiver, ar
         effects.push({
             kind: 'Impure',
             place: receiver,
-            error: {
-                reason: 'Calling an impure function can produce unstable results. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent)',
-                description: signature.canonicalName != null
-                    ? `\`${signature.canonicalName}\` is an impure function whose results may change on every call`
-                    : null,
+            error: CompilerDiagnostic.create({
                 severity: ErrorSeverity.InvalidReact,
+                category: 'Cannot call impure function during render',
+                description: (signature.canonicalName != null
+                    ? `\`${signature.canonicalName}\` is an impure function. `
+                    : '') +
+                    'Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent)',
+            }).withDetail({
+                kind: 'error',
                 loc,
-                suggestions: null,
-            },
+                message: 'Cannot call impure function',
+            }),
         });
     }
     const stores = [];
@@ -42319,6 +42878,7 @@ function computeEffectsForSignature(env, signature, lvalue, receiver, args, cont
     }
     for (const effect of signature.effects) {
         switch (effect.kind) {
+            case 'MaybeAlias':
             case 'Assign':
             case 'ImmutableCapture':
             case 'Alias':
@@ -42521,6 +43081,9 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
                 else if (effect.kind === 'Alias') {
                     state.assign(index++, effect.from, effect.into);
                 }
+                else if (effect.kind === 'MaybeAlias') {
+                    state.maybeAlias(index++, effect.from, effect.into);
+                }
                 else if (effect.kind === 'Capture') {
                     state.capture(index++, effect.from, effect.into);
                 }
@@ -42551,7 +43114,7 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
                 else if (effect.kind === 'MutateFrozen' ||
                     effect.kind === 'MutateGlobal' ||
                     effect.kind === 'Impure') {
-                    errors.push(effect.error);
+                    errors.pushDiagnostic(effect.error);
                     functionEffects.push(effect);
                 }
                 else if (effect.kind === 'Render') {
@@ -42672,7 +43235,8 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
                     case 'Assign':
                     case 'Alias':
                     case 'Capture':
-                    case 'CreateFrom': {
+                    case 'CreateFrom':
+                    case 'MaybeAlias': {
                         const isMutatedOrReassigned = effect.into.identifier.mutableRange.end > instr.id;
                         if (isMutatedOrReassigned) {
                             operandEffects.set(effect.from.identifier.id, Effect.Capture);
@@ -42810,7 +43374,7 @@ function appendFunctionErrors(errors, fn) {
             case 'Impure':
             case 'MutateFrozen':
             case 'MutateGlobal': {
-                errors.push(effect.error);
+                errors.pushDiagnostic(effect.error);
                 break;
             }
         }
@@ -42832,6 +43396,7 @@ class AliasingState {
             createdFrom: new Map(),
             captures: new Map(),
             aliases: new Map(),
+            maybeAliases: new Map(),
             edges: [],
             transitive: null,
             local: null,
@@ -42873,6 +43438,17 @@ class AliasingState {
             toNode.aliases.set(from.identifier, index);
         }
     }
+    maybeAlias(index, from, into) {
+        const fromNode = this.nodes.get(from.identifier);
+        const toNode = this.nodes.get(into.identifier);
+        if (fromNode == null || toNode == null) {
+            return;
+        }
+        fromNode.edges.push({ index, node: into.identifier, kind: 'maybeAlias' });
+        if (!toNode.maybeAliases.has(from.identifier)) {
+            toNode.maybeAliases.set(from.identifier, index);
+        }
+    }
     render(index, start, errors) {
         const seen = new Set();
         const queue = [start];
@@ -42909,15 +43485,16 @@ class AliasingState {
             }
         }
     }
-    mutate(index, start, end, transitive, kind, loc, errors) {
-        const seen = new Set();
-        const queue = [{ place: start, transitive, direction: 'backwards' }];
+    mutate(index, start, end, transitive, startKind, loc, errors) {
+        const seen = new Map();
+        const queue = [{ place: start, transitive, direction: 'backwards', kind: startKind }];
         while (queue.length !== 0) {
-            const { place: current, transitive, direction } = queue.pop();
-            if (seen.has(current)) {
+            const { place: current, transitive, direction, kind } = queue.pop();
+            const previousKind = seen.get(current);
+            if (previousKind != null && previousKind >= kind) {
                 continue;
             }
-            seen.add(current);
+            seen.set(current, kind);
             const node = this.nodes.get(current);
             if (node == null) {
                 continue;
@@ -42945,20 +43522,36 @@ class AliasingState {
                 if (edge.index >= index) {
                     break;
                 }
-                queue.push({ place: edge.node, transitive, direction: 'forwards' });
+                queue.push({ place: edge.node, transitive, direction: 'forwards', kind });
             }
             for (const [alias, when] of node.createdFrom) {
                 if (when >= index) {
                     continue;
                 }
-                queue.push({ place: alias, transitive: true, direction: 'backwards' });
+                queue.push({
+                    place: alias,
+                    transitive: true,
+                    direction: 'backwards',
+                    kind,
+                });
             }
             if (direction === 'backwards' || node.value.kind !== 'Phi') {
                 for (const [alias, when] of node.aliases) {
                     if (when >= index) {
                         continue;
                     }
-                    queue.push({ place: alias, transitive, direction: 'backwards' });
+                    queue.push({ place: alias, transitive, direction: 'backwards', kind });
+                }
+                for (const [alias, when] of node.maybeAliases) {
+                    if (when >= index) {
+                        continue;
+                    }
+                    queue.push({
+                        place: alias,
+                        transitive,
+                        direction: 'backwards',
+                        kind: MutationKind.Conditional,
+                    });
                 }
             }
             if (transitive) {
@@ -42966,7 +43559,12 @@ class AliasingState {
                     if (when >= index) {
                         continue;
                     }
-                    queue.push({ place: capture, transitive, direction: 'backwards' });
+                    queue.push({
+                        place: capture,
+                        transitive,
+                        direction: 'backwards',
+                        kind,
+                    });
                 }
             }
         }
@@ -43016,7 +43614,8 @@ function lowerWithMutationAliasing(fn) {
             case 'Assign':
             case 'Alias':
             case 'Capture':
-            case 'CreateFrom': {
+            case 'CreateFrom':
+            case 'MaybeAlias': {
                 capturedOrMutated.add(effect.from.identifier.id);
                 break;
             }
@@ -46481,8 +47080,13 @@ function* generateInstructionTypes(env, names, instr) {
             break;
         }
         case 'DeclareContext':
-        case 'StoreContext':
         case 'LoadContext': {
+            break;
+        }
+        case 'StoreContext': {
+            if (value.lvalue.kind === InstructionKind.Const) {
+                yield equation(value.lvalue.place.identifier.type, value.value.identifier.type);
+            }
             break;
         }
         case 'StoreLocal': {
@@ -48016,22 +48620,28 @@ function validateNoSetStateInRenderImpl(fn, unconditionalSetStateFunctions) {
                     if (isSetStateType(callee.identifier) ||
                         unconditionalSetStateFunctions.has(callee.identifier.id)) {
                         if (activeManualMemoId !== null) {
-                            errors.push({
-                                reason: 'Calling setState from useMemo may trigger an infinite loop. (https://react.dev/reference/react/useState)',
-                                description: null,
+                            errors.pushDiagnostic(CompilerDiagnostic.create({
+                                category: 'Calling setState from useMemo may trigger an infinite loop',
+                                description: 'Each time the memo callback is evaluated it will change state. This can cause a memoization dependency to change, running the memo function again and causing an infinite loop. Instead of setting state in useMemo(), prefer deriving the value during render. (https://react.dev/reference/react/useState)',
                                 severity: ErrorSeverity.InvalidReact,
-                                loc: callee.loc,
                                 suggestions: null,
-                            });
+                            }).withDetail({
+                                kind: 'error',
+                                loc: callee.loc,
+                                message: 'Found setState() within useMemo()',
+                            }));
                         }
                         else if (unconditionalBlocks.has(block.id)) {
-                            errors.push({
-                                reason: 'This is an unconditional set state during render, which will trigger an infinite loop. (https://react.dev/reference/react/useState)',
-                                description: null,
+                            errors.pushDiagnostic(CompilerDiagnostic.create({
+                                category: 'Calling setState during render may trigger an infinite loop',
+                                description: 'Calling setState during render will trigger another render, and can lead to infinite loops. (https://react.dev/reference/react/useState)',
                                 severity: ErrorSeverity.InvalidReact,
-                                loc: callee.loc,
                                 suggestions: null,
-                            });
+                            }).withDetail({
+                                kind: 'error',
+                                loc: callee.loc,
+                                message: 'Found setState() within useMemo()',
+                            }));
                         }
                     }
                     break;
@@ -48172,19 +48782,28 @@ function validateInferredDep(dep, temporaries, declsWithinMemoBlock, validDepsIn
             errorDiagnostic = merge(errorDiagnostic !== null && errorDiagnostic !== void 0 ? errorDiagnostic : compareResult, compareResult);
         }
     }
-    errorState.push({
+    errorState.pushDiagnostic(CompilerDiagnostic.create({
         severity: ErrorSeverity.CannotPreserveMemoization,
-        reason: 'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected',
-        description: (dep.identifier.name != null && dep.identifier.name.kind === 'named')
-            ? `The inferred dependency was \`${prettyPrintScopeDependency(dep)}\`, but the source dependencies were [${validDepsInMemoBlock
-                .map(dep => printManualMemoDependency(dep, true))
-                .join(', ')}]. ${errorDiagnostic
-                ? getCompareDependencyResultDescription(errorDiagnostic)
-                : 'Inferred dependency not present in source'}`
-            : null,
-        loc: memoLocation,
+        category: 'Compilation skipped because existing memoization could not be preserved',
+        description: [
+            'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. ',
+            'The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. ',
+            (dep.identifier.name != null && dep.identifier.name.kind === 'named')
+                ? `The inferred dependency was \`${prettyPrintScopeDependency(dep)}\`, but the source dependencies were [${validDepsInMemoBlock
+                    .map(dep => printManualMemoDependency(dep, true))
+                    .join(', ')}]. ${errorDiagnostic
+                    ? getCompareDependencyResultDescription(errorDiagnostic)
+                    : 'Inferred dependency not present in source'}.`
+                : '',
+        ]
+            .join('')
+            .trim(),
         suggestions: null,
-    });
+    }).withDetail({
+        kind: 'error',
+        loc: memoLocation,
+        message: 'Could not preserve existing manual memoization',
+    }));
 }
 class Visitor extends ReactiveFunctionVisitor {
     constructor() {
@@ -48323,13 +48942,18 @@ class Visitor extends ReactiveFunctionVisitor {
                 if (identifier.scope != null &&
                     !this.scopes.has(identifier.scope.id) &&
                     !this.prunedScopes.has(identifier.scope.id)) {
-                    state.errors.push({
-                        reason: 'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This dependency may be mutated later, which could cause the value to change unexpectedly',
-                        description: null,
+                    state.errors.pushDiagnostic(CompilerDiagnostic.create({
                         severity: ErrorSeverity.CannotPreserveMemoization,
+                        category: 'Compilation skipped because existing memoization could not be preserved',
+                        description: [
+                            'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. ',
+                            'This dependency may be mutated later, which could cause the value to change unexpectedly.',
+                        ].join(''),
+                    }).withDetail({
+                        kind: 'error',
                         loc,
-                        suggestions: null,
-                    });
+                        message: 'This dependency may be modified later',
+                    }));
                 }
             }
         }
@@ -48354,13 +48978,20 @@ class Visitor extends ReactiveFunctionVisitor {
                     }
                     for (const identifier of decls) {
                         if (isUnmemoized(identifier, this.scopes)) {
-                            state.errors.push({
-                                reason: 'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.',
-                                description: null,
+                            state.errors.pushDiagnostic(CompilerDiagnostic.create({
                                 severity: ErrorSeverity.CannotPreserveMemoization,
+                                category: 'Compilation skipped because existing memoization could not be preserved',
+                                description: [
+                                    'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output. ',
+                                    '',
+                                ]
+                                    .join('')
+                                    .trim(),
+                            }).withDetail({
+                                kind: 'error',
                                 loc,
-                                suggestions: null,
-                            });
+                                message: 'Could not preserve existing memoization',
+                            }));
                         }
                     }
                 }
@@ -48419,22 +49050,32 @@ function validateUseMemo(fn) {
                         continue;
                     }
                     if (body.loweredFunc.func.params.length > 0) {
-                        errors.push({
+                        const firstParam = body.loweredFunc.func.params[0];
+                        const loc = firstParam.kind === 'Identifier'
+                            ? firstParam.loc
+                            : firstParam.place.loc;
+                        errors.pushDiagnostic(CompilerDiagnostic.create({
                             severity: ErrorSeverity.InvalidReact,
-                            reason: 'useMemo callbacks may not accept any arguments',
-                            description: null,
-                            loc: body.loc,
+                            category: 'useMemo() callbacks may not accept parameters',
+                            description: 'useMemo() callbacks are called by React to cache calculations across re-renders. They should not take parameters. Instead, directly reference the props, state, or local variables needed for the computation.',
                             suggestions: null,
-                        });
+                        }).withDetail({
+                            kind: 'error',
+                            loc,
+                            message: 'Callbacks with parameters are not supported',
+                        }));
                     }
                     if (body.loweredFunc.func.async || body.loweredFunc.func.generator) {
-                        errors.push({
+                        errors.pushDiagnostic(CompilerDiagnostic.create({
                             severity: ErrorSeverity.InvalidReact,
-                            reason: 'useMemo callbacks may not be async or generator functions',
-                            description: null,
-                            loc: body.loc,
+                            category: 'useMemo() callbacks may not be async or generator functions',
+                            description: 'useMemo() callbacks are called once and must synchronously return a value.',
                             suggestions: null,
-                        });
+                        }).withDetail({
+                            kind: 'error',
+                            loc: body.loc,
+                            message: 'Async and generator functions are not supported',
+                        }));
                     }
                     break;
                 }
@@ -48448,14 +49089,21 @@ function validateLocalsNotReassignedAfterRender(fn) {
     const contextVariables = new Set();
     const reassignment = getContextReassignment(fn, contextVariables, false, false);
     if (reassignment !== null) {
-        CompilerError.throwInvalidReact({
-            reason: 'Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead',
-            description: reassignment.identifier.name !== null &&
-                reassignment.identifier.name.kind === 'named'
-                ? `Variable \`${reassignment.identifier.name.value}\` cannot be reassigned after render`
-                : '',
+        const errors = new CompilerError();
+        const variable = reassignment.identifier.name != null &&
+            reassignment.identifier.name.kind === 'named'
+            ? `\`${reassignment.identifier.name.value}\``
+            : 'variable';
+        errors.pushDiagnostic(CompilerDiagnostic.create({
+            severity: ErrorSeverity.InvalidReact,
+            category: 'Cannot reassign variable after render completes',
+            description: `Reassigning ${variable} after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.`,
+        }).withDetail({
+            kind: 'error',
             loc: reassignment.loc,
-        });
+            message: `Cannot reassign ${variable} after render completes`,
+        }));
+        throw errors;
     }
 }
 function getContextReassignment(fn, contextVariables, isFunctionExpression, isAsync) {
@@ -48478,14 +49126,21 @@ function getContextReassignment(fn, contextVariables, isFunctionExpression, isAs
                     }
                     if (reassignment !== null) {
                         if (isAsync || value.loweredFunc.func.async) {
-                            CompilerError.throwInvalidReact({
-                                reason: 'Reassigning a variable in an async function can cause inconsistent behavior on subsequent renders. Consider using state instead',
-                                description: reassignment.identifier.name !== null &&
-                                    reassignment.identifier.name.kind === 'named'
-                                    ? `Variable \`${reassignment.identifier.name.value}\` cannot be reassigned after render`
-                                    : '',
+                            const errors = new CompilerError();
+                            const variable = reassignment.identifier.name !== null &&
+                                reassignment.identifier.name.kind === 'named'
+                                ? `\`${reassignment.identifier.name.value}\``
+                                : 'variable';
+                            errors.pushDiagnostic(CompilerDiagnostic.create({
+                                severity: ErrorSeverity.InvalidReact,
+                                category: 'Cannot reassign variable in async function',
+                                description: 'Reassigning a variable in an async function can cause inconsistent behavior on subsequent renders. Consider using state instead',
+                            }).withDetail({
+                                kind: 'error',
                                 loc: reassignment.loc,
-                            });
+                                message: `Cannot reassign ${variable}`,
+                            }));
+                            throw errors;
                         }
                         reassigningFunctions.set(lvalue.identifier.id, reassignment);
                     }
@@ -48906,13 +49561,21 @@ function validateNoSetStateInEffects(fn) {
                         if (arg !== undefined && arg.kind === 'Identifier') {
                             const setState = setStateFunctions.get(arg.identifier.id);
                             if (setState !== undefined) {
-                                errors.push({
-                                    reason: 'Calling setState directly within a useEffect causes cascading renders and is not recommended. Consider alternatives to useEffect. (https://react.dev/learn/you-might-not-need-an-effect)',
-                                    description: null,
+                                errors.pushDiagnostic(CompilerDiagnostic.create({
+                                    category: 'Calling setState synchronously within an effect can trigger cascading renders',
+                                    description: 'Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. ' +
+                                        'In general, the body of an effect should do one or both of the following:\n' +
+                                        '* Update external systems with the latest state from React.\n' +
+                                        '* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\n' +
+                                        'Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. ' +
+                                        '(https://react.dev/learn/you-might-not-need-an-effect)',
                                     severity: ErrorSeverity.InvalidReact,
-                                    loc: setState.loc,
                                     suggestions: null,
-                                });
+                                }).withDetail({
+                                    kind: 'error',
+                                    loc: setState.loc,
+                                    message: 'Avoid calling setState() directly within an effect',
+                                }));
                             }
                         }
                     }
@@ -48964,11 +49627,15 @@ function validateNoJSXInTryStatement(fn) {
                 switch (value.kind) {
                     case 'JsxExpression':
                     case 'JsxFragment': {
-                        errors.push({
+                        errors.pushDiagnostic(CompilerDiagnostic.create({
                             severity: ErrorSeverity.InvalidReact,
-                            reason: `Unexpected JSX element within a try statement. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary)`,
+                            category: 'Avoid constructing JSX within try/catch',
+                            description: `React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary)`,
+                        }).withDetail({
+                            kind: 'error',
                             loc: value.loc,
-                        });
+                            message: 'Avoid constructing JSX within try/catch',
+                        }));
                         break;
                     }
                 }
@@ -49814,15 +50481,19 @@ function validateNoImpureFunctionsInRender(fn) {
                 const callee = value.kind === 'MethodCall' ? value.property : value.callee;
                 const signature = getFunctionCallSignature(fn.env, callee.identifier.type);
                 if (signature != null && signature.impure === true) {
-                    errors.push({
-                        reason: 'Calling an impure function can produce unstable results. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent)',
-                        description: signature.canonicalName != null
-                            ? `\`${signature.canonicalName}\` is an impure function whose results may change on every call`
-                            : null,
+                    errors.pushDiagnostic(CompilerDiagnostic.create({
+                        category: 'Cannot call impure function during render',
+                        description: (signature.canonicalName != null
+                            ? `\`${signature.canonicalName}\` is an impure function. `
+                            : '') +
+                            'Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent)',
                         severity: ErrorSeverity.InvalidReact,
-                        loc: callee.loc,
                         suggestions: null,
-                    });
+                    }).withDetail({
+                        kind: 'error',
+                        loc: callee.loc,
+                        message: 'Cannot call impure function',
+                    }));
                 }
             }
         }
@@ -49872,20 +50543,21 @@ function validateStaticComponents(fn) {
                     if (value.tag.kind === 'Identifier') {
                         const location = knownDynamicComponents.get(value.tag.identifier.id);
                         if (location != null) {
-                            error.push({
-                                reason: `Components created during render will reset their state each time they are created. Declare components outside of render. `,
+                            error.pushDiagnostic(CompilerDiagnostic.create({
                                 severity: ErrorSeverity.InvalidReact,
+                                category: 'Cannot create components during render',
+                                description: `Components created during render will reset their state each time they are created. Declare components outside of render. `,
+                            })
+                                .withDetail({
+                                kind: 'error',
                                 loc: value.tag.loc,
-                                description: null,
-                                suggestions: null,
-                            });
-                            error.push({
-                                reason: `The component may be created during render`,
-                                severity: ErrorSeverity.InvalidReact,
+                                message: 'This component is created during render',
+                            })
+                                .withDetail({
+                                kind: 'error',
                                 loc: location,
-                                description: null,
-                                suggestions: null,
-                            });
+                                message: 'The component is created during render here',
+                            }));
                         }
                     }
                 }
@@ -49903,16 +50575,27 @@ function validateNoFreezingKnownMutableFunctions(fn) {
         if (operand.effect === Effect.Freeze) {
             const effect = contextMutationEffects.get(operand.identifier.id);
             if (effect != null) {
-                errors.push({
-                    reason: `This argument is a function which may reassign or mutate local variables after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead`,
+                const place = [...effect.places][0];
+                const variable = place != null &&
+                    place.identifier.name != null &&
+                    place.identifier.name.kind === 'named'
+                    ? `\`${place.identifier.name.value}\``
+                    : 'a local variable';
+                errors.pushDiagnostic(CompilerDiagnostic.create({
+                    severity: ErrorSeverity.InvalidReact,
+                    category: 'Cannot modify local variables after render completes',
+                    description: `This argument is a function which may reassign or mutate ${variable} after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.`,
+                })
+                    .withDetail({
+                    kind: 'error',
                     loc: operand.loc,
-                    severity: ErrorSeverity.InvalidReact,
-                });
-                errors.push({
-                    reason: `The function modifies a local variable here`,
+                    message: `This function may (indirectly) reassign or modify ${variable} after render`,
+                })
+                    .withDetail({
+                    kind: 'error',
                     loc: effect.loc,
-                    severity: ErrorSeverity.InvalidReact,
-                });
+                    message: `This modifies ${variable}`,
+                }));
             }
         }
     }
@@ -50460,11 +51143,10 @@ function suppressionsToCompilerError(suppressionRanges) {
             default:
                 assertExhaustive$1(suppressionRange.source, 'Unhandled suppression source');
         }
-        error.pushErrorDetail(new CompilerErrorDetail({
-            reason: `${reason}. React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior`,
-            description: suppressionRange.disableComment.value.trim(),
+        error.pushDiagnostic(CompilerDiagnostic.create({
+            category: reason,
+            description: `React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior. Found suppression \`${suppressionRange.disableComment.value.trim()}\``,
             severity: ErrorSeverity.InvalidReact,
-            loc: (_a = suppressionRange.disableComment.loc) !== null && _a !== void 0 ? _a : null,
             suggestions: [
                 {
                     description: suggestion,
@@ -50475,6 +51157,10 @@ function suppressionsToCompilerError(suppressionRanges) {
                     op: CompilerSuggestionOperation.Remove,
                 },
             ],
+        }).withDetail({
+            kind: 'error',
+            loc: (_a = suppressionRange.disableComment.loc) !== null && _a !== void 0 ? _a : null,
+            message: 'Found React rule suppression',
         }));
     }
     return error;
@@ -50514,7 +51200,7 @@ function findDirectivesDynamicGating(directives, opts) {
     for (const directive of directives) {
         const maybeMatch = DYNAMIC_GATING_DIRECTIVE.exec(directive.value.value);
         if (maybeMatch != null && maybeMatch[1] != null) {
-            if (libExports.isValidIdentifier(maybeMatch[1])) {
+            if (libExports$1.isValidIdentifier(maybeMatch[1])) {
                 result.push({ directive, match: maybeMatch[1] });
             }
             else {
@@ -50574,7 +51260,7 @@ function logError(err, context, fnLoc) {
                 context.opts.logger.logEvent(context.filename, {
                     kind: 'CompileError',
                     fnLoc,
-                    detail: detail.options,
+                    detail,
                 });
             }
         }
@@ -51449,14 +52135,14 @@ function addImportsToProgram(path, programContext) {
             ...importsMap.values(),
         ].sort(({ imported: a }, { imported: b }) => a.localeCompare(b));
         const importSpecifiers = sortedImport.map(specifier => {
-            return libExports.importSpecifier(libExports.identifier(specifier.name), libExports.identifier(specifier.imported));
+            return libExports$1.importSpecifier(libExports$1.identifier(specifier.name), libExports$1.identifier(specifier.imported));
         });
         const maybeExistingImports = existingImports.get(moduleName);
         if (maybeExistingImports != null) {
             maybeExistingImports.pushContainer('specifiers', importSpecifiers);
         }
         else {
-            stmts.push(libExports.importDeclaration(importSpecifiers, libExports.stringLiteral(moduleName)));
+            stmts.push(libExports$1.importDeclaration(importSpecifiers, libExports$1.stringLiteral(moduleName)));
         }
     }
     path.unshiftContainer('body', stmts);
@@ -51645,13 +52331,13 @@ function injectReanimatedFlag(options) {
 }
 
 function throwInvalidReact(options, { logger, filename }) {
-    const detail = Object.assign(Object.assign({}, options), { severity: ErrorSeverity.InvalidReact });
+    const detail = Object.assign({ severity: ErrorSeverity.InvalidReact }, options);
     logger === null || logger === void 0 ? void 0 : logger.logEvent(filename, {
         kind: 'CompileError',
         fnLoc: null,
-        detail,
+        detail: new CompilerDiagnostic(detail),
     });
-    CompilerError.throw(detail);
+    CompilerError.throwDiagnostic(detail);
 }
 function isAutodepsSigil(arg) {
     if (arg.isIdentifier() && arg.node.name === 'AUTODEPS') {
@@ -51689,13 +52375,16 @@ function assertValidEffectImportReference(autodepsIndex, paths, context) {
             if (hasAutodepsArg && !hasInferredEffect) {
                 const maybeErrorDiagnostic = matchCompilerDiagnostic(path, context.transformErrors);
                 throwInvalidReact({
-                    reason: '[InferEffectDependencies] React Compiler is unable to infer dependencies of this effect. ' +
-                        'This will break your build! ' +
-                        'To resolve, either pass your own dependency array or fix reported compiler bailout diagnostics.',
-                    description: maybeErrorDiagnostic
-                        ? `(Bailout reason: ${maybeErrorDiagnostic})`
-                        : null,
-                    loc: (_a = parent.node.loc) !== null && _a !== void 0 ? _a : null,
+                    category: 'Cannot infer dependencies of this effect. This will break your build!',
+                    description: 'To resolve, either pass a dependency array or fix reported compiler bailout diagnostics.' +
+                        (maybeErrorDiagnostic ? ` ${maybeErrorDiagnostic}` : ''),
+                    details: [
+                        {
+                            kind: 'error',
+                            message: 'Cannot infer dependencies',
+                            loc: (_a = parent.node.loc) !== null && _a !== void 0 ? _a : GeneratedSource,
+                        },
+                    ],
                 }, context);
             }
         }
@@ -51706,12 +52395,18 @@ function assertValidFireImportReference(paths, context) {
     if (paths.length > 0) {
         const maybeErrorDiagnostic = matchCompilerDiagnostic(paths[0], context.transformErrors);
         throwInvalidReact({
-            reason: '[Fire] Untransformed reference to compiler-required feature. ' +
-                'Either remove this `fire` call or ensure it is successfully transformed by the compiler',
-            description: maybeErrorDiagnostic
-                ? `(Bailout reason: ${maybeErrorDiagnostic})`
-                : null,
-            loc: (_a = paths[0].node.loc) !== null && _a !== void 0 ? _a : null,
+            category: '[Fire] Untransformed reference to compiler-required feature.',
+            description: 'Either remove this `fire` call or ensure it is successfully transformed by the compiler' +
+                maybeErrorDiagnostic
+                ? ` ${maybeErrorDiagnostic}`
+                : '',
+            details: [
+                {
+                    kind: 'error',
+                    message: 'Untransformed `fire` call',
+                    loc: (_a = paths[0].node.loc) !== null && _a !== void 0 ? _a : GeneratedSource,
+                },
+            ],
         }, context);
     }
 }
@@ -51835,33 +52530,42 @@ function BabelPluginReactCompiler(_babel) {
             Program: {
                 enter(prog, pass) {
                     var _a, _b, _c, _d;
-                    const filename = (_a = pass.filename) !== null && _a !== void 0 ? _a : 'unknown';
-                    if (ENABLE_REACT_COMPILER_TIMINGS === true) {
-                        performance.mark(`${filename}:start`, {
-                            detail: 'BabelPlugin:Program:start',
+                    try {
+                        const filename = (_a = pass.filename) !== null && _a !== void 0 ? _a : 'unknown';
+                        if (ENABLE_REACT_COMPILER_TIMINGS === true) {
+                            performance.mark(`${filename}:start`, {
+                                detail: 'BabelPlugin:Program:start',
+                            });
+                        }
+                        let opts = parsePluginOptions(pass.opts);
+                        const isDev = (typeof true !== 'undefined' && true === true) ||
+                            process.env['NODE_ENV'] === 'development';
+                        if (opts.enableReanimatedCheck === true &&
+                            pipelineUsesReanimatedPlugin(pass.file.opts.plugins)) {
+                            opts = injectReanimatedFlag(opts);
+                        }
+                        if (opts.environment.enableResetCacheOnSourceFileChanges !== false &&
+                            isDev) {
+                            opts = Object.assign(Object.assign({}, opts), { environment: Object.assign(Object.assign({}, opts.environment), { enableResetCacheOnSourceFileChanges: true }) });
+                        }
+                        const result = compileProgram(prog, {
+                            opts,
+                            filename: (_b = pass.filename) !== null && _b !== void 0 ? _b : null,
+                            comments: (_c = pass.file.ast.comments) !== null && _c !== void 0 ? _c : [],
+                            code: pass.file.code,
                         });
+                        validateNoUntransformedReferences(prog, (_d = pass.filename) !== null && _d !== void 0 ? _d : null, opts.logger, opts.environment, result);
+                        if (ENABLE_REACT_COMPILER_TIMINGS === true) {
+                            performance.mark(`${filename}:end`, {
+                                detail: 'BabelPlugin:Program:end',
+                            });
+                        }
                     }
-                    let opts = parsePluginOptions(pass.opts);
-                    const isDev = (true === true) ;
-                    if (opts.enableReanimatedCheck === true &&
-                        pipelineUsesReanimatedPlugin(pass.file.opts.plugins)) {
-                        opts = injectReanimatedFlag(opts);
-                    }
-                    if (opts.environment.enableResetCacheOnSourceFileChanges !== false &&
-                        isDev) {
-                        opts = Object.assign(Object.assign({}, opts), { environment: Object.assign(Object.assign({}, opts.environment), { enableResetCacheOnSourceFileChanges: true }) });
-                    }
-                    const result = compileProgram(prog, {
-                        opts,
-                        filename: (_b = pass.filename) !== null && _b !== void 0 ? _b : null,
-                        comments: (_c = pass.file.ast.comments) !== null && _c !== void 0 ? _c : [],
-                        code: pass.file.code,
-                    });
-                    validateNoUntransformedReferences(prog, (_d = pass.filename) !== null && _d !== void 0 ? _d : null, opts.logger, opts.environment, result);
-                    if (ENABLE_REACT_COMPILER_TIMINGS === true) {
-                        performance.mark(`${filename}:end`, {
-                            detail: 'BabelPlugin:Program:end',
-                        });
+                    catch (e) {
+                        if (e instanceof CompilerError) {
+                            throw e.withPrintedMessage(pass.file.code, { eslint: false });
+                        }
+                        throw e;
                     }
                 },
                 exit(_, pass) {
@@ -51896,9 +52600,7 @@ const DEFAULT_REPORTABLE_LEVELS = new Set([
 ]);
 let reportableLevels = DEFAULT_REPORTABLE_LEVELS;
 function isReportableDiagnostic(detail) {
-    return (reportableLevels.has(detail.severity) &&
-        detail.loc != null &&
-        typeof detail.loc !== 'symbol');
+    return reportableLevels.has(detail.severity);
 }
 function makeSuggestions(detail) {
     const suggest = [];
@@ -51997,10 +52699,11 @@ const rule$1 = {
                 if (event.kind === 'CompileError') {
                     shouldReportUnusedOptOutDirective = false;
                     const detail = event.detail;
-                    const suggest = makeSuggestions(detail);
+                    const suggest = makeSuggestions(detail.options);
                     if (__unstable_donotuse_reportAllBailouts && event.fnLoc != null) {
-                        const locStr = detail.loc != null && typeof detail.loc !== 'symbol'
-                            ? ` (@:${detail.loc.start.line}:${detail.loc.start.column})`
+                        const loc = detail.primaryLocation();
+                        const locStr = loc != null && typeof loc !== 'symbol'
+                            ? ` (@:${loc.start.line}:${loc.start.column})`
                             : '';
                         let endLoc;
                         if (event.fnLoc.end.line === event.fnLoc.start.line) {
@@ -52017,24 +52720,26 @@ const rule$1 = {
                             end: endLoc,
                         };
                         context.report({
-                            message: `[ReactCompilerBailout] ${detail.reason}${locStr}`,
+                            message: `${detail.printErrorMessage(sourceCode.text, { eslint: true })} ${locStr}`,
                             loc: firstLineLoc,
                             suggest,
                         });
                     }
-                    if (!isReportableDiagnostic(detail)) {
+                    const loc = detail.primaryLocation();
+                    if (!isReportableDiagnostic(detail) ||
+                        loc == null ||
+                        typeof loc === 'symbol') {
                         return;
                     }
-                    if (hasFlowSuppression(detail.loc, 'react-rule-hook') ||
-                        hasFlowSuppression(detail.loc, 'react-rule-unsafe-ref')) {
+                    if (hasFlowSuppression(loc, 'react-rule-hook') ||
+                        hasFlowSuppression(loc, 'react-rule-unsafe-ref')) {
                         return;
                     }
-                    const loc = detail.loc == null || typeof detail.loc === 'symbol'
-                        ? event.fnLoc
-                        : detail.loc;
                     if (loc != null) {
                         context.report({
-                            message: detail.reason,
+                            message: detail.printErrorMessage(sourceCode.text, {
+                                eslint: true,
+                            }),
                             loc,
                             suggest,
                         });

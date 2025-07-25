@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6cd28dc2d7a00c6cb4b9d9b9c78f02a3>>
+ * @generated SignedSource<<de7399e9836a2ca5b9d523f1e28dfa58>>
  */
 
 "use strict";
@@ -2776,7 +2776,7 @@ __DEV__ &&
             selfTime.run(
               performance.measure.bind(
                 performance,
-                name,
+                "\u200b" + name,
                 reusableComponentOptions
               )
             );
@@ -2848,8 +2848,10 @@ __DEV__ &&
             }
           };
           debugTask
-            ? debugTask.run(performance.measure.bind(performance, name, fiber))
-            : performance.measure(name, fiber);
+            ? debugTask.run(
+                performance.measure.bind(performance, "\u200b" + name, fiber)
+              )
+            : performance.measure("\u200b" + name, fiber);
         }
       }
     }
@@ -2888,9 +2890,13 @@ __DEV__ &&
             };
             (fiber = fiber._debugTask)
               ? fiber.run(
-                  performance.measure.bind(performance, name, startTime)
+                  performance.measure.bind(
+                    performance,
+                    "\u200b" + name,
+                    startTime
+                  )
                 )
-              : performance.measure(name, startTime);
+              : performance.measure("\u200b" + name, startTime);
           }
         }
       } else
@@ -19583,11 +19589,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.2.0-native-fb-0d39496e-20250724" !== isomorphicReactPackageVersion)
+    if ("19.2.0-native-fb-19baee81-20250725" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.2.0-native-fb-0d39496e-20250724\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.2.0-native-fb-19baee81-20250725\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -19613,10 +19619,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-0d39496e-20250724",
+        version: "19.2.0-native-fb-19baee81-20250725",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-0d39496e-20250724"
+        reconcilerVersion: "19.2.0-native-fb-19baee81-20250725"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

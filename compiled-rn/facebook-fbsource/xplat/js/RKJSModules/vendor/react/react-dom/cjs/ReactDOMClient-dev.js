@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<644f91205e7ff804ab151a7097785d30>>
+ * @generated SignedSource<<071efcef088b318f0a3b3fbf6b2ce842>>
  */
 
 /*
@@ -4261,7 +4261,7 @@ __DEV__ &&
             selfTime.run(
               performance.measure.bind(
                 performance,
-                name,
+                "\u200b" + name,
                 reusableComponentOptions
               )
             );
@@ -4333,8 +4333,10 @@ __DEV__ &&
             }
           };
           debugTask
-            ? debugTask.run(performance.measure.bind(performance, name, fiber))
-            : performance.measure(name, fiber);
+            ? debugTask.run(
+                performance.measure.bind(performance, "\u200b" + name, fiber)
+              )
+            : performance.measure("\u200b" + name, fiber);
         }
       }
     }
@@ -4373,9 +4375,13 @@ __DEV__ &&
             };
             (fiber = fiber._debugTask)
               ? fiber.run(
-                  performance.measure.bind(performance, name, startTime)
+                  performance.measure.bind(
+                    performance,
+                    "\u200b" + name,
+                    startTime
+                  )
                 )
-              : performance.measure(name, startTime);
+              : performance.measure("\u200b" + name, startTime);
           }
         }
       } else
@@ -29006,11 +29012,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-native-fb-0d39496e-20250724" !== isomorphicReactPackageVersion)
+      if ("19.2.0-native-fb-19baee81-20250725" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-native-fb-0d39496e-20250724\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-native-fb-19baee81-20250725\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -29047,10 +29053,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-native-fb-0d39496e-20250724",
+          version: "19.2.0-native-fb-19baee81-20250725",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-native-fb-0d39496e-20250724"
+          reconcilerVersion: "19.2.0-native-fb-19baee81-20250725"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -29188,5 +29194,5 @@ __DEV__ &&
       listenToAllSupportedEvents(container);
       return new ReactDOMHydrationRoot(initialChildren);
     };
-    exports.version = "19.2.0-native-fb-0d39496e-20250724";
+    exports.version = "19.2.0-native-fb-19baee81-20250725";
   })();
