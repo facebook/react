@@ -21,26 +21,17 @@ function Component() {
 ## Error
 
 ```
-Found 2 errors:
+Found 1 error:
 
-Error: This function accesses a ref value (the `current` property), which may not be accessed during render. (https://react.dev/reference/react/useRef)
+Error: Cannot access refs during render
 
-error.invalid-disallow-mutating-refs-in-render-transitive.ts:9:2
-   7 |   };
-   8 |   const changeRef = setRef;
->  9 |   changeRef();
-     |   ^^^^^^^^^ This function accesses a ref value (the `current` property), which may not be accessed during render. (https://react.dev/reference/react/useRef)
-  10 |
-  11 |   return <button ref={ref} />;
-  12 | }
-
-Error: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef)
 
 error.invalid-disallow-mutating-refs-in-render-transitive.ts:9:2
    7 |   };
    8 |   const changeRef = setRef;
 >  9 |   changeRef();
-     |   ^^^^^^^^^ Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)
+     |   ^^^^^^^^^ This function accesses a ref value
   10 |
   11 |   return <button ref={ref} />;
   12 | }
