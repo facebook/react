@@ -51,22 +51,22 @@ import type {FetchFileWithCaching} from './Components/FetchFileWithCachingContex
 import type {HookNamesModuleLoaderFunction} from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {BrowserTheme} from 'react-devtools-shared/src/frontend/types';
-import type {ReactFunctionLocation} from 'shared/ReactTypes';
+import type {ReactFunctionLocation, ReactCallSite} from 'shared/ReactTypes';
 import type {SourceSelection} from './Editor/EditorPane';
 
 export type TabID = 'components' | 'profiler';
 
 export type ViewElementSource = (
-  source: ReactFunctionLocation,
-  symbolicatedSource: ReactFunctionLocation | null,
+  source: ReactFunctionLocation | ReactCallSite,
+  symbolicatedSource: ReactFunctionLocation | ReactCallSite | null,
 ) => void;
 export type ViewAttributeSource = (
   id: number,
   path: Array<string | number>,
 ) => void;
 export type CanViewElementSource = (
-  source: ReactFunctionLocation,
-  symbolicatedSource: ReactFunctionLocation | null,
+  source: ReactFunctionLocation | ReactCallSite,
+  symbolicatedSource: ReactFunctionLocation | ReactCallSite | null,
 ) => boolean;
 
 export type Props = {

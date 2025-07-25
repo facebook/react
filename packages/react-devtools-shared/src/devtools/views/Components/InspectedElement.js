@@ -18,8 +18,11 @@ import Toggle from '../Toggle';
 import {ElementTypeSuspense} from 'react-devtools-shared/src/frontend/types';
 import InspectedElementView from './InspectedElementView';
 import {InspectedElementContext} from './InspectedElementContext';
-import {getOpenInEditorURL} from '../../../utils';
-import {LOCAL_STORAGE_OPEN_IN_EDITOR_URL} from '../../../constants';
+import {getOpenInEditorURL, getAlwaysOpenInEditor} from '../../../utils';
+import {
+  LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
+  LOCAL_STORAGE_ALWAYS_OPEN_IN_EDITOR,
+} from '../../../constants';
 import FetchFileWithCachingContext from './FetchFileWithCachingContext';
 import {symbolicateSourceWithCache} from 'react-devtools-shared/src/symbolicateSource';
 import OpenInEditorButton from './OpenInEditorButton';
@@ -118,17 +121,25 @@ export default function InspectedElementWrapper(_: Props): React.Node {
     inspectedElement != null &&
     inspectedElement.canToggleSuspense;
 
-  const editorURL = useSyncExternalStore(
-    function subscribe(callback) {
-      window.addEventListener(LOCAL_STORAGE_OPEN_IN_EDITOR_URL, callback);
+  const alwaysOpenInEditor = useSyncExternalStore(
+    useCallback(function subscribe(callback) {
+      window.addEventListener(LOCAL_STORAGE_ALWAYS_OPEN_IN_EDITOR, callback);
       return function unsubscribe() {
-        window.removeEventListener(LOCAL_STORAGE_OPEN_IN_EDITOR_URL, callback);
+        window.removeEventListener(
+          LOCAL_STORAGE_ALWAYS_OPEN_IN_EDITOR,
+          callback,
+        );
       };
-    },
-    function getState() {
-      return getOpenInEditorURL();
-    },
+    }, []),
+    getAlwaysOpenInEditor,
   );
+
+  const editorURL = useSyncExternalStore(function subscribe(callback) {
+    window.addEventListener(LOCAL_STORAGE_OPEN_IN_EDITOR_URL, callback);
+    return function unsubscribe() {
+      window.removeEventListener(LOCAL_STORAGE_OPEN_IN_EDITOR_URL, callback);
+    };
+  }, getOpenInEditorURL);
 
   const toggleErrored = useCallback(() => {
     if (inspectedElement == null) {
@@ -217,7 +228,8 @@ export default function InspectedElementWrapper(_: Props): React.Node {
           </div>
         </div>
 
-        {!!editorURL &&
+        {!alwaysOpenInEditor &&
+          !!editorURL &&
           inspectedElement != null &&
           inspectedElement.source != null &&
           symbolicatedSourcePromise != null && (
@@ -271,8 +283,7 @@ export default function InspectedElementWrapper(_: Props): React.Node {
 
         {!hideViewSourceAction && (
           <InspectedElementViewSourceButton
-            canViewSource={inspectedElement?.canViewSource}
-            source={inspectedElement?.source}
+            source={inspectedElement ? inspectedElement.source : null}
             symbolicatedSourcePromise={symbolicatedSourcePromise}
           />
         )}

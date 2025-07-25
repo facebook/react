@@ -35,6 +35,7 @@ import {
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
   LOCAL_STORAGE_COMPONENT_FILTER_PREFERENCES_KEY,
   LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
+  LOCAL_STORAGE_ALWAYS_OPEN_IN_EDITOR,
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
   SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
   SESSION_STORAGE_RECORD_TIMELINE_KEY,
@@ -398,6 +399,14 @@ export function getOpenInEditorURL(): string {
     }
   } catch (error) {}
   return getDefaultOpenInEditorURL();
+}
+
+export function getAlwaysOpenInEditor(): boolean {
+  try {
+    const raw = localStorageGetItem(LOCAL_STORAGE_ALWAYS_OPEN_IN_EDITOR);
+    return raw === 'true';
+  } catch (error) {}
+  return false;
 }
 
 type ParseElementDisplayNameFromBackendReturn = {
