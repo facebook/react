@@ -4153,7 +4153,10 @@ function renderNode(
         // $FlowFixMe[method-unbinding]
         if (typeof x.then === 'function') {
           const wakeable: Wakeable = (x: any);
-          const thenableState = getThenableStateAfterSuspending();
+          const thenableState =
+            thrownValue === SuspenseException
+              ? getThenableStateAfterSuspending()
+              : null;
           const newTask = spawnNewSuspendedReplayTask(
             request,
             // $FlowFixMe: Refined.
@@ -4186,7 +4189,10 @@ function renderNode(
           // performance but it can lead to stack overflows in extremely deep trees.
           // We do have the ability to create a trampoile if this happens which makes
           // this kind of zero-cost.
-          const thenableState = getThenableStateAfterSuspending();
+          const thenableState =
+            thrownValue === SuspenseException
+              ? getThenableStateAfterSuspending()
+              : null;
           const newTask = spawnNewSuspendedReplayTask(
             request,
             // $FlowFixMe: Refined.
@@ -4246,7 +4252,10 @@ function renderNode(
         // $FlowFixMe[method-unbinding]
         if (typeof x.then === 'function') {
           const wakeable: Wakeable = (x: any);
-          const thenableState = getThenableStateAfterSuspending();
+          const thenableState =
+            thrownValue === SuspenseException
+              ? getThenableStateAfterSuspending()
+              : null;
           const newTask = spawnNewSuspendedRenderTask(
             request,
             // $FlowFixMe: Refined.
@@ -4317,7 +4326,10 @@ function renderNode(
           // performance but it can lead to stack overflows in extremely deep trees.
           // We do have the ability to create a trampoile if this happens which makes
           // this kind of zero-cost.
-          const thenableState = getThenableStateAfterSuspending();
+          const thenableState =
+            thrownValue === SuspenseException
+              ? getThenableStateAfterSuspending()
+              : null;
           const newTask = spawnNewSuspendedRenderTask(
             request,
             // $FlowFixMe: Refined.
@@ -5233,7 +5245,10 @@ function retryRenderTask(
       if (typeof x.then === 'function') {
         // Something suspended again, let's pick it back up later.
         segment.status = PENDING;
-        task.thenableState = getThenableStateAfterSuspending();
+        task.thenableState =
+          thrownValue === SuspenseException
+            ? getThenableStateAfterSuspending()
+            : null;
         const ping = task.ping;
         // We've asserted that x is a thenable above
         (x: any).then(ping, ping);
@@ -5338,7 +5353,10 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
         // Something suspended again, let's pick it back up later.
         const ping = task.ping;
         x.then(ping, ping);
-        task.thenableState = getThenableStateAfterSuspending();
+        task.thenableState =
+          thrownValue === SuspenseException
+            ? getThenableStateAfterSuspending()
+            : null;
         return;
       }
     }
