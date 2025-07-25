@@ -14,6 +14,7 @@ import {
   Identifier,
   IdentifierId,
   Instruction,
+  InstructionKind,
   makePropertyLiteral,
   makeType,
   PropType,
@@ -194,10 +195,27 @@ function* generateInstructionTypes(
       break;
     }
 
-    // We intentionally do not infer types for context variables
+    // We intentionally do not infer types for most context variables
     case 'DeclareContext':
-    case 'StoreContext':
     case 'LoadContext': {
+      break;
+    }
+    case 'StoreContext': {
+      /**
+       * The caveat is StoreContext const, where we know the value is
+       * assigned once such that everywhere the value is accessed, it
+       * must have the same type from the rvalue.
+       *
+       * A concrete example where this is useful is `const ref = useRef()`
+       * where the ref is referenced before its declaration in a function
+       * expression, causing it to be converted to a const context variable.
+       */
+      if (value.lvalue.kind === InstructionKind.Const) {
+        yield equation(
+          value.lvalue.place.identifier.type,
+          value.value.identifier.type,
+        );
+      }
       break;
     }
 
