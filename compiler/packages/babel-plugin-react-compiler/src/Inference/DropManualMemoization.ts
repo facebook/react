@@ -284,26 +284,33 @@ function extractManualMemoizationArgs(
   instr: TInstruction<CallExpression> | TInstruction<MethodCall>,
   kind: 'useCallback' | 'useMemo',
   sidemap: IdentifierSidemap,
+  errors: CompilerError,
 ): {
-  fnPlace: Place;
+  fnPlace: Place | null;
   depsList: Array<ManualMemoDependency> | null;
 } {
   const [fnPlace, depsListPlace] = instr.value.args as Array<
     Place | SpreadPattern | undefined
   >;
   if (fnPlace == null) {
-    CompilerError.throwInvalidReact({
+    errors.push({
       reason: `Expected a callback function to be passed to ${kind}`,
+      severity: ErrorSeverity.InvalidReact,
       loc: instr.value.loc,
       suggestions: null,
+      description: null,
     });
+    return {fnPlace: null, depsList: null};
   }
   if (fnPlace.kind === 'Spread' || depsListPlace?.kind === 'Spread') {
-    CompilerError.throwInvalidReact({
+    errors.push({
       reason: `Unexpected spread argument to ${kind}`,
+      severity: ErrorSeverity.InvalidReact,
       loc: instr.value.loc,
       suggestions: null,
+      description: null,
     });
+    return {fnPlace: null, depsList: null};
   }
   let depsList: Array<ManualMemoDependency> | null = null;
   if (depsListPlace != null) {
@@ -311,23 +318,30 @@ function extractManualMemoizationArgs(
       depsListPlace.identifier.id,
     );
     if (maybeDepsList == null) {
-      CompilerError.throwInvalidReact({
+      errors.push({
         reason: `Expected the dependency list for ${kind} to be an array literal`,
+        severity: ErrorSeverity.InvalidReact,
         suggestions: null,
         loc: depsListPlace.loc,
+        description: null,
       });
+      return {fnPlace, depsList: null};
     }
-    depsList = maybeDepsList.map(dep => {
+    depsList = [];
+    for (const dep of maybeDepsList) {
       const maybeDep = sidemap.maybeDeps.get(dep.identifier.id);
       if (maybeDep == null) {
-        CompilerError.throwInvalidReact({
+        errors.push({
           reason: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
+          severity: ErrorSeverity.InvalidReact,
           suggestions: null,
           loc: dep.loc,
+          description: null,
         });
+      } else {
+        depsList.push(maybeDep);
       }
-      return maybeDep;
-    });
+    }
   }
   return {
     fnPlace,
@@ -396,7 +410,12 @@ export function dropManualMemoization(
             instr as TInstruction<CallExpression> | TInstruction<MethodCall>,
             manualMemo.kind,
             sidemap,
+            errors,
           );
+
+          if (fnPlace == null) {
+            continue;
+          }
 
           /**
            * Bailout on void return useMemos. This is an anti-pattern where code might be using
@@ -447,11 +466,14 @@ export function dropManualMemoization(
              * is rare and likely sketchy.
              */
             if (!sidemap.functions.has(fnPlace.identifier.id)) {
-              CompilerError.throwInvalidReact({
+              errors.push({
                 reason: `Expected the first argument to be an inline function expression`,
+                severity: ErrorSeverity.InvalidReact,
                 suggestions: [],
                 loc: fnPlace.loc,
+                description: null,
               });
+              continue;
             }
             const memoDecl: Place =
               manualMemo.kind === 'useMemo'
