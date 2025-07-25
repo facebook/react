@@ -170,6 +170,7 @@ type FiberInstance = {
   source: null | string | Error | ReactFunctionLocation, // source location of this component function, or owned child stack
   logCount: number, // total number of errors/warnings last seen
   treeBaseDuration: number, // the profiled time of the last render of this subtree
+  suspendedBy: null | Array<ReactAsyncInfo>, // things that suspended in the children position of this component
   data: Fiber, // one of a Fiber pair
 };
 
@@ -183,6 +184,7 @@ function createFiberInstance(fiber: Fiber): FiberInstance {
     source: null,
     logCount: 0,
     treeBaseDuration: 0,
+    suspendedBy: null,
     data: fiber,
   };
 }
@@ -198,6 +200,7 @@ type FilteredFiberInstance = {
   source: null | string | Error | ReactFunctionLocation, // always null here.
   logCount: number, // total number of errors/warnings last seen
   treeBaseDuration: number, // the profiled time of the last render of this subtree
+  suspendedBy: null | Array<ReactAsyncInfo>, // not used
   data: Fiber, // one of a Fiber pair
 };
 
@@ -212,6 +215,7 @@ function createFilteredFiberInstance(fiber: Fiber): FilteredFiberInstance {
     source: null,
     logCount: 0,
     treeBaseDuration: 0,
+    suspendedBy: null,
     data: fiber,
   }: any);
 }
@@ -230,6 +234,7 @@ type VirtualInstance = {
   source: null | string | Error | ReactFunctionLocation, // source location of this server component, or owned child stack
   logCount: number, // total number of errors/warnings last seen
   treeBaseDuration: number, // the profiled time of the last render of this subtree
+  suspendedBy: null | Array<ReactAsyncInfo>, // things that blocked the server component's child from rendering
   // The latest info for this instance. This can be updated over time and the
   // same info can appear in more than once ServerComponentInstance.
   data: ReactComponentInfo,
@@ -247,6 +252,7 @@ function createVirtualInstance(
     source: null,
     logCount: 0,
     treeBaseDuration: 0,
+    suspendedBy: null,
     data: debugEntry,
   };
 }
@@ -2359,6 +2365,21 @@ export function attach(
   // the current parent here as well.
   let reconcilingParent: null | DevToolsInstance = null;
 
+  function insertSuspendedBy(asyncInfo: ReactAsyncInfo): void {
+    const parentInstance = reconcilingParent;
+    if (parentInstance === null) {
+      // Suspending at the root is not attributed to any particular component
+      // TODO: It should be attributed to the shell.
+      return;
+    }
+    const suspendedBy = parentInstance.suspendedBy;
+    if (suspendedBy === null) {
+      parentInstance.suspendedBy = [asyncInfo];
+    } else if (suspendedBy.indexOf(asyncInfo) === -1) {
+      suspendedBy.push(asyncInfo);
+    }
+  }
+
   function insertChild(instance: DevToolsInstance): void {
     const parentInstance = reconcilingParent;
     if (parentInstance === null) {
@@ -2520,6 +2541,17 @@ export function attach(
       if (fiber._debugInfo) {
         for (let i = 0; i < fiber._debugInfo.length; i++) {
           const debugEntry = fiber._debugInfo[i];
+          if (debugEntry.awaited) {
+            // Async Info
+            const asyncInfo: ReactAsyncInfo = (debugEntry: any);
+            if (level === virtualLevel) {
+              // Track any async info between the previous virtual instance up until to this
+              // instance and add it to the parent. This can add the same set multiple times
+              // so we assume insertSuspendedBy dedupes.
+              insertSuspendedBy(asyncInfo);
+            }
+            if (previousVirtualInstance) continue;
+          }
           if (typeof debugEntry.name !== 'string') {
             // Not a Component. Some other Debug Info.
             continue;
@@ -2773,6 +2805,7 @@ export function attach(
     // Move all the children of this instance to the remaining set.
     remainingReconcilingChildren = instance.firstChild;
     instance.firstChild = null;
+    instance.suspendedBy = null;
     try {
       // Unmount the remaining set.
       unmountRemainingChildren();
@@ -2973,6 +3006,7 @@ export function attach(
     // We'll move them back one by one, and anything that remains is deleted.
     remainingReconcilingChildren = virtualInstance.firstChild;
     virtualInstance.firstChild = null;
+    virtualInstance.suspendedBy = null;
     try {
       if (
         updateVirtualChildrenRecursively(
@@ -3024,6 +3058,17 @@ export function attach(
       if (nextChild._debugInfo) {
         for (let i = 0; i < nextChild._debugInfo.length; i++) {
           const debugEntry = nextChild._debugInfo[i];
+          if (debugEntry.awaited) {
+            // Async Info
+            const asyncInfo: ReactAsyncInfo = (debugEntry: any);
+            if (level === virtualLevel) {
+              // Track any async info between the previous virtual instance up until to this
+              // instance and add it to the parent. This can add the same set multiple times
+              // so we assume insertSuspendedBy dedupes.
+              insertSuspendedBy(asyncInfo);
+            }
+            if (previousVirtualInstance) continue;
+          }
           if (typeof debugEntry.name !== 'string') {
             // Not a Component. Some other Debug Info.
             continue;
@@ -3348,6 +3393,7 @@ export function attach(
       // We'll move them back one by one, and anything that remains is deleted.
       remainingReconcilingChildren = fiberInstance.firstChild;
       fiberInstance.firstChild = null;
+      fiberInstance.suspendedBy = null;
     }
     try {
       if (
@@ -4383,6 +4429,13 @@ export function attach(
       nativeTag = getNativeTag(fiber.stateNode);
     }
 
+    // This set is an edge case where if you pass a promise to a Client Component into a children
+    // position without a Server Component as the direct parent. E.g. <div>{promise}</div>
+    // In this case, this becomes associated with the Client/Host Component where as normally
+    // you'd expect these to be associated with the Server Component that awaited the data.
+    // TODO: Prepend other suspense sources like css, images and use().
+    const suspendedBy = fiberInstance.suspendedBy;
+
     return {
       id: fiberInstance.id,
 
@@ -4439,8 +4492,12 @@ export function attach(
           ? []
           : Array.from(componentLogsEntry.warnings.entries()),
 
-      // TODO
-      suspendedBy: [],
+      suspendedBy:
+        suspendedBy === null
+          ? []
+          : suspendedBy.map((info, index) =>
+              serializeAsyncInfo(info, index, fiberInstance),
+            ),
 
       // List of owners
       owners,
@@ -4495,8 +4552,8 @@ export function attach(
     const componentLogsEntry =
       componentInfoToComponentLogsMap.get(componentInfo);
 
-    // TODO
-    const suspendedBy: Array<ReactAsyncInfo> = [];
+    // Things that Suspended this Server Component (use(), awaits and direct child promises)
+    const suspendedBy = virtualInstance.suspendedBy;
 
     return {
       id: virtualInstance.id,
@@ -4538,10 +4595,12 @@ export function attach(
           ? []
           : Array.from(componentLogsEntry.warnings.entries()),
 
-      // Things that Suspended this Server Component
-      suspendedBy: suspendedBy.map((info, index) =>
-        serializeAsyncInfo(info, index, virtualInstance),
-      ),
+      suspendedBy:
+        suspendedBy === null
+          ? []
+          : suspendedBy.map((info, index) =>
+              serializeAsyncInfo(info, index, virtualInstance),
+            ),
 
       // List of owners
       owners,
