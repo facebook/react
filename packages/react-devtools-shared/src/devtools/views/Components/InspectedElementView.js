@@ -18,6 +18,7 @@ import InspectedElementPropsTree from './InspectedElementPropsTree';
 import InspectedElementStateTree from './InspectedElementStateTree';
 import InspectedElementStyleXPlugin from './InspectedElementStyleXPlugin';
 import InspectedElementSuspenseToggle from './InspectedElementSuspenseToggle';
+import InspectedElementSuspendedBy from './InspectedElementSuspendedBy';
 import NativeStyleEditor from './NativeStyleEditor';
 import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 import InspectedElementSourcePanel from './InspectedElementSourcePanel';
@@ -150,6 +151,15 @@ export default function InspectedElementView({
 
         <div className={styles.InspectedElementSection}>
           <NativeStyleEditor />
+        </div>
+
+        <div className={styles.InspectedElementSection}>
+          <InspectedElementSuspendedBy
+            bridge={bridge}
+            element={element}
+            inspectedElement={inspectedElement}
+            store={store}
+          />
         </div>
 
         {showRenderedBy && (
