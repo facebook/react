@@ -62,7 +62,8 @@ export type HookType =
   | 'useCacheRefresh'
   | 'useOptimistic'
   | 'useFormState'
-  | 'useActionState';
+  | 'useActionState'
+  | 'useSetStateWithCallback';
 
 export type ContextDependency<T> = {
   context: ReactContext<T>,
@@ -455,6 +456,7 @@ export type Dispatcher = {
     initialState: Awaited<S>,
     permalink?: string,
   ) => [Awaited<S>, (P) => void, boolean],
+  useSetStateWithCallback: <T>(initialValue: T) => [T, (value: T, callback?: () => void) => void],
 };
 
 export type AsyncDispatcher = {
