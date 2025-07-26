@@ -16,6 +16,7 @@ import {serializeDataForCopy} from '../utils';
 import Store from '../../store';
 import styles from './InspectedElementSharedStyles.css';
 import {withPermissionsCheck} from 'react-devtools-shared/src/frontend/utils/withPermissionsCheck';
+import StackTraceView from './StackTraceView';
 import OwnerView from './OwnerView';
 
 import type {InspectedElement} from 'react-devtools-shared/src/frontend/types';
@@ -68,12 +69,7 @@ function SuspendedByRow({
         store={store}
         value={asyncInfo.awaited.value}
       />
-      <div>
-        {stack !== null &&
-          stack.map(callsite => {
-            return <div>{callsite[0]}</div>;
-          })}
-      </div>
+      {stack !== null && stack.length > 0 && <StackTraceView stack={stack} />}
       {owner !== null && owner.id !== inspectedElement.id ? (
         <OwnerView
           key={owner.id}
