@@ -48,7 +48,11 @@ type Props = {
 };
 
 export default function StackTraceView({stack}: Props): React.Node {
-  return stack.map((callSite, index) => (
-    <CallSiteView key={index} callSite={callSite} />
-  ));
+  return (
+    <div className={styles.StackTraceView}>
+      {stack.map((callSite, index) => (
+        <CallSiteView key={index} callSite={callSite} />
+      ))}
+    </div>
+  );
 }

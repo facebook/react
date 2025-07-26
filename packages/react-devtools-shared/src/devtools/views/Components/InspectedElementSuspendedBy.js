@@ -9,6 +9,7 @@
 
 import {copy} from 'clipboard-js';
 import * as React from 'react';
+import {useState} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import KeyValue from './KeyValue';
@@ -40,6 +41,7 @@ function SuspendedByRow({
   asyncInfo,
   index,
 }: RowProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const name = asyncInfo.awaited.name;
   let stack;
   let owner;
@@ -51,36 +53,53 @@ function SuspendedByRow({
     owner = asyncInfo.owner;
   }
   return (
-    <div>
-      <div>{name}</div>
-      <KeyValue
-        alphaSort={true}
-        bridge={bridge}
-        canDeletePaths={false}
-        canEditValues={false}
-        canRenamePaths={false}
-        depth={1}
-        element={element}
-        hidden={false}
-        inspectedElement={inspectedElement}
-        name={'Promise'}
-        path={[index, 'awaited', 'value']}
-        pathRoot="suspendedBy"
-        store={store}
-        value={asyncInfo.awaited.value}
-      />
-      {stack !== null && stack.length > 0 && <StackTraceView stack={stack} />}
-      {owner !== null && owner.id !== inspectedElement.id ? (
-        <OwnerView
-          key={owner.id}
-          displayName={owner.displayName || 'Anonymous'}
-          hocDisplayNames={owner.hocDisplayNames}
-          compiledWithForget={owner.compiledWithForget}
-          id={owner.id}
-          isInStore={store.containsElement(owner.id)}
-          type={owner.type}
+    <div className={styles.CollapsableRow}>
+      <Button
+        className={styles.CollapsableHeader}
+        onClick={() => setIsOpen(prevIsOpen => !prevIsOpen)}
+        title={`${isOpen ? 'Collapse' : 'Expand'}`}>
+        <ButtonIcon
+          className={styles.CollapsableHeaderIcon}
+          type={isOpen ? 'expanded' : 'collapsed'}
         />
-      ) : null}
+        <span className={styles.CollapsableHeaderTitle}>{name}</span>
+      </Button>
+      {isOpen && (
+        <div className={styles.CollapsableContent}>
+          <div className={styles.PreviewContainer}>
+            <KeyValue
+              alphaSort={true}
+              bridge={bridge}
+              canDeletePaths={false}
+              canEditValues={false}
+              canRenamePaths={false}
+              depth={1}
+              element={element}
+              hidden={false}
+              inspectedElement={inspectedElement}
+              name={'Promise'}
+              path={[index, 'awaited', 'value']}
+              pathRoot="suspendedBy"
+              store={store}
+              value={asyncInfo.awaited.value}
+            />
+          </div>
+          {stack !== null && stack.length > 0 && (
+            <StackTraceView stack={stack} />
+          )}
+          {owner !== null && owner.id !== inspectedElement.id ? (
+            <OwnerView
+              key={owner.id}
+              displayName={owner.displayName || 'Anonymous'}
+              hocDisplayNames={owner.hocDisplayNames}
+              compiledWithForget={owner.compiledWithForget}
+              id={owner.id}
+              isInStore={store.containsElement(owner.id)}
+              type={owner.type}
+            />
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,10 @@
+.StackTraceView {
+  padding: 0.25rem;
+}
+
 .CallSite {
   display: block;
+  padding-left: 1rem;
 }
 
 .Link {
