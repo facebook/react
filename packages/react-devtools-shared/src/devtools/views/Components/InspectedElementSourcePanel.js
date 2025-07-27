@@ -9,7 +9,6 @@
 
 import * as React from 'react';
 import {copy} from 'clipboard-js';
-import {toNormalUrl} from 'jsc-safe-url';
 
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
@@ -20,6 +19,8 @@ import useOpenResource from '../useOpenResource';
 
 import type {ReactFunctionLocation} from 'shared/ReactTypes';
 import styles from './InspectedElementSourcePanel.css';
+
+import formatLocationForDisplay from './formatLocationForDisplay';
 
 type Props = {
   source: ReactFunctionLocation,
@@ -95,52 +96,21 @@ function FormattedSourceString({source, symbolicatedSourcePromise}: Props) {
     symbolicatedSource,
   );
 
-  const [, sourceURL, line] =
+  const [, sourceURL, line, column] =
     symbolicatedSource == null ? source : symbolicatedSource;
 
   return (
     <div
       className={styles.SourceOneLiner}
       data-testname="InspectedElementView-FormattedSourceString">
-      {linkIsEnabled ? (
-        <span className={styles.Link} onClick={viewSource}>
-          {formatSourceForDisplay(sourceURL, line)}
-        </span>
-      ) : (
-        formatSourceForDisplay(sourceURL, line)
-      )}
+      <span
+        className={linkIsEnabled ? styles.Link : null}
+        title={sourceURL + ':' + line}
+        onClick={viewSource}>
+        {formatLocationForDisplay(sourceURL, line, column)}
+      </span>
     </div>
   );
-}
-
-// This function is based on describeComponentFrame() in packages/shared/ReactComponentStackFrame
-function formatSourceForDisplay(sourceURL: string, line: number) {
-  // Metro can return JSC-safe URLs, which have `//&` as a delimiter
-  // https://www.npmjs.com/package/jsc-safe-url
-  const sanitizedSourceURL = sourceURL.includes('//&')
-    ? toNormalUrl(sourceURL)
-    : sourceURL;
-
-  // Note: this RegExp doesn't work well with URLs from Metro,
-  // which provides bundle URL with query parameters prefixed with /&
-  const BEFORE_SLASH_RE = /^(.*)[\\\/]/;
-
-  let nameOnly = sanitizedSourceURL.replace(BEFORE_SLASH_RE, '');
-
-  // In DEV, include code for a common special case:
-  // prefer "folder/index.js" instead of just "index.js".
-  if (/^index\./.test(nameOnly)) {
-    const match = sanitizedSourceURL.match(BEFORE_SLASH_RE);
-    if (match) {
-      const pathBeforeSlash = match[1];
-      if (pathBeforeSlash) {
-        const folderName = pathBeforeSlash.replace(BEFORE_SLASH_RE, '');
-        nameOnly = folderName + '/' + nameOnly;
-      }
-    }
-  }
-
-  return `${nameOnly}:${line}`;
 }
 
 export default InspectedElementSourcePanel;
