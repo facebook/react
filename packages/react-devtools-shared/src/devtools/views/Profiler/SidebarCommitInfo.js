@@ -14,7 +14,7 @@ import Updaters from './Updaters';
 import {formatDuration, formatTime} from './utils';
 import {StoreContext} from '../context';
 import {getCommitTree} from './CommitTreeBuilder';
-
+import SectionTitle from '../components/SectionTitle';
 import styles from './SidebarCommitInfo.css';
 
 export type Props = {};
@@ -51,7 +51,7 @@ export default function SidebarCommitInfo(_: Props): React.Node {
 
   return (
     <Fragment>
-      <div className={styles.Toolbar}>Commit information</div>
+      <SectionTitle>Commit information</SectionTitle>
       <div className={styles.Content}>
         <ul className={styles.List}>
           {priorityLevel !== null && (
