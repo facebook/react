@@ -755,6 +755,10 @@ export function attach(
       inspectedElement.state,
       createIsPathAllowed('state'),
     );
+    inspectedElement.suspendedBy = cleanForBridge(
+      inspectedElement.suspendedBy,
+      createIsPathAllowed('suspendedBy'),
+    );
 
     return {
       id,
