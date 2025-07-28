@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<7d905134e4619bd8455489186c1eb4ad>>
+ * @generated SignedSource<<97679be2952d86c2d3eb0c5b32ce41e9>>
  */
 
 'use strict';
@@ -52513,6 +52513,7 @@ const COMPILER_OPTIONS = {
         validateNoImpureFunctionsInRender: true,
         validateStaticComponents: true,
         validateNoFreezingKnownMutableFunctions: true,
+        validateNoVoidUseMemo: true,
     }),
 };
 const rule$1 = {

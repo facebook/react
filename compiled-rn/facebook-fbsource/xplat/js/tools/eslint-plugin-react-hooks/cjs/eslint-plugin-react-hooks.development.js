@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<1e211c71e7a37149f580804368da78b4>>
+ * @generated SignedSource<<a47b8848ba2f41a3a5bf4b93518b6c18>>
  */
 
 'use strict';
@@ -52734,6 +52734,7 @@ const COMPILER_OPTIONS = {
         validateNoImpureFunctionsInRender: true,
         validateStaticComponents: true,
         validateNoFreezingKnownMutableFunctions: true,
+        validateNoVoidUseMemo: true,
     }),
 };
 const rule$1 = {
