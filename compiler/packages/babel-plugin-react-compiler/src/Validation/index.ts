@@ -6,7 +6,6 @@
  */
 
 export {validateContextVariableLValues} from './ValidateContextVariableLValues';
-export {validateNoVoidUseMemo} from './ValidateNoVoidUseMemo';
 export {validateHooksUsage} from './ValidateHooksUsage';
 export {validateMemoizedEffectDependencies} from './ValidateMemoizedEffectDependencies';
 export {validateNoCapitalizedCalls} from './ValidateNoCapitalizedCalls';
