@@ -32,6 +32,8 @@ Found 1 error:
 
 Error: Expected the dependency list for useMemo to be an array literal
 
+Expected the dependency list for useMemo to be an array literal
+
 error.useMemo-non-literal-depslist.ts:10:4
    8 |       return text.toUpperCase();
    9 |     },
