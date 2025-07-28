@@ -218,6 +218,7 @@ function backendToFrontendSerializedAsyncInfo(
   return {
     awaited: {
       name: ioInfo.name,
+      description: ioInfo.description,
       start: ioInfo.start,
       end: ioInfo.end,
       value: ioInfo.value,
