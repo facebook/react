@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<fcb375dde21813a6f7625a415256ab33>>
+ * @generated SignedSource<<1e211c71e7a37149f580804368da78b4>>
  */
 
 'use strict';
@@ -43756,7 +43756,7 @@ function collectMaybeMemoDependencies(value, maybeDeps, optional) {
     }
     return null;
 }
-function collectTemporaries$1(instr, env, sidemap) {
+function collectTemporaries(instr, env, sidemap) {
     const { value, lvalue } = instr;
     switch (value.kind) {
         case 'FunctionExpression': {
@@ -43853,43 +43853,69 @@ function getManualMemoizationReplacement(fn, loc, kind) {
         };
     }
 }
-function extractManualMemoizationArgs(instr, kind, sidemap) {
+function extractManualMemoizationArgs(instr, kind, sidemap, errors) {
     const [fnPlace, depsListPlace] = instr.value.args;
     if (fnPlace == null) {
-        CompilerError.throwInvalidReact({
-            reason: `Expected a callback function to be passed to ${kind}`,
-            loc: instr.value.loc,
+        errors.pushDiagnostic(CompilerDiagnostic.create({
+            severity: ErrorSeverity.InvalidReact,
+            category: `Expected a callback function to be passed to ${kind}`,
+            description: `Expected a callback function to be passed to ${kind}`,
             suggestions: null,
-        });
+        }).withDetail({
+            kind: 'error',
+            loc: instr.value.loc,
+            message: `Expected a callback function to be passed to ${kind}`,
+        }));
+        return { fnPlace: null, depsList: null };
     }
     if (fnPlace.kind === 'Spread' || (depsListPlace === null || depsListPlace === void 0 ? void 0 : depsListPlace.kind) === 'Spread') {
-        CompilerError.throwInvalidReact({
-            reason: `Unexpected spread argument to ${kind}`,
-            loc: instr.value.loc,
+        errors.pushDiagnostic(CompilerDiagnostic.create({
+            severity: ErrorSeverity.InvalidReact,
+            category: `Unexpected spread argument to ${kind}`,
+            description: `Unexpected spread argument to ${kind}`,
             suggestions: null,
-        });
+        }).withDetail({
+            kind: 'error',
+            loc: instr.value.loc,
+            message: `Unexpected spread argument to ${kind}`,
+        }));
+        return { fnPlace: null, depsList: null };
     }
     let depsList = null;
     if (depsListPlace != null) {
         const maybeDepsList = sidemap.maybeDepsLists.get(depsListPlace.identifier.id);
         if (maybeDepsList == null) {
-            CompilerError.throwInvalidReact({
-                reason: `Expected the dependency list for ${kind} to be an array literal`,
+            errors.pushDiagnostic(CompilerDiagnostic.create({
+                severity: ErrorSeverity.InvalidReact,
+                category: `Expected the dependency list for ${kind} to be an array literal`,
+                description: `Expected the dependency list for ${kind} to be an array literal`,
                 suggestions: null,
+            }).withDetail({
+                kind: 'error',
                 loc: depsListPlace.loc,
-            });
+                message: `Expected the dependency list for ${kind} to be an array literal`,
+            }));
+            return { fnPlace, depsList: null };
         }
-        depsList = maybeDepsList.map(dep => {
+        depsList = [];
+        for (const dep of maybeDepsList) {
             const maybeDep = sidemap.maybeDeps.get(dep.identifier.id);
             if (maybeDep == null) {
-                CompilerError.throwInvalidReact({
-                    reason: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
+                errors.pushDiagnostic(CompilerDiagnostic.create({
+                    severity: ErrorSeverity.InvalidReact,
+                    category: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
+                    description: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
                     suggestions: null,
+                }).withDetail({
+                    kind: 'error',
                     loc: dep.loc,
-                });
+                    message: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
+                }));
             }
-            return maybeDep;
-        });
+            else {
+                depsList.push(maybeDep);
+            }
+        }
     }
     return {
         fnPlace,
@@ -43897,6 +43923,8 @@ function extractManualMemoizationArgs(instr, kind, sidemap) {
     };
 }
 function dropManualMemoization(func) {
+    var _a;
+    const errors = new CompilerError();
     const isValidationEnabled = func.env.config.validatePreserveExistingMemoizationGuarantees ||
         func.env.config.validateNoSetStateInRender ||
         func.env.config.enablePreserveExistingMemoizationGuarantees;
@@ -43921,15 +43949,44 @@ function dropManualMemoization(func) {
                     : instr.value.property.identifier.id;
                 const manualMemo = sidemap.manualMemos.get(id);
                 if (manualMemo != null) {
-                    const { fnPlace, depsList } = extractManualMemoizationArgs(instr, manualMemo.kind, sidemap);
+                    const { fnPlace, depsList } = extractManualMemoizationArgs(instr, manualMemo.kind, sidemap, errors);
+                    if (fnPlace == null) {
+                        continue;
+                    }
+                    if (func.env.config.validateNoVoidUseMemo &&
+                        manualMemo.kind === 'useMemo') {
+                        const funcToCheck = (_a = sidemap.functions.get(fnPlace.identifier.id)) === null || _a === void 0 ? void 0 : _a.value;
+                        if (funcToCheck !== undefined && funcToCheck.loweredFunc.func) {
+                            if (!hasNonVoidReturn(funcToCheck.loweredFunc.func)) {
+                                errors.pushDiagnostic(CompilerDiagnostic.create({
+                                    severity: ErrorSeverity.InvalidReact,
+                                    category: 'useMemo() callbacks must return a value',
+                                    description: `This ${manualMemo.loadInstr.value.kind === 'PropertyLoad'
+                                        ? 'React.useMemo'
+                                        : 'useMemo'} callback doesn't return a value. useMemo is for computing and caching values, not for arbitrary side effects.`,
+                                    suggestions: null,
+                                }).withDetail({
+                                    kind: 'error',
+                                    loc: instr.value.loc,
+                                    message: 'useMemo() callbacks must return a value',
+                                }));
+                            }
+                        }
+                    }
                     instr.value = getManualMemoizationReplacement(fnPlace, instr.value.loc, manualMemo.kind);
                     if (isValidationEnabled) {
                         if (!sidemap.functions.has(fnPlace.identifier.id)) {
-                            CompilerError.throwInvalidReact({
-                                reason: `Expected the first argument to be an inline function expression`,
+                            errors.pushDiagnostic(CompilerDiagnostic.create({
+                                severity: ErrorSeverity.InvalidReact,
+                                category: `Expected the first argument to be an inline function expression`,
+                                description: `Expected the first argument to be an inline function expression`,
                                 suggestions: [],
+                            }).withDetail({
+                                kind: 'error',
                                 loc: fnPlace.loc,
-                            });
+                                message: `Expected the first argument to be an inline function expression`,
+                            }));
+                            continue;
                         }
                         const memoDecl = manualMemo.kind === 'useMemo'
                             ? instr.lvalue
@@ -43947,7 +44004,7 @@ function dropManualMemoization(func) {
                 }
             }
             else {
-                collectTemporaries$1(instr, func.env, sidemap);
+                collectTemporaries(instr, func.env, sidemap);
             }
         }
     }
@@ -43976,6 +44033,7 @@ function dropManualMemoization(func) {
             markInstructionIds(func.body);
         }
     }
+    return errors.asResult();
 }
 function findOptionalPlaces(fn) {
     const optionals = new Set();
@@ -44018,6 +44076,17 @@ function findOptionalPlaces(fn) {
         }
     }
     return optionals;
+}
+function hasNonVoidReturn(func) {
+    for (const [, block] of func.body.blocks) {
+        if (block.terminal.kind === 'return') {
+            if (block.terminal.returnVariant === 'Explicit' ||
+                block.terminal.returnVariant === 'Implicit') {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 class StableSidemap {
@@ -47619,107 +47688,6 @@ function visit(identifiers, place, kind) {
     identifiers.set(place.identifier.id, { place, kind });
 }
 
-function validateNoVoidUseMemo(fn) {
-    const errors = new CompilerError();
-    const sidemap = {
-        useMemoHooks: new Map(),
-        funcExprs: new Map(),
-        react: new Set(),
-    };
-    for (const [, block] of fn.body.blocks) {
-        for (const instr of block.instructions) {
-            collectTemporaries(instr, fn.env, sidemap);
-        }
-    }
-    for (const [, block] of fn.body.blocks) {
-        for (const instr of block.instructions) {
-            if (instr.value.kind === 'CallExpression') {
-                const callee = instr.value.callee.identifier;
-                const useMemoHook = sidemap.useMemoHooks.get(callee.id);
-                if (useMemoHook !== undefined && instr.value.args.length > 0) {
-                    const firstArg = instr.value.args[0];
-                    if (firstArg.kind !== 'Identifier') {
-                        continue;
-                    }
-                    let funcToCheck = sidemap.funcExprs.get(firstArg.identifier.id);
-                    if (!funcToCheck) {
-                        for (const [, searchBlock] of fn.body.blocks) {
-                            for (const searchInstr of searchBlock.instructions) {
-                                if (searchInstr.lvalue &&
-                                    searchInstr.lvalue.identifier.id === firstArg.identifier.id &&
-                                    searchInstr.value.kind === 'FunctionExpression') {
-                                    funcToCheck = searchInstr.value;
-                                    break;
-                                }
-                            }
-                            if (funcToCheck)
-                                break;
-                        }
-                    }
-                    if (funcToCheck) {
-                        const hasReturn = checkFunctionHasNonVoidReturn(funcToCheck.loweredFunc.func);
-                        if (!hasReturn) {
-                            errors.push({
-                                severity: ErrorSeverity.InvalidReact,
-                                reason: `React Compiler has skipped optimizing this component because ${useMemoHook.name} doesn't return a value. ${useMemoHook.name} should only be used for memoizing values, not running arbitrary side effects.`,
-                                loc: useMemoHook.loc,
-                                suggestions: null,
-                                description: null,
-                            });
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return errors.asResult();
-}
-function checkFunctionHasNonVoidReturn(func) {
-    for (const [, block] of func.body.blocks) {
-        if (block.terminal.kind === 'return') {
-            if (block.terminal.returnVariant === 'Explicit' ||
-                block.terminal.returnVariant === 'Implicit') {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-function collectTemporaries(instr, env, sidemap) {
-    const { value, lvalue } = instr;
-    switch (value.kind) {
-        case 'FunctionExpression': {
-            sidemap.funcExprs.set(lvalue.identifier.id, value);
-            break;
-        }
-        case 'LoadGlobal': {
-            const global = env.getGlobalDeclaration(value.binding, value.loc);
-            const hookKind = global !== null ? getHookKindForType(env, global) : null;
-            if (hookKind === 'useMemo') {
-                sidemap.useMemoHooks.set(lvalue.identifier.id, {
-                    name: value.binding.name,
-                    loc: instr.loc,
-                });
-            }
-            else if (value.binding.name === 'React') {
-                sidemap.react.add(lvalue.identifier.id);
-            }
-            break;
-        }
-        case 'PropertyLoad': {
-            if (sidemap.react.has(value.object.identifier.id)) {
-                if (value.property === 'useMemo') {
-                    sidemap.useMemoHooks.set(lvalue.identifier.id, {
-                        name: value.property,
-                        loc: instr.loc,
-                    });
-                }
-            }
-            break;
-        }
-    }
-}
-
 function computeUnconditionalBlocks(fn) {
     const unconditionalBlocks = new Set();
     const dominators = computePostDominatorTree(fn, {
@@ -50812,14 +50780,11 @@ function runWithEnvironment(func, env) {
     log({ kind: 'hir', name: 'PruneMaybeThrows', value: hir });
     validateContextVariableLValues(hir);
     validateUseMemo(hir).unwrap();
-    if (env.config.validateNoVoidUseMemo) {
-        validateNoVoidUseMemo(hir).unwrap();
-    }
     if (env.isInferredMemoEnabled &&
         !env.config.enablePreserveExistingManualUseMemo &&
         !env.config.disableMemoizationForDebugging &&
         !env.config.enableChangeDetectionForDebugging) {
-        dropManualMemoization(hir);
+        dropManualMemoization(hir).unwrap();
         log({ kind: 'hir', name: 'DropManualMemoization', value: hir });
     }
     inlineImmediatelyInvokedFunctionExpressions(hir);
