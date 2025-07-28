@@ -110,6 +110,7 @@ const COMPILER_OPTIONS: Partial<PluginOptions> = {
     validateNoImpureFunctionsInRender: true,
     validateStaticComponents: true,
     validateNoFreezingKnownMutableFunctions: true,
+    validateNoVoidUseMemo: true,
   }),
 };
 
