@@ -52733,6 +52733,7 @@ const COMPILER_OPTIONS = {
         validateNoImpureFunctionsInRender: true,
         validateStaticComponents: true,
         validateNoFreezingKnownMutableFunctions: true,
+        validateNoVoidUseMemo: true,
     }),
 };
 const rule$1 = {
