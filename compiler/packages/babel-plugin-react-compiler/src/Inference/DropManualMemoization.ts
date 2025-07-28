@@ -289,26 +289,43 @@ function extractManualMemoizationArgs(
   instr: TInstruction<CallExpression> | TInstruction<MethodCall>,
   kind: 'useCallback' | 'useMemo',
   sidemap: IdentifierSidemap,
+  errors: CompilerError,
 ): {
-  fnPlace: Place;
+  fnPlace: Place | null;
   depsList: Array<ManualMemoDependency> | null;
 } {
   const [fnPlace, depsListPlace] = instr.value.args as Array<
     Place | SpreadPattern | undefined
   >;
   if (fnPlace == null) {
-    CompilerError.throwInvalidReact({
-      reason: `Expected a callback function to be passed to ${kind}`,
-      loc: instr.value.loc,
-      suggestions: null,
-    });
+    errors.pushDiagnostic(
+      CompilerDiagnostic.create({
+        severity: ErrorSeverity.InvalidReact,
+        category: `Expected a callback function to be passed to ${kind}`,
+        description: `Expected a callback function to be passed to ${kind}`,
+        suggestions: null,
+      }).withDetail({
+        kind: 'error',
+        loc: instr.value.loc,
+        message: `Expected a callback function to be passed to ${kind}`,
+      }),
+    );
+    return {fnPlace: null, depsList: null};
   }
   if (fnPlace.kind === 'Spread' || depsListPlace?.kind === 'Spread') {
-    CompilerError.throwInvalidReact({
-      reason: `Unexpected spread argument to ${kind}`,
-      loc: instr.value.loc,
-      suggestions: null,
-    });
+    errors.pushDiagnostic(
+      CompilerDiagnostic.create({
+        severity: ErrorSeverity.InvalidReact,
+        category: `Unexpected spread argument to ${kind}`,
+        description: `Unexpected spread argument to ${kind}`,
+        suggestions: null,
+      }).withDetail({
+        kind: 'error',
+        loc: instr.value.loc,
+        message: `Unexpected spread argument to ${kind}`,
+      }),
+    );
+    return {fnPlace: null, depsList: null};
   }
   let depsList: Array<ManualMemoDependency> | null = null;
   if (depsListPlace != null) {
@@ -316,23 +333,40 @@ function extractManualMemoizationArgs(
       depsListPlace.identifier.id,
     );
     if (maybeDepsList == null) {
-      CompilerError.throwInvalidReact({
-        reason: `Expected the dependency list for ${kind} to be an array literal`,
-        suggestions: null,
-        loc: depsListPlace.loc,
-      });
+      errors.pushDiagnostic(
+        CompilerDiagnostic.create({
+          severity: ErrorSeverity.InvalidReact,
+          category: `Expected the dependency list for ${kind} to be an array literal`,
+          description: `Expected the dependency list for ${kind} to be an array literal`,
+          suggestions: null,
+        }).withDetail({
+          kind: 'error',
+          loc: depsListPlace.loc,
+          message: `Expected the dependency list for ${kind} to be an array literal`,
+        }),
+      );
+      return {fnPlace, depsList: null};
     }
-    depsList = maybeDepsList.map(dep => {
+    depsList = [];
+    for (const dep of maybeDepsList) {
       const maybeDep = sidemap.maybeDeps.get(dep.identifier.id);
       if (maybeDep == null) {
-        CompilerError.throwInvalidReact({
-          reason: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
-          suggestions: null,
-          loc: dep.loc,
-        });
+        errors.pushDiagnostic(
+          CompilerDiagnostic.create({
+            severity: ErrorSeverity.InvalidReact,
+            category: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
+            description: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
+            suggestions: null,
+          }).withDetail({
+            kind: 'error',
+            loc: dep.loc,
+            message: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
+          }),
+        );
+      } else {
+        depsList.push(maybeDep);
       }
-      return maybeDep;
-    });
+    }
   }
   return {
     fnPlace,
@@ -401,7 +435,12 @@ export function dropManualMemoization(
             instr as TInstruction<CallExpression> | TInstruction<MethodCall>,
             manualMemo.kind,
             sidemap,
+            errors,
           );
+
+          if (fnPlace == null) {
+            continue;
+          }
 
           /**
            * Bailout on void return useMemos. This is an anti-pattern where code might be using
@@ -457,11 +496,19 @@ export function dropManualMemoization(
              * is rare and likely sketchy.
              */
             if (!sidemap.functions.has(fnPlace.identifier.id)) {
-              CompilerError.throwInvalidReact({
-                reason: `Expected the first argument to be an inline function expression`,
-                suggestions: [],
-                loc: fnPlace.loc,
-              });
+              errors.pushDiagnostic(
+                CompilerDiagnostic.create({
+                  severity: ErrorSeverity.InvalidReact,
+                  category: `Expected the first argument to be an inline function expression`,
+                  description: `Expected the first argument to be an inline function expression`,
+                  suggestions: [],
+                }).withDetail({
+                  kind: 'error',
+                  loc: fnPlace.loc,
+                  message: `Expected the first argument to be an inline function expression`,
+                }),
+              );
+              continue;
             }
             const memoDecl: Place =
               manualMemo.kind === 'useMemo'
