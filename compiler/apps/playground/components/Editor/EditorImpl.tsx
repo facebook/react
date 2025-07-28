@@ -219,6 +219,7 @@ function compile(
               validateNoImpureFunctionsInRender: true,
               validateStaticComponents: true,
               validateNoFreezingKnownMutableFunctions: true,
+              validateNoVoidUseMemo: true,
             }
           : {
               /* use defaults for compiler mode */
