@@ -92,7 +92,7 @@
 
 .TimeBarContainer {
   position: relative;
-  flex: 0 0 33%;
+  flex: 0 0 20%;
   height: 0.25rem;
   border-radius: 0.125rem;
   background-color: var(--color-timebar-background);
