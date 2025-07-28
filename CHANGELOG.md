@@ -1,3 +1,10 @@
+## 19.1.1 (July 28, 2025)
+
+### React
+* Fixed Owner Stacks to work with ES2015 function.name semantics (#33680 by @hoxyq)
+* Move the Fabric completeRoot call from `finalizeContainerChildren` to `replaceContainerChildren` to align how JS API and Fabric interpret `completeRoot` (#30513, #33064 by @kassens and @jackpope)
+* Fix React retaining shadow nodes longer that it needs to (#33161, #33447 by @sammy-SC and @yungsters)
+
 ## 19.1.0 (March 28, 2025)
 
 ### Owner Stack
