@@ -448,7 +448,7 @@ export function dropManualMemoization(
            * values.
            */
           if (
-            func.env.config.enableValidateNoVoidUseMemo &&
+            func.env.config.validateNoVoidUseMemo &&
             manualMemo.kind === 'useMemo'
           ) {
             const funcToCheck = sidemap.functions.get(
