@@ -524,11 +524,25 @@ function validateNoRefAccessInRenderImpl(
             } else {
               validateNoRefUpdate(errors, env, instr.value.object, instr.loc);
             }
-            for (const operand of eachInstructionValueOperand(instr.value)) {
-              if (operand === instr.value.object) {
-                continue;
+            if (
+              instr.value.kind === 'ComputedDelete' ||
+              instr.value.kind === 'ComputedStore'
+            ) {
+              validateNoRefValueAccess(errors, env, instr.value.property);
+            }
+            if (
+              instr.value.kind === 'ComputedStore' ||
+              instr.value.kind === 'PropertyStore'
+            ) {
+              validateNoDirectRefValueAccess(errors, instr.value.value, env);
+              const type = env.get(instr.value.value.identifier.id);
+              if (type != null && type.kind === 'Structure') {
+                let objectType: RefAccessType = type;
+                if (target != null) {
+                  objectType = joinRefAccessTypes(objectType, target);
+                }
+                env.set(instr.value.object.identifier.id, objectType);
               }
-              validateNoRefValueAccess(errors, env, operand);
             }
             break;
           }
@@ -730,11 +744,7 @@ function validateNoRefUpdate(
   loc: SourceLocation,
 ): void {
   const type = destructure(env.get(operand.identifier.id));
-  if (
-    type?.kind === 'Ref' ||
-    type?.kind === 'RefValue' ||
-    (type?.kind === 'Structure' && type.fn?.readRefEffect)
-  ) {
+  if (type?.kind === 'Ref' || type?.kind === 'RefValue') {
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
         severity: ErrorSeverity.InvalidReact,
