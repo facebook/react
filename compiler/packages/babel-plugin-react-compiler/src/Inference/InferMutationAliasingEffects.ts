@@ -2120,6 +2120,26 @@ function computeEffectsForLegacySignature(
       }),
     });
   }
+  if (signature.knownIncompatible != null) {
+    const errors = new CompilerError();
+    errors.pushDiagnostic(
+      CompilerDiagnostic.create({
+        severity: ErrorSeverity.InvalidReact,
+        category: 'Use of incompatible library',
+        description: [
+          'This API returns functions which cannot be memoized without leading to stale UI. ' +
+            'To prevent this, by default React Compiler will skip memoizing this component/hook. ' +
+            'However, you may see issues if values from this API are passed to other components/hooks that are ' +
+            'memoized.',
+        ].join(''),
+      }).withDetail({
+        kind: 'error',
+        loc: receiver.loc,
+        message: signature.knownIncompatible,
+      }),
+    );
+    throw errors;
+  }
   const stores: Array<Place> = [];
   const captures: Array<Place> = [];
   function visit(place: Place, effect: Effect): void {
