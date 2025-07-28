@@ -75,11 +75,25 @@
   color: var(--color-expand-collapse-toggle);
 }
 
-.CollapsableHeaderTitle {
-  flex: 1 1 auto;
+.CollapsableHeaderTitle, .CollapsableHeaderDescription, .CollapsableHeaderSeparator, .CollapsableHeaderFiller {
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-monospace-normal);
   text-align: left;
+  white-space: nowrap;
+}
+.CollapsableHeaderTitle {
+  flex: 0 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.CollapsableHeaderSeparator {
+  flex: 0 0 auto;
+  white-space: pre;
+}
+
+.CollapsableHeaderFiller {
+  flex: 1 0 0;
 }
 
 .CollapsableContent {

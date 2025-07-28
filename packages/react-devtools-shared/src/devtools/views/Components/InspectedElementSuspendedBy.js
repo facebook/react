@@ -38,6 +38,37 @@ type RowProps = {
   maxTime: number,
 };
 
+function getShortDescription(name: string, description: string): string {
+  const descMaxLength = 30 - name.length;
+  if (descMaxLength > 1) {
+    const l = description.length;
+    if (l > 0 && l <= descMaxLength) {
+      // We can fit the full description
+      return description;
+    } else if (
+      description.startsWith('http://') ||
+      description.startsWith('https://') ||
+      description.startsWith('/')
+    ) {
+      // Looks like a URL. Let's see if we can extract something shorter.
+      // We don't have to do a full parse so let's try something cheaper.
+      let queryIdx = description.indexOf('?');
+      if (queryIdx === -1) {
+        queryIdx = description.length;
+      }
+      if (description.charCodeAt(queryIdx - 1) === 47 /* "/" */) {
+        // Ends with slash. Look before that.
+        queryIdx--;
+      }
+      const slashIdx = description.lastIndexOf('/', queryIdx - 1);
+      // This may now be either the file name or the host.
+      // Include the slash to make it more obvious what we trimmed.
+      return '…' + description.slice(slashIdx, queryIdx);
+    }
+  }
+  return '';
+}
+
 function SuspendedByRow({
   bridge,
   element,
@@ -50,6 +81,9 @@ function SuspendedByRow({
 }: RowProps) {
   const [isOpen, setIsOpen] = useState(false);
   const name = asyncInfo.awaited.name;
+  const description = asyncInfo.awaited.description;
+  const longName = description === '' ? name : name + ' (' + description + ')';
+  const shortDescription = getShortDescription(name, description);
   let stack;
   let owner;
   if (asyncInfo.stack === null || asyncInfo.stack.length === 0) {
@@ -83,12 +117,22 @@ function SuspendedByRow({
       <Button
         className={styles.CollapsableHeader}
         onClick={() => setIsOpen(prevIsOpen => !prevIsOpen)}
-        title={name + ' — ' + (end - start).toFixed(2) + ' ms'}>
+        title={longName + ' — ' + (end - start).toFixed(2) + ' ms'}>
         <ButtonIcon
           className={styles.CollapsableHeaderIcon}
           type={isOpen ? 'expanded' : 'collapsed'}
         />
         <span className={styles.CollapsableHeaderTitle}>{name}</span>
+        {shortDescription === '' ? null : (
+          <>
+            <span className={styles.CollapsableHeaderSeparator}>{' ('}</span>
+            <span className={styles.CollapsableHeaderTitle}>
+              {shortDescription}
+            </span>
+            <span className={styles.CollapsableHeaderSeparator}>{') '}</span>
+          </>
+        )}
+        <div className={styles.CollapsableHeaderFiller} />
         <div className={styles.TimeBarContainer}>
           <div
             className={
