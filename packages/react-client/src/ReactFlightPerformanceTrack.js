@@ -22,6 +22,8 @@ import {
   addObjectToProperties,
 } from 'shared/ReactPerformanceTrackProperties';
 
+import {getIODescription} from 'shared/ReactIODescription';
+
 const supportsUserTiming =
   enableProfilerTimer &&
   typeof console !== 'undefined' &&
@@ -297,70 +299,6 @@ function getIOColor(
       return 'tertiary';
     default:
       return 'tertiary-dark';
-  }
-}
-
-function getIODescription(value: any): string {
-  if (!__DEV__) {
-    return '';
-  }
-  try {
-    switch (typeof value) {
-      case 'object':
-        // Test the object for a bunch of common property names that are useful identifiers.
-        // While we only have the return value here, it should ideally be a name that
-        // describes the arguments requested.
-        if (value === null) {
-          return '';
-        } else if (value instanceof Error) {
-          // eslint-disable-next-line react-internal/safe-string-coercion
-          return String(value.message);
-        } else if (typeof value.url === 'string') {
-          return value.url;
-        } else if (typeof value.command === 'string') {
-          return value.command;
-        } else if (
-          typeof value.request === 'object' &&
-          typeof value.request.url === 'string'
-        ) {
-          return value.request.url;
-        } else if (
-          typeof value.response === 'object' &&
-          typeof value.response.url === 'string'
-        ) {
-          return value.response.url;
-        } else if (
-          typeof value.id === 'string' ||
-          typeof value.id === 'number' ||
-          typeof value.id === 'bigint'
-        ) {
-          // eslint-disable-next-line react-internal/safe-string-coercion
-          return String(value.id);
-        } else if (typeof value.name === 'string') {
-          return value.name;
-        } else {
-          const str = value.toString();
-          if (str.startWith('[object ') || str.length < 5 || str.length > 500) {
-            // This is probably not a useful description.
-            return '';
-          }
-          return str;
-        }
-      case 'string':
-        if (value.length < 5 || value.length > 500) {
-          return '';
-        }
-        return value;
-      case 'number':
-      case 'bigint':
-        // eslint-disable-next-line react-internal/safe-string-coercion
-        return String(value);
-      default:
-        // Not useful descriptors.
-        return '';
-    }
-  } catch (x) {
-    return '';
   }
 }
 
