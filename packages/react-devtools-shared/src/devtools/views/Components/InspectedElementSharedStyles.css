@@ -89,3 +89,23 @@
 .PreviewContainer {
   padding: 0 0.25rem 0.25rem 0.25rem;
 }
+
+.TimeBarContainer {
+  position: relative;
+  flex: 0 0 20%;
+  height: 0.25rem;
+  border-radius: 0.125rem;
+  background-color: var(--color-timebar-background);
+}
+
+.TimeBarSpan, .TimeBarSpanErrored {
+  position: absolute;
+  border-radius: 0.125rem;
+  background-color: var(--color-timespan-background);
+  width: 100%;
+  height: 100%;
+}
+
+.TimeBarSpanErrored {
+  background-color: var(--color-timespan-background-errored);
+}
