@@ -82,7 +82,6 @@ import {
 import {inferTypes} from '../TypeInference';
 import {
   validateContextVariableLValues,
-  validateNoVoidUseMemo,
   validateHooksUsage,
   validateMemoizedEffectDependencies,
   validateNoCapitalizedCalls,
@@ -168,9 +167,6 @@ function runWithEnvironment(
 
   validateContextVariableLValues(hir);
   validateUseMemo(hir).unwrap();
-  if (env.config.validateNoVoidUseMemo) {
-    validateNoVoidUseMemo(hir).unwrap();
-  }
 
   if (
     env.isInferredMemoEnabled &&
@@ -178,7 +174,7 @@ function runWithEnvironment(
     !env.config.disableMemoizationForDebugging &&
     !env.config.enableChangeDetectionForDebugging
   ) {
-    dropManualMemoization(hir);
+    dropManualMemoization(hir).unwrap();
     log({kind: 'hir', name: 'DropManualMemoization', value: hir});
   }
 
