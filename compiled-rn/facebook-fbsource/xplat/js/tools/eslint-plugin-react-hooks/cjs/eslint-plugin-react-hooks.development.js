@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<373cb73cae3f9425897ad918f744974b>>
+ * @generated SignedSource<<fcb375dde21813a6f7625a415256ab33>>
  */
 
 'use strict';
@@ -30735,6 +30735,7 @@ const EnvironmentConfigSchema = zod.z.object({
     hookPattern: zod.z.string().nullable().default(null),
     enableTreatRefLikeIdentifiersAsRefs: zod.z.boolean().default(false),
     lowerContextAccess: ExternalFunctionSchema.nullable().default(null),
+    validateNoVoidUseMemo: zod.z.boolean().default(false),
 });
 class Environment {
     constructor(scope, fnType, compilerMode, config, contextIdentifiers, parentFunction, logger, filename, code, programContext) {
@@ -43755,7 +43756,7 @@ function collectMaybeMemoDependencies(value, maybeDeps, optional) {
     }
     return null;
 }
-function collectTemporaries(instr, env, sidemap) {
+function collectTemporaries$1(instr, env, sidemap) {
     const { value, lvalue } = instr;
     switch (value.kind) {
         case 'FunctionExpression': {
@@ -43946,7 +43947,7 @@ function dropManualMemoization(func) {
                 }
             }
             else {
-                collectTemporaries(instr, func.env, sidemap);
+                collectTemporaries$1(instr, func.env, sidemap);
             }
         }
     }
@@ -47618,6 +47619,107 @@ function visit(identifiers, place, kind) {
     identifiers.set(place.identifier.id, { place, kind });
 }
 
+function validateNoVoidUseMemo(fn) {
+    const errors = new CompilerError();
+    const sidemap = {
+        useMemoHooks: new Map(),
+        funcExprs: new Map(),
+        react: new Set(),
+    };
+    for (const [, block] of fn.body.blocks) {
+        for (const instr of block.instructions) {
+            collectTemporaries(instr, fn.env, sidemap);
+        }
+    }
+    for (const [, block] of fn.body.blocks) {
+        for (const instr of block.instructions) {
+            if (instr.value.kind === 'CallExpression') {
+                const callee = instr.value.callee.identifier;
+                const useMemoHook = sidemap.useMemoHooks.get(callee.id);
+                if (useMemoHook !== undefined && instr.value.args.length > 0) {
+                    const firstArg = instr.value.args[0];
+                    if (firstArg.kind !== 'Identifier') {
+                        continue;
+                    }
+                    let funcToCheck = sidemap.funcExprs.get(firstArg.identifier.id);
+                    if (!funcToCheck) {
+                        for (const [, searchBlock] of fn.body.blocks) {
+                            for (const searchInstr of searchBlock.instructions) {
+                                if (searchInstr.lvalue &&
+                                    searchInstr.lvalue.identifier.id === firstArg.identifier.id &&
+                                    searchInstr.value.kind === 'FunctionExpression') {
+                                    funcToCheck = searchInstr.value;
+                                    break;
+                                }
+                            }
+                            if (funcToCheck)
+                                break;
+                        }
+                    }
+                    if (funcToCheck) {
+                        const hasReturn = checkFunctionHasNonVoidReturn(funcToCheck.loweredFunc.func);
+                        if (!hasReturn) {
+                            errors.push({
+                                severity: ErrorSeverity.InvalidReact,
+                                reason: `React Compiler has skipped optimizing this component because ${useMemoHook.name} doesn't return a value. ${useMemoHook.name} should only be used for memoizing values, not running arbitrary side effects.`,
+                                loc: useMemoHook.loc,
+                                suggestions: null,
+                                description: null,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return errors.asResult();
+}
+function checkFunctionHasNonVoidReturn(func) {
+    for (const [, block] of func.body.blocks) {
+        if (block.terminal.kind === 'return') {
+            if (block.terminal.returnVariant === 'Explicit' ||
+                block.terminal.returnVariant === 'Implicit') {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+function collectTemporaries(instr, env, sidemap) {
+    const { value, lvalue } = instr;
+    switch (value.kind) {
+        case 'FunctionExpression': {
+            sidemap.funcExprs.set(lvalue.identifier.id, value);
+            break;
+        }
+        case 'LoadGlobal': {
+            const global = env.getGlobalDeclaration(value.binding, value.loc);
+            const hookKind = global !== null ? getHookKindForType(env, global) : null;
+            if (hookKind === 'useMemo') {
+                sidemap.useMemoHooks.set(lvalue.identifier.id, {
+                    name: value.binding.name,
+                    loc: instr.loc,
+                });
+            }
+            else if (value.binding.name === 'React') {
+                sidemap.react.add(lvalue.identifier.id);
+            }
+            break;
+        }
+        case 'PropertyLoad': {
+            if (sidemap.react.has(value.object.identifier.id)) {
+                if (value.property === 'useMemo') {
+                    sidemap.useMemoHooks.set(lvalue.identifier.id, {
+                        name: value.property,
+                        loc: instr.loc,
+                    });
+                }
+            }
+            break;
+        }
+    }
+}
+
 function computeUnconditionalBlocks(fn) {
     const unconditionalBlocks = new Set();
     const dominators = computePostDominatorTree(fn, {
@@ -50710,6 +50812,9 @@ function runWithEnvironment(func, env) {
     log({ kind: 'hir', name: 'PruneMaybeThrows', value: hir });
     validateContextVariableLValues(hir);
     validateUseMemo(hir).unwrap();
+    if (env.config.validateNoVoidUseMemo) {
+        validateNoVoidUseMemo(hir).unwrap();
+    }
     if (env.isInferredMemoEnabled &&
         !env.config.enablePreserveExistingManualUseMemo &&
         !env.config.disableMemoizationForDebugging &&
