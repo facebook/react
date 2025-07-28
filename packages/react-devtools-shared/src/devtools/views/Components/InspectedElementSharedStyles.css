@@ -51,3 +51,41 @@
 .EditableValue {
   min-width: 1rem;
 }
+
+.CollapsableRow {
+  border-top: 1px solid var(--color-border);
+}
+
+.CollapsableRow:last-child {
+  margin-bottom: -0.25rem;
+}
+
+.CollapsableHeader {
+  width: 100%;
+  padding: 0.25rem;
+  display: flex;
+}
+
+.CollapsableHeaderIcon {
+  flex: 0 0 1rem;
+  margin-left: -0.25rem;
+  width: 1rem;
+  height: 1rem;
+  padding: 0;
+  color: var(--color-expand-collapse-toggle);
+}
+
+.CollapsableHeaderTitle {
+  flex: 1 1 auto;
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-normal);
+  text-align: left;
+}
+
+.CollapsableContent {
+  padding: 0.25rem 0;
+}
+
+.PreviewContainer {
+  padding: 0 0.25rem 0.25rem 0.25rem;
+}
