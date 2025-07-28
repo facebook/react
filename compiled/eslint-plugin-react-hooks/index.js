@@ -18684,7 +18684,7 @@ function printTerminal(terminal) {
             break;
         }
         case 'return': {
-            value = `[${terminal.id}] Return${terminal.value != null ? ' ' + printPlace(terminal.value) : ''}`;
+            value = `[${terminal.id}] Return ${terminal.returnVariant}${terminal.value != null ? ' ' + printPlace(terminal.value) : ''}`;
             if (terminal.effects != null) {
                 value += `\n    ${terminal.effects.map(printAliasingEffect).join('\n    ')}`;
             }
@@ -20033,6 +20033,7 @@ function mapTerminalSuccessors(terminal, fn) {
         case 'return': {
             return {
                 kind: 'return',
+                returnVariant: terminal.returnVariant,
                 loc: terminal.loc,
                 value: terminal.value,
                 id: makeInstructionId(0),
@@ -22396,6 +22397,7 @@ function lower$1(func, env, bindings = null, capturedRefs = new Map()) {
         const fallthrough = builder.reserve('block');
         const terminal = {
             kind: 'return',
+            returnVariant: 'Implicit',
             loc: GeneratedSource,
             value: lowerExpressionToTemporary(builder, body),
             id: makeInstructionId(0),
@@ -22423,6 +22425,7 @@ function lower$1(func, env, bindings = null, capturedRefs = new Map()) {
     }
     builder.terminate({
         kind: 'return',
+        returnVariant: 'Void',
         loc: GeneratedSource,
         value: lowerValueToTemporary(builder, {
             kind: 'Primitive',
@@ -22490,6 +22493,7 @@ function lowerStatement(builder, stmtPath, label = null) {
             }
             const terminal = {
                 kind: 'return',
+                returnVariant: 'Explicit',
                 loc: (_c = stmt.node.loc) !== null && _c !== void 0 ? _c : GeneratedSource,
                 value,
                 id: makeInstructionId(0),
@@ -49456,6 +49460,7 @@ function emitSelectorFn(env, keys) {
         terminal: {
             id: makeInstructionId(0),
             kind: 'return',
+            returnVariant: 'Explicit',
             loc: GeneratedSource,
             value: arrayInstr.lvalue,
             effects: null,
@@ -49887,6 +49892,7 @@ function emitOutlinedFn(env, jsx, oldProps, globals) {
         terminal: {
             id: makeInstructionId(0),
             kind: 'return',
+            returnVariant: 'Explicit',
             loc: GeneratedSource,
             value: instructions.at(-1).lvalue,
             effects: null,
