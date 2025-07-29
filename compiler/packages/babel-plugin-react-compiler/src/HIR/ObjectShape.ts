@@ -1211,6 +1211,8 @@ addObject(BUILTIN_SHAPES, BuiltInRefValueId, [
   ['*', {kind: 'Object', shapeId: BuiltInRefValueId}],
 ]);
 
+addObject(BUILTIN_SHAPES, ReanimatedSharedValueId, []);
+
 addFunction(
   BUILTIN_SHAPES,
   [],
