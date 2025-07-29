@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<97679be2952d86c2d3eb0c5b32ce41e9>>
+ * @generated SignedSource<<db1aa5f446193cc65773bb48a6e1b8ec>>
  */
 
 'use strict';
@@ -55575,6 +55575,15 @@ function isInsideDoWhileLoop(node) {
     }
     return false;
 }
+function isInsideTryCatch(node) {
+    while (node) {
+        if (node.type === 'TryStatement' || node.type === 'CatchClause') {
+            return true;
+        }
+        node = node.parent;
+    }
+    return false;
+}
 function isUseEffectEventIdentifier(node) {
     {
         return node.type === 'Identifier' && node.name === 'useEffectEvent';
@@ -55777,6 +55786,12 @@ const rule = {
                     for (const hook of reactHooks) {
                         if (hasFlowSuppression(hook, 'react-rule-hook')) {
                             continue;
+                        }
+                        if (isUseIdentifier(hook) && isInsideTryCatch(hook)) {
+                            context.report({
+                                node: hook,
+                                message: `React Hook "${getSourceCode().getText(hook)}" cannot be called in a try/catch block.`,
+                            });
                         }
                         if ((cycled || isInsideDoWhileLoop(hook)) &&
                             !isUseIdentifier(hook)) {
