@@ -106,6 +106,13 @@ let lastSuspendedFiber: null | Fiber = null;
 let lastSuspendedStack: null | Error = null;
 let didIssueUseWarning = false;
 
+export function hasPotentialUseWarnings(): boolean {
+  return lastSuspendedFiber !== null;
+}
+export function clearUseWarnings() {
+  lastSuspendedFiber = null;
+}
+
 export function trackUsedThenable<T>(
   thenableState: ThenableState,
   thenable: Thenable<T>,
