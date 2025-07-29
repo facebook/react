@@ -80,8 +80,18 @@ type RefAccessRefType =
 
 type RefFnType = {readRefEffect: boolean; returnType: RefAccessType};
 
-class Env extends Map<IdentifierId, RefAccessType> {
+class Env {
   #changed = false;
+  #data: Map<IdentifierId, RefAccessType> = new Map();
+  #temporaries: Map<IdentifierId, Place> = new Map();
+
+  lookup(place: Place): Place {
+    return this.#temporaries.get(place.identifier.id) ?? place;
+  }
+
+  define(place: Place, value: Place): void {
+    this.#temporaries.set(place.identifier.id, value);
+  }
 
   resetChanged(): void {
     this.#changed = false;
@@ -91,8 +101,14 @@ class Env extends Map<IdentifierId, RefAccessType> {
     return this.#changed;
   }
 
-  override set(key: IdentifierId, value: RefAccessType): this {
-    const cur = this.get(key);
+  get(key: IdentifierId): RefAccessType | undefined {
+    const operandId = this.#temporaries.get(key)?.identifier.id ?? key;
+    return this.#data.get(operandId);
+  }
+
+  set(key: IdentifierId, value: RefAccessType): this {
+    const operandId = this.#temporaries.get(key)?.identifier.id ?? key;
+    const cur = this.#data.get(operandId);
     const widenedValue = joinRefAccessTypes(value, cur ?? {kind: 'None'});
     if (
       !(cur == null && widenedValue.kind === 'None') &&
@@ -100,7 +116,8 @@ class Env extends Map<IdentifierId, RefAccessType> {
     ) {
       this.#changed = true;
     }
-    return super.set(key, widenedValue);
+    this.#data.set(operandId, widenedValue);
+    return this;
   }
 }
 
@@ -108,7 +125,46 @@ export function validateNoRefAccessInRender(
   fn: HIRFunction,
 ): Result<void, CompilerError> {
   const env = new Env();
+  collectTemporariesSidemap(fn, env);
   return validateNoRefAccessInRenderImpl(fn, env).map(_ => undefined);
+}
+
+function collectTemporariesSidemap(fn: HIRFunction, env: Env): void {
+  for (const block of fn.body.blocks.values()) {
+    for (const instr of block.instructions) {
+      const {lvalue, value} = instr;
+      switch (value.kind) {
+        case 'LoadLocal': {
+          const temp = env.lookup(value.place);
+          if (temp != null) {
+            env.define(lvalue, temp);
+          }
+          break;
+        }
+        case 'StoreLocal': {
+          const temp = env.lookup(value.value);
+          if (temp != null) {
+            env.define(lvalue, temp);
+            env.define(value.lvalue.place, temp);
+          }
+          break;
+        }
+        case 'PropertyLoad': {
+          if (
+            isUseRefType(value.object.identifier) &&
+            value.property === 'current'
+          ) {
+            continue;
+          }
+          const temp = env.lookup(value.object);
+          if (temp != null) {
+            env.define(lvalue, temp);
+          }
+          break;
+        }
+      }
+    }
+  }
 }
 
 function refTypeOfType(place: Place): RefAccessType {
@@ -524,11 +580,25 @@ function validateNoRefAccessInRenderImpl(
             } else {
               validateNoRefUpdate(errors, env, instr.value.object, instr.loc);
             }
-            for (const operand of eachInstructionValueOperand(instr.value)) {
-              if (operand === instr.value.object) {
-                continue;
+            if (
+              instr.value.kind === 'ComputedDelete' ||
+              instr.value.kind === 'ComputedStore'
+            ) {
+              validateNoRefValueAccess(errors, env, instr.value.property);
+            }
+            if (
+              instr.value.kind === 'ComputedStore' ||
+              instr.value.kind === 'PropertyStore'
+            ) {
+              validateNoDirectRefValueAccess(errors, instr.value.value, env);
+              const type = env.get(instr.value.value.identifier.id);
+              if (type != null && type.kind === 'Structure') {
+                let objectType: RefAccessType = type;
+                if (target != null) {
+                  objectType = joinRefAccessTypes(objectType, target);
+                }
+                env.set(instr.value.object.identifier.id, objectType);
               }
-              validateNoRefValueAccess(errors, env, operand);
             }
             break;
           }
@@ -730,11 +800,7 @@ function validateNoRefUpdate(
   loc: SourceLocation,
 ): void {
   const type = destructure(env.get(operand.identifier.id));
-  if (
-    type?.kind === 'Ref' ||
-    type?.kind === 'RefValue' ||
-    (type?.kind === 'Structure' && type.fn?.readRefEffect)
-  ) {
+  if (type?.kind === 'Ref' || type?.kind === 'RefValue') {
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
         severity: ErrorSeverity.InvalidReact,
