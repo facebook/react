@@ -262,6 +262,20 @@ function validateNoRefAccessInRenderImpl(
     env.set(place.identifier.id, type);
   }
 
+  const interpolatedAsJsx = new Set<IdentifierId>();
+  for (const block of fn.body.blocks.values()) {
+    for (const instr of block.instructions) {
+      const {value} = instr;
+      if (value.kind === 'JsxExpression' || value.kind === 'JsxFragment') {
+        if (value.children != null) {
+          for (const child of value.children) {
+            interpolatedAsJsx.add(child.identifier.id);
+          }
+        }
+      }
+    }
+  }
+
   for (let i = 0; (i == 0 || env.hasChanged()) && i < 10; i++) {
     env.resetChanged();
     returnValues = [];
@@ -414,10 +428,19 @@ function validateNoRefAccessInRenderImpl(
             if (!didError) {
               const isRefLValue = isUseRefType(instr.lvalue.identifier);
               for (const operand of eachInstructionValueOperand(instr.value)) {
-                if (hookKind != null) {
-                  validateNoDirectRefValueAccess(errors, operand, env);
-                } else if (!isRefLValue) {
+                /**
+                 * By default we check that function call operands are not refs,
+                 * ref values, or functions that can access refs.
+                 */
+                if (
+                  isRefLValue ||
+                  interpolatedAsJsx.has(instr.lvalue.identifier.id) ||
+                  hookKind != null
+                ) {
                   /**
+                   * Special cases:
+                   *
+                   * 1) the lvalue is a ref
                    * In general passing a ref to a function may access that ref
                    * value during render, so we disallow it.
                    *
@@ -428,7 +451,20 @@ function validateNoRefAccessInRenderImpl(
                    * refs.
                    *
                    * Eg `const mergedRef = mergeRefs(ref1, ref2)`
+                   *
+                   * 2) the lvalue is passed as a jsx child
+                   *
+                   * For example `<Foo>{renderHelper(ref)}</Foo>`. Here we have more
+                   * context and infer that the ref is being passed to a component-like
+                   * render function which attempts to obey the rules.
+                   *
+                   * 3) hooks
+                   *
+                   * Hooks are independently checked to ensure they don't access refs
+                   * during render.
                    */
+                  validateNoDirectRefValueAccess(errors, operand, env);
+                } else {
                   validateNoRefPassedToFunction(
                     errors,
                     env,
