@@ -38,7 +38,7 @@
   cursor: ew-resize;
 }
 
-@media screen and (max-width: 600px) {
+@container devtools (width < 600px) {
   .Components {
     flex-direction: column;
   }
