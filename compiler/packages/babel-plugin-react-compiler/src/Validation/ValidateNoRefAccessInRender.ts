@@ -432,15 +432,11 @@ function validateNoRefAccessInRenderImpl(
                  * By default we check that function call operands are not refs,
                  * ref values, or functions that can access refs.
                  */
-                if (
-                  isRefLValue ||
-                  interpolatedAsJsx.has(instr.lvalue.identifier.id) ||
-                  hookKind != null
-                ) {
+                if (isRefLValue || hookKind != null) {
                   /**
                    * Special cases:
                    *
-                   * 1) the lvalue is a ref
+                   * 1. the lvalue is a ref
                    * In general passing a ref to a function may access that ref
                    * value during render, so we disallow it.
                    *
@@ -452,31 +448,22 @@ function validateNoRefAccessInRenderImpl(
                    *
                    * Eg `const mergedRef = mergeRefs(ref1, ref2)`
                    *
-                   * 2) the lvalue is passed as a jsx child
-                   *
-                   * For example `<Foo>{renderHelper(ref)}</Foo>`. Here we have more
-                   * context and infer that the ref is being passed to a component-like
-                   * render function which attempts to obey the rules.
-                   *
-                   * 3) hooks
+                   * 2. calling hooks
                    *
                    * Hooks are independently checked to ensure they don't access refs
                    * during render.
                    */
                   validateNoDirectRefValueAccess(errors, operand, env);
-                } else if (!isRefLValue) {
+                } else if (interpolatedAsJsx.has(instr.lvalue.identifier.id)) {
                   /**
-                   * In general passing a ref to a function may access that ref
-                   * value during render, so we disallow it.
+                   * Special case: the lvalue is passed as a jsx child
                    *
-                   * The main exception is the "mergeRefs" pattern, ie a function
-                   * that accepts multiple refs as arguments (or an array of refs)
-                   * and returns a new, aggregated ref. If the lvalue is a ref,
-                   * we assume that the user is doing this pattern and allow passing
-                   * refs.
-                   *
-                   * Eg `const mergedRef = mergeRefs(ref1, ref2)`
+                   * For example `<Foo>{renderHelper(ref)}</Foo>`. Here we have more
+                   * context and infer that the ref is being passed to a component-like
+                   * render function which attempts to obey the rules.
                    */
+                  validateNoRefValueAccess(errors, env, operand);
+                } else {
                   validateNoRefPassedToFunction(
                     errors,
                     env,
