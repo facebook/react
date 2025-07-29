@@ -105,6 +105,8 @@ import {componentInfoToComponentLogsMap} from '../shared/DevToolsServerComponent
 import is from 'shared/objectIs';
 import hasOwnProperty from 'shared/hasOwnProperty';
 
+import {getIODescription} from 'shared/ReactIODescription';
+
 import {
   getStackByFiberInDevAndProd,
   getOwnerStackByFiberInDev,
@@ -4116,9 +4118,26 @@ export function attach(
       parentInstance,
       asyncInfo.owner,
     );
+    const value: any = ioInfo.value;
+    let resolvedValue = undefined;
+    if (
+      typeof value === 'object' &&
+      value !== null &&
+      typeof value.then === 'function'
+    ) {
+      switch (value.status) {
+        case 'fulfilled':
+          resolvedValue = value.value;
+          break;
+        case 'rejected':
+          resolvedValue = value.reason;
+          break;
+      }
+    }
     return {
       awaited: {
         name: ioInfo.name,
+        description: getIODescription(resolvedValue),
         start: ioInfo.start,
         end: ioInfo.end,
         value: ioInfo.value == null ? null : ioInfo.value,

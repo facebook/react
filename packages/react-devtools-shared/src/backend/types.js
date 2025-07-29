@@ -235,6 +235,7 @@ export type PathMatch = {
 // Serialized version of ReactIOInfo
 export type SerializedIOInfo = {
   name: string,
+  description: string,
   start: number,
   end: number,
   value: null | Promise<mixed>,

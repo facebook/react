@@ -68,9 +68,9 @@ import {
   SuspenseActionException,
   createThenableState,
   trackUsedThenable,
+  resolveLazy,
 } from './ReactFiberThenable';
 import {readContextDuringReconciliation} from './ReactFiberNewContext';
-import {callLazyInitInDEV} from './ReactFiberCallUserSpace';
 
 import {runWithFiberInDEV} from './ReactCurrentFiber';
 
@@ -362,15 +362,6 @@ function warnOnSymbolType(returnFiber: Fiber, invalidChild: symbol) {
       );
     }
   }
-}
-
-function resolveLazy(lazyType: any) {
-  if (__DEV__) {
-    return callLazyInitInDEV(lazyType);
-  }
-  const payload = lazyType._payload;
-  const init = lazyType._init;
-  return init(payload);
 }
 
 type ChildReconciler = (
@@ -698,14 +689,7 @@ function createChildReconciler(
         }
         case REACT_LAZY_TYPE: {
           const prevDebugInfo = pushDebugInfo(newChild._debugInfo);
-          let resolvedChild;
-          if (__DEV__) {
-            resolvedChild = callLazyInitInDEV(newChild);
-          } else {
-            const payload = newChild._payload;
-            const init = newChild._init;
-            resolvedChild = init(payload);
-          }
+          const resolvedChild = resolveLazy((newChild: any));
           const created = createChild(returnFiber, resolvedChild, lanes);
           currentDebugInfo = prevDebugInfo;
           return created;
@@ -830,14 +814,7 @@ function createChildReconciler(
         }
         case REACT_LAZY_TYPE: {
           const prevDebugInfo = pushDebugInfo(newChild._debugInfo);
-          let resolvedChild;
-          if (__DEV__) {
-            resolvedChild = callLazyInitInDEV(newChild);
-          } else {
-            const payload = newChild._payload;
-            const init = newChild._init;
-            resolvedChild = init(payload);
-          }
+          const resolvedChild = resolveLazy((newChild: any));
           const updated = updateSlot(
             returnFiber,
             oldFiber,
@@ -962,14 +939,7 @@ function createChildReconciler(
         }
         case REACT_LAZY_TYPE: {
           const prevDebugInfo = pushDebugInfo(newChild._debugInfo);
-          let resolvedChild;
-          if (__DEV__) {
-            resolvedChild = callLazyInitInDEV(newChild);
-          } else {
-            const payload = newChild._payload;
-            const init = newChild._init;
-            resolvedChild = init(payload);
-          }
+          const resolvedChild = resolveLazy((newChild: any));
           const updated = updateFromMap(
             existingChildren,
             returnFiber,
@@ -1086,14 +1056,7 @@ function createChildReconciler(
           });
           break;
         case REACT_LAZY_TYPE: {
-          let resolvedChild;
-          if (__DEV__) {
-            resolvedChild = callLazyInitInDEV((child: any));
-          } else {
-            const payload = child._payload;
-            const init = (child._init: any);
-            resolvedChild = init(payload);
-          }
+          const resolvedChild = resolveLazy((child: any));
           warnOnInvalidKey(
             returnFiber,
             workInProgress,
@@ -1809,14 +1772,7 @@ function createChildReconciler(
           );
         case REACT_LAZY_TYPE: {
           const prevDebugInfo = pushDebugInfo(newChild._debugInfo);
-          let result;
-          if (__DEV__) {
-            result = callLazyInitInDEV(newChild);
-          } else {
-            const payload = newChild._payload;
-            const init = newChild._init;
-            result = init(payload);
-          }
+          const result = resolveLazy((newChild: any));
           const firstChild = reconcileChildFibersImpl(
             returnFiber,
             currentFirstChild,

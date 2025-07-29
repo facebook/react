@@ -21,10 +21,8 @@ import ButtonIcon from '../ButtonIcon';
 import {InspectedElementContext} from '../Components/InspectedElementContext';
 import {StoreContext} from '../context';
 
-import {
-  getAlreadyLoadedHookNames,
-  getHookSourceLocationKey,
-} from 'react-devtools-shared/src/hookNamesCache';
+import {getAlreadyLoadedHookNames} from 'react-devtools-shared/src/hookNamesCache';
+import {getHookSourceLocationKey} from 'react-devtools-shared/src/hookSourceLocation';
 import Toggle from '../Toggle';
 import type {HooksNode} from 'react-debug-tools/src/ReactDebugHooks';
 import type {ChangeDescription} from './types';

@@ -111,6 +111,16 @@ function isInsideDoWhileLoop(node: Node | undefined): node is DoWhileStatement {
   return false;
 }
 
+function isInsideTryCatch(node: Node | undefined): boolean {
+  while (node) {
+    if (node.type === 'TryStatement' || node.type === 'CatchClause') {
+      return true;
+    }
+    node = node.parent;
+  }
+  return false;
+}
+
 function isUseEffectEventIdentifier(node: Node): boolean {
   if (__EXPERIMENTAL__) {
     return node.type === 'Identifier' && node.name === 'useEffectEvent';
@@ -530,6 +540,16 @@ const rule = {
             // Skip reporting if this hook already has a relevant flow suppression.
             if (hasFlowSuppression(hook, 'react-rule-hook')) {
               continue;
+            }
+
+            // Report an error if use() is called inside try/catch/finally.
+            if (isUseIdentifier(hook) && isInsideTryCatch(hook)) {
+              context.report({
+                node: hook,
+                message: `React Hook "${getSourceCode().getText(
+                  hook,
+                )}" cannot be called in a try/catch/finally block.`,
+              });
             }
 
             // Report an error if a hook may be called more then once.
