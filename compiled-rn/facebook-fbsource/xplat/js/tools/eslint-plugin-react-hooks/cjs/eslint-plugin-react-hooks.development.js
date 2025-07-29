@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<2330f949c229f6527117f953261139b0>>
+ * @generated SignedSource<<1532ca94b5cd60e695ea4e8f6e4dc5ba>>
  */
 
 'use strict';
@@ -30734,7 +30734,7 @@ const EnvironmentConfigSchema = zod.z.object({
     enableChangeDetectionForDebugging: ExternalFunctionSchema.nullable().default(null),
     enableCustomTypeDefinitionForReanimated: zod.z.boolean().default(false),
     hookPattern: zod.z.string().nullable().default(null),
-    enableTreatRefLikeIdentifiersAsRefs: zod.z.boolean().default(false),
+    enableTreatRefLikeIdentifiersAsRefs: zod.z.boolean().default(true),
     lowerContextAccess: ExternalFunctionSchema.nullable().default(null),
     validateNoVoidUseMemo: zod.z.boolean().default(false),
 });
@@ -48335,6 +48335,19 @@ function validateNoRefAccessInRenderImpl(fn, env) {
         const type = refTypeOfType(place);
         env.set(place.identifier.id, type);
     }
+    const interpolatedAsJsx = new Set();
+    for (const block of fn.body.blocks.values()) {
+        for (const instr of block.instructions) {
+            const { value } = instr;
+            if (value.kind === 'JsxExpression' || value.kind === 'JsxFragment') {
+                if (value.children != null) {
+                    for (const child of value.children) {
+                        interpolatedAsJsx.add(child.identifier.id);
+                    }
+                }
+            }
+        }
+    }
     for (let i = 0; (i == 0 || env.hasChanged()) && i < 10; i++) {
         env.resetChanged();
         returnValues = [];
@@ -48448,10 +48461,13 @@ function validateNoRefAccessInRenderImpl(fn, env) {
                         if (!didError) {
                             const isRefLValue = isUseRefType(instr.lvalue.identifier);
                             for (const operand of eachInstructionValueOperand(instr.value)) {
-                                if (hookKind != null) {
+                                if (isRefLValue || hookKind != null) {
                                     validateNoDirectRefValueAccess(errors, operand, env);
                                 }
-                                else if (!isRefLValue) {
+                                else if (interpolatedAsJsx.has(instr.lvalue.identifier.id)) {
+                                    validateNoRefValueAccess(errors, env, operand);
+                                }
+                                else {
                                     validateNoRefPassedToFunction(errors, env, operand, operand.loc);
                                 }
                             }
