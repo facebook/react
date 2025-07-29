@@ -48,28 +48,21 @@ import { c as _c } from "react/compiler-runtime";
 import { StaticText1, Stringify, Text } from "shared-runtime";
 
 function Component(props) {
-  const $ = _c(4);
+  const $ = _c(2);
   const { buttons } = props;
   let t0;
   if ($[0] !== buttons) {
     const [, ...nonPrimaryButtons] = buttons;
 
-    t0 = nonPrimaryButtons.map(_temp);
+    const renderedNonPrimaryButtons = nonPrimaryButtons.map(_temp);
+
+    t0 = <StaticText1>{renderedNonPrimaryButtons}</StaticText1>;
     $[0] = buttons;
     $[1] = t0;
   } else {
     t0 = $[1];
   }
-  const renderedNonPrimaryButtons = t0;
-  let t1;
-  if ($[2] !== renderedNonPrimaryButtons) {
-    t1 = <StaticText1>{renderedNonPrimaryButtons}</StaticText1>;
-    $[2] = renderedNonPrimaryButtons;
-    $[3] = t1;
-  } else {
-    t1 = $[3];
-  }
-  return t1;
+  return t0;
 }
 function _temp(buttonProps, i) {
   return (
