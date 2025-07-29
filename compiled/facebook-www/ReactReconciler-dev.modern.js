@@ -21925,7 +21925,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-1d7e942d-20250729"
+        reconcilerVersion: "19.2.0-www-modern-6891dcb8-20250729"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
