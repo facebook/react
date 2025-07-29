@@ -52847,7 +52847,7 @@ const COMPILER_OPTIONS = {
     panicThreshold: 'none',
     flowSuppressions: false,
     environment: validateEnvironmentConfig({
-        validateRefAccessDuringRender: false,
+        validateRefAccessDuringRender: true,
         validateNoSetStateInRender: true,
         validateNoSetStateInEffects: true,
         validateNoJSXInTryStatements: true,
