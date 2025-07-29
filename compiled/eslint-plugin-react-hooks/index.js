@@ -55795,6 +55795,15 @@ function isInsideDoWhileLoop(node) {
     }
     return false;
 }
+function isInsideTryCatch(node) {
+    while (node) {
+        if (node.type === 'TryStatement' || node.type === 'CatchClause') {
+            return true;
+        }
+        node = node.parent;
+    }
+    return false;
+}
 function isUseEffectEventIdentifier(node) {
     {
         return node.type === 'Identifier' && node.name === 'useEffectEvent';
@@ -55997,6 +56006,12 @@ const rule = {
                     for (const hook of reactHooks) {
                         if (hasFlowSuppression(hook, 'react-rule-hook')) {
                             continue;
+                        }
+                        if (isUseIdentifier(hook) && isInsideTryCatch(hook)) {
+                            context.report({
+                                node: hook,
+                                message: `React Hook "${getSourceCode().getText(hook)}" cannot be called in a try/catch block.`,
+                            });
                         }
                         if ((cycled || isInsideDoWhileLoop(hook)) &&
                             !isUseIdentifier(hook)) {
