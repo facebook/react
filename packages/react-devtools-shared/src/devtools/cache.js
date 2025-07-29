@@ -140,6 +140,10 @@ export function createResource<Input, Key, Value>(
 
       const key = hashInput(input);
       const result: Thenable<Value> = accessResult(resource, fetch, input, key);
+      if (typeof React.use === 'function') {
+        return React.use(result);
+      }
+
       switch (result.status) {
         case 'fulfilled': {
           const value = result.value;

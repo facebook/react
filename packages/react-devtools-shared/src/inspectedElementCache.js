@@ -7,6 +7,8 @@
  * @flow
  */
 
+import * as React from 'react';
+
 import {
   unstable_getCacheForType as getCacheForType,
   startTransition,
@@ -29,6 +31,9 @@ import type {
 } from 'react-devtools-shared/src/frontend/types';
 
 function readRecord<T>(record: Thenable<T>): T {
+  if (typeof React.use === 'function') {
+    return React.use(record);
+  }
   if (record.status === 'fulfilled') {
     return record.value;
   } else if (record.status === 'rejected') {

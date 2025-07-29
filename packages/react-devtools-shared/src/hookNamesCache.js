@@ -22,12 +22,24 @@ import type {
 } from 'react-devtools-shared/src/frontend/types';
 import type {HookSource} from 'react-debug-tools/src/ReactDebugHooks';
 import type {FetchFileWithCaching} from 'react-devtools-shared/src/devtools/views/Components/FetchFileWithCachingContext';
+
+import * as React from 'react';
+
 import {withCallbackPerfMeasurements} from './PerformanceLoggingUtils';
 import {logEvent} from './Logger';
 
 const TIMEOUT = 30000;
-
 function readRecord<T>(record: Thenable<T>): T | null {
+  if (typeof React.use === 'function') {
+    try {
+      return React.use(record);
+    } catch (x) {
+      if (x === null) {
+        return null;
+      }
+      throw x;
+    }
+  }
   if (record.status === 'fulfilled') {
     return record.value;
   } else if (record.status === 'rejected') {

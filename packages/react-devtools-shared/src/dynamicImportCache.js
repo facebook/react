@@ -15,6 +15,8 @@ import type {
   RejectedThenable,
 } from 'shared/ReactTypes';
 
+import * as React from 'react';
+
 const TIMEOUT = 30000;
 
 type Module = any;
@@ -25,8 +27,17 @@ type ModuleLoaderFunction = () => Thenable<Module>;
 // Modules are static anyway.
 const moduleLoaderFunctionToModuleMap: Map<ModuleLoaderFunction, Module> =
   new Map();
-
 function readRecord<T>(record: Thenable<T>): T | null {
+  if (typeof React.use === 'function') {
+    try {
+      return React.use(record);
+    } catch (x) {
+      if (x === null) {
+        return null;
+      }
+      throw x;
+    }
+  }
   if (record.status === 'fulfilled') {
     return record.value;
   } else if (record.status === 'rejected') {

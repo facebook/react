@@ -14,6 +14,8 @@ import type {
 } from 'shared/ReactTypes';
 import type {TimelineData} from './types';
 
+import * as React from 'react';
+
 import {importFile as importFileWorker} from './import-worker';
 
 // This is intentionally a module-level Map, rather than a React-managed one.
@@ -25,6 +27,16 @@ const fileNameToProfilerDataMap: Map<
 > = new Map();
 
 function readRecord<T>(record: Thenable<T>): T | Error {
+  if (typeof React.use === 'function') {
+    try {
+      return React.use(record);
+    } catch (x) {
+      if (record.status === 'rejected') {
+        return (record.reason: any);
+      }
+      throw x;
+    }
+  }
   if (record.status === 'fulfilled') {
     return record.value;
   } else if (record.status === 'rejected') {
