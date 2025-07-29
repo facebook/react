@@ -173,6 +173,7 @@ type FiberInstance = {
   logCount: number, // total number of errors/warnings last seen
   treeBaseDuration: number, // the profiled time of the last render of this subtree
   suspendedBy: null | Array<ReactAsyncInfo>, // things that suspended in the children position of this component
+  suspenseNode: null | SuspenseNode,
   data: Fiber, // one of a Fiber pair
 };
 
@@ -187,6 +188,7 @@ function createFiberInstance(fiber: Fiber): FiberInstance {
     logCount: 0,
     treeBaseDuration: 0,
     suspendedBy: null,
+    suspenseNode: null,
     data: fiber,
   };
 }
@@ -203,6 +205,7 @@ type FilteredFiberInstance = {
   logCount: number, // total number of errors/warnings last seen
   treeBaseDuration: number, // the profiled time of the last render of this subtree
   suspendedBy: null | Array<ReactAsyncInfo>, // not used
+  suspenseNode: null | SuspenseNode,
   data: Fiber, // one of a Fiber pair
 };
 
@@ -218,6 +221,7 @@ function createFilteredFiberInstance(fiber: Fiber): FilteredFiberInstance {
     logCount: 0,
     treeBaseDuration: 0,
     suspendedBy: null,
+    suspenseNode: null,
     data: fiber,
   }: any);
 }
@@ -237,6 +241,7 @@ type VirtualInstance = {
   logCount: number, // total number of errors/warnings last seen
   treeBaseDuration: number, // the profiled time of the last render of this subtree
   suspendedBy: null | Array<ReactAsyncInfo>, // things that blocked the server component's child from rendering
+  suspenseNode: null,
   // The latest info for this instance. This can be updated over time and the
   // same info can appear in more than once ServerComponentInstance.
   data: ReactComponentInfo,
@@ -255,11 +260,38 @@ function createVirtualInstance(
     logCount: 0,
     treeBaseDuration: 0,
     suspendedBy: null,
+    suspenseNode: null,
     data: debugEntry,
   };
 }
 
 type DevToolsInstance = FiberInstance | VirtualInstance | FilteredFiberInstance;
+
+type SuspenseNode = {
+  // The Instance can be a Suspense boundary, a SuspenseList Row, or HostRoot.
+  // It can also be disconnected from the main tree if it's a Filtered Instance.
+  instance: FiberInstance | FilteredFiberInstance,
+  parent: null | SuspenseNode,
+  firstChild: null | SuspenseNode,
+  nextSibling: null | SuspenseNode,
+  suspendedBy: Map<ReactAsyncInfo, Set<DevToolsInstance>>, // Tracks which data we're suspended by and the children that suspend it.
+  // Track whether any of the items in suspendedBy are unique this this Suspense boundaries or if they're all
+  // also in the parent sets. This determine whether this could contribute in the loading sequence.
+  hasUniqueSuspenders: boolean,
+};
+
+function createSuspenseNode(
+  instance: FiberInstance | FilteredFiberInstance,
+): SuspenseNode {
+  return {
+    instance: instance,
+    parent: null,
+    firstChild: null,
+    nextSibling: null,
+    suspendedBy: new Map(),
+    hasUniqueSuspenders: false,
+  };
+}
 
 type getDisplayNameForFiberType = (fiber: Fiber) => string | null;
 type getTypeSymbolType = (type: any) => symbol | string | number;
