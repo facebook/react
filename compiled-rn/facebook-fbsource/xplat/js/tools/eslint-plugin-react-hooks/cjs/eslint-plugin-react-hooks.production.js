@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<64572058ce96b666592e1c4520ef72ad>>
+ * @generated SignedSource<<77f496fc546154c35cf03cd9bc0fa6d9>>
  */
 
 'use strict';
@@ -47133,6 +47133,18 @@ function* generateInstructionTypes(env, names, instr) {
         }
         case 'JsxExpression':
         case 'JsxFragment': {
+            if (env.config.enableTreatRefLikeIdentifiersAsRefs) {
+                if (value.kind === 'JsxExpression') {
+                    for (const prop of value.props) {
+                        if (prop.kind === 'JsxAttribute' && prop.name === 'ref') {
+                            yield equation(prop.place.identifier.type, {
+                                kind: 'Object',
+                                shapeId: BuiltInUseRefId,
+                            });
+                        }
+                    }
+                }
+            }
             yield equation(left, { kind: 'Object', shapeId: BuiltInJsxId });
             break;
         }
@@ -48213,11 +48225,12 @@ function validateNoRefAccessInRenderImpl(fn, env) {
                             }
                         }
                         if (!didError) {
+                            const isRefLValue = isUseRefType(instr.lvalue.identifier);
                             for (const operand of eachInstructionValueOperand(instr.value)) {
                                 if (hookKind != null) {
                                     validateNoDirectRefValueAccess(errors, operand, env);
                                 }
-                                else {
+                                else if (!isRefLValue) {
                                     validateNoRefPassedToFunction(errors, env, operand, operand.loc);
                                 }
                             }
