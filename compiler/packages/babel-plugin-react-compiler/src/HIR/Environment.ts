@@ -247,11 +247,6 @@ export const EnvironmentConfigSchema = z.object({
   enableUseTypeAnnotations: z.boolean().default(false),
 
   /**
-   * Enable a new model for mutability and aliasing inference
-   */
-  enableNewMutationAliasingModel: z.boolean().default(true),
-
-  /**
    * Enables inference of optional dependency chains. Without this flag
    * a property chain such as `props?.items?.foo` will infer as a dep on
    * just `props`. With this flag enabled, we'll infer that full path as
@@ -634,6 +629,17 @@ export const EnvironmentConfigSchema = z.object({
    * ```
    */
   lowerContextAccess: ExternalFunctionSchema.nullable().default(null),
+
+  /**
+   * If enabled, will validate useMemos that don't return any values:
+   *
+   * Valid:
+   *   useMemo(() => foo, [foo]);
+   *   useMemo(() => { return foo }, [foo]);
+   * Invalid:
+   *   useMemo(() => { ... }, [...]);
+   */
+  validateNoVoidUseMemo: z.boolean().default(false),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;

@@ -24,7 +24,6 @@ import {
   getHookKind,
   isMutableEffect,
 } from '../HIR';
-import {getFunctionCallSignature} from '../Inference/InferReferenceEffects';
 import {assertExhaustive, getOrInsertDefault} from '../Utils/utils';
 import {getPlaceScope, ReactiveScope} from '../HIR/HIR';
 import {
@@ -35,6 +34,7 @@ import {
   visitReactiveFunction,
 } from './visitors';
 import {printPlace} from '../HIR/PrintHIR';
+import {getFunctionCallSignature} from '../Inference/InferMutationAliasingEffects';
 
 /*
  * This pass prunes reactive scopes that are not necessary to bound downstream computation.

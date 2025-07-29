@@ -755,6 +755,10 @@ export function attach(
       inspectedElement.state,
       createIsPathAllowed('state'),
     );
+    inspectedElement.suspendedBy = cleanForBridge(
+      inspectedElement.suspendedBy,
+      createIsPathAllowed('suspendedBy'),
+    );
 
     return {
       id,
@@ -846,6 +850,9 @@ export function attach(
       state,
       errors,
       warnings,
+
+      // Not supported in legacy renderers.
+      suspendedBy: [],
 
       // List of owners
       owners,

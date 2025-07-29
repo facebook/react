@@ -247,9 +247,10 @@ const tests: CompilerTestCases = {
       name: 'Pipeline errors are reported',
       code: normalizeIndent`
         import useMyEffect from 'useMyEffect';
+        import {AUTODEPS} from 'react';
         function Component({a}) {
           'use no memo';
-          useMyEffect(() => console.log(a.b));
+          useMyEffect(() => console.log(a.b), AUTODEPS);
           return <div>Hello world</div>;
         }
       `,
@@ -262,7 +263,7 @@ const tests: CompilerTestCases = {
                   source: 'useMyEffect',
                   importSpecifierName: 'default',
                 },
-                numRequiredArgs: 1,
+                autodepsIndex: 1,
               },
             ],
           },

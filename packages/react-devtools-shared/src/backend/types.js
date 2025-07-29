@@ -32,7 +32,7 @@ import type {
 import type {InitBackend} from 'react-devtools-shared/src/backend';
 import type {TimelineDataExport} from 'react-devtools-timeline/src/types';
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
-import type {ReactFunctionLocation} from 'shared/ReactTypes';
+import type {ReactFunctionLocation, ReactStackTrace} from 'shared/ReactTypes';
 import type Agent from './agent';
 
 type BundleType =
@@ -232,6 +232,26 @@ export type PathMatch = {
   isFullMatch: boolean,
 };
 
+// Serialized version of ReactIOInfo
+export type SerializedIOInfo = {
+  name: string,
+  description: string,
+  start: number,
+  end: number,
+  value: null | Promise<mixed>,
+  env: null | string,
+  owner: null | SerializedElement,
+  stack: null | ReactStackTrace,
+};
+
+// Serialized version of ReactAsyncInfo
+export type SerializedAsyncInfo = {
+  awaited: SerializedIOInfo,
+  env: null | string,
+  owner: null | SerializedElement,
+  stack: null | ReactStackTrace,
+};
+
 export type SerializedElement = {
   displayName: string | null,
   id: number,
@@ -268,13 +288,16 @@ export type InspectedElement = {
   hasLegacyContext: boolean,
 
   // Inspectable properties.
-  context: Object | null,
-  hooks: Object | null,
-  props: Object | null,
-  state: Object | null,
+  context: Object | null, // DehydratedData or {[string]: mixed}
+  hooks: Object | null, // DehydratedData or {[string]: mixed}
+  props: Object | null, // DehydratedData or {[string]: mixed}
+  state: Object | null, // DehydratedData or {[string]: mixed}
   key: number | string | null,
   errors: Array<[string, number]>,
   warnings: Array<[string, number]>,
+
+  // Things that suspended this Instances
+  suspendedBy: Object, // DehydratedData or Array<SerializedAsyncInfo>
 
   // List of owners
   owners: Array<SerializedElement> | null,
