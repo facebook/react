@@ -434,7 +434,12 @@ function validateNoRefAccessInRenderImpl(
                  * By default we check that function call operands are not refs,
                  * ref values, or functions that can access refs.
                  */
-                if (isRefLValue || hookKind != null) {
+                if (
+                  isRefLValue ||
+                  (hookKind != null &&
+                    hookKind !== 'useState' &&
+                    hookKind !== 'useReducer')
+                ) {
                   /**
                    * Special cases:
                    *
