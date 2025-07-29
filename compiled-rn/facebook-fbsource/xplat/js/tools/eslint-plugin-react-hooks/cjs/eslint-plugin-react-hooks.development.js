@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<5eb6ce1422187d298960d6c9a7bb5666>>
+ * @generated SignedSource<<3871798f596aa8dcf52018fc7504d978>>
  */
 
 'use strict';
@@ -52848,7 +52848,7 @@ const COMPILER_OPTIONS = {
     panicThreshold: 'none',
     flowSuppressions: false,
     environment: validateEnvironmentConfig({
-        validateRefAccessDuringRender: false,
+        validateRefAccessDuringRender: true,
         validateNoSetStateInRender: true,
         validateNoSetStateInEffects: true,
         validateNoJSXInTryStatements: true,

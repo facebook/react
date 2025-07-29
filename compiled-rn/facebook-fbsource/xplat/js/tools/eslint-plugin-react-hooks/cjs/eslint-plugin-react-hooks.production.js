@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<f44c57e7954a5c9f35d5dcc5b3fb03f9>>
+ * @generated SignedSource<<9333c1881d2e38e7a657bf98d1f5f416>>
  */
 
 'use strict';
@@ -52627,7 +52627,7 @@ const COMPILER_OPTIONS = {
     panicThreshold: 'none',
     flowSuppressions: false,
     environment: validateEnvironmentConfig({
-        validateRefAccessDuringRender: false,
+        validateRefAccessDuringRender: true,
         validateNoSetStateInRender: true,
         validateNoSetStateInEffects: true,
         validateNoJSXInTryStatements: true,
