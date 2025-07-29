@@ -7,7 +7,11 @@
  * @flow
  */
 
-import type {Wakeable} from 'shared/ReactTypes';
+import type {
+  Thenable,
+  FulfilledThenable,
+  RejectedThenable,
+} from 'shared/ReactTypes';
 import type {GitHubIssue} from './githubAPI';
 
 import {unstable_getCacheForType as getCacheForType} from 'react';
@@ -15,46 +19,23 @@ import {searchGitHubIssues} from './githubAPI';
 
 const API_TIMEOUT = 3000;
 
-const Pending = 0;
-const Resolved = 1;
-const Rejected = 2;
-
-type PendingRecord = {
-  status: 0,
-  value: Wakeable,
-};
-
-type ResolvedRecord<T> = {
-  status: 1,
-  value: T,
-};
-
-type RejectedRecord = {
-  status: 2,
-  value: null,
-};
-
-type Record<T> = PendingRecord | ResolvedRecord<T> | RejectedRecord;
-
-function readRecord<T>(record: Record<T>): ResolvedRecord<T> | RejectedRecord {
-  if (record.status === Resolved) {
-    // This is just a type refinement.
-    return record;
-  } else if (record.status === Rejected) {
-    // This is just a type refinement.
-    return record;
+function readRecord<T>(record: Thenable<T>): T | null {
+  if (record.status === 'fulfilled') {
+    return record.value;
+  } else if (record.status === 'rejected') {
+    return null;
   } else {
-    throw record.value;
+    throw record;
   }
 }
 
-type GitHubIssueMap = Map<string, Record<GitHubIssue>>;
+type GitHubIssueMap = Map<string, Thenable<GitHubIssue>>;
 
 function createMap(): GitHubIssueMap {
   return new Map();
 }
 
-function getRecordMap(): Map<string, Record<GitHubIssue>> {
+function getRecordMap(): Map<string, Thenable<GitHubIssue>> {
   return getCacheForType(createMap);
 }
 
@@ -66,8 +47,11 @@ export function findGitHubIssue(errorMessage: string): GitHubIssue | null {
 
   if (!record) {
     const callbacks = new Set<() => mixed>();
-    const wakeable: Wakeable = {
-      then(callback: () => mixed) {
+    const thenable: Thenable<GitHubIssue> = {
+      status: 'pending',
+      value: null,
+      reason: null,
+      then(callback: (value: any) => mixed, reject: (error: mixed) => mixed) {
         callbacks.add(callback);
       },
 
@@ -79,10 +63,7 @@ export function findGitHubIssue(errorMessage: string): GitHubIssue | null {
       callbacks.forEach(callback => callback());
       callbacks.clear();
     };
-    const newRecord: Record<GitHubIssue> = (record = {
-      status: Pending,
-      value: wakeable,
-    });
+    record = thenable;
 
     let didTimeout = false;
 
@@ -93,22 +74,23 @@ export function findGitHubIssue(errorMessage: string): GitHubIssue | null {
         }
 
         if (maybeItem) {
-          const resolvedRecord =
-            ((newRecord: any): ResolvedRecord<GitHubIssue>);
-          resolvedRecord.status = Resolved;
-          resolvedRecord.value = maybeItem;
+          const fulfilledThenable: FulfilledThenable<GitHubIssue> =
+            (thenable: any);
+          fulfilledThenable.status = 'fulfilled';
+          fulfilledThenable.value = maybeItem;
         } else {
-          const notFoundRecord = ((newRecord: any): RejectedRecord);
-          notFoundRecord.status = Rejected;
-          notFoundRecord.value = null;
+          const notFoundThenable: RejectedThenable<GitHubIssue> =
+            (thenable: any);
+          notFoundThenable.status = 'rejected';
+          notFoundThenable.reason = null;
         }
 
         wake();
       })
       .catch(error => {
-        const thrownRecord = ((newRecord: any): RejectedRecord);
-        thrownRecord.status = Rejected;
-        thrownRecord.value = null;
+        const rejectedThenable: RejectedThenable<GitHubIssue> = (thenable: any);
+        rejectedThenable.status = 'rejected';
+        rejectedThenable.reason = null;
 
         wake();
       });
@@ -117,9 +99,9 @@ export function findGitHubIssue(errorMessage: string): GitHubIssue | null {
     setTimeout(() => {
       didTimeout = true;
 
-      const timedoutRecord = ((newRecord: any): RejectedRecord);
-      timedoutRecord.status = Rejected;
-      timedoutRecord.value = null;
+      const timedoutThenable: RejectedThenable<GitHubIssue> = (thenable: any);
+      timedoutThenable.status = 'rejected';
+      timedoutThenable.reason = null;
 
       wake();
     }, API_TIMEOUT);
@@ -127,7 +109,7 @@ export function findGitHubIssue(errorMessage: string): GitHubIssue | null {
     map.set(errorMessage, record);
   }
 
-  const response = readRecord(record).value;
+  const response = readRecord(record);
   return response;
 }
 

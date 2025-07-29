@@ -10,7 +10,11 @@
 import {__DEBUG__} from 'react-devtools-shared/src/constants';
 
 import type {HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
-import type {Thenable, Wakeable} from 'shared/ReactTypes';
+import type {
+  Thenable,
+  FulfilledThenable,
+  RejectedThenable,
+} from 'shared/ReactTypes';
 import type {
   Element,
   HookNames,
@@ -23,36 +27,13 @@ import {logEvent} from './Logger';
 
 const TIMEOUT = 30000;
 
-const Pending = 0;
-const Resolved = 1;
-const Rejected = 2;
-
-type PendingRecord = {
-  status: 0,
-  value: Wakeable,
-};
-
-type ResolvedRecord<T> = {
-  status: 1,
-  value: T,
-};
-
-type RejectedRecord = {
-  status: 2,
-  value: null,
-};
-
-type Record<T> = PendingRecord | ResolvedRecord<T> | RejectedRecord;
-
-function readRecord<T>(record: Record<T>): ResolvedRecord<T> | RejectedRecord {
-  if (record.status === Resolved) {
-    // This is just a type refinement.
-    return record;
-  } else if (record.status === Rejected) {
-    // This is just a type refinement.
-    return record;
+function readRecord<T>(record: Thenable<T>): T | null {
+  if (record.status === 'fulfilled') {
+    return record.value;
+  } else if (record.status === 'rejected') {
+    return null;
   } else {
-    throw record.value;
+    throw record;
   }
 }
 
@@ -65,16 +46,16 @@ type LoadHookNamesFunction = (
 // Otherwise, refreshing the inspected element cache would also clear this cache.
 // TODO Rethink this if the React API constraints change.
 // See https://github.com/reactwg/react-18/discussions/25#discussioncomment-980435
-let map: WeakMap<Element, Record<HookNames>> = new WeakMap();
+let map: WeakMap<Element, Thenable<HookNames>> = new WeakMap();
 
 export function hasAlreadyLoadedHookNames(element: Element): boolean {
   const record = map.get(element);
-  return record != null && record.status === Resolved;
+  return record != null && record.status === 'fulfilled';
 }
 
 export function getAlreadyLoadedHookNames(element: Element): HookNames | null {
   const record = map.get(element);
-  if (record != null && record.status === Resolved) {
+  if (record != null && record.status === 'fulfilled') {
     return record.value;
   }
   return null;
@@ -96,8 +77,11 @@ export function loadHookNames(
 
   if (!record) {
     const callbacks = new Set<() => mixed>();
-    const wakeable: Wakeable = {
-      then(callback: () => mixed) {
+    const thenable: Thenable<HookNames> = {
+      status: 'pending',
+      value: null,
+      reason: null,
+      then(callback: (value: any) => mixed, reject: (error: mixed) => mixed) {
         callbacks.add(callback);
       },
 
@@ -132,10 +116,7 @@ export function loadHookNames(
       });
     };
 
-    const newRecord: Record<HookNames> = (record = {
-      status: Pending,
-      value: wakeable,
-    });
+    record = thenable;
 
     withCallbackPerfMeasurements(
       'loadHookNames',
@@ -151,14 +132,15 @@ export function loadHookNames(
             }
 
             if (hookNames) {
-              const resolvedRecord =
-                ((newRecord: any): ResolvedRecord<HookNames>);
-              resolvedRecord.status = Resolved;
-              resolvedRecord.value = hookNames;
+              const fulfilledThenable: FulfilledThenable<HookNames> =
+                (thenable: any);
+              fulfilledThenable.status = 'fulfilled';
+              fulfilledThenable.value = hookNames;
             } else {
-              const notFoundRecord = ((newRecord: any): RejectedRecord);
-              notFoundRecord.status = Rejected;
-              notFoundRecord.value = null;
+              const notFoundThenable: RejectedThenable<HookNames> =
+                (thenable: any);
+              notFoundThenable.status = 'rejected';
+              notFoundThenable.reason = null;
             }
 
             status = 'success';
@@ -177,9 +159,10 @@ export function loadHookNames(
 
             console.error(error);
 
-            const thrownRecord = ((newRecord: any): RejectedRecord);
-            thrownRecord.status = Rejected;
-            thrownRecord.value = null;
+            const rejectedThenable: RejectedThenable<HookNames> =
+              (thenable: any);
+            rejectedThenable.status = 'rejected';
+            rejectedThenable.reason = null;
 
             status = 'error';
             done();
@@ -197,9 +180,9 @@ export function loadHookNames(
 
           didTimeout = true;
 
-          const timedoutRecord = ((newRecord: any): RejectedRecord);
-          timedoutRecord.status = Rejected;
-          timedoutRecord.value = null;
+          const timedoutThenable: RejectedThenable<HookNames> = (thenable: any);
+          timedoutThenable.status = 'rejected';
+          timedoutThenable.reason = null;
 
           status = 'timeout';
           done();
@@ -211,7 +194,7 @@ export function loadHookNames(
     map.set(element, record);
   }
 
-  const response = readRecord(record).value;
+  const response = readRecord(record);
   return response;
 }
 

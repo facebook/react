@@ -16,7 +16,11 @@ import {inspectElement as inspectElementMutableSource} from 'react-devtools-shar
 import ElementPollingCancellationError from 'react-devtools-shared/src//errors/ElementPollingCancellationError';
 
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
-import type {Wakeable} from 'shared/ReactTypes';
+import type {
+  Thenable,
+  FulfilledThenable,
+  RejectedThenable,
+} from 'shared/ReactTypes';
 import type {
   Element,
   InspectedElement as InspectedElementFrontend,
@@ -24,44 +28,24 @@ import type {
   InspectedElementPath,
 } from 'react-devtools-shared/src/frontend/types';
 
-const Pending = 0;
-const Resolved = 1;
-const Rejected = 2;
-
-type PendingRecord = {
-  status: 0,
-  value: Wakeable,
-};
-
-type ResolvedRecord<T> = {
-  status: 1,
-  value: T,
-};
-
-type RejectedRecord = {
-  status: 2,
-  value: Error | string,
-};
-
-type Record<T> = PendingRecord | ResolvedRecord<T> | RejectedRecord;
-
-function readRecord<T>(record: Record<T>): ResolvedRecord<T> {
-  if (record.status === Resolved) {
-    // This is just a type refinement.
-    return record;
+function readRecord<T>(record: Thenable<T>): T {
+  if (record.status === 'fulfilled') {
+    return record.value;
+  } else if (record.status === 'rejected') {
+    throw record.reason;
   } else {
-    throw record.value;
+    throw record;
   }
 }
 
-type InspectedElementMap = WeakMap<Element, Record<InspectedElementFrontend>>;
+type InspectedElementMap = WeakMap<Element, Thenable<InspectedElementFrontend>>;
 type CacheSeedKey = () => InspectedElementMap;
 
 function createMap(): InspectedElementMap {
   return new WeakMap();
 }
 
-function getRecordMap(): WeakMap<Element, Record<InspectedElementFrontend>> {
+function getRecordMap(): WeakMap<Element, Thenable<InspectedElementFrontend>> {
   return getCacheForType(createMap);
 }
 
@@ -69,12 +53,15 @@ function createCacheSeed(
   element: Element,
   inspectedElement: InspectedElementFrontend,
 ): [CacheSeedKey, InspectedElementMap] {
-  const newRecord: Record<InspectedElementFrontend> = {
-    status: Resolved,
+  const thenable: FulfilledThenable<InspectedElementFrontend> = {
+    then(callback: (value: any) => mixed, reject: (error: mixed) => mixed) {
+      callback(thenable.value);
+    },
+    status: 'fulfilled',
     value: inspectedElement,
   };
   const map = createMap();
-  map.set(element, newRecord);
+  map.set(element, thenable);
   return [createMap, map];
 }
 
@@ -92,8 +79,11 @@ export function inspectElement(
   let record = map.get(element);
   if (!record) {
     const callbacks = new Set<() => mixed>();
-    const wakeable: Wakeable = {
-      then(callback: () => mixed) {
+    const thenable: Thenable<InspectedElementFrontend> = {
+      status: 'pending',
+      value: null,
+      reason: null,
+      then(callback: (value: any) => mixed, reject: (error: mixed) => mixed) {
         callbacks.add(callback);
       },
 
@@ -106,16 +96,14 @@ export function inspectElement(
       callbacks.forEach(callback => callback());
       callbacks.clear();
     };
-    const newRecord: Record<InspectedElementFrontend> = (record = {
-      status: Pending,
-      value: wakeable,
-    });
+    record = thenable;
 
     const rendererID = store.getRendererIDForElement(element.id);
     if (rendererID == null) {
-      const rejectedRecord = ((newRecord: any): RejectedRecord);
-      rejectedRecord.status = Rejected;
-      rejectedRecord.value = new Error(
+      const rejectedThenable: RejectedThenable<InspectedElementFrontend> =
+        (thenable: any);
+      rejectedThenable.status = 'rejected';
+      rejectedThenable.reason = new Error(
         `Could not inspect element with id "${element.id}". No renderer found.`,
       );
 
@@ -129,20 +117,20 @@ export function inspectElement(
         InspectedElementFrontend,
         InspectedElementResponseType,
       ]) => {
-        const resolvedRecord =
-          ((newRecord: any): ResolvedRecord<InspectedElementFrontend>);
-        resolvedRecord.status = Resolved;
-        resolvedRecord.value = inspectedElement;
-
+        const fulfilledThenable: FulfilledThenable<InspectedElementFrontend> =
+          (thenable: any);
+        fulfilledThenable.status = 'fulfilled';
+        fulfilledThenable.value = inspectedElement;
         wake();
       },
 
       error => {
         console.error(error);
 
-        const rejectedRecord = ((newRecord: any): RejectedRecord);
-        rejectedRecord.status = Rejected;
-        rejectedRecord.value = error;
+        const rejectedThenable: RejectedThenable<InspectedElementFrontend> =
+          (thenable: any);
+        rejectedThenable.status = 'rejected';
+        rejectedThenable.reason = error;
 
         wake();
       },
@@ -151,7 +139,7 @@ export function inspectElement(
     map.set(element, record);
   }
 
-  const response = readRecord(record).value;
+  const response = readRecord(record);
   return response;
 }
 
