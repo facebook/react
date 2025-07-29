@@ -83,13 +83,15 @@ export function inspectElement(
   const map = getRecordMap();
   let record = map.get(element);
   if (!record) {
-    const callbacks = new Set<() => mixed>();
+    const callbacks = new Set<(value: any) => mixed>();
+    const rejectCallbacks = new Set<(reason: mixed) => mixed>();
     const thenable: Thenable<InspectedElementFrontend> = {
       status: 'pending',
       value: null,
       reason: null,
       then(callback: (value: any) => mixed, reject: (error: mixed) => mixed) {
         callbacks.add(callback);
+        rejectCallbacks.add(reject);
       },
 
       // Optional property used by Timeline:
@@ -98,7 +100,14 @@ export function inspectElement(
 
     const wake = () => {
       // This assumes they won't throw.
-      callbacks.forEach(callback => callback());
+      callbacks.forEach(callback => callback((thenable: any).value));
+      callbacks.clear();
+      rejectCallbacks.clear();
+    };
+    const wakeRejections = () => {
+      // This assumes they won't throw.
+      rejectCallbacks.forEach(callback => callback((thenable: any).reason));
+      rejectCallbacks.clear();
       callbacks.clear();
     };
     record = thenable;
@@ -137,7 +146,7 @@ export function inspectElement(
         rejectedThenable.status = 'rejected';
         rejectedThenable.reason = error;
 
-        wake();
+        wakeRejections();
       },
     );
 

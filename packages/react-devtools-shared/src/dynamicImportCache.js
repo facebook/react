@@ -58,13 +58,15 @@ export function loadModule(moduleLoaderFunction: ModuleLoaderFunction): Module {
   }
 
   if (!record) {
-    const callbacks = new Set<() => mixed>();
+    const callbacks = new Set<(value: any) => mixed>();
+    const rejectCallbacks = new Set<(reason: mixed) => mixed>();
     const thenable: Thenable<Module> = {
       status: 'pending',
       value: null,
       reason: null,
       then(callback: (value: any) => mixed, reject: (error: mixed) => mixed) {
         callbacks.add(callback);
+        rejectCallbacks.add(reject);
       },
 
       // Optional property used by Timeline:
@@ -79,6 +81,18 @@ export function loadModule(moduleLoaderFunction: ModuleLoaderFunction): Module {
 
       // This assumes they won't throw.
       callbacks.forEach(callback => callback());
+      callbacks.clear();
+      rejectCallbacks.clear();
+    };
+    const wakeRejections = () => {
+      if (timeoutID) {
+        clearTimeout(timeoutID);
+        timeoutID = null;
+      }
+
+      // This assumes they won't throw.
+      rejectCallbacks.forEach(callback => callback((thenable: any).reason));
+      rejectCallbacks.clear();
       callbacks.clear();
     };
 
@@ -121,7 +135,7 @@ export function loadModule(moduleLoaderFunction: ModuleLoaderFunction): Module {
         rejectedThenable.status = 'rejected';
         rejectedThenable.reason = error;
 
-        wake();
+        wakeRejections();
       },
     );
 
@@ -141,7 +155,7 @@ export function loadModule(moduleLoaderFunction: ModuleLoaderFunction): Module {
       rejectedThenable.status = 'rejected';
       rejectedThenable.reason = null;
 
-      wake();
+      wakeRejections();
     }, TIMEOUT);
 
     moduleLoaderFunctionToModuleMap.set(moduleLoaderFunction, record);

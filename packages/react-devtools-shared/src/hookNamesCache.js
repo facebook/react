@@ -34,7 +34,7 @@ function readRecord<T>(record: Thenable<T>): T | null {
     try {
       return React.use(record);
     } catch (x) {
-      if (x === null) {
+      if (record.status === 'rejected') {
         return null;
       }
       throw x;
@@ -88,13 +88,15 @@ export function loadHookNames(
   }
 
   if (!record) {
-    const callbacks = new Set<() => mixed>();
+    const callbacks = new Set<(value: any) => mixed>();
+    const rejectCallbacks = new Set<(reason: mixed) => mixed>();
     const thenable: Thenable<HookNames> = {
       status: 'pending',
       value: null,
       reason: null,
       then(callback: (value: any) => mixed, reject: (error: mixed) => mixed) {
         callbacks.add(callback);
+        rejectCallbacks.add(reject);
       },
 
       // Optional property used by Timeline:
@@ -113,7 +115,18 @@ export function loadHookNames(
       }
 
       // This assumes they won't throw.
-      callbacks.forEach(callback => callback());
+      callbacks.forEach(callback => callback((thenable: any).value));
+      callbacks.clear();
+      rejectCallbacks.clear();
+    };
+    const wakeRejections = () => {
+      if (timeoutID) {
+        clearTimeout(timeoutID);
+        timeoutID = null;
+      }
+      // This assumes they won't throw.
+      rejectCallbacks.forEach(callback => callback((thenable: any).reason));
+      rejectCallbacks.clear();
       callbacks.clear();
     };
 
@@ -148,17 +161,20 @@ export function loadHookNames(
                 (thenable: any);
               fulfilledThenable.status = 'fulfilled';
               fulfilledThenable.value = hookNames;
+              status = 'success';
+              resolvedHookNames = hookNames;
+              done();
+              wake();
             } else {
               const notFoundThenable: RejectedThenable<HookNames> =
                 (thenable: any);
               notFoundThenable.status = 'rejected';
               notFoundThenable.reason = null;
+              status = 'error';
+              resolvedHookNames = hookNames;
+              done();
+              wakeRejections();
             }
-
-            status = 'success';
-            resolvedHookNames = hookNames;
-            done();
-            wake();
           },
           function onError(error) {
             if (didTimeout) {
@@ -178,7 +194,7 @@ export function loadHookNames(
 
             status = 'error';
             done();
-            wake();
+            wakeRejections();
           },
         );
 
@@ -198,7 +214,7 @@ export function loadHookNames(
 
           status = 'timeout';
           done();
-          wake();
+          wakeRejections();
         }, TIMEOUT);
       },
       handleLoadComplete,
