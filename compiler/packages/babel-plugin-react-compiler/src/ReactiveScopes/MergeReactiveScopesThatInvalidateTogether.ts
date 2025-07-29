@@ -480,6 +480,7 @@ function canMergeScopes(
     (next.scope.dependencies.size !== 0 &&
       [...next.scope.dependencies].every(
         dep =>
+          dep.path.length === 0 &&
           isAlwaysInvalidatingType(dep.identifier.type) &&
           Iterable_some(
             current.scope.declarations.values(),
