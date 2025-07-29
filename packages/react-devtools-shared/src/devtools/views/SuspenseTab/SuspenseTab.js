@@ -27,20 +27,20 @@ type LayoutActionType =
   | 'ACTION_SET_TREE_LIST_TOGGLE'
   | 'ACTION_SET_TREE_LIST_HORIZONTAL_FRACTION'
   | 'ACTION_SET_INSPECTED_ELEMENT_TOGGLE'
-  | 'ACTION_SET_INSPECTED_ELEMENT_HORIZONTAL_PERCENTAGE'
-  | 'ACTION_SET_INSPECTED_ELEMENT_VERTICAL_PERCENTAGE';
+  | 'ACTION_SET_INSPECTED_ELEMENT_HORIZONTAL_FRACTION'
+  | 'ACTION_SET_INSPECTED_ELEMENT_VERTICAL_FRACTION';
 type LayoutAction = {
   type: LayoutActionType,
   payload: any,
 };
 
-interface LayoutState {
-  treeListHidden: boolean;
-  treeListHorizontalFraction: number;
-  inspectedElementHidden: boolean;
-  inspectedElementHorizontalFraction: number;
-  inspectedElementVerticalFraction: number;
-}
+type LayoutState = {
+  treeListHidden: boolean,
+  treeListHorizontalFraction: number,
+  inspectedElementHidden: boolean,
+  inspectedElementHorizontalFraction: number,
+  inspectedElementVerticalFraction: number,
+};
 type LayoutDispatch = (action: LayoutAction) => void;
 
 function SuspenseTreeList() {
@@ -67,6 +67,7 @@ function ToggleTreeList({
       onClick={() =>
         dispatch({
           type: 'ACTION_SET_TREE_LIST_TOGGLE',
+          payload: null,
         })
       }
       title={state.treeListHidden ? 'Show Tree List' : 'Hide Tree List'}>
@@ -103,6 +104,7 @@ function ToggleInspectedElement({
       onClick={() =>
         dispatch({
           type: 'ACTION_SET_INSPECTED_ELEMENT_TOGGLE',
+          payload: null,
         })
       }
       title={
@@ -116,7 +118,7 @@ function ToggleInspectedElement({
 }
 
 function SuspenseTab(_: {}) {
-  const [state, dispatch] = useReducer<LayoutState, null, LayoutActionType>(
+  const [state, dispatch] = useReducer<LayoutState, null, LayoutAction>(
     layoutReducer,
     null,
     initLayoutState,
@@ -184,17 +186,17 @@ function SuspenseTab(_: {}) {
     treeListHorizontalFraction,
   ]);
 
-  const onResizeStart = event => {
+  const onResizeStart = (event: SyntheticPointerEvent<HTMLElement>) => {
     const element = event.currentTarget;
     element.setPointerCapture(event.pointerId);
   };
 
-  const onResizeEnd = event => {
+  const onResizeEnd = (event: SyntheticPointerEvent<HTMLElement>) => {
     const element = event.currentTarget;
     element.releasePointerCapture(event.pointerId);
   };
 
-  const onResizeTree = event => {
+  const onResizeTree = (event: SyntheticPointerEvent<HTMLElement>) => {
     const element = event.currentTarget;
     const isResizing = element.hasPointerCapture(event.pointerId);
     if (!isResizing) {
@@ -245,7 +247,7 @@ function SuspenseTab(_: {}) {
     }
   };
 
-  const onResizeTreeList = event => {
+  const onResizeTreeList = (event: SyntheticPointerEvent<HTMLElement>) => {
     const element = event.currentTarget;
     const isResizing = element.hasPointerCapture(event.pointerId);
     if (!isResizing) {
@@ -355,10 +357,7 @@ const VERTICAL_TREE_MODE_MAX_WIDTH = 600;
 const MINIMUM_TREE_SIZE = 100;
 const MINIMUM_TREE_LIST_SIZE = 100;
 
-function layoutReducer(
-  state: LayoutState,
-  action: LayoutActionType,
-): LayoutState {
+function layoutReducer(state: LayoutState, action: LayoutAction): LayoutState {
   switch (action.type) {
     case 'ACTION_SET_TREE_LIST_TOGGLE':
       return {
@@ -430,15 +429,17 @@ function getTreeOrientation(
 }
 
 function setResizeCSSVariable(
-  resizeElement: HTMLElement,
+  resizeElement: null | HTMLElement,
   name: 'tree' | 'tree-list',
   orientation: null | Orientation,
   percentage: number,
 ): void {
-  resizeElement.style.setProperty(
-    `--${orientation}-resize-${name}-percentage`,
-    `${percentage}%`,
-  );
+  if (resizeElement !== null && orientation !== null) {
+    resizeElement.style.setProperty(
+      `--${orientation}-resize-${name}-percentage`,
+      `${percentage}%`,
+    );
+  }
 }
 
 export default (portaledContent(SuspenseTab): React$ComponentType<{}>);
