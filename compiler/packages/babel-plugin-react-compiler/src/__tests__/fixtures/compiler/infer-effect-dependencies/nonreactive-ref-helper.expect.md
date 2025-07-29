@@ -51,12 +51,12 @@ function RefsInEffects() {
   const ref = useRefHelper();
   const wrapped = useDeeperRefHelper();
   let t0;
-  if ($[0] !== ref.current || $[1] !== wrapped.foo.current) {
+  if ($[0] !== ref || $[1] !== wrapped.foo.current) {
     t0 = () => {
       print(ref.current);
       print(wrapped.foo.current);
     };
-    $[0] = ref.current;
+    $[0] = ref;
     $[1] = wrapped.foo.current;
     $[2] = t0;
   } else {

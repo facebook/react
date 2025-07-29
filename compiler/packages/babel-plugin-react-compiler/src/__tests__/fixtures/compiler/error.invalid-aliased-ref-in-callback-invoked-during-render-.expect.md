@@ -29,7 +29,7 @@ error.invalid-aliased-ref-in-callback-invoked-during-render-.ts:9:33
    7 |     return <Foo item={item} current={current} />;
    8 |   };
 >  9 |   return <Items>{props.items.map(item => renderItem(item))}</Items>;
-     |                                  ^^^^^^^^^^^^^^^^^^^^^^^^ Passing a ref to a function may read its value during render
+     |                                  ^^^^^^^^^^^^^^^^^^^^^^^^ Cannot access ref value during render
   10 | }
   11 |
 ```
