@@ -18,9 +18,7 @@ import type {
 import type {
   Element,
   HookNames,
-  HookSourceLocationKey,
 } from 'react-devtools-shared/src/frontend/types';
-import type {HookSource} from 'react-debug-tools/src/ReactDebugHooks';
 import type {FetchFileWithCaching} from 'react-devtools-shared/src/devtools/views/Components/FetchFileWithCachingContext';
 
 import * as React from 'react';
@@ -224,17 +222,6 @@ export function loadHookNames(
 
   const response = readRecord(record);
   return response;
-}
-
-export function getHookSourceLocationKey({
-  fileName,
-  lineNumber,
-  columnNumber,
-}: HookSource): HookSourceLocationKey {
-  if (fileName == null || lineNumber == null || columnNumber == null) {
-    throw Error('Hook source code location not found.');
-  }
-  return `${fileName}:${lineNumber}:${columnNumber}`;
 }
 
 export function clearHookNamesCache(): void {
