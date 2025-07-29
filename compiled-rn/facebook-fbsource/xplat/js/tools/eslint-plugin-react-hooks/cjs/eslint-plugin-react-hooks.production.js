@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<db1aa5f446193cc65773bb48a6e1b8ec>>
+ * @generated SignedSource<<377758887af8926074774ed2f3e15beb>>
  */
 
 'use strict';
@@ -22059,6 +22059,7 @@ addObject(BUILTIN_SHAPES, BuiltInUseRefId, [
 addObject(BUILTIN_SHAPES, BuiltInRefValueId, [
     ['*', { kind: 'Object', shapeId: BuiltInRefValueId }],
 ]);
+addObject(BUILTIN_SHAPES, ReanimatedSharedValueId, []);
 addFunction(BUILTIN_SHAPES, [], {
     positionalParams: [],
     restParam: Effect.ConditionallyMutate,
@@ -43890,12 +43891,6 @@ class StableSidemap {
                         });
                     }
                 }
-                else if (this.env.config.enableTreatRefLikeIdentifiersAsRefs &&
-                    isUseRefType(lvalue.identifier)) {
-                    this.map.set(lvalue.identifier.id, {
-                        isStable: true,
-                    });
-                }
                 break;
             }
             case 'Destructure':
@@ -47152,7 +47147,18 @@ function* generateInstructionTypes(env, names, instr) {
             yield equation(left, returnType);
             break;
         }
-        case 'PropertyStore':
+        case 'PropertyStore': {
+            yield equation(makeType(), {
+                kind: 'Property',
+                objectType: value.object.identifier.type,
+                objectName: getName(names, value.object.identifier.id),
+                propertyName: {
+                    kind: 'literal',
+                    value: value.property,
+                },
+            });
+            break;
+        }
         case 'DeclareLocal':
         case 'RegExpLiteral':
         case 'MetaProperty':

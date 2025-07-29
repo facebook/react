@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<82fead294e1b0b5fcb96ef9cf7e4af9b>>
+ * @generated SignedSource<<85f4a03610e3d0a39fe3599dabbf580e>>
  */
 
 'use strict';
@@ -22074,6 +22074,7 @@ addObject(BUILTIN_SHAPES, BuiltInUseRefId, [
 addObject(BUILTIN_SHAPES, BuiltInRefValueId, [
     ['*', { kind: 'Object', shapeId: BuiltInRefValueId }],
 ]);
+addObject(BUILTIN_SHAPES, ReanimatedSharedValueId, []);
 addFunction(BUILTIN_SHAPES, [], {
     positionalParams: [],
     restParam: Effect.ConditionallyMutate,
@@ -44111,12 +44112,6 @@ class StableSidemap {
                         });
                     }
                 }
-                else if (this.env.config.enableTreatRefLikeIdentifiersAsRefs &&
-                    isUseRefType(lvalue.identifier)) {
-                    this.map.set(lvalue.identifier.id, {
-                        isStable: true,
-                    });
-                }
                 break;
             }
             case 'Destructure':
@@ -47373,7 +47368,18 @@ function* generateInstructionTypes(env, names, instr) {
             yield equation(left, returnType);
             break;
         }
-        case 'PropertyStore':
+        case 'PropertyStore': {
+            yield equation(makeType(), {
+                kind: 'Property',
+                objectType: value.object.identifier.type,
+                objectName: getName(names, value.object.identifier.id),
+                propertyName: {
+                    kind: 'literal',
+                    value: value.property,
+                },
+            });
+            break;
+        }
         case 'DeclareLocal':
         case 'RegExpLiteral':
         case 'MetaProperty':
