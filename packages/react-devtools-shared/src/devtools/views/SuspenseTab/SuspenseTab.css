@@ -15,7 +15,7 @@
 }
 
 .TreeWrapper {
-  flex: 1 0 var(--horizontal-resize-tree-percentage);
+  flex: 1 1 var(--horizontal-resize-tree-percentage);
   display: flex;
   flex-direction: row;
   overflow: auto;
@@ -23,7 +23,7 @@
 }
 
 .InspectedElementWrapper {
-  flex: 1 1 35%;
+  flex: 1 1 calc(100% - var(--horizontal-resize-tree-percentage));
   overflow-x: hidden;
   overflow-y: auto;
 }

@@ -138,16 +138,16 @@ function SuspenseTab(_: {}) {
   } = state;
 
   useLayoutEffect(() => {
-    const resizeTreeElement = resizeTreeRef.current;
+    const wrapperElement = wrapperTreeRef.current;
 
     setResizeCSSVariable(
-      resizeTreeElement,
+      wrapperElement,
       'tree',
       'horizontal',
       inspectedElementHorizontalFraction * 100,
     );
     setResizeCSSVariable(
-      resizeTreeElement,
+      wrapperElement,
       'tree',
       'vertical',
       inspectedElementVerticalFraction * 100,
@@ -210,7 +210,7 @@ function SuspenseTab(_: {}) {
 
     event.preventDefault();
 
-    const orientation = getInspectedElementOrientation(wrapperElement);
+    const orientation = getTreeOrientation(wrapperElement);
 
     const {height, width, left, top} = wrapperElement.getBoundingClientRect();
 
@@ -236,7 +236,7 @@ function SuspenseTab(_: {}) {
       const fraction = currentMousePosition / resizedElementDimension;
       const percentage = fraction * 100;
 
-      setResizeCSSVariable(resizeElement, 'tree', orientation, percentage);
+      setResizeCSSVariable(wrapperElement, 'tree', orientation, percentage);
 
       dispatch({
         type: actionType,
@@ -419,7 +419,7 @@ function initLayoutState(): LayoutState {
   };
 }
 
-function getInspectedElementOrientation(
+function getTreeOrientation(
   wrapperElement: null | HTMLElement,
 ): null | Orientation {
   if (wrapperElement != null) {
