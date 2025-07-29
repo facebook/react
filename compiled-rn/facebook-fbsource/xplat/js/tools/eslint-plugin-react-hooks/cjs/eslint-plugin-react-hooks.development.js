@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<1532ca94b5cd60e695ea4e8f6e4dc5ba>>
+ * @generated SignedSource<<52f91c0cf29475f3f7d04dd04f4edf3f>>
  */
 
 'use strict';
@@ -48351,9 +48351,10 @@ function validateNoRefAccessInRenderImpl(fn, env) {
     for (let i = 0; (i == 0 || env.hasChanged()) && i < 10; i++) {
         env.resetChanged();
         returnValues = [];
-        const safeBlocks = new Map();
+        const safeBlocks = [];
         const errors = new CompilerError();
         for (const [, block] of fn.body.blocks) {
+            retainWhere(safeBlocks, entry => entry.block !== block.id);
             for (const phi of block.phis) {
                 env.set(phi.place.identifier.id, joinRefAccessTypes(...Array(...phi.operands.values()).map(operand => { var _a; return (_a = env.get(operand.identifier.id)) !== null && _a !== void 0 ? _a : { kind: 'None' }; })));
             }
@@ -48461,7 +48462,10 @@ function validateNoRefAccessInRenderImpl(fn, env) {
                         if (!didError) {
                             const isRefLValue = isUseRefType(instr.lvalue.identifier);
                             for (const operand of eachInstructionValueOperand(instr.value)) {
-                                if (isRefLValue || hookKind != null) {
+                                if (isRefLValue ||
+                                    (hookKind != null &&
+                                        hookKind !== 'useState' &&
+                                        hookKind !== 'useReducer')) {
                                     validateNoDirectRefValueAccess(errors, operand, env);
                                 }
                                 else if (interpolatedAsJsx.has(instr.lvalue.identifier.id)) {
@@ -48501,13 +48505,15 @@ function validateNoRefAccessInRenderImpl(fn, env) {
                     case 'PropertyStore':
                     case 'ComputedDelete':
                     case 'ComputedStore': {
-                        const safe = safeBlocks.get(block.id);
                         const target = env.get(instr.value.object.identifier.id);
+                        let safe = null;
                         if (instr.value.kind === 'PropertyStore' &&
-                            safe != null &&
-                            (target === null || target === void 0 ? void 0 : target.kind) === 'Ref' &&
-                            target.refId === safe) {
-                            safeBlocks.delete(block.id);
+                            target != null &&
+                            target.kind === 'Ref') {
+                            safe = safeBlocks.find(entry => entry.ref === target.refId);
+                        }
+                        if (safe != null) {
+                            retainWhere(safeBlocks, entry => entry !== safe);
                         }
                         else {
                             validateNoRefUpdate(errors, env, instr.value.object, instr.loc);
@@ -48577,8 +48583,9 @@ function validateNoRefAccessInRenderImpl(fn, env) {
             }
             if (block.terminal.kind === 'if') {
                 const test = env.get(block.terminal.test.identifier.id);
-                if ((test === null || test === void 0 ? void 0 : test.kind) === 'Guard') {
-                    safeBlocks.set(block.terminal.consequent, test.refId);
+                if ((test === null || test === void 0 ? void 0 : test.kind) === 'Guard' &&
+                    safeBlocks.find(entry => entry.ref === test.refId) == null) {
+                    safeBlocks.push({ block: block.terminal.fallthrough, ref: test.refId });
                 }
             }
             for (const operand of eachTerminalOperand(block.terminal)) {
