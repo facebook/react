@@ -23,7 +23,7 @@ Found 1 error:
 
 Todo: [hoisting] EnterSSA: Expected identifier to be defined before being used
 
-Identifier x$1 is undefined.
+Identifier x$1_d1_ is undefined.
 
 error.dont-hoist-inline-reference.ts:3:2
   1 | import {identity} from 'shared-runtime';

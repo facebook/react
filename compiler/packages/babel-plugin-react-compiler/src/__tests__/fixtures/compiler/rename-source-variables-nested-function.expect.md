@@ -41,11 +41,11 @@ const $ = "module_$";
 const t0 = "module_t0";
 const c_0 = "module_c_0";
 function useFoo(props) {
-  const $0 = _c(4);
+  const $0 = _c(2);
   const c_00 = $0[0] !== props.value;
   let t1;
   if (c_00) {
-    t1 = () => {
+    const a = () => {
       const b = () => {
         const c = () => {
           console.log($);
@@ -57,22 +57,14 @@ function useFoo(props) {
       };
       return b;
     };
+
+    t1 = a()()();
     $0[0] = props.value;
     $0[1] = t1;
   } else {
     t1 = $0[1];
   }
-  const a = t1;
-  const c_2 = $0[2] !== a;
-  let t2;
-  if (c_2) {
-    t2 = a()()();
-    $0[2] = a;
-    $0[3] = t2;
-  } else {
-    t2 = $0[3];
-  }
-  return t2;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {
