@@ -1324,6 +1324,34 @@ const allTests = {
       `,
       errors: [asyncComponentHookError('use')],
     },
+    {
+      code: normalizeIndent`
+        function App({p1, p2}) {
+          try {
+            use(p1);
+          } catch (error) {
+            console.error(error);
+          }
+          use(p2);
+          return <div>App</div>;
+        }
+      `,
+      errors: [tryCatchUseError('use')],
+    },
+    {
+      code: normalizeIndent`
+        function App({p1, p2}) {
+          try {
+            doSomething();
+          } catch {
+            use(p1);
+          }
+          use(p2);
+          return <div>App</div>;
+        }
+      `,
+      errors: [tryCatchUseError('use')],
+    },
   ],
 };
 
@@ -1383,7 +1411,7 @@ if (__EXPERIMENTAL__) {
           const onEvent = useEffectEvent((text) => {
             console.log(text);
           });
-          
+
           useEffect(() => {
             onEvent('Hello world');
           });
@@ -1421,7 +1449,7 @@ if (__EXPERIMENTAL__) {
           });
           return <Child onClick={() => onClick()} />
         }
-          
+
         // The useEffectEvent function shares an identifier name with the above
         function MyLastComponent({theme}) {
           const onClick = useEffectEvent(() => {
@@ -1570,6 +1598,12 @@ function useEffectEventError(fn, called) {
 function asyncComponentHookError(fn) {
   return {
     message: `React Hook "${fn}" cannot be called in an async function.`,
+  };
+}
+
+function tryCatchUseError(fn) {
+  return {
+    message: `React Hook "${fn}" cannot be called in a try/catch block.`,
   };
 }
 

@@ -7,7 +7,13 @@
 /* eslint-disable no-for-of-loops/no-for-of-loops */
 
 import type {Rule, Scope} from 'eslint';
-import type {CallExpression, DoWhileStatement, Node} from 'estree';
+import type {
+  CallExpression,
+  CatchClause,
+  DoWhileStatement,
+  Node,
+  TryStatement,
+} from 'estree';
 
 // @ts-expect-error untyped module
 import CodePathAnalyzer from '../code-path-analysis/code-path-analyzer';
@@ -104,6 +110,18 @@ function isInsideComponentOrHook(node: Node | undefined): boolean {
 function isInsideDoWhileLoop(node: Node | undefined): node is DoWhileStatement {
   while (node) {
     if (node.type === 'DoWhileStatement') {
+      return true;
+    }
+    node = node.parent;
+  }
+  return false;
+}
+
+function isInsideTryCatch(
+  node: Node | undefined,
+): node is TryStatement | CatchClause {
+  while (node) {
+    if (node.type === 'TryStatement' || node.type === 'CatchClause') {
       return true;
     }
     node = node.parent;
@@ -530,6 +548,16 @@ const rule = {
             // Skip reporting if this hook already has a relevant flow suppression.
             if (hasFlowSuppression(hook, 'react-rule-hook')) {
               continue;
+            }
+
+            // Report an error if use() is called inside try/catch.
+            if (isUseIdentifier(hook) && isInsideTryCatch(hook)) {
+              context.report({
+                node: hook,
+                message: `React Hook "${getSourceCode().getText(
+                  hook,
+                )}" cannot be called in a try/catch block.`,
+              });
             }
 
             // Report an error if a hook may be called more then once.

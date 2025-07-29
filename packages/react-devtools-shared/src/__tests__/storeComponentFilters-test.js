@@ -509,7 +509,11 @@ describe('Store component filters', () => {
 
     const Component = ({shouldSuspend}) => {
       if (shouldSuspend) {
-        throw promise;
+        if (React.use) {
+          React.use(promise);
+        } else {
+          throw promise;
+        }
       }
       return null;
     };

@@ -682,6 +682,14 @@ describe('ProfilingCache', () => {
   it('should calculate durations correctly for suspended views', async () => {
     let data;
     const getData = () => {
+      if (React.use) {
+        if (!data) {
+          data = new Promise(resolve => {
+            resolve('abc');
+          });
+        }
+        return React.use(data);
+      }
       if (data) {
         return data;
       } else {
