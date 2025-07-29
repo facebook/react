@@ -27,6 +27,7 @@ import {
   eachTerminalOperand,
 } from '../HIR/visitors';
 import {Err, Ok, Result} from '../Utils/Result';
+import {retainWhere} from '../Utils/utils';
 
 /**
  * Validates that a function does not access a ref value during render. This includes a partial check
@@ -279,9 +280,10 @@ function validateNoRefAccessInRenderImpl(
   for (let i = 0; (i == 0 || env.hasChanged()) && i < 10; i++) {
     env.resetChanged();
     returnValues = [];
-    const safeBlocks = new Map<BlockId, RefId>();
+    const safeBlocks: Array<{block: BlockId; ref: RefId}> = [];
     const errors = new CompilerError();
     for (const [, block] of fn.body.blocks) {
+      retainWhere(safeBlocks, entry => entry.block !== block.id);
       for (const phi of block.phis) {
         env.set(
           phi.place.identifier.id,
@@ -503,15 +505,17 @@ function validateNoRefAccessInRenderImpl(
           case 'PropertyStore':
           case 'ComputedDelete':
           case 'ComputedStore': {
-            const safe = safeBlocks.get(block.id);
             const target = env.get(instr.value.object.identifier.id);
+            let safe: (typeof safeBlocks)['0'] | null | undefined = null;
             if (
               instr.value.kind === 'PropertyStore' &&
-              safe != null &&
-              target?.kind === 'Ref' &&
-              target.refId === safe
+              target != null &&
+              target.kind === 'Ref'
             ) {
-              safeBlocks.delete(block.id);
+              safe = safeBlocks.find(entry => entry.ref === target.refId);
+            }
+            if (safe != null) {
+              retainWhere(safeBlocks, entry => entry !== safe);
             } else {
               validateNoRefUpdate(errors, env, instr.value.object, instr.loc);
             }
@@ -599,8 +603,11 @@ function validateNoRefAccessInRenderImpl(
 
       if (block.terminal.kind === 'if') {
         const test = env.get(block.terminal.test.identifier.id);
-        if (test?.kind === 'Guard') {
-          safeBlocks.set(block.terminal.consequent, test.refId);
+        if (
+          test?.kind === 'Guard' &&
+          safeBlocks.find(entry => entry.ref === test.refId) == null
+        ) {
+          safeBlocks.push({block: block.terminal.fallthrough, ref: test.refId});
         }
       }
 
