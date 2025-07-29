@@ -101,7 +101,7 @@ const COMPILER_OPTIONS: Partial<PluginOptions> = {
   // Don't emit errors on Flow suppressions--Flow already gave a signal
   flowSuppressions: false,
   environment: validateEnvironmentConfig({
-    validateRefAccessDuringRender: false,
+    validateRefAccessDuringRender: true,
     validateNoSetStateInRender: true,
     validateNoSetStateInEffects: true,
     validateNoJSXInTryStatements: true,
