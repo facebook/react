@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<2aa72cc9b8e63bee7148a6ff1683c4a9>>
+ * @generated SignedSource<<f44c57e7954a5c9f35d5dcc5b3fb03f9>>
  */
 
 'use strict';
@@ -45069,7 +45069,7 @@ function makeOrMergeProperty(node, property, accessType) {
 var _DependencyCollectionContext_instances, _DependencyCollectionContext_declarations, _DependencyCollectionContext_reassignments, _DependencyCollectionContext_scopes, _DependencyCollectionContext_dependencies, _DependencyCollectionContext_temporaries, _DependencyCollectionContext_temporariesUsedOutsideScope, _DependencyCollectionContext_processedInstrsInOptional, _DependencyCollectionContext_innerFnContext, _DependencyCollectionContext_checkValidDependency, _DependencyCollectionContext_isScopeActive;
 function propagateScopeDependenciesHIR(fn) {
     const usedOutsideDeclaringScope = findTemporariesUsedOutsideDeclaringScope(fn);
-    const temporaries = collectTemporariesSidemap(fn, usedOutsideDeclaringScope);
+    const temporaries = collectTemporariesSidemap$1(fn, usedOutsideDeclaringScope);
     const { temporariesReadInOptional, processedInstrsInOptional, hoistableObjects, } = collectOptionalChainSidemap(fn);
     const hoistablePropertyLoads = keyByScopeId(fn, collectHoistablePropertyLoads(fn, temporaries, hoistableObjects));
     const scopeDeps = collectDependencies(fn, usedOutsideDeclaringScope, new Map([...temporaries, ...temporariesReadInOptional]), processedInstrsInOptional);
@@ -45140,7 +45140,7 @@ function findTemporariesUsedOutsideDeclaringScope(fn) {
     }
     return usedOutsideDeclaringScope;
 }
-function collectTemporariesSidemap(fn, usedOutsideDeclaringScope) {
+function collectTemporariesSidemap$1(fn, usedOutsideDeclaringScope) {
     const temporaries = new Map();
     collectTemporariesSidemapImpl(fn, usedOutsideDeclaringScope, temporaries, null);
     return temporaries;
@@ -45965,7 +45965,7 @@ function collectDepUsages(deps, fnExpr) {
 }
 function inferMinimalDependencies(fnInstr) {
     const fn = fnInstr.value.loweredFunc.func;
-    const temporaries = collectTemporariesSidemap(fn, new Set());
+    const temporaries = collectTemporariesSidemap$1(fn, new Set());
     const { hoistableObjects, processedInstrsInOptional, temporariesReadInOptional, } = collectOptionalChainSidemap(fn);
     const hoistablePropertyLoads = collectHoistablePropertyLoadsInInnerFn(fnInstr, temporaries, hoistableObjects);
     const hoistableToFnEntry = hoistablePropertyLoads.get(fn.body.entry);
@@ -47931,7 +47931,7 @@ function validateNoCapitalizedCalls(fn) {
     return errors.asResult();
 }
 
-var _Env_changed;
+var _Env_changed, _Env_data, _Env_temporaries;
 function makeRefId(id) {
     CompilerError.invariant(id >= 0 && Number.isInteger(id), {
         reason: 'Expected identifier id to be a non-negative integer',
@@ -47945,10 +47945,18 @@ let _refId = 0;
 function nextRefId() {
     return makeRefId(_refId++);
 }
-class Env extends Map {
+class Env {
     constructor() {
-        super(...arguments);
         _Env_changed.set(this, false);
+        _Env_data.set(this, new Map());
+        _Env_temporaries.set(this, new Map());
+    }
+    lookup(place) {
+        var _a;
+        return (_a = __classPrivateFieldGet(this, _Env_temporaries, "f").get(place.identifier.id)) !== null && _a !== void 0 ? _a : place;
+    }
+    define(place, value) {
+        __classPrivateFieldGet(this, _Env_temporaries, "f").set(place.identifier.id, value);
     }
     resetChanged() {
         __classPrivateFieldSet(this, _Env_changed, false, "f");
@@ -47956,20 +47964,64 @@ class Env extends Map {
     hasChanged() {
         return __classPrivateFieldGet(this, _Env_changed, "f");
     }
+    get(key) {
+        var _a, _b;
+        const operandId = (_b = (_a = __classPrivateFieldGet(this, _Env_temporaries, "f").get(key)) === null || _a === void 0 ? void 0 : _a.identifier.id) !== null && _b !== void 0 ? _b : key;
+        return __classPrivateFieldGet(this, _Env_data, "f").get(operandId);
+    }
     set(key, value) {
-        const cur = this.get(key);
+        var _a, _b;
+        const operandId = (_b = (_a = __classPrivateFieldGet(this, _Env_temporaries, "f").get(key)) === null || _a === void 0 ? void 0 : _a.identifier.id) !== null && _b !== void 0 ? _b : key;
+        const cur = __classPrivateFieldGet(this, _Env_data, "f").get(operandId);
         const widenedValue = joinRefAccessTypes(value, cur !== null && cur !== void 0 ? cur : { kind: 'None' });
         if (!(cur == null && widenedValue.kind === 'None') &&
             (cur == null || !tyEqual(cur, widenedValue))) {
             __classPrivateFieldSet(this, _Env_changed, true, "f");
         }
-        return super.set(key, widenedValue);
+        __classPrivateFieldGet(this, _Env_data, "f").set(operandId, widenedValue);
+        return this;
     }
 }
-_Env_changed = new WeakMap();
+_Env_changed = new WeakMap(), _Env_data = new WeakMap(), _Env_temporaries = new WeakMap();
 function validateNoRefAccessInRender(fn) {
     const env = new Env();
+    collectTemporariesSidemap(fn, env);
     return validateNoRefAccessInRenderImpl(fn, env).map(_ => undefined);
+}
+function collectTemporariesSidemap(fn, env) {
+    for (const block of fn.body.blocks.values()) {
+        for (const instr of block.instructions) {
+            const { lvalue, value } = instr;
+            switch (value.kind) {
+                case 'LoadLocal': {
+                    const temp = env.lookup(value.place);
+                    if (temp != null) {
+                        env.define(lvalue, temp);
+                    }
+                    break;
+                }
+                case 'StoreLocal': {
+                    const temp = env.lookup(value.value);
+                    if (temp != null) {
+                        env.define(lvalue, temp);
+                        env.define(value.lvalue.place, temp);
+                    }
+                    break;
+                }
+                case 'PropertyLoad': {
+                    if (isUseRefType(value.object.identifier) &&
+                        value.property === 'current') {
+                        continue;
+                    }
+                    const temp = env.lookup(value.object);
+                    if (temp != null) {
+                        env.define(lvalue, temp);
+                    }
+                    break;
+                }
+            }
+        }
+    }
 }
 function refTypeOfType(place) {
     if (isRefValueType(place.identifier)) {
@@ -48297,11 +48349,21 @@ function validateNoRefAccessInRenderImpl(fn, env) {
                         else {
                             validateNoRefUpdate(errors, env, instr.value.object, instr.loc);
                         }
-                        for (const operand of eachInstructionValueOperand(instr.value)) {
-                            if (operand === instr.value.object) {
-                                continue;
+                        if (instr.value.kind === 'ComputedDelete' ||
+                            instr.value.kind === 'ComputedStore') {
+                            validateNoRefValueAccess(errors, env, instr.value.property);
+                        }
+                        if (instr.value.kind === 'ComputedStore' ||
+                            instr.value.kind === 'PropertyStore') {
+                            validateNoDirectRefValueAccess(errors, instr.value.value, env);
+                            const type = env.get(instr.value.value.identifier.id);
+                            if (type != null && type.kind === 'Structure') {
+                                let objectType = type;
+                                if (target != null) {
+                                    objectType = joinRefAccessTypes(objectType, target);
+                                }
+                                env.set(instr.value.object.identifier.id, objectType);
                             }
-                            validateNoRefValueAccess(errors, env, operand);
                         }
                         break;
                     }
@@ -48445,11 +48507,8 @@ function validateNoRefPassedToFunction(errors, env, operand, loc) {
     }
 }
 function validateNoRefUpdate(errors, env, operand, loc) {
-    var _a;
     const type = destructure(env.get(operand.identifier.id));
-    if ((type === null || type === void 0 ? void 0 : type.kind) === 'Ref' ||
-        (type === null || type === void 0 ? void 0 : type.kind) === 'RefValue' ||
-        ((type === null || type === void 0 ? void 0 : type.kind) === 'Structure' && ((_a = type.fn) === null || _a === void 0 ? void 0 : _a.readRefEffect))) {
+    if ((type === null || type === void 0 ? void 0 : type.kind) === 'Ref' || (type === null || type === void 0 ? void 0 : type.kind) === 'RefValue') {
         errors.pushDiagnostic(CompilerDiagnostic.create({
             severity: ErrorSeverity.InvalidReact,
             category: 'Cannot access refs during render',
