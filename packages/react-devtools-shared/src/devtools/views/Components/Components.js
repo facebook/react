@@ -29,7 +29,6 @@ type Orientation = 'horizontal' | 'vertical';
 
 type ResizeActionType =
   | 'ACTION_SET_DID_MOUNT'
-  | 'ACTION_SET_IS_RESIZING'
   | 'ACTION_SET_HORIZONTAL_PERCENTAGE'
   | 'ACTION_SET_VERTICAL_PERCENTAGE';
 
@@ -40,7 +39,6 @@ type ResizeAction = {
 
 type ResizeState = {
   horizontalPercentage: number,
-  isResizing: boolean,
   verticalPercentage: number,
 };
 
@@ -81,82 +79,81 @@ function Components(_: {}) {
     return () => clearTimeout(timeoutID);
   }, [horizontalPercentage, verticalPercentage]);
 
-  const {isResizing} = state;
+  const onResizeStart = (event: SyntheticPointerEvent<HTMLElement>) => {
+    const element = event.currentTarget;
+    element.setPointerCapture(event.pointerId);
+  };
 
-  const onResizeStart = () =>
-    dispatch({type: 'ACTION_SET_IS_RESIZING', payload: true});
+  const onResizeEnd = (event: SyntheticPointerEvent<HTMLElement>) => {
+    const element = event.currentTarget;
+    element.releasePointerCapture(event.pointerId);
+  };
 
-  let onResize;
-  let onResizeEnd;
-  if (isResizing) {
-    onResizeEnd = () =>
-      dispatch({type: 'ACTION_SET_IS_RESIZING', payload: false});
+  const onResize = (event: SyntheticPointerEvent<HTMLElement>) => {
+    const element = event.currentTarget;
+    const isResizing = element.hasPointerCapture(event.pointerId);
+    if (!isResizing) {
+      return;
+    }
 
-    // $FlowFixMe[missing-local-annot]
-    onResize = event => {
-      const resizeElement = resizeElementRef.current;
-      const wrapperElement = wrapperElementRef.current;
+    const resizeElement = resizeElementRef.current;
+    const wrapperElement = wrapperElementRef.current;
 
-      if (!isResizing || wrapperElement === null || resizeElement === null) {
-        return;
-      }
+    if (wrapperElement === null || resizeElement === null) {
+      return;
+    }
 
-      event.preventDefault();
+    event.preventDefault();
 
-      const orientation = getOrientation(wrapperElement);
+    const orientation = getOrientation(wrapperElement);
 
-      const {height, width, left, top} = wrapperElement.getBoundingClientRect();
+    const {height, width, left, top} = wrapperElement.getBoundingClientRect();
 
-      const currentMousePosition =
+    const currentMousePosition =
+      orientation === 'horizontal' ? event.clientX - left : event.clientY - top;
+
+    const boundaryMin = MINIMUM_SIZE;
+    const boundaryMax =
+      orientation === 'horizontal'
+        ? width - MINIMUM_SIZE
+        : height - MINIMUM_SIZE;
+
+    const isMousePositionInBounds =
+      currentMousePosition > boundaryMin && currentMousePosition < boundaryMax;
+
+    if (isMousePositionInBounds) {
+      const resizedElementDimension =
+        orientation === 'horizontal' ? width : height;
+      const actionType =
         orientation === 'horizontal'
-          ? event.clientX - left
-          : event.clientY - top;
+          ? 'ACTION_SET_HORIZONTAL_PERCENTAGE'
+          : 'ACTION_SET_VERTICAL_PERCENTAGE';
+      const percentage = (currentMousePosition / resizedElementDimension) * 100;
 
-      const boundaryMin = MINIMUM_SIZE;
-      const boundaryMax =
-        orientation === 'horizontal'
-          ? width - MINIMUM_SIZE
-          : height - MINIMUM_SIZE;
+      setResizeCSSVariable(resizeElement, orientation, percentage);
 
-      const isMousePositionInBounds =
-        currentMousePosition > boundaryMin &&
-        currentMousePosition < boundaryMax;
-
-      if (isMousePositionInBounds) {
-        const resizedElementDimension =
-          orientation === 'horizontal' ? width : height;
-        const actionType =
-          orientation === 'horizontal'
-            ? 'ACTION_SET_HORIZONTAL_PERCENTAGE'
-            : 'ACTION_SET_VERTICAL_PERCENTAGE';
-        const percentage =
-          (currentMousePosition / resizedElementDimension) * 100;
-
-        setResizeCSSVariable(resizeElement, orientation, percentage);
-
-        dispatch({
-          type: actionType,
-          payload: currentMousePosition / resizedElementDimension,
-        });
-      }
-    };
-  }
+      dispatch({
+        type: actionType,
+        payload: currentMousePosition / resizedElementDimension,
+      });
+    }
+  };
 
   return (
     <SettingsModalContextController>
       <OwnersListContextController>
-        <div
-          ref={wrapperElementRef}
-          className={styles.Components}
-          onMouseMove={onResize}
-          onMouseLeave={onResizeEnd}
-          onMouseUp={onResizeEnd}>
+        <div ref={wrapperElementRef} className={styles.Components}>
           <Fragment>
             <div ref={resizeElementRef} className={styles.TreeWrapper}>
               <Tree />
             </div>
             <div className={styles.ResizeBarWrapper}>
-              <div onMouseDown={onResizeStart} className={styles.ResizeBar} />
+              <div
+                onPointerDown={onResizeStart}
+                onPointerMove={onResize}
+                onPointerUp={onResizeEnd}
+                className={styles.ResizeBar}
+              />
             </div>
             <div className={styles.InspectedElementWrapper}>
               <NativeStyleContextController>
@@ -193,18 +190,12 @@ function initResizeState(): ResizeState {
 
   return {
     horizontalPercentage,
-    isResizing: false,
     verticalPercentage,
   };
 }
 
 function resizeReducer(state: ResizeState, action: ResizeAction): ResizeState {
   switch (action.type) {
-    case 'ACTION_SET_IS_RESIZING':
-      return {
-        ...state,
-        isResizing: action.payload,
-      };
     case 'ACTION_SET_HORIZONTAL_PERCENTAGE':
       return {
         ...state,
