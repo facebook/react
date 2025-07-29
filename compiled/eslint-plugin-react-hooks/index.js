@@ -47353,6 +47353,18 @@ function* generateInstructionTypes(env, names, instr) {
         }
         case 'JsxExpression':
         case 'JsxFragment': {
+            if (env.config.enableTreatRefLikeIdentifiersAsRefs) {
+                if (value.kind === 'JsxExpression') {
+                    for (const prop of value.props) {
+                        if (prop.kind === 'JsxAttribute' && prop.name === 'ref') {
+                            yield equation(prop.place.identifier.type, {
+                                kind: 'Object',
+                                shapeId: BuiltInUseRefId,
+                            });
+                        }
+                    }
+                }
+            }
             yield equation(left, { kind: 'Object', shapeId: BuiltInJsxId });
             break;
         }
@@ -48433,11 +48445,12 @@ function validateNoRefAccessInRenderImpl(fn, env) {
                             }
                         }
                         if (!didError) {
+                            const isRefLValue = isUseRefType(instr.lvalue.identifier);
                             for (const operand of eachInstructionValueOperand(instr.value)) {
                                 if (hookKind != null) {
                                     validateNoDirectRefValueAccess(errors, operand, env);
                                 }
-                                else {
+                                else if (!isRefLValue) {
                                     validateNoRefPassedToFunction(errors, env, operand, operand.loc);
                                 }
                             }
