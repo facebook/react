@@ -274,7 +274,7 @@ type SuspenseNode = {
   parent: null | SuspenseNode,
   firstChild: null | SuspenseNode,
   nextSibling: null | SuspenseNode,
-  suspendedBy: Map<ReactAsyncInfo, Set<DevToolsInstance>>, // Tracks which data we're suspended by and the children that suspend it.
+  suspendedBy: Map<ReactAsyncInfo, Set<DevToolsInstance | null>>, // Tracks which data we're suspended by and the children that suspend it.
   // Track whether any of the items in suspendedBy are unique this this Suspense boundaries or if they're all
   // also in the parent sets. This determine whether this could contribute in the loading sequence.
   hasUniqueSuspenders: boolean,
@@ -2407,17 +2407,49 @@ export function attach(
   let reconcilingParentSuspenseNode: null | SuspenseNode = null;
 
   function insertSuspendedBy(asyncInfo: ReactAsyncInfo): void {
+    const parentSuspenseNode = reconcilingParentSuspenseNode;
     const parentInstance = reconcilingParent;
-    if (parentInstance === null) {
-      // Suspending at the root is not attributed to any particular component
-      // TODO: It should be attributed to the shell.
-      return;
+    if (parentSuspenseNode !== null) {
+      const suspendedBy = parentSuspenseNode.suspendedBy;
+      let suspendedBySet = suspendedBy.get(asyncInfo);
+      if (suspendedBySet === undefined) {
+        suspendedBySet = new Set();
+        suspendedBy.set(asyncInfo, suspendedBySet);
+      }
+      // The child of the Suspense boundary that was suspended on this, or null if suspended at the root.
+      // This is used to keep track of how many dependents are still alive and also to get information
+      // like owner instances to link down into the tree.
+      suspendedBySet.add(parentInstance);
     }
-    const suspendedBy = parentInstance.suspendedBy;
-    if (suspendedBy === null) {
-      parentInstance.suspendedBy = [asyncInfo];
-    } else if (suspendedBy.indexOf(asyncInfo) === -1) {
-      suspendedBy.push(asyncInfo);
+    if (parentInstance !== null) {
+      // Suspending at the root is not attributed to any particular component other than the SuspenseNode.
+      const suspendedBy = parentInstance.suspendedBy;
+      if (suspendedBy === null) {
+        parentInstance.suspendedBy = [asyncInfo];
+      } else if (suspendedBy.indexOf(asyncInfo) === -1) {
+        suspendedBy.push(asyncInfo);
+      }
+    }
+  }
+
+  function removePreviousSuspendedBy(instance: DevToolsInstance): void {
+    // Remove previous suspended by from the parent before we recompute them below.
+    const parentSuspenseNode = reconcilingParentSuspenseNode;
+    const suspendedBy = instance.suspendedBy;
+    if (suspendedBy !== null && parentSuspenseNode !== null) {
+      for (let i = 0; i < suspendedBy.length; i++) {
+        const asyncInfo = suspendedBy[i];
+        const suspendedBySet = parentSuspenseNode.suspendedBy.get(asyncInfo);
+        if (suspendedBySet === undefined || !suspendedBySet.delete(instance)) {
+          throw new Error(
+            'We are cleaning up async info that was not on the parent Suspense boundary. ' +
+              'This is a bug in React.',
+          );
+        }
+        if (suspendedBySet.size === 0) {
+          parentSuspenseNode.suspendedBy.delete(asyncInfo);
+        }
+      }
     }
   }
 
@@ -2918,14 +2950,16 @@ export function attach(
     previouslyReconciledSibling = null;
     // Move all the children of this instance to the remaining set.
     remainingReconcilingChildren = instance.firstChild;
-    instance.firstChild = null;
-    instance.suspendedBy = null;
 
     if (instance.suspenseNode !== null) {
       reconcilingParentSuspenseNode = instance.suspenseNode;
       previouslyReconciledSiblingSuspenseNode = null;
       remainingReconcilingChildrenSuspenseNodes = null;
     }
+
+    removePreviousSuspendedBy(instance);
+    instance.firstChild = null;
+    instance.suspendedBy = null;
 
     try {
       // Unmount the remaining set.
@@ -3129,6 +3163,9 @@ export function attach(
     // Move all the children of this instance to the remaining set.
     // We'll move them back one by one, and anything that remains is deleted.
     remainingReconcilingChildren = virtualInstance.firstChild;
+
+    removePreviousSuspendedBy(virtualInstance);
+
     virtualInstance.firstChild = null;
     virtualInstance.suspendedBy = null;
     try {
@@ -3519,14 +3556,17 @@ export function attach(
       // Move all the children of this instance to the remaining set.
       // We'll move them back one by one, and anything that remains is deleted.
       remainingReconcilingChildren = fiberInstance.firstChild;
-      fiberInstance.firstChild = null;
-      fiberInstance.suspendedBy = null;
 
       if (fiberInstance.suspenseNode !== null) {
         reconcilingParentSuspenseNode = fiberInstance.suspenseNode;
         previouslyReconciledSiblingSuspenseNode = null;
         remainingReconcilingChildrenSuspenseNodes = null;
       }
+
+      removePreviousSuspendedBy(fiberInstance);
+
+      fiberInstance.firstChild = null;
+      fiberInstance.suspendedBy = null;
     }
     try {
       if (
