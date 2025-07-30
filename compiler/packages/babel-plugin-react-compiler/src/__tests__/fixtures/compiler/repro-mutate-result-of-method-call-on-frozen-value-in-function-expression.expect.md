@@ -30,40 +30,33 @@ import { c as _c } from "react/compiler-runtime";
 import { makeObject_Primitives, Stringify } from "shared-runtime";
 
 function Example(props) {
-  const $ = _c(7);
+  const $ = _c(5);
   const object = props.object;
   let t0;
   if ($[0] !== object || $[1] !== props.value) {
-    t0 = () => {
+    const f = () => {
       const obj = object.makeObject();
       obj.property = props.value;
       return obj;
     };
+
+    t0 = f();
     $[0] = object;
     $[1] = props.value;
     $[2] = t0;
   } else {
     t0 = $[2];
   }
-  const f = t0;
+  const obj_0 = t0;
   let t1;
-  if ($[3] !== f) {
-    t1 = f();
-    $[3] = f;
+  if ($[3] !== obj_0) {
+    t1 = <Stringify obj={obj_0} />;
+    $[3] = obj_0;
     $[4] = t1;
   } else {
     t1 = $[4];
   }
-  const obj_0 = t1;
-  let t2;
-  if ($[5] !== obj_0) {
-    t2 = <Stringify obj={obj_0} />;
-    $[5] = obj_0;
-    $[6] = t2;
-  } else {
-    t2 = $[6];
-  }
-  return t2;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {
