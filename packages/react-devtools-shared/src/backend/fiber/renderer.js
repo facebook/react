@@ -2406,8 +2406,21 @@ export function attach(
   // the current parent here as well.
   let reconcilingParentSuspenseNode: null | SuspenseNode = null;
 
+  function isSuspenseInFallback(suspenseNode: SuspenseNode) {
+    const fiber = suspenseNode.instance.data;
+    return fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
+  }
+
   function insertSuspendedBy(asyncInfo: ReactAsyncInfo): void {
-    const parentSuspenseNode = reconcilingParentSuspenseNode;
+    let parentSuspenseNode = reconcilingParentSuspenseNode;
+    while (
+      parentSuspenseNode !== null &&
+      isSuspenseInFallback(parentSuspenseNode)
+    ) {
+      // If we have something that suspends inside the fallback tree of a Suspense boundary, then
+      // we bubble that up to the nearest parent Suspense boundary that isn't in fallback mode.
+      parentSuspenseNode = parentSuspenseNode.parent;
+    }
     const parentInstance = reconcilingParent;
     if (parentSuspenseNode !== null) {
       const suspendedBy = parentSuspenseNode.suspendedBy;
