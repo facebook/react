@@ -2445,22 +2445,36 @@ export function attach(
     }
   }
 
-  function removePreviousSuspendedBy(instance: DevToolsInstance): void {
-    // Remove previous suspended by from the parent before we recompute them below.
+  function removePreviousSuspendedBy(
+    instance: DevToolsInstance,
+    previousSuspendedBy: null | Array<ReactAsyncInfo>,
+  ): void {
+    // Remove any async info from the parent, if they were in the previous set but
+    // is no longer in the new set.
     const parentSuspenseNode = reconcilingParentSuspenseNode;
-    const suspendedBy = instance.suspendedBy;
-    if (suspendedBy !== null && parentSuspenseNode !== null) {
-      for (let i = 0; i < suspendedBy.length; i++) {
-        const asyncInfo = suspendedBy[i];
-        const suspendedBySet = parentSuspenseNode.suspendedBy.get(asyncInfo);
-        if (suspendedBySet === undefined || !suspendedBySet.delete(instance)) {
-          throw new Error(
-            'We are cleaning up async info that was not on the parent Suspense boundary. ' +
-              'This is a bug in React.',
-          );
-        }
-        if (suspendedBySet.size === 0) {
-          parentSuspenseNode.suspendedBy.delete(asyncInfo);
+    if (previousSuspendedBy !== null && parentSuspenseNode !== null) {
+      const nextSuspendedBy = instance.suspendedBy;
+      for (let i = 0; i < previousSuspendedBy.length; i++) {
+        const asyncInfo = previousSuspendedBy[i];
+        if (
+          nextSuspendedBy === null ||
+          nextSuspendedBy.indexOf(asyncInfo) === -1
+        ) {
+          // This entry is no longer blocking the current tree.
+          // Let's remove it from the parent SuspenseNode.
+          const suspendedBySet = parentSuspenseNode.suspendedBy.get(asyncInfo);
+          if (
+            suspendedBySet === undefined ||
+            !suspendedBySet.delete(instance)
+          ) {
+            throw new Error(
+              'We are cleaning up async info that was not on the parent Suspense boundary. ' +
+                'This is a bug in React.',
+            );
+          }
+          if (suspendedBySet.size === 0) {
+            parentSuspenseNode.suspendedBy.delete(asyncInfo);
+          }
         }
       }
     }
@@ -2958,11 +2972,14 @@ export function attach(
     const stashedSuspenseParent = reconcilingParentSuspenseNode;
     const stashedSuspensePrevious = previouslyReconciledSiblingSuspenseNode;
     const stashedSuspenseRemaining = remainingReconcilingChildrenSuspenseNodes;
+    const previousSuspendedBy = instance.suspendedBy;
     // Push a new DevTools instance parent while reconciling this subtree.
     reconcilingParent = instance;
     previouslyReconciledSibling = null;
     // Move all the children of this instance to the remaining set.
     remainingReconcilingChildren = instance.firstChild;
+    instance.firstChild = null;
+    instance.suspendedBy = null;
 
     if (instance.suspenseNode !== null) {
       reconcilingParentSuspenseNode = instance.suspenseNode;
@@ -2970,13 +2987,10 @@ export function attach(
       remainingReconcilingChildrenSuspenseNodes = null;
     }
 
-    removePreviousSuspendedBy(instance);
-    instance.firstChild = null;
-    instance.suspendedBy = null;
-
     try {
       // Unmount the remaining set.
       unmountRemainingChildren();
+      removePreviousSuspendedBy(instance, previousSuspendedBy);
     } finally {
       reconcilingParent = stashedParent;
       previouslyReconciledSibling = stashedPrevious;
@@ -3170,15 +3184,13 @@ export function attach(
     const stashedParent = reconcilingParent;
     const stashedPrevious = previouslyReconciledSibling;
     const stashedRemaining = remainingReconcilingChildren;
+    const previousSuspendedBy = virtualInstance.suspendedBy;
     // Push a new DevTools instance parent while reconciling this subtree.
     reconcilingParent = virtualInstance;
     previouslyReconciledSibling = null;
     // Move all the children of this instance to the remaining set.
     // We'll move them back one by one, and anything that remains is deleted.
     remainingReconcilingChildren = virtualInstance.firstChild;
-
-    removePreviousSuspendedBy(virtualInstance);
-
     virtualInstance.firstChild = null;
     virtualInstance.suspendedBy = null;
     try {
@@ -3193,6 +3205,7 @@ export function attach(
       ) {
         recordResetChildren(virtualInstance);
       }
+      removePreviousSuspendedBy(virtualInstance, previousSuspendedBy);
       // Update the errors/warnings count. If this Instance has switched to a different
       // ReactComponentInfo instance, such as when refreshing Server Components, then
       // we replace all the previous logs with the ones associated with the new ones rather
@@ -3551,7 +3564,9 @@ export function attach(
     const stashedSuspenseParent = reconcilingParentSuspenseNode;
     const stashedSuspensePrevious = previouslyReconciledSiblingSuspenseNode;
     const stashedSuspenseRemaining = remainingReconcilingChildrenSuspenseNodes;
+    let previousSuspendedBy = null;
     if (fiberInstance !== null) {
+      previousSuspendedBy = fiberInstance.suspendedBy;
       // Update the Fiber so we that we always keep the current Fiber on the data.
       fiberInstance.data = nextFiber;
       if (
@@ -3569,17 +3584,14 @@ export function attach(
       // Move all the children of this instance to the remaining set.
       // We'll move them back one by one, and anything that remains is deleted.
       remainingReconcilingChildren = fiberInstance.firstChild;
+      fiberInstance.firstChild = null;
+      fiberInstance.suspendedBy = null;
 
       if (fiberInstance.suspenseNode !== null) {
         reconcilingParentSuspenseNode = fiberInstance.suspenseNode;
         previouslyReconciledSiblingSuspenseNode = null;
         remainingReconcilingChildrenSuspenseNodes = null;
       }
-
-      removePreviousSuspendedBy(fiberInstance);
-
-      fiberInstance.firstChild = null;
-      fiberInstance.suspendedBy = null;
     }
     try {
       if (
@@ -3734,6 +3746,8 @@ export function attach(
       }
 
       if (fiberInstance !== null) {
+        removePreviousSuspendedBy(fiberInstance, previousSuspendedBy);
+
         let componentLogsEntry = fiberToComponentLogsMap.get(
           fiberInstance.data,
         );
