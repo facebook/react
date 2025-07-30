@@ -2412,6 +2412,20 @@ export function attach(
     return fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
   }
 
+  function ioExistsInSuspenseAncestor(
+    suspenseNode: SuspenseNode,
+    ioInfo: ReactIOInfo,
+  ): boolean {
+    let ancestor = suspenseNode.parent;
+    while (ancestor !== null) {
+      if (ancestor.suspendedBy.has(ioInfo)) {
+        return true;
+      }
+      ancestor = ancestor.parent;
+    }
+    return false;
+  }
+
   function insertSuspendedBy(asyncInfo: ReactAsyncInfo): void {
     let parentSuspenseNode = reconcilingParentSuspenseNode;
     while (
@@ -2425,7 +2439,8 @@ export function attach(
     const parentInstance = reconcilingParent;
     if (parentSuspenseNode !== null) {
       const suspendedBy = parentSuspenseNode.suspendedBy;
-      let suspendedBySet = suspendedBy.get(asyncInfo.awaited);
+      const ioInfo = asyncInfo.awaited;
+      let suspendedBySet = suspendedBy.get(ioInfo);
       if (suspendedBySet === undefined) {
         suspendedBySet = new Set();
         suspendedBy.set(asyncInfo.awaited, suspendedBySet);
@@ -2433,7 +2448,16 @@ export function attach(
       // The child of the Suspense boundary that was suspended on this, or null if suspended at the root.
       // This is used to keep track of how many dependents are still alive and also to get information
       // like owner instances to link down into the tree.
-      suspendedBySet.add(parentInstance);
+      if (!suspendedBySet.has(parentInstance)) {
+        suspendedBySet.add(parentInstance);
+        if (
+          !parentSuspenseNode.hasUniqueSuspenders &&
+          !ioExistsInSuspenseAncestor(parentSuspenseNode, ioInfo)
+        ) {
+          // This didn't exist in the parent before, so let's mark this boundary as having a unique suspender.
+          parentSuspenseNode.hasUniqueSuspenders = true;
+        }
+      }
     }
     if (parentInstance !== null) {
       // Suspending at the root is not attributed to any particular component other than the SuspenseNode.
@@ -2459,6 +2483,35 @@ export function attach(
     return null;
   }
 
+  function unblockSuspendedBy(
+    parentSuspenseNode: SuspenseNode,
+    ioInfo: ReactIOInfo,
+  ): void {
+    const firstChild = parentSuspenseNode.firstChild;
+    if (firstChild === null) {
+      return;
+    }
+    let node: SuspenseNode = firstChild;
+    while (node !== null) {
+      if (node.suspendedBy.has(ioInfo)) {
+        // We have found a child boundary that depended on the unblocked I/O.
+        // It can now be marked as having unique suspenders. We can skip its children
+        // since they'll still be blocked by this one.
+        node.hasUniqueSuspenders = true;
+      } else if (node.firstChild !== null) {
+        node = node.firstChild;
+        continue;
+      }
+      while (node.nextSibling === null) {
+        if (node.parent === null || node.parent === parentSuspenseNode) {
+          return;
+        }
+        node = node.parent;
+      }
+      node = node.nextSibling;
+    }
+  }
+
   function removePreviousSuspendedBy(
     instance: DevToolsInstance,
     previousSuspendedBy: null | Array<ReactAsyncInfo>,
@@ -2478,9 +2531,8 @@ export function attach(
         ) {
           // This IO entry is no longer blocking the current tree.
           // Let's remove it from the parent SuspenseNode.
-          const suspendedBySet = parentSuspenseNode.suspendedBy.get(
-            asyncInfo.awaited,
-          );
+          const ioInfo = asyncInfo.awaited;
+          const suspendedBySet = parentSuspenseNode.suspendedBy.get(ioInfo);
           if (
             suspendedBySet === undefined ||
             !suspendedBySet.delete(instance)
@@ -2492,6 +2544,15 @@ export function attach(
           }
           if (suspendedBySet.size === 0) {
             parentSuspenseNode.suspendedBy.delete(asyncInfo.awaited);
+          }
+          if (
+            parentSuspenseNode.hasUniqueSuspenders &&
+            !ioExistsInSuspenseAncestor(parentSuspenseNode, ioInfo)
+          ) {
+            // This entry wasn't in any ancestor and is no longer in this suspense boundary.
+            // This means that a child might now be the unique suspender for this IO.
+            // Search the child boundaries to see if we can reveal any of them.
+            unblockSuspendedBy(parentSuspenseNode, ioInfo);
           }
         }
       }
@@ -4329,6 +4390,9 @@ export function attach(
     // Collect all ReactAsyncInfo that was suspending this SuspenseNode but
     // isn't also in any parent set.
     const result: Array<ReactAsyncInfo> = [];
+    if (!suspenseNode.hasUniqueSuspenders) {
+      return result;
+    }
     suspenseNode.suspendedBy.forEach((set, ioInfo) => {
       let parentNode = suspenseNode.parent;
       while (parentNode !== null) {
