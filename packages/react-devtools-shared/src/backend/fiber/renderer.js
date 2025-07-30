@@ -4278,6 +4278,26 @@ export function attach(
     return null;
   }
 
+  function getSuspendedByOfSuspenseNode(
+    suspenseNode: SuspenseNode,
+  ): Array<ReactAsyncInfo> {
+    // Collect all ReactAsyncInfo that was suspending this SuspenseNode but
+    // isn't also in any parent set.
+    const result: Array<ReactAsyncInfo> = [];
+    suspenseNode.suspendedBy.forEach((set, asyncInfo) => {
+      let parentNode = suspenseNode.parent;
+      while (parentNode !== null) {
+        // TODO: We probably should dedupe on ReactIOInfo instead of the awaits.
+        if (parentNode.suspendedBy.has(asyncInfo)) {
+          return;
+        }
+        parentNode = parentNode.parent;
+      }
+      result.push(asyncInfo);
+    });
+    return result;
+  }
+
   function serializeAsyncInfo(
     asyncInfo: ReactAsyncInfo,
     index: number,
@@ -4622,12 +4642,17 @@ export function attach(
       nativeTag = getNativeTag(fiber.stateNode);
     }
 
-    // This set is an edge case where if you pass a promise to a Client Component into a children
-    // position without a Server Component as the direct parent. E.g. <div>{promise}</div>
-    // In this case, this becomes associated with the Client/Host Component where as normally
-    // you'd expect these to be associated with the Server Component that awaited the data.
-    // TODO: Prepend other suspense sources like css, images and use().
-    const suspendedBy = fiberInstance.suspendedBy;
+    const suspendedBy =
+      fiberInstance.suspenseNode !== null
+        ? // If this is a Suspense boundary, then we include everything in the subtree that might suspend
+          // this boundary down to the next Suspense boundary.
+          getSuspendedByOfSuspenseNode(fiberInstance.suspenseNode)
+        : // This set is an edge case where if you pass a promise to a Client Component into a children
+          // position without a Server Component as the direct parent. E.g. <div>{promise}</div>
+          // In this case, this becomes associated with the Client/Host Component where as normally
+          // you'd expect these to be associated with the Server Component that awaited the data.
+          // TODO: Prepend other suspense sources like css, images and use().
+          fiberInstance.suspendedBy;
 
     return {
       id: fiberInstance.id,
