@@ -5504,6 +5504,9 @@ function preparePreambleFromSegment(
       // This boundary is complete. It might have inner boundaries which are pending
       // and able to provide a preamble so we have to check it's children
       hoistPreambleState(request.renderState, preamble);
+      // We track this boundary's byteSize on the request since it will always flush with
+      // the request since it may contribute to the preamble
+      request.byteSize += boundary.byteSize;
       const boundaryRootSegment = boundary.completedSegments[0];
       if (!boundaryRootSegment) {
         // Using the same error from flushSegment to avoid making a new one since conceptually the problem is still the same
@@ -5550,6 +5553,7 @@ function preparePreamble(request: Request) {
     request.completedPreambleSegments === null
   ) {
     const collectedPreambleSegments: Array<Array<Segment>> = [];
+    const originalRequestByteSize = request.byteSize;
     const hasPendingPreambles = preparePreambleFromSegment(
       request,
       request.completedRootSegment,
@@ -5557,6 +5561,10 @@ function preparePreamble(request: Request) {
     );
     if (isPreambleReady(request.renderState, hasPendingPreambles)) {
       request.completedPreambleSegments = collectedPreambleSegments;
+    } else {
+      // We restore the original size since the preamble is not ready
+      // and we will prepare it again.
+      request.byteSize = originalRequestByteSize;
     }
   }
 }
