@@ -11,6 +11,7 @@ import type {
   ReactComponentInfo,
   ReactDebugInfo,
   ReactAsyncInfo,
+  ReactIOInfo,
 } from 'shared/ReactTypes';
 
 import {
@@ -274,7 +275,7 @@ type SuspenseNode = {
   parent: null | SuspenseNode,
   firstChild: null | SuspenseNode,
   nextSibling: null | SuspenseNode,
-  suspendedBy: Map<ReactAsyncInfo, Set<DevToolsInstance | null>>, // Tracks which data we're suspended by and the children that suspend it.
+  suspendedBy: Map<ReactIOInfo, Set<DevToolsInstance | null>>, // Tracks which data we're suspended by and the children that suspend it.
   // Track whether any of the items in suspendedBy are unique this this Suspense boundaries or if they're all
   // also in the parent sets. This determine whether this could contribute in the loading sequence.
   hasUniqueSuspenders: boolean,
@@ -2424,10 +2425,10 @@ export function attach(
     const parentInstance = reconcilingParent;
     if (parentSuspenseNode !== null) {
       const suspendedBy = parentSuspenseNode.suspendedBy;
-      let suspendedBySet = suspendedBy.get(asyncInfo);
+      let suspendedBySet = suspendedBy.get(asyncInfo.awaited);
       if (suspendedBySet === undefined) {
         suspendedBySet = new Set();
-        suspendedBy.set(asyncInfo, suspendedBySet);
+        suspendedBy.set(asyncInfo.awaited, suspendedBySet);
       }
       // The child of the Suspense boundary that was suspended on this, or null if suspended at the root.
       // This is used to keep track of how many dependents are still alive and also to get information
@@ -2445,6 +2446,19 @@ export function attach(
     }
   }
 
+  function getAwaitInSuspendedByFromIO(
+    suspensedBy: Array<ReactAsyncInfo>,
+    ioInfo: ReactIOInfo,
+  ): null | ReactAsyncInfo {
+    for (let i = 0; i < suspensedBy.length; i++) {
+      const asyncInfo = suspensedBy[i];
+      if (asyncInfo.awaited === ioInfo) {
+        return asyncInfo;
+      }
+    }
+    return null;
+  }
+
   function removePreviousSuspendedBy(
     instance: DevToolsInstance,
     previousSuspendedBy: null | Array<ReactAsyncInfo>,
@@ -2458,11 +2472,15 @@ export function attach(
         const asyncInfo = previousSuspendedBy[i];
         if (
           nextSuspendedBy === null ||
-          nextSuspendedBy.indexOf(asyncInfo) === -1
+          (nextSuspendedBy.indexOf(asyncInfo) === -1 &&
+            getAwaitInSuspendedByFromIO(nextSuspendedBy, asyncInfo.awaited) ===
+              null)
         ) {
-          // This entry is no longer blocking the current tree.
+          // This IO entry is no longer blocking the current tree.
           // Let's remove it from the parent SuspenseNode.
-          const suspendedBySet = parentSuspenseNode.suspendedBy.get(asyncInfo);
+          const suspendedBySet = parentSuspenseNode.suspendedBy.get(
+            asyncInfo.awaited,
+          );
           if (
             suspendedBySet === undefined ||
             !suspendedBySet.delete(instance)
@@ -2473,7 +2491,7 @@ export function attach(
             );
           }
           if (suspendedBySet.size === 0) {
-            parentSuspenseNode.suspendedBy.delete(asyncInfo);
+            parentSuspenseNode.suspendedBy.delete(asyncInfo.awaited);
           }
         }
       }
@@ -4311,16 +4329,30 @@ export function attach(
     // Collect all ReactAsyncInfo that was suspending this SuspenseNode but
     // isn't also in any parent set.
     const result: Array<ReactAsyncInfo> = [];
-    suspenseNode.suspendedBy.forEach((set, asyncInfo) => {
+    suspenseNode.suspendedBy.forEach((set, ioInfo) => {
       let parentNode = suspenseNode.parent;
       while (parentNode !== null) {
-        // TODO: We probably should dedupe on ReactIOInfo instead of the awaits.
-        if (parentNode.suspendedBy.has(asyncInfo)) {
+        if (parentNode.suspendedBy.has(ioInfo)) {
           return;
         }
         parentNode = parentNode.parent;
       }
-      result.push(asyncInfo);
+      // We have the ioInfo but we need to find at least one corresponding await
+      // to go along with it. We don't really need to show every child that awaits the same
+      // thing so we just pick the first one that is still alive.
+      if (set.size === 0) {
+        return;
+      }
+      const firstInstance: DevToolsInstance = (set.values().next().value: any);
+      if (firstInstance.suspendedBy !== null) {
+        const asyncInfo = getAwaitInSuspendedByFromIO(
+          firstInstance.suspendedBy,
+          ioInfo,
+        );
+        if (asyncInfo !== null) {
+          result.push(asyncInfo);
+        }
+      }
     });
     return result;
   }
