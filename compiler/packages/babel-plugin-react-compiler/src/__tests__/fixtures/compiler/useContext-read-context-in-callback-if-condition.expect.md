@@ -42,7 +42,7 @@ function Component(props) {
   const $ = _c(6);
   const foo = useContext(FooContext);
   let t0;
-  if ($[0] !== foo.current) {
+  if ($[0] !== foo) {
     t0 = () => {
       if (foo.current) {
         return {};
@@ -50,7 +50,7 @@ function Component(props) {
         return null;
       }
     };
-    $[0] = foo.current;
+    $[0] = foo;
     $[1] = t0;
   } else {
     t0 = $[1];

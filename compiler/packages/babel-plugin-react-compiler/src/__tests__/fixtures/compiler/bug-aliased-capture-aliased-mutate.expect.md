@@ -75,9 +75,9 @@ function useFoo(t0) {
     arrayPush(x, y);
     const y_alias = y;
     let t2;
-    if ($[3] !== y_alias.value) {
+    if ($[3] !== y_alias) {
       t2 = () => y_alias.value;
-      $[3] = y_alias.value;
+      $[3] = y_alias;
       $[4] = t2;
     } else {
       t2 = $[4];
