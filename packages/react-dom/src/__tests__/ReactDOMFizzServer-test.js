@@ -10695,4 +10695,40 @@ describe('ReactDOMFizzServer', () => {
 
     expect(getVisibleChildren(container)).toEqual(<div>Success!</div>);
   });
+
+  it('should always flush the boundaries contributing the preamble regardless of their size', async () => {
+    const longDescription =
+      `I need to make this segment somewhat large because it needs to be large enought to be outlined during the initial flush. Setting the progressive chunk size to near zero isn't enough because there is a fixed minimum size that we use to avoid doing the size tracking altogether and this needs to be larger than that at least.
+
+Unfortunately that previous paragraph wasn't quite long enough so I'll continue with some more prose and maybe throw on some repeated additional strings at the end for good measure.
+
+` + 'a'.repeat(500);
+
+    const randomTag = Math.random().toString(36).slice(2, 10);
+
+    function App() {
+      return (
+        <Suspense fallback={randomTag}>
+          <html lang="en">
+            <body>
+              <main>{longDescription}</main>
+            </body>
+          </html>
+        </Suspense>
+      );
+    }
+
+    let streamedContent = '';
+    writable.on('data', chunk => (streamedContent += chunk));
+
+    await act(() => {
+      renderToPipeableStream(<App />, {progressiveChunkSize: 100}).pipe(
+        writable,
+      );
+    });
+
+    // We don't use the DOM here b/c we execute scripts which hides whether a fallback was shown briefly
+    // Instead we assert that we never emitted the fallback of the Suspense boundary around the body.
+    expect(streamedContent).not.toContain(randomTag);
+  });
 });

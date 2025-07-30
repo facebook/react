@@ -460,7 +460,13 @@ function isEligibleForOutlining(
   // For very small boundaries, don't bother producing a fallback for outlining.
   // The larger this limit is, the more we can save on preparing fallbacks in case we end up
   // outlining.
-  return boundary.byteSize > 500;
+  return (
+    boundary.byteSize > 500 &&
+    // For boundaries that can possibly contribute to the preamble we don't want to outline
+    // them regardless of their size since the fallbacks should only be emitted if we've
+    // errored the boundary.
+    boundary.contentPreamble === null
+  );
 }
 
 function defaultErrorHandler(error: mixed) {
