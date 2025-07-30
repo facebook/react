@@ -275,7 +275,7 @@ type SuspenseNode = {
   parent: null | SuspenseNode,
   firstChild: null | SuspenseNode,
   nextSibling: null | SuspenseNode,
-  suspendedBy: Map<ReactIOInfo, Set<DevToolsInstance | null>>, // Tracks which data we're suspended by and the children that suspend it.
+  suspendedBy: Map<ReactIOInfo, Set<DevToolsInstance>>, // Tracks which data we're suspended by and the children that suspend it.
   // Track whether any of the items in suspendedBy are unique this this Suspense boundaries or if they're all
   // also in the parent sets. This determine whether this could contribute in the loading sequence.
   hasUniqueSuspenders: boolean,
@@ -2437,36 +2437,39 @@ export function attach(
       parentSuspenseNode = parentSuspenseNode.parent;
     }
     const parentInstance = reconcilingParent;
-    if (parentSuspenseNode !== null) {
-      const suspendedBy = parentSuspenseNode.suspendedBy;
-      const ioInfo = asyncInfo.awaited;
-      let suspendedBySet = suspendedBy.get(ioInfo);
-      if (suspendedBySet === undefined) {
-        suspendedBySet = new Set();
-        suspendedBy.set(asyncInfo.awaited, suspendedBySet);
-      }
-      // The child of the Suspense boundary that was suspended on this, or null if suspended at the root.
-      // This is used to keep track of how many dependents are still alive and also to get information
-      // like owner instances to link down into the tree.
-      if (!suspendedBySet.has(parentInstance)) {
-        suspendedBySet.add(parentInstance);
-        if (
-          !parentSuspenseNode.hasUniqueSuspenders &&
-          !ioExistsInSuspenseAncestor(parentSuspenseNode, ioInfo)
-        ) {
-          // This didn't exist in the parent before, so let's mark this boundary as having a unique suspender.
-          parentSuspenseNode.hasUniqueSuspenders = true;
-        }
+    if (parentInstance === null || parentSuspenseNode === null) {
+      throw new Error(
+        'It should not be possible to have suspended data outside the root. ' +
+          'Even suspending at the first position is still a child of the root.',
+      );
+    }
+    const suspenseNodeSuspendedBy = parentSuspenseNode.suspendedBy;
+    const ioInfo = asyncInfo.awaited;
+    let suspendedBySet = suspenseNodeSuspendedBy.get(ioInfo);
+    if (suspendedBySet === undefined) {
+      suspendedBySet = new Set();
+      suspenseNodeSuspendedBy.set(asyncInfo.awaited, suspendedBySet);
+    }
+    // The child of the Suspense boundary that was suspended on this, or null if suspended at the root.
+    // This is used to keep track of how many dependents are still alive and also to get information
+    // like owner instances to link down into the tree.
+    if (!suspendedBySet.has(parentInstance)) {
+      suspendedBySet.add(parentInstance);
+      if (
+        !parentSuspenseNode.hasUniqueSuspenders &&
+        !ioExistsInSuspenseAncestor(parentSuspenseNode, ioInfo)
+      ) {
+        // This didn't exist in the parent before, so let's mark this boundary as having a unique suspender.
+        parentSuspenseNode.hasUniqueSuspenders = true;
       }
     }
-    if (parentInstance !== null) {
-      // Suspending at the root is not attributed to any particular component other than the SuspenseNode.
-      const suspendedBy = parentInstance.suspendedBy;
-      if (suspendedBy === null) {
-        parentInstance.suspendedBy = [asyncInfo];
-      } else if (suspendedBy.indexOf(asyncInfo) === -1) {
-        suspendedBy.push(asyncInfo);
-      }
+    // Suspending right below the root is not attributed to any particular component in UI
+    // other than the SuspenseNode and the HostRoot's FiberInstance.
+    const suspendedBy = parentInstance.suspendedBy;
+    if (suspendedBy === null) {
+      parentInstance.suspendedBy = [asyncInfo];
+    } else if (suspendedBy.indexOf(asyncInfo) === -1) {
+      suspendedBy.push(asyncInfo);
     }
   }
 
