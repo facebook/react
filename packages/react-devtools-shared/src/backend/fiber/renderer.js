@@ -2778,7 +2778,7 @@ export function attach(
               // so we assume insertSuspendedBy dedupes.
               insertSuspendedBy(asyncInfo);
             }
-            if (previousVirtualInstance) continue;
+            continue;
           }
           if (typeof debugEntry.name !== 'string') {
             // Not a Component. Some other Debug Info.
@@ -3336,7 +3336,7 @@ export function attach(
               // so we assume insertSuspendedBy dedupes.
               insertSuspendedBy(asyncInfo);
             }
-            if (previousVirtualInstance) continue;
+            continue;
           }
           if (typeof debugEntry.name !== 'string') {
             // Not a Component. Some other Debug Info.
