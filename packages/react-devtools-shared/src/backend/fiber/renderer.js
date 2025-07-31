@@ -205,7 +205,7 @@ type FilteredFiberInstance = {
   source: null | string | Error | ReactFunctionLocation, // always null here.
   logCount: number, // total number of errors/warnings last seen
   treeBaseDuration: number, // the profiled time of the last render of this subtree
-  suspendedBy: null | Array<ReactAsyncInfo>, // not used
+  suspendedBy: null | Array<ReactAsyncInfo>, // only used at the root
   suspenseNode: null | SuspenseNode,
   data: Fiber, // one of a Fiber pair
 };
@@ -2444,13 +2444,22 @@ export function attach(
       // we bubble that up to the nearest parent Suspense boundary that isn't in fallback mode.
       parentSuspenseNode = parentSuspenseNode.parent;
     }
-    const parentInstance = reconcilingParent;
-    if (parentInstance === null || parentSuspenseNode === null) {
+    if (reconcilingParent === null || parentSuspenseNode === null) {
       throw new Error(
         'It should not be possible to have suspended data outside the root. ' +
           'Even suspending at the first position is still a child of the root.',
       );
     }
+    // Use the nearest unfiltered parent so that there's always some component that has
+    // the entry on it even if you filter, or the root if all are filtered.
+    let parentInstance = reconcilingParent;
+    while (
+      parentInstance.kind === FILTERED_FIBER_INSTANCE &&
+      parentInstance.parent !== null
+    ) {
+      parentInstance = parentInstance.parent;
+    }
+
     const suspenseNodeSuspendedBy = parentSuspenseNode.suspendedBy;
     const ioInfo = asyncInfo.awaited;
     let suspendedBySet = suspenseNodeSuspendedBy.get(ioInfo);
