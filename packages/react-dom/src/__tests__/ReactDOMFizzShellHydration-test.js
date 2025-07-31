@@ -764,13 +764,9 @@ describe('ReactDOMFizzShellHydration', () => {
       'use: [object Promise]',
       'use: [object Promise]',
       'used: resolved',
-      'use: [object Promise]',
-      'used: resolved',
-      // FIXME
-      'onUncaughtError: Rendered more hooks than during the previous render.',
     ]);
 
     // Should've rendered something. The error was handled by the error boundary.
-    expect(container.textContent).toBe('');
+    expect(container.textContent).toBe('Something went wrong: boomhello world');
   });
 });

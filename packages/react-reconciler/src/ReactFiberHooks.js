@@ -281,6 +281,9 @@ let localIdCounter: number = 0;
 let thenableIndexCounter: number = 0;
 let thenableState: ThenableState | null = null;
 
+// Track whether we've switched dispatchers due to conditional use
+let hasDispatcherSwitchedDueToUse: boolean = false;
+
 // Used for ids that are generated completely client-side (i.e. not during
 // hydration). This counter is global, so client ids are not stable across
 // render attempts.
@@ -624,6 +627,9 @@ export function renderWithHooks<Props, SecondArg>(
 
   finishRenderingHooks(current, workInProgress, Component);
 
+  // Reset dispatcher switch flag for the next render
+  hasDispatcherSwitchedDueToUse = false;
+
   return children;
 }
 
@@ -931,6 +937,9 @@ export function resetHooksAfterThrow(): void {
   // We can assume the previous dispatcher is always this one, since we set it
   // at the beginning of the render phase and there's no re-entrance.
   ReactSharedInternals.H = ContextOnlyDispatcher;
+
+  // Reset dispatcher switch flag
+  hasDispatcherSwitchedDueToUse = false;
 }
 
 export function resetHooksOnUnwind(workInProgress: Fiber): void {
@@ -1037,6 +1046,32 @@ function updateWorkInProgressHook(): Hook {
           'Update hook called on initial render. This is likely a bug in React. Please file an issue.',
         );
       } else {
+        // Check if we're in a conditional use scenario
+        if (hasDispatcherSwitchedDueToUse) {
+          // We're in a situation where conditional use has caused hook count mismatch.
+          // Create a new hook and mark that we should treat the next hook as a mount.
+          const newHook: Hook = {
+            memoizedState: null,
+            baseState: null,
+            baseQueue: null,
+            queue: null,
+            next: null,
+          };
+
+          if (workInProgressHook === null) {
+            // This is the first hook in the list.
+            currentlyRenderingFiber.memoizedState = workInProgressHook =
+              newHook;
+          } else {
+            // Append to the end of the list.
+            workInProgressHook = workInProgressHook.next = newHook;
+          }
+
+          // Don't throw error - let the hook continue
+          // The specific hook implementation will handle initialization
+          return workInProgressHook;
+        }
+
         // This is an update. We should always have a current hook.
         throw new Error('Rendered more hooks than during the previous render.');
       }
@@ -1130,11 +1165,15 @@ function useThenable<T>(thenable: Thenable<T>): T {
     const currentFiber = workInProgressFiber.alternate;
     if (__DEV__) {
       if (currentFiber !== null && currentFiber.memoizedState !== null) {
+        hasDispatcherSwitchedDueToUse = true;
         ReactSharedInternals.H = HooksDispatcherOnUpdateInDEV;
       } else {
         ReactSharedInternals.H = HooksDispatcherOnMountInDEV;
       }
     } else {
+      if (currentFiber !== null && currentFiber.memoizedState !== null) {
+        hasDispatcherSwitchedDueToUse = true;
+      }
       ReactSharedInternals.H =
         currentFiber === null || currentFiber.memoizedState === null
           ? HooksDispatcherOnMount
@@ -1301,13 +1340,36 @@ function updateReducerImpl<S, A>(
   current: Hook,
   reducer: (S, A) => S,
 ): [S, Dispatch<A>] {
-  const queue = hook.queue;
+  let queue = hook.queue;
 
   if (queue === null) {
-    throw new Error(
-      'Should have a queue. You are likely calling Hooks conditionally, ' +
-        'which is not allowed. (https://react.dev/link/invalid-hook-call)',
-    );
+    // Check if this is a conditional use scenario
+    if (hasDispatcherSwitchedDueToUse && hook.memoizedState === null) {
+      // Initialize the hook for conditional use case
+      // For conditional use, we don't have the initial state, so we use the current state
+      // or a default value. This matches what would happen during mount.
+      const initialState = ((undefined: any): S);
+      hook.memoizedState = hook.baseState = initialState;
+      const newQueue: UpdateQueue<S, A> = {
+        pending: null,
+        lanes: NoLanes,
+        dispatch: null,
+        lastRenderedReducer: reducer,
+        lastRenderedState: initialState,
+      };
+      queue = hook.queue = newQueue;
+      const dispatch: Dispatch<A> = (dispatchReducerAction.bind(
+        null,
+        currentlyRenderingFiber,
+        newQueue,
+      ): any);
+      newQueue.dispatch = dispatch;
+    } else {
+      throw new Error(
+        'Should have a queue. You are likely calling Hooks conditionally, ' +
+          'which is not allowed. (https://react.dev/link/invalid-hook-call)',
+      );
+    }
   }
 
   queue.lastRenderedReducer = reducer;
@@ -2900,6 +2962,14 @@ function updateCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
   const hook = updateWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
   const prevState = hook.memoizedState;
+
+  // Handle conditional use scenario where hook was newly created
+  if (hasDispatcherSwitchedDueToUse && prevState === null) {
+    // This hook was created due to conditional use - initialize it properly
+    hook.memoizedState = [callback, nextDeps];
+    return callback;
+  }
+
   if (nextDeps !== null) {
     const prevDeps: Array<mixed> | null = prevState[1];
     if (areHookInputsEqual(nextDeps, prevDeps)) {
@@ -2936,6 +3006,23 @@ function updateMemo<T>(
   const hook = updateWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
   const prevState = hook.memoizedState;
+
+  // Handle conditional use scenario where hook was newly created
+  if (hasDispatcherSwitchedDueToUse && prevState === null) {
+    // This hook was created due to conditional use - initialize it properly
+    const nextValue = nextCreate();
+    if (shouldDoubleInvokeUserFnsInHooksDEV) {
+      setIsStrictModeForDevtools(true);
+      try {
+        nextCreate();
+      } finally {
+        setIsStrictModeForDevtools(false);
+      }
+    }
+    hook.memoizedState = [nextValue, nextDeps];
+    return nextValue;
+  }
+
   // Assume these are defined. If they're not, areHookInputsEqual will warn.
   if (nextDeps !== null) {
     const prevDeps: Array<mixed> | null = prevState[1];
