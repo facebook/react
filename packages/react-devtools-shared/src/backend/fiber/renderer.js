@@ -2893,7 +2893,8 @@ export function attach(
     } else if (
       (reconcilingParent !== null &&
         reconcilingParent.kind === VIRTUAL_INSTANCE) ||
-      fiber.tag === SuspenseComponent
+      fiber.tag === SuspenseComponent ||
+      fiber.tag === OffscreenComponent // Use to keep resuspended instances alive inside a SuspenseComponent.
     ) {
       // If the parent is a Virtual Instance and we filtered this Fiber we include a
       // hidden node. We also include this if it's a Suspense boundary so we can track those
@@ -3005,7 +3006,7 @@ export function attach(
           if (areSuspenseChildrenConditionallyWrapped) {
             primaryChild = fiber.child;
           } else if (fiber.child !== null) {
-            primaryChild = fiber.child.child;
+            primaryChild = fiber.child;
             updateTrackedPathStateBeforeMount(fiber.child, null);
           }
           if (primaryChild !== null) {
