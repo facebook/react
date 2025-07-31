@@ -5837,6 +5837,7 @@ function preparePreambleFromSegment(
   switch (boundary.status) {
     case 1:
       hoistPreambleState(request.renderState, preamble);
+      request.byteSize += boundary.byteSize;
       segment = boundary.completedSegments[0];
       if (!segment)
         throw Error(
@@ -5869,17 +5870,16 @@ function preparePreamble(request) {
     null === request.completedPreambleSegments
   ) {
     var collectedPreambleSegments = [],
+      originalRequestByteSize = request.byteSize,
       hasPendingPreambles = preparePreambleFromSegment(
         request,
         request.completedRootSegment,
         collectedPreambleSegments
       ),
       preamble = request.renderState.preamble;
-    if (
-      !1 === hasPendingPreambles ||
-      (preamble.headChunks && preamble.bodyChunks)
-    )
-      request.completedPreambleSegments = collectedPreambleSegments;
+    !1 === hasPendingPreambles || (preamble.headChunks && preamble.bodyChunks)
+      ? (request.completedPreambleSegments = collectedPreambleSegments)
+      : (request.byteSize = originalRequestByteSize);
   }
 }
 function flushSubtree(request, destination, segment, hoistableState) {
