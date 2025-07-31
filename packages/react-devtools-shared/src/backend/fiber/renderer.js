@@ -2173,13 +2173,23 @@ export function attach(
     }
     idToDevToolsInstanceMap.set(fiberInstance.id, fiberInstance);
 
-    const id = fiberInstance.id;
-
     if (__DEBUG__) {
       debug('recordMount()', fiberInstance, parentInstance);
     }
 
+    return recordReconnect(fiberInstance, parentInstance);
+  }
+
+  function recordReconnect(
+    fiberInstance: FiberInstance,
+    parentInstance: DevToolsInstance | null,
+  ): FiberInstance {
+    const id = fiberInstance.id;
+    const fiber = fiberInstance.data;
+
     const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
+
+    const isRoot = fiber.tag === HostRoot;
 
     if (isRoot) {
       const hasOwnerMetadata = fiber.hasOwnProperty('_debugOwner');
@@ -2304,6 +2314,14 @@ export function attach(
 
     idToDevToolsInstanceMap.set(id, instance);
 
+    recordVirtualReconnect(instance, parentInstance, secondaryEnv);
+  }
+
+  function recordVirtualReconnect(
+    instance: VirtualInstance,
+    parentInstance: DevToolsInstance | null,
+    secondaryEnv: null | string,
+  ): void {
     const componentInfo = instance.data;
 
     const key =
@@ -2355,6 +2373,8 @@ export function attach(
     const keyString = key === null ? null : String(key);
     const keyStringID = getStringID(keyString);
 
+    const id = instance.id;
+
     pushOperation(TREE_OPERATION_ADD);
     pushOperation(id);
     pushOperation(elementType);
@@ -2369,14 +2389,23 @@ export function attach(
   }
 
   function recordUnmount(fiberInstance: FiberInstance): void {
-    const fiber = fiberInstance.data;
     if (__DEBUG__) {
       debug('recordUnmount()', fiberInstance, reconcilingParent);
     }
 
+    recordDisconnect(fiberInstance);
+
+    idToDevToolsInstanceMap.delete(fiberInstance.id);
+
+    untrackFiber(fiberInstance, fiberInstance.data);
+  }
+
+  function recordDisconnect(fiberInstance: FiberInstance): void {
+    const fiber = fiberInstance.data;
+
     if (trackedPathMatchInstance === fiberInstance) {
       // We're in the process of trying to restore previous selection.
-      // If this fiber matched but is being unmounted, there's no use trying.
+      // If this fiber matched but is being hidden, there's no use trying.
       // Reset the state so we don't keep holding onto it.
       setTrackedPath(null);
     }
@@ -2393,10 +2422,6 @@ export function attach(
       // and later arrange them in the correct order.
       pendingRealUnmountedIDs.push(id);
     }
-
-    idToDevToolsInstanceMap.delete(fiberInstance.id);
-
-    untrackFiber(fiberInstance, fiber);
   }
 
   // Running state of the remaining children from the previous version of this parent that
@@ -2811,6 +2836,11 @@ export function attach(
   }
 
   function recordVirtualUnmount(instance: VirtualInstance) {
+    recordVirtualDisconnect(instance);
+    idToDevToolsInstanceMap.delete(instance.id);
+  }
+
+  function recordVirtualDisconnect(instance: VirtualInstance) {
     if (trackedPathMatchInstance === instance) {
       // We're in the process of trying to restore previous selection.
       // If this fiber matched but is being unmounted, there's no use trying.
@@ -2820,8 +2850,6 @@ export function attach(
 
     const id = instance.id;
     pendingRealUnmountedIDs.push(id);
-
-    idToDevToolsInstanceMap.delete(instance.id);
   }
 
   function getSecondaryEnvironmentName(
@@ -3887,21 +3915,28 @@ export function attach(
         // We don't update any children while they're still hidden.
       } else if (prevWasHidden && !nextIsHidden) {
         // We're revealing the hidden children. We now need to update them to the latest state.
+        if (fiberInstance !== null) {
+          reconnectChildrenRecursively(fiberInstance);
+        }
         if (nextFiber.child !== null) {
-          mountChildrenRecursively(
-            nextFiber.child,
-            traceNearestHostComponentUpdate,
-          );
-          shouldResetChildren = true;
+          if (
+            updateChildrenRecursively(
+              prevFiber.child, // TODO: This is not safe because it could have updated multiple times before.
+              nextFiber.child,
+              traceNearestHostComponentUpdate,
+            )
+          ) {
+            shouldResetChildren = true;
+          }
         }
       } else if (!prevWasHidden && nextIsHidden) {
-        // We're hiding the children. We really just unmount them for now.
-        updateChildrenRecursively(
-          null,
-          prevFiber.child,
-          traceNearestHostComponentUpdate,
-        );
-        shouldResetChildren = true;
+        // We're hiding the children. Disconnect them from the front end but keep state.
+        if (fiberInstance !== null) {
+          disconnectChildrenRecursively(fiberInstance);
+          fiberInstance.firstChild = remainingReconcilingChildren; // Restore the set, we won't readd them.
+          remainingReconcilingChildren = null; // Don't delete them. We've consumed them.
+          fiberInstance.suspendedBy = previousSuspendedBy; // Restore the suspended
+        }
       } else {
         // Common case: Primary -> Primary.
         // This is the same code path as for non-Suspense fibers.
@@ -4000,6 +4035,55 @@ export function attach(
           previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
           remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
         }
+      }
+    }
+  }
+
+  function disconnectChildrenRecursively(parentInstance: DevToolsInstance) {
+    for (
+      let child = parentInstance.firstChild;
+      child !== null;
+      child = child.nextSibling
+    ) {
+      if (
+        (child.kind === FIBER_INSTANCE ||
+          child.kind === FILTERED_FIBER_INSTANCE) &&
+        child.data.tag === OffscreenComponent &&
+        child.data.memoizedState !== null
+      ) {
+        // This instance's children are already disconnected.
+      } else {
+        disconnectChildrenRecursively(child);
+      }
+      if (child.kind === FIBER_INSTANCE) {
+        recordDisconnect(child);
+      } else if (child.kind === VIRTUAL_INSTANCE) {
+        recordVirtualDisconnect(child);
+      }
+    }
+  }
+
+  function reconnectChildrenRecursively(parentInstance: DevToolsInstance) {
+    for (
+      let child = parentInstance.firstChild;
+      child !== null;
+      child = child.nextSibling
+    ) {
+      if (child.kind === FIBER_INSTANCE) {
+        recordReconnect(child, parentInstance);
+      } else if (child.kind === VIRTUAL_INSTANCE) {
+        const secondaryEnv = null; // TODO: We don't have this data anywhere. We could just stash it somewhere.
+        recordVirtualReconnect(child, parentInstance, secondaryEnv);
+      }
+      if (
+        (child.kind === FIBER_INSTANCE ||
+          child.kind === FILTERED_FIBER_INSTANCE) &&
+        child.data.tag === OffscreenComponent &&
+        child.data.memoizedState !== null
+      ) {
+        // This instance's children should remain disconnected.
+      } else {
+        reconnectChildrenRecursively(child);
       }
     }
   }
