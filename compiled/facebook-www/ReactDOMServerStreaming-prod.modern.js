@@ -3702,6 +3702,9 @@ function getViewTransitionClassName(defaultClass, eventClass) {
       ? null
       : eventClass;
 }
+function isEligibleForOutlining(request, boundary) {
+  return 500 < boundary.byteSize && null === boundary.contentPreamble;
+}
 function defaultErrorHandler(error) {
   if (
     "object" === typeof error &&
@@ -4019,7 +4022,7 @@ function tryToResolveTogetherRow(request, togetherRow) {
       if (
         1 !== rowBoundary.pendingTasks ||
         rowBoundary.parentFlushed ||
-        500 < rowBoundary.byteSize
+        isEligibleForOutlining(request, rowBoundary)
       ) {
         allCompleteAndInlinable = !1;
         break;
@@ -4778,7 +4781,10 @@ function renderElement(request, task, keyPath, type, props, ref) {
                 queueCompletedSegment(newBoundary, contentRootSegment),
                 0 === newBoundary.pendingTasks && 0 === newBoundary.status)
               ) {
-                if (((newBoundary.status = 1), !(500 < newBoundary.byteSize))) {
+                if (
+                  ((newBoundary.status = 1),
+                  !isEligibleForOutlining(request, newBoundary))
+                ) {
                   null !== prevRow$jscomp$0 &&
                     0 === --prevRow$jscomp$0.pendingTasks &&
                     finishSuspenseListRow(request, prevRow$jscomp$0);
@@ -5713,7 +5719,7 @@ function finishedTask(request$jscomp$0, boundary, row, segment) {
         (row = boundary.row),
           null !== row &&
             hoistHoistables(row.hoistables, boundary.contentState),
-          500 < boundary.byteSize ||
+          isEligibleForOutlining(request$jscomp$0, boundary) ||
             (boundary.fallbackAbortableTasks.forEach(
               abortTaskSoft,
               request$jscomp$0
@@ -5949,7 +5955,7 @@ function flushSegment(request, destination, segment, hoistableState) {
       hoistableState && hoistHoistables(hoistableState, boundary.fallbackState),
       flushSubtree(request, destination, segment, hoistableState);
   else if (
-    500 < boundary.byteSize &&
+    isEligibleForOutlining(request, boundary) &&
     flushedByteSize + boundary.byteSize > request.progressiveChunkSize
   )
     (boundary.rootSegmentID = request.nextSegmentId++),
@@ -5965,7 +5971,7 @@ function flushSegment(request, destination, segment, hoistableState) {
     hoistableState && hoistHoistables(hoistableState, boundary.contentState);
     segment = boundary.row;
     null !== segment &&
-      500 < boundary.byteSize &&
+      isEligibleForOutlining(request, boundary) &&
       0 === --segment.pendingTasks &&
       finishSuspenseListRow(request, segment);
     writeChunkAndReturn(destination, "\x3c!--$--\x3e");
@@ -6004,7 +6010,7 @@ function flushCompletedBoundary(request, destination, boundary) {
   completedSegments.length = 0;
   completedSegments = boundary.row;
   null !== completedSegments &&
-    500 < boundary.byteSize &&
+    isEligibleForOutlining(request, boundary) &&
     0 === --completedSegments.pendingTasks &&
     finishSuspenseListRow(request, completedSegments);
   writeHoistablesForBoundary(
