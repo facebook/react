@@ -2986,7 +2986,9 @@ export function attach(
         aquireHostInstance(nearestInstance, fiber.stateNode);
       }
 
-      if (fiber.tag === SuspenseComponent && OffscreenComponent === -1) {
+      if (fiber.tag === OffscreenComponent && fiber.memoizedState !== null) {
+        // If an Offscreen component is hidden, don't mount its children yet.
+      } else if (fiber.tag === SuspenseComponent && OffscreenComponent === -1) {
         // Legacy Suspense without the Offscreen wrapper. For the modern Suspense we just handle the
         // Offscreen wrapper itself specially.
         const isTimedOut = fiber.memoizedState !== null;
@@ -3500,7 +3502,8 @@ export function attach(
         }
         if (existingInstance !== null) {
           // Common case. Match in the same parent.
-          const fiberInstance: FiberInstance = (existingInstance: any); // Only matches if it's a Fiber.
+          const fiberInstance: FiberInstance | FilteredFiberInstance =
+            (existingInstance: any); // Only matches if it's a Fiber.
 
           // We keep track if the order of the children matches the previous order.
           // They are always different referentially, but if the instances line up
@@ -3608,7 +3611,7 @@ export function attach(
 
   // Returns whether closest unfiltered fiber parent needs to reset its child list.
   function updateFiberRecursively(
-    fiberInstance: null | FiberInstance, // null if this should be filtered
+    fiberInstance: null | FiberInstance | FilteredFiberInstance, // null if this should be filtered
     nextFiber: Fiber,
     prevFiber: Fiber,
     traceNearestHostComponentUpdate: boolean,
@@ -3723,6 +3726,11 @@ export function attach(
         isLegacySuspense && prevFiber.memoizedState !== null;
       const nextDidTimeOut =
         isLegacySuspense && nextFiber.memoizedState !== null;
+
+      const isOffscreen = nextFiber.tag === OffscreenComponent;
+      const prevWasHidden = isOffscreen && prevFiber.memoizedState !== null;
+      const nextIsHidden = isOffscreen && nextFiber.memoizedState !== null;
+
       // The logic below is inspired by the code paths in updateSuspenseComponent()
       // inside ReactFiberBeginWork in the React source code.
       if (prevDidTimeout && nextDidTimeOut) {
@@ -3789,6 +3797,25 @@ export function attach(
           );
           shouldResetChildren = true;
         }
+      } else if (prevWasHidden && nextIsHidden) {
+        // We don't update any children while they're still hidden.
+      } else if (prevWasHidden && !nextIsHidden) {
+        // We're revealing the hidden children. We now need to update them to the latest state.
+        if (nextFiber.child !== null) {
+          mountChildrenRecursively(
+            nextFiber.child,
+            traceNearestHostComponentUpdate,
+          );
+          shouldResetChildren = true;
+        }
+      } else if (!prevWasHidden && nextIsHidden) {
+        // We're hiding the children. We really just unmount them for now.
+        updateChildrenRecursively(
+          null,
+          prevFiber.child,
+          traceNearestHostComponentUpdate,
+        );
+        shouldResetChildren = true;
       } else {
         // Common case: Primary -> Primary.
         // This is the same code path as for non-Suspense fibers.
@@ -3838,26 +3865,31 @@ export function attach(
       if (fiberInstance !== null) {
         removePreviousSuspendedBy(fiberInstance, previousSuspendedBy);
 
-        let componentLogsEntry = fiberToComponentLogsMap.get(
-          fiberInstance.data,
-        );
-        if (componentLogsEntry === undefined && fiberInstance.data.alternate) {
-          componentLogsEntry = fiberToComponentLogsMap.get(
-            fiberInstance.data.alternate,
+        if (fiberInstance.kind === FIBER_INSTANCE) {
+          let componentLogsEntry = fiberToComponentLogsMap.get(
+            fiberInstance.data,
           );
-        }
-        recordConsoleLogs(fiberInstance, componentLogsEntry);
+          if (
+            componentLogsEntry === undefined &&
+            fiberInstance.data.alternate
+          ) {
+            componentLogsEntry = fiberToComponentLogsMap.get(
+              fiberInstance.data.alternate,
+            );
+          }
+          recordConsoleLogs(fiberInstance, componentLogsEntry);
 
-        const isProfilingSupported =
-          nextFiber.hasOwnProperty('treeBaseDuration');
-        if (isProfilingSupported) {
-          recordProfilingDurations(fiberInstance, prevFiber);
+          const isProfilingSupported =
+            nextFiber.hasOwnProperty('treeBaseDuration');
+          if (isProfilingSupported) {
+            recordProfilingDurations(fiberInstance, prevFiber);
+          }
         }
       }
       if (shouldResetChildren) {
         // We need to crawl the subtree for closest non-filtered Fibers
         // so that we can display them in a flat children set.
-        if (fiberInstance !== null) {
+        if (fiberInstance !== null && fiberInstance.kind === FIBER_INSTANCE) {
           recordResetChildren(fiberInstance);
           // We've handled the child order change for this Fiber.
           // Since it's included, there's no need to invalidate parent child order.
