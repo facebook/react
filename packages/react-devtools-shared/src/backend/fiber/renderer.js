@@ -2236,13 +2236,17 @@ export function attach(
         // the debugStack will be a stack frame inside the ownerInstance's source.
         ownerInstance.source = fiber._debugStack;
       }
+
+      let unfilteredParent = parentInstance;
+      while (
+        unfilteredParent !== null &&
+        unfilteredParent.kind === FILTERED_FIBER_INSTANCE
+      ) {
+        unfilteredParent = unfilteredParent.parent;
+      }
+
       const ownerID = ownerInstance === null ? 0 : ownerInstance.id;
-      const parentID = parentInstance
-        ? parentInstance.kind === FILTERED_FIBER_INSTANCE
-          ? // A Filtered Fiber Instance will always have a Virtual Instance as a parent.
-            ((parentInstance.parent: any): VirtualInstance).id
-          : parentInstance.id
-        : 0;
+      const parentID = unfilteredParent === null ? 0 : unfilteredParent.id;
 
       const displayNameStringID = getStringID(displayName);
 
@@ -2331,13 +2335,17 @@ export function attach(
       // the debugStack will be a stack frame inside the ownerInstance's source.
       ownerInstance.source = componentInfo.debugStack;
     }
+
+    let unfilteredParent = parentInstance;
+    while (
+      unfilteredParent !== null &&
+      unfilteredParent.kind === FILTERED_FIBER_INSTANCE
+    ) {
+      unfilteredParent = unfilteredParent.parent;
+    }
+
     const ownerID = ownerInstance === null ? 0 : ownerInstance.id;
-    const parentID = parentInstance
-      ? parentInstance.kind === FILTERED_FIBER_INSTANCE
-        ? // A Filtered Fiber Instance will always have a Virtual Instance as a parent.
-          ((parentInstance.parent: any): VirtualInstance).id
-        : parentInstance.id
-      : 0;
+    const parentID = unfilteredParent === null ? 0 : unfilteredParent.id;
 
     const displayNameStringID = getStringID(displayName);
 
@@ -3204,6 +3212,21 @@ export function attach(
     virtualInstance.treeBaseDuration = treeBaseDuration;
   }
 
+  function addUnfilteredChildrenIDs(
+    parentInstance: DevToolsInstance,
+    nextChildren: Array<number>,
+  ): void {
+    let child: null | DevToolsInstance = parentInstance.firstChild;
+    while (child !== null) {
+      if (child.kind === FILTERED_FIBER_INSTANCE) {
+        addUnfilteredChildrenIDs(child, nextChildren);
+      } else {
+        nextChildren.push(child.id);
+      }
+      child = child.nextSibling;
+    }
+  }
+
   function recordResetChildren(
     parentInstance: FiberInstance | VirtualInstance,
   ) {
@@ -3221,21 +3244,7 @@ export function attach(
     // This is trickier than a simple comparison though, since certain types of fibers are filtered.
     const nextChildren: Array<number> = [];
 
-    let child: null | DevToolsInstance = parentInstance.firstChild;
-    while (child !== null) {
-      if (child.kind === FILTERED_FIBER_INSTANCE) {
-        for (
-          let innerChild: null | DevToolsInstance = parentInstance.firstChild;
-          innerChild !== null;
-          innerChild = innerChild.nextSibling
-        ) {
-          nextChildren.push((innerChild: any).id);
-        }
-      } else {
-        nextChildren.push(child.id);
-      }
-      child = child.nextSibling;
-    }
+    addUnfilteredChildrenIDs(parentInstance, nextChildren);
 
     const numChildren = nextChildren.length;
     if (numChildren < 2) {
