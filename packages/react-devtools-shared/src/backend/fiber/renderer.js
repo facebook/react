@@ -78,6 +78,9 @@ import {
   TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
+  SUSPENSE_TREE_OPERATION_ADD,
+  SUSPENSE_TREE_OPERATION_REMOVE,
+  SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
 } from '../../constants';
 import {inspectHooksOfFiber} from 'react-debug-tools';
 import {
@@ -824,8 +827,12 @@ const rootToFiberInstanceMap: Map<FiberRoot, FiberInstance> = new Map();
 // Map of id to FiberInstance or VirtualInstance.
 // This Map is used to e.g. get the display name for a Fiber or schedule an update,
 // operations that should be the same whether the current and work-in-progress Fiber is used.
-const idToDevToolsInstanceMap: Map<number, FiberInstance | VirtualInstance> =
-  new Map();
+const idToDevToolsInstanceMap: Map<
+  FiberInstance['id'] | VirtualInstance['id'],
+  FiberInstance | VirtualInstance,
+> = new Map();
+
+const idToSuspenseNodeMap: Map<FiberInstance['id'], SuspenseNode> = new Map();
 
 // Map of canonical HostInstances to the nearest parent DevToolsInstance.
 const publicInstanceToDevToolsInstanceMap: Map<HostInstance, DevToolsInstance> =
@@ -1960,11 +1967,12 @@ export function attach(
   };
 
   const pendingOperations: OperationsArray = [];
-  const pendingRealUnmountedIDs: Array<number> = [];
+  const pendingRealUnmountedIDs: Array<FiberInstance['id']> = [];
+  const pendingRealUnmountedSuspenseIDs: Array<FiberInstance['id']> = [];
   let pendingOperationsQueue: Array<OperationsArray> | null = [];
   const pendingStringTable: Map<string, StringTableEntry> = new Map();
   let pendingStringTableLength: number = 0;
-  let pendingUnmountedRootID: number | null = null;
+  let pendingUnmountedRootID: FiberInstance['id'] | null = null;
 
   function pushOperation(op: number): void {
     if (__DEV__) {
@@ -1991,6 +1999,7 @@ export function attach(
     return (
       pendingOperations.length === 0 &&
       pendingRealUnmountedIDs.length === 0 &&
+      pendingRealUnmountedSuspenseIDs.length === 0 &&
       pendingUnmountedRootID === null
     );
   }
@@ -2056,6 +2065,7 @@ export function attach(
     const numUnmountIDs =
       pendingRealUnmountedIDs.length +
       (pendingUnmountedRootID === null ? 0 : 1);
+    const numUnmountSuspenseIDs = pendingRealUnmountedSuspenseIDs.length;
 
     const operations = new Array<number>(
       // Identify which renderer this update is coming from.
@@ -2064,6 +2074,9 @@ export function attach(
         1 + // [stringTableLength]
         // Then goes the actual string table.
         pendingStringTableLength +
+        // All unmounts of Suspense boundaries are batched in a single message.
+        // [TREE_OPERATION_REMOVE_SUSPENSE, removedSuspenseIDLength, ...ids]
+        (numUnmountSuspenseIDs > 0 ? 2 + numUnmountSuspenseIDs : 0) +
         // All unmounts are batched in a single message.
         // [TREE_OPERATION_REMOVE, removedIDLength, ...ids]
         (numUnmountIDs > 0 ? 2 + numUnmountIDs : 0) +
@@ -2101,6 +2114,19 @@ export function attach(
       i += length;
     });
 
+    if (numUnmountSuspenseIDs > 0) {
+      // All unmounts of Suspense boundaries are batched in a single message.
+      operations[i++] = SUSPENSE_TREE_OPERATION_REMOVE;
+      // The first number is how many unmounted IDs we're gonna send.
+      operations[i++] = numUnmountSuspenseIDs;
+      // Fill in the real unmounts in the reverse order.
+      // They were inserted parents-first by React, but we want children-first.
+      // So we traverse our array backwards.
+      for (let j = 0; j < pendingRealUnmountedSuspenseIDs.length; j++) {
+        operations[i++] = pendingRealUnmountedSuspenseIDs[j];
+      }
+    }
+
     if (numUnmountIDs > 0) {
       // All unmounts except roots are batched in a single message.
       operations[i++] = TREE_OPERATION_REMOVE;
@@ -2130,6 +2156,7 @@ export function attach(
     // Reset all of the pending state now that we've told the frontend about it.
     pendingOperations.length = 0;
     pendingRealUnmountedIDs.length = 0;
+    pendingRealUnmountedSuspenseIDs.length = 0;
     pendingUnmountedRootID = null;
     pendingStringTable.clear();
     pendingStringTableLength = 0;
@@ -2467,12 +2494,65 @@ export function attach(
     recordConsoleLogs(instance, componentLogsEntry);
   }
 
+  function recordSuspenseMount(
+    suspenseInstance: SuspenseNode,
+    parentSuspenseInstance: SuspenseNode | null,
+  ): void {
+    const fiberInstance = suspenseInstance.instance;
+    if (fiberInstance.kind === FILTERED_FIBER_INSTANCE) {
+      throw new Error('Cannot record a mount for a filtered Fiber instance.');
+    }
+    const fiberID = fiberInstance.id;
+
+    let unfilteredParent = parentSuspenseInstance;
+    while (
+      unfilteredParent !== null &&
+      unfilteredParent.instance.kind === FILTERED_FIBER_INSTANCE
+    ) {
+      unfilteredParent = unfilteredParent.parent;
+    }
+    const unfilteredParentInstance =
+      unfilteredParent !== null ? unfilteredParent.instance : null;
+    if (
+      unfilteredParentInstance !== null &&
+      unfilteredParentInstance.kind === FILTERED_FIBER_INSTANCE
+    ) {
+      throw new Error(
+        'Should not have a filtered instance at this point. This is a bug.',
+      );
+    }
+    const parentID =
+      unfilteredParentInstance === null ? 0 : unfilteredParentInstance.id;
+
+    const fiber = fiberInstance.data;
+    const props = fiber.memoizedProps;
+    // TODO: Compute a fallback name based on Owner, key etc.
+    const name = props === null ? null : props.name || null;
+    const nameStringID = getStringID(name);
+
+    if (__DEBUG__) {
+      console.log('recordSuspenseMount()', suspenseInstance);
+    }
+
+    idToSuspenseNodeMap.set(fiberID, suspenseInstance);
+
+    pushOperation(SUSPENSE_TREE_OPERATION_ADD);
+    pushOperation(fiberID);
+    pushOperation(parentID);
+    pushOperation(nameStringID);
+  }
+
   function recordUnmount(fiberInstance: FiberInstance): void {
     if (__DEBUG__) {
       debug('recordUnmount()', fiberInstance, reconcilingParent);
     }
 
     recordDisconnect(fiberInstance);
+
+    const suspenseNode = fiberInstance.suspenseNode;
+    if (suspenseNode !== null) {
+      recordSuspenseUnmount(suspenseNode);
+    }
 
     idToDevToolsInstanceMap.delete(fiberInstance.id);
 
@@ -2509,6 +2589,28 @@ export function attach(
 
   function recordSuspenseResize(suspenseNode: SuspenseNode): void {
     // TODO: Notify the front end of the change.
+  }
+
+  // TODO:
+  function recordSuspenseUnmount(suspenseInstance: SuspenseNode): void {
+    if (__DEBUG__) {
+      console.log(
+        'recordSuspenseUnmount()',
+        suspenseInstance,
+        reconcilingParentSuspenseNode,
+      );
+    }
+
+    // TODO: We're not unmounting filtered instances anyway. Think about if we
+    // can just use recordUnmount() for this as well.
+    const id = ((suspenseInstance.instance: any): FiberInstance).id;
+
+    // To maintain child-first ordering,
+    // we'll push it into one of these queues,
+    // and later arrange them in the correct order.
+    pendingRealUnmountedSuspenseIDs.push(id);
+
+    idToSuspenseNodeMap.delete(id);
   }
 
   // Running state of the remaining children from the previous version of this parent that
@@ -3181,6 +3283,7 @@ export function attach(
         // inserted the new children but since we know this is a FiberInstance we'll
         // just use the Fiber anyway.
         newSuspenseNode.rects = measureInstance(newInstance);
+        recordSuspenseMount(newSuspenseNode, reconcilingParentSuspenseNode);
       }
       insertChild(newInstance);
       if (__DEBUG__) {
@@ -3603,6 +3706,52 @@ export function attach(
     }
     pushOperation(TREE_OPERATION_REORDER_CHILDREN);
     pushOperation(parentInstance.id);
+    pushOperation(numChildren);
+    for (let i = 0; i < nextChildren.length; i++) {
+      pushOperation(nextChildren[i]);
+    }
+  }
+
+  function addUnfilteredSuspenseChildrenIDs(
+    parentInstance: SuspenseNode,
+    nextChildren: Array<number>,
+  ): void {
+    let child: null | SuspenseNode = parentInstance.firstChild;
+    while (child !== null) {
+      if (child.instance.kind === FILTERED_FIBER_INSTANCE) {
+        addUnfilteredSuspenseChildrenIDs(child, nextChildren);
+      } else {
+        nextChildren.push(child.instance.id);
+      }
+      child = child.nextSibling;
+    }
+  }
+
+  function recordResetSuspenseChildren(parentInstance: SuspenseNode) {
+    if (__DEBUG__) {
+      if (parentInstance.firstChild !== null) {
+        console.log(
+          'recordResetSuspenseChildren()',
+          parentInstance.firstChild,
+          parentInstance,
+        );
+      }
+    }
+    // The frontend only really cares about the displayName, key, and children.
+    // The first two don't really change, so we are only concerned with the order of children here.
+    // This is trickier than a simple comparison though, since certain types of fibers are filtered.
+    const nextChildren: Array<number> = [];
+
+    addUnfilteredSuspenseChildrenIDs(parentInstance, nextChildren);
+
+    const numChildren = nextChildren.length;
+    if (numChildren < 2) {
+      // No need to reorder.
+      return;
+    }
+    pushOperation(SUSPENSE_TREE_OPERATION_REORDER_CHILDREN);
+    // $FlowFixMe[incompatible-call] TODO: Allow filtering SuspenseNode
+    pushOperation(parentInstance.instance.id);
     pushOperation(numChildren);
     for (let i = 0; i < nextChildren.length; i++) {
       pushOperation(nextChildren[i]);
@@ -4330,11 +4479,20 @@ export function attach(
           }
         }
       }
+
+      const suspenseNode =
+        fiberInstance !== null ? fiberInstance.suspenseNode : null;
+      if (suspenseNode !== null) {
+        // TODO: This doesn't cover all cases. Bubble up a dedicated shouldResetSuspense
+        recordResetSuspenseChildren(suspenseNode);
+      }
+
       if (shouldResetChildren) {
         // We need to crawl the subtree for closest non-filtered Fibers
         // so that we can display them in a flat children set.
         if (fiberInstance !== null && fiberInstance.kind === FIBER_INSTANCE) {
           recordResetChildren(fiberInstance);
+
           // We've handled the child order change for this Fiber.
           // Since it's included, there's no need to invalidate parent child order.
           return false;
