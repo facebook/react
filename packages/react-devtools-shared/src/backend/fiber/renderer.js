@@ -2978,7 +2978,9 @@ export function attach(
         aquireHostInstance(nearestInstance, fiber.stateNode);
       }
 
-      if (fiber.tag === SuspenseComponent) {
+      if (fiber.tag === SuspenseComponent && OffscreenComponent === -1) {
+        // Legacy Suspense without the Offscreen wrapper. For the modern Suspense we just handle the
+        // Offscreen wrapper itself specially.
         const isTimedOut = fiber.memoizedState !== null;
         if (isTimedOut) {
           // Special case: if Suspense mounts in a timed-out state,
@@ -3000,15 +3002,7 @@ export function attach(
           }
           // TODO: Track SuspenseNode in resuspended trees.
         } else {
-          let primaryChild: Fiber | null = null;
-          const areSuspenseChildrenConditionallyWrapped =
-            OffscreenComponent === -1;
-          if (areSuspenseChildrenConditionallyWrapped) {
-            primaryChild = fiber.child;
-          } else if (fiber.child !== null) {
-            primaryChild = fiber.child;
-            updateTrackedPathStateBeforeMount(fiber.child, null);
-          }
+          const primaryChild: Fiber | null = fiber.child;
           if (primaryChild !== null) {
             mountChildrenRecursively(
               primaryChild,
@@ -3704,9 +3698,9 @@ export function attach(
         aquireHostInstance(nearestInstance, nextFiber.stateNode);
       }
 
-      const isSuspense = nextFiber.tag === SuspenseComponent;
       let shouldResetChildren = false;
-      // The behavior of timed-out Suspense trees is unique.
+
+      // The behavior of timed-out legacy Suspense trees is unique. Without the Offscreen wrapper.
       // Rather than unmount the timed out content (and possibly lose important state),
       // React re-parents this content within a hidden Fragment while the fallback is showing.
       // This behavior doesn't need to be observable in the DevTools though.
@@ -3714,8 +3708,12 @@ export function attach(
       // The easiest fix is to strip out the intermediate Fragment fibers,
       // so the Elements panel and Profiler don't need to special case them.
       // Suspense components only have a non-null memoizedState if they're timed-out.
-      const prevDidTimeout = isSuspense && prevFiber.memoizedState !== null;
-      const nextDidTimeOut = isSuspense && nextFiber.memoizedState !== null;
+      const isLegacySuspense =
+        nextFiber.tag === SuspenseComponent && OffscreenComponent === -1;
+      const prevDidTimeout =
+        isLegacySuspense && prevFiber.memoizedState !== null;
+      const nextDidTimeOut =
+        isLegacySuspense && nextFiber.memoizedState !== null;
       // The logic below is inspired by the code paths in updateSuspenseComponent()
       // inside ReactFiberBeginWork in the React source code.
       if (prevDidTimeout && nextDidTimeOut) {
