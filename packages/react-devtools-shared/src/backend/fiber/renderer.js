@@ -2732,6 +2732,8 @@ export function attach(
 
     const id = instance.id;
     pendingRealUnmountedIDs.push(id);
+
+    idToDevToolsInstanceMap.delete(instance.id);
   }
 
   function getSecondaryEnvironmentName(
