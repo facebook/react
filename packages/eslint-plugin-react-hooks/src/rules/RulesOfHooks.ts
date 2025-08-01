@@ -11,7 +11,10 @@ import type {
   CallExpression,
   CatchClause,
   DoWhileStatement,
+  Expression,
+  Identifier,
   Node,
+  Super,
   TryStatement,
 } from 'estree';
 
@@ -129,6 +132,24 @@ function isInsideTryCatch(
   return false;
 }
 
+function getNodeWithoutReactNamespace(
+  node: Expression | Super,
+): Expression | Identifier | Super {
+  if (
+    node.type === 'MemberExpression' &&
+    node.object.type === 'Identifier' &&
+    node.object.name === 'React' &&
+    node.property.type === 'Identifier' &&
+    !node.computed
+  ) {
+    return node.property;
+  }
+  return node;
+}
+
+function isUseEffectIdentifier(node: Node): boolean {
+  return node.type === 'Identifier' && node.name === 'useEffect';
+}
 function isUseEffectEventIdentifier(node: Node): boolean {
   if (__EXPERIMENTAL__) {
     return node.type === 'Identifier' && node.name === 'useEffectEvent';
@@ -702,10 +723,11 @@ const rule = {
 
         // useEffectEvent: useEffectEvent functions can be passed by reference within useEffect as well as in
         // another useEffectEvent
+        // Check all `useEffect` and `React.useEffect`, `useEffectEvent`, and `React.useEffectEvent`
+        const nodeWithoutNamespace = getNodeWithoutReactNamespace(node.callee);
         if (
-          node.callee.type === 'Identifier' &&
-          (node.callee.name === 'useEffect' ||
-            isUseEffectEventIdentifier(node.callee)) &&
+          (isUseEffectIdentifier(nodeWithoutNamespace) ||
+            isUseEffectEventIdentifier(nodeWithoutNamespace)) &&
           node.arguments.length > 0
         ) {
           // Denote that we have traversed into a useEffect call, and stash the CallExpr for
