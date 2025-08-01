@@ -1197,14 +1197,14 @@ describe('FragmentRefs', () => {
 
       function Test() {
         return (
-          <div ref={containerRef}>
-            <div ref={beforeRef} />
+          <div ref={containerRef} id="container">
+            <div ref={beforeRef} id="before" />
             <React.Fragment ref={fragmentRef}>
-              <div ref={firstChildRef} />
-              <div ref={middleChildRef} />
-              <div ref={lastChildRef} />
+              <div ref={firstChildRef} id="first" />
+              <div ref={middleChildRef} id="middle" />
+              <div ref={lastChildRef} id="last" />
             </React.Fragment>
-            <div ref={afterRef} />
+            <div ref={afterRef} id="after" />
           </div>
         );
       }
@@ -1289,7 +1289,7 @@ describe('FragmentRefs', () => {
         },
       );
 
-      // containerRef preceds and contains the fragment
+      // containerRef precedes and contains the fragment
       expectPosition(
         fragmentRef.current.compareDocumentPosition(containerRef.current),
         {
@@ -1328,7 +1328,7 @@ describe('FragmentRefs', () => {
       function Test() {
         return (
           <div id="container" ref={containerRef}>
-            <div>
+            <div id="innercontainer">
               <div ref={beforeRef} id="before" />
               <React.Fragment ref={fragmentRef}>
                 <div ref={onlyChildRef} id="within" />
@@ -1492,6 +1492,77 @@ describe('FragmentRefs', () => {
     });
 
     // @gate enableFragmentRefs
+    it('handles nested children', async () => {
+      const fragmentRef = React.createRef();
+      const nestedFragmentRef = React.createRef();
+      const childARef = React.createRef();
+      const childBRef = React.createRef();
+      const childCRef = React.createRef();
+      document.body.appendChild(container);
+      const root = ReactDOMClient.createRoot(container);
+
+      function Child() {
+        return (
+          <div ref={childCRef} id="C">
+            C
+          </div>
+        );
+      }
+
+      function Test() {
+        return (
+          <React.Fragment ref={fragmentRef}>
+            <div ref={childARef} id="A">
+              A
+            </div>
+            <React.Fragment ref={nestedFragmentRef}>
+              <div ref={childBRef} id="B">
+                B
+              </div>
+            </React.Fragment>
+            <Child />
+          </React.Fragment>
+        );
+      }
+
+      await act(() => root.render(<Test />));
+
+      expectPosition(
+        fragmentRef.current.compareDocumentPosition(childARef.current),
+        {
+          preceding: false,
+          following: false,
+          contains: false,
+          containedBy: true,
+          disconnected: false,
+          implementationSpecific: false,
+        },
+      );
+      expectPosition(
+        fragmentRef.current.compareDocumentPosition(childBRef.current),
+        {
+          preceding: false,
+          following: false,
+          contains: false,
+          containedBy: true,
+          disconnected: false,
+          implementationSpecific: false,
+        },
+      );
+      expectPosition(
+        fragmentRef.current.compareDocumentPosition(childCRef.current),
+        {
+          preceding: false,
+          following: false,
+          contains: false,
+          containedBy: true,
+          disconnected: false,
+          implementationSpecific: false,
+        },
+      );
+    });
+
+    // @gate enableFragmentRefs
     it('returns disconnected for comparison with an unmounted fragment instance', async () => {
       const fragmentRef = React.createRef();
       const containerRef = React.createRef();
@@ -1551,11 +1622,11 @@ describe('FragmentRefs', () => {
 
         function Test() {
           return (
-            <div>
-              {createPortal(<div ref={portaledSiblingRef} />, document.body)}
+            <div id="wrapper">
+              {createPortal(<div ref={portaledSiblingRef} id="A" />, container)}
               <Fragment ref={fragmentRef}>
-                {createPortal(<div ref={portaledChildRef} />, document.body)}
-                <div />
+                {createPortal(<div ref={portaledChildRef} id="B" />, container)}
+                <div id="C" />
               </Fragment>
             </div>
           );
@@ -1600,6 +1671,8 @@ describe('FragmentRefs', () => {
         const childARef = React.createRef();
         const childBRef = React.createRef();
         const childCRef = React.createRef();
+        const childDRef = React.createRef();
+        const childERef = React.createRef();
 
         function Test() {
           const [c, setC] = React.useState(false);
@@ -1612,23 +1685,30 @@ describe('FragmentRefs', () => {
               {createPortal(
                 <Fragment ref={fragmentRef}>
                   <div id="A" ref={childARef} />
-                  {c ? <div id="C" ref={childCRef} /> : null}
+                  {c ? (
+                    <div id="C" ref={childCRef}>
+                      <div id="D" ref={childDRef} />
+                    </div>
+                  ) : null}
                 </Fragment>,
                 document.body,
               )}
               {createPortal(<p id="B" ref={childBRef} />, document.body)}
+              <div id="E" ref={childERef} />
             </>
           );
         }
 
         await act(() => root.render(<Test />));
 
-        // Due to effect, order is A->B->C
-        expect(document.body.innerHTML).toBe(
-          '<div></div>' +
+        // Due to effect, order is E / A->B->C->D
+        expect(document.body.outerHTML).toBe(
+          '<body>' +
+            '<div><div id="E"></div></div>' +
             '<div id="A"></div>' +
             '<p id="B"></p>' +
-            '<div id="C"></div>',
+            '<div id="C"><div id="D"></div></div>' +
+            '</body>',
         );
 
         expectPosition(
@@ -1642,7 +1722,6 @@ describe('FragmentRefs', () => {
             implementationSpecific: false,
           },
         );
-
         expectPosition(
           fragmentRef.current.compareDocumentPosition(childARef.current),
           {
@@ -1654,6 +1733,7 @@ describe('FragmentRefs', () => {
             implementationSpecific: false,
           },
         );
+        // Contained by in DOM, but following in React tree
         expectPosition(
           fragmentRef.current.compareDocumentPosition(childBRef.current),
           {
@@ -1674,6 +1754,29 @@ describe('FragmentRefs', () => {
             containedBy: true,
             disconnected: false,
             implementationSpecific: false,
+          },
+        );
+        expectPosition(
+          fragmentRef.current.compareDocumentPosition(childDRef.current),
+          {
+            preceding: false,
+            following: false,
+            contains: false,
+            containedBy: true,
+            disconnected: false,
+            implementationSpecific: false,
+          },
+        );
+        // Preceding DOM but following in React tree
+        expectPosition(
+          fragmentRef.current.compareDocumentPosition(childERef.current),
+          {
+            preceding: false,
+            following: false,
+            contains: false,
+            containedBy: false,
+            disconnected: false,
+            implementationSpecific: true,
           },
         );
       });
