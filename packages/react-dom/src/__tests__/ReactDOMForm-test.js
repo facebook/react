@@ -2287,6 +2287,14 @@ describe('ReactDOMForm', () => {
     const textRef = React.createRef();
     const btnRef = React.createRef();
 
+    let rerenderUnrelatedStatus;
+    function UnrelatedStatus() {
+      const {pending} = useFormStatus();
+      const [counter, setCounter] = useState(0);
+      rerenderUnrelatedStatus = () => setCounter(n => n + 1);
+      Scheduler.log(`[unrelated form] pending: ${pending}, state: ${counter}`);
+    }
+
     function Status() {
       const {pending} = useFormStatus();
       const [counter, setCounter] = useState(0);
@@ -2313,15 +2321,22 @@ describe('ReactDOMForm', () => {
       }
 
       return (
-        <form action={action} ref={formRef}>
-          <input type="submit" />
-          <Status />
-        </form>
+        <>
+          <form action={action} ref={formRef}>
+            <input type="submit" />
+            <Status />
+          </form>
+          <form>
+            <UnrelatedStatus />
+          </form>
+        </>
       );
     }
 
     const root = ReactDOMClient.createRoot(container);
     await act(() => root.render(<App />));
+
+    assertLog(['[unrelated form] pending: false, state: 0']);
 
     await submit(formRef.current);
 
@@ -2330,5 +2345,9 @@ describe('ReactDOMForm', () => {
     await act(() => btnRef.current.click());
 
     expect(textRef.current.textContent).toBe('Pending with state: 1');
+
+    await act(() => rerenderUnrelatedStatus());
+
+    assertLog(['[unrelated form] pending: false, state: 1']);
   });
 });
