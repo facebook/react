@@ -19,6 +19,7 @@ import InspectedElementErrorBoundary from '../Components/InspectedElementErrorBo
 import InspectedElement from '../Components/InspectedElement';
 import portaledContent from '../portaledContent';
 import styles from './SuspenseTab.css';
+import SuspenseTreeList from './SuspenseTreeList';
 import Button from '../Button';
 
 type Orientation = 'horizontal' | 'vertical';
@@ -42,10 +43,6 @@ type LayoutState = {
   inspectedElementVerticalFraction: number,
 };
 type LayoutDispatch = (action: LayoutAction) => void;
-
-function SuspenseTreeList() {
-  return <div>tree list</div>;
-}
 
 function SuspenseTimeline() {
   return <div className={styles.Timeline}>timeline</div>;

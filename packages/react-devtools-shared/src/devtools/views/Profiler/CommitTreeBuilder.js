@@ -16,6 +16,9 @@ import {
   TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
+  SUSPENSE_TREE_OPERATION_ADD,
+  SUSPENSE_TREE_OPERATION_REMOVE,
+  SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
 } from 'react-devtools-shared/src/constants';
 import {
   parseElementDisplayNameFromBackend,
@@ -363,6 +366,50 @@ function updateTree(
             `fiber ${id} has ${numErrors} errors and ${numWarnings} warnings`,
           );
         }
+        break;
+      }
+
+      case SUSPENSE_TREE_OPERATION_ADD: {
+        const fiberID = operations[i + 1];
+        const parentID = operations[i + 2];
+        const nameStringID = operations[i + 3];
+        const name = stringTable[nameStringID];
+
+        i += 4;
+
+        if (__DEBUG__) {
+          debug(
+            'Add suspense',
+            `node ${fiberID} (${String(name)}) under ${parentID}`,
+          );
+        }
+        break;
+      }
+
+      case SUSPENSE_TREE_OPERATION_REMOVE: {
+        const removeLength = ((operations[i + 1]: any): number);
+        i += 2 + removeLength;
+
+        break;
+      }
+
+      case SUSPENSE_TREE_OPERATION_REORDER_CHILDREN: {
+        const suspenseID = ((operations[i + 1]: any): number);
+        const numChildren = ((operations[i + 2]: any): number);
+        const children = ((operations.slice(
+          i + 3,
+          i + 3 + numChildren,
+        ): any): Array<number>);
+
+        i = i + 3 + numChildren;
+
+        if (__DEBUG__) {
+          debug(
+            'Suspense re-order',
+            `suspense ${suspenseID} children ${children.join(',')}`,
+          );
+        }
+
         break;
       }
 

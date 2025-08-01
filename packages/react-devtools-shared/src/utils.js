@@ -40,6 +40,9 @@ import {
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
   SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
   SESSION_STORAGE_RECORD_TIMELINE_KEY,
+  SUSPENSE_TREE_OPERATION_ADD,
+  SUSPENSE_TREE_OPERATION_REMOVE,
+  SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
 } from './constants';
 import {
   ComponentFilterElementType,
@@ -318,7 +321,7 @@ export function printOperationsArray(operations: Array<number>) {
         // The profiler UI uses them lazily in order to generate the tree.
         i += 3;
         break;
-      case TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS:
+      case TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS: {
         const id = operations[i + 1];
         const numErrors = operations[i + 2];
         const numWarnings = operations[i + 3];
@@ -329,6 +332,45 @@ export function printOperationsArray(operations: Array<number>) {
           `Node ${id} has ${numErrors} errors and ${numWarnings} warnings`,
         );
         break;
+      }
+      case SUSPENSE_TREE_OPERATION_ADD: {
+        const fiberID = operations[i + 1];
+        const parentID = operations[i + 2];
+        const nameStringID = operations[i + 3];
+        const name = stringTable[nameStringID];
+
+        i += 4;
+
+        logs.push(
+          `Add suspense node ${fiberID} (${String(name)}) under ${parentID}`,
+        );
+        break;
+      }
+      case SUSPENSE_TREE_OPERATION_REMOVE: {
+        const removeLength = ((operations[i + 1]: any): number);
+        i += 2;
+
+        for (let removeIndex = 0; removeIndex < removeLength; removeIndex++) {
+          const id = ((operations[i]: any): number);
+          i += 1;
+
+          logs.push(`Remove suspense node ${id}`);
+        }
+
+        break;
+      }
+      case SUSPENSE_TREE_OPERATION_REORDER_CHILDREN: {
+        const id = ((operations[i + 1]: any): number);
+        const numChildren = ((operations[i + 2]: any): number);
+        i += 3;
+        const children = operations.slice(i, i + numChildren);
+        i += numChildren;
+
+        logs.push(
+          `Re-order suspense node ${id} children ${children.join(',')}`,
+        );
+        break;
+      }
       default:
         throw Error(`Unsupported Bridge operation "${operation}"`);
     }
