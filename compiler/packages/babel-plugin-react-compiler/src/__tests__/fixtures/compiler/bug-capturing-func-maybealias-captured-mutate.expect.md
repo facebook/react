@@ -85,19 +85,11 @@ import { makeArray, mutate } from "shared-runtime";
  * used when we analyze CallExpressions.
  */
 function Component(t0) {
-  const $ = _c(5);
+  const $ = _c(3);
   const { foo, bar } = t0;
-  let t1;
-  if ($[0] !== foo) {
-    t1 = { foo };
-    $[0] = foo;
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  const x = t1;
   let y;
-  if ($[2] !== bar || $[3] !== x) {
+  if ($[0] !== bar || $[1] !== foo) {
+    const x = { foo };
     y = { bar };
     const f0 = function () {
       const a = makeArray(y);
@@ -108,11 +100,11 @@ function Component(t0) {
 
     f0();
     mutate(y.x);
-    $[2] = bar;
-    $[3] = x;
-    $[4] = y;
+    $[0] = bar;
+    $[1] = foo;
+    $[2] = y;
   } else {
-    y = $[4];
+    y = $[2];
   }
   return y;
 }
