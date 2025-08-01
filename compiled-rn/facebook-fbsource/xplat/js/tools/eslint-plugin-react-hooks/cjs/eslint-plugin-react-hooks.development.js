@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<3871798f596aa8dcf52018fc7504d978>>
+ * @generated SignedSource<<c0576f059188ef841e1726fe6ccc7133>>
  */
 
 'use strict';
@@ -18100,6 +18100,61 @@ function phiTypeEquals(tA, tB) {
     return false;
 }
 
+const RESERVED_WORDS = new Set([
+    'break',
+    'case',
+    'catch',
+    'class',
+    'const',
+    'continue',
+    'debugger',
+    'default',
+    'delete',
+    'do',
+    'else',
+    'enum',
+    'export',
+    'extends',
+    'false',
+    'finally',
+    'for',
+    'function',
+    'if',
+    'import',
+    'in',
+    'instanceof',
+    'new',
+    'null',
+    'return',
+    'super',
+    'switch',
+    'this',
+    'throw',
+    'true',
+    'try',
+    'typeof',
+    'var',
+    'void',
+    'while',
+    'with',
+]);
+const STRICT_MODE_RESERVED_WORDS = new Set([
+    'let',
+    'static',
+    'implements',
+    'interface',
+    'package',
+    'private',
+    'protected',
+    'public',
+]);
+const STRICT_MODE_RESTRICTED_WORDS = new Set(['eval', 'arguments']);
+function isReservedWord(identifierName) {
+    return (RESERVED_WORDS.has(identifierName) ||
+        STRICT_MODE_RESERVED_WORDS.has(identifierName) ||
+        STRICT_MODE_RESTRICTED_WORDS.has(identifierName));
+}
+
 const GeneratedSource = Symbol();
 function isStatementBlockKind(kind) {
     return kind === 'block' || kind === 'catch';
@@ -18157,12 +18212,22 @@ function forkTemporaryIdentifier(id, source) {
     return Object.assign(Object.assign({}, source), { mutableRange: { start: makeInstructionId(0), end: makeInstructionId(0) }, id });
 }
 function makeIdentifierName(name) {
-    CompilerError.invariant(libExports$1.isValidIdentifier(name), {
-        reason: `Expected a valid identifier name`,
-        loc: GeneratedSource,
-        description: `\`${name}\` is not a valid JavaScript identifier`,
-        suggestions: null,
-    });
+    if (isReservedWord(name)) {
+        CompilerError.throwInvalidJS({
+            reason: 'Expected a non-reserved identifier name',
+            loc: GeneratedSource,
+            description: `\`${name}\` is a reserved word in JavaScript and cannot be used as an identifier name`,
+            suggestions: null,
+        });
+    }
+    else {
+        CompilerError.invariant(libExports$1.isValidIdentifier(name), {
+            reason: `Expected a valid identifier name`,
+            loc: GeneratedSource,
+            description: `\`${name}\` is not a valid JavaScript identifier`,
+            suggestions: null,
+        });
+    }
     return {
         kind: 'named',
         value: name,
