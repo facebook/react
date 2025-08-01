@@ -21362,6 +21362,7 @@ function parseAliasingSignatureConfig(typeConfig, moduleName, loc) {
     const temporaries = typeConfig.temporaries.map(define);
     const effects = typeConfig.effects.map((effect) => {
         switch (effect.kind) {
+            case 'ImmutableCapture':
             case 'CreateFrom':
             case 'Capture':
             case 'Alias':
@@ -29804,6 +29805,96 @@ const TYPED_GLOBALS = [
                     returnValueKind: ValueKind.Mutable,
                 }),
             ],
+            [
+                'entries',
+                addFunction(DEFAULT_SHAPES, [], {
+                    positionalParams: [Effect.Capture],
+                    restParam: null,
+                    returnType: { kind: 'Object', shapeId: BuiltInArrayId },
+                    calleeEffect: Effect.Read,
+                    returnValueKind: ValueKind.Mutable,
+                    aliasing: {
+                        receiver: '@receiver',
+                        params: ['@object'],
+                        rest: null,
+                        returns: '@returns',
+                        temporaries: [],
+                        effects: [
+                            {
+                                kind: 'Create',
+                                into: '@returns',
+                                reason: ValueReason.KnownReturnSignature,
+                                value: ValueKind.Mutable,
+                            },
+                            {
+                                kind: 'Capture',
+                                from: '@object',
+                                into: '@returns',
+                            },
+                        ],
+                    },
+                }),
+            ],
+            [
+                'keys',
+                addFunction(DEFAULT_SHAPES, [], {
+                    positionalParams: [Effect.Read],
+                    restParam: null,
+                    returnType: { kind: 'Object', shapeId: BuiltInArrayId },
+                    calleeEffect: Effect.Read,
+                    returnValueKind: ValueKind.Mutable,
+                    aliasing: {
+                        receiver: '@receiver',
+                        params: ['@object'],
+                        rest: null,
+                        returns: '@returns',
+                        temporaries: [],
+                        effects: [
+                            {
+                                kind: 'Create',
+                                into: '@returns',
+                                reason: ValueReason.KnownReturnSignature,
+                                value: ValueKind.Mutable,
+                            },
+                            {
+                                kind: 'ImmutableCapture',
+                                from: '@object',
+                                into: '@returns',
+                            },
+                        ],
+                    },
+                }),
+            ],
+            [
+                'values',
+                addFunction(DEFAULT_SHAPES, [], {
+                    positionalParams: [Effect.Capture],
+                    restParam: null,
+                    returnType: { kind: 'Object', shapeId: BuiltInArrayId },
+                    calleeEffect: Effect.Read,
+                    returnValueKind: ValueKind.Mutable,
+                    aliasing: {
+                        receiver: '@receiver',
+                        params: ['@object'],
+                        rest: null,
+                        returns: '@returns',
+                        temporaries: [],
+                        effects: [
+                            {
+                                kind: 'Create',
+                                into: '@returns',
+                                reason: ValueReason.KnownReturnSignature,
+                                value: ValueKind.Mutable,
+                            },
+                            {
+                                kind: 'Capture',
+                                from: '@object',
+                                into: '@returns',
+                            },
+                        ],
+                    },
+                }),
+            ],
         ]),
     ],
     [
@@ -30623,6 +30714,11 @@ const AliasEffectSchema = zod.z.object({
     from: LifetimeIdSchema,
     into: LifetimeIdSchema,
 });
+const ImmutableCaptureEffectSchema = zod.z.object({
+    kind: zod.z.literal('ImmutableCapture'),
+    from: LifetimeIdSchema,
+    into: LifetimeIdSchema,
+});
 const CaptureEffectSchema = zod.z.object({
     kind: zod.z.literal('Capture'),
     from: LifetimeIdSchema,
@@ -30662,6 +30758,7 @@ const AliasingEffectSchema = zod.z.union([
     AssignEffectSchema,
     AliasEffectSchema,
     CaptureEffectSchema,
+    ImmutableCaptureEffectSchema,
     ImpureEffectSchema,
     MutateEffectSchema,
     MutateTransitiveConditionallySchema,
