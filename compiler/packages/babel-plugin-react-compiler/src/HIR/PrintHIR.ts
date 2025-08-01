@@ -554,23 +554,11 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       const context = instrValue.loweredFunc.func.context
         .map(dep => printPlace(dep))
         .join(',');
-      const effects =
-        instrValue.loweredFunc.func.effects
-          ?.map(effect => {
-            if (effect.kind === 'ContextMutation') {
-              return `ContextMutation places=[${[...effect.places]
-                .map(place => printPlace(place))
-                .join(', ')}] effect=${effect.effect}`;
-            } else {
-              return `GlobalMutation`;
-            }
-          })
-          .join(', ') ?? '';
       const aliasingEffects =
         instrValue.loweredFunc.func.aliasingEffects
           ?.map(printAliasingEffect)
           ?.join(', ') ?? '';
-      value = `${kind} ${name} @context[${context}] @effects[${effects}] @aliasingEffects=[${aliasingEffects}]\n${fn}`;
+      value = `${kind} ${name} @context[${context}] @aliasingEffects=[${aliasingEffects}]\n${fn}`;
       break;
     }
     case 'TaggedTemplateExpression': {

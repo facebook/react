@@ -7,7 +7,7 @@
 
 import {BindingKind} from '@babel/traverse';
 import * as t from '@babel/types';
-import {CompilerError, CompilerErrorDetailOptions} from '../CompilerError';
+import {CompilerError} from '../CompilerError';
 import {assertExhaustive} from '../Utils/utils';
 import {Environment, ReactFunctionType} from './Environment';
 import type {HookKind} from './ObjectShape';
@@ -282,29 +282,12 @@ export type HIRFunction = {
   returnTypeAnnotation: t.FlowType | t.TSType | null;
   returns: Place;
   context: Array<Place>;
-  effects: Array<FunctionEffect> | null;
   body: HIR;
   generator: boolean;
   async: boolean;
   directives: Array<string>;
-  aliasingEffects?: Array<AliasingEffect> | null;
+  aliasingEffects: Array<AliasingEffect> | null;
 };
-
-export type FunctionEffect =
-  | {
-      kind: 'GlobalMutation';
-      error: CompilerErrorDetailOptions;
-    }
-  | {
-      kind: 'ReactMutation';
-      error: CompilerErrorDetailOptions;
-    }
-  | {
-      kind: 'ContextMutation';
-      places: ReadonlySet<Place>;
-      effect: Effect;
-      loc: SourceLocation;
-    };
 
 /*
  * Each reactive scope may have its own control-flow, so the instructions form

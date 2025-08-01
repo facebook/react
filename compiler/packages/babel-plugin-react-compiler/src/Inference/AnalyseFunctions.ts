@@ -6,20 +6,10 @@
  */
 
 import {CompilerError} from '../CompilerError';
-import {
-  Effect,
-  HIRFunction,
-  Identifier,
-  IdentifierId,
-  LoweredFunction,
-  isRefOrRefValue,
-  makeInstructionId,
-} from '../HIR';
+import {Effect, HIRFunction, IdentifierId, makeInstructionId} from '../HIR';
 import {deadCodeElimination} from '../Optimization';
 import {inferReactiveScopeVariables} from '../ReactiveScopes';
 import {rewriteInstructionKindsBasedOnReassignment} from '../SSA';
-import {inferMutableRanges} from './InferMutableRanges';
-import inferReferenceEffects from './InferReferenceEffects';
 import {assertExhaustive} from '../Utils/utils';
 import {inferMutationAliasingEffects} from './InferMutationAliasingEffects';
 import {inferMutationAliasingRanges} from './InferMutationAliasingRanges';
@@ -30,12 +20,7 @@ export default function analyseFunctions(func: HIRFunction): void {
       switch (instr.value.kind) {
         case 'ObjectMethod':
         case 'FunctionExpression': {
-          if (!func.env.config.enableNewMutationAliasingModel) {
-            lower(instr.value.loweredFunc.func);
-            infer(instr.value.loweredFunc);
-          } else {
-            lowerWithMutationAliasing(instr.value.loweredFunc.func);
-          }
+          lowerWithMutationAliasing(instr.value.loweredFunc.func);
 
           /**
            * Reset mutable range for outer inferReferenceEffects
@@ -139,59 +124,4 @@ function lowerWithMutationAliasing(fn: HIRFunction): void {
     name: 'AnalyseFunction (inner)',
     value: fn,
   });
-}
-
-function lower(func: HIRFunction): void {
-  analyseFunctions(func);
-  inferReferenceEffects(func, {isFunctionExpression: true});
-  deadCodeElimination(func);
-  inferMutableRanges(func);
-  rewriteInstructionKindsBasedOnReassignment(func);
-  inferReactiveScopeVariables(func);
-  func.env.logger?.debugLogIRs?.({
-    kind: 'hir',
-    name: 'AnalyseFunction (inner)',
-    value: func,
-  });
-}
-
-function infer(loweredFunc: LoweredFunction): void {
-  for (const operand of loweredFunc.func.context) {
-    const identifier = operand.identifier;
-    CompilerError.invariant(operand.effect === Effect.Unknown, {
-      reason:
-        '[AnalyseFunctions] Expected Function context effects to not have been set',
-      loc: operand.loc,
-    });
-    if (isRefOrRefValue(identifier)) {
-      /*
-       * TODO: this is a hack to ensure we treat functions which reference refs
-       * as having a capture and therefore being considered mutable. this ensures
-       * the function gets a mutable range which accounts for anywhere that it
-       * could be called, and allows us to help ensure it isn't called during
-       * render
-       */
-      operand.effect = Effect.Capture;
-    } else if (isMutatedOrReassigned(identifier)) {
-      /**
-       * Reflects direct reassignments, PropertyStores, and ConditionallyMutate
-       * (directly or through maybe-aliases)
-       */
-      operand.effect = Effect.Capture;
-    } else {
-      operand.effect = Effect.Read;
-    }
-  }
-}
-
-function isMutatedOrReassigned(id: Identifier): boolean {
-  /*
-   * This check checks for mutation and reassingnment, so the usual check for
-   * mutation (ie, `mutableRange.end - mutableRange.start > 1`) isn't quite
-   * enough.
-   *
-   * We need to track re-assignments in context refs as we need to reflect the
-   * re-assignment back to the captured refs.
-   */
-  return id.mutableRange.end > id.mutableRange.start;
 }
