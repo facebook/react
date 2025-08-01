@@ -251,6 +251,7 @@ export type FunctionTypeConfig = {
   impure?: boolean | null | undefined;
   canonicalName?: string | null | undefined;
   aliasing?: AliasingSignatureConfig | null | undefined;
+  knownIncompatible?: string | null | undefined;
 };
 export const FunctionTypeSchema: z.ZodType<FunctionTypeConfig> = z.object({
   kind: z.literal('function'),
@@ -264,6 +265,7 @@ export const FunctionTypeSchema: z.ZodType<FunctionTypeConfig> = z.object({
   impure: z.boolean().nullable().optional(),
   canonicalName: z.string().nullable().optional(),
   aliasing: AliasingSignatureSchema.nullable().optional(),
+  knownIncompatible: z.string().nullable().optional(),
 });
 
 export type HookTypeConfig = {
@@ -274,6 +276,7 @@ export type HookTypeConfig = {
   returnValueKind?: ValueKind | null | undefined;
   noAlias?: boolean | null | undefined;
   aliasing?: AliasingSignatureConfig | null | undefined;
+  knownIncompatible?: string | null | undefined;
 };
 export const HookTypeSchema: z.ZodType<HookTypeConfig> = z.object({
   kind: z.literal('hook'),
@@ -283,6 +286,7 @@ export const HookTypeSchema: z.ZodType<HookTypeConfig> = z.object({
   returnValueKind: ValueKindSchema.nullable().optional(),
   noAlias: z.boolean().nullable().optional(),
   aliasing: AliasingSignatureSchema.nullable().optional(),
+  knownIncompatible: z.string().nullable().optional(),
 });
 
 export type BuiltInTypeConfig =

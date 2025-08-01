@@ -54,7 +54,7 @@ component Component(id) {
 ```
 Found 3 errors:
 
-Memoization: Compilation skipped because existing memoization could not be preserved
+Compilation Skipped: Existing memoization could not be preserved
 
 React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.
 
@@ -76,7 +76,7 @@ React Compiler has skipped optimizing this component because the existing manual
   18 |   const setCurrentIndex = useCallback(
   19 |     (index: number) => {
 
-Memoization: Compilation skipped because existing memoization could not be preserved
+Compilation Skipped: Existing memoization could not be preserved
 
 React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This dependency may be mutated later, which could cause the value to change unexpectedly.
 
@@ -88,7 +88,7 @@ React Compiler has skipped optimizing this component because the existing manual
   30 |
   31 |   if (prevId !== id) {
 
-Memoization: Compilation skipped because existing memoization could not be preserved
+Compilation Skipped: Existing memoization could not be preserved
 
 React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.
 
