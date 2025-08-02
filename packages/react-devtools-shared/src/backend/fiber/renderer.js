@@ -2179,13 +2179,18 @@ export function attach(
       debug('recordMount()', fiberInstance, parentInstance);
     }
 
-    return recordReconnect(fiberInstance, parentInstance);
+    recordReconnect(fiberInstance, parentInstance);
+    return fiberInstance;
   }
 
   function recordReconnect(
     fiberInstance: FiberInstance,
     parentInstance: DevToolsInstance | null,
-  ): FiberInstance {
+  ): void {
+    if (isInDisconnectedSubtree) {
+      // We're disconnected. We'll reconnect a hidden mount after the parent reappears.
+      return;
+    }
     const id = fiberInstance.id;
     const fiber = fiberInstance.data;
 
@@ -2304,7 +2309,6 @@ export function attach(
     if (isProfilingSupported) {
       recordProfilingDurations(fiberInstance, null);
     }
-    return fiberInstance;
   }
 
   function recordVirtualMount(
@@ -2324,6 +2328,10 @@ export function attach(
     parentInstance: DevToolsInstance | null,
     secondaryEnv: null | string,
   ): void {
+    if (isInDisconnectedSubtree) {
+      // We're disconnected. We'll reconnect a hidden mount after the parent reappears.
+      return;
+    }
     const componentInfo = instance.data;
 
     const key =
@@ -2403,6 +2411,10 @@ export function attach(
   }
 
   function recordDisconnect(fiberInstance: FiberInstance): void {
+    if (isInDisconnectedSubtree) {
+      // Already disconnected.
+      return;
+    }
     const fiber = fiberInstance.data;
 
     if (trackedPathMatchInstance === fiberInstance) {
@@ -3099,7 +3111,16 @@ export function attach(
       }
 
       if (fiber.tag === OffscreenComponent && fiber.memoizedState !== null) {
-        // If an Offscreen component is hidden, don't mount its children yet.
+        // If an Offscreen component is hidden, mount its children as disconnected.
+        const stashedDisconnected = isInDisconnectedSubtree;
+        isInDisconnectedSubtree = true;
+        try {
+          if (fiber.child !== null) {
+            mountChildrenRecursively(fiber.child, false);
+          }
+        } finally {
+          isInDisconnectedSubtree = stashedDisconnected;
+        }
       } else if (fiber.tag === SuspenseComponent && OffscreenComponent === -1) {
         // Legacy Suspense without the Offscreen wrapper. For the modern Suspense we just handle the
         // Offscreen wrapper itself specially.
@@ -3924,11 +3945,7 @@ export function attach(
         const stashedDisconnected = isInDisconnectedSubtree;
         isInDisconnectedSubtree = true;
         try {
-          updateChildrenRecursively(
-            prevFiber.child,
-            nextFiber.child,
-            traceNearestHostComponentUpdate,
-          );
+          updateChildrenRecursively(prevFiber.child, nextFiber.child, false);
         } finally {
           isInDisconnectedSubtree = stashedDisconnected;
         }
