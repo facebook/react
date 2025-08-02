@@ -70,6 +70,9 @@ const proxyHandlers = {
             `Instead, you can export a Client Component wrapper ` +
             `that itself renders a Client Context Provider.`,
         );
+      // Allow returning a temporary reference from an async function
+      case 'then':
+        return undefined;
     }
     throw new Error(
       // eslint-disable-next-line react-internal/safe-string-coercion
