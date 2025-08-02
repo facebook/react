@@ -106,7 +106,7 @@ export function trackUsedThenable<T>(
   thenable: Thenable<T>,
   index: number,
 ): T {
-  if (__DEV__ && ReactSharedInternals.actQueue !== null) {
+  if (__DEV__ && ReactSharedInternals.actQueue) {
     ReactSharedInternals.didUsePromise = true;
   }
   const trackedThenables = getThenablesFromState(thenableState);
