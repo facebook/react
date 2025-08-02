@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<31804b19bd245bfbf53b8d4c116d7fb4>>
+ * @generated SignedSource<<8b1b8f2145063e8c59277e8766b3c225>>
  */
 
 'use strict';
@@ -37267,6 +37267,7 @@ class FindLastUsageVisitor extends ReactiveFunctionVisitor {
 let Transform$4 = class Transform extends ReactiveFunctionTransform {
     constructor(lastUsage) {
         super();
+        this.temporaries = new Map();
         this.lastUsage = lastUsage;
     }
     transformScope(scopeBlock, state) {
@@ -37280,6 +37281,7 @@ let Transform$4 = class Transform extends ReactiveFunctionTransform {
         }
     }
     visitBlock(block, state) {
+        var _a;
         this.traverseBlock(block, state);
         let current = null;
         const merged = [];
@@ -37323,6 +37325,9 @@ let Transform$4 = class Transform extends ReactiveFunctionTransform {
                         case 'UnaryExpression': {
                             if (current !== null && instr.instruction.lvalue !== null) {
                                 current.lvalues.add(instr.instruction.lvalue.identifier.declarationId);
+                                if (instr.instruction.value.kind === 'LoadLocal') {
+                                    this.temporaries.set(instr.instruction.lvalue.identifier.declarationId, instr.instruction.value.place.identifier.declarationId);
+                                }
                             }
                             break;
                         }
@@ -37332,6 +37337,8 @@ let Transform$4 = class Transform extends ReactiveFunctionTransform {
                                     for (const lvalue of eachInstructionLValue(instr.instruction)) {
                                         current.lvalues.add(lvalue.identifier.declarationId);
                                     }
+                                    this.temporaries.set(instr.instruction.value.lvalue.place.identifier
+                                        .declarationId, (_a = this.temporaries.get(instr.instruction.value.value.identifier.declarationId)) !== null && _a !== void 0 ? _a : instr.instruction.value.value.identifier.declarationId);
                                 }
                                 else {
                                     reset();
@@ -37349,7 +37356,7 @@ let Transform$4 = class Transform extends ReactiveFunctionTransform {
                 }
                 case 'scope': {
                     if (current !== null &&
-                        canMergeScopes(current.block, instr) &&
+                        canMergeScopes(current.block, instr, this.temporaries) &&
                         areLValuesLastUsedByScope(instr.scope, current.lvalues, this.lastUsage)) {
                         current.block.scope.range.end = makeInstructionId(Math.max(current.block.scope.range.end, instr.scope.range.end));
                         for (const [key, value] of instr.scope.declarations) {
@@ -37445,7 +37452,7 @@ function areLValuesLastUsedByScope(scope, lvalues, lastUsage) {
     }
     return true;
 }
-function canMergeScopes(current, next) {
+function canMergeScopes(current, next, temporaries) {
     if (current.scope.reassignments.size !== 0 ||
         next.scope.reassignments.size !== 0) {
         return false;
@@ -37459,12 +37466,15 @@ function canMergeScopes(current, next) {
         path: [],
     }))), next.scope.dependencies) ||
         (next.scope.dependencies.size !== 0 &&
-            [...next.scope.dependencies].every(dep => isAlwaysInvalidatingType(dep.identifier.type) &&
-                Iterable_some(current.scope.declarations.values(), decl => decl.identifier.declarationId === dep.identifier.declarationId)))) {
+            [...next.scope.dependencies].every(dep => dep.path.length === 0 &&
+                isAlwaysInvalidatingType(dep.identifier.type) &&
+                Iterable_some(current.scope.declarations.values(), decl => decl.identifier.declarationId === dep.identifier.declarationId ||
+                    decl.identifier.declarationId ===
+                        temporaries.get(dep.identifier.declarationId))))) {
         return true;
     }
-    log(`  ${printReactiveScopeSummary(current.scope)}`);
-    log(`  ${printReactiveScopeSummary(next.scope)}`);
+    log(`  ${printReactiveScopeSummary(current.scope)} ${[...current.scope.declarations.values()].map(decl => decl.identifier.declarationId)}`);
+    log(`  ${printReactiveScopeSummary(next.scope)} ${[...next.scope.dependencies].map(dep => { var _a; return `${dep.identifier.declarationId} ${(_a = temporaries.get(dep.identifier.declarationId)) !== null && _a !== void 0 ? _a : dep.identifier.declarationId}`; })}`);
     return false;
 }
 function isAlwaysInvalidatingType(type) {
