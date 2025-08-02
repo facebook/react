@@ -18,7 +18,44 @@ import {StoreContext} from '../context';
 
 import styles from './SnapshotSelector.css';
 
+import type {CommitDataFrontend, CommitTree} from './types';
+
 export type Props = {};
+
+function getAllFiberIDsInSubtree(
+  fiberID: number,
+  commitTree: CommitTree,
+): Set<number> {
+  const fiberIDs = new Set<number>();
+  const stack = [fiberID];
+
+  while (stack.length > 0) {
+    const currentID = stack.pop();
+    if (currentID != null) {
+      fiberIDs.add(currentID);
+
+      const currentNode = commitTree.nodes.get(currentID);
+      if (currentNode != null) {
+        stack.push(...currentNode.children);
+      }
+    }
+  }
+
+  return fiberIDs;
+}
+
+function doesCommitContainSubtree(
+  commitDatum: CommitDataFrontend,
+  subtreeFiberIDs: Set<number>,
+): boolean {
+  // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+  for (const fiberID of subtreeFiberIDs) {
+    if (commitDatum.fiberActualDurations.has(fiberID)) {
+      return true;
+    }
+  }
+  return false;
+}
 
 export default function SnapshotSelector(_: Props): React.Node {
   const {
@@ -26,6 +63,7 @@ export default function SnapshotSelector(_: Props): React.Node {
     minCommitDuration,
     rootID,
     selectedCommitIndex,
+    selectedFiberID,
     selectCommitIndex,
   } = useContext(ProfilerContext);
 
@@ -43,18 +81,48 @@ export default function SnapshotSelector(_: Props): React.Node {
     commitTimes.push(commitDatum.timestamp);
   });
 
+  const subtreeFiberIDs = useMemo(() => {
+    if (
+      selectedFiberID === null ||
+      selectedCommitIndex === null ||
+      rootID === null
+    ) {
+      return null;
+    }
+
+    try {
+      const commitTree = profilerStore.profilingCache.getCommitTree({
+        commitIndex: selectedCommitIndex,
+        rootID: ((rootID: any): number),
+      });
+
+      return getAllFiberIDsInSubtree(selectedFiberID, commitTree);
+    } catch (error) {
+      // Can't get commit tree => don't filter
+      return null;
+    }
+  }, [
+    selectedFiberID,
+    selectedCommitIndex,
+    rootID,
+    profilerStore.profilingCache,
+  ]);
+
   const filteredCommitIndices = useMemo(
     () =>
       commitData.reduce((reduced: $FlowFixMe, commitDatum, index) => {
         if (
-          !isCommitFilterEnabled ||
-          commitDatum.duration >= minCommitDuration
+          (!isCommitFilterEnabled ||
+            commitDatum.duration >= minCommitDuration) &&
+          (subtreeFiberIDs === null ||
+            doesCommitContainSubtree(commitDatum, subtreeFiberIDs))
         ) {
           reduced.push(index);
         }
+
         return reduced;
       }, []),
-    [commitData, isCommitFilterEnabled, minCommitDuration],
+    [commitData, isCommitFilterEnabled, minCommitDuration, subtreeFiberIDs],
   );
 
   const numFilteredCommits = filteredCommitIndices.length;
