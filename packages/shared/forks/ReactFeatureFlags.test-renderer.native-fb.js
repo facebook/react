@@ -28,6 +28,7 @@ export const enableMoveBefore = false;
 export const enableFizzExternalRuntime = true;
 export const enableHalt = false;
 export const enableInfiniteRenderLoopDetection = false;
+export const logInfiniteRenderLoopDetectionWarning: null | ((string) => void) = null;
 export const enableHiddenSubtreeInsertionEffectCleanup = true;
 export const enableLegacyCache = false;
 export const enableLegacyFBSupport = false;

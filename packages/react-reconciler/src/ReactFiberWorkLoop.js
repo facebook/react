@@ -52,6 +52,7 @@ import {
   enableViewTransition,
   enableGestureTransition,
   enableDefaultTransitionIndicator,
+  logInfiniteRenderLoopDetectionWarning,
 } from 'shared/ReactFeatureFlags';
 import {resetOwnerStackLimit} from 'shared/ReactOwnerStackReset';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -683,7 +684,9 @@ let pendingSuspendedCommitReason: SuspendedCommitReason = IMMEDIATE_COMMIT; // P
 
 // Use these to prevent an infinite loop of nested updates
 const NESTED_UPDATE_LIMIT = 50;
+const NESTED_UPDATE_LIMIT_MAX_HITS = 10;
 let nestedUpdateCount: number = 0;
+let nestedUpdateCountWarningThresholdHits: number = 0;
 let rootWithNestedUpdates: FiberRoot | null = null;
 let isFlushingPassiveEffects = false;
 let didScheduleUpdateDuringPassiveEffects = false;
@@ -4532,23 +4535,47 @@ export function throwIfInfiniteUpdateLoopDetected() {
 
     if (enableInfiniteRenderLoopDetection) {
       if (executionContext & RenderContext && workInProgressRoot !== null) {
-        // We're in the render phase. Disable the concurrent error recovery
-        // mechanism to ensure that the error we're about to throw gets handled.
-        // We need it to trigger the nearest error boundary so that the infinite
-        // update loop is broken.
-        workInProgressRoot.errorRecoveryDisabledLanes = mergeLanes(
-          workInProgressRoot.errorRecoveryDisabledLanes,
-          workInProgressRootRenderLanes,
-        );
+        // For the enableInfiniteRenderLoopDetection experiment, we use a warning
+        // of potential infinite loops while allowing more passes in an attempt to let
+        // the rendering settle.
+        // If NESTED_UPDATE_LIMIT * NESTED_UPDATE_LIMIT_MAX_HITS is reached,
+        // we throw an error to break the infinite loop.
+        // We expect we can simplify this in the future to throw on one render limit.
+        nestedUpdateCountWarningThresholdHits++;
+        if (
+          nestedUpdateCountWarningThresholdHits >= NESTED_UPDATE_LIMIT_MAX_HITS
+        ) {
+          // We're in the render phase. Disable the concurrent error recovery
+          // mechanism to ensure that the error we're about to throw gets handled.
+          // We need it to trigger the nearest error boundary so that the infinite
+          // update loop is broken.
+          workInProgressRoot.errorRecoveryDisabledLanes = mergeLanes(
+            workInProgressRoot.errorRecoveryDisabledLanes,
+            workInProgressRootRenderLanes,
+          );
+        } else if (nestedUpdateCountWarningThresholdHits === 1) {
+          // This is the first time we hit the limit, so we log a warning.
+          if (logInfiniteRenderLoopDetectionWarning) {
+            logInfiniteRenderLoopDetectionWarning('Potential infinite loop detected. This can happen when a component ' +
+              'repeatedly calls setState in render. React limits the number of nested ' +
+              'updates to prevent infinite loops.');
+          }
+        }
       }
     }
-
-    throw new Error(
-      'Maximum update depth exceeded. This can happen when a component ' +
-        'repeatedly calls setState inside componentWillUpdate or ' +
-        'componentDidUpdate. React limits the number of nested updates to ' +
-        'prevent infinite loops.',
-    );
+    if (
+      !enableInfiniteRenderLoopDetection ||
+      nestedUpdateCountWarningThresholdHits === 0 ||
+      nestedUpdateCountWarningThresholdHits >= NESTED_UPDATE_LIMIT_MAX_HITS
+    ) {
+      nestedUpdateCountWarningThresholdHits = 0;
+      throw new Error(
+        'Maximum update depth exceeded. This can happen when a component ' +
+          'repeatedly calls setState inside componentWillUpdate or ' +
+          'componentDidUpdate. React limits the number of nested updates to ' +
+          'prevent infinite loops.',
+      );
+    }
   }
 
   if (__DEV__) {
