@@ -3945,7 +3945,7 @@ export function attach(
         const stashedDisconnected = isInDisconnectedSubtree;
         isInDisconnectedSubtree = true;
         try {
-          updateChildrenRecursively(prevFiber.child, nextFiber.child, false);
+          updateChildrenRecursively(nextFiber.child, prevFiber.child, false);
         } finally {
           isInDisconnectedSubtree = stashedDisconnected;
         }
@@ -3957,8 +3957,8 @@ export function attach(
         if (nextFiber.child !== null) {
           if (
             updateChildrenRecursively(
-              prevFiber.child,
               nextFiber.child,
+              prevFiber.child,
               traceNearestHostComponentUpdate,
             )
           ) {
