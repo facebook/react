@@ -2156,6 +2156,8 @@ export function attach(
     return id;
   }
 
+  let isInDisconnectedSubtree = false;
+
   function recordMount(
     fiber: Fiber,
     parentInstance: DevToolsInstance | null,
@@ -3911,31 +3913,40 @@ export function attach(
           );
           shouldResetChildren = true;
         }
-      } else if (prevWasHidden && nextIsHidden) {
-        // We don't update any children while they're still hidden.
+      } else if (nextIsHidden) {
+        if (!prevWasHidden) {
+          // We're hiding the children. Disconnect them from the front end but keep state.
+          if (fiberInstance !== null && !isInDisconnectedSubtree) {
+            disconnectChildrenRecursively(fiberInstance);
+          }
+        }
+        // Update children inside the hidden tree if they committed with a new updates.
+        const stashedDisconnected = isInDisconnectedSubtree;
+        isInDisconnectedSubtree = true;
+        try {
+          updateChildrenRecursively(
+            prevFiber.child,
+            nextFiber.child,
+            traceNearestHostComponentUpdate,
+          );
+        } finally {
+          isInDisconnectedSubtree = stashedDisconnected;
+        }
       } else if (prevWasHidden && !nextIsHidden) {
         // We're revealing the hidden children. We now need to update them to the latest state.
-        if (fiberInstance !== null) {
+        if (fiberInstance !== null && !isInDisconnectedSubtree) {
           reconnectChildrenRecursively(fiberInstance);
         }
         if (nextFiber.child !== null) {
           if (
             updateChildrenRecursively(
-              prevFiber.child, // TODO: This is not safe because it could have updated multiple times before.
+              prevFiber.child,
               nextFiber.child,
               traceNearestHostComponentUpdate,
             )
           ) {
             shouldResetChildren = true;
           }
-        }
-      } else if (!prevWasHidden && nextIsHidden) {
-        // We're hiding the children. Disconnect them from the front end but keep state.
-        if (fiberInstance !== null) {
-          disconnectChildrenRecursively(fiberInstance);
-          fiberInstance.firstChild = remainingReconcilingChildren; // Restore the set, we won't readd them.
-          remainingReconcilingChildren = null; // Don't delete them. We've consumed them.
-          fiberInstance.suspendedBy = previousSuspendedBy; // Restore the suspended
         }
       } else {
         // Common case: Primary -> Primary.
