@@ -4848,9 +4848,18 @@ function renderDebugModel(
       return existingReference;
     }
 
+    // $FlowFixMe[method-unbinding]
+    const functionBody: string = Function.prototype.toString.call(value);
+
+    const name = value.name;
     const serializedValue = serializeEval(
-      // $FlowFixMe[method-unbinding]
-      '(' + Function.prototype.toString.call(value) + ')',
+      typeof name === 'string'
+        ? 'Object.defineProperty(' +
+            functionBody +
+            ',"name",{value:' +
+            JSON.stringify(name) +
+            '})'
+        : '(' + functionBody + ')',
     );
     request.pendingDebugChunks++;
     const id = request.nextChunkId++;
