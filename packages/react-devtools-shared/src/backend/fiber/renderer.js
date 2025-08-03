@@ -3758,10 +3758,12 @@ export function attach(
       fiberInstance.firstChild = null;
       fiberInstance.suspendedBy = null;
 
-      if (fiberInstance.suspenseNode !== null) {
-        reconcilingParentSuspenseNode = fiberInstance.suspenseNode;
+      const suspenseNode = fiberInstance.suspenseNode;
+      if (suspenseNode !== null) {
+        reconcilingParentSuspenseNode = suspenseNode;
         previouslyReconciledSiblingSuspenseNode = null;
-        remainingReconcilingChildrenSuspenseNodes = null;
+        remainingReconcilingChildrenSuspenseNodes = suspenseNode.firstChild;
+        suspenseNode.firstChild = null;
       }
     }
     try {
