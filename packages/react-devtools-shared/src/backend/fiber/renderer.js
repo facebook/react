@@ -2135,6 +2135,54 @@ export function attach(
     pendingStringTableLength = 0;
   }
 
+  function measureHostInstance(instance: HostInstance): null | Array<Rect> {
+    // Feature detect measurement capabilities of this environment.
+    // TODO: Consider making this capability injected by the ReactRenderer.
+    if (typeof instance !== 'object' || instance === null) {
+      return null;
+    }
+    if (typeof instance.getClientRects === 'function') {
+      // DOM
+      return Array.from(instance.getClientRects());
+    }
+    if (instance.canonical) {
+      // Native
+      const publicInstance = instance.canonical.publicInstance;
+      if (!publicInstance) {
+        // The publicInstance may not have been initialized yet if there was no ref on this node.
+        // We can't initialize it from any existing Hook but we could fallback to this async form:
+        // renderer.extraDevToolsConfig.getInspectorDataForInstance(instance).hierarchy[last].getInspectorData().measure(callback)
+        return null;
+      }
+      if (typeof publicInstance.getBoundingClientRect === 'function') {
+        // enableAccessToHostTreeInFabric / ReadOnlyElement
+        return [publicInstance.getBoundingClientRect()];
+      }
+      if (typeof publicInstance.unstable_getBoundingClientRect === 'function') {
+        // ReactFabricHostComponent
+        return [publicInstance.unstable_getBoundingClientRect()];
+      }
+    }
+    return null;
+  }
+
+  function measureInstance(instance: DevToolsInstance): null | Array<Rect> {
+    // Synchronously return the client rects of the Host instances directly inside this Instance.
+    const hostInstances = findAllCurrentHostInstances(instance);
+    let result: null | Array<Rect> = null;
+    for (let i = 0; i < hostInstances.length; i++) {
+      const childResult = measureHostInstance(hostInstances[i]);
+      if (childResult !== null) {
+        if (result === null) {
+          result = childResult;
+        } else {
+          result = result.concat(childResult);
+        }
+      }
+    }
+    return result;
+  }
+
   function getStringID(string: string | null): number {
     if (string === null) {
       return 0;
