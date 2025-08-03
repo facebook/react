@@ -2733,10 +2733,31 @@ export function attach(
   }
 
   function unmountRemainingChildren() {
-    let child = remainingReconcilingChildren;
-    while (child !== null) {
-      unmountInstanceRecursively(child);
-      child = remainingReconcilingChildren;
+    if (
+      reconcilingParent !== null &&
+      (reconcilingParent.kind === FIBER_INSTANCE ||
+        reconcilingParent.kind === FILTERED_FIBER_INSTANCE) &&
+      reconcilingParent.data.tag === OffscreenComponent &&
+      reconcilingParent.data.memoizedState !== null &&
+      !isInDisconnectedSubtree
+    ) {
+      // This is a hidden offscreen, we need to execute this in the context of a disconnected subtree.
+      isInDisconnectedSubtree = true;
+      try {
+        let child = remainingReconcilingChildren;
+        while (child !== null) {
+          unmountInstanceRecursively(child);
+          child = remainingReconcilingChildren;
+        }
+      } finally {
+        isInDisconnectedSubtree = false;
+      }
+    } else {
+      let child = remainingReconcilingChildren;
+      while (child !== null) {
+        unmountInstanceRecursively(child);
+        child = remainingReconcilingChildren;
+      }
     }
   }
 
@@ -2855,6 +2876,9 @@ export function attach(
   }
 
   function recordVirtualDisconnect(instance: VirtualInstance) {
+    if (isInDisconnectedSubtree) {
+      return;
+    }
     if (trackedPathMatchInstance === instance) {
       // We're in the process of trying to restore previous selection.
       // If this fiber matched but is being unmounted, there's no use trying.
@@ -3962,12 +3986,12 @@ export function attach(
         isInDisconnectedSubtree = true;
         try {
           if (nextFiber.child !== null) {
-            updateChildrenRecursively(
-              nextFiber.child,
-              prevFiber.child,
-              traceNearestHostComponentUpdate,
-            );
+            updateChildrenRecursively(nextFiber.child, prevFiber.child, false);
           }
+          // Ensure we unmount any remaining children inside the isInDisconnectedSubtree flag
+          // since they should not trigger real deletions.
+          unmountRemainingChildren();
+          remainingReconcilingChildren = null;
         } finally {
           isInDisconnectedSubtree = stashedDisconnected;
         }
