@@ -2492,6 +2492,10 @@ export function attach(
     }
   }
 
+  function recordSuspenseResize(suspenseNode: SuspenseNode): void {
+    // TODO: Notify the front end of the change.
+  }
+
   // Running state of the remaining children from the previous version of this parent that
   // we haven't yet added back. This should be reset anytime we change parent.
   // Any remaining ones at the end will be deleted.
@@ -2881,7 +2885,6 @@ export function attach(
       parent = parent.parent;
     }
     // We changed inside a visible tree.
-    suspenseNode.rects = nextRects;
     // Since this boundary changed, it's possible it also affected its children so lets
     // measure them as well.
     for (
@@ -2891,6 +2894,8 @@ export function attach(
     ) {
       measureUnchangedSuspenseNodesRecursively(child);
     }
+    suspenseNode.rects = nextRects;
+    recordSuspenseResize(suspenseNode);
   }
 
   function consumeSuspenseNodesOfExistingInstance(
@@ -4229,7 +4234,13 @@ export function attach(
             // we're inside a disconnected subtree nor if we are the Suspense boundary that
             // is suspended. This lets us keep the rectangle of the displayed content while
             // we're suspended to visualize the resulting state.
-            fiberInstance.suspenseNode.rects = measureInstance(fiberInstance);
+            const suspenseNode = fiberInstance.suspenseNode;
+            const prevRects = suspenseNode.rects;
+            const nextRects = measureInstance(fiberInstance);
+            if (!areEqualRects(prevRects, nextRects)) {
+              suspenseNode.rects = nextRects;
+              recordSuspenseResize(suspenseNode);
+            }
           }
         }
       } else {
@@ -4333,8 +4344,13 @@ export function attach(
             // Measure this Suspense node in case it changed. We don't update the rect
             // while we're inside a disconnected subtree so that we keep the outline
             // as it was before we hid the parent.
-            reconcilingParentSuspenseNode.rects =
-              measureInstance(fiberInstance);
+            const suspenseNode = reconcilingParentSuspenseNode;
+            const prevRects = suspenseNode.rects;
+            const nextRects = measureInstance(fiberInstance);
+            if (!areEqualRects(prevRects, nextRects)) {
+              suspenseNode.rects = nextRects;
+              recordSuspenseResize(suspenseNode);
+            }
           }
           reconcilingParentSuspenseNode = stashedSuspenseParent;
           previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
