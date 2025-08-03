@@ -1969,6 +1969,42 @@ function createModel(response: Response, model: any): any {
   return model;
 }
 
+function getInferredFunctionApproximate(code: string): () => void {
+  let slicedCode;
+  if (code.startsWith('Object.defineProperty(')) {
+    slicedCode = code.slice('Object.defineProperty('.length);
+  } else if (code.startsWith('(')) {
+    slicedCode = code.slice(1);
+  } else {
+    slicedCode = code;
+  }
+  if (slicedCode.startsWith('async function')) {
+    const idx = slicedCode.indexOf('(', 14);
+    if (idx !== -1) {
+      const name = slicedCode.slice(14, idx).trim();
+      // eslint-disable-next-line no-eval
+      return (0, eval)('({' + JSON.stringify(name) + ':async function(){}})')[
+        name
+      ];
+    }
+  } else if (slicedCode.startsWith('function')) {
+    const idx = slicedCode.indexOf('(', 8);
+    if (idx !== -1) {
+      const name = slicedCode.slice(8, idx).trim();
+      // eslint-disable-next-line no-eval
+      return (0, eval)('({' + JSON.stringify(name) + ':function(){}})')[name];
+    }
+  } else if (slicedCode.startsWith('class')) {
+    const idx = slicedCode.indexOf('{', 5);
+    if (idx !== -1) {
+      const name = slicedCode.slice(5, idx).trim();
+      // eslint-disable-next-line no-eval
+      return (0, eval)('({' + JSON.stringify(name) + ':class{}})')[name];
+    }
+  }
+  return function () {};
+}
+
 function parseModelString(
   response: Response,
   parentObject: Object,
@@ -2163,35 +2199,24 @@ function parseModelString(
           } catch (x) {
             // We currently use this to express functions so we fail parsing it,
             // let's just return a blank function as a place holder.
-            if (code.startsWith('(async function')) {
-              const idx = code.indexOf('(', 15);
-              if (idx !== -1) {
-                const name = code.slice(15, idx).trim();
-                // eslint-disable-next-line no-eval
-                return (0, eval)(
-                  '({' + JSON.stringify(name) + ':async function(){}})',
-                )[name];
+            let fn;
+            try {
+              fn = getInferredFunctionApproximate(code);
+              if (code.startsWith('Object.defineProperty(')) {
+                const DESCRIPTOR = ',"name",{value:"';
+                const idx = code.lastIndexOf(DESCRIPTOR);
+                if (idx !== -1) {
+                  const name = JSON.parse(
+                    code.slice(idx + DESCRIPTOR.length - 1, code.length - 2),
+                  );
+                  // $FlowFixMe[cannot-write]
+                  Object.defineProperty(fn, 'name', {value: name});
+                }
               }
-            } else if (code.startsWith('(function')) {
-              const idx = code.indexOf('(', 9);
-              if (idx !== -1) {
-                const name = code.slice(9, idx).trim();
-                // eslint-disable-next-line no-eval
-                return (0, eval)(
-                  '({' + JSON.stringify(name) + ':function(){}})',
-                )[name];
-              }
-            } else if (code.startsWith('(class')) {
-              const idx = code.indexOf('{', 6);
-              if (idx !== -1) {
-                const name = code.slice(6, idx).trim();
-                // eslint-disable-next-line no-eval
-                return (0, eval)('({' + JSON.stringify(name) + ':class{}})')[
-                  name
-                ];
-              }
+            } catch (_) {
+              fn = function () {};
             }
-            return function () {};
+            return fn;
           }
         }
         // Fallthrough
