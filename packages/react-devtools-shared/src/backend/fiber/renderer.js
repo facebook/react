@@ -271,6 +271,9 @@ function createVirtualInstance(
 
 type DevToolsInstance = FiberInstance | VirtualInstance | FilteredFiberInstance;
 
+// A Generic Rect super type which can include DOMRect and other objects with similar shape like in React Native.
+type Rect = {x: number, y: number, width: number, height: number, ...};
+
 type SuspenseNode = {
   // The Instance can be a Suspense boundary, a SuspenseList Row, or HostRoot.
   // It can also be disconnected from the main tree if it's a Filtered Instance.
@@ -278,6 +281,7 @@ type SuspenseNode = {
   parent: null | SuspenseNode,
   firstChild: null | SuspenseNode,
   nextSibling: null | SuspenseNode,
+  rects: null | Array<Rect>, // The bounding rects of content children.
   suspendedBy: Map<ReactIOInfo, Set<DevToolsInstance>>, // Tracks which data we're suspended by and the children that suspend it.
   // Track whether any of the items in suspendedBy are unique this this Suspense boundaries or if they're all
   // also in the parent sets. This determine whether this could contribute in the loading sequence.
@@ -292,6 +296,7 @@ function createSuspenseNode(
     parent: null,
     firstChild: null,
     nextSibling: null,
+    rects: null,
     suspendedBy: new Map(),
     hasUniqueSuspenders: false,
   });
