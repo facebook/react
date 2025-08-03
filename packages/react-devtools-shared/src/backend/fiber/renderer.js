@@ -2821,6 +2821,78 @@ export function attach(
     return false;
   }
 
+  function areEqualRects(
+    a: null | Array<Rect>,
+    b: null | Array<Rect>,
+  ): boolean {
+    if (a === null) {
+      return b === null;
+    }
+    if (b === null) {
+      return false;
+    }
+    if (a.length !== b.length) {
+      return false;
+    }
+    for (let i = 0; i < a.length; i++) {
+      const aRect = a[i];
+      const bRect = b[i];
+      if (
+        aRect.x !== bRect.x ||
+        aRect.y !== bRect.y ||
+        aRect.width !== bRect.width ||
+        aRect.height !== bRect.height
+      ) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function measureUnchangedSuspenseNodesRecursively(
+    suspenseNode: SuspenseNode,
+  ): void {
+    if (isInDisconnectedSubtree) {
+      // We don't update rects inside disconnected subtrees.
+      return;
+    }
+    const nextRects = measureInstance(suspenseNode.instance);
+    const prevRects = suspenseNode.rects;
+    if (areEqualRects(prevRects, nextRects)) {
+      return; // Unchanged
+    }
+    // The rect has changed. While the bailed out root wasn't in a disconnected subtree,
+    // it's possible that this node was in one. So we need to check if we're offscreen.
+    let parent = suspenseNode.instance.parent;
+    while (parent !== null) {
+      if (
+        (parent.kind === FIBER_INSTANCE ||
+          parent.kind === FILTERED_FIBER_INSTANCE) &&
+        parent.data.tag === OffscreenComponent &&
+        parent.data.memoizedState !== null
+      ) {
+        // We're inside a hidden offscreen Fiber. We're in a disconnected tree.
+        return;
+      }
+      if (parent.suspenseNode !== null) {
+        // Found our parent SuspenseNode. We can bail out now.
+        break;
+      }
+      parent = parent.parent;
+    }
+    // We changed inside a visible tree.
+    suspenseNode.rects = nextRects;
+    // Since this boundary changed, it's possible it also affected its children so lets
+    // measure them as well.
+    for (
+      let child = suspenseNode.firstChild;
+      child !== null;
+      child = child.nextSibling
+    ) {
+      measureUnchangedSuspenseNodesRecursively(child);
+    }
+  }
+
   function consumeSuspenseNodesOfExistingInstance(
     instance: DevToolsInstance,
   ): void {
@@ -2859,6 +2931,9 @@ export function attach(
           previouslyReconciledSiblingSuspenseNode.nextSibling = suspenseNode;
         }
         previouslyReconciledSiblingSuspenseNode = suspenseNode;
+        // While React didn't rerender this node, it's possible that it was affected by
+        // layout due to mutation of a parent or sibling. Check if it changed size.
+        measureUnchangedSuspenseNodesRecursively(suspenseNode);
         // Continue
         suspenseNode = nextRemainingSibling;
       } else if (foundOne) {
