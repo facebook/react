@@ -3082,6 +3082,10 @@ export function attach(
       newInstance = recordMount(fiber, reconcilingParent);
       if (fiber.tag === SuspenseComponent || fiber.tag === HostRoot) {
         newSuspenseNode = createSuspenseNode(newInstance);
+        // Measure this Suspense node. In general we shouldn't do this until we have
+        // inserted the new children but since we know this is a FiberInstance we'll
+        // just use the Fiber anyway.
+        newSuspenseNode.rects = measureInstance(newInstance);
       }
       insertChild(newInstance);
       if (__DEBUG__) {
@@ -3111,6 +3115,10 @@ export function attach(
       newInstance = createFilteredFiberInstance(fiber);
       if (fiber.tag === SuspenseComponent) {
         newSuspenseNode = createSuspenseNode(newInstance);
+        // Measure this Suspense node. In general we shouldn't do this until we have
+        // inserted the new children but since we know this is a FiberInstance we'll
+        // just use the Fiber anyway.
+        newSuspenseNode.rects = measureInstance(newInstance);
       }
       insertChild(newInstance);
       if (__DEBUG__) {
@@ -4137,6 +4145,17 @@ export function attach(
           ) {
             shouldResetChildren = true;
           }
+        } else if (
+          nextFiber.memoizedState === null &&
+          fiberInstance.suspenseNode !== null
+        ) {
+          if (!isInDisconnectedSubtree) {
+            // Measure this Suspense node in case it changed. We don't update the rect while
+            // we're inside a disconnected subtree nor if we are the Suspense boundary that
+            // is suspended. This lets us keep the rectangle of the displayed content while
+            // we're suspended to visualize the resulting state.
+            fiberInstance.suspenseNode.rects = measureInstance(fiberInstance);
+          }
         }
       } else {
         // Common case: Primary -> Primary.
@@ -4232,6 +4251,16 @@ export function attach(
         previouslyReconciledSibling = stashedPrevious;
         remainingReconcilingChildren = stashedRemaining;
         if (shouldPopSuspenseNode) {
+          if (
+            !isInDisconnectedSubtree &&
+            reconcilingParentSuspenseNode !== null
+          ) {
+            // Measure this Suspense node in case it changed. We don't update the rect
+            // while we're inside a disconnected subtree so that we keep the outline
+            // as it was before we hid the parent.
+            reconcilingParentSuspenseNode.rects =
+              measureInstance(fiberInstance);
+          }
           reconcilingParentSuspenseNode = stashedSuspenseParent;
           previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
           remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
