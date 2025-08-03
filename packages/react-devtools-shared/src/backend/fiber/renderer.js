@@ -3938,7 +3938,7 @@ export function attach(
         if (!prevWasHidden) {
           // We're hiding the children. Disconnect them from the front end but keep state.
           if (fiberInstance !== null && !isInDisconnectedSubtree) {
-            disconnectChildrenRecursively(fiberInstance);
+            disconnectChildrenRecursively(remainingReconcilingChildren);
           }
         }
         // Update children inside the hidden tree if they committed with a new updates.
@@ -3951,19 +3951,25 @@ export function attach(
         }
       } else if (prevWasHidden && !nextIsHidden) {
         // We're revealing the hidden children. We now need to update them to the latest state.
-        if (fiberInstance !== null && !isInDisconnectedSubtree) {
-          reconnectChildrenRecursively(fiberInstance);
-        }
-        if (nextFiber.child !== null) {
-          if (
+        // We do this while still in the disconnected state and then we reconnect the new ones.
+        // This avoids reconnecting things that are about to be removed anyway.
+        const stashedDisconnected = isInDisconnectedSubtree;
+        isInDisconnectedSubtree = true;
+        try {
+          if (nextFiber.child !== null) {
             updateChildrenRecursively(
               nextFiber.child,
               prevFiber.child,
               traceNearestHostComponentUpdate,
-            )
-          ) {
-            shouldResetChildren = true;
+            );
           }
+        } finally {
+          isInDisconnectedSubtree = stashedDisconnected;
+        }
+        if (fiberInstance !== null && !isInDisconnectedSubtree) {
+          reconnectChildrenRecursively(fiberInstance);
+          // Children may have reordered while they were hidden.
+          shouldResetChildren = true;
         }
       } else {
         // Common case: Primary -> Primary.
@@ -4067,12 +4073,8 @@ export function attach(
     }
   }
 
-  function disconnectChildrenRecursively(parentInstance: DevToolsInstance) {
-    for (
-      let child = parentInstance.firstChild;
-      child !== null;
-      child = child.nextSibling
-    ) {
+  function disconnectChildrenRecursively(firstChild: null | DevToolsInstance) {
+    for (let child = firstChild; child !== null; child = child.nextSibling) {
       if (
         (child.kind === FIBER_INSTANCE ||
           child.kind === FILTERED_FIBER_INSTANCE) &&
@@ -4081,7 +4083,7 @@ export function attach(
       ) {
         // This instance's children are already disconnected.
       } else {
-        disconnectChildrenRecursively(child);
+        disconnectChildrenRecursively(child.firstChild);
       }
       if (child.kind === FIBER_INSTANCE) {
         recordDisconnect(child);
