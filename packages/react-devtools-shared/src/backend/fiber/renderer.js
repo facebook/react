@@ -3356,7 +3356,12 @@ export function attach(
     let child: null | DevToolsInstance = parentInstance.firstChild;
     while (child !== null) {
       if (child.kind === FILTERED_FIBER_INSTANCE) {
-        addUnfilteredChildrenIDs(child, nextChildren);
+        const fiber = child.data;
+        if (fiber.tag === OffscreenComponent && fiber.memoizedState !== null) {
+          // The children of this Offscreen are hidden so they don't get added.
+        } else {
+          addUnfilteredChildrenIDs(child, nextChildren);
+        }
       } else {
         nextChildren.push(child.id);
       }
