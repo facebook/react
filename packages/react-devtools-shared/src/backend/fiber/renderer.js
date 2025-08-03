@@ -2455,11 +2455,6 @@ export function attach(
   // the current parent here as well.
   let reconcilingParentSuspenseNode: null | SuspenseNode = null;
 
-  function isSuspenseInFallback(suspenseNode: SuspenseNode) {
-    const fiber = suspenseNode.instance.data;
-    return fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
-  }
-
   function ioExistsInSuspenseAncestor(
     suspenseNode: SuspenseNode,
     ioInfo: ReactIOInfo,
@@ -2475,21 +2470,13 @@ export function attach(
   }
 
   function insertSuspendedBy(asyncInfo: ReactAsyncInfo): void {
-    let parentSuspenseNode = reconcilingParentSuspenseNode;
-    while (
-      parentSuspenseNode !== null &&
-      isSuspenseInFallback(parentSuspenseNode)
-    ) {
-      // If we have something that suspends inside the fallback tree of a Suspense boundary, then
-      // we bubble that up to the nearest parent Suspense boundary that isn't in fallback mode.
-      parentSuspenseNode = parentSuspenseNode.parent;
-    }
-    if (reconcilingParent === null || parentSuspenseNode === null) {
+    if (reconcilingParent === null || reconcilingParentSuspenseNode === null) {
       throw new Error(
         'It should not be possible to have suspended data outside the root. ' +
           'Even suspending at the first position is still a child of the root.',
       );
     }
+    const parentSuspenseNode = reconcilingParentSuspenseNode;
     // Use the nearest unfiltered parent so that there's always some component that has
     // the entry on it even if you filter, or the root if all are filtered.
     let parentInstance = reconcilingParent;
@@ -3096,10 +3083,12 @@ export function attach(
       previouslyReconciledSibling = null;
       remainingReconcilingChildren = null;
     }
+    let shouldPopSuspenseNode = false;
     if (newSuspenseNode !== null) {
       reconcilingParentSuspenseNode = newSuspenseNode;
       previouslyReconciledSiblingSuspenseNode = null;
       remainingReconcilingChildrenSuspenseNodes = null;
+      shouldPopSuspenseNode = true;
     }
     try {
       if (traceUpdatesEnabled) {
@@ -3177,6 +3166,44 @@ export function attach(
             );
           }
         }
+      } else if (
+        fiber.tag === SuspenseComponent &&
+        OffscreenComponent !== -1 &&
+        newInstance !== null &&
+        newSuspenseNode !== null
+      ) {
+        // Modern Suspense path
+        const contentFiber = fiber.child;
+        if (contentFiber === null) {
+          throw new Error(
+            'There should always be an Offscreen Fiber child in a Suspense boundary.',
+          );
+        }
+        const fallbackFiber = contentFiber.sibling;
+
+        // First update only the Offscreen boundary. I.e. the main content.
+        mountVirtualChildrenRecursively(
+          contentFiber,
+          fallbackFiber,
+          traceNearestHostComponentUpdate,
+          0, // first level
+        );
+
+        // Next, we'll pop back out of the SuspenseNode that we added above and now we'll
+        // reconcile the fallback, reconciling anything by inserting into the parent SuspenseNode.
+        // Since the fallback conceptually blocks the parent.
+        reconcilingParentSuspenseNode = stashedSuspenseParent;
+        previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
+        remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
+        shouldPopSuspenseNode = false;
+        if (fallbackFiber !== null) {
+          mountVirtualChildrenRecursively(
+            fallbackFiber,
+            null,
+            traceNearestHostComponentUpdate,
+            0, // first level
+          );
+        }
       } else {
         if (fiber.child !== null) {
           mountChildrenRecursively(
@@ -3191,7 +3218,7 @@ export function attach(
         previouslyReconciledSibling = stashedPrevious;
         remainingReconcilingChildren = stashedRemaining;
       }
-      if (newSuspenseNode !== null) {
+      if (shouldPopSuspenseNode) {
         reconcilingParentSuspenseNode = stashedSuspenseParent;
         previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
         remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
@@ -3817,6 +3844,7 @@ export function attach(
     const stashedSuspenseParent = reconcilingParentSuspenseNode;
     const stashedSuspensePrevious = previouslyReconciledSiblingSuspenseNode;
     const stashedSuspenseRemaining = remainingReconcilingChildrenSuspenseNodes;
+    let shouldPopSuspenseNode = false;
     let previousSuspendedBy = null;
     if (fiberInstance !== null) {
       previousSuspendedBy = fiberInstance.suspendedBy;
@@ -3846,6 +3874,7 @@ export function attach(
         previouslyReconciledSiblingSuspenseNode = null;
         remainingReconcilingChildrenSuspenseNodes = suspenseNode.firstChild;
         suspenseNode.firstChild = null;
+        shouldPopSuspenseNode = true;
       }
     }
     try {
@@ -4000,6 +4029,56 @@ export function attach(
           // Children may have reordered while they were hidden.
           shouldResetChildren = true;
         }
+      } else if (
+        nextFiber.tag === SuspenseComponent &&
+        OffscreenComponent !== -1 &&
+        fiberInstance !== null &&
+        fiberInstance.suspenseNode !== null
+      ) {
+        // Modern Suspense path
+        const prevContentFiber = prevFiber.child;
+        const nextContentFiber = nextFiber.child;
+        if (nextContentFiber === null || prevContentFiber === null) {
+          throw new Error(
+            'There should always be an Offscreen Fiber child in a Suspense boundary.',
+          );
+        }
+        const prevFallbackFiber = prevContentFiber.sibling;
+        const nextFallbackFiber = nextContentFiber.sibling;
+
+        // First update only the Offscreen boundary. I.e. the main content.
+        if (
+          updateVirtualChildrenRecursively(
+            nextContentFiber,
+            nextFallbackFiber,
+            prevContentFiber,
+            traceNearestHostComponentUpdate,
+            0,
+          )
+        ) {
+          shouldResetChildren = true;
+        }
+
+        // Next, we'll pop back out of the SuspenseNode that we added above and now we'll
+        // reconcile the fallback, reconciling anything by inserting into the parent SuspenseNode.
+        // Since the fallback conceptually blocks the parent.
+        reconcilingParentSuspenseNode = stashedSuspenseParent;
+        previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
+        remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
+        shouldPopSuspenseNode = false;
+        if (nextFallbackFiber !== null) {
+          if (
+            updateVirtualChildrenRecursively(
+              nextFallbackFiber,
+              null,
+              prevFallbackFiber,
+              traceNearestHostComponentUpdate,
+              0,
+            )
+          ) {
+            shouldResetChildren = true;
+          }
+        }
       } else {
         // Common case: Primary -> Primary.
         // This is the same code path as for non-Suspense fibers.
@@ -4093,7 +4172,7 @@ export function attach(
         reconcilingParent = stashedParent;
         previouslyReconciledSibling = stashedPrevious;
         remainingReconcilingChildren = stashedRemaining;
-        if (fiberInstance.suspenseNode !== null) {
+        if (shouldPopSuspenseNode) {
           reconcilingParentSuspenseNode = stashedSuspenseParent;
           previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
           remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
