@@ -146,6 +146,20 @@ function SuspendedByRow({
       </Button>
       {isOpen && (
         <div className={styles.CollapsableContent}>
+          {stack !== null && stack.length > 0 && (
+            <StackTraceView stack={stack} />
+          )}
+          {owner !== null && owner.id !== inspectedElement.id ? (
+            <OwnerView
+              key={owner.id}
+              displayName={owner.displayName || 'Anonymous'}
+              hocDisplayNames={owner.hocDisplayNames}
+              compiledWithForget={owner.compiledWithForget}
+              id={owner.id}
+              isInStore={store.containsElement(owner.id)}
+              type={owner.type}
+            />
+          ) : null}
           <div className={styles.PreviewContainer}>
             <KeyValue
               alphaSort={true}
@@ -174,20 +188,6 @@ function SuspendedByRow({
               }
             />
           </div>
-          {stack !== null && stack.length > 0 && (
-            <StackTraceView stack={stack} />
-          )}
-          {owner !== null && owner.id !== inspectedElement.id ? (
-            <OwnerView
-              key={owner.id}
-              displayName={owner.displayName || 'Anonymous'}
-              hocDisplayNames={owner.hocDisplayNames}
-              compiledWithForget={owner.compiledWithForget}
-              id={owner.id}
-              isInStore={store.containsElement(owner.id)}
-              type={owner.type}
-            />
-          ) : null}
         </div>
       )}
     </div>
