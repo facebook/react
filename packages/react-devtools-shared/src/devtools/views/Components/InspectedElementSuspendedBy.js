@@ -205,6 +205,15 @@ type Props = {
   store: Store,
 };
 
+function compareTime(a: SerializedAsyncInfo, b: SerializedAsyncInfo): number {
+  const ioA = a.awaited;
+  const ioB = b.awaited;
+  if (ioA.start === ioB.start) {
+    return ioA.end - ioB.end;
+  }
+  return ioA.start - ioB.start;
+}
+
 export default function InspectedElementSuspendedBy({
   bridge,
   element,
@@ -241,6 +250,9 @@ export default function InspectedElementSuspendedBy({
     minTime = maxTime - 25;
   }
 
+  const sortedSuspendedBy = suspendedBy.slice(0);
+  sortedSuspendedBy.sort(compareTime);
+
   return (
     <div>
       <div className={styles.HeaderRow}>
@@ -249,7 +261,7 @@ export default function InspectedElementSuspendedBy({
           <ButtonIcon type="copy" />
         </Button>
       </div>
-      {suspendedBy.map((asyncInfo, index) => (
+      {sortedSuspendedBy.map((asyncInfo, index) => (
         <SuspendedByRow
           key={index}
           index={index}
