@@ -795,6 +795,7 @@ export function attach(
             displayName: getData(owner).displayName || 'Unknown',
             id: getID(owner),
             key: element.key,
+            env: null,
             type: getElementType(owner),
           });
           if (owner._currentElement) {

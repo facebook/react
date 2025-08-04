@@ -174,6 +174,7 @@ export default function InspectedElementView({
                   key={owner.id}
                   displayName={owner.displayName || 'Anonymous'}
                   hocDisplayNames={owner.hocDisplayNames}
+                  environmentName={owner.env}
                   compiledWithForget={owner.compiledWithForget}
                   id={owner.id}
                   isInStore={store.containsElement(owner.id)}

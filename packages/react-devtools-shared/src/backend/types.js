@@ -256,6 +256,7 @@ export type SerializedElement = {
   displayName: string | null,
   id: number,
   key: number | string | null,
+  env: null | string,
   type: ElementType,
 };
 

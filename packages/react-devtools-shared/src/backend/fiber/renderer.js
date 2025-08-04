@@ -4630,6 +4630,7 @@ export function attach(
         displayName: getDisplayNameForFiber(fiber) || 'Anonymous',
         id: instance.id,
         key: fiber.key,
+        env: null,
         type: getElementTypeForFiber(fiber),
       };
     } else {
@@ -4638,6 +4639,7 @@ export function attach(
         displayName: componentInfo.name || 'Anonymous',
         id: instance.id,
         key: componentInfo.key == null ? null : componentInfo.key,
+        env: componentInfo.env == null ? null : componentInfo.env,
         type: ElementTypeVirtual,
       };
     }

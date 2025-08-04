@@ -20,6 +20,7 @@ import styles from './OwnerView.css';
 type OwnerViewProps = {
   displayName: string,
   hocDisplayNames: Array<string> | null,
+  environmentName: string | null,
   compiledWithForget: boolean,
   id: number,
   isInStore: boolean,
@@ -27,6 +28,7 @@ type OwnerViewProps = {
 
 export default function OwnerView({
   displayName,
+  environmentName,
   hocDisplayNames,
   compiledWithForget,
   id,
@@ -65,6 +67,7 @@ export default function OwnerView({
         <ElementBadges
           hocDisplayNames={hocDisplayNames}
           compiledWithForget={compiledWithForget}
+          environmentName={environmentName}
         />
       </span>
     </Button>

@@ -157,6 +157,7 @@ function SuspendedByRow({
             <OwnerView
               key={ioOwner.id}
               displayName={ioOwner.displayName || 'Anonymous'}
+              environmentName={ioOwner.env}
               hocDisplayNames={ioOwner.hocDisplayNames}
               compiledWithForget={ioOwner.compiledWithForget}
               id={ioOwner.id}
@@ -174,6 +175,7 @@ function SuspendedByRow({
                 <OwnerView
                   key={asyncOwner.id}
                   displayName={asyncOwner.displayName || 'Anonymous'}
+                  environmentName={asyncOwner.env}
                   hocDisplayNames={asyncOwner.hocDisplayNames}
                   compiledWithForget={asyncOwner.compiledWithForget}
                   id={asyncOwner.id}
