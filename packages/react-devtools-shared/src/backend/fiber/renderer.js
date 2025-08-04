@@ -4442,10 +4442,10 @@ export function attach(
 
   function getSuspendedByOfSuspenseNode(
     suspenseNode: SuspenseNode,
-  ): Array<ReactAsyncInfo> {
+  ): Array<SerializedAsyncInfo> {
     // Collect all ReactAsyncInfo that was suspending this SuspenseNode but
     // isn't also in any parent set.
-    const result: Array<ReactAsyncInfo> = [];
+    const result: Array<SerializedAsyncInfo> = [];
     if (!suspenseNode.hasUniqueSuspenders) {
       return result;
     }
@@ -4470,7 +4470,8 @@ export function attach(
           ioInfo,
         );
         if (asyncInfo !== null) {
-          result.push(asyncInfo);
+          const index = result.length;
+          result.push(serializeAsyncInfo(asyncInfo, index, firstInstance));
         }
       }
     });
@@ -4844,8 +4845,11 @@ export function attach(
           // In this case, this becomes associated with the Client/Host Component where as normally
           // you'd expect these to be associated with the Server Component that awaited the data.
           // TODO: Prepend other suspense sources like css, images and use().
-          fiberInstance.suspendedBy;
-
+          fiberInstance.suspendedBy === null
+          ? []
+          : fiberInstance.suspendedBy.map((info, index) =>
+              serializeAsyncInfo(info, index, fiberInstance),
+            );
     return {
       id: fiberInstance.id,
 
@@ -4902,12 +4906,7 @@ export function attach(
           ? []
           : Array.from(componentLogsEntry.warnings.entries()),
 
-      suspendedBy:
-        suspendedBy === null
-          ? []
-          : suspendedBy.map((info, index) =>
-              serializeAsyncInfo(info, index, fiberInstance),
-            ),
+      suspendedBy: suspendedBy,
 
       // List of owners
       owners,
