@@ -969,7 +969,6 @@ export function attach(
   } = getInternalReactConstants(version);
   const {
     ActivityComponent,
-    CacheComponent,
     ClassComponent,
     ContextConsumer,
     DehydratedSuspenseComponent,
@@ -4618,7 +4617,8 @@ export function attach(
 
     // TODO Show custom UI for Cache like we do for Suspense
     // For now, just hide state data entirely since it's not meant to be inspected.
-    const showState = !usesHooks && tag !== CacheComponent;
+    const showState =
+      tag === ClassComponent || tag === IncompleteClassComponent;
 
     const typeSymbol = getTypeSymbol(type);
 
