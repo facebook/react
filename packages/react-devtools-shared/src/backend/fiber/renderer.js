@@ -54,10 +54,12 @@ import {
   formatDurationToMicrosecondsGranularity,
   gt,
   gte,
-  parseSourceFromComponentStack,
-  parseSourceFromOwnerStack,
   serializeToString,
 } from 'react-devtools-shared/src/backend/utils';
+import {
+  extractLocationFromComponentStack,
+  extractLocationFromOwnerStack,
+} from 'react-devtools-shared/src/backend/utils/parseStackTrace';
 import {
   cleanForBridge,
   copyWithDelete,
@@ -6340,7 +6342,7 @@ export function attach(
     if (stackFrame === null) {
       return null;
     }
-    const source = parseSourceFromComponentStack(stackFrame);
+    const source = extractLocationFromComponentStack(stackFrame);
     fiberInstance.source = source;
     return source;
   }
@@ -6369,7 +6371,7 @@ export function attach(
     // any intermediate utility functions. This won't point to the top of the component function
     // but it's at least somewhere within it.
     if (isError(unresolvedSource)) {
-      return (instance.source = parseSourceFromOwnerStack(
+      return (instance.source = extractLocationFromOwnerStack(
         (unresolvedSource: any),
       ));
     }
@@ -6377,7 +6379,7 @@ export function attach(
       const idx = unresolvedSource.lastIndexOf('\n');
       const lastLine =
         idx === -1 ? unresolvedSource : unresolvedSource.slice(idx + 1);
-      return (instance.source = parseSourceFromComponentStack(lastLine));
+      return (instance.source = extractLocationFromComponentStack(lastLine));
     }
 
     // $FlowFixMe: refined.
