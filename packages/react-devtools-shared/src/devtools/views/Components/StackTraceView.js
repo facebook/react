@@ -12,6 +12,8 @@ import {use, useContext} from 'react';
 
 import useOpenResource from '../useOpenResource';
 
+import ElementBadges from './ElementBadges';
+
 import styles from './StackTraceView.css';
 
 import type {
@@ -28,9 +30,13 @@ import formatLocationForDisplay from './formatLocationForDisplay';
 
 type CallSiteViewProps = {
   callSite: ReactCallSite,
+  environmentName: null | string,
 };
 
-export function CallSiteView({callSite}: CallSiteViewProps): React.Node {
+export function CallSiteView({
+  callSite,
+  environmentName,
+}: CallSiteViewProps): React.Node {
   const fetchFileWithCaching = useContext(FetchFileWithCachingContext);
 
   const [virtualFunctionName, virtualURL, virtualLine, virtualColumn] =
@@ -64,19 +70,33 @@ export function CallSiteView({callSite}: CallSiteViewProps): React.Node {
         title={url + ':' + line}>
         {formatLocationForDisplay(url, line, column)}
       </span>
+      <ElementBadges environmentName={environmentName} />
     </div>
   );
 }
 
 type Props = {
   stack: ReactStackTrace,
+  environmentName: null | string,
 };
 
-export default function StackTraceView({stack}: Props): React.Node {
+export default function StackTraceView({
+  stack,
+  environmentName,
+}: Props): React.Node {
   return (
     <div className={styles.StackTraceView}>
       {stack.map((callSite, index) => (
-        <CallSiteView key={index} callSite={callSite} />
+        <CallSiteView
+          key={index}
+          callSite={callSite}
+          environmentName={
+            // Badge last row
+            // TODO: If we start ignore listing the last row, we should badge the last
+            // non-ignored row.
+            index === stack.length - 1 ? environmentName : null
+          }
+        />
       ))}
     </div>
   );
