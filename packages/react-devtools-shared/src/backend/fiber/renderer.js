@@ -3164,9 +3164,11 @@ export function attach(
       reconcilingParent = stashedParent;
       previouslyReconciledSibling = stashedPrevious;
       remainingReconcilingChildren = stashedRemaining;
-      reconcilingParentSuspenseNode = stashedSuspenseParent;
-      previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
-      remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
+      if (instance.suspenseNode !== null) {
+        reconcilingParentSuspenseNode = stashedSuspenseParent;
+        previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
+        remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
+      }
     }
     if (instance.kind === FIBER_INSTANCE) {
       recordUnmount(instance);
