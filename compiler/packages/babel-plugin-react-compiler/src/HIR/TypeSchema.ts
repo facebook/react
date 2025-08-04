@@ -111,6 +111,19 @@ export const AliasEffectSchema: z.ZodType<AliasEffectConfig> = z.object({
   into: LifetimeIdSchema,
 });
 
+export type ImmutableCaptureEffectConfig = {
+  kind: 'ImmutableCapture';
+  from: string;
+  into: string;
+};
+
+export const ImmutableCaptureEffectSchema: z.ZodType<ImmutableCaptureEffectConfig> =
+  z.object({
+    kind: z.literal('ImmutableCapture'),
+    from: LifetimeIdSchema,
+    into: LifetimeIdSchema,
+  });
+
 export type CaptureEffectConfig = {
   kind: 'Capture';
   from: string;
@@ -187,6 +200,7 @@ export type AliasingEffectConfig =
   | AssignEffectConfig
   | AliasEffectConfig
   | CaptureEffectConfig
+  | ImmutableCaptureEffectConfig
   | ImpureEffectConfig
   | MutateEffectConfig
   | MutateTransitiveConditionallyConfig
@@ -199,6 +213,7 @@ export const AliasingEffectSchema: z.ZodType<AliasingEffectConfig> = z.union([
   AssignEffectSchema,
   AliasEffectSchema,
   CaptureEffectSchema,
+  ImmutableCaptureEffectSchema,
   ImpureEffectSchema,
   MutateEffectSchema,
   MutateTransitiveConditionallySchema,

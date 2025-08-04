@@ -879,7 +879,7 @@ function initializeDebugChunk(
             waitForReference(
               debugChunk,
               {}, // noop, since we'll have already added an entry to debug info
-              '', // noop
+              'debug', // noop, but we need it to not be empty string since that indicates the root object
               response,
               initializeDebugInfo,
               [''], // path

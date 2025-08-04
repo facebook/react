@@ -142,6 +142,7 @@ function parseAliasingSignatureConfig(
   const effects = typeConfig.effects.map(
     (effect: AliasingEffectConfig): AliasingEffect => {
       switch (effect.kind) {
+        case 'ImmutableCapture':
         case 'CreateFrom':
         case 'Capture':
         case 'Alias':
