@@ -238,10 +238,7 @@ function collectStackTrace(
 const chromeFrameRegExp =
   /^ *at (?:(.+) \((?:(.+):(\d+):(\d+)|\<anonymous\>)\)|(?:async )?(.+):(\d+):(\d+)|\<anonymous\>)$/;
 
-// DEV-only cache of parsed and filtered stack frames.
-const stackTraceCache: WeakMap<Error, ReactStackTrace> = __DEV__
-  ? new WeakMap()
-  : (null: any);
+const stackTraceCache: WeakMap<Error, ReactStackTrace> = new WeakMap();
 
 export function parseStackTrace(
   error: Error,
