@@ -19,8 +19,8 @@ import {
   formatWithStyles,
   gt,
   gte,
-  parseSourceFromComponentStack,
 } from 'react-devtools-shared/src/backend/utils';
+import {extractLocationFromComponentStack} from 'react-devtools-shared/src/backend/utils/parseStackTrace';
 import {
   REACT_SUSPENSE_LIST_TYPE as SuspenseList,
   REACT_STRICT_MODE_TYPE as StrictMode,
@@ -306,20 +306,20 @@ describe('utils', () => {
     });
   });
 
-  describe('parseSourceFromComponentStack', () => {
+  describe('extractLocationFromComponentStack', () => {
     it('should return null if passed empty string', () => {
-      expect(parseSourceFromComponentStack('')).toEqual(null);
+      expect(extractLocationFromComponentStack('')).toEqual(null);
     });
 
     it('should construct the source from the first frame if available', () => {
       expect(
-        parseSourceFromComponentStack(
+        extractLocationFromComponentStack(
           'at l (https://react.dev/_next/static/chunks/main-78a3b4c2aa4e4850.js:1:10389)\n' +
             'at f (https://react.dev/_next/static/chunks/pages/%5B%5B...markdownPath%5D%5D-af2ed613aedf1d57.js:1:8519)\n' +
             'at r (https://react.dev/_next/static/chunks/pages/_app-dd0b77ea7bd5b246.js:1:498)\n',
         ),
       ).toEqual([
-        '',
+        'l',
         'https://react.dev/_next/static/chunks/main-78a3b4c2aa4e4850.js',
         1,
         10389,
@@ -328,7 +328,7 @@ describe('utils', () => {
 
     it('should construct the source from highest available frame', () => {
       expect(
-        parseSourceFromComponentStack(
+        extractLocationFromComponentStack(
           '    at Q\n' +
             '    at a\n' +
             '    at m (https://react.dev/_next/static/chunks/848-122f91e9565d9ffa.js:5:9236)\n' +
@@ -342,7 +342,7 @@ describe('utils', () => {
             '    at f (https://react.dev/_next/static/chunks/pages/%5B%5B...markdownPath%5D%5D-af2ed613aedf1d57.js:1:8519)',
         ),
       ).toEqual([
-        '',
+        'm',
         'https://react.dev/_next/static/chunks/848-122f91e9565d9ffa.js',
         5,
         9236,
@@ -351,7 +351,7 @@ describe('utils', () => {
 
     it('should construct the source from frame, which has only url specified', () => {
       expect(
-        parseSourceFromComponentStack(
+        extractLocationFromComponentStack(
           '    at Q\n' +
             '    at a\n' +
             '    at https://react.dev/_next/static/chunks/848-122f91e9565d9ffa.js:5:9236\n',
@@ -366,13 +366,13 @@ describe('utils', () => {
 
     it('should parse sourceURL correctly if it includes parentheses', () => {
       expect(
-        parseSourceFromComponentStack(
+        extractLocationFromComponentStack(
           'at HotReload (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/hot-reloader-client.js:307:11)\n' +
             '    at Router (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/app-router.js:181:11)\n' +
             '    at ErrorBoundaryHandler (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/error-boundary.js:114:9)',
         ),
       ).toEqual([
-        '',
+        'HotReload',
         'webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/hot-reloader-client.js',
         307,
         11,
@@ -381,13 +381,13 @@ describe('utils', () => {
 
     it('should support Firefox stack', () => {
       expect(
-        parseSourceFromComponentStack(
+        extractLocationFromComponentStack(
           'tt@https://react.dev/_next/static/chunks/363-3c5f1b553b6be118.js:1:165558\n' +
             'f@https://react.dev/_next/static/chunks/pages/%5B%5B...markdownPath%5D%5D-af2ed613aedf1d57.js:1:8535\n' +
             'r@https://react.dev/_next/static/chunks/pages/_app-dd0b77ea7bd5b246.js:1:513',
         ),
       ).toEqual([
-        '',
+        'tt',
         'https://react.dev/_next/static/chunks/363-3c5f1b553b6be118.js',
         1,
         165558,

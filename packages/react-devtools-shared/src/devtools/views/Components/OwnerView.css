@@ -2,6 +2,7 @@
   color: var(--color-component-name);
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-monospace-normal);
+  font-weight: bold;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
