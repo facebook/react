@@ -106,6 +106,7 @@ import {validateStaticComponents} from '../Validation/ValidateStaticComponents';
 import {validateNoFreezingKnownMutableFunctions} from '../Validation/ValidateNoFreezingKnownMutableFunctions';
 import {inferMutationAliasingEffects} from '../Inference/InferMutationAliasingEffects';
 import {inferMutationAliasingRanges} from '../Inference/InferMutationAliasingRanges';
+import {validateNoDerivedComputationsInEffects} from '../Validation/ValidateNoDerivedComputationsInEffects';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -290,6 +291,10 @@ function runWithEnvironment(
 
     if (env.config.validateNoSetStateInRender) {
       validateNoSetStateInRender(hir).unwrap();
+    }
+
+    if (env.config.validateNoDerivedComputationsInEffects) {
+      validateNoDerivedComputationsInEffects(hir);
     }
 
     if (env.config.validateNoSetStateInEffects) {
