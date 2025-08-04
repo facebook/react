@@ -3779,15 +3779,14 @@ export function attach(
     virtualInstance.firstChild = null;
     virtualInstance.suspendedBy = null;
     try {
-      if (
-        updateVirtualChildrenRecursively(
-          nextFirstChild,
-          nextLastChild,
-          prevFirstChild,
-          traceNearestHostComponentUpdate,
-          virtualLevel + 1,
-        )
-      ) {
+      const updateFlags = updateVirtualChildrenRecursively(
+        nextFirstChild,
+        nextLastChild,
+        prevFirstChild,
+        traceNearestHostComponentUpdate,
+        virtualLevel + 1,
+      );
+      if ((updateFlags & ShouldResetChildren) !== NoUpdate) {
         recordResetChildren(virtualInstance);
       }
       removePreviousSuspendedBy(virtualInstance, previousSuspendedBy);
@@ -3809,14 +3808,18 @@ export function attach(
     }
   }
 
+  const NoUpdate = /*              */ 0b00;
+  const ShouldResetChildren = /*   */ 0b01;
+  // TODO: Separate flag for resetting suspense children.
+
   function updateVirtualChildrenRecursively(
     nextFirstChild: Fiber,
     nextLastChild: null | Fiber, // non-inclusive
     prevFirstChild: null | Fiber,
     traceNearestHostComponentUpdate: boolean,
     virtualLevel: number, // the nth level of virtual instances
-  ): boolean {
-    let shouldResetChildren = false;
+  ): number {
+    let updateFlags = NoUpdate;
     // If the first child is different, we need to traverse them.
     // Each next child will be either a new child (mount) or an alternate (update).
     let nextChild: null | Fiber = nextFirstChild;
@@ -3928,7 +3931,7 @@ export function attach(
                 insertChild(newVirtualInstance);
                 previousVirtualInstance = newVirtualInstance;
                 previousVirtualInstanceWasMount = true;
-                shouldResetChildren = true;
+                updateFlags |= ShouldResetChildren;
               }
               // Existing children might be reparented into this new virtual instance.
               // TODO: This will cause the front end to error which needs to be fixed.
@@ -4006,44 +4009,36 @@ export function attach(
           // They are always different referentially, but if the instances line up
           // conceptually we'll want to know that.
           if (prevChild !== prevChildAtSameIndex) {
-            shouldResetChildren = true;
+            updateFlags |= ShouldResetChildren;
           }
 
           moveChild(fiberInstance, previousSiblingOfExistingInstance);
 
-          if (
-            updateFiberRecursively(
-              fiberInstance,
-              nextChild,
-              (prevChild: any),
-              traceNearestHostComponentUpdate,
-            )
-          ) {
-            // If a nested tree child order changed but it can't handle its own
-            // child order invalidation (e.g. because it's filtered out like host nodes),
-            // propagate the need to reset child order upwards to this Fiber.
-            shouldResetChildren = true;
-          }
+          // If a nested tree child order changed but it can't handle its own
+          // child order invalidation (e.g. because it's filtered out like host nodes),
+          // propagate the need to reset child order upwards to this Fiber.
+          updateFlags |= updateFiberRecursively(
+            fiberInstance,
+            nextChild,
+            (prevChild: any),
+            traceNearestHostComponentUpdate,
+          );
         } else if (prevChild !== null && shouldFilterFiber(nextChild)) {
           // The filtered instance could've reordered.
           if (prevChild !== prevChildAtSameIndex) {
-            shouldResetChildren = true;
+            updateFlags |= ShouldResetChildren;
           }
 
           // If this Fiber should be filtered, we need to still update its children.
           // This relies on an alternate since we don't have an Instance with the previous
           // child on it. Ideally, the reconciliation wouldn't need previous Fibers that
           // are filtered from the tree.
-          if (
-            updateFiberRecursively(
-              null,
-              nextChild,
-              prevChild,
-              traceNearestHostComponentUpdate,
-            )
-          ) {
-            shouldResetChildren = true;
-          }
+          updateFlags |= updateFiberRecursively(
+            null,
+            nextChild,
+            prevChild,
+            traceNearestHostComponentUpdate,
+          );
         } else {
           // It's possible for a FiberInstance to be reparented when virtual parents
           // get their sequence split or change structure with the same render result.
@@ -4055,14 +4050,17 @@ export function attach(
 
           mountFiberRecursively(nextChild, traceNearestHostComponentUpdate);
           // Need to mark the parent set to remount the new instance.
-          shouldResetChildren = true;
+          updateFlags |= ShouldResetChildren;
         }
       }
       // Try the next child.
       nextChild = nextChild.sibling;
       // Advance the pointer in the previous list so that we can
       // keep comparing if they line up.
-      if (!shouldResetChildren && prevChildAtSameIndex !== null) {
+      if (
+        (updateFlags & ShouldResetChildren) === NoUpdate &&
+        prevChildAtSameIndex !== null
+      ) {
         prevChildAtSameIndex = prevChildAtSameIndex.sibling;
       }
     }
@@ -4088,9 +4086,9 @@ export function attach(
     }
     // If we have no more children, but used to, they don't line up.
     if (prevChildAtSameIndex !== null) {
-      shouldResetChildren = true;
+      updateFlags |= ShouldResetChildren;
     }
-    return shouldResetChildren;
+    return updateFlags;
   }
 
   // Returns whether closest unfiltered fiber parent needs to reset its child list.
@@ -4098,9 +4096,9 @@ export function attach(
     nextFirstChild: null | Fiber,
     prevFirstChild: null | Fiber,
     traceNearestHostComponentUpdate: boolean,
-  ): boolean {
+  ): number {
     if (nextFirstChild === null) {
-      return prevFirstChild !== null;
+      return prevFirstChild !== null ? ShouldResetChildren : NoUpdate;
     }
     return updateVirtualChildrenRecursively(
       nextFirstChild,
@@ -4117,7 +4115,7 @@ export function attach(
     nextFiber: Fiber,
     prevFiber: Fiber,
     traceNearestHostComponentUpdate: boolean,
-  ): boolean {
+  ): number {
     if (__DEBUG__) {
       if (fiberInstance !== null) {
         debug('updateFiberRecursively()', fiberInstance, reconcilingParent);
@@ -4216,7 +4214,7 @@ export function attach(
         aquireHostInstance(nearestInstance, nextFiber.stateNode);
       }
 
-      let shouldResetChildren = false;
+      let updateFlags = NoUpdate;
 
       // The behavior of timed-out legacy Suspense trees is unique. Without the Offscreen wrapper.
       // Rather than unmount the timed out content (and possibly lose important state),
@@ -4259,20 +4257,18 @@ export function attach(
             traceNearestHostComponentUpdate,
           );
 
-          shouldResetChildren = true;
+          updateFlags |= ShouldResetChildren;
         }
 
-        if (
-          nextFallbackChildSet != null &&
-          prevFallbackChildSet != null &&
-          updateChildrenRecursively(
-            nextFallbackChildSet,
-            prevFallbackChildSet,
-            traceNearestHostComponentUpdate,
-          )
-        ) {
-          shouldResetChildren = true;
-        }
+        const childrenUpdateFlags =
+          nextFallbackChildSet != null && prevFallbackChildSet != null
+            ? updateChildrenRecursively(
+                nextFallbackChildSet,
+                prevFallbackChildSet,
+                traceNearestHostComponentUpdate,
+              )
+            : NoUpdate;
+        updateFlags |= childrenUpdateFlags;
       } else if (prevDidTimeout && !nextDidTimeOut) {
         // Fallback -> Primary:
         // 1. Unmount fallback set
@@ -4285,7 +4281,7 @@ export function attach(
             traceNearestHostComponentUpdate,
           );
         }
-        shouldResetChildren = true;
+        updateFlags |= ShouldResetChildren;
       } else if (!prevDidTimeout && nextDidTimeOut) {
         // Primary -> Fallback:
         // 1. Hide primary set
@@ -4301,7 +4297,7 @@ export function attach(
             nextFallbackChildSet,
             traceNearestHostComponentUpdate,
           );
-          shouldResetChildren = true;
+          updateFlags |= ShouldResetChildren;
         }
       } else if (nextIsHidden) {
         if (!prevWasHidden) {
@@ -4338,7 +4334,7 @@ export function attach(
         if (fiberInstance !== null && !isInDisconnectedSubtree) {
           reconnectChildrenRecursively(fiberInstance);
           // Children may have reordered while they were hidden.
-          shouldResetChildren = true;
+          updateFlags |= ShouldResetChildren;
         }
       } else if (
         nextFiber.tag === SuspenseComponent &&
@@ -4358,17 +4354,13 @@ export function attach(
         const nextFallbackFiber = nextContentFiber.sibling;
 
         // First update only the Offscreen boundary. I.e. the main content.
-        if (
-          updateVirtualChildrenRecursively(
-            nextContentFiber,
-            nextFallbackFiber,
-            prevContentFiber,
-            traceNearestHostComponentUpdate,
-            0,
-          )
-        ) {
-          shouldResetChildren = true;
-        }
+        updateFlags |= updateVirtualChildrenRecursively(
+          nextContentFiber,
+          nextFallbackFiber,
+          prevContentFiber,
+          traceNearestHostComponentUpdate,
+          0,
+        );
 
         // Next, we'll pop back out of the SuspenseNode that we added above and now we'll
         // reconcile the fallback, reconciling anything by inserting into the parent SuspenseNode.
@@ -4378,17 +4370,13 @@ export function attach(
         remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
         shouldPopSuspenseNode = false;
         if (nextFallbackFiber !== null) {
-          if (
-            updateVirtualChildrenRecursively(
-              nextFallbackFiber,
-              null,
-              prevFallbackFiber,
-              traceNearestHostComponentUpdate,
-              0,
-            )
-          ) {
-            shouldResetChildren = true;
-          }
+          updateFlags |= updateVirtualChildrenRecursively(
+            nextFallbackFiber,
+            null,
+            prevFallbackFiber,
+            traceNearestHostComponentUpdate,
+            0,
+          );
         } else if (
           nextFiber.memoizedState === null &&
           fiberInstance.suspenseNode !== null
@@ -4411,15 +4399,11 @@ export function attach(
         // Common case: Primary -> Primary.
         // This is the same code path as for non-Suspense fibers.
         if (nextFiber.child !== prevFiber.child) {
-          if (
-            updateChildrenRecursively(
-              nextFiber.child,
-              prevFiber.child,
-              traceNearestHostComponentUpdate,
-            )
-          ) {
-            shouldResetChildren = true;
-          }
+          updateFlags |= updateChildrenRecursively(
+            nextFiber.child,
+            prevFiber.child,
+            traceNearestHostComponentUpdate,
+          );
         } else {
           // Children are unchanged.
           if (fiberInstance !== null) {
@@ -4442,15 +4426,19 @@ export function attach(
               }
             }
           } else {
+            const childrenUpdateFlags = updateChildrenRecursively(
+              nextFiber.child,
+              prevFiber.child,
+              false,
+            );
             // If this fiber is filtered there might be changes to this set elsewhere so we have
             // to visit each child to place it back in the set. We let the child bail out instead.
-            if (
-              updateChildrenRecursively(nextFiber.child, prevFiber.child, false)
-            ) {
+            if ((childrenUpdateFlags & ShouldResetChildren) !== NoUpdate) {
               throw new Error(
                 'The children should not have changed if we pass in the same set.',
               );
             }
+            updateFlags |= childrenUpdateFlags;
           }
         }
       }
@@ -4487,7 +4475,7 @@ export function attach(
         recordResetSuspenseChildren(suspenseNode);
       }
 
-      if (shouldResetChildren) {
+      if ((updateFlags & ShouldResetChildren) !== NoUpdate) {
         // We need to crawl the subtree for closest non-filtered Fibers
         // so that we can display them in a flat children set.
         if (fiberInstance !== null && fiberInstance.kind === FIBER_INSTANCE) {
@@ -4495,14 +4483,14 @@ export function attach(
 
           // We've handled the child order change for this Fiber.
           // Since it's included, there's no need to invalidate parent child order.
-          return false;
+          updateFlags &= ~ShouldResetChildren;
         } else {
           // Let the closest unfiltered parent Fiber reset its child order instead.
-          return true;
         }
       } else {
-        return false;
       }
+
+      return updateFlags;
     } finally {
       if (fiberInstance !== null) {
         unmountRemainingChildren();
