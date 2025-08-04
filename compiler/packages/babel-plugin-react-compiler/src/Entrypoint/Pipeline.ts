@@ -92,7 +92,6 @@ import {
 } from '../Validation';
 import {validateLocalsNotReassignedAfterRender} from '../Validation/ValidateLocalsNotReassignedAfterRender';
 import {outlineFunctions} from '../Optimization/OutlineFunctions';
-import {propagatePhiTypes} from '../TypeInference/PropagatePhiTypes';
 import {lowerContextAccess} from '../Optimization/LowerContextAccess';
 import {validateNoSetStateInEffects} from '../Validation/ValidateNoSetStateInEffects';
 import {validateNoJSXInTryStatement} from '../Validation/ValidateNoJSXInTryStatement';
@@ -106,6 +105,7 @@ import {validateStaticComponents} from '../Validation/ValidateStaticComponents';
 import {validateNoFreezingKnownMutableFunctions} from '../Validation/ValidateNoFreezingKnownMutableFunctions';
 import {inferMutationAliasingEffects} from '../Inference/InferMutationAliasingEffects';
 import {inferMutationAliasingRanges} from '../Inference/InferMutationAliasingRanges';
+import {validateNoDerivedComputationsInEffects} from '../Validation/ValidateNoDerivedComputationsInEffects';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -292,6 +292,10 @@ function runWithEnvironment(
       validateNoSetStateInRender(hir).unwrap();
     }
 
+    if (env.config.validateNoDerivedComputationsInEffects) {
+      validateNoDerivedComputationsInEffects(hir);
+    }
+
     if (env.config.validateNoSetStateInEffects) {
       env.logErrors(validateNoSetStateInEffects(hir));
     }
@@ -319,13 +323,6 @@ function runWithEnvironment(
   log({
     kind: 'hir',
     name: 'RewriteInstructionKindsBasedOnReassignment',
-    value: hir,
-  });
-
-  propagatePhiTypes(hir);
-  log({
-    kind: 'hir',
-    name: 'PropagatePhiTypes',
     value: hir,
   });
 
