@@ -3737,7 +3737,7 @@ export function attach(
         );
       }
     }
-    // The frontend only really cares about the displayName, key, and children.
+    // The frontend only really cares about the name, and children.
     // The first two don't really change, so we are only concerned with the order of children here.
     // This is trickier than a simple comparison though, since certain types of fibers are filtered.
     const nextChildren: Array<number> = [];
@@ -3882,6 +3882,8 @@ export function attach(
                     traceNearestHostComponentUpdate,
                     virtualLevel,
                   );
+                  updateFlags |=
+                    ShouldResetChildren | ShouldResetSuspenseChildren;
                 } else {
                   updateFlags |= updateVirtualInstanceRecursively(
                     previousVirtualInstance,
@@ -3961,6 +3963,7 @@ export function attach(
               traceNearestHostComponentUpdate,
               virtualLevel,
             );
+            updateFlags |= ShouldResetChildren | ShouldResetSuspenseChildren;
           } else {
             updateFlags |= updateVirtualInstanceRecursively(
               previousVirtualInstance,
@@ -4076,6 +4079,7 @@ export function attach(
           traceNearestHostComponentUpdate,
           virtualLevel,
         );
+        updateFlags |= ShouldResetChildren | ShouldResetSuspenseChildren;
       } else {
         updateFlags |= updateVirtualInstanceRecursively(
           previousVirtualInstance,
@@ -4283,8 +4287,8 @@ export function attach(
             nextPrimaryChildSet,
             traceNearestHostComponentUpdate,
           );
+          updateFlags |= ShouldResetChildren | ShouldResetSuspenseChildren;
         }
-        updateFlags |= ShouldResetChildren | ShouldResetSuspenseChildren;
       } else if (!prevDidTimeout && nextDidTimeOut) {
         // Primary -> Fallback:
         // 1. Hide primary set
