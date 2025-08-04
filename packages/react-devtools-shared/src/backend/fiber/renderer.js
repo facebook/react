@@ -59,6 +59,7 @@ import {
 import {
   extractLocationFromComponentStack,
   extractLocationFromOwnerStack,
+  parseStackTrace,
 } from 'react-devtools-shared/src/backend/utils/parseStackTrace';
 import {
   cleanForBridge,
@@ -4518,14 +4519,26 @@ export function attach(
           ioOwnerInstance === null
             ? null
             : instanceToSerializedElement(ioOwnerInstance),
-        stack: ioInfo.stack == null ? null : ioInfo.stack,
+        stack:
+          ioInfo.debugStack == null
+            ? null
+            : // While we have a ReactStackTrace on ioInfo.stack, that will point to the location on
+              // the server. We need a location that points to the virtual source on the client which
+              // we can then use to source map to the original location.
+              parseStackTrace(ioInfo.debugStack, 1),
       },
       env: asyncInfo.env == null ? null : asyncInfo.env,
       owner:
         awaitOwnerInstance === null
           ? null
           : instanceToSerializedElement(awaitOwnerInstance),
-      stack: asyncInfo.stack == null ? null : asyncInfo.stack,
+      stack:
+        asyncInfo.debugStack == null
+          ? null
+          : // While we have a ReactStackTrace on ioInfo.stack, that will point to the location on
+            // the server. We need a location that points to the virtual source on the client which
+            // we can then use to source map to the original location.
+            parseStackTrace(asyncInfo.debugStack, 1),
     };
   }
 
