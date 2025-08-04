@@ -92,7 +92,6 @@ import {
 } from '../Validation';
 import {validateLocalsNotReassignedAfterRender} from '../Validation/ValidateLocalsNotReassignedAfterRender';
 import {outlineFunctions} from '../Optimization/OutlineFunctions';
-import {propagatePhiTypes} from '../TypeInference/PropagatePhiTypes';
 import {lowerContextAccess} from '../Optimization/LowerContextAccess';
 import {validateNoSetStateInEffects} from '../Validation/ValidateNoSetStateInEffects';
 import {validateNoJSXInTryStatement} from '../Validation/ValidateNoJSXInTryStatement';
@@ -324,13 +323,6 @@ function runWithEnvironment(
   log({
     kind: 'hir',
     name: 'RewriteInstructionKindsBasedOnReassignment',
-    value: hir,
-  });
-
-  propagatePhiTypes(hir);
-  log({
-    kind: 'hir',
-    name: 'PropagatePhiTypes',
     value: hir,
   });
 
