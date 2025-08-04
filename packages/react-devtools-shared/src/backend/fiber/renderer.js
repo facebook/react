@@ -2701,6 +2701,76 @@ export function attach(
     }
   }
 
+  function isChildOf(
+    parentInstance: DevToolsInstance,
+    childInstance: DevToolsInstance,
+    grandParent: DevToolsInstance,
+  ): boolean {
+    let instance = childInstance.parent;
+    while (instance !== null) {
+      if (parentInstance === instance) {
+        return true;
+      }
+      if (instance === parentInstance.parent || instance === grandParent) {
+        // This was a sibling but not inside the FiberInstance. We can bail out.
+        break;
+      }
+      instance = instance.parent;
+    }
+    return false;
+  }
+
+  function consumeSuspenseNodesOfExistingInstance(
+    instance: DevToolsInstance,
+  ): void {
+    // We need to also consume any unchanged Suspense boundaries.
+    let suspenseNode = remainingReconcilingChildrenSuspenseNodes;
+    if (suspenseNode === null) {
+      return;
+    }
+    const parentSuspenseNode = reconcilingParentSuspenseNode;
+    if (parentSuspenseNode === null) {
+      throw new Error(
+        'The should not be any remaining suspense node children if there is no parent.',
+      );
+    }
+    let foundOne = false;
+    let previousSkippedSibling = null;
+    while (suspenseNode !== null) {
+      // Check if this SuspenseNode was a child of the bailed out FiberInstance.
+      if (
+        isChildOf(instance, suspenseNode.instance, parentSuspenseNode.instance)
+      ) {
+        foundOne = true;
+        // The suspenseNode was child of the bailed out Fiber.
+        // First, remove it from the remaining children set.
+        const nextRemainingSibling = suspenseNode.nextSibling;
+        if (previousSkippedSibling === null) {
+          remainingReconcilingChildrenSuspenseNodes = nextRemainingSibling;
+        } else {
+          previousSkippedSibling.nextSibling = nextRemainingSibling;
+        }
+        suspenseNode.nextSibling = null;
+        // Then, re-insert it into the newly reconciled set.
+        if (previouslyReconciledSiblingSuspenseNode === null) {
+          parentSuspenseNode.firstChild = suspenseNode;
+        } else {
+          previouslyReconciledSiblingSuspenseNode.nextSibling = suspenseNode;
+        }
+        previouslyReconciledSiblingSuspenseNode = suspenseNode;
+        // Continue
+        suspenseNode = nextRemainingSibling;
+      } else if (foundOne) {
+        // If we found one and then hit a miss, we assume that we're passed the sequence because
+        // they should've all been consecutive.
+        break;
+      } else {
+        previousSkippedSibling = suspenseNode;
+        suspenseNode = suspenseNode.nextSibling;
+      }
+    }
+  }
+
   function mountVirtualInstanceRecursively(
     virtualInstance: VirtualInstance,
     firstChild: Fiber,
@@ -3094,9 +3164,11 @@ export function attach(
       reconcilingParent = stashedParent;
       previouslyReconciledSibling = stashedPrevious;
       remainingReconcilingChildren = stashedRemaining;
-      reconcilingParentSuspenseNode = stashedSuspenseParent;
-      previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
-      remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
+      if (instance.suspenseNode !== null) {
+        reconcilingParentSuspenseNode = stashedSuspenseParent;
+        previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
+        remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
+      }
     }
     if (instance.kind === FIBER_INSTANCE) {
       recordUnmount(instance);
@@ -3688,10 +3760,12 @@ export function attach(
       fiberInstance.firstChild = null;
       fiberInstance.suspendedBy = null;
 
-      if (fiberInstance.suspenseNode !== null) {
-        reconcilingParentSuspenseNode = fiberInstance.suspenseNode;
+      const suspenseNode = fiberInstance.suspenseNode;
+      if (suspenseNode !== null) {
+        reconcilingParentSuspenseNode = suspenseNode;
         previouslyReconciledSiblingSuspenseNode = null;
-        remainingReconcilingChildrenSuspenseNodes = null;
+        remainingReconcilingChildrenSuspenseNodes = suspenseNode.firstChild;
+        suspenseNode.firstChild = null;
       }
     }
     try {
@@ -3849,6 +3923,8 @@ export function attach(
             fiberInstance.firstChild = remainingReconcilingChildren;
             remainingReconcilingChildren = null;
 
+            consumeSuspenseNodesOfExistingInstance(fiberInstance);
+
             if (traceUpdatesEnabled) {
               // If we're tracing updates and we've bailed out before reaching a host node,
               // we should fall back to recursively marking the nearest host descendants for highlight.
@@ -3919,9 +3995,11 @@ export function attach(
         reconcilingParent = stashedParent;
         previouslyReconciledSibling = stashedPrevious;
         remainingReconcilingChildren = stashedRemaining;
-        reconcilingParentSuspenseNode = stashedSuspenseParent;
-        previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
-        remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
+        if (fiberInstance.suspenseNode !== null) {
+          reconcilingParentSuspenseNode = stashedSuspenseParent;
+          previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
+          remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
+        }
       }
     }
   }
