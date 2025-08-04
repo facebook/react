@@ -61,12 +61,12 @@ const suspenseTreeOperationsChildren = {
   ),
   e: (
     <Suspense key="e" name="e">
-      <IgnoreMePassthrough>
+      <IgnoreMePassthrough key="e1">
         <Suspense name="e-child-one">
           <p>e1</p>
         </Suspense>
       </IgnoreMePassthrough>
-      <IgnoreMePassthrough>
+      <IgnoreMePassthrough key="e2">
         <Suspense name="e-child-two">
           <div>e2</div>
         </Suspense>
@@ -75,12 +75,12 @@ const suspenseTreeOperationsChildren = {
   ),
   eReordered: (
     <Suspense key="e" name="e">
-      <IgnoreMePassthrough>
+      <IgnoreMePassthrough key="e2">
         <Suspense name="e-child-two">
           <div>e2</div>
         </Suspense>
       </IgnoreMePassthrough>
-      <IgnoreMePassthrough>
+      <IgnoreMePassthrough key="e1">
         <Suspense name="e-child-one">
           <p>e1</p>
         </Suspense>
