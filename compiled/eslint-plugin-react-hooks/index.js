@@ -49630,46 +49630,6 @@ function outlineFunctions(fn, fbtOperands) {
     }
 }
 
-function propagatePhiTypes(fn) {
-    const propagated = new Set();
-    for (const [, block] of fn.body.blocks) {
-        for (const phi of block.phis) {
-            if (phi.place.identifier.type.kind !== 'Type' ||
-                phi.place.identifier.name !== null) {
-                continue;
-            }
-            let type = null;
-            for (const [, operand] of phi.operands) {
-                if (type === null) {
-                    type = operand.identifier.type;
-                }
-                else if (!typeEquals(type, operand.identifier.type)) {
-                    type = null;
-                    break;
-                }
-            }
-            if (type !== null) {
-                phi.place.identifier.type = type;
-                propagated.add(phi.place.identifier.id);
-            }
-        }
-        for (const instr of block.instructions) {
-            const { value } = instr;
-            switch (value.kind) {
-                case 'StoreLocal': {
-                    const lvalue = value.lvalue.place;
-                    if (propagated.has(value.value.identifier.id) &&
-                        lvalue.identifier.type.kind === 'Type' &&
-                        lvalue.identifier.name === null) {
-                        lvalue.identifier.type = value.value.identifier.type;
-                        propagated.add(lvalue.identifier.id);
-                    }
-                }
-            }
-        }
-    }
-}
-
 function lowerContextAccess(fn, loweredContextCalleeConfig) {
     const contextAccess = new Map();
     const contextKeys = new Map();
@@ -51357,12 +51317,6 @@ function runWithEnvironment(func, env) {
     log({
         kind: 'hir',
         name: 'RewriteInstructionKindsBasedOnReassignment',
-        value: hir,
-    });
-    propagatePhiTypes(hir);
-    log({
-        kind: 'hir',
-        name: 'PropagatePhiTypes',
         value: hir,
     });
     if (env.isInferredMemoEnabled) {
