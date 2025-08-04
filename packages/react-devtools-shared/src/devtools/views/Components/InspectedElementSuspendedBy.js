@@ -107,11 +107,10 @@ function SuspendedByRow({
   }
 
   const value: any = asyncInfo.awaited.value;
-  const isErrored =
-    value !== null &&
-    typeof value === 'object' &&
-    value[meta.name] === 'rejected Thenable';
-
+  const metaName =
+    value !== null && typeof value === 'object' ? value[meta.name] : null;
+  const isFulfilled = metaName === 'fulfilled Thenable';
+  const isRejected = metaName === 'rejected Thenable';
   return (
     <div className={styles.CollapsableRow}>
       <Button
@@ -136,7 +135,7 @@ function SuspendedByRow({
         <div className={styles.TimeBarContainer}>
           <div
             className={
-              !isErrored ? styles.TimeBarSpan : styles.TimeBarSpanErrored
+              !isRejected ? styles.TimeBarSpan : styles.TimeBarSpanErrored
             }
             style={{
               left: left.toFixed(2) + '%',
@@ -158,11 +157,21 @@ function SuspendedByRow({
               element={element}
               hidden={false}
               inspectedElement={inspectedElement}
-              name={'Promise'}
-              path={[index, 'awaited', 'value']}
+              name={
+                isFulfilled ? 'fulfilled' : isRejected ? 'rejected' : 'pending'
+              }
+              path={
+                isFulfilled
+                  ? [index, 'awaited', 'value', 'value']
+                  : isRejected
+                    ? [index, 'awaited', 'value', 'reason']
+                    : [index, 'awaited', 'value']
+              }
               pathRoot="suspendedBy"
               store={store}
-              value={asyncInfo.awaited.value}
+              value={
+                isFulfilled ? value.value : isRejected ? value.reason : value
+              }
             />
           </div>
           {stack !== null && stack.length > 0 && (
