@@ -59,7 +59,7 @@ export default function OwnerView({
         <span
           className={`${styles.Owner} ${isInStore ? '' : styles.NotInStore}`}
           title={displayName}>
-          {displayName}
+          {'<' + displayName + '>'}
         </span>
 
         <ElementBadges
