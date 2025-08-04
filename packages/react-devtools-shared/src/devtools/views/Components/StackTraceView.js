@@ -33,7 +33,8 @@ type CallSiteViewProps = {
 export function CallSiteView({callSite}: CallSiteViewProps): React.Node {
   const fetchFileWithCaching = useContext(FetchFileWithCachingContext);
 
-  const [, virtualURL, virtualLine, virtualColumn] = callSite;
+  const [virtualFunctionName, virtualURL, virtualLine, virtualColumn] =
+    callSite;
 
   const symbolicatedCallSite: null | ReactFunctionLocation =
     fetchFileWithCaching !== null
@@ -55,7 +56,7 @@ export function CallSiteView({callSite}: CallSiteViewProps): React.Node {
     symbolicatedCallSite !== null ? symbolicatedCallSite : callSite;
   return (
     <div className={styles.CallSite}>
-      {functionName}
+      {functionName || virtualFunctionName}
       {' @ '}
       <span
         className={linkIsEnabled ? styles.Link : null}
