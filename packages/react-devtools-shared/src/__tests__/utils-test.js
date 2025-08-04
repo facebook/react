@@ -319,7 +319,7 @@ describe('utils', () => {
             'at r (https://react.dev/_next/static/chunks/pages/_app-dd0b77ea7bd5b246.js:1:498)\n',
         ),
       ).toEqual([
-        '',
+        'l',
         'https://react.dev/_next/static/chunks/main-78a3b4c2aa4e4850.js',
         1,
         10389,
@@ -342,7 +342,7 @@ describe('utils', () => {
             '    at f (https://react.dev/_next/static/chunks/pages/%5B%5B...markdownPath%5D%5D-af2ed613aedf1d57.js:1:8519)',
         ),
       ).toEqual([
-        '',
+        'm',
         'https://react.dev/_next/static/chunks/848-122f91e9565d9ffa.js',
         5,
         9236,
@@ -372,7 +372,7 @@ describe('utils', () => {
             '    at ErrorBoundaryHandler (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/error-boundary.js:114:9)',
         ),
       ).toEqual([
-        '',
+        'HotReload',
         'webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/hot-reloader-client.js',
         307,
         11,
@@ -387,7 +387,7 @@ describe('utils', () => {
             'r@https://react.dev/_next/static/chunks/pages/_app-dd0b77ea7bd5b246.js:1:513',
         ),
       ).toEqual([
-        '',
+        'tt',
         'https://react.dev/_next/static/chunks/363-3c5f1b553b6be118.js',
         1,
         165558,
