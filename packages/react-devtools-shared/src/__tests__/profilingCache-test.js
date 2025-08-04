@@ -862,6 +862,7 @@ describe('ProfilingCache', () => {
             {
               "compiledWithForget": false,
               "displayName": "render()",
+              "env": null,
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -903,6 +904,7 @@ describe('ProfilingCache', () => {
             {
               "compiledWithForget": false,
               "displayName": "createRoot()",
+              "env": null,
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -943,6 +945,7 @@ describe('ProfilingCache', () => {
             {
               "compiledWithForget": false,
               "displayName": "createRoot()",
+              "env": null,
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
