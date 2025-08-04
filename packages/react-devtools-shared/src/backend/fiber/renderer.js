@@ -4488,10 +4488,63 @@ export function attach(
       parentInstance,
       ioInfo.owner,
     );
-    const awaitOwnerInstance = findNearestOwnerInstance(
-      parentInstance,
-      asyncInfo.owner,
-    );
+    let awaitStack =
+      asyncInfo.debugStack == null
+        ? null
+        : // While we have a ReactStackTrace on ioInfo.stack, that will point to the location on
+          // the server. We need a location that points to the virtual source on the client which
+          // we can then use to source map to the original location.
+          parseStackTrace(asyncInfo.debugStack, 1);
+    let awaitOwnerInstance: null | FiberInstance | VirtualInstance;
+    if (
+      asyncInfo.owner == null &&
+      (awaitStack === null || awaitStack.length === 0)
+    ) {
+      // We had no owner nor stack for the await. This can happen if you render it as a child
+      // or throw a Promise. Replace it with the parent as the await.
+      awaitStack = null;
+      awaitOwnerInstance =
+        parentInstance.kind === FILTERED_FIBER_INSTANCE ? null : parentInstance;
+      if (
+        parentInstance.kind === FIBER_INSTANCE ||
+        parentInstance.kind === FILTERED_FIBER_INSTANCE
+      ) {
+        const fiber = parentInstance.data;
+        switch (fiber.tag) {
+          case ClassComponent:
+          case FunctionComponent:
+          case IncompleteClassComponent:
+          case IncompleteFunctionComponent:
+          case IndeterminateComponent:
+          case MemoComponent:
+          case SimpleMemoComponent:
+            // If we awaited in the child position of a component, then the best stack would be the
+            // return callsite but we don't have that available so instead we skip. The callsite of
+            // the JSX would be misleading in this case. The same thing happens with throw-a-Promise.
+            break;
+          default:
+            // If we awaited by passing a Promise to a built-in element, then the JSX callsite is a
+            // good stack trace to use for the await.
+            if (
+              fiber._debugOwner != null &&
+              fiber._debugStack != null &&
+              typeof fiber._debugStack !== 'string'
+            ) {
+              awaitStack = parseStackTrace(fiber._debugStack, 1);
+              awaitOwnerInstance = findNearestOwnerInstance(
+                parentInstance,
+                fiber._debugOwner,
+              );
+            }
+        }
+      }
+    } else {
+      awaitOwnerInstance = findNearestOwnerInstance(
+        parentInstance,
+        asyncInfo.owner,
+      );
+    }
+
     const value: any = ioInfo.value;
     let resolvedValue = undefined;
     if (
@@ -4533,13 +4586,7 @@ export function attach(
         awaitOwnerInstance === null
           ? null
           : instanceToSerializedElement(awaitOwnerInstance),
-      stack:
-        asyncInfo.debugStack == null
-          ? null
-          : // While we have a ReactStackTrace on ioInfo.stack, that will point to the location on
-            // the server. We need a location that points to the virtual source on the client which
-            // we can then use to source map to the original location.
-            parseStackTrace(asyncInfo.debugStack, 1),
+      stack: awaitStack,
     };
   }
 
