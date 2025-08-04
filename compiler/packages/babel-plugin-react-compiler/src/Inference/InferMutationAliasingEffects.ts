@@ -24,8 +24,8 @@ import {
   IdentifierId,
   Instruction,
   InstructionKind,
-  InstructionValue,
   isArrayType,
+  isJsxType,
   isMapType,
   isPrimitiveType,
   isRefOrRefValue,
@@ -60,7 +60,6 @@ import {
   printAliasingSignature,
   printIdentifier,
   printInstruction,
-  printInstructionValue,
   printPlace,
   printSourceLocation,
 } from '../HIR/PrintHIR';
@@ -106,11 +105,11 @@ export function inferMutationAliasingEffects(
   const statesByBlock: Map<BlockId, InferenceState> = new Map();
 
   for (const ref of fn.context) {
-    // TODO: using InstructionValue as a bit of a hack, but it's pragmatic
-    const value: InstructionValue = {
-      kind: 'ObjectExpression',
-      properties: [],
-      loc: ref.loc,
+    const value: AliasingEffect = {
+      kind: 'Create',
+      into: ref,
+      value: ValueKind.Context,
+      reason: ValueReason.Other,
     };
     initialState.initialize(value, {
       kind: ValueKind.Context,
@@ -143,10 +142,11 @@ export function inferMutationAliasingEffects(
     }
     if (ref != null) {
       const place = ref.kind === 'Identifier' ? ref : ref.place;
-      const value: InstructionValue = {
-        kind: 'ObjectExpression',
-        properties: [],
-        loc: place.loc,
+      const value: AliasingEffect = {
+        kind: 'Create',
+        into: place,
+        value: ValueKind.Mutable,
+        reason: ValueReason.Other,
       };
       initialState.initialize(value, {
         kind: ValueKind.Mutable,
@@ -263,8 +263,6 @@ function findHoistedContextDeclarations(
 class Context {
   internedEffects: Map<string, AliasingEffect> = new Map();
   instructionSignatureCache: Map<Instruction, InstructionSignature> = new Map();
-  effectInstructionValueCache: Map<AliasingEffect, InstructionValue> =
-    new Map();
   applySignatureCache: Map<
     AliasingSignature,
     Map<AliasingEffect, Array<AliasingEffect> | null>
@@ -316,10 +314,11 @@ function inferParam(
   paramKind: AbstractValue,
 ): void {
   const place = param.kind === 'Identifier' ? param : param.place;
-  const value: InstructionValue = {
-    kind: 'Primitive',
-    loc: place.loc,
-    value: undefined,
+  const value: AliasingEffect = {
+    kind: 'Create',
+    into: place,
+    value: paramKind.kind,
+    reason: ValueReason.Other,
   };
   initialState.initialize(value, paramKind);
   initialState.define(place, value);
@@ -530,20 +529,11 @@ function applyEffect(
       });
       initialized.add(effect.into.identifier.id);
 
-      let value = context.effectInstructionValueCache.get(effect);
-      if (value == null) {
-        value = {
-          kind: 'ObjectExpression',
-          properties: [],
-          loc: effect.into.loc,
-        };
-        context.effectInstructionValueCache.set(effect, value);
-      }
-      state.initialize(value, {
+      state.initialize(effect, {
         kind: effect.value,
         reason: new Set([effect.reason]),
       });
-      state.define(effect.into, value);
+      state.define(effect.into, effect);
       effects.push(effect);
       break;
     }
@@ -570,20 +560,11 @@ function applyEffect(
       initialized.add(effect.into.identifier.id);
 
       const fromValue = state.kind(effect.from);
-      let value = context.effectInstructionValueCache.get(effect);
-      if (value == null) {
-        value = {
-          kind: 'ObjectExpression',
-          properties: [],
-          loc: effect.into.loc,
-        };
-        context.effectInstructionValueCache.set(effect, value);
-      }
-      state.initialize(value, {
+      state.initialize(effect, {
         kind: fromValue.kind,
         reason: new Set(fromValue.reason),
       });
-      state.define(effect.into, value);
+      state.define(effect.into, effect);
       switch (fromValue.kind) {
         case ValueKind.Primitive:
         case ValueKind.Global: {
@@ -671,11 +652,11 @@ function applyEffect(
           operand.effect = Effect.Read;
         }
       }
-      state.initialize(effect.function, {
+      state.initialize(effect, {
         kind: isMutable ? ValueKind.Mutable : ValueKind.Frozen,
         reason: new Set([]),
       });
-      state.define(effect.into, effect.function);
+      state.define(effect.into, effect);
       for (const capture of effect.captures) {
         applyEffect(
           context,
@@ -781,38 +762,20 @@ function applyEffect(
             initialized,
             effects,
           );
-          let value = context.effectInstructionValueCache.get(effect);
-          if (value == null) {
-            value = {
-              kind: 'Primitive',
-              value: undefined,
-              loc: effect.from.loc,
-            };
-            context.effectInstructionValueCache.set(effect, value);
-          }
-          state.initialize(value, {
+          state.initialize(effect, {
             kind: fromKind,
             reason: new Set(fromValue.reason),
           });
-          state.define(effect.into, value);
+          state.define(effect.into, effect);
           break;
         }
         case ValueKind.Global:
         case ValueKind.Primitive: {
-          let value = context.effectInstructionValueCache.get(effect);
-          if (value == null) {
-            value = {
-              kind: 'Primitive',
-              value: undefined,
-              loc: effect.from.loc,
-            };
-            context.effectInstructionValueCache.set(effect, value);
-          }
-          state.initialize(value, {
+          state.initialize(effect, {
             kind: fromKind,
             reason: new Set(fromValue.reason),
           });
-          state.define(effect.into, value);
+          state.define(effect.into, effect);
           break;
         }
         default: {
@@ -827,14 +790,15 @@ function applyEffect(
       const functionValues = state.values(effect.function);
       if (
         functionValues.length === 1 &&
-        functionValues[0].kind === 'FunctionExpression' &&
-        functionValues[0].loweredFunc.func.aliasingEffects != null
+        functionValues[0].kind === 'CreateFunction' &&
+        functionValues[0].function.kind === 'FunctionExpression' &&
+        functionValues[0].function.loweredFunc.func.aliasingEffects != null
       ) {
         /*
          * We're calling a locally declared function, we already know it's effects!
          * We just have to substitute in the args for the params
          */
-        const functionExpr = functionValues[0];
+        const functionExpr = functionValues[0].function;
         let signature = context.functionSignatureCache.get(functionExpr);
         if (signature == null) {
           signature = buildSignatureFromFunctionExpression(
@@ -1113,19 +1077,19 @@ class InferenceState {
   #isFunctionExpression: boolean;
 
   // The kind of each value, based on its allocation site
-  #values: Map<InstructionValue, AbstractValue>;
+  #values: Map<AliasingEffect, AbstractValue>;
   /*
    * The set of values pointed to by each identifier. This is a set
    * to accomodate phi points (where a variable may have different
    * values from different control flow paths).
    */
-  #variables: Map<IdentifierId, Set<InstructionValue>>;
+  #variables: Map<IdentifierId, Set<AliasingEffect>>;
 
   constructor(
     env: Environment,
     isFunctionExpression: boolean,
-    values: Map<InstructionValue, AbstractValue>,
-    variables: Map<IdentifierId, Set<InstructionValue>>,
+    values: Map<AliasingEffect, AbstractValue>,
+    variables: Map<IdentifierId, Set<AliasingEffect>>,
   ) {
     this.env = env;
     this.#isFunctionExpression = isFunctionExpression;
@@ -1145,18 +1109,11 @@ class InferenceState {
   }
 
   // (Re)initializes a @param value with its default @param kind.
-  initialize(value: InstructionValue, kind: AbstractValue): void {
-    CompilerError.invariant(value.kind !== 'LoadLocal', {
-      reason:
-        '[InferMutationAliasingEffects] Expected all top-level identifiers to be defined as variables, not values',
-      description: null,
-      loc: value.loc,
-      suggestions: null,
-    });
+  initialize(value: AliasingEffect, kind: AbstractValue): void {
     this.#values.set(value, kind);
   }
 
-  values(place: Place): Array<InstructionValue> {
+  values(place: Place): Array<AliasingEffect> {
     const values = this.#variables.get(place.identifier.id);
     CompilerError.invariant(values != null, {
       reason: `[InferMutationAliasingEffects] Expected value kind to be initialized`,
@@ -1219,13 +1176,13 @@ class InferenceState {
   }
 
   // Defines (initializing or updating) a variable with a specific kind of value.
-  define(place: Place, value: InstructionValue): void {
+  define(place: Place, value: AliasingEffect): void {
     CompilerError.invariant(this.#values.has(value), {
       reason: `[InferMutationAliasingEffects] Expected value to be initialized at '${printSourceLocation(
-        value.loc,
+        place.loc,
       )}'`,
-      description: printInstructionValue(value),
-      loc: value.loc,
+      description: printAliasingEffect(value),
+      loc: place.loc,
       suggestions: null,
     });
     this.#variables.set(place.identifier.id, new Set([value]));
@@ -1265,17 +1222,17 @@ class InferenceState {
     }
   }
 
-  freezeValue(value: InstructionValue, reason: ValueReason): void {
+  freezeValue(value: AliasingEffect, reason: ValueReason): void {
     this.#values.set(value, {
       kind: ValueKind.Frozen,
       reason: new Set([reason]),
     });
     if (
-      value.kind === 'FunctionExpression' &&
+      value.kind === 'CreateFunction' &&
       (this.env.config.enablePreserveExistingMemoizationGuarantees ||
         this.env.config.enableTransitivelyFreezeFunctionExpressions)
     ) {
-      for (const place of value.loweredFunc.func.context) {
+      for (const place of value.function.loweredFunc.func.context) {
         this.freeze(place, reason);
       }
     }
@@ -1350,8 +1307,8 @@ class InferenceState {
    * termination.
    */
   merge(other: InferenceState): InferenceState | null {
-    let nextValues: Map<InstructionValue, AbstractValue> | null = null;
-    let nextVariables: Map<IdentifierId, Set<InstructionValue>> | null = null;
+    let nextValues: Map<AliasingEffect, AbstractValue> | null = null;
+    let nextVariables: Map<IdentifierId, Set<AliasingEffect>> | null = null;
 
     for (const [id, thisValue] of this.#values) {
       const otherValue = other.#values.get(id);
@@ -1375,7 +1332,7 @@ class InferenceState {
     for (const [id, thisValues] of this.#variables) {
       const otherValues = other.#variables.get(id);
       if (otherValues !== undefined) {
-        let mergedValues: Set<InstructionValue> | null = null;
+        let mergedValues: Set<AliasingEffect> | null = null;
         for (const otherValue of otherValues) {
           if (!thisValues.has(otherValue)) {
             mergedValues = mergedValues ?? new Set(thisValues);
@@ -1428,8 +1385,8 @@ class InferenceState {
    */
   debug(): any {
     const result: any = {values: {}, variables: {}};
-    const objects: Map<InstructionValue, number> = new Map();
-    function identify(value: InstructionValue): number {
+    const objects: Map<AliasingEffect, number> = new Map();
+    function identify(value: AliasingEffect): number {
       let id = objects.get(value);
       if (id == null) {
         id = objects.size;
@@ -1441,7 +1398,7 @@ class InferenceState {
       const id = identify(value);
       result.values[id] = {
         abstract: this.debugAbstractValue(kind),
-        value: printInstructionValue(value),
+        value: printAliasingEffect(value),
       };
     }
     for (const [variable, values] of this.#variables) {
@@ -1458,7 +1415,7 @@ class InferenceState {
   }
 
   inferPhi(phi: Phi): void {
-    const values: Set<InstructionValue> = new Set();
+    const values: Set<AliasingEffect> = new Set();
     for (const [_, operand] of phi.operands) {
       const operandValues = this.#variables.get(operand.identifier.id);
       // This is a backedge that will be handled later by State.merge
@@ -1838,6 +1795,19 @@ function computeSignatureForInstruction(
             effects.push({
               kind: 'Render',
               place: child,
+            });
+          }
+        }
+        for (const prop of value.props) {
+          if (
+            prop.kind === 'JsxAttribute' &&
+            prop.place.identifier.type.kind === 'Function' &&
+            isJsxType(prop.place.identifier.type.return)
+          ) {
+            // Any props which return jsx are assumed to be called during render
+            effects.push({
+              kind: 'Render',
+              place: prop.place,
             });
           }
         }
@@ -2317,8 +2287,9 @@ function areArgumentsImmutableAndNonMutating(
     const values = state.values(place);
     for (const value of values) {
       if (
-        value.kind === 'FunctionExpression' &&
-        value.loweredFunc.func.params.some(param => {
+        value.kind === 'CreateFunction' &&
+        value.function.kind === 'FunctionExpression' &&
+        value.function.loweredFunc.func.params.some(param => {
           const place = param.kind === 'Identifier' ? param : param.place;
           const range = place.identifier.mutableRange;
           return range.end > range.start + 1;
@@ -2511,10 +2482,47 @@ function computeEffectsForSignature(
         break;
       }
       case 'CreateFunction': {
-        CompilerError.throwTodo({
-          reason: `Support CreateFrom effects in signatures`,
-          loc: receiver.loc,
+        const applyInto = substitutions.get(effect.into.identifier.id);
+        if (applyInto == null || applyInto.length !== 1) {
+          return null;
+        }
+        const captures: Array<Place> = [];
+        for (let i = 0; i < effect.captures.length; i++) {
+          const substitution = substitutions.get(
+            effect.captures[i].identifier.id,
+          );
+          if (substitution == null || substitution.length !== 1) {
+            return null;
+          }
+          captures.push(substitution[0]);
+        }
+        const context: Array<Place> = [];
+        const originalContext = effect.function.loweredFunc.func.context;
+        for (let i = 0; i < originalContext.length; i++) {
+          const substitution = substitutions.get(
+            originalContext[i].identifier.id,
+          );
+          if (substitution == null || substitution.length !== 1) {
+            return null;
+          }
+          context.push(substitution[0]);
+        }
+        effects.push({
+          kind: 'CreateFunction',
+          into: applyInto[0],
+          function: {
+            ...effect.function,
+            loweredFunc: {
+              ...effect.function.loweredFunc,
+              func: {
+                ...effect.function.loweredFunc.func,
+                context,
+              },
+            },
+          },
+          captures,
         });
+        break;
       }
       default: {
         assertExhaustive(
