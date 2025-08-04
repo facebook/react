@@ -490,7 +490,7 @@ export function logComponentAwait(
       if (typeof value === 'object' && value !== null) {
         addObjectToProperties(value, properties, 0, '');
       } else if (value !== undefined) {
-        addValueToProperties('Resolved', value, properties, 0, '');
+        addValueToProperties('awaited value', value, properties, 0, '');
       }
       const tooltipText = getIOLongName(
         asyncInfo.awaited,
@@ -547,7 +547,7 @@ export function logIOInfoErrored(
             String(error.message)
           : // eslint-disable-next-line react-internal/safe-string-coercion
             String(error);
-      const properties = [['Rejected', message]];
+      const properties = [['rejected with', message]];
       const tooltipText =
         getIOLongName(ioInfo, description, ioInfo.env, rootEnv) + ' Rejected';
       debugTask.run(

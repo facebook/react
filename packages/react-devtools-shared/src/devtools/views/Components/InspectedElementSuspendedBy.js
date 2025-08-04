@@ -172,7 +172,11 @@ function SuspendedByRow({
               hidden={false}
               inspectedElement={inspectedElement}
               name={
-                isFulfilled ? 'fulfilled' : isRejected ? 'rejected' : 'pending'
+                isFulfilled
+                  ? 'awaited value'
+                  : isRejected
+                    ? 'rejected with'
+                    : 'pending value'
               }
               path={
                 isFulfilled
