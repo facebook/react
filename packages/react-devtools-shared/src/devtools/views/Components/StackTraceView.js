@@ -8,12 +8,21 @@
  */
 
 import * as React from 'react';
+import {use, useContext} from 'react';
 
 import useOpenResource from '../useOpenResource';
 
 import styles from './StackTraceView.css';
 
-import type {ReactStackTrace, ReactCallSite} from 'shared/ReactTypes';
+import type {
+  ReactStackTrace,
+  ReactCallSite,
+  ReactFunctionLocation,
+} from 'shared/ReactTypes';
+
+import FetchFileWithCachingContext from './FetchFileWithCachingContext';
+
+import {symbolicateSourceWithCache} from 'react-devtools-shared/src/symbolicateSource';
 
 import formatLocationForDisplay from './formatLocationForDisplay';
 
@@ -22,7 +31,22 @@ type CallSiteViewProps = {
 };
 
 export function CallSiteView({callSite}: CallSiteViewProps): React.Node {
-  const symbolicatedCallSite: null | ReactCallSite = null; // TODO
+  const fetchFileWithCaching = useContext(FetchFileWithCachingContext);
+
+  const [, virtualURL, virtualLine, virtualColumn] = callSite;
+
+  const symbolicatedCallSite: null | ReactFunctionLocation =
+    fetchFileWithCaching !== null
+      ? use(
+          symbolicateSourceWithCache(
+            fetchFileWithCaching,
+            virtualURL,
+            virtualLine,
+            virtualColumn,
+          ),
+        )
+      : null;
+
   const [linkIsEnabled, viewSource] = useOpenResource(
     callSite,
     symbolicatedCallSite,
