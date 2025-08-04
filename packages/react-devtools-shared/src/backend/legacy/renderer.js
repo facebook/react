@@ -858,6 +858,8 @@ export function attach(
       // List of owners
       owners,
 
+      env: null,
+
       rootType: null,
       rendererPackageName: null,
       rendererVersion: null,

@@ -302,6 +302,10 @@ export type InspectedElement = {
 
   // List of owners
   owners: Array<SerializedElement> | null,
+
+  // Environment name that this component executed in or null for the client
+  env: string | null,
+
   source: ReactFunctionLocation | null,
 
   type: ElementType,

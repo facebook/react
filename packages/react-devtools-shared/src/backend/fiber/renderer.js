@@ -5265,6 +5265,8 @@ export function attach(
       // List of owners
       owners,
 
+      env: null,
+
       rootType,
       rendererPackageName: renderer.rendererPackageName,
       rendererVersion: renderer.version,
@@ -5367,6 +5369,8 @@ export function attach(
 
       // List of owners
       owners,
+
+      env: componentInfo.env == null ? null : componentInfo.env,
 
       rootType,
       rendererPackageName: renderer.rendererPackageName,
