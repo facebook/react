@@ -2143,7 +2143,22 @@ export function attach(
     }
     if (typeof instance.getClientRects === 'function') {
       // DOM
-      return Array.from(instance.getClientRects());
+      const result = [];
+      const doc = instance.ownerDocument;
+      const win = doc && doc.defaultView;
+      const scrollX = win ? win.scrollX : 0;
+      const scrollY = win ? win.scrollY : 0;
+      const rects = instance.getClientRects();
+      for (let i = 0; i < rects.length; i++) {
+        const rect = rects[i];
+        result.push({
+          x: rect.x + scrollX,
+          y: rect.y + scrollY,
+          width: rect.width,
+          height: rect.height,
+        });
+      }
+      return result;
     }
     if (instance.canonical) {
       // Native
