@@ -3917,10 +3917,7 @@ export function attach(
           }
         } else {
           // Children are unchanged.
-          if (
-            fiberInstance !== null &&
-            fiberInstance.kind !== FILTERED_FIBER_INSTANCE
-          ) {
+          if (fiberInstance !== null) {
             // All the remaining children will be children of this same fiber so we can just reuse them.
             // I.e. we just restore them by undoing what we did above.
             fiberInstance.firstChild = remainingReconcilingChildren;
