@@ -82,11 +82,13 @@ export async function symbolicateSource(
           const {
             sourceURL: possiblyURL,
             line,
-            column,
+            column: columnZeroBased,
           } = consumer.originalPositionFor({
             lineNumber, // 1-based
             columnNumber, // 1-based
           });
+
+          const column = columnZeroBased + 1;
 
           if (possiblyURL === null) {
             return null;
