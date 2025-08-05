@@ -2591,7 +2591,6 @@ export function attach(
     // TODO: Notify the front end of the change.
   }
 
-  // TODO:
   function recordSuspenseUnmount(suspenseInstance: SuspenseNode): void {
     if (__DEBUG__) {
       console.log(
@@ -2601,9 +2600,12 @@ export function attach(
       );
     }
 
-    // TODO: We're not unmounting filtered instances anyway. Think about if we
-    // can just use recordUnmount() for this as well.
-    const id = ((suspenseInstance.instance: any): FiberInstance).id;
+    const devtoolsInstance = suspenseInstance.instance;
+    if (devtoolsInstance.kind !== FIBER_INSTANCE) {
+      throw new Error("Can't unmount a filtered SuspenseNode. This is a bug.");
+    }
+    const fiberInstance = devtoolsInstance;
+    const id = fiberInstance.id;
 
     // To maintain child-first ordering,
     // we'll push it into one of these queues,
