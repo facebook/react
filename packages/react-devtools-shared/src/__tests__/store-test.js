@@ -17,8 +17,10 @@ describe('Store', () => {
   let act;
   let actAsync;
   let bridge;
+  let createDisplayNameFilter;
   let getRendererID;
   let legacyRender;
+  let previousComponentFilters;
   let store;
   let withErrorsOrWarningsIgnored;
 
@@ -29,6 +31,8 @@ describe('Store', () => {
     bridge = global.bridge;
     store = global.store;
 
+    previousComponentFilters = store.componentFilters;
+
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
@@ -38,7 +42,12 @@ describe('Store', () => {
     actAsync = utils.actAsync;
     getRendererID = utils.getRendererID;
     legacyRender = utils.legacyRender;
+    createDisplayNameFilter = utils.createDisplayNameFilter;
     withErrorsOrWarningsIgnored = utils.withErrorsOrWarningsIgnored;
+  });
+
+  afterEach(() => {
+    store.componentFilters = previousComponentFilters;
   });
 
   const {render, unmount, createContainer} = getVersionedRenderImplementation();
@@ -126,6 +135,72 @@ describe('Store', () => {
     expect(store).toMatchInlineSnapshot(`
       [root]
           <🟩💜🔵>
+    `);
+  });
+
+  it('should handle reorder of filtered elements', async () => {
+    function IgnoreMePassthrough({children}) {
+      return children;
+    }
+    function PassThrough({children}) {
+      return children;
+    }
+
+    await actAsync(
+      async () =>
+        (store.componentFilters = [createDisplayNameFilter('^IgnoreMe', true)]),
+    );
+
+    await act(() => {
+      render(
+        <PassThrough key="e" name="e">
+          <IgnoreMePassthrough key="e1">
+            <PassThrough name="e-child-one">
+              <p>e1</p>
+            </PassThrough>
+          </IgnoreMePassthrough>
+          <IgnoreMePassthrough key="e2">
+            <PassThrough name="e-child-two">
+              <div>e2</div>
+            </PassThrough>
+          </IgnoreMePassthrough>
+        </PassThrough>,
+      );
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <PassThrough key="e">
+          ▾ <PassThrough>
+              <p>
+          ▾ <PassThrough>
+              <div>
+    `);
+
+    await act(() => {
+      render(
+        <PassThrough key="e" name="e">
+          <IgnoreMePassthrough key="e2">
+            <PassThrough name="e-child-two">
+              <div>e2</div>
+            </PassThrough>
+          </IgnoreMePassthrough>
+          <IgnoreMePassthrough key="e1">
+            <PassThrough name="e-child-one">
+              <p>e1</p>
+            </PassThrough>
+          </IgnoreMePassthrough>
+        </PassThrough>,
+      );
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <PassThrough key="e">
+          ▾ <PassThrough>
+              <div>
+          ▾ <PassThrough>
+              <p>
     `);
   });
 
