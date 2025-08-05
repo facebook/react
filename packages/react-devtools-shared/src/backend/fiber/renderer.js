@@ -3612,6 +3612,11 @@ export function attach(
             shouldResetChildren = true;
           }
         } else if (prevChild !== null && shouldFilterFiber(nextChild)) {
+          // The filtered instance could've reordered.
+          if (prevChild !== prevChildAtSameIndex) {
+            shouldResetChildren = true;
+          }
+
           // If this Fiber should be filtered, we need to still update its children.
           // This relies on an alternate since we don't have an Instance with the previous
           // child on it. Ideally, the reconciliation wouldn't need previous Fibers that
