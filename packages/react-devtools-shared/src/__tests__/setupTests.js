@@ -8,6 +8,11 @@
  */
 
 import {CustomConsole} from '@jest/console';
+const {
+  assertConsoleLogsCleared,
+  resetAllUnexpectedConsoleCalls,
+  patchConsoleMethods,
+} = require('internal-test-utils/consoleMock');
 
 import type {
   BackendBridge,
@@ -116,82 +121,50 @@ function shouldIgnoreConsoleErrorOrWarn(args) {
     return false;
   }
 
-  return global._ignoredErrorOrWarningMessages.some(errorOrWarningMessage => {
-    return firstArg.indexOf(errorOrWarningMessage) !== -1;
-  });
+  if (firstArg.indexOf('react-test-renderer is deprecated.') !== -1) {
+    return true;
+  }
+
+  return false;
 }
 
-function patchConsoleForTestingBeforeHookInstallation() {
-  const originalConsoleError = console.error;
-  const originalConsoleWarn = console.warn;
-  const originalConsoleLog = console.log;
-
-  const consoleErrorMock = jest.fn();
-  const consoleWarnMock = jest.fn();
-  const consoleLogMock = jest.fn();
-
-  global.consoleErrorMock = consoleErrorMock;
-  global.consoleWarnMock = consoleWarnMock;
-  global.consoleLogMock = consoleLogMock;
-
-  console.error = (...args) => {
-    let firstArg = args[0];
-    if (typeof firstArg === 'string' && firstArg.startsWith('Warning: ')) {
-      // Older React versions might use the Warning: prefix. I'm not sure
-      // if they use this code path.
-      firstArg = firstArg.slice(9);
-    }
-    if (firstArg === 'React instrumentation encountered an error: %s') {
-      // Rethrow errors from React.
-      throw args[1];
-    } else if (
-      typeof firstArg === 'string' &&
-      (firstArg.startsWith("It looks like you're using the wrong act()") ||
-        firstArg.startsWith(
-          'The current testing environment is not configured to support act',
-        ) ||
-        firstArg.startsWith('You seem to have overlapping act() calls') ||
-        firstArg.startsWith(
-          'ReactDOM.render is no longer supported in React 18.',
-        ))
-    ) {
-      // DevTools intentionally wraps updates with acts from both DOM and test-renderer,
-      // since test updates are expected to impact both renderers.
-      return;
-    } else if (shouldIgnoreConsoleErrorOrWarn(args)) {
-      // Allows testing how DevTools behaves when it encounters console.error without cluttering the test output.
-      // Errors can be ignored by running in a special context provided by utils.js#withErrorsOrWarningsIgnored
-      return;
-    }
-
-    consoleErrorMock(...args);
-    originalConsoleError.apply(console, args);
-  };
-  console.warn = (...args) => {
-    if (shouldIgnoreConsoleErrorOrWarn(args)) {
-      // Allows testing how DevTools behaves when it encounters console.warn without cluttering the test output.
-      // Warnings can be ignored by running in a special context provided by utils.js#withErrorsOrWarningsIgnored
-      return;
-    }
-
-    consoleWarnMock(...args);
-    originalConsoleWarn.apply(console, args);
-  };
-  console.log = (...args) => {
-    consoleLogMock(...args);
-    originalConsoleLog.apply(console, args);
-  };
+function shouldIgnoreConsoleError(...args) {
+  let firstArg = args[0];
+  if (typeof firstArg === 'string' && firstArg.startsWith('Warning: ')) {
+    // Older React versions might use the Warning: prefix. I'm not sure
+    // if they use this code path.
+    firstArg = firstArg.slice(9);
+  }
+  if (firstArg === 'React instrumentation encountered an error: %s') {
+    // Rethrow errors from React.
+    throw args[1];
+  } else if (
+    typeof firstArg === 'string' &&
+    (firstArg.startsWith("It looks like you're using the wrong act()") ||
+      firstArg.startsWith(
+        'The current testing environment is not configured to support act',
+      ) ||
+      firstArg.startsWith('You seem to have overlapping act() calls') ||
+      firstArg.startsWith(
+        'ReactDOM.render is no longer supported in React 18.',
+      ))
+  ) {
+    // DevTools intentionally wraps updates with acts from both DOM and test-renderer,
+    // since test updates are expected to impact both renderers.
+    return true;
+  }
+  return shouldIgnoreConsoleErrorOrWarn(args);
 }
-
-function unpatchConsoleAfterTesting() {
-  delete global.consoleErrorMock;
-  delete global.consoleWarnMock;
-  delete global.consoleLogMock;
-}
+patchConsoleMethods({
+  // DevTools itself does that
+  appendOwnerStack: false,
+  includeLog: true,
+  shouldIgnoreConsoleError,
+  shouldIgnoreConsoleWarn: shouldIgnoreConsoleErrorOrWarn,
+});
 
 beforeEach(() => {
-  patchConsoleForTestingBeforeHookInstallation();
-
+  resetAllUnexpectedConsoleCalls();
   global.mockClipboardCopy = jest.fn();
 
   // Test environment doesn't support document methods like execCommand()
@@ -220,11 +193,6 @@ beforeEach(() => {
   global.devtoolsJestTestScheduler = callback => {
     setTimeout(callback, 0);
   };
-
-  // Use utils.js#withErrorsOrWarningsIgnored instead of directly mutating this array.
-  global._ignoredErrorOrWarningMessages = [
-    'react-test-renderer is deprecated.',
-  ];
 
   // Initialize filters to a known good state.
   setSavedComponentFilters(getDefaultComponentFilters());
@@ -281,7 +249,7 @@ beforeEach(() => {
 
 afterEach(() => {
   delete global.__REACT_DEVTOOLS_GLOBAL_HOOK__;
-  unpatchConsoleAfterTesting();
+  assertConsoleLogsCleared();
 
   // It's important to reset modules between test runs;
   // Without this, ReactDOM won't re-inject itself into the new hook.

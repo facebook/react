@@ -13,11 +13,12 @@ describe('Fast Refresh', () => {
   let React;
   let ReactFreshRuntime;
   let act;
+  let assertConsoleError;
+  let assertConsoleWarn;
   let babel;
   let exportsObj;
   let freshPlugin;
   let store;
-  let withErrorsOrWarningsIgnored;
 
   beforeEach(() => {
     global.IS_REACT_ACT_ENVIRONMENT = true;
@@ -36,7 +37,8 @@ describe('Fast Refresh', () => {
 
     const utils = require('./utils');
     act = utils.act;
-    withErrorsOrWarningsIgnored = utils.withErrorsOrWarningsIgnored;
+    assertConsoleError = utils.assertConsoleError;
+    assertConsoleWarn = utils.assertConsoleWarn;
   });
 
   const {render: renderImplementation, getContainer} =
@@ -189,8 +191,7 @@ describe('Fast Refresh', () => {
   // @reactVersion < 18.0
   // @reactVersion >= 16.9
   it('should not break when there are warnings in between patching (before post commit hook)', () => {
-    withErrorsOrWarningsIgnored(['Expected:'], () => {
-      render(`
+    render(`
       const {useState} = React;
 
       export default function Component() {
@@ -199,15 +200,14 @@ describe('Fast Refresh', () => {
         return null;
       }
     `);
-    });
+    assertConsoleError(['Expected: warning during render']);
     expect(store).toMatchInlineSnapshot(`
       ✕ 0, ⚠ 1
       [root]
           <Component> ⚠
     `);
 
-    withErrorsOrWarningsIgnored(['Expected:'], () => {
-      patch(`
+    patch(`
       const {useEffect, useState} = React;
 
       export default function Component() {
@@ -216,15 +216,14 @@ describe('Fast Refresh', () => {
         return null;
       }
     `);
-    });
+    assertConsoleError(['Expected: warning during render']);
     expect(store).toMatchInlineSnapshot(`
       ✕ 0, ⚠ 2
       [root]
           <Component> ⚠
     `);
 
-    withErrorsOrWarningsIgnored(['Expected:'], () => {
-      patch(`
+    patch(`
       const {useEffect, useState} = React;
 
       export default function Component() {
@@ -236,15 +235,14 @@ describe('Fast Refresh', () => {
         return null;
       }
     `);
-    });
+    assertConsoleError(['Expected: warning during render']);
     expect(store).toMatchInlineSnapshot(`
       ✕ 0, ⚠ 1
       [root]
           <Component> ⚠
     `);
 
-    withErrorsOrWarningsIgnored(['Expected:'], () => {
-      patch(`
+    patch(`
       const {useEffect, useState} = React;
 
       export default function Component() {
@@ -253,7 +251,7 @@ describe('Fast Refresh', () => {
         return null;
       }
     `);
-    });
+    assertConsoleError(['Expected: warning during render']);
     expect(store).toMatchInlineSnapshot(`
       ✕ 0, ⚠ 1
       [root]
@@ -263,8 +261,7 @@ describe('Fast Refresh', () => {
 
   // @reactVersion >= 18.0
   it('should not break when there are warnings in between patching (with post commit hook)', () => {
-    withErrorsOrWarningsIgnored(['Expected:'], () => {
-      render(`
+    render(`
       const {useState} = React;
 
       export default function Component() {
@@ -273,15 +270,14 @@ describe('Fast Refresh', () => {
         return null;
       }
     `);
-    });
+    assertConsoleWarn(['Expected: warning during render']);
     expect(store).toMatchInlineSnapshot(`
       ✕ 0, ⚠ 1
       [root]
           <Component> ⚠
     `);
 
-    withErrorsOrWarningsIgnored(['Expected:'], () => {
-      patch(`
+    patch(`
       const {useEffect, useState} = React;
 
       export default function Component() {
@@ -290,15 +286,14 @@ describe('Fast Refresh', () => {
         return null;
       }
     `);
-    });
+    assertConsoleWarn(['Expected: warning during render']);
     expect(store).toMatchInlineSnapshot(`
       ✕ 0, ⚠ 2
       [root]
           <Component> ⚠
     `);
 
-    withErrorsOrWarningsIgnored(['Expected:'], () => {
-      patch(`
+    patch(`
       const {useEffect, useState} = React;
 
       export default function Component() {
@@ -310,15 +305,15 @@ describe('Fast Refresh', () => {
         return null;
       }
     `);
-    });
+    assertConsoleWarn(['Expected: warning during render']);
+    assertConsoleError(['Expected: error during effect']);
     expect(store).toMatchInlineSnapshot(`
       ✕ 1, ⚠ 1
       [root]
           <Component> ✕⚠
     `);
 
-    withErrorsOrWarningsIgnored(['Expected:'], () => {
-      patch(`
+    patch(`
       const {useEffect, useState} = React;
 
       export default function Component() {
@@ -327,7 +322,7 @@ describe('Fast Refresh', () => {
         return null;
       }
     `);
-    });
+    assertConsoleWarn(['Expected: warning during render']);
     expect(store).toMatchInlineSnapshot(`
       ✕ 0, ⚠ 1
       [root]

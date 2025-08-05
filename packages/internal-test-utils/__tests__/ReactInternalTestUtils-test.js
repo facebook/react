@@ -389,7 +389,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         + B
         + C
 
-        You must call one of the assertConsoleDev helpers between each act call."
+        You must call one of the console assertion helpers between each act call."
       `);
     });
 
@@ -608,7 +608,8 @@ describe('ReactInternalTestUtils console assertions', () => {
         "assertConsoleLogDev(expected)
 
         Received 2 arguments for a message with 1 placeholders:
-          "Hi %s""
+          message: "Hi %s"
+          placeholders: ["Sara", "extra"]"
       `);
     });
 
@@ -623,10 +624,12 @@ describe('ReactInternalTestUtils console assertions', () => {
         "assertConsoleLogDev(expected)
 
         Received 2 arguments for a message with 1 placeholders:
-          "Hi %s"
+          message: "Hi %s"
+          placeholders: ["Sara", "extra"]
 
         Received 2 arguments for a message with 1 placeholders:
-          "Bye %s""
+          message: "Bye %s"
+          placeholders: ["Sara", "extra"]"
       `);
     });
 
@@ -640,7 +643,8 @@ describe('ReactInternalTestUtils console assertions', () => {
         "assertConsoleLogDev(expected)
 
         Received 0 arguments for a message with 1 placeholders:
-          "Hi %s""
+          message: "Hi %s"
+          placeholders: []"
       `);
     });
 
@@ -655,10 +659,12 @@ describe('ReactInternalTestUtils console assertions', () => {
         "assertConsoleLogDev(expected)
 
         Received 0 arguments for a message with 1 placeholders:
-          "Hi %s"
+          message: "Hi %s"
+          placeholders: []
 
         Received 0 arguments for a message with 1 placeholders:
-          "Bye %s""
+          message: "Bye %s"
+          placeholders: []"
       `);
     });
 
@@ -706,7 +712,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         console.log was called without assertConsoleLogDev:
         + Not asserted
 
-        You must call one of the assertConsoleDev helpers between each act call."
+        You must call one of the console assertion helpers between each act call."
       `);
 
       await waitForAll(['foo', 'bar', 'baz']);
@@ -748,7 +754,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         console.log was called without assertConsoleLogDev:
         + Not asserted
 
-        You must call one of the assertConsoleDev helpers between each act call."
+        You must call one of the console assertion helpers between each act call."
       `);
 
       await waitForAll(['A', 'B', 'A', 'B']);
@@ -783,7 +789,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         console.log was called without assertConsoleLogDev:
         + Not asserted
 
-        You must call one of the assertConsoleDev helpers between each act call."
+        You must call one of the console assertion helpers between each act call."
       `);
 
       await waitForAll(['Urgent: B, Deferred: A', 'Urgent: B, Deferred: B']);
@@ -817,7 +823,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         console.log was called without assertConsoleLogDev:
         + Not asserted
 
-        You must call one of the assertConsoleDev helpers between each act call."
+        You must call one of the console assertion helpers between each act call."
       `);
 
       await waitForAll(['foo', 'bar', 'baz']);
@@ -855,7 +861,7 @@ describe('ReactInternalTestUtils console assertions', () => {
           + Not asserted
           + Not asserted
 
-          You must call one of the assertConsoleDev helpers between each act call."
+          You must call one of the console assertion helpers between each act call."
         `);
       } else {
         expect(message).toMatchInlineSnapshot(`
@@ -866,7 +872,7 @@ describe('ReactInternalTestUtils console assertions', () => {
           + Not asserted
           + Not asserted
 
-          You must call one of the assertConsoleDev helpers between each act call."
+          You must call one of the console assertion helpers between each act call."
         `);
       }
 
@@ -926,21 +932,18 @@ describe('ReactInternalTestUtils console assertions', () => {
           + B
           + C
 
-          You must call one of the assertConsoleDev helpers between each act call."
+          You must call one of the console assertion helpers between each act call."
         `);
       } else {
         expect(message).toMatchInlineSnapshot(`
           "asserConsoleLogsCleared(expected)
 
           console.warn was called without assertConsoleWarnDev:
-          + A%s,
-          +     in App (at **)
-          + B%s,
-          +     in App (at **)
-          + C%s,
-          +     in App (at **)
+          + A
+          + B
+          + C
 
-          You must call one of the assertConsoleDev helpers between each act call."
+          You must call one of the console assertion helpers between each act call."
         `);
       }
     });
@@ -992,7 +995,7 @@ describe('ReactInternalTestUtils console assertions', () => {
           + B
           + C
 
-          You must call one of the assertConsoleDev helpers between each act call."
+          You must call one of the console assertion helpers between each act call."
         `);
       } else {
         expect(message).toMatchInlineSnapshot(`
@@ -1004,22 +1007,16 @@ describe('ReactInternalTestUtils console assertions', () => {
           + C
 
           console.warn was called without assertConsoleWarnDev:
-          + A%s,
-          +     in App (at **)
-          + B%s,
-          +     in App (at **)
-          + C%s,
-          +     in App (at **)
+          + A
+          + B
+          + C
 
           console.error was called without assertConsoleErrorDev:
-          + A%s,
-          +     in App (at **)
-          + B%s,
-          +     in App (at **)
-          + C%s,
-          +     in App (at **)
+          + A
+          + B
+          + C
 
-          You must call one of the assertConsoleDev helpers between each act call."
+          You must call one of the console assertion helpers between each act call."
         `);
       }
     });
@@ -1548,7 +1545,8 @@ describe('ReactInternalTestUtils console assertions', () => {
         "assertConsoleWarnDev(expected)
 
         Received 2 arguments for a message with 1 placeholders:
-          "Hi %s""
+          message: "Hi %s"
+          placeholders: ["Sara", "extra"]"
       `);
     });
 
@@ -1563,10 +1561,12 @@ describe('ReactInternalTestUtils console assertions', () => {
         "assertConsoleWarnDev(expected)
 
         Received 2 arguments for a message with 1 placeholders:
-          "Hi %s"
+          message: "Hi %s"
+          placeholders: ["Sara", "extra"]
 
         Received 2 arguments for a message with 1 placeholders:
-          "Bye %s""
+          message: "Bye %s"
+          placeholders: ["Sara", "extra"]"
       `);
     });
 
@@ -1580,7 +1580,8 @@ describe('ReactInternalTestUtils console assertions', () => {
         "assertConsoleWarnDev(expected)
 
         Received 0 arguments for a message with 1 placeholders:
-          "Hi %s""
+          message: "Hi %s"
+          placeholders: []"
       `);
     });
 
@@ -1595,10 +1596,12 @@ describe('ReactInternalTestUtils console assertions', () => {
         "assertConsoleWarnDev(expected)
 
         Received 0 arguments for a message with 1 placeholders:
-          "Hi %s"
+          message: "Hi %s"
+          placeholders: []
 
         Received 0 arguments for a message with 1 placeholders:
-          "Bye %s""
+          message: "Bye %s"
+          placeholders: []"
       `);
     });
 
@@ -1708,7 +1711,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         console.warn was called without assertConsoleWarnDev:
         + Not asserted
 
-        You must call one of the assertConsoleDev helpers between each act call."
+        You must call one of the console assertion helpers between each act call."
       `);
 
       await waitForAll(['foo', 'bar', 'baz']);
@@ -1750,7 +1753,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         console.warn was called without assertConsoleWarnDev:
         + Not asserted
 
-        You must call one of the assertConsoleDev helpers between each act call."
+        You must call one of the console assertion helpers between each act call."
       `);
 
       await waitForAll(['A', 'B', 'A', 'B']);
@@ -1785,7 +1788,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         console.warn was called without assertConsoleWarnDev:
         + Not asserted
 
-        You must call one of the assertConsoleDev helpers between each act call."
+        You must call one of the console assertion helpers between each act call."
       `);
 
       await waitForAll(['Urgent: B, Deferred: A', 'Urgent: B, Deferred: B']);
@@ -1819,7 +1822,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         console.warn was called without assertConsoleWarnDev:
         + Not asserted
 
-        You must call one of the assertConsoleDev helpers between each act call."
+        You must call one of the console assertion helpers between each act call."
       `);
 
       await waitForAll(['foo', 'bar', 'baz']);
@@ -1857,21 +1860,18 @@ describe('ReactInternalTestUtils console assertions', () => {
           + Not asserted
           + Not asserted
 
-          You must call one of the assertConsoleDev helpers between each act call."
+          You must call one of the console assertion helpers between each act call."
         `);
       } else {
         expect(message).toMatchInlineSnapshot(`
           "asserConsoleLogsCleared(expected)
 
           console.warn was called without assertConsoleWarnDev:
-          + Not asserted%s,
-          +     in Yield (at **)
-          + Not asserted%s,
-          +     in Yield (at **)
-          + Not asserted%s,
-          +     in Yield (at **)
+          + Not asserted
+          + Not asserted
+          + Not asserted
 
-          You must call one of the assertConsoleDev helpers between each act call."
+          You must call one of the console assertion helpers between each act call."
         `);
       }
 
@@ -1931,22 +1931,19 @@ describe('ReactInternalTestUtils console assertions', () => {
           + B
           + C
 
-          You must call one of the assertConsoleDev helpers between each act call."
+          You must call one of the console assertion helpers between each act call."
         `);
       } else {
         expect(message).toMatchInlineSnapshot(`
-                  "asserConsoleLogsCleared(expected)
+          "asserConsoleLogsCleared(expected)
 
-                  console.error was called without assertConsoleErrorDev:
-                  + A%s,
-                  +     in App (at **)
-                  + B%s,
-                  +     in App (at **)
-                  + C%s,
-                  +     in App (at **)
+          console.error was called without assertConsoleErrorDev:
+          + A
+          + B
+          + C
 
-                  You must call one of the assertConsoleDev helpers between each act call."
-              `);
+          You must call one of the console assertion helpers between each act call."
+        `);
       }
     });
 
@@ -1997,35 +1994,29 @@ describe('ReactInternalTestUtils console assertions', () => {
           + B
           + C
 
-          You must call one of the assertConsoleDev helpers between each act call."
+          You must call one of the console assertion helpers between each act call."
         `);
       } else {
         expect(message).toMatchInlineSnapshot(`
-                  "asserConsoleLogsCleared(expected)
+          "asserConsoleLogsCleared(expected)
 
-                  console.log was called without assertConsoleLogDev:
-                  + A
-                  + B
-                  + C
+          console.log was called without assertConsoleLogDev:
+          + A
+          + B
+          + C
 
-                  console.warn was called without assertConsoleWarnDev:
-                  + A%s,
-                  +     in App (at **)
-                  + B%s,
-                  +     in App (at **)
-                  + C%s,
-                  +     in App (at **)
+          console.warn was called without assertConsoleWarnDev:
+          + A
+          + B
+          + C
 
-                  console.error was called without assertConsoleErrorDev:
-                  + A%s,
-                  +     in App (at **)
-                  + B%s,
-                  +     in App (at **)
-                  + C%s,
-                  +     in App (at **)
+          console.error was called without assertConsoleErrorDev:
+          + A
+          + B
+          + C
 
-                  You must call one of the assertConsoleDev helpers between each act call."
-              `);
+          You must call one of the console assertion helpers between each act call."
+        `);
       }
     });
 
@@ -2597,7 +2588,8 @@ describe('ReactInternalTestUtils console assertions', () => {
         "assertConsoleErrorDev(expected)
 
         Received 2 arguments for a message with 1 placeholders:
-          "Hi %s""
+          message: "Hi %s"
+          placeholders: ["Sara", "extra"]"
       `);
     });
 
@@ -2612,10 +2604,12 @@ describe('ReactInternalTestUtils console assertions', () => {
         "assertConsoleErrorDev(expected)
 
         Received 2 arguments for a message with 1 placeholders:
-          "Hi %s"
+          message: "Hi %s"
+          placeholders: ["Sara", "extra"]
 
         Received 2 arguments for a message with 1 placeholders:
-          "Bye %s""
+          message: "Bye %s"
+          placeholders: ["Sara", "extra"]"
       `);
     });
 
@@ -2629,7 +2623,8 @@ describe('ReactInternalTestUtils console assertions', () => {
         "assertConsoleErrorDev(expected)
 
         Received 0 arguments for a message with 1 placeholders:
-          "Hi %s""
+          message: "Hi %s"
+          placeholders: []"
       `);
     });
 
@@ -2644,10 +2639,12 @@ describe('ReactInternalTestUtils console assertions', () => {
         "assertConsoleErrorDev(expected)
 
         Received 0 arguments for a message with 1 placeholders:
-          "Hi %s"
+          message: "Hi %s"
+          placeholders: []
 
         Received 0 arguments for a message with 1 placeholders:
-          "Bye %s""
+          message: "Bye %s"
+          placeholders: []"
       `);
     });
 
@@ -2757,7 +2754,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         console.error was called without assertConsoleErrorDev:
         + Not asserted
 
-        You must call one of the assertConsoleDev helpers between each act call."
+        You must call one of the console assertion helpers between each act call."
       `);
 
       await waitForAll(['foo', 'bar', 'baz']);
@@ -2799,7 +2796,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         console.error was called without assertConsoleErrorDev:
         + Not asserted
 
-        You must call one of the assertConsoleDev helpers between each act call."
+        You must call one of the console assertion helpers between each act call."
       `);
 
       await waitForAll(['A', 'B', 'A', 'B']);
@@ -2834,7 +2831,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         console.error was called without assertConsoleErrorDev:
         + Not asserted
 
-        You must call one of the assertConsoleDev helpers between each act call."
+        You must call one of the console assertion helpers between each act call."
       `);
 
       await waitForAll(['Urgent: B, Deferred: A', 'Urgent: B, Deferred: B']);
@@ -2868,7 +2865,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         console.error was called without assertConsoleErrorDev:
         + Not asserted
 
-        You must call one of the assertConsoleDev helpers between each act call."
+        You must call one of the console assertion helpers between each act call."
       `);
 
       await waitForAll(['foo', 'bar', 'baz']);
@@ -2906,21 +2903,18 @@ describe('ReactInternalTestUtils console assertions', () => {
           + Not asserted
           + Not asserted
 
-          You must call one of the assertConsoleDev helpers between each act call."
+          You must call one of the console assertion helpers between each act call."
         `);
       } else {
         expect(message).toMatchInlineSnapshot(`
           "asserConsoleLogsCleared(expected)
 
           console.error was called without assertConsoleErrorDev:
-          + Not asserted%s,
-          +     in Yield (at **)
-          + Not asserted%s,
-          +     in Yield (at **)
-          + Not asserted%s,
-          +     in Yield (at **)
+          + Not asserted
+          + Not asserted
+          + Not asserted
 
-          You must call one of the assertConsoleDev helpers between each act call."
+          You must call one of the console assertion helpers between each act call."
         `);
       }
 

@@ -63,7 +63,7 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   });
 
   // Patch the console to assert that all console error/warn/log calls assert.
-  patchConsoleMethods({includeLog: !!process.env.CI});
+  patchConsoleMethods({appendOwnerStack: true, includeLog: !!process.env.CI});
   beforeEach(resetAllUnexpectedConsoleCalls);
   afterEach(assertConsoleLogsCleared);
 
