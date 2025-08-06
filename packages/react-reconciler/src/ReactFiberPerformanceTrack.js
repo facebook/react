@@ -609,6 +609,7 @@ export function logBlockingStart(
   eventType: null | string,
   eventIsRepeat: boolean,
   isSpawnedUpdate: boolean,
+  isPingedUpdate: boolean,
   renderStartTime: number,
   lanes: Lanes,
   debugTask: null | ConsoleTask, // DEV-only
@@ -658,11 +659,13 @@ export function logBlockingStart(
           // $FlowFixMe[method-unbinding]
           console.timeStamp.bind(
             console,
-            isSpawnedUpdate
-              ? 'Cascading Update'
-              : renderStartTime - updateTime > 5
-                ? 'Update Blocked'
-                : 'Update',
+            isPingedUpdate
+              ? 'Promise Resolved'
+              : isSpawnedUpdate
+                ? 'Cascading Update'
+                : renderStartTime - updateTime > 5
+                  ? 'Update Blocked'
+                  : 'Update',
             updateTime,
             renderStartTime,
             currentTrack,
@@ -672,11 +675,13 @@ export function logBlockingStart(
         );
       } else {
         console.timeStamp(
-          isSpawnedUpdate
-            ? 'Cascading Update'
-            : renderStartTime - updateTime > 5
-              ? 'Update Blocked'
-              : 'Update',
+          isPingedUpdate
+            ? 'Promise Resolved'
+            : isSpawnedUpdate
+              ? 'Cascading Update'
+              : renderStartTime - updateTime > 5
+                ? 'Update Blocked'
+                : 'Update',
           updateTime,
           renderStartTime,
           currentTrack,
@@ -694,6 +699,7 @@ export function logTransitionStart(
   eventTime: number,
   eventType: null | string,
   eventIsRepeat: boolean,
+  isPingedUpdate: boolean,
   renderStartTime: number,
   debugTask: null | ConsoleTask, // DEV-only
 ): void {
@@ -763,7 +769,11 @@ export function logTransitionStart(
           // $FlowFixMe[method-unbinding]
           console.timeStamp.bind(
             console,
-            renderStartTime - updateTime > 5 ? 'Update Blocked' : 'Update',
+            isPingedUpdate
+              ? 'Promise Resolved'
+              : renderStartTime - updateTime > 5
+                ? 'Update Blocked'
+                : 'Update',
             updateTime,
             renderStartTime,
             currentTrack,
@@ -773,7 +783,11 @@ export function logTransitionStart(
         );
       } else {
         console.timeStamp(
-          renderStartTime - updateTime > 5 ? 'Update Blocked' : 'Update',
+          isPingedUpdate
+            ? 'Promise Resolved'
+            : renderStartTime - updateTime > 5
+              ? 'Update Blocked'
+              : 'Update',
           updateTime,
           renderStartTime,
           currentTrack,
