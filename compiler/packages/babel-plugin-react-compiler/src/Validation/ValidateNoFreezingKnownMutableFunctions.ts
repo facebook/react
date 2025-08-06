@@ -125,10 +125,7 @@ export function validateNoFreezingKnownMutableFunctions(
           );
           if (knownMutation && knownMutation.kind === 'ContextMutation') {
             contextMutationEffects.set(lvalue.identifier.id, knownMutation);
-          } else if (
-            fn.env.config.enableNewMutationAliasingModel &&
-            value.loweredFunc.func.aliasingEffects != null
-          ) {
+          } else if (value.loweredFunc.func.aliasingEffects != null) {
             const context = new Set(
               value.loweredFunc.func.context.map(p => p.identifier.id),
             );
