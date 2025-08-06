@@ -36,6 +36,14 @@ export enum ErrorSeverity {
    */
   CannotPreserveMemoization = 'CannotPreserveMemoization',
   /**
+   * An API that is known to be incompatible with the compiler. Generally as a result of
+   * the library using "interior mutability", ie having a value whose referential identity
+   * stays the same but which provides access to values that can change. For example a
+   * function that doesn't change but returns different results, or an object that doesn't
+   * change identity but whose properties change.
+   */
+  KnownIncompatible = 'KnownIncompatible',
+  /**
    * Unhandled syntax that we don't support yet.
    */
   Todo = 'Todo',
@@ -427,7 +435,8 @@ export class CompilerError extends Error {
         case ErrorSeverity.InvalidJS:
         case ErrorSeverity.InvalidReact:
         case ErrorSeverity.InvalidConfig:
-        case ErrorSeverity.UnsupportedJS: {
+        case ErrorSeverity.UnsupportedJS:
+        case ErrorSeverity.KnownIncompatible: {
           return true;
         }
         case ErrorSeverity.CannotPreserveMemoization:
@@ -475,8 +484,9 @@ function printErrorSummary(severity: ErrorSeverity, message: string): string {
       severityCategory = 'Error';
       break;
     }
+    case ErrorSeverity.KnownIncompatible:
     case ErrorSeverity.CannotPreserveMemoization: {
-      severityCategory = 'Memoization';
+      severityCategory = 'Compilation Skipped';
       break;
     }
     case ErrorSeverity.Invariant: {

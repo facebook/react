@@ -25,7 +25,7 @@ function Component(props) {
 ```
 Found 1 error:
 
-Memoization: React Compiler has skipped optimizing this component because the effect dependencies could not be memoized. Unmemoized effect dependencies can trigger an infinite loop or other unexpected behavior
+Compilation Skipped: React Compiler has skipped optimizing this component because the effect dependencies could not be memoized. Unmemoized effect dependencies can trigger an infinite loop or other unexpected behavior
 
 error.invalid-useEffect-dep-not-memoized-bc-range-overlaps-hook.ts:9:2
    7 |
