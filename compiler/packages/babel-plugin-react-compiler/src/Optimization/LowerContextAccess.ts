@@ -255,7 +255,6 @@ function emitSelectorFn(env: Environment, keys: Array<string>): Instruction {
     returnTypeAnnotation: null,
     returns: createTemporaryPlace(env, GeneratedSource),
     context: [],
-    effects: null,
     body: {
       entry: block.id,
       blocks: new Map([[block.id, block]]),
@@ -263,6 +262,7 @@ function emitSelectorFn(env: Environment, keys: Array<string>): Instruction {
     generator: false,
     async: false,
     directives: [],
+    aliasingEffects: [],
   };
 
   reversePostorderBlocks(fn.body);
