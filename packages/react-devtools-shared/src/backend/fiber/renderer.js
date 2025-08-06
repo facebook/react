@@ -271,6 +271,9 @@ function createVirtualInstance(
 
 type DevToolsInstance = FiberInstance | VirtualInstance | FilteredFiberInstance;
 
+// A Generic Rect super type which can include DOMRect and other objects with similar shape like in React Native.
+type Rect = {x: number, y: number, width: number, height: number, ...};
+
 type SuspenseNode = {
   // The Instance can be a Suspense boundary, a SuspenseList Row, or HostRoot.
   // It can also be disconnected from the main tree if it's a Filtered Instance.
@@ -278,6 +281,7 @@ type SuspenseNode = {
   parent: null | SuspenseNode,
   firstChild: null | SuspenseNode,
   nextSibling: null | SuspenseNode,
+  rects: null | Array<Rect>, // The bounding rects of content children.
   suspendedBy: Map<ReactIOInfo, Set<DevToolsInstance>>, // Tracks which data we're suspended by and the children that suspend it.
   // Track whether any of the items in suspendedBy are unique this this Suspense boundaries or if they're all
   // also in the parent sets. This determine whether this could contribute in the loading sequence.
@@ -292,6 +296,7 @@ function createSuspenseNode(
     parent: null,
     firstChild: null,
     nextSibling: null,
+    rects: null,
     suspendedBy: new Map(),
     hasUniqueSuspenders: false,
   });
@@ -2130,6 +2135,69 @@ export function attach(
     pendingStringTableLength = 0;
   }
 
+  function measureHostInstance(instance: HostInstance): null | Array<Rect> {
+    // Feature detect measurement capabilities of this environment.
+    // TODO: Consider making this capability injected by the ReactRenderer.
+    if (typeof instance !== 'object' || instance === null) {
+      return null;
+    }
+    if (typeof instance.getClientRects === 'function') {
+      // DOM
+      const result = [];
+      const doc = instance.ownerDocument;
+      const win = doc && doc.defaultView;
+      const scrollX = win ? win.scrollX : 0;
+      const scrollY = win ? win.scrollY : 0;
+      const rects = instance.getClientRects();
+      for (let i = 0; i < rects.length; i++) {
+        const rect = rects[i];
+        result.push({
+          x: rect.x + scrollX,
+          y: rect.y + scrollY,
+          width: rect.width,
+          height: rect.height,
+        });
+      }
+      return result;
+    }
+    if (instance.canonical) {
+      // Native
+      const publicInstance = instance.canonical.publicInstance;
+      if (!publicInstance) {
+        // The publicInstance may not have been initialized yet if there was no ref on this node.
+        // We can't initialize it from any existing Hook but we could fallback to this async form:
+        // renderer.extraDevToolsConfig.getInspectorDataForInstance(instance).hierarchy[last].getInspectorData().measure(callback)
+        return null;
+      }
+      if (typeof publicInstance.getBoundingClientRect === 'function') {
+        // enableAccessToHostTreeInFabric / ReadOnlyElement
+        return [publicInstance.getBoundingClientRect()];
+      }
+      if (typeof publicInstance.unstable_getBoundingClientRect === 'function') {
+        // ReactFabricHostComponent
+        return [publicInstance.unstable_getBoundingClientRect()];
+      }
+    }
+    return null;
+  }
+
+  function measureInstance(instance: DevToolsInstance): null | Array<Rect> {
+    // Synchronously return the client rects of the Host instances directly inside this Instance.
+    const hostInstances = findAllCurrentHostInstances(instance);
+    let result: null | Array<Rect> = null;
+    for (let i = 0; i < hostInstances.length; i++) {
+      const childResult = measureHostInstance(hostInstances[i]);
+      if (childResult !== null) {
+        if (result === null) {
+          result = childResult;
+        } else {
+          result = result.concat(childResult);
+        }
+      }
+    }
+    return result;
+  }
+
   function getStringID(string: string | null): number {
     if (string === null) {
       return 0;
@@ -2437,6 +2505,10 @@ export function attach(
       // and later arrange them in the correct order.
       pendingRealUnmountedIDs.push(id);
     }
+  }
+
+  function recordSuspenseResize(suspenseNode: SuspenseNode): void {
+    // TODO: Notify the front end of the change.
   }
 
   // Running state of the remaining children from the previous version of this parent that
@@ -2768,6 +2840,79 @@ export function attach(
     return false;
   }
 
+  function areEqualRects(
+    a: null | Array<Rect>,
+    b: null | Array<Rect>,
+  ): boolean {
+    if (a === null) {
+      return b === null;
+    }
+    if (b === null) {
+      return false;
+    }
+    if (a.length !== b.length) {
+      return false;
+    }
+    for (let i = 0; i < a.length; i++) {
+      const aRect = a[i];
+      const bRect = b[i];
+      if (
+        aRect.x !== bRect.x ||
+        aRect.y !== bRect.y ||
+        aRect.width !== bRect.width ||
+        aRect.height !== bRect.height
+      ) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function measureUnchangedSuspenseNodesRecursively(
+    suspenseNode: SuspenseNode,
+  ): void {
+    if (isInDisconnectedSubtree) {
+      // We don't update rects inside disconnected subtrees.
+      return;
+    }
+    const nextRects = measureInstance(suspenseNode.instance);
+    const prevRects = suspenseNode.rects;
+    if (areEqualRects(prevRects, nextRects)) {
+      return; // Unchanged
+    }
+    // The rect has changed. While the bailed out root wasn't in a disconnected subtree,
+    // it's possible that this node was in one. So we need to check if we're offscreen.
+    let parent = suspenseNode.instance.parent;
+    while (parent !== null) {
+      if (
+        (parent.kind === FIBER_INSTANCE ||
+          parent.kind === FILTERED_FIBER_INSTANCE) &&
+        parent.data.tag === OffscreenComponent &&
+        parent.data.memoizedState !== null
+      ) {
+        // We're inside a hidden offscreen Fiber. We're in a disconnected tree.
+        return;
+      }
+      if (parent.suspenseNode !== null) {
+        // Found our parent SuspenseNode. We can bail out now.
+        break;
+      }
+      parent = parent.parent;
+    }
+    // We changed inside a visible tree.
+    // Since this boundary changed, it's possible it also affected its children so lets
+    // measure them as well.
+    for (
+      let child = suspenseNode.firstChild;
+      child !== null;
+      child = child.nextSibling
+    ) {
+      measureUnchangedSuspenseNodesRecursively(child);
+    }
+    suspenseNode.rects = nextRects;
+    recordSuspenseResize(suspenseNode);
+  }
+
   function consumeSuspenseNodesOfExistingInstance(
     instance: DevToolsInstance,
   ): void {
@@ -2806,6 +2951,9 @@ export function attach(
           previouslyReconciledSiblingSuspenseNode.nextSibling = suspenseNode;
         }
         previouslyReconciledSiblingSuspenseNode = suspenseNode;
+        // While React didn't rerender this node, it's possible that it was affected by
+        // layout due to mutation of a parent or sibling. Check if it changed size.
+        measureUnchangedSuspenseNodesRecursively(suspenseNode);
         // Continue
         suspenseNode = nextRemainingSibling;
       } else if (foundOne) {
@@ -3029,6 +3177,10 @@ export function attach(
       newInstance = recordMount(fiber, reconcilingParent);
       if (fiber.tag === SuspenseComponent || fiber.tag === HostRoot) {
         newSuspenseNode = createSuspenseNode(newInstance);
+        // Measure this Suspense node. In general we shouldn't do this until we have
+        // inserted the new children but since we know this is a FiberInstance we'll
+        // just use the Fiber anyway.
+        newSuspenseNode.rects = measureInstance(newInstance);
       }
       insertChild(newInstance);
       if (__DEBUG__) {
@@ -3058,6 +3210,10 @@ export function attach(
       newInstance = createFilteredFiberInstance(fiber);
       if (fiber.tag === SuspenseComponent) {
         newSuspenseNode = createSuspenseNode(newInstance);
+        // Measure this Suspense node. In general we shouldn't do this until we have
+        // inserted the new children but since we know this is a FiberInstance we'll
+        // just use the Fiber anyway.
+        newSuspenseNode.rects = measureInstance(newInstance);
       }
       insertChild(newInstance);
       if (__DEBUG__) {
@@ -4084,6 +4240,23 @@ export function attach(
           ) {
             shouldResetChildren = true;
           }
+        } else if (
+          nextFiber.memoizedState === null &&
+          fiberInstance.suspenseNode !== null
+        ) {
+          if (!isInDisconnectedSubtree) {
+            // Measure this Suspense node in case it changed. We don't update the rect while
+            // we're inside a disconnected subtree nor if we are the Suspense boundary that
+            // is suspended. This lets us keep the rectangle of the displayed content while
+            // we're suspended to visualize the resulting state.
+            const suspenseNode = fiberInstance.suspenseNode;
+            const prevRects = suspenseNode.rects;
+            const nextRects = measureInstance(fiberInstance);
+            if (!areEqualRects(prevRects, nextRects)) {
+              suspenseNode.rects = nextRects;
+              recordSuspenseResize(suspenseNode);
+            }
+          }
         }
       } else {
         // Common case: Primary -> Primary.
@@ -4179,6 +4352,21 @@ export function attach(
         previouslyReconciledSibling = stashedPrevious;
         remainingReconcilingChildren = stashedRemaining;
         if (shouldPopSuspenseNode) {
+          if (
+            !isInDisconnectedSubtree &&
+            reconcilingParentSuspenseNode !== null
+          ) {
+            // Measure this Suspense node in case it changed. We don't update the rect
+            // while we're inside a disconnected subtree so that we keep the outline
+            // as it was before we hid the parent.
+            const suspenseNode = reconcilingParentSuspenseNode;
+            const prevRects = suspenseNode.rects;
+            const nextRects = measureInstance(fiberInstance);
+            if (!areEqualRects(prevRects, nextRects)) {
+              suspenseNode.rects = nextRects;
+              recordSuspenseResize(suspenseNode);
+            }
+          }
           reconcilingParentSuspenseNode = stashedSuspenseParent;
           previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
           remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
