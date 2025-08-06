@@ -2156,6 +2156,8 @@ export function attach(
     return id;
   }
 
+  let isInDisconnectedSubtree = false;
+
   function recordMount(
     fiber: Fiber,
     parentInstance: DevToolsInstance | null,
@@ -2173,13 +2175,28 @@ export function attach(
     }
     idToDevToolsInstanceMap.set(fiberInstance.id, fiberInstance);
 
-    const id = fiberInstance.id;
-
     if (__DEBUG__) {
       debug('recordMount()', fiberInstance, parentInstance);
     }
 
+    recordReconnect(fiberInstance, parentInstance);
+    return fiberInstance;
+  }
+
+  function recordReconnect(
+    fiberInstance: FiberInstance,
+    parentInstance: DevToolsInstance | null,
+  ): void {
+    if (isInDisconnectedSubtree) {
+      // We're disconnected. We'll reconnect a hidden mount after the parent reappears.
+      return;
+    }
+    const id = fiberInstance.id;
+    const fiber = fiberInstance.data;
+
     const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
+
+    const isRoot = fiber.tag === HostRoot;
 
     if (isRoot) {
       const hasOwnerMetadata = fiber.hasOwnProperty('_debugOwner');
@@ -2292,7 +2309,6 @@ export function attach(
     if (isProfilingSupported) {
       recordProfilingDurations(fiberInstance, null);
     }
-    return fiberInstance;
   }
 
   function recordVirtualMount(
@@ -2304,6 +2320,18 @@ export function attach(
 
     idToDevToolsInstanceMap.set(id, instance);
 
+    recordVirtualReconnect(instance, parentInstance, secondaryEnv);
+  }
+
+  function recordVirtualReconnect(
+    instance: VirtualInstance,
+    parentInstance: DevToolsInstance | null,
+    secondaryEnv: null | string,
+  ): void {
+    if (isInDisconnectedSubtree) {
+      // We're disconnected. We'll reconnect a hidden mount after the parent reappears.
+      return;
+    }
     const componentInfo = instance.data;
 
     const key =
@@ -2355,6 +2383,8 @@ export function attach(
     const keyString = key === null ? null : String(key);
     const keyStringID = getStringID(keyString);
 
+    const id = instance.id;
+
     pushOperation(TREE_OPERATION_ADD);
     pushOperation(id);
     pushOperation(elementType);
@@ -2369,14 +2399,27 @@ export function attach(
   }
 
   function recordUnmount(fiberInstance: FiberInstance): void {
-    const fiber = fiberInstance.data;
     if (__DEBUG__) {
       debug('recordUnmount()', fiberInstance, reconcilingParent);
     }
 
+    recordDisconnect(fiberInstance);
+
+    idToDevToolsInstanceMap.delete(fiberInstance.id);
+
+    untrackFiber(fiberInstance, fiberInstance.data);
+  }
+
+  function recordDisconnect(fiberInstance: FiberInstance): void {
+    if (isInDisconnectedSubtree) {
+      // Already disconnected.
+      return;
+    }
+    const fiber = fiberInstance.data;
+
     if (trackedPathMatchInstance === fiberInstance) {
       // We're in the process of trying to restore previous selection.
-      // If this fiber matched but is being unmounted, there's no use trying.
+      // If this fiber matched but is being hidden, there's no use trying.
       // Reset the state so we don't keep holding onto it.
       setTrackedPath(null);
     }
@@ -2393,10 +2436,6 @@ export function attach(
       // and later arrange them in the correct order.
       pendingRealUnmountedIDs.push(id);
     }
-
-    idToDevToolsInstanceMap.delete(fiberInstance.id);
-
-    untrackFiber(fiberInstance, fiber);
   }
 
   // Running state of the remaining children from the previous version of this parent that
@@ -2416,11 +2455,6 @@ export function attach(
   // the current parent here as well.
   let reconcilingParentSuspenseNode: null | SuspenseNode = null;
 
-  function isSuspenseInFallback(suspenseNode: SuspenseNode) {
-    const fiber = suspenseNode.instance.data;
-    return fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
-  }
-
   function ioExistsInSuspenseAncestor(
     suspenseNode: SuspenseNode,
     ioInfo: ReactIOInfo,
@@ -2436,21 +2470,13 @@ export function attach(
   }
 
   function insertSuspendedBy(asyncInfo: ReactAsyncInfo): void {
-    let parentSuspenseNode = reconcilingParentSuspenseNode;
-    while (
-      parentSuspenseNode !== null &&
-      isSuspenseInFallback(parentSuspenseNode)
-    ) {
-      // If we have something that suspends inside the fallback tree of a Suspense boundary, then
-      // we bubble that up to the nearest parent Suspense boundary that isn't in fallback mode.
-      parentSuspenseNode = parentSuspenseNode.parent;
-    }
-    if (reconcilingParent === null || parentSuspenseNode === null) {
+    if (reconcilingParent === null || reconcilingParentSuspenseNode === null) {
       throw new Error(
         'It should not be possible to have suspended data outside the root. ' +
           'Even suspending at the first position is still a child of the root.',
       );
     }
+    const parentSuspenseNode = reconcilingParentSuspenseNode;
     // Use the nearest unfiltered parent so that there's always some component that has
     // the entry on it even if you filter, or the root if all are filtered.
     let parentInstance = reconcilingParent;
@@ -2694,10 +2720,31 @@ export function attach(
   }
 
   function unmountRemainingChildren() {
-    let child = remainingReconcilingChildren;
-    while (child !== null) {
-      unmountInstanceRecursively(child);
-      child = remainingReconcilingChildren;
+    if (
+      reconcilingParent !== null &&
+      (reconcilingParent.kind === FIBER_INSTANCE ||
+        reconcilingParent.kind === FILTERED_FIBER_INSTANCE) &&
+      reconcilingParent.data.tag === OffscreenComponent &&
+      reconcilingParent.data.memoizedState !== null &&
+      !isInDisconnectedSubtree
+    ) {
+      // This is a hidden offscreen, we need to execute this in the context of a disconnected subtree.
+      isInDisconnectedSubtree = true;
+      try {
+        let child = remainingReconcilingChildren;
+        while (child !== null) {
+          unmountInstanceRecursively(child);
+          child = remainingReconcilingChildren;
+        }
+      } finally {
+        isInDisconnectedSubtree = false;
+      }
+    } else {
+      let child = remainingReconcilingChildren;
+      while (child !== null) {
+        unmountInstanceRecursively(child);
+        child = remainingReconcilingChildren;
+      }
     }
   }
 
@@ -2811,6 +2858,14 @@ export function attach(
   }
 
   function recordVirtualUnmount(instance: VirtualInstance) {
+    recordVirtualDisconnect(instance);
+    idToDevToolsInstanceMap.delete(instance.id);
+  }
+
+  function recordVirtualDisconnect(instance: VirtualInstance) {
+    if (isInDisconnectedSubtree) {
+      return;
+    }
     if (trackedPathMatchInstance === instance) {
       // We're in the process of trying to restore previous selection.
       // If this fiber matched but is being unmounted, there's no use trying.
@@ -2820,8 +2875,6 @@ export function attach(
 
     const id = instance.id;
     pendingRealUnmountedIDs.push(id);
-
-    idToDevToolsInstanceMap.delete(instance.id);
   }
 
   function getSecondaryEnvironmentName(
@@ -3030,10 +3083,12 @@ export function attach(
       previouslyReconciledSibling = null;
       remainingReconcilingChildren = null;
     }
+    let shouldPopSuspenseNode = false;
     if (newSuspenseNode !== null) {
       reconcilingParentSuspenseNode = newSuspenseNode;
       previouslyReconciledSiblingSuspenseNode = null;
       remainingReconcilingChildrenSuspenseNodes = null;
+      shouldPopSuspenseNode = true;
     }
     try {
       if (traceUpdatesEnabled) {
@@ -3069,7 +3124,16 @@ export function attach(
       }
 
       if (fiber.tag === OffscreenComponent && fiber.memoizedState !== null) {
-        // If an Offscreen component is hidden, don't mount its children yet.
+        // If an Offscreen component is hidden, mount its children as disconnected.
+        const stashedDisconnected = isInDisconnectedSubtree;
+        isInDisconnectedSubtree = true;
+        try {
+          if (fiber.child !== null) {
+            mountChildrenRecursively(fiber.child, false);
+          }
+        } finally {
+          isInDisconnectedSubtree = stashedDisconnected;
+        }
       } else if (fiber.tag === SuspenseComponent && OffscreenComponent === -1) {
         // Legacy Suspense without the Offscreen wrapper. For the modern Suspense we just handle the
         // Offscreen wrapper itself specially.
@@ -3102,6 +3166,44 @@ export function attach(
             );
           }
         }
+      } else if (
+        fiber.tag === SuspenseComponent &&
+        OffscreenComponent !== -1 &&
+        newInstance !== null &&
+        newSuspenseNode !== null
+      ) {
+        // Modern Suspense path
+        const contentFiber = fiber.child;
+        if (contentFiber === null) {
+          throw new Error(
+            'There should always be an Offscreen Fiber child in a Suspense boundary.',
+          );
+        }
+        const fallbackFiber = contentFiber.sibling;
+
+        // First update only the Offscreen boundary. I.e. the main content.
+        mountVirtualChildrenRecursively(
+          contentFiber,
+          fallbackFiber,
+          traceNearestHostComponentUpdate,
+          0, // first level
+        );
+
+        // Next, we'll pop back out of the SuspenseNode that we added above and now we'll
+        // reconcile the fallback, reconciling anything by inserting into the parent SuspenseNode.
+        // Since the fallback conceptually blocks the parent.
+        reconcilingParentSuspenseNode = stashedSuspenseParent;
+        previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
+        remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
+        shouldPopSuspenseNode = false;
+        if (fallbackFiber !== null) {
+          mountVirtualChildrenRecursively(
+            fallbackFiber,
+            null,
+            traceNearestHostComponentUpdate,
+            0, // first level
+          );
+        }
       } else {
         if (fiber.child !== null) {
           mountChildrenRecursively(
@@ -3116,7 +3218,7 @@ export function attach(
         previouslyReconciledSibling = stashedPrevious;
         remainingReconcilingChildren = stashedRemaining;
       }
-      if (newSuspenseNode !== null) {
+      if (shouldPopSuspenseNode) {
         reconcilingParentSuspenseNode = stashedSuspenseParent;
         previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
         remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
@@ -3305,7 +3407,12 @@ export function attach(
     let child: null | DevToolsInstance = parentInstance.firstChild;
     while (child !== null) {
       if (child.kind === FILTERED_FIBER_INSTANCE) {
-        addUnfilteredChildrenIDs(child, nextChildren);
+        const fiber = child.data;
+        if (fiber.tag === OffscreenComponent && fiber.memoizedState !== null) {
+          // The children of this Offscreen are hidden so they don't get added.
+        } else {
+          addUnfilteredChildrenIDs(child, nextChildren);
+        }
       } else {
         nextChildren.push(child.id);
       }
@@ -3742,6 +3849,7 @@ export function attach(
     const stashedSuspenseParent = reconcilingParentSuspenseNode;
     const stashedSuspensePrevious = previouslyReconciledSiblingSuspenseNode;
     const stashedSuspenseRemaining = remainingReconcilingChildrenSuspenseNodes;
+    let shouldPopSuspenseNode = false;
     let previousSuspendedBy = null;
     if (fiberInstance !== null) {
       previousSuspendedBy = fiberInstance.suspendedBy;
@@ -3771,6 +3879,7 @@ export function attach(
         previouslyReconciledSiblingSuspenseNode = null;
         remainingReconcilingChildrenSuspenseNodes = suspenseNode.firstChild;
         suspenseNode.firstChild = null;
+        shouldPopSuspenseNode = true;
       }
     }
     try {
@@ -3888,25 +3997,93 @@ export function attach(
           );
           shouldResetChildren = true;
         }
-      } else if (prevWasHidden && nextIsHidden) {
-        // We don't update any children while they're still hidden.
+      } else if (nextIsHidden) {
+        if (!prevWasHidden) {
+          // We're hiding the children. Disconnect them from the front end but keep state.
+          if (fiberInstance !== null && !isInDisconnectedSubtree) {
+            disconnectChildrenRecursively(remainingReconcilingChildren);
+          }
+        }
+        // Update children inside the hidden tree if they committed with a new updates.
+        const stashedDisconnected = isInDisconnectedSubtree;
+        isInDisconnectedSubtree = true;
+        try {
+          updateChildrenRecursively(nextFiber.child, prevFiber.child, false);
+        } finally {
+          isInDisconnectedSubtree = stashedDisconnected;
+        }
       } else if (prevWasHidden && !nextIsHidden) {
         // We're revealing the hidden children. We now need to update them to the latest state.
-        if (nextFiber.child !== null) {
-          mountChildrenRecursively(
-            nextFiber.child,
-            traceNearestHostComponentUpdate,
-          );
+        // We do this while still in the disconnected state and then we reconnect the new ones.
+        // This avoids reconnecting things that are about to be removed anyway.
+        const stashedDisconnected = isInDisconnectedSubtree;
+        isInDisconnectedSubtree = true;
+        try {
+          if (nextFiber.child !== null) {
+            updateChildrenRecursively(nextFiber.child, prevFiber.child, false);
+          }
+          // Ensure we unmount any remaining children inside the isInDisconnectedSubtree flag
+          // since they should not trigger real deletions.
+          unmountRemainingChildren();
+          remainingReconcilingChildren = null;
+        } finally {
+          isInDisconnectedSubtree = stashedDisconnected;
+        }
+        if (fiberInstance !== null && !isInDisconnectedSubtree) {
+          reconnectChildrenRecursively(fiberInstance);
+          // Children may have reordered while they were hidden.
           shouldResetChildren = true;
         }
-      } else if (!prevWasHidden && nextIsHidden) {
-        // We're hiding the children. We really just unmount them for now.
-        updateChildrenRecursively(
-          null,
-          prevFiber.child,
-          traceNearestHostComponentUpdate,
-        );
-        shouldResetChildren = true;
+      } else if (
+        nextFiber.tag === SuspenseComponent &&
+        OffscreenComponent !== -1 &&
+        fiberInstance !== null &&
+        fiberInstance.suspenseNode !== null
+      ) {
+        // Modern Suspense path
+        const prevContentFiber = prevFiber.child;
+        const nextContentFiber = nextFiber.child;
+        if (nextContentFiber === null || prevContentFiber === null) {
+          throw new Error(
+            'There should always be an Offscreen Fiber child in a Suspense boundary.',
+          );
+        }
+        const prevFallbackFiber = prevContentFiber.sibling;
+        const nextFallbackFiber = nextContentFiber.sibling;
+
+        // First update only the Offscreen boundary. I.e. the main content.
+        if (
+          updateVirtualChildrenRecursively(
+            nextContentFiber,
+            nextFallbackFiber,
+            prevContentFiber,
+            traceNearestHostComponentUpdate,
+            0,
+          )
+        ) {
+          shouldResetChildren = true;
+        }
+
+        // Next, we'll pop back out of the SuspenseNode that we added above and now we'll
+        // reconcile the fallback, reconciling anything by inserting into the parent SuspenseNode.
+        // Since the fallback conceptually blocks the parent.
+        reconcilingParentSuspenseNode = stashedSuspenseParent;
+        previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
+        remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
+        shouldPopSuspenseNode = false;
+        if (nextFallbackFiber !== null) {
+          if (
+            updateVirtualChildrenRecursively(
+              nextFallbackFiber,
+              null,
+              prevFallbackFiber,
+              traceNearestHostComponentUpdate,
+              0,
+            )
+          ) {
+            shouldResetChildren = true;
+          }
+        }
       } else {
         // Common case: Primary -> Primary.
         // This is the same code path as for non-Suspense fibers.
@@ -4000,11 +4177,56 @@ export function attach(
         reconcilingParent = stashedParent;
         previouslyReconciledSibling = stashedPrevious;
         remainingReconcilingChildren = stashedRemaining;
-        if (fiberInstance.suspenseNode !== null) {
+        if (shouldPopSuspenseNode) {
           reconcilingParentSuspenseNode = stashedSuspenseParent;
           previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
           remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
         }
+      }
+    }
+  }
+
+  function disconnectChildrenRecursively(firstChild: null | DevToolsInstance) {
+    for (let child = firstChild; child !== null; child = child.nextSibling) {
+      if (
+        (child.kind === FIBER_INSTANCE ||
+          child.kind === FILTERED_FIBER_INSTANCE) &&
+        child.data.tag === OffscreenComponent &&
+        child.data.memoizedState !== null
+      ) {
+        // This instance's children are already disconnected.
+      } else {
+        disconnectChildrenRecursively(child.firstChild);
+      }
+      if (child.kind === FIBER_INSTANCE) {
+        recordDisconnect(child);
+      } else if (child.kind === VIRTUAL_INSTANCE) {
+        recordVirtualDisconnect(child);
+      }
+    }
+  }
+
+  function reconnectChildrenRecursively(parentInstance: DevToolsInstance) {
+    for (
+      let child = parentInstance.firstChild;
+      child !== null;
+      child = child.nextSibling
+    ) {
+      if (child.kind === FIBER_INSTANCE) {
+        recordReconnect(child, parentInstance);
+      } else if (child.kind === VIRTUAL_INSTANCE) {
+        const secondaryEnv = null; // TODO: We don't have this data anywhere. We could just stash it somewhere.
+        recordVirtualReconnect(child, parentInstance, secondaryEnv);
+      }
+      if (
+        (child.kind === FIBER_INSTANCE ||
+          child.kind === FILTERED_FIBER_INSTANCE) &&
+        child.data.tag === OffscreenComponent &&
+        child.data.memoizedState !== null
+      ) {
+        // This instance's children should remain disconnected.
+      } else {
+        reconnectChildrenRecursively(child);
       }
     }
   }
