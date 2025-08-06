@@ -59,6 +59,7 @@ import {
 import {
   extractLocationFromComponentStack,
   extractLocationFromOwnerStack,
+  parseStackTrace,
 } from 'react-devtools-shared/src/backend/utils/parseStackTrace';
 import {
   cleanForBridge,
@@ -4746,10 +4747,10 @@ export function attach(
 
   function getSuspendedByOfSuspenseNode(
     suspenseNode: SuspenseNode,
-  ): Array<ReactAsyncInfo> {
+  ): Array<SerializedAsyncInfo> {
     // Collect all ReactAsyncInfo that was suspending this SuspenseNode but
     // isn't also in any parent set.
-    const result: Array<ReactAsyncInfo> = [];
+    const result: Array<SerializedAsyncInfo> = [];
     if (!suspenseNode.hasUniqueSuspenders) {
       return result;
     }
@@ -4774,7 +4775,8 @@ export function attach(
           ioInfo,
         );
         if (asyncInfo !== null) {
-          result.push(asyncInfo);
+          const index = result.length;
+          result.push(serializeAsyncInfo(asyncInfo, index, firstInstance));
         }
       }
     });
@@ -4791,10 +4793,63 @@ export function attach(
       parentInstance,
       ioInfo.owner,
     );
-    const awaitOwnerInstance = findNearestOwnerInstance(
-      parentInstance,
-      asyncInfo.owner,
-    );
+    let awaitStack =
+      asyncInfo.debugStack == null
+        ? null
+        : // While we have a ReactStackTrace on ioInfo.stack, that will point to the location on
+          // the server. We need a location that points to the virtual source on the client which
+          // we can then use to source map to the original location.
+          parseStackTrace(asyncInfo.debugStack, 1);
+    let awaitOwnerInstance: null | FiberInstance | VirtualInstance;
+    if (
+      asyncInfo.owner == null &&
+      (awaitStack === null || awaitStack.length === 0)
+    ) {
+      // We had no owner nor stack for the await. This can happen if you render it as a child
+      // or throw a Promise. Replace it with the parent as the await.
+      awaitStack = null;
+      awaitOwnerInstance =
+        parentInstance.kind === FILTERED_FIBER_INSTANCE ? null : parentInstance;
+      if (
+        parentInstance.kind === FIBER_INSTANCE ||
+        parentInstance.kind === FILTERED_FIBER_INSTANCE
+      ) {
+        const fiber = parentInstance.data;
+        switch (fiber.tag) {
+          case ClassComponent:
+          case FunctionComponent:
+          case IncompleteClassComponent:
+          case IncompleteFunctionComponent:
+          case IndeterminateComponent:
+          case MemoComponent:
+          case SimpleMemoComponent:
+            // If we awaited in the child position of a component, then the best stack would be the
+            // return callsite but we don't have that available so instead we skip. The callsite of
+            // the JSX would be misleading in this case. The same thing happens with throw-a-Promise.
+            break;
+          default:
+            // If we awaited by passing a Promise to a built-in element, then the JSX callsite is a
+            // good stack trace to use for the await.
+            if (
+              fiber._debugOwner != null &&
+              fiber._debugStack != null &&
+              typeof fiber._debugStack !== 'string'
+            ) {
+              awaitStack = parseStackTrace(fiber._debugStack, 1);
+              awaitOwnerInstance = findNearestOwnerInstance(
+                parentInstance,
+                fiber._debugOwner,
+              );
+            }
+        }
+      }
+    } else {
+      awaitOwnerInstance = findNearestOwnerInstance(
+        parentInstance,
+        asyncInfo.owner,
+      );
+    }
+
     const value: any = ioInfo.value;
     let resolvedValue = undefined;
     if (
@@ -4823,14 +4878,20 @@ export function attach(
           ioOwnerInstance === null
             ? null
             : instanceToSerializedElement(ioOwnerInstance),
-        stack: ioInfo.stack == null ? null : ioInfo.stack,
+        stack:
+          ioInfo.debugStack == null
+            ? null
+            : // While we have a ReactStackTrace on ioInfo.stack, that will point to the location on
+              // the server. We need a location that points to the virtual source on the client which
+              // we can then use to source map to the original location.
+              parseStackTrace(ioInfo.debugStack, 1),
       },
       env: asyncInfo.env == null ? null : asyncInfo.env,
       owner:
         awaitOwnerInstance === null
           ? null
           : instanceToSerializedElement(awaitOwnerInstance),
-      stack: asyncInfo.stack == null ? null : asyncInfo.stack,
+      stack: awaitStack,
     };
   }
 
@@ -5136,8 +5197,11 @@ export function attach(
           // In this case, this becomes associated with the Client/Host Component where as normally
           // you'd expect these to be associated with the Server Component that awaited the data.
           // TODO: Prepend other suspense sources like css, images and use().
-          fiberInstance.suspendedBy;
-
+          fiberInstance.suspendedBy === null
+          ? []
+          : fiberInstance.suspendedBy.map((info, index) =>
+              serializeAsyncInfo(info, index, fiberInstance),
+            );
     return {
       id: fiberInstance.id,
 
@@ -5194,12 +5258,7 @@ export function attach(
           ? []
           : Array.from(componentLogsEntry.warnings.entries()),
 
-      suspendedBy:
-        suspendedBy === null
-          ? []
-          : suspendedBy.map((info, index) =>
-              serializeAsyncInfo(info, index, fiberInstance),
-            ),
+      suspendedBy: suspendedBy,
 
       // List of owners
       owners,

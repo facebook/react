@@ -17,7 +17,7 @@ const symbolicationCache: Map<
   Promise<ReactFunctionLocation | null>,
 > = new Map();
 
-export async function symbolicateSourceWithCache(
+export function symbolicateSourceWithCache(
   fetchFileWithCaching: FetchFileWithCaching,
   sourceURL: string,
   line: number, // 1-based
