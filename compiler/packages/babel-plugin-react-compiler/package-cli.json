@@ -1,0 +1,108 @@
+{
+  "name": "@react-compiler/conditional-hooks-validator",
+  "version": "1.0.0",
+  "description": "CLI tool and React Compiler plugin for detecting conditional hook usage patterns",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "validate-conditional-hooks": "dist/cli/bin.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "prepare": "npm run build",
+    "cli:validate": "node dist/cli/bin.js check",
+    "cli:fix": "node dist/cli/bin.js fix",
+    "cli:analyze": "node dist/cli/bin.js analyze"
+  },
+  "keywords": [
+    "react",
+    "hooks",
+    "compiler",
+    "validation",
+    "cli",
+    "conditional-hooks",
+    "rules-of-hooks",
+    "babel-plugin"
+  ],
+  "author": "React Compiler Team",
+  "license": "MIT",
+  "dependencies": {
+    "@babel/types": "^7.23.0",
+    "chalk": "^4.1.2",
+    "commander": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "jest": "^29.0.0",
+    "@types/jest": "^29.0.0",
+    "ts-jest": "^29.0.0",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react",
+    "directory": "compiler/packages/babel-plugin-react-compiler"
+  },
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "homepage": "https://react.dev/learn/react-compiler",
+  "publishConfig": {
+    "access": "public"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/__tests__/**/*.test.ts",
+      "**/*.test.ts"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.ts",
+      "!src/**/*.d.ts",
+      "!src/**/*.test.ts"
+    ],
+    "coverageDirectory": "coverage",
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ]
+  },
+  "eslintConfig": {
+    "extends": [
+      "@typescript-eslint/recommended"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "@typescript-eslint"
+    ],
+    "root": true,
+    "rules": {
+      "@typescript-eslint/no-unused-vars": "error",
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/explicit-function-return-type": "off"
+    }
+  }
+}
