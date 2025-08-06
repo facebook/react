@@ -954,7 +954,7 @@ function TreeContextController({
       Array<number>,
       Map<number, number>,
     ]) => {
-      transitionDispatch({
+      dispatch({
         type: 'HANDLE_STORE_MUTATION',
         payload: [addedElementIDs, removedElementIDs],
       });
@@ -965,7 +965,7 @@ function TreeContextController({
       // At the moment, we can treat this as a mutation.
       // We don't know which Elements were newly added/removed, but that should be okay in this case.
       // It would only impact the search state, which is unlikely to exist yet at this point.
-      transitionDispatch({
+      dispatch({
         type: 'HANDLE_STORE_MUTATION',
         payload: [[], new Map()],
       });
