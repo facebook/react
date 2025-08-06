@@ -78,6 +78,10 @@ export default class DisjointSet<T> {
     return root;
   }
 
+  has(item: T): boolean {
+    return this.#entries.has(item);
+  }
+
   /*
    * Forces the set into canonical form, ie with all items pointing directly to
    * their root, and returns a Map representing the mapping of items to their roots.

@@ -80,21 +80,13 @@ function SuspendedByRow({
   maxTime,
 }: RowProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const name = asyncInfo.awaited.name;
-  const description = asyncInfo.awaited.description;
+  const ioInfo = asyncInfo.awaited;
+  const name = ioInfo.name;
+  const description = ioInfo.description;
   const longName = description === '' ? name : name + ' (' + description + ')';
   const shortDescription = getShortDescription(name, description);
-  let stack;
-  let owner;
-  if (asyncInfo.stack === null || asyncInfo.stack.length === 0) {
-    stack = asyncInfo.awaited.stack;
-    owner = asyncInfo.awaited.owner;
-  } else {
-    stack = asyncInfo.stack;
-    owner = asyncInfo.owner;
-  }
-  const start = asyncInfo.awaited.start;
-  const end = asyncInfo.awaited.end;
+  const start = ioInfo.start;
+  const end = ioInfo.end;
   const timeScale = 100 / (maxTime - minTime);
   let left = (start - minTime) * timeScale;
   let width = (end - start) * timeScale;
@@ -106,7 +98,19 @@ function SuspendedByRow({
     }
   }
 
-  const value: any = asyncInfo.awaited.value;
+  const ioOwner = ioInfo.owner;
+  const asyncOwner = asyncInfo.owner;
+  const showIOStack = ioInfo.stack !== null && ioInfo.stack.length !== 0;
+  // Only show the awaited stack if the I/O started in a different owner
+  // than where it was awaited. If it's started by the same component it's
+  // probably easy enough to infer and less noise in the common case.
+  const showAwaitStack =
+    !showIOStack ||
+    (ioOwner === null
+      ? asyncOwner !== null
+      : asyncOwner === null || ioOwner.id !== asyncOwner.id);
+
+  const value: any = ioInfo.value;
   const metaName =
     value !== null && typeof value === 'object' ? value[meta.name] : null;
   const isFulfilled = metaName === 'fulfilled Thenable';
@@ -146,19 +150,38 @@ function SuspendedByRow({
       </Button>
       {isOpen && (
         <div className={styles.CollapsableContent}>
-          {stack !== null && stack.length > 0 && (
-            <StackTraceView stack={stack} />
-          )}
-          {owner !== null && owner.id !== inspectedElement.id ? (
+          {showIOStack && <StackTraceView stack={ioInfo.stack} />}
+          {(showIOStack || !showAwaitStack) &&
+          ioOwner !== null &&
+          ioOwner.id !== inspectedElement.id ? (
             <OwnerView
-              key={owner.id}
-              displayName={owner.displayName || 'Anonymous'}
-              hocDisplayNames={owner.hocDisplayNames}
-              compiledWithForget={owner.compiledWithForget}
-              id={owner.id}
-              isInStore={store.containsElement(owner.id)}
-              type={owner.type}
+              key={ioOwner.id}
+              displayName={ioOwner.displayName || 'Anonymous'}
+              hocDisplayNames={ioOwner.hocDisplayNames}
+              compiledWithForget={ioOwner.compiledWithForget}
+              id={ioOwner.id}
+              isInStore={store.containsElement(ioOwner.id)}
+              type={ioOwner.type}
             />
+          ) : null}
+          {showAwaitStack ? (
+            <>
+              <div className={styles.SmallHeader}>awaited at:</div>
+              {asyncInfo.stack !== null && asyncInfo.stack.length > 0 && (
+                <StackTraceView stack={asyncInfo.stack} />
+              )}
+              {asyncOwner !== null && asyncOwner.id !== inspectedElement.id ? (
+                <OwnerView
+                  key={asyncOwner.id}
+                  displayName={asyncOwner.displayName || 'Anonymous'}
+                  hocDisplayNames={asyncOwner.hocDisplayNames}
+                  compiledWithForget={asyncOwner.compiledWithForget}
+                  id={asyncOwner.id}
+                  isInStore={store.containsElement(asyncOwner.id)}
+                  type={asyncOwner.type}
+                />
+              ) : null}
+            </>
           ) : null}
           <div className={styles.PreviewContainer}>
             <KeyValue
@@ -205,6 +228,15 @@ type Props = {
   store: Store,
 };
 
+function compareTime(a: SerializedAsyncInfo, b: SerializedAsyncInfo): number {
+  const ioA = a.awaited;
+  const ioB = b.awaited;
+  if (ioA.start === ioB.start) {
+    return ioA.end - ioB.end;
+  }
+  return ioA.start - ioB.start;
+}
+
 export default function InspectedElementSuspendedBy({
   bridge,
   element,
@@ -241,6 +273,9 @@ export default function InspectedElementSuspendedBy({
     minTime = maxTime - 25;
   }
 
+  const sortedSuspendedBy = suspendedBy.slice(0);
+  sortedSuspendedBy.sort(compareTime);
+
   return (
     <div>
       <div className={styles.HeaderRow}>
@@ -249,7 +284,7 @@ export default function InspectedElementSuspendedBy({
           <ButtonIcon type="copy" />
         </Button>
       </div>
-      {suspendedBy.map((asyncInfo, index) => (
+      {sortedSuspendedBy.map((asyncInfo, index) => (
         <SuspendedByRow
           key={index}
           index={index}

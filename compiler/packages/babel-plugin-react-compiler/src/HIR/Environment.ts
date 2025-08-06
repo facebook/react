@@ -49,6 +49,7 @@ import {
 } from './ObjectShape';
 import {Scope as BabelScope, NodePath} from '@babel/traverse';
 import {TypeSchema} from './TypeSchema';
+import {FlowTypeEnv} from '../Flood/Types';
 
 export const ReactElementSymbolSchema = z.object({
   elementSymbol: z.union([
@@ -242,6 +243,12 @@ export const EnvironmentConfigSchema = z.object({
    * enables trusting user type annotations.
    */
   enableUseTypeAnnotations: z.boolean().default(false),
+
+  /**
+   * Allows specifying a function that can populate HIR with type information from
+   * Flow
+   */
+  flowTypeProvider: z.nullable(z.function().args(z.string())).default(null),
 
   /**
    * Enable a new model for mutability and aliasing inference
@@ -697,6 +704,8 @@ export class Environment {
   #hoistedIdentifiers: Set<t.Identifier>;
   parentFunction: NodePath<t.Function>;
 
+  #flowTypeEnvironment: FlowTypeEnv | null;
+
   constructor(
     scope: BabelScope,
     fnType: ReactFunctionType,
@@ -765,6 +774,26 @@ export class Environment {
     this.parentFunction = parentFunction;
     this.#contextIdentifiers = contextIdentifiers;
     this.#hoistedIdentifiers = new Set();
+
+    if (config.flowTypeProvider != null) {
+      this.#flowTypeEnvironment = new FlowTypeEnv();
+      CompilerError.invariant(code != null, {
+        reason:
+          'Expected Environment to be initialized with source code when a Flow type provider is specified',
+        loc: null,
+      });
+      this.#flowTypeEnvironment.init(this, code);
+    } else {
+      this.#flowTypeEnvironment = null;
+    }
+  }
+
+  get typeContext(): FlowTypeEnv {
+    CompilerError.invariant(this.#flowTypeEnvironment != null, {
+      reason: 'Flow type environment not initialized',
+      loc: null,
+    });
+    return this.#flowTypeEnvironment;
   }
 
   get isInferredMemoEnabled(): boolean {

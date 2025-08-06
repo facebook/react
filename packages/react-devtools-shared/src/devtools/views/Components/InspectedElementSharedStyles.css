@@ -123,3 +123,10 @@
 .TimeBarSpanErrored {
   background-color: var(--color-timespan-background-errored);
 }
+
+.SmallHeader {
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-normal);
+  padding-left: 1.25rem;
+  margin-top: 0.25rem;
+}
