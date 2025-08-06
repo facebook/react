@@ -50,7 +50,7 @@ function Component() {
 ```
 Found 1 error:
 
-Error: Cannot reassign variable after render completes
+Error: Cannot modify local variables after render completes
 
 Reassigning `local` after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.
 

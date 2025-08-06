@@ -92,7 +92,7 @@ export const MacroSchema = z.union([
   z.tuple([z.string(), z.array(MacroMethodSchema)]),
 ]);
 
-export type CompilerMode = 'all_features' | 'no_inferred_memo';
+export type CompilerMode = 'all_features' | 'no_inferred_memo' | 'lint_only';
 
 export type Macro = z.infer<typeof MacroSchema>;
 export type MacroMethod = z.infer<typeof MacroMethodSchema>;
@@ -797,6 +797,14 @@ export class Environment {
         detail: error,
         fnLoc: null,
       });
+    }
+  }
+
+  logOrThrowErrors(errors: Result<void, CompilerError>): void {
+    if (this.compilerMode === 'lint_only') {
+      this.logErrors(errors);
+    } else {
+      errors.unwrap();
     }
   }
 
