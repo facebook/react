@@ -482,6 +482,9 @@ export function getWorkInProgressTransitions(): null | Array<Transition> {
   return workInProgressTransitions;
 }
 
+// The first setState call that eventually caused the current render.
+let workInProgressUpdateTask: null | ConsoleTask = null;
+
 let currentPendingTransitionCallbacks: PendingTransitionCallbacks | null = null;
 let currentEndTime: number | null = null;
 
@@ -1878,7 +1881,9 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
       finalizeRender(workInProgressRootRenderLanes, renderStartTime);
     }
 
+    workInProgressUpdateTask = null;
     if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
+      workInProgressUpdateTask = blockingUpdateTask;
       const clampedUpdateTime =
         blockingUpdateTime >= 0 && blockingUpdateTime < blockingClampTime
           ? blockingClampTime
@@ -1913,6 +1918,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
       clearBlockingTimers();
     }
     if (includesTransitionLane(lanes)) {
+      workInProgressUpdateTask = transitionUpdateTask;
       const clampedStartTime =
         transitionStartTime >= 0 && transitionStartTime < transitionClampTime
           ? transitionClampTime

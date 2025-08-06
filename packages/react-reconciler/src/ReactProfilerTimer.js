@@ -166,7 +166,6 @@ export function trackSuspendedTime(lanes: Lanes, renderEndTime: number) {
 
 export function clearBlockingTimers(): void {
   blockingUpdateTime = -1.1;
-  blockingUpdateTask = null;
   blockingSuspendedTime = -1.1;
   blockingEventIsRepeat = true;
   blockingSpawnedUpdate = false;
@@ -217,7 +216,6 @@ export function clearAsyncTransitionTimer(): void {
 export function clearTransitionTimers(): void {
   transitionStartTime = -1.1;
   transitionUpdateTime = -1.1;
-  transitionUpdateTask = null;
   transitionSuspendedTime = -1.1;
   transitionEventIsRepeat = true;
 }
