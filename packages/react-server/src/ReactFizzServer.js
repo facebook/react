@@ -3256,8 +3256,11 @@ function warnOnFunctionType(invalidChild: Function) {
     const name = invalidChild.displayName || invalidChild.name || 'Component';
     console.error(
       'Functions are not valid as a React child. This may happen if ' +
-        'you return %s instead of <%s /> from render. ' +
-        'Or maybe you meant to call this function rather than return it.',
+        'you return %s instead of <%s /> from render, or if you meant to call a function but forgot ().\n\n' +
+        'Common fixes:\n' +
+        '- Use <Component /> instead of Component\n' +
+        '- Use functionName() instead of functionName\n' +
+        '- Or pass the function as a prop if that was your intention\n',
       name,
       name,
     );
