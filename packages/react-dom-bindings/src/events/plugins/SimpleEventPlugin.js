@@ -95,14 +95,6 @@ function extractEvents(
     case 'afterblur':
       SyntheticEventCtor = SyntheticFocusEvent;
       break;
-    case 'click':
-      // Firefox creates a click event on right mouse clicks. This removes the
-      // unwanted click events.
-      // TODO: Fixed in https://phabricator.services.mozilla.com/D26793. Can
-      // probably remove.
-      if (nativeEvent.button === 2) {
-        return;
-      }
     /* falls through */
     case 'auxclick':
     case 'dblclick':
@@ -152,6 +144,14 @@ function extractEvents(
     case 'paste':
       SyntheticEventCtor = SyntheticClipboardEvent;
       break;
+    case 'click':
+      // Firefox creates a click event on right mouse clicks. This removes the
+      // unwanted click events.
+      // TODO: Fixed in https://phabricator.services.mozilla.com/D26793. Can
+      // probably remove.
+      if (nativeEvent.button === 2) {
+        return;
+      }
     case 'gotpointercapture':
     case 'lostpointercapture':
     case 'pointercancel':
