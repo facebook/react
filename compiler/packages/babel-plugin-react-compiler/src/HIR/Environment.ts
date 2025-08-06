@@ -297,7 +297,7 @@ export const EnvironmentConfigSchema = z.object({
    * An alternative to the standard JSX transform which replaces JSX with React's jsxProd() runtime
    * Currently a prod-only optimization, requiring Fast JSX dependencies
    *
-   * The symbol configuration is set for backwards compatability with pre-React 19 transforms
+   * The symbol configuration is set for backwards compatibility with pre-React 19 transforms
    */
   inlineJsxTransform: ReactElementSymbolSchema.nullable().default(null),
 
