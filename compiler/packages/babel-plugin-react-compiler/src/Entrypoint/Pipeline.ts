@@ -82,6 +82,7 @@ import {
 import {inferTypes} from '../TypeInference';
 import {
   validateContextVariableLValues,
+  validateConditionalHooksUsage,
   validateHooksUsage,
   validateMemoizedEffectDependencies,
   validateNoCapitalizedCalls,
@@ -208,6 +209,8 @@ function runWithEnvironment(
   if (env.isInferredMemoEnabled) {
     if (env.config.validateHooksUsage) {
       validateHooksUsage(hir).unwrap();
+      // Enhanced validation for conditional hook patterns (PR #34116 fix)
+      validateConditionalHooksUsage(hir).unwrap();
     }
     if (env.config.validateNoCapitalizedCalls) {
       validateNoCapitalizedCalls(hir).unwrap();
