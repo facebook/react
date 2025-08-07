@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<3e79d84e2f93dfb2b1fe8e1a0785659c>>
+ * @generated SignedSource<<81ef16de650e37ae8a8e82ed614a3950>>
  */
 
 'use strict';
@@ -17494,7 +17494,7 @@ function retainWhere(array, predicate) {
     let writeIndex = 0;
     for (let readIndex = 0; readIndex < array.length; readIndex++) {
         const item = array[readIndex];
-        if (predicate(item) === true) {
+        if (predicate(item, readIndex) === true) {
             array[writeIndex++] = item;
         }
     }
@@ -30592,7 +30592,489 @@ const TypeSchema = zod.z.union([
     TypeReferenceSchema,
 ]);
 
-var _Environment_instances, _Environment_globals, _Environment_shapes, _Environment_moduleTypes, _Environment_nextIdentifer, _Environment_nextBlock, _Environment_nextScope, _Environment_scope, _Environment_outlinedFunctions, _Environment_contextIdentifiers, _Environment_hoistedIdentifiers, _Environment_resolveModuleType, _Environment_isKnownReactModule, _Environment_getCustomHookType;
+function unsupportedTypeAnnotation(desc, loc) {
+    CompilerError.throwInvalidJS({
+        reason: `Typedchecker does not currently support type annotation: ${desc}`,
+        loc,
+    });
+}
+
+var _FlowTypeEnv_nextNominalId, _FlowTypeEnv_nextTypeParameterId, _FlowTypeEnv_types, _FlowTypeEnv_bindings, _FlowTypeEnv_generics, _FlowTypeEnv_flowTypes;
+function makeTypeParameterId(id) {
+    CompilerError.invariant(id >= 0 && Number.isInteger(id), {
+        reason: 'Expected TypeParameterId to be a non-negative integer',
+        description: null,
+        loc: null,
+        suggestions: null,
+    });
+    return id;
+}
+function makeNominalId(id) {
+    return id;
+}
+const DUMMY_NOMINAL = makeNominalId(0);
+function convertFlowType(flowType, loc) {
+    let nextGenericId = 0;
+    function convertFlowTypeImpl(flowType, loc, genericEnv, platform, poly = null) {
+        var _a, _b, _c;
+        switch (flowType.kind) {
+            case 'TypeApp': {
+                if (flowType.type.kind === 'Def' &&
+                    flowType.type.def.kind === 'Poly' &&
+                    flowType.type.def.t_out.kind === 'Def' &&
+                    flowType.type.def.t_out.def.kind === 'Type' &&
+                    flowType.type.def.t_out.def.type.kind === 'Opaque' &&
+                    flowType.type.def.t_out.def.type.opaquetype.opaque_name ===
+                        'Client' &&
+                    flowType.targs.length === 1) {
+                    return convertFlowTypeImpl(flowType.targs[0], loc, genericEnv, 'client');
+                }
+                else if (flowType.type.kind === 'Def' &&
+                    flowType.type.def.kind === 'Poly' &&
+                    flowType.type.def.t_out.kind === 'Def' &&
+                    flowType.type.def.t_out.def.kind === 'Type' &&
+                    flowType.type.def.t_out.def.type.kind === 'Opaque' &&
+                    flowType.type.def.t_out.def.type.opaquetype.opaque_name ===
+                        'Server' &&
+                    flowType.targs.length === 1) {
+                    return convertFlowTypeImpl(flowType.targs[0], loc, genericEnv, 'server');
+                }
+                return Resolved.todo(platform);
+            }
+            case 'Open':
+                return Resolved.mixed(platform);
+            case 'Any':
+                return Resolved.todo(platform);
+            case 'Annot':
+                return convertFlowTypeImpl(flowType.type, loc, genericEnv, platform, poly);
+            case 'Opaque': {
+                if (flowType.opaquetype.opaque_name === 'Client' &&
+                    flowType.opaquetype.super_t != null) {
+                    return convertFlowTypeImpl(flowType.opaquetype.super_t, loc, genericEnv, 'client');
+                }
+                if (flowType.opaquetype.opaque_name === 'Server' &&
+                    flowType.opaquetype.super_t != null) {
+                    return convertFlowTypeImpl(flowType.opaquetype.super_t, loc, genericEnv, 'server');
+                }
+                const t = (_a = flowType.opaquetype.underlying_t) !== null && _a !== void 0 ? _a : flowType.opaquetype.super_t;
+                if (t != null) {
+                    return convertFlowTypeImpl(t, loc, genericEnv, platform, poly);
+                }
+                else {
+                    return Resolved.todo(platform);
+                }
+            }
+            case 'Def': {
+                switch (flowType.def.kind) {
+                    case 'EnumValue':
+                        return convertFlowTypeImpl(flowType.def.enum_info.representation_t, loc, genericEnv, platform, poly);
+                    case 'EnumObject':
+                        return Resolved.enum(platform);
+                    case 'Empty':
+                        return Resolved.todo(platform);
+                    case 'Instance': {
+                        const members = new Map();
+                        for (const key in flowType.def.instance.inst.own_props) {
+                            const prop = flowType.def.instance.inst.own_props[key];
+                            if (prop.kind === 'Field') {
+                                members.set(key, convertFlowTypeImpl(prop.type, loc, genericEnv, platform));
+                            }
+                            else {
+                                CompilerError.invariant(false, {
+                                    reason: `Unsupported property kind ${prop.kind}`,
+                                    loc: GeneratedSource,
+                                });
+                            }
+                        }
+                        return Resolved.class((_b = flowType.def.instance.inst.class_name) !== null && _b !== void 0 ? _b : '[anonymous class]', members, platform);
+                    }
+                    case 'Type':
+                        return convertFlowTypeImpl(flowType.def.type, loc, genericEnv, platform, poly);
+                    case 'NumGeneral':
+                    case 'SingletonNum':
+                        return Resolved.number(platform);
+                    case 'StrGeneral':
+                    case 'SingletonStr':
+                        return Resolved.string(platform);
+                    case 'BoolGeneral':
+                    case 'SingletonBool':
+                        return Resolved.boolean(platform);
+                    case 'Void':
+                        return Resolved.void(platform);
+                    case 'Null':
+                        return Resolved.void(platform);
+                    case 'Mixed':
+                        return Resolved.mixed(platform);
+                    case 'Arr': {
+                        if (flowType.def.arrtype.kind === 'ArrayAT' ||
+                            flowType.def.arrtype.kind === 'ROArrayAT') {
+                            return Resolved.array(convertFlowTypeImpl(flowType.def.arrtype.elem_t, loc, genericEnv, platform), platform);
+                        }
+                        else {
+                            return Resolved.tuple(DUMMY_NOMINAL, flowType.def.arrtype.elements.map(t => convertFlowTypeImpl(t.t, loc, genericEnv, platform)), platform);
+                        }
+                    }
+                    case 'Obj': {
+                        const members = new Map();
+                        for (const key in flowType.def.objtype.props) {
+                            const prop = flowType.def.objtype.props[key];
+                            if (prop.kind === 'Field') {
+                                members.set(key, convertFlowTypeImpl(prop.type, loc, genericEnv, platform));
+                            }
+                            else {
+                                CompilerError.invariant(false, {
+                                    reason: `Unsupported property kind ${prop.kind}`,
+                                    loc: GeneratedSource,
+                                });
+                            }
+                        }
+                        return Resolved.object(DUMMY_NOMINAL, members, platform);
+                    }
+                    case 'Class': {
+                        if (flowType.def.type.kind === 'ThisInstance') {
+                            const members = new Map();
+                            for (const key in flowType.def.type.instance.inst.own_props) {
+                                const prop = flowType.def.type.instance.inst.own_props[key];
+                                if (prop.kind === 'Field') {
+                                    members.set(key, convertFlowTypeImpl(prop.type, loc, genericEnv, platform));
+                                }
+                                else {
+                                    CompilerError.invariant(false, {
+                                        reason: `Unsupported property kind ${prop.kind}`,
+                                        loc: GeneratedSource,
+                                    });
+                                }
+                            }
+                            return Resolved.class((_c = flowType.def.type.instance.inst.class_name) !== null && _c !== void 0 ? _c : '[anonymous class]', members, platform);
+                        }
+                        CompilerError.invariant(false, {
+                            reason: `Unsupported class instance type ${flowType.def.type.kind}`,
+                            loc: GeneratedSource,
+                        });
+                    }
+                    case 'Fun':
+                        return Resolved.function(poly, flowType.def.funtype.params.map(p => convertFlowTypeImpl(p.type, loc, genericEnv, platform)), convertFlowTypeImpl(flowType.def.funtype.return_t, loc, genericEnv, platform), platform);
+                    case 'Poly': {
+                        let newEnv = genericEnv;
+                        const poly = flowType.def.tparams.map(p => {
+                            const id = makeTypeParameterId(nextGenericId++);
+                            const bound = convertFlowTypeImpl(p.bound, loc, newEnv, platform);
+                            newEnv = new Map(newEnv);
+                            newEnv.set(p.name, id);
+                            return {
+                                name: p.name,
+                                id,
+                                bound,
+                            };
+                        });
+                        return convertFlowTypeImpl(flowType.def.t_out, loc, newEnv, platform, poly);
+                    }
+                    case 'ReactAbstractComponent': {
+                        const props = new Map();
+                        let children = null;
+                        const propsType = convertFlowTypeImpl(flowType.def.config, loc, genericEnv, platform);
+                        if (propsType.type.kind === 'Object') {
+                            propsType.type.members.forEach((v, k) => {
+                                if (k === 'children') {
+                                    children = v;
+                                }
+                                else {
+                                    props.set(k, v);
+                                }
+                            });
+                        }
+                        else {
+                            CompilerError.invariant(false, {
+                                reason: `Unsupported component props type ${propsType.type.kind}`,
+                                loc: GeneratedSource,
+                            });
+                        }
+                        return Resolved.component(props, children, platform);
+                    }
+                    case 'Renders':
+                        return Resolved.todo(platform);
+                    default:
+                        unsupportedTypeAnnotation('Renders', GeneratedSource);
+                }
+            }
+            case 'Generic': {
+                const id = genericEnv.get(flowType.name);
+                if (id == null) {
+                    unsupportedTypeAnnotation(flowType.name, GeneratedSource);
+                }
+                return Resolved.generic(id, platform, convertFlowTypeImpl(flowType.bound, loc, genericEnv, platform));
+            }
+            case 'Union': {
+                const members = flowType.members.map(t => convertFlowTypeImpl(t, loc, genericEnv, platform));
+                if (members.length === 1) {
+                    return members[0];
+                }
+                if (members[0].type.kind === 'Number' ||
+                    members[0].type.kind === 'String' ||
+                    members[0].type.kind === 'Boolean') {
+                    const dupes = members.filter(t => t.type.kind === members[0].type.kind);
+                    if (dupes.length === members.length) {
+                        return members[0];
+                    }
+                }
+                if (members[0].type.kind === 'Array' &&
+                    (members[0].type.element.type.kind === 'Number' ||
+                        members[0].type.element.type.kind === 'String' ||
+                        members[0].type.element.type.kind === 'Boolean')) {
+                    const first = members[0].type.element;
+                    const dupes = members.filter(t => t.type.kind === 'Array' &&
+                        t.type.element.type.kind === first.type.kind);
+                    if (dupes.length === members.length) {
+                        return members[0];
+                    }
+                }
+                return Resolved.union(members, platform);
+            }
+            case 'Eval': {
+                if (flowType.destructor.kind === 'ReactDRO' ||
+                    flowType.destructor.kind === 'ReactCheckComponentConfig') {
+                    return convertFlowTypeImpl(flowType.type, loc, genericEnv, platform, poly);
+                }
+                unsupportedTypeAnnotation(`EvalT(${flowType.destructor.kind})`, GeneratedSource);
+            }
+            case 'Optional': {
+                return Resolved.union([
+                    convertFlowTypeImpl(flowType.type, loc, genericEnv, platform),
+                    Resolved.void(platform),
+                ], platform);
+            }
+            default:
+                unsupportedTypeAnnotation(flowType.kind, GeneratedSource);
+        }
+    }
+    return convertFlowTypeImpl(flowType, loc, new Map(), 'shared');
+}
+function serializeLoc(location) {
+    return `${location.start.line}:${location.start.column}-${location.end.line}:${location.end.column}`;
+}
+function buildTypeEnvironment(flowOutput) {
+    const result = new Map();
+    for (const item of flowOutput) {
+        const loc = {
+            start: {
+                line: item.loc.start.line,
+                column: item.loc.start.column - 1,
+                index: item.loc.start.index,
+            },
+            end: item.loc.end,
+            filename: item.loc.filename,
+            identifierName: item.loc.identifierName,
+        };
+        result.set(serializeLoc(loc), item.type);
+    }
+    return result;
+}
+let lastFlowSource = null;
+let lastFlowResult = null;
+class FlowTypeEnv {
+    constructor() {
+        this.moduleEnv = new Map();
+        _FlowTypeEnv_nextNominalId.set(this, 0);
+        _FlowTypeEnv_nextTypeParameterId.set(this, 0);
+        _FlowTypeEnv_types.set(this, new Map());
+        _FlowTypeEnv_bindings.set(this, new Map());
+        _FlowTypeEnv_generics.set(this, []);
+        _FlowTypeEnv_flowTypes.set(this, new Map());
+    }
+    init(env, source) {
+        CompilerError.invariant(env.config.flowTypeProvider != null, {
+            reason: 'Expected flowDumpTypes to be defined in environment config',
+            loc: GeneratedSource,
+        });
+        let stdout;
+        if (source === lastFlowSource) {
+            stdout = lastFlowResult;
+        }
+        else {
+            lastFlowSource = source;
+            lastFlowResult = env.config.flowTypeProvider(source);
+            stdout = lastFlowResult;
+        }
+        const flowTypes = buildTypeEnvironment(stdout);
+        const resolvedFlowTypes = new Map();
+        for (const [loc, type] of flowTypes) {
+            if (typeof loc === 'symbol')
+                continue;
+            resolvedFlowTypes.set(loc, convertFlowType(JSON.parse(type), loc));
+        }
+        __classPrivateFieldSet(this, _FlowTypeEnv_flowTypes, resolvedFlowTypes, "f");
+    }
+    setType(identifier, type) {
+        if (typeof identifier.loc !== 'symbol' &&
+            __classPrivateFieldGet(this, _FlowTypeEnv_flowTypes, "f").has(serializeLoc(identifier.loc))) {
+            return;
+        }
+        __classPrivateFieldGet(this, _FlowTypeEnv_types, "f").set(identifier.id, type);
+    }
+    getType(identifier) {
+        const result = this.getTypeOrNull(identifier);
+        if (result == null) {
+            throw new Error(`Type not found for ${identifier.id}, ${typeof identifier.loc === 'symbol' ? 'generated loc' : serializeLoc(identifier.loc)}`);
+        }
+        return result;
+    }
+    getTypeOrNull(identifier) {
+        var _a;
+        const result = (_a = __classPrivateFieldGet(this, _FlowTypeEnv_types, "f").get(identifier.id)) !== null && _a !== void 0 ? _a : null;
+        if (result == null && typeof identifier.loc !== 'symbol') {
+            const flowType = __classPrivateFieldGet(this, _FlowTypeEnv_flowTypes, "f").get(serializeLoc(identifier.loc));
+            return flowType !== null && flowType !== void 0 ? flowType : null;
+        }
+        return result;
+    }
+    getTypeByLoc(loc) {
+        if (typeof loc === 'symbol') {
+            return null;
+        }
+        const flowType = __classPrivateFieldGet(this, _FlowTypeEnv_flowTypes, "f").get(serializeLoc(loc));
+        return flowType !== null && flowType !== void 0 ? flowType : null;
+    }
+    nextNominalId() {
+        var _a, _b;
+        return makeNominalId((__classPrivateFieldSet(this, _FlowTypeEnv_nextNominalId, (_b = __classPrivateFieldGet(this, _FlowTypeEnv_nextNominalId, "f"), _a = _b++, _b), "f"), _a));
+    }
+    nextTypeParameterId() {
+        var _a, _b;
+        return makeTypeParameterId((__classPrivateFieldSet(this, _FlowTypeEnv_nextTypeParameterId, (_b = __classPrivateFieldGet(this, _FlowTypeEnv_nextTypeParameterId, "f"), _a = _b++, _b), "f"), _a));
+    }
+    addBinding(bindingIdentifier, type) {
+        __classPrivateFieldGet(this, _FlowTypeEnv_bindings, "f").set(bindingIdentifier, type);
+    }
+    resolveBinding(bindingIdentifier) {
+        var _a;
+        return (_a = __classPrivateFieldGet(this, _FlowTypeEnv_bindings, "f").get(bindingIdentifier)) !== null && _a !== void 0 ? _a : null;
+    }
+    pushGeneric(name, generic) {
+        __classPrivateFieldGet(this, _FlowTypeEnv_generics, "f").unshift([name, generic]);
+    }
+    popGeneric(name) {
+        for (let i = 0; i < __classPrivateFieldGet(this, _FlowTypeEnv_generics, "f").length; i++) {
+            if (__classPrivateFieldGet(this, _FlowTypeEnv_generics, "f")[i][0] === name) {
+                __classPrivateFieldGet(this, _FlowTypeEnv_generics, "f").splice(i, 1);
+                return;
+            }
+        }
+    }
+    getGeneric(name) {
+        for (const [eltName, param] of __classPrivateFieldGet(this, _FlowTypeEnv_generics, "f")) {
+            if (name === eltName) {
+                return param;
+            }
+        }
+        return null;
+    }
+}
+_FlowTypeEnv_nextNominalId = new WeakMap(), _FlowTypeEnv_nextTypeParameterId = new WeakMap(), _FlowTypeEnv_types = new WeakMap(), _FlowTypeEnv_bindings = new WeakMap(), _FlowTypeEnv_generics = new WeakMap(), _FlowTypeEnv_flowTypes = new WeakMap();
+const Primitives = {
+    number(platform) {
+        return { kind: 'Concrete', type: { kind: 'Number' }, platform };
+    },
+    string(platform) {
+        return { kind: 'Concrete', type: { kind: 'String' }, platform };
+    },
+    boolean(platform) {
+        return { kind: 'Concrete', type: { kind: 'Boolean' }, platform };
+    },
+    void(platform) {
+        return { kind: 'Concrete', type: { kind: 'Void' }, platform };
+    },
+    mixed(platform) {
+        return { kind: 'Concrete', type: { kind: 'Mixed' }, platform };
+    },
+    enum(platform) {
+        return { kind: 'Concrete', type: { kind: 'Enum' }, platform };
+    },
+    todo(platform) {
+        return { kind: 'Concrete', type: { kind: 'Mixed' }, platform };
+    },
+};
+const Resolved = Object.assign(Object.assign({}, Primitives), { nullable(type, platform) {
+        return { kind: 'Concrete', type: { kind: 'Nullable', type }, platform };
+    },
+    array(element, platform) {
+        return { kind: 'Concrete', type: { kind: 'Array', element }, platform };
+    },
+    set(element, platform) {
+        return { kind: 'Concrete', type: { kind: 'Set', element }, platform };
+    },
+    map(key, value, platform) {
+        return { kind: 'Concrete', type: { kind: 'Map', key, value }, platform };
+    },
+    function(typeParameters, params, returnType, platform) {
+        return {
+            kind: 'Concrete',
+            type: { kind: 'Function', typeParameters, params, returnType },
+            platform,
+        };
+    },
+    component(props, children, platform) {
+        return {
+            kind: 'Concrete',
+            type: { kind: 'Component', props, children },
+            platform,
+        };
+    },
+    object(id, members, platform) {
+        return {
+            kind: 'Concrete',
+            type: {
+                kind: 'Object',
+                id,
+                members,
+            },
+            platform,
+        };
+    },
+    class(name, members, platform) {
+        return {
+            kind: 'Concrete',
+            type: {
+                kind: 'Instance',
+                name,
+                members,
+            },
+            platform,
+        };
+    },
+    tuple(id, members, platform) {
+        return {
+            kind: 'Concrete',
+            type: {
+                kind: 'Tuple',
+                id,
+                members,
+            },
+            platform,
+        };
+    },
+    generic(id, platform, bound = Primitives.mixed(platform)) {
+        return {
+            kind: 'Concrete',
+            type: {
+                kind: 'Generic',
+                id,
+                bound,
+            },
+            platform,
+        };
+    },
+    union(members, platform) {
+        return {
+            kind: 'Concrete',
+            type: {
+                kind: 'Union',
+                members,
+            },
+            platform,
+        };
+    } });
+
+var _Environment_instances, _Environment_globals, _Environment_shapes, _Environment_moduleTypes, _Environment_nextIdentifer, _Environment_nextBlock, _Environment_nextScope, _Environment_scope, _Environment_outlinedFunctions, _Environment_contextIdentifiers, _Environment_hoistedIdentifiers, _Environment_flowTypeEnvironment, _Environment_resolveModuleType, _Environment_isKnownReactModule, _Environment_getCustomHookType;
 const ReactElementSymbolSchema = zod.z.object({
     elementSymbol: zod.z.union([
         zod.z.literal('react.element'),
@@ -30637,6 +31119,7 @@ const EnvironmentConfigSchema = zod.z.object({
     enablePreserveExistingManualUseMemo: zod.z.boolean().default(false),
     enableForest: zod.z.boolean().default(false),
     enableUseTypeAnnotations: zod.z.boolean().default(false),
+    flowTypeProvider: zod.z.nullable(zod.z.function().args(zod.z.string())).default(null),
     enableNewMutationAliasingModel: zod.z.boolean().default(true),
     enableOptionalDependencies: zod.z.boolean().default(true),
     enableFire: zod.z.boolean().default(false),
@@ -30694,6 +31177,7 @@ class Environment {
         this.inferredEffectLocations = new Set();
         _Environment_contextIdentifiers.set(this, void 0);
         _Environment_hoistedIdentifiers.set(this, void 0);
+        _Environment_flowTypeEnvironment.set(this, void 0);
         __classPrivateFieldSet(this, _Environment_scope, scope, "f");
         this.fnType = fnType;
         this.compilerMode = compilerMode;
@@ -30741,6 +31225,24 @@ class Environment {
         this.parentFunction = parentFunction;
         __classPrivateFieldSet(this, _Environment_contextIdentifiers, contextIdentifiers, "f");
         __classPrivateFieldSet(this, _Environment_hoistedIdentifiers, new Set(), "f");
+        if (config.flowTypeProvider != null) {
+            __classPrivateFieldSet(this, _Environment_flowTypeEnvironment, new FlowTypeEnv(), "f");
+            CompilerError.invariant(code != null, {
+                reason: 'Expected Environment to be initialized with source code when a Flow type provider is specified',
+                loc: null,
+            });
+            __classPrivateFieldGet(this, _Environment_flowTypeEnvironment, "f").init(this, code);
+        }
+        else {
+            __classPrivateFieldSet(this, _Environment_flowTypeEnvironment, null, "f");
+        }
+    }
+    get typeContext() {
+        CompilerError.invariant(__classPrivateFieldGet(this, _Environment_flowTypeEnvironment, "f") != null, {
+            reason: 'Flow type environment not initialized',
+            loc: null,
+        });
+        return __classPrivateFieldGet(this, _Environment_flowTypeEnvironment, "f");
     }
     get isInferredMemoEnabled() {
         return this.compilerMode !== 'no_inferred_memo';
@@ -30933,7 +31435,7 @@ class Environment {
         __classPrivateFieldGet(this, _Environment_hoistedIdentifiers, "f").add(node);
     }
 }
-_Environment_globals = new WeakMap(), _Environment_shapes = new WeakMap(), _Environment_moduleTypes = new WeakMap(), _Environment_nextIdentifer = new WeakMap(), _Environment_nextBlock = new WeakMap(), _Environment_nextScope = new WeakMap(), _Environment_scope = new WeakMap(), _Environment_outlinedFunctions = new WeakMap(), _Environment_contextIdentifiers = new WeakMap(), _Environment_hoistedIdentifiers = new WeakMap(), _Environment_instances = new WeakSet(), _Environment_resolveModuleType = function _Environment_resolveModuleType(moduleName, loc) {
+_Environment_globals = new WeakMap(), _Environment_shapes = new WeakMap(), _Environment_moduleTypes = new WeakMap(), _Environment_nextIdentifer = new WeakMap(), _Environment_nextBlock = new WeakMap(), _Environment_nextScope = new WeakMap(), _Environment_scope = new WeakMap(), _Environment_outlinedFunctions = new WeakMap(), _Environment_contextIdentifiers = new WeakMap(), _Environment_hoistedIdentifiers = new WeakMap(), _Environment_flowTypeEnvironment = new WeakMap(), _Environment_instances = new WeakSet(), _Environment_resolveModuleType = function _Environment_resolveModuleType(moduleName, loc) {
     let moduleType = __classPrivateFieldGet(this, _Environment_moduleTypes, "f").get(moduleName);
     if (moduleType === undefined) {
         if (this.config.moduleTypeProvider == null) {
@@ -31159,6 +31661,9 @@ class DisjointSet {
         const root = this.find(parent);
         __classPrivateFieldGet(this, _DisjointSet_entries, "f").set(item, root);
         return root;
+    }
+    has(item) {
+        return __classPrivateFieldGet(this, _DisjointSet_entries, "f").has(item);
     }
     canonicalize() {
         const entries = new Map();
