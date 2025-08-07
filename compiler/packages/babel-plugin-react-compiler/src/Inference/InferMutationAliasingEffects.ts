@@ -471,8 +471,7 @@ function applySignature(
               effect.reason?.kind === 'AssignCurrentProperty'
             ) {
               diagnostic.withDetail({
-                kind: 'error',
-                loc: effect.value.loc,
+                kind: 'hint',
                 message: `Hint: If this value is a Ref (value returned by \`useRef()\`), rename the variable to end in "Ref".`,
               });
             }
@@ -1096,8 +1095,7 @@ function applyEffect(
             effect.reason?.kind === 'AssignCurrentProperty'
           ) {
             diagnostic.withDetail({
-              kind: 'error',
-              loc: effect.value.loc,
+              kind: 'hint',
               message: `Hint: If this value is a Ref (value returned by \`useRef()\`), rename the variable to end in "Ref".`,
             });
           }

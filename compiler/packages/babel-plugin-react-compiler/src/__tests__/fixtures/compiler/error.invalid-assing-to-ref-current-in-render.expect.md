@@ -30,13 +30,7 @@ Modifying a value returned from a hook is not allowed. Consider moving the modif
   7 | }
   8 |
 
-  3 | component Foo() {
-  4 |   const foo = useFoo();
-> 5 |   foo.current = true;
-    |   ^^^ Hint: If this value is a Ref (value returned by `useRef()`), rename the variable to end in "Ref".
-  6 |   return <div />;
-  7 | }
-  8 |
+Hint: If this value is a Ref (value returned by `useRef()`), rename the variable to end in "Ref".
 ```
           
       
