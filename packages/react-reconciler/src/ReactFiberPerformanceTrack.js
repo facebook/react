@@ -609,6 +609,7 @@ export function logBlockingStart(
   eventType: null | string,
   eventIsRepeat: boolean,
   isSpawnedUpdate: boolean,
+  isPingedUpdate: boolean,
   renderStartTime: number,
   lanes: Lanes,
   debugTask: null | ConsoleTask, // DEV-only
@@ -658,11 +659,13 @@ export function logBlockingStart(
           // $FlowFixMe[method-unbinding]
           console.timeStamp.bind(
             console,
-            isSpawnedUpdate
-              ? 'Cascading Update'
-              : renderStartTime - updateTime > 5
-                ? 'Update Blocked'
-                : 'Update',
+            isPingedUpdate
+              ? 'Promise Resolved'
+              : isSpawnedUpdate
+                ? 'Cascading Update'
+                : renderStartTime - updateTime > 5
+                  ? 'Update Blocked'
+                  : 'Update',
             updateTime,
             renderStartTime,
             currentTrack,
@@ -672,11 +675,13 @@ export function logBlockingStart(
         );
       } else {
         console.timeStamp(
-          isSpawnedUpdate
-            ? 'Cascading Update'
-            : renderStartTime - updateTime > 5
-              ? 'Update Blocked'
-              : 'Update',
+          isPingedUpdate
+            ? 'Promise Resolved'
+            : isSpawnedUpdate
+              ? 'Cascading Update'
+              : renderStartTime - updateTime > 5
+                ? 'Update Blocked'
+                : 'Update',
           updateTime,
           renderStartTime,
           currentTrack,
@@ -694,6 +699,7 @@ export function logTransitionStart(
   eventTime: number,
   eventType: null | string,
   eventIsRepeat: boolean,
+  isPingedUpdate: boolean,
   renderStartTime: number,
   debugTask: null | ConsoleTask, // DEV-only
 ): void {
@@ -763,7 +769,11 @@ export function logTransitionStart(
           // $FlowFixMe[method-unbinding]
           console.timeStamp.bind(
             console,
-            renderStartTime - updateTime > 5 ? 'Update Blocked' : 'Update',
+            isPingedUpdate
+              ? 'Promise Resolved'
+              : renderStartTime - updateTime > 5
+                ? 'Update Blocked'
+                : 'Update',
             updateTime,
             renderStartTime,
             currentTrack,
@@ -773,7 +783,11 @@ export function logTransitionStart(
         );
       } else {
         console.timeStamp(
-          renderStartTime - updateTime > 5 ? 'Update Blocked' : 'Update',
+          isPingedUpdate
+            ? 'Promise Resolved'
+            : renderStartTime - updateTime > 5
+              ? 'Update Blocked'
+              : 'Update',
           updateTime,
           renderStartTime,
           currentTrack,
@@ -789,23 +803,43 @@ export function logRenderPhase(
   startTime: number,
   endTime: number,
   lanes: Lanes,
+  debugTask: null | ConsoleTask,
 ): void {
   if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
     const color = includesOnlyHydrationOrOffscreenLanes(lanes)
       ? 'tertiary-dark'
       : 'primary-dark';
-    console.timeStamp(
-      includesOnlyOffscreenLanes(lanes)
-        ? 'Prepared'
-        : includesOnlyHydrationLanes(lanes)
-          ? 'Hydrated'
-          : 'Render',
-      startTime,
-      endTime,
-      currentTrack,
-      LANES_TRACK_GROUP,
-      color,
-    );
+    const label = includesOnlyOffscreenLanes(lanes)
+      ? 'Prepared'
+      : includesOnlyHydrationLanes(lanes)
+        ? 'Hydrated'
+        : 'Render';
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          label,
+          startTime,
+          endTime,
+          currentTrack,
+          LANES_TRACK_GROUP,
+          color,
+        ),
+      );
+    } else {
+      console.timeStamp(
+        label,
+        startTime,
+        endTime,
+        currentTrack,
+        LANES_TRACK_GROUP,
+        color,
+      );
+    }
   }
 }
 
@@ -813,23 +847,43 @@ export function logInterruptedRenderPhase(
   startTime: number,
   endTime: number,
   lanes: Lanes,
+  debugTask: null | ConsoleTask,
 ): void {
   if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
     const color = includesOnlyHydrationOrOffscreenLanes(lanes)
       ? 'tertiary-dark'
       : 'primary-dark';
-    console.timeStamp(
-      includesOnlyOffscreenLanes(lanes)
-        ? 'Prewarm'
-        : includesOnlyHydrationLanes(lanes)
-          ? 'Interrupted Hydration'
-          : 'Interrupted Render',
-      startTime,
-      endTime,
-      currentTrack,
-      LANES_TRACK_GROUP,
-      color,
-    );
+    const label = includesOnlyOffscreenLanes(lanes)
+      ? 'Prewarm'
+      : includesOnlyHydrationLanes(lanes)
+        ? 'Interrupted Hydration'
+        : 'Interrupted Render';
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          label,
+          startTime,
+          endTime,
+          currentTrack,
+          LANES_TRACK_GROUP,
+          color,
+        ),
+      );
+    } else {
+      console.timeStamp(
+        label,
+        startTime,
+        endTime,
+        currentTrack,
+        LANES_TRACK_GROUP,
+        color,
+      );
+    }
   }
 }
 
@@ -837,19 +891,38 @@ export function logSuspendedRenderPhase(
   startTime: number,
   endTime: number,
   lanes: Lanes,
+  debugTask: null | ConsoleTask,
 ): void {
   if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
     const color = includesOnlyHydrationOrOffscreenLanes(lanes)
       ? 'tertiary-dark'
       : 'primary-dark';
-    console.timeStamp(
-      'Prewarm',
-      startTime,
-      endTime,
-      currentTrack,
-      LANES_TRACK_GROUP,
-      color,
-    );
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          'Prewarm',
+          startTime,
+          endTime,
+          currentTrack,
+          LANES_TRACK_GROUP,
+          color,
+        ),
+      );
+    } else {
+      console.timeStamp(
+        'Prewarm',
+        startTime,
+        endTime,
+        currentTrack,
+        LANES_TRACK_GROUP,
+        color,
+      );
+    }
   }
 }
 
@@ -857,20 +930,39 @@ export function logSuspendedWithDelayPhase(
   startTime: number,
   endTime: number,
   lanes: Lanes,
+  debugTask: null | ConsoleTask,
 ): void {
   // This means the render was suspended and cannot commit until it gets unblocked.
   if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
     const color = includesOnlyHydrationOrOffscreenLanes(lanes)
       ? 'tertiary-dark'
       : 'primary-dark';
-    console.timeStamp(
-      'Suspended',
-      startTime,
-      endTime,
-      currentTrack,
-      LANES_TRACK_GROUP,
-      color,
-    );
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          'Suspended',
+          startTime,
+          endTime,
+          currentTrack,
+          LANES_TRACK_GROUP,
+          color,
+        ),
+      );
+    } else {
+      console.timeStamp(
+        'Suspended',
+        startTime,
+        endTime,
+        currentTrack,
+        LANES_TRACK_GROUP,
+        color,
+      );
+    }
   }
 }
 
@@ -880,8 +972,12 @@ export function logRecoveredRenderPhase(
   lanes: Lanes,
   recoverableErrors: Array<CapturedValue<mixed>>,
   hydrationFailed: boolean,
+  debugTask: null | ConsoleTask,
 ): void {
   if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
     if (__DEV__) {
       const properties: Array<[string, string]> = [];
       for (let i = 0; i < recoverableErrors.length; i++) {
@@ -897,7 +993,7 @@ export function logRecoveredRenderPhase(
               String(error);
         properties.push(['Recoverable Error', message]);
       }
-      performance.measure('Recovered', {
+      const options = {
         start: startTime,
         end: endTime,
         detail: {
@@ -911,7 +1007,15 @@ export function logRecoveredRenderPhase(
             properties,
           },
         },
-      });
+      };
+      if (debugTask) {
+        debugTask.run(
+          // $FlowFixMe[method-unbinding]
+          performance.measure.bind(performance, 'Recovered', options),
+        );
+      } else {
+        performance.measure('Recovered', options);
+      }
     } else {
       console.timeStamp(
         'Recovered',
@@ -929,68 +1033,144 @@ export function logErroredRenderPhase(
   startTime: number,
   endTime: number,
   lanes: Lanes,
+  debugTask: null | ConsoleTask,
 ): void {
   if (supportsUserTiming) {
-    console.timeStamp(
-      'Errored',
-      startTime,
-      endTime,
-      currentTrack,
-      LANES_TRACK_GROUP,
-      'error',
-    );
+    if (endTime <= startTime) {
+      return;
+    }
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          'Errored',
+          startTime,
+          endTime,
+          currentTrack,
+          LANES_TRACK_GROUP,
+          'error',
+        ),
+      );
+    } else {
+      console.timeStamp(
+        'Errored',
+        startTime,
+        endTime,
+        currentTrack,
+        LANES_TRACK_GROUP,
+        'error',
+      );
+    }
   }
 }
 
 export function logInconsistentRender(
   startTime: number,
   endTime: number,
+  debugTask: null | ConsoleTask,
 ): void {
   if (supportsUserTiming) {
-    console.timeStamp(
-      'Teared Render',
-      startTime,
-      endTime,
-      currentTrack,
-      LANES_TRACK_GROUP,
-      'error',
-    );
+    if (endTime <= startTime) {
+      return;
+    }
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          'Teared Render',
+          startTime,
+          endTime,
+          currentTrack,
+          LANES_TRACK_GROUP,
+          'error',
+        ),
+      );
+    } else {
+      console.timeStamp(
+        'Teared Render',
+        startTime,
+        endTime,
+        currentTrack,
+        LANES_TRACK_GROUP,
+        'error',
+      );
+    }
   }
 }
 
 export function logSuspenseThrottlePhase(
   startTime: number,
   endTime: number,
+  debugTask: null | ConsoleTask,
 ): void {
   // This was inside a throttled Suspense boundary commit.
   if (supportsUserTiming) {
-    console.timeStamp(
-      'Throttled',
-      startTime,
-      endTime,
-      currentTrack,
-      LANES_TRACK_GROUP,
-      'secondary-light',
-    );
+    if (endTime <= startTime) {
+      return;
+    }
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          'Throttled',
+          startTime,
+          endTime,
+          currentTrack,
+          LANES_TRACK_GROUP,
+          'secondary-light',
+        ),
+      );
+    } else {
+      console.timeStamp(
+        'Throttled',
+        startTime,
+        endTime,
+        currentTrack,
+        LANES_TRACK_GROUP,
+        'secondary-light',
+      );
+    }
   }
 }
 
 export function logSuspendedCommitPhase(
   startTime: number,
   endTime: number,
+  debugTask: null | ConsoleTask,
 ): void {
   // This means the commit was suspended on CSS or images.
   if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
     // TODO: Include the exact reason and URLs of what resources suspended.
     // TODO: This might also be Suspended while waiting on a View Transition.
-    console.timeStamp(
-      'Suspended on CSS or Images',
-      startTime,
-      endTime,
-      currentTrack,
-      LANES_TRACK_GROUP,
-      'secondary-light',
-    );
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          'Suspended on CSS or Images',
+          startTime,
+          endTime,
+          currentTrack,
+          LANES_TRACK_GROUP,
+          'secondary-light',
+        ),
+      );
+    } else {
+      console.timeStamp(
+        'Suspended on CSS or Images',
+        startTime,
+        endTime,
+        currentTrack,
+        LANES_TRACK_GROUP,
+        'secondary-light',
+      );
+    }
   }
 }
 
@@ -999,8 +1179,12 @@ export function logCommitErrored(
   endTime: number,
   errors: Array<CapturedValue<mixed>>,
   passive: boolean,
+  debugTask: null | ConsoleTask,
 ): void {
   if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
     if (__DEV__) {
       const properties: Array<[string, string]> = [];
       for (let i = 0; i < errors.length; i++) {
@@ -1016,7 +1200,7 @@ export function logCommitErrored(
               String(error);
         properties.push(['Error', message]);
       }
-      performance.measure('Errored', {
+      const options = {
         start: startTime,
         end: endTime,
         detail: {
@@ -1030,7 +1214,15 @@ export function logCommitErrored(
             properties,
           },
         },
-      });
+      };
+      if (debugTask) {
+        debugTask.run(
+          // $FlowFixMe[method-unbinding]
+          performance.measure.bind(performance, 'Errored', options),
+        );
+      } else {
+        performance.measure('Errored', options);
+      }
     } else {
       console.timeStamp(
         'Errored',
@@ -1048,20 +1240,39 @@ export function logCommitPhase(
   startTime: number,
   endTime: number,
   errors: null | Array<CapturedValue<mixed>>,
+  debugTask: null | ConsoleTask,
 ): void {
   if (errors !== null) {
-    logCommitErrored(startTime, endTime, errors, false);
+    logCommitErrored(startTime, endTime, errors, false, debugTask);
     return;
   }
   if (supportsUserTiming) {
-    console.timeStamp(
-      'Commit',
-      startTime,
-      endTime,
-      currentTrack,
-      LANES_TRACK_GROUP,
-      'secondary-dark',
-    );
+    if (endTime <= startTime) {
+      return;
+    }
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          'Commit',
+          startTime,
+          endTime,
+          currentTrack,
+          LANES_TRACK_GROUP,
+          'secondary-dark',
+        ),
+      );
+    } else {
+      console.timeStamp(
+        'Commit',
+        startTime,
+        endTime,
+        currentTrack,
+        LANES_TRACK_GROUP,
+        'secondary-dark',
+      );
+    }
   }
 }
 
@@ -1069,16 +1280,35 @@ export function logPaintYieldPhase(
   startTime: number,
   endTime: number,
   delayedUntilPaint: boolean,
+  debugTask: null | ConsoleTask,
 ): void {
   if (supportsUserTiming) {
-    console.timeStamp(
-      delayedUntilPaint ? 'Waiting for Paint' : '',
-      startTime,
-      endTime,
-      currentTrack,
-      LANES_TRACK_GROUP,
-      'secondary-light',
-    );
+    if (endTime <= startTime) {
+      return;
+    }
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          delayedUntilPaint ? 'Waiting for Paint' : '',
+          startTime,
+          endTime,
+          currentTrack,
+          LANES_TRACK_GROUP,
+          'secondary-light',
+        ),
+      );
+    } else {
+      console.timeStamp(
+        delayedUntilPaint ? 'Waiting for Paint' : '',
+        startTime,
+        endTime,
+        currentTrack,
+        LANES_TRACK_GROUP,
+        'secondary-light',
+      );
+    }
   }
 }
 
@@ -1086,19 +1316,38 @@ export function logPassiveCommitPhase(
   startTime: number,
   endTime: number,
   errors: null | Array<CapturedValue<mixed>>,
+  debugTask: null | ConsoleTask,
 ): void {
   if (errors !== null) {
-    logCommitErrored(startTime, endTime, errors, true);
+    logCommitErrored(startTime, endTime, errors, true, debugTask);
     return;
   }
   if (supportsUserTiming) {
-    console.timeStamp(
-      'Remaining Effects',
-      startTime,
-      endTime,
-      currentTrack,
-      LANES_TRACK_GROUP,
-      'secondary-dark',
-    );
+    if (endTime <= startTime) {
+      return;
+    }
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          'Remaining Effects',
+          startTime,
+          endTime,
+          currentTrack,
+          LANES_TRACK_GROUP,
+          'secondary-dark',
+        ),
+      );
+    } else {
+      console.timeStamp(
+        'Remaining Effects',
+        startTime,
+        endTime,
+        currentTrack,
+        LANES_TRACK_GROUP,
+        'secondary-dark',
+      );
+    }
   }
 }
