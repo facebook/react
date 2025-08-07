@@ -7,6 +7,7 @@ function Component() {
       <Text value={'Lauren'} />
       <Text value={'சத்யா'} />
       <Text value={'Sathya'} />
+      <Text value={'welcome 👋'} />
     </div>
   );
 }

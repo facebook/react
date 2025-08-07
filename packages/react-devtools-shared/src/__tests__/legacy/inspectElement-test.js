@@ -212,8 +212,8 @@ describe('InspectedElementContext', () => {
     expect(inspectedElement.props).toMatchInlineSnapshot(`
       {
         "anonymous_fn": Dehydrated {
-          "preview_short": ƒ () {},
-          "preview_long": ƒ () {},
+          "preview_short": () => {},
+          "preview_long": () => {},
         },
         "array_buffer": Dehydrated {
           "preview_short": ArrayBuffer(3),
@@ -230,8 +230,8 @@ describe('InspectedElementContext', () => {
           "preview_long": 123n,
         },
         "bound_fn": Dehydrated {
-          "preview_short": ƒ bound exampleFunction() {},
-          "preview_long": ƒ bound exampleFunction() {},
+          "preview_short": bound exampleFunction() {},
+          "preview_long": bound exampleFunction() {},
         },
         "data_view": Dehydrated {
           "preview_short": DataView(3),
@@ -242,8 +242,8 @@ describe('InspectedElementContext', () => {
           "preview_long": Thu Jan 01 1970 00:00:00 GMT+0000 (Coordinated Universal Time),
         },
         "fn": Dehydrated {
-          "preview_short": ƒ exampleFunction() {},
-          "preview_long": ƒ exampleFunction() {},
+          "preview_short": exampleFunction() {},
+          "preview_long": exampleFunction() {},
         },
         "html_element": Dehydrated {
           "preview_short": <div />,
@@ -289,23 +289,9 @@ describe('InspectedElementContext', () => {
             "preview_long": {boolean: true, number: 123, string: "abc"},
           },
         },
-        "react_element": {
-          "$$typeof": Dehydrated {
-            "preview_short": Symbol(react.element),
-            "preview_long": Symbol(react.element),
-          },
-          "_owner": null,
-          "_store": Dehydrated {
-            "preview_short": {…},
-            "preview_long": {},
-          },
-          "key": null,
-          "props": Dehydrated {
-            "preview_short": {…},
-            "preview_long": {},
-          },
-          "ref": null,
-          "type": "span",
+        "react_element": Dehydrated {
+          "preview_short": <span />,
+          "preview_long": <span />,
         },
         "regexp": Dehydrated {
           "preview_short": /abc/giu,

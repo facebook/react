@@ -16,6 +16,7 @@ import ElementPollingCancellationError from 'react-devtools-shared/src/errors/El
 import type {
   InspectedElement as InspectedElementBackend,
   InspectedElementPayload,
+  SerializedAsyncInfo as SerializedAsyncInfoBackend,
 } from 'react-devtools-shared/src/backend/types';
 import type {
   BackendEvents,
@@ -24,6 +25,7 @@ import type {
 import type {
   DehydratedData,
   InspectedElement as InspectedElementFrontend,
+  SerializedAsyncInfo as SerializedAsyncInfoFrontend,
 } from 'react-devtools-shared/src/frontend/types';
 import type {InspectedElementPath} from 'react-devtools-shared/src/frontend/types';
 
@@ -48,7 +50,7 @@ export function clearErrorsForElement({
   id: number,
   rendererID: number,
 }): void {
-  bridge.send('clearErrorsForFiberID', {
+  bridge.send('clearErrorsForElementID', {
     rendererID,
     id,
   });
@@ -63,7 +65,7 @@ export function clearWarningsForElement({
   id: number,
   rendererID: number,
 }): void {
-  bridge.send('clearWarningsForFiberID', {
+  bridge.send('clearWarningsForElementID', {
     rendererID,
     id,
   });
@@ -209,6 +211,33 @@ export function cloneInspectedElementWithPath(
   return clonedInspectedElement;
 }
 
+function backendToFrontendSerializedAsyncInfo(
+  asyncInfo: SerializedAsyncInfoBackend,
+): SerializedAsyncInfoFrontend {
+  const ioInfo = asyncInfo.awaited;
+  return {
+    awaited: {
+      name: ioInfo.name,
+      description: ioInfo.description,
+      start: ioInfo.start,
+      end: ioInfo.end,
+      value: ioInfo.value,
+      env: ioInfo.env,
+      owner:
+        ioInfo.owner === null
+          ? null
+          : backendToFrontendSerializedElementMapper(ioInfo.owner),
+      stack: ioInfo.stack,
+    },
+    env: asyncInfo.env,
+    owner:
+      asyncInfo.owner === null
+        ? null
+        : backendToFrontendSerializedElementMapper(asyncInfo.owner),
+    stack: asyncInfo.stack,
+  };
+}
+
 export function convertInspectedElementBackendToFrontend(
   inspectedElementBackend: InspectedElementBackend,
 ): InspectedElementFrontend {
@@ -221,9 +250,7 @@ export function convertInspectedElementBackendToFrontend(
     canEditHooksAndRenamePaths,
     canToggleError,
     isErrored,
-    targetErrorBoundaryID,
     canToggleSuspense,
-    canViewSource,
     hasLegacyContext,
     id,
     type,
@@ -240,7 +267,12 @@ export function convertInspectedElementBackendToFrontend(
     key,
     errors,
     warnings,
+    suspendedBy,
+    nativeTag,
   } = inspectedElementBackend;
+
+  const hydratedSuspendedBy: null | Array<SerializedAsyncInfoBackend> =
+    hydrateHelper(suspendedBy);
 
   const inspectedElement: InspectedElementFrontend = {
     canEditFunctionProps,
@@ -251,9 +283,7 @@ export function convertInspectedElementBackendToFrontend(
     canEditHooksAndRenamePaths,
     canToggleError,
     isErrored,
-    targetErrorBoundaryID,
     canToggleSuspense,
-    canViewSource,
     hasLegacyContext,
     id,
     key,
@@ -261,9 +291,9 @@ export function convertInspectedElementBackendToFrontend(
     rendererPackageName,
     rendererVersion,
     rootType,
-    // Previous backend implementations (<= 5.0.1) have a different interface for Source, with fileName.
-    // This gates the source features for only compatible backends: >= 5.0.2
-    source: source && source.sourceURL ? source : null,
+    // Previous backend implementations (<= 6.1.5) have a different interface for Source.
+    // This gates the source features for only compatible backends: >= 6.1.6
+    source: Array.isArray(source) ? source : null,
     type,
     owners:
       owners === null
@@ -275,6 +305,11 @@ export function convertInspectedElementBackendToFrontend(
     state: hydrateHelper(state),
     errors,
     warnings,
+    suspendedBy:
+      hydratedSuspendedBy == null // backwards compat
+        ? []
+        : hydratedSuspendedBy.map(backendToFrontendSerializedAsyncInfo),
+    nativeTag,
   };
 
   return inspectedElement;

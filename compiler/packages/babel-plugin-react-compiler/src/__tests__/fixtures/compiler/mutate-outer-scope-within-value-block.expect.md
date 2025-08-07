@@ -4,6 +4,8 @@
 ```javascript
 import {CONST_TRUE, identity, shallowCopy} from 'shared-runtime';
 
+function mutate(_: unknown) {}
+
 /**
  * There are three values with their own scopes in this fixture.
  * - arr, whose mutable range extends to the `mutate(...)` call
@@ -44,6 +46,8 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 import { CONST_TRUE, identity, shallowCopy } from "shared-runtime";
+
+function mutate(_) {}
 
 /**
  * There are three values with their own scopes in this fixture.
@@ -91,4 +95,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: exception) mutate is not defined
+(kind: ok) 

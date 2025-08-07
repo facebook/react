@@ -172,7 +172,7 @@ test('regression (#20932): return pointer is correct before entering deleted tre
 
   function App() {
     return (
-      <SuspenseList revealOrder="forwards">
+      <SuspenseList revealOrder="forwards" tail="visible">
         <Suspense fallback={<Text text="Loading Async..." />}>
           <Async />
         </Suspense>
@@ -192,7 +192,13 @@ test('regression (#20932): return pointer is correct before entering deleted tre
   await act(() => {
     root.render(<App />);
   });
-  assertLog(['Suspend! [0]', 'Loading Async...', 'Loading Tail...']);
+  assertLog([
+    'Suspend! [0]',
+    'Loading Async...',
+    'Loading Tail...',
+    // pre-warming
+    'Suspend! [0]',
+  ]);
   await act(() => {
     resolveText(0);
   });
@@ -205,5 +211,7 @@ test('regression (#20932): return pointer is correct before entering deleted tre
     'Loading Async...',
     'Suspend! [1]',
     'Loading Async...',
+    // pre-warming
+    'Suspend! [1]',
   ]);
 });

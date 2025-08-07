@@ -10,7 +10,10 @@
 import {REACT_FORWARD_REF_TYPE, REACT_MEMO_TYPE} from 'shared/ReactSymbols';
 
 export function forwardRef<Props, ElementType: React$ElementType>(
-  render: (props: Props, ref: React$Ref<ElementType>) => React$Node,
+  render: (
+    props: Props,
+    ref: React$RefSetter<React$ElementRef<ElementType>>,
+  ) => React$Node,
 ) {
   if (__DEV__) {
     if (render != null && render.$$typeof === REACT_MEMO_TYPE) {

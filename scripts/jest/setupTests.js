@@ -2,7 +2,7 @@
 
 const {getTestFlags} = require('./TestFlags');
 const {
-  flushAllUnexpectedConsoleCalls,
+  assertConsoleLogsCleared,
   resetAllUnexpectedConsoleCalls,
   patchConsoleMethods,
 } = require('internal-test-utils/consoleMock');
@@ -44,7 +44,6 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   expect.extend({
     ...require('./matchers/reactTestMatchers'),
     ...require('./matchers/toThrow'),
-    ...require('./matchers/toWarnDev'),
   });
 
   // We have a Babel transform that inserts guards against infinite loops.
@@ -66,7 +65,19 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   // Patch the console to assert that all console error/warn/log calls assert.
   patchConsoleMethods({includeLog: !!process.env.CI});
   beforeEach(resetAllUnexpectedConsoleCalls);
-  afterEach(flushAllUnexpectedConsoleCalls);
+  afterEach(assertConsoleLogsCleared);
+
+  // TODO: enable this check so we don't forget to reset spyOnX mocks.
+  // afterEach(() => {
+  //   if (
+  //       console[methodName] !== mockMethod &&
+  //       !jest.isMockFunction(console[methodName])
+  //   ) {
+  //     throw new Error(
+  //       `Test did not tear down console.${methodName} mock properly.`
+  //     );
+  //   }
+  // });
 
   if (process.env.NODE_ENV === 'production') {
     // In production, we strip error messages and turn them into codes.
@@ -187,7 +198,7 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
       // Flush unexpected console calls inside the test itself, instead of in
       // `afterEach` like we normally do. `afterEach` is too late because if it
       // throws, we won't have captured it.
-      flushAllUnexpectedConsoleCalls();
+      assertConsoleLogsCleared();
     } catch (testError) {
       didError = true;
     }
@@ -205,8 +216,17 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     }
   };
 
+  const coerceGateConditionToFunction = gateFnOrString => {
+    return typeof gateFnOrString === 'string'
+      ? // `gate('foo')` is treated as equivalent to `gate(flags => flags.foo)`
+        flags => flags[gateFnOrString]
+      : // Assume this is already a function
+        gateFnOrString;
+  };
+
   const gatedErrorMessage = 'Gated test was expected to fail, but it passed.';
-  global._test_gate = (gateFn, testName, callback, timeoutMS) => {
+  global._test_gate = (gateFnOrString, testName, callback, timeoutMS) => {
+    const gateFn = coerceGateConditionToFunction(gateFnOrString);
     let shouldPass;
     try {
       const flags = getTestFlags();
@@ -230,7 +250,8 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
         expectTestToFail(callback, error, timeoutMS));
     }
   };
-  global._test_gate_focus = (gateFn, testName, callback, timeoutMS) => {
+  global._test_gate_focus = (gateFnOrString, testName, callback, timeoutMS) => {
+    const gateFn = coerceGateConditionToFunction(gateFnOrString);
     let shouldPass;
     try {
       const flags = getTestFlags();
@@ -259,8 +280,31 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   };
 
   // Dynamic version of @gate pragma
-  global.gate = fn => {
+  global.gate = gateFnOrString => {
+    const gateFn = coerceGateConditionToFunction(gateFnOrString);
     const flags = getTestFlags();
-    return fn(flags);
+    return gateFn(flags);
   };
+
+  // We augment JSDOM to produce a document that has a loading readyState by default
+  // and can be changed. We mock it here globally so we don't have to import our special
+  // mock in every file.
+  jest.mock('jsdom', () => {
+    return require('internal-test-utils/ReactJSDOM.js');
+  });
 }
+
+// We mock createHook so that we can automatically clean it up.
+let installedHook = null;
+jest.mock('async_hooks', () => {
+  const actual = jest.requireActual('async_hooks');
+  return {
+    ...actual,
+    createHook(config) {
+      if (installedHook) {
+        installedHook.disable();
+      }
+      return (installedHook = actual.createHook(config));
+    },
+  };
+});

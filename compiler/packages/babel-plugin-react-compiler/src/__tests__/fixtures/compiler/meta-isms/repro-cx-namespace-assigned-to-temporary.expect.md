@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @compilationMode(infer) @enableAssumeHooksFollowRulesOfReact:false @customMacros(cx)
+// @compilationMode:"infer" @enableAssumeHooksFollowRulesOfReact:false @customMacros(cx)
 import {identity} from 'shared-runtime';
 
 const DARK = 'dark';
@@ -19,15 +19,17 @@ function Component() {
   );
 }
 
-function cx(obj) {
-  const classes = [];
-  for (const [key, value] of Object.entries(obj)) {
-    if (value) {
-      classes.push(key);
+const cx = {
+  foo(obj) {
+    const classes = [];
+    for (const [key, value] of Object.entries(obj)) {
+      if (value) {
+        classes.push(key);
+      }
     }
-  }
-  return classes.join(' ');
-}
+    return classes.join(' ');
+  },
+};
 
 function useTheme() {
   return {
@@ -47,7 +49,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @compilationMode(infer) @enableAssumeHooksFollowRulesOfReact:false @customMacros(cx)
+import { c as _c } from "react/compiler-runtime"; // @compilationMode:"infer" @enableAssumeHooksFollowRulesOfReact:false @customMacros(cx)
 import { identity } from "shared-runtime";
 
 const DARK = "dark";
@@ -71,15 +73,17 @@ function Component() {
   return t1;
 }
 
-function cx(obj) {
-  const classes = [];
-  for (const [key, value] of Object.entries(obj)) {
-    if (value) {
-      classes.push(key);
+const cx = {
+  foo(obj) {
+    const classes = [];
+    for (const [key, value] of Object.entries(obj)) {
+      if (value) {
+        classes.push(key);
+      }
     }
-  }
-  return classes.join(" ");
-}
+    return classes.join(" ");
+  },
+};
 
 function useTheme() {
   return {
@@ -97,4 +101,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: exception) cx.foo is not a function
+(kind: ok) <div class="styles/light styles/dark"></div>

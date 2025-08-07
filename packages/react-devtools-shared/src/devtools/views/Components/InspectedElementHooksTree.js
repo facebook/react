@@ -20,7 +20,7 @@ import {getMetaValueLabel, serializeHooksForCopy} from '../utils';
 import Store from '../../store';
 import styles from './InspectedElementHooksTree.css';
 import {meta} from '../../../hydration';
-import {getHookSourceLocationKey} from 'react-devtools-shared/src/hookNamesCache';
+import {getHookSourceLocationKey} from 'react-devtools-shared/src/hookSourceLocation';
 import HookNamesModuleLoaderContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import isArray from 'react-devtools-shared/src/isArray';
 
@@ -80,9 +80,7 @@ export function InspectedElementHooksTree({
     return null;
   } else {
     return (
-      <div
-        className={styles.HooksTreeView}
-        data-testname="InspectedElementHooksTree">
+      <div data-testname="InspectedElementHooksTree">
         <div className={styles.HeaderRow}>
           <div className={styles.Header}>hooks</div>
           {typeof hookNamesModuleLoader === 'function' &&

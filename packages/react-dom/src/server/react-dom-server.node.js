@@ -8,4 +8,9 @@
  */
 
 export * from './ReactDOMFizzServerNode.js';
-export {prerenderToNodeStream} from './ReactDOMFizzStaticNode.js';
+export {
+  prerenderToNodeStream,
+  prerender,
+  resumeAndPrerenderToNodeStream,
+  resumeAndPrerender,
+} from './ReactDOMFizzStaticNode.js';

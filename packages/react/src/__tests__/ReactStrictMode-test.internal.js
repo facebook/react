@@ -104,52 +104,6 @@ describe('ReactStrictMode', () => {
         ]);
       });
 
-      // @gate enableDO_NOT_USE_disableStrictPassiveEffect
-      it('should include legacy + strict effects mode, but not strict passive effect with disableStrictPassiveEffect', async () => {
-        await act(() => {
-          const container = document.createElement('div');
-          const root = ReactDOMClient.createRoot(container);
-          root.render(
-            <React.StrictMode DO_NOT_USE_disableStrictPassiveEffect={true}>
-              <Component label="A" />
-            </React.StrictMode>,
-          );
-        });
-
-        expect(log).toEqual([
-          'A: render',
-          'A: render',
-          'A: useLayoutEffect mount',
-          'A: useEffect mount',
-          'A: useLayoutEffect unmount',
-          'A: useLayoutEffect mount',
-        ]);
-      });
-
-      // @gate enableDO_NOT_USE_disableStrictPassiveEffect
-      it('should include legacy + strict effects mode, but not strict passive effect with disableStrictPassiveEffect in Suspense', async () => {
-        await act(() => {
-          const container = document.createElement('div');
-          const root = ReactDOMClient.createRoot(container);
-          root.render(
-            <React.StrictMode DO_NOT_USE_disableStrictPassiveEffect={true}>
-              <React.Suspense>
-                <Component label="A" />
-              </React.Suspense>
-            </React.StrictMode>,
-          );
-        });
-
-        expect(log).toEqual([
-          'A: render',
-          'A: render',
-          'A: useLayoutEffect mount',
-          'A: useEffect mount',
-          'A: useLayoutEffect unmount',
-          'A: useLayoutEffect mount',
-        ]);
-      });
-
       it('should allow level to be increased with nesting', async () => {
         await act(() => {
           const container = document.createElement('div');
@@ -177,6 +131,40 @@ describe('ReactStrictMode', () => {
           'B: useEffect unmount',
           'B: useLayoutEffect mount',
           'B: useEffect mount',
+        ]);
+      });
+
+      it('should support nested strict mode on initial mount', async () => {
+        function Wrapper({children}) {
+          return children;
+        }
+        await act(() => {
+          const container = document.createElement('div');
+          const root = ReactDOMClient.createRoot(container);
+          root.render(
+            <Wrapper>
+              <Component label="A" />
+              <React.StrictMode>
+                <Component label="B" />,
+              </React.StrictMode>
+              ,
+            </Wrapper>,
+          );
+        });
+
+        expect(log).toEqual([
+          'A: render',
+          'B: render',
+          'B: render',
+          'A: useLayoutEffect mount',
+          'B: useLayoutEffect mount',
+          'A: useEffect mount',
+          'B: useEffect mount',
+          // TODO: this is currently broken
+          // 'B: useLayoutEffect unmount',
+          // 'B: useEffect unmount',
+          // 'B: useLayoutEffect mount',
+          // 'B: useEffect mount',
         ]);
       });
     }

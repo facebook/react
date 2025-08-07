@@ -24,12 +24,13 @@ function Component(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(2);
+  const $ = _c(6);
   const item = props.item;
-  let t0;
+  let baseVideos;
+  let thumbnails;
   if ($[0] !== item) {
-    const thumbnails = [];
-    const baseVideos = getBaseVideos(item);
+    thumbnails = [];
+    baseVideos = getBaseVideos(item);
 
     baseVideos.forEach((video) => {
       const baseVideo = video.hasBaseVideo;
@@ -37,12 +38,21 @@ function Component(props) {
         thumbnails.push({ extraVideo: true });
       }
     });
-
-    t0 = <FlatList baseVideos={baseVideos} items={thumbnails} />;
     $[0] = item;
-    $[1] = t0;
+    $[1] = baseVideos;
+    $[2] = thumbnails;
   } else {
-    t0 = $[1];
+    baseVideos = $[1];
+    thumbnails = $[2];
+  }
+  let t0;
+  if ($[3] !== baseVideos || $[4] !== thumbnails) {
+    t0 = <FlatList baseVideos={baseVideos} items={thumbnails} />;
+    $[3] = baseVideos;
+    $[4] = thumbnails;
+    $[5] = t0;
+  } else {
+    t0 = $[5];
   }
   return t0;
 }

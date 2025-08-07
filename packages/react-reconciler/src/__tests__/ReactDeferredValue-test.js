@@ -371,7 +371,6 @@ describe('ReactDeferredValue', () => {
     });
   });
 
-  // @gate enableUseDeferredValueInitialArg
   it('supports initialValue argument', async () => {
     function App() {
       const value = useDeferredValue('Final', 'Initial');
@@ -388,7 +387,6 @@ describe('ReactDeferredValue', () => {
     expect(root).toMatchRenderedOutput('Final');
   });
 
-  // @gate enableUseDeferredValueInitialArg
   it('defers during initial render when initialValue is provided, even if render is not sync', async () => {
     function App() {
       const value = useDeferredValue('Final', 'Initial');
@@ -406,7 +404,6 @@ describe('ReactDeferredValue', () => {
     expect(root).toMatchRenderedOutput('Final');
   });
 
-  // @gate enableUseDeferredValueInitialArg
   it(
     'if a suspended render spawns a deferred task, we can switch to the ' +
       'deferred task without finishing the original one (no Suspense boundary)',
@@ -422,6 +419,9 @@ describe('ReactDeferredValue', () => {
         'Suspend! [Loading...]',
         // The initial value suspended, so we attempt the final value, which
         // also suspends.
+        'Suspend! [Final]',
+        // pre-warming
+        'Suspend! [Loading...]',
         'Suspend! [Final]',
       ]);
       expect(root).toMatchRenderedOutput(null);
@@ -439,7 +439,6 @@ describe('ReactDeferredValue', () => {
     },
   );
 
-  // @gate enableUseDeferredValueInitialArg
   it(
     'if a suspended render spawns a deferred task, we can switch to the ' +
       'deferred task without finishing the original one (no Suspense boundary, ' +
@@ -463,6 +462,9 @@ describe('ReactDeferredValue', () => {
         // The initial value suspended, so we attempt the final value, which
         // also suspends.
         'Suspend! [Final]',
+        // pre-warming
+        'Suspend! [Loading...]',
+        'Suspend! [Final]',
       ]);
       expect(root).toMatchRenderedOutput(null);
 
@@ -479,7 +481,6 @@ describe('ReactDeferredValue', () => {
     },
   );
 
-  // @gate enableUseDeferredValueInitialArg
   it(
     'if a suspended render spawns a deferred task, we can switch to the ' +
       'deferred task without finishing the original one (Suspense boundary)',
@@ -504,6 +505,8 @@ describe('ReactDeferredValue', () => {
         // The initial value suspended, so we attempt the final value, which
         // also suspends.
         'Suspend! [Final]',
+        // pre-warming
+        'Suspend! [Final]',
       ]);
       expect(root).toMatchRenderedOutput('Fallback');
 
@@ -520,7 +523,6 @@ describe('ReactDeferredValue', () => {
     },
   );
 
-  // @gate enableUseDeferredValueInitialArg
   it(
     'if a suspended render spawns a deferred task that also suspends, we can ' +
       'finish the original task if that one loads first',
@@ -536,6 +538,9 @@ describe('ReactDeferredValue', () => {
         'Suspend! [Loading...]',
         // The initial value suspended, so we attempt the final value, which
         // also suspends.
+        'Suspend! [Final]',
+        // pre-warming
+        'Suspend! [Loading...]',
         'Suspend! [Final]',
       ]);
       expect(root).toMatchRenderedOutput(null);
@@ -556,7 +561,6 @@ describe('ReactDeferredValue', () => {
     },
   );
 
-  // @gate enableUseDeferredValueInitialArg
   it(
     'if there are multiple useDeferredValues in the same tree, only the ' +
       'first level defers; subsequent ones go straight to the final value, to ' +
@@ -604,7 +608,6 @@ describe('ReactDeferredValue', () => {
     },
   );
 
-  // @gate enableUseDeferredValueInitialArg
   it('avoids a useDeferredValue waterfall when separated by a Suspense boundary', async () => {
     // Same as the previous test but with a Suspense boundary separating the
     // two useDeferredValue hooks.
@@ -638,6 +641,8 @@ describe('ReactDeferredValue', () => {
       // go straight to attempting the final value.
       'Suspend! [Content]',
       'Loading...',
+      // pre-warming
+      'Suspend! [Content]',
     ]);
     // The content suspended, so we show a Suspense fallback
     expect(root).toMatchRenderedOutput('Loading...');
@@ -649,7 +654,6 @@ describe('ReactDeferredValue', () => {
     expect(root).toMatchRenderedOutput('Content');
   });
 
-  // @gate enableUseDeferredValueInitialArg
   // @gate enableActivity
   it('useDeferredValue can spawn a deferred task while prerendering a hidden tree', async () => {
     function App() {
@@ -696,7 +700,6 @@ describe('ReactDeferredValue', () => {
     expect(root).toMatchRenderedOutput(<div>Final</div>);
   });
 
-  // @gate enableUseDeferredValueInitialArg
   // @gate enableActivity
   it('useDeferredValue can prerender the initial value inside a hidden tree', async () => {
     function App({text}) {
@@ -738,6 +741,7 @@ describe('ReactDeferredValue', () => {
         </Container>,
       );
       // We should switch to pre-rendering the new preview.
+      await waitForPaint([]);
       await waitForPaint(['Preview [B]']);
       expect(root).toMatchRenderedOutput(<div hidden={true}>Preview [B]</div>);
 
@@ -747,6 +751,10 @@ describe('ReactDeferredValue', () => {
       revealContent();
       // Because the preview state was already prerendered, we can reveal it
       // without any addditional work.
+      if (gate(flags => flags.enableYieldingBeforePassive)) {
+        // Passive effects.
+        await waitForPaint([]);
+      }
       await waitForPaint([]);
       expect(root).toMatchRenderedOutput(<div>Preview [B]</div>);
     });
@@ -755,7 +763,6 @@ describe('ReactDeferredValue', () => {
     expect(root).toMatchRenderedOutput(<div>B</div>);
   });
 
-  // @gate enableUseDeferredValueInitialArg
   // @gate enableActivity
   it(
     'useDeferredValue skips the preview state when revealing a hidden tree ' +
@@ -796,7 +803,6 @@ describe('ReactDeferredValue', () => {
     },
   );
 
-  // @gate enableUseDeferredValueInitialArg
   // @gate enableActivity
   it(
     'useDeferredValue does not skip the preview state when revealing a ' +

@@ -14,6 +14,13 @@ const paramDefinitions = [
     defaultValue: false,
   },
   {
+    name: 'onlyPackages',
+    type: String,
+    multiple: true,
+    description: 'Packages to include in publishing',
+    defaultValue: [],
+  },
+  {
     name: 'skipPackages',
     type: String,
     multiple: true,
@@ -32,12 +39,24 @@ const paramDefinitions = [
     description:
       'Version of published "next" release (e.g. 0.0.0-0e526bcec-20210202)',
   },
+  {
+    name: 'publishVersion',
+    type: String,
+    description: 'Version to publish',
+  },
+  {
+    name: 'ci',
+    type: Boolean,
+    description: 'Run in automated environment, without interactive prompts.',
+    defaultValue: false,
+  },
 ];
 
 module.exports = () => {
   const params = commandLineArgs(paramDefinitions);
 
   splitCommaParams(params.skipPackages);
+  splitCommaParams(params.onlyPackages);
 
   return params;
 };

@@ -7,9 +7,9 @@
 
 import {NodePath, Scope} from '@babel/traverse';
 import * as t from '@babel/types';
-import {Expression} from '@babel/types';
 import invariant from 'invariant';
 import {
+  CompilerDiagnostic,
   CompilerError,
   CompilerSuggestionOperation,
   ErrorSeverity,
@@ -37,16 +37,18 @@ import {
   ObjectProperty,
   ObjectPropertyKey,
   Place,
+  PropertyLiteral,
   ReturnTerminal,
   SourceLocation,
   SpreadPattern,
   ThrowTerminal,
   Type,
   makeInstructionId,
+  makePropertyLiteral,
   makeType,
   promoteTemporary,
 } from './HIR';
-import HIRBuilder, {Bindings} from './HIRBuilder';
+import HIRBuilder, {Bindings, createTemporaryPlace} from './HIRBuilder';
 import {BuiltInArrayId} from './ObjectShape';
 
 /*
@@ -69,21 +71,23 @@ import {BuiltInArrayId} from './ObjectShape';
 export function lower(
   func: NodePath<t.Function>,
   env: Environment,
+  // Bindings captured from the outer function, in case lower() is called recursively (for lambdas)
   bindings: Bindings | null = null,
-  capturedRefs: Array<t.Identifier> = [],
-  // the outermost function being compiled, in case lower() is called recursively (for lambdas)
-  parent: NodePath<t.Function> | null = null,
+  capturedRefs: Map<t.Identifier, SourceLocation> = new Map(),
 ): Result<HIRFunction, CompilerError> {
-  const builder = new HIRBuilder(env, parent ?? func, bindings, capturedRefs);
-  const context: Array<Place> = [];
+  const builder = new HIRBuilder(env, {
+    bindings,
+    context: capturedRefs,
+  });
+  const context: HIRFunction['context'] = [];
 
-  for (const ref of capturedRefs ?? []) {
+  for (const [ref, loc] of capturedRefs ?? []) {
     context.push({
       kind: 'Identifier',
       identifier: builder.resolveBinding(ref),
       effect: Effect.Unknown,
       reactive: false,
-      loc: ref.loc ?? GeneratedSource,
+      loc,
     });
   }
 
@@ -101,12 +105,17 @@ export function lower(
     if (param.isIdentifier()) {
       const binding = builder.resolveIdentifier(param);
       if (binding.kind !== 'Identifier') {
-        builder.errors.push({
-          reason: `(BuildHIR::lower) Could not find binding for param \`${param.node.name}\``,
-          severity: ErrorSeverity.Invariant,
-          loc: param.node.loc ?? null,
-          suggestions: null,
-        });
+        builder.errors.pushDiagnostic(
+          CompilerDiagnostic.create({
+            severity: ErrorSeverity.Invariant,
+            category: 'Could not find binding',
+            description: `[BuildHIR] Could not find binding for param \`${param.node.name}\`.`,
+          }).withDetail({
+            kind: 'error',
+            loc: param.node.loc ?? null,
+            message: 'Could not find binding',
+          }),
+        );
         return;
       }
       const place: Place = {
@@ -160,12 +169,17 @@ export function lower(
         'Assignment',
       );
     } else {
-      builder.errors.push({
-        reason: `(BuildHIR::lower) Handle ${param.node.type} params`,
-        severity: ErrorSeverity.Todo,
-        loc: param.node.loc ?? null,
-        suggestions: null,
-      });
+      builder.errors.pushDiagnostic(
+        CompilerDiagnostic.create({
+          severity: ErrorSeverity.Todo,
+          category: `Handle ${param.node.type} parameters`,
+          description: `[BuildHIR] Add support for ${param.node.type} parameters.`,
+        }).withDetail({
+          kind: 'error',
+          loc: param.node.loc ?? null,
+          message: 'Unsupported parameter type',
+        }),
+      );
     }
   });
 
@@ -175,22 +189,28 @@ export function lower(
     const fallthrough = builder.reserve('block');
     const terminal: ReturnTerminal = {
       kind: 'return',
+      returnVariant: 'Implicit',
       loc: GeneratedSource,
       value: lowerExpressionToTemporary(builder, body),
       id: makeInstructionId(0),
+      effects: null,
     };
     builder.terminateWithContinuation(terminal, fallthrough);
   } else if (body.isBlockStatement()) {
     lowerStatement(builder, body);
     directives = body.get('directives').map(d => d.node.value.value);
   } else {
-    builder.errors.push({
-      severity: ErrorSeverity.InvalidJS,
-      reason: `Unexpected function body kind`,
-      description: `Expected function body to be an expression or a block statement, got \`${body.type}\``,
-      loc: body.node.loc ?? null,
-      suggestions: null,
-    });
+    builder.errors.pushDiagnostic(
+      CompilerDiagnostic.create({
+        severity: ErrorSeverity.InvalidJS,
+        category: `Unexpected function body kind`,
+        description: `Expected function body to be an expression or a block statement, got \`${body.type}\`.`,
+      }).withDetail({
+        kind: 'error',
+        loc: body.node.loc ?? null,
+        message: 'Expected a block statement or expression',
+      }),
+    );
   }
 
   if (builder.errors.hasErrors()) {
@@ -200,6 +220,7 @@ export function lower(
   builder.terminate(
     {
       kind: 'return',
+      returnVariant: 'Void',
       loc: GeneratedSource,
       value: lowerValueToTemporary(builder, {
         kind: 'Primitive',
@@ -207,6 +228,7 @@ export function lower(
         loc: GeneratedSource,
       }),
       id: makeInstructionId(0),
+      effects: null,
     },
     null,
   );
@@ -214,8 +236,9 @@ export function lower(
   return Ok({
     id,
     params,
-    fnType: parent == null ? env.fnType : 'Other',
-    returnType: null, // TODO: extract the actual return type node if present
+    fnType: bindings == null ? env.fnType : 'Other',
+    returnTypeAnnotation: null, // TODO: extract the actual return type node if present
+    returns: createTemporaryPlace(env, func.node.loc ?? GeneratedSource),
     body: builder.build(),
     context,
     generator: func.node.generator === true,
@@ -223,6 +246,7 @@ export function lower(
     loc: func.node.loc ?? GeneratedSource,
     env,
     effects: null,
+    aliasingEffects: null,
     directives,
   });
 }
@@ -280,9 +304,11 @@ function lowerStatement(
       }
       const terminal: ReturnTerminal = {
         kind: 'return',
+        returnVariant: 'Explicit',
         loc: stmt.node.loc ?? GeneratedSource,
         value,
         id: makeInstructionId(0),
+        effects: null,
       };
       builder.terminate(terminal, 'block');
       return;
@@ -419,7 +445,19 @@ function lowerStatement(
             // Already hoisted
             continue;
           }
-          if (!binding.path.isVariableDeclarator()) {
+
+          let kind:
+            | InstructionKind.Let
+            | InstructionKind.HoistedConst
+            | InstructionKind.HoistedLet
+            | InstructionKind.HoistedFunction;
+          if (binding.kind === 'const' || binding.kind === 'var') {
+            kind = InstructionKind.HoistedConst;
+          } else if (binding.kind === 'let') {
+            kind = InstructionKind.HoistedLet;
+          } else if (binding.path.isFunctionDeclaration()) {
+            kind = InstructionKind.HoistedFunction;
+          } else if (!binding.path.isVariableDeclarator()) {
             builder.errors.push({
               severity: ErrorSeverity.Todo,
               reason: 'Unsupported declaration type for hoisting',
@@ -428,19 +466,7 @@ function lowerStatement(
               loc: id.parentPath.node.loc ?? GeneratedSource,
             });
             continue;
-          } else if (!binding.path.get('id').isIdentifier()) {
-            builder.errors.push({
-              severity: ErrorSeverity.Todo,
-              reason: 'Unsupported variable declaration type for hoisting',
-              description: `variable "${
-                binding.identifier.name
-              }" declared with ${binding.path.get('id').type}`,
-              suggestions: null,
-              loc: id.parentPath.node.loc ?? GeneratedSource,
-            });
-            continue;
-          } else if (binding.kind !== 'const' && binding.kind !== 'var') {
-            // Avoid double errors on var declarations, which we do not plan to support anyways
+          } else {
             builder.errors.push({
               severity: ErrorSeverity.Todo,
               reason: 'Handle non-const declarations for hoisting',
@@ -450,6 +476,7 @@ function lowerStatement(
             });
             continue;
           }
+
           const identifier = builder.resolveIdentifier(id);
           CompilerError.invariant(identifier.kind === 'Identifier', {
             reason:
@@ -466,7 +493,7 @@ function lowerStatement(
           lowerValueToTemporary(builder, {
             kind: 'DeclareContext',
             lvalue: {
-              kind: InstructionKind.HoistedConst,
+              kind,
               place,
             },
             loc: id.node.loc ?? GeneratedSource,
@@ -607,6 +634,7 @@ function lowerStatement(
             ),
             consequent: bodyBlock,
             alternate: continuationBlock.id,
+            fallthrough: continuationBlock.id,
             id: makeInstructionId(0),
             loc: stmt.node.loc ?? GeneratedSource,
           },
@@ -656,16 +684,13 @@ function lowerStatement(
         },
         conditionalBlock,
       );
-      /*
-       * The conditional block is empty and exists solely as conditional for
-       * (re)entering or exiting the loop
-       */
       const test = lowerExpressionToTemporary(builder, stmt.get('test'));
       const terminal: BranchTerminal = {
         kind: 'branch',
         test,
         consequent: loopBlock,
         alternate: continuationBlock.id,
+        fallthrough: conditionalBlock.id,
         id: makeInstructionId(0),
         loc: stmt.node.loc ?? GeneratedSource,
       };
@@ -975,6 +1000,7 @@ function lowerStatement(
         test,
         consequent: loopBlock,
         alternate: continuationBlock.id,
+        fallthrough: conditionalBlock.id,
         id: makeInstructionId(0),
         loc,
       };
@@ -1000,7 +1026,7 @@ function lowerStatement(
       lowerAssignment(
         builder,
         stmt.node.loc ?? GeneratedSource,
-        InstructionKind.Let,
+        InstructionKind.Function,
         id,
         fn,
         'Assignment',
@@ -1077,6 +1103,12 @@ function lowerStatement(
       const left = stmt.get('left');
       const leftLoc = left.node.loc ?? GeneratedSource;
       let test: Place;
+      const advanceIterator = lowerValueToTemporary(builder, {
+        kind: 'IteratorNext',
+        loc: leftLoc,
+        iterator: {...iterator},
+        collection: {...value},
+      });
       if (left.isVariableDeclaration()) {
         const declarations = left.get('declarations');
         CompilerError.invariant(declarations.length === 1, {
@@ -1086,12 +1118,6 @@ function lowerStatement(
           suggestions: null,
         });
         const id = declarations[0].get('id');
-        const advanceIterator = lowerValueToTemporary(builder, {
-          kind: 'IteratorNext',
-          loc: leftLoc,
-          iterator: {...iterator},
-          collection: {...value},
-        });
         const assign = lowerAssignment(
           builder,
           leftLoc,
@@ -1102,13 +1128,19 @@ function lowerStatement(
         );
         test = lowerValueToTemporary(builder, assign);
       } else {
-        builder.errors.push({
-          reason: `(BuildHIR::lowerStatement) Handle ${left.type} inits in ForOfStatement`,
-          severity: ErrorSeverity.Todo,
-          loc: left.node.loc ?? null,
-          suggestions: null,
+        CompilerError.invariant(left.isLVal(), {
+          loc: leftLoc,
+          reason: 'Expected ForOf init to be a variable declaration or lval',
         });
-        return;
+        const assign = lowerAssignment(
+          builder,
+          leftLoc,
+          InstructionKind.Reassign,
+          left,
+          advanceIterator,
+          'Assignment',
+        );
+        test = lowerValueToTemporary(builder, assign);
       }
       builder.terminateWithContinuation(
         {
@@ -1118,6 +1150,7 @@ function lowerStatement(
           consequent: loopBlock,
           alternate: continuationBlock.id,
           loc: stmt.node.loc ?? GeneratedSource,
+          fallthrough: continuationBlock.id,
         },
         continuationBlock,
       );
@@ -1164,6 +1197,11 @@ function lowerStatement(
       const left = stmt.get('left');
       const leftLoc = left.node.loc ?? GeneratedSource;
       let test: Place;
+      const nextPropertyTemp = lowerValueToTemporary(builder, {
+        kind: 'NextPropertyOf',
+        loc: leftLoc,
+        value,
+      });
       if (left.isVariableDeclaration()) {
         const declarations = left.get('declarations');
         CompilerError.invariant(declarations.length === 1, {
@@ -1173,11 +1211,6 @@ function lowerStatement(
           suggestions: null,
         });
         const id = declarations[0].get('id');
-        const nextPropertyTemp = lowerValueToTemporary(builder, {
-          kind: 'NextPropertyOf',
-          loc: leftLoc,
-          value,
-        });
         const assign = lowerAssignment(
           builder,
           leftLoc,
@@ -1188,13 +1221,19 @@ function lowerStatement(
         );
         test = lowerValueToTemporary(builder, assign);
       } else {
-        builder.errors.push({
-          reason: `(BuildHIR::lowerStatement) Handle ${left.type} inits in ForInStatement`,
-          severity: ErrorSeverity.Todo,
-          loc: left.node.loc ?? null,
-          suggestions: null,
+        CompilerError.invariant(left.isLVal(), {
+          loc: leftLoc,
+          reason: 'Expected ForIn init to be a variable declaration or lval',
         });
-        return;
+        const assign = lowerAssignment(
+          builder,
+          leftLoc,
+          InstructionKind.Reassign,
+          left,
+          nextPropertyTemp,
+          'Assignment',
+        );
+        test = lowerValueToTemporary(builder, assign);
       }
       builder.terminateWithContinuation(
         {
@@ -1203,6 +1242,7 @@ function lowerStatement(
           test,
           consequent: loopBlock,
           alternate: continuationBlock.id,
+          fallthrough: continuationBlock.id,
           loc: stmt.node.loc ?? GeneratedSource,
         },
         continuationBlock,
@@ -1219,6 +1259,7 @@ function lowerStatement(
           kind: 'Debugger',
           loc,
         },
+        effects: null,
         loc,
       });
       return;
@@ -1332,13 +1373,85 @@ function lowerStatement(
 
       return;
     }
-    case 'TypeAlias':
-    case 'TSInterfaceDeclaration':
-    case 'TSTypeAliasDeclaration': {
-      // We do not preserve type annotations/syntax through transformation
+    case 'WithStatement': {
+      builder.errors.push({
+        reason: `JavaScript 'with' syntax is not supported`,
+        description: `'with' syntax is considered deprecated and removed from JavaScript standards, consider alternatives`,
+        severity: ErrorSeverity.UnsupportedJS,
+        loc: stmtPath.node.loc ?? null,
+        suggestions: null,
+      });
+      lowerValueToTemporary(builder, {
+        kind: 'UnsupportedNode',
+        loc: stmtPath.node.loc ?? GeneratedSource,
+        node: stmtPath.node,
+      });
       return;
     }
-    case 'ClassDeclaration':
+    case 'ClassDeclaration': {
+      /**
+       * In theory we could support inline class declarations, but this is rare enough in practice
+       * and complex enough to support that we don't anticipate supporting anytime soon. Developers
+       * are encouraged to lift classes out of component/hook declarations.
+       */
+      builder.errors.push({
+        reason: 'Inline `class` declarations are not supported',
+        description: `Move class declarations outside of components/hooks`,
+        severity: ErrorSeverity.UnsupportedJS,
+        loc: stmtPath.node.loc ?? null,
+        suggestions: null,
+      });
+      lowerValueToTemporary(builder, {
+        kind: 'UnsupportedNode',
+        loc: stmtPath.node.loc ?? GeneratedSource,
+        node: stmtPath.node,
+      });
+      return;
+    }
+    case 'EnumDeclaration':
+    case 'TSEnumDeclaration': {
+      lowerValueToTemporary(builder, {
+        kind: 'UnsupportedNode',
+        loc: stmtPath.node.loc ?? GeneratedSource,
+        node: stmtPath.node,
+      });
+      return;
+    }
+    case 'ExportAllDeclaration':
+    case 'ExportDefaultDeclaration':
+    case 'ExportNamedDeclaration':
+    case 'ImportDeclaration':
+    case 'TSExportAssignment':
+    case 'TSImportEqualsDeclaration': {
+      builder.errors.push({
+        reason:
+          'JavaScript `import` and `export` statements may only appear at the top level of a module',
+        severity: ErrorSeverity.InvalidJS,
+        loc: stmtPath.node.loc ?? null,
+        suggestions: null,
+      });
+      lowerValueToTemporary(builder, {
+        kind: 'UnsupportedNode',
+        loc: stmtPath.node.loc ?? GeneratedSource,
+        node: stmtPath.node,
+      });
+      return;
+    }
+    case 'TSNamespaceExportDeclaration': {
+      builder.errors.push({
+        reason:
+          'TypeScript `namespace` statements may only appear at the top level of a module',
+        severity: ErrorSeverity.InvalidJS,
+        loc: stmtPath.node.loc ?? null,
+        suggestions: null,
+      });
+      lowerValueToTemporary(builder, {
+        kind: 'UnsupportedNode',
+        loc: stmtPath.node.loc ?? GeneratedSource,
+        node: stmtPath.node,
+      });
+      return;
+    }
     case 'DeclareClass':
     case 'DeclareExportAllDeclaration':
     case 'DeclareExportDeclaration':
@@ -1349,31 +1462,14 @@ function lowerStatement(
     case 'DeclareOpaqueType':
     case 'DeclareTypeAlias':
     case 'DeclareVariable':
-    case 'EnumDeclaration':
-    case 'ExportAllDeclaration':
-    case 'ExportDefaultDeclaration':
-    case 'ExportNamedDeclaration':
-    case 'ImportDeclaration':
     case 'InterfaceDeclaration':
     case 'OpaqueType':
     case 'TSDeclareFunction':
-    case 'TSEnumDeclaration':
-    case 'TSExportAssignment':
-    case 'TSImportEqualsDeclaration':
+    case 'TSInterfaceDeclaration':
     case 'TSModuleDeclaration':
-    case 'TSNamespaceExportDeclaration':
-    case 'WithStatement': {
-      builder.errors.push({
-        reason: `(BuildHIR::lowerStatement) Handle ${stmtPath.type} statements`,
-        severity: ErrorSeverity.Todo,
-        loc: stmtPath.node.loc ?? null,
-        suggestions: null,
-      });
-      lowerValueToTemporary(builder, {
-        kind: 'UnsupportedNode',
-        loc: stmtPath.node.loc ?? GeneratedSource,
-        node: stmtPath.node,
-      });
+    case 'TSTypeAliasDeclaration':
+    case 'TypeAlias': {
+      // We do not preserve type annotations/syntax through transformation
       return;
     }
     default: {
@@ -1415,7 +1511,7 @@ function lowerObjectPropertyKey(
       name: key.node.value,
     };
   } else if (property.node.computed && key.isExpression()) {
-    if (!key.isIdentifier()) {
+    if (!key.isIdentifier() && !key.isMemberExpression()) {
       /*
        * NOTE: allowing complex key expressions can trigger a bug where a mutation is made conditional
        * see fixture
@@ -1438,6 +1534,11 @@ function lowerObjectPropertyKey(
     return {
       kind: 'identifier',
       name: key.node.name,
+    };
+  } else if (key.isNumericLiteral()) {
+    return {
+      kind: 'identifier',
+      name: String(key.node.value),
     };
   }
 
@@ -1800,6 +1901,7 @@ function lowerExpression(
           test: {...testPlace},
           consequent: consequentBlock,
           alternate: alternateBlock,
+          fallthrough: continuationBlock.id,
           id: makeInstructionId(0),
           loc: exprLoc,
         },
@@ -1870,6 +1972,7 @@ function lowerExpression(
           place: leftValue,
           loc: exprLoc,
         },
+        effects: null,
         loc: exprLoc,
       });
       builder.terminateWithContinuation(
@@ -1878,6 +1981,7 @@ function lowerExpression(
           test: {...leftPlace},
           consequent,
           alternate,
+          fallthrough: continuationBlock.id,
           id: makeInstructionId(0),
           loc: exprLoc,
         },
@@ -1891,16 +1995,31 @@ function lowerExpression(
 
       if (operator === '=') {
         const left = expr.get('left');
-        return lowerAssignment(
-          builder,
-          left.node.loc ?? GeneratedSource,
-          InstructionKind.Reassign,
-          left,
-          lowerExpressionToTemporary(builder, expr.get('right')),
-          left.isArrayPattern() || left.isObjectPattern()
-            ? 'Destructure'
-            : 'Assignment',
-        );
+        if (left.isLVal()) {
+          return lowerAssignment(
+            builder,
+            left.node.loc ?? GeneratedSource,
+            InstructionKind.Reassign,
+            left,
+            lowerExpressionToTemporary(builder, expr.get('right')),
+            left.isArrayPattern() || left.isObjectPattern()
+              ? 'Destructure'
+              : 'Assignment',
+          );
+        } else {
+          /**
+           * OptionalMemberExpressions as the left side of an AssignmentExpression are Stage 1 and
+           * not supported by React Compiler yet.
+           */
+          builder.errors.push({
+            reason: `(BuildHIR::lowerExpression) Unsupported syntax on the left side of an AssignmentExpression`,
+            description: `Expected an LVal, got: ${left.type}`,
+            severity: ErrorSeverity.Todo,
+            loc: left.node.loc ?? null,
+            suggestions: null,
+          });
+          return {kind: 'UnsupportedNode', node: exprNode, loc: exprLoc};
+        }
       }
 
       const operators: {
@@ -1934,7 +2053,6 @@ function lowerExpression(
       switch (leftNode.type) {
         case 'Identifier': {
           const leftExpr = left as NodePath<t.Identifier>;
-          const identifier = lowerIdentifier(builder, leftExpr);
           const leftPlace = lowerExpressionToTemporary(builder, leftExpr);
           const right = lowerExpressionToTemporary(builder, expr.get('right'));
           const binaryPlace = lowerValueToTemporary(builder, {
@@ -1944,30 +2062,42 @@ function lowerExpression(
             right,
             loc: exprLoc,
           });
-          const kind = getStoreKind(builder, leftExpr);
-          if (kind === 'StoreLocal') {
-            lowerValueToTemporary(builder, {
-              kind: 'StoreLocal',
-              lvalue: {
-                place: {...identifier},
-                kind: InstructionKind.Reassign,
-              },
-              value: {...binaryPlace},
-              type: null,
-              loc: exprLoc,
-            });
-            return {kind: 'LoadLocal', place: identifier, loc: exprLoc};
+          const binding = builder.resolveIdentifier(leftExpr);
+          if (binding.kind === 'Identifier') {
+            const identifier = lowerIdentifier(builder, leftExpr);
+            const kind = getStoreKind(builder, leftExpr);
+            if (kind === 'StoreLocal') {
+              lowerValueToTemporary(builder, {
+                kind: 'StoreLocal',
+                lvalue: {
+                  place: {...identifier},
+                  kind: InstructionKind.Reassign,
+                },
+                value: {...binaryPlace},
+                type: null,
+                loc: exprLoc,
+              });
+              return {kind: 'LoadLocal', place: identifier, loc: exprLoc};
+            } else {
+              lowerValueToTemporary(builder, {
+                kind: 'StoreContext',
+                lvalue: {
+                  place: {...identifier},
+                  kind: InstructionKind.Reassign,
+                },
+                value: {...binaryPlace},
+                loc: exprLoc,
+              });
+              return {kind: 'LoadContext', place: identifier, loc: exprLoc};
+            }
           } else {
-            lowerValueToTemporary(builder, {
-              kind: 'StoreContext',
-              lvalue: {
-                place: {...identifier},
-                kind: InstructionKind.Reassign,
-              },
+            const temporary = lowerValueToTemporary(builder, {
+              kind: 'StoreGlobal',
+              name: leftExpr.node.name,
               value: {...binaryPlace},
               loc: exprLoc,
             });
-            return {kind: 'LoadContext', place: identifier, loc: exprLoc};
+            return {kind: 'LoadLocal', place: temporary, loc: temporary.loc};
           }
         }
         case 'MemberExpression': {
@@ -1990,11 +2120,11 @@ function lowerExpression(
           });
 
           // Save the result back to the property
-          if (typeof property === 'string') {
+          if (typeof property === 'string' || typeof property === 'number') {
             return {
               kind: 'PropertyStore',
               object: {...object},
-              property,
+              property: makePropertyLiteral(property),
               value: {...newValuePlace},
               loc: leftExpr.node.loc ?? GeneratedSource,
             };
@@ -2062,7 +2192,7 @@ function lowerExpression(
           propName = namePath.node.name;
           if (propName.indexOf(':') !== -1) {
             builder.errors.push({
-              reason: `(BuildHIR::lowerExpression) Unexpected colon in attribute name \`${name}\``,
+              reason: `(BuildHIR::lowerExpression) Unexpected colon in attribute name \`${propName}\``,
               severity: ErrorSeverity.Todo,
               loc: namePath.node.loc ?? null,
               suggestions: null,
@@ -2113,73 +2243,79 @@ function lowerExpression(
         }
         props.push({kind: 'JsxAttribute', name: propName, place: value});
       }
-      if (
-        tag.kind === 'BuiltinTag' &&
-        (tag.name === 'fbt' || tag.name === 'fbs')
-      ) {
+
+      const isFbt =
+        tag.kind === 'BuiltinTag' && (tag.name === 'fbt' || tag.name === 'fbs');
+      if (isFbt) {
         const tagName = tag.name;
         const openingIdentifier = opening.get('name');
         const tagIdentifier = openingIdentifier.isJSXIdentifier()
           ? builder.resolveIdentifier(openingIdentifier)
           : null;
-        if (tagIdentifier != null && tagIdentifier.kind === 'Identifier') {
-          CompilerError.throwTodo({
-            reason: `Support <${tagName}> tags where '${tagName}' is a local variable instead of a global`,
+        if (tagIdentifier != null) {
+          // This is already checked in builder.resolveIdentifier
+          CompilerError.invariant(tagIdentifier.kind !== 'Identifier', {
+            reason: `<${tagName}> tags should be module-level imports`,
             loc: openingIdentifier.node.loc ?? GeneratedSource,
             description: null,
             suggestions: null,
           });
         }
-        const fbtEnumLocations: Array<SourceLocation> = [];
+        // see `error.todo-multiple-fbt-plural` fixture for explanation
+        const fbtLocations = {
+          enum: new Array<SourceLocation>(),
+          plural: new Array<SourceLocation>(),
+          pronoun: new Array<SourceLocation>(),
+        };
         expr.traverse({
+          JSXClosingElement(path) {
+            path.skip();
+          },
           JSXNamespacedName(path) {
-            if (
-              path.node.namespace.name === tagName &&
-              path.node.name.name === 'enum'
-            ) {
-              fbtEnumLocations.push(path.node.loc ?? GeneratedSource);
+            if (path.node.namespace.name === tagName) {
+              switch (path.node.name.name) {
+                case 'enum':
+                  fbtLocations.enum.push(path.node.loc ?? GeneratedSource);
+                  break;
+                case 'plural':
+                  fbtLocations.plural.push(path.node.loc ?? GeneratedSource);
+                  break;
+                case 'pronoun':
+                  fbtLocations.pronoun.push(path.node.loc ?? GeneratedSource);
+                  break;
+              }
             }
           },
         });
-        if (fbtEnumLocations.length > 1) {
-          CompilerError.throwTodo({
-            reason: `Support <${tagName}> tags with multiple <${tagName}:enum> values`,
-            loc: fbtEnumLocations.at(-1) ?? GeneratedSource,
-            description: null,
-            suggestions: null,
-          });
+        for (const [name, locations] of Object.entries(fbtLocations)) {
+          if (locations.length > 1) {
+            CompilerError.throwDiagnostic({
+              severity: ErrorSeverity.Todo,
+              category: 'Support duplicate fbt tags',
+              description: `Support \`<${tagName}>\` tags with multiple \`<${tagName}:${name}>\` values`,
+              details: locations.map(loc => {
+                return {
+                  kind: 'error',
+                  message: `Multiple \`<${tagName}:${name}>\` tags found`,
+                  loc,
+                };
+              }),
+            });
+          }
         }
       }
 
-      let children: Array<Place>;
-      if (
-        tag.kind === 'BuiltinTag' &&
-        (tag.name === 'fbt' || tag.name === 'fbs')
-      ) {
-        children = expr
-          .get('children')
-          .map(child => {
-            if (child.isJSXText()) {
-              /*
-               * FBT whitespace normalization differs from standard JSX:
-               * https://github.com/facebook/fbt/blob/0b4e0d13c30bffd0daa2a75715d606e3587b4e40/packages/babel-plugin-fbt/src/FbtUtil.js#L76-L87
-               */
-              const text = child.node.value.replace(/[^\S\u00A0]+/g, ' ');
-              return lowerValueToTemporary(builder, {
-                kind: 'JSXText',
-                value: text,
-                loc: child.node.loc ?? GeneratedSource,
-              });
-            }
-            return lowerJsxElement(builder, child);
-          })
-          .filter(notNull);
-      } else {
-        children = expr
-          .get('children')
-          .map(child => lowerJsxElement(builder, child))
-          .filter(notNull);
-      }
+      /**
+       * Increment fbt counter before traversing into children, as whitespace
+       * in jsx text is handled differently for fbt subtrees.
+       */
+      isFbt && builder.fbtDepth++;
+      const children: Array<Place> = expr
+        .get('children')
+        .map(child => lowerJsxElement(builder, child))
+        .filter(notNull);
+      isFbt && builder.fbtDepth--;
+
       return {
         kind: 'JsxExpression',
         tag,
@@ -2289,11 +2425,11 @@ function lowerExpression(
         const argument = expr.get('argument');
         if (argument.isMemberExpression()) {
           const {object, property} = lowerMemberExpression(builder, argument);
-          if (typeof property === 'string') {
+          if (typeof property === 'string' || typeof property === 'number') {
             return {
               kind: 'PropertyDelete',
               object,
-              property,
+              property: makePropertyLiteral(property),
               loc: exprLoc,
             };
           } else {
@@ -2357,6 +2493,19 @@ function lowerExpression(
         kind: 'TypeCastExpression',
         value: lowerExpressionToTemporary(builder, expr.get('expression')),
         typeAnnotation: typeAnnotation.node,
+        typeAnnotationKind: 'cast',
+        type: lowerType(typeAnnotation.node),
+        loc: exprLoc,
+      };
+    }
+    case 'TSSatisfiesExpression': {
+      let expr = exprPath as NodePath<t.TSSatisfiesExpression>;
+      const typeAnnotation = expr.get('typeAnnotation');
+      return {
+        kind: 'TypeCastExpression',
+        value: lowerExpressionToTemporary(builder, expr.get('expression')),
+        typeAnnotation: typeAnnotation.node,
+        typeAnnotationKind: 'satisfies',
         type: lowerType(typeAnnotation.node),
         loc: exprLoc,
       };
@@ -2368,6 +2517,7 @@ function lowerExpression(
         kind: 'TypeCastExpression',
         value: lowerExpressionToTemporary(builder, expr.get('expression')),
         typeAnnotation: typeAnnotation.node,
+        typeAnnotationKind: 'as',
         type: lowerType(typeAnnotation.node),
         loc: exprLoc,
       };
@@ -2375,6 +2525,57 @@ function lowerExpression(
     case 'UpdateExpression': {
       let expr = exprPath as NodePath<t.UpdateExpression>;
       const argument = expr.get('argument');
+      if (argument.isMemberExpression()) {
+        const binaryOperator = expr.node.operator === '++' ? '+' : '-';
+        const leftExpr = argument as NodePath<t.MemberExpression>;
+        const {object, property, value} = lowerMemberExpression(
+          builder,
+          leftExpr,
+        );
+
+        // Store the previous value to a temporary
+        const previousValuePlace = lowerValueToTemporary(builder, value);
+        // Store the new value to a temporary
+        const updatedValue = lowerValueToTemporary(builder, {
+          kind: 'BinaryExpression',
+          operator: binaryOperator,
+          left: {...previousValuePlace},
+          right: lowerValueToTemporary(builder, {
+            kind: 'Primitive',
+            value: 1,
+            loc: GeneratedSource,
+          }),
+          loc: leftExpr.node.loc ?? GeneratedSource,
+        });
+
+        // Save the result back to the property
+        let newValuePlace;
+        if (typeof property === 'string' || typeof property === 'number') {
+          newValuePlace = lowerValueToTemporary(builder, {
+            kind: 'PropertyStore',
+            object: {...object},
+            property: makePropertyLiteral(property),
+            value: {...updatedValue},
+            loc: leftExpr.node.loc ?? GeneratedSource,
+          });
+        } else {
+          newValuePlace = lowerValueToTemporary(builder, {
+            kind: 'ComputedStore',
+            object: {...object},
+            property: {...property},
+            value: {...updatedValue},
+            loc: leftExpr.node.loc ?? GeneratedSource,
+          });
+        }
+
+        return {
+          kind: 'LoadLocal',
+          place: expr.node.prefix
+            ? {...newValuePlace}
+            : {...previousValuePlace},
+          loc: exprLoc,
+        };
+      }
       if (!argument.isIdentifier()) {
         builder.errors.push({
           reason: `(BuildHIR::lowerExpression) Handle UpdateExpression with ${argument.type} argument`,
@@ -2449,6 +2650,7 @@ function lowerExpression(
         loc: expr.node.loc ?? GeneratedSource,
       };
     }
+    case 'TSInstantiationExpression':
     case 'TSNonNullExpression': {
       let expr = exprPath as NodePath<t.TSNonNullExpression>;
       return lowerExpression(builder, expr.get('expression'));
@@ -2549,6 +2751,7 @@ function lowerOptionalMemberExpression(
       test: {...object},
       consequent: consequent.id,
       alternate,
+      fallthrough: continuationBlock.id,
       id: makeInstructionId(0),
       loc,
     };
@@ -2688,6 +2891,7 @@ function lowerOptionalCallExpression(
       test: {...testPlace},
       consequent: consequent.id,
       alternate,
+      fallthrough: continuationBlock.id,
       id: makeInstructionId(0),
       loc,
     };
@@ -2710,6 +2914,7 @@ function lowerOptionalCallExpression(
           args,
           loc,
         },
+        effects: null,
         loc,
       });
     } else {
@@ -2723,6 +2928,7 @@ function lowerOptionalCallExpression(
           args,
           loc,
         },
+        effects: null,
         loc,
       });
     }
@@ -2819,11 +3025,28 @@ function isReorderableExpression(
         }
       }
     }
+    case 'TSAsExpression':
+    case 'TSNonNullExpression':
     case 'TypeCastExpression': {
       return isReorderableExpression(
         builder,
         (expr as NodePath<t.TypeCastExpression>).get('expression'),
         allowLocalIdentifiers,
+      );
+    }
+    case 'LogicalExpression': {
+      const logical = expr as NodePath<t.LogicalExpression>;
+      return (
+        isReorderableExpression(
+          builder,
+          logical.get('left'),
+          allowLocalIdentifiers,
+        ) &&
+        isReorderableExpression(
+          builder,
+          logical.get('right'),
+          allowLocalIdentifiers,
+        )
       );
     }
     case 'ConditionalExpression': {
@@ -2961,7 +3184,7 @@ function lowerArguments(
 
 type LoweredMemberExpression = {
   object: Place;
-  property: Place | string;
+  property: Place | string | number;
   value: InstructionValue;
 };
 function lowerMemberExpression(
@@ -2976,8 +3199,13 @@ function lowerMemberExpression(
   const object =
     loweredObject ?? lowerExpressionToTemporary(builder, objectNode);
 
-  if (!expr.node.computed) {
-    if (!propertyNode.isIdentifier()) {
+  if (!expr.node.computed || expr.node.property.type === 'NumericLiteral') {
+    let property: PropertyLiteral;
+    if (propertyNode.isIdentifier()) {
+      property = makePropertyLiteral(propertyNode.node.name);
+    } else if (propertyNode.isNumericLiteral()) {
+      property = makePropertyLiteral(propertyNode.node.value);
+    } else {
       builder.errors.push({
         reason: `(BuildHIR::lowerMemberExpression) Handle ${propertyNode.type} property`,
         severity: ErrorSeverity.Todo,
@@ -2993,10 +3221,10 @@ function lowerMemberExpression(
     const value: InstructionValue = {
       kind: 'PropertyLoad',
       object: {...object},
-      property: propertyNode.node.name,
+      property,
       loc: exprLoc,
     };
-    return {object, property: propertyNode.node.name, value};
+    return {object, property, value};
   } else {
     if (!propertyNode.isExpression()) {
       builder.errors.push({
@@ -3102,13 +3330,19 @@ function lowerJsxMemberExpression(
       loc: object.node.loc ?? null,
       suggestions: null,
     });
-    objectPlace = lowerIdentifier(builder, object);
+
+    const kind = getLoadKind(builder, object);
+    objectPlace = lowerValueToTemporary(builder, {
+      kind: kind,
+      place: lowerIdentifier(builder, object),
+      loc: exprPath.node.loc ?? GeneratedSource,
+    });
   }
   const property = exprPath.get('property').node.name;
   return lowerValueToTemporary(builder, {
     kind: 'PropertyLoad',
     object: objectPlace,
-    property,
+    property: makePropertyLiteral(property),
     loc,
   });
 }
@@ -3141,7 +3375,19 @@ function lowerJsxElement(
       return lowerExpressionToTemporary(builder, expression);
     }
   } else if (exprPath.isJSXText()) {
-    const text = trimJsxText(exprPath.node.value);
+    let text: string | null;
+    if (builder.fbtDepth > 0) {
+      /*
+       * FBT whitespace normalization differs from standard JSX.
+       * https://github.com/facebook/fbt/blob/0b4e0d13c30bffd0daa2a75715d606e3587b4e40/packages/babel-plugin-fbt/src/FbtUtil.js#L76-L87
+       * Since the fbt transform runs after, let's just preserve all
+       * whitespace in FBT subtrees as is.
+       */
+      text = exprPath.node.value;
+    } else {
+      text = trimJsxText(exprPath.node.value);
+    }
+
     if (text === null) {
       return null;
     }
@@ -3247,7 +3493,7 @@ function lowerFunctionToValue(
   return {
     kind: 'FunctionExpression',
     name,
-    expr: expr.node,
+    type: expr.node.type,
     loc: exprLoc,
     loweredFunc,
   };
@@ -3262,8 +3508,8 @@ function lowerFunction(
     | t.ObjectMethod
   >,
 ): LoweredFunction | null {
-  const componentScope: Scope = builder.parentFunction.scope;
-  const captured = gatherCapturedDeps(builder, expr, componentScope);
+  const componentScope: Scope = builder.environment.parentFunction.scope;
+  const capturedContext = gatherCapturedContext(expr, componentScope);
 
   /*
    * TODO(gsn): In the future, we could only pass in the context identifiers
@@ -3277,20 +3523,17 @@ function lowerFunction(
     expr,
     builder.environment,
     builder.bindings,
-    [...builder.context, ...captured.identifiers],
-    builder.parentFunction,
+    new Map([...builder.context, ...capturedContext]),
   );
   let loweredFunc: HIRFunction;
   if (lowering.isErr()) {
-    lowering
-      .unwrapErr()
-      .details.forEach(detail => builder.errors.pushErrorDetail(detail));
+    const functionErrors = lowering.unwrapErr();
+    builder.errors.merge(functionErrors);
     return null;
   }
   loweredFunc = lowering.unwrap();
   return {
     func: loweredFunc,
-    dependencies: captured.refs,
   };
 }
 
@@ -3302,7 +3545,7 @@ function lowerExpressionToTemporary(
   return lowerValueToTemporary(builder, value);
 }
 
-function lowerValueToTemporary(
+export function lowerValueToTemporary(
   builder: HIRBuilder,
   value: InstructionValue,
 ): Place {
@@ -3312,9 +3555,10 @@ function lowerValueToTemporary(
   const place: Place = buildTemporaryPlace(builder, value.loc);
   builder.push({
     id: makeInstructionId(0),
-    value: value,
-    loc: value.loc,
     lvalue: {...place},
+    value: value,
+    effects: null,
+    loc: value.loc,
   });
   return place;
 }
@@ -3338,6 +3582,16 @@ function lowerIdentifier(
       return place;
     }
     default: {
+      if (binding.kind === 'Global' && binding.name === 'eval') {
+        builder.errors.push({
+          reason: `The 'eval' function is not supported`,
+          description:
+            'Eval is an anti-pattern in JavaScript, and the code executed cannot be evaluated by React Compiler',
+          severity: ErrorSeverity.UnsupportedJS,
+          loc: exprPath.node.loc ?? null,
+          suggestions: null,
+        });
+      }
       return lowerValueToTemporary(builder, {
         kind: 'LoadGlobal',
         binding,
@@ -3455,31 +3709,40 @@ function lowerAssignment(
 
       let temporary;
       if (builder.isContextIdentifier(lvalue)) {
-        if (kind !== InstructionKind.Reassign && !isHoistedIdentifier) {
-          if (kind === InstructionKind.Const) {
-            builder.errors.push({
-              reason: `Expected \`const\` declaration not to be reassigned`,
-              severity: ErrorSeverity.InvalidJS,
-              loc: lvalue.node.loc ?? null,
-              suggestions: null,
-            });
-          }
-          lowerValueToTemporary(builder, {
-            kind: 'DeclareContext',
-            lvalue: {
-              kind: InstructionKind.Let,
-              place: {...place},
-            },
-            loc: place.loc,
+        if (kind === InstructionKind.Const && !isHoistedIdentifier) {
+          builder.errors.push({
+            reason: `Expected \`const\` declaration not to be reassigned`,
+            severity: ErrorSeverity.InvalidJS,
+            loc: lvalue.node.loc ?? null,
+            suggestions: null,
           });
         }
 
-        temporary = lowerValueToTemporary(builder, {
-          kind: 'StoreContext',
-          lvalue: {place: {...place}, kind: InstructionKind.Reassign},
-          value,
-          loc,
-        });
+        if (
+          kind !== InstructionKind.Const &&
+          kind !== InstructionKind.Reassign &&
+          kind !== InstructionKind.Let &&
+          kind !== InstructionKind.Function
+        ) {
+          builder.errors.push({
+            reason: `Unexpected context variable kind`,
+            severity: ErrorSeverity.InvalidJS,
+            loc: lvalue.node.loc ?? null,
+            suggestions: null,
+          });
+          temporary = lowerValueToTemporary(builder, {
+            kind: 'UnsupportedNode',
+            node: lvalueNode,
+            loc: lvalueNode.loc ?? GeneratedSource,
+          });
+        } else {
+          temporary = lowerValueToTemporary(builder, {
+            kind: 'StoreContext',
+            lvalue: {place: {...place}, kind},
+            value,
+            loc,
+          });
+        }
       } else {
         const typeAnnotation = lvalue.get('typeAnnotation');
         let type: t.FlowType | t.TSType | null;
@@ -3513,8 +3776,25 @@ function lowerAssignment(
       const lvalue = lvaluePath as NodePath<t.MemberExpression>;
       const property = lvalue.get('property');
       const object = lowerExpressionToTemporary(builder, lvalue.get('object'));
-      if (!lvalue.node.computed) {
-        if (!property.isIdentifier()) {
+      if (!lvalue.node.computed || lvalue.get('property').isNumericLiteral()) {
+        let temporary;
+        if (property.isIdentifier()) {
+          temporary = lowerValueToTemporary(builder, {
+            kind: 'PropertyStore',
+            object,
+            property: makePropertyLiteral(property.node.name),
+            value,
+            loc,
+          });
+        } else if (property.isNumericLiteral()) {
+          temporary = lowerValueToTemporary(builder, {
+            kind: 'PropertyStore',
+            object,
+            property: makePropertyLiteral(property.node.value),
+            value,
+            loc,
+          });
+        } else {
           builder.errors.push({
             reason: `(BuildHIR::lowerAssignment) Handle ${property.type} properties in MemberExpression`,
             severity: ErrorSeverity.Todo,
@@ -3523,13 +3803,6 @@ function lowerAssignment(
           });
           return {kind: 'UnsupportedNode', node: lvalueNode, loc};
         }
-        const temporary = lowerValueToTemporary(builder, {
-          kind: 'PropertyStore',
-          object,
-          property: property.node.name,
-          value,
-          loc,
-        });
         return {kind: 'LoadLocal', place: temporary, loc: temporary.loc};
       } else {
         if (!property.isExpression()) {
@@ -3936,6 +4209,7 @@ function lowerAssignment(
           test: {...test},
           consequent,
           alternate,
+          fallthrough: continuationBlock.id,
           id: makeInstructionId(0),
           loc,
         },
@@ -3963,14 +4237,6 @@ function lowerAssignment(
   }
 }
 
-function isValidDependency(path: NodePath<t.MemberExpression>): boolean {
-  const parent: NodePath<t.Node> = path.parentPath;
-  return (
-    !path.node.computed &&
-    !(parent.isCallExpression() && parent.get('callee') === path)
-  );
-}
-
 function captureScopes({from, to}: {from: Scope; to: Scope}): Set<Scope> {
   let scopes: Set<Scope> = new Set();
   while (from) {
@@ -3985,8 +4251,12 @@ function captureScopes({from, to}: {from: Scope; to: Scope}): Set<Scope> {
   return scopes;
 }
 
-function gatherCapturedDeps(
-  builder: HIRBuilder,
+/**
+ * Returns a mapping of "context" identifiers — references to free variables that
+ * will become part of the function expression's `context` array — along with the
+ * source location of their first reference within the function.
+ */
+function gatherCapturedContext(
   fn: NodePath<
     | t.FunctionExpression
     | t.ArrowFunctionExpression
@@ -3994,10 +4264,8 @@ function gatherCapturedDeps(
     | t.ObjectMethod
   >,
   componentScope: Scope,
-): {identifiers: Array<t.Identifier>; refs: Array<Place>} {
-  const capturedIds: Map<t.Identifier, number> = new Map();
-  const capturedRefs: Set<Place> = new Set();
-  const seenPaths: Set<string> = new Set();
+): Map<t.Identifier, SourceLocation> {
+  const capturedIds = new Map<t.Identifier, SourceLocation>();
 
   /*
    * Capture all the scopes from the parent of this function up to and including
@@ -4008,33 +4276,11 @@ function gatherCapturedDeps(
     to: componentScope,
   });
 
-  function addCapturedId(bindingIdentifier: t.Identifier): number {
-    if (!capturedIds.has(bindingIdentifier)) {
-      const index = capturedIds.size;
-      capturedIds.set(bindingIdentifier, index);
-      return index;
-    } else {
-      return capturedIds.get(bindingIdentifier)!;
-    }
-  }
-
   function handleMaybeDependency(
-    path:
-      | NodePath<t.MemberExpression>
-      | NodePath<t.Identifier>
-      | NodePath<t.JSXOpeningElement>,
+    path: NodePath<t.Identifier> | NodePath<t.JSXOpeningElement>,
   ): void {
     // Base context variable to depend on
     let baseIdentifier: NodePath<t.Identifier> | NodePath<t.JSXIdentifier>;
-    /*
-     * Base expression to depend on, which (for now) may contain non side-effectful
-     * member expressions
-     */
-    let dependency:
-      | NodePath<t.MemberExpression>
-      | NodePath<t.JSXMemberExpression>
-      | NodePath<t.Identifier>
-      | NodePath<t.JSXIdentifier>;
     if (path.isJSXOpeningElement()) {
       const name = path.get('name');
       if (!(name.isJSXMemberExpression() || name.isJSXIdentifier())) {
@@ -4050,115 +4296,27 @@ function gatherCapturedDeps(
         'Invalid logic in gatherCapturedDeps',
       );
       baseIdentifier = current;
-
-      /*
-       * Get the expression to depend on, which may involve PropertyLoads
-       * for member expressions
-       */
-      let currentDep:
-        | NodePath<t.JSXMemberExpression>
-        | NodePath<t.Identifier>
-        | NodePath<t.JSXIdentifier> = baseIdentifier;
-
-      while (true) {
-        const nextDep: null | NodePath<t.Node> = currentDep.parentPath;
-        if (nextDep && nextDep.isJSXMemberExpression()) {
-          currentDep = nextDep;
-        } else {
-          break;
-        }
-      }
-      dependency = currentDep;
-    } else if (path.isMemberExpression()) {
-      // Calculate baseIdentifier
-      let currentId: NodePath<Expression> = path;
-      while (currentId.isMemberExpression()) {
-        currentId = currentId.get('object');
-      }
-      if (!currentId.isIdentifier()) {
-        return;
-      }
-      baseIdentifier = currentId;
-
-      /*
-       * Get the expression to depend on, which may involve PropertyLoads
-       * for member expressions
-       */
-      let currentDep:
-        | NodePath<t.MemberExpression>
-        | NodePath<t.Identifier>
-        | NodePath<t.JSXIdentifier> = baseIdentifier;
-
-      while (true) {
-        const nextDep: null | NodePath<t.Node> = currentDep.parentPath;
-        if (
-          nextDep &&
-          nextDep.isMemberExpression() &&
-          isValidDependency(nextDep)
-        ) {
-          currentDep = nextDep;
-        } else {
-          break;
-        }
-      }
-
-      dependency = currentDep;
     } else {
       baseIdentifier = path;
-      dependency = path;
     }
 
     /*
      * Skip dependency path, as we already tried to recursively add it (+ all subexpressions)
      * as a dependency.
      */
-    dependency.skip();
+    path.skip();
 
     // Add the base identifier binding as a dependency.
     const binding = baseIdentifier.scope.getBinding(baseIdentifier.node.name);
-    if (binding === undefined || !pureScopes.has(binding.scope)) {
-      return;
-    }
-    const idKey = String(addCapturedId(binding.identifier));
-
-    // Add the expression (potentially a memberexpr path) as a dependency.
-    let exprKey = idKey;
-    if (dependency.isMemberExpression()) {
-      let pathTokens = [];
-      let current: NodePath<Expression> = dependency;
-      while (current.isMemberExpression()) {
-        const property = current.get('property') as NodePath<t.Identifier>;
-        pathTokens.push(property.node.name);
-        current = current.get('object');
-      }
-
-      exprKey += '.' + pathTokens.reverse().join('.');
-    } else if (dependency.isJSXMemberExpression()) {
-      let pathTokens = [];
-      let current: NodePath<t.JSXMemberExpression | t.JSXIdentifier> =
-        dependency;
-      while (current.isJSXMemberExpression()) {
-        const property = current.get('property');
-        pathTokens.push(property.node.name);
-        current = current.get('object');
-      }
-    }
-
-    if (!seenPaths.has(exprKey)) {
-      let loweredDep: Place;
-      if (dependency.isJSXIdentifier()) {
-        loweredDep = lowerValueToTemporary(builder, {
-          kind: 'LoadLocal',
-          place: lowerIdentifier(builder, dependency),
-          loc: path.node.loc ?? GeneratedSource,
-        });
-      } else if (dependency.isJSXMemberExpression()) {
-        loweredDep = lowerJsxMemberExpression(builder, dependency);
-      } else {
-        loweredDep = lowerExpressionToTemporary(builder, dependency);
-      }
-      capturedRefs.add(loweredDep);
-      seenPaths.add(exprKey);
+    if (
+      binding !== undefined &&
+      pureScopes.has(binding.scope) &&
+      !capturedIds.has(binding.identifier)
+    ) {
+      capturedIds.set(
+        binding.identifier,
+        path.node.loc ?? binding.identifier.loc ?? GeneratedSource,
+      );
     }
   }
 
@@ -4189,13 +4347,13 @@ function gatherCapturedDeps(
         return;
       } else if (path.isJSXElement()) {
         handleMaybeDependency(path.get('openingElement'));
-      } else if (path.isMemberExpression() || path.isIdentifier()) {
+      } else if (path.isIdentifier()) {
         handleMaybeDependency(path);
       }
     },
   });
 
-  return {identifiers: [...capturedIds.keys()], refs: [...capturedRefs]};
+  return capturedIds;
 }
 
 function notNull<T>(value: T | null): value is T {

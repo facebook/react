@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment node
  */
 
 'use strict';
@@ -20,12 +21,14 @@ let webpackModules;
 let webpackModuleLoading;
 let React;
 let ReactDOMServer;
+let ReactDOMFizzStatic;
+let ReactServer;
 let ReactServerDOMServer;
+let ReactServerDOMStaticServer;
 let ReactServerDOMClient;
 let Stream;
 let use;
-let ReactServerScheduler;
-let reactServerAct;
+let serverAct;
 
 // We test pass-through without encoding strings but it should work without it too.
 const streamOptions = {
@@ -36,16 +39,22 @@ describe('ReactFlightDOMNode', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    ReactServerScheduler = require('scheduler');
-    patchSetImmediate(ReactServerScheduler);
-    reactServerAct = require('internal-test-utils').act;
+    patchSetImmediate();
+    serverAct = require('internal-test-utils').serverAct;
 
     // Simulate the condition resolution
     jest.mock('react', () => require('react/react.react-server'));
     jest.mock('react-server-dom-webpack/server', () =>
       require('react-server-dom-webpack/server.node'),
     );
+    ReactServer = require('react');
     ReactServerDOMServer = require('react-server-dom-webpack/server');
+    if (__EXPERIMENTAL__) {
+      jest.mock('react-server-dom-webpack/static', () =>
+        require('react-server-dom-webpack/static.node'),
+      );
+      ReactServerDOMStaticServer = require('react-server-dom-webpack/static');
+    }
 
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
@@ -62,20 +71,30 @@ describe('ReactFlightDOMNode', () => {
 
     React = require('react');
     ReactDOMServer = require('react-dom/server.node');
+    ReactDOMFizzStatic = require('react-dom/static');
     ReactServerDOMClient = require('react-server-dom-webpack/client');
     Stream = require('stream');
     use = React.use;
   });
 
-  async function serverAct(callback) {
-    let maybePromise;
-    await reactServerAct(() => {
-      maybePromise = callback();
-      if (maybePromise && typeof maybePromise.catch === 'function') {
-        maybePromise.catch(() => {});
-      }
-    });
-    return maybePromise;
+  function filterStackFrame(filename, functionName) {
+    return (
+      filename !== '' &&
+      !filename.startsWith('node:') &&
+      !filename.includes('node_modules') &&
+      // Filter out our own internal source code since it'll typically be in node_modules
+      (!filename.includes('/packages/') || filename.includes('/__tests__/')) &&
+      !filename.includes('/build/')
+    );
+  }
+
+  function normalizeCodeLocInfo(str) {
+    return (
+      str &&
+      str.replace(/^ +(?:at|in) ([\S]+)[^\n]*/gm, function (m, name) {
+        return '    in ' + name + (/\d/.test(m) ? ' (at **)' : '');
+      })
+    );
   }
 
   function readResult(stream) {
@@ -95,6 +114,84 @@ describe('ReactFlightDOMNode', () => {
       stream.pipe(writable);
     });
   }
+
+  async function readWebResult(webStream: ReadableStream<Uint8Array>) {
+    const reader = webStream.getReader();
+    let result = '';
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) {
+        return result;
+      }
+      result += Buffer.from(value).toString('utf8');
+    }
+  }
+
+  async function createBufferedUnclosingStream(
+    prelude: ReadableStream<Uint8Array>,
+  ): ReadableStream<Uint8Array> {
+    const chunks: Array<Uint8Array> = [];
+    const reader = prelude.getReader();
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) {
+        break;
+      } else {
+        chunks.push(value);
+      }
+    }
+
+    let i = 0;
+    return new ReadableStream({
+      async pull(controller) {
+        if (i < chunks.length) {
+          controller.enqueue(chunks[i++]);
+        }
+      },
+    });
+  }
+
+  it('should support web streams in node', async () => {
+    function Text({children}) {
+      return <span>{children}</span>;
+    }
+    // Large strings can get encoded differently so we need to test that.
+    const largeString = 'world'.repeat(1000);
+    function HTML() {
+      return (
+        <div>
+          <Text>hello</Text>
+          <Text>{largeString}</Text>
+        </div>
+      );
+    }
+
+    function App() {
+      const model = {
+        html: <HTML />,
+      };
+      return model;
+    }
+
+    const readable = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(<App />, webpackMap),
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(readable, {
+      serverConsumerManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+    const model = await response;
+    expect(model).toEqual({
+      html: (
+        <div>
+          <span>hello</span>
+          <span>{largeString}</span>
+        </div>
+      ),
+    });
+  });
 
   it('should allow an alternative module mapping to be used for SSR', async () => {
     function ClientComponent() {
@@ -121,7 +218,7 @@ describe('ReactFlightDOMNode', () => {
         '*': ssrMetadata,
       },
     };
-    const ssrManifest = {
+    const serverConsumerManifest = {
       moduleMap: translationMap,
       moduleLoading: webpackModuleLoading,
     };
@@ -142,7 +239,7 @@ describe('ReactFlightDOMNode', () => {
       if (response) return use(response);
       response = ReactServerDOMClient.createFromNodeStream(
         readable,
-        ssrManifest,
+        serverConsumerManifest,
       );
       return use(response);
     }
@@ -188,7 +285,6 @@ describe('ReactFlightDOMNode', () => {
     expect(result.text).toBe(testString);
   });
 
-  // @gate enableBinaryFlight
   it('should be able to serialize any kind of typed array', async () => {
     const buffer = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
@@ -246,7 +342,7 @@ describe('ReactFlightDOMNode', () => {
         '*': ssrMetadata,
       },
     };
-    const ssrManifest = {
+    const serverConsumerManifest = {
       moduleMap: translationMap,
       moduleLoading: webpackModuleLoading,
     };
@@ -267,7 +363,7 @@ describe('ReactFlightDOMNode', () => {
       if (response) return use(response);
       response = ReactServerDOMClient.createFromNodeStream(
         readable,
-        ssrManifest,
+        serverConsumerManifest,
         {
           nonce: 'r4nd0m',
         },
@@ -284,7 +380,6 @@ describe('ReactFlightDOMNode', () => {
     );
   });
 
-  // @gate enableFlightReadableStream
   it('should cancels the underlying ReadableStream when we are cancelled', async () => {
     let controller;
     let cancelReason;
@@ -328,7 +423,6 @@ describe('ReactFlightDOMNode', () => {
     );
   });
 
-  // @gate enableFlightReadableStream
   it('should cancels the underlying ReadableStream when we abort', async () => {
     const errors = [];
     let controller;
@@ -377,5 +471,438 @@ describe('ReactFlightDOMNode', () => {
     }
     expect(error.digest).toBe('aborted');
     expect(errors).toEqual([reason]);
+  });
+
+  // @gate experimental
+  it('can prerender', async () => {
+    let resolveGreeting;
+    const greetingPromise = new Promise(resolve => {
+      resolveGreeting = resolve;
+    });
+
+    function App() {
+      return (
+        <div>
+          <Greeting />
+        </div>
+      );
+    }
+
+    async function Greeting() {
+      await greetingPromise;
+      return 'hello world';
+    }
+
+    const {pendingResult} = await serverAct(async () => {
+      // destructure trick to avoid the act scope from awaiting the returned value
+      return {
+        pendingResult:
+          ReactServerDOMStaticServer.unstable_prerenderToNodeStream(
+            <App />,
+            webpackMap,
+          ),
+      };
+    });
+
+    resolveGreeting();
+    const {prelude} = await pendingResult;
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromNodeStream(prelude, {
+      serverConsumerManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+    // Use the SSR render to resolve any lazy elements
+    const ssrStream = await serverAct(() =>
+      ReactDOMServer.renderToPipeableStream(
+        React.createElement(ClientRoot, {response}),
+      ),
+    );
+    // Should still match the result when parsed
+    const result = await readResult(ssrStream);
+    expect(result).toBe('<div>hello world</div>');
+  });
+
+  // @gate enableHalt
+  it('does not propagate abort reasons errors when aborting a prerender', async () => {
+    let resolveGreeting;
+    const greetingPromise = new Promise(resolve => {
+      resolveGreeting = resolve;
+    });
+
+    function App() {
+      return (
+        <div>
+          <ReactServer.Suspense fallback="loading...">
+            <Greeting />
+          </ReactServer.Suspense>
+        </div>
+      );
+    }
+
+    async function Greeting() {
+      await greetingPromise;
+      return 'hello world';
+    }
+
+    const controller = new AbortController();
+    const errors = [];
+    const {pendingResult} = await serverAct(async () => {
+      // destructure trick to avoid the act scope from awaiting the returned value
+      return {
+        pendingResult:
+          ReactServerDOMStaticServer.unstable_prerenderToNodeStream(
+            <App />,
+            webpackMap,
+            {
+              signal: controller.signal,
+              onError(err) {
+                errors.push(err);
+              },
+            },
+          ),
+      };
+    });
+
+    controller.abort('boom');
+    resolveGreeting();
+    const {prelude} = await serverAct(() => pendingResult);
+    expect(errors).toEqual([]);
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromNodeStream(prelude, {
+      serverConsumerManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+    errors.length = 0;
+    const ssrStream = await serverAct(() =>
+      ReactDOMServer.renderToPipeableStream(
+        React.createElement(ClientRoot, {response}),
+        {
+          onError(error) {
+            errors.push(error);
+          },
+        },
+      ),
+    );
+    ssrStream.abort('bam');
+    expect(errors).toEqual([new Error('Connection closed.')]);
+    // Should still match the result when parsed
+    const result = await readResult(ssrStream);
+    expect(result).toContain('loading...');
+  });
+
+  // @gate enableHalt && enableAsyncDebugInfo
+  it('includes source locations in component and owner stacks for halted components', async () => {
+    async function Component() {
+      await new Promise(() => {});
+      return null;
+    }
+
+    function App() {
+      return ReactServer.createElement(
+        'html',
+        null,
+        ReactServer.createElement(
+          'body',
+          null,
+          ReactServer.createElement(
+            ReactServer.Suspense,
+            {fallback: 'Loading...'},
+            ReactServer.createElement(Component, null),
+          ),
+        ),
+      );
+    }
+
+    const errors = [];
+    const serverAbortController = new AbortController();
+    const {pendingResult} = await serverAct(async () => {
+      // destructure trick to avoid the act scope from awaiting the returned value
+      return {
+        pendingResult: ReactServerDOMStaticServer.unstable_prerender(
+          ReactServer.createElement(App, null),
+          webpackMap,
+          {
+            signal: serverAbortController.signal,
+            onError(error) {
+              errors.push(error);
+            },
+          },
+        ),
+      };
+    });
+
+    await await serverAct(
+      async () =>
+        new Promise(resolve => {
+          setImmediate(() => {
+            serverAbortController.abort();
+            resolve();
+          });
+        }),
+    );
+
+    const {prelude} = await pendingResult;
+
+    expect(errors).toEqual([]);
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const prerenderResponse = ReactServerDOMClient.createFromReadableStream(
+      await createBufferedUnclosingStream(prelude),
+      {
+        serverConsumerManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
+
+    let componentStack;
+    let ownerStack;
+
+    const clientAbortController = new AbortController();
+
+    const fizzPrerenderStreamResult = ReactDOMFizzStatic.prerender(
+      React.createElement(ClientRoot, {response: prerenderResponse}),
+      {
+        signal: clientAbortController.signal,
+        onError(error, errorInfo) {
+          componentStack = errorInfo.componentStack;
+          ownerStack = React.captureOwnerStack
+            ? React.captureOwnerStack()
+            : null;
+        },
+      },
+    );
+
+    await await serverAct(
+      async () =>
+        new Promise(resolve => {
+          setImmediate(() => {
+            clientAbortController.abort();
+            resolve();
+          });
+        }),
+    );
+
+    const fizzPrerenderStream = await fizzPrerenderStreamResult;
+    const prerenderHTML = await readWebResult(fizzPrerenderStream.prelude);
+
+    expect(prerenderHTML).toContain('Loading...');
+
+    if (__DEV__) {
+      expect(normalizeCodeLocInfo(componentStack)).toBe(
+        '\n    in Component (at **)\n    in Suspense\n    in body\n    in html\n    in ClientRoot (at **)',
+      );
+    } else {
+      expect(normalizeCodeLocInfo(componentStack)).toBe(
+        '\n    in Suspense\n    in body\n    in html\n    in ClientRoot (at **)',
+      );
+    }
+
+    if (__DEV__) {
+      expect(normalizeCodeLocInfo(ownerStack)).toBe(
+        '\n    in Component (at **)\n    in App (at **)',
+      );
+    } else {
+      expect(ownerStack).toBeNull();
+    }
+  });
+
+  // @gate enableHalt && enableAsyncDebugInfo
+  it('includes deeper location for aborted stacks', async () => {
+    async function getData() {
+      const signal = ReactServer.cacheSignal();
+      await new Promise((resolve, reject) => {
+        signal.addEventListener('abort', () => reject(signal.reason));
+      });
+    }
+
+    async function thisShouldNotBeInTheStack() {
+      await new Promise((resolve, reject) => {
+        resolve();
+      });
+    }
+
+    async function Component() {
+      try {
+        await getData();
+      } catch (x) {
+        await thisShouldNotBeInTheStack(); // This is issued after the rejection so should not be included.
+      }
+      return null;
+    }
+
+    function App() {
+      return ReactServer.createElement(
+        'html',
+        null,
+        ReactServer.createElement(
+          'body',
+          null,
+          ReactServer.createElement(
+            ReactServer.Suspense,
+            {fallback: 'Loading...'},
+            ReactServer.createElement(Component, null),
+          ),
+        ),
+      );
+    }
+
+    const errors = [];
+    const serverAbortController = new AbortController();
+    const {pendingResult} = await serverAct(async () => {
+      // destructure trick to avoid the act scope from awaiting the returned value
+      return {
+        pendingResult: ReactServerDOMStaticServer.unstable_prerender(
+          ReactServer.createElement(App, null),
+          webpackMap,
+          {
+            signal: serverAbortController.signal,
+            onError(error) {
+              errors.push(error);
+            },
+            filterStackFrame,
+          },
+        ),
+      };
+    });
+
+    await serverAct(
+      () =>
+        new Promise(resolve => {
+          setImmediate(() => {
+            serverAbortController.abort();
+            resolve();
+          });
+        }),
+    );
+
+    const {prelude} = await pendingResult;
+
+    expect(errors).toEqual([]);
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const prerenderResponse = ReactServerDOMClient.createFromReadableStream(
+      await createBufferedUnclosingStream(prelude),
+      {
+        serverConsumerManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
+
+    let componentStack;
+    let ownerStack;
+
+    const clientAbortController = new AbortController();
+
+    const fizzPrerenderStreamResult = ReactDOMFizzStatic.prerender(
+      React.createElement(ClientRoot, {response: prerenderResponse}),
+      {
+        signal: clientAbortController.signal,
+        onError(error, errorInfo) {
+          componentStack = errorInfo.componentStack;
+          ownerStack = React.captureOwnerStack
+            ? React.captureOwnerStack()
+            : null;
+        },
+      },
+    );
+
+    await await serverAct(
+      async () =>
+        new Promise(resolve => {
+          setImmediate(() => {
+            clientAbortController.abort();
+            resolve();
+          });
+        }),
+    );
+
+    const fizzPrerenderStream = await fizzPrerenderStreamResult;
+    const prerenderHTML = await readWebResult(fizzPrerenderStream.prelude);
+
+    expect(prerenderHTML).toContain('Loading...');
+
+    if (__DEV__) {
+      expect(normalizeCodeLocInfo(componentStack)).toBe(
+        '\n    in Component (at **)\n    in Suspense\n    in body\n    in html\n    in ClientRoot (at **)',
+      );
+    } else {
+      expect(normalizeCodeLocInfo(componentStack)).toBe(
+        '\n    in Suspense\n    in body\n    in html\n    in ClientRoot (at **)',
+      );
+    }
+
+    if (__DEV__) {
+      expect(normalizeCodeLocInfo(ownerStack)).toBe(
+        '\n    in getData (at **)' +
+          '\n    in Component (at **)' +
+          '\n    in App (at **)',
+      );
+    } else {
+      expect(ownerStack).toBeNull();
+    }
+  });
+
+  // @gate experimental
+  // @gate enableHalt
+  it('can handle an empty prelude when prerendering', async () => {
+    function App() {
+      return null;
+    }
+
+    const serverAbortController = new AbortController();
+    serverAbortController.abort();
+    const errors = [];
+    const {pendingResult} = await serverAct(async () => {
+      // destructure trick to avoid the act scope from awaiting the returned value
+      return {
+        pendingResult: ReactServerDOMStaticServer.unstable_prerender(
+          ReactServer.createElement(App, null),
+          webpackMap,
+          {
+            signal: serverAbortController.signal,
+            onError(error) {
+              errors.push(error);
+            },
+          },
+        ),
+      };
+    });
+
+    expect(errors).toEqual([]);
+
+    const {prelude} = await pendingResult;
+
+    const reader = prelude.getReader();
+    while (true) {
+      const {done} = await reader.read();
+      if (done) {
+        break;
+      }
+    }
+
+    // We don't really have an assertion other than to make sure
+    // the stream doesn't hang.
   });
 });

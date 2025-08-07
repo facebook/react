@@ -66,7 +66,7 @@ export type Props = {
 export function InspectedElementContextController({
   children,
 }: Props): React.Node {
-  const {selectedElementID} = useContext(TreeStateContext);
+  const {inspectedElementID} = useContext(TreeStateContext);
   const fetchFileWithCaching = useContext(FetchFileWithCachingContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
@@ -93,7 +93,9 @@ export function InspectedElementContextController({
   });
 
   const element =
-    selectedElementID !== null ? store.getElementByID(selectedElementID) : null;
+    inspectedElementID !== null
+      ? store.getElementByID(inspectedElementID)
+      : null;
 
   const alreadyLoadedHookNames =
     element != null && hasAlreadyLoadedHookNames(element);

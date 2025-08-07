@@ -15,30 +15,45 @@ export type Wall = {
 };
 
 export type Bridge = {
-  shutdown: () => void,
+  addListener(event: string, listener: (params: unknown) => any): void;
+  removeListener(event: string, listener: Function): void;
+  shutdown: () => void;
 };
 export type Store = Object;
 export type BrowserTheme = 'dark' | 'light';
+export type Config = {
+  supportsReloadAndProfile?: boolean,
+};
 
 export function createBridge(wall: Wall): Bridge;
-export function createStore(bridge: Bridge): Store;
+export function createStore(bridge: Bridge, config?: Config): Store;
 
-export type Source = {
-  sourceURL: string,
-  line: number,
-  column: number,
-};
+export type ReactFunctionLocation = [
+  string, // function name
+  string, // file name TODO: model nested eval locations as nested arrays
+  number, // enclosing line number
+  number, // enclosing column number
+];
+export type ReactCallSite = [
+  string, // function name
+  string, // file name TODO: model nested eval locations as nested arrays
+  number, // line number
+  number, // column number
+  number, // enclosing line number
+  number, // enclosing column number
+  boolean, // async resume
+];
 export type ViewElementSource = (
-  source: Source,
-  symbolicatedSource: Source | null,
+  source: ReactFunctionLocation | ReactCallSite,
+  symbolicatedSource: ReactFunctionLocation | ReactCallSite | null,
 ) => void;
 export type ViewAttributeSource = (
   id: number,
   path: Array<string | number>,
 ) => void;
 export type CanViewElementSource = (
-  source: Source,
-  symbolicatedSource: Source | null,
+  source: ReactFunctionLocation | ReactCallSite,
+  symbolicatedSource: ReactFunctionLocation | ReactCallSite | null,
 ) => boolean;
 
 export type InitializationOptions = {
@@ -50,4 +65,5 @@ export type InitializationOptions = {
   canViewElementSourceFunction?: CanViewElementSource,
 };
 
-export function initialize(node: Element | Document, options: InitializationOptions): void;
+export function initializeComponents(node: Element | Document, options: InitializationOptions): void;
+export function initializeProfiler(node: Element | Document, options: InitializationOptions): void;

@@ -1,8 +1,3 @@
-.Source {
-  padding: 0.25rem;
-  border-top: 1px solid var(--color-border);
-}
-
 .SourceHeaderRow {
   display: flex;
   align-items: center;
@@ -22,4 +17,19 @@
   text-overflow: ellipsis;
   max-width: 100%;
   margin-left: 1rem;
+}
+
+.Link {
+  color: var(--color-link);
+  white-space: pre;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  cursor: pointer;
+  border-radius: 0.125rem;
+  padding: 0px 2px;
+}
+
+.Link:hover {
+  background-color: var(--color-background-hover);
 }

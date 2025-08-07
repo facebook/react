@@ -60,6 +60,10 @@ import {
   disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 
+import noop from 'shared/noop';
+
+const defaultOnDefaultTransitionIndicator: () => void | (() => void) = noop;
+
 // $FlowFixMe[prop-missing]: This is only in the development export.
 const act = React.act;
 
@@ -166,10 +170,14 @@ function flatten(arr) {
   const stack = [{i: 0, array: arr}];
   while (stack.length) {
     const n = stack.pop();
+    // $FlowFixMe[incompatible-use]
     while (n.i < n.array.length) {
+      // $FlowFixMe[incompatible-use]
       const el = n.array[n.i];
+      // $FlowFixMe[incompatible-use]
       n.i += 1;
       if (isArray(el)) {
+        // $FlowFixMe[incompatible-call]
         stack.push(n);
         stack.push({i: 0, array: el});
         break;
@@ -511,6 +519,7 @@ function create(
     defaultOnUncaughtError,
     defaultOnCaughtError,
     defaultOnRecoverableError,
+    defaultOnDefaultTransitionIndicator,
     null,
   );
 
@@ -633,18 +642,12 @@ function wrapFiber(fiber: Fiber): ReactTestInstance {
 }
 
 // Enable ReactTestRenderer to be used to test DevTools integration.
-injectIntoDevTools({
-  findFiberByHostInstance: (() => {
-    throw new Error('TestRenderer does not support findFiberByHostInstance()');
-  }: any),
-  bundleType: __DEV__ ? 1 : 0,
-  version: ReactVersion,
-  rendererPackageName: 'react-test-renderer',
-});
+injectIntoDevTools();
 
 export {
   Scheduler as _Scheduler,
   create,
   batchedUpdates as unstable_batchedUpdates,
   act,
+  ReactVersion as version,
 };

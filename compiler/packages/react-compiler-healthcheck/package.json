@@ -6,8 +6,9 @@
     "react-compiler-healthcheck": "dist/index.js"
   },
   "scripts": {
-    "build": "rimraf dist && rollup --config --bundleConfigAsCjs",
-    "test": "echo 'no tests'"
+    "build": "rimraf dist && tsup",
+    "test": "echo 'no tests'",
+    "watch": "yarn build --watch"
   },
   "dependencies": {
     "@babel/core": "^7.24.4",
@@ -23,5 +24,10 @@
   "engines": {
     "node": "^14.17.0 || ^16.0.0 || >= 18.0.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/react.git",
+    "directory": "compiler/packages/react-compiler-healthcheck"
+  }
 }

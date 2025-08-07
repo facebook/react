@@ -6,7 +6,7 @@
  */
 
 import MonacoEditor, {loader, type Monaco} from '@monaco-editor/react';
-import {CompilerErrorDetail} from 'babel-plugin-react-compiler/src';
+import {CompilerErrorDetail} from 'babel-plugin-react-compiler';
 import invariant from 'invariant';
 import type {editor} from 'monaco-editor';
 import * as monaco from 'monaco-editor';
@@ -15,18 +15,17 @@ import {useEffect, useState} from 'react';
 import {renderReactCompilerMarkers} from '../../lib/reactCompilerMonacoDiagnostics';
 import {useStore, useStoreDispatch} from '../StoreContext';
 import {monacoOptions} from './monacoOptions';
-// TODO: Make TS recognize .d.ts files, in addition to loading them with webpack.
-// @ts-ignore
+// @ts-expect-error TODO: Make TS recognize .d.ts files, in addition to loading them with webpack.
 import React$Types from '../../node_modules/@types/react/index.d.ts';
 
 loader.config({monaco});
 
 type Props = {
-  errors: CompilerErrorDetail[];
+  errors: Array<CompilerErrorDetail>;
   language: 'flow' | 'typescript';
 };
 
-export default function Input({errors, language}: Props) {
+export default function Input({errors, language}: Props): JSX.Element {
   const [monaco, setMonaco] = useState<Monaco | null>(null);
   const store = useStore();
   const dispatchStore = useStoreDispatch();
@@ -37,19 +36,25 @@ export default function Input({errors, language}: Props) {
     const uri = monaco.Uri.parse(`file:///index.js`);
     const model = monaco.editor.getModel(uri);
     invariant(model, 'Model must exist for the selected input file.');
-    renderReactCompilerMarkers({monaco, model, details: errors});
-    // N.B. that `tabSize` is a model property, not an editor property.
-    // So, the tab size has to be set per model.
+    renderReactCompilerMarkers({
+      monaco,
+      model,
+      details: errors,
+      source: store.source,
+    });
+    /**
+     * N.B. that `tabSize` is a model property, not an editor property.
+     * So, the tab size has to be set per model.
+     */
     model.updateOptions({tabSize: 2});
-  }, [monaco, errors]);
+  }, [monaco, errors, store.source]);
 
-  const flowDiagnosticDisable = [
-    7028 /* unused label */, 6133 /* var declared but not read */,
-  ];
   useEffect(() => {
-    // Ignore "can only be used in TypeScript files." errors, since
-    // we want to support syntax highlighting for Flow (*.js) files
-    // and Flow is not a built-in language.
+    /**
+     * Ignore "can only be used in TypeScript files." errors, since
+     * we want to support syntax highlighting for Flow (*.js) files
+     * and Flow is not a built-in language.
+     */
     if (!monaco) return;
     monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
       diagnosticCodesToIgnore: [
@@ -64,7 +69,9 @@ export default function Input({errors, language}: Props) {
         8011,
         8012,
         8013,
-        ...(language === 'flow' ? flowDiagnosticDisable : []),
+        ...(language === 'flow'
+          ? [7028 /* unused label */, 6133 /* var declared but not read */]
+          : []),
       ],
       noSemanticValidation: true,
       // Monaco can't validate Flow component syntax
@@ -72,7 +79,7 @@ export default function Input({errors, language}: Props) {
     });
   }, [monaco, language]);
 
-  const handleChange = (value: string | undefined) => {
+  const handleChange: (value: string | undefined) => void = value => {
     if (!value) return;
 
     dispatchStore({
@@ -83,7 +90,13 @@ export default function Input({errors, language}: Props) {
     });
   };
 
-  const handleMount = (_: editor.IStandaloneCodeEditor, monaco: Monaco) => {
+  const handleMount: (
+    _: editor.IStandaloneCodeEditor,
+    monaco: Monaco,
+  ) => void = (_, monaco) => {
+    if (typeof window !== 'undefined') {
+      window['__MONACO_LOADED__'] = true;
+    }
     setMonaco(monaco);
 
     const tscOptions = {
@@ -111,10 +124,12 @@ export default function Input({errors, language}: Props) {
     monaco.languages.typescript.javascriptDefaults.addExtraLib(...reactLib);
     monaco.languages.typescript.typescriptDefaults.addExtraLib(...reactLib);
 
-    // Remeasure the font in case the custom font is loaded only after
-    // Monaco Editor is mounted.
-    // N.B. that this applies also to the output editor as it seems
-    // Monaco Editor instances share the same font config.
+    /**
+     * Remeasure the font in case the custom font is loaded only after
+     * Monaco Editor is mounted.
+     * N.B. that this applies also to the output editor as it seems
+     * Monaco Editor instances share the same font config.
+     */
     document.fonts.ready.then(() => {
       monaco.editor.remeasureFonts();
     });
@@ -125,14 +140,18 @@ export default function Input({errors, language}: Props) {
       <Resizable
         minWidth={650}
         enable={{right: true}}
-        // Restrict MonacoEditor's height, since the config autoLayout:true
-        // will grow the editor to fit within parent element
+        /**
+         * Restrict MonacoEditor's height, since the config autoLayout:true
+         * will grow the editor to fit within parent element
+         */
         className="!h-[calc(100vh_-_3.5rem)]">
         <MonacoEditor
           path={'index.js'}
-          // .js and .jsx files are specified to be TS so that Monaco can actually
-          // check their syntax using its TS language service. They are still JS files
-          // due to their extensions, so TS language features don't work.
+          /**
+           * .js and .jsx files are specified to be TS so that Monaco can actually
+           * check their syntax using its TS language service. They are still JS files
+           * due to their extensions, so TS language features don't work.
+           */
           language={'javascript'}
           value={store.source}
           onMount={handleMount}

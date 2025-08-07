@@ -14,6 +14,7 @@ module.exports = {
     Proxy: 'readonly',
     WeakMap: 'readonly',
     WeakSet: 'readonly',
+    WeakRef: 'readonly',
 
     Int8Array: 'readonly',
     Uint8Array: 'readonly',
@@ -33,6 +34,9 @@ module.exports = {
     globalThis: 'readonly',
 
     FinalizationRegistry: 'readonly',
+
+    ScrollTimeline: 'readonly',
+    navigation: 'readonly',
 
     // Vendor specific
     MSApp: 'readonly',
@@ -71,6 +75,17 @@ module.exports = {
   rules: {
     'no-undef': 'error',
     'no-shadow-restricted-names': 'error',
+    'no-restricted-syntax': [
+      'error',
+      // TODO: Can be removed once we upgrade GCC to a version without `optimizeArgumentsArray` optimization.
+      {
+        selector: 'Identifier[name=/^JSCompiler_OptimizeArgumentsArray_/]',
+        message:
+          'Google Closure Compiler optimized `arguments` access. ' +
+          'This affects function arity. ' +
+          'Create a reference to `arguments` to avoid this optimization',
+      },
+    ],
   },
 
   // These plugins aren't used, but eslint complains if an eslint-ignore comment

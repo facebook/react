@@ -14,7 +14,7 @@ import {
   ReactiveScopeBlock,
   ScopeId,
 } from '../HIR';
-import {getPlaceScope} from './BuildReactiveBlocks';
+import {getPlaceScope} from '../HIR/HIR';
 import {ReactiveFunctionVisitor} from './visitors';
 
 /*

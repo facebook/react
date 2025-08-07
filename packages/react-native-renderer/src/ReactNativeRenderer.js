@@ -8,9 +8,10 @@
  */
 
 import type {ReactPortal, ReactNodeList} from 'shared/ReactTypes';
-import type {ElementRef, Element, ElementType} from 'react';
+import type {ElementRef, ElementType, MixedElement} from 'react';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {RenderRootOptions} from './ReactNativeTypes';
+import type {Container} from 'react-reconciler/src/ReactFiberConfig';
 
 import './ReactNativeInjection';
 
@@ -26,22 +27,14 @@ import {
   defaultOnRecoverableError,
 } from 'react-reconciler/src/ReactFiberReconciler';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import {getStackByFiberInDevAndProd} from 'react-reconciler/src/ReactFiberComponentStack';
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {
   setBatchingImplementation,
   batchedUpdates,
 } from './legacy-events/ReactGenericBatching';
-import ReactVersion from 'shared/ReactVersion';
 // Modules provided by RN:
 import {UIManager} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
-import {getClosestInstanceFromNode} from './ReactNativeComponentTree';
-import {
-  getInspectorDataForViewTag,
-  getInspectorDataForViewAtPoint,
-  getInspectorDataForInstance,
-} from './ReactNativeFiberInspector';
 import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import {
   findHostInstance_DEPRECATED,
@@ -120,9 +113,12 @@ function nativeOnCaughtError(
 
   defaultOnCaughtError(error, errorInfo);
 }
+function nativeOnDefaultTransitionIndicator(): void | (() => void) {
+  // Native doesn't have a default indicator.
+}
 
 function render(
-  element: Element<ElementType>,
+  element: MixedElement,
   containerTag: number,
   callback: ?() => void,
   options: ?RenderRootOptions,
@@ -151,10 +147,16 @@ function render(
       onRecoverableError = options.onRecoverableError;
     }
 
+    const rootInstance: Container = {
+      containerTag,
+      // $FlowExpectedError[incompatible-type] the legacy renderer does not use public root instances
+      publicInstance: null,
+    };
+
     // TODO (bvaughn): If we decide to keep the wrapper component,
     // We could create a wrapper for containerTag as well to reduce special casing.
     root = createContainer(
-      containerTag,
+      rootInstance,
       LegacyRoot,
       null,
       false,
@@ -163,6 +165,7 @@ function render(
       onUncaughtError,
       onCaughtError,
       onRecoverableError,
+      nativeOnDefaultTransitionIndicator,
       null,
     );
     roots.set(containerTag, root);
@@ -199,19 +202,7 @@ function createPortal(
 
 setBatchingImplementation(batchedUpdatesImpl, discreteUpdates);
 
-function computeComponentStackForErrorReporting(reactTag: number): string {
-  const fiber = getClosestInstanceFromNode(reactTag);
-  if (!fiber) {
-    return '';
-  }
-  return getStackByFiberInDevAndProd(fiber);
-}
-
 const roots = new Map<number, FiberRoot>();
-
-const Internals = {
-  computeComponentStackForErrorReporting,
-};
 
 export {
   // This is needed for implementation details of TouchableNativeFeedback
@@ -225,25 +216,8 @@ export {
   unmountComponentAtNodeAndRemoveContainer,
   createPortal,
   batchedUpdates as unstable_batchedUpdates,
-  Internals as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-  // This export is typically undefined in production builds.
-  // See the "enableGetInspectorDataForInstanceInProduction" flag.
-  getInspectorDataForInstance,
   // DEV-only:
   isChildPublicInstance,
 };
 
-injectIntoDevTools({
-  findFiberByHostInstance: getClosestInstanceFromNode,
-  bundleType: __DEV__ ? 1 : 0,
-  version: ReactVersion,
-  rendererPackageName: 'react-native-renderer',
-  rendererConfig: {
-    getInspectorDataForInstance,
-    getInspectorDataForViewTag: getInspectorDataForViewTag,
-    getInspectorDataForViewAtPoint: getInspectorDataForViewAtPoint.bind(
-      null,
-      findNodeHandle,
-    ),
-  },
-});
+injectIntoDevTools();

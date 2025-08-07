@@ -15,11 +15,21 @@ import {
   normalizeCodeLocInfo,
 } from './utils';
 
+let React = require('react');
+let Scheduler;
+let store;
+let utils;
+
+// This flag is on experimental which disables timeline profiler.
+const enableComponentPerformanceTrack =
+  React.version.startsWith('19') && React.version.includes('experimental');
+
 describe('Timeline profiler', () => {
-  let React;
-  let Scheduler;
-  let store;
-  let utils;
+  if (enableComponentPerformanceTrack) {
+    test('no tests', () => {});
+    // Ignore all tests.
+    return;
+  }
 
   beforeEach(() => {
     utils = require('./utils');
@@ -1259,12 +1269,12 @@ describe('Timeline profiler', () => {
     });
 
     describe('when profiling', () => {
-      beforeEach(() => {
-        utils.act(() => store.profilerStore.startProfiling());
-      });
-
       describe('with legacy render', () => {
         const {render: legacyRender} = getLegacyRenderImplementation();
+
+        beforeEach(() => {
+          utils.act(() => store.profilerStore.startProfiling());
+        });
 
         // @reactVersion <= 18.2
         // @reactVersion >= 18.0
@@ -1516,6 +1526,10 @@ describe('Timeline profiler', () => {
 
         const {render: modernRender} = getModernRenderImplementation();
 
+        beforeEach(() => {
+          utils.act(() => store.profilerStore.startProfiling());
+        });
+
         it('should mark concurrent render without suspends or state updates', () => {
           utils.act(() => modernRender(<div />));
 
@@ -1651,7 +1665,11 @@ describe('Timeline profiler', () => {
             </React.Suspense>,
           );
 
-          await waitForAll(['suspended']);
+          await waitForAll([
+            'suspended',
+            // pre-warming
+            'suspended',
+          ]);
 
           Scheduler.unstable_advanceTime(10);
           resolveFn();
@@ -1662,26 +1680,39 @@ describe('Timeline profiler', () => {
           const timelineData = stopProfilingAndGetTimelineData();
 
           // Verify the Suspense event and duration was recorded.
-          expect(timelineData.suspenseEvents).toHaveLength(1);
-          const suspenseEvent = timelineData.suspenseEvents[0];
-          expect(suspenseEvent).toMatchInlineSnapshot(`
-                      {
-                        "componentName": "Example",
-                        "depth": 0,
-                        "duration": 10,
-                        "id": "0",
-                        "phase": "mount",
-                        "promiseName": "",
-                        "resolution": "resolved",
-                        "timestamp": 10,
-                        "type": "suspense",
-                        "warning": null,
-                      }
-                  `);
+          expect(timelineData.suspenseEvents).toMatchInlineSnapshot(`
+              [
+                {
+                  "componentName": "Example",
+                  "depth": 0,
+                  "duration": 10,
+                  "id": "0",
+                  "phase": "mount",
+                  "promiseName": "",
+                  "resolution": "resolved",
+                  "timestamp": 10,
+                  "type": "suspense",
+                  "warning": null,
+                },
+                {
+                  "componentName": "Example",
+                  "depth": 0,
+                  "duration": 10,
+                  "id": "0",
+                  "phase": "mount",
+                  "promiseName": "",
+                  "resolution": "resolved",
+                  "timestamp": 10,
+                  "type": "suspense",
+                  "warning": null,
+                },
+              ]
+            `);
 
           // There should be two batches of renders: Suspeneded and resolved.
           expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
-          expect(timelineData.componentMeasures).toHaveLength(2);
+          // An additional measure with pre-warming
+          expect(timelineData.componentMeasures).toHaveLength(3);
         });
 
         it('should mark concurrent render with suspense that rejects', async () => {
@@ -1708,7 +1739,7 @@ describe('Timeline profiler', () => {
             </React.Suspense>,
           );
 
-          await waitForAll(['suspended']);
+          await waitForAll(['suspended', 'suspended']);
 
           Scheduler.unstable_advanceTime(10);
           rejectFn();
@@ -1719,26 +1750,39 @@ describe('Timeline profiler', () => {
           const timelineData = stopProfilingAndGetTimelineData();
 
           // Verify the Suspense event and duration was recorded.
-          expect(timelineData.suspenseEvents).toHaveLength(1);
-          const suspenseEvent = timelineData.suspenseEvents[0];
-          expect(suspenseEvent).toMatchInlineSnapshot(`
-                      {
-                        "componentName": "Example",
-                        "depth": 0,
-                        "duration": 10,
-                        "id": "0",
-                        "phase": "mount",
-                        "promiseName": "",
-                        "resolution": "rejected",
-                        "timestamp": 10,
-                        "type": "suspense",
-                        "warning": null,
-                      }
-                  `);
+          expect(timelineData.suspenseEvents).toMatchInlineSnapshot(`
+              [
+                {
+                  "componentName": "Example",
+                  "depth": 0,
+                  "duration": 10,
+                  "id": "0",
+                  "phase": "mount",
+                  "promiseName": "",
+                  "resolution": "rejected",
+                  "timestamp": 10,
+                  "type": "suspense",
+                  "warning": null,
+                },
+                {
+                  "componentName": "Example",
+                  "depth": 0,
+                  "duration": 10,
+                  "id": "0",
+                  "phase": "mount",
+                  "promiseName": "",
+                  "resolution": "rejected",
+                  "timestamp": 10,
+                  "type": "suspense",
+                  "warning": null,
+                },
+              ]
+            `);
 
           // There should be two batches of renders: Suspeneded and resolved.
           expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
-          expect(timelineData.componentMeasures).toHaveLength(2);
+          // An additional measure with pre-warming
+          expect(timelineData.componentMeasures).toHaveLength(3);
         });
 
         it('should mark cascading class component state updates', async () => {

@@ -15,14 +15,13 @@ import type {
 } from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {
-  Instance,
-  TextInstance,
   Container,
   PublicInstance,
   RendererInspectionConfig,
 } from './ReactFiberConfig';
 import type {ReactNodeList, ReactFormState} from 'shared/ReactTypes';
 import type {Lane} from './ReactFiberLane';
+import type {ActivityState} from './ReactFiberActivityComponent';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import {LegacyRoot} from './ReactRootTags';
@@ -37,25 +36,37 @@ import {
   ClassComponent,
   HostRoot,
   SuspenseComponent,
+  ActivityComponent,
 } from './ReactWorkTags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import isArray from 'shared/isArray';
-import {enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
+import {
+  enableSchedulingProfiler,
+  enableHydrationLaneScheduling,
+  disableLegacyMode,
+} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {getPublicInstance} from './ReactFiberConfig';
+import {
+  getPublicInstance,
+  rendererVersion,
+  rendererPackageName,
+  extraDevToolsConfig,
+} from './ReactFiberConfig';
 import {
   findCurrentUnmaskedContext,
   processChildContext,
   emptyContextObject,
   isContextProvider as isLegacyContextProvider,
-} from './ReactFiberContext';
+} from './ReactFiberLegacyContext';
 import {createFiberRoot} from './ReactFiberRoot';
 import {isRootDehydrated} from './ReactFiberShellHydration';
 import {
   injectInternals,
   markRenderScheduled,
   onScheduleRoot,
+  injectProfilingHooks,
 } from './ReactFiberDevToolsHook';
+import {startUpdateTimerByLane} from './ReactProfilerTimer';
 import {
   requestUpdateLane,
   scheduleUpdateOnFiber,
@@ -67,7 +78,7 @@ import {
   isAlreadyRendering,
   deferredUpdates,
   discreteUpdates,
-  flushPassiveEffects,
+  flushPendingEffects,
 } from './ReactFiberWorkLoop';
 import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates';
 import {
@@ -86,12 +97,12 @@ import {
   SelectiveHydrationLane,
   getHighestPriorityPendingLanes,
   higherPriorityLane,
+  getBumpedLaneForHydrationByLane,
 } from './ReactFiberLane';
 import {
   scheduleRefresh,
   scheduleRoot,
   setRefreshHandler,
-  findHostInstancesForRefresh,
 } from './ReactFiberHotReloading';
 import ReactVersion from 'shared/ReactVersion';
 export {createPortal} from './ReactPortal';
@@ -113,22 +124,10 @@ export {
   defaultOnCaughtError,
   defaultOnRecoverableError,
 } from './ReactFiberErrorLogger';
+import {getLabelForLane, TotalLanes} from 'react-reconciler/src/ReactFiberLane';
+import {registerDefaultIndicator} from './ReactFiberAsyncAction';
 
 type OpaqueRoot = FiberRoot;
-
-// 0 is PROD, 1 is DEV.
-// Might add PROFILE later.
-type BundleType = 0 | 1;
-
-type DevToolsConfig = {
-  bundleType: BundleType,
-  version: string,
-  rendererPackageName: string,
-  // Note: this actually *does* depend on Fiber internal fields.
-  // Used by "inspect clicked DOM element" in React DevTools.
-  findFiberByHostInstance?: (instance: Instance | TextInstance) => Fiber | null,
-  rendererConfig?: RendererInspectionConfig,
-};
 
 let didWarnAboutNestedUpdates;
 let didWarnAboutFindNodeInStrictMode;
@@ -256,11 +255,12 @@ export function createContainer(
     error: mixed,
     errorInfo: {+componentStack?: ?string},
   ) => void,
+  onDefaultTransitionIndicator: () => void | (() => void),
   transitionCallbacks: null | TransitionTracingCallbacks,
 ): OpaqueRoot {
   const hydrate = false;
   const initialChildren = null;
-  return createFiberRoot(
+  const root = createFiberRoot(
     containerInfo,
     tag,
     hydrate,
@@ -268,12 +268,15 @@ export function createContainer(
     hydrationCallbacks,
     isStrictMode,
     identifierPrefix,
+    null,
     onUncaughtError,
     onCaughtError,
     onRecoverableError,
+    onDefaultTransitionIndicator,
     transitionCallbacks,
-    null,
   );
+  registerDefaultIndicator(onDefaultTransitionIndicator);
+  return root;
 }
 
 export function createHydrationContainer(
@@ -302,6 +305,7 @@ export function createHydrationContainer(
     error: mixed,
     errorInfo: {+componentStack?: ?string},
   ) => void,
+  onDefaultTransitionIndicator: () => void | (() => void),
   transitionCallbacks: null | TransitionTracingCallbacks,
   formState: ReactFormState<any, any> | null,
 ): OpaqueRoot {
@@ -314,12 +318,15 @@ export function createHydrationContainer(
     hydrationCallbacks,
     isStrictMode,
     identifierPrefix,
+    formState,
     onUncaughtError,
     onCaughtError,
     onRecoverableError,
+    onDefaultTransitionIndicator,
     transitionCallbacks,
-    formState,
   );
+
+  registerDefaultIndicator(onDefaultTransitionIndicator);
 
   // TODO: Move this to FiberRoot constructor
   root.context = getContextForSubtree(null);
@@ -331,7 +338,10 @@ export function createHydrationContainer(
   // the update to schedule work on the root fiber (and, for legacy roots, to
   // enqueue the callback if one is provided).
   const current = root.current;
-  const lane = requestUpdateLane(current);
+  let lane = requestUpdateLane(current);
+  if (enableHydrationLaneScheduling) {
+    lane = getBumpedLaneForHydrationByLane(lane);
+  }
   const update = createUpdate(lane);
   update.callback =
     callback !== undefined && callback !== null ? callback : null;
@@ -366,8 +376,8 @@ export function updateContainerSync(
   parentComponent: ?React$Component<any, any>,
   callback: ?Function,
 ): Lane {
-  if (container.tag === LegacyRoot) {
-    flushPassiveEffects();
+  if (!disableLegacyMode && container.tag === LegacyRoot) {
+    flushPendingEffects();
   }
   const current = container.current;
   updateContainerImpl(
@@ -442,6 +452,7 @@ function updateContainerImpl(
 
   const root = enqueueUpdate(rootFiber, update, lane);
   if (root !== null) {
+    startUpdateTimerByLane(lane, 'root.render()');
     scheduleUpdateOnFiber(root, rootFiber, lane);
     entangleTransitions(root, rootFiber, lane);
   }
@@ -454,7 +465,7 @@ export {
   flushSyncFromReconciler,
   flushSyncWork,
   isAlreadyRendering,
-  flushPassiveEffects,
+  flushPendingEffects as flushPassiveEffects,
 };
 
 export function getPublicRootInstance(
@@ -484,6 +495,7 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
       }
       break;
     }
+    case ActivityComponent:
     case SuspenseComponent: {
       const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
       if (root !== null) {
@@ -501,7 +513,8 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
 }
 
 function markRetryLaneImpl(fiber: Fiber, retryLane: Lane) {
-  const suspenseState: null | SuspenseState = fiber.memoizedState;
+  const suspenseState: null | SuspenseState | ActivityState =
+    fiber.memoizedState;
   if (suspenseState !== null && suspenseState.dehydrated !== null) {
     suspenseState.retryLane = higherPriorityLane(
       suspenseState.retryLane,
@@ -520,7 +533,7 @@ function markRetryLaneIfNotHydrated(fiber: Fiber, retryLane: Lane) {
 }
 
 export function attemptContinuousHydration(fiber: Fiber): void {
-  if (fiber.tag !== SuspenseComponent) {
+  if (fiber.tag !== SuspenseComponent && fiber.tag !== ActivityComponent) {
     // We ignore HostRoots here because we can't increase
     // their priority and they should not suspend on I/O,
     // since you have to wrap anything that might suspend in
@@ -536,12 +549,15 @@ export function attemptContinuousHydration(fiber: Fiber): void {
 }
 
 export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
-  if (fiber.tag !== SuspenseComponent) {
+  if (fiber.tag !== SuspenseComponent && fiber.tag !== ActivityComponent) {
     // We ignore HostRoots here because we can't increase
     // their priority other than synchronously flush it.
     return;
   }
-  const lane = requestUpdateLane(fiber);
+  let lane = requestUpdateLane(fiber);
+  if (enableHydrationLaneScheduling) {
+    lane = getBumpedLaneForHydrationByLane(lane);
+  }
   const root = enqueueConcurrentRenderForLane(fiber, lane);
   if (root !== null) {
     scheduleUpdateOnFiber(root, fiber, lane);
@@ -827,54 +843,63 @@ if (__DEV__) {
   };
 }
 
-function findHostInstanceByFiber(fiber: Fiber): Instance | TextInstance | null {
-  const hostFiber = findCurrentHostFiber(fiber);
-  if (hostFiber === null) {
-    return null;
-  }
-  return hostFiber.stateNode;
-}
-
-function emptyFindFiberByHostInstance(
-  instance: Instance | TextInstance,
-): Fiber | null {
-  return null;
-}
-
 function getCurrentFiberForDevTools() {
   return ReactCurrentFiberCurrent;
 }
 
-export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
-  const {findFiberByHostInstance} = devToolsConfig;
+function getLaneLabelMap(): Map<Lane, string> | null {
+  if (enableSchedulingProfiler) {
+    const map: Map<Lane, string> = new Map();
 
-  return injectInternals({
-    bundleType: devToolsConfig.bundleType,
-    version: devToolsConfig.version,
-    rendererPackageName: devToolsConfig.rendererPackageName,
-    rendererConfig: devToolsConfig.rendererConfig,
-    overrideHookState,
-    overrideHookStateDeletePath,
-    overrideHookStateRenamePath,
-    overrideProps,
-    overridePropsDeletePath,
-    overridePropsRenamePath,
-    setErrorHandler,
-    setSuspenseHandler,
-    scheduleUpdate,
+    let lane = 1;
+    for (let index = 0; index < TotalLanes; index++) {
+      const label = ((getLabelForLane(lane): any): string);
+      map.set(lane, label);
+      lane *= 2;
+    }
+
+    return map;
+  } else {
+    return null;
+  }
+}
+
+export function injectIntoDevTools(): boolean {
+  const internals: Object = {
+    bundleType: __DEV__ ? 1 : 0, // Might add PROFILE later.
+    version: rendererVersion,
+    rendererPackageName: rendererPackageName,
     currentDispatcherRef: ReactSharedInternals,
-    findHostInstanceByFiber,
-    findFiberByHostInstance:
-      findFiberByHostInstance || emptyFindFiberByHostInstance,
-    // React Refresh
-    findHostInstancesForRefresh: __DEV__ ? findHostInstancesForRefresh : null,
-    scheduleRefresh: __DEV__ ? scheduleRefresh : null,
-    scheduleRoot: __DEV__ ? scheduleRoot : null,
-    setRefreshHandler: __DEV__ ? setRefreshHandler : null,
-    // Enables DevTools to append owner stacks to error messages in DEV mode.
-    getCurrentFiber: __DEV__ ? getCurrentFiberForDevTools : null,
     // Enables DevTools to detect reconciler version rather than renderer version
     // which may not match for third party renderers.
     reconcilerVersion: ReactVersion,
-  });
+  };
+  if (extraDevToolsConfig !== null) {
+    internals.rendererConfig = (extraDevToolsConfig: RendererInspectionConfig);
+  }
+  if (__DEV__) {
+    internals.overrideHookState = overrideHookState;
+    internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
+    internals.overrideHookStateRenamePath = overrideHookStateRenamePath;
+    internals.overrideProps = overrideProps;
+    internals.overridePropsDeletePath = overridePropsDeletePath;
+    internals.overridePropsRenamePath = overridePropsRenamePath;
+    internals.scheduleUpdate = scheduleUpdate;
+    internals.setErrorHandler = setErrorHandler;
+    internals.setSuspenseHandler = setSuspenseHandler;
+    // React Refresh
+    internals.scheduleRefresh = scheduleRefresh;
+    internals.scheduleRoot = scheduleRoot;
+    internals.setRefreshHandler = setRefreshHandler;
+    // Enables DevTools to append owner stacks to error messages in DEV mode.
+    internals.getCurrentFiber = getCurrentFiberForDevTools;
+  }
+  if (enableSchedulingProfiler) {
+    // Conditionally inject these hooks only if Timeline profiler is supported by this build.
+    // This gives DevTools a way to feature detect that isn't tied to version number
+    // (since profiling and timeline are controlled by different feature flags).
+    internals.getLaneLabelMap = getLaneLabelMap;
+    internals.injectProfilingHooks = injectProfilingHooks;
+  }
+  return injectInternals(internals);
 }

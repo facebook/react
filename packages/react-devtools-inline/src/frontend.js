@@ -5,13 +5,7 @@ import {forwardRef} from 'react';
 import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
 import DevTools from 'react-devtools-shared/src/devtools/views/DevTools';
-import {
-  getAppendComponentStack,
-  getBreakOnConsoleErrors,
-  getSavedComponentFilters,
-  getShowInlineWarningsAndErrors,
-  getHideConsoleLogsInStrictMode,
-} from 'react-devtools-shared/src/utils';
+import {getSavedComponentFilters} from 'react-devtools-shared/src/utils';
 
 import type {Wall} from 'react-devtools-shared/src/frontend/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
@@ -58,7 +52,7 @@ export function initialize(
     bridge?: FrontendBridge,
     store?: Store,
   } = {},
-): React.AbstractComponent<Props, mixed> {
+): React.ComponentType<Props> {
   if (bridge == null) {
     bridge = createBridge(contentWindow);
   }
@@ -76,11 +70,7 @@ export function initialize(
     frontendBridge.removeListener('getSavedPreferences', onGetSavedPreferences);
 
     const data = {
-      appendComponentStack: getAppendComponentStack(),
-      breakOnConsoleErrors: getBreakOnConsoleErrors(),
       componentFilters: getSavedComponentFilters(),
-      showInlineWarningsAndErrors: getShowInlineWarningsAndErrors(),
-      hideConsoleLogsInStrictMode: getHideConsoleLogsInStrictMode(),
     };
 
     // The renderer interface can't read saved preferences directly,

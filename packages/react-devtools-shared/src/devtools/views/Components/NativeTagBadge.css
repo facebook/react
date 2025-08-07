@@ -1,0 +1,11 @@
+.Toggle {
+  display: flex;
+}
+
+.Toggle > span { /* targets .ToggleContent */
+  padding: 0;
+}
+
+.Badge {
+  cursor: help;
+}

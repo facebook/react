@@ -4,6 +4,8 @@
 ```javascript
 import {identity, makeObject_Primitives} from 'shared-runtime';
 
+function useHook() {}
+
 function useTest({cond}) {
   const val = makeObject_Primitives();
 
@@ -30,6 +32,8 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 import { identity, makeObject_Primitives } from "shared-runtime";
+
+function useHook() {}
 
 function useTest(t0) {
   const $ = _c(3);
@@ -64,4 +68,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: exception) useHook is not defined
+(kind: ok) {"a":0,"b":"value1","c":true}

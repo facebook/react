@@ -1333,7 +1333,8 @@ describe('DOMPropertyOperations', () => {
       });
 
       assertConsoleErrorDev([
-        'The `popoverTarget` prop expects the ID of an Element as a string. Received HTMLDivElement {} instead.',
+        'The `popoverTarget` prop expects the ID of an Element as a string. Received HTMLDivElement {} instead.\n' +
+          '    in button (at **)',
       ]);
 
       // Dedupe warning
@@ -1375,13 +1376,17 @@ describe('DOMPropertyOperations', () => {
         expect(container.firstChild.getAttribute('value')).toBe('foo');
       }
       expect(container.firstChild.value).toBe('foo');
-      await expect(async () => {
-        await act(() => {
-          root.render(<input type="text" onChange={function () {}} />);
-        });
-      }).toErrorDev(
-        'A component is changing a controlled input to be uncontrolled',
-      );
+      await act(() => {
+        root.render(<input type="text" onChange={function () {}} />);
+      });
+      assertConsoleErrorDev([
+        'A component is changing a controlled input to be uncontrolled. ' +
+          'This is likely caused by the value changing from a defined to undefined, ' +
+          'which should not happen. Decide between using a controlled or uncontrolled ' +
+          'input element for the lifetime of the component. ' +
+          'More info: https://react.dev/link/controlled-components\n' +
+          '    in input (at **)',
+      ]);
       if (disableInputAttributeSyncing) {
         expect(container.firstChild.hasAttribute('value')).toBe(false);
       } else {

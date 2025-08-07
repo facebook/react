@@ -21,6 +21,8 @@ import type {
   InspectedElementPath,
 } from 'react-devtools-shared/src/frontend/types';
 
+import noop from 'shared/noop';
+
 export const meta = {
   inspectable: (Symbol('inspectable'): symbol),
   inspected: (Symbol('inspected'): symbol),
@@ -43,7 +45,7 @@ export type Dehydrated = {
   type: string,
 };
 
-// Typed arrays and other complex iteratable objects (e.g. Map, Set, ImmutableJS) need special handling.
+// Typed arrays, other complex iteratable objects (e.g. Map, Set, ImmutableJS) or Promises need special handling.
 // These objects can't be serialized without losing type information,
 // so a "Unserializable" type wrapper is used (with meta-data keys) to send nested values-
 // while preserving the original type and name.
@@ -216,16 +218,19 @@ export function dehydrate(
       if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
         return createDehydrated(type, true, data, cleaned, path);
       }
-      return data.map((item, i) =>
-        dehydrate(
-          item,
+      const arr: Array<Object> = [];
+      for (let i = 0; i < data.length; i++) {
+        arr[i] = dehydrateKey(
+          data,
+          i,
           cleaned,
           unserializable,
           path.concat([i]),
           isPathAllowed,
           isPathAllowedCheck ? 1 : level + 1,
-        ),
-      );
+        );
+      }
+      return arr;
 
     case 'html_all_collection':
     case 'typed_array':
@@ -300,6 +305,85 @@ export function dehydrate(
         type,
       };
 
+    case 'thenable':
+      isPathAllowedCheck = isPathAllowed(path);
+
+      if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
+        return {
+          inspectable:
+            data.status === 'fulfilled' || data.status === 'rejected',
+          preview_short: formatDataForPreview(data, false),
+          preview_long: formatDataForPreview(data, true),
+          name: data.toString(),
+          type,
+        };
+      }
+
+      if (
+        data.status === 'resolved_model' ||
+        data.status === 'resolve_module'
+      ) {
+        // This looks it's a lazy initialization pattern such in Flight.
+        // Since we're about to inspect it. Let's eagerly initialize it.
+        data.then(noop);
+      }
+
+      switch (data.status) {
+        case 'fulfilled': {
+          const unserializableValue: Unserializable = {
+            unserializable: true,
+            type: type,
+            preview_short: formatDataForPreview(data, false),
+            preview_long: formatDataForPreview(data, true),
+            name: 'fulfilled Thenable',
+          };
+
+          unserializableValue.value = dehydrate(
+            data.value,
+            cleaned,
+            unserializable,
+            path.concat(['value']),
+            isPathAllowed,
+            isPathAllowedCheck ? 1 : level + 1,
+          );
+
+          unserializable.push(path);
+
+          return unserializableValue;
+        }
+        case 'rejected': {
+          const unserializableValue: Unserializable = {
+            unserializable: true,
+            type: type,
+            preview_short: formatDataForPreview(data, false),
+            preview_long: formatDataForPreview(data, true),
+            name: 'rejected Thenable',
+          };
+
+          unserializableValue.reason = dehydrate(
+            data.reason,
+            cleaned,
+            unserializable,
+            path.concat(['reason']),
+            isPathAllowed,
+            isPathAllowedCheck ? 1 : level + 1,
+          );
+
+          unserializable.push(path);
+
+          return unserializableValue;
+        }
+        default:
+          cleaned.push(path);
+          return {
+            inspectable: false,
+            preview_short: formatDataForPreview(data, false),
+            preview_long: formatDataForPreview(data, true),
+            name: data.toString(),
+            type,
+          };
+      }
+
     case 'object':
       isPathAllowedCheck = isPathAllowed(path);
 
@@ -311,8 +395,9 @@ export function dehydrate(
         } = {};
         getAllEnumerableKeys(data).forEach(key => {
           const name = key.toString();
-          object[name] = dehydrate(
-            data[key],
+          object[name] = dehydrateKey(
+            data,
+            key,
             cleaned,
             unserializable,
             path.concat([name]),
@@ -323,7 +408,7 @@ export function dehydrate(
         return object;
       }
 
-    case 'class_instance':
+    case 'class_instance': {
       isPathAllowedCheck = isPathAllowed(path);
 
       if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
@@ -359,7 +444,69 @@ export function dehydrate(
       unserializable.push(path);
 
       return value;
+    }
+    case 'error': {
+      isPathAllowedCheck = isPathAllowed(path);
 
+      if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
+        return createDehydrated(type, true, data, cleaned, path);
+      }
+
+      const value: Unserializable = {
+        unserializable: true,
+        type,
+        readonly: true,
+        preview_short: formatDataForPreview(data, false),
+        preview_long: formatDataForPreview(data, true),
+        name: data.name,
+      };
+
+      // name, message, stack and cause are not enumerable yet still interesting.
+      value.message = dehydrate(
+        data.message,
+        cleaned,
+        unserializable,
+        path.concat(['message']),
+        isPathAllowed,
+        isPathAllowedCheck ? 1 : level + 1,
+      );
+      value.stack = dehydrate(
+        data.stack,
+        cleaned,
+        unserializable,
+        path.concat(['stack']),
+        isPathAllowed,
+        isPathAllowedCheck ? 1 : level + 1,
+      );
+
+      if ('cause' in data) {
+        value.cause = dehydrate(
+          data.cause,
+          cleaned,
+          unserializable,
+          path.concat(['cause']),
+          isPathAllowed,
+          isPathAllowedCheck ? 1 : level + 1,
+        );
+      }
+
+      getAllEnumerableKeys(data).forEach(key => {
+        const keyAsString = key.toString();
+
+        value[keyAsString] = dehydrate(
+          data[key],
+          cleaned,
+          unserializable,
+          path.concat([keyAsString]),
+          isPathAllowed,
+          isPathAllowedCheck ? 1 : level + 1,
+        );
+      });
+
+      unserializable.push(path);
+
+      return value;
+    }
     case 'infinity':
     case 'nan':
     case 'undefined':
@@ -370,6 +517,46 @@ export function dehydrate(
 
     default:
       return data;
+  }
+}
+
+function dehydrateKey(
+  parent: Object,
+  key: number | string | symbol,
+  cleaned: Array<Array<string | number>>,
+  unserializable: Array<Array<string | number>>,
+  path: Array<string | number>,
+  isPathAllowed: (path: Array<string | number>) => boolean,
+  level: number = 0,
+): $PropertyType<DehydratedData, 'data'> {
+  try {
+    return dehydrate(
+      parent[key],
+      cleaned,
+      unserializable,
+      path,
+      isPathAllowed,
+      level,
+    );
+  } catch (error) {
+    let preview = '';
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      typeof error.stack === 'string'
+    ) {
+      preview = error.stack;
+    } else if (typeof error === 'string') {
+      preview = error;
+    }
+    cleaned.push(path);
+    return {
+      inspectable: false,
+      preview_short: '[Exception]',
+      preview_long: preview ? '[Exception: ' + preview + ']' : '[Exception]',
+      name: preview,
+      type: 'unknown',
+    };
   }
 }
 

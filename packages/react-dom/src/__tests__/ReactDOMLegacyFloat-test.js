@@ -34,7 +34,9 @@ describe('ReactDOMFloat', () => {
     );
 
     expect(result).toEqual(
-      '<html><head><meta charSet="utf-8"/><title>title</title><script src="foo"></script></head></html>',
+      '<html><head><meta charSet="utf-8"/>' +
+        '<title>title</title><script src="foo"></script></head>' +
+        '</html>',
     );
   });
 });

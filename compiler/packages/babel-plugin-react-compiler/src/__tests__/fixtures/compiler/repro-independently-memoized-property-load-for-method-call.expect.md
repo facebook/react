@@ -59,7 +59,7 @@ function Component(t0) {
   const serverTime = useServerTime();
   let t1;
   let timestampLabel;
-  if ($[0] !== highlightedItem || $[1] !== serverTime || $[2] !== label) {
+  if ($[0] !== highlightedItem || $[1] !== label || $[2] !== serverTime) {
     const highlight = new Highlight(highlightedItem);
 
     const time = serverTime.get();
@@ -68,8 +68,8 @@ function Component(t0) {
 
     t1 = highlight.render();
     $[0] = highlightedItem;
-    $[1] = serverTime;
-    $[2] = label;
+    $[1] = label;
+    $[2] = serverTime;
     $[3] = t1;
     $[4] = timestampLabel;
   } else {

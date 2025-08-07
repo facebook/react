@@ -28,7 +28,7 @@ export function decodeStore(hash: string): Store {
 /**
  * Serialize, encode, and save @param store to localStorage and update URL.
  */
-export function saveStore(store: Store) {
+export function saveStore(store: Store): void {
   const hash = encodeStore(store);
   localStorage.setItem('playgroundStore', hash);
   history.replaceState({}, '', `#${hash}`);
@@ -56,8 +56,10 @@ export function initStoreFromUrlOrLocalStorage(): Store {
   const encodedSourceFromLocal = localStorage.getItem('playgroundStore');
   const encodedSource = encodedSourceFromUrl || encodedSourceFromLocal;
 
-  // No data in the URL and no data in the localStorage to fallback to.
-  // Initialize with the default store.
+  /**
+   * No data in the URL and no data in the localStorage to fallback to.
+   * Initialize with the default store.
+   */
   if (!encodedSource) return defaultStore;
 
   const raw = decodeStore(encodedSource);

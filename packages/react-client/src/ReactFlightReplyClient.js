@@ -13,21 +13,15 @@ import type {
   FulfilledThenable,
   RejectedThenable,
   ReactCustomFormAction,
+  ReactFunctionLocation,
 } from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
 
 import {
-  enableRenderableContext,
-  enableBinaryFlight,
-  enableFlightReadableStream,
-} from 'shared/ReactFeatureFlags';
-
-import {
   REACT_ELEMENT_TYPE,
   REACT_LAZY_TYPE,
   REACT_CONTEXT_TYPE,
-  REACT_PROVIDER_TYPE,
   getIteratorFn,
   ASYNC_ITERATOR,
 } from 'shared/ReactSymbols';
@@ -66,10 +60,14 @@ export type EncodeFormActionCallback = <A>(
 
 export type ServerReferenceId = any;
 
-const knownServerReferences: WeakMap<
-  Function,
-  {id: ServerReferenceId, bound: null | Thenable<Array<any>>},
-> = new WeakMap();
+type ServerReferenceClosure = {
+  id: ServerReferenceId,
+  originalBind: Function,
+  bound: null | Thenable<Array<any>>,
+};
+
+const knownServerReferences: WeakMap<Function, ServerReferenceClosure> =
+  new WeakMap();
 
 // Serializable values
 export type ReactServerValue =
@@ -184,7 +182,7 @@ export function processReply(
   temporaryReferences: void | TemporaryReferenceSet,
   resolve: (string | FormData) => void,
   reject: (error: mixed) => void,
-): void {
+): (reason: mixed) => void {
   let nextPartId = 1;
   let pendingParts = 0;
   let formData: null | FormData = null;
@@ -553,6 +551,7 @@ export function processReply(
         const prefix = formFieldPrefix + refId + '_';
         // $FlowFixMe[prop-missing]: FormData has forEach.
         value.forEach((originalValue: string | File, originalKey: string) => {
+          // $FlowFixMe[incompatible-call]
           data.append(prefix + originalKey, originalValue);
         });
         return serializeFormDataReference(refId);
@@ -576,73 +575,71 @@ export function processReply(
         return serializeSetID(setId);
       }
 
-      if (enableBinaryFlight) {
-        if (value instanceof ArrayBuffer) {
-          const blob = new Blob([value]);
-          const blobId = nextPartId++;
-          if (formData === null) {
-            formData = new FormData();
-          }
-          formData.append(formFieldPrefix + blobId, blob);
-          return '$' + 'A' + blobId.toString(16);
+      if (value instanceof ArrayBuffer) {
+        const blob = new Blob([value]);
+        const blobId = nextPartId++;
+        if (formData === null) {
+          formData = new FormData();
         }
-        if (value instanceof Int8Array) {
-          // char
-          return serializeTypedArray('O', value);
+        formData.append(formFieldPrefix + blobId, blob);
+        return '$' + 'A' + blobId.toString(16);
+      }
+      if (value instanceof Int8Array) {
+        // char
+        return serializeTypedArray('O', value);
+      }
+      if (value instanceof Uint8Array) {
+        // unsigned char
+        return serializeTypedArray('o', value);
+      }
+      if (value instanceof Uint8ClampedArray) {
+        // unsigned clamped char
+        return serializeTypedArray('U', value);
+      }
+      if (value instanceof Int16Array) {
+        // sort
+        return serializeTypedArray('S', value);
+      }
+      if (value instanceof Uint16Array) {
+        // unsigned short
+        return serializeTypedArray('s', value);
+      }
+      if (value instanceof Int32Array) {
+        // long
+        return serializeTypedArray('L', value);
+      }
+      if (value instanceof Uint32Array) {
+        // unsigned long
+        return serializeTypedArray('l', value);
+      }
+      if (value instanceof Float32Array) {
+        // float
+        return serializeTypedArray('G', value);
+      }
+      if (value instanceof Float64Array) {
+        // double
+        return serializeTypedArray('g', value);
+      }
+      if (value instanceof BigInt64Array) {
+        // number
+        return serializeTypedArray('M', value);
+      }
+      if (value instanceof BigUint64Array) {
+        // unsigned number
+        // We use "m" instead of "n" since JSON can start with "null"
+        return serializeTypedArray('m', value);
+      }
+      if (value instanceof DataView) {
+        return serializeTypedArray('V', value);
+      }
+      // TODO: Blob is not available in old Node/browsers. Remove the typeof check later.
+      if (typeof Blob === 'function' && value instanceof Blob) {
+        if (formData === null) {
+          formData = new FormData();
         }
-        if (value instanceof Uint8Array) {
-          // unsigned char
-          return serializeTypedArray('o', value);
-        }
-        if (value instanceof Uint8ClampedArray) {
-          // unsigned clamped char
-          return serializeTypedArray('U', value);
-        }
-        if (value instanceof Int16Array) {
-          // sort
-          return serializeTypedArray('S', value);
-        }
-        if (value instanceof Uint16Array) {
-          // unsigned short
-          return serializeTypedArray('s', value);
-        }
-        if (value instanceof Int32Array) {
-          // long
-          return serializeTypedArray('L', value);
-        }
-        if (value instanceof Uint32Array) {
-          // unsigned long
-          return serializeTypedArray('l', value);
-        }
-        if (value instanceof Float32Array) {
-          // float
-          return serializeTypedArray('G', value);
-        }
-        if (value instanceof Float64Array) {
-          // double
-          return serializeTypedArray('g', value);
-        }
-        if (value instanceof BigInt64Array) {
-          // number
-          return serializeTypedArray('M', value);
-        }
-        if (value instanceof BigUint64Array) {
-          // unsigned number
-          // We use "m" instead of "n" since JSON can start with "null"
-          return serializeTypedArray('m', value);
-        }
-        if (value instanceof DataView) {
-          return serializeTypedArray('V', value);
-        }
-        // TODO: Blob is not available in old Node/browsers. Remove the typeof check later.
-        if (typeof Blob === 'function' && value instanceof Blob) {
-          if (formData === null) {
-            formData = new FormData();
-          }
-          const blobId = nextPartId++;
-          formData.append(formFieldPrefix + blobId, value);
-          return serializeBlobID(blobId);
-        }
+        const blobId = nextPartId++;
+        formData.append(formFieldPrefix + blobId, value);
+        return serializeBlobID(blobId);
       }
 
       const iteratorFn = getIteratorFn(value);
@@ -664,23 +661,21 @@ export function processReply(
         return Array.from((iterator: any));
       }
 
-      if (enableFlightReadableStream) {
-        // TODO: ReadableStream is not available in old Node. Remove the typeof check later.
-        if (
-          typeof ReadableStream === 'function' &&
-          value instanceof ReadableStream
-        ) {
-          return serializeReadableStream(value);
-        }
-        const getAsyncIterator: void | (() => $AsyncIterator<any, any, any>) =
-          (value: any)[ASYNC_ITERATOR];
-        if (typeof getAsyncIterator === 'function') {
-          // We treat AsyncIterables as a Fragment and as such we might need to key them.
-          return serializeAsyncIterable(
-            (value: any),
-            getAsyncIterator.call((value: any)),
-          );
-        }
+      // TODO: ReadableStream is not available in old Node. Remove the typeof check later.
+      if (
+        typeof ReadableStream === 'function' &&
+        value instanceof ReadableStream
+      ) {
+        return serializeReadableStream(value);
+      }
+      const getAsyncIterator: void | (() => $AsyncIterator<any, any, any>) =
+        (value: any)[ASYNC_ITERATOR];
+      if (typeof getAsyncIterator === 'function') {
+        // We treat AsyncIterables as a Fragment and as such we might need to key them.
+        return serializeAsyncIterable(
+          (value: any),
+          getAsyncIterator.call((value: any)),
+        );
       }
 
       // Verify that this is a simple plain object.
@@ -691,7 +686,7 @@ export function processReply(
       ) {
         if (temporaryReferences === undefined) {
           throw new Error(
-            'Only plain objects, and a few built-ins, can be passed to Server Actions. ' +
+            'Only plain objects, and a few built-ins, can be passed to Server Functions. ' +
               'Classes or null prototypes are not supported.' +
               (__DEV__ ? describeObjectForErrorMessage(parent, key) : ''),
           );
@@ -701,10 +696,7 @@ export function processReply(
         return serializeTemporaryReferenceMarker();
       }
       if (__DEV__) {
-        if (
-          (value: any).$$typeof ===
-          (enableRenderableContext ? REACT_CONTEXT_TYPE : REACT_PROVIDER_TYPE)
-        ) {
+        if ((value: any).$$typeof === REACT_CONTEXT_TYPE) {
           console.error(
             'React Context Providers cannot be passed to Server Functions from the Client.%s',
             describeObjectForErrorMessage(parent, key),
@@ -766,16 +758,17 @@ export function processReply(
     }
 
     if (typeof value === 'function') {
-      const metaData = knownServerReferences.get(value);
-      if (metaData !== undefined) {
-        const metaDataJSON = JSON.stringify(metaData, resolveToJSON);
+      const referenceClosure = knownServerReferences.get(value);
+      if (referenceClosure !== undefined) {
+        const {id, bound} = referenceClosure;
+        const referenceClosureJSON = JSON.stringify({id, bound}, resolveToJSON);
         if (formData === null) {
           // Upgrade to use FormData to allow us to stream this value.
           formData = new FormData();
         }
         // The reference to this function came from the same client so we can pass it back.
         const refId = nextPartId++;
-        formData.set(formFieldPrefix + refId, metaDataJSON);
+        formData.set(formFieldPrefix + refId, referenceClosureJSON);
         return serializeServerReferenceID(refId);
       }
       if (temporaryReferences !== undefined && key.indexOf(':') === -1) {
@@ -839,6 +832,19 @@ export function processReply(
     return JSON.stringify(model, resolveToJSON);
   }
 
+  function abort(reason: mixed): void {
+    if (pendingParts > 0) {
+      pendingParts = 0; // Don't resolve again later.
+      // Resolve with what we have so far, which may have holes at this point.
+      // They'll error when the stream completes on the server.
+      if (formData === null) {
+        resolve(json);
+      } else {
+        resolve(formData);
+      }
+    }
+  }
+
   const json = serializeModel(root, 0);
 
   if (formData === null) {
@@ -852,10 +858,12 @@ export function processReply(
       resolve(formData);
     }
   }
+
+  return abort;
 }
 
 const boundCache: WeakMap<
-  {id: ServerReferenceId, bound: null | Thenable<Array<any>>},
+  ServerReferenceClosure,
   Thenable<FormData>,
 > = new WeakMap();
 
@@ -896,8 +904,8 @@ function defaultEncodeFormAction(
   this: any => Promise<any>,
   identifierPrefix: string,
 ): ReactCustomFormAction {
-  const reference = knownServerReferences.get(this);
-  if (!reference) {
+  const referenceClosure = knownServerReferences.get(this);
+  if (!referenceClosure) {
     throw new Error(
       'Tried to encode a Server Action from a different instance than the encoder is from. ' +
         'This is a bug in React.',
@@ -905,12 +913,13 @@ function defaultEncodeFormAction(
   }
   let data: null | FormData = null;
   let name;
-  const boundPromise = reference.bound;
+  const boundPromise = referenceClosure.bound;
   if (boundPromise !== null) {
-    let thenable = boundCache.get(reference);
+    let thenable = boundCache.get(referenceClosure);
     if (!thenable) {
-      thenable = encodeFormData(reference);
-      boundCache.set(reference, thenable);
+      const {id, bound} = referenceClosure;
+      thenable = encodeFormData({id, bound});
+      boundCache.set(referenceClosure, thenable);
     }
     if (thenable.status === 'rejected') {
       throw thenable.reason;
@@ -924,6 +933,7 @@ function defaultEncodeFormAction(
     const prefixedData = new FormData();
     // $FlowFixMe[prop-missing]
     encodedFormData.forEach((value: string | File, key: string) => {
+      // $FlowFixMe[incompatible-call]
       prefixedData.append('$ACTION_' + identifierPrefix + ':' + key, value);
     });
     data = prefixedData;
@@ -931,7 +941,7 @@ function defaultEncodeFormAction(
     name = '$ACTION_REF_' + identifierPrefix;
   } else {
     // This is the simple case so we can just encode the ID.
-    name = '$ACTION_ID_' + reference.id;
+    name = '$ACTION_ID_' + referenceClosure.id;
   }
   return {
     name: name,
@@ -942,22 +952,22 @@ function defaultEncodeFormAction(
 }
 
 function customEncodeFormAction(
-  proxy: any => Promise<any>,
+  reference: any => Promise<any>,
   identifierPrefix: string,
   encodeFormAction: EncodeFormActionCallback,
 ): ReactCustomFormAction {
-  const reference = knownServerReferences.get(proxy);
-  if (!reference) {
+  const referenceClosure = knownServerReferences.get(reference);
+  if (!referenceClosure) {
     throw new Error(
       'Tried to encode a Server Action from a different instance than the encoder is from. ' +
         'This is a bug in React.',
     );
   }
-  let boundPromise: Promise<Array<any>> = (reference.bound: any);
+  let boundPromise: Promise<Array<any>> = (referenceClosure.bound: any);
   if (boundPromise === null) {
     boundPromise = Promise.resolve([]);
   }
-  return encodeFormAction(reference.id, boundPromise);
+  return encodeFormAction(referenceClosure.id, boundPromise);
 }
 
 function isSignatureEqual(
@@ -965,19 +975,19 @@ function isSignatureEqual(
   referenceId: ServerReferenceId,
   numberOfBoundArgs: number,
 ): boolean {
-  const reference = knownServerReferences.get(this);
-  if (!reference) {
+  const referenceClosure = knownServerReferences.get(this);
+  if (!referenceClosure) {
     throw new Error(
       'Tried to encode a Server Action from a different instance than the encoder is from. ' +
         'This is a bug in React.',
     );
   }
-  if (reference.id !== referenceId) {
+  if (referenceClosure.id !== referenceId) {
     // These are different functions.
     return false;
   }
   // Now check if the number of bound arguments is the same.
-  const boundPromise = reference.bound;
+  const boundPromise = referenceClosure.bound;
   if (boundPromise === null) {
     // No bound arguments.
     return numberOfBoundArgs === 0;
@@ -1023,15 +1033,118 @@ function isSignatureEqual(
   }
 }
 
-export function registerServerReference(
-  proxy: any,
-  reference: {id: ServerReferenceId, bound: null | Thenable<Array<any>>},
+let fakeServerFunctionIdx = 0;
+
+function createFakeServerFunction<A: Iterable<any>, T>(
+  name: string,
+  filename: string,
+  sourceMap: null | string,
+  line: number,
+  col: number,
+  environmentName: string,
+  innerFunction: (...A) => Promise<T>,
+): (...A) => Promise<T> {
+  // This creates a fake copy of a Server Module. It represents the Server Action on the server.
+  // We use an eval so we can source map it to the original location.
+
+  const comment =
+    '/* This module is a proxy to a Server Action. Turn on Source Maps to see the server source. */';
+
+  if (!name) {
+    // An eval:ed function with no name gets the name "eval". We give it something more descriptive.
+    name = '<anonymous>';
+  }
+  const encodedName = JSON.stringify(name);
+  // We generate code where both the beginning of the function and its parenthesis is at the line
+  // and column of the server executed code. We use a method form since that lets us name it
+  // anything we want and because the beginning of the function and its parenthesis is the same
+  // column. Because Chrome inspects the location of the parenthesis and Firefox inspects the
+  // location of the beginning of the function. By not using a function expression we avoid the
+  // ambiguity.
+  let code;
+  if (line <= 1) {
+    const minSize = encodedName.length + 7;
+    code =
+      's=>({' +
+      encodedName +
+      ' '.repeat(col < minSize ? 0 : col - minSize) +
+      ':' +
+      '(...args) => s(...args)' +
+      '})\n' +
+      comment;
+  } else {
+    code =
+      comment +
+      '\n'.repeat(line - 2) +
+      'server=>({' +
+      encodedName +
+      ':\n' +
+      ' '.repeat(col < 1 ? 0 : col - 1) +
+      // The function body can get printed so we make it look nice.
+      // This "calls the server with the arguments".
+      '(...args) => server(...args)' +
+      '})';
+  }
+
+  if (filename.startsWith('/')) {
+    // If the filename starts with `/` we assume that it is a file system file
+    // rather than relative to the current host. Since on the server fully qualified
+    // stack traces use the file path.
+    // TODO: What does this look like on Windows?
+    filename = 'file://' + filename;
+  }
+
+  if (sourceMap) {
+    // We use the prefix about://React/ to separate these from other files listed in
+    // the Chrome DevTools. We need a "host name" and not just a protocol because
+    // otherwise the group name becomes the root folder. Ideally we don't want to
+    // show these at all but there's two reasons to assign a fake URL.
+    // 1) A printed stack trace string needs a unique URL to be able to source map it.
+    // 2) If source maps are disabled or fails, you should at least be able to tell
+    //    which file it was.
+    code +=
+      '\n//# sourceURL=about://React/' +
+      encodeURIComponent(environmentName) +
+      '/' +
+      encodeURI(filename) +
+      '?s' + // We add an extra s here to distinguish from the fake stack frames
+      fakeServerFunctionIdx++;
+    code += '\n//# sourceMappingURL=' + sourceMap;
+  } else if (filename) {
+    code += '\n//# sourceURL=' + filename;
+  }
+
+  try {
+    // Eval a factory and then call it to create a closure over the inner function.
+    // eslint-disable-next-line no-eval
+    return (0, eval)(code)(innerFunction)[name];
+  } catch (x) {
+    // If eval fails, such as if in an environment that doesn't support it,
+    // we fallback to just returning the inner function.
+    return innerFunction;
+  }
+}
+
+export function registerBoundServerReference<T: Function>(
+  reference: T,
+  id: ServerReferenceId,
+  bound: null | Thenable<Array<any>>,
   encodeFormAction: void | EncodeFormActionCallback,
-) {
+): void {
+  if (knownServerReferences.has(reference)) {
+    return;
+  }
+
+  knownServerReferences.set(reference, {
+    id,
+    originalBind: reference.bind,
+    bound,
+  });
+
   // Expose encoder for use by SSR, as well as a special bind that can be used to
   // keep server capabilities.
   if (usedWithSSR) {
-    // Only expose this in builds that would actually use it. Not needed on the client.
+    // Only expose this in builds that would actually use it. Not needed in the browser.
     const $$FORM_ACTION =
       encodeFormAction === undefined
         ? defaultEncodeFormAction
@@ -1045,13 +1158,21 @@ export function registerServerReference(
               encodeFormAction,
             );
           };
-    Object.defineProperties((proxy: any), {
+    Object.defineProperties((reference: any), {
       $$FORM_ACTION: {value: $$FORM_ACTION},
       $$IS_SIGNATURE_EQUAL: {value: isSignatureEqual},
       bind: {value: bind},
     });
   }
-  knownServerReferences.set(proxy, reference);
+}
+
+export function registerServerReference<T: Function>(
+  reference: T,
+  id: ServerReferenceId,
+  encodeFormAction?: EncodeFormActionCallback,
+): ServerReference<T> {
+  registerBoundServerReference(reference, id, null, encodeFormAction);
+  return reference;
 }
 
 // $FlowFixMe[method-unbinding]
@@ -1059,55 +1180,215 @@ const FunctionBind = Function.prototype.bind;
 // $FlowFixMe[method-unbinding]
 const ArraySlice = Array.prototype.slice;
 function bind(this: Function): Function {
-  // $FlowFixMe[unsupported-syntax]
-  const newFn = FunctionBind.apply(this, arguments);
-  const reference = knownServerReferences.get(this);
-  if (reference) {
-    if (__DEV__) {
-      const thisBind = arguments[0];
-      if (thisBind != null) {
-        // This doesn't warn in browser environments since it's not instrumented outside
-        // usedWithSSR. This makes this an SSR only warning which we don't generally do.
-        // TODO: Consider a DEV only instrumentation in the browser.
-        console.error(
-          'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
-        );
-      }
-    }
-    const args = ArraySlice.call(arguments, 1);
-    let boundPromise = null;
-    if (reference.bound !== null) {
-      boundPromise = Promise.resolve((reference.bound: any)).then(boundArgs =>
-        boundArgs.concat(args),
-      );
-    } else {
-      boundPromise = Promise.resolve(args);
-    }
-    // Expose encoder for use by SSR, as well as a special bind that can be used to
-    // keep server capabilities.
-    if (usedWithSSR) {
-      // Only expose this in builds that would actually use it. Not needed on the client.
-      Object.defineProperties((newFn: any), {
-        $$FORM_ACTION: {value: this.$$FORM_ACTION},
-        $$IS_SIGNATURE_EQUAL: {value: isSignatureEqual},
-        bind: {value: bind},
-      });
-    }
-    knownServerReferences.set(newFn, {id: reference.id, bound: boundPromise});
+  const referenceClosure = knownServerReferences.get(this);
+
+  if (!referenceClosure) {
+    // $FlowFixMe[prop-missing]
+    return FunctionBind.apply(this, arguments);
   }
+
+  const newFn = referenceClosure.originalBind.apply(this, arguments);
+
+  if (__DEV__) {
+    const thisBind = arguments[0];
+    if (thisBind != null) {
+      // This doesn't warn in browser environments since it's not instrumented outside
+      // usedWithSSR. This makes this an SSR only warning which we don't generally do.
+      // TODO: Consider a DEV only instrumentation in the browser.
+      console.error(
+        'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
+      );
+    }
+  }
+
+  const args = ArraySlice.call(arguments, 1);
+  let boundPromise = null;
+  if (referenceClosure.bound !== null) {
+    boundPromise = Promise.resolve((referenceClosure.bound: any)).then(
+      boundArgs => boundArgs.concat(args),
+    );
+  } else {
+    boundPromise = Promise.resolve(args);
+  }
+
+  knownServerReferences.set(newFn, {
+    id: referenceClosure.id,
+    originalBind: newFn.bind,
+    bound: boundPromise,
+  });
+
+  // Expose encoder for use by SSR, as well as a special bind that can be used to
+  // keep server capabilities.
+  if (usedWithSSR) {
+    // Only expose this in builds that would actually use it. Not needed on the client.
+    Object.defineProperties((newFn: any), {
+      $$FORM_ACTION: {value: this.$$FORM_ACTION},
+      $$IS_SIGNATURE_EQUAL: {value: isSignatureEqual},
+      bind: {value: bind},
+    });
+  }
+
   return newFn;
+}
+
+export type FindSourceMapURLCallback = (
+  fileName: string,
+  environmentName: string,
+) => null | string;
+
+export function createBoundServerReference<A: Iterable<any>, T>(
+  metaData: {
+    id: ServerReferenceId,
+    bound: null | Thenable<Array<any>>,
+    name?: string, // DEV-only
+    env?: string, // DEV-only
+    location?: ReactFunctionLocation, // DEV-only
+  },
+  callServer: CallServerCallback,
+  encodeFormAction?: EncodeFormActionCallback,
+  findSourceMapURL?: FindSourceMapURLCallback, // DEV-only
+): (...A) => Promise<T> {
+  const id = metaData.id;
+  const bound = metaData.bound;
+  let action = function (): Promise<T> {
+    // $FlowFixMe[method-unbinding]
+    const args = Array.prototype.slice.call(arguments);
+    const p = bound;
+    if (!p) {
+      return callServer(id, args);
+    }
+    if (p.status === 'fulfilled') {
+      const boundArgs = p.value;
+      return callServer(id, boundArgs.concat(args));
+    }
+    // Since this is a fake Promise whose .then doesn't chain, we have to wrap it.
+    // TODO: Remove the wrapper once that's fixed.
+    return ((Promise.resolve(p): any): Promise<Array<any>>).then(
+      function (boundArgs) {
+        return callServer(id, boundArgs.concat(args));
+      },
+    );
+  };
+  if (__DEV__) {
+    const location = metaData.location;
+    if (location) {
+      const functionName = metaData.name || '';
+      const [, filename, line, col] = location;
+      const env = metaData.env || 'Server';
+      const sourceMap =
+        findSourceMapURL == null ? null : findSourceMapURL(filename, env);
+      action = createFakeServerFunction(
+        functionName,
+        filename,
+        sourceMap,
+        line,
+        col,
+        env,
+        action,
+      );
+    }
+  }
+  registerBoundServerReference(action, id, bound, encodeFormAction);
+  return action;
+}
+
+// This matches either of these V8 formats.
+//     at name (filename:0:0)
+//     at filename:0:0
+//     at async filename:0:0
+const v8FrameRegExp =
+  /^ {3} at (?:(.+) \((.+):(\d+):(\d+)\)|(?:async )?(.+):(\d+):(\d+))$/;
+// This matches either of these JSC/SpiderMonkey formats.
+// name@filename:0:0
+// filename:0:0
+const jscSpiderMonkeyFrameRegExp = /(?:(.*)@)?(.*):(\d+):(\d+)/;
+
+function parseStackLocation(error: Error): null | ReactFunctionLocation {
+  // This parsing is special in that we know that the calling function will always
+  // be a module that initializes the server action. We also need this part to work
+  // cross-browser so not worth a Config. It's DEV only so not super code size
+  // sensitive but also a non-essential feature.
+  let stack = error.stack;
+  if (stack.startsWith('Error: react-stack-top-frame\n')) {
+    // V8's default formatting prefixes with the error message which we
+    // don't want/need.
+    stack = stack.slice(29);
+  }
+  const endOfFirst = stack.indexOf('\n');
+  let secondFrame;
+  if (endOfFirst !== -1) {
+    // Skip the first frame.
+    const endOfSecond = stack.indexOf('\n', endOfFirst + 1);
+    if (endOfSecond === -1) {
+      secondFrame = stack.slice(endOfFirst + 1);
+    } else {
+      secondFrame = stack.slice(endOfFirst + 1, endOfSecond);
+    }
+  } else {
+    secondFrame = stack;
+  }
+
+  let parsed = v8FrameRegExp.exec(secondFrame);
+  if (!parsed) {
+    parsed = jscSpiderMonkeyFrameRegExp.exec(secondFrame);
+    if (!parsed) {
+      return null;
+    }
+  }
+
+  let name = parsed[1] || '';
+  if (name === '<anonymous>') {
+    name = '';
+  }
+  let filename = parsed[2] || parsed[5] || '';
+  if (filename === '<anonymous>') {
+    filename = '';
+  }
+  // This is really the enclosingLine/Column.
+  const line = +(parsed[3] || parsed[6]);
+  const col = +(parsed[4] || parsed[7]);
+
+  return [name, filename, line, col];
 }
 
 export function createServerReference<A: Iterable<any>, T>(
   id: ServerReferenceId,
   callServer: CallServerCallback,
   encodeFormAction?: EncodeFormActionCallback,
+  findSourceMapURL?: FindSourceMapURLCallback, // DEV-only
+  functionName?: string,
 ): (...A) => Promise<T> {
-  const proxy = function (): Promise<T> {
+  let action = function (): Promise<T> {
     // $FlowFixMe[method-unbinding]
     const args = Array.prototype.slice.call(arguments);
     return callServer(id, args);
   };
-  registerServerReference(proxy, {id, bound: null}, encodeFormAction);
-  return proxy;
+  if (__DEV__) {
+    // Let's see if we can find a source map for the file which contained the
+    // server action. We extract it from the runtime so that it's resilient to
+    // multiple passes of compilation as long as we can find the final source map.
+    const location = parseStackLocation(new Error('react-stack-top-frame'));
+    if (location !== null) {
+      const [, filename, line, col] = location;
+      // While the environment that the Server Reference points to can be
+      // in any environment, what matters here is where the compiled source
+      // is from and that's in the currently executing environment. We hard
+      // code that as the value "Client" in case the findSourceMapURL helper
+      // needs it.
+      const env = 'Client';
+      const sourceMap =
+        findSourceMapURL == null ? null : findSourceMapURL(filename, env);
+      action = createFakeServerFunction(
+        functionName || '',
+        filename,
+        sourceMap,
+        line,
+        col,
+        env,
+        action,
+      );
+    }
+  }
+  registerBoundServerReference(action, id, null, encodeFormAction);
+  return action;
 }

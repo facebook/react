@@ -12,18 +12,11 @@ import {flushSync} from 'react-dom';
 import {createRoot} from 'react-dom/client';
 import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
-import {
-  getAppendComponentStack,
-  getBreakOnConsoleErrors,
-  getSavedComponentFilters,
-  getShowInlineWarningsAndErrors,
-  getHideConsoleLogsInStrictMode,
-} from 'react-devtools-shared/src/utils';
+import {getSavedComponentFilters} from 'react-devtools-shared/src/utils';
 import {registerDevToolsEventLogger} from 'react-devtools-shared/src/registerDevToolsEventLogger';
 import {Server} from 'ws';
 import {join} from 'path';
 import {readFileSync} from 'fs';
-import {installHook} from 'react-devtools-shared/src/hook';
 import DevTools from 'react-devtools-shared/src/devtools/views/DevTools';
 import {doesFilePathExist, launchEditor} from './editor';
 import {
@@ -33,9 +26,7 @@ import {
 import {localStorageSetItem} from 'react-devtools-shared/src/storage';
 
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
-import type {Source} from 'react-devtools-shared/src/shared/types';
-
-installHook(window);
+import type {ReactFunctionLocation, ReactCallSite} from 'shared/ReactTypes';
 
 export type StatusTypes = 'server-connected' | 'devtools-connected' | 'error';
 export type StatusListener = (message: string, status: StatusTypes) => void;
@@ -153,29 +144,27 @@ async function fetchFileWithCaching(url: string) {
 }
 
 function canViewElementSourceFunction(
-  _source: Source,
-  symbolicatedSource: Source | null,
+  _source: ReactFunctionLocation | ReactCallSite,
+  symbolicatedSource: ReactFunctionLocation | ReactCallSite | null,
 ): boolean {
   if (symbolicatedSource == null) {
     return false;
   }
+  const [, sourceURL, ,] = symbolicatedSource;
 
-  return doesFilePathExist(symbolicatedSource.sourceURL, projectRoots);
+  return doesFilePathExist(sourceURL, projectRoots);
 }
 
 function viewElementSourceFunction(
-  _source: Source,
-  symbolicatedSource: Source | null,
+  _source: ReactFunctionLocation | ReactCallSite,
+  symbolicatedSource: ReactFunctionLocation | ReactCallSite | null,
 ): void {
   if (symbolicatedSource == null) {
     return;
   }
 
-  launchEditor(
-    symbolicatedSource.sourceURL,
-    symbolicatedSource.line,
-    projectRoots,
-  );
+  const [, sourceURL, line] = symbolicatedSource;
+  launchEditor(sourceURL, line, projectRoots);
 }
 
 function onDisconnected() {
@@ -329,7 +318,7 @@ function startServer(
   const httpServer = useHttps
     ? require('https').createServer(httpsOptions)
     : require('http').createServer();
-  const server = new Server({server: httpServer});
+  const server = new Server({server: httpServer, maxPayload: 1e9});
   let connected: WebSocket | null = null;
   server.on('connection', (socket: WebSocket) => {
     if (connected !== null) {
@@ -368,20 +357,8 @@ function startServer(
     // Because of this it relies on the extension to pass filters, so include them wth the response here.
     // This will ensure that saved filters are shared across different web pages.
     const savedPreferencesString = `
-      window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = ${JSON.stringify(
-        getAppendComponentStack(),
-      )};
-      window.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ = ${JSON.stringify(
-        getBreakOnConsoleErrors(),
-      )};
       window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = ${JSON.stringify(
         getSavedComponentFilters(),
-      )};
-      window.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ = ${JSON.stringify(
-        getShowInlineWarningsAndErrors(),
-      )};
-      window.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ = ${JSON.stringify(
-        getHideConsoleLogsInStrictMode(),
       )};`;
 
     response.end(
@@ -389,9 +366,12 @@ function startServer(
         '\n;' +
         backendFile.toString() +
         '\n;' +
+        'ReactDevToolsBackend.initialize();' +
+        '\n' +
         `ReactDevToolsBackend.connectToDevTools({port: ${port}, host: '${host}', useHttps: ${
           useHttps ? 'true' : 'false'
-        }});`,
+        }});
+        `,
     );
   });
 

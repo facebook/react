@@ -14,10 +14,11 @@ import {
   renameVariables,
 } from '.';
 import {CompilerError, ErrorSeverity} from '../CompilerError';
-import {Environment, EnvironmentConfig, ExternalFunction} from '../HIR';
+import {Environment, ExternalFunction} from '../HIR';
 import {
   ArrayPattern,
   BlockId,
+  DeclarationId,
   GeneratedSource,
   Identifier,
   IdentifierId,
@@ -33,6 +34,7 @@ import {
   ReactiveInstruction,
   ReactiveScope,
   ReactiveScopeBlock,
+  ReactiveScopeDeclaration,
   ReactiveScopeDependency,
   ReactiveTerminal,
   ReactiveValue,
@@ -42,7 +44,7 @@ import {
   getHookKind,
   makeIdentifierName,
 } from '../HIR/HIR';
-import {printIdentifier, printPlace} from '../HIR/PrintHIR';
+import {printIdentifier, printInstruction, printPlace} from '../HIR/PrintHIR';
 import {eachPatternOperand} from '../HIR/visitors';
 import {Err, Ok, Result} from '../Utils/Result';
 import {GuardKind} from '../Utils/RuntimeDiagnosticConstants';
@@ -50,7 +52,8 @@ import {assertExhaustive} from '../Utils/utils';
 import {buildReactiveFunction} from './BuildReactiveFunction';
 import {SINGLE_CHILD_FBT_TAGS} from './MemoizeFbtAndMacroOperandsInSameScope';
 import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
-import {ReactFunctionType} from '../HIR/Environment';
+import {EMIT_FREEZE_GLOBAL_GATING, ReactFunctionType} from '../HIR/Environment';
+import {ProgramContext} from '../Entrypoint';
 
 export const MEMO_CACHE_SENTINEL = 'react.memo_cache_sentinel';
 export const EARLY_RETURN_SENTINEL = 'react.early_return_sentinel';
@@ -96,6 +99,17 @@ export type CodegenFunction = {
     fn: CodegenFunction;
     type: ReactFunctionType | null;
   }>;
+
+  /**
+   * This is true if the compiler has compiled inferred effect dependencies
+   */
+  hasInferredEffect: boolean;
+  inferredEffectLocations: Set<SourceLocation>;
+
+  /**
+   * This is true if the compiler has compiled a fire to a useFire call
+   */
+  hasFireRewrite: boolean;
 };
 
 export function codegenFunction(
@@ -144,10 +158,11 @@ export function codegenFunction(
   const compiled = compileResult.unwrap();
 
   const hookGuard = fn.env.config.enableEmitHookGuards;
-  if (hookGuard != null) {
+  if (hookGuard != null && fn.env.isInferredMemoEnabled) {
     compiled.body = t.blockStatement([
       createHookGuard(
         hookGuard,
+        fn.env.programContext,
         compiled.body.body,
         GuardKind.PushHookGuard,
         GuardKind.PopHookGuard,
@@ -158,13 +173,15 @@ export function codegenFunction(
   const cacheCount = compiled.memoSlotsUsed;
   if (cacheCount !== 0) {
     const preface: Array<t.Statement> = [];
+    const useMemoCacheIdentifier =
+      fn.env.programContext.addMemoCacheImport().name;
 
     // The import declaration for `useMemoCache` is inserted in the Babel plugin
     preface.push(
       t.variableDeclaration('const', [
         t.variableDeclarator(
           t.identifier(cx.synthesizeName('$')),
-          t.callExpression(t.identifier(fn.env.useMemoCacheIdentifier), [
+          t.callExpression(t.identifier(useMemoCacheIdentifier), [
             t.numericLiteral(cacheCount),
           ]),
         ),
@@ -238,39 +255,63 @@ export function codegenFunction(
   }
 
   const emitInstrumentForget = fn.env.config.enableEmitInstrumentForget;
-  if (emitInstrumentForget != null && fn.id != null) {
+  if (
+    emitInstrumentForget != null &&
+    fn.id != null &&
+    fn.env.isInferredMemoEnabled
+  ) {
     /*
      * Technically, this is a conditional hook call. However, we expect
      * __DEV__ and gating identifier to be runtime constants
      */
-    let gating: t.Expression;
-    if (
-      emitInstrumentForget.gating != null &&
+    const gating =
+      emitInstrumentForget.gating != null
+        ? t.identifier(
+            fn.env.programContext.addImportSpecifier(
+              emitInstrumentForget.gating,
+            ).name,
+          )
+        : null;
+
+    const globalGating =
       emitInstrumentForget.globalGating != null
-    ) {
-      gating = t.logicalExpression(
-        '&&',
-        t.identifier(emitInstrumentForget.globalGating),
-        t.identifier(emitInstrumentForget.gating.importSpecifierName),
+        ? t.identifier(emitInstrumentForget.globalGating)
+        : null;
+
+    if (emitInstrumentForget.globalGating != null) {
+      const assertResult = fn.env.programContext.assertGlobalBinding(
+        emitInstrumentForget.globalGating,
       );
-    } else if (emitInstrumentForget.gating != null) {
-      gating = t.identifier(emitInstrumentForget.gating.importSpecifierName);
+      if (assertResult.isErr()) {
+        return assertResult;
+      }
+    }
+
+    let ifTest: t.Expression;
+    if (gating != null && globalGating != null) {
+      ifTest = t.logicalExpression('&&', globalGating, gating);
+    } else if (gating != null) {
+      ifTest = gating;
     } else {
-      CompilerError.invariant(emitInstrumentForget.globalGating != null, {
+      CompilerError.invariant(globalGating != null, {
         reason:
           'Bad config not caught! Expected at least one of gating or globalGating',
         loc: null,
         suggestions: null,
       });
-      gating = t.identifier(emitInstrumentForget.globalGating);
+      ifTest = globalGating;
     }
+
+    const instrumentFnIdentifier = fn.env.programContext.addImportSpecifier(
+      emitInstrumentForget.fn,
+    ).name;
     const test: t.IfStatement = t.ifStatement(
-      gating,
+      ifTest,
       t.expressionStatement(
-        t.callExpression(
-          t.identifier(emitInstrumentForget.fn.importSpecifierName),
-          [t.stringLiteral(fn.id), t.stringLiteral(fn.env.filename ?? '')],
-        ),
+        t.callExpression(t.identifier(instrumentFnIdentifier), [
+          t.stringLiteral(fn.id),
+          t.stringLiteral(fn.env.filename ?? ''),
+        ]),
       ),
     );
     compiled.body.body.unshift(test);
@@ -308,11 +349,9 @@ function codegenReactiveFunction(
   fn: ReactiveFunction,
 ): Result<CodegenFunction, CompilerError> {
   for (const param of fn.params) {
-    if (param.kind === 'Identifier') {
-      cx.temp.set(param.identifier.id, null);
-    } else {
-      cx.temp.set(param.place.identifier.id, null);
-    }
+    const place = param.kind === 'Identifier' ? param : param.place;
+    cx.temp.set(place.identifier.declarationId, null);
+    cx.declare(place.identifier);
   }
 
   const params = fn.params.map(param => convertParameter(param));
@@ -347,6 +386,9 @@ function codegenReactiveFunction(
     prunedMemoBlocks: countMemoBlockVisitor.prunedMemoBlocks,
     prunedMemoValues: countMemoBlockVisitor.prunedMemoValues,
     outlined: [],
+    hasFireRewrite: fn.env.hasFireRewrite,
+    hasInferredEffect: fn.env.hasInferredEffect,
+    inferredEffectLocations: fn.env.inferredEffectLocations,
   });
 }
 
@@ -392,7 +434,11 @@ class Context {
   env: Environment;
   fnName: string;
   #nextCacheIndex: number = 0;
-  #declarations: Set<IdentifierId> = new Set();
+  /**
+   * Tracks which named variables have been declared to dedupe declarations,
+   * so this uses DeclarationId instead of IdentifierId
+   */
+  #declarations: Set<DeclarationId> = new Set();
   temp: Temporaries;
   errors: CompilerError = new CompilerError();
   objectMethods: Map<IdentifierId, ObjectMethod> = new Map();
@@ -418,11 +464,11 @@ class Context {
   }
 
   declare(identifier: Identifier): void {
-    this.#declarations.add(identifier.id);
+    this.#declarations.add(identifier.declarationId);
   }
 
   hasDeclared(identifier: Identifier): boolean {
-    return this.#declarations.has(identifier.id);
+    return this.#declarations.has(identifier.declarationId);
   }
 
   synthesizeName(name: string): ValidIdentifierName {
@@ -530,14 +576,19 @@ function codegenBlockNoReset(
 }
 
 function wrapCacheDep(cx: Context, value: t.Expression): t.Expression {
-  if (cx.env.config.enableEmitFreeze != null) {
-    // The import declaration for emitFreeze is inserted in the Babel plugin
+  if (cx.env.config.enableEmitFreeze != null && cx.env.isInferredMemoEnabled) {
+    const emitFreezeIdentifier = cx.env.programContext.addImportSpecifier(
+      cx.env.config.enableEmitFreeze,
+    ).name;
+    cx.env.programContext
+      .assertGlobalBinding(EMIT_FREEZE_GLOBAL_GATING, cx.env.scope)
+      .unwrap();
     return t.conditionalExpression(
-      t.identifier('__DEV__'),
-      t.callExpression(
-        t.identifier(cx.env.config.enableEmitFreeze.importSpecifierName),
-        [value, t.stringLiteral(cx.fnName)],
-      ),
+      t.identifier(EMIT_FREEZE_GLOBAL_GATING),
+      t.callExpression(t.identifier(emitFreezeIdentifier), [
+        value,
+        t.stringLiteral(cx.fnName),
+      ]),
       value,
     );
   } else {
@@ -561,7 +612,8 @@ function codegenReactiveScope(
   const changeExpressions: Array<t.Expression> = [];
   const changeExpressionComments: Array<string> = [];
   const outputComments: Array<string> = [];
-  for (const dep of scope.dependencies) {
+
+  for (const dep of [...scope.dependencies].sort(compareScopeDependency)) {
     const index = cx.nextCacheIndex;
     changeExpressionComments.push(printDependencyComment(dep));
     const comparison = t.binaryExpression(
@@ -604,7 +656,10 @@ function codegenReactiveScope(
     );
   }
   let firstOutputIndex: number | null = null;
-  for (const [, {identifier}] of scope.declarations) {
+
+  for (const [, {identifier}] of [...scope.declarations].sort(([, a], [, b]) =>
+    compareScopeDeclaration(a, b),
+  )) {
     const index = cx.nextCacheIndex;
     if (firstOutputIndex === null) {
       firstOutputIndex = index;
@@ -687,16 +742,14 @@ function codegenReactiveScope(
   let computationBlock = codegenBlock(cx, block);
 
   let memoStatement;
-  if (
-    cx.env.config.enableChangeDetectionForDebugging != null &&
-    changeExpressions.length > 0
-  ) {
+  const detectionFunction = cx.env.config.enableChangeDetectionForDebugging;
+  if (detectionFunction != null && changeExpressions.length > 0) {
     const loc =
       typeof scope.loc === 'symbol'
         ? 'unknown location'
         : `(${scope.loc.start.line}:${scope.loc.end.line})`;
-    const detectionFunction =
-      cx.env.config.enableChangeDetectionForDebugging.importSpecifierName;
+    const importedDetectionFunctionIdentifier =
+      cx.env.programContext.addImportSpecifier(detectionFunction).name;
     const cacheLoadOldValueStatements: Array<t.Statement> = [];
     const changeDetectionStatements: Array<t.Statement> = [];
     const idempotenceDetectionStatements: Array<t.Statement> = [];
@@ -718,7 +771,7 @@ function codegenReactiveScope(
       );
       changeDetectionStatements.push(
         t.expressionStatement(
-          t.callExpression(t.identifier(detectionFunction), [
+          t.callExpression(t.identifier(importedDetectionFunctionIdentifier), [
             t.identifier(loadName),
             t.cloneNode(name, true),
             t.stringLiteral(name.name),
@@ -730,7 +783,7 @@ function codegenReactiveScope(
       );
       idempotenceDetectionStatements.push(
         t.expressionStatement(
-          t.callExpression(t.identifier(detectionFunction), [
+          t.callExpression(t.identifier(importedDetectionFunctionIdentifier), [
             t.cloneNode(slot, true),
             t.cloneNode(name, true),
             t.stringLiteral(name.name),
@@ -945,6 +998,14 @@ function codegenTerminal(
           lval = codegenLValue(cx, iterableItem.value.lvalue.pattern);
           break;
         }
+        case 'StoreContext': {
+          CompilerError.throwTodo({
+            reason: 'Support non-trivial for..in inits',
+            description: null,
+            loc: terminal.init.loc,
+            suggestions: null,
+          });
+        }
         default:
           CompilerError.invariant(false, {
             reason: `Expected a StoreLocal or Destructure to be assigned to the collection`,
@@ -970,15 +1031,12 @@ function codegenTerminal(
             suggestions: null,
           });
         case InstructionKind.Catch:
-          CompilerError.invariant(false, {
-            reason: 'Unexpected catch variable as for..in collection',
-            description: null,
-            loc: iterableItem.loc,
-            suggestions: null,
-          });
         case InstructionKind.HoistedConst:
+        case InstructionKind.HoistedLet:
+        case InstructionKind.HoistedFunction:
+        case InstructionKind.Function:
           CompilerError.invariant(false, {
-            reason: 'Unexpected HoistedConst variable in for..in collection',
+            reason: `Unexpected ${iterableItem.value.lvalue.kind} variable in for..in collection`,
             description: null,
             loc: iterableItem.loc,
             suggestions: null,
@@ -1040,6 +1098,14 @@ function codegenTerminal(
           lval = codegenLValue(cx, iterableItem.value.lvalue.pattern);
           break;
         }
+        case 'StoreContext': {
+          CompilerError.throwTodo({
+            reason: 'Support non-trivial for..of inits',
+            description: null,
+            loc: terminal.init.loc,
+            suggestions: null,
+          });
+        }
         default:
           CompilerError.invariant(false, {
             reason: `Expected a StoreLocal or Destructure to be assigned to the collection`,
@@ -1057,23 +1123,13 @@ function codegenTerminal(
           varDeclKind = 'let' as const;
           break;
         case InstructionKind.Reassign:
-          CompilerError.invariant(false, {
-            reason:
-              'Destructure should never be Reassign as it would be an Object/ArrayPattern',
-            description: null,
-            loc: iterableItem.loc,
-            suggestions: null,
-          });
         case InstructionKind.Catch:
-          CompilerError.invariant(false, {
-            reason: 'Unexpected catch variable as for..of collection',
-            description: null,
-            loc: iterableItem.loc,
-            suggestions: null,
-          });
         case InstructionKind.HoistedConst:
+        case InstructionKind.HoistedLet:
+        case InstructionKind.HoistedFunction:
+        case InstructionKind.Function:
           CompilerError.invariant(false, {
-            reason: 'Unexpected HoistedConst variable in for..of collection',
+            reason: `Unexpected ${iterableItem.value.lvalue.kind} variable in for..of collection`,
             description: null,
             loc: iterableItem.loc,
             suggestions: null,
@@ -1125,7 +1181,7 @@ function codegenTerminal(
               ? codegenPlaceToExpression(cx, case_.test)
               : null;
           const block = codegenBlock(cx, case_.block!);
-          return t.switchCase(test, [block]);
+          return t.switchCase(test, block.body.length === 0 ? [] : [block]);
         }),
       );
     }
@@ -1147,7 +1203,7 @@ function codegenTerminal(
       let catchParam = null;
       if (terminal.handlerBinding !== null) {
         catchParam = convertIdentifier(terminal.handlerBinding.identifier);
-        cx.temp.set(terminal.handlerBinding.identifier.id, null);
+        cx.temp.set(terminal.handlerBinding.identifier.declarationId, null);
       }
       return t.tryStatement(
         codegenBlock(cx, terminal.block),
@@ -1198,20 +1254,20 @@ function codegenInstructionNullable(
       value = null;
     } else {
       lvalue = instr.value.lvalue.pattern;
-      let hasReasign = false;
+      let hasReassign = false;
       let hasDeclaration = false;
       for (const place of eachPatternOperand(lvalue)) {
         if (
           kind !== InstructionKind.Reassign &&
           place.identifier.name === null
         ) {
-          cx.temp.set(place.identifier.id, null);
+          cx.temp.set(place.identifier.declarationId, null);
         }
         const isDeclared = cx.hasDeclared(place.identifier);
-        hasReasign ||= isDeclared;
+        hasReassign ||= isDeclared;
         hasDeclaration ||= !isDeclared;
       }
-      if (hasReasign && hasDeclaration) {
+      if (hasReassign && hasDeclaration) {
         CompilerError.invariant(false, {
           reason:
             'Encountered a destructuring operation where some identifiers are already declared (reassignments) but others are not (declarations)',
@@ -1219,7 +1275,7 @@ function codegenInstructionNullable(
           loc: instr.loc,
           suggestions: null,
         });
-      } else if (hasReasign) {
+      } else if (hasReassign) {
         kind = InstructionKind.Reassign;
       }
       value = codegenPlaceToExpression(cx, instr.value.value);
@@ -1235,6 +1291,35 @@ function codegenInstructionNullable(
         return createVariableDeclaration(instr.loc, 'const', [
           t.variableDeclarator(codegenLValue(cx, lvalue), value),
         ]);
+      }
+      case InstructionKind.Function: {
+        CompilerError.invariant(instr.lvalue === null, {
+          reason: `Function declaration cannot be referenced as an expression`,
+          description: null,
+          loc: instr.value.loc,
+          suggestions: null,
+        });
+        const genLvalue = codegenLValue(cx, lvalue);
+        CompilerError.invariant(genLvalue.type === 'Identifier', {
+          reason: 'Expected an identifier as a function declaration lvalue',
+          description: null,
+          loc: instr.value.loc,
+          suggestions: null,
+        });
+        CompilerError.invariant(value?.type === 'FunctionExpression', {
+          reason: 'Expected a function as a function declaration value',
+          description: `Got ${value == null ? String(value) : value.type} at ${printInstruction(instr)}`,
+          loc: instr.value.loc,
+          suggestions: null,
+        });
+        return createFunctionDeclaration(
+          instr.loc,
+          genLvalue,
+          value.params,
+          value.body,
+          value.generator,
+          value.async,
+        );
       }
       case InstructionKind.Let: {
         CompilerError.invariant(instr.lvalue === null, {
@@ -1261,7 +1346,7 @@ function codegenInstructionNullable(
         );
         if (instr.lvalue !== null) {
           if (instr.value.kind !== 'StoreContext') {
-            cx.temp.set(instr.lvalue.identifier.id, expr);
+            cx.temp.set(instr.lvalue.identifier.declarationId, expr);
             return null;
           } else {
             // Handle chained reassignments for context variables
@@ -1278,10 +1363,11 @@ function codegenInstructionNullable(
       case InstructionKind.Catch: {
         return t.emptyStatement();
       }
-      case InstructionKind.HoistedConst: {
+      case InstructionKind.HoistedLet:
+      case InstructionKind.HoistedConst:
+      case InstructionKind.HoistedFunction: {
         CompilerError.invariant(false, {
-          reason:
-            'Expected HoistedConsts to have been pruned in PruneHoistedContexts',
+          reason: `Expected ${kind} to have been pruned in PruneHoistedContexts`,
           description: null,
           loc: instr.loc,
           suggestions: null,
@@ -1321,20 +1407,6 @@ function codegenForInit(
   init: ReactiveValue,
 ): t.Expression | t.VariableDeclaration | null {
   if (init.kind === 'SequenceExpression') {
-    for (const instr of init.instructions) {
-      if (instr.value.kind === 'DeclareContext') {
-        CompilerError.throwTodo({
-          reason: `Support for loops where the index variable is a context variable`,
-          loc: instr.loc,
-          description:
-            instr.value.lvalue.place.identifier.name != null
-              ? `\`${instr.value.lvalue.place.identifier.name.value}\` is a context variable`
-              : null,
-          suggestions: null,
-        });
-      }
-    }
-
     const body = codegenBlock(
       cx,
       init.instructions.map(instruction => ({
@@ -1345,20 +1417,33 @@ function codegenForInit(
     const declarators: Array<t.VariableDeclarator> = [];
     let kind: 'let' | 'const' = 'const';
     body.forEach(instr => {
-      CompilerError.invariant(
-        instr.type === 'VariableDeclaration' &&
-          (instr.kind === 'let' || instr.kind === 'const'),
-        {
-          reason: 'Expected a variable declaration',
-          loc: init.loc,
-          description: `Got ${instr.type}`,
-          suggestions: null,
-        },
-      );
-      if (instr.kind === 'let') {
-        kind = 'let';
+      let top: undefined | t.VariableDeclarator = undefined;
+      if (
+        instr.type === 'ExpressionStatement' &&
+        instr.expression.type === 'AssignmentExpression' &&
+        instr.expression.operator === '=' &&
+        instr.expression.left.type === 'Identifier' &&
+        (top = declarators.at(-1))?.id.type === 'Identifier' &&
+        top?.id.name === instr.expression.left.name &&
+        top?.init == null
+      ) {
+        top.init = instr.expression.right;
+      } else {
+        CompilerError.invariant(
+          instr.type === 'VariableDeclaration' &&
+            (instr.kind === 'let' || instr.kind === 'const'),
+          {
+            reason: 'Expected a variable declaration',
+            loc: init.loc,
+            description: `Got ${instr.type}`,
+            suggestions: null,
+          },
+        );
+        if (instr.kind === 'let') {
+          kind = 'let';
+        }
+        declarators.push(...instr.declarations);
       }
-      declarators.push(...instr.declarations);
     });
     CompilerError.invariant(declarators.length > 0, {
       reason: 'Expected a variable declaration',
@@ -1377,7 +1462,7 @@ function printDependencyComment(dependency: ReactiveScopeDependency): string {
   let name = identifier.name;
   if (dependency.path !== null) {
     for (const path of dependency.path) {
-      name += `.${path}`;
+      name += `.${path.property}`;
     }
   }
   return name;
@@ -1412,9 +1497,24 @@ function codegenDependency(
   dependency: ReactiveScopeDependency,
 ): t.Expression {
   let object: t.Expression = convertIdentifier(dependency.identifier);
-  if (dependency.path !== null) {
+  if (dependency.path.length !== 0) {
+    const hasOptional = dependency.path.some(path => path.optional);
     for (const path of dependency.path) {
-      object = t.memberExpression(object, t.identifier(path));
+      const property =
+        typeof path.property === 'string'
+          ? t.identifier(path.property)
+          : t.numericLiteral(path.property);
+      const isComputed = typeof path.property !== 'string';
+      if (hasOptional) {
+        object = t.optionalMemberExpression(
+          object,
+          property,
+          isComputed,
+          path.optional,
+        );
+      } else {
+        object = t.memberExpression(object, property, isComputed);
+      }
     }
   }
   return object;
@@ -1442,6 +1542,7 @@ const createBinaryExpression = withLoc(t.binaryExpression);
 const createExpressionStatement = withLoc(t.expressionStatement);
 const _createLabelledStatement = withLoc(t.labeledStatement);
 const createVariableDeclaration = withLoc(t.variableDeclaration);
+const createFunctionDeclaration = withLoc(t.functionDeclaration);
 const _createWhileStatement = withLoc(t.whileStatement);
 const createTaggedTemplateExpression = withLoc(t.taggedTemplateExpression);
 const createLogicalExpression = withLoc(t.logicalExpression);
@@ -1460,15 +1561,15 @@ const createStringLiteral = withLoc(t.stringLiteral);
 
 function createHookGuard(
   guard: ExternalFunction,
+  context: ProgramContext,
   stmts: Array<t.Statement>,
   before: GuardKind,
   after: GuardKind,
 ): t.TryStatement {
+  const guardFnName = context.addImportSpecifier(guard).name;
   function createHookGuardImpl(kind: number): t.ExpressionStatement {
     return t.expressionStatement(
-      t.callExpression(t.identifier(guard.importSpecifierName), [
-        t.numericLiteral(kind),
-      ]),
+      t.callExpression(t.identifier(guardFnName), [t.numericLiteral(kind)]),
     );
   }
 
@@ -1499,7 +1600,7 @@ function createHookGuard(
  * ```
  */
 function createCallExpression(
-  config: EnvironmentConfig,
+  env: Environment,
   callee: t.Expression,
   args: Array<t.Expression | t.SpreadElement>,
   loc: SourceLocation | null,
@@ -1510,14 +1611,15 @@ function createCallExpression(
     callExpr.loc = loc;
   }
 
-  const hookGuard = config.enableEmitHookGuards;
-  if (hookGuard != null && isHook) {
+  const hookGuard = env.config.enableEmitHookGuards;
+  if (hookGuard != null && isHook && env.isInferredMemoEnabled) {
     const iife = t.functionExpression(
       null,
       [],
       t.blockStatement([
         createHookGuard(
           hookGuard,
+          env.programContext,
           [t.returnStatement(callExpr)],
           GuardKind.AllowHook,
           GuardKind.DisallowHook,
@@ -1530,7 +1632,7 @@ function createCallExpression(
   }
 }
 
-type Temporaries = Map<IdentifierId, t.Expression | t.JSXText | null>;
+type Temporaries = Map<DeclarationId, t.Expression | t.JSXText | null>;
 
 function codegenLabel(id: BlockId): string {
   return `bb${id}`;
@@ -1549,7 +1651,7 @@ function codegenInstruction(
   }
   if (instr.lvalue.identifier.name === null) {
     // temporary
-    cx.temp.set(instr.lvalue.identifier.id, value);
+    cx.temp.set(instr.lvalue.identifier.declarationId, value);
     return t.emptyStatement();
   } else {
     const expressionValue = convertValueToExpression(value);
@@ -1622,7 +1724,7 @@ function codegenInstructionValue(
     }
     case 'UnaryExpression': {
       value = t.unaryExpression(
-        instrValue.operator as 'throw', // todo
+        instrValue.operator,
         codegenPlaceToExpression(cx, instrValue.value),
       );
       break;
@@ -1647,7 +1749,7 @@ function codegenInstructionValue(
       const callee = codegenPlaceToExpression(cx, instrValue.callee);
       const args = instrValue.args.map(arg => codegenArgument(cx, arg));
       value = createCallExpression(
-        cx.env.config,
+        cx.env,
         callee,
         args,
         instrValue.loc,
@@ -1737,7 +1839,7 @@ function codegenInstructionValue(
       );
       const args = instrValue.args.map(arg => codegenArgument(cx, arg));
       value = createCallExpression(
-        cx.env.config,
+        cx.env,
         memberExpr,
         args,
         instrValue.loc,
@@ -1913,38 +2015,37 @@ function codegenInstructionValue(
       value = node;
       break;
     }
-    case 'PropertyStore': {
-      value = t.assignmentExpression(
-        '=',
-        t.memberExpression(
-          codegenPlaceToExpression(cx, instrValue.object),
-          t.identifier(instrValue.property),
-        ),
-        codegenPlaceToExpression(cx, instrValue.value),
-      );
-      break;
-    }
-    case 'PropertyLoad': {
-      const object = codegenPlaceToExpression(cx, instrValue.object);
+    case 'PropertyStore':
+    case 'PropertyLoad':
+    case 'PropertyDelete': {
+      let memberExpr;
       /*
        * We currently only lower single chains of optional memberexpr.
        * (See BuildHIR.ts for more detail.)
        */
-      value = t.memberExpression(
-        object,
-        t.identifier(instrValue.property),
-        undefined,
-      );
-      break;
-    }
-    case 'PropertyDelete': {
-      value = t.unaryExpression(
-        'delete',
-        t.memberExpression(
+      if (typeof instrValue.property === 'string') {
+        memberExpr = t.memberExpression(
           codegenPlaceToExpression(cx, instrValue.object),
           t.identifier(instrValue.property),
-        ),
-      );
+        );
+      } else {
+        memberExpr = t.memberExpression(
+          codegenPlaceToExpression(cx, instrValue.object),
+          t.numericLiteral(instrValue.property),
+          true,
+        );
+      }
+      if (instrValue.kind === 'PropertyStore') {
+        value = t.assignmentExpression(
+          '=',
+          memberExpr,
+          codegenPlaceToExpression(cx, instrValue.value),
+        );
+      } else if (instrValue.kind === 'PropertyLoad') {
+        value = memberExpr;
+      } else {
+        value = t.unaryExpression('delete', memberExpr);
+      }
       break;
     }
     case 'ComputedStore': {
@@ -1997,7 +2098,7 @@ function codegenInstructionValue(
         ),
         reactiveFunction,
       ).unwrap();
-      if (instrValue.expr.type === 'ArrowFunctionExpression') {
+      if (instrValue.type === 'ArrowFunctionExpression') {
         let body: t.BlockStatement | t.Expression = fn.body;
         if (body.body.length === 1 && loweredFunc.directives.length == 0) {
           const stmt = body.body[0]!;
@@ -2028,10 +2129,17 @@ function codegenInstructionValue(
     }
     case 'TypeCastExpression': {
       if (t.isTSType(instrValue.typeAnnotation)) {
-        value = t.tsAsExpression(
-          codegenPlaceToExpression(cx, instrValue.value),
-          instrValue.typeAnnotation,
-        );
+        if (instrValue.typeAnnotationKind === 'satisfies') {
+          value = t.tsSatisfiesExpression(
+            codegenPlaceToExpression(cx, instrValue.value),
+            instrValue.typeAnnotation,
+          );
+        } else {
+          value = t.tsAsExpression(
+            codegenPlaceToExpression(cx, instrValue.value),
+            instrValue.typeAnnotation,
+          );
+        }
       } else {
         value = t.typeCastExpression(
           codegenPlaceToExpression(cx, instrValue.value),
@@ -2182,7 +2290,6 @@ function codegenInstructionValue(
       );
       break;
     }
-    case 'ReactiveFunctionValue':
     case 'StartMemoize':
     case 'FinishMemoize':
     case 'Debugger':
@@ -2218,9 +2325,12 @@ function codegenInstructionValue(
  * u0080 to u009F: C1 control codes
  * u00A0 to uFFFF: All non-basic Latin characters
  * https://en.wikipedia.org/wiki/List_of_Unicode_characters#Control_codes
+ *
+ * u010000 to u10FFFF: Astral plane characters
+ * https://mathiasbynens.be/notes/javascript-unicode
  */
 const STRING_REQUIRES_EXPR_CONTAINER_PATTERN =
-  /[\u{0000}-\u{001F}\u{007F}\u{0080}-\u{FFFF}]|"/u;
+  /[\u{0000}-\u{001F}\u{007F}\u{0080}-\u{FFFF}\u{010000}-\u{10FFFF}]|"|\\/u;
 function codegenJsxAttribute(
   cx: Context,
   attribute: JsxAttribute,
@@ -2278,7 +2388,7 @@ function codegenJsxAttribute(
   }
 }
 
-const JSX_TEXT_CHILD_REQUIRES_EXPR_CONTAINER_PATTERN = /[<>&]/;
+const JSX_TEXT_CHILD_REQUIRES_EXPR_CONTAINER_PATTERN = /[<>&{}]/;
 function codegenJsxElement(
   cx: Context,
   place: Place,
@@ -2377,6 +2487,9 @@ function codegenObjectPropertyKey(
       });
       return expr;
     }
+    case 'number': {
+      return t.numericLiteral(key.name);
+    }
   }
 }
 
@@ -2467,7 +2580,16 @@ function codegenValue(
   value: boolean | number | string | null | undefined,
 ): t.Expression {
   if (typeof value === 'number') {
-    return t.numericLiteral(value);
+    if (value < 0) {
+      /**
+       * Babel's code generator produces invalid JS for negative numbers when
+       * run with { compact: true }.
+       * See repro https://codesandbox.io/p/devbox/5d47fr
+       */
+      return t.unaryExpression('-', t.numericLiteral(-value), false);
+    } else {
+      return t.numericLiteral(value);
+    }
   } else if (typeof value === 'boolean') {
     return t.booleanLiteral(value);
   } else if (typeof value === 'string') {
@@ -2498,7 +2620,7 @@ function codegenPlaceToExpression(cx: Context, place: Place): t.Expression {
 }
 
 function codegenPlace(cx: Context, place: Place): t.Expression | t.JSXText {
-  let tmp = cx.temp.get(place.identifier.id);
+  let tmp = cx.temp.get(place.identifier.declarationId);
   if (tmp != null) {
     return tmp;
   }
@@ -2526,4 +2648,46 @@ function convertIdentifier(identifier: Identifier): t.Identifier {
     },
   );
   return t.identifier(identifier.name.value);
+}
+
+function compareScopeDependency(
+  a: ReactiveScopeDependency,
+  b: ReactiveScopeDependency,
+): number {
+  CompilerError.invariant(
+    a.identifier.name?.kind === 'named' && b.identifier.name?.kind === 'named',
+    {
+      reason: '[Codegen] Expected named identifier for dependency',
+      loc: a.identifier.loc,
+    },
+  );
+  const aName = [
+    a.identifier.name.value,
+    ...a.path.map(entry => `${entry.optional ? '?' : ''}${entry.property}`),
+  ].join('.');
+  const bName = [
+    b.identifier.name.value,
+    ...b.path.map(entry => `${entry.optional ? '?' : ''}${entry.property}`),
+  ].join('.');
+  if (aName < bName) return -1;
+  else if (aName > bName) return 1;
+  else return 0;
+}
+
+function compareScopeDeclaration(
+  a: ReactiveScopeDeclaration,
+  b: ReactiveScopeDeclaration,
+): number {
+  CompilerError.invariant(
+    a.identifier.name?.kind === 'named' && b.identifier.name?.kind === 'named',
+    {
+      reason: '[Codegen] Expected named identifier for declaration',
+      loc: a.identifier.loc,
+    },
+  );
+  const aName = a.identifier.name.value;
+  const bName = b.identifier.name.value;
+  if (aName < bName) return -1;
+  else if (aName > bName) return 1;
+  else return 0;
 }

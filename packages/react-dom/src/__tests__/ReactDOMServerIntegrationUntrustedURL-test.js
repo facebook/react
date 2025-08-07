@@ -41,6 +41,7 @@ describe('ReactDOMServerIntegration - Untrusted URLs', () => {
   const {
     resetModules,
     itRenders,
+    clientCleanRender,
     clientRenderOnBadMarkup,
     clientRenderOnServerString,
   } = ReactDOMServerIntegrationUtils(initModules);
@@ -141,6 +142,11 @@ describe('ReactDOMServerIntegration - Untrusted URLs', () => {
   });
 
   itRenders('a javascript protocol frame src', async render => {
+    if (render === clientCleanRender || render === clientRenderOnServerString) {
+      // React does not hydrate framesets properly because the default hydration scope
+      // is the body
+      return;
+    }
     const e = await render(
       <html>
         <head />

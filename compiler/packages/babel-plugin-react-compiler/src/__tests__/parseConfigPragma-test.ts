@@ -5,26 +5,33 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {parseConfigPragma, validateEnvironmentConfig} from '..';
+import {parseConfigPragmaForTests, validateEnvironmentConfig} from '..';
+import {defaultOptions} from '../Entrypoint';
 
-describe('parseConfigPragma()', () => {
+describe('parseConfigPragmaForTests()', () => {
   it('parses flags in various forms', () => {
     const defaultConfig = validateEnvironmentConfig({});
 
     // Validate defaults first to make sure that the parser is getting the value from the pragma,
     // and not just missing it and getting the default value
     expect(defaultConfig.enableUseTypeAnnotations).toBe(false);
-    expect(defaultConfig.validateRefAccessDuringRender).toBe(false);
+    expect(defaultConfig.validateNoSetStateInEffects).toBe(false);
     expect(defaultConfig.validateNoSetStateInRender).toBe(true);
 
-    const config = parseConfigPragma(
-      '@enableUseTypeAnnotations @validateRefAccessDuringRender:true @validateNoSetStateInRender:false',
+    const config = parseConfigPragmaForTests(
+      '@enableUseTypeAnnotations @validateNoSetStateInEffects:true @validateNoSetStateInRender:false',
+      {compilationMode: defaultOptions.compilationMode},
     );
     expect(config).toEqual({
-      ...defaultConfig,
-      enableUseTypeAnnotations: true,
-      validateRefAccessDuringRender: true,
-      validateNoSetStateInRender: false,
+      ...defaultOptions,
+      panicThreshold: 'all_errors',
+      environment: {
+        ...defaultOptions.environment,
+        enableUseTypeAnnotations: true,
+        validateNoSetStateInEffects: true,
+        validateNoSetStateInRender: false,
+        enableResetCacheOnSourceFileChanges: false,
+      },
     });
   });
 });

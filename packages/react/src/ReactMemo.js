@@ -9,14 +9,12 @@
 
 import {REACT_MEMO_TYPE} from 'shared/ReactSymbols';
 
-import isValidElementType from 'shared/isValidElementType';
-
 export function memo<Props>(
   type: React$ElementType,
   compare?: (oldProps: Props, newProps: Props) => boolean,
 ) {
   if (__DEV__) {
-    if (!isValidElementType(type)) {
+    if (type == null) {
       console.error(
         'memo: The first argument must be a component. Instead ' +
           'received: %s',

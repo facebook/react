@@ -10,7 +10,7 @@ function Component(props) {
     x = identity(props.value[0]);
   };
   foo();
-  return {x};
+  return <div>{x}</div>;
 }
 
 export const FIXTURE_ENTRYPOINT = {
@@ -42,16 +42,15 @@ function Component(props) {
   } else {
     x = $[1];
   }
-  const t0 = x;
-  let t1;
-  if ($[2] !== t0) {
-    t1 = { x: t0 };
-    $[2] = t0;
-    $[3] = t1;
+  let t0;
+  if ($[2] !== x) {
+    t0 = <div>{x}</div>;
+    $[2] = x;
+    $[3] = t0;
   } else {
-    t1 = $[3];
+    t0 = $[3];
   }
-  return t1;
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {
@@ -62,4 +61,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: ok) {"x":42}
+(kind: ok) <div>42</div>

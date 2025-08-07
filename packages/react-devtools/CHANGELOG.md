@@ -4,6 +4,106 @@
 
 ---
 
+### 6.1.5
+July 4, 2025
+
+* fix: fallback to reading string stack trace when failed ([hoxyq](https://github.com/hoxyq) in [#33700](https://github.com/facebook/react/pull/33700))
+
+---
+
+### 6.1.4
+July 4, 2025
+
+* feat: static Components panel layout ([hoxyq](https://github.com/hoxyq) in [#33696](https://github.com/facebook/react/pull/33696))
+
+---
+
+### 6.1.3
+June 27, 2025
+
+* devtools: emit performance entries only when profiling ([hoxyq](https://github.com/hoxyq) in [#33652](https://github.com/facebook/react/pull/33652))
+* Get Server Component Function Location for Parent Stacks using Child's Owner Stack ([sebmarkbage](https://github.com/sebmarkbage) in [#33629](https://github.com/facebook/react/pull/33629))
+* Added minimum indent size to Component Tree ([jsdf](https://github.com/jsdf) in [#33517](https://github.com/facebook/react/pull/33517))
+* refactor[devtools]: update css for settings and support css variables in shadow dom scnenario ([hoxyq](https://github.com/hoxyq) in [#33487](https://github.com/facebook/react/pull/33487))
+* Get source location from structured callsites in prepareStackTrace ([sebmarkbage](https://github.com/sebmarkbage) in [#33143](https://github.com/facebook/react/pull/33143))
+
+---
+
+### 6.1.2
+May 7, 2025
+
+* Restore "double-click to view owners tree" functionality ([eps1lon](https://github.com/eps1lon) in [#33039](https://github.com/facebook/react/pull/33039))
+
+---
+
+### 6.1.1
+February 7, 2025
+
+* DevTools: refactor NativeStyleEditor, don't use custom cache implementation ([hoxyq](https://github.com/hoxyq) in [#32298](https://github.com/facebook/react/pull/32298))
+* DevTools: fix host component filter option title ([hoxyq](https://github.com/hoxyq) in [#32296](https://github.com/facebook/react/pull/32296))
+* chore[DevTools]: make clipboardWrite optional for chromium ([hoxyq](https://github.com/hoxyq) in [#32262](https://github.com/facebook/react/pull/32262))
+
+---
+
+### 6.1.0
+January 16, 2025
+
+* fix[DevTools]: fix HostComponent naming in filters for Native ([hoxyq](https://github.com/hoxyq) in [#32086](https://github.com/facebook/react/pull/32086))
+* Fix copy functionality in Firefox ([V3RON](https://github.com/V3RON) in [#32077](https://github.com/facebook/react/pull/32077))
+* Prevent crash when starting consecutive profiling sessions ([V3RON](https://github.com/V3RON) in [#32066](https://github.com/facebook/react/pull/32066))
+* fix[DevTools/Tree]: only scroll to item when panel is visible ([hoxyq](https://github.com/hoxyq) in [#32018](https://github.com/facebook/react/pull/32018))
+* feat[Tree]: set initial scroll offset when inspected element index is set ([hoxyq](https://github.com/hoxyq) in [#31968](https://github.com/facebook/react/pull/31968))
+* DevTools: fix initial host instance selection ([hoxyq](https://github.com/hoxyq) in [#31892](https://github.com/facebook/react/pull/31892))
+* chore[DevTools/Tree]: don't pre-select root element ([hoxyq](https://github.com/hoxyq) in [#32015](https://github.com/facebook/react/pull/32015))
+* Show component names while highlighting renders ([piotrski](https://github.com/piotrski) in [#31577](https://github.com/facebook/react/pull/31577))
+* allow non-coercible objects in formatConsoleArgumentsToSingleString ([henryqdineen](https://github.com/henryqdineen) in [#31444](https://github.com/facebook/react/pull/31444))
+
+---
+
+### 6.0.1
+October 15, 2024
+
+* Fix React Compiler badging ([poteto](https://github.com/poteto) in [#31196](https://github.com/facebook/react/pull/31196))
+* fix[react-devtools]: record timeline data only when supported ([hoxyq](https://github.com/hoxyq) in [#31154](https://github.com/facebook/react/pull/31154))
+* fix[react-devtools]: remove all listeners when Agent is shutdown ([hoxyq](https://github.com/hoxyq) in [#31151](https://github.com/facebook/react/pull/31151))
+* fix[react-devtools]: wrap key string in preformatted text html element ([hoxyq](https://github.com/hoxyq) in [#31153](https://github.com/facebook/react/pull/31153))
+* fix[react-devtools]: request hook initialization inside http server response ([hoxyq](https://github.com/hoxyq) in [#31102](https://github.com/facebook/react/pull/31102))
+* refactor: allow custom impl of backend reload-to-profile support check ([EdmondChuiHW](https://github.com/EdmondChuiHW) in [#31048](https://github.com/facebook/react/pull/31048))
+
+---
+
+### 6.0.0
+September 25, 2024
+
+#### Features
+* Support Server Components in Tree ([sebmarkbage](https://github.com/sebmarkbage) in [#30684](https://github.com/facebook/react/pull/30684))
+* feat: expose installHook with settings argument from react-devtools-core/backend ([hoxyq](https://github.com/hoxyq) in [#30987](https://github.com/facebook/react/pull/30987))
+* Add Filtering of Environment Names ([sebmarkbage](https://github.com/sebmarkbage) in [#30850](https://github.com/facebook/react/pull/30850))
+* Support secondary environment name when it changes ([sebmarkbage](https://github.com/sebmarkbage) in [#30842](https://github.com/facebook/react/pull/30842))
+* Filter Server Components ([sebmarkbage](https://github.com/sebmarkbage) in [#30839](https://github.com/facebook/react/pull/30839))
+* Make function inspection instant ([sebmarkbage](https://github.com/sebmarkbage) in [#30786](https://github.com/facebook/react/pull/30786))
+* Make Functions Clickable to Jump to Definition ([sebmarkbage](https://github.com/sebmarkbage) in [#30769](https://github.com/facebook/react/pull/30769))
+* [Flight/DevTools] Pass the Server Component's "key" as Part of the ReactComponentInfo ([sebmarkbage](https://github.com/sebmarkbage) in [#30703](https://github.com/facebook/react/pull/30703))
+* Make Element Inspection Feel Snappy ([sebmarkbage](https://github.com/sebmarkbage) in [#30555](https://github.com/facebook/react/pull/30555))
+* Print component stacks as error objects to get source mapping ([sebmarkbage](https://github.com/sebmarkbage) in [#30289](https://github.com/facebook/react/pull/30289))
+
+#### Bugfixes
+* Fix: profiling crashes #30661 #28838 ([EdmondChuiHW](https://github.com/EdmondChuiHW) in [#31024](https://github.com/facebook/react/pull/31024))
+* chore: remove settings manager from react-devtools-core ([hoxyq](https://github.com/hoxyq) in [#30986](https://github.com/facebook/react/pull/30986))
+* fix[react-devtools/extensions]: fixed tabs API calls and displaying restricted access popup ([hoxyq](https://github.com/hoxyq) in [#30825](https://github.com/facebook/react/pull/30825))
+* fix[react-devtools/InspectedElement]: fixed border stylings when some of the panels are not rendered ([hoxyq](https://github.com/hoxyq) in [#30676](https://github.com/facebook/react/pull/30676))
+* fix: path handling in react devtools ([Jack-Works](https://github.com/Jack-Works) in [#29199](https://github.com/facebook/react/pull/29199))
+
+#### Other
+* feat: display message if user ended up opening hook script ([hoxyq](https://github.com/hoxyq) in [#31000](https://github.com/facebook/react/pull/31000))
+* refactor[react-devtools]: move console patching to global hook ([hoxyq](https://github.com/hoxyq) in [#30596](https://github.com/facebook/react/pull/30596))
+* refactor[react-devtools]: initialize renderer interface early ([hoxyq](https://github.com/hoxyq) in [#30946](https://github.com/facebook/react/pull/30946))
+* Use Unicode Atom Symbol instead of Atom Emoji ([sebmarkbage](https://github.com/sebmarkbage) in [#30832](https://github.com/facebook/react/pull/30832))
+* feat[react-devtools]: support Manifest v3 for Firefox extension ([hoxyq](https://github.com/hoxyq) in [#30824](https://github.com/facebook/react/pull/30824))
+* Enable pointEvents while scrolling ([sebmarkbage](https://github.com/sebmarkbage) in [#30560](https://github.com/facebook/react/pull/30560))
+
+---
+
 ### 5.3.1
 July 3, 2024
 

@@ -70,7 +70,7 @@ const percentFormatter = new Intl.NumberFormat('en', {
 });
 
 function change(decimal) {
-  if (Number === Infinity) {
+  if (decimal === Infinity) {
     return 'New file';
   }
   if (decimal === -1) {
@@ -274,7 +274,7 @@ ${significantResults.join('\n')}
     writeFileSync('sizebot-message.md', message);
     markdown(
       'The size diff is too large to display in a single comment. ' +
-        `The [CircleCI job](${process.env.CIRCLE_BUILD_URL}) contains an artifact called 'sizebot-message.md' with the full message.`
+        `The GitHub action for this pull request contains an artifact called 'sizebot-message.md' with the full message.`
     );
   } else {
     markdown(message);

@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "private": true,
   "devEngines": {
-    "node": "20.x || 21.x"
+    "node": "20.x || 22.x"
   },
   "dependencies": {
     "@babel/core": "^7.16.0",
@@ -23,6 +23,7 @@
     "browserslist": "^4.18.1",
     "busboy": "^1.6.0",
     "camelcase": "^6.2.1",
+    "canvas": "^3.1.0",
     "case-sensitive-paths-webpack-plugin": "^2.4.0",
     "compression": "^1.7.4",
     "concurrently": "^7.3.0",
@@ -49,6 +50,7 @@
     "react-dev-utils": "^12.0.1",
     "react-dom": "experimental",
     "react-refresh": "^0.11.0",
+    "react-server-dom-webpack": "experimental",
     "resolve": "^1.20.0",
     "resolve-url-loader": "^4.0.0",
     "sass-loader": "^12.3.0",
@@ -64,11 +66,11 @@
     "webpack-manifest-plugin": "^4.0.2"
   },
   "devDependencies": {
-    "@playwright/test": "^1.41.2"
+    "@playwright/test": "^1.51.1"
   },
   "scripts": {
-    "predev": "cp -r ../../build/oss-experimental/* ./node_modules/",
-    "prebuild": "cp -r ../../build/oss-experimental/* ./node_modules/",
+    "predev": "cp -r ../../build/oss-experimental/* ./node_modules/ && rm -rf node_modules/.cache;",
+    "prebuild": "cp -r ../../build/oss-experimental/* ./node_modules/ && rm -rf node_modules/.cache;",
     "dev": "concurrently \"npm run dev:region\" \"npm run dev:global\"",
     "dev:global": "NODE_ENV=development BUILD_PATH=dist node --experimental-loader ./loader/global.js --inspect=127.0.0.1:9230 server/global",
     "dev:region": "NODE_ENV=development BUILD_PATH=dist nodemon --watch src --watch dist -- --enable-source-maps --experimental-loader ./loader/region.js --conditions=react-server --inspect=127.0.0.1:9229 server/region",

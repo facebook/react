@@ -1,5 +1,3 @@
-// @enableReactiveScopesInHIR:false
-
 import {Stringify, identity, makeArray, mutate} from 'shared-runtime';
 
 /**

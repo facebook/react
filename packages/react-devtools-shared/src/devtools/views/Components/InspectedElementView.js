@@ -8,10 +8,8 @@
  */
 
 import * as React from 'react';
-import {Fragment, useCallback, useContext} from 'react';
-import {TreeDispatcherContext} from './TreeContext';
+import {Fragment, useContext} from 'react';
 import {BridgeContext, StoreContext} from '../context';
-import Button from '../Button';
 import InspectedElementBadges from './InspectedElementBadges';
 import InspectedElementContextTree from './InspectedElementContextTree';
 import InspectedElementErrorsAndWarningsTree from './InspectedElementErrorsAndWarningsTree';
@@ -20,12 +18,11 @@ import InspectedElementPropsTree from './InspectedElementPropsTree';
 import InspectedElementStateTree from './InspectedElementStateTree';
 import InspectedElementStyleXPlugin from './InspectedElementStyleXPlugin';
 import InspectedElementSuspenseToggle from './InspectedElementSuspenseToggle';
+import InspectedElementSuspendedBy from './InspectedElementSuspendedBy';
 import NativeStyleEditor from './NativeStyleEditor';
-import ElementBadges from './ElementBadges';
-import {useHighlightNativeElement} from '../hooks';
 import {enableStyleXFeatures} from 'react-devtools-feature-flags';
-import {logEvent} from 'react-devtools-shared/src/Logger';
 import InspectedElementSourcePanel from './InspectedElementSourcePanel';
+import OwnerView from './OwnerView';
 
 import styles from './InspectedElementView.css';
 
@@ -35,7 +32,7 @@ import type {
 } from 'react-devtools-shared/src/frontend/types';
 import type {HookNames} from 'react-devtools-shared/src/frontend/types';
 import type {ToggleParseHookNames} from './InspectedElementContext';
-import type {Source} from 'react-devtools-shared/src/shared/types';
+import type {ReactFunctionLocation} from 'shared/ReactTypes';
 
 type Props = {
   element: Element,
@@ -43,7 +40,7 @@ type Props = {
   inspectedElement: InspectedElement,
   parseHookNames: boolean,
   toggleParseHookNames: ToggleParseHookNames,
-  symbolicatedSourcePromise: Promise<Source | null>,
+  symbolicatedSourcePromise: Promise<ReactFunctionLocation | null>,
 };
 
 export default function InspectedElementView({
@@ -54,8 +51,14 @@ export default function InspectedElementView({
   toggleParseHookNames,
   symbolicatedSourcePromise,
 }: Props): React.Node {
-  const {owners, rendererPackageName, rendererVersion, rootType, source} =
-    inspectedElement;
+  const {
+    owners,
+    rendererPackageName,
+    rendererVersion,
+    rootType,
+    source,
+    nativeTag,
+  } = inspectedElement;
 
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
@@ -71,71 +74,97 @@ export default function InspectedElementView({
   return (
     <Fragment>
       <div className={styles.InspectedElement}>
-        <div className={styles.InspectedElementBadgesContainer}>
+        <div className={styles.InspectedElementSection}>
           <InspectedElementBadges
             hocDisplayNames={element.hocDisplayNames}
             compiledWithForget={element.compiledWithForget}
+            nativeTag={nativeTag}
           />
         </div>
 
-        <InspectedElementPropsTree
-          bridge={bridge}
-          element={element}
-          inspectedElement={inspectedElement}
-          store={store}
-        />
-
-        <InspectedElementSuspenseToggle
-          bridge={bridge}
-          inspectedElement={inspectedElement}
-          store={store}
-        />
-
-        <InspectedElementStateTree
-          bridge={bridge}
-          element={element}
-          inspectedElement={inspectedElement}
-          store={store}
-        />
-
-        <InspectedElementHooksTree
-          bridge={bridge}
-          element={element}
-          hookNames={hookNames}
-          inspectedElement={inspectedElement}
-          parseHookNames={parseHookNames}
-          store={store}
-          toggleParseHookNames={toggleParseHookNames}
-        />
-
-        <InspectedElementContextTree
-          bridge={bridge}
-          element={element}
-          inspectedElement={inspectedElement}
-          store={store}
-        />
-
-        {enableStyleXFeatures && (
-          <InspectedElementStyleXPlugin
+        <div className={styles.InspectedElementSection}>
+          <InspectedElementPropsTree
             bridge={bridge}
             element={element}
             inspectedElement={inspectedElement}
             store={store}
           />
+        </div>
+
+        <div className={styles.InspectedElementSection}>
+          <InspectedElementSuspenseToggle
+            bridge={bridge}
+            inspectedElement={inspectedElement}
+            store={store}
+          />
+        </div>
+
+        <div className={styles.InspectedElementSection}>
+          <InspectedElementStateTree
+            bridge={bridge}
+            element={element}
+            inspectedElement={inspectedElement}
+            store={store}
+          />
+        </div>
+
+        <div className={styles.InspectedElementSection}>
+          <InspectedElementHooksTree
+            bridge={bridge}
+            element={element}
+            hookNames={hookNames}
+            inspectedElement={inspectedElement}
+            parseHookNames={parseHookNames}
+            store={store}
+            toggleParseHookNames={toggleParseHookNames}
+          />
+        </div>
+
+        <div className={styles.InspectedElementSection}>
+          <InspectedElementContextTree
+            bridge={bridge}
+            element={element}
+            inspectedElement={inspectedElement}
+            store={store}
+          />
+        </div>
+
+        {enableStyleXFeatures && (
+          <div className={styles.InspectedElementSection}>
+            <InspectedElementStyleXPlugin
+              bridge={bridge}
+              element={element}
+              inspectedElement={inspectedElement}
+              store={store}
+            />
+          </div>
         )}
 
-        <InspectedElementErrorsAndWarningsTree
-          bridge={bridge}
-          element={element}
-          inspectedElement={inspectedElement}
-          store={store}
-        />
+        <div className={styles.InspectedElementSection}>
+          <InspectedElementErrorsAndWarningsTree
+            bridge={bridge}
+            element={element}
+            inspectedElement={inspectedElement}
+            store={store}
+          />
+        </div>
 
-        <NativeStyleEditor />
+        <div className={styles.InspectedElementSection}>
+          <NativeStyleEditor />
+        </div>
+
+        <div className={styles.InspectedElementSection}>
+          <InspectedElementSuspendedBy
+            bridge={bridge}
+            element={element}
+            inspectedElement={inspectedElement}
+            store={store}
+          />
+        </div>
 
         {showRenderedBy && (
           <div
-            className={styles.Owners}
+            className={styles.InspectedElementSection}
             data-testname="InspectedElementView-Owners">
             <div className={styles.OwnersHeader}>rendered by</div>
 
@@ -162,66 +191,14 @@ export default function InspectedElementView({
         )}
 
         {source != null && (
-          <InspectedElementSourcePanel
-            source={source}
-            symbolicatedSourcePromise={symbolicatedSourcePromise}
-          />
+          <div className={styles.InspectedElementSection}>
+            <InspectedElementSourcePanel
+              source={source}
+              symbolicatedSourcePromise={symbolicatedSourcePromise}
+            />
+          </div>
         )}
       </div>
     </Fragment>
-  );
-}
-
-type OwnerViewProps = {
-  displayName: string,
-  hocDisplayNames: Array<string> | null,
-  compiledWithForget: boolean,
-  id: number,
-  isInStore: boolean,
-};
-
-function OwnerView({
-  displayName,
-  hocDisplayNames,
-  compiledWithForget,
-  id,
-  isInStore,
-}: OwnerViewProps) {
-  const dispatch = useContext(TreeDispatcherContext);
-  const {highlightNativeElement, clearHighlightNativeElement} =
-    useHighlightNativeElement();
-
-  const handleClick = useCallback(() => {
-    logEvent({
-      event_name: 'select-element',
-      metadata: {source: 'owner-view'},
-    });
-    dispatch({
-      type: 'SELECT_ELEMENT_BY_ID',
-      payload: id,
-    });
-  }, [dispatch, id]);
-
-  return (
-    <Button
-      key={id}
-      className={styles.OwnerButton}
-      disabled={!isInStore}
-      onClick={handleClick}
-      onMouseEnter={() => highlightNativeElement(id)}
-      onMouseLeave={clearHighlightNativeElement}>
-      <span className={styles.OwnerContent}>
-        <span
-          className={`${styles.Owner} ${isInStore ? '' : styles.NotInStore}`}
-          title={displayName}>
-          {displayName}
-        </span>
-
-        <ElementBadges
-          hocDisplayNames={hocDisplayNames}
-          compiledWithForget={compiledWithForget}
-        />
-      </span>
-    </Button>
   );
 }

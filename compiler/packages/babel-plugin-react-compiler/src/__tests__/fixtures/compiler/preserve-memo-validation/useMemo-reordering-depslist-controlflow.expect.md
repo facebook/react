@@ -44,27 +44,24 @@ function Foo(t0) {
   const { arr1, arr2, foo } = t0;
   let t1;
   let val1;
-  if ($[0] !== arr1 || $[1] !== foo || $[2] !== arr2) {
+  if ($[0] !== arr1 || $[1] !== arr2 || $[2] !== foo) {
     const x = [arr1];
 
-    let y;
-    y = [];
+    let y = [];
     let t2;
-    let t3;
     if ($[5] === Symbol.for("react.memo_cache_sentinel")) {
-      t3 = { x: 2 };
-      $[5] = t3;
+      t2 = { x: 2 };
+      $[5] = t2;
     } else {
-      t3 = $[5];
+      t2 = $[5];
     }
-    t2 = t3;
     val1 = t2;
 
     foo ? (y = x.concat(arr2)) : y;
     t1 = (() => [y])();
     $[0] = arr1;
-    $[1] = foo;
-    $[2] = arr2;
+    $[1] = arr2;
+    $[2] = foo;
     $[3] = t1;
     $[4] = val1;
   } else {

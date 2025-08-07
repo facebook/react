@@ -33,12 +33,12 @@ export function assertExhaustive(_: never, errorMsg: string): never {
 // Modifies @param array in place, retaining only the items where the predicate returns true.
 export function retainWhere<T>(
   array: Array<T>,
-  predicate: (item: T) => boolean,
+  predicate: (item: T, index: number) => boolean,
 ): void {
   let writeIndex = 0;
   for (let readIndex = 0; readIndex < array.length; readIndex++) {
     const item = array[readIndex];
-    if (predicate(item) === true) {
+    if (predicate(item, readIndex) === true) {
       array[writeIndex++] = item;
     }
   }
@@ -82,21 +82,89 @@ export function getOrInsertDefault<U, V>(
     return defaultValue;
   }
 }
-
-export function Set_union<T>(a: Set<T>, b: Set<T>): Set<T> {
-  const union = new Set<T>();
+export function Set_equal<T>(a: ReadonlySet<T>, b: ReadonlySet<T>): boolean {
+  if (a.size !== b.size) {
+    return false;
+  }
   for (const item of a) {
-    if (b.has(item)) {
-      union.add(item);
+    if (!b.has(item)) {
+      return false;
     }
   }
+  return true;
+}
+
+export function Set_union<T>(a: ReadonlySet<T>, b: ReadonlySet<T>): Set<T> {
+  const union = new Set<T>(a);
+  for (const item of b) {
+    union.add(item);
+  }
   return union;
+}
+
+export function Set_intersect<T>(sets: Array<ReadonlySet<T>>): Set<T> {
+  if (sets.length === 0 || sets.some(s => s.size === 0)) {
+    return new Set();
+  } else if (sets.length === 1) {
+    return new Set(sets[0]);
+  }
+  const result: Set<T> = new Set();
+  const first = sets[0];
+  outer: for (const e of first) {
+    for (let i = 1; i < sets.length; i++) {
+      if (!sets[i].has(e)) {
+        continue outer;
+      }
+    }
+    result.add(e);
+  }
+  return result;
+}
+
+/**
+ * @returns `true` if `a` is a superset of `b`.
+ */
+export function Set_isSuperset<T>(
+  a: ReadonlySet<T>,
+  b: ReadonlySet<T>,
+): boolean {
+  for (const v of b) {
+    if (!a.has(v)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+export function Iterable_some<T>(
+  iter: Iterable<T>,
+  pred: (item: T) => boolean,
+): boolean {
+  for (const item of iter) {
+    if (pred(item)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 export function nonNull<T extends NonNullable<U>, U>(
   value: T | null | undefined,
 ): value is T {
   return value != null;
+}
+
+export function Set_filter<T>(
+  source: ReadonlySet<T>,
+  fn: (arg: T) => boolean,
+): Set<T> {
+  const result = new Set<T>();
+  for (const entry of source) {
+    if (fn(entry)) {
+      result.add(entry);
+    }
+  }
+  return result;
 }
 
 export function hasNode<T>(

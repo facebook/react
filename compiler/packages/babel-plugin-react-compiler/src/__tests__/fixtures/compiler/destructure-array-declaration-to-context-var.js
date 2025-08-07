@@ -6,7 +6,7 @@ function Component(props) {
     x = identity(props.value[0]);
   };
   foo();
-  return {x};
+  return <div>{x}</div>;
 }
 
 export const FIXTURE_ENTRYPOINT = {

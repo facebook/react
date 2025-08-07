@@ -126,3 +126,15 @@ export function cache<A: Iterable<mixed>, T>(fn: (...A) => T): (...A) => T {
     }
   };
 }
+
+export function cacheSignal(): null | AbortSignal {
+  const dispatcher = ReactSharedInternals.A;
+  if (!dispatcher) {
+    // If there is no dispatcher, then we treat this as not having an AbortSignal
+    // since in the same context, a cached function will be allowed to be called
+    // but it won't be cached. So it's neither an infinite AbortSignal nor an
+    // already resolved one.
+    return null;
+  }
+  return dispatcher.cacheSignal();
+}

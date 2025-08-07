@@ -6,6 +6,17 @@
 import {useCallback} from 'react';
 import {Stringify} from 'shared-runtime';
 
+/**
+ * TODO: we're currently bailing out because `contextVar` is a context variable
+ * and not recorded into the PropagateScopeDeps LoadLocal / PropertyLoad
+ * sidemap. Previously, we were able to avoid this as `BuildHIR` hoisted
+ * `LoadContext` and `PropertyLoad` instructions into the outer function, which
+ * we took as eligible dependencies.
+ *
+ * One solution is to simply record `LoadContext` identifiers into the
+ * temporaries sidemap when the instruction occurs *after* the context
+ * variable's mutable range.
+ */
 function Foo(props) {
   let contextVar;
   if (props.cond) {
@@ -33,6 +44,17 @@ import { c as _c } from "react/compiler-runtime"; // @validatePreserveExistingMe
 import { useCallback } from "react";
 import { Stringify } from "shared-runtime";
 
+/**
+ * TODO: we're currently bailing out because `contextVar` is a context variable
+ * and not recorded into the PropagateScopeDeps LoadLocal / PropertyLoad
+ * sidemap. Previously, we were able to avoid this as `BuildHIR` hoisted
+ * `LoadContext` and `PropertyLoad` instructions into the outer function, which
+ * we took as eligible dependencies.
+ *
+ * One solution is to simply record `LoadContext` identifiers into the
+ * temporaries sidemap when the instruction occurs *after* the context
+ * variable's mutable range.
+ */
 function Foo(props) {
   const $ = _c(6);
   let contextVar;
@@ -47,27 +69,25 @@ function Foo(props) {
   } else {
     contextVar = $[1];
   }
-
-  const t0 = contextVar;
-  let t1;
-  if ($[2] !== t0.val) {
-    t1 = () => [contextVar.val];
-    $[2] = t0.val;
-    $[3] = t1;
+  let t0;
+  if ($[2] !== contextVar.val) {
+    t0 = () => [contextVar.val];
+    $[2] = contextVar.val;
+    $[3] = t0;
   } else {
-    t1 = $[3];
+    t0 = $[3];
   }
   contextVar;
-  const cb = t1;
-  let t2;
+  const cb = t0;
+  let t1;
   if ($[4] !== cb) {
-    t2 = <Stringify cb={cb} shouldInvokeFns={true} />;
+    t1 = <Stringify cb={cb} shouldInvokeFns={true} />;
     $[4] = cb;
-    $[5] = t2;
+    $[5] = t1;
   } else {
-    t2 = $[5];
+    t1 = $[5];
   }
-  return t2;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

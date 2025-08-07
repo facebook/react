@@ -92,18 +92,6 @@ const tests: CompilerTestCases = {
         }
       `,
     },
-    {
-      // TODO(gsn): Move this to invalid test suite, when we turn on
-      // validateRefAccessDuringRender validation
-      name: '[InvalidInput] Ref access during render',
-      code: normalizeIndent`
-        function Component(props) {
-          const ref = useRef(null);
-          const value = ref.current;
-          return value;
-        }
-      `,
-    },
   ],
   invalid: [
     {
@@ -116,8 +104,7 @@ const tests: CompilerTestCases = {
         }`,
       errors: [
         {
-          message:
-            '(BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration',
+          message: /Handle var kinds in VariableDeclaration/,
         },
       ],
     },
@@ -131,8 +118,7 @@ const tests: CompilerTestCases = {
   }`,
       errors: [
         {
-          message:
-            'React Compiler has skipped optimizing this component because one or more React ESLint rules were disabled. React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior',
+          message: /React Compiler has skipped optimizing this component/,
           suggestions: [
             {
               output: normalizeIndent`
@@ -170,12 +156,10 @@ const tests: CompilerTestCases = {
         }`,
       errors: [
         {
-          message:
-            '(BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration',
+          message: /Handle var kinds in VariableDeclaration/,
         },
         {
-          message:
-            'Mutating component props or hook arguments is not allowed. Consider using a local variable instead',
+          message: /Modifying component props or hook arguments is not allowed/,
         },
       ],
     },
@@ -194,8 +178,98 @@ const tests: CompilerTestCases = {
         }`,
       errors: [
         {
+          message: /Handle var kinds in VariableDeclaration/,
+        },
+      ],
+    },
+    {
+      name: "'use no forget' does not disable eslint rule",
+      code: normalizeIndent`
+        let count = 0;
+        function Component() {
+          'use no forget';
+          count = count + 1;
+          return <div>Hello world {count}</div>
+        }
+      `,
+      errors: [
+        {
           message:
-            '[ReactCompilerBailout] (BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration (@:3:2)',
+            /Cannot reassign variables declared outside of the component\/hook/,
+        },
+      ],
+    },
+    {
+      name: "Unused 'use no forget' directive is reported when no errors are present on components",
+      code: normalizeIndent`
+        function Component() {
+          'use no forget';
+          return <div>Hello world</div>
+        }
+      `,
+      errors: [
+        {
+          message: "Unused 'use no forget' directive",
+          suggestions: [
+            {
+              output:
+                // yuck
+                '\nfunction Component() {\n  \n  return <div>Hello world</div>\n}\n',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: "Unused 'use no forget' directive is reported when no errors are present on non-components or hooks",
+      code: normalizeIndent`
+        function notacomponent() {
+          'use no forget';
+          return 1 + 1;
+        }
+      `,
+      errors: [
+        {
+          message: "Unused 'use no forget' directive",
+          suggestions: [
+            {
+              output:
+                // yuck
+                '\nfunction notacomponent() {\n  \n  return 1 + 1;\n}\n',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Pipeline errors are reported',
+      code: normalizeIndent`
+        import useMyEffect from 'useMyEffect';
+        import {AUTODEPS} from 'react';
+        function Component({a}) {
+          'use no memo';
+          useMyEffect(() => console.log(a.b), AUTODEPS);
+          return <div>Hello world</div>;
+        }
+      `,
+      options: [
+        {
+          environment: {
+            inferEffectDependencies: [
+              {
+                function: {
+                  source: 'useMyEffect',
+                  importSpecifierName: 'default',
+                },
+                autodepsIndex: 1,
+              },
+            ],
+          },
+        },
+      ],
+      errors: [
+        {
+          message: /Cannot infer dependencies of this effect/,
         },
       ],
     },

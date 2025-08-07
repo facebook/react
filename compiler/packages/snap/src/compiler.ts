@@ -11,213 +11,85 @@ import {transformFromAstSync} from '@babel/core';
 import * as BabelParser from '@babel/parser';
 import {NodePath} from '@babel/traverse';
 import * as t from '@babel/types';
-import assert from 'assert';
 import type {
-  CompilationMode,
   Logger,
   LoggerEvent,
-  PanicThresholdOptions,
   PluginOptions,
+  CompilerReactTarget,
+  CompilerPipelineValue,
 } from 'babel-plugin-react-compiler/src/Entrypoint';
-import type {Effect, ValueKind} from 'babel-plugin-react-compiler/src/HIR';
-import type {parseConfigPragma as ParseConfigPragma} from 'babel-plugin-react-compiler/src/HIR/Environment';
+import type {
+  Effect,
+  ValueKind,
+  ValueReason,
+} from 'babel-plugin-react-compiler/src/HIR';
+import type {parseConfigPragmaForTests as ParseConfigPragma} from 'babel-plugin-react-compiler/src/Utils/TestUtils';
 import * as HermesParser from 'hermes-parser';
 import invariant from 'invariant';
 import path from 'path';
 import prettier from 'prettier';
 import SproutTodoFilter from './SproutTodoFilter';
 import {isExpectError} from './fixture-utils';
+import {makeSharedRuntimeTypeProvider} from './sprout/shared-runtime-type-provider';
 export function parseLanguage(source: string): 'flow' | 'typescript' {
   return source.indexOf('@flow') !== -1 ? 'flow' : 'typescript';
 }
 
+/**
+ * Parse react compiler plugin + environment options from test fixture. Note
+ * that although this primarily uses `Environment:parseConfigPragma`, it also
+ * has test fixture specific (i.e. not applicable to playground) parsing logic.
+ */
 function makePluginOptions(
   firstLine: string,
   parseConfigPragmaFn: typeof ParseConfigPragma,
+  debugIRLogger: (value: CompilerPipelineValue) => void,
+  EffectEnum: typeof Effect,
+  ValueKindEnum: typeof ValueKind,
+  ValueReasonEnum: typeof ValueReason,
 ): [PluginOptions, Array<{filename: string | null; event: LoggerEvent}>] {
-  let gating = null;
-  let enableEmitInstrumentForget = null;
-  let enableEmitFreeze = null;
-  let enableEmitHookGuards = null;
-  let compilationMode: CompilationMode = 'all';
-  let runtimeModule = null;
-  let panicThreshold: PanicThresholdOptions = 'all_errors';
-  let hookPattern: string | null = null;
   // TODO(@mofeiZ) rewrite snap fixtures to @validatePreserveExistingMemo:false
   let validatePreserveExistingMemoizationGuarantees = false;
-  let enableChangeDetectionForDebugging = null;
-  let customMacros = null;
+  let target: CompilerReactTarget = '19';
 
-  if (firstLine.indexOf('@compilationMode(annotation)') !== -1) {
-    assert(
-      compilationMode === 'all',
-      'Cannot set @compilationMode(..) more than once',
-    );
-    compilationMode = 'annotation';
-  }
-  if (firstLine.indexOf('@compilationMode(infer)') !== -1) {
-    assert(
-      compilationMode === 'all',
-      'Cannot set @compilationMode(..) more than once',
-    );
-    compilationMode = 'infer';
-  }
-
-  if (firstLine.includes('@gating')) {
-    gating = {
-      source: 'ReactForgetFeatureFlag',
-      importSpecifierName: 'isForgetEnabled_Fixtures',
-    };
-  }
-  if (firstLine.includes('@instrumentForget')) {
-    enableEmitInstrumentForget = {
-      fn: {
-        source: 'react-compiler-runtime',
-        importSpecifierName: 'useRenderCounter',
-      },
-      gating: {
-        source: 'react-compiler-runtime',
-        importSpecifierName: 'shouldInstrument',
-      },
-      globalGating: '__DEV__',
-    };
-  }
-  if (firstLine.includes('@enableEmitFreeze')) {
-    enableEmitFreeze = {
-      source: 'react-compiler-runtime',
-      importSpecifierName: 'makeReadOnly',
-    };
-  }
-  if (firstLine.includes('@enableEmitHookGuards')) {
-    enableEmitHookGuards = {
-      source: 'react-compiler-runtime',
-      importSpecifierName: '$dispatcherGuard',
-    };
-  }
-  const runtimeModuleMatch = /@runtimeModule="([^"]+)"/.exec(firstLine);
-  if (runtimeModuleMatch) {
-    runtimeModule = runtimeModuleMatch[1];
-  }
-  if (firstLine.includes('@panicThreshold(none)')) {
-    panicThreshold = 'none';
-  }
-
-  let eslintSuppressionRules: Array<string> | null = null;
-  const eslintSuppressionMatch = /@eslintSuppressionRules\(([^)]+)\)/.exec(
-    firstLine,
-  );
-  if (eslintSuppressionMatch != null) {
-    eslintSuppressionRules = eslintSuppressionMatch[1].split('|');
-  }
-
-  let flowSuppressions: boolean = false;
-  if (firstLine.includes('@enableFlowSuppressions')) {
-    flowSuppressions = true;
-  }
-
-  let ignoreUseNoForget: boolean = false;
-  if (firstLine.includes('@ignoreUseNoForget')) {
-    ignoreUseNoForget = true;
-  }
-
+  /**
+   * Snap currently runs all fixtures without `validatePreserveExistingMemo` as
+   * most fixtures are interested in compilation output, not whether the
+   * compiler was able to preserve existing memo.
+   *
+   * TODO: flip the default. `useMemo` is rare in test fixtures -- fixtures that
+   * use useMemo should be explicit about whether this flag is enabled
+   */
   if (firstLine.includes('@validatePreserveExistingMemoizationGuarantees')) {
     validatePreserveExistingMemoizationGuarantees = true;
   }
 
-  if (firstLine.includes('@enableChangeDetectionForDebugging')) {
-    enableChangeDetectionForDebugging = {
-      source: 'react-compiler-runtime',
-      importSpecifierName: '$structuralCheck',
-    };
-  }
-  const hookPatternMatch = /@hookPattern:"([^"]+)"/.exec(firstLine);
-  if (
-    hookPatternMatch &&
-    hookPatternMatch.length > 1 &&
-    hookPatternMatch[1].trim().length > 0
-  ) {
-    hookPattern = hookPatternMatch[1].trim();
-  } else if (firstLine.includes('@hookPattern')) {
-    throw new Error(
-      'Invalid @hookPattern:"..." pragma, must contain the prefix between balanced double quotes eg @hookPattern:"pattern"',
-    );
-  }
+  const logs: Array<{filename: string | null; event: LoggerEvent}> = [];
+  const logger: Logger = {
+    logEvent: firstLine.includes('@loggerTestOnly')
+      ? (filename, event) => {
+          logs.push({filename, event});
+        }
+      : () => {},
+    debugLogIRs: debugIRLogger,
+  };
 
-  const customMacrosMatch = /@customMacros\(([^)]+)\)/.exec(firstLine);
-  if (
-    customMacrosMatch &&
-    customMacrosMatch.length > 1 &&
-    customMacrosMatch[1].trim().length > 0
-  ) {
-    customMacros = customMacrosMatch[1]
-      .split(' ')
-      .map(s => s.trim())
-      .filter(s => s.length > 0);
-  }
-
-  let logs: Array<{filename: string | null; event: LoggerEvent}> = [];
-  let logger: Logger | null = null;
-  if (firstLine.includes('@logger')) {
-    logger = {
-      logEvent(filename: string | null, event: LoggerEvent): void {
-        logs.push({filename, event});
-      },
-    };
-  }
-
-  const config = parseConfigPragmaFn(firstLine);
+  const config = parseConfigPragmaFn(firstLine, {compilationMode: 'all'});
   const options = {
+    ...config,
     environment: {
-      ...config,
-      customHooks: new Map([
-        [
-          'useFreeze',
-          {
-            valueKind: 'frozen' as ValueKind,
-            effectKind: 'freeze' as Effect,
-            transitiveMixedData: false,
-            noAlias: false,
-          },
-        ],
-        [
-          'useFragment',
-          {
-            valueKind: 'frozen' as ValueKind,
-            effectKind: 'freeze' as Effect,
-            transitiveMixedData: true,
-            noAlias: true,
-          },
-        ],
-        [
-          'useNoAlias',
-          {
-            valueKind: 'mutable' as ValueKind,
-            effectKind: 'read' as Effect,
-            transitiveMixedData: false,
-            noAlias: true,
-          },
-        ],
-      ]),
-      customMacros,
-      enableEmitFreeze,
-      enableEmitInstrumentForget,
-      enableEmitHookGuards,
+      ...config.environment,
+      moduleTypeProvider: makeSharedRuntimeTypeProvider({
+        EffectEnum,
+        ValueKindEnum,
+        ValueReasonEnum,
+      }),
       assertValidMutableRanges: true,
-      enableSharedRuntime__testonly: true,
-      hookPattern,
       validatePreserveExistingMemoizationGuarantees,
-      enableChangeDetectionForDebugging,
     },
-    compilationMode,
     logger,
-    gating,
-    panicThreshold,
-    noEmit: false,
-    runtimeModule,
-    eslintSuppressionRules,
-    flowSuppressions,
-    ignoreUseNoForget,
     enableReanimatedCheck: false,
+    target,
   };
   return [options, logs];
 }
@@ -299,6 +171,8 @@ function getEvaluatorPresets(
                       arg.value = './shared-runtime';
                     } else if (arg.value === 'ReactForgetFeatureFlag') {
                       arg.value = './ReactForgetFeatureFlag';
+                    } else if (arg.value === 'useEffectWrapper') {
+                      arg.value = './useEffectWrapper';
                     }
                   }
                 }
@@ -338,6 +212,10 @@ export async function transformFixtureInput(
   parseConfigPragmaFn: typeof ParseConfigPragma,
   plugin: BabelCore.PluginObj,
   includeEvaluator: boolean,
+  debugIRLogger: (value: CompilerPipelineValue) => void,
+  EffectEnum: typeof Effect,
+  ValueKindEnum: typeof ValueKind,
+  ValueReasonEnum: typeof ValueReason,
 ): Promise<{kind: 'ok'; value: TransformResult} | {kind: 'err'; msg: string}> {
   // Extract the first line to quickly check for custom test directives
   const firstLine = input.substring(0, input.indexOf('\n'));
@@ -360,11 +238,19 @@ export async function transformFixtureInput(
   /**
    * Get Forget compiled code
    */
-  const [options, logs] = makePluginOptions(firstLine, parseConfigPragmaFn);
+  const [options, logs] = makePluginOptions(
+    firstLine,
+    parseConfigPragmaFn,
+    debugIRLogger,
+    EffectEnum,
+    ValueKindEnum,
+    ValueReasonEnum,
+  );
   const forgetResult = transformFromAstSync(inputAst, input, {
     filename: virtualFilepath,
     highlightCode: false,
     retainLines: true,
+    compact: true,
     plugins: [
       [plugin, options],
       'babel-plugin-fbt',

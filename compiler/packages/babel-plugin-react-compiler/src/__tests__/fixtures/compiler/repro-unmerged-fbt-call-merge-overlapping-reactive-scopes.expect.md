@@ -38,7 +38,7 @@ import { Stringify } from "shared-runtime";
 function Component(props) {
   const $ = _c(3);
   let t0;
-  if ($[0] !== props.value.length || $[1] !== props.cond) {
+  if ($[0] !== props.cond || $[1] !== props.value.length) {
     const label = fbt._(
       { "*": "{number} bars", _1: "1 bar" },
       [fbt._plural(props.value.length, "number")],
@@ -51,8 +51,8 @@ function Component(props) {
         label={label.toString()}
       />
     ) : null;
-    $[0] = props.value.length;
-    $[1] = props.cond;
+    $[0] = props.cond;
+    $[1] = props.value.length;
     $[2] = t0;
   } else {
     t0 = $[2];

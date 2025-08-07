@@ -67,7 +67,7 @@ const TOTAL = 10;
 function Component(props) {
   const $ = _c(3);
   let t0;
-  if ($[0] !== props.start || $[1] !== props.items) {
+  if ($[0] !== props.items || $[1] !== props.start) {
     const items = [];
     for (let i = props.start ?? 0; i < props.items.length; i++) {
       const item = props.items[i];
@@ -75,8 +75,8 @@ function Component(props) {
     }
 
     t0 = <div>{items}</div>;
-    $[0] = props.start;
-    $[1] = props.items;
+    $[0] = props.items;
+    $[1] = props.start;
     $[2] = t0;
   } else {
     t0 = $[2];

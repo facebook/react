@@ -12,7 +12,6 @@
 const ESLintTesterV7 = require('eslint-v7').RuleTester;
 const ESLintTesterV9 = require('eslint-v9').RuleTester;
 const ReactHooksESLintPlugin = require('eslint-plugin-react-hooks');
-const BabelEslintParser = require('@babel/eslint-parser');
 const ReactHooksESLintRule = ReactHooksESLintPlugin.rules['rules-of-hooks'];
 
 /**
@@ -35,12 +34,31 @@ function normalizeIndent(strings) {
 // }
 // ***************************************************
 
-const tests = {
+const allTests = {
   valid: [
     {
       code: normalizeIndent`
         // Valid because components can use hooks.
         function ComponentWithHook() {
+          useHook();
+        }
+      `,
+    },
+    {
+      syntax: 'flow',
+      code: normalizeIndent`
+        // Component syntax
+        component Button() {
+          useHook();
+          return <div>Button!</div>;
+        }
+      `,
+    },
+    {
+      syntax: 'flow',
+      code: normalizeIndent`
+        // Hook syntax
+        hook useSampleHook() {
           useHook();
         }
       `,
@@ -550,8 +568,42 @@ const tests = {
       // TODO: this should error but doesn't.
       // errors: [genericError('useState')],
     },
+    {
+      code: normalizeIndent`
+        // Valid because the hook is outside of the loop
+        const Component = () => {
+          const [state, setState] = useState(0);
+          for (let i = 0; i < 10; i++) {
+            console.log(i);
+          }
+          return <div></div>;
+        };
+      `,
+    },
   ],
   invalid: [
+    {
+      syntax: 'flow',
+      code: normalizeIndent`
+        component Button(cond: boolean) {
+          if (cond) {
+            useConditionalHook();
+          }
+        }
+      `,
+      errors: [conditionalError('useConditionalHook')],
+    },
+    {
+      syntax: 'flow',
+      code: normalizeIndent`
+        hook useTest(cond: boolean) {
+          if (cond) {
+            useConditionalHook();
+          }
+        }
+      `,
+      errors: [conditionalError('useConditionalHook')],
+    },
     {
       code: normalizeIndent`
         // Invalid because it's dangerous and might not warn otherwise.
@@ -759,6 +811,30 @@ const tests = {
       code: normalizeIndent`
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
+        function ComponentWithHookInsideLoop() {
+          do {
+            useHookInsideLoop();
+          } while (cond);
+        }
+      `,
+      errors: [loopError('useHookInsideLoop')],
+    },
+    {
+      code: normalizeIndent`
+        // Invalid because it's dangerous and might not warn otherwise.
+        // This *must* be invalid.
+        function ComponentWithHookInsideLoop() {
+          do {
+            foo();
+          } while (useHookInsideLoop());
+        }
+      `,
+      errors: [loopError('useHookInsideLoop')],
+    },
+    {
+      code: normalizeIndent`
+        // Invalid because it's dangerous and might not warn otherwise.
+        // This *must* be invalid.
         function renderItem() {
           useState();
         }
@@ -849,6 +925,45 @@ const tests = {
             if (b) continue;
             useHook2();
           }
+        }
+      `,
+      errors: [loopError('useHook1'), loopError('useHook2', true)],
+    },
+    {
+      code: normalizeIndent`
+        // Invalid because it's dangerous and might not warn otherwise.
+        // This *must* be invalid.
+        function useHookInLoops() {
+          do {
+            useHook1();
+            if (a) return;
+            useHook2();
+          } while (b);
+
+          do {
+            useHook3();
+            if (c) return;
+            useHook4();
+          } while (d)
+        }
+      `,
+      errors: [
+        loopError('useHook1'),
+        loopError('useHook2'),
+        loopError('useHook3'),
+        loopError('useHook4'),
+      ],
+    },
+    {
+      code: normalizeIndent`
+        // Invalid because it's dangerous and might not warn otherwise.
+        // This *must* be invalid.
+        function useHookInLoops() {
+          do {
+            useHook1();
+            if (a) continue;
+            useHook2();
+          } while (b);
         }
       `,
       errors: [loopError('useHook1'), loopError('useHook2', true)],
@@ -1131,6 +1246,34 @@ const tests = {
     },
     {
       code: normalizeIndent`
+        async function Page() {
+          useId();
+          React.useId();
+        }
+      `,
+      errors: [
+        asyncComponentHookError('useId'),
+        asyncComponentHookError('React.useId'),
+      ],
+    },
+    {
+      code: normalizeIndent`
+        async function useAsyncHook() {
+          useId();
+        }
+      `,
+      errors: [asyncComponentHookError('useId')],
+    },
+    {
+      code: normalizeIndent`
+        async function notAHook() {
+          useId();
+        }
+      `,
+      errors: [functionError('useId', 'notAHook')],
+    },
+    {
+      code: normalizeIndent`
         Hook.use();
         Hook._use();
         Hook.useState();
@@ -1181,12 +1324,40 @@ const tests = {
       `,
       errors: [asyncComponentHookError('use')],
     },
+    {
+      code: normalizeIndent`
+        function App({p1, p2}) {
+          try {
+            use(p1);
+          } catch (error) {
+            console.error(error);
+          }
+          use(p2);
+          return <div>App</div>;
+        }
+      `,
+      errors: [tryCatchUseError('use')],
+    },
+    {
+      code: normalizeIndent`
+        function App({p1, p2}) {
+          try {
+            doSomething();
+          } catch {
+            use(p1);
+          }
+          use(p2);
+          return <div>App</div>;
+        }
+      `,
+      errors: [tryCatchUseError('use')],
+    },
   ],
 };
 
 if (__EXPERIMENTAL__) {
-  tests.valid = [
-    ...tests.valid,
+  allTests.valid = [
+    ...allTests.valid,
     {
       code: normalizeIndent`
         // Valid because functions created with useEffectEvent can be called in a useEffect.
@@ -1202,33 +1373,6 @@ if (__EXPERIMENTAL__) {
     },
     {
       code: normalizeIndent`
-        // Valid because functions created with useEffectEvent can be called in closures.
-        function MyComponent({ theme }) {
-          const onClick = useEffectEvent(() => {
-            showNotification(theme);
-          });
-          return <Child onClick={() => onClick()}></Child>;
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
-        // Valid because functions created with useEffectEvent can be called in closures.
-        function MyComponent({ theme }) {
-          const onClick = useEffectEvent(() => {
-            showNotification(theme);
-          });
-          const onClick2 = () => { onClick() };
-          const onClick3 = useCallback(() => onClick(), []);
-          return <>
-            <Child onClick={onClick2}></Child>
-            <Child onClick={onClick3}></Child>
-          </>;
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
         // Valid because functions created with useEffectEvent can be passed by reference in useEffect
         // and useEffectEvent.
         function MyComponent({ theme }) {
@@ -1237,36 +1381,15 @@ if (__EXPERIMENTAL__) {
           });
           const onClick2 = useEffectEvent(() => {
             debounce(onClick);
+            debounce(() => onClick());
+            debounce(() => { onClick() });
+            deboucne(() => debounce(onClick));
           });
           useEffect(() => {
-            let id = setInterval(onClick, 100);
+            let id = setInterval(() => onClick(), 100);
             return () => clearInterval(onClick);
           }, []);
-          return <Child onClick={() => onClick2()} />
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
-        const MyComponent = ({theme}) => {
-          const onClick = useEffectEvent(() => {
-            showNotification(theme);
-          });
-          return <Child onClick={() => onClick()}></Child>;
-        };
-      `,
-    },
-    {
-      code: normalizeIndent`
-        function MyComponent({ theme }) {
-          const notificationService = useNotifications();
-          const showNotification = useEffectEvent((text) => {
-            notificationService.notify(theme, text);
-          });
-          const onClick = useEffectEvent((text) => {
-            showNotification(text);
-          });
-          return <Child onClick={(text) => onClick(text)} />
+          return null;
         }
       `,
     },
@@ -1282,9 +1405,22 @@ if (__EXPERIMENTAL__) {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        function MyComponent({ theme }) {
+          const onEvent = useEffectEvent((text) => {
+            console.log(text);
+          });
+
+          useEffect(() => {
+            onEvent('Hello world');
+          });
+        }
+      `,
+    },
   ];
-  tests.invalid = [
-    ...tests.invalid,
+  allTests.invalid = [
+    ...allTests.invalid,
     {
       code: normalizeIndent`
         function MyComponent({ theme }) {
@@ -1294,7 +1430,7 @@ if (__EXPERIMENTAL__) {
           return <Child onClick={onClick}></Child>;
         }
       `,
-      errors: [useEffectEventError('onClick')],
+      errors: [useEffectEventError('onClick', false)],
     },
     {
       code: normalizeIndent`
@@ -1313,8 +1449,23 @@ if (__EXPERIMENTAL__) {
           });
           return <Child onClick={() => onClick()} />
         }
+
+        // The useEffectEvent function shares an identifier name with the above
+        function MyLastComponent({theme}) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme)
+          });
+          useEffect(() => {
+            onClick(); // No error here, errors on all other uses
+            onClick;
+          })
+          return <Child />
+        }
       `,
-      errors: [{...useEffectEventError('onClick'), line: 7}],
+      errors: [
+        {...useEffectEventError('onClick', false), line: 7},
+        {...useEffectEventError('onClick', true), line: 15},
+      ],
     },
     {
       code: normalizeIndent`
@@ -1325,7 +1476,7 @@ if (__EXPERIMENTAL__) {
           return <Child onClick={onClick}></Child>;
         }
       `,
-      errors: [useEffectEventError('onClick')],
+      errors: [useEffectEventError('onClick', false)],
     },
     {
       code: normalizeIndent`
@@ -1338,7 +1489,7 @@ if (__EXPERIMENTAL__) {
           return <Bar onClick={foo} />
         }
       `,
-      errors: [{...useEffectEventError('onClick'), line: 7}],
+      errors: [{...useEffectEventError('onClick', false), line: 7}],
     },
     {
       code: normalizeIndent`
@@ -1354,7 +1505,27 @@ if (__EXPERIMENTAL__) {
           return <Child onClick={onClick} />
         }
       `,
-      errors: [useEffectEventError('onClick')],
+      errors: [useEffectEventError('onClick', false)],
+    },
+    {
+      code: normalizeIndent`
+        // Invalid because functions created with useEffectEvent cannot be called in arbitrary closures.
+        function MyComponent({ theme }) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          const onClick2 = () => { onClick() };
+          const onClick3 = useCallback(() => onClick(), []);
+          return <>
+            <Child onClick={onClick2}></Child>
+            <Child onClick={onClick3}></Child>
+          </>;
+        }
+      `,
+      errors: [
+        useEffectEventError('onClick', true),
+        useEffectEventError('onClick', true),
+      ],
     },
   ];
 }
@@ -1416,11 +1587,11 @@ function classError(hook) {
   };
 }
 
-function useEffectEventError(fn) {
+function useEffectEventError(fn, called) {
   return {
     message:
       `\`${fn}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-      'the same component. They cannot be assigned to variables or passed down.',
+      `the same component.${called ? '' : ' They cannot be assigned to variables or passed down.'}`,
   };
 }
 
@@ -1430,11 +1601,17 @@ function asyncComponentHookError(fn) {
   };
 }
 
+function tryCatchUseError(fn) {
+  return {
+    message: `React Hook "${fn}" cannot be called in a try/catch block.`,
+  };
+}
+
 // For easier local testing
 if (!process.env.CI) {
   let only = [];
   let skipped = [];
-  [...tests.valid, ...tests.invalid].forEach(t => {
+  [...allTests.valid, ...allTests.invalid].forEach(t => {
     if (t.skip) {
       delete t.skip;
       skipped.push(t);
@@ -1453,24 +1630,154 @@ if (!process.env.CI) {
     }
     return true;
   };
-  tests.valid = tests.valid.filter(predicate);
-  tests.invalid = tests.invalid.filter(predicate);
+  allTests.valid = allTests.valid.filter(predicate);
+  allTests.invalid = allTests.invalid.filter(predicate);
 }
 
+function filteredTests(predicate) {
+  return {
+    valid: allTests.valid.filter(predicate),
+    invalid: allTests.invalid.filter(predicate),
+  };
+}
+
+const flowTests = filteredTests(t => t.syntax == null || t.syntax === 'flow');
+const tests = filteredTests(t => t.syntax !== 'flow');
+
+allTests.valid.forEach(t => delete t.syntax);
+allTests.invalid.forEach(t => delete t.syntax);
+
 describe('rules-of-hooks/rules-of-hooks', () => {
+  const parserOptionsV7 = {
+    ecmaFeatures: {
+      jsx: true,
+    },
+    ecmaVersion: 6,
+    sourceType: 'module',
+  };
+
+  const languageOptionsV9 = {
+    ecmaVersion: 6,
+    sourceType: 'module',
+    parserOptions: {
+      ecmaFeatures: {
+        jsx: true,
+      },
+    },
+  };
+
   new ESLintTesterV7({
     parser: require.resolve('babel-eslint'),
-    parserOptions: {
-      ecmaVersion: 6,
-      sourceType: 'module',
-    },
-  }).run('eslint: v7', ReactHooksESLintRule, tests);
+    parserOptions: parserOptionsV7,
+  }).run('eslint: v7, parser: babel-eslint', ReactHooksESLintRule, tests);
 
   new ESLintTesterV9({
     languageOptions: {
-      parser: BabelEslintParser,
-      ecmaVersion: 6,
-      sourceType: 'module',
+      ...languageOptionsV9,
+      parser: require('@babel/eslint-parser'),
     },
-  }).run('eslint: v9', ReactHooksESLintRule, tests);
+  }).run(
+    'eslint: v9, parser: @babel/eslint-parser',
+    ReactHooksESLintRule,
+    tests
+  );
+
+  new ESLintTesterV7({
+    parser: require.resolve('hermes-eslint'),
+    parserOptions: {
+      sourceType: 'module',
+      enableExperimentalComponentSyntax: true,
+    },
+  }).run('eslint: v7, parser: hermes-eslint', ReactHooksESLintRule, flowTests);
+
+  new ESLintTesterV9({
+    languageOptions: {
+      ...languageOptionsV9,
+      parser: require('hermes-eslint'),
+      parserOptions: {
+        sourceType: 'module',
+        enableExperimentalComponentSyntax: true,
+      },
+    },
+  }).run('eslint: v9, parser: hermes-eslint', ReactHooksESLintRule, flowTests);
+
+  new ESLintTesterV7({
+    parser: require.resolve('@typescript-eslint/parser-v2'),
+    parserOptions: parserOptionsV7,
+  }).run(
+    'eslint: v7, parser: @typescript-eslint/parser@2.x',
+    ReactHooksESLintRule,
+    tests
+  );
+
+  new ESLintTesterV9({
+    languageOptions: {
+      ...languageOptionsV9,
+      parser: require('@typescript-eslint/parser-v2'),
+    },
+  }).run(
+    'eslint: v9, parser: @typescript-eslint/parser@2.x',
+    ReactHooksESLintRule,
+    tests
+  );
+
+  new ESLintTesterV7({
+    parser: require.resolve('@typescript-eslint/parser-v3'),
+    parserOptions: parserOptionsV7,
+  }).run(
+    'eslint: v7, parser: @typescript-eslint/parser@3.x',
+    ReactHooksESLintRule,
+    tests
+  );
+
+  new ESLintTesterV9({
+    languageOptions: {
+      ...languageOptionsV9,
+      parser: require('@typescript-eslint/parser-v3'),
+    },
+  }).run(
+    'eslint: v9, parser: @typescript-eslint/parser@3.x',
+    ReactHooksESLintRule,
+    tests
+  );
+
+  new ESLintTesterV7({
+    parser: require.resolve('@typescript-eslint/parser-v4'),
+    parserOptions: parserOptionsV7,
+  }).run(
+    'eslint: v7, parser: @typescript-eslint/parser@4.x',
+    ReactHooksESLintRule,
+    tests
+  );
+
+  new ESLintTesterV9({
+    languageOptions: {
+      ...languageOptionsV9,
+      parser: require('@typescript-eslint/parser-v4'),
+    },
+  }).run(
+    'eslint: v9, parser: @typescript-eslint/parser@4.x',
+    ReactHooksESLintRule,
+    tests
+  );
+
+  new ESLintTesterV7({
+    parser: require.resolve('@typescript-eslint/parser-v5'),
+    parserOptions: parserOptionsV7,
+  }).run(
+    'eslint: v7, parser: @typescript-eslint/parser@^5.0.0-0',
+    ReactHooksESLintRule,
+    tests
+  );
+
+  new ESLintTesterV9({
+    languageOptions: {
+      ...languageOptionsV9,
+      parser: require('@typescript-eslint/parser-v5'),
+    },
+  }).run(
+    'eslint: v9, parser: @typescript-eslint/parser@^5.0.0',
+    ReactHooksESLintRule,
+    tests
+  );
 });

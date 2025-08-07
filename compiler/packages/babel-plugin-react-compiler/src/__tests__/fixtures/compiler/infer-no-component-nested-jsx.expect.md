@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @compilationMode(infer)
+// @compilationMode:"infer"
 function Component(props) {
   const result = f(props);
   function helper() {
@@ -26,7 +26,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-// @compilationMode(infer)
+// @compilationMode:"infer"
 function Component(props) {
   const result = f(props);
   function helper() {

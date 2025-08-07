@@ -21,6 +21,8 @@ const {
   RN_FB_PROD,
   RN_FB_PROFILING,
   BROWSER_SCRIPT,
+  CJS_DTS,
+  ESM_DTS,
 } = bundleTypes;
 
 const {RECONCILER} = moduleTypes;
@@ -248,6 +250,16 @@ ${source}
   Object.defineProperty(module.exports, "__esModule", { value: true });
   `;
   },
+
+  /***************** CJS_DTS *****************/
+  [CJS_DTS](source, globalName, filename, moduleType) {
+    return source;
+  },
+
+  /***************** ESM_DTS *****************/
+  [ESM_DTS](source, globalName, filename, moduleType) {
+    return source;
+  },
 };
 
 const licenseHeaderWrappers = {
@@ -462,6 +474,30 @@ ${license}
  * @noflow
  * @nolint
  * @preventMunge
+ */
+
+${source}`;
+  },
+
+  /***************** CJS_DTS *****************/
+  [CJS_DTS](source, globalName, filename, moduleType) {
+    return `/**
+ * @license React
+ * ${filename}
+ *
+${license}
+ */
+
+${source}`;
+  },
+
+  /***************** ESM_DTS *****************/
+  [ESM_DTS](source, globalName, filename, moduleType) {
+    return `/**
+ * @license React
+ * ${filename}
+ *
+${license}
  */
 
 ${source}`;

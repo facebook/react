@@ -1,4 +1,4 @@
-// @validateRefAccessDuringRender
+// @validateRefAccessDuringRender @validateNoSetStateInRender:false
 import {useCallback, useEffect, useRef, useState} from 'react';
 
 function Component() {
@@ -23,6 +23,7 @@ function Component() {
 }
 
 function Child({ref}) {
+  'use no memo';
   // This violates the rules of React, so we access the ref in a child
   // component
   return ref.current;

@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-function foo(props) {
+function useFoo(props) {
   let x = [];
   x.push(props.bar);
   props.cond ? ((x = {}), (x = []), x.push(props.foo)) : null;
@@ -10,9 +10,13 @@ function foo(props) {
 }
 
 export const FIXTURE_ENTRYPOINT = {
-  fn: foo,
-  params: ['TodoAdd'],
-  isComponent: 'TodoAdd',
+  fn: useFoo,
+  params: [{cond: false, foo: 2, bar: 55}],
+  sequentialRenders: [
+    {cond: false, foo: 2, bar: 55},
+    {cond: false, foo: 3, bar: 55},
+    {cond: true, foo: 3, bar: 55},
+  ],
 };
 
 ```
@@ -21,8 +25,8 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime";
-function foo(props) {
-  const $ = _c(4);
+function useFoo(props) {
+  const $ = _c(5);
   let x;
   if ($[0] !== props.bar) {
     x = [];
@@ -32,21 +36,30 @@ function foo(props) {
   } else {
     x = $[1];
   }
-  if ($[2] !== props) {
+  if ($[2] !== props.cond || $[3] !== props.foo) {
     props.cond ? ((x = []), x.push(props.foo)) : null;
-    $[2] = props;
-    $[3] = x;
+    $[2] = props.cond;
+    $[3] = props.foo;
+    $[4] = x;
   } else {
-    x = $[3];
+    x = $[4];
   }
   return x;
 }
 
 export const FIXTURE_ENTRYPOINT = {
-  fn: foo,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  fn: useFoo,
+  params: [{ cond: false, foo: 2, bar: 55 }],
+  sequentialRenders: [
+    { cond: false, foo: 2, bar: 55 },
+    { cond: false, foo: 3, bar: 55 },
+    { cond: true, foo: 3, bar: 55 },
+  ],
 };
 
 ```
       
+### Eval output
+(kind: ok) [55]
+[55]
+[3]

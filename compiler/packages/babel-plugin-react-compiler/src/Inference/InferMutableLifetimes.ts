@@ -11,6 +11,10 @@ import {
   Identifier,
   InstructionId,
   InstructionKind,
+  isArrayType,
+  isMapType,
+  isRefOrRefValue,
+  isSetType,
   makeInstructionId,
   Place,
 } from '../HIR/HIR';
@@ -66,7 +70,9 @@ import {assertExhaustive} from '../Utils/utils';
  */
 
 function infer(place: Place, instrId: InstructionId): void {
-  place.identifier.mutableRange.end = makeInstructionId(instrId + 1);
+  if (!isRefOrRefValue(place.identifier)) {
+    place.identifier.mutableRange.end = makeInstructionId(instrId + 1);
+  }
 }
 
 function inferPlace(
@@ -87,6 +93,17 @@ function inferPlace(
         infer(place, instrId);
       }
       return;
+    case Effect.ConditionallyMutateIterator: {
+      const identifier = place.identifier;
+      if (
+        !isArrayType(identifier) &&
+        !isSetType(identifier) &&
+        !isMapType(identifier)
+      ) {
+        infer(place, instrId);
+      }
+      return;
+    }
     case Effect.ConditionallyMutate:
     case Effect.Mutate: {
       infer(place, instrId);
@@ -113,19 +130,23 @@ export function inferMutableLifetimes(
   for (const [_, block] of func.body.blocks) {
     for (const phi of block.phis) {
       const isPhiMutatedAfterCreation: boolean =
-        phi.id.mutableRange.end >
+        phi.place.identifier.mutableRange.end >
         (block.instructions.at(0)?.id ?? block.terminal.id);
       if (
         inferMutableRangeForStores &&
         isPhiMutatedAfterCreation &&
-        phi.id.mutableRange.start === 0
+        phi.place.identifier.mutableRange.start === 0
       ) {
         for (const [, operand] of phi.operands) {
-          if (phi.id.mutableRange.start === 0) {
-            phi.id.mutableRange.start = operand.mutableRange.start;
+          if (phi.place.identifier.mutableRange.start === 0) {
+            phi.place.identifier.mutableRange.start =
+              operand.identifier.mutableRange.start;
           } else {
-            phi.id.mutableRange.start = makeInstructionId(
-              Math.min(phi.id.mutableRange.start, operand.mutableRange.start),
+            phi.place.identifier.mutableRange.start = makeInstructionId(
+              Math.min(
+                phi.place.identifier.mutableRange.start,
+                operand.identifier.mutableRange.start,
+              ),
             );
           }
         }
@@ -155,9 +176,15 @@ export function inferMutableLifetimes(
       if (
         instr.value.kind === 'DeclareContext' ||
         (instr.value.kind === 'StoreContext' &&
-          instr.value.lvalue.kind !== InstructionKind.Reassign)
+          instr.value.lvalue.kind !== InstructionKind.Reassign &&
+          !contextVariableDeclarationInstructions.has(
+            instr.value.lvalue.place.identifier,
+          ))
       ) {
-        // Save declarations of context variables
+        /**
+         * Save declarations of context variables if they hasn't already been
+         * declared (due to hoisted declarations).
+         */
         contextVariableDeclarationInstructions.set(
           instr.value.lvalue.place.identifier,
           instr.id,
@@ -171,7 +198,10 @@ export function inferMutableLifetimes(
         const declaration = contextVariableDeclarationInstructions.get(
           instr.value.lvalue.place.identifier,
         );
-        if (declaration != null) {
+        if (
+          declaration != null &&
+          !isRefOrRefValue(instr.value.lvalue.place.identifier)
+        ) {
           const range = instr.value.lvalue.place.identifier.mutableRange;
           if (range.start === 0) {
             range.start = declaration;

@@ -60,6 +60,6 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: ok) [2]
-[2]
-[3]
+(kind: ok) [2,"joe"]
+[2,"joe"]
+[3,"joe"]

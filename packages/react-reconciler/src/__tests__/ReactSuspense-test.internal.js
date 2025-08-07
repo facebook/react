@@ -135,6 +135,9 @@ describe('ReactSuspense', () => {
       'Bar',
       // A suspends
       'Suspend! [A]',
+      // pre-warming
+      'B',
+      // end pre-warming
       'Loading...',
     ]);
     expect(container.textContent).toEqual('');
@@ -166,13 +169,21 @@ describe('ReactSuspense', () => {
       'Loading A...',
       'Suspend! [B]',
       'Loading B...',
+      // pre-warming
+      'Suspend! [A]',
+      'Suspend! [B]',
     ]);
     expect(container.innerHTML).toEqual('Loading A...Loading B...');
 
     // Resolve first Suspense's promise and switch back to the normal view. The
     // second Suspense should still show the placeholder
     await act(() => resolveText('A'));
-    assertLog(['A']);
+    assertLog([
+      'A',
+      ...(gate('alwaysThrottleRetries')
+        ? ['Suspend! [B]', 'Suspend! [B]']
+        : []),
+    ]);
     expect(container.textContent).toEqual('ALoading B...');
 
     // Resolve the second Suspense's promise resolves and switche back to the
@@ -271,7 +282,15 @@ describe('ReactSuspense', () => {
       root.render(<Foo />);
     });
 
-    assertLog(['Foo', 'Suspend! [A]', 'Loading...']);
+    assertLog([
+      'Foo',
+      'Suspend! [A]',
+      'Loading...',
+      // pre-warming
+      'Suspend! [A]',
+      'Suspend! [B]',
+      'Loading more...',
+    ]);
     expect(container.textContent).toEqual('Loading...');
 
     await resolveText('A');
@@ -316,7 +335,15 @@ describe('ReactSuspense', () => {
     // Render an empty shell
     const root = ReactDOMClient.createRoot(container);
     root.render(<Foo />);
-    await waitForAll(['Foo', 'Suspend! [A]', 'Loading...']);
+    await waitForAll([
+      'Foo',
+      'Suspend! [A]',
+      'Loading...',
+      // pre-warming
+      'Suspend! [A]',
+      'Suspend! [B]',
+      'Loading more...',
+    ]);
     expect(container.textContent).toEqual('Loading...');
 
     // Now resolve A
@@ -357,7 +384,15 @@ describe('ReactSuspense', () => {
     await act(() => {
       root.render(<Foo />);
     });
-    assertLog(['Foo', 'Suspend! [A]', 'Loading...']);
+    assertLog([
+      'Foo',
+      'Suspend! [A]',
+      'Loading...',
+      // pre-warming
+      'Suspend! [A]',
+      'Suspend! [B]',
+      'Loading more...',
+    ]);
     expect(container.textContent).toEqual('Loading...');
 
     await resolveText('A');
@@ -442,14 +477,24 @@ describe('ReactSuspense', () => {
     await act(() => {
       root.render(<App />);
     });
-    assertLog(['Suspend! [default]', 'Loading...']);
+    assertLog([
+      'Suspend! [default]',
+      'Loading...',
+      // pre-warming
+      'Suspend! [default]',
+    ]);
 
     await act(() => resolveText('default'));
     assertLog(['default']);
     expect(container.textContent).toEqual('default');
 
     await act(() => setValue('new value'));
-    assertLog(['Suspend! [new value]', 'Loading...']);
+    assertLog([
+      'Suspend! [new value]',
+      'Loading...',
+      // pre-warming
+      'Suspend! [new value]',
+    ]);
 
     await act(() => resolveText('new value'));
     assertLog(['new value']);
@@ -489,14 +534,24 @@ describe('ReactSuspense', () => {
     await act(() => {
       root.render(<App />);
     });
-    assertLog(['Suspend! [default]', 'Loading...']);
+    assertLog([
+      'Suspend! [default]',
+      'Loading...',
+      // pre-warming
+      'Suspend! [default]',
+    ]);
 
     await act(() => resolveText('default'));
     assertLog(['default']);
     expect(container.textContent).toEqual('default');
 
     await act(() => setValue('new value'));
-    assertLog(['Suspend! [new value]', 'Loading...']);
+    assertLog([
+      'Suspend! [new value]',
+      'Loading...',
+      // pre-warming
+      'Suspend! [new value]',
+    ]);
 
     await act(() => resolveText('new value'));
     assertLog(['new value']);
@@ -533,14 +588,24 @@ describe('ReactSuspense', () => {
         </App>,
       );
     });
-    assertLog(['Suspend! [default]', 'Loading...']);
+    assertLog([
+      'Suspend! [default]',
+      'Loading...',
+      // pre-warming
+      'Suspend! [default]',
+    ]);
 
     await act(() => resolveText('default'));
     assertLog(['default']);
     expect(container.textContent).toEqual('default');
 
     await act(() => setValue('new value'));
-    assertLog(['Suspend! [new value]', 'Loading...']);
+    assertLog([
+      'Suspend! [new value]',
+      'Loading...',
+      // pre-warming
+      'Suspend! [new value]',
+    ]);
 
     await act(() => resolveText('new value'));
     assertLog(['new value']);
@@ -577,14 +642,24 @@ describe('ReactSuspense', () => {
         </App>,
       );
     });
-    assertLog(['Suspend! [default]', 'Loading...']);
+    assertLog([
+      'Suspend! [default]',
+      'Loading...',
+      // pre-warming
+      'Suspend! [default]',
+    ]);
 
     await act(() => resolveText('default'));
     assertLog(['default']);
     expect(container.textContent).toEqual('default');
 
     await act(() => setValue('new value'));
-    assertLog(['Suspend! [new value]', 'Loading...']);
+    assertLog([
+      'Suspend! [new value]',
+      'Loading...',
+      // pre-warming
+      'Suspend! [new value]',
+    ]);
 
     await act(() => resolveText('new value'));
     assertLog(['new value']);
@@ -631,6 +706,9 @@ describe('ReactSuspense', () => {
       'Suspend! [Child 2]',
       'Loading...',
       'destroy layout',
+      // pre-warming
+      'Child 1',
+      'Suspend! [Child 2]',
     ]);
 
     await act(() => resolveText('Child 2'));
@@ -653,9 +731,21 @@ describe('ReactSuspense', () => {
       root.render(<App />);
     });
 
-    assertLog(['Suspend! [Child 1]', 'Loading...']);
+    assertLog([
+      'Suspend! [Child 1]',
+      'Loading...',
+      // pre-warming
+      'Suspend! [Child 1]',
+      'Suspend! [Child 2]',
+    ]);
     await resolveText('Child 1');
-    await waitForAll(['Child 1', 'Suspend! [Child 2]']);
+    await waitForAll([
+      'Child 1',
+      'Suspend! [Child 2]',
+      ...(gate('alwaysThrottleRetries')
+        ? []
+        : ['Child 1', 'Suspend! [Child 2]']),
+    ]);
 
     jest.advanceTimersByTime(6000);
 

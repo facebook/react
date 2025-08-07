@@ -13,6 +13,8 @@ import {
   eachTerminalOperand,
 } from '../HIR/visitors';
 
+const DEBUG = false;
+
 /*
  * Pass to eliminate redundant phi nodes:
  * - all operands are the same identifier, ie `x2 = phi(x1, x1, x1)`.
@@ -68,18 +70,13 @@ export function eliminateRedundantPhi(
       // Find any redundant phis
       phis: for (const phi of block.phis) {
         // Remap phis in case operands are from eliminated phis
-        phi.operands = new Map(
-          Array.from(phi.operands).map(([block, id]) => [
-            block,
-            rewrites.get(id) ?? id,
-          ]),
-        );
+        phi.operands.forEach((place, _) => rewritePlace(place, rewrites));
         // Find if the phi can be eliminated
         let same: Identifier | null = null;
         for (const [_, operand] of phi.operands) {
           if (
-            (same !== null && operand.id === same.id) ||
-            operand.id === phi.id.id
+            (same !== null && operand.identifier.id === same.id) ||
+            operand.identifier.id === phi.place.identifier.id
           ) {
             /*
              * This operand is the same as the phi or is the same as the
@@ -94,7 +91,7 @@ export function eliminateRedundantPhi(
             continue phis;
           } else {
             // First non-phi operand
-            same = operand;
+            same = operand.identifier;
           }
         }
         CompilerError.invariant(same !== null, {
@@ -103,7 +100,7 @@ export function eliminateRedundantPhi(
           loc: null,
           suggestions: null,
         });
-        rewrites.set(phi.id, same);
+        rewrites.set(phi.place.identifier, same);
         block.phis.delete(phi);
       }
 
@@ -146,6 +143,23 @@ export function eliminateRedundantPhi(
      * have already propagated forwards since we visit in reverse postorder.
      */
   } while (rewrites.size > size && hasBackEdge);
+
+  if (DEBUG) {
+    for (const [, block] of ir.blocks) {
+      for (const phi of block.phis) {
+        CompilerError.invariant(!rewrites.has(phi.place.identifier), {
+          reason: '[EliminateRedundantPhis]: rewrite not complete',
+          loc: phi.place.loc,
+        });
+        for (const [, operand] of phi.operands) {
+          CompilerError.invariant(!rewrites.has(operand.identifier), {
+            reason: '[EliminateRedundantPhis]: rewrite not complete',
+            loc: phi.place.loc,
+          });
+        }
+      }
+    }
+  }
 }
 
 function rewritePlace(

@@ -1,31 +1,5 @@
 /* global chrome */
 
-import nullthrows from 'nullthrows';
-
-// We run scripts on the page via the service worker (background/index.js) for
-// Manifest V3 extensions (Chrome & Edge).
-// We need to inject this code for Firefox only because it does not support ExecutionWorld.MAIN
-// https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/scripting/ExecutionWorld
-// In this content script we have access to DOM, but don't have access to the webpage's window,
-// so we inject this inline script tag into the webpage (allowed in Manifest V2).
-function injectScriptSync(src) {
-  let code = '';
-  const request = new XMLHttpRequest();
-  request.addEventListener('load', function () {
-    code = this.responseText;
-  });
-  request.open('GET', src, false);
-  request.send();
-
-  const script = document.createElement('script');
-  script.textContent = code;
-
-  // This script runs before the <head> element is created,
-  // so we add the script to <html> instead.
-  nullthrows(document.documentElement).appendChild(script);
-  nullthrows(script.parentNode).removeChild(script);
-}
-
 let lastSentDevToolsHookMessage;
 
 // We want to detect when a renderer attaches, and notify the "background page"
@@ -60,17 +34,3 @@ window.addEventListener('pageshow', function ({target}) {
 
   chrome.runtime.sendMessage(lastSentDevToolsHookMessage);
 });
-
-if (__IS_FIREFOX__) {
-  injectScriptSync(chrome.runtime.getURL('build/renderer.js'));
-
-  // Inject a __REACT_DEVTOOLS_GLOBAL_HOOK__ global for React to interact with.
-  // Only do this for HTML documents though, to avoid e.g. breaking syntax highlighting for XML docs.
-  switch (document.contentType) {
-    case 'text/html':
-    case 'application/xhtml+xml': {
-      injectScriptSync(chrome.runtime.getURL('build/installHook.js'));
-      break;
-    }
-  }
-}

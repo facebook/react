@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use no forget';
-
 import * as React from 'react';
 
 const {useRef, useEffect, isValidElement} = React;
@@ -19,30 +17,27 @@ const ReactSecretInternals =
 type MemoCache = Array<number | typeof $empty>;
 
 const $empty = Symbol.for('react.memo_cache_sentinel');
-/**
- * DANGER: this hook is NEVER meant to be called directly!
- **/
-export function c(size: number) {
-  return React.useState(() => {
-    const $ = new Array(size);
-    for (let ii = 0; ii < size; ii++) {
-      $[ii] = $empty;
-    }
-    // This symbol is added to tell the react devtools that this array is from
-    // useMemoCache.
-    // @ts-ignore
-    $[$empty] = true;
-    return $;
-  })[0];
-}
 
-export function $read(memoCache: MemoCache, index: number) {
-  const value = memoCache[index];
-  if (value === $empty) {
-    throw new Error('useMemoCache: read before write');
-  }
-  return value;
-}
+// Re-export React.c if present, otherwise fallback to the userspace polyfill for versions of React
+// < 19.
+export const c =
+  // @ts-expect-error
+  typeof React.__COMPILER_RUNTIME?.c === 'function'
+    ? // @ts-expect-error
+      React.__COMPILER_RUNTIME.c
+    : function c(size: number) {
+        return React.useMemo<Array<unknown>>(() => {
+          const $ = new Array(size);
+          for (let ii = 0; ii < size; ii++) {
+            $[ii] = $empty;
+          }
+          // This symbol is added to tell the react devtools that this array is from
+          // useMemoCache.
+          // @ts-ignore
+          $[$empty] = true;
+          return $;
+        }, []);
+      };
 
 const LazyGuardDispatcher: {[key: string]: (...args: Array<any>) => any} = {};
 [
@@ -70,7 +65,7 @@ const LazyGuardDispatcher: {[key: string]: (...args: Array<any>) => any} = {};
 ].forEach(name => {
   LazyGuardDispatcher[name] = () => {
     throw new Error(
-      `[React] Unexpected React hook call (${name}) from a React Forget compiled function. ` +
+      `[React] Unexpected React hook call (${name}) from a React compiled function. ` +
         "Check that all hooks are called directly and named according to convention ('use[A-Z]') ",
     );
   };
@@ -82,7 +77,7 @@ let originalDispatcher: unknown = null;
 LazyGuardDispatcher['useMemoCache'] = (count: number) => {
   if (originalDispatcher == null) {
     throw new Error(
-      'React Forget internal invariant violation: unexpected null dispatcher',
+      'React Compiler internal invariant violation: unexpected null dispatcher',
     );
   } else {
     return (originalDispatcher as any).useMemoCache(count);
@@ -106,12 +101,12 @@ const guardFrames: Array<unknown> = [];
 /**
  * When `enableEmitHookGuards` is set, this does runtime validation
  * of the no-conditional-hook-calls rule.
- * As Forget needs to statically understand which calls to move out of
- * conditional branches (i.e. Forget cannot memoize the results of hook
+ * As React Compiler needs to statically understand which calls to move out of
+ * conditional branches (i.e. React Compiler cannot memoize the results of hook
  * calls), its understanding of "the rules of React" are more restrictive.
  * This validation throws on unsound inputs at runtime.
  *
- * Components should only be invoked through React as Forget could memoize
+ * Components should only be invoked through React as React Compiler could memoize
  * the call to AnotherComponent, introducing conditional hook calls in its
  * compiled output.
  * ```js
@@ -151,7 +146,7 @@ export function $dispatcherGuard(kind: GuardKind) {
 
     if (curr === LazyGuardDispatcher) {
       throw new Error(
-        `[React] Unexpected call to custom hook or component from a React Forget compiled function. ` +
+        `[React] Unexpected call to custom hook or component from a React compiled function. ` +
           "Check that (1) all hooks are called directly and named according to convention ('use[A-Z]') " +
           'and (2) components are returned as JSX instead of being directly invoked.',
       );
@@ -163,7 +158,7 @@ export function $dispatcherGuard(kind: GuardKind) {
 
     if (lastFrame == null) {
       throw new Error(
-        'React Forget internal error: unexpected null in guard stack',
+        'React Compiler internal error: unexpected null in guard stack',
       );
     }
     if (guardFrames.length === 0) {
@@ -179,12 +174,12 @@ export function $dispatcherGuard(kind: GuardKind) {
     const lastFrame = guardFrames.pop();
     if (lastFrame == null) {
       throw new Error(
-        'React Forget internal error: unexpected null in guard stack',
+        'React Compiler internal error: unexpected null in guard stack',
       );
     }
     setCurrent(lastFrame);
   } else {
-    throw new Error('Forget internal error: unreachable block' + kind);
+    throw new Error('React Compiler internal error: unreachable block' + kind);
   }
 }
 

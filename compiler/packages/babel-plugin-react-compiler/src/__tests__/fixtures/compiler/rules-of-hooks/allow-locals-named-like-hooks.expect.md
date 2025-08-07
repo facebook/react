@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import {makeObject_Primitives} from 'shared-runtime';
+import {makeObject_Primitives, Stringify} from 'shared-runtime';
 
 function Component(props) {
   let useFeature = makeObject_Primitives();
@@ -32,7 +32,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime";
-import { makeObject_Primitives } from "shared-runtime";
+import { makeObject_Primitives, Stringify } from "shared-runtime";
 
 function Component(props) {
   const $ = _c(2);
@@ -75,4 +75,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: exception) Stringify is not defined
+(kind: ok) <div>{"val":{"a":0,"b":"value1","c":true},"children":[2,"[[ cyclic ref *1 ]]",null]}</div>

@@ -12,6 +12,7 @@ export type ImportManifestEntry = {
   // chunks is a double indexed array of chunkId / chunkFilename pairs
   chunks: Array<string>,
   name: string,
+  async?: boolean,
 };
 
 // This is the parsed shape of the wire format which is why it is

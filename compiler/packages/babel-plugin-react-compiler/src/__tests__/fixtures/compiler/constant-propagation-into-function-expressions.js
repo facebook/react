@@ -1,7 +1,15 @@
+import {Stringify, identity} from 'shared-runtime';
+
 function Component(props) {
   const x = 42;
   const onEvent = () => {
-    console.log(x);
+    return identity(x);
   };
-  return <Foo onEvent={onEvent} />;
+  return <Stringify onEvent={onEvent} shouldInvokeFns={true} />;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{}],
+  sequentialRenders: [{}, {}],
+};

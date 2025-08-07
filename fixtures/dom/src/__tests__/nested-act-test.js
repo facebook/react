@@ -14,8 +14,6 @@ let TestAct;
 
 global.__DEV__ = process.env.NODE_ENV !== 'production';
 
-expect.extend(require('../toWarnDev'));
-
 describe('unmocked scheduler', () => {
   beforeEach(() => {
     jest.resetModules();

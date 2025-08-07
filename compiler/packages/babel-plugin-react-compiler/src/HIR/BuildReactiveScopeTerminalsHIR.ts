@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 import {CompilerError} from '../CompilerError';
 import {getScopes, recursivelyTraverseItems} from './AssertValidBlockNesting';
 import {Environment} from './Environment';
@@ -14,6 +21,7 @@ import {
   ScopeId,
 } from './HIR';
 import {
+  fixScopeAndIdentifierRanges,
   markInstructionIds,
   markPredecessors,
   reversePostorderBlocks,
@@ -176,20 +184,7 @@ export function buildReactiveScopeTerminalsHIR(fn: HIRFunction): void {
    * Step 5:
    * Fix scope and identifier ranges to account for renumbered instructions
    */
-  for (const [, block] of fn.body.blocks) {
-    const terminal = block.terminal;
-    if (terminal.kind === 'scope' || terminal.kind === 'pruned-scope') {
-      /*
-       * Scope ranges should always align to start at the 'scope' terminal
-       * and end at the first instruction of the fallthrough block
-       */
-      const fallthroughBlock = fn.body.blocks.get(terminal.fallthrough)!;
-      const firstId =
-        fallthroughBlock.instructions[0]?.id ?? fallthroughBlock.terminal.id;
-      terminal.scope.range.start = terminal.id;
-      terminal.scope.range.end = firstId;
-    }
-  }
+  fixScopeAndIdentifierRanges(fn.body);
 }
 
 type TerminalRewriteInfo =

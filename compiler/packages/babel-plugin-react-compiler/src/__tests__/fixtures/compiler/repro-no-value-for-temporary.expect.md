@@ -21,13 +21,13 @@ function Component(listItem, thread) {
   let t0;
   let t1;
   let t2;
-  if ($[0] !== thread.threadType || $[1] !== listItem) {
+  if ($[0] !== listItem || $[1] !== thread.threadType) {
     const isFoo = isFooThread(thread.threadType);
     t1 = useBar;
     t2 = listItem;
     t0 = getBadgeText(listItem, isFoo);
-    $[0] = thread.threadType;
-    $[1] = listItem;
+    $[0] = listItem;
+    $[1] = thread.threadType;
     $[2] = t0;
     $[3] = t1;
     $[4] = t2;

@@ -13,6 +13,7 @@ describe('forwardRef', () => {
   let React;
   let ReactNoop;
   let waitForAll;
+  let assertConsoleErrorDev;
 
   beforeEach(() => {
     jest.resetModules();
@@ -21,6 +22,7 @@ describe('forwardRef', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
   });
 
   it('should update refs when switching between children', async () => {
@@ -74,65 +76,32 @@ describe('forwardRef', () => {
     expect(ref.current).toBe(null);
   });
 
-  // @gate !disableDefaultPropsExceptForClasses
-  it('should support defaultProps', async () => {
-    function FunctionComponent({forwardedRef, optional, required}) {
-      return (
-        <div ref={forwardedRef}>
-          {optional}
-          {required}
-        </div>
-      );
-    }
-
-    const RefForwardingComponent = React.forwardRef(
-      function NamedFunction(props, ref) {
-        return <FunctionComponent {...props} forwardedRef={ref} />;
-      },
-    );
-    RefForwardingComponent.defaultProps = {
-      optional: 'default',
-    };
-
-    const ref = React.createRef();
-
-    ReactNoop.render(
-      <RefForwardingComponent ref={ref} optional="foo" required="bar" />,
-    );
-    await waitForAll([]);
-    expect(ref.current.children).toEqual([
-      {text: 'foo', hidden: false},
-      {text: 'bar', hidden: false},
-    ]);
-
-    ReactNoop.render(<RefForwardingComponent ref={ref} required="foo" />);
-    await waitForAll([]);
-    expect(ref.current.children).toEqual([
-      {text: 'default', hidden: false},
-      {text: 'foo', hidden: false},
-    ]);
-  });
-
   it('should warn if not provided a callback during creation', () => {
-    expect(() => React.forwardRef(undefined)).toErrorDev(
-      'forwardRef requires a render function but was given undefined.',
+    React.forwardRef(undefined);
+    assertConsoleErrorDev(
+      ['forwardRef requires a render function but was given undefined.'],
       {withoutStack: true},
     );
-    expect(() => React.forwardRef(null)).toErrorDev(
-      'forwardRef requires a render function but was given null.',
+
+    React.forwardRef(null);
+    assertConsoleErrorDev(
+      ['forwardRef requires a render function but was given null.'],
       {
         withoutStack: true,
       },
     );
-    expect(() => React.forwardRef('foo')).toErrorDev(
-      'forwardRef requires a render function but was given string.',
+
+    React.forwardRef('foo');
+    assertConsoleErrorDev(
+      ['forwardRef requires a render function but was given string.'],
       {withoutStack: true},
     );
   });
 
   it('should warn if no render function is provided', () => {
-    expect(React.forwardRef).toErrorDev(
-      'forwardRef requires a render function but was given undefined.',
+    React.forwardRef();
+    assertConsoleErrorDev(
+      ['forwardRef requires a render function but was given undefined.'],
       {withoutStack: true},
     );
   });
@@ -143,9 +112,12 @@ describe('forwardRef', () => {
     }
     renderWithDefaultProps.defaultProps = {};
 
-    expect(() => React.forwardRef(renderWithDefaultProps)).toErrorDev(
-      'forwardRef render functions do not support defaultProps. ' +
-        'Did you accidentally pass a React component?',
+    React.forwardRef(renderWithDefaultProps);
+    assertConsoleErrorDev(
+      [
+        'forwardRef render functions do not support defaultProps. ' +
+          'Did you accidentally pass a React component?',
+      ],
       {withoutStack: true},
     );
   });
@@ -159,9 +131,12 @@ describe('forwardRef', () => {
   it('should warn if the render function provided does not use the forwarded ref parameter', () => {
     const arityOfOne = props => <div {...props} />;
 
-    expect(() => React.forwardRef(arityOfOne)).toErrorDev(
-      'forwardRef render functions accept exactly two parameters: props and ref. ' +
-        'Did you forget to use the ref parameter?',
+    React.forwardRef(arityOfOne);
+    assertConsoleErrorDev(
+      [
+        'forwardRef render functions accept exactly two parameters: props and ref. ' +
+          'Did you forget to use the ref parameter?',
+      ],
       {withoutStack: true},
     );
   });
@@ -174,9 +149,12 @@ describe('forwardRef', () => {
   it('should warn if the render function provided expects to use more than two parameters', () => {
     const arityOfThree = (props, ref, x) => <div {...props} ref={ref} x={x} />;
 
-    expect(() => React.forwardRef(arityOfThree)).toErrorDev(
-      'forwardRef render functions accept exactly two parameters: props and ref. ' +
-        'Any additional parameter will be undefined.',
+    React.forwardRef(arityOfThree);
+    assertConsoleErrorDev(
+      [
+        'forwardRef render functions accept exactly two parameters: props and ref. ' +
+          'Any additional parameter will be undefined.',
+      ],
       {withoutStack: true},
     );
   });
@@ -190,15 +168,14 @@ describe('forwardRef', () => {
         <RefForwardingComponent />
       </p>,
     );
-    await expect(async () => {
-      await waitForAll([]);
-    }).toErrorDev(
+    await waitForAll([]);
+    assertConsoleErrorDev([
       'Each child in a list should have a unique "key" prop.' +
         '\n\nCheck the top-level render call using <ForwardRef>. It was passed a child from ForwardRef. ' +
         'See https://react.dev/link/warning-keys for more information.\n' +
         '    in span (at **)\n' +
-        '    in ',
-    );
+        '    in **/forwardRef-test.js:**:** (at **)',
+    ]);
   });
 
   it('should use the inner function name for the stack', async () => {
@@ -210,16 +187,15 @@ describe('forwardRef', () => {
         <RefForwardingComponent />
       </p>,
     );
-    await expect(async () => {
-      await waitForAll([]);
-    }).toErrorDev(
+
+    await waitForAll([]);
+    assertConsoleErrorDev([
       'Each child in a list should have a unique "key" prop.' +
         '\n\nCheck the top-level render call using <ForwardRef(Inner)>. It was passed a child from ForwardRef(Inner). ' +
         'See https://react.dev/link/warning-keys for more information.\n' +
         '    in span (at **)\n' +
-        '    in Inner (at **)' +
-        (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
-    );
+        '    in Inner (at **)',
+    ]);
   });
 
   it('should use the inner name in the stack', async () => {
@@ -233,16 +209,14 @@ describe('forwardRef', () => {
         <RefForwardingComponent />
       </p>,
     );
-    await expect(async () => {
-      await waitForAll([]);
-    }).toErrorDev(
+    await waitForAll([]);
+    assertConsoleErrorDev([
       'Each child in a list should have a unique "key" prop.' +
         '\n\nCheck the top-level render call using <ForwardRef(Inner)>. It was passed a child from ForwardRef(Inner). ' +
         'See https://react.dev/link/warning-keys for more information.\n' +
         '    in span (at **)\n' +
-        '    in Inner (at **)' +
-        (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
-    );
+        '    in Inner (at **)',
+    ]);
   });
 
   it('can use the outer displayName in the stack', async () => {
@@ -255,16 +229,14 @@ describe('forwardRef', () => {
         <RefForwardingComponent />
       </p>,
     );
-    await expect(async () => {
-      await waitForAll([]);
-    }).toErrorDev(
+    await waitForAll([]);
+    assertConsoleErrorDev([
       'Each child in a list should have a unique "key" prop.' +
         '\n\nCheck the top-level render call using <Outer>. It was passed a child from Outer. ' +
         'See https://react.dev/link/warning-keys for more information.\n' +
         '    in span (at **)\n' +
-        '    in Outer (at **)' +
-        (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
-    );
+        '    in Outer (at **)',
+    ]);
   });
 
   it('should prefer the inner name to the outer displayName in the stack', async () => {
@@ -279,16 +251,14 @@ describe('forwardRef', () => {
         <RefForwardingComponent />
       </p>,
     );
-    await expect(async () => {
-      await waitForAll([]);
-    }).toErrorDev(
+    await waitForAll([]);
+    assertConsoleErrorDev([
       'Each child in a list should have a unique "key" prop.' +
         '\n\nCheck the top-level render call using <Outer>. It was passed a child from Outer. ' +
         'See https://react.dev/link/warning-keys for more information.\n' +
         '    in span (at **)\n' +
-        '    in Inner (at **)' +
-        (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
-    );
+        '    in Inner (at **)',
+    ]);
   });
 
   it('should not bailout if forwardRef is not wrapped in memo', async () => {
@@ -419,13 +389,12 @@ describe('forwardRef', () => {
   });
 
   it('warns on forwardRef(memo(...))', () => {
-    expect(() => {
-      React.forwardRef(
-        React.memo((props, ref) => {
-          return null;
-        }),
-      );
-    }).toErrorDev(
+    React.forwardRef(
+      React.memo((props, ref) => {
+        return null;
+      }),
+    );
+    assertConsoleErrorDev(
       [
         'forwardRef requires a render function but received a `memo` ' +
           'component. Instead of forwardRef(memo(...)), use ' +

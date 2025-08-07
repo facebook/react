@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enablePreserveExistingMemoizationGuarantees
+// @enablePreserveExistingMemoizationGuarantees @validateRefAccessDuringRender
 import {useCallback, useRef} from 'react';
 
 function Component(props) {
@@ -31,21 +31,20 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
-   5 |   const ref = useRef({inner: null});
-   6 |
->  7 |   const onChange = useCallback(event => {
-     |                                ^^^^^^^^^^
->  8 |     // The ref should still be mutable here even though function deps are frozen in
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->  9 |     // @enablePreserveExistingMemoizationGuarantees mode
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 10 |     ref.current.inner = event.target.value;
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 11 |   });
-     | ^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value may be mutated later, which could cause the value to change unexpectedly (7:11)
+Found 1 error:
+
+Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef)
+
+error.todo-useCallback-set-ref-nested-property-ref-modified-later-preserve-memoization.ts:14:2
   12 |
   13 |   // The ref is modified later, extending its range and preventing memoization of onChange
-  14 |   ref.current.inner = null;
+> 14 |   ref.current.inner = null;
+     |   ^^^^^^^^^^^ Cannot update ref during render
+  15 |
+  16 |   return <input onChange={onChange} />;
+  17 | }
 ```
           
       

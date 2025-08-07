@@ -16,7 +16,7 @@ import {
   clearErrors,
   createLogAssertion,
 } from './consoleMock';
-export {act} from './internalAct';
+export {act, serverAct} from './internalAct';
 const {assertConsoleLogsCleared} = require('internal-test-utils/consoleMock');
 
 import {thrownErrors, actingUpdatesScopeDepth} from './internalAct';

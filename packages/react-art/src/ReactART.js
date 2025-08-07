@@ -13,13 +13,21 @@ import {
   updateContainerSync,
   injectIntoDevTools,
   flushSyncWork,
+  defaultOnUncaughtError,
+  defaultOnCaughtError,
+  defaultOnRecoverableError,
 } from 'react-reconciler/src/ReactFiberReconciler';
+
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
 import FastNoSideEffects from 'art/modes/fast-noSideEffects';
 import {disableLegacyMode} from 'shared/ReactFeatureFlags';
 
 import {TYPES, childrenAsString} from './ReactARTInternals';
+
+function defaultOnDefaultTransitionIndicator() {
+  // Noop
+}
 
 Mode.setCurrent(
   // Change to 'art/modes/dom' for easier debugging via SVG
@@ -75,6 +83,11 @@ class Surface extends React.Component {
       false,
       false,
       '',
+      defaultOnUncaughtError,
+      defaultOnCaughtError,
+      defaultOnRecoverableError,
+      defaultOnDefaultTransitionIndicator,
+      null,
     );
     // We synchronously flush updates coming from above so that they commit together
     // and so that refs resolve before the parent life cycles.
@@ -155,12 +168,7 @@ class Text extends React.Component {
   }
 }
 
-injectIntoDevTools({
-  findFiberByHostInstance: () => null,
-  bundleType: __DEV__ ? 1 : 0,
-  version: ReactVersion,
-  rendererPackageName: 'react-art',
-});
+injectIntoDevTools();
 
 /** API */
 
@@ -169,3 +177,5 @@ export const Group = TYPES.GROUP;
 export const Shape = TYPES.SHAPE;
 export const Path = Mode.Path;
 export {LinearGradient, Pattern, RadialGradient, Surface, Text, Transform};
+
+export {ReactVersion as version};

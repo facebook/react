@@ -35,7 +35,7 @@ export function setReactSelectionFromBrowser(bridge) {
         }
 
         // Remember to sync the selection next time we show Components tab.
-        bridge.send('syncSelectionFromNativeElementsPanel');
+        bridge.send('syncSelectionFromBuiltinElementsPanel');
       }
     },
   );

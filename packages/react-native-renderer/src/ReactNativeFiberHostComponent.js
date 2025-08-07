@@ -7,15 +7,13 @@
  * @flow
  */
 
-import type {ElementRef} from 'react';
+import type {ViewConfig} from './ReactNativeTypes';
 import type {
-  HostComponent,
+  LegacyPublicInstance,
+  MeasureOnSuccessCallback,
   MeasureInWindowOnSuccessCallback,
   MeasureLayoutOnSuccessCallback,
-  MeasureOnSuccessCallback,
-  INativeMethods,
-  ViewConfig,
-} from './ReactNativeTypes';
+} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import type {Instance} from './ReactFiberConfigNative';
 
 // Modules provided by RN:
@@ -30,7 +28,7 @@ import {
   warnForStyleProps,
 } from './NativeMethodsMixinUtils';
 
-class ReactNativeFiberHostComponent implements INativeMethods {
+class ReactNativeFiberHostComponent implements LegacyPublicInstance {
   _children: Array<Instance | number>;
   _nativeTag: number;
   _internalFiberInstanceHandleDEV: Object;
@@ -72,7 +70,7 @@ class ReactNativeFiberHostComponent implements INativeMethods {
   }
 
   measureLayout(
-    relativeToNativeNode: number | ElementRef<HostComponent<mixed>>,
+    relativeToNativeNode: number | LegacyPublicInstance,
     onSuccess: MeasureLayoutOnSuccessCallback,
     onFail?: () => void /* currently unused */,
   ) {

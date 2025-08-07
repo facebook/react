@@ -391,18 +391,22 @@ const __printTree = (commitTree: CommitTree) => {
       const id = queue.shift();
       const depth = queue.shift();
 
+      // $FlowFixMe[incompatible-call]
       const node = nodes.get(id);
       if (node == null) {
+        // $FlowFixMe[incompatible-type]
         throw Error(`Could not find node with id "${id}" in commit tree`);
       }
 
       console.log(
+        // $FlowFixMe[incompatible-call]
         `${'•'.repeat(depth)}${node.id}:${node.displayName || ''} ${
           node.key ? `key:"${node.key}"` : ''
         } (${node.treeBaseDuration})`,
       );
 
       node.children.forEach(childID => {
+        // $FlowFixMe[unsafe-addition]
         queue.push(childID, depth + 1);
       });
     }

@@ -8,6 +8,7 @@
  */
 
 import type Agent from 'react-devtools-shared/src/backend/agent';
+import type {HostInstance} from '../../types';
 
 import {isReactNativeEnvironment} from 'react-devtools-shared/src/backend/utils';
 
@@ -37,12 +38,15 @@ export function hideOverlay(agent: Agent): void {
     : hideOverlayWeb();
 }
 
-function showOverlayNative(elements: Array<HTMLElement>, agent: Agent): void {
+function showOverlayNative(
+  elements: $ReadOnlyArray<HostInstance>,
+  agent: Agent,
+): void {
   agent.emit('showNativeHighlight', elements);
 }
 
 function showOverlayWeb(
-  elements: Array<HTMLElement>,
+  elements: $ReadOnlyArray<HTMLElement>,
   componentName: string | null,
   agent: Agent,
   hideAfterTimeout: boolean,
@@ -63,12 +67,17 @@ function showOverlayWeb(
 }
 
 export function showOverlay(
-  elements: Array<HTMLElement>,
+  elements: $ReadOnlyArray<HostInstance>,
   componentName: string | null,
   agent: Agent,
   hideAfterTimeout: boolean,
 ): void {
   return isReactNativeEnvironment()
     ? showOverlayNative(elements, agent)
-    : showOverlayWeb(elements, componentName, agent, hideAfterTimeout);
+    : showOverlayWeb(
+        (elements: $ReadOnlyArray<any>),
+        componentName,
+        agent,
+        hideAfterTimeout,
+      );
 }

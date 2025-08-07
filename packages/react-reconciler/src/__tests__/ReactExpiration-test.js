@@ -652,7 +652,14 @@ describe('ReactExpiration', () => {
       React.startTransition(() => {
         root.render(<App step={1} />);
       });
-      await waitForAll(['Suspend! [A1]', 'Loading...']);
+      await waitForAll([
+        'Suspend! [A1]',
+        // pre-warming
+        'B',
+        'C',
+        // end pre-warming
+        'Loading...',
+      ]);
 
       // Lots of time elapses before the promise resolves
       Scheduler.unstable_advanceTime(10000);
@@ -749,10 +756,16 @@ describe('ReactExpiration', () => {
 
       // The update finishes without yielding. But it does not flush the effect.
       await waitFor(['B1'], {
-        additionalLogsAfterAttemptingToYield: ['C1'],
+        additionalLogsAfterAttemptingToYield: gate(
+          flags => flags.enableYieldingBeforePassive,
+        )
+          ? ['C1', 'Effect: 1']
+          : ['C1'],
       });
     });
-    // The effect flushes after paint.
-    assertLog(['Effect: 1']);
+    if (!gate(flags => flags.enableYieldingBeforePassive)) {
+      // The effect flushes after paint.
+      assertLog(['Effect: 1']);
+    }
   });
 });

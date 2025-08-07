@@ -5,10 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import {ProgramContext} from '..';
 import {CompilerError} from '../CompilerError';
 import {
+  DeclarationId,
   Identifier,
-  IdentifierId,
   IdentifierName,
   InstructionId,
   Place,
@@ -47,7 +48,7 @@ import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
  */
 export function renameVariables(fn: ReactiveFunction): Set<string> {
   const globals = collectReferencedGlobals(fn);
-  const scopes = new Scopes(globals);
+  const scopes = new Scopes(globals, fn.env.programContext);
   renameVariablesImpl(fn, new Visitor(), scopes);
   return new Set([...scopes.names, ...globals]);
 }
@@ -121,13 +122,15 @@ class Visitor extends ReactiveFunctionVisitor<Scopes> {
 }
 
 class Scopes {
-  #seen: Map<IdentifierId, IdentifierName> = new Map();
-  #stack: Array<Map<string, IdentifierId>> = [new Map()];
+  #seen: Map<DeclarationId, IdentifierName> = new Map();
+  #stack: Array<Map<string, DeclarationId>> = [new Map()];
   #globals: Set<string>;
+  #programContext: ProgramContext;
   names: Set<ValidIdentifierName> = new Set();
 
-  constructor(globals: Set<string>) {
+  constructor(globals: Set<string>, programContext: ProgramContext) {
     this.#globals = globals;
+    this.#programContext = programContext;
   }
 
   visit(identifier: Identifier): void {
@@ -135,7 +138,7 @@ class Scopes {
     if (originalName === null) {
       return;
     }
-    const mappedName = this.#seen.get(identifier.id);
+    const mappedName = this.#seen.get(identifier.declarationId);
     if (mappedName !== undefined) {
       identifier.name = mappedName;
       return;
@@ -156,14 +159,15 @@ class Scopes {
         name = `${originalName.value}$${id++}`;
       }
     }
+    this.#programContext.addNewReference(name);
     const identifierName = makeIdentifierName(name);
     identifier.name = identifierName;
-    this.#seen.set(identifier.id, identifierName);
-    this.#stack.at(-1)!.set(identifierName.value, identifier.id);
+    this.#seen.set(identifier.declarationId, identifierName);
+    this.#stack.at(-1)!.set(identifierName.value, identifier.declarationId);
     this.names.add(identifierName.value);
   }
 
-  #lookup(name: string): IdentifierId | null {
+  #lookup(name: string): DeclarationId | null {
     for (let i = this.#stack.length - 1; i >= 0; i--) {
       const scope = this.#stack[i]!;
       const entry = scope.get(name);

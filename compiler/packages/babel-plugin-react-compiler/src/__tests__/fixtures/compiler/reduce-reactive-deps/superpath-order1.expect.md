@@ -48,14 +48,14 @@ function useConditionalSuperpath1(t0) {
   const $ = _c(3);
   const { props, cond } = t0;
   let x;
-  if ($[0] !== props.a || $[1] !== cond) {
+  if ($[0] !== cond || $[1] !== props.a) {
     x = {};
     x.a = props.a;
     if (identity(cond)) {
       x.b = props.a.b;
     }
-    $[0] = props.a;
-    $[1] = cond;
+    $[0] = cond;
+    $[1] = props.a;
     $[2] = x;
   } else {
     x = $[2];

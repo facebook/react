@@ -2,7 +2,9 @@
 ## Input
 
 ```javascript
-function component(a, b) {
+import {mutate} from 'shared-runtime';
+
+function Component({a, b}) {
   let z = {a};
   (function () {
     mutate(z);
@@ -17,14 +19,28 @@ function component(a, b) {
   return y;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{a: 2, b: 3}],
+  sequentialRenders: [
+    {a: 2, b: 3},
+    {a: 2, b: 3},
+    {a: 2, b: 4},
+    {a: 3, b: 4},
+  ],
+};
+
 ```
 
 ## Code
 
 ```javascript
 import { c as _c } from "react/compiler-runtime";
-function component(a, b) {
+import { mutate } from "shared-runtime";
+
+function Component(t0) {
   const $ = _c(7);
+  const { a, b } = t0;
   let z;
   if ($[0] !== a) {
     z = { a };
@@ -37,27 +53,43 @@ function component(a, b) {
   }
 
   let y = z;
-  let t0;
-  if ($[2] !== b) {
-    t0 = { b };
-    $[2] = b;
-    $[3] = t0;
-  } else {
-    t0 = $[3];
-  }
-  const z_0 = t0;
   let t1;
+  if ($[2] !== b) {
+    t1 = { b };
+    $[2] = b;
+    $[3] = t1;
+  } else {
+    t1 = $[3];
+  }
+  const z_0 = t1;
+  let t2;
   if ($[4] !== y || $[5] !== z_0) {
-    t1 = { y, z: z_0 };
+    t2 = { y, z: z_0 };
     $[4] = y;
     $[5] = z_0;
-    $[6] = t1;
+    $[6] = t2;
   } else {
-    t1 = $[6];
+    t2 = $[6];
   }
-  y = t1;
+  y = t2;
   return y;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ a: 2, b: 3 }],
+  sequentialRenders: [
+    { a: 2, b: 3 },
+    { a: 2, b: 3 },
+    { a: 2, b: 4 },
+    { a: 3, b: 4 },
+  ],
+};
+
 ```
       
+### Eval output
+(kind: ok) {"y":{"a":2,"wat0":"joe"},"z":{"b":3}}
+{"y":{"a":2,"wat0":"joe"},"z":{"b":3}}
+{"y":{"a":2,"wat0":"joe"},"z":{"b":4}}
+{"y":{"a":3,"wat0":"joe"},"z":{"b":4}}

@@ -12,7 +12,7 @@
 
 import type {ReactNativeType} from './ReactNativeTypes';
 
-let ReactNative;
+let ReactNative: ReactNativeType;
 
 if (__DEV__) {
   ReactNative = require('../implementations/ReactNativeRenderer-dev');
@@ -20,4 +20,4 @@ if (__DEV__) {
   ReactNative = require('../implementations/ReactNativeRenderer-prod');
 }
 
-module.exports = (ReactNative: ReactNativeType);
+export default ReactNative;

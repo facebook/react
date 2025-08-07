@@ -26,6 +26,7 @@ import {
   eachTerminalOperand,
 } from '../HIR/visitors';
 import {assertExhaustive} from '../Utils/utils';
+import {Result} from '../Utils/Result';
 
 /**
  * Represents the possible kinds of value which may be stored at a given Place during
@@ -87,7 +88,9 @@ function joinKinds(a: Kind, b: Kind): Kind {
  *   may not appear as the callee of a conditional call.
  *   See the note for Kind.PotentialHook for sources of potential hooks
  */
-export function validateHooksUsage(fn: HIRFunction): void {
+export function validateHooksUsage(
+  fn: HIRFunction,
+): Result<void, CompilerError> {
   const unconditionalBlocks = computeUnconditionalBlocks(fn);
 
   const errors = new CompilerError();
@@ -198,11 +201,12 @@ export function validateHooksUsage(fn: HIRFunction): void {
   for (const [, block] of fn.body.blocks) {
     for (const phi of block.phis) {
       let kind: Kind =
-        phi.id.name !== null && isHookName(phi.id.name.value)
+        phi.place.identifier.name !== null &&
+        isHookName(phi.place.identifier.name.value)
           ? Kind.PotentialHook
           : Kind.Local;
       for (const [, operand] of phi.operands) {
-        const operandKind = valueKinds.get(operand.id);
+        const operandKind = valueKinds.get(operand.identifier.id);
         /*
          * NOTE: we currently skip operands whose value is unknown
          * (which can only occur for functions with loops), we may
@@ -213,7 +217,7 @@ export function validateHooksUsage(fn: HIRFunction): void {
           kind = joinKinds(kind, operandKind);
         }
       }
-      valueKinds.set(phi.id.id, kind);
+      valueKinds.set(phi.place.identifier.id, kind);
     }
     for (const instr of block.instructions) {
       switch (instr.value.kind) {
@@ -256,7 +260,9 @@ export function validateHooksUsage(fn: HIRFunction): void {
         }
         case 'PropertyLoad': {
           const objectKind = getKindForPlace(instr.value.object);
-          const isHookProperty = isHookName(instr.value.property);
+          const isHookProperty =
+            typeof instr.value.property === 'string' &&
+            isHookName(instr.value.property);
           let kind: Kind;
           switch (objectKind) {
             case Kind.Error: {
@@ -420,9 +426,7 @@ export function validateHooksUsage(fn: HIRFunction): void {
   for (const [, error] of errorsByPlace) {
     errors.push(error);
   }
-  if (errors.hasErrors()) {
-    throw errors;
-  }
+  return errors.asResult();
 }
 
 function visitFunctionExpression(errors: CompilerError, fn: HIRFunction): void {
@@ -448,7 +452,7 @@ function visitFunctionExpression(errors: CompilerError, fn: HIRFunction): void {
                 reason:
                   'Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)',
                 loc: callee.loc,
-                description: `Cannot call ${hookKind} within a function component`,
+                description: `Cannot call ${hookKind === 'Custom' ? 'hook' : hookKind} within a function expression`,
                 suggestions: null,
               }),
             );

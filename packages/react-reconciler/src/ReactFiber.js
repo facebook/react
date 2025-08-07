@@ -8,17 +8,25 @@
  */
 
 import type {ReactElement} from 'shared/ReactElementType';
-import type {ReactFragment, ReactPortal, ReactScope} from 'shared/ReactTypes';
+import type {
+  ReactFragment,
+  ReactPortal,
+  ReactScope,
+  ViewTransitionProps,
+  ActivityProps,
+} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Lanes} from './ReactFiberLane';
-import type {SuspenseInstance} from './ReactFiberConfig';
+import type {ActivityInstance, SuspenseInstance} from './ReactFiberConfig';
 import type {
+  LegacyHiddenProps,
   OffscreenProps,
   OffscreenInstance,
-} from './ReactFiberActivityComponent';
+} from './ReactFiberOffscreenComponent';
+import type {ViewTransitionState} from './ReactFiberViewTransitionComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 
 import {
@@ -32,12 +40,10 @@ import {
   enableScopeAPI,
   enableLegacyHidden,
   enableTransitionTracing,
-  enableDebugTracing,
-  enableDO_NOT_USE_disableStrictPassiveEffect,
-  enableRenderableContext,
   disableLegacyMode,
   enableObjectFiber,
-  enableOwnerStacks,
+  enableViewTransition,
+  enableSuspenseyImages,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
@@ -67,8 +73,10 @@ import {
   LegacyHiddenComponent,
   TracingMarkerComponent,
   Throw,
+  ViewTransitionComponent,
+  ActivityComponent,
 } from './ReactWorkTags';
-import {OffscreenVisible} from './ReactFiberActivityComponent';
+import {OffscreenVisible} from './ReactFiberOffscreenComponent';
 import {getComponentNameFromOwner} from 'react-reconciler/src/getComponentNameFromFiber';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {
@@ -80,19 +88,16 @@ import {NoLanes} from './ReactFiberLane';
 import {
   NoMode,
   ConcurrentMode,
-  DebugTracingMode,
   ProfileMode,
   StrictLegacyMode,
   StrictEffectsMode,
-  NoStrictPassiveEffectsMode,
+  SuspenseyImagesMode,
 } from './ReactTypeOfMode';
 import {
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
-  REACT_DEBUG_TRACING_MODE_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_PROFILER_TYPE,
-  REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_CONSUMER_TYPE,
   REACT_SUSPENSE_TYPE,
@@ -100,16 +105,13 @@ import {
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
   REACT_SCOPE_TYPE,
-  REACT_OFFSCREEN_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
   REACT_TRACING_MARKER_TYPE,
   REACT_ELEMENT_TYPE,
+  REACT_VIEW_TRANSITION_TYPE,
+  REACT_ACTIVITY_TYPE,
 } from 'shared/ReactSymbols';
 import {TransitionTracingMarker} from './ReactFiberTracingMarkerComponent';
-import {
-  detachOffscreenInstance,
-  attachOffscreenInstance,
-} from './ReactFiberCommitWork';
 import {getHostContext} from './ReactFiberHostContext';
 import type {ReactComponentInfo} from '../../shared/ReactTypes';
 import isArray from 'shared/isArray';
@@ -187,28 +189,19 @@ function FiberNode(
     // Learn more about this here:
     // https://github.com/facebook/react/issues/14365
     // https://bugs.chromium.org/p/v8/issues/detail?id=8538
-    this.actualDuration = Number.NaN;
-    this.actualStartTime = Number.NaN;
-    this.selfBaseDuration = Number.NaN;
-    this.treeBaseDuration = Number.NaN;
 
-    // It's okay to replace the initial doubles with smis after initialization.
-    // This won't trigger the performance cliff mentioned above,
-    // and it simplifies other profiler code (including DevTools).
-    this.actualDuration = 0;
-    this.actualStartTime = -1;
-    this.selfBaseDuration = 0;
-    this.treeBaseDuration = 0;
+    this.actualDuration = -0;
+    this.actualStartTime = -1.1;
+    this.selfBaseDuration = -0;
+    this.treeBaseDuration = -0;
   }
 
   if (__DEV__) {
     // This isn't directly used but is handy for debugging internals:
     this._debugInfo = null;
     this._debugOwner = null;
-    if (enableOwnerStacks) {
-      this._debugStack = null;
-      this._debugTask = null;
-    }
+    this._debugStack = null;
+    this._debugTask = null;
     this._debugNeedsRemount = false;
     this._debugHookTypes = null;
     if (!hasBadMapPolyfill && typeof Object.preventExtensions === 'function') {
@@ -286,20 +279,18 @@ function createFiberImplObject(
   };
 
   if (enableProfilerTimer) {
-    fiber.actualDuration = 0;
-    fiber.actualStartTime = -1;
-    fiber.selfBaseDuration = 0;
-    fiber.treeBaseDuration = 0;
+    fiber.actualDuration = -0;
+    fiber.actualStartTime = -1.1;
+    fiber.selfBaseDuration = -0;
+    fiber.treeBaseDuration = -0;
   }
 
   if (__DEV__) {
     // This isn't directly used but is handy for debugging internals:
     fiber._debugInfo = null;
     fiber._debugOwner = null;
-    if (enableOwnerStacks) {
-      fiber._debugStack = null;
-      fiber._debugTask = null;
-    }
+    fiber._debugStack = null;
+    fiber._debugTask = null;
     fiber._debugNeedsRemount = false;
     fiber._debugHookTypes = null;
     if (!hasBadMapPolyfill && typeof Object.preventExtensions === 'function') {
@@ -355,10 +346,8 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
       // DEV-only fields
 
       workInProgress._debugOwner = current._debugOwner;
-      if (enableOwnerStacks) {
-        workInProgress._debugStack = current._debugStack;
-        workInProgress._debugTask = current._debugTask;
-      }
+      workInProgress._debugStack = current._debugStack;
+      workInProgress._debugTask = current._debugTask;
       workInProgress._debugHookTypes = current._debugHookTypes;
     }
 
@@ -382,8 +371,8 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
       // This prevents time from endlessly accumulating in new commits.
       // This has the downside of resetting values for different priority renders,
       // But works for yielding (the common case) and should support resuming.
-      workInProgress.actualDuration = 0;
-      workInProgress.actualStartTime = -1;
+      workInProgress.actualDuration = -0;
+      workInProgress.actualStartTime = -1.1;
     }
   }
 
@@ -404,10 +393,16 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
   workInProgress.dependencies =
     currentDependencies === null
       ? null
-      : {
-          lanes: currentDependencies.lanes,
-          firstContext: currentDependencies.firstContext,
-        };
+      : __DEV__
+        ? {
+            lanes: currentDependencies.lanes,
+            firstContext: currentDependencies.firstContext,
+            _debugThenableState: currentDependencies._debugThenableState,
+          }
+        : {
+            lanes: currentDependencies.lanes,
+            firstContext: currentDependencies.firstContext,
+          };
 
   // These will be overridden during the parent's reconciliation
   workInProgress.sibling = current.sibling;
@@ -503,10 +498,16 @@ export function resetWorkInProgress(
     workInProgress.dependencies =
       currentDependencies === null
         ? null
-        : {
-            lanes: currentDependencies.lanes,
-            firstContext: currentDependencies.firstContext,
-          };
+        : __DEV__
+          ? {
+              lanes: currentDependencies.lanes,
+              firstContext: currentDependencies.firstContext,
+              _debugThenableState: currentDependencies._debugThenableState,
+            }
+          : {
+              lanes: currentDependencies.lanes,
+              firstContext: currentDependencies.firstContext,
+            };
 
     if (enableProfilerTimer) {
       // Note: We don't reset the actualTime counts. It's useful to accumulate
@@ -586,6 +587,8 @@ export function createFiberFromTypeAndProps(
     }
   } else {
     getTag: switch (type) {
+      case REACT_ACTIVITY_TYPE:
+        return createFiberFromActivity(pendingProps, mode, lanes, key);
       case REACT_FRAGMENT_TYPE:
         return createFiberFromFragment(pendingProps.children, mode, lanes, key);
       case REACT_STRICT_MODE_TYPE:
@@ -594,12 +597,6 @@ export function createFiberFromTypeAndProps(
         if (disableLegacyMode || (mode & ConcurrentMode) !== NoMode) {
           // Strict effects should never run on legacy roots
           mode |= StrictEffectsMode;
-          if (
-            enableDO_NOT_USE_disableStrictPassiveEffect &&
-            pendingProps.DO_NOT_USE_disableStrictPassiveEffect
-          ) {
-            mode |= NoStrictPassiveEffectsMode;
-          }
         }
         break;
       case REACT_PROFILER_TYPE:
@@ -608,11 +605,14 @@ export function createFiberFromTypeAndProps(
         return createFiberFromSuspense(pendingProps, mode, lanes, key);
       case REACT_SUSPENSE_LIST_TYPE:
         return createFiberFromSuspenseList(pendingProps, mode, lanes, key);
-      case REACT_OFFSCREEN_TYPE:
-        return createFiberFromOffscreen(pendingProps, mode, lanes, key);
       case REACT_LEGACY_HIDDEN_TYPE:
         if (enableLegacyHidden) {
           return createFiberFromLegacyHidden(pendingProps, mode, lanes, key);
+        }
+      // Fall through
+      case REACT_VIEW_TRANSITION_TYPE:
+        if (enableViewTransition) {
+          return createFiberFromViewTransition(pendingProps, mode, lanes, key);
         }
       // Fall through
       case REACT_SCOPE_TYPE:
@@ -625,35 +625,15 @@ export function createFiberFromTypeAndProps(
           return createFiberFromTracingMarker(pendingProps, mode, lanes, key);
         }
       // Fall through
-      case REACT_DEBUG_TRACING_MODE_TYPE:
-        if (enableDebugTracing) {
-          fiberTag = Mode;
-          mode |= DebugTracingMode;
-          break;
-        }
-      // Fall through
       default: {
         if (typeof type === 'object' && type !== null) {
           switch (type.$$typeof) {
-            case REACT_PROVIDER_TYPE:
-              if (!enableRenderableContext) {
-                fiberTag = ContextProvider;
-                break getTag;
-              }
-            // Fall through
             case REACT_CONTEXT_TYPE:
-              if (enableRenderableContext) {
-                fiberTag = ContextProvider;
-                break getTag;
-              } else {
-                fiberTag = ContextConsumer;
-                break getTag;
-              }
+              fiberTag = ContextProvider;
+              break getTag;
             case REACT_CONSUMER_TYPE:
-              if (enableRenderableContext) {
-                fiberTag = ContextConsumer;
-                break getTag;
-              }
+              fiberTag = ContextConsumer;
+              break getTag;
             // Fall through
             case REACT_FORWARD_REF_TYPE:
               fiberTag = ForwardRef;
@@ -759,10 +739,8 @@ export function createFiberFromElement(
   );
   if (__DEV__) {
     fiber._debugOwner = element._owner;
-    if (enableOwnerStacks) {
-      fiber._debugStack = element._debugStack;
-      fiber._debugTask = element._debugTask;
-    }
+    fiber._debugStack = element._debugStack;
+    fiber._debugTask = element._debugTask;
   }
   return fiber;
 }
@@ -852,24 +830,54 @@ export function createFiberFromOffscreen(
   key: null | string,
 ): Fiber {
   const fiber = createFiber(OffscreenComponent, pendingProps, key, mode);
-  fiber.elementType = REACT_OFFSCREEN_TYPE;
   fiber.lanes = lanes;
   const primaryChildInstance: OffscreenInstance = {
     _visibility: OffscreenVisible,
-    _pendingVisibility: OffscreenVisible,
     _pendingMarkers: null,
     _retryCache: null,
     _transitions: null,
-    _current: null,
-    detach: () => detachOffscreenInstance(primaryChildInstance),
-    attach: () => attachOffscreenInstance(primaryChildInstance),
   };
   fiber.stateNode = primaryChildInstance;
   return fiber;
 }
+export function createFiberFromActivity(
+  pendingProps: ActivityProps,
+  mode: TypeOfMode,
+  lanes: Lanes,
+  key: null | string,
+): Fiber {
+  const fiber = createFiber(ActivityComponent, pendingProps, key, mode);
+  fiber.elementType = REACT_ACTIVITY_TYPE;
+  fiber.lanes = lanes;
+  return fiber;
+}
+
+export function createFiberFromViewTransition(
+  pendingProps: ViewTransitionProps,
+  mode: TypeOfMode,
+  lanes: Lanes,
+  key: null | string,
+): Fiber {
+  if (!enableSuspenseyImages) {
+    // Render a ViewTransition component opts into SuspenseyImages mode even
+    // when the flag is off.
+    mode |= SuspenseyImagesMode;
+  }
+  const fiber = createFiber(ViewTransitionComponent, pendingProps, key, mode);
+  fiber.elementType = REACT_VIEW_TRANSITION_TYPE;
+  fiber.lanes = lanes;
+  const instance: ViewTransitionState = {
+    autoName: null,
+    paired: null,
+    clones: null,
+    ref: null,
+  };
+  fiber.stateNode = instance;
+  return fiber;
+}
 
 export function createFiberFromLegacyHidden(
-  pendingProps: OffscreenProps,
+  pendingProps: LegacyHiddenProps,
   mode: TypeOfMode,
   lanes: Lanes,
   key: null | string,
@@ -881,13 +889,9 @@ export function createFiberFromLegacyHidden(
   // the offscreen implementation, which depends on a state node
   const instance: OffscreenInstance = {
     _visibility: OffscreenVisible,
-    _pendingVisibility: OffscreenVisible,
     _pendingMarkers: null,
     _transitions: null,
     _retryCache: null,
-    _current: null,
-    detach: () => detachOffscreenInstance(instance),
-    attach: () => attachOffscreenInstance(instance),
   };
   fiber.stateNode = instance;
   return fiber;
@@ -924,7 +928,7 @@ export function createFiberFromText(
 }
 
 export function createFiberFromDehydratedFragment(
-  dehydratedNode: SuspenseInstance,
+  dehydratedNode: SuspenseInstance | ActivityInstance,
 ): Fiber {
   const fiber = createFiber(DehydratedFragment, null, null, NoMode);
   fiber.stateNode = dehydratedNode;

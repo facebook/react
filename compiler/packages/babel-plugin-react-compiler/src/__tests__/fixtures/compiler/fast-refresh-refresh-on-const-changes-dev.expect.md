@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @compilationMode(infer) @enableResetCacheOnSourceFileChanges
+// @compilationMode:"infer" @enableResetCacheOnSourceFileChanges
 import {useEffect, useMemo, useState} from 'react';
 import {ValidateMemoization} from 'shared-runtime';
 
@@ -46,7 +46,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @compilationMode(infer) @enableResetCacheOnSourceFileChanges
+import { c as _c } from "react/compiler-runtime"; // @compilationMode:"infer" @enableResetCacheOnSourceFileChanges
 import { useEffect, useMemo, useState } from "react";
 import { ValidateMemoization } from "shared-runtime";
 
@@ -63,34 +63,32 @@ function unsafeUpdateConst() {
 function Component() {
   const $ = _c(3);
   if (
-    $[0] !== "8d7015668f857996c3d895a7a90e3e16b8a791d5b9cd13f2c76e1c254aeedebb"
+    $[0] !== "a585d27423c1181e7b6305ff909458183d284658c3c3d2e3764e1128be302fd7"
   ) {
     for (let $i = 0; $i < 3; $i += 1) {
       $[$i] = Symbol.for("react.memo_cache_sentinel");
     }
-    $[0] = "8d7015668f857996c3d895a7a90e3e16b8a791d5b9cd13f2c76e1c254aeedebb";
+    $[0] = "a585d27423c1181e7b6305ff909458183d284658c3c3d2e3764e1128be302fd7";
   }
   useState(_temp);
 
   unsafeUpdateConst();
   let t0;
-  let t1;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = [{ pretendConst }];
-    $[1] = t1;
+    t0 = [{ pretendConst }];
+    $[1] = t0;
   } else {
-    t1 = $[1];
+    t0 = $[1];
   }
-  t0 = t1;
   const value = t0;
-  let t2;
+  let t1;
   if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-    t2 = <ValidateMemoization inputs={[pretendConst]} output={value} />;
-    $[2] = t2;
+    t1 = <ValidateMemoization inputs={[pretendConst]} output={value} />;
+    $[2] = t1;
   } else {
-    t2 = $[2];
+    t1 = $[2];
   }
-  return t2;
+  return t1;
 }
 function _temp() {
   unsafeResetConst();

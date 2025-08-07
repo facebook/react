@@ -14,7 +14,11 @@
  * Be mindful of backwards compatibility when making changes.
  */
 
-import type {ReactContext, Wakeable} from 'shared/ReactTypes';
+import type {
+  ReactContext,
+  Wakeable,
+  ReactComponentInfo,
+} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   ComponentFilter,
@@ -27,9 +31,8 @@ import type {
 } from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
 import type {InitBackend} from 'react-devtools-shared/src/backend';
 import type {TimelineDataExport} from 'react-devtools-timeline/src/types';
-import type {BrowserTheme} from 'react-devtools-shared/src/frontend/types';
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
-import type {Source} from 'react-devtools-shared/src/shared/types';
+import type {ReactFunctionLocation, ReactStackTrace} from 'shared/ReactTypes';
 import type Agent from './agent';
 
 type BundleType =
@@ -73,18 +76,11 @@ export type WorkTagMap = {
   TracingMarkerComponent: WorkTag,
   YieldComponent: WorkTag,
   Throw: WorkTag,
+  ViewTransitionComponent: WorkTag,
+  ActivityComponent: WorkTag,
 };
 
-// TODO: If it's useful for the frontend to know which types of data an Element has
-// (e.g. props, state, context, hooks) then we could add a bitmask field for this
-// to keep the number of attributes small.
-export type FiberData = {
-  key: string | null,
-  displayName: string | null,
-  type: ElementType,
-};
-
-export type NativeType = Object;
+export type HostInstance = Object;
 export type RendererID = number;
 
 type Dispatcher = any;
@@ -95,16 +91,14 @@ type SharedInternalsSubset = {
 };
 export type CurrentDispatcherRef = SharedInternalsSubset;
 
-export type GetDisplayNameForFiberID = (
-  id: number,
-  findNearestUnfilteredAncestor?: boolean,
-) => string | null;
+export type GetDisplayNameForElementID = (id: number) => string | null;
 
-export type GetFiberIDForNative = (
-  component: NativeType,
-  findNearestUnfilteredAncestor?: boolean,
+export type GetElementIDForHostInstance = (
+  component: HostInstance,
 ) => number | null;
-export type FindNativeNodesForFiberID = (id: number) => ?Array<NativeType>;
+export type FindHostInstancesForElementID = (
+  id: number,
+) => null | $ReadOnlyArray<HostInstance>;
 
 export type ReactProviderType<T> = {
   $$typeof: symbol | number,
@@ -116,10 +110,11 @@ export type Lane = number;
 export type Lanes = number;
 
 export type ReactRenderer = {
-  findFiberByHostInstance: (hostInstance: NativeType) => Fiber | null,
   version: string,
   rendererPackageName: string,
   bundleType: BundleType,
+  // 16.0+ - To be removed in future versions.
+  findFiberByHostInstance?: (hostInstance: HostInstance) => Fiber | null,
   // 16.9+
   overrideHookState?: ?(
     fiber: Object,
@@ -164,7 +159,10 @@ export type ReactRenderer = {
   currentDispatcherRef?: LegacyDispatcherRef | CurrentDispatcherRef,
   // Only injected by React v16.9+ in DEV mode.
   // Enables DevTools to append owners-only component stack to error messages.
-  getCurrentFiber?: () => Fiber | null,
+  getCurrentFiber?: (() => Fiber | null) | null,
+  // Only injected by React Flight Clients in DEV mode.
+  // Enables DevTools to append owners-only component stack to error messages from Server Components.
+  getCurrentComponentInfo?: () => ReactComponentInfo | null,
   // 17.0.2+
   reconcilerVersion?: string,
   // Uniquely identifies React DOM v15.
@@ -234,6 +232,26 @@ export type PathMatch = {
   isFullMatch: boolean,
 };
 
+// Serialized version of ReactIOInfo
+export type SerializedIOInfo = {
+  name: string,
+  description: string,
+  start: number,
+  end: number,
+  value: null | Promise<mixed>,
+  env: null | string,
+  owner: null | SerializedElement,
+  stack: null | ReactStackTrace,
+};
+
+// Serialized version of ReactAsyncInfo
+export type SerializedAsyncInfo = {
+  awaited: SerializedIOInfo,
+  env: null | string,
+  owner: null | SerializedElement,
+  stack: null | ReactStackTrace,
+};
+
 export type SerializedElement = {
   displayName: string | null,
   id: number,
@@ -249,8 +267,6 @@ export type OwnersList = {
 export type InspectedElement = {
   id: number,
 
-  displayName: string | null,
-
   // Does the current renderer support editable hooks and function props?
   canEditHooks: boolean,
   canEditFunctionProps: boolean,
@@ -264,29 +280,28 @@ export type InspectedElement = {
   // Is this Error, and can its value be overridden now?
   canToggleError: boolean,
   isErrored: boolean,
-  targetErrorBoundaryID: ?number,
 
   // Is this Suspense, and can its value be overridden now?
   canToggleSuspense: boolean,
-
-  // Can view component source location.
-  canViewSource: boolean,
 
   // Does the component have legacy context attached to it.
   hasLegacyContext: boolean,
 
   // Inspectable properties.
-  context: Object | null,
-  hooks: Object | null,
-  props: Object | null,
-  state: Object | null,
+  context: Object | null, // DehydratedData or {[string]: mixed}
+  hooks: Object | null, // DehydratedData or {[string]: mixed}
+  props: Object | null, // DehydratedData or {[string]: mixed}
+  state: Object | null, // DehydratedData or {[string]: mixed}
   key: number | string | null,
   errors: Array<[string, number]>,
   warnings: Array<[string, number]>,
 
+  // Things that suspended this Instances
+  suspendedBy: Object, // DehydratedData or Array<SerializedAsyncInfo>
+
   // List of owners
   owners: Array<SerializedElement> | null,
-  source: Source | null,
+  source: ReactFunctionLocation | null,
 
   type: ElementType,
 
@@ -299,6 +314,9 @@ export type InspectedElement = {
 
   // UI plugins/visualizations for the inspected element.
   plugins: Plugins,
+
+  // React Native only.
+  nativeTag: number | null,
 };
 
 export const InspectElementErrorType = 'error';
@@ -356,23 +374,32 @@ export type InstanceAndStyle = {
 
 type Type = 'props' | 'hooks' | 'state' | 'context';
 
+export type OnErrorOrWarning = (
+  type: 'error' | 'warn',
+  args: Array<any>,
+) => void;
+export type GetComponentStack = (
+  topFrame: Error,
+) => null | {enableOwnerStacks: boolean, componentStack: string};
+
 export type RendererInterface = {
   cleanup: () => void,
   clearErrorsAndWarnings: () => void,
-  clearErrorsForFiberID: (id: number) => void,
-  clearWarningsForFiberID: (id: number) => void,
+  clearErrorsForElementID: (id: number) => void,
+  clearWarningsForElementID: (id: number) => void,
   deletePath: (
     type: Type,
     id: number,
     hookID: ?number,
     path: Array<string | number>,
   ) => void,
-  findNativeNodesForFiberID: FindNativeNodesForFiberID,
+  findHostInstancesForElementID: FindHostInstancesForElementID,
   flushInitialOperations: () => void,
   getBestMatchForTrackedPath: () => PathMatch | null,
-  getFiberForNative: (component: NativeType) => Fiber | null,
-  getFiberIDForNative: GetFiberIDForNative,
-  getDisplayNameForFiberID: GetDisplayNameForFiberID,
+  getComponentStack?: GetComponentStack,
+  getNearestMountedDOMNode: (component: Element) => Element | null,
+  getElementIDForHostInstance: GetElementIDForHostInstance,
+  getDisplayNameForElementID: GetDisplayNameForElementID,
   getInstanceAndStyle(id: number): InstanceAndStyle,
   getProfilingData(): ProfilingDataBackend,
   getOwnersList: (id: number) => Array<SerializedElement> | null,
@@ -384,7 +411,7 @@ export type RendererInterface = {
   handleCommitFiberRoot: (fiber: Object, commitPriority?: number) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,
   handlePostCommitFiberRoot: (fiber: Object) => void,
-  hasFiberWithId: (id: number) => boolean,
+  hasElementWithId: (id: number) => boolean,
   inspectElement: (
     requestID: number,
     id: number,
@@ -392,6 +419,7 @@ export type RendererInterface = {
     forceFullData: boolean,
   ) => InspectedElementPayload,
   logElementToConsole: (id: number) => void,
+  onErrorOrWarning?: OnErrorOrWarning,
   overrideError: (id: number, forceError: boolean) => void,
   overrideSuspense: (id: number, forceFallback: boolean) => void,
   overrideValueAtPath: (
@@ -401,12 +429,11 @@ export type RendererInterface = {
     path: Array<string | number>,
     value: any,
   ) => void,
-  patchConsoleForStrictMode: () => void,
-  prepareViewAttributeSource: (
+  getElementAttributeByPath: (
     id: number,
     path: Array<string | number>,
-  ) => void,
-  prepareViewElementSource: (id: number) => void,
+  ) => mixed,
+  getElementSourceFunctionById: (id: number) => null | Function,
   renamePath: (
     type: Type,
     id: number,
@@ -417,15 +444,18 @@ export type RendererInterface = {
   renderer: ReactRenderer | null,
   setTraceUpdatesEnabled: (enabled: boolean) => void,
   setTrackedPath: (path: Array<PathFrame> | null) => void,
-  startProfiling: (recordChangeDescriptions: boolean) => void,
+  startProfiling: (
+    recordChangeDescriptions: boolean,
+    recordTimeline: boolean,
+  ) => void,
   stopProfiling: () => void,
   storeAsGlobal: (
     id: number,
     path: Array<string | number>,
     count: number,
   ) => void,
-  unpatchConsoleForStrictMode: () => void,
   updateComponentFilters: (componentFilters: Array<ComponentFilter>) => void,
+  getEnvironmentNames: () => Array<string>,
 
   // Timeline profiler interface
 
@@ -483,10 +513,16 @@ export type DevToolsBackend = {
   setupNativeStyleEditor?: SetupNativeStyleEditor,
 };
 
+export type ProfilingSettings = {
+  recordChangeDescriptions: boolean,
+  recordTimeline: boolean,
+};
+
 export type DevToolsHook = {
   listeners: {[key: string]: Array<Handler>, ...},
   rendererInterfaces: Map<RendererID, RendererInterface>,
   renderers: Map<RendererID, ReactRenderer>,
+  hasUnsupportedRendererAttached: boolean,
   backends: Map<string, DevToolsBackend>,
 
   emit: (event: string, data: any) => void,
@@ -521,13 +557,13 @@ export type DevToolsHook = {
   // Testing
   dangerous_setTargetConsoleForTesting?: (fakeConsole: Object) => void,
 
+  settings?: $ReadOnly<DevToolsHookSettings>,
   ...
 };
 
-export type ConsolePatchSettings = {
+export type DevToolsHookSettings = {
   appendComponentStack: boolean,
   breakOnConsoleErrors: boolean,
   showInlineWarningsAndErrors: boolean,
   hideConsoleLogsInStrictMode: boolean,
-  browserTheme: BrowserTheme,
 };

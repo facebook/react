@@ -9,30 +9,44 @@ export {runBabelPluginReactCompiler} from './Babel/RunReactCompilerBabelPlugin';
 export {
   CompilerError,
   CompilerErrorDetail,
+  CompilerDiagnostic,
   CompilerSuggestionOperation,
   ErrorSeverity,
   type CompilerErrorDetailOptions,
+  type CompilerDiagnosticOptions,
+  type CompilerDiagnosticDetail,
 } from './CompilerError';
 export {
   compileFn as compile,
   compileProgram,
   parsePluginOptions,
-  run,
+  OPT_OUT_DIRECTIVES,
+  OPT_IN_DIRECTIVES,
+  ProgramContext,
+  tryFindDirectiveEnablingMemoization as findDirectiveEnablingMemoization,
+  findDirectiveDisablingMemoization,
   type CompilerPipelineValue,
+  type Logger,
+  type LoggerEvent,
   type PluginOptions,
 } from './Entrypoint';
 export {
   Effect,
   ValueKind,
-  parseConfigPragma,
+  ValueReason,
   printHIR,
+  printFunctionWithOutlined,
   validateEnvironmentConfig,
   type EnvironmentConfig,
   type ExternalFunction,
   type Hook,
   type SourceLocation,
 } from './HIR';
-export {printReactiveFunction} from './ReactiveScopes';
+export {
+  printReactiveFunction,
+  printReactiveFunctionWithOutlined,
+} from './ReactiveScopes';
+export {parseConfigPragmaForTests} from './Utils/TestUtils';
 declare global {
   let __DEV__: boolean | null | undefined;
 }

@@ -7,11 +7,12 @@
  * @flow
  */
 
-import type {ReactNodeList, Wakeable} from 'shared/ReactTypes';
+import type {Wakeable, SuspenseListTailMode} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {SuspenseInstance} from './ReactFiberConfig';
 import type {Lane} from './ReactFiberLane';
 import type {TreeContext} from './ReactFiberTreeContext';
+import type {CapturedValue} from './ReactCapturedValue';
 
 import {SuspenseComponent, SuspenseListComponent} from './ReactWorkTags';
 import {NoFlags, DidCapture} from './ReactFiberFlags';
@@ -19,18 +20,6 @@ import {
   isSuspenseInstancePending,
   isSuspenseInstanceFallback,
 } from './ReactFiberConfig';
-
-export type SuspenseProps = {
-  children?: ReactNodeList,
-  fallback?: ReactNodeList,
-
-  // TODO: Add "unstable_" prefix?
-  suspenseCallback?: (Set<Wakeable> | null) => mixed,
-
-  unstable_avoidThisFallback?: boolean,
-  unstable_expectedLoadTime?: number,
-  unstable_name?: string,
-};
 
 // A null SuspenseState represents an unsuspended normal Suspense boundary.
 // A non-null SuspenseState means that it is blocked for one reason or another.
@@ -49,9 +38,9 @@ export type SuspenseState = {
   // OffscreenLane is the default for dehydrated boundaries.
   // NoLane is the default for normal boundaries, which turns into "normal" pri.
   retryLane: Lane,
+  // Stashed Errors that happened while attempting to hydrate this boundary.
+  hydrationErrors: Array<CapturedValue<mixed>> | null,
 };
-
-export type SuspenseListTailMode = 'collapsed' | 'hidden' | void;
 
 export type SuspenseListRenderState = {
   isBackwards: boolean,
@@ -65,6 +54,8 @@ export type SuspenseListRenderState = {
   tail: null | Fiber,
   // Tail insertions setting.
   tailMode: SuspenseListTailMode,
+  // Keep track of total number of forks during multiple passes
+  treeForkCount: number,
 };
 
 export type RetryQueue = Set<Wakeable>;
@@ -86,9 +77,12 @@ export function findFirstSuspended(row: Fiber): null | Fiber {
       }
     } else if (
       node.tag === SuspenseListComponent &&
-      // revealOrder undefined can't be trusted because it don't
+      // Independent revealOrder can't be trusted because it doesn't
       // keep track of whether it suspended or not.
-      node.memoizedProps.revealOrder !== undefined
+      (node.memoizedProps.revealOrder === 'forwards' ||
+        node.memoizedProps.revealOrder === 'backwards' ||
+        node.memoizedProps.revealOrder === 'unstable_legacy-backwards' ||
+        node.memoizedProps.revealOrder === 'together')
     ) {
       const didSuspend = (node.flags & DidCapture) !== NoFlags;
       if (didSuspend) {

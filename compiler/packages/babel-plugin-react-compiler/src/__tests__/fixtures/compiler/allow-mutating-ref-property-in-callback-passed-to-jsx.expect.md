@@ -36,7 +36,7 @@ import { c as _c } from "react/compiler-runtime"; // @validateRefAccessDuringRen
 import { useRef } from "react";
 
 function Component() {
-  const $ = _c(8);
+  const $ = _c(2);
   const ref = useRef(null);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
@@ -51,36 +51,18 @@ function Component() {
   }
   const onClick = t0;
   let t1;
-  if ($[1] !== ref) {
-    t1 = <input ref={ref} />;
-    $[1] = ref;
-    $[2] = t1;
-  } else {
-    t1 = $[2];
-  }
-  let t2;
-  if ($[3] !== onClick) {
-    t2 = <button onClick={onClick} />;
-    $[3] = onClick;
-    $[4] = t2;
-  } else {
-    t2 = $[4];
-  }
-  let t3;
-  if ($[5] !== t1 || $[6] !== t2) {
-    t3 = (
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = (
       <>
-        {t1}
-        {t2}
+        <input ref={ref} />
+        <button onClick={onClick} />
       </>
     );
-    $[5] = t1;
-    $[6] = t2;
-    $[7] = t3;
+    $[1] = t1;
   } else {
-    t3 = $[7];
+    t1 = $[1];
   }
-  return t3;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

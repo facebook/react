@@ -29,14 +29,17 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
-  10 |   const val = [1, 2, 3];
-  11 |
-> 12 |   return useMemo(() => {
-     |                  ^^^^^^^
-> 13 |     return identity(val);
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+Found 1 error:
+
+Memoization: Compilation skipped because existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This dependency may be mutated later, which could cause the value to change unexpectedly.
+
+error.false-positive-useMemo-infer-mutate-deps.ts:14:6
+  12 |   return useMemo(() => {
+  13 |     return identity(val);
 > 14 |   }, [val]);
-     | ^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value may be mutated later, which could cause the value to change unexpectedly (12:14)
+     |       ^^^ This dependency may be modified later
   15 | }
   16 |
   17 | export const FIXTURE_ENTRYPOINT = {

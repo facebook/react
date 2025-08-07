@@ -18,17 +18,18 @@ import {
   REACT_PORTAL_TYPE,
   REACT_MEMO_TYPE,
   REACT_PROFILER_TYPE,
-  REACT_PROVIDER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
   REACT_LAZY_TYPE,
   REACT_TRACING_MARKER_TYPE,
+  REACT_VIEW_TRANSITION_TYPE,
+  REACT_ACTIVITY_TYPE,
 } from 'shared/ReactSymbols';
 
 import {
   enableTransitionTracing,
-  enableRenderableContext,
+  enableViewTransition,
 } from './ReactFeatureFlags';
 
 // Keep in sync with react-reconciler/getComponentNameFromFiber
@@ -71,8 +72,6 @@ export default function getComponentNameFromType(type: mixed): string | null {
   switch (type) {
     case REACT_FRAGMENT_TYPE:
       return 'Fragment';
-    case REACT_PORTAL_TYPE:
-      return 'Portal';
     case REACT_PROFILER_TYPE:
       return 'Profiler';
     case REACT_STRICT_MODE_TYPE:
@@ -81,6 +80,12 @@ export default function getComponentNameFromType(type: mixed): string | null {
       return 'Suspense';
     case REACT_SUSPENSE_LIST_TYPE:
       return 'SuspenseList';
+    case REACT_ACTIVITY_TYPE:
+      return 'Activity';
+    case REACT_VIEW_TRANSITION_TYPE:
+      if (enableViewTransition) {
+        return 'ViewTransition';
+      }
     // Fall through
     case REACT_TRACING_MARKER_TYPE:
       if (enableTransitionTracing) {
@@ -97,27 +102,14 @@ export default function getComponentNameFromType(type: mixed): string | null {
       }
     }
     switch (type.$$typeof) {
-      case REACT_PROVIDER_TYPE:
-        if (enableRenderableContext) {
-          return null;
-        } else {
-          const provider = (type: any);
-          return getContextName(provider._context) + '.Provider';
-        }
+      case REACT_PORTAL_TYPE:
+        return 'Portal';
       case REACT_CONTEXT_TYPE:
         const context: ReactContext<any> = (type: any);
-        if (enableRenderableContext) {
-          return getContextName(context) + '.Provider';
-        } else {
-          return getContextName(context) + '.Consumer';
-        }
+        return getContextName(context);
       case REACT_CONSUMER_TYPE:
-        if (enableRenderableContext) {
-          const consumer: ReactConsumerType<any> = (type: any);
-          return getContextName(consumer._context) + '.Consumer';
-        } else {
-          return null;
-        }
+        const consumer: ReactConsumerType<any> = (type: any);
+        return getContextName(consumer._context) + '.Consumer';
       case REACT_FORWARD_REF_TYPE:
         return getWrappedName(type, type.render, 'ForwardRef');
       case REACT_MEMO_TYPE:

@@ -19,6 +19,7 @@ let ReplaySubject;
 let assertLog;
 let waitForAll;
 let waitFor;
+let waitForPaint;
 
 describe('useSubscription', () => {
   beforeEach(() => {
@@ -37,6 +38,7 @@ describe('useSubscription', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
+    waitForPaint = InternalTestUtils.waitForPaint;
     assertLog = InternalTestUtils.assertLog;
     waitFor = InternalTestUtils.waitFor;
   });
@@ -595,7 +597,7 @@ describe('useSubscription', () => {
       React.startTransition(() => {
         mutate('C');
       });
-      await waitFor(['render:first:C', 'render:second:C']);
+      await waitForPaint(['render:first:C', 'render:second:C']);
       React.startTransition(() => {
         mutate('D');
       });

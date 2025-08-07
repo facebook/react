@@ -47,17 +47,14 @@ function Component(t0) {
   const $ = _c(19);
   const { a, b } = t0;
   let t1;
-  let t2;
   if ($[0] !== a) {
-    t2 = [a];
+    t1 = [a];
     $[0] = a;
-    $[1] = t2;
+    $[1] = t1;
   } else {
-    t2 = $[1];
+    t1 = $[1];
   }
-  t1 = t2;
   const x = t1;
-  let t3;
   let items;
   if ($[2] !== b || $[3] !== x) {
     items = [b];
@@ -70,59 +67,57 @@ function Component(t0) {
   } else {
     items = $[4];
   }
-
-  t3 = items;
-  const y = t3;
-  let t4;
+  const y = items;
+  let t2;
   if ($[5] !== a) {
-    t4 = [a];
+    t2 = [a];
     $[5] = a;
-    $[6] = t4;
+    $[6] = t2;
   } else {
-    t4 = $[6];
+    t2 = $[6];
+  }
+  let t3;
+  if ($[7] !== t2 || $[8] !== x) {
+    t3 = <ValidateMemoization inputs={t2} output={x} />;
+    $[7] = t2;
+    $[8] = x;
+    $[9] = t3;
+  } else {
+    t3 = $[9];
+  }
+  let t4;
+  if ($[10] !== b || $[11] !== x) {
+    t4 = [x, b];
+    $[10] = b;
+    $[11] = x;
+    $[12] = t4;
+  } else {
+    t4 = $[12];
   }
   let t5;
-  if ($[7] !== t4 || $[8] !== x) {
-    t5 = <ValidateMemoization inputs={t4} output={x} />;
-    $[7] = t4;
-    $[8] = x;
-    $[9] = t5;
+  if ($[13] !== t4 || $[14] !== y) {
+    t5 = <ValidateMemoization inputs={t4} output={y} />;
+    $[13] = t4;
+    $[14] = y;
+    $[15] = t5;
   } else {
-    t5 = $[9];
+    t5 = $[15];
   }
   let t6;
-  if ($[10] !== x || $[11] !== b) {
-    t6 = [x, b];
-    $[10] = x;
-    $[11] = b;
-    $[12] = t6;
-  } else {
-    t6 = $[12];
-  }
-  let t7;
-  if ($[13] !== t6 || $[14] !== y) {
-    t7 = <ValidateMemoization inputs={t6} output={y} />;
-    $[13] = t6;
-    $[14] = y;
-    $[15] = t7;
-  } else {
-    t7 = $[15];
-  }
-  let t8;
-  if ($[16] !== t5 || $[17] !== t7) {
-    t8 = (
+  if ($[16] !== t3 || $[17] !== t5) {
+    t6 = (
       <>
+        {t3}
         {t5}
-        {t7}
       </>
     );
-    $[16] = t5;
-    $[17] = t7;
-    $[18] = t8;
+    $[16] = t3;
+    $[17] = t5;
+    $[18] = t6;
   } else {
-    t8 = $[18];
+    t6 = $[18];
   }
-  return t8;
+  return t6;
 }
 
 export const FIXTURE_ENTRYPOINT = {

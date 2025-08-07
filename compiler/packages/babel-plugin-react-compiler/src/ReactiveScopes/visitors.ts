@@ -73,15 +73,6 @@ export class ReactiveFunctionVisitor<TState = void> {
         this.visitValue(value.id, value.value, state);
         break;
       }
-      case 'ReactiveFunctionValue': {
-        this.visitReactiveFunctionValue(
-          id,
-          value.dependencies,
-          value.fn,
-          state,
-        );
-        break;
-      }
       default: {
         for (const place of eachInstructionValueOperand(value)) {
           this.visitPlace(id, place, state);
@@ -434,18 +425,6 @@ export class ReactiveFunctionTransform<
         }
         break;
       }
-      case 'ReactiveFunctionValue': {
-        const nextValue = this.transformReactiveFunctionValue(
-          id,
-          value.dependencies,
-          value.fn,
-          state,
-        );
-        if (nextValue.kind === 'replace') {
-          value.fn = nextValue.value;
-        }
-        break;
-      }
       default: {
         for (const place of eachInstructionValueOperand(value)) {
           this.visitPlace(id, place, state);
@@ -617,10 +596,6 @@ export function* eachReactiveValueOperand(
       yield* eachReactiveValueOperand(instrValue.test);
       yield* eachReactiveValueOperand(instrValue.consequent);
       yield* eachReactiveValueOperand(instrValue.alternate);
-      break;
-    }
-    case 'ReactiveFunctionValue': {
-      yield* instrValue.dependencies;
       break;
     }
     default: {

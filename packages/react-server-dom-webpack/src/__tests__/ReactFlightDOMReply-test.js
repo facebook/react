@@ -23,7 +23,7 @@ let React;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 let ReactServerScheduler;
-let reactServerAct;
+let serverAct;
 
 describe('ReactFlightDOMReply', () => {
   beforeEach(() => {
@@ -31,7 +31,7 @@ describe('ReactFlightDOMReply', () => {
 
     ReactServerScheduler = require('scheduler');
     patchMessageChannel(ReactServerScheduler);
-    reactServerAct = require('internal-test-utils').act;
+    serverAct = require('internal-test-utils').serverAct;
 
     // Simulate the condition resolution
     jest.mock('react', () => require('react/react.react-server'));
@@ -47,17 +47,6 @@ describe('ReactFlightDOMReply', () => {
     __unmockReact();
     ReactServerDOMClient = require('react-server-dom-webpack/client');
   });
-
-  async function serverAct(callback) {
-    let maybePromise;
-    await reactServerAct(() => {
-      maybePromise = callback();
-      if (maybePromise && typeof maybePromise.catch === 'function') {
-        maybePromise.catch(() => {});
-      }
-    });
-    return maybePromise;
-  }
 
   // This method should exist on File but is not implemented in JSDOM
   async function arrayBuffer(file) {
@@ -449,7 +438,50 @@ describe('ReactFlightDOMReply', () => {
     expect(response.obj).toBe(obj);
   });
 
-  // @gate enableFlightReadableStream
+  it('can return an opaque object through an async function', async () => {
+    function fn() {
+      return 'this is a client function';
+    }
+
+    const args = [fn];
+
+    const temporaryReferences =
+      ReactServerDOMClient.createTemporaryReferenceSet();
+    const body = await ReactServerDOMClient.encodeReply(args, {
+      temporaryReferences,
+    });
+
+    const temporaryReferencesServer =
+      ReactServerDOMServer.createTemporaryReferenceSet();
+    const serverPayload = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+      {temporaryReferences: temporaryReferencesServer},
+    );
+
+    async function action(arg) {
+      return arg;
+    }
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        {
+          result: action.apply(null, serverPayload),
+        },
+        null,
+        {temporaryReferences: temporaryReferencesServer},
+      ),
+    );
+    const response = await ReactServerDOMClient.createFromReadableStream(
+      stream,
+      {
+        temporaryReferences,
+      },
+    );
+
+    expect(await response.result).toBe(fn);
+  });
+
   it('should supports streaming ReadableStream with objects', async () => {
     let controller1;
     let controller2;
@@ -511,7 +543,6 @@ describe('ReactFlightDOMReply', () => {
     });
   });
 
-  // @gate enableFlightReadableStream
   it('should supports streaming AsyncIterables with objects', async () => {
     let resolve;
     const wait = new Promise(r => (resolve = r));
@@ -617,5 +648,21 @@ describe('ReactFlightDOMReply', () => {
     const body = await ReactServerDOMClient.encodeReply({prop: cyclic});
     const root = await ReactServerDOMServer.decodeReply(body, webpackServerMap);
     expect(root.prop.obj).toBe(root.prop);
+  });
+
+  it('can abort an unresolved model and get the partial result', async () => {
+    const promise = new Promise(r => {});
+    const controller = new AbortController();
+    const bodyPromise = ReactServerDOMClient.encodeReply(
+      {promise: promise, hello: 'world'},
+      {signal: controller.signal},
+    );
+    controller.abort();
+
+    const result = await ReactServerDOMServer.decodeReply(await bodyPromise);
+    expect(result.hello).toBe('world');
+    // TODO: await result.promise should reject at this point because the stream
+    // has closed but that's a bug in both ReactFlightReplyServer and ReactFlightClient.
+    // It just halts in this case.
   });
 });

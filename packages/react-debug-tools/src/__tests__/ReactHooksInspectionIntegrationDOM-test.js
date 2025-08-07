@@ -119,7 +119,12 @@ describe('ReactHooksInspectionIntegration', () => {
         isStateEditable: false,
         name: 'FormStatus',
         subHooks: [],
-        value: null,
+        value: {
+          action: null,
+          data: null,
+          method: null,
+          pending: false,
+        },
       },
       {
         debugInfo: null,

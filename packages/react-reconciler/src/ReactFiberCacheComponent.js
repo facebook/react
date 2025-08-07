@@ -10,7 +10,6 @@
 import type {ReactContext} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
-import {enableCache} from 'shared/ReactFeatureFlags';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 
 import {pushProvider, popProvider} from './ReactFiberNewContext';
@@ -18,8 +17,8 @@ import * as Scheduler from 'scheduler';
 
 // In environments without AbortController (e.g. tests)
 // replace it with a lightweight shim that only has the features we use.
-const AbortControllerLocal: typeof AbortController = enableCache
-  ? typeof AbortController !== 'undefined'
+const AbortControllerLocal: typeof AbortController =
+  typeof AbortController !== 'undefined'
     ? AbortController
     : // $FlowFixMe[missing-this-annot]
       // $FlowFixMe[prop-missing]
@@ -36,9 +35,7 @@ const AbortControllerLocal: typeof AbortController = enableCache
           signal.aborted = true;
           listeners.forEach(listener => listener());
         };
-      }
-  : // $FlowFixMe[incompatible-type]
-    null;
+      };
 
 export type Cache = {
   controller: AbortController,
@@ -63,20 +60,18 @@ const {
   unstable_NormalPriority: NormalPriority,
 } = Scheduler;
 
-export const CacheContext: ReactContext<Cache> = enableCache
-  ? {
-      $$typeof: REACT_CONTEXT_TYPE,
-      // We don't use Consumer/Provider for Cache components. So we'll cheat.
-      Consumer: (null: any),
-      Provider: (null: any),
-      // We'll initialize these at the root.
-      _currentValue: (null: any),
-      _currentValue2: (null: any),
-      _threadCount: 0,
-    }
-  : (null: any);
+export const CacheContext: ReactContext<Cache> = {
+  $$typeof: REACT_CONTEXT_TYPE,
+  // We don't use Consumer/Provider for Cache components. So we'll cheat.
+  Consumer: (null: any),
+  Provider: (null: any),
+  // We'll initialize these at the root.
+  _currentValue: (null: any),
+  _currentValue2: (null: any),
+  _threadCount: 0,
+};
 
-if (__DEV__ && enableCache) {
+if (__DEV__) {
   CacheContext._currentRenderer = null;
   CacheContext._currentRenderer2 = null;
 }
@@ -85,22 +80,14 @@ if (__DEV__ && enableCache) {
 // for retaining the cache once it is in use (retainCache), and releasing the cache
 // once it is no longer needed (releaseCache).
 export function createCache(): Cache {
-  if (!enableCache) {
-    return (null: any);
-  }
-  const cache: Cache = {
+  return {
     controller: new AbortControllerLocal(),
     data: new Map(),
     refCount: 0,
   };
-
-  return cache;
 }
 
 export function retainCache(cache: Cache) {
-  if (!enableCache) {
-    return;
-  }
   if (__DEV__) {
     if (cache.controller.signal.aborted) {
       console.warn(
@@ -114,9 +101,6 @@ export function retainCache(cache: Cache) {
 
 // Cleanup a cache instance, potentially freeing it if there are no more references
 export function releaseCache(cache: Cache) {
-  if (!enableCache) {
-    return;
-  }
   cache.refCount--;
   if (__DEV__) {
     if (cache.refCount < 0) {
@@ -134,15 +118,9 @@ export function releaseCache(cache: Cache) {
 }
 
 export function pushCacheProvider(workInProgress: Fiber, cache: Cache) {
-  if (!enableCache) {
-    return;
-  }
   pushProvider(workInProgress, CacheContext, cache);
 }
 
 export function popCacheProvider(workInProgress: Fiber, cache: Cache) {
-  if (!enableCache) {
-    return;
-  }
   popProvider(CacheContext, workInProgress);
 }

@@ -7,4 +7,4 @@
 
 export {eliminateRedundantPhi} from './EliminateRedundantPhi';
 export {default as enterSSA} from './EnterSSA';
-export {leaveSSA} from './LeaveSSA';
+export {rewriteInstructionKindsBasedOnReassignment} from './RewriteInstructionKindsBasedOnReassignment';

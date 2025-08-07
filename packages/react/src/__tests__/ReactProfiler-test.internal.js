@@ -161,10 +161,19 @@ describe(`onRender`, () => {
     // Restore original mock
     jest.mock('scheduler', () => jest.requireActual('scheduler/unstable_mock'));
 
-    // TODO: unstable_now is called by more places than just the profiler.
-    // Rewrite this test so it's less fragile.
-    if (gate(flags => flags.enableDeferRootSchedulingToMicrotask)) {
+    if (gate(flags => flags.enableComponentPerformanceTrack)) {
       assertLog([
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
         'read current time',
         'read current time',
         'read current time',
@@ -172,6 +181,10 @@ describe(`onRender`, () => {
       ]);
     } else {
       assertLog([
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
         'read current time',
         'read current time',
         'read current time',
@@ -1592,7 +1605,7 @@ describe(`onCommit`, () => {
     expect(call).toHaveLength(4);
     expect(call[0]).toBe('root-update');
     expect(call[1]).toBe('update');
-    expect(call[2]).toBe(1100); // durations
+    expect(call[2]).toBe(11100); // durations
     expect(call[3]).toBe(1124); // commit start time (before mutations or effects)
   });
 
@@ -1901,11 +1914,7 @@ describe(`onPostCommit`, () => {
     expect(call).toHaveLength(4);
     expect(call[0]).toBe('unmount-test');
     expect(call[1]).toBe('update');
-    // TODO (bvaughn) The duration reported below should be 10100, but is 0
-    // by the time the passive effect is flushed its parent Fiber pointer is gone.
-    // If we refactor to preserve the unmounted Fiber tree we could fix this.
-    // The current implementation would require too much extra overhead to track this.
-    expect(call[2]).toBe(0); // durations
+    expect(call[2]).toBe(10100); // durations
     expect(call[3]).toBe(12030); // commit start time (before mutations or effects)
   });
 
@@ -2034,7 +2043,7 @@ describe(`onPostCommit`, () => {
     expect(call).toHaveLength(4);
     expect(call[0]).toBe('root-update');
     expect(call[1]).toBe('update');
-    expect(call[2]).toBe(1100); // durations
+    expect(call[2]).toBe(11100); // durations
     expect(call[3]).toBe(1124); // commit start time (before mutations or effects)
   });
 
@@ -2249,7 +2258,7 @@ describe(`onPostCommit`, () => {
     expect(call).toHaveLength(4);
     expect(call[0]).toBe('root');
     expect(call[1]).toBe('update');
-    expect(call[2]).toBe(100000000); // durations
+    expect(call[2]).toBe(100001000); // durations
     // The commit time varies because the above duration time varies
     expect(call[3]).toBe(11221221); // commit start time (before mutations or effects)
   });

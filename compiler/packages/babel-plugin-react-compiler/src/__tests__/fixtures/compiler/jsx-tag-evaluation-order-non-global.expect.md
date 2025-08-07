@@ -53,23 +53,23 @@ function maybeMutate(x) {}
 
 function Component(props) {
   const $ = _c(11);
-  let Tag;
   let T0;
+  let Tag;
   let t0;
-  if ($[0] !== props.component || $[1] !== props.alternateComponent) {
+  if ($[0] !== props.alternateComponent || $[1] !== props.component) {
     const maybeMutable = new MaybeMutable();
     Tag = props.component;
 
     T0 = Tag;
     t0 = ((Tag = props.alternateComponent), maybeMutate(maybeMutable));
-    $[0] = props.component;
-    $[1] = props.alternateComponent;
-    $[2] = Tag;
-    $[3] = T0;
+    $[0] = props.alternateComponent;
+    $[1] = props.component;
+    $[2] = T0;
+    $[3] = Tag;
     $[4] = t0;
   } else {
-    Tag = $[2];
-    T0 = $[3];
+    T0 = $[2];
+    Tag = $[3];
     t0 = $[4];
   }
   let t1;

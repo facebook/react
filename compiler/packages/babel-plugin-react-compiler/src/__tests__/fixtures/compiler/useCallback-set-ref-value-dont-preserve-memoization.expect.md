@@ -31,7 +31,7 @@ import { c as _c } from "react/compiler-runtime"; // @enablePreserveExistingMemo
 import { useCallback, useRef } from "react";
 
 function Component(props) {
-  const $ = _c(3);
+  const $ = _c(2);
   const ref = useRef(null);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
@@ -44,12 +44,11 @@ function Component(props) {
   }
   const onChange = t0;
   let t1;
-  if ($[1] !== onChange) {
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = <input onChange={onChange} />;
-    $[1] = onChange;
-    $[2] = t1;
+    $[1] = t1;
   } else {
-    t1 = $[2];
+    t1 = $[1];
   }
   return t1;
 }

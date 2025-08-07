@@ -83,6 +83,13 @@ describe('ReactFiberHostContext', () => {
         }
         return DefaultEventPriority;
       },
+      trackSchedulerEvent: function () {},
+      resolveEventType: function () {
+        return null;
+      },
+      resolveEventTimeStamp: function () {
+        return -1.1;
+      },
       shouldAttemptEagerTransition() {
         return false;
       },
@@ -90,11 +97,18 @@ describe('ReactFiberHostContext', () => {
       maySuspendCommit(type, props) {
         return false;
       },
-      preloadInstance(type, props) {
+      maySuspendCommitOnUpdate(type, oldProps, newProps) {
+        return false;
+      },
+      maySuspendCommitInSyncRender(type, props) {
+        return false;
+      },
+      preloadInstance(instance, type, props) {
         return true;
       },
       startSuspendingCommit() {},
-      suspendInstance(type, props) {},
+      suspendInstance(instance, type, props) {},
+      suspendOnActiveViewTransition(container) {},
       waitForCommitToBeReady() {
         return null;
       },

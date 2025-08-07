@@ -255,6 +255,39 @@ describe('ReactDOMFizzShellHydration', () => {
     },
   );
 
+  // @gate enableHydrationLaneScheduling
+  it(
+    'updating the root at same priority as initial hydration does not ' +
+      'force a client render',
+    async () => {
+      function App() {
+        return <Text text="Initial" />;
+      }
+
+      // Server render
+      await resolveText('Initial');
+      await serverAct(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+      assertLog(['Initial']);
+
+      await clientAct(async () => {
+        let root;
+        startTransition(() => {
+          root = ReactDOMClient.hydrateRoot(container, <App />);
+        });
+        // This has lower priority than the initial hydration, so the update
+        // won't be processed until after hydration finishes.
+        startTransition(() => {
+          root.render(<Text text="Updated" />);
+        });
+      });
+      assertLog(['Initial', 'Updated']);
+      expect(container.textContent).toBe('Updated');
+    },
+  );
+
   it('updating the root while the shell is suspended forces a client render', async () => {
     function App() {
       return <AsyncText text="Shell" />;

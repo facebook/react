@@ -14,12 +14,15 @@ import {
   REACT_MEMO_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
+  REACT_VIEW_TRANSITION_TYPE,
 } from 'shared/ReactSymbols';
 
 import type {LazyComponent} from 'react/src/ReactLazy';
 
 import isArray from 'shared/isArray';
 import getPrototypeOf from 'shared/getPrototypeOf';
+
+import {enableViewTransition} from 'shared/ReactFeatureFlags';
 
 // Used for DEV messages to keep track of which parent rendered some props,
 // in case they error.
@@ -46,6 +49,18 @@ function isObjectPrototype(object: any): boolean {
     }
   }
   return true;
+}
+
+export function isGetter(object: any, name: string): boolean {
+  const ObjectPrototype = Object.prototype;
+  if (object === ObjectPrototype || object === null) {
+    return false;
+  }
+  const descriptor = Object.getOwnPropertyDescriptor(object, name);
+  if (descriptor === undefined) {
+    return isGetter(getPrototypeOf(object), name);
+  }
+  return typeof descriptor.get === 'function';
 }
 
 export function isSimpleObject(object: any): boolean {
@@ -77,9 +92,8 @@ export function isSimpleObject(object: any): boolean {
 export function objectName(object: mixed): string {
   // $FlowFixMe[method-unbinding]
   const name = Object.prototype.toString.call(object);
-  return name.replace(/^\[object (.*)\]$/, function (m, p0) {
-    return p0;
-  });
+  // Extract 'Object' from '[object Object]':
+  return name.slice(8, name.length - 1);
 }
 
 function describeKeyForErrorMessage(key: string): string {
@@ -129,6 +143,10 @@ function describeElementType(type: any): string {
       return 'Suspense';
     case REACT_SUSPENSE_LIST_TYPE:
       return 'SuspenseList';
+    case REACT_VIEW_TRANSITION_TYPE:
+      if (enableViewTransition) {
+        return 'ViewTransition';
+      }
   }
   if (typeof type === 'object') {
     switch (type.$$typeof) {

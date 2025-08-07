@@ -5,12 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, Effect} from '..';
+import {CompilerDiagnostic, CompilerError, Effect, ErrorSeverity} from '..';
 import {HIRFunction, IdentifierId, Place} from '../HIR';
 import {
+  eachInstructionLValue,
   eachInstructionValueOperand,
   eachTerminalOperand,
 } from '../HIR/visitors';
+import {getFunctionCallSignature} from '../Inference/InferReferenceEffects';
 
 /**
  * Validates that local variables cannot be reassigned after render.
@@ -26,16 +28,24 @@ export function validateLocalsNotReassignedAfterRender(fn: HIRFunction): void {
     false,
   );
   if (reassignment !== null) {
-    CompilerError.throwInvalidReact({
-      reason:
-        'Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead',
-      description:
-        reassignment.identifier.name !== null &&
-        reassignment.identifier.name.kind === 'named'
-          ? `Variable \`${reassignment.identifier.name.value}\` cannot be reassigned after render`
-          : '',
-      loc: reassignment.loc,
-    });
+    const errors = new CompilerError();
+    const variable =
+      reassignment.identifier.name != null &&
+      reassignment.identifier.name.kind === 'named'
+        ? `\`${reassignment.identifier.name.value}\``
+        : 'variable';
+    errors.pushDiagnostic(
+      CompilerDiagnostic.create({
+        severity: ErrorSeverity.InvalidReact,
+        category: 'Cannot reassign variable after render completes',
+        description: `Reassigning ${variable} after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.`,
+      }).withDetail({
+        kind: 'error',
+        loc: reassignment.loc,
+        message: `Cannot reassign ${variable} after render completes`,
+      }),
+    );
+    throw errors;
   }
 }
 
@@ -73,16 +83,25 @@ function getContextReassignment(
           // if the function or its depends reassign, propagate that fact on the lvalue
           if (reassignment !== null) {
             if (isAsync || value.loweredFunc.func.async) {
-              CompilerError.throwInvalidReact({
-                reason:
-                  'Reassigning a variable in an async function can cause inconsistent behavior on subsequent renders. Consider using state instead',
-                description:
-                  reassignment.identifier.name !== null &&
-                  reassignment.identifier.name.kind === 'named'
-                    ? `Variable \`${reassignment.identifier.name.value}\` cannot be reassigned after render`
-                    : '',
-                loc: reassignment.loc,
-              });
+              const errors = new CompilerError();
+              const variable =
+                reassignment.identifier.name !== null &&
+                reassignment.identifier.name.kind === 'named'
+                  ? `\`${reassignment.identifier.name.value}\``
+                  : 'variable';
+              errors.pushDiagnostic(
+                CompilerDiagnostic.create({
+                  severity: ErrorSeverity.InvalidReact,
+                  category: 'Cannot reassign variable in async function',
+                  description:
+                    'Reassigning a variable in an async function can cause inconsistent behavior on subsequent renders. Consider using state instead',
+                }).withDetail({
+                  kind: 'error',
+                  loc: reassignment.loc,
+                  message: `Cannot reassign ${variable}`,
+                }),
+              );
+              throw errors;
             }
             reassigningFunctions.set(lvalue.identifier.id, reassignment);
           }
@@ -128,10 +147,47 @@ function getContextReassignment(
              */
             contextVariables.add(value.lvalue.place.identifier.id);
           }
+          const reassignment = reassigningFunctions.get(
+            value.value.identifier.id,
+          );
+          if (reassignment !== undefined) {
+            reassigningFunctions.set(
+              value.lvalue.place.identifier.id,
+              reassignment,
+            );
+            reassigningFunctions.set(lvalue.identifier.id, reassignment);
+          }
           break;
         }
         default: {
-          for (const operand of eachInstructionValueOperand(value)) {
+          let operands = eachInstructionValueOperand(value);
+          // If we're calling a function that doesn't let its arguments escape, only test the callee
+          if (value.kind === 'CallExpression') {
+            const signature = getFunctionCallSignature(
+              fn.env,
+              value.callee.identifier.type,
+            );
+            if (signature?.noAlias) {
+              operands = [value.callee];
+            }
+          } else if (value.kind === 'MethodCall') {
+            const signature = getFunctionCallSignature(
+              fn.env,
+              value.property.identifier.type,
+            );
+            if (signature?.noAlias) {
+              operands = [value.receiver, value.property];
+            }
+          } else if (value.kind === 'TaggedTemplateExpression') {
+            const signature = getFunctionCallSignature(
+              fn.env,
+              value.tag.identifier.type,
+            );
+            if (signature?.noAlias) {
+              operands = [value.tag];
+            }
+          }
+          for (const operand of operands) {
             CompilerError.invariant(operand.effect !== Effect.Unknown, {
               reason: `Expected effects to be inferred prior to ValidateLocalsNotReassignedAfterRender`,
               loc: operand.loc,
@@ -139,15 +195,22 @@ function getContextReassignment(
             const reassignment = reassigningFunctions.get(
               operand.identifier.id,
             );
-            if (
-              reassignment !== undefined &&
-              operand.effect === Effect.Freeze
-            ) {
+            if (reassignment !== undefined) {
               /*
                * Functions that reassign local variables are inherently mutable and are unsafe to pass
                * to a place that expects a frozen value. Propagate the reassignment upward.
                */
-              return reassignment;
+              if (operand.effect === Effect.Freeze) {
+                return reassignment;
+              } else {
+                /*
+                 * If the operand is not frozen but it does reassign, then the lvalues
+                 * of the instruction could also be reassigning
+                 */
+                for (const lval of eachInstructionLValue(instr)) {
+                  reassigningFunctions.set(lval.identifier.id, reassignment);
+                }
+              }
             }
           }
           break;

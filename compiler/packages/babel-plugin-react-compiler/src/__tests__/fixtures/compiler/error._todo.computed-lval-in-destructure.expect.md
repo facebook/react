@@ -15,10 +15,15 @@ function Component(props) {
 ## Error
 
 ```
+Found 1 error:
+
+Todo: (BuildHIR::lowerAssignment) Handle computed properties in ObjectPattern
+
+error._todo.computed-lval-in-destructure.ts:3:9
   1 | function Component(props) {
   2 |   const computedKey = props.key;
 > 3 |   const {[computedKey]: x} = props.val;
-    |          ^^^^^^^^^^^^^^^^ Todo: (BuildHIR::lowerAssignment) Handle computed properties in ObjectPattern (3:3)
+    |          ^^^^^^^^^^^^^^^^ (BuildHIR::lowerAssignment) Handle computed properties in ObjectPattern
   4 |
   5 |   return x;
   6 | }

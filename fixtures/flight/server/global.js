@@ -86,7 +86,7 @@ function request(options, body) {
   });
 }
 
-app.all('/', async function (req, res, next) {
+async function renderApp(req, res, next) {
   // Proxy the request to the regional server.
   const proxiedHeaders = {
     'X-Forwarded-Host': req.hostname,
@@ -101,13 +101,21 @@ app.all('/', async function (req, res, next) {
   } else if (req.get('Content-type')) {
     proxiedHeaders['Content-type'] = req.get('Content-type');
   }
+  if (req.headers['cache-control']) {
+    proxiedHeaders['Cache-Control'] = req.get('cache-control');
+  }
+  if (req.get('rsc-request-id')) {
+    proxiedHeaders['rsc-request-id'] = req.get('rsc-request-id');
+  }
+
+  const requestsPrerender = req.path === '/prerender';
 
   const promiseForData = request(
     {
       host: '127.0.0.1',
       port: 3001,
       method: req.method,
-      path: '/',
+      path: requestsPrerender ? '/?prerender=1' : '/',
       headers: proxiedHeaders,
     },
     req
@@ -128,7 +136,7 @@ app.all('/', async function (req, res, next) {
         buildPath = path.join(__dirname, '../build/');
       }
       // Read the module map from the virtual file system.
-      const ssrManifest = JSON.parse(
+      const serverConsumerManifest = JSON.parse(
         await virtualFs.readFile(
           path.join(buildPath, 'react-ssr-manifest.json'),
           'utf8'
@@ -158,14 +166,20 @@ app.all('/', async function (req, res, next) {
       rscResponse.pipe(rscResponse1);
       rscResponse.pipe(rscResponse2);
 
-      const {formState} = await createFromNodeStream(rscResponse1, ssrManifest);
+      const {formState} = await createFromNodeStream(
+        rscResponse1,
+        serverConsumerManifest
+      );
       rscResponse1.end();
 
       let cachedResult;
       let Root = () => {
         if (!cachedResult) {
           // Read this stream inside the render.
-          cachedResult = createFromNodeStream(rscResponse2, ssrManifest);
+          cachedResult = createFromNodeStream(
+            rscResponse2,
+            serverConsumerManifest
+          );
         }
         return React.use(cachedResult).root;
       };
@@ -210,7 +224,10 @@ app.all('/', async function (req, res, next) {
       res.end();
     }
   }
-});
+}
+
+app.all('/', renderApp);
+app.all('/prerender', renderApp);
 
 if (process.env.NODE_ENV === 'development') {
   app.use(express.static('public'));

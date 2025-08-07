@@ -15,9 +15,14 @@ function Component() {
 
   // capture into a separate variable that is not a context variable.
   const y = x;
+  /**
+   * Note that this fixture currently produces a stale effect closure if `y = x
+   * = someGlobal` changes between renders. Under current compiler assumptions,
+   * that would be a rule of react violation.
+   */
   useEffect(() => {
     y.value = 'hello';
-  }, []);
+  });
 
   useEffect(() => {
     setState(someGlobal.value);

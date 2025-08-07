@@ -860,6 +860,9 @@ describe('ReactTransition', () => {
     assertLog([
       // Suspend.
       'Suspend! [Async]',
+      // pre-warming
+      'Normal pri: 0',
+      // end pre-warming
       'Loading...',
     ]);
     expect(root).toMatchRenderedOutput('(empty), Normal pri: 0');

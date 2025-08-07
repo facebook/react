@@ -18,8 +18,6 @@ import {REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-import {enableAsyncActions} from 'shared/ReactFeatureFlags';
-
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
@@ -90,6 +88,14 @@ export function useEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
+  if (__DEV__) {
+    if (create == null) {
+      console.warn(
+        'React Hook useEffect requires an effect callback. Did you forget to pass a callback to the hook?',
+      );
+    }
+  }
+
   const dispatcher = resolveDispatcher();
   return dispatcher.useEffect(create, deps);
 }
@@ -98,6 +104,14 @@ export function useInsertionEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
+  if (__DEV__) {
+    if (create == null) {
+      console.warn(
+        'React Hook useInsertionEffect requires an effect callback. Did you forget to pass a callback to the hook?',
+      );
+    }
+  }
+
   const dispatcher = resolveDispatcher();
   return dispatcher.useInsertionEffect(create, deps);
 }
@@ -106,6 +120,14 @@ export function useLayoutEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
+  if (__DEV__) {
+    if (create == null) {
+      console.warn(
+        'React Hook useLayoutEffect requires an effect callback. Did you forget to pass a callback to the hook?',
+      );
+    }
+  }
+
   const dispatcher = resolveDispatcher();
   return dispatcher.useLayoutEffect(create, deps);
 }
@@ -187,7 +209,7 @@ export function use<T>(usable: Usable<T>): T {
   return dispatcher.use(usable);
 }
 
-export function useMemoCache(size: number): Array<any> {
+export function useMemoCache(size: number): Array<mixed> {
   const dispatcher = resolveDispatcher();
   // $FlowFixMe[not-a-function] This is unstable, thus optional
   return dispatcher.useMemoCache(size);
@@ -206,7 +228,6 @@ export function useOptimistic<S, A>(
   reducer: ?(S, A) => S,
 ): [S, (A) => void] {
   const dispatcher = resolveDispatcher();
-  // $FlowFixMe[not-a-function] This is unstable, thus optional
   return dispatcher.useOptimistic(passthrough, reducer);
 }
 
@@ -215,11 +236,6 @@ export function useActionState<S, P>(
   initialState: Awaited<S>,
   permalink?: string,
 ): [Awaited<S>, (P) => void, boolean] {
-  if (!enableAsyncActions) {
-    throw new Error('Not implemented.');
-  } else {
-    const dispatcher = resolveDispatcher();
-    // $FlowFixMe[not-a-function] This is unstable, thus optional
-    return dispatcher.useActionState(action, initialState, permalink);
-  }
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useActionState(action, initialState, permalink);
 }

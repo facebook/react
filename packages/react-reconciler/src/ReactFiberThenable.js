@@ -14,9 +14,15 @@ import type {
   RejectedThenable,
 } from 'shared/ReactTypes';
 
+import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
+
+import {callLazyInitInDEV} from './ReactFiberCallUserSpace';
+
 import {getWorkInProgressRoot} from './ReactFiberWorkLoop';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
+
+import noop from 'shared/noop';
 
 opaque type ThenableStateDev = {
   didWarnAboutUncachedPromise: boolean,
@@ -46,7 +52,7 @@ export const SuspenseException: mixed = new Error(
     '`try/catch` block. Capturing without rethrowing will lead to ' +
     'unexpected behavior.\n\n' +
     'To handle async errors, wrap your component in an error boundary, or ' +
-    "call the promise's `.catch` method and pass the result to `use`",
+    "call the promise's `.catch` method and pass the result to `use`.",
 );
 
 export const SuspenseyCommitException: mixed = new Error(
@@ -54,6 +60,14 @@ export const SuspenseyCommitException: mixed = new Error(
     "userspace. If you're seeing this, it's likely a bug in React.",
 );
 
+export const SuspenseActionException: mixed = new Error(
+  "Suspense Exception: This is not a real error! It's an implementation " +
+    'detail of `useActionState` to interrupt the current render. You must either ' +
+    'rethrow it immediately, or move the `useActionState` call outside of the ' +
+    '`try/catch` block. Capturing without rethrowing will lead to ' +
+    'unexpected behavior.\n\n' +
+    'To handle async errors, wrap your component in an error boundary.',
+);
 // This is a noop thenable that we use to trigger a fallback in throwException.
 // TODO: It would be better to refactor throwException into multiple functions
 // so we can trigger a fallback directly without having to check the type. But
@@ -86,8 +100,6 @@ export function isThenableResolved(thenable: Thenable<mixed>): boolean {
   const status = thenable.status;
   return status === 'fulfilled' || status === 'rejected';
 }
-
-function noop(): void {}
 
 export function trackUsedThenable<T>(
   thenableState: ThenableState,
@@ -186,8 +198,9 @@ export function trackUsedThenable<T>(
           // this case include forcing a concurrent render, or putting the whole
           // root into offscreen mode.
           throw new Error(
-            'async/await is not yet supported in Client Components, only ' +
-              'Server Components. This error is often caused by accidentally ' +
+            'An unknown Component is an async Client Component. ' +
+              'Only Server Components can be async at the moment. ' +
+              'This error is often caused by accidentally ' +
               "adding `'use client'` to a module that was originally written " +
               'for the server.',
           );
@@ -251,6 +264,27 @@ export function suspendCommit(): void {
   throw SuspenseyCommitException;
 }
 
+export function resolveLazy<T>(lazyType: LazyComponentType<T, any>): T {
+  try {
+    if (__DEV__) {
+      return callLazyInitInDEV(lazyType);
+    }
+    const payload = lazyType._payload;
+    const init = lazyType._init;
+    return init(payload);
+  } catch (x) {
+    if (x !== null && typeof x === 'object' && typeof x.then === 'function') {
+      // This lazy Suspended. Treat this as if we called use() to unwrap it.
+      suspendedThenable = x;
+      if (__DEV__) {
+        needsToResetSuspendedThenableDEV = true;
+      }
+      throw SuspenseException;
+    }
+    throw x;
+  }
+}
+
 // This is used to track the actual thenable that suspended so it can be
 // passed to the rest of the Suspense implementation — which, for historical
 // reasons, expects to receive a thenable.
@@ -296,7 +330,10 @@ export function checkIfUseWrappedInAsyncCatch(rejectedReason: any) {
   // execution context is to check the dispatcher every time `use` is called,
   // or some equivalent. That might be preferable for other reasons, too, since
   // it matches how we prevent similar mistakes for other hooks.
-  if (rejectedReason === SuspenseException) {
+  if (
+    rejectedReason === SuspenseException ||
+    rejectedReason === SuspenseActionException
+  ) {
     throw new Error(
       'Hooks are not supported inside an async component. This ' +
         "error is often caused by accidentally adding `'use client'` " +

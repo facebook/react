@@ -12,7 +12,7 @@ import type {Lane, Lanes} from './ReactFiberLane';
 import type {CapturedValue} from './ReactCapturedValue';
 import type {Update} from './ReactFiberClassUpdateQueue';
 import type {Wakeable} from 'shared/ReactTypes';
-import type {OffscreenQueue} from './ReactFiberActivityComponent';
+import type {OffscreenQueue} from './ReactFiberOffscreenComponent';
 import type {RetryQueue} from './ReactFiberSuspenseComponent';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
@@ -24,6 +24,7 @@ import {
   FunctionComponent,
   ForwardRef,
   SimpleMemoComponent,
+  ActivityComponent,
   SuspenseComponent,
   OffscreenComponent,
 } from './ReactWorkTags';
@@ -37,10 +38,8 @@ import {
   ForceClientRender,
   ScheduleRetry,
 } from './ReactFiberFlags';
-import {NoMode, ConcurrentMode, DebugTracingMode} from './ReactTypeOfMode';
+import {NoMode, ConcurrentMode} from './ReactTypeOfMode';
 import {
-  enableDebugTracing,
-  enableLazyContextPropagation,
   enableUpdaterTracking,
   enablePostpone,
   disableLegacyMode,
@@ -70,7 +69,6 @@ import {
 } from './ReactFiberWorkLoop';
 import {propagateParentContextChangesToDeferredTree} from './ReactFiberNewContext';
 import {logUncaughtError, logCaughtError} from './ReactFiberErrorLogger';
-import {logComponentSuspended} from './DebugTracing';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {
   SyncLane,
@@ -201,21 +199,19 @@ function initializeClassErrorUpdate(
 }
 
 function resetSuspendedComponent(sourceFiber: Fiber, rootRenderLanes: Lanes) {
-  if (enableLazyContextPropagation) {
-    const currentSourceFiber = sourceFiber.alternate;
-    if (currentSourceFiber !== null) {
-      // Since we never visited the children of the suspended component, we
-      // need to propagate the context change now, to ensure that we visit
-      // them during the retry.
-      //
-      // We don't have to do this for errors because we retry errors without
-      // committing in between. So this is specific to Suspense.
-      propagateParentContextChangesToDeferredTree(
-        currentSourceFiber,
-        sourceFiber,
-        rootRenderLanes,
-      );
-    }
+  const currentSourceFiber = sourceFiber.alternate;
+  if (currentSourceFiber !== null) {
+    // Since we never visited the children of the suspended component, we
+    // need to propagate the context change now, to ensure that we visit
+    // them during the retry.
+    //
+    // We don't have to do this for errors because we retry errors without
+    // committing in between. So this is specific to Suspense.
+    propagateParentContextChangesToDeferredTree(
+      currentSourceFiber,
+      sourceFiber,
+      rootRenderLanes,
+    );
   }
 
   // Reset the memoizedState to what it was before we attempted to render it.
@@ -399,21 +395,13 @@ function throwException(
         }
       }
 
-      if (__DEV__) {
-        if (enableDebugTracing) {
-          if (sourceFiber.mode & DebugTracingMode) {
-            const name = getComponentNameFromFiber(sourceFiber) || 'Unknown';
-            logComponentSuspended(name, wakeable);
-          }
-        }
-      }
-
       // Mark the nearest Suspense boundary to switch to rendering a fallback.
       const suspenseBoundary = getSuspenseHandler();
       if (suspenseBoundary !== null) {
         switch (suspenseBoundary.tag) {
+          case ActivityComponent:
           case SuspenseComponent: {
-            // If this suspense boundary is not already showing a fallback, mark
+            // If this suspense/activity boundary is not already showing a fallback, mark
             // the in-progress render as suspended. We try to perform this logic
             // as soon as soon as possible during the render phase, so the work
             // loop can know things like whether it's OK to switch to other tasks,
@@ -567,19 +555,19 @@ function throwException(
     (disableLegacyMode || sourceFiber.mode & ConcurrentMode)
   ) {
     markDidThrowWhileHydratingDEV();
-    const suspenseBoundary = getSuspenseHandler();
+    const hydrationBoundary = getSuspenseHandler();
     // If the error was thrown during hydration, we may be able to recover by
     // discarding the dehydrated content and switching to a client render.
     // Instead of surfacing the error, find the nearest Suspense boundary
     // and render it again without hydration.
-    if (suspenseBoundary !== null) {
-      if ((suspenseBoundary.flags & ShouldCapture) === NoFlags) {
+    if (hydrationBoundary !== null) {
+      if ((hydrationBoundary.flags & ShouldCapture) === NoFlags) {
         // Set a flag to indicate that we should try rendering the normal
         // children again, not the fallback.
-        suspenseBoundary.flags |= ForceClientRender;
+        hydrationBoundary.flags |= ForceClientRender;
       }
       markSuspenseBoundaryShouldCapture(
-        suspenseBoundary,
+        hydrationBoundary,
         returnFiber,
         sourceFiber,
         root,

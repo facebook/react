@@ -17,6 +17,12 @@ function Foo(props) {
   );
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: Foo,
+  params: [{value: 1}],
+  sequentialRenders: [{value: 1}, {value: 0}],
+};
+
 ```
 
 ## Code
@@ -49,5 +55,14 @@ function Foo(props) {
   return t0;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: Foo,
+  params: [{ value: 1 }],
+  sequentialRenders: [{ value: 1 }, { value: 0 }],
+};
+
 ```
       
+### Eval output
+(kind: ok) hello 1,
+goodbye 0,

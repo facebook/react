@@ -20,7 +20,11 @@ import type {
   RejectedThenable,
 } from 'shared/ReactTypes';
 
-export opaque type ThenableState = Array<Thenable<any>>;
+import {enableAsyncDebugInfo} from 'shared/ReactFeatureFlags';
+
+import noop from 'shared/noop';
+
+export type ThenableState = Array<Thenable<any>>;
 
 // An error that is thrown (e.g. by `use`) to trigger Suspense. If we
 // detect this is caught by userspace, we'll log a warning in development.
@@ -31,7 +35,7 @@ export const SuspenseException: mixed = new Error(
     '`try/catch` block. Capturing without rethrowing will lead to ' +
     'unexpected behavior.\n\n' +
     'To handle async errors, wrap your component in an error boundary, or ' +
-    "call the promise's `.catch` method and pass the result to `use`",
+    "call the promise's `.catch` method and pass the result to `use`.",
 );
 
 export function createThenableState(): ThenableState {
@@ -39,8 +43,6 @@ export function createThenableState(): ThenableState {
   // suspends again, we'll reuse the same state.
   return [];
 }
-
-function noop(): void {}
 
 export function trackUsedThenable<T>(
   thenableState: ThenableState,
@@ -50,6 +52,11 @@ export function trackUsedThenable<T>(
   const previous = thenableState[index];
   if (previous === undefined) {
     thenableState.push(thenable);
+    if (__DEV__ && enableAsyncDebugInfo) {
+      const stacks: Array<Error> =
+        (thenableState: any)._stacks || ((thenableState: any)._stacks = []);
+      stacks.push(new Error());
+    }
   } else {
     if (previous !== thenable) {
       // Reuse the previous thenable, and drop the new one. We can assume

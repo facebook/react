@@ -60,9 +60,9 @@ export function typedArrayToBinaryChunk(
   throw new Error('Not implemented.');
 }
 
-export function byteLengthOfChunk(chunk: Chunk | PrecomputedChunk): number {
-  throw new Error('Not implemented.');
-}
+export const byteLengthOfChunk:
+  | null
+  | ((chunk: Chunk | PrecomputedChunk) => number) = null;
 
 export function byteLengthOfBinaryChunk(chunk: BinaryChunk): number {
   throw new Error('Not implemented.');
@@ -75,3 +75,7 @@ export function closeWithError(destination: Destination, error: mixed): void {
 }
 
 export {createFastHashJS as createFastHash} from './createFastHashJS';
+
+export function readAsDataURL(blob: Blob): Promise<string> {
+  throw new Error('Not implemented.');
+}

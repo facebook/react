@@ -33,8 +33,8 @@ const { shallowCopy, throwInput } = require("shared-runtime");
 
 function Component(props) {
   const $ = _c(2);
-  let x;
   let t0;
+  let x;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = Symbol.for("react.early_return_sentinel");
     bb0: {
@@ -52,11 +52,11 @@ function Component(props) {
         break bb0;
       }
     }
-    $[0] = x;
-    $[1] = t0;
+    $[0] = t0;
+    $[1] = x;
   } else {
-    x = $[0];
-    t0 = $[1];
+    t0 = $[0];
+    x = $[1];
   }
   if (t0 !== Symbol.for("react.early_return_sentinel")) {
     return t0;

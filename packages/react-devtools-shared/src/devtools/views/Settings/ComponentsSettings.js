@@ -15,12 +15,9 @@ import {
   useMemo,
   useRef,
   useState,
+  use,
 } from 'react';
-import {
-  LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
-  LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET,
-} from '../../../constants';
-import {useLocalStorage, useSubscription} from '../hooks';
+import {useSubscription} from '../hooks';
 import {StoreContext} from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
@@ -31,6 +28,7 @@ import {
   ComponentFilterElementType,
   ComponentFilterHOC,
   ComponentFilterLocation,
+  ComponentFilterEnvironmentName,
   ElementTypeClass,
   ElementTypeContext,
   ElementTypeFunction,
@@ -40,8 +38,9 @@ import {
   ElementTypeOtherOrUnknown,
   ElementTypeProfiler,
   ElementTypeSuspense,
+  ElementTypeActivity,
+  ElementTypeViewTransition,
 } from 'react-devtools-shared/src/frontend/types';
-import {getDefaultOpenInEditorURL} from 'react-devtools-shared/src/utils';
 
 import styles from './SettingsShared.css';
 
@@ -52,11 +51,15 @@ import type {
   ElementType,
   ElementTypeComponentFilter,
   RegExpComponentFilter,
+  EnvironmentNameComponentFilter,
 } from 'react-devtools-shared/src/frontend/types';
+import {isInternalFacebookBuild} from 'react-devtools-feature-flags';
 
-const vscodeFilepath = 'vscode://file/{path}:{line}';
-
-export default function ComponentsSettings(_: {}): React.Node {
+export default function ComponentsSettings({
+  environmentNames,
+}: {
+  environmentNames: Promise<Array<string>>,
+}): React.Node {
   const store = useContext(StoreContext);
   const {parseHookNames, setParseHookNames} = useContext(SettingsContext);
 
@@ -88,18 +91,33 @@ export default function ComponentsSettings(_: {}): React.Node {
     [setParseHookNames],
   );
 
-  const [openInEditorURLPreset, setOpenInEditorURLPreset] = useLocalStorage<
-    'vscode' | 'custom',
-  >(LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET, 'custom');
-
-  const [openInEditorURL, setOpenInEditorURL] = useLocalStorage<string>(
-    LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
-    getDefaultOpenInEditorURL(),
-  );
-
   const [componentFilters, setComponentFilters] = useState<
     Array<ComponentFilter>,
   >(() => [...store.componentFilters]);
+
+  const usedEnvironmentNames = use(environmentNames);
+
+  const resolvedEnvironmentNames = useMemo(() => {
+    const set = new Set(usedEnvironmentNames);
+    // If there are other filters already specified but are not currently
+    // on the page, we still allow them as options.
+    for (let i = 0; i < componentFilters.length; i++) {
+      const filter = componentFilters[i];
+      if (filter.type === ComponentFilterEnvironmentName) {
+        set.add(filter.value);
+      }
+    }
+    // Client is special and is always available as a default.
+    if (set.size > 0) {
+      // Only show any options at all if there's any other option already
+      // used by a filter or if any environments are used by the page.
+      // Note that "Client" can have been added above which would mean
+      // that we should show it as an option regardless if it's the only
+      // option.
+      set.add('Client');
+    }
+    return Array.from(set).sort();
+  }, [usedEnvironmentNames, componentFilters]);
 
   const addFilter = useCallback(() => {
     setComponentFilters(prevComponentFilters => {
@@ -145,6 +163,13 @@ export default function ComponentsSettings(_: {}): React.Node {
               type: ComponentFilterHOC,
               isEnabled: componentFilter.isEnabled,
               isValid: true,
+            };
+          } else if (type === ComponentFilterEnvironmentName) {
+            cloned[index] = {
+              type: ComponentFilterEnvironmentName,
+              isEnabled: componentFilter.isEnabled,
+              isValid: true,
+              value: 'Client',
             };
           }
         }
@@ -210,6 +235,29 @@ export default function ComponentsSettings(_: {}): React.Node {
     [],
   );
 
+  const updateFilterValueEnvironmentName = useCallback(
+    (componentFilter: ComponentFilter, value: string) => {
+      if (componentFilter.type !== ComponentFilterEnvironmentName) {
+        throw Error('Invalid value for environment name filter');
+      }
+
+      setComponentFilters(prevComponentFilters => {
+        const cloned: Array<ComponentFilter> = [...prevComponentFilters];
+        if (componentFilter.type === ComponentFilterEnvironmentName) {
+          const index = prevComponentFilters.indexOf(componentFilter);
+          if (index >= 0) {
+            cloned[index] = {
+              ...componentFilter,
+              value,
+            };
+          }
+        }
+        return cloned;
+      });
+    },
+    [],
+  );
+
   const removeFilter = useCallback((index: number) => {
     setComponentFilters(prevComponentFilters => {
       const cloned: Array<ComponentFilter> = [...prevComponentFilters];
@@ -246,6 +294,11 @@ export default function ComponentsSettings(_: {}): React.Node {
               ...((cloned[index]: any): BooleanComponentFilter),
               isEnabled,
             };
+          } else if (componentFilter.type === ComponentFilterEnvironmentName) {
+            cloned[index] = {
+              ...((cloned[index]: any): EnvironmentNameComponentFilter),
+              isEnabled,
+            };
           }
         }
         return cloned;
@@ -271,55 +324,31 @@ export default function ComponentsSettings(_: {}): React.Node {
   );
 
   return (
-    <div className={styles.Settings}>
-      <label className={styles.Setting}>
-        <input
-          type="checkbox"
-          checked={!collapseNodesByDefault}
-          onChange={updateCollapseNodesByDefault}
-        />{' '}
-        Expand component tree by default
-      </label>
-
-      <label className={styles.Setting}>
-        <input
-          type="checkbox"
-          checked={parseHookNames}
-          onChange={updateParseHookNames}
-        />{' '}
-        Always parse hook names from source{' '}
-        <span className={styles.Warning}>(may be slow)</span>
-      </label>
-
-      <label className={styles.OpenInURLSetting}>
-        Open in Editor URL:{' '}
-        <select
-          className={styles.Select}
-          value={openInEditorURLPreset}
-          onChange={({currentTarget}) => {
-            const selectedValue = currentTarget.value;
-            setOpenInEditorURLPreset(selectedValue);
-            if (selectedValue === 'vscode') {
-              setOpenInEditorURL(vscodeFilepath);
-            } else if (selectedValue === 'custom') {
-              setOpenInEditorURL('');
-            }
-          }}>
-          <option value="vscode">VS Code</option>
-          <option value="custom">Custom</option>
-        </select>
-        {openInEditorURLPreset === 'custom' && (
+    <div className={styles.SettingList}>
+      <div className={styles.SettingWrapper}>
+        <label className={styles.SettingRow}>
           <input
-            className={styles.Input}
-            type="text"
-            placeholder={process.env.EDITOR_URL ? process.env.EDITOR_URL : ''}
-            value={openInEditorURL}
-            onChange={event => {
-              setOpenInEditorURL(event.target.value);
-            }}
+            type="checkbox"
+            checked={!collapseNodesByDefault}
+            onChange={updateCollapseNodesByDefault}
+            className={styles.SettingRowCheckbox}
           />
-        )}
-      </label>
+          Expand component tree by default
+        </label>
+      </div>
+
+      <div className={styles.SettingWrapper}>
+        <label className={styles.SettingRow}>
+          <input
+            type="checkbox"
+            checked={parseHookNames}
+            onChange={updateParseHookNames}
+            className={styles.SettingRowCheckbox}
+          />
+          Always parse hook names from source&nbsp;
+          <span className={styles.Warning}>(may be slow)</span>
+        </label>
+      </div>
 
       <div className={styles.Header}>Hide components where...</div>
 
@@ -363,7 +392,6 @@ export default function ComponentsSettings(_: {}): React.Node {
               </td>
               <td className={styles.TableCell}>
                 <select
-                  className={styles.Select}
                   value={componentFilter.type}
                   onChange={({currentTarget}) =>
                     changeFilterType(
@@ -380,10 +408,16 @@ export default function ComponentsSettings(_: {}): React.Node {
                   <option value={ComponentFilterDisplayName}>name</option>
                   <option value={ComponentFilterElementType}>type</option>
                   <option value={ComponentFilterHOC}>hoc</option>
+                  {resolvedEnvironmentNames.length > 0 && (
+                    <option value={ComponentFilterEnvironmentName}>
+                      environment
+                    </option>
+                  )}
                 </select>
               </td>
               <td className={styles.TableCell}>
-                {componentFilter.type === ComponentFilterElementType &&
+                {(componentFilter.type === ComponentFilterElementType ||
+                  componentFilter.type === ComponentFilterEnvironmentName) &&
                   'equals'}
                 {(componentFilter.type === ComponentFilterLocation ||
                   componentFilter.type === ComponentFilterDisplayName) &&
@@ -392,7 +426,6 @@ export default function ComponentsSettings(_: {}): React.Node {
               <td className={styles.TableCell}>
                 {componentFilter.type === ComponentFilterElementType && (
                   <select
-                    className={styles.Select}
                     value={componentFilter.value}
                     onChange={({currentTarget}) =>
                       updateFilterValueElementType(
@@ -400,17 +433,27 @@ export default function ComponentsSettings(_: {}): React.Node {
                         ((parseInt(currentTarget.value, 10): any): ElementType),
                       )
                     }>
+                    {isInternalFacebookBuild && (
+                      <option value={ElementTypeActivity}>activity</option>
+                    )}
                     <option value={ElementTypeClass}>class</option>
                     <option value={ElementTypeContext}>context</option>
                     <option value={ElementTypeFunction}>function</option>
                     <option value={ElementTypeForwardRef}>forward ref</option>
                     <option value={ElementTypeHostComponent}>
-                      dom nodes (e.g. &lt;div&gt;)
+                      {__IS_NATIVE__
+                        ? 'host components (e.g. <RCTText>)'
+                        : 'dom nodes (e.g. <div>)'}
                     </option>
                     <option value={ElementTypeMemo}>memo</option>
                     <option value={ElementTypeOtherOrUnknown}>other</option>
                     <option value={ElementTypeProfiler}>profiler</option>
                     <option value={ElementTypeSuspense}>suspense</option>
+                    {isInternalFacebookBuild && (
+                      <option value={ElementTypeViewTransition}>
+                        view transition
+                      </option>
+                    )}
                   </select>
                 )}
                 {(componentFilter.type === ComponentFilterLocation ||
@@ -427,6 +470,22 @@ export default function ComponentsSettings(_: {}): React.Node {
                     }
                     value={componentFilter.value}
                   />
+                )}
+                {componentFilter.type === ComponentFilterEnvironmentName && (
+                  <select
+                    value={componentFilter.value}
+                    onChange={({currentTarget}) =>
+                      updateFilterValueEnvironmentName(
+                        componentFilter,
+                        currentTarget.value,
+                      )
+                    }>
+                    {resolvedEnvironmentNames.map(name => (
+                      <option key={name} value={name}>
+                        {name}
+                      </option>
+                    ))}
+                  </select>
                 )}
               </td>
               <td className={styles.TableCell}>

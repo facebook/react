@@ -36,6 +36,9 @@ function Component() {
   }
   return t0;
 }
+function _temp() {
+  window.foo = true;
+}
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,

@@ -1,6 +1,6 @@
 'use strict';
 
-const {TestEnvironment: JSDOMEnvironment} = require('jest-environment-jsdom');
+const ReactJSDOMEnvironment = require('./ReactJSDOMEnvironment');
 const {TestEnvironment: NodeEnvironment} = require('jest-environment-node');
 
 /**
@@ -10,7 +10,7 @@ class ReactDOMServerIntegrationEnvironment extends NodeEnvironment {
   constructor(config, context) {
     super(config, context);
 
-    this.domEnvironment = new JSDOMEnvironment(config, context);
+    this.domEnvironment = new ReactJSDOMEnvironment(config, context);
 
     this.global.window = this.domEnvironment.dom.window;
     this.global.document = this.global.window.document;

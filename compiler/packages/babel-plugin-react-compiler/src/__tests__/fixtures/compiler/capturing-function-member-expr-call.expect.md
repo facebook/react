@@ -46,10 +46,10 @@ function component(t0) {
   }
   const hide = t2;
   let t3;
-  if ($[4] !== poke || $[5] !== hide) {
+  if ($[4] !== hide || $[5] !== poke) {
     t3 = <Foo poke={poke} hide={hide} />;
-    $[4] = poke;
-    $[5] = hide;
+    $[4] = hide;
+    $[5] = poke;
     $[6] = t3;
   } else {
     t3 = $[6];

@@ -67,6 +67,7 @@ describe('rendering React components at document', () => {
 
       const markup = ReactDOMServer.renderToString(<Root hello="world" />);
       expect(markup).not.toContain('DOCTYPE');
+      expect(markup).not.toContain('rel="expect"');
       const testDocument = getTestDocument(markup);
       const body = testDocument.body;
 
@@ -115,8 +116,8 @@ describe('rendering React components at document', () => {
       expect(testDocument.firstChild).toBe(originalDocEl);
       expect(testDocument.head).toBe(originalHead);
       expect(testDocument.body).toBe(originalBody);
-      expect(originalBody.firstChild).toEqual(null);
-      expect(originalHead.firstChild).toEqual(null);
+      expect(originalBody.innerHTML).toBe('');
+      expect(originalHead.innerHTML).toBe('');
     });
 
     it('should not be able to switch root constructors', async () => {
@@ -266,47 +267,27 @@ describe('rendering React components at document', () => {
       );
       const testDocument = getTestDocument(markup);
 
-      const favorSafetyOverHydrationPerf = gate(
-        flags => flags.favorSafetyOverHydrationPerf,
-      );
-      expect(() => {
-        ReactDOM.flushSync(() => {
-          ReactDOMClient.hydrateRoot(
-            testDocument,
-            <Component text="Hello world" />,
-            {
-              onRecoverableError: error => {
-                Scheduler.log(
-                  'onRecoverableError: ' + normalizeError(error.message),
-                );
-                if (error.cause) {
-                  Scheduler.log(
-                    'Cause: ' + normalizeError(error.cause.message),
-                  );
-                }
-              },
+      ReactDOM.flushSync(() => {
+        ReactDOMClient.hydrateRoot(
+          testDocument,
+          <Component text="Hello world" />,
+          {
+            onRecoverableError: error => {
+              Scheduler.log(
+                'onRecoverableError: ' + normalizeError(error.message),
+              );
+              if (error.cause) {
+                Scheduler.log('Cause: ' + normalizeError(error.cause.message));
+              }
             },
-          );
-        });
-      }).toErrorDev(
-        favorSafetyOverHydrationPerf
-          ? []
-          : [
-              "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
-            ],
-        {withoutStack: true},
-      );
+          },
+        );
+      });
 
-      assertLog(
-        favorSafetyOverHydrationPerf
-          ? [
-              "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
-            ]
-          : [],
-      );
-      expect(testDocument.body.innerHTML).toBe(
-        favorSafetyOverHydrationPerf ? 'Hello world' : 'Goodbye world',
-      );
+      assertLog([
+        "onRecoverableError: Hydration failed because the server rendered text didn't match the client.",
+      ]);
+      expect(testDocument.body.innerHTML).toBe('Hello world');
     });
 
     it('should render w/ no markup to full document', async () => {

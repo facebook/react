@@ -21,7 +21,7 @@ function shim(...args: any): any {
 // Resources (when unsupported)
 export const supportsSingletons = false;
 export const resolveSingletonInstance = shim;
-export const clearSingleton = shim;
 export const acquireSingletonInstance = shim;
 export const releaseSingletonInstance = shim;
 export const isHostSingletonType = shim;
+export const isSingletonScope = shim;

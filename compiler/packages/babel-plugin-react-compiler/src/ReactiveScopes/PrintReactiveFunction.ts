@@ -113,7 +113,7 @@ export function printDependency(dependency: ReactiveScopeDependency): string {
   const identifier =
     printIdentifier(dependency.identifier) +
     printType(dependency.identifier.type);
-  return `${identifier}${dependency.path.map(prop => `.${prop}`).join('')}`;
+  return `${identifier}${dependency.path.map(token => `${token.optional ? '?.' : '.'}${token.property}`).join('')}`;
 }
 
 export function printReactiveInstructions(
@@ -255,6 +255,12 @@ function writeReactiveValue(writer: Writer, value: ReactiveValue): void {
   }
 }
 
+export function printReactiveTerminal(terminal: ReactiveTerminal): string {
+  const writer = new Writer();
+  writeTerminal(writer, terminal);
+  return writer.complete();
+}
+
 function writeTerminal(writer: Writer, terminal: ReactiveTerminal): void {
   switch (terminal.kind) {
     case 'break': {
@@ -394,7 +400,10 @@ function writeTerminal(writer: Writer, terminal: ReactiveTerminal): void {
       break;
     }
     default:
-      assertExhaustive(terminal, `Unhandled terminal ${terminal}`);
+      assertExhaustive(
+        terminal,
+        `Unhandled terminal kind \`${(terminal as any).kind}\``,
+      );
   }
 }
 

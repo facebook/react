@@ -51,17 +51,15 @@ function getValueFromNode(node: HTMLInputElement): string {
   return value;
 }
 
-function trackValueOnNode(node: any): ?ValueTracker {
-  const valueField = isCheckable(node) ? 'checked' : 'value';
+function trackValueOnNode(
+  node: any,
+  valueField: 'checked' | 'value',
+  currentValue: string,
+): ?ValueTracker {
   const descriptor = Object.getOwnPropertyDescriptor(
     node.constructor.prototype,
     valueField,
   );
-
-  if (__DEV__) {
-    checkFormFieldValueStringCoercion(node[valueField]);
-  }
-  let currentValue = '' + node[valueField];
 
   // if someone has already defined a value or Safari, then bail
   // and don't track value will cause over reporting of changes,
@@ -123,7 +121,39 @@ export function track(node: ElementWithValueTracker) {
     return;
   }
 
-  node._valueTracker = trackValueOnNode(node);
+  const valueField = isCheckable(node) ? 'checked' : 'value';
+  // This is read from the DOM so always safe to coerce. We really shouldn't
+  // be coercing to a string at all. It's just historical.
+  // eslint-disable-next-line react-internal/safe-string-coercion
+  const initialValue = '' + (node[valueField]: any);
+  node._valueTracker = trackValueOnNode(node, valueField, initialValue);
+}
+
+export function trackHydrated(
+  node: ElementWithValueTracker,
+  initialValue: string,
+  initialChecked: boolean,
+): boolean {
+  // For hydration, the initial value is not the current value but the value
+  // that we last observed which is what the initial server render was.
+  if (getTracker(node)) {
+    return false;
+  }
+
+  let valueField;
+  let expectedValue;
+  if (isCheckable(node)) {
+    valueField = 'checked';
+    // eslint-disable-next-line react-internal/safe-string-coercion
+    expectedValue = '' + (initialChecked: any);
+  } else {
+    valueField = 'value';
+    expectedValue = initialValue;
+  }
+  // eslint-disable-next-line react-internal/safe-string-coercion
+  const currentValue = '' + (node[valueField]: any);
+  node._valueTracker = trackValueOnNode(node, valueField, expectedValue);
+  return currentValue !== expectedValue;
 }
 
 export function updateValueIfChanged(node: ElementWithValueTracker): boolean {

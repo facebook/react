@@ -13,4 +13,4 @@ export * from 'react-dom-bindings/src/client/ReactFiberConfigDOM';
 export * from 'react-client/src/ReactClientConsoleConfigBrowser';
 
 // eslint-disable-next-line react-internal/prod-error-codes
-throw new Error('Fiber is not used in react-html');
+throw new Error('Fiber is not used in react-markup');

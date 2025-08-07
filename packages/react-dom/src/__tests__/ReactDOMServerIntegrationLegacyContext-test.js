@@ -16,6 +16,7 @@ let PropTypes;
 let React;
 let ReactDOMClient;
 let ReactDOMServer;
+let assertConsoleErrorDev;
 
 function initModules() {
   // Reset warning cache.
@@ -24,6 +25,7 @@ function initModules() {
   React = require('react');
   ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
+  assertConsoleErrorDev = require('internal-test-utils').assertConsoleErrorDev;
 
   // Make them available to the helpers.
   return {
@@ -42,6 +44,13 @@ const {
 describe('ReactDOMServerIntegration', () => {
   beforeEach(() => {
     resetModules();
+  });
+  afterEach(() => {
+    // TODO: This is a hack because expectErrors does not restore mock,
+    // however fixing it requires a major refactor to all these tests.
+    if (console.error.mockClear) {
+      console.error.mockRestore();
+    }
   });
 
   describe('legacy context', function () {
@@ -344,12 +353,11 @@ describe('ReactDOMServerIntegration', () => {
         }
       }
 
-      expect(() => {
-        ReactDOMServer.renderToString(<MyComponent />);
-      }).toErrorDev(
+      ReactDOMServer.renderToString(<MyComponent />);
+      assertConsoleErrorDev([
         'MyComponent.getChildContext(): childContextTypes must be defined in order to use getChildContext().\n' +
           '    in MyComponent (at **)',
-      );
+      ]);
     });
   });
 });

@@ -1,5 +1,14 @@
+import {useFragment} from 'shared-runtime';
+
 function Component(props) {
-  const post = useFragment(graphql`...`, props.post);
+  const post = useFragment(
+    graphql`
+      fragment F on T {
+        id
+      }
+    `,
+    props.post
+  );
   const allUrls = [];
   // `media` and `urls` are exported from the scope that will wrap this code,
   // but `comments` is not (it doesn't need to be memoized, bc the callback

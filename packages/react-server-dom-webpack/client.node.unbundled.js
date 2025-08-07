@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from './src/ReactFlightDOMClientNode';
+export * from './src/client/react-flight-dom-client.node.unbundled';

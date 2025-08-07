@@ -32,15 +32,15 @@ function Component(t0) {
   const $ = _c(5);
   const { base, start, increment, test } = t0;
   let value;
-  if ($[0] !== base || $[1] !== start || $[2] !== test || $[3] !== increment) {
+  if ($[0] !== base || $[1] !== increment || $[2] !== start || $[3] !== test) {
     value = base;
     for (let i = start; i < test; i = i + increment, i) {
       value = value + i;
     }
     $[0] = base;
-    $[1] = start;
-    $[2] = test;
-    $[3] = increment;
+    $[1] = increment;
+    $[2] = start;
+    $[3] = test;
     $[4] = value;
   } else {
     value = $[4];

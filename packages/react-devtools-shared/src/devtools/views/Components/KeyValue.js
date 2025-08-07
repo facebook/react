@@ -27,7 +27,9 @@ import isArray from 'react-devtools-shared/src/isArray';
 import {InspectedElementContext} from './InspectedElementContext';
 import {PROTOCOLS_SUPPORTED_AS_LINKS_IN_KEY_VALUE} from './constants';
 import KeyValueContextMenuContainer from './KeyValueContextMenuContainer';
+import {ContextMenuContext} from '../context';
 
+import type {ContextMenuContextType} from '../context';
 import type {InspectedElement} from 'react-devtools-shared/src/frontend/types';
 import type {Element} from 'react-devtools-shared/src/frontend/types';
 import type {Element as ReactElement} from 'react';
@@ -91,6 +93,8 @@ export default function KeyValue({
   const contextMenuTriggerRef = useRef(null);
 
   const {inspectPaths} = useContext(InspectedElementContext);
+  const {viewAttributeSourceFunction} =
+    useContext<ContextMenuContextType>(ContextMenuContext);
 
   let isInspectable = false;
   let isReadOnlyBasedOnMetadata = false;
@@ -206,6 +210,13 @@ export default function KeyValue({
     canRenameTheCurrentPath = canRenamePathsAtDepth(depth);
   }
 
+  const hasChildren =
+    typeof value === 'object' &&
+    value !== null &&
+    (canEditValues ||
+      (isArray(value) && value.length > 0) ||
+      Object.entries(value).length > 0);
+
   let renderedName;
   if (isDirectChildOfAnArray) {
     if (canDeletePaths) {
@@ -214,27 +225,37 @@ export default function KeyValue({
       );
     } else {
       renderedName = (
-        <span className={styles.Name}>
+        <span
+          className={styles.Name}
+          onClick={isInspectable || hasChildren ? toggleIsOpen : null}>
           {name}
           {!!hookName && <span className={styles.HookName}>({hookName})</span>}
+          <span className={styles.AfterName}>:</span>
         </span>
       );
     }
   } else if (canRenameTheCurrentPath) {
     renderedName = (
-      <EditableName
-        allowEmpty={canDeletePaths}
-        className={styles.EditableName}
-        initialValue={name}
-        overrideName={renamePath}
-        path={path}
-      />
+      <>
+        <EditableName
+          allowEmpty={canDeletePaths}
+          className={styles.EditableName}
+          initialValue={name}
+          overrideName={renamePath}
+          path={path}
+        />
+        <span className={styles.AfterName}>:</span>
+      </>
     );
   } else {
     renderedName = (
-      <span className={styles.Name} data-testname="NonEditableName">
+      <span
+        className={styles.Name}
+        data-testname="NonEditableName"
+        onClick={isInspectable || hasChildren ? toggleIsOpen : null}>
         {name}
         {!!hookName && <span className={styles.HookName}>({hookName})</span>}
+        <span className={styles.AfterName}>:</span>
       </span>
     );
   }
@@ -268,8 +289,8 @@ export default function KeyValue({
       <KeyValueContextMenuContainer
         key="root"
         anchorElementRef={contextMenuTriggerRef}
-        attributeSourceCanBeInspected={pathIsFunction}
-        canBeCopiedToClipboard={!pathIsFunction}
+        attributeSourceCanBeInspected={false}
+        canBeCopiedToClipboard={true}
         store={store}
         bridge={bridge}
         id={id}
@@ -282,7 +303,6 @@ export default function KeyValue({
           style={style}>
           <div className={styles.ExpandCollapseToggleSpacer} />
           {renderedName}
-          <div className={styles.AfterName}>:</div>
           {canEditValues ? (
             <EditableValue
               overrideValue={overrideValue}
@@ -305,6 +325,35 @@ export default function KeyValue({
         </div>
       </KeyValueContextMenuContainer>
     );
+  } else if (pathIsFunction && viewAttributeSourceFunction != null) {
+    children = (
+      <KeyValueContextMenuContainer
+        key="root"
+        anchorElementRef={contextMenuTriggerRef}
+        attributeSourceCanBeInspected={true}
+        canBeCopiedToClipboard={false}
+        store={store}
+        bridge={bridge}
+        id={id}
+        path={fullPath}>
+        <div
+          data-testname="KeyValue"
+          className={styles.Item}
+          hidden={hidden}
+          ref={contextMenuTriggerRef}
+          style={style}>
+          <div className={styles.ExpandCollapseToggleSpacer} />
+          {renderedName}
+          <span
+            className={styles.Link}
+            onClick={() => {
+              viewAttributeSourceFunction(id, fullPath);
+            }}>
+            {getMetaValueLabel(value)}
+          </span>
+        </div>
+      </KeyValueContextMenuContainer>
+    );
   } else if (
     hasOwnProperty.call(value, meta.type) &&
     !hasOwnProperty.call(value, meta.unserializable)
@@ -313,8 +362,8 @@ export default function KeyValue({
       <KeyValueContextMenuContainer
         key="root"
         anchorElementRef={contextMenuTriggerRef}
-        attributeSourceCanBeInspected={pathIsFunction}
-        canBeCopiedToClipboard={!pathIsFunction}
+        attributeSourceCanBeInspected={false}
+        canBeCopiedToClipboard={true}
         store={store}
         bridge={bridge}
         id={id}
@@ -331,7 +380,6 @@ export default function KeyValue({
             <div className={styles.ExpandCollapseToggleSpacer} />
           )}
           {renderedName}
-          <div className={styles.AfterName}>:</div>
           <span
             className={styles.Value}
             onClick={isInspectable ? toggleIsOpen : undefined}>
@@ -354,7 +402,6 @@ export default function KeyValue({
     }
   } else {
     if (isArray(value)) {
-      const hasChildren = value.length > 0 || canEditValues;
       const displayName = getMetaValueLabel(value);
 
       children = value.map((innerValue, index) => (
@@ -415,12 +462,11 @@ export default function KeyValue({
             ref={contextMenuTriggerRef}
             style={style}>
             {hasChildren ? (
-              <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
+              <ExpandCollapseToggle isOpen={isOpen} setIsOpen={toggleIsOpen} />
             ) : (
               <div className={styles.ExpandCollapseToggleSpacer} />
             )}
             {renderedName}
-            <div className={styles.AfterName}>:</div>
             <span
               className={styles.Value}
               onClick={hasChildren ? toggleIsOpen : undefined}>
@@ -438,7 +484,6 @@ export default function KeyValue({
         entries.sort(alphaSortEntries);
       }
 
-      const hasChildren = entries.length > 0 || canEditValues;
       const displayName = getMetaValueLabel(value);
 
       children = entries.map(([key, keyValue]): ReactElement<any> => (
@@ -497,12 +542,11 @@ export default function KeyValue({
             ref={contextMenuTriggerRef}
             style={style}>
             {hasChildren ? (
-              <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
+              <ExpandCollapseToggle isOpen={isOpen} setIsOpen={toggleIsOpen} />
             ) : (
               <div className={styles.ExpandCollapseToggleSpacer} />
             )}
             {renderedName}
-            <div className={styles.AfterName}>:</div>
             <span
               className={styles.Value}
               onClick={hasChildren ? toggleIsOpen : undefined}>
@@ -533,7 +577,10 @@ function DeleteToggle({deletePath, name, path}) {
         title="Delete entry">
         <ButtonIcon type="delete" />
       </Button>
-      <span className={styles.Name}>{name}</span>
+      <span className={styles.Name}>
+        {name}
+        <span className={styles.AfterName}>:</span>
+      </span>
     </>
   );
 }

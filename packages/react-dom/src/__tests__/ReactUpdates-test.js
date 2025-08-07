@@ -18,6 +18,20 @@ let Scheduler;
 let waitForAll;
 let waitFor;
 let assertLog;
+let assertConsoleErrorDev;
+
+function normalizeCodeLocInfo(str) {
+  return (
+    str &&
+    str.replace(/^ +(?:at|in) ([\S]+)[^\n]*/gm, function (m, name) {
+      const dot = name.lastIndexOf('.');
+      if (dot !== -1) {
+        name = name.slice(dot + 1);
+      }
+      return '    in ' + name + (/\d/.test(m) ? ' (at **)' : '');
+    })
+  );
+}
 
 describe('ReactUpdates', () => {
   beforeEach(() => {
@@ -29,6 +43,8 @@ describe('ReactUpdates', () => {
       ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE
         .findDOMNode;
     act = require('internal-test-utils').act;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
     Scheduler = require('scheduler');
 
     const InternalTestUtils = require('internal-test-utils');
@@ -1039,18 +1055,20 @@ describe('ReactUpdates', () => {
       root.render(<A ref={current => (component = current)} />);
     });
 
-    await expect(
-      expect(async () => {
-        await act(() => {
-          component.setState({}, 'no');
-        });
-      }).toErrorDev(
-        'Expected the last optional `callback` argument to be ' +
-          'a function. Instead received: no.',
-      ),
-    ).rejects.toThrowError(
+    await expect(async () => {
+      await act(() => {
+        component.setState({}, 'no');
+      });
+    }).rejects.toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: no',
+    );
+    assertConsoleErrorDev(
+      [
+        'Expected the last optional `callback` argument to be ' +
+          'a function. Instead received: no.',
+      ],
+      {withoutStack: true},
     );
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
@@ -1058,18 +1076,20 @@ describe('ReactUpdates', () => {
       root.render(<A ref={current => (component = current)} />);
     });
 
-    await expect(
-      expect(async () => {
-        await act(() => {
-          component.setState({}, {foo: 'bar'});
-        });
-      }).toErrorDev(
-        'Expected the last optional `callback` argument to be ' +
-          'a function. Instead received: [object Object].',
-      ),
-    ).rejects.toThrowError(
+    await expect(async () => {
+      await act(() => {
+        component.setState({}, {foo: 'bar'});
+      });
+    }).rejects.toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
+    );
+    assertConsoleErrorDev(
+      [
+        'Expected the last optional `callback` argument to be ' +
+          "a function. Instead received: { foo: 'bar' }.",
+      ],
+      {withoutStack: true},
     );
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
@@ -1108,18 +1128,20 @@ describe('ReactUpdates', () => {
       root.render(<A ref={current => (component = current)} />);
     });
 
-    await expect(
-      expect(async () => {
-        await act(() => {
-          component.forceUpdate('no');
-        });
-      }).toErrorDev(
-        'Expected the last optional `callback` argument to be ' +
-          'a function. Instead received: no.',
-      ),
-    ).rejects.toThrowError(
+    await expect(async () => {
+      await act(() => {
+        component.forceUpdate('no');
+      });
+    }).rejects.toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: no',
+    );
+    assertConsoleErrorDev(
+      [
+        'Expected the last optional `callback` argument to be ' +
+          'a function. Instead received: no.',
+      ],
+      {withoutStack: true},
     );
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
@@ -1127,18 +1149,20 @@ describe('ReactUpdates', () => {
       root.render(<A ref={current => (component = current)} />);
     });
 
-    await expect(
-      expect(async () => {
-        await act(() => {
-          component.forceUpdate({foo: 'bar'});
-        });
-      }).toErrorDev(
-        'Expected the last optional `callback` argument to be ' +
-          'a function. Instead received: [object Object].',
-      ),
-    ).rejects.toThrowError(
+    await expect(async () => {
+      await act(() => {
+        component.forceUpdate({foo: 'bar'});
+      });
+    }).rejects.toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
+    );
+    assertConsoleErrorDev(
+      [
+        'Expected the last optional `callback` argument to be ' +
+          "a function. Instead received: { foo: 'bar' }.",
+      ],
+      {withoutStack: true},
     );
     // Make sure the warning is deduplicated and doesn't fire again
     container = document.createElement('div');
@@ -1351,11 +1375,14 @@ describe('ReactUpdates', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await expect(async () => {
-      await act(() => {
-        root.render(<Foo />);
-      });
-    }).toErrorDev('Cannot update during an existing state transition');
+    await act(() => {
+      root.render(<Foo />);
+    });
+    assertConsoleErrorDev([
+      'Cannot update during an existing state transition (such as within `render`). ' +
+        'Render methods should be a pure function of props and state.\n' +
+        '    in Foo (at **)',
+    ]);
 
     assertLog(['base: 0, memoized: 0', 'base: 1, memoized: 1']);
   });
@@ -1798,12 +1825,14 @@ describe('ReactUpdates', () => {
     const root = ReactDOMClient.createRoot(container);
 
     await expect(async () => {
-      await expect(async () => {
-        await act(() => ReactDOM.flushSync(() => root.render(<App />)));
-      }).rejects.toThrow('Maximum update depth exceeded');
-    }).toErrorDev(
-      'Cannot update a component (`App`) while rendering a different component (`Child`)',
-    );
+      await act(() => ReactDOM.flushSync(() => root.render(<App />)));
+    }).rejects.toThrow('Maximum update depth exceeded');
+    assertConsoleErrorDev([
+      'Cannot update a component (`App`) while rendering a different component (`Child`). ' +
+        'To locate the bad setState() call inside `Child`, ' +
+        'follow the stack trace as described in https://react.dev/link/setstate-in-render\n' +
+        '    in App (at **)',
+    ]);
   });
 
   it("does not infinite loop if there's an async render phase update on another component", async () => {
@@ -1827,18 +1856,17 @@ describe('ReactUpdates', () => {
     const root = ReactDOMClient.createRoot(container);
 
     await expect(async () => {
-      let error;
-      try {
-        await act(() => {
-          React.startTransition(() => root.render(<App />));
-        });
-      } catch (e) {
-        error = e;
-      }
-      expect(error.message).toMatch('Maximum update depth exceeded');
-    }).toErrorDev(
-      'Cannot update a component (`App`) while rendering a different component (`Child`)',
-    );
+      await act(() => {
+        React.startTransition(() => root.render(<App />));
+      });
+    }).rejects.toThrow('Maximum update depth exceeded');
+
+    assertConsoleErrorDev([
+      'Cannot update a component (`App`) while rendering a different component (`Child`). ' +
+        'To locate the bad setState() call inside `Child`, ' +
+        'follow the stack trace as described in https://react.dev/link/setstate-in-render\n' +
+        '    in App (at **)',
+    ]);
   });
 
   // TODO: Replace this branch with @gate pragmas
@@ -1862,9 +1890,7 @@ describe('ReactUpdates', () => {
       const originalConsoleError = console.error;
       console.error = e => {
         error = e;
-        ownerStack = gate(flags => flags.enableOwnerStacks)
-          ? React.captureOwnerStack()
-          : null;
+        ownerStack = React.captureOwnerStack();
         debugStack = new Error().stack;
         Scheduler.log('stop');
       };
@@ -1880,11 +1906,7 @@ describe('ReactUpdates', () => {
       expect(error).toContain('Maximum update depth exceeded');
       // The currently executing effect should be on the native stack
       expect(debugStack).toContain('at myEffect');
-      if (gate(flags => flags.enableOwnerStacks)) {
-        expect(ownerStack).toContain('at App');
-      } else {
-        expect(ownerStack).toBe(null);
-      }
+      expect(ownerStack).toContain('at App');
     });
 
     it('can have nested updates if they do not cross the limit', async () => {
@@ -1963,13 +1985,65 @@ describe('ReactUpdates', () => {
     }
 
     const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await expect(async () => {
-      await act(() => {
-        ReactDOM.flushSync(() => {
-          root.render(<NonTerminating />);
-        });
+    const errors = [];
+    const root = ReactDOMClient.createRoot(container, {
+      onUncaughtError: (error, errorInfo) => {
+        errors.push(
+          `${error.message}${normalizeCodeLocInfo(errorInfo.componentStack)}`,
+        );
+      },
+    });
+    await act(() => {
+      ReactDOM.flushSync(() => {
+        root.render(<NonTerminating />);
       });
-    }).rejects.toThrow('Maximum update depth exceeded');
+    });
+
+    expect(errors).toEqual([
+      'Maximum update depth exceeded. ' +
+        'This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. ' +
+        'React limits the number of nested updates to prevent infinite loops.' +
+        '\n    in NonTerminating (at **)',
+    ]);
+  });
+
+  it('prevents infinite update loop triggered by too many updates in ref callbacks', async () => {
+    let scheduleUpdate;
+    function TooManyRefUpdates() {
+      const [count, _scheduleUpdate] = React.useReducer(c => c + 1, 0);
+      scheduleUpdate = _scheduleUpdate;
+
+      return (
+        <div
+          ref={() => {
+            for (let i = 0; i < 50; i++) {
+              scheduleUpdate(1);
+            }
+          }}>
+          {count}
+        </div>
+      );
+    }
+
+    const container = document.createElement('div');
+    const errors = [];
+    const root = ReactDOMClient.createRoot(container, {
+      onUncaughtError: (error, errorInfo) => {
+        errors.push(
+          `${error.message}${normalizeCodeLocInfo(errorInfo.componentStack)}`,
+        );
+      },
+    });
+    await act(() => {
+      root.render(<TooManyRefUpdates />);
+    });
+
+    expect(errors).toEqual([
+      'Maximum update depth exceeded. ' +
+        'This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. ' +
+        'React limits the number of nested updates to prevent infinite loops.' +
+        '\n    in div' +
+        '\n    in TooManyRefUpdates (at **)',
+    ]);
   });
 });

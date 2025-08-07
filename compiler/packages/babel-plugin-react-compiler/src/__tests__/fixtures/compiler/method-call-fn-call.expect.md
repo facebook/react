@@ -33,11 +33,11 @@ function foo(a, b, c) {
 
   const method = x.method;
   let t1;
-  if ($[2] !== method || $[3] !== x || $[4] !== b) {
+  if ($[2] !== b || $[3] !== method || $[4] !== x) {
     t1 = method.call(x, b);
-    $[2] = method;
-    $[3] = x;
-    $[4] = b;
+    $[2] = b;
+    $[3] = method;
+    $[4] = x;
     $[5] = t1;
   } else {
     t1 = $[5];

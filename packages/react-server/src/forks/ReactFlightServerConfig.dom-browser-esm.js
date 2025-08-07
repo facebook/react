@@ -10,7 +10,7 @@
 import type {Request} from 'react-server/src/ReactFlightServer';
 import type {ReactComponentInfo} from 'shared/ReactTypes';
 
-export * from 'react-server-dom-esm/src/ReactFlightServerConfigESMBundler';
+export * from 'react-server-dom-esm/src/server/ReactFlightServerConfigESMBundler';
 export * from 'react-dom-bindings/src/server/ReactFlightServerConfigDOM';
 
 export const supportsRequestStorage = false;
@@ -23,3 +23,4 @@ export const componentStorage: AsyncLocalStorage<ReactComponentInfo | void> =
 export * from '../ReactFlightServerConfigDebugNoop';
 
 export * from '../ReactFlightStackConfigV8';
+export * from '../ReactServerConsoleConfigBrowser';

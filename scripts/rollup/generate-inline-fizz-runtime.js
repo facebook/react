@@ -14,12 +14,20 @@ const inlineCodeStringsFilename =
 
 const config = [
   {
+    entry: 'ReactDOMFizzInlineShellTime.js',
+    exportName: 'markShellTime',
+  },
+  {
     entry: 'ReactDOMFizzInlineClientRenderBoundary.js',
     exportName: 'clientRenderBoundary',
   },
   {
     entry: 'ReactDOMFizzInlineCompleteBoundary.js',
     exportName: 'completeBoundary',
+  },
+  {
+    entry: 'ReactDOMFizzInlineCompleteBoundaryUpgradeToViewTransitions.js',
+    exportName: 'completeBoundaryUpgradeToViewTransitions',
   },
   {
     entry: 'ReactDOMFizzInlineCompleteBoundaryWithStyles.js',
@@ -46,7 +54,6 @@ async function main() {
         js: [
           require.resolve('./externs/closure-externs.js'),
           fullEntryPath,
-          instructionDir + '/ReactDOMFizzInstructionSetInlineSource.js',
           instructionDir + '/ReactDOMFizzInstructionSetShared.js',
         ],
         compilation_level: 'ADVANCED',
@@ -67,7 +74,7 @@ async function main() {
         });
       });
 
-      return `export const ${exportName} = ${JSON.stringify(code.trim())};`;
+      return `export const ${exportName} = ${JSON.stringify(code.trim().replace('\n', ''))};`;
     })
   );
 

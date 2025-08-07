@@ -10,16 +10,19 @@
 import type {AsyncDispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import type {ComponentStackNode} from './ReactFizzComponentStack';
 
-import {disableStringRefs} from 'shared/ReactFeatureFlags';
-
 import {currentTaskInDEV} from './ReactFizzCurrentTask';
 
 function getCacheForType<T>(resourceType: () => T): T {
   throw new Error('Not implemented.');
 }
 
+function cacheSignal(): null | AbortSignal {
+  throw new Error('Not implemented.');
+}
+
 export const DefaultAsyncDispatcher: AsyncDispatcher = ({
   getCacheForType,
+  cacheSignal,
 }: any);
 
 if (__DEV__) {
@@ -28,9 +31,5 @@ if (__DEV__) {
       return null;
     }
     return currentTaskInDEV.componentStack;
-  };
-} else if (!disableStringRefs) {
-  DefaultAsyncDispatcher.getOwner = (): null => {
-    return null;
   };
 }

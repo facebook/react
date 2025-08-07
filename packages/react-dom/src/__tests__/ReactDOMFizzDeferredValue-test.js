@@ -21,6 +21,7 @@ global.ReadableStream =
 global.TextEncoder = require('util').TextEncoder;
 
 let act;
+let serverAct;
 let assertLog;
 let waitForPaint;
 let container;
@@ -35,8 +36,9 @@ describe('ReactDOMFizzForm', () => {
   beforeEach(() => {
     jest.resetModules();
     Scheduler = require('scheduler');
-    patchMessageChannel(Scheduler);
+    patchMessageChannel();
     act = require('internal-test-utils').act;
+    serverAct = require('internal-test-utils').serverAct;
     React = require('react');
     ReactDOMServer = require('react-dom/server.browser');
     ReactDOMClient = require('react-dom/client');
@@ -51,17 +53,6 @@ describe('ReactDOMFizzForm', () => {
   afterEach(() => {
     document.body.removeChild(container);
   });
-
-  async function serverAct(callback) {
-    let maybePromise;
-    await act(() => {
-      maybePromise = callback();
-      if (maybePromise && typeof maybePromise.catch === 'function') {
-        maybePromise.catch(() => {});
-      }
-    });
-    return maybePromise;
-  }
 
   async function readIntoContainer(stream) {
     const reader = stream.getReader();
@@ -83,7 +74,6 @@ describe('ReactDOMFizzForm', () => {
     return text;
   }
 
-  // @gate enableUseDeferredValueInitialArg
   it('returns initialValue argument, if provided', async () => {
     function App() {
       return useDeferredValue('Final', 'Initial');
@@ -100,7 +90,6 @@ describe('ReactDOMFizzForm', () => {
     expect(container.textContent).toEqual('Final');
   });
 
-  // @gate enableUseDeferredValueInitialArg
   // @gate enablePostpone
   it(
     'if initial value postpones during hydration, it will switch to the ' +
@@ -116,9 +105,11 @@ describe('ReactDOMFizzForm', () => {
 
       function App() {
         return (
-          <Suspense fallback={<Text text="Loading..." />}>
-            <Content />
-          </Suspense>
+          <div>
+            <Suspense fallback={<Text text="Loading..." />}>
+              <Content />
+            </Suspense>
+          </div>
         );
       }
 
@@ -136,7 +127,6 @@ describe('ReactDOMFizzForm', () => {
     },
   );
 
-  // @gate enableUseDeferredValueInitialArg
   it(
     'useDeferredValue during hydration has higher priority than remaining ' +
       'incremental hydration',

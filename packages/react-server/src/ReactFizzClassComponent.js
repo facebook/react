@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {emptyContextObject} from './ReactFizzContext';
+import {emptyContextObject} from './ReactFizzLegacyContext';
 import {readContext} from './ReactFizzNewContext';
 
 import {disableLegacyContext} from 'shared/ReactFeatureFlags';
@@ -108,9 +108,6 @@ type InternalInstance = {
 };
 
 const classComponentUpdater = {
-  isMounted(inst: any) {
-    return false;
-  },
   // $FlowFixMe[missing-local-annot]
   enqueueSetState(inst: any, payload: any, callback) {
     const internals: InternalInstance = getInstance(inst);

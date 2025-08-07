@@ -1,5 +1,7 @@
 import {CONST_TRUE, identity, shallowCopy} from 'shared-runtime';
 
+function mutate(_: unknown) {}
+
 /**
  * There are three values with their own scopes in this fixture.
  * - arr, whose mutable range extends to the `mutate(...)` call

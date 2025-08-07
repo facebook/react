@@ -39,69 +39,59 @@ function Component() {
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
 function Component() {
-  const $ = _c(8);
+  const $ = _c(6);
   const items = useItems();
   let t0;
   let t1;
-  let t2;
   if ($[0] !== items) {
-    t2 = Symbol.for("react.early_return_sentinel");
+    t1 = Symbol.for("react.early_return_sentinel");
     bb0: {
-      let t3;
-      if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
-        t3 = (t4) => {
-          const [item] = t4;
-          return item.name != null;
-        };
-        $[4] = t3;
-      } else {
-        t3 = $[4];
-      }
-      t0 = items.filter(t3);
-      const filteredItems = t0;
+      const filteredItems = items.filter(_temp);
       if (filteredItems.length === 0) {
-        let t4;
-        if ($[5] === Symbol.for("react.memo_cache_sentinel")) {
-          t4 = (
+        let t2;
+        if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+          t2 = (
             <div>
               <span />
             </div>
           );
-          $[5] = t4;
+          $[3] = t2;
         } else {
-          t4 = $[5];
+          t2 = $[3];
         }
-        t2 = t4;
+        t1 = t2;
         break bb0;
       }
 
-      t1 = filteredItems.map(_temp);
+      t0 = filteredItems.map(_temp2);
     }
     $[0] = items;
-    $[1] = t1;
-    $[2] = t2;
-    $[3] = t0;
+    $[1] = t0;
+    $[2] = t1;
   } else {
-    t1 = $[1];
-    t2 = $[2];
-    t0 = $[3];
+    t0 = $[1];
+    t1 = $[2];
   }
-  if (t2 !== Symbol.for("react.early_return_sentinel")) {
-    return t2;
+  if (t1 !== Symbol.for("react.early_return_sentinel")) {
+    return t1;
   }
-  let t3;
-  if ($[6] !== t1) {
-    t3 = <>{t1}</>;
-    $[6] = t1;
-    $[7] = t3;
+  let t2;
+  if ($[4] !== t0) {
+    t2 = <>{t0}</>;
+    $[4] = t0;
+    $[5] = t2;
   } else {
-    t3 = $[7];
+    t2 = $[5];
   }
-  return t3;
+  return t2;
 }
-function _temp(t0) {
+function _temp2(t0) {
   const [item_0] = t0;
   return <Stringify item={item_0} />;
+}
+function _temp(t0) {
+  const [item] = t0;
+  return item.name != null;
 }
 
 ```

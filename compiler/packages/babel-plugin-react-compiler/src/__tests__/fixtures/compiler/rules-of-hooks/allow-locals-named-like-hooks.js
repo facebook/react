@@ -1,4 +1,4 @@
-import {makeObject_Primitives} from 'shared-runtime';
+import {makeObject_Primitives, Stringify} from 'shared-runtime';
 
 function Component(props) {
   let useFeature = makeObject_Primitives();

@@ -9,37 +9,22 @@
 
 import LRU from 'lru-cache';
 import {
-  isElement,
-  typeOf,
-  ContextConsumer,
-  ContextProvider,
-  ForwardRef,
-  Fragment,
-  Lazy,
-  Memo,
-  Portal,
-  Profiler,
-  StrictMode,
-  Suspense,
-} from 'react-is';
-import {
   REACT_CONSUMER_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_LAZY_TYPE,
+  REACT_ELEMENT_TYPE,
   REACT_LEGACY_ELEMENT_TYPE,
   REACT_MEMO_TYPE,
   REACT_PORTAL_TYPE,
   REACT_PROFILER_TYPE,
-  REACT_PROVIDER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
-  REACT_SUSPENSE_LIST_TYPE as SuspenseList,
   REACT_SUSPENSE_TYPE,
-  REACT_TRACING_MARKER_TYPE as TracingMarker,
+  REACT_TRACING_MARKER_TYPE,
+  REACT_VIEW_TRANSITION_TYPE,
 } from 'shared/ReactSymbols';
-import {enableRenderableContext} from 'shared/ReactFeatureFlags';
 import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
@@ -50,10 +35,11 @@ import {
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
   LOCAL_STORAGE_COMPONENT_FILTER_PREFERENCES_KEY,
   LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
-  LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
-  LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY,
-  LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
-  LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
+  LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET,
+  LOCAL_STORAGE_ALWAYS_OPEN_IN_EDITOR,
+  SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
+  SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
+  SESSION_STORAGE_RECORD_TIMELINE_KEY,
 } from './constants';
 import {
   ComponentFilterElementType,
@@ -66,19 +52,29 @@ import {
   ElementTypeForwardRef,
   ElementTypeFunction,
   ElementTypeMemo,
+  ElementTypeVirtual,
 } from 'react-devtools-shared/src/frontend/types';
-import {localStorageGetItem, localStorageSetItem} from './storage';
+import {
+  localStorageGetItem,
+  localStorageSetItem,
+  sessionStorageGetItem,
+  sessionStorageRemoveItem,
+  sessionStorageSetItem,
+} from 'react-devtools-shared/src/storage';
 import {meta} from './hydration';
 import isArray from './isArray';
 
 import type {
   ComponentFilter,
   ElementType,
-  BrowserTheme,
   SerializedElement as SerializedElementFrontend,
   LRUCache,
 } from 'react-devtools-shared/src/frontend/types';
-import type {SerializedElement as SerializedElementBackend} from 'react-devtools-shared/src/backend/types';
+import type {
+  ProfilingSettings,
+  SerializedElement as SerializedElementBackend,
+} from 'react-devtools-shared/src/backend/types';
+import {isSynchronousXHRSupported} from './backend/utils';
 
 // $FlowFixMe[method-unbinding]
 const hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -90,6 +86,9 @@ const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
 const encodedStringCache: LRUCache<string, Array<number>> = new LRU({
   max: 1000,
 });
+
+// Previously, the type of `Context.Provider`.
+const LEGACY_REACT_PROVIDER_TYPE: symbol = Symbol.for('react.provider');
 
 export function alphaSortKeys(
   a: string | number | symbol,
@@ -387,67 +386,41 @@ export function filterOutLocationComponentFilters(
   return componentFilters.filter(f => f.type !== ComponentFilterLocation);
 }
 
-function parseBool(s: ?string): ?boolean {
-  if (s === 'true') {
-    return true;
-  }
-  if (s === 'false') {
-    return false;
-  }
-}
+const vscodeFilepath = 'vscode://file/{path}:{line}:{column}';
 
-export function castBool(v: any): ?boolean {
-  if (v === true || v === false) {
-    return v;
-  }
-}
-
-export function castBrowserTheme(v: any): ?BrowserTheme {
-  if (v === 'light' || v === 'dark' || v === 'auto') {
-    return v;
-  }
-}
-
-export function getAppendComponentStack(): boolean {
-  const raw = localStorageGetItem(
-    LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY,
-  );
-  return parseBool(raw) ?? true;
-}
-
-export function getBreakOnConsoleErrors(): boolean {
-  const raw = localStorageGetItem(LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS);
-  return parseBool(raw) ?? false;
-}
-
-export function getHideConsoleLogsInStrictMode(): boolean {
-  const raw = localStorageGetItem(
-    LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
-  );
-  return parseBool(raw) ?? false;
-}
-
-export function getShowInlineWarningsAndErrors(): boolean {
-  const raw = localStorageGetItem(
-    LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
-  );
-  return parseBool(raw) ?? true;
+export function getDefaultPreset(): 'custom' | 'vscode' {
+  return typeof process.env.EDITOR_URL === 'string' ? 'custom' : 'vscode';
 }
 
 export function getDefaultOpenInEditorURL(): string {
   return typeof process.env.EDITOR_URL === 'string'
     ? process.env.EDITOR_URL
-    : '';
+    : vscodeFilepath;
 }
 
 export function getOpenInEditorURL(): string {
   try {
+    const rawPreset = localStorageGetItem(
+      LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET,
+    );
+    switch (rawPreset) {
+      case '"vscode"':
+        return vscodeFilepath;
+    }
     const raw = localStorageGetItem(LOCAL_STORAGE_OPEN_IN_EDITOR_URL);
     if (raw != null) {
       return JSON.parse(raw);
     }
   } catch (error) {}
   return getDefaultOpenInEditorURL();
+}
+
+export function getAlwaysOpenInEditor(): boolean {
+  try {
+    const raw = localStorageGetItem(LOCAL_STORAGE_ALWAYS_OPEN_IN_EDITOR);
+    return raw === 'true';
+  } catch (error) {}
+  return false;
 }
 
 type ParseElementDisplayNameFromBackendReturn = {
@@ -484,9 +457,11 @@ export function parseElementDisplayNameFromBackend(
     case ElementTypeForwardRef:
     case ElementTypeFunction:
     case ElementTypeMemo:
+    case ElementTypeVirtual:
       if (displayName.indexOf('(') >= 0) {
         const matches = displayName.match(/[^()]+/g);
         if (matches != null) {
+          // $FlowFixMe[incompatible-type]
           displayName = matches.pop();
           hocDisplayNames = matches;
         }
@@ -497,6 +472,7 @@ export function parseElementDisplayNameFromBackend(
   }
 
   return {
+    // $FlowFixMe[incompatible-return]
     formattedDisplayName: displayName,
     hocDisplayNames,
     compiledWithForget: false,
@@ -602,6 +578,7 @@ export type DataType =
   | 'class_instance'
   | 'data_view'
   | 'date'
+  | 'error'
   | 'function'
   | 'html_all_collection'
   | 'html_element'
@@ -611,6 +588,7 @@ export type DataType =
   | 'nan'
   | 'null'
   | 'number'
+  | 'thenable'
   | 'object'
   | 'react_element'
   | 'regexp'
@@ -620,6 +598,21 @@ export type DataType =
   | 'undefined'
   | 'unknown';
 
+function isError(data: Object): boolean {
+  // If it doesn't event look like an error, it won't be an actual error.
+  if ('name' in data && 'message' in data) {
+    while (data) {
+      // $FlowFixMe[method-unbinding]
+      if (Object.prototype.toString.call(data) === '[object Error]') {
+        return true;
+      }
+      data = Object.getPrototypeOf(data);
+    }
+  }
+
+  return false;
+}
+
 /**
  * Get a enhanced/artificial type string based on the object instance
  */
@@ -628,10 +621,6 @@ export function getDataType(data: Object): DataType {
     return 'null';
   } else if (data === undefined) {
     return 'undefined';
-  }
-
-  if (isElement(data)) {
-    return 'react_element';
   }
 
   if (typeof HTMLElement !== 'undefined' && data instanceof HTMLElement) {
@@ -655,6 +644,12 @@ export function getDataType(data: Object): DataType {
         return 'number';
       }
     case 'object':
+      if (
+        data.$$typeof === REACT_ELEMENT_TYPE ||
+        data.$$typeof === REACT_LEGACY_ELEMENT_TYPE
+      ) {
+        return 'react_element';
+      }
       if (isArray(data)) {
         return 'array';
       } else if (ArrayBuffer.isView(data)) {
@@ -677,6 +672,10 @@ export function getDataType(data: Object): DataType {
         }
       } else if (data.constructor && data.constructor.name === 'RegExp') {
         return 'regexp';
+      } else if (typeof data.then === 'function') {
+        return 'thenable';
+      } else if (isError(data)) {
+        return 'error';
       } else {
         // $FlowFixMe[method-unbinding]
         const toStringValue = Object.prototype.toString.call(data);
@@ -715,6 +714,7 @@ function typeOfWithLegacyElementSymbol(object: any): mixed {
   if (typeof object === 'object' && object !== null) {
     const $$typeof = object.$$typeof;
     switch ($$typeof) {
+      case REACT_ELEMENT_TYPE:
       case REACT_LEGACY_ELEMENT_TYPE:
         const type = object.type;
 
@@ -724,6 +724,7 @@ function typeOfWithLegacyElementSymbol(object: any): mixed {
           case REACT_STRICT_MODE_TYPE:
           case REACT_SUSPENSE_TYPE:
           case REACT_SUSPENSE_LIST_TYPE:
+          case REACT_VIEW_TRANSITION_TYPE:
             return type;
           default:
             const $$typeofType = type && type.$$typeof;
@@ -735,14 +736,7 @@ function typeOfWithLegacyElementSymbol(object: any): mixed {
               case REACT_MEMO_TYPE:
                 return $$typeofType;
               case REACT_CONSUMER_TYPE:
-                if (enableRenderableContext) {
-                  return $$typeofType;
-                }
-              // Fall through
-              case REACT_PROVIDER_TYPE:
-                if (!enableRenderableContext) {
-                  return $$typeofType;
-                }
+                return $$typeofType;
               // Fall through
               default:
                 return $$typeof;
@@ -759,31 +753,35 @@ function typeOfWithLegacyElementSymbol(object: any): mixed {
 export function getDisplayNameForReactElement(
   element: React$Element<any>,
 ): string | null {
-  const elementType = typeOf(element) || typeOfWithLegacyElementSymbol(element);
+  const elementType = typeOfWithLegacyElementSymbol(element);
   switch (elementType) {
-    case ContextConsumer:
+    case REACT_CONSUMER_TYPE:
       return 'ContextConsumer';
-    case ContextProvider:
+    case LEGACY_REACT_PROVIDER_TYPE:
       return 'ContextProvider';
-    case ForwardRef:
+    case REACT_CONTEXT_TYPE:
+      return 'Context';
+    case REACT_FORWARD_REF_TYPE:
       return 'ForwardRef';
-    case Fragment:
+    case REACT_FRAGMENT_TYPE:
       return 'Fragment';
-    case Lazy:
+    case REACT_LAZY_TYPE:
       return 'Lazy';
-    case Memo:
+    case REACT_MEMO_TYPE:
       return 'Memo';
-    case Portal:
+    case REACT_PORTAL_TYPE:
       return 'Portal';
-    case Profiler:
+    case REACT_PROFILER_TYPE:
       return 'Profiler';
-    case StrictMode:
+    case REACT_STRICT_MODE_TYPE:
       return 'StrictMode';
-    case Suspense:
+    case REACT_SUSPENSE_TYPE:
       return 'Suspense';
-    case SuspenseList:
+    case REACT_SUSPENSE_LIST_TYPE:
       return 'SuspenseList';
-    case TracingMarker:
+    case REACT_VIEW_TRANSITION_TYPE:
+      return 'ViewTransition';
+    case REACT_TRACING_MARKER_TYPE:
       return 'TracingMarker';
     default:
       const {type} = element;
@@ -850,9 +848,10 @@ export function formatDataForPreview(
     case 'html_element':
       return `<${truncateForDisplay(data.tagName.toLowerCase())} />`;
     case 'function':
-      return truncateForDisplay(
-        `ƒ ${typeof data.name === 'function' ? '' : data.name}() {}`,
-      );
+      if (typeof data.name === 'function' || data.name === '') {
+        return '() => {}';
+      }
+      return `${truncateForDisplay(data.name)}() {}`;
     case 'string':
       return `"${data}"`;
     case 'bigint':
@@ -954,7 +953,61 @@ export function formatDataForPreview(
     case 'date':
       return data.toString();
     case 'class_instance':
-      return data.constructor.name;
+      try {
+        let resolvedConstructorName = data.constructor.name;
+        if (typeof resolvedConstructorName === 'string') {
+          return resolvedConstructorName;
+        }
+
+        resolvedConstructorName = Object.getPrototypeOf(data).constructor.name;
+        if (typeof resolvedConstructorName === 'string') {
+          return resolvedConstructorName;
+        }
+
+        try {
+          return truncateForDisplay(String(data));
+        } catch (error) {
+          return 'unserializable';
+        }
+      } catch (error) {
+        return 'unserializable';
+      }
+    case 'thenable':
+      let displayName: string;
+      if (isPlainObject(data)) {
+        displayName = 'Thenable';
+      } else {
+        let resolvedConstructorName = data.constructor.name;
+        if (typeof resolvedConstructorName !== 'string') {
+          resolvedConstructorName =
+            Object.getPrototypeOf(data).constructor.name;
+        }
+        if (typeof resolvedConstructorName === 'string') {
+          displayName = resolvedConstructorName;
+        } else {
+          displayName = 'Thenable';
+        }
+      }
+      switch (data.status) {
+        case 'pending':
+          return `pending ${displayName}`;
+        case 'fulfilled':
+          if (showFormattedValue) {
+            const formatted = formatDataForPreview(data.value, false);
+            return `fulfilled ${displayName} {${truncateForDisplay(formatted)}}`;
+          } else {
+            return `fulfilled ${displayName} {…}`;
+          }
+        case 'rejected':
+          if (showFormattedValue) {
+            const formatted = formatDataForPreview(data.reason, false);
+            return `rejected ${displayName} {${truncateForDisplay(formatted)}}`;
+          } else {
+            return `rejected ${displayName} {…}`;
+          }
+        default:
+          return displayName;
+      }
     case 'object':
       if (showFormattedValue) {
         const keys = Array.from(getAllEnumerableKeys(data)).sort(alphaSortKeys);
@@ -978,13 +1031,15 @@ export function formatDataForPreview(
       } else {
         return '{…}';
       }
+    case 'error':
+      return truncateForDisplay(String(data));
     case 'boolean':
     case 'number':
     case 'infinity':
     case 'nan':
     case 'null':
     case 'undefined':
-      return data;
+      return String(data);
     default:
       try {
         return truncateForDisplay(String(data));
@@ -1017,7 +1072,65 @@ export function backendToFrontendSerializedElementMapper(
   };
 }
 
-// Chrome normalizes urls like webpack-internals:// but new URL don't, so cannot use new URL here.
-export function normalizeUrl(url: string): string {
-  return url.replace('/./', '/');
+/**
+ * Should be used when treating url as a Chrome Resource URL.
+ */
+export function normalizeUrlIfValid(url: string): string {
+  try {
+    // TODO: Chrome will use the basepath to create a Resource URL.
+    return new URL(url).toString();
+  } catch {
+    // Giving up if it's not a valid URL without basepath
+    return url;
+  }
+}
+
+export function getIsReloadAndProfileSupported(): boolean {
+  // Notify the frontend if the backend supports the Storage API (e.g. localStorage).
+  // If not, features like reload-and-profile will not work correctly and must be disabled.
+  let isBackendStorageAPISupported = false;
+  try {
+    localStorage.getItem('test');
+    isBackendStorageAPISupported = true;
+  } catch (error) {}
+
+  return isBackendStorageAPISupported && isSynchronousXHRSupported();
+}
+
+// Expected to be used only by browser extension and react-devtools-inline
+export function getIfReloadedAndProfiling(): boolean {
+  return (
+    sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true'
+  );
+}
+
+export function getProfilingSettings(): ProfilingSettings {
+  return {
+    recordChangeDescriptions:
+      sessionStorageGetItem(SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY) ===
+      'true',
+    recordTimeline:
+      sessionStorageGetItem(SESSION_STORAGE_RECORD_TIMELINE_KEY) === 'true',
+  };
+}
+
+export function onReloadAndProfile(
+  recordChangeDescriptions: boolean,
+  recordTimeline: boolean,
+): void {
+  sessionStorageSetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY, 'true');
+  sessionStorageSetItem(
+    SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
+    recordChangeDescriptions ? 'true' : 'false',
+  );
+  sessionStorageSetItem(
+    SESSION_STORAGE_RECORD_TIMELINE_KEY,
+    recordTimeline ? 'true' : 'false',
+  );
+}
+
+export function onReloadAndProfileFlagsReset(): void {
+  sessionStorageRemoveItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY);
+  sessionStorageRemoveItem(SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY);
+  sessionStorageRemoveItem(SESSION_STORAGE_RECORD_TIMELINE_KEY);
 }

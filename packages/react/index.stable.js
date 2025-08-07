@@ -9,7 +9,7 @@
 
 export {
   __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
-  act,
+  __COMPILER_RUNTIME,
   Children,
   Component,
   Fragment,
@@ -27,6 +27,7 @@ export {
   lazy,
   memo,
   cache,
+  cacheSignal,
   unstable_useCacheRefresh,
   startTransition,
   useId,

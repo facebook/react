@@ -10,18 +10,12 @@
 import type {AsyncDispatcher, Fiber} from './ReactInternalTypes';
 import type {Cache} from './ReactFiberCacheComponent';
 
-import {enableCache} from 'shared/ReactFeatureFlags';
 import {readContext} from './ReactFiberNewContext';
 import {CacheContext} from './ReactFiberCacheComponent';
-
-import {disableStringRefs} from 'shared/ReactFeatureFlags';
 
 import {current as currentOwner} from './ReactCurrentFiber';
 
 function getCacheForType<T>(resourceType: () => T): T {
-  if (!enableCache) {
-    throw new Error('Not implemented.');
-  }
   const cache: Cache = readContext(CacheContext);
   let cacheForType: T | void = (cache.data.get(resourceType): any);
   if (cacheForType === undefined) {
@@ -31,11 +25,17 @@ function getCacheForType<T>(resourceType: () => T): T {
   return cacheForType;
 }
 
+function cacheSignal(): null | AbortSignal {
+  const cache: Cache = readContext(CacheContext);
+  return cache.controller.signal;
+}
+
 export const DefaultAsyncDispatcher: AsyncDispatcher = ({
   getCacheForType,
+  cacheSignal,
 }: any);
 
-if (__DEV__ || !disableStringRefs) {
+if (__DEV__) {
   DefaultAsyncDispatcher.getOwner = (): null | Fiber => {
     return currentOwner;
   };

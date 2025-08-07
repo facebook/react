@@ -1,5 +1,4 @@
-// @debug
-function component(a, b) {
+function useHook(a, b) {
   let z = {a};
   let y = b;
   let x = function () {

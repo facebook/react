@@ -1,3 +1,4 @@
+// @validateNoSetStateInRender:false
 import {useMemo} from 'react';
 import {makeArray} from 'shared-runtime';
 

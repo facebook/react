@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @gating @panicThreshold(none) @compilationMode(infer)
+// @gating @panicThreshold:"none" @compilationMode:"infer"
 let someGlobal = 'joe';
 
 function Component() {
@@ -20,7 +20,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-// @gating @panicThreshold(none) @compilationMode(infer)
+// @gating @panicThreshold:"none" @compilationMode:"infer"
 let someGlobal = "joe";
 
 function Component() {

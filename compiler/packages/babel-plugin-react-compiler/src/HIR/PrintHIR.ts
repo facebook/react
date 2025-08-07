@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import generate from '@babel/generator';
-import {printReactiveFunction} from '..';
 import {CompilerError} from '../CompilerError';
 import {printReactiveScopeSummary} from '../ReactiveScopes/PrintReactiveFunction';
 import DisjointSet from '../Utils/DisjointSet';
@@ -36,6 +34,7 @@ import type {
   Type,
 } from './HIR';
 import {GotoVariant, InstructionKind} from './HIR';
+import {AliasingEffect, AliasingSignature} from '../Inference/AliasingEffects';
 
 export type Options = {
   indent: number;
@@ -54,6 +53,8 @@ export function printFunction(fn: HIRFunction): string {
   let definition = '';
   if (fn.id !== null) {
     definition += fn.id;
+  } else {
+    definition += '<<anonymous>>';
   }
   if (fn.params.length !== 0) {
     definition +=
@@ -68,12 +69,13 @@ export function printFunction(fn: HIRFunction): string {
         })
         .join(', ') +
       ')';
+  } else {
+    definition += '()';
   }
-  if (definition.length !== 0) {
-    output.push(definition);
-  }
-  output.push(printHIR(fn.body));
+  definition += `: ${printPlace(fn.returns)}`;
+  output.push(definition);
   output.push(...fn.directives);
+  output.push(printHIR(fn.body));
   return output.join('\n');
 }
 
@@ -151,7 +153,10 @@ export function printMixedHIR(
 
 export function printInstruction(instr: ReactiveInstruction): string {
   const id = `[${instr.id}]`;
-  const value = printInstructionValue(instr.value);
+  let value = printInstructionValue(instr.value);
+  if (instr.effects != null) {
+    value += `\n    ${instr.effects.map(printAliasingEffect).join('\n    ')}`;
+  }
 
   if (instr.lvalue !== null) {
     return `${id} ${printPlace(instr.lvalue)} = ${value}`;
@@ -162,13 +167,13 @@ export function printInstruction(instr: ReactiveInstruction): string {
 
 export function printPhi(phi: Phi): string {
   const items = [];
-  items.push(printIdentifier(phi.id));
-  items.push(printMutableRange(phi.id));
-  items.push(printType(phi.type));
+  items.push(printPlace(phi.place));
+  items.push(printMutableRange(phi.place.identifier));
+  items.push(printType(phi.place.identifier.type));
   items.push(': phi(');
   const phis = [];
-  for (const [blockId, id] of phi.operands) {
-    phis.push(`bb${blockId}: ${printIdentifier(id)}`);
+  for (const [blockId, place] of phi.operands) {
+    phis.push(`bb${blockId}: ${printPlace(place)}`);
   }
 
   items.push(phis.join(', '));
@@ -190,7 +195,7 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
     case 'branch': {
       value = `[${terminal.id}] Branch (${printPlace(terminal.test)}) then:bb${
         terminal.consequent
-      } else:bb${terminal.alternate}`;
+      } else:bb${terminal.alternate} fallthrough:bb${terminal.fallthrough}`;
       break;
     }
     case 'logical': {
@@ -210,9 +215,12 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
       break;
     }
     case 'return': {
-      value = `[${terminal.id}] Return${
+      value = `[${terminal.id}] Return ${terminal.returnVariant}${
         terminal.value != null ? ' ' + printPlace(terminal.value) : ''
       }`;
+      if (terminal.effects != null) {
+        value += `\n    ${terminal.effects.map(printAliasingEffect).join('\n    ')}`;
+      }
       break;
     }
     case 'goto': {
@@ -281,6 +289,9 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
     }
     case 'maybe-throw': {
       value = `[${terminal.id}] MaybeThrow continuation=bb${terminal.continuation} handler=bb${terminal.handler}`;
+      if (terminal.effects != null) {
+        value += `\n    ${terminal.effects.map(printAliasingEffect).join('\n    ')}`;
+      }
       break;
     }
     case 'scope': {
@@ -329,6 +340,9 @@ function printObjectPropertyKey(key: ObjectPropertyKey): string {
       return `"${key.name}"`;
     case 'computed': {
       return `[${printPlace(key.name)}]`;
+    }
+    case 'number': {
+      return String(key.name);
     }
   }
 }
@@ -451,7 +465,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       break;
     }
     case 'UnsupportedNode': {
-      value = `UnsupportedNode(${generate(instrValue.node).code})`;
+      value = `UnsupportedNode ${instrValue.node.type}`;
       break;
     }
     case 'LoadLocal': {
@@ -537,9 +551,6 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
         .split('\n')
         .map(line => `      ${line}`)
         .join('\n');
-      const deps = instrValue.loweredFunc.dependencies
-        .map(dep => printPlace(dep))
-        .join(',');
       const context = instrValue.loweredFunc.func.context
         .map(dep => printPlace(dep))
         .join(',');
@@ -555,7 +566,11 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
             }
           })
           .join(', ') ?? '';
-      value = `${kind} ${name} @deps[${deps}] @context[${context}] @effects[${effects}]:\n${fn}`;
+      const aliasingEffects =
+        instrValue.loweredFunc.func.aliasingEffects
+          ?.map(printAliasingEffect)
+          ?.join(', ') ?? '';
+      value = `${kind} ${name} @context[${context}] @effects[${effects}] @aliasingEffects=[${aliasingEffects}]\n${fn}`;
       break;
     }
     case 'TaggedTemplateExpression': {
@@ -699,11 +714,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       break;
     }
     case 'FinishMemoize': {
-      value = `FinishMemoize decl=${printPlace(instrValue.decl)}`;
-      break;
-    }
-    case 'ReactiveFunctionValue': {
-      value = `FunctionValue ${printReactiveFunction(instrValue.fn)}`;
+      value = `FinishMemoize decl=${printPlace(instrValue.decl)}${instrValue.pruned ? ' pruned' : ''}`;
       break;
     }
     default: {
@@ -759,6 +770,15 @@ export function printLValue(lval: LValue): string {
     }
     case InstructionKind.HoistedConst: {
       return `HoistedConst ${lvalue}$`;
+    }
+    case InstructionKind.HoistedLet: {
+      return `HoistedLet ${lvalue}$`;
+    }
+    case InstructionKind.Function: {
+      return `Function ${lvalue}$`;
+    }
+    case InstructionKind.HoistedFunction: {
+      return `HoistedFunction ${lvalue}$`;
     }
     default: {
       assertExhaustive(lval.kind, `Unexpected lvalue kind \`${lval.kind}\``);
@@ -864,7 +884,7 @@ export function printManualMemoDependency(
       ? val.root.value.identifier.name.value
       : printIdentifier(val.root.value.identifier);
   }
-  return `${rootStr}${val.path.length > 0 ? '.' : ''}${val.path.join('.')}`;
+  return `${rootStr}${val.path.map(v => `${v.optional ? '?.' : '.'}${v.property}`).join('')}`;
 }
 export function printType(type: Type): string {
   if (type.kind === 'Type') return '';
@@ -883,6 +903,14 @@ export function printSourceLocation(loc: SourceLocation): string {
     return 'generated';
   } else {
     return `${loc.start.line}:${loc.start.column}:${loc.end.line}:${loc.end.column}`;
+  }
+}
+
+export function printSourceLocationLine(loc: SourceLocation): string {
+  if (typeof loc === 'symbol') {
+    return 'generated';
+  } else {
+    return `${loc.start.line}:${loc.end.line}`;
   }
 }
 
@@ -907,4 +935,111 @@ function getFunctionName(
     case 'ObjectMethod':
       return defaultValue;
   }
+}
+
+export function printAliasingEffect(effect: AliasingEffect): string {
+  switch (effect.kind) {
+    case 'Assign': {
+      return `Assign ${printPlaceForAliasEffect(effect.into)} = ${printPlaceForAliasEffect(effect.from)}`;
+    }
+    case 'Alias': {
+      return `Alias ${printPlaceForAliasEffect(effect.into)} <- ${printPlaceForAliasEffect(effect.from)}`;
+    }
+    case 'MaybeAlias': {
+      return `MaybeAlias ${printPlaceForAliasEffect(effect.into)} <- ${printPlaceForAliasEffect(effect.from)}`;
+    }
+    case 'Capture': {
+      return `Capture ${printPlaceForAliasEffect(effect.into)} <- ${printPlaceForAliasEffect(effect.from)}`;
+    }
+    case 'ImmutableCapture': {
+      return `ImmutableCapture ${printPlaceForAliasEffect(effect.into)} <- ${printPlaceForAliasEffect(effect.from)}`;
+    }
+    case 'Create': {
+      return `Create ${printPlaceForAliasEffect(effect.into)} = ${effect.value}`;
+    }
+    case 'CreateFrom': {
+      return `Create ${printPlaceForAliasEffect(effect.into)} = kindOf(${printPlaceForAliasEffect(effect.from)})`;
+    }
+    case 'CreateFunction': {
+      return `Function ${printPlaceForAliasEffect(effect.into)} = Function captures=[${effect.captures.map(printPlaceForAliasEffect).join(', ')}]`;
+    }
+    case 'Apply': {
+      const receiverCallee =
+        effect.receiver.identifier.id === effect.function.identifier.id
+          ? printPlaceForAliasEffect(effect.receiver)
+          : `${printPlaceForAliasEffect(effect.receiver)}.${printPlaceForAliasEffect(effect.function)}`;
+      const args = effect.args
+        .map(arg => {
+          if (arg.kind === 'Identifier') {
+            return printPlaceForAliasEffect(arg);
+          } else if (arg.kind === 'Hole') {
+            return ' ';
+          }
+          return `...${printPlaceForAliasEffect(arg.place)}`;
+        })
+        .join(', ');
+      let signature = '';
+      if (effect.signature != null) {
+        if (effect.signature.aliasing != null) {
+          signature = printAliasingSignature(effect.signature.aliasing);
+        } else {
+          signature = JSON.stringify(effect.signature, null, 2);
+        }
+      }
+      return `Apply ${printPlaceForAliasEffect(effect.into)} = ${receiverCallee}(${args})${signature != '' ? '\n     ' : ''}${signature}`;
+    }
+    case 'Freeze': {
+      return `Freeze ${printPlaceForAliasEffect(effect.value)} ${effect.reason}`;
+    }
+    case 'Mutate':
+    case 'MutateConditionally':
+    case 'MutateTransitive':
+    case 'MutateTransitiveConditionally': {
+      return `${effect.kind} ${printPlaceForAliasEffect(effect.value)}`;
+    }
+    case 'MutateFrozen': {
+      return `MutateFrozen ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.category)}`;
+    }
+    case 'MutateGlobal': {
+      return `MutateGlobal ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.category)}`;
+    }
+    case 'Impure': {
+      return `Impure ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.category)}`;
+    }
+    case 'Render': {
+      return `Render ${printPlaceForAliasEffect(effect.place)}`;
+    }
+    default: {
+      assertExhaustive(effect, `Unexpected kind '${(effect as any).kind}'`);
+    }
+  }
+}
+
+function printPlaceForAliasEffect(place: Place): string {
+  return printIdentifier(place.identifier);
+}
+
+export function printAliasingSignature(signature: AliasingSignature): string {
+  const tokens: Array<string> = ['function '];
+  if (signature.temporaries.length !== 0) {
+    tokens.push('<');
+    tokens.push(
+      signature.temporaries.map(temp => `$${temp.identifier.id}`).join(', '),
+    );
+    tokens.push('>');
+  }
+  tokens.push('(');
+  tokens.push('this=$' + String(signature.receiver));
+  for (const param of signature.params) {
+    tokens.push(', $' + String(param));
+  }
+  if (signature.rest != null) {
+    tokens.push(`, ...$${String(signature.rest)}`);
+  }
+  tokens.push('): ');
+  tokens.push('$' + String(signature.returns) + ':');
+  for (const effect of signature.effects) {
+    tokens.push('\n  ' + printAliasingEffect(effect));
+  }
+  return tokens.join('');
 }

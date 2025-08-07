@@ -36,7 +36,7 @@ function useFoo(t0) {
   const $ = _c(3);
   const { obj, objIsNull } = t0;
   let x;
-  if ($[0] !== objIsNull || $[1] !== obj) {
+  if ($[0] !== obj || $[1] !== objIsNull) {
     x = [];
     bb0: {
       if (objIsNull) {
@@ -45,8 +45,8 @@ function useFoo(t0) {
 
       x.push(obj.a);
     }
-    $[0] = objIsNull;
-    $[1] = obj;
+    $[0] = obj;
+    $[1] = objIsNull;
     $[2] = x;
   } else {
     x = $[2];

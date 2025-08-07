@@ -63,8 +63,20 @@ export function findContextIdentifiers(
         state: FindContextIdentifierState,
       ): void {
         const left = path.get('left');
-        const currentFn = state.currentFn.at(-1) ?? null;
-        handleAssignment(currentFn, state.identifiers, left);
+        if (left.isLVal()) {
+          const currentFn = state.currentFn.at(-1) ?? null;
+          handleAssignment(currentFn, state.identifiers, left);
+        } else {
+          /**
+           * OptionalMemberExpressions as the left side of an AssignmentExpression are Stage 1 and
+           * not supported by React Compiler yet.
+           */
+          CompilerError.throwTodo({
+            reason: `Unsupported syntax on the left side of an AssignmentExpression`,
+            description: `Expected an LVal, got: ${left.type}`,
+            loc: left.node.loc ?? null,
+          });
+        }
       },
       UpdateExpression(
         path: NodePath<t.UpdateExpression>,

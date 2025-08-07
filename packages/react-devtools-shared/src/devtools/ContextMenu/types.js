@@ -7,10 +7,10 @@
  * @flow
  */
 
-import type {Node as ReactNode, AbstractComponent, ElementRef} from 'react';
+import type {Node as ReactNode} from 'react';
 
 export type ContextMenuItem = {
-  onClick: () => void,
+  onClick: () => mixed,
   content: ReactNode,
 };
 
@@ -25,5 +25,7 @@ export type ContextMenuHandle = {
   hide(): void,
 };
 
-export type ContextMenuComponent = AbstractComponent<{}, ContextMenuHandle>;
-export type ContextMenuRef = {current: ElementRef<ContextMenuComponent> | null};
+export type ContextMenuComponent = component(
+  ref: React$RefSetter<ContextMenuHandle>,
+);
+export type ContextMenuRef = {current: ContextMenuHandle | null};

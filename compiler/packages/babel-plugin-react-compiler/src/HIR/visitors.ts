@@ -6,7 +6,9 @@
  */
 
 import {assertExhaustive} from '../Utils/utils';
+import {CompilerError} from '..';
 import {
+  BasicBlock,
   BlockId,
   Instruction,
   InstructionValue,
@@ -14,7 +16,9 @@ import {
   Pattern,
   Place,
   ReactiveInstruction,
+  ReactiveScope,
   ReactiveValue,
+  ScopeId,
   SpreadPattern,
   Terminal,
 } from './HIR';
@@ -189,7 +193,7 @@ export function* eachInstructionValueOperand(
     }
     case 'ObjectMethod':
     case 'FunctionExpression': {
-      yield* instrValue.loweredFunc.dependencies;
+      yield* instrValue.loweredFunc.func.context;
       break;
     }
     case 'TaggedTemplateExpression': {
@@ -323,6 +327,51 @@ export function* eachPatternOperand(pattern: Pattern): Iterable<Place> {
           yield property.place;
         } else if (property.kind === 'Spread') {
           yield property.place;
+        } else {
+          assertExhaustive(
+            property,
+            `Unexpected item kind \`${(property as any).kind}\``,
+          );
+        }
+      }
+      break;
+    }
+    default: {
+      assertExhaustive(
+        pattern,
+        `Unexpected pattern kind \`${(pattern as any).kind}\``,
+      );
+    }
+  }
+}
+
+export function* eachPatternItem(
+  pattern: Pattern,
+): Iterable<Place | SpreadPattern> {
+  switch (pattern.kind) {
+    case 'ArrayPattern': {
+      for (const item of pattern.items) {
+        if (item.kind === 'Identifier') {
+          yield item;
+        } else if (item.kind === 'Spread') {
+          yield item;
+        } else if (item.kind === 'Hole') {
+          continue;
+        } else {
+          assertExhaustive(
+            item,
+            `Unexpected item kind \`${(item as any).kind}\``,
+          );
+        }
+      }
+      break;
+    }
+    case 'ObjectPattern': {
+      for (const property of pattern.properties) {
+        if (property.kind === 'ObjectProperty') {
+          yield property.place;
+        } else if (property.kind === 'Spread') {
+          yield property;
         } else {
           assertExhaustive(
             property,
@@ -513,8 +562,9 @@ export function mapInstructionValueOperands(
     }
     case 'ObjectMethod':
     case 'FunctionExpression': {
-      instrValue.loweredFunc.dependencies =
-        instrValue.loweredFunc.dependencies.map(d => fn(d));
+      instrValue.loweredFunc.func.context =
+        instrValue.loweredFunc.func.context.map(d => fn(d));
+
       break;
     }
     case 'TaggedTemplateExpression': {
@@ -660,11 +710,13 @@ export function mapTerminalSuccessors(
     case 'branch': {
       const consequent = fn(terminal.consequent);
       const alternate = fn(terminal.alternate);
+      const fallthrough = fn(terminal.fallthrough);
       return {
         kind: 'branch',
         test: terminal.test,
         consequent,
         alternate,
+        fallthrough,
         id: makeInstructionId(0),
         loc: terminal.loc,
       };
@@ -725,9 +777,11 @@ export function mapTerminalSuccessors(
     case 'return': {
       return {
         kind: 'return',
+        returnVariant: terminal.returnVariant,
         loc: terminal.loc,
         value: terminal.value,
         id: makeInstructionId(0),
+        effects: terminal.effects,
       };
     }
     case 'throw': {
@@ -835,6 +889,7 @@ export function mapTerminalSuccessors(
         handler,
         id: makeInstructionId(0),
         loc: terminal.loc,
+        effects: terminal.effects,
       };
     }
     case 'try': {
@@ -883,7 +938,6 @@ export function terminalHasFallthrough<
 >(terminal: T): terminal is U {
   switch (terminal.kind) {
     case 'maybe-throw':
-    case 'branch':
     case 'goto':
     case 'return':
     case 'throw':
@@ -892,6 +946,7 @@ export function terminalHasFallthrough<
       const _: undefined = terminal.fallthrough;
       return false;
     }
+    case 'branch':
     case 'try':
     case 'do-while':
     case 'for-of':
@@ -1145,5 +1200,82 @@ export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
         `Unexpected terminal kind \`${(terminal as any).kind}\``,
       );
     }
+  }
+}
+
+/**
+ * Helper class for traversing scope blocks in HIR-form.
+ */
+export class ScopeBlockTraversal {
+  // Live stack of active scopes
+  #activeScopes: Array<ScopeId> = [];
+  blockInfos: Map<
+    BlockId,
+    | {
+        kind: 'end';
+        scope: ReactiveScope;
+        pruned: boolean;
+      }
+    | {
+        kind: 'begin';
+        scope: ReactiveScope;
+        pruned: boolean;
+        fallthrough: BlockId;
+      }
+  > = new Map();
+
+  recordScopes(block: BasicBlock): void {
+    const blockInfo = this.blockInfos.get(block.id);
+    if (blockInfo?.kind === 'begin') {
+      this.#activeScopes.push(blockInfo.scope.id);
+    } else if (blockInfo?.kind === 'end') {
+      const top = this.#activeScopes.at(-1);
+      CompilerError.invariant(blockInfo.scope.id === top, {
+        reason:
+          'Expected traversed block fallthrough to match top-most active scope',
+        loc: block.instructions[0]?.loc ?? block.terminal.id,
+      });
+      this.#activeScopes.pop();
+    }
+
+    if (
+      block.terminal.kind === 'scope' ||
+      block.terminal.kind === 'pruned-scope'
+    ) {
+      CompilerError.invariant(
+        !this.blockInfos.has(block.terminal.block) &&
+          !this.blockInfos.has(block.terminal.fallthrough),
+        {
+          reason: 'Expected unique scope blocks and fallthroughs',
+          loc: block.terminal.loc,
+        },
+      );
+      this.blockInfos.set(block.terminal.block, {
+        kind: 'begin',
+        scope: block.terminal.scope,
+        pruned: block.terminal.kind === 'pruned-scope',
+        fallthrough: block.terminal.fallthrough,
+      });
+      this.blockInfos.set(block.terminal.fallthrough, {
+        kind: 'end',
+        scope: block.terminal.scope,
+        pruned: block.terminal.kind === 'pruned-scope',
+      });
+    }
+  }
+
+  /**
+   * @returns if the given scope is currently 'active', i.e. if the scope start
+   * block but not the scope fallthrough has been recorded.
+   */
+  isScopeActive(scopeId: ScopeId): boolean {
+    return this.#activeScopes.indexOf(scopeId) !== -1;
+  }
+
+  /**
+   * The current, innermost active scope.
+   */
+  get currentScope(): ScopeId | null {
+    return this.#activeScopes.at(-1) ?? null;
   }
 }

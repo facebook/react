@@ -8,10 +8,13 @@
 import {CompilerError, SourceLocation} from '..';
 import {Environment} from '../HIR';
 import {
+  DeclarationId,
   GeneratedSource,
   HIRFunction,
   Identifier,
   Instruction,
+  InstructionId,
+  MutableRange,
   Place,
   ReactiveScope,
   makeInstructionId,
@@ -22,7 +25,6 @@ import {
   eachPatternOperand,
 } from '../HIR/visitors';
 import DisjointSet from '../Utils/DisjointSet';
-import {logHIRFunction} from '../Utils/logger';
 import {assertExhaustive} from '../Utils/utils';
 
 /*
@@ -153,7 +155,11 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
       scope.range.end > maxInstruction + 1
     ) {
       // Make it easier to debug why the error occurred
-      logHIRFunction('InferReactiveScopeVariables (invalid scope)', fn);
+      fn.env.logger?.debugLogIRs?.({
+        kind: 'hir',
+        name: 'InferReactiveScopeVariables (invalid scope)',
+        value: fn,
+      });
       CompilerError.invariant(false, {
         reason: `Invalid mutable range for scope`,
         loc: GeneratedSource,
@@ -172,11 +178,15 @@ function mergeLocation(l: SourceLocation, r: SourceLocation): SourceLocation {
     return l;
   } else {
     return {
+      filename: l.filename,
+      identifierName: l.identifierName,
       start: {
+        index: Math.min(l.start.index, r.start.index),
         line: Math.min(l.start.line, r.start.line),
         column: Math.min(l.start.column, r.start.column),
       },
       end: {
+        index: Math.max(l.end.index, r.end.index),
         line: Math.max(l.end.line, r.end.line),
         column: Math.max(l.end.column, r.end.column),
       },
@@ -185,12 +195,18 @@ function mergeLocation(l: SourceLocation, r: SourceLocation): SourceLocation {
 }
 
 // Is the operand mutable at this given instruction
-export function isMutable({id}: Instruction, place: Place): boolean {
-  const range = place.identifier.mutableRange;
+export function isMutable(instr: {id: InstructionId}, place: Place): boolean {
+  return inRange(instr, place.identifier.mutableRange);
+}
+
+export function inRange(
+  {id}: {id: InstructionId},
+  range: MutableRange,
+): boolean {
   return id >= range.start && id < range.end;
 }
 
-function mayAllocate(env: Environment, instruction: Instruction): boolean {
+function mayAllocate(_env: Environment, instruction: Instruction): boolean {
   const {value} = instruction;
   switch (value.kind) {
     case 'Destructure': {
@@ -226,6 +242,7 @@ function mayAllocate(env: Environment, instruction: Instruction): boolean {
     case 'StoreGlobal': {
       return false;
     }
+    case 'TaggedTemplateExpression':
     case 'CallExpression':
     case 'MethodCall': {
       return instruction.lvalue.identifier.type.kind !== 'Primitive';
@@ -240,8 +257,7 @@ function mayAllocate(env: Environment, instruction: Instruction): boolean {
     case 'ObjectExpression':
     case 'UnsupportedNode':
     case 'ObjectMethod':
-    case 'FunctionExpression':
-    case 'TaggedTemplateExpression': {
+    case 'FunctionExpression': {
       return true;
     }
     default: {
@@ -257,6 +273,14 @@ export function findDisjointMutableValues(
   fn: HIRFunction,
 ): DisjointSet<Identifier> {
   const scopeIdentifiers = new DisjointSet<Identifier>();
+
+  const declarations = new Map<DeclarationId, Identifier>();
+  function declareIdentifier(lvalue: Place): void {
+    if (!declarations.has(lvalue.identifier.declarationId)) {
+      declarations.set(lvalue.identifier.declarationId, lvalue.identifier);
+    }
+  }
+
   for (const [_, block] of fn.body.blocks) {
     /*
      * If a phi is mutated after creation, then we need to alias all of its operands such that they
@@ -264,17 +288,25 @@ export function findDisjointMutableValues(
      */
     for (const phi of block.phis) {
       if (
-        // The phi was reset because it was not mutated after creation
-        phi.id.mutableRange.start + 1 !== phi.id.mutableRange.end &&
-        phi.id.mutableRange.end >
+        phi.place.identifier.mutableRange.start + 1 !==
+          phi.place.identifier.mutableRange.end &&
+        phi.place.identifier.mutableRange.end >
           (block.instructions.at(0)?.id ?? block.terminal.id)
       ) {
-        for (const [, phiId] of phi.operands) {
-          scopeIdentifiers.union([phi.id, phiId]);
+        const operands = [phi.place.identifier];
+        const declaration = declarations.get(
+          phi.place.identifier.declarationId,
+        );
+        if (declaration !== undefined) {
+          operands.push(declaration);
         }
+        for (const [_, phiId] of phi.operands) {
+          operands.push(phiId.identifier);
+        }
+        scopeIdentifiers.union(operands);
       } else if (fn.env.config.enableForest) {
         for (const [, phiId] of phi.operands) {
-          scopeIdentifiers.union([phi.id, phiId]);
+          scopeIdentifiers.union([phi.place.identifier, phiId.identifier]);
         }
       }
     }
@@ -286,9 +318,15 @@ export function findDisjointMutableValues(
         operands.push(instr.lvalue!.identifier);
       }
       if (
+        instr.value.kind === 'DeclareLocal' ||
+        instr.value.kind === 'DeclareContext'
+      ) {
+        declareIdentifier(instr.value.lvalue.place);
+      } else if (
         instr.value.kind === 'StoreLocal' ||
         instr.value.kind === 'StoreContext'
       ) {
+        declareIdentifier(instr.value.lvalue.place);
         if (
           instr.value.lvalue.place.identifier.mutableRange.end >
           instr.value.lvalue.place.identifier.mutableRange.start + 1
@@ -303,6 +341,7 @@ export function findDisjointMutableValues(
         }
       } else if (instr.value.kind === 'Destructure') {
         for (const place of eachPatternOperand(instr.value.lvalue.pattern)) {
+          declareIdentifier(place);
           if (
             place.identifier.mutableRange.end >
             place.identifier.mutableRange.start + 1
@@ -344,6 +383,14 @@ export function findDisjointMutableValues(
              */
             operand.identifier.mutableRange.start > 0
           ) {
+            if (
+              instr.value.kind === 'FunctionExpression' ||
+              instr.value.kind === 'ObjectMethod'
+            ) {
+              if (operand.identifier.type.kind === 'Primitive') {
+                continue;
+              }
+            }
             operands.push(operand.identifier);
           }
         }

@@ -187,13 +187,14 @@ export default class Overlay {
     }
   }
 
-  inspect(nodes: Array<HTMLElement>, name?: ?string) {
+  inspect(nodes: $ReadOnlyArray<HTMLElement>, name?: ?string) {
     // We can't get the size of text nodes or comment nodes. React as of v15
     // heavily uses comment nodes to delimit text.
     const elements = nodes.filter(node => node.nodeType === Node.ELEMENT_NODE);
 
     while (this.rects.length > elements.length) {
       const rect = this.rects.pop();
+      // $FlowFixMe[incompatible-use]
       rect.remove();
     }
     if (elements.length === 0) {
@@ -233,19 +234,9 @@ export default class Overlay {
       name = elements[0].nodeName.toLowerCase();
 
       const node = elements[0];
-      const rendererInterface =
-        this.agent.getBestMatchingRendererInterface(node);
-      if (rendererInterface) {
-        const id = rendererInterface.getFiberIDForNative(node, true);
-        if (id) {
-          const ownerName = rendererInterface.getDisplayNameForFiberID(
-            id,
-            true,
-          );
-          if (ownerName) {
-            name += ' (in ' + ownerName + ')';
-          }
-        }
+      const ownerName = this.agent.getComponentNameForHostInstance(node);
+      if (ownerName) {
+        name += ' (in ' + ownerName + ')';
       }
     }
 

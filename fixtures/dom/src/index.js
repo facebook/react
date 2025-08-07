@@ -1,21 +1,42 @@
 import './polyfills';
-import loadReact from './react-loader';
+import loadReact, {isLocal} from './react-loader';
 
-loadReact()
-  .then(() => import('./components/App'))
-  .then(App => {
-    const {React, ReactDOM} = window;
-
-    if (typeof window.ReactDOMClient !== 'undefined') {
-      // we are in a React that only supports modern roots
-
-      ReactDOM.createRoot(document.getElementById('root')).render(
-        React.createElement(App.default)
+if (isLocal()) {
+  Promise.all([import('react'), import('react-dom/client')])
+    .then(([React, ReactDOMClient]) => {
+      if (React === undefined || ReactDOMClient === undefined) {
+        throw new Error(
+          'Unable to load React. Build experimental and then run `yarn dev` again'
+        );
+      }
+      window.React = React;
+      window.ReactDOMClient = ReactDOMClient;
+    })
+    .then(() => import('./components/App'))
+    .then(App => {
+      window.ReactDOMClient.createRoot(document.getElementById('root')).render(
+        window.React.createElement(App.default)
       );
-    } else {
-      ReactDOM.render(
-        React.createElement(App.default),
-        document.getElementById('root')
-      );
-    }
-  });
+    });
+} else {
+  loadReact()
+    .then(() => import('./components/App'))
+    .then(App => {
+      const {React, ReactDOM} = window;
+      if (
+        typeof window.ReactDOMClient !== 'undefined' &&
+        typeof window.ReactDOMClient.createRoot !== 'undefined'
+      ) {
+        // we are in a React that only supports modern roots
+
+        window.ReactDOMClient.createRoot(
+          document.getElementById('root')
+        ).render(React.createElement(App.default));
+      } else {
+        ReactDOM.render(
+          React.createElement(App.default),
+          document.getElementById('root')
+        );
+      }
+    });
+}

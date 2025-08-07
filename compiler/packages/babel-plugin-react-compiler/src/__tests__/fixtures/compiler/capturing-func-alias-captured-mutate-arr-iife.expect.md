@@ -32,7 +32,7 @@ const { mutate } = require("shared-runtime");
 function component(foo, bar) {
   const $ = _c(3);
   let y;
-  if ($[0] !== foo || $[1] !== bar) {
+  if ($[0] !== bar || $[1] !== foo) {
     const x = { foo };
     y = { bar };
 
@@ -41,8 +41,8 @@ function component(foo, bar) {
     a.x = b;
 
     mutate(y);
-    $[0] = foo;
-    $[1] = bar;
+    $[0] = bar;
+    $[1] = foo;
     $[2] = y;
   } else {
     y = $[2];

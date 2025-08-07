@@ -10,20 +10,21 @@ import {transformFromAstSync} from '@babel/core';
 import PluginProposalPrivateMethods from '@babel/plugin-proposal-private-methods';
 import type {SourceLocation as BabelSourceLocation} from '@babel/types';
 import BabelPluginReactCompiler, {
+  CompilerDiagnostic,
+  CompilerDiagnosticOptions,
+  CompilerErrorDetail,
   CompilerErrorDetailOptions,
   CompilerSuggestionOperation,
   ErrorSeverity,
   parsePluginOptions,
   validateEnvironmentConfig,
+  OPT_OUT_DIRECTIVES,
   type PluginOptions,
 } from 'babel-plugin-react-compiler/src';
-import {Logger} from 'babel-plugin-react-compiler/src/Entrypoint';
+import {Logger, LoggerEvent} from 'babel-plugin-react-compiler/src/Entrypoint';
 import type {Rule} from 'eslint';
+import {Statement} from 'estree';
 import * as HermesParser from 'hermes-parser';
-
-type CompilerErrorDetailWithLoc = Omit<CompilerErrorDetailOptions, 'loc'> & {
-  loc: BabelSourceLocation;
-};
 
 function assertExhaustive(_: never, errorMsg: string): never {
   throw new Error(errorMsg);
@@ -36,19 +37,15 @@ const DEFAULT_REPORTABLE_LEVELS = new Set([
 let reportableLevels = DEFAULT_REPORTABLE_LEVELS;
 
 function isReportableDiagnostic(
-  detail: CompilerErrorDetailOptions,
-): detail is CompilerErrorDetailWithLoc {
-  return (
-    reportableLevels.has(detail.severity) &&
-    detail.loc != null &&
-    typeof detail.loc !== 'symbol'
-  );
+  detail: CompilerErrorDetail | CompilerDiagnostic,
+): boolean {
+  return reportableLevels.has(detail.severity);
 }
 
 function makeSuggestions(
-  detail: CompilerErrorDetailOptions,
+  detail: CompilerErrorDetailOptions | CompilerDiagnosticOptions,
 ): Array<Rule.SuggestionReportDescriptor> {
-  let suggest: Array<Rule.SuggestionReportDescriptor> = [];
+  const suggest: Array<Rule.SuggestionReportDescriptor> = [];
   if (Array.isArray(detail.suggestions)) {
     for (const suggestion of detail.suggestions) {
       switch (suggestion.op) {
@@ -101,6 +98,18 @@ function makeSuggestions(
 const COMPILER_OPTIONS: Partial<PluginOptions> = {
   noEmit: true,
   panicThreshold: 'none',
+  // Don't emit errors on Flow suppressions--Flow already gave a signal
+  flowSuppressions: false,
+  environment: validateEnvironmentConfig({
+    validateRefAccessDuringRender: true,
+    validateNoSetStateInRender: true,
+    validateNoSetStateInEffects: true,
+    validateNoJSXInTryStatements: true,
+    validateNoImpureFunctionsInRender: true,
+    validateStaticComponents: true,
+    validateNoFreezingKnownMutableFunctions: true,
+    validateNoVoidUseMemo: true,
+  }),
 };
 
 const rule: Rule.RuleModule = {
@@ -117,14 +126,14 @@ const rule: Rule.RuleModule = {
   },
   create(context: Rule.RuleContext) {
     // Compat with older versions of eslint
-    const sourceCode = context.sourceCode?.text ?? context.getSourceCode().text;
+    const sourceCode = context.sourceCode ?? context.getSourceCode();
     const filename = context.filename ?? context.getFilename();
     const userOpts = context.options[0] ?? {};
     if (
-      userOpts['reportableLevels'] != null &&
-      userOpts['reportableLevels'] instanceof Set
+      userOpts.reportableLevels != null &&
+      userOpts.reportableLevels instanceof Set
     ) {
-      reportableLevels = userOpts['reportableLevels'];
+      reportableLevels = userOpts.reportableLevels;
     } else {
       reportableLevels = DEFAULT_REPORTABLE_LEVELS;
     }
@@ -137,57 +146,87 @@ const rule: Rule.RuleModule = {
      */
     let __unstable_donotuse_reportAllBailouts: boolean = false;
     if (
-      userOpts['__unstable_donotuse_reportAllBailouts'] != null &&
-      typeof userOpts['__unstable_donotuse_reportAllBailouts'] === 'boolean'
+      userOpts.__unstable_donotuse_reportAllBailouts != null &&
+      typeof userOpts.__unstable_donotuse_reportAllBailouts === 'boolean'
     ) {
       __unstable_donotuse_reportAllBailouts =
-        userOpts['__unstable_donotuse_reportAllBailouts'];
+        userOpts.__unstable_donotuse_reportAllBailouts;
     }
 
-    const options: PluginOptions = {
-      ...parsePluginOptions(userOpts),
+    let shouldReportUnusedOptOutDirective = true;
+    const options: PluginOptions = parsePluginOptions({
       ...COMPILER_OPTIONS,
-    };
+      ...userOpts,
+      environment: {
+        ...COMPILER_OPTIONS.environment,
+        ...userOpts.environment,
+      },
+    });
     const userLogger: Logger | null = options.logger;
     options.logger = {
-      logEvent: (filename, event): void => {
-        userLogger?.logEvent(filename, event);
+      logEvent: (eventFilename, event): void => {
+        userLogger?.logEvent(eventFilename, event);
         if (event.kind === 'CompileError') {
+          shouldReportUnusedOptOutDirective = false;
           const detail = event.detail;
-          const suggest = makeSuggestions(detail);
+          const suggest = makeSuggestions(detail.options);
           if (__unstable_donotuse_reportAllBailouts && event.fnLoc != null) {
+            const loc = detail.primaryLocation();
             const locStr =
-              detail.loc != null && typeof detail.loc !== 'symbol'
-                ? ` (@:${detail.loc.start.line}:${detail.loc.start.column})`
+              loc != null && typeof loc !== 'symbol'
+                ? ` (@:${loc.start.line}:${loc.start.column})`
                 : '';
+            /**
+             * Report bailouts with a smaller span (just the first line).
+             * Compiler bailout lints only serve to flag that a react function
+             * has not been optimized by the compiler for codebases which depend
+             * on compiler memo heavily for perf. These lints are also often not
+             * actionable.
+             */
+            let endLoc;
+            if (event.fnLoc.end.line === event.fnLoc.start.line) {
+              endLoc = event.fnLoc.end;
+            } else {
+              endLoc = {
+                line: event.fnLoc.start.line,
+                // Babel loc line numbers are 1-indexed
+                column:
+                  sourceCode.text.split(/\r?\n|\r|\n/g)[
+                    event.fnLoc.start.line - 1
+                  ]?.length ?? 0,
+              };
+            }
             const firstLineLoc = {
               start: event.fnLoc.start,
-              end: {
-                line: event.fnLoc.start.line,
-                column: 10e3,
-              },
+              end: endLoc,
             };
             context.report({
-              message: `[ReactCompilerBailout] ${detail.reason}${locStr}`,
+              message: `${detail.printErrorMessage(sourceCode.text, {eslint: true})} ${locStr}`,
               loc: firstLineLoc,
               suggest,
             });
           }
 
-          if (!isReportableDiagnostic(detail)) {
+          const loc = detail.primaryLocation();
+          if (
+            !isReportableDiagnostic(detail) ||
+            loc == null ||
+            typeof loc === 'symbol'
+          ) {
             return;
           }
-          if (hasFlowSuppression(detail.loc, 'react-rule-hook')) {
+          if (
+            hasFlowSuppression(loc, 'react-rule-hook') ||
+            hasFlowSuppression(loc, 'react-rule-unsafe-ref')
+          ) {
             // If Flow already caught this error, we don't need to report it again.
             return;
           }
-          const loc =
-            detail.loc == null || typeof detail.loc == 'symbol'
-              ? event.fnLoc
-              : detail.loc;
           if (loc != null) {
             context.report({
-              message: detail.reason,
+              message: detail.printErrorMessage(sourceCode.text, {
+                eslint: true,
+              }),
               loc,
               suggest,
             });
@@ -200,15 +239,14 @@ const rule: Rule.RuleModule = {
       options.environment = validateEnvironmentConfig(
         options.environment ?? {},
       );
-    } catch (err) {
-      options.logger?.logEvent('', err);
+    } catch (err: unknown) {
+      options.logger?.logEvent('', err as LoggerEvent);
     }
 
     function hasFlowSuppression(
       nodeLoc: BabelSourceLocation,
       suppression: string,
     ): boolean {
-      const sourceCode = context.getSourceCode();
       const comments = sourceCode.getAllComments();
       const flowSuppressionRegex = new RegExp(
         '\\$FlowFixMe\\[' + suppression + '\\]',
@@ -228,7 +266,7 @@ const rule: Rule.RuleModule = {
     if (filename.endsWith('.tsx') || filename.endsWith('.ts')) {
       try {
         const {parse: babelParse} = require('@babel/parser');
-        babelAST = babelParse(sourceCode, {
+        babelAST = babelParse(sourceCode.text, {
           filename,
           sourceType: 'unambiguous',
           plugins: ['typescript', 'jsx'],
@@ -238,7 +276,7 @@ const rule: Rule.RuleModule = {
       }
     } else {
       try {
-        babelAST = HermesParser.parse(sourceCode, {
+        babelAST = HermesParser.parse(sourceCode.text, {
           babel: true,
           enableExperimentalComponentSyntax: true,
           sourceFilename: filename,
@@ -251,7 +289,7 @@ const rule: Rule.RuleModule = {
 
     if (babelAST != null) {
       try {
-        transformFromAstSync(babelAST, sourceCode, {
+        transformFromAstSync(babelAST, sourceCode.text, {
           filename,
           highlightCode: false,
           retainLines: true,
@@ -267,7 +305,52 @@ const rule: Rule.RuleModule = {
         /* errors handled by injected logger */
       }
     }
-    return {};
+
+    function reportUnusedOptOutDirective(stmt: Statement) {
+      if (
+        stmt.type === 'ExpressionStatement' &&
+        stmt.expression.type === 'Literal' &&
+        typeof stmt.expression.value === 'string' &&
+        OPT_OUT_DIRECTIVES.has(stmt.expression.value) &&
+        stmt.loc != null
+      ) {
+        context.report({
+          message: `Unused '${stmt.expression.value}' directive`,
+          loc: stmt.loc,
+          suggest: [
+            {
+              desc: 'Remove the directive',
+              fix(fixer) {
+                return fixer.remove(stmt);
+              },
+            },
+          ],
+        });
+      }
+    }
+    if (shouldReportUnusedOptOutDirective) {
+      return {
+        FunctionDeclaration(fnDecl) {
+          for (const stmt of fnDecl.body.body) {
+            reportUnusedOptOutDirective(stmt);
+          }
+        },
+        ArrowFunctionExpression(fnExpr) {
+          if (fnExpr.body.type === 'BlockStatement') {
+            for (const stmt of fnExpr.body.body) {
+              reportUnusedOptOutDirective(stmt);
+            }
+          }
+        },
+        FunctionExpression(fnExpr) {
+          for (const stmt of fnExpr.body.body) {
+            reportUnusedOptOutDirective(stmt);
+          }
+        },
+      };
+    } else {
+      return {};
+    }
   },
 };
 

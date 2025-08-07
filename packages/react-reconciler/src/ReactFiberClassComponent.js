@@ -18,16 +18,10 @@ import {
   MountLayoutDev,
 } from './ReactFiberFlags';
 import {
-  debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
-  enableDebugTracing,
   enableSchedulingProfiler,
-  enableLazyContextPropagation,
-  enableRefAsProp,
-  disableDefaultPropsExceptForClasses,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
-import {isMounted} from './ReactFiberTreeReflection';
 import {get as getInstance, set as setInstance} from 'shared/ReactInstanceMap';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
@@ -36,12 +30,7 @@ import assign from 'shared/assign';
 import isArray from 'shared/isArray';
 import {REACT_CONTEXT_TYPE, REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
 
-import {
-  DebugTracingMode,
-  NoMode,
-  StrictLegacyMode,
-  StrictEffectsMode,
-} from './ReactTypeOfMode';
+import {NoMode, StrictLegacyMode, StrictEffectsMode} from './ReactTypeOfMode';
 
 import {
   enqueueUpdate,
@@ -63,15 +52,15 @@ import {
   getUnmaskedContext,
   hasContextChanged,
   emptyContextObject,
-} from './ReactFiberContext';
+} from './ReactFiberLegacyContext';
 import {readContext, checkIfContextChanged} from './ReactFiberNewContext';
 import {requestUpdateLane, scheduleUpdateOnFiber} from './ReactFiberWorkLoop';
-import {logForceUpdateScheduled, logStateUpdateScheduled} from './DebugTracing';
 import {
   markForceUpdateScheduled,
   markStateUpdateScheduled,
   setIsStrictModeForDevtools,
 } from './ReactFiberDevToolsHook';
+import {startUpdateTimerByLane} from './ReactProfilerTimer';
 
 const fakeInternalInstance = {};
 
@@ -146,10 +135,7 @@ function applyDerivedStateFromProps(
   const prevState = workInProgress.memoizedState;
   let partialState = getDerivedStateFromProps(nextProps, prevState);
   if (__DEV__) {
-    if (
-      debugRenderPhaseSideEffectsForStrictMode &&
-      workInProgress.mode & StrictLegacyMode
-    ) {
+    if (workInProgress.mode & StrictLegacyMode) {
       setIsStrictModeForDevtools(true);
       try {
         // Invoke the function an extra time to help detect side-effects.
@@ -177,7 +163,6 @@ function applyDerivedStateFromProps(
 }
 
 const classComponentUpdater = {
-  isMounted,
   // $FlowFixMe[missing-local-annot]
   enqueueSetState(inst: any, payload: any, callback) {
     const fiber = getInstance(inst);
@@ -194,17 +179,9 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
+      startUpdateTimerByLane(lane, 'this.setState()');
       scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitions(root, fiber, lane);
-    }
-
-    if (__DEV__) {
-      if (enableDebugTracing) {
-        if (fiber.mode & DebugTracingMode) {
-          const name = getComponentNameFromFiber(fiber) || 'Unknown';
-          logStateUpdateScheduled(name, lane, payload);
-        }
-      }
     }
 
     if (enableSchedulingProfiler) {
@@ -228,17 +205,9 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
+      startUpdateTimerByLane(lane, 'this.replaceState()');
       scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitions(root, fiber, lane);
-    }
-
-    if (__DEV__) {
-      if (enableDebugTracing) {
-        if (fiber.mode & DebugTracingMode) {
-          const name = getComponentNameFromFiber(fiber) || 'Unknown';
-          logStateUpdateScheduled(name, lane, payload);
-        }
-      }
     }
 
     if (enableSchedulingProfiler) {
@@ -262,17 +231,9 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
+      startUpdateTimerByLane(lane, 'this.forceUpdate()');
       scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitions(root, fiber, lane);
-    }
-
-    if (__DEV__) {
-      if (enableDebugTracing) {
-        if (fiber.mode & DebugTracingMode) {
-          const name = getComponentNameFromFiber(fiber) || 'Unknown';
-          logForceUpdateScheduled(name, lane);
-        }
-      }
     }
 
     if (enableSchedulingProfiler) {
@@ -298,10 +259,7 @@ function checkShouldComponentUpdate(
       nextContext,
     );
     if (__DEV__) {
-      if (
-        debugRenderPhaseSideEffectsForStrictMode &&
-        workInProgress.mode & StrictLegacyMode
-      ) {
+      if (workInProgress.mode & StrictLegacyMode) {
         setIsStrictModeForDevtools(true);
         try {
           // Invoke the function an extra time to help detect side-effects.
@@ -630,10 +588,7 @@ function constructClassInstance(
   let instance = new ctor(props, context);
   // Instantiate twice to help detect side-effects.
   if (__DEV__) {
-    if (
-      debugRenderPhaseSideEffectsForStrictMode &&
-      workInProgress.mode & StrictLegacyMode
-    ) {
+    if (workInProgress.mode & StrictLegacyMode) {
       setIsStrictModeForDevtools(true);
       try {
         instance = new ctor(props, context);
@@ -739,7 +694,7 @@ function constructClassInstance(
   }
 
   // Cache unmasked context so we can avoid recreating masked context unless necessary.
-  // ReactFiberContext usually updates this cache but can't for newly-created instances.
+  // ReactFiberLegacyContext usually updates this cache but can't for newly-created instances.
   if (isLegacyContextConsumer) {
     cacheContext(workInProgress, unmaskedContext, context);
   }
@@ -903,11 +858,7 @@ function resumeMountClassInstance(
   const instance = workInProgress.stateNode;
 
   const unresolvedOldProps = workInProgress.memoizedProps;
-  const oldProps = resolveClassComponentProps(
-    ctor,
-    unresolvedOldProps,
-    workInProgress.type === workInProgress.elementType,
-  );
+  const oldProps = resolveClassComponentProps(ctor, unresolvedOldProps);
   instance.props = oldProps;
 
   const oldContext = instance.context;
@@ -1062,11 +1013,7 @@ function updateClassInstance(
   cloneUpdateQueue(current, workInProgress);
 
   const unresolvedOldProps = workInProgress.memoizedProps;
-  const oldProps = resolveClassComponentProps(
-    ctor,
-    unresolvedOldProps,
-    workInProgress.type === workInProgress.elementType,
-  );
+  const oldProps = resolveClassComponentProps(ctor, unresolvedOldProps);
   instance.props = oldProps;
   const unresolvedNewProps = workInProgress.pendingProps;
 
@@ -1123,7 +1070,6 @@ function updateClassInstance(
     !hasContextChanged() &&
     !checkHasForceUpdateAfterProcessing() &&
     !(
-      enableLazyContextPropagation &&
       current !== null &&
       current.dependencies !== null &&
       checkIfContextChanged(current.dependencies)
@@ -1175,8 +1121,7 @@ function updateClassInstance(
     // both before and after `shouldComponentUpdate` has been called. Not ideal,
     // but I'm loath to refactor this function. This only happens for memoized
     // components so it's not that common.
-    (enableLazyContextPropagation &&
-      current !== null &&
+    (current !== null &&
       current.dependencies !== null &&
       checkIfContextChanged(current.dependencies));
 
@@ -1239,35 +1184,22 @@ function updateClassInstance(
 export function resolveClassComponentProps(
   Component: any,
   baseProps: Object,
-  // Only resolve default props if this is a lazy component. Otherwise, they
-  // would have already been resolved by the JSX runtime.
-  // TODO: We're going to remove default prop resolution from the JSX runtime
-  // and keep it only for class components. As part of that change, we should
-  // remove this extra check.
-  alreadyResolvedDefaultProps: boolean,
 ): Object {
   let newProps = baseProps;
 
-  if (enableRefAsProp) {
-    // Remove ref from the props object, if it exists.
-    if ('ref' in baseProps) {
-      newProps = ({}: any);
-      for (const propName in baseProps) {
-        if (propName !== 'ref') {
-          newProps[propName] = baseProps[propName];
-        }
+  // Remove ref from the props object, if it exists.
+  if ('ref' in baseProps) {
+    newProps = ({}: any);
+    for (const propName in baseProps) {
+      if (propName !== 'ref') {
+        newProps[propName] = baseProps[propName];
       }
     }
   }
 
   // Resolve default props.
   const defaultProps = Component.defaultProps;
-  if (
-    defaultProps &&
-    // If disableDefaultPropsExceptForClasses is true, we always resolve
-    // default props here in the reconciler, rather than in the JSX runtime.
-    (disableDefaultPropsExceptForClasses || !alreadyResolvedDefaultProps)
-  ) {
+  if (defaultProps) {
     // We may have already copied the props object above to remove ref. If so,
     // we can modify that. Otherwise, copy the props object with Object.assign.
     if (newProps === baseProps) {

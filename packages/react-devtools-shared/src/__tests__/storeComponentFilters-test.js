@@ -135,6 +135,169 @@ describe('Store component filters', () => {
   });
 
   // @reactVersion >= 16.0
+  it('should filter Suspense', async () => {
+    const Suspense = React.Suspense;
+    await actAsync(async () =>
+      render(
+        <React.Fragment>
+          <Suspense>
+            <div>Visible</div>
+          </Suspense>
+          <Suspense>
+            <div>Hidden</div>
+          </Suspense>
+        </React.Fragment>,
+      ),
+    );
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense>
+            <div>
+        ▾ <Suspense>
+            <div>
+    `);
+
+    await actAsync(
+      async () =>
+        (store.componentFilters = [
+          utils.createElementTypeFilter(Types.ElementTypeActivity),
+        ]),
+    );
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense>
+            <div>
+        ▾ <Suspense>
+            <div>
+    `);
+
+    await actAsync(
+      async () =>
+        (store.componentFilters = [
+          utils.createElementTypeFilter(Types.ElementTypeActivity, false),
+        ]),
+    );
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense>
+            <div>
+        ▾ <Suspense>
+            <div>
+    `);
+  });
+
+  it('should filter Activity', async () => {
+    const Activity = React.unstable_Activity;
+
+    if (Activity != null) {
+      await actAsync(async () =>
+        render(
+          <React.Fragment>
+            <Activity mode="visible">
+              <div>Visible</div>
+            </Activity>
+            <Activity mode="hidden">
+              <div>Hidden</div>
+            </Activity>
+          </React.Fragment>,
+        ),
+      );
+
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+          ▾ <Activity>
+              <div>
+            <Activity>
+      `);
+
+      await actAsync(
+        async () =>
+          (store.componentFilters = [
+            utils.createElementTypeFilter(Types.ElementTypeActivity),
+          ]),
+      );
+
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+            <div>
+      `);
+
+      await actAsync(
+        async () =>
+          (store.componentFilters = [
+            utils.createElementTypeFilter(Types.ElementTypeActivity, false),
+          ]),
+      );
+
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+          ▾ <Activity>
+              <div>
+            <Activity>
+      `);
+    }
+  });
+
+  it('should filter ViewTransition', async () => {
+    const ViewTransition = React.unstable_ViewTransition;
+
+    if (ViewTransition != null) {
+      await actAsync(async () =>
+        render(
+          <React.Fragment>
+            <ViewTransition>
+              <div>Visible</div>
+            </ViewTransition>
+            <ViewTransition>
+              <div>Hidden</div>
+            </ViewTransition>
+          </React.Fragment>,
+        ),
+      );
+
+      expect(store).toMatchInlineSnapshot(`
+              [root]
+                ▾ <ViewTransition>
+                    <div>
+                ▾ <ViewTransition>
+                    <div>
+          `);
+
+      await actAsync(
+        async () =>
+          (store.componentFilters = [
+            utils.createElementTypeFilter(Types.ElementTypeActivity),
+          ]),
+      );
+
+      expect(store).toMatchInlineSnapshot(`
+              [root]
+                ▾ <ViewTransition>
+                    <div>
+                ▾ <ViewTransition>
+                    <div>
+          `);
+
+      await actAsync(
+        async () =>
+          (store.componentFilters = [
+            utils.createElementTypeFilter(Types.ElementTypeActivity, false),
+          ]),
+      );
+
+      expect(store).toMatchInlineSnapshot(`
+              [root]
+                ▾ <ViewTransition>
+                    <div>
+                ▾ <ViewTransition>
+                    <div>
+          `);
+    }
+  });
+
   it('should ignore invalid ElementTypeRoot filter', async () => {
     const Component = () => <div>Hi</div>;
 
@@ -343,7 +506,11 @@ describe('Store component filters', () => {
 
     const Component = ({shouldSuspend}) => {
       if (shouldSuspend) {
-        throw promise;
+        if (React.use) {
+          React.use(promise);
+        } else {
+          throw promise;
+        }
       }
       return null;
     };
@@ -420,8 +587,8 @@ describe('Store component filters', () => {
       });
 
       expect(store).toMatchInlineSnapshot(``);
-      expect(store.errorCount).toBe(0);
-      expect(store.warningCount).toBe(0);
+      expect(store.componentWithErrorCount).toBe(0);
+      expect(store.componentWithWarningCount).toBe(0);
 
       await actAsync(async () => (store.componentFilters = []));
       expect(store).toMatchInlineSnapshot(`
@@ -460,8 +627,8 @@ describe('Store component filters', () => {
           ]),
       );
       expect(store).toMatchInlineSnapshot(`[root]`);
-      expect(store.errorCount).toBe(0);
-      expect(store.warningCount).toBe(0);
+      expect(store.componentWithErrorCount).toBe(0);
+      expect(store.componentWithWarningCount).toBe(0);
 
       await actAsync(async () => (store.componentFilters = []));
       expect(store).toMatchInlineSnapshot(`
@@ -510,8 +677,8 @@ describe('Store component filters', () => {
       });
 
       expect(store).toMatchInlineSnapshot(``);
-      expect(store.errorCount).toBe(0);
-      expect(store.warningCount).toBe(0);
+      expect(store.componentWithErrorCount).toBe(0);
+      expect(store.componentWithWarningCount).toBe(0);
 
       await actAsync(async () => (store.componentFilters = []));
       expect(store).toMatchInlineSnapshot(`
@@ -550,8 +717,8 @@ describe('Store component filters', () => {
           ]),
       );
       expect(store).toMatchInlineSnapshot(`[root]`);
-      expect(store.errorCount).toBe(0);
-      expect(store.warningCount).toBe(0);
+      expect(store.componentWithErrorCount).toBe(0);
+      expect(store.componentWithWarningCount).toBe(0);
 
       await actAsync(async () => (store.componentFilters = []));
       expect(store).toMatchInlineSnapshot(`

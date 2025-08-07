@@ -18,7 +18,7 @@ import type {
   Dehydrated,
   Unserializable,
 } from 'react-devtools-shared/src/hydration';
-import type {Source} from 'react-devtools-shared/src/shared/types';
+import type {ReactFunctionLocation, ReactStackTrace} from 'shared/ReactTypes';
 
 export type BrowserTheme = 'dark' | 'light';
 
@@ -48,11 +48,29 @@ export const ElementTypeRoot = 11;
 export const ElementTypeSuspense = 12;
 export const ElementTypeSuspenseList = 13;
 export const ElementTypeTracingMarker = 14;
+export const ElementTypeVirtual = 15;
+export const ElementTypeViewTransition = 16;
+export const ElementTypeActivity = 17;
 
 // Different types of elements displayed in the Elements tree.
 // These types may be used to visually distinguish types,
 // or to enable/disable certain functionality.
-export type ElementType = 1 | 2 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14;
+export type ElementType =
+  | 1
+  | 2
+  | 5
+  | 6
+  | 7
+  | 8
+  | 9
+  | 10
+  | 11
+  | 12
+  | 13
+  | 14
+  | 15
+  | 16
+  | 17;
 
 // WARNING
 // The values below are referenced by ComponentFilters (which are saved via localStorage).
@@ -62,8 +80,9 @@ export const ComponentFilterElementType = 1;
 export const ComponentFilterDisplayName = 2;
 export const ComponentFilterLocation = 3;
 export const ComponentFilterHOC = 4;
+export const ComponentFilterEnvironmentName = 5;
 
-export type ComponentFilterType = 1 | 2 | 3 | 4;
+export type ComponentFilterType = 1 | 2 | 3 | 4 | 5;
 
 // Hide all elements of types in this Set.
 // We hide host components only by default.
@@ -88,10 +107,18 @@ export type BooleanComponentFilter = {
   type: 4,
 };
 
+export type EnvironmentNameComponentFilter = {
+  isEnabled: boolean,
+  isValid: boolean,
+  type: 5,
+  value: string,
+};
+
 export type ComponentFilter =
   | BooleanComponentFilter
   | ElementTypeComponentFilter
-  | RegExpComponentFilter;
+  | RegExpComponentFilter
+  | EnvironmentNameComponentFilter;
 
 export type HookName = string | null;
 // Map of hook source ("<filename>:<line-number>:<column-number>") to name.
@@ -119,7 +146,7 @@ export type Plugins = {
 
 export const StrictMode = 1;
 
-// Each element on the frontend corresponds to a Fiber on the backend.
+// Each element on the frontend corresponds to an ElementID (e.g. a Fiber) on the backend.
 // Some of its information (e.g. id, type, displayName) come from the backend.
 // Other bits (e.g. weight and depth) are computed on the frontend for windowing and display purposes.
 // Elements are updated on a push basis– meaning the backend pushes updates to the frontend when needed.
@@ -155,6 +182,26 @@ export type Element = {
   // If component is compiled with Forget, the backend will send its name as Forget(...)
   // Later, on the frontend side, we will strip HOC names and Forget prefix.
   compiledWithForget: boolean,
+};
+
+// Serialized version of ReactIOInfo
+export type SerializedIOInfo = {
+  name: string,
+  description: string,
+  start: number,
+  end: number,
+  value: null | Promise<mixed>,
+  env: null | string,
+  owner: null | SerializedElement,
+  stack: null | ReactStackTrace,
+};
+
+// Serialized version of ReactAsyncInfo
+export type SerializedAsyncInfo = {
+  awaited: SerializedIOInfo,
+  env: null | string,
+  owner: null | SerializedElement,
+  stack: null | ReactStackTrace,
 };
 
 export type SerializedElement = {
@@ -196,13 +243,9 @@ export type InspectedElement = {
   // Is this Error, and can its value be overridden now?
   isErrored: boolean,
   canToggleError: boolean,
-  targetErrorBoundaryID: ?number,
 
   // Is this Suspense, and can its value be overridden now?
   canToggleSuspense: boolean,
-
-  // Can view component source location.
-  canViewSource: boolean,
 
   // Does the component have legacy context attached to it.
   hasLegacyContext: boolean,
@@ -216,11 +259,14 @@ export type InspectedElement = {
   errors: Array<[string, number]>,
   warnings: Array<[string, number]>,
 
+  // Things that suspended this Instances
+  suspendedBy: Object,
+
   // List of owners
   owners: Array<SerializedElement> | null,
 
   // Location of component in source code.
-  source: Source | null,
+  source: ReactFunctionLocation | null,
 
   type: ElementType,
 
@@ -233,6 +279,9 @@ export type InspectedElement = {
 
   // UI plugins/visualizations for the inspected element.
   plugins: Plugins,
+
+  // React Native only.
+  nativeTag: number | null,
 };
 
 // TODO: Add profiling type

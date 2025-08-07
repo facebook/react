@@ -38,6 +38,7 @@ import {
   currentBridgeProtocol,
 } from 'react-devtools-shared/src/bridge';
 import {StrictMode} from 'react-devtools-shared/src/frontend/types';
+import {withPermissionsCheck} from 'react-devtools-shared/src/frontend/utils/withPermissionsCheck';
 
 import type {
   Element,
@@ -49,6 +50,7 @@ import type {
   BridgeProtocol,
 } from 'react-devtools-shared/src/bridge';
 import UnsupportedBridgeOperationError from 'react-devtools-shared/src/UnsupportedBridgeOperationError';
+import type {DevToolsHookSettings} from '../backend/types';
 
 const debug = (methodName: string, ...args: Array<string>) => {
   if (__DEBUG__) {
@@ -93,7 +95,11 @@ export default class Store extends EventEmitter<{
   backendVersion: [],
   collapseNodesByDefault: [],
   componentFilters: [],
+  enableSuspenseTab: [],
   error: [Error],
+  hookSettings: [$ReadOnly<DevToolsHookSettings>],
+  hostInstanceSelected: [Element['id']],
+  settingsUpdated: [$ReadOnly<DevToolsHookSettings>],
   mutated: [[Array<number>, Map<number, number>]],
   recordChangeDescriptions: [],
   roots: [],
@@ -111,8 +117,8 @@ export default class Store extends EventEmitter<{
   _bridge: FrontendBridge;
 
   // Computed whenever _errorsAndWarnings Map changes.
-  _cachedErrorCount: number = 0;
-  _cachedWarningCount: number = 0;
+  _cachedComponentWithErrorCount: number = 0;
+  _cachedComponentWithWarningCount: number = 0;
   _cachedErrorAndWarningTuples: ErrorAndWarningTuples | null = null;
 
   // Should new nodes be collapsed by default when added to the tree?
@@ -134,16 +140,6 @@ export default class Store extends EventEmitter<{
 
   // Should the React Native style editor panel be shown?
   _isNativeStyleEditorSupported: boolean = false;
-
-  // Can the backend use the Storage API (e.g. localStorage)?
-  // If not, features like reload-and-profile will not work correctly and must be disabled.
-  _isBackendStorageAPISupported: boolean = false;
-
-  // Can DevTools use sync XHR requests?
-  // If not, features like reload-and-profile will not work correctly and must be disabled.
-  // This current limitation applies only to web extension builds
-  // and will need to be reconsidered in the future if we add support for reload to React Native.
-  _isSynchronousXHRSupported: boolean = false;
 
   _nativeStyleEditorValidAttributes: $ReadOnlyArray<string> | null = null;
 
@@ -175,9 +171,13 @@ export default class Store extends EventEmitter<{
   // These options may be initially set by a configuration option when constructing the Store.
   _supportsInspectMatchingDOMElement: boolean = false;
   _supportsClickToInspect: boolean = false;
-  _supportsReloadAndProfile: boolean = false;
   _supportsTimeline: boolean = false;
   _supportsTraceUpdates: boolean = false;
+  // Dynamically set if the renderer supports the Suspense tab.
+  _supportsSuspenseTab: boolean = false;
+
+  _isReloadAndProfileFrontendSupported: boolean = false;
+  _isReloadAndProfileBackendSupported: boolean = false;
 
   // These options default to false but may be updated as roots are added and removed.
   _rootSupportsBasicProfiling: boolean = false;
@@ -190,6 +190,17 @@ export default class Store extends EventEmitter<{
   // Total number of visible elements (within all roots).
   // Used for windowing purposes.
   _weightAcrossRoots: number = 0;
+
+  _shouldCheckBridgeProtocolCompatibility: boolean = false;
+  _hookSettings: $ReadOnly<DevToolsHookSettings> | null = null;
+  _shouldShowWarningsAndErrors: boolean = false;
+
+  // Only used in browser extension for synchronization with built-in Elements panel.
+  _lastSelectedHostInstanceElementId: Element['id'] | null = null;
+
+  // Maximum recorded node depth during the lifetime of this Store.
+  // Can only increase: not guaranteed to return maximal value for currently recorded elements.
+  _maximumRecordedDepth = 0;
 
   constructor(bridge: FrontendBridge, config?: Config) {
     super();
@@ -218,6 +229,7 @@ export default class Store extends EventEmitter<{
         supportsReloadAndProfile,
         supportsTimeline,
         supportsTraceUpdates,
+        checkBridgeProtocolCompatibility,
       } = config;
       if (supportsInspectMatchingDOMElement) {
         this._supportsInspectMatchingDOMElement = true;
@@ -226,13 +238,16 @@ export default class Store extends EventEmitter<{
         this._supportsClickToInspect = true;
       }
       if (supportsReloadAndProfile) {
-        this._supportsReloadAndProfile = true;
+        this._isReloadAndProfileFrontendSupported = true;
       }
       if (supportsTimeline) {
         this._supportsTimeline = true;
       }
       if (supportsTraceUpdates) {
         this._supportsTraceUpdates = true;
+      }
+      if (checkBridgeProtocolCompatibility) {
+        this._shouldCheckBridgeProtocolCompatibility = true;
       }
     }
 
@@ -244,16 +259,12 @@ export default class Store extends EventEmitter<{
     );
     bridge.addListener('shutdown', this.onBridgeShutdown);
     bridge.addListener(
-      'isBackendStorageAPISupported',
-      this.onBackendStorageAPISupported,
+      'isReloadAndProfileSupportedByBackend',
+      this.onBackendReloadAndProfileSupported,
     );
     bridge.addListener(
       'isNativeStyleEditorSupported',
       this.onBridgeNativeStyleEditorSupported,
-    );
-    bridge.addListener(
-      'isSynchronousXHRSupported',
-      this.onBridgeSynchronousXHRSupported,
     );
     bridge.addListener(
       'unsupportedRendererVersion',
@@ -262,24 +273,12 @@ export default class Store extends EventEmitter<{
 
     this._profilerStore = new ProfilerStore(bridge, this, isProfiling);
 
-    // Verify that the frontend version is compatible with the connected backend.
-    // See github.com/facebook/react/issues/21326
-    if (config != null && config.checkBridgeProtocolCompatibility) {
-      // Older backends don't support an explicit bridge protocol,
-      // so we should timeout eventually and show a downgrade message.
-      this._onBridgeProtocolTimeoutID = setTimeout(
-        this.onBridgeProtocolTimeout,
-        10000,
-      );
-
-      bridge.addListener('bridgeProtocol', this.onBridgeProtocol);
-      bridge.send('getBridgeProtocol');
-    }
-
     bridge.addListener('backendVersion', this.onBridgeBackendVersion);
-    bridge.send('getBackendVersion');
-
     bridge.addListener('saveToClipboard', this.onSaveToClipboard);
+    bridge.addListener('hookSettings', this.onHookSettings);
+    bridge.addListener('backendInitialized', this.onBackendInitialized);
+    bridge.addListener('selectElement', this.onHostInstanceSelected);
+    bridge.addListener('enableSuspenseTab', this.onEnableSuspenseTab);
   }
 
   // This is only used in tests to avoid memory leaks.
@@ -339,7 +338,7 @@ export default class Store extends EventEmitter<{
     return this._componentFilters;
   }
   set componentFilters(value: Array<ComponentFilter>): void {
-    if (this._profilerStore.isProfiling) {
+    if (this._profilerStore.isProfilingBasedOnUserInput) {
       // Re-mounting a tree while profiling is in progress might break a lot of assumptions.
       // If necessary, we could support this- but it doesn't seem like a necessary use case.
       this._throwAndEmitError(
@@ -387,8 +386,24 @@ export default class Store extends EventEmitter<{
     return this._bridgeProtocol;
   }
 
-  get errorCount(): number {
-    return this._cachedErrorCount;
+  get componentWithErrorCount(): number {
+    if (!this._shouldShowWarningsAndErrors) {
+      return 0;
+    }
+
+    return this._cachedComponentWithErrorCount;
+  }
+
+  get componentWithWarningCount(): number {
+    if (!this._shouldShowWarningsAndErrors) {
+      return 0;
+    }
+
+    return this._cachedComponentWithWarningCount;
+  }
+
+  get displayingErrorsAndWarningsEnabled(): boolean {
+    return this._shouldShowWarningsAndErrors;
   }
 
   get hasOwnerMetadata(): boolean {
@@ -456,13 +471,9 @@ export default class Store extends EventEmitter<{
   }
 
   get supportsReloadAndProfile(): boolean {
-    // Does the DevTools shell support reloading and eagerly injecting the renderer interface?
-    // And if so, can the backend use the localStorage API and sync XHR?
-    // All of these are currently required for the reload-and-profile feature to work.
     return (
-      this._supportsReloadAndProfile &&
-      this._isBackendStorageAPISupported &&
-      this._isSynchronousXHRSupported
+      this._isReloadAndProfileFrontendSupported &&
+      this._isReloadAndProfileBackendSupported
     );
   }
 
@@ -484,8 +495,8 @@ export default class Store extends EventEmitter<{
     return this._unsupportedRendererVersionDetected;
   }
 
-  get warningCount(): number {
-    return this._cachedWarningCount;
+  get lastSelectedHostInstanceElementId(): Element['id'] | null {
+    return this._lastSelectedHostInstanceElementId;
   }
 
   containsElement(id: number): boolean {
@@ -585,7 +596,11 @@ export default class Store extends EventEmitter<{
   }
 
   // Returns a tuple of [id, index]
-  getElementsWithErrorsAndWarnings(): Array<{id: number, index: number}> {
+  getElementsWithErrorsAndWarnings(): ErrorAndWarningTuples {
+    if (!this._shouldShowWarningsAndErrors) {
+      return [];
+    }
+
     if (this._cachedErrorAndWarningTuples !== null) {
       return this._cachedErrorAndWarningTuples;
     }
@@ -619,6 +634,10 @@ export default class Store extends EventEmitter<{
     errorCount: number,
     warningCount: number,
   } {
+    if (!this._shouldShowWarningsAndErrors) {
+      return {errorCount: 0, warningCount: 0};
+    }
+
     return this._errorsAndWarnings.get(id) || {errorCount: 0, warningCount: 0};
   }
 
@@ -685,6 +704,50 @@ export default class Store extends EventEmitter<{
     }
 
     return index;
+  }
+
+  isDescendantOf(parentId: number, descendantId: number): boolean {
+    if (descendantId === 0) {
+      return false;
+    }
+
+    const descendant = this.getElementByID(descendantId);
+    if (descendant === null) {
+      return false;
+    }
+
+    if (descendant.parentID === parentId) {
+      return true;
+    }
+
+    const parent = this.getElementByID(parentId);
+    if (!parent || parent.depth >= descendant.depth) {
+      return false;
+    }
+
+    return this.isDescendantOf(parentId, descendant.parentID);
+  }
+
+  /**
+   * Returns index of the lowest descendant element, if available.
+   * May not be the deepest element, the lowest is used in a sense of bottom-most from UI Tree representation perspective.
+   */
+  getIndexOfLowestDescendantElement(element: Element): number | null {
+    let current: null | Element = element;
+    while (current !== null) {
+      if (current.isCollapsed || current.children.length === 0) {
+        if (current === element) {
+          return null;
+        }
+
+        return this.getIndexOfElementID(current.id);
+      } else {
+        const lastChildID = current.children[current.children.length - 1];
+        current = this.getElementByID(lastChildID);
+      }
+    }
+
+    return null;
   }
 
   getOwnersListForElement(ownerID: number): Array<Element> {
@@ -1078,9 +1141,15 @@ export default class Store extends EventEmitter<{
               compiledWithForget,
             } = parseElementDisplayNameFromBackend(displayName, type);
 
+            const elementDepth = parentElement.depth + 1;
+            this._maximumRecordedDepth = Math.max(
+              this._maximumRecordedDepth,
+              elementDepth,
+            );
+
             const element: Element = {
               children: [],
-              depth: parentElement.depth + 1,
+              depth: elementDepth,
               displayName: displayNameWithoutHOCs,
               hocDisplayNames,
               id,
@@ -1329,16 +1398,21 @@ export default class Store extends EventEmitter<{
     this._cachedErrorAndWarningTuples = null;
 
     if (haveErrorsOrWarningsChanged) {
-      let errorCount = 0;
-      let warningCount = 0;
+      let componentWithErrorCount = 0;
+      let componentWithWarningCount = 0;
 
       this._errorsAndWarnings.forEach(entry => {
-        errorCount += entry.errorCount;
-        warningCount += entry.warningCount;
+        if (entry.errorCount > 0) {
+          componentWithErrorCount++;
+        }
+
+        if (entry.warningCount > 0) {
+          componentWithWarningCount++;
+        }
       });
 
-      this._cachedErrorCount = errorCount;
-      this._cachedWarningCount = warningCount;
+      this._cachedComponentWithErrorCount = componentWithErrorCount;
+      this._cachedComponentWithWarningCount = componentWithWarningCount;
     }
 
     if (haveRootsChanged) {
@@ -1411,16 +1485,12 @@ export default class Store extends EventEmitter<{
     );
     bridge.removeListener('shutdown', this.onBridgeShutdown);
     bridge.removeListener(
-      'isBackendStorageAPISupported',
-      this.onBackendStorageAPISupported,
+      'isReloadAndProfileSupportedByBackend',
+      this.onBackendReloadAndProfileSupported,
     );
     bridge.removeListener(
       'isNativeStyleEditorSupported',
       this.onBridgeNativeStyleEditorSupported,
-    );
-    bridge.removeListener(
-      'isSynchronousXHRSupported',
-      this.onBridgeSynchronousXHRSupported,
     );
     bridge.removeListener(
       'unsupportedRendererVersion',
@@ -1429,6 +1499,7 @@ export default class Store extends EventEmitter<{
     bridge.removeListener('backendVersion', this.onBridgeBackendVersion);
     bridge.removeListener('bridgeProtocol', this.onBridgeProtocol);
     bridge.removeListener('saveToClipboard', this.onSaveToClipboard);
+    bridge.removeListener('selectElement', this.onHostInstanceSelected);
 
     if (this._onBridgeProtocolTimeoutID !== null) {
       clearTimeout(this._onBridgeProtocolTimeoutID);
@@ -1436,18 +1507,10 @@ export default class Store extends EventEmitter<{
     }
   };
 
-  onBackendStorageAPISupported: (
-    isBackendStorageAPISupported: boolean,
-  ) => void = isBackendStorageAPISupported => {
-    this._isBackendStorageAPISupported = isBackendStorageAPISupported;
-
-    this.emit('supportsReloadAndProfile');
-  };
-
-  onBridgeSynchronousXHRSupported: (
-    isSynchronousXHRSupported: boolean,
-  ) => void = isSynchronousXHRSupported => {
-    this._isSynchronousXHRSupported = isSynchronousXHRSupported;
+  onBackendReloadAndProfileSupported: (
+    isReloadAndProfileSupported: boolean,
+  ) => void = isReloadAndProfileSupported => {
+    this._isReloadAndProfileBackendSupported = isReloadAndProfileSupported;
 
     this.emit('supportsReloadAndProfile');
   };
@@ -1490,7 +1553,88 @@ export default class Store extends EventEmitter<{
   };
 
   onSaveToClipboard: (text: string) => void = text => {
-    copy(text);
+    withPermissionsCheck({permissions: ['clipboardWrite']}, () => copy(text))();
+  };
+
+  onBackendInitialized: () => void = () => {
+    // Verify that the frontend version is compatible with the connected backend.
+    // See github.com/facebook/react/issues/21326
+    if (this._shouldCheckBridgeProtocolCompatibility) {
+      // Older backends don't support an explicit bridge protocol,
+      // so we should timeout eventually and show a downgrade message.
+      this._onBridgeProtocolTimeoutID = setTimeout(
+        this.onBridgeProtocolTimeout,
+        10000,
+      );
+
+      this._bridge.addListener('bridgeProtocol', this.onBridgeProtocol);
+      this._bridge.send('getBridgeProtocol');
+    }
+
+    this._bridge.send('getBackendVersion');
+    this._bridge.send('getIfHasUnsupportedRendererVersion');
+    this._bridge.send('getHookSettings'); // Warm up cached hook settings
+  };
+
+  onHostInstanceSelected: (elementId: number) => void = elementId => {
+    if (this._lastSelectedHostInstanceElementId === elementId) {
+      return;
+    }
+
+    this._lastSelectedHostInstanceElementId = elementId;
+    // By the time we emit this, there is no guarantee that TreeContext is rendered.
+    this.emit('hostInstanceSelected', elementId);
+  };
+
+  getHookSettings: () => void = () => {
+    if (this._hookSettings != null) {
+      this.emit('hookSettings', this._hookSettings);
+    } else {
+      this._bridge.send('getHookSettings');
+    }
+  };
+
+  /**
+   * Maximum recorded node depth during the lifetime of this Store.
+   * Can only increase: not guaranteed to return maximal value for currently recorded elements.
+   */
+  getMaximumRecordedDepth(): number {
+    return this._maximumRecordedDepth;
+  }
+
+  updateHookSettings: (settings: $ReadOnly<DevToolsHookSettings>) => void =
+    settings => {
+      this._hookSettings = settings;
+
+      this._bridge.send('updateHookSettings', settings);
+      this.emit('settingsUpdated', settings);
+    };
+
+  onHookSettings: (settings: $ReadOnly<DevToolsHookSettings>) => void =
+    settings => {
+      this._hookSettings = settings;
+
+      this.setShouldShowWarningsAndErrors(settings.showInlineWarningsAndErrors);
+      this.emit('hookSettings', settings);
+    };
+
+  setShouldShowWarningsAndErrors(status: boolean): void {
+    const previousStatus = this._shouldShowWarningsAndErrors;
+    this._shouldShowWarningsAndErrors = status;
+
+    if (previousStatus !== status) {
+      // Propagate to subscribers, although tree state has not changed
+      this.emit('mutated', [[], new Map()]);
+    }
+  }
+
+  get supportsSuspenseTab(): boolean {
+    return this._supportsSuspenseTab;
+  }
+
+  onEnableSuspenseTab = (): void => {
+    this._supportsSuspenseTab = true;
+    this.emit('enableSuspenseTab');
   };
 
   // The Store should never throw an Error without also emitting an event.

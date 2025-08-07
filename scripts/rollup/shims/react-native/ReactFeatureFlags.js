@@ -15,4 +15,4 @@ const ReactFeatureFlags = {
   debugRenderPhaseSideEffects: false,
 };
 
-module.exports = ReactFeatureFlags;
+export default ReactFeatureFlags;

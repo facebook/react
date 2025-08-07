@@ -23,13 +23,26 @@ const run = async () => {
   try {
     const params = parseParams();
 
-    const version = readJsonSync(
-      './build/node_modules/react/package.json'
-    ).version;
+    const version =
+      params.publishVersion ??
+      readJsonSync('./build/node_modules/react/package.json').version;
     const isExperimental = version.includes('experimental');
 
     params.cwd = join(__dirname, '..', '..');
     params.packages = await getPublicPackages(isExperimental);
+
+    if (params.onlyPackages.length > 0 && params.skipPackages.length > 0) {
+      console.error(
+        '--onlyPackages and --skipPackages cannot be used together'
+      );
+      process.exit(1);
+    }
+
+    if (params.onlyPackages.length > 0) {
+      params.packages = params.packages.filter(packageName => {
+        return params.onlyPackages.includes(packageName);
+      });
+    }
 
     // Pre-filter any skipped packages to simplify the following commands.
     // As part of doing this we can also validate that none of the skipped packages were misspelled.

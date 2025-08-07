@@ -40,7 +40,7 @@ import { c as _c } from "react/compiler-runtime"; // @validatePreserveExistingMe
 import { useCallback } from "react";
 
 function Component(t0) {
-  const $ = _c(11);
+  const $ = _c(9);
   const { entity, children } = t0;
   let t1;
   if ($[0] !== entity) {
@@ -51,46 +51,39 @@ function Component(t0) {
     t1 = $[1];
   }
   const showMessage = t1;
+
+  const shouldShowMessage = showMessage();
   let t2;
-  if ($[2] !== showMessage) {
-    t2 = showMessage();
-    $[2] = showMessage;
+  if ($[2] !== shouldShowMessage) {
+    t2 = <div>{shouldShowMessage}</div>;
+    $[2] = shouldShowMessage;
     $[3] = t2;
   } else {
     t2 = $[3];
   }
-  const shouldShowMessage = t2;
   let t3;
-  if ($[4] !== shouldShowMessage) {
-    t3 = <div>{shouldShowMessage}</div>;
-    $[4] = shouldShowMessage;
+  if ($[4] !== children) {
+    t3 = <div>{children}</div>;
+    $[4] = children;
     $[5] = t3;
   } else {
     t3 = $[5];
   }
   let t4;
-  if ($[6] !== children) {
-    t4 = <div>{children}</div>;
-    $[6] = children;
-    $[7] = t4;
-  } else {
-    t4 = $[7];
-  }
-  let t5;
-  if ($[8] !== t3 || $[9] !== t4) {
-    t5 = (
+  if ($[6] !== t2 || $[7] !== t3) {
+    t4 = (
       <div>
+        {t2}
         {t3}
-        {t4}
       </div>
     );
-    $[8] = t3;
-    $[9] = t4;
-    $[10] = t5;
+    $[6] = t2;
+    $[7] = t3;
+    $[8] = t4;
   } else {
-    t5 = $[10];
+    t4 = $[8];
   }
-  return t5;
+  return t4;
 }
 
 export const FIXTURE_ENTRYPOINT = {
