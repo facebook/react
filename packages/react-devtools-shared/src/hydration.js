@@ -200,6 +200,16 @@ export function dehydrate(
         type,
       };
 
+    case 'react_lazy':
+      cleaned.push(path);
+      return {
+        inspectable: false,
+        preview_short: formatDataForPreview(data, false),
+        preview_long: formatDataForPreview(data, true),
+        name: 'Unknown',
+        type,
+      };
+
     // ArrayBuffers error if you try to inspect them.
     case 'array_buffer':
     case 'data_view':
