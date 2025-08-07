@@ -806,6 +806,9 @@ export function logRenderPhase(
   debugTask: null | ConsoleTask,
 ): void {
   if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
     const color = includesOnlyHydrationOrOffscreenLanes(lanes)
       ? 'tertiary-dark'
       : 'primary-dark';
@@ -847,6 +850,9 @@ export function logInterruptedRenderPhase(
   debugTask: null | ConsoleTask,
 ): void {
   if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
     const color = includesOnlyHydrationOrOffscreenLanes(lanes)
       ? 'tertiary-dark'
       : 'primary-dark';
@@ -888,6 +894,9 @@ export function logSuspendedRenderPhase(
   debugTask: null | ConsoleTask,
 ): void {
   if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
     const color = includesOnlyHydrationOrOffscreenLanes(lanes)
       ? 'tertiary-dark'
       : 'primary-dark';
@@ -925,6 +934,9 @@ export function logSuspendedWithDelayPhase(
 ): void {
   // This means the render was suspended and cannot commit until it gets unblocked.
   if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
     const color = includesOnlyHydrationOrOffscreenLanes(lanes)
       ? 'tertiary-dark'
       : 'primary-dark';
@@ -963,6 +975,9 @@ export function logRecoveredRenderPhase(
   debugTask: null | ConsoleTask,
 ): void {
   if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
     if (__DEV__) {
       const properties: Array<[string, string]> = [];
       for (let i = 0; i < recoverableErrors.length; i++) {
@@ -1021,6 +1036,9 @@ export function logErroredRenderPhase(
   debugTask: null | ConsoleTask,
 ): void {
   if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
     if (__DEV__ && debugTask) {
       debugTask.run(
         // $FlowFixMe[method-unbinding]
@@ -1053,6 +1071,9 @@ export function logInconsistentRender(
   debugTask: null | ConsoleTask,
 ): void {
   if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
     if (__DEV__ && debugTask) {
       debugTask.run(
         // $FlowFixMe[method-unbinding]
@@ -1086,6 +1107,9 @@ export function logSuspenseThrottlePhase(
 ): void {
   // This was inside a throttled Suspense boundary commit.
   if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
     if (__DEV__ && debugTask) {
       debugTask.run(
         // $FlowFixMe[method-unbinding]
@@ -1119,6 +1143,9 @@ export function logSuspendedCommitPhase(
 ): void {
   // This means the commit was suspended on CSS or images.
   if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
     // TODO: Include the exact reason and URLs of what resources suspended.
     // TODO: This might also be Suspended while waiting on a View Transition.
     if (__DEV__ && debugTask) {
@@ -1155,6 +1182,9 @@ export function logCommitErrored(
   debugTask: null | ConsoleTask,
 ): void {
   if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
     if (__DEV__) {
       const properties: Array<[string, string]> = [];
       for (let i = 0; i < errors.length; i++) {
@@ -1217,6 +1247,9 @@ export function logCommitPhase(
     return;
   }
   if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
     if (__DEV__ && debugTask) {
       debugTask.run(
         // $FlowFixMe[method-unbinding]
@@ -1250,6 +1283,9 @@ export function logPaintYieldPhase(
   debugTask: null | ConsoleTask,
 ): void {
   if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
     if (__DEV__ && debugTask) {
       debugTask.run(
         // $FlowFixMe[method-unbinding]
@@ -1287,6 +1323,9 @@ export function logPassiveCommitPhase(
     return;
   }
   if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
     if (__DEV__ && debugTask) {
       debugTask.run(
         // $FlowFixMe[method-unbinding]
