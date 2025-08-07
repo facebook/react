@@ -9,6 +9,7 @@ import {
 import * as t from '@babel/types';
 import * as TypeErrors from './TypeErrors';
 import {assertExhaustive} from '../Utils/utils';
+import {FlowType} from './FlowTypes';
 
 export const DEBUG = false;
 
@@ -196,8 +197,6 @@ export function makeVariableId(id: number): VariableId {
   return id as VariableId;
 }
 
-import {inspect} from 'util';
-import {FlowType} from './FlowTypes';
 export function printConcrete<T>(
   type: ConcreteType<T>,
   printType: (_: T) => string,
@@ -241,7 +240,7 @@ export function printConcrete<T>(
     case 'Generic':
       return `T${type.id}`;
     case 'Object': {
-      const name = `Object ${inspect([...type.members.keys()])}`;
+      const name = `Object [${[...type.members.keys()].map(key => JSON.stringify(key)).join(', ')}]`;
       return `${name}`;
     }
     case 'Tuple': {
