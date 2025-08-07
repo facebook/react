@@ -3618,6 +3618,8 @@ describe('ReactFresh', () => {
       expect(ReactFreshRuntime.isLikelyComponentType(Figure)).toBe(false);
       class Point extends Figure {}
       expect(ReactFreshRuntime.isLikelyComponentType(Point)).toBe(false);
+      class Foo { value = 'foo'; }
+      expect(ReactFreshRuntime.isLikelyComponentType(Foo)).toBe(false);
 
       // Run the same tests without Babel.
       // This tests real arrow functions and classes, as implemented in Node.
@@ -3667,6 +3669,8 @@ describe('ReactFresh', () => {
         expect(ReactFreshRuntime.isLikelyComponentType(Figure)).toBe(false);
         class Point extends Figure {}
         expect(ReactFreshRuntime.isLikelyComponentType(Point)).toBe(false);
+        class Foo { value = 'foo'; }
+        expect(ReactFreshRuntime.isLikelyComponentType(Foo)).toBe(false);
       `,
       )(global, React, ReactFreshRuntime, expect, createReactClass);
     }
