@@ -336,7 +336,7 @@ export function jsxProd(type, config, maybeKey) {
     // always pass the object straight through.
     props = config;
   } else {
-    // We need to remove reserved props (key, prop, ref). Create a fresh props
+    // We need to remove reserved props key. Create a fresh props
     // object and copy over all the non-reserved props. We don't use `delete`
     // because in V8 it will deopt the object to dictionary mode.
     props = {};
@@ -571,7 +571,7 @@ function jsxDEVImpl(
       // always pass the object straight through.
       props = config;
     } else {
-      // We need to remove reserved props (key, prop, ref). Create a fresh props
+      // We need to remove reserved props key. Create a fresh props
       // object and copy over all the non-reserved props. We don't use `delete`
       // because in V8 it will deopt the object to dictionary mode.
       props = {};
