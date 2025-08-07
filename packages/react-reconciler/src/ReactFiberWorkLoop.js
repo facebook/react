@@ -1110,7 +1110,11 @@ export function performWorkOnRoot(
       ) {
         if (enableProfilerTimer && enableComponentPerformanceTrack) {
           setCurrentTrackFromLanes(lanes);
-          logInconsistentRender(renderStartTime, renderEndTime);
+          logInconsistentRender(
+            renderStartTime,
+            renderEndTime,
+            workInProgressUpdateTask,
+          );
           finalizeRender(lanes, renderEndTime);
         }
         // A store was mutated in an interleaved event. Render again,
@@ -1136,7 +1140,12 @@ export function performWorkOnRoot(
         if (errorRetryLanes !== NoLanes) {
           if (enableProfilerTimer && enableComponentPerformanceTrack) {
             setCurrentTrackFromLanes(lanes);
-            logErroredRenderPhase(renderStartTime, renderEndTime, lanes);
+            logErroredRenderPhase(
+              renderStartTime,
+              renderEndTime,
+              lanes,
+              workInProgressUpdateTask,
+            );
             finalizeRender(lanes, renderEndTime);
           }
           lanes = errorRetryLanes;
@@ -1167,7 +1176,12 @@ export function performWorkOnRoot(
       if (exitStatus === RootFatalErrored) {
         if (enableProfilerTimer && enableComponentPerformanceTrack) {
           setCurrentTrackFromLanes(lanes);
-          logErroredRenderPhase(renderStartTime, renderEndTime, lanes);
+          logErroredRenderPhase(
+            renderStartTime,
+            renderEndTime,
+            lanes,
+            workInProgressUpdateTask,
+          );
           finalizeRender(lanes, renderEndTime);
         }
         prepareFreshStack(root, NoLanes);
@@ -1308,7 +1322,12 @@ function finishConcurrentRender(
       // until we receive more data.
       if (enableProfilerTimer && enableComponentPerformanceTrack) {
         setCurrentTrackFromLanes(lanes);
-        logSuspendedRenderPhase(renderStartTime, renderEndTime, lanes);
+        logSuspendedRenderPhase(
+          renderStartTime,
+          renderEndTime,
+          lanes,
+          workInProgressUpdateTask,
+        );
         finalizeRender(lanes, renderEndTime);
         trackSuspendedTime(lanes, renderEndTime);
       }
@@ -1873,12 +1892,14 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
           previousRenderStartTime,
           renderStartTime,
           lanes,
+          workInProgressUpdateTask,
         );
       } else {
         logInterruptedRenderPhase(
           previousRenderStartTime,
           renderStartTime,
           lanes,
+          workInProgressUpdateTask,
         );
       }
       finalizeRender(workInProgressRootRenderLanes, renderStartTime);
@@ -1906,6 +1927,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
               ? clampedUpdateTime
               : renderStartTime,
           lanes,
+          workInProgressUpdateTask,
         );
       }
       logBlockingStart(
@@ -1946,6 +1968,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
               ? clampedUpdateTime
               : renderStartTime,
           lanes,
+          workInProgressUpdateTask,
         );
       }
       logTransitionStart(
@@ -3250,6 +3273,7 @@ function commitRoot(
         completedRenderStartTime,
         completedRenderEndTime,
         lanes,
+        workInProgressUpdateTask,
       );
     } else if (recoverableErrors !== null) {
       const hydrationFailed =
@@ -3263,9 +3287,15 @@ function commitRoot(
         lanes,
         recoverableErrors,
         hydrationFailed,
+        workInProgressUpdateTask,
       );
     } else {
-      logRenderPhase(completedRenderStartTime, completedRenderEndTime, lanes);
+      logRenderPhase(
+        completedRenderStartTime,
+        completedRenderEndTime,
+        lanes,
+        workInProgressUpdateTask,
+      );
     }
   }
 
@@ -3436,9 +3466,17 @@ function commitRoot(
     recordCommitTime();
     if (enableComponentPerformanceTrack) {
       if (suspendedCommitReason === SUSPENDED_COMMIT) {
-        logSuspendedCommitPhase(completedRenderEndTime, commitStartTime);
+        logSuspendedCommitPhase(
+          completedRenderEndTime,
+          commitStartTime,
+          workInProgressUpdateTask,
+        );
       } else if (suspendedCommitReason === THROTTLED_COMMIT) {
-        logSuspenseThrottlePhase(completedRenderEndTime, commitStartTime);
+        logSuspenseThrottlePhase(
+          completedRenderEndTime,
+          commitStartTime,
+          workInProgressUpdateTask,
+        );
       }
     }
   }
@@ -3683,6 +3721,7 @@ function flushSpawnedWork(): void {
         : commitStartTime,
       commitEndTime,
       commitErrors,
+      workInProgressUpdateTask,
     );
   }
 
@@ -4158,6 +4197,7 @@ function flushPassiveEffectsImpl(wasDelayedCommit: void | boolean) {
       commitEndTime,
       passiveEffectStartTime,
       !!wasDelayedCommit,
+      workInProgressUpdateTask,
     );
   }
 
@@ -4193,6 +4233,7 @@ function flushPassiveEffectsImpl(wasDelayedCommit: void | boolean) {
       passiveEffectStartTime,
       passiveEffectsEndTime,
       commitErrors,
+      workInProgressUpdateTask,
     );
     finalizeRender(lanes, passiveEffectsEndTime);
   }
