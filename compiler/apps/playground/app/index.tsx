@@ -5,42 +5,52 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+'use client';
+
+import React from 'react';
 import type {NextPage} from 'next';
 import Head from 'next/head';
 import {SnackbarProvider} from 'notistack';
 import {Editor, Header, StoreProvider} from '../components';
 import MessageSnackbar from '../components/Message';
 
+// Add type for process if missing
+declare var process: {
+  env: {
+    NODE_ENV: string;
+  };
+};
+
 const Home: NextPage = () => {
   return (
-    <div className="flex flex-col w-screen h-screen font-light">
-      <Head>
-        <title>
-          {process.env.NODE_ENV === 'development'
-            ? '[DEV] React Compiler Playground'
-            : 'React Compiler Playground'}
-        </title>
-        <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"></meta>
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="manifest" href="/site.webmanifest" />
-        <link
-          rel="preload"
-          href="/fonts/Source-Code-Pro-Regular.woff2"
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="preload"
-          href="/fonts/Optimistic_Display_W_Lt.woff2"
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
-      </Head>
-      <StoreProvider>
+    <StoreProvider>
+      <div className="flex flex-col w-screen h-screen font-light">
+        <Head>
+          <title>
+            {typeof process !== 'undefined' && process.env.NODE_ENV === 'development'
+              ? '[DEV] React Compiler Playground'
+              : 'React Compiler Playground'}
+          </title>
+          <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"></meta>
+          <link rel="icon" href="/favicon.ico" />
+          <link rel="manifest" href="/site.webmanifest" />
+          <link
+            rel="preload"
+            href="/fonts/Source-Code-Pro-Regular.woff2"
+            as="font"
+            type="font/woff2"
+            crossOrigin="anonymous"
+          />
+          <link
+            rel="preload"
+            href="/fonts/Optimistic_Display_W_Lt.woff2"
+            as="font"
+            type="font/woff2"
+            crossOrigin="anonymous"
+          />
+        </Head>
         <SnackbarProvider
           preventDuplicate
           maxSnack={10}
@@ -48,8 +58,8 @@ const Home: NextPage = () => {
           <Header />
           <Editor />
         </SnackbarProvider>
-      </StoreProvider>
-    </div>
+      </div>
+    </StoreProvider>
   );
 };
 

@@ -5,19 +5,29 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+'use client';
+
+import React from 'react';
 import '../styles/globals.css';
+
+// Add type for process if missing
+declare var process: {
+  env: {
+    NODE_ENV: string;
+  };
+};
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
-}): JSX.Element {
+}): React.ReactElement {
   'use no memo';
   return (
     <html lang="en">
       <head>
         <title>
-          {process.env.NODE_ENV === 'development'
+          {typeof process !== 'undefined' && process.env.NODE_ENV === 'development'
             ? '[DEV] React Compiler Playground'
             : 'React Compiler Playground'}
         </title>
