@@ -2261,6 +2261,21 @@ function popAsyncDispatcher(prevAsyncDispatcher: any) {
   ReactSharedInternals.A = prevAsyncDispatcher;
 }
 
+export function markRenderDerivedCause(fiber: Fiber): void {
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if (__DEV__) {
+      if (workInProgressUpdateTask === null) {
+        // If we don't have a cause associated with this render, it's likely because some
+        // other render left work behind on this Fiber. The real cause is this Fiber itself.
+        // We use its debugTask as the cause for this render. This might not be the only
+        // one when multiple siblings are rendered but they ideally shouldn't be.
+        workInProgressUpdateTask =
+          fiber._debugTask == null ? null : fiber._debugTask;
+      }
+    }
+  }
+}
+
 export function markCommitTimeOfFallback() {
   globalMostRecentFallbackTime = now();
 }
