@@ -141,6 +141,54 @@ export function startUpdateTimerByLane(lane: Lane, method: string): void {
   }
 }
 
+export function startHostActionTimer(fiber: Fiber): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  // This schedules an update on both the blocking lane for the pending state and on the
+  // transition lane for the action update. Using the debug task from the host fiber.
+  if (blockingUpdateTime < 0) {
+    blockingUpdateTime = now();
+    blockingUpdateTask =
+      __DEV__ && fiber._debugTask != null ? fiber._debugTask : null;
+    if (isAlreadyRendering()) {
+      blockingUpdateType = SPAWNED_UPDATE;
+    }
+    const newEventTime = resolveEventTimeStamp();
+    const newEventType = resolveEventType();
+    if (
+      newEventTime !== blockingEventTime ||
+      newEventType !== blockingEventType
+    ) {
+      blockingEventIsRepeat = false;
+    } else if (newEventType !== null) {
+      // If this is a second update in the same event, we treat it as a spawned update.
+      // This might be a microtask spawned from useEffect, multiple flushSync or
+      // a setState in a microtask spawned after the first setState. Regardless it's bad.
+      blockingUpdateType = SPAWNED_UPDATE;
+    }
+    blockingEventTime = newEventTime;
+    blockingEventType = newEventType;
+  }
+  if (transitionUpdateTime < 0) {
+    transitionUpdateTime = now();
+    transitionUpdateTask =
+      __DEV__ && fiber._debugTask != null ? fiber._debugTask : null;
+    if (transitionStartTime < 0) {
+      const newEventTime = resolveEventTimeStamp();
+      const newEventType = resolveEventType();
+      if (
+        newEventTime !== transitionEventTime ||
+        newEventType !== transitionEventType
+      ) {
+        transitionEventIsRepeat = false;
+      }
+      transitionEventTime = newEventTime;
+      transitionEventType = newEventType;
+    }
+  }
+}
+
 export function startPingTimerByLanes(lanes: Lanes): void {
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
     return;
@@ -203,20 +251,6 @@ export function startAsyncTransitionTimer(): void {
 export function hasScheduledTransitionWork(): boolean {
   // If we have setState on a transition or scheduled useActionState update.
   return transitionUpdateTime > -1;
-}
-
-// We use this marker to indicate that we have scheduled a render to be performed
-// but it's not an explicit state update.
-const ACTION_STATE_MARKER = -0.5;
-
-export function startActionStateUpdate(): void {
-  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
-    return;
-  }
-  if (transitionUpdateTime < 0) {
-    transitionUpdateTime = ACTION_STATE_MARKER;
-    transitionUpdateTask = null;
-  }
 }
 
 export function clearAsyncTransitionTimer(): void {

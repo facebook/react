@@ -122,7 +122,10 @@ import {
   markStateUpdateScheduled,
   setIsStrictModeForDevtools,
 } from './ReactFiberDevToolsHook';
-import {startUpdateTimerByLane} from './ReactProfilerTimer';
+import {
+  startUpdateTimerByLane,
+  startHostActionTimer,
+} from './ReactProfilerTimer';
 import {createCache} from './ReactFiberCacheComponent';
 import {
   createUpdate as createLegacyQueueUpdate,
@@ -3238,6 +3241,8 @@ export function startHostTransition<F>(
     Thenable<TransitionStatus> | TransitionStatus,
     BasicStateAction<Thenable<TransitionStatus> | TransitionStatus>,
   > = stateHook.queue;
+
+  startHostActionTimer(formFiber);
 
   startTransition(
     formFiber,
