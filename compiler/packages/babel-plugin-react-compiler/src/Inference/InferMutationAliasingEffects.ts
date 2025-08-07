@@ -67,7 +67,12 @@ import {FunctionSignature} from '../HIR/ObjectShape';
 import {getWriteErrorReason} from './InferFunctionEffects';
 import prettyFormat from 'pretty-format';
 import {createTemporaryPlace} from '../HIR/HIRBuilder';
-import {AliasingEffect, AliasingSignature, hashEffect} from './AliasingEffects';
+import {
+  AliasingEffect,
+  AliasingSignature,
+  hashEffect,
+  MutationReason,
+} from './AliasingEffects';
 
 const DEBUG = false;
 
@@ -451,18 +456,29 @@ function applySignature(
               effect.value.identifier.name.kind === 'named'
                 ? `\`${effect.value.identifier.name.value}\``
                 : 'value';
+            const diagnostic = CompilerDiagnostic.create({
+              severity: ErrorSeverity.InvalidReact,
+              category: 'This value cannot be modified',
+              description: `${reason}.`,
+            }).withDetail({
+              kind: 'error',
+              loc: effect.value.loc,
+              message: `${variable} cannot be modified`,
+            });
+            if (
+              effect.kind === 'Mutate' &&
+              effect.reason?.kind === 'AssignCurrentProperty'
+            ) {
+              diagnostic.withDetail({
+                kind: 'error',
+                loc: effect.value.loc,
+                message: `Hint: If this value is a Ref (value returned by \`useRef()\`), rename the variable to end in "Ref".`,
+              });
+            }
             effects.push({
               kind: 'MutateFrozen',
               place: effect.value,
-              error: CompilerDiagnostic.create({
-                severity: ErrorSeverity.InvalidReact,
-                category: 'This value cannot be modified',
-                description: `${reason}.`,
-              }).withDetail({
-                kind: 'error',
-                loc: effect.value.loc,
-                message: `${variable} cannot be modified`,
-              }),
+              error: diagnostic,
             });
           }
         }
@@ -1030,6 +1046,25 @@ function applyEffect(
             effect.value.identifier.name.kind === 'named'
               ? `\`${effect.value.identifier.name.value}\``
               : 'value';
+          const diagnostic = CompilerDiagnostic.create({
+            severity: ErrorSeverity.InvalidReact,
+            category: 'This value cannot be modified',
+            description: `${reason}.`,
+          }).withDetail({
+            kind: 'error',
+            loc: effect.value.loc,
+            message: `${variable} cannot be modified`,
+          });
+          if (
+            effect.kind === 'Mutate' &&
+            effect.reason?.kind === 'AssignCurrentProperty'
+          ) {
+            diagnostic.withDetail({
+              kind: 'error',
+              loc: effect.value.loc,
+              message: `Hint: If this value is a Ref (value returned by \`useRef()\`), rename the variable to end in "Ref".`,
+            });
+          }
           applyEffect(
             context,
             state,
@@ -1039,15 +1074,7 @@ function applyEffect(
                   ? 'MutateFrozen'
                   : 'MutateGlobal',
               place: effect.value,
-              error: CompilerDiagnostic.create({
-                severity: ErrorSeverity.InvalidReact,
-                category: 'This value cannot be modified',
-                description: `${reason}.`,
-              }).withDetail({
-                kind: 'error',
-                loc: effect.value.loc,
-                message: `${variable} cannot be modified`,
-              }),
+              error: diagnostic,
             },
             initialized,
             effects,
@@ -1637,7 +1664,15 @@ function computeSignatureForInstruction(
     }
     case 'PropertyStore':
     case 'ComputedStore': {
-      effects.push({kind: 'Mutate', value: value.object});
+      const mutationReason: MutationReason | null =
+        value.kind === 'PropertyStore' && value.property === 'current'
+          ? {kind: 'AssignCurrentProperty'}
+          : null;
+      effects.push({
+        kind: 'Mutate',
+        value: value.object,
+        reason: mutationReason,
+      });
       effects.push({
         kind: 'Capture',
         from: value.value,
