@@ -150,13 +150,28 @@ function SuspendedByRow({
       </Button>
       {isOpen && (
         <div className={styles.CollapsableContent}>
-          {showIOStack && <StackTraceView stack={ioInfo.stack} />}
+          {showIOStack && (
+            <StackTraceView
+              stack={ioInfo.stack}
+              environmentName={
+                ioOwner !== null && ioOwner.env === ioInfo.env
+                  ? null
+                  : ioInfo.env
+              }
+            />
+          )}
           {(showIOStack || !showAwaitStack) &&
           ioOwner !== null &&
           ioOwner.id !== inspectedElement.id ? (
             <OwnerView
               key={ioOwner.id}
               displayName={ioOwner.displayName || 'Anonymous'}
+              environmentName={
+                ioOwner.env === inspectedElement.env &&
+                ioOwner.env === ioInfo.env
+                  ? null
+                  : ioOwner.env
+              }
               hocDisplayNames={ioOwner.hocDisplayNames}
               compiledWithForget={ioOwner.compiledWithForget}
               id={ioOwner.id}
@@ -168,12 +183,25 @@ function SuspendedByRow({
             <>
               <div className={styles.SmallHeader}>awaited at:</div>
               {asyncInfo.stack !== null && asyncInfo.stack.length > 0 && (
-                <StackTraceView stack={asyncInfo.stack} />
+                <StackTraceView
+                  stack={asyncInfo.stack}
+                  environmentName={
+                    asyncOwner !== null && asyncOwner.env === asyncInfo.env
+                      ? null
+                      : asyncInfo.env
+                  }
+                />
               )}
               {asyncOwner !== null && asyncOwner.id !== inspectedElement.id ? (
                 <OwnerView
                   key={asyncOwner.id}
                   displayName={asyncOwner.displayName || 'Anonymous'}
+                  environmentName={
+                    asyncOwner.env === inspectedElement.env &&
+                    asyncOwner.env === asyncInfo.env
+                      ? null
+                      : asyncOwner.env
+                  }
                   hocDisplayNames={asyncOwner.hocDisplayNames}
                   compiledWithForget={asyncOwner.compiledWithForget}
                   id={asyncOwner.id}

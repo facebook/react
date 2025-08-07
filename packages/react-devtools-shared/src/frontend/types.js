@@ -208,6 +208,7 @@ export type SerializedElement = {
   displayName: string | null,
   id: number,
   key: number | string | null,
+  env: null | string,
   hocDisplayNames: Array<string> | null,
   compiledWithForget: boolean,
   type: ElementType,
@@ -264,6 +265,9 @@ export type InspectedElement = {
 
   // List of owners
   owners: Array<SerializedElement> | null,
+
+  // Environment name that this component executed in or null for the client
+  env: string | null,
 
   // Location of component in source code.
   source: ReactFunctionLocation | null,

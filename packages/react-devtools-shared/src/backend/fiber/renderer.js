@@ -4818,6 +4818,7 @@ export function attach(
         displayName: getDisplayNameForFiber(fiber) || 'Anonymous',
         id: instance.id,
         key: fiber.key,
+        env: null,
         type: getElementTypeForFiber(fiber),
       };
     } else {
@@ -4826,6 +4827,7 @@ export function attach(
         displayName: componentInfo.name || 'Anonymous',
         id: instance.id,
         key: componentInfo.key == null ? null : componentInfo.key,
+        env: componentInfo.env == null ? null : componentInfo.env,
         type: ElementTypeVirtual,
       };
     }
@@ -5451,6 +5453,8 @@ export function attach(
       // List of owners
       owners,
 
+      env: null,
+
       rootType,
       rendererPackageName: renderer.rendererPackageName,
       rendererVersion: renderer.version,
@@ -5553,6 +5557,8 @@ export function attach(
 
       // List of owners
       owners,
+
+      env: componentInfo.env == null ? null : componentInfo.env,
 
       rootType,
       rendererPackageName: renderer.rendererPackageName,
