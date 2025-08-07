@@ -59,3 +59,12 @@ export type OffscreenInstance = {
   _transitions: Set<Transition> | null,
   _retryCache: WeakSet<Wakeable> | Set<Wakeable> | null,
 };
+
+export function createInitialOffscreenInstance(): OffscreenInstance {
+  return {
+    _visibility: OffscreenVisible,
+    _pendingMarkers: null,
+    _retryCache: null,
+    _transitions: null,
+  };
+}

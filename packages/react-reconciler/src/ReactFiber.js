@@ -24,7 +24,6 @@ import type {ActivityInstance, SuspenseInstance} from './ReactFiberConfig';
 import type {
   LegacyHiddenProps,
   OffscreenProps,
-  OffscreenInstance,
 } from './ReactFiberOffscreenComponent';
 import type {ViewTransitionState} from './ReactFiberViewTransitionComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
@@ -76,7 +75,7 @@ import {
   ViewTransitionComponent,
   ActivityComponent,
 } from './ReactWorkTags';
-import {OffscreenVisible} from './ReactFiberOffscreenComponent';
+import {createInitialOffscreenInstance} from './ReactFiberOffscreenComponent';
 import {getComponentNameFromOwner} from 'react-reconciler/src/getComponentNameFromFiber';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {
@@ -831,12 +830,7 @@ export function createFiberFromOffscreen(
 ): Fiber {
   const fiber = createFiber(OffscreenComponent, pendingProps, key, mode);
   fiber.lanes = lanes;
-  const primaryChildInstance: OffscreenInstance = {
-    _visibility: OffscreenVisible,
-    _pendingMarkers: null,
-    _retryCache: null,
-    _transitions: null,
-  };
+  const primaryChildInstance = createInitialOffscreenInstance();
   fiber.stateNode = primaryChildInstance;
   return fiber;
 }
@@ -887,12 +881,7 @@ export function createFiberFromLegacyHidden(
   fiber.lanes = lanes;
   // Adding a stateNode for legacy hidden because it's currently using
   // the offscreen implementation, which depends on a state node
-  const instance: OffscreenInstance = {
-    _visibility: OffscreenVisible,
-    _pendingMarkers: null,
-    _transitions: null,
-    _retryCache: null,
-  };
+  const instance = createInitialOffscreenInstance();
   fiber.stateNode = instance;
   return fiber;
 }

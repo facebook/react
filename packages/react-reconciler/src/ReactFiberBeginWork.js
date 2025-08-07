@@ -278,6 +278,7 @@ import {
   createCapturedValueFromError,
   createCapturedValueAtFiber,
 } from './ReactCapturedValue';
+import {createInitialOffscreenInstance} from './ReactFiberOffscreenComponent';
 import {
   createClassErrorUpdate,
   initializeClassErrorUpdate,
@@ -617,6 +618,13 @@ function updateOffscreenComponent(
 
   const prevState: OffscreenState | null =
     current !== null ? current.memoizedState : null;
+
+  if (current === null && workInProgress.stateNode === null) {
+    // We previously reset the work-in-progress.
+    // We need to create a new Offscreen instance.
+    const primaryChildInstance = createInitialOffscreenInstance();
+    workInProgress.stateNode = primaryChildInstance;
+  }
 
   if (
     nextProps.mode === 'hidden' ||
