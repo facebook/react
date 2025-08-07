@@ -382,7 +382,6 @@ export function jsxProdSignatureRunningInDevWithDynamicChildren(
   if (__DEV__) {
     const isStaticChildren = false;
     const trackActualOwner =
-      __DEV__ &&
       ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
     return jsxDEVImpl(
       type,
@@ -391,14 +390,12 @@ export function jsxProdSignatureRunningInDevWithDynamicChildren(
       isStaticChildren,
       source,
       self,
-      __DEV__ &&
-        (trackActualOwner
+      trackActualOwner
           ? Error('react-stack-top-frame')
-          : unknownOwnerDebugStack),
-      __DEV__ &&
-        (trackActualOwner
+          : unknownOwnerDebugStack,
+      trackActualOwner
           ? createTask(getTaskName(type))
-          : unknownOwnerDebugTask),
+          : unknownOwnerDebugTask,
     );
   }
 }
