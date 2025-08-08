@@ -22,6 +22,7 @@ import InspectedElementSuspendedBy from './InspectedElementSuspendedBy';
 import NativeStyleEditor from './NativeStyleEditor';
 import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 import InspectedElementSourcePanel from './InspectedElementSourcePanel';
+import StackTraceView from './StackTraceView';
 import OwnerView from './OwnerView';
 
 import styles from './InspectedElementView.css';
@@ -170,18 +171,23 @@ export default function InspectedElementView({
 
             {showOwnersList &&
               owners?.map(owner => (
-                <OwnerView
-                  key={owner.id}
-                  displayName={owner.displayName || 'Anonymous'}
-                  hocDisplayNames={owner.hocDisplayNames}
-                  environmentName={
-                    inspectedElement.env === owner.env ? null : owner.env
-                  }
-                  compiledWithForget={owner.compiledWithForget}
-                  id={owner.id}
-                  isInStore={store.containsElement(owner.id)}
-                  type={owner.type}
-                />
+                <>
+                  <OwnerView
+                    key={owner.id}
+                    displayName={owner.displayName || 'Anonymous'}
+                    hocDisplayNames={owner.hocDisplayNames}
+                    environmentName={
+                      inspectedElement.env === owner.env ? null : owner.env
+                    }
+                    compiledWithForget={owner.compiledWithForget}
+                    id={owner.id}
+                    isInStore={store.containsElement(owner.id)}
+                    type={owner.type}
+                  />
+                  {owner.stack != null && owner.stack.length > 0 ? (
+                    <StackTraceView stack={owner.stack} />
+                  ) : null}
+                </>
               ))}
 
             {rootType !== null && (
