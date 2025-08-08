@@ -781,13 +781,18 @@ describe('InspectedElement', () => {
           "preview_short": () => {},
           "preview_long": () => {},
         },
-        "react_element": Dehydrated {
-          "preview_short": <span />,
-          "preview_long": <span />,
+        "react_element": {
+          "key": null,
+          "props": Dehydrated {
+            "preview_short": {…},
+            "preview_long": {},
+          },
         },
-        "react_lazy": Dehydrated {
-          "preview_short": lazy(),
-          "preview_long": lazy(),
+        "react_lazy": {
+          "_payload": Dehydrated {
+            "preview_short": {…},
+            "preview_long": {_result: () => {}, _status: -1},
+          },
         },
         "regexp": Dehydrated {
           "preview_short": /abc/giu,
