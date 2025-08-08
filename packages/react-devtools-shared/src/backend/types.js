@@ -309,6 +309,9 @@ export type InspectedElement = {
 
   source: ReactFunctionLocation | null,
 
+  // The location of the JSX creation.
+  stack: ReactStackTrace | null,
+
   type: ElementType,
 
   // Meta information about the root this element belongs to.

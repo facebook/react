@@ -838,6 +838,8 @@ export function attach(
 
       source: null,
 
+      stack: null,
+
       // Only legacy context exists in legacy versions.
       hasLegacyContext: true,
 
