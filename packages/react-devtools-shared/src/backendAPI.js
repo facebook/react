@@ -255,6 +255,7 @@ export function convertInspectedElementBackendToFrontend(
     id,
     type,
     owners,
+    env,
     source,
     context,
     hooks,
@@ -299,6 +300,7 @@ export function convertInspectedElementBackendToFrontend(
       owners === null
         ? null
         : owners.map(backendToFrontendSerializedElementMapper),
+    env,
     context: hydrateHelper(context),
     hooks: hydrateHelper(hooks),
     props: hydrateHelper(props),

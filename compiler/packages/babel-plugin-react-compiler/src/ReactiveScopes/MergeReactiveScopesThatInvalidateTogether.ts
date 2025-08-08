@@ -504,7 +504,7 @@ function canMergeScopes(
   return false;
 }
 
-function isAlwaysInvalidatingType(type: Type): boolean {
+export function isAlwaysInvalidatingType(type: Type): boolean {
   switch (type.kind) {
     case 'Object': {
       switch (type.shapeId) {

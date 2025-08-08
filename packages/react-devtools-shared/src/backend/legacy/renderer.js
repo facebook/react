@@ -795,6 +795,7 @@ export function attach(
             displayName: getData(owner).displayName || 'Unknown',
             id: getID(owner),
             key: element.key,
+            env: null,
             type: getElementType(owner),
           });
           if (owner._currentElement) {
@@ -856,6 +857,8 @@ export function attach(
 
       // List of owners
       owners,
+
+      env: null,
 
       rootType: null,
       rendererPackageName: null,

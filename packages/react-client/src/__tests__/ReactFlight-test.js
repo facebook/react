@@ -3239,6 +3239,8 @@ describe('ReactFlight', () => {
     }
     Object.defineProperty(MyClass.prototype, 'y', {enumerable: true});
 
+    Object.defineProperty(MyClass, 'name', {value: 'MyClassName'});
+
     function ServerComponent() {
       console.log('hi', {
         prop: 123,
@@ -3341,6 +3343,7 @@ describe('ReactFlight', () => {
     const instance = mockConsoleLog.mock.calls[0][1].instance;
     expect(typeof Class).toBe('function');
     expect(Class.prototype.constructor).toBe(Class);
+    expect(Class.name).toBe('MyClassName');
     expect(instance instanceof Class).toBe(true);
     expect(Object.getPrototypeOf(instance)).toBe(Class.prototype);
     expect(instance.x).toBe(1);
