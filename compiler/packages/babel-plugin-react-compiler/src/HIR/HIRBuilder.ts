@@ -7,7 +7,7 @@
 
 import {Binding, NodePath} from '@babel/traverse';
 import * as t from '@babel/types';
-import {CompilerError} from '../CompilerError';
+import {CompilerDiagnostic, CompilerError} from '../CompilerError';
 import {Environment} from './Environment';
 import {
   BasicBlock,
@@ -37,6 +37,7 @@ import {
   mapTerminalSuccessors,
   terminalFallthrough,
 } from './visitors';
+import {ErrorCode} from '../Utils/CompilerErrorCodes';
 
 /*
  * *******************************************************************************************
@@ -106,7 +107,7 @@ export default class HIRBuilder {
   #current: WipBlock;
   #entry: BlockId;
   #scopes: Array<Scope> = [];
-  #context: Array<t.Identifier>;
+  #context: Map<t.Identifier, SourceLocation>;
   #bindings: Bindings;
   #env: Environment;
   #exceptionHandlerStack: Array<BlockId> = [];
@@ -121,7 +122,7 @@ export default class HIRBuilder {
     return this.#env.nextIdentifierId;
   }
 
-  get context(): Array<t.Identifier> {
+  get context(): Map<t.Identifier, SourceLocation> {
     return this.#context;
   }
 
@@ -137,13 +138,13 @@ export default class HIRBuilder {
     env: Environment,
     options?: {
       bindings?: Bindings | null;
-      context?: Array<t.Identifier>;
+      context?: Map<t.Identifier, SourceLocation>;
       entryBlockKind?: BlockKind;
     },
   ) {
     this.#env = env;
     this.#bindings = options?.bindings ?? new Map();
-    this.#context = options?.context ?? [];
+    this.#context = options?.context ?? new Map();
     this.#entry = makeBlockId(env.nextBlockId);
     this.#current = newBlock(this.#entry, options?.entryBlockKind ?? 'block');
   }
@@ -165,6 +166,7 @@ export default class HIRBuilder {
           handler: exceptionHandler,
           id: makeInstructionId(0),
           loc: instruction.loc,
+          effects: null,
         },
         continuationBlock,
       );
@@ -307,10 +309,17 @@ export default class HIRBuilder {
 
   resolveBinding(node: t.Identifier): Identifier {
     if (node.name === 'fbt') {
-      CompilerError.throwTodo({
-        reason: 'Support local variables named "fbt"',
-        loc: node.loc ?? null,
-      });
+      CompilerError.throwDiagnostic(
+        CompilerDiagnostic.fromCode(ErrorCode.TODO_CONFLICTING_FBT_IDENTIFIER, {
+          details: [
+            {
+              kind: 'error',
+              message: 'Rename to avoid conflict with fbt plugin',
+              loc: node.loc ?? GeneratedSource,
+            },
+          ],
+        }),
+      );
     }
     const originalName = node.name;
     let name = originalName;

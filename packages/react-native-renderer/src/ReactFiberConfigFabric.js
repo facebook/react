@@ -12,7 +12,6 @@ import type {
   TouchedViewDataAtPoint,
   ViewConfig,
 } from './ReactNativeTypes';
-import {create, diff} from './ReactNativeAttributePayloadFabric';
 import {dispatchEvent} from './ReactFabricEventEmitter';
 import {
   NoEventPriority,
@@ -35,6 +34,8 @@ import {
   deepFreezeAndThrowOnMutationInDev,
   createPublicInstance,
   createPublicTextInstance,
+  createAttributePayload,
+  diffAttributePayloads,
   type PublicInstance as ReactNativePublicInstance,
   type PublicTextInstance,
   type PublicRootInstance,
@@ -65,10 +66,7 @@ import {
   getInspectorDataForInstance,
 } from './ReactNativeFiberInspector';
 
-import {
-  passChildrenWhenCloningPersistedNodes,
-  enableLazyPublicInstanceInFabric,
-} from 'shared/ReactFeatureFlags';
+import {passChildrenWhenCloningPersistedNodes} from 'shared/ReactFeatureFlags';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import type {ReactContext} from 'shared/ReactTypes';
 
@@ -190,7 +188,10 @@ export function createInstance(
     }
   }
 
-  const updatePayload = create(props, viewConfig.validAttributes);
+  const updatePayload = createAttributePayload(
+    props,
+    viewConfig.validAttributes,
+  );
 
   const node = createNode(
     tag, // reactTag
@@ -200,37 +201,17 @@ export function createInstance(
     internalInstanceHandle, // internalInstanceHandle
   );
 
-  if (enableLazyPublicInstanceInFabric) {
-    return {
-      node: node,
-      canonical: {
-        nativeTag: tag,
-        viewConfig,
-        currentProps: props,
-        internalInstanceHandle,
-        publicInstance: null,
-        publicRootInstance: rootContainerInstance.publicInstance,
-      },
-    };
-  } else {
-    const component = createPublicInstance(
-      tag,
+  return {
+    node: node,
+    canonical: {
+      nativeTag: tag,
       viewConfig,
+      currentProps: props,
       internalInstanceHandle,
-      rootContainerInstance.publicInstance,
-    );
-
-    return {
-      node: node,
-      canonical: {
-        nativeTag: tag,
-        viewConfig,
-        currentProps: props,
-        internalInstanceHandle,
-        publicInstance: component,
-      },
-    };
-  }
+      publicInstance: null,
+      publicRootInstance: rootContainerInstance.publicInstance,
+    },
+  };
 }
 
 export function createTextInstance(
@@ -456,7 +437,11 @@ export function cloneInstance(
   newChildSet: ?ChildSet,
 ): Instance {
   const viewConfig = instance.canonical.viewConfig;
-  const updatePayload = diff(oldProps, newProps, viewConfig.validAttributes);
+  const updatePayload = diffAttributePayloads(
+    oldProps,
+    newProps,
+    viewConfig.validAttributes,
+  );
   // TODO: If the event handlers have changed, we need to update the current props
   // in the commit phase but there is no host config hook to do it yet.
   // So instead we hack it by updating it in the render phase.
@@ -505,7 +490,7 @@ export function cloneHiddenInstance(
 ): Instance {
   const viewConfig = instance.canonical.viewConfig;
   const node = instance.node;
-  const updatePayload = create(
+  const updatePayload = createAttributePayload(
     {style: {display: 'none'}},
     viewConfig.validAttributes,
   );

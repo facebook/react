@@ -7,7 +7,13 @@
 /* eslint-disable no-for-of-loops/no-for-of-loops */
 
 import type {Rule, Scope} from 'eslint';
-import type {CallExpression, DoWhileStatement, Node} from 'estree';
+import type {
+  CallExpression,
+  CatchClause,
+  DoWhileStatement,
+  Node,
+  TryStatement,
+} from 'estree';
 
 // @ts-expect-error untyped module
 import CodePathAnalyzer from '../code-path-analysis/code-path-analyzer';
@@ -104,6 +110,18 @@ function isInsideComponentOrHook(node: Node | undefined): boolean {
 function isInsideDoWhileLoop(node: Node | undefined): node is DoWhileStatement {
   while (node) {
     if (node.type === 'DoWhileStatement') {
+      return true;
+    }
+    node = node.parent;
+  }
+  return false;
+}
+
+function isInsideTryCatch(
+  node: Node | undefined,
+): node is TryStatement | CatchClause {
+  while (node) {
+    if (node.type === 'TryStatement' || node.type === 'CatchClause') {
       return true;
     }
     node = node.parent;
@@ -532,6 +550,16 @@ const rule = {
               continue;
             }
 
+            // Report an error if use() is called inside try/catch.
+            if (isUseIdentifier(hook) && isInsideTryCatch(hook)) {
+              context.report({
+                node: hook,
+                message: `React Hook "${getSourceCode().getText(
+                  hook,
+                )}" cannot be called in a try/catch block.`,
+              });
+            }
+
             // Report an error if a hook may be called more then once.
             // `use(...)` can be called in loops.
             if (
@@ -541,7 +569,9 @@ const rule = {
               context.report({
                 node: hook,
                 message:
-                  `React Hook "${getSourceCode().getText(hook)}" may be executed ` +
+                  `React Hook "${getSourceCode().getText(
+                    hook,
+                  )}" may be executed ` +
                   'more than once. Possibly because it is called in a loop. ' +
                   'React Hooks must be called in the exact same order in ' +
                   'every component render.',
@@ -596,7 +626,9 @@ const rule = {
             ) {
               // Custom message for hooks inside a class
               const message =
-                `React Hook "${getSourceCode().getText(hook)}" cannot be called ` +
+                `React Hook "${getSourceCode().getText(
+                  hook,
+                )}" cannot be called ` +
                 'in a class component. React Hooks must be called in a ' +
                 'React function component or a custom React Hook function.';
               context.report({node: hook, message});
@@ -613,7 +645,9 @@ const rule = {
             } else if (codePathNode.type === 'Program') {
               // These are dangerous if you have inline requires enabled.
               const message =
-                `React Hook "${getSourceCode().getText(hook)}" cannot be called ` +
+                `React Hook "${getSourceCode().getText(
+                  hook,
+                )}" cannot be called ` +
                 'at the top level. React Hooks must be called in a ' +
                 'React function component or a custom React Hook function.';
               context.report({node: hook, message});
@@ -626,7 +660,9 @@ const rule = {
               // `use(...)` can be called in callbacks.
               if (isSomewhereInsideComponentOrHook && !isUseIdentifier(hook)) {
                 const message =
-                  `React Hook "${getSourceCode().getText(hook)}" cannot be called ` +
+                  `React Hook "${getSourceCode().getText(
+                    hook,
+                  )}" cannot be called ` +
                   'inside a callback. React Hooks must be called in a ' +
                   'React function component or a custom React Hook function.';
                 context.report({node: hook, message});
@@ -681,18 +717,18 @@ const rule = {
       Identifier(node) {
         // This identifier resolves to a useEffectEvent function, but isn't being referenced in an
         // effect or another event function. It isn't being called either.
-        if (
-          lastEffect == null &&
-          useEffectEventFunctions.has(node) &&
-          node.parent.type !== 'CallExpression'
-        ) {
+        if (lastEffect == null && useEffectEventFunctions.has(node)) {
+          const message =
+            `\`${getSourceCode().getText(
+              node,
+            )}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
+            'the same component.' +
+            (node.parent.type === 'CallExpression'
+              ? ''
+              : ' They cannot be assigned to variables or passed down.');
           context.report({
             node,
-            message:
-              `\`${getSourceCode().getText(
-                node,
-              )}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-              'the same component. They cannot be assigned to variables or passed down.',
+            message,
           });
         }
       },

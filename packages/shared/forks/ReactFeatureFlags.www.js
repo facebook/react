@@ -16,24 +16,19 @@ const dynamicFeatureFlags: DynamicFeatureFlags = require('ReactFeatureFlags');
 
 export const {
   alwaysThrottleRetries,
-  disableDefaultPropsExceptForClasses,
   disableLegacyContextForFunctionComponents,
   disableSchedulerTimeoutInWorkLoop,
-  enableDO_NOT_USE_disableStrictPassiveEffect,
   enableHiddenSubtreeInsertionEffectCleanup,
   enableInfiniteRenderLoopDetection,
   enableNoCloningMemoCache,
   enableObjectFiber,
-  enableRenderableContext,
   enableRetryLaneExpiration,
   enableTransitionTracing,
   enableTrustedTypesIntegration,
-  favorSafetyOverHydrationPerf,
   renameElementSymbol,
   retryLaneExpirationMs,
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
-  enableFastAddPropertiesInDiffing,
   enableViewTransition,
   enableComponentPerformanceTrack,
   enableScrollEndPolyfill,
@@ -105,11 +100,7 @@ export const enableReactTestRendererWarning = false;
 
 export const disableLegacyMode = true;
 
-export const enableShallowPropDiffing = false;
-
-export const enableEagerAlternateStateNodeCleanup = false;
-
-export const enableLazyPublicInstanceInFabric = false;
+export const enableEagerAlternateStateNodeCleanup = true;
 
 export const enableGestureTransition = false;
 

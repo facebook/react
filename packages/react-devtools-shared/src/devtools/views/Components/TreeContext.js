@@ -803,6 +803,45 @@ type Props = {
   defaultInspectedElementIndex?: ?number,
 };
 
+function getInitialState({
+  defaultOwnerID,
+  defaultInspectedElementID,
+  defaultInspectedElementIndex,
+  store,
+}: {
+  defaultOwnerID?: ?number,
+  defaultInspectedElementID?: ?number,
+  defaultInspectedElementIndex?: ?number,
+  store: Store,
+}): State {
+  return {
+    // Tree
+    numElements: store.numElements,
+    ownerSubtreeLeafElementID: null,
+
+    // Search
+    searchIndex: null,
+    searchResults: [],
+    searchText: '',
+
+    // Owners
+    ownerID: defaultOwnerID == null ? null : defaultOwnerID,
+    ownerFlatTree: null,
+
+    // Inspection element panel
+    inspectedElementID:
+      defaultInspectedElementID != null
+        ? defaultInspectedElementID
+        : store.lastSelectedHostInstanceElementId,
+    inspectedElementIndex:
+      defaultInspectedElementIndex != null
+        ? defaultInspectedElementIndex
+        : store.lastSelectedHostInstanceElementId
+          ? store.getIndexOfElementID(store.lastSelectedHostInstanceElementId)
+          : null,
+  };
+}
+
 // TODO Remove TreeContextController wrapper element once global Context.write API exists.
 function TreeContextController({
   children,
@@ -866,32 +905,16 @@ function TreeContextController({
     [store],
   );
 
-  const [state, dispatch] = useReducer(reducer, {
-    // Tree
-    numElements: store.numElements,
-    ownerSubtreeLeafElementID: null,
-
-    // Search
-    searchIndex: null,
-    searchResults: [],
-    searchText: '',
-
-    // Owners
-    ownerID: defaultOwnerID == null ? null : defaultOwnerID,
-    ownerFlatTree: null,
-
-    // Inspection element panel
-    inspectedElementID:
-      defaultInspectedElementID != null
-        ? defaultInspectedElementID
-        : store.lastSelectedHostInstanceElementId,
-    inspectedElementIndex:
-      defaultInspectedElementIndex != null
-        ? defaultInspectedElementIndex
-        : store.lastSelectedHostInstanceElementId
-          ? store.getIndexOfElementID(store.lastSelectedHostInstanceElementId)
-          : null,
-  });
+  const [state, dispatch] = useReducer(
+    reducer,
+    {
+      defaultOwnerID,
+      defaultInspectedElementID,
+      defaultInspectedElementIndex,
+      store,
+    },
+    getInitialState,
+  );
   const transitionDispatch = useMemo(
     () => (action: Action) =>
       startTransition(() => {

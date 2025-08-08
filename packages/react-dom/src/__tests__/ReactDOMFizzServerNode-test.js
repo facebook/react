@@ -56,6 +56,18 @@ describe('ReactDOMFizzServerNode', () => {
     throw theInfinitePromise;
   }
 
+  async function readContentWeb(stream) {
+    const reader = stream.getReader();
+    let content = '';
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) {
+        return content;
+      }
+      content += Buffer.from(value).toString('utf8');
+    }
+  }
+
   it('should call renderToPipeableStream', async () => {
     const {writable, output} = getTestWritable();
     await act(() => {
@@ -65,6 +77,14 @@ describe('ReactDOMFizzServerNode', () => {
       pipe(writable);
     });
     expect(output.result).toMatchInlineSnapshot(`"<div>hello world</div>"`);
+  });
+
+  it('should support web streams', async () => {
+    const stream = await act(() =>
+      ReactDOMFizzServer.renderToReadableStream(<div>hello world</div>),
+    );
+    const result = await readContentWeb(stream);
+    expect(result).toMatchInlineSnapshot(`"<div>hello world</div>"`);
   });
 
   it('flush fully if piping in on onShellReady', async () => {
@@ -95,7 +115,7 @@ describe('ReactDOMFizzServerNode', () => {
     // with Float, we emit empty heads if they are elided when rendering <html>
     if (gate(flags => flags.enableFizzBlockingRender)) {
       expect(output.result).toMatchInlineSnapshot(
-        `"<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/></head><body>hello world<template id="«R»"></template></body></html>"`,
+        `"<!DOCTYPE html><html><head><link rel="expect" href="#_R_" blocking="render"/></head><body>hello world<template id="_R_"></template></body></html>"`,
       );
     } else {
       expect(output.result).toMatchInlineSnapshot(
@@ -118,7 +138,7 @@ describe('ReactDOMFizzServerNode', () => {
       pipe(writable);
     });
     expect(output.result).toMatchInlineSnapshot(
-      `"<link rel="preload" as="script" fetchPriority="low" href="init.js"/><link rel="modulepreload" fetchPriority="low" href="init.mjs"/><div>hello world</div><script id="«R»">INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
+      `"<link rel="preload" as="script" fetchPriority="low" href="init.js"/><link rel="modulepreload" fetchPriority="low" href="init.mjs"/><div>hello world</div><script id="_R_">INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
     );
   });
 

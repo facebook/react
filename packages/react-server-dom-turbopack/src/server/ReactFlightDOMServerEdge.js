@@ -7,7 +7,10 @@
  * @flow
  */
 
-import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
+import type {
+  Request,
+  ReactClientValue,
+} from 'react-server/src/ReactFlightServer';
 import type {Thenable} from 'shared/ReactTypes';
 import type {ClientManifest} from './ReactFlightServerConfigTurbopackBundler';
 import type {ServerManifest} from 'react-client/src/ReactFlightClientConfig';
@@ -19,8 +22,11 @@ import {
   createPrerenderRequest,
   startWork,
   startFlowing,
+  startFlowingDebug,
   stopFlowing,
   abort,
+  resolveDebugMessage,
+  closeDebugChannel,
 } from 'react-server/src/ReactFlightServer';
 
 import {
@@ -43,6 +49,12 @@ export {
   createClientModuleProxy,
 } from '../ReactFlightTurbopackReferences';
 
+import {
+  createStringDecoder,
+  readPartialStringChunk,
+  readFinalStringChunk,
+} from 'react-client/src/ReactFlightClientStreamConfigWeb';
+
 import type {TemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
 
 export {createTemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
@@ -50,6 +62,7 @@ export {createTemporaryReferenceSet} from 'react-server/src/ReactFlightServerTem
 export type {TemporaryReferenceSet};
 
 type Options = {
+  debugChannel?: {readable?: ReadableStream, writable?: WritableStream, ...},
   environmentName?: string | (() => string),
   filterStackFrame?: (url: string, functionName: string) => boolean,
   identifierPrefix?: string,
@@ -59,11 +72,60 @@ type Options = {
   onPostpone?: (reason: string) => void,
 };
 
+function startReadingFromDebugChannelReadableStream(
+  request: Request,
+  stream: ReadableStream,
+): void {
+  const reader = stream.getReader();
+  const stringDecoder = createStringDecoder();
+  let stringBuffer = '';
+  function progress({
+    done,
+    value,
+  }: {
+    done: boolean,
+    value: ?any,
+    ...
+  }): void | Promise<void> {
+    const buffer: Uint8Array = (value: any);
+    stringBuffer += done
+      ? readFinalStringChunk(stringDecoder, new Uint8Array(0))
+      : readPartialStringChunk(stringDecoder, buffer);
+    const messages = stringBuffer.split('\n');
+    for (let i = 0; i < messages.length - 1; i++) {
+      resolveDebugMessage(request, messages[i]);
+    }
+    stringBuffer = messages[messages.length - 1];
+    if (done) {
+      closeDebugChannel(request);
+      return;
+    }
+    return reader.read().then(progress).catch(error);
+  }
+  function error(e: any) {
+    abort(
+      request,
+      new Error('Lost connection to the Debug Channel.', {
+        cause: e,
+      }),
+    );
+  }
+  reader.read().then(progress).catch(error);
+}
+
 function renderToReadableStream(
   model: ReactClientValue,
   turbopackMap: ClientManifest,
   options?: Options,
 ): ReadableStream {
+  const debugChannelReadable =
+    __DEV__ && options && options.debugChannel
+      ? options.debugChannel.readable
+      : undefined;
+  const debugChannelWritable =
+    __DEV__ && options && options.debugChannel
+      ? options.debugChannel.writable
+      : undefined;
   const request = createRequest(
     model,
     turbopackMap,
@@ -73,6 +135,7 @@ function renderToReadableStream(
     options ? options.temporaryReferences : undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
+    debugChannelReadable !== undefined,
   );
   if (options && options.signal) {
     const signal = options.signal;
@@ -85,6 +148,22 @@ function renderToReadableStream(
       };
       signal.addEventListener('abort', listener);
     }
+  }
+  if (debugChannelWritable !== undefined) {
+    const debugStream = new ReadableStream(
+      {
+        type: 'bytes',
+        pull: (controller): ?Promise<void> => {
+          startFlowingDebug(request, controller);
+        },
+      },
+      // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
+      {highWaterMark: 0},
+    );
+    debugStream.pipeTo(debugChannelWritable);
+  }
+  if (debugChannelReadable !== undefined) {
+    startReadingFromDebugChannelReadableStream(request, debugChannelReadable);
   }
   const stream = new ReadableStream(
     {
@@ -121,9 +200,6 @@ function prerender(
       const stream = new ReadableStream(
         {
           type: 'bytes',
-          start: (controller): ?Promise<void> => {
-            startWork(request);
-          },
           pull: (controller): ?Promise<void> => {
             startFlowing(request, controller);
           },
@@ -148,6 +224,7 @@ function prerender(
       options ? options.temporaryReferences : undefined,
       __DEV__ && options ? options.environmentName : undefined,
       __DEV__ && options ? options.filterStackFrame : undefined,
+      false,
     );
     if (options && options.signal) {
       const signal = options.signal;

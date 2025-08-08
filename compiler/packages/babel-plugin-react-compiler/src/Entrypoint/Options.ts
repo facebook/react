@@ -7,7 +7,12 @@
 
 import * as t from '@babel/types';
 import {z} from 'zod';
-import {CompilerError, CompilerErrorDetailOptions} from '../CompilerError';
+import {
+  CompilerDiagnostic,
+  CompilerError,
+  CompilerErrorDetail,
+  PlainCompilerErrorDetailOptions,
+} from '../CompilerError';
 import {
   EnvironmentConfig,
   ExternalFunction,
@@ -102,6 +107,8 @@ export type PluginOptions = {
    * passes.
    *
    * Defaults to false
+   *
+   * TODO: rename this to lintOnly or something similar
    */
   noEmit: boolean;
 
@@ -224,12 +231,15 @@ export type LoggerEvent =
 export type CompileErrorEvent = {
   kind: 'CompileError';
   fnLoc: t.SourceLocation | null;
-  detail: CompilerErrorDetailOptions;
+  detail: CompilerErrorDetail | CompilerDiagnostic;
 };
 export type CompileDiagnosticEvent = {
   kind: 'CompileDiagnostic';
   fnLoc: t.SourceLocation | null;
-  detail: Omit<Omit<CompilerErrorDetailOptions, 'severity'>, 'suggestions'>;
+  detail: Omit<
+    Omit<PlainCompilerErrorDetailOptions, 'severity'>,
+    'suggestions'
+  >;
 };
 export type CompileSuccessEvent = {
   kind: 'CompileSuccess';

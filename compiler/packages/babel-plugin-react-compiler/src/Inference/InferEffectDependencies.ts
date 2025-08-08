@@ -31,6 +31,7 @@ import {
   HIR,
   BasicBlock,
   BlockId,
+  isEffectEventFunctionType,
 } from '../HIR';
 import {collectHoistablePropertyLoadsInInnerFn} from '../HIR/CollectHoistablePropertyLoads';
 import {collectOptionalChainSidemap} from '../HIR/CollectOptionalChainDependencies';
@@ -56,6 +57,8 @@ import {
 } from '../HIR/visitors';
 import {empty} from '../Utils/Stack';
 import {getOrInsertWith} from '../Utils/utils';
+import {deadCodeElimination} from '../Optimization';
+import {BuiltInAutodepsId} from '../HIR/ObjectShape';
 
 /**
  * Infers reactive dependencies captured by useEffect lambdas and adds them as
@@ -76,7 +79,7 @@ export function inferEffectDependencies(fn: HIRFunction): void {
     );
     moduleTargets.set(
       effectTarget.function.importSpecifierName,
-      effectTarget.numRequiredArgs,
+      effectTarget.autodepsIndex,
     );
   }
   const autodepFnLoads = new Map<IdentifierId, number>();
@@ -134,7 +137,6 @@ export function inferEffectDependencies(fn: HIRFunction): void {
         }
       } else if (value.kind === 'LoadGlobal') {
         loadGlobals.add(lvalue.identifier.id);
-
         /*
          * TODO: Handle properties on default exports, like
          * import React from 'react';
@@ -168,8 +170,22 @@ export function inferEffectDependencies(fn: HIRFunction): void {
       ) {
         const callee =
           value.kind === 'CallExpression' ? value.callee : value.property;
+
+        const autodepsArgIndex = value.args.findIndex(
+          arg =>
+            arg.kind === 'Identifier' &&
+            arg.identifier.type.kind === 'Object' &&
+            arg.identifier.type.shapeId === BuiltInAutodepsId,
+        );
+        const autodepsArgExpectedIndex = autodepFnLoads.get(
+          callee.identifier.id,
+        );
+
         if (
-          value.args.length === autodepFnLoads.get(callee.identifier.id) &&
+          value.args.length > 0 &&
+          autodepsArgExpectedIndex != null &&
+          autodepsArgIndex === autodepsArgExpectedIndex &&
+          autodepFnLoads.has(callee.identifier.id) &&
           value.args[0].kind === 'Identifier'
         ) {
           // We have a useEffect call with no deps array, so we need to infer the deps
@@ -209,7 +225,8 @@ export function inferEffectDependencies(fn: HIRFunction): void {
                 ((isUseRefType(maybeDep.identifier) ||
                   isSetStateType(maybeDep.identifier)) &&
                   !reactiveIds.has(maybeDep.identifier.id)) ||
-                isFireFunctionType(maybeDep.identifier)
+                isFireFunctionType(maybeDep.identifier) ||
+                isEffectEventFunctionType(maybeDep.identifier)
               ) {
                 // exclude non-reactive hook results, which will never be in a memo block
                 continue;
@@ -255,9 +272,13 @@ export function inferEffectDependencies(fn: HIRFunction): void {
                 loc: GeneratedSource,
                 lvalue: {...depsPlace, effect: Effect.Mutate},
                 value: deps,
+                effects: null,
               },
             });
-            value.args.push({...depsPlace, effect: Effect.Freeze});
+            value.args[autodepsArgIndex] = {
+              ...depsPlace,
+              effect: Effect.Freeze,
+            };
             fn.env.inferredEffectLocations.add(callee.loc);
           } else if (loadGlobals.has(value.args[0].identifier.id)) {
             // Global functions have no reactive dependencies, so we can insert an empty array
@@ -269,9 +290,13 @@ export function inferEffectDependencies(fn: HIRFunction): void {
                 loc: GeneratedSource,
                 lvalue: {...depsPlace, effect: Effect.Mutate},
                 value: deps,
+                effects: null,
               },
             });
-            value.args.push({...depsPlace, effect: Effect.Freeze});
+            value.args[autodepsArgIndex] = {
+              ...depsPlace,
+              effect: Effect.Freeze,
+            };
             fn.env.inferredEffectLocations.add(callee.loc);
           }
         } else if (
@@ -319,6 +344,7 @@ export function inferEffectDependencies(fn: HIRFunction): void {
     // Renumber instructions and fix scope ranges
     markInstructionIds(fn.body);
     fixScopeAndIdentifierRanges(fn.body);
+    deadCodeElimination(fn);
 
     fn.env.hasInferredEffect = true;
   }
@@ -404,6 +430,7 @@ function rewriteSplices(
   rewriteBlocks.push(currBlock);
 
   let cursor = 0;
+
   for (const rewrite of splices) {
     while (originalInstrs[cursor].id < rewrite.location) {
       CompilerError.invariant(
@@ -425,7 +452,7 @@ function rewriteSplices(
 
     if (rewrite.kind === 'instr') {
       currBlock.instructions.push(rewrite.value);
-    } else {
+    } else if (rewrite.kind === 'block') {
       const {entry, blocks} = rewrite.value;
       const entryBlock = blocks.get(entry)!;
       // splice in all instructions from the entry block

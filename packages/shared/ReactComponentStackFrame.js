@@ -13,6 +13,8 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import DefaultPrepareStackTrace from 'shared/DefaultPrepareStackTrace';
 
+import {formatOwnerStack} from './ReactOwnerStackFrames';
+
 let prefix;
 let suffix;
 export function describeBuiltInComponentFrame(name: string): string {
@@ -38,7 +40,24 @@ export function describeBuiltInComponentFrame(name: string): string {
   return '\n' + prefix + name + suffix;
 }
 
-export function describeDebugInfoFrame(name: string, env: ?string): string {
+export function describeDebugInfoFrame(
+  name: string,
+  env: ?string,
+  location: ?Error,
+): string {
+  if (location != null) {
+    // If we have a location, it's the child's owner stack. Treat the bottom most frame as
+    // the location of this function.
+    const childStack = formatOwnerStack(location);
+    const idx = childStack.lastIndexOf('\n');
+    const lastLine = idx === -1 ? childStack : childStack.slice(idx + 1);
+    if (lastLine.indexOf(name) !== -1) {
+      // For async stacks it's possible we don't have the owner on it. As a precaution only
+      // use this frame if it has the name of the function in it.
+      return '\n' + lastLine;
+    }
+  }
+
   return describeBuiltInComponentFrame(name + (env ? ' [' + env + ']' : ''));
 }
 

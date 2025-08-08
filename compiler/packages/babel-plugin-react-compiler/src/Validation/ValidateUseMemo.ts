@@ -5,8 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, ErrorSeverity} from '..';
+import {CompilerDiagnostic, CompilerError} from '../CompilerError';
 import {FunctionExpression, HIRFunction, IdentifierId} from '../HIR';
+import {ErrorCode} from '../Utils/CompilerErrorCodes';
 import {Result} from '../Utils/Result';
 
 export function validateUseMemo(fn: HIRFunction): Result<void, CompilerError> {
@@ -63,24 +64,32 @@ export function validateUseMemo(fn: HIRFunction): Result<void, CompilerError> {
           }
 
           if (body.loweredFunc.func.params.length > 0) {
-            errors.push({
-              severity: ErrorSeverity.InvalidReact,
-              reason: 'useMemo callbacks may not accept any arguments',
-              description: null,
-              loc: body.loc,
-              suggestions: null,
-            });
+            const firstParam = body.loweredFunc.func.params[0];
+            const loc =
+              firstParam.kind === 'Identifier'
+                ? firstParam.loc
+                : firstParam.place.loc;
+            errors.pushDiagnostic(
+              CompilerDiagnostic.fromCode(
+                ErrorCode.INVALID_USE_MEMO_CALLBACK_PARAMETERS,
+              ).withDetail({
+                kind: 'error',
+                loc,
+                message: 'Callbacks with parameters are not supported',
+              }),
+            );
           }
 
           if (body.loweredFunc.func.async || body.loweredFunc.func.generator) {
-            errors.push({
-              severity: ErrorSeverity.InvalidReact,
-              reason:
-                'useMemo callbacks may not be async or generator functions',
-              description: null,
-              loc: body.loc,
-              suggestions: null,
-            });
+            errors.pushDiagnostic(
+              CompilerDiagnostic.fromCode(
+                ErrorCode.INVALID_USE_MEMO_CALLBACK_ASYNC,
+              ).withDetail({
+                kind: 'error',
+                loc: body.loc,
+                message: 'Async and generator functions are not supported',
+              }),
+            );
           }
 
           break;

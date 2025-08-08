@@ -13,6 +13,9 @@ import {Environment, ReactFunctionType} from './Environment';
 import type {HookKind} from './ObjectShape';
 import {Type, makeType} from './Types';
 import {z} from 'zod';
+import type {AliasingEffect} from '../Inference/AliasingEffects';
+import {isReservedWord} from '../Utils/Keyword';
+import {ErrorCode} from '../Utils/CompilerErrorCodes';
 
 /*
  * *******************************************************************************************
@@ -100,6 +103,7 @@ export type ReactiveInstruction = {
   id: InstructionId;
   lvalue: Place | null;
   value: ReactiveValue;
+  effects?: Array<AliasingEffect> | null; // TODO make non-optional
   loc: SourceLocation;
 };
 
@@ -277,13 +281,14 @@ export type HIRFunction = {
   env: Environment;
   params: Array<Place | SpreadPattern>;
   returnTypeAnnotation: t.FlowType | t.TSType | null;
-  returnType: Type;
+  returns: Place;
   context: Array<Place>;
   effects: Array<FunctionEffect> | null;
   body: HIR;
   generator: boolean;
   async: boolean;
   directives: Array<string>;
+  aliasingEffects?: Array<AliasingEffect> | null;
 };
 
 export type FunctionEffect =
@@ -443,12 +448,25 @@ export type ThrowTerminal = {
 };
 export type Case = {test: Place | null; block: BlockId};
 
+export type ReturnVariant = 'Void' | 'Implicit' | 'Explicit';
 export type ReturnTerminal = {
   kind: 'return';
+  /**
+   * Void:
+   *   () => { ... }
+   *   function() { ... }
+   * Implicit (ArrowFunctionExpression only):
+   *   () => foo
+   * Explicit:
+   *   () => { return ... }
+   *   function () { return ... }
+   */
+  returnVariant: ReturnVariant;
   loc: SourceLocation;
   value: Place;
   id: InstructionId;
   fallthrough?: never;
+  effects: Array<AliasingEffect> | null;
 };
 
 export type GotoTerminal = {
@@ -609,6 +627,7 @@ export type MaybeThrowTerminal = {
   id: InstructionId;
   loc: SourceLocation;
   fallthrough?: never;
+  effects: Array<AliasingEffect> | null;
 };
 
 export type ReactiveScopeTerminal = {
@@ -645,12 +664,14 @@ export type Instruction = {
   lvalue: Place;
   value: InstructionValue;
   loc: SourceLocation;
+  effects: Array<AliasingEffect> | null;
 };
 
 export type TInstruction<T extends InstructionValue> = {
   id: InstructionId;
   lvalue: Place;
   value: T;
+  effects: Array<AliasingEffect> | null;
   loc: SourceLocation;
 };
 
@@ -1301,12 +1322,21 @@ export function forkTemporaryIdentifier(
  * original source code.
  */
 export function makeIdentifierName(name: string): ValidatedIdentifier {
-  CompilerError.invariant(t.isValidIdentifier(name), {
-    reason: `Expected a valid identifier name`,
-    loc: GeneratedSource,
-    description: `\`${name}\` is not a valid JavaScript identifier`,
-    suggestions: null,
-  });
+  if (isReservedWord(name)) {
+    CompilerError.throwFromCode(
+      ErrorCode.INVALID_SYNTAX_RESERVED_VARIABLE_NAME,
+      {
+        loc: GeneratedSource,
+        description: `\`${name}\` is a reserved word in JavaScript and cannot be used as an identifier name`,
+      },
+    );
+  } else {
+    CompilerError.invariant(t.isValidIdentifier(name), {
+      reason: `Expected a valid identifier name`,
+      loc: GeneratedSource,
+      description: `\`${name}\` is not a valid JavaScript identifier`,
+    });
+  }
   return {
     kind: 'named',
     value: name as ValidIdentifierName,
@@ -1381,6 +1411,21 @@ export enum ValueReason {
   JsxCaptured = 'jsx-captured',
 
   /**
+   * Argument to a hook
+   */
+  HookCaptured = 'hook-captured',
+
+  /**
+   * Return value of a hook
+   */
+  HookReturn = 'hook-return',
+
+  /**
+   * Passed to an effect
+   */
+  Effect = 'effect',
+
+  /**
    * Return value of a function with known frozen return value, e.g. `useState`.
    */
   KnownReturnSignature = 'known-return-signature',
@@ -1428,6 +1473,20 @@ export const ValueKindSchema = z.enum([
   ValueKind.Global,
   ValueKind.Mutable,
   ValueKind.Context,
+]);
+
+export const ValueReasonSchema = z.enum([
+  ValueReason.Context,
+  ValueReason.Effect,
+  ValueReason.Global,
+  ValueReason.HookCaptured,
+  ValueReason.HookReturn,
+  ValueReason.JsxCaptured,
+  ValueReason.KnownReturnSignature,
+  ValueReason.Other,
+  ValueReason.ReactiveFunctionArgument,
+  ValueReason.ReducerState,
+  ValueReason.State,
 ]);
 
 // The effect with which a value is modified.
@@ -1733,6 +1792,10 @@ export function isUseStateType(id: Identifier): boolean {
   return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInUseState';
 }
 
+export function isJsxType(type: Type): boolean {
+  return type.kind === 'Object' && type.shapeId === 'BuiltInJsx';
+}
+
 export function isRefOrRefValue(id: Identifier): boolean {
   return isUseRefType(id) || isRefValueType(id);
 }
@@ -1782,6 +1845,13 @@ export function isDispatcherType(id: Identifier): boolean {
 export function isFireFunctionType(id: Identifier): boolean {
   return (
     id.type.kind === 'Function' && id.type.shapeId === 'BuiltInFireFunction'
+  );
+}
+
+export function isEffectEventFunctionType(id: Identifier): boolean {
+  return (
+    id.type.kind === 'Function' &&
+    id.type.shapeId === 'BuiltInEffectEventFunction'
   );
 }
 

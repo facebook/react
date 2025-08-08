@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import generate from '@babel/generator';
 import {CompilerError} from '../CompilerError';
 import {printReactiveScopeSummary} from '../ReactiveScopes/PrintReactiveFunction';
 import DisjointSet from '../Utils/DisjointSet';
@@ -35,6 +34,7 @@ import type {
   Type,
 } from './HIR';
 import {GotoVariant, InstructionKind} from './HIR';
+import {AliasingEffect, AliasingSignature} from '../Inference/AliasingEffects';
 
 export type Options = {
   indent: number;
@@ -53,6 +53,8 @@ export function printFunction(fn: HIRFunction): string {
   let definition = '';
   if (fn.id !== null) {
     definition += fn.id;
+  } else {
+    definition += '<<anonymous>>';
   }
   if (fn.params.length !== 0) {
     definition +=
@@ -67,13 +69,13 @@ export function printFunction(fn: HIRFunction): string {
         })
         .join(', ') +
       ')';
+  } else {
+    definition += '()';
   }
-  if (definition.length !== 0) {
-    output.push(definition);
-  }
-  output.push(printType(fn.returnType));
-  output.push(printHIR(fn.body));
+  definition += `: ${printPlace(fn.returns)}`;
+  output.push(definition);
   output.push(...fn.directives);
+  output.push(printHIR(fn.body));
   return output.join('\n');
 }
 
@@ -151,7 +153,10 @@ export function printMixedHIR(
 
 export function printInstruction(instr: ReactiveInstruction): string {
   const id = `[${instr.id}]`;
-  const value = printInstructionValue(instr.value);
+  let value = printInstructionValue(instr.value);
+  if (instr.effects != null) {
+    value += `\n    ${instr.effects.map(printAliasingEffect).join('\n    ')}`;
+  }
 
   if (instr.lvalue !== null) {
     return `${id} ${printPlace(instr.lvalue)} = ${value}`;
@@ -210,9 +215,12 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
       break;
     }
     case 'return': {
-      value = `[${terminal.id}] Return${
+      value = `[${terminal.id}] Return ${terminal.returnVariant}${
         terminal.value != null ? ' ' + printPlace(terminal.value) : ''
       }`;
+      if (terminal.effects != null) {
+        value += `\n    ${terminal.effects.map(printAliasingEffect).join('\n    ')}`;
+      }
       break;
     }
     case 'goto': {
@@ -281,6 +289,9 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
     }
     case 'maybe-throw': {
       value = `[${terminal.id}] MaybeThrow continuation=bb${terminal.continuation} handler=bb${terminal.handler}`;
+      if (terminal.effects != null) {
+        value += `\n    ${terminal.effects.map(printAliasingEffect).join('\n    ')}`;
+      }
       break;
     }
     case 'scope': {
@@ -454,7 +465,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       break;
     }
     case 'UnsupportedNode': {
-      value = `UnsupportedNode(${generate(instrValue.node).code})`;
+      value = `UnsupportedNode ${instrValue.node.type}`;
       break;
     }
     case 'LoadLocal': {
@@ -555,8 +566,11 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
             }
           })
           .join(', ') ?? '';
-      const type = printType(instrValue.loweredFunc.func.returnType).trim();
-      value = `${kind} ${name} @context[${context}] @effects[${effects}]${type !== '' ? ` return${type}` : ''}:\n${fn}`;
+      const aliasingEffects =
+        instrValue.loweredFunc.func.aliasingEffects
+          ?.map(printAliasingEffect)
+          ?.join(', ') ?? '';
+      value = `${kind} ${name} @context[${context}] @effects[${effects}] @aliasingEffects=[${aliasingEffects}]\n${fn}`;
       break;
     }
     case 'TaggedTemplateExpression': {
@@ -700,7 +714,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       break;
     }
     case 'FinishMemoize': {
-      value = `FinishMemoize decl=${printPlace(instrValue.decl)}`;
+      value = `FinishMemoize decl=${printPlace(instrValue.decl)}${instrValue.pruned ? ' pruned' : ''}`;
       break;
     }
     default: {
@@ -921,4 +935,111 @@ function getFunctionName(
     case 'ObjectMethod':
       return defaultValue;
   }
+}
+
+export function printAliasingEffect(effect: AliasingEffect): string {
+  switch (effect.kind) {
+    case 'Assign': {
+      return `Assign ${printPlaceForAliasEffect(effect.into)} = ${printPlaceForAliasEffect(effect.from)}`;
+    }
+    case 'Alias': {
+      return `Alias ${printPlaceForAliasEffect(effect.into)} <- ${printPlaceForAliasEffect(effect.from)}`;
+    }
+    case 'MaybeAlias': {
+      return `MaybeAlias ${printPlaceForAliasEffect(effect.into)} <- ${printPlaceForAliasEffect(effect.from)}`;
+    }
+    case 'Capture': {
+      return `Capture ${printPlaceForAliasEffect(effect.into)} <- ${printPlaceForAliasEffect(effect.from)}`;
+    }
+    case 'ImmutableCapture': {
+      return `ImmutableCapture ${printPlaceForAliasEffect(effect.into)} <- ${printPlaceForAliasEffect(effect.from)}`;
+    }
+    case 'Create': {
+      return `Create ${printPlaceForAliasEffect(effect.into)} = ${effect.value}`;
+    }
+    case 'CreateFrom': {
+      return `Create ${printPlaceForAliasEffect(effect.into)} = kindOf(${printPlaceForAliasEffect(effect.from)})`;
+    }
+    case 'CreateFunction': {
+      return `Function ${printPlaceForAliasEffect(effect.into)} = Function captures=[${effect.captures.map(printPlaceForAliasEffect).join(', ')}]`;
+    }
+    case 'Apply': {
+      const receiverCallee =
+        effect.receiver.identifier.id === effect.function.identifier.id
+          ? printPlaceForAliasEffect(effect.receiver)
+          : `${printPlaceForAliasEffect(effect.receiver)}.${printPlaceForAliasEffect(effect.function)}`;
+      const args = effect.args
+        .map(arg => {
+          if (arg.kind === 'Identifier') {
+            return printPlaceForAliasEffect(arg);
+          } else if (arg.kind === 'Hole') {
+            return ' ';
+          }
+          return `...${printPlaceForAliasEffect(arg.place)}`;
+        })
+        .join(', ');
+      let signature = '';
+      if (effect.signature != null) {
+        if (effect.signature.aliasing != null) {
+          signature = printAliasingSignature(effect.signature.aliasing);
+        } else {
+          signature = JSON.stringify(effect.signature, null, 2);
+        }
+      }
+      return `Apply ${printPlaceForAliasEffect(effect.into)} = ${receiverCallee}(${args})${signature != '' ? '\n     ' : ''}${signature}`;
+    }
+    case 'Freeze': {
+      return `Freeze ${printPlaceForAliasEffect(effect.value)} ${effect.reason}`;
+    }
+    case 'Mutate':
+    case 'MutateConditionally':
+    case 'MutateTransitive':
+    case 'MutateTransitiveConditionally': {
+      return `${effect.kind} ${printPlaceForAliasEffect(effect.value)}`;
+    }
+    case 'MutateFrozen': {
+      return `MutateFrozen ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.category)}`;
+    }
+    case 'MutateGlobal': {
+      return `MutateGlobal ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.category)}`;
+    }
+    case 'Impure': {
+      return `Impure ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.category)}`;
+    }
+    case 'Render': {
+      return `Render ${printPlaceForAliasEffect(effect.place)}`;
+    }
+    default: {
+      assertExhaustive(effect, `Unexpected kind '${(effect as any).kind}'`);
+    }
+  }
+}
+
+function printPlaceForAliasEffect(place: Place): string {
+  return printIdentifier(place.identifier);
+}
+
+export function printAliasingSignature(signature: AliasingSignature): string {
+  const tokens: Array<string> = ['function '];
+  if (signature.temporaries.length !== 0) {
+    tokens.push('<');
+    tokens.push(
+      signature.temporaries.map(temp => `$${temp.identifier.id}`).join(', '),
+    );
+    tokens.push('>');
+  }
+  tokens.push('(');
+  tokens.push('this=$' + String(signature.receiver));
+  for (const param of signature.params) {
+    tokens.push(', $' + String(param));
+  }
+  if (signature.rest != null) {
+    tokens.push(`, ...$${String(signature.rest)}`);
+  }
+  tokens.push('): ');
+  tokens.push('$' + String(signature.returns) + ':');
+  for (const effect of signature.effects) {
+    tokens.push('\n  ' + printAliasingEffect(effect));
+  }
+  return tokens.join('');
 }

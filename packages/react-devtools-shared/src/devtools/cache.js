@@ -7,7 +7,12 @@
  * @flow
  */
 
-import type {ReactContext, Thenable} from 'shared/ReactTypes';
+import type {
+  ReactContext,
+  Thenable,
+  FulfilledThenable,
+  RejectedThenable,
+} from 'shared/ReactTypes';
 
 import * as React from 'react';
 import {createContext} from 'react';
@@ -26,27 +31,6 @@ import {createContext} from 'react';
 
 export type {Thenable};
 
-interface Suspender {
-  then(resolve: () => mixed, reject: () => mixed): mixed;
-}
-
-type PendingResult = {
-  status: 0,
-  value: Suspender,
-};
-
-type ResolvedResult<Value> = {
-  status: 1,
-  value: Value,
-};
-
-type RejectedResult = {
-  status: 2,
-  value: mixed,
-};
-
-type Result<Value> = PendingResult | ResolvedResult<Value> | RejectedResult;
-
 export type Resource<Input, Key, Value> = {
   clear(): void,
   invalidate(Key): void,
@@ -54,10 +38,6 @@ export type Resource<Input, Key, Value> = {
   preload(Input): void,
   write(Key, Value): void,
 };
-
-const Pending = 0;
-const Resolved = 1;
-const Rejected = 2;
 
 let readContext;
 if (typeof React.use === 'function') {
@@ -115,33 +95,25 @@ function accessResult<Input, Key, Value>(
   fetch: Input => Thenable<Value>,
   input: Input,
   key: Key,
-): Result<Value> {
+): Thenable<Value> {
   const entriesForResource = getEntriesForResource(resource);
   const entry = entriesForResource.get(key);
   if (entry === undefined) {
     const thenable = fetch(input);
     thenable.then(
       value => {
-        if (newResult.status === Pending) {
-          const resolvedResult: ResolvedResult<Value> = (newResult: any);
-          resolvedResult.status = Resolved;
-          resolvedResult.value = value;
-        }
+        const fulfilledThenable: FulfilledThenable<Value> = (thenable: any);
+        fulfilledThenable.status = 'fulfilled';
+        fulfilledThenable.value = value;
       },
       error => {
-        if (newResult.status === Pending) {
-          const rejectedResult: RejectedResult = (newResult: any);
-          rejectedResult.status = Rejected;
-          rejectedResult.value = error;
-        }
+        const rejectedThenable: RejectedThenable<Value> = (thenable: any);
+        rejectedThenable.status = 'rejected';
+        rejectedThenable.reason = error;
       },
     );
-    const newResult: PendingResult = {
-      status: Pending,
-      value: thenable,
-    };
-    entriesForResource.set(key, newResult);
-    return newResult;
+    entriesForResource.set(key, thenable);
+    return thenable;
   } else {
     return entry;
   }
@@ -167,23 +139,22 @@ export function createResource<Input, Key, Value>(
       readContext(CacheContext);
 
       const key = hashInput(input);
-      const result: Result<Value> = accessResult(resource, fetch, input, key);
+      const result: Thenable<Value> = accessResult(resource, fetch, input, key);
+      if (typeof React.use === 'function') {
+        return React.use(result);
+      }
+
       switch (result.status) {
-        case Pending: {
-          const suspender = result.value;
-          throw suspender;
-        }
-        case Resolved: {
+        case 'fulfilled': {
           const value = result.value;
           return value;
         }
-        case Rejected: {
-          const error = result.value;
+        case 'rejected': {
+          const error = result.reason;
           throw error;
         }
         default:
-          // Should be unreachable
-          return (undefined: any);
+          throw result;
       }
     },
 
@@ -198,12 +169,13 @@ export function createResource<Input, Key, Value>(
     write(key: Key, value: Value): void {
       const entriesForResource = getEntriesForResource(resource);
 
-      const resolvedResult: ResolvedResult<Value> = {
-        status: Resolved,
+      const fulfilledThenable: FulfilledThenable<Value> = (Promise.resolve(
         value,
-      };
+      ): any);
+      fulfilledThenable.status = 'fulfilled';
+      fulfilledThenable.value = value;
 
-      entriesForResource.set(key, resolvedResult);
+      entriesForResource.set(key, fulfilledThenable);
     },
   };
 

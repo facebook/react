@@ -474,7 +474,7 @@ module.exports = {
     {
       files: ['packages/react-server-dom-turbopack/**/*.js'],
       globals: {
-        __turbopack_load__: 'readonly',
+        __turbopack_load_by_url__: 'readonly',
         __turbopack_require__: 'readonly',
       },
     },
@@ -496,6 +496,7 @@ module.exports = {
         'packages/react-devtools-shared/src/devtools/views/**/*.js',
         'packages/react-devtools-shared/src/hook.js',
         'packages/react-devtools-shared/src/backend/console.js',
+        'packages/react-devtools-shared/src/backend/fiber/renderer.js',
         'packages/react-devtools-shared/src/backend/shared/DevToolsComponentStackFrame.js',
         'packages/react-devtools-shared/src/frontend/utils/withPermissionsCheck.js',
       ],
@@ -504,6 +505,7 @@ module.exports = {
         __IS_FIREFOX__: 'readonly',
         __IS_EDGE__: 'readonly',
         __IS_NATIVE__: 'readonly',
+        __IS_INTERNAL_MCP_BUILD__: 'readonly',
         __IS_INTERNAL_VERSION__: 'readonly',
         chrome: 'readonly',
       },
@@ -559,6 +561,7 @@ module.exports = {
     ConsoleTask: 'readonly', // TOOD: Figure out what the official name of this will be.
     ReturnType: 'readonly',
     AnimationFrameID: 'readonly',
+    WeakRef: 'readonly',
     // For Flow type annotation. Only `BigInt` is valid at runtime.
     bigint: 'readonly',
     BigInt: 'readonly',
@@ -605,10 +608,12 @@ module.exports = {
     symbol: 'readonly',
     SyntheticEvent: 'readonly',
     SyntheticMouseEvent: 'readonly',
+    SyntheticPointerEvent: 'readonly',
     Thenable: 'readonly',
     TimeoutID: 'readonly',
     WheelEventHandler: 'readonly',
     FinalizationRegistry: 'readonly',
+    Exclude: 'readonly',
     Omit: 'readonly',
     Keyframe: 'readonly',
     PropertyIndexedKeyframes: 'readonly',
@@ -618,6 +623,7 @@ module.exports = {
     ScrollTimeline: 'readonly',
     EventListenerOptionsOrUseCapture: 'readonly',
     FocusOptions: 'readonly',
+    OptionalEffectTiming: 'readonly',
 
     spyOnDev: 'readonly',
     spyOnDevAndProd: 'readonly',

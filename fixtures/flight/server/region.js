@@ -50,7 +50,36 @@ const {readFile} = require('fs').promises;
 
 const React = require('react');
 
-async function renderApp(res, returnValue, formState) {
+const activeDebugChannels =
+  process.env.NODE_ENV === 'development' ? new Map() : null;
+
+function filterStackFrame(sourceURL, functionName) {
+  return (
+    sourceURL !== '' &&
+    !sourceURL.startsWith('node:') &&
+    !sourceURL.includes('node_modules') &&
+    !sourceURL.endsWith('library.js')
+  );
+}
+
+function getDebugChannel(req) {
+  if (process.env.NODE_ENV !== 'development') {
+    return undefined;
+  }
+  const requestId = req.get('rsc-request-id');
+  if (!requestId) {
+    return undefined;
+  }
+  return activeDebugChannels.get(requestId);
+}
+
+async function renderApp(
+  res,
+  returnValue,
+  formState,
+  noCache,
+  promiseForDebugChannel
+) {
   const {renderToPipeableStream} = await import(
     'react-server-dom-webpack/server'
   );
@@ -97,15 +126,18 @@ async function renderApp(res, returnValue, formState) {
         key: filename,
       })
     ),
-    React.createElement(App)
+    React.createElement(App, {noCache})
   );
   // For client-invoked server actions we refresh the tree and return a return value.
   const payload = {root, returnValue, formState};
-  const {pipe} = renderToPipeableStream(payload, moduleMap);
+  const {pipe} = renderToPipeableStream(payload, moduleMap, {
+    debugChannel: await promiseForDebugChannel,
+    filterStackFrame,
+  });
   pipe(res);
 }
 
-async function prerenderApp(res, returnValue, formState) {
+async function prerenderApp(res, returnValue, formState, noCache) {
   const {unstable_prerenderToNodeStream: prerenderToNodeStream} = await import(
     'react-server-dom-webpack/static'
   );
@@ -152,23 +184,28 @@ async function prerenderApp(res, returnValue, formState) {
         key: filename,
       })
     ),
-    React.createElement(App, {prerender: true})
+    React.createElement(App, {prerender: true, noCache})
   );
   // For client-invoked server actions we refresh the tree and return a return value.
   const payload = {root, returnValue, formState};
-  const {prelude} = await prerenderToNodeStream(payload, moduleMap);
+  const {prelude} = await prerenderToNodeStream(payload, moduleMap, {
+    filterStackFrame,
+  });
   prelude.pipe(res);
 }
 
 app.get('/', async function (req, res) {
+  const noCache = req.get('cache-control') === 'no-cache';
+
   if ('prerender' in req.query) {
-    await prerenderApp(res, null, null);
+    await prerenderApp(res, null, null, noCache);
   } else {
-    await renderApp(res, null, null);
+    await renderApp(res, null, null, noCache, getDebugChannel(req));
   }
 });
 
 app.post('/', bodyParser.text(), async function (req, res) {
+  const noCache = req.headers['cache-control'] === 'no-cache';
   const {decodeReply, decodeReplyFromBusboy, decodeAction, decodeFormState} =
     await import('react-server-dom-webpack/server');
   const serverReference = req.get('rsc-action');
@@ -201,7 +238,7 @@ app.post('/', bodyParser.text(), async function (req, res) {
       // We handle the error on the client
     }
     // Refresh the client and return the value
-    renderApp(res, result, null);
+    renderApp(res, result, null, noCache, getDebugChannel(req));
   } else {
     // This is the progressive enhancement case
     const UndiciRequest = require('undici').Request;
@@ -217,11 +254,11 @@ app.post('/', bodyParser.text(), async function (req, res) {
       // Wait for any mutations
       const result = await action();
       const formState = decodeFormState(result, formData);
-      renderApp(res, null, formState);
+      renderApp(res, null, formState, noCache, undefined);
     } catch (x) {
       const {setServerState} = await import('../src/ServerState.js');
       setServerState('Error: ' + x.message);
-      renderApp(res, null, null);
+      renderApp(res, null, null, noCache, undefined);
     }
   }
 });
@@ -321,7 +358,7 @@ if (process.env.NODE_ENV === 'development') {
   });
 }
 
-app.listen(3001, () => {
+const httpServer = app.listen(3001, () => {
   console.log('Regional Flight Server listening on port 3001...');
 });
 
@@ -343,3 +380,27 @@ app.on('error', function (error) {
       throw error;
   }
 });
+
+if (process.env.NODE_ENV === 'development') {
+  // Open a websocket server for Debug information
+  const WebSocket = require('ws');
+  const webSocketServer = new WebSocket.Server({noServer: true});
+
+  httpServer.on('upgrade', (request, socket, head) => {
+    const DEBUG_CHANNEL_PATH = '/debug-channel?';
+    if (request.url.startsWith(DEBUG_CHANNEL_PATH)) {
+      const requestId = request.url.slice(DEBUG_CHANNEL_PATH.length);
+      const promiseForWs = new Promise(resolve => {
+        webSocketServer.handleUpgrade(request, socket, head, ws => {
+          ws.on('close', () => {
+            activeDebugChannels.delete(requestId);
+          });
+          resolve(ws);
+        });
+      });
+      activeDebugChannels.set(requestId, promiseForWs);
+    } else {
+      socket.destroy();
+    }
+  });
+}

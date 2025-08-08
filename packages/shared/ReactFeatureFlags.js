@@ -31,14 +31,8 @@ export const enableHydrationLaneScheduling = true;
 // like migrating internal callers or performance testing.
 // -----------------------------------------------------------------------------
 
-// TODO: Finish rolling out in www
-export const favorSafetyOverHydrationPerf = true;
-
 // Need to remove didTimeout argument from Scheduler before landing
 export const disableSchedulerTimeoutInWorkLoop = false;
-
-// TODO: Land at Meta before removing.
-export const disableDefaultPropsExceptForClasses = true;
 
 // -----------------------------------------------------------------------------
 // Slated for removal in the future (significant effort)
@@ -141,8 +135,6 @@ export const passChildrenWhenCloningPersistedNodes = false;
  */
 export const enablePersistedModeClonedFlag = false;
 
-export const enableShallowPropDiffing = false;
-
 export const enableEagerAlternateStateNodeCleanup = true;
 
 /**
@@ -158,9 +150,6 @@ export const transitionLaneExpirationMs = 5000;
  * by setState or similar outside of the component owning the state.
  */
 export const enableInfiniteRenderLoopDetection = false;
-
-export const enableFastAddPropertiesInDiffing = true;
-export const enableLazyPublicInstanceInFabric = false;
 
 export const enableFragmentRefs = __EXPERIMENTAL__;
 
@@ -206,9 +195,6 @@ export const enableReactTestRendererWarning = true;
 // This allows us to land breaking changes to remove legacy mode APIs in experimental builds
 // before removing them in stable in the next Major
 export const disableLegacyMode = true;
-
-// Make <Context> equivalent to <Context.Provider> instead of <Context.Consumer>
-export const enableRenderableContext = true;
 
 // -----------------------------------------------------------------------------
 // Chopping Block
@@ -261,12 +247,9 @@ export const enableProfilerCommitHooks = __PROFILE__;
 // Phase param passed to onRender callback differentiates between an "update" and a "cascading-update".
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 
-export const enableAsyncDebugInfo = __EXPERIMENTAL__;
+export const enableAsyncDebugInfo = true;
 
 // Track which Fiber(s) schedule render work.
 export const enableUpdaterTracking = __PROFILE__;
-
-// Internal only.
-export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 
 export const ownerStackLimit = 1e4;

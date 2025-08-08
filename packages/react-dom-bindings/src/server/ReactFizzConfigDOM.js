@@ -1082,7 +1082,7 @@ export function makeId(
 ): string {
   const idPrefix = resumableState.idPrefix;
 
-  let id = '\u00AB' + idPrefix + 'R' + treeId;
+  let id = '_' + idPrefix + 'R_' + treeId;
 
   // Unless this is the first id at this level, append a number at the end
   // that represents the position of this useId hook among all the useId
@@ -1091,7 +1091,7 @@ export function makeId(
     id += 'H' + localId.toString(32);
   }
 
-  return id + '\u00BB';
+  return id + '_';
 }
 
 function encodeHTMLTextNode(text: string): string {
@@ -4860,8 +4860,9 @@ export function writeCompletedSegmentInstruction(
 const completeBoundaryScriptFunctionOnly = stringToPrecomputedChunk(
   completeBoundaryFunction,
 );
-const completeBoundaryUpgradeToViewTransitionsInstruction =
-  stringToPrecomputedChunk(upgradeToViewTransitionsInstruction);
+const completeBoundaryUpgradeToViewTransitionsInstruction = stringToChunk(
+  upgradeToViewTransitionsInstruction,
+);
 const completeBoundaryScript1Partial = stringToPrecomputedChunk('$RC("');
 
 const completeBoundaryWithStylesScript1FullPartial = stringToPrecomputedChunk(
@@ -5415,7 +5416,7 @@ function writeBlockingRenderInstruction(
 ): void {
   if (enableFizzBlockingRender) {
     const idPrefix = resumableState.idPrefix;
-    const shellId = '\u00AB' + idPrefix + 'R\u00BB';
+    const shellId = '_' + idPrefix + 'R_';
     writeChunk(destination, blockingRenderChunkStart);
     writeChunk(destination, stringToChunk(escapeTextForBrowser(shellId)));
     writeChunk(destination, blockingRenderChunkEnd);
@@ -5433,7 +5434,7 @@ function writeCompletedShellIdAttribute(
   }
   resumableState.instructions |= SentCompletedShellId;
   const idPrefix = resumableState.idPrefix;
-  const shellId = '\u00AB' + idPrefix + 'R\u00BB';
+  const shellId = '_' + idPrefix + 'R_';
   writeChunk(destination, completedShellIdAttributeStart);
   writeChunk(destination, stringToChunk(escapeTextForBrowser(shellId)));
   writeChunk(destination, attributeEnd);
@@ -5448,7 +5449,7 @@ function pushCompletedShellIdAttribute(
   }
   resumableState.instructions |= SentCompletedShellId;
   const idPrefix = resumableState.idPrefix;
-  const shellId = '\u00AB' + idPrefix + 'R\u00BB';
+  const shellId = '_' + idPrefix + 'R_';
   target.push(
     completedShellIdAttributeStart,
     stringToChunk(escapeTextForBrowser(shellId)),
@@ -5464,7 +5465,7 @@ export function writePreambleStart(
   destination: Destination,
   resumableState: ResumableState,
   renderState: RenderState,
-  skipExpect?: boolean, // Used as an override by ReactFizzConfigMarkup
+  skipBlockingShell: boolean,
 ): void {
   // This function must be called exactly once on every request
   if (enableFizzExternalRuntime && renderState.externalRuntimeScript) {
@@ -5548,7 +5549,7 @@ export function writePreambleStart(
   renderState.bulkPreloads.forEach(flushResource, destination);
   renderState.bulkPreloads.clear();
 
-  if ((htmlChunks || headChunks) && !skipExpect) {
+  if ((htmlChunks || headChunks) && !skipBlockingShell) {
     // If we have any html or head chunks we know that we're rendering a full document.
     // A full document should block display until the full shell has downloaded.
     // Therefore we insert a render blocking instruction referring to the last body
@@ -5556,6 +5557,10 @@ export function writePreambleStart(
     // have already been emitted so we don't do anything to delay them but early so that
     // the browser doesn't risk painting too early.
     writeBlockingRenderInstruction(destination, resumableState, renderState);
+  } else {
+    // We don't need to add the shell id so mark it as if sent.
+    // Currently it might still be sent if it was already added to a bootstrap script.
+    resumableState.instructions |= SentCompletedShellId;
   }
 
   // Write embedding hoistableChunks

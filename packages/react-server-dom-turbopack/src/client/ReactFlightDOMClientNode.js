@@ -30,15 +30,15 @@ import type {Readable} from 'stream';
 
 import {
   createResponse,
+  createStreamState,
   getRoot,
   reportGlobalError,
+  processStringChunk,
   processBinaryChunk,
   close,
 } from 'react-client/src/ReactFlightClient';
 
-import {createServerReference as createServerReferenceImpl} from 'react-client/src/ReactFlightReplyClient';
-
-export {registerServerReference} from 'react-client/src/ReactFlightReplyClient';
+export * from './ReactFlightDOMClientEdge';
 
 function noServerCall() {
   throw new Error(
@@ -46,13 +46,6 @@ function noServerCall() {
       'This would create a fetch waterfall. Try to use a Server Component ' +
       'to pass data to Client Components instead.',
   );
-}
-
-export function createServerReference<A: Iterable<any>, T>(
-  id: any,
-  callServer: any,
-): (...A) => Promise<T> {
-  return createServerReferenceImpl(id, noServerCall);
 }
 
 type EncodeFormActionCallback = <A>(
@@ -89,8 +82,13 @@ function createFromNodeStream<T>(
       ? options.environmentName
       : undefined,
   );
+  const streamState = createStreamState();
   stream.on('data', chunk => {
-    processBinaryChunk(response, chunk);
+    if (typeof chunk === 'string') {
+      processStringChunk(response, streamState, chunk);
+    } else {
+      processBinaryChunk(response, streamState, chunk);
+    }
   });
   stream.on('error', error => {
     reportGlobalError(response, error);

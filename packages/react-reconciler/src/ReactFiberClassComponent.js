@@ -20,7 +20,6 @@ import {
 import {
   disableLegacyContext,
   enableSchedulingProfiler,
-  disableDefaultPropsExceptForClasses,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {get as getInstance, set as setInstance} from 'shared/ReactInstanceMap';
@@ -53,7 +52,7 @@ import {
   getUnmaskedContext,
   hasContextChanged,
   emptyContextObject,
-} from './ReactFiberContext';
+} from './ReactFiberLegacyContext';
 import {readContext, checkIfContextChanged} from './ReactFiberNewContext';
 import {requestUpdateLane, scheduleUpdateOnFiber} from './ReactFiberWorkLoop';
 import {
@@ -695,7 +694,7 @@ function constructClassInstance(
   }
 
   // Cache unmasked context so we can avoid recreating masked context unless necessary.
-  // ReactFiberContext usually updates this cache but can't for newly-created instances.
+  // ReactFiberLegacyContext usually updates this cache but can't for newly-created instances.
   if (isLegacyContextConsumer) {
     cacheContext(workInProgress, unmaskedContext, context);
   }
@@ -859,11 +858,7 @@ function resumeMountClassInstance(
   const instance = workInProgress.stateNode;
 
   const unresolvedOldProps = workInProgress.memoizedProps;
-  const oldProps = resolveClassComponentProps(
-    ctor,
-    unresolvedOldProps,
-    workInProgress.type === workInProgress.elementType,
-  );
+  const oldProps = resolveClassComponentProps(ctor, unresolvedOldProps);
   instance.props = oldProps;
 
   const oldContext = instance.context;
@@ -1018,11 +1013,7 @@ function updateClassInstance(
   cloneUpdateQueue(current, workInProgress);
 
   const unresolvedOldProps = workInProgress.memoizedProps;
-  const oldProps = resolveClassComponentProps(
-    ctor,
-    unresolvedOldProps,
-    workInProgress.type === workInProgress.elementType,
-  );
+  const oldProps = resolveClassComponentProps(ctor, unresolvedOldProps);
   instance.props = oldProps;
   const unresolvedNewProps = workInProgress.pendingProps;
 
@@ -1193,12 +1184,6 @@ function updateClassInstance(
 export function resolveClassComponentProps(
   Component: any,
   baseProps: Object,
-  // Only resolve default props if this is a lazy component. Otherwise, they
-  // would have already been resolved by the JSX runtime.
-  // TODO: We're going to remove default prop resolution from the JSX runtime
-  // and keep it only for class components. As part of that change, we should
-  // remove this extra check.
-  alreadyResolvedDefaultProps: boolean,
 ): Object {
   let newProps = baseProps;
 
@@ -1214,12 +1199,7 @@ export function resolveClassComponentProps(
 
   // Resolve default props.
   const defaultProps = Component.defaultProps;
-  if (
-    defaultProps &&
-    // If disableDefaultPropsExceptForClasses is true, we always resolve
-    // default props here in the reconciler, rather than in the JSX runtime.
-    (disableDefaultPropsExceptForClasses || !alreadyResolvedDefaultProps)
-  ) {
+  if (defaultProps) {
     // We may have already copied the props object above to remove ref. If so,
     // we can modify that. Otherwise, copy the props object with Object.assign.
     if (newProps === baseProps) {

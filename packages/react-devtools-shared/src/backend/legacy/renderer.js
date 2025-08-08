@@ -755,6 +755,10 @@ export function attach(
       inspectedElement.state,
       createIsPathAllowed('state'),
     );
+    inspectedElement.suspendedBy = cleanForBridge(
+      inspectedElement.suspendedBy,
+      createIsPathAllowed('suspendedBy'),
+    );
 
     return {
       id,
@@ -830,8 +834,6 @@ export function attach(
       // Suspense did not exist in legacy versions
       canToggleSuspense: false,
 
-      // Can view component source location.
-      canViewSource: type === ElementTypeClass || type === ElementTypeFunction,
       source: null,
 
       // Only legacy context exists in legacy versions.
@@ -848,6 +850,9 @@ export function attach(
       state,
       errors,
       warnings,
+
+      // Not supported in legacy renderers.
+      suspendedBy: [],
 
       // List of owners
       owners,

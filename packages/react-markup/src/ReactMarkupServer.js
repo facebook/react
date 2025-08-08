@@ -25,6 +25,7 @@ import {
 
 import {
   createResponse as createFlightResponse,
+  createStreamState as createFlightStreamState,
   getRoot as getFlightRoot,
   processStringChunk as processFlightStringChunk,
   close as closeFlight,
@@ -80,10 +81,11 @@ export function experimental_renderToHTML(
   options?: MarkupOptions,
 ): Promise<string> {
   return new Promise((resolve, reject) => {
+    const streamState = createFlightStreamState();
     const flightDestination = {
       push(chunk: string | null): boolean {
         if (chunk !== null) {
-          processFlightStringChunk(flightResponse, chunk);
+          processFlightStringChunk(flightResponse, streamState, chunk);
         } else {
           closeFlight(flightResponse);
         }
@@ -171,6 +173,7 @@ export function experimental_renderToHTML(
       undefined,
       'Markup',
       undefined,
+      false,
     );
     const flightResponse = createFlightResponse(
       null,

@@ -23,7 +23,9 @@ import {
 } from './context';
 import Components from './Components/Components';
 import Profiler from './Profiler/Profiler';
+import SuspenseTab from './SuspenseTab/SuspenseTab';
 import TabBar from './TabBar';
+import EditorPane from './Editor/EditorPane';
 import {SettingsContextController} from './Settings/SettingsContext';
 import {TreeContextController} from './Components/TreeContext';
 import ViewElementSourceContext from './Components/ViewElementSourceContext';
@@ -50,21 +52,22 @@ import type {FetchFileWithCaching} from './Components/FetchFileWithCachingContex
 import type {HookNamesModuleLoaderFunction} from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {BrowserTheme} from 'react-devtools-shared/src/frontend/types';
-import type {Source} from 'react-devtools-shared/src/shared/types';
+import type {ReactFunctionLocation, ReactCallSite} from 'shared/ReactTypes';
+import type {SourceSelection} from './Editor/EditorPane';
 
-export type TabID = 'components' | 'profiler';
+export type TabID = 'components' | 'profiler' | 'suspense';
 
 export type ViewElementSource = (
-  source: Source,
-  symbolicatedSource: Source | null,
+  source: ReactFunctionLocation | ReactCallSite,
+  symbolicatedSource: ReactFunctionLocation | ReactCallSite | null,
 ) => void;
 export type ViewAttributeSource = (
   id: number,
   path: Array<string | number>,
 ) => void;
 export type CanViewElementSource = (
-  source: Source,
-  symbolicatedSource: Source | null,
+  source: ReactFunctionLocation | ReactCallSite,
+  symbolicatedSource: ReactFunctionLocation | ReactCallSite | null,
 ) => boolean;
 
 export type Props = {
@@ -97,6 +100,10 @@ export type Props = {
   // but individual tabs (e.g. Components, Profiling) can be rendered into portals within their browser panels.
   componentsPortalContainer?: Element,
   profilerPortalContainer?: Element,
+  suspensePortalContainer?: Element,
+  editorPortalContainer?: Element,
+
+  currentSelectedSource?: null | SourceSelection,
 
   // Loads and parses source maps for function components
   // and extracts hook "names" based on the variables the hook return values get assigned to.
@@ -118,20 +125,43 @@ const profilerTab = {
   label: 'Profiler',
   title: 'React Profiler',
 };
+const suspenseTab = {
+  id: ('suspense': TabID),
+  icon: 'suspense',
+  label: 'Suspense',
+  title: 'React Suspense',
+};
 
-const tabs = [componentsTab, profilerTab];
+const defaultTabs = [componentsTab, profilerTab];
+const tabsWithSuspense = [componentsTab, profilerTab, suspenseTab];
+
+function useIsSuspenseTabEnabled(store: Store): boolean {
+  const subscribe = useCallback(
+    (onStoreChange: () => void) => {
+      store.addListener('enableSuspenseTab', onStoreChange);
+      return () => {
+        store.removeListener('enableSuspenseTab', onStoreChange);
+      };
+    },
+    [store],
+  );
+  return React.useSyncExternalStore(subscribe, () => store.supportsSuspenseTab);
+}
 
 export default function DevTools({
   bridge,
   browserTheme = 'light',
   canViewElementSourceFunction,
   componentsPortalContainer,
+  editorPortalContainer,
+  profilerPortalContainer,
+  suspensePortalContainer,
+  currentSelectedSource,
   defaultTab = 'components',
   enabledInspectedElementContextMenu = false,
   fetchFileWithCaching,
   hookNamesModuleLoaderFunction,
   overrideTab,
-  profilerPortalContainer,
   showTabBar = false,
   store,
   warnIfLegacyBackendDetected = false,
@@ -149,6 +179,8 @@ export default function DevTools({
     LOCAL_STORAGE_DEFAULT_TAB_KEY,
     defaultTab,
   );
+  const enableSuspenseTab = useIsSuspenseTabEnabled(store);
+  const tabs = enableSuspenseTab ? tabsWithSuspense : defaultTabs;
 
   let tab = currentTab;
 
@@ -165,6 +197,8 @@ export default function DevTools({
       if (showTabBar === true) {
         if (tabId === 'components') {
           logEvent({event_name: 'selected-components-tab'});
+        } else if (tabId === 'suspense') {
+          logEvent({event_name: 'selected-suspense-tab'});
         } else {
           logEvent({event_name: 'selected-profiler-tab'});
         }
@@ -234,6 +268,13 @@ export default function DevTools({
             selectTab(tabs[1].id);
             event.preventDefault();
             event.stopPropagation();
+            break;
+          case '3':
+            if (tabs.length > 2) {
+              selectTab(tabs[2].id);
+              event.preventDefault();
+              event.stopPropagation();
+            }
             break;
         }
       }
@@ -315,7 +356,20 @@ export default function DevTools({
                                       portalContainer={profilerPortalContainer}
                                     />
                                   </div>
+                                  <div
+                                    className={styles.TabContent}
+                                    hidden={tab !== 'suspense'}>
+                                    <SuspenseTab
+                                      portalContainer={suspensePortalContainer}
+                                    />
+                                  </div>
                                 </div>
+                                {editorPortalContainer ? (
+                                  <EditorPane
+                                    selectedSource={currentSelectedSource}
+                                    portalContainer={editorPortalContainer}
+                                  />
+                                ) : null}
                               </ThemeProvider>
                             </InspectedElementContextController>
                           </TimelineContextController>

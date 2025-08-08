@@ -8,10 +8,10 @@
 import {NodePath} from '@babel/core';
 import * as t from '@babel/types';
 import {
+  CompilerDiagnostic,
   CompilerError,
-  CompilerErrorDetail,
   CompilerSuggestionOperation,
-  ErrorSeverity,
+  ErrorCode,
 } from '../CompilerError';
 import {assertExhaustive} from '../Utils/utils';
 import {GeneratedSource} from '../HIR';
@@ -165,14 +165,12 @@ export function suppressionsToCompilerError(
     let reason, suggestion;
     switch (suppressionRange.source) {
       case 'Eslint':
-        reason =
-          'React Compiler has skipped optimizing this component because one or more React ESLint rules were disabled';
+        reason = ErrorCode.BAILOUT_ESLINT_SUPPRESSION;
         suggestion =
           'Remove the ESLint suppression and address the React error';
         break;
       case 'Flow':
-        reason =
-          'React Compiler has skipped optimizing this component because one or more React rule violations were reported by Flow';
+        reason = ErrorCode.BAILOUT_FLOW_SUPPRESSION;
         suggestion = 'Remove the Flow suppression and address the React error';
         break;
       default:
@@ -181,12 +179,9 @@ export function suppressionsToCompilerError(
           'Unhandled suppression source',
         );
     }
-    error.pushErrorDetail(
-      new CompilerErrorDetail({
-        reason: `${reason}. React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior`,
-        description: suppressionRange.disableComment.value.trim(),
-        severity: ErrorSeverity.InvalidReact,
-        loc: suppressionRange.disableComment.loc ?? null,
+    error.pushDiagnostic(
+      CompilerDiagnostic.fromCode(reason, {
+        description: `Found suppression \`${suppressionRange.disableComment.value.trim()}\``,
         suggestions: [
           {
             description: suggestion,
@@ -197,6 +192,10 @@ export function suppressionsToCompilerError(
             op: CompilerSuggestionOperation.Remove,
           },
         ],
+      }).withDetail({
+        kind: 'error',
+        loc: suppressionRange.disableComment.loc ?? null,
+        message: 'Found React rule suppression',
       }),
     );
   }

@@ -5,7 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, Effect, ErrorSeverity} from '..';
+import {CompilerDiagnostic, CompilerError, Effect} from '..';
+import {ErrorCode} from '../CompilerError';
 import {
   FunctionEffect,
   HIRFunction,
@@ -57,17 +58,28 @@ export function validateNoFreezingKnownMutableFunctions(
     if (operand.effect === Effect.Freeze) {
       const effect = contextMutationEffects.get(operand.identifier.id);
       if (effect != null) {
-        errors.push({
-          reason: `This argument is a function which modifies local variables when called, which can bypass memoization and cause the UI not to update`,
-          description: `Functions that are returned from hooks, passed as arguments to hooks, or passed as props to components may not mutate local variables`,
-          loc: operand.loc,
-          severity: ErrorSeverity.InvalidReact,
-        });
-        errors.push({
-          reason: `The function modifies a local variable here`,
-          loc: effect.loc,
-          severity: ErrorSeverity.InvalidReact,
-        });
+        const place = [...effect.places][0];
+        const variable =
+          place != null &&
+          place.identifier.name != null &&
+          place.identifier.name.kind === 'named'
+            ? `\`${place.identifier.name.value}\``
+            : 'a local variable';
+        errors.pushDiagnostic(
+          CompilerDiagnostic.fromCode(ErrorCode.WRITE_AFTER_RENDER, {
+            description: `This argument is a function which may reassign or mutate ${variable} after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.`,
+          })
+            .withDetail({
+              kind: 'error',
+              loc: operand.loc,
+              message: `This function may (indirectly) reassign or modify ${variable} after render`,
+            })
+            .withDetail({
+              kind: 'error',
+              loc: effect.loc,
+              message: `This modifies ${variable}`,
+            }),
+        );
       }
     }
   }
@@ -112,6 +124,55 @@ export function validateNoFreezingKnownMutableFunctions(
           );
           if (knownMutation && knownMutation.kind === 'ContextMutation') {
             contextMutationEffects.set(lvalue.identifier.id, knownMutation);
+          } else if (
+            fn.env.config.enableNewMutationAliasingModel &&
+            value.loweredFunc.func.aliasingEffects != null
+          ) {
+            const context = new Set(
+              value.loweredFunc.func.context.map(p => p.identifier.id),
+            );
+            effects: for (const effect of value.loweredFunc.func
+              .aliasingEffects) {
+              switch (effect.kind) {
+                case 'Mutate':
+                case 'MutateTransitive': {
+                  const knownMutation = contextMutationEffects.get(
+                    effect.value.identifier.id,
+                  );
+                  if (knownMutation != null) {
+                    contextMutationEffects.set(
+                      lvalue.identifier.id,
+                      knownMutation,
+                    );
+                  } else if (
+                    context.has(effect.value.identifier.id) &&
+                    !isRefOrRefLikeMutableType(effect.value.identifier.type)
+                  ) {
+                    contextMutationEffects.set(lvalue.identifier.id, {
+                      kind: 'ContextMutation',
+                      effect: Effect.Mutate,
+                      loc: effect.value.loc,
+                      places: new Set([effect.value]),
+                    });
+                    break effects;
+                  }
+                  break;
+                }
+                case 'MutateConditionally':
+                case 'MutateTransitiveConditionally': {
+                  const knownMutation = contextMutationEffects.get(
+                    effect.value.identifier.id,
+                  );
+                  if (knownMutation != null) {
+                    contextMutationEffects.set(
+                      lvalue.identifier.id,
+                      knownMutation,
+                    );
+                  }
+                  break;
+                }
+              }
+            }
           }
           break;
         }

@@ -7,11 +7,7 @@
 
 import {NodePath} from '@babel/core';
 import * as t from '@babel/types';
-import {
-  CompilerError,
-  CompilerErrorDetail,
-  ErrorSeverity,
-} from '../CompilerError';
+import {CompilerError, ErrorSeverity} from '../CompilerError';
 import {ExternalFunction, ReactFunctionType} from '../HIR/Environment';
 import {CodegenFunction} from '../ReactiveScopes';
 import {isComponentDeclaration} from '../Utils/ComponentDeclaration';
@@ -32,6 +28,7 @@ import {
 } from './Suppression';
 import {GeneratedSource} from '../HIR';
 import {Err, Ok, Result} from '../Utils/Result';
+import {ErrorCode} from '../Utils/CompilerErrorCodes';
 
 export type CompilerPass = {
   opts: PluginOptions;
@@ -101,12 +98,9 @@ function findDirectivesDynamicGating(
       if (t.isValidIdentifier(maybeMatch[1])) {
         result.push({directive, match: maybeMatch[1]});
       } else {
-        errors.push({
-          reason: `Dynamic gating directive is not a valid JavaScript identifier`,
+        errors.pushErrorCode(ErrorCode.DYNAMIC_GATING_IS_NOT_IDENTIFIER, {
           description: `Found '${directive.value.value}'`,
-          severity: ErrorSeverity.InvalidReact,
           loc: directive.loc ?? null,
-          suggestions: null,
         });
       }
     }
@@ -115,14 +109,11 @@ function findDirectivesDynamicGating(
     return Err(errors);
   } else if (result.length > 1) {
     const error = new CompilerError();
-    error.push({
-      reason: `Multiple dynamic gating directives found`,
+    error.pushErrorCode(ErrorCode.DYNAMIC_GATING_MULTIPLE_DIRECTIVES, {
       description: `Expected a single directive but found [${result
         .map(r => r.directive.value.value)
         .join(', ')}]`,
-      severity: ErrorSeverity.InvalidReact,
       loc: result[0].directive.loc ?? null,
-      suggestions: null,
     });
     return Err(error);
   } else if (result.length === 1) {
@@ -181,7 +172,7 @@ function logError(
         context.opts.logger.logEvent(context.filename, {
           kind: 'CompileError',
           fnLoc,
-          detail: detail.options,
+          detail,
         });
       }
     } else {
@@ -451,14 +442,12 @@ export function compileProgram(
   if (programContext.hasModuleScopeOptOut) {
     if (compiledFns.length > 0) {
       const error = new CompilerError();
-      error.pushErrorDetail(
-        new CompilerErrorDetail({
-          reason:
-            'Unexpected compiled functions when module scope opt-out is present',
-          severity: ErrorSeverity.Invariant,
-          loc: null,
-        }),
-      );
+      error.push({
+        reason:
+          'Unexpected compiled functions when module scope opt-out is present',
+        severity: ErrorSeverity.Invariant,
+        loc: null,
+      });
       handleError(error, programContext, null);
     }
     return null;
@@ -591,9 +580,7 @@ function processFn(
   let compiledFn: CodegenFunction;
   const compileResult = tryCompileFunction(fn, fnType, programContext);
   if (compileResult.kind === 'error') {
-    if (directives.optOut != null) {
-      logError(compileResult.error, programContext, fn.node.loc ?? null);
-    } else {
+    if (directives.optOut == null) {
       handleError(compileResult.error, programContext, fn.node.loc ?? null);
     }
     const retryResult = retryCompileFunction(fn, fnType, programContext);
@@ -692,7 +679,7 @@ function tryCompileFunction(
         fn,
         programContext.opts.environment,
         fnType,
-        'all_features',
+        programContext.opts.noEmit ? 'lint_only' : 'all_features',
         programContext,
         programContext.opts.logger,
         programContext.filename,
@@ -805,15 +792,7 @@ function shouldSkipCompilation(
   if (pass.opts.sources) {
     if (pass.filename === null) {
       const error = new CompilerError();
-      error.pushErrorDetail(
-        new CompilerErrorDetail({
-          reason: `Expected a filename but found none.`,
-          description:
-            "When the 'sources' config options is specified, the React compiler will only compile files with a name",
-          severity: ErrorSeverity.InvalidConfig,
-          loc: null,
-        }),
-      );
+      error.pushErrorCode(ErrorCode.FILENAME_NOT_SET);
       handleError(error, pass, null);
       return true;
     }

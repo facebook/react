@@ -16,18 +16,49 @@ function findSourceMapURL(fileName) {
 
 let updateRoot;
 async function callServer(id, args) {
-  const response = fetch('/', {
-    method: 'POST',
-    headers: {
-      Accept: 'text/x-component',
-      'rsc-action': id,
-    },
-    body: await encodeReply(args),
-  });
-  const {returnValue, root} = await createFromFetch(response, {
-    callServer,
-    findSourceMapURL,
-  });
+  let response;
+  if (
+    process.env.NODE_ENV === 'development' &&
+    typeof WebSocketStream === 'function'
+  ) {
+    const requestId = crypto.randomUUID();
+    const wss = new WebSocketStream(
+      'ws://localhost:3001/debug-channel?' + requestId
+    );
+    const debugChannel = await wss.opened;
+    response = createFromFetch(
+      fetch('/', {
+        method: 'POST',
+        headers: {
+          Accept: 'text/x-component',
+          'rsc-action': id,
+          'rsc-request-id': requestId,
+        },
+        body: await encodeReply(args),
+      }),
+      {
+        callServer,
+        debugChannel,
+        findSourceMapURL,
+      }
+    );
+  } else {
+    response = createFromFetch(
+      fetch('/', {
+        method: 'POST',
+        headers: {
+          Accept: 'text/x-component',
+          'rsc-action': id,
+        },
+        body: await encodeReply(args),
+      }),
+      {
+        callServer,
+        findSourceMapURL,
+      }
+    );
+  }
+  const {returnValue, root} = await response;
   // Refresh the tree with the new RSC payload.
   startTransition(() => {
     updateRoot(root);
@@ -42,17 +73,43 @@ function Shell({data}) {
 }
 
 async function hydrateApp() {
-  const {root, returnValue, formState} = await createFromFetch(
-    fetch('/', {
-      headers: {
-        Accept: 'text/x-component',
-      },
-    }),
-    {
-      callServer,
-      findSourceMapURL,
-    }
-  );
+  let response;
+  if (
+    process.env.NODE_ENV === 'development' &&
+    typeof WebSocketStream === 'function'
+  ) {
+    const requestId = crypto.randomUUID();
+    const wss = new WebSocketStream(
+      'ws://localhost:3001/debug-channel?' + requestId
+    );
+    const debugChannel = await wss.opened;
+    response = createFromFetch(
+      fetch('/', {
+        headers: {
+          Accept: 'text/x-component',
+          'rsc-request-id': requestId,
+        },
+      }),
+      {
+        callServer,
+        debugChannel,
+        findSourceMapURL,
+      }
+    );
+  } else {
+    response = createFromFetch(
+      fetch('/', {
+        headers: {
+          Accept: 'text/x-component',
+        },
+      }),
+      {
+        callServer,
+        findSourceMapURL,
+      }
+    );
+  }
+  const {root, returnValue, formState} = await response;
 
   ReactDOM.hydrateRoot(
     document,

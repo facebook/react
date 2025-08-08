@@ -25,6 +25,7 @@ import {
   isRefOrRefValue,
 } from '../HIR';
 import {eachInstructionOperand, eachTerminalOperand} from '../HIR/visitors';
+import {ErrorCode} from '../Utils/CompilerErrorCodes';
 import {assertExhaustive} from '../Utils/utils';
 
 interface State {
@@ -62,22 +63,20 @@ function inferOperandEffect(state: State, place: Place): null | FunctionEffect {
         // We ignore mutations of primitives since this is not a React-specific problem
         value.kind !== ValueKind.Primitive
       ) {
-        let reason = getWriteErrorReason(value);
+        let errorCode = getWriteErrorReason(value);
         return {
           kind:
             value.reason.size === 1 && value.reason.has(ValueReason.Global)
               ? 'GlobalMutation'
               : 'ReactMutation',
           error: {
-            reason,
+            errorCode,
             description:
               place.identifier.name !== null &&
               place.identifier.name.kind === 'named'
                 ? `Found mutation of \`${place.identifier.name.value}\``
                 : null,
             loc: place.loc,
-            suggestions: null,
-            severity: ErrorSeverity.InvalidReact,
           },
         };
       }
@@ -266,11 +265,8 @@ export function inferInstructionFunctionEffects(
       functionEffects.push({
         kind: 'GlobalMutation',
         error: {
-          reason:
-            'Unexpected reassignment of a variable which was defined outside of the component. Components and hooks should be pure and side-effect free, but variable reassignment is a form of side-effect. If this variable is used in rendering, use useState instead. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render)',
+          errorCode: ErrorCode.INVALID_WRITE_GLOBAL,
           loc: instr.loc,
-          suggestions: null,
-          severity: ErrorSeverity.InvalidReact,
         },
       });
       break;
@@ -324,22 +320,28 @@ function isEffectSafeOutsideRender(effect: FunctionEffect): boolean {
   return effect.kind === 'GlobalMutation';
 }
 
-function getWriteErrorReason(abstractValue: AbstractValue): string {
+export function getWriteErrorReason(abstractValue: AbstractValue): ErrorCode {
   if (abstractValue.reason.has(ValueReason.Global)) {
-    return 'Writing to a variable defined outside a component or hook is not allowed. Consider using an effect';
+    return ErrorCode.INVALID_WRITE_GLOBAL;
   } else if (abstractValue.reason.has(ValueReason.JsxCaptured)) {
-    return 'Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX';
+    return ErrorCode.INVALID_WRITE_FROZEN_VALUE_JSX;
   } else if (abstractValue.reason.has(ValueReason.Context)) {
-    return `Mutating a value returned from 'useContext()', which should not be mutated`;
+    return ErrorCode.INVALID_WRITE_IMMUTABLE_VALUE_USE_CONTEXT;
   } else if (abstractValue.reason.has(ValueReason.KnownReturnSignature)) {
-    return 'Mutating a value returned from a function whose return value should not be mutated';
+    return ErrorCode.INVALID_WRITE_IMMUTABLE_VALUE_KNOWN_SIGNATURE;
   } else if (abstractValue.reason.has(ValueReason.ReactiveFunctionArgument)) {
-    return 'Mutating component props or hook arguments is not allowed. Consider using a local variable instead';
+    return ErrorCode.INVALID_WRITE_IMMUTABLE_ARGS;
   } else if (abstractValue.reason.has(ValueReason.State)) {
-    return "Mutating a value returned from 'useState()', which should not be mutated. Use the setter function to update instead";
+    return ErrorCode.INVALID_WRITE_STATE;
   } else if (abstractValue.reason.has(ValueReason.ReducerState)) {
-    return "Mutating a value returned from 'useReducer()', which should not be mutated. Use the dispatch function to update instead";
+    return ErrorCode.INVALID_WRITE_REDUCER_STATE;
+  } else if (abstractValue.reason.has(ValueReason.Effect)) {
+    return ErrorCode.INVALID_WRITE_EFFECT_DEPENDENCY;
+  } else if (abstractValue.reason.has(ValueReason.HookCaptured)) {
+    return ErrorCode.INVALID_WRITE_HOOK_CAPTURED;
+  } else if (abstractValue.reason.has(ValueReason.HookReturn)) {
+    return ErrorCode.INVALID_WRITE_HOOK_RETURN;
   } else {
-    return 'This mutates a variable that React considers immutable';
+    return ErrorCode.INVALID_WRITE_GENERIC;
   }
 }

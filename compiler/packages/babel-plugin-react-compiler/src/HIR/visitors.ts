@@ -345,6 +345,51 @@ export function* eachPatternOperand(pattern: Pattern): Iterable<Place> {
   }
 }
 
+export function* eachPatternItem(
+  pattern: Pattern,
+): Iterable<Place | SpreadPattern> {
+  switch (pattern.kind) {
+    case 'ArrayPattern': {
+      for (const item of pattern.items) {
+        if (item.kind === 'Identifier') {
+          yield item;
+        } else if (item.kind === 'Spread') {
+          yield item;
+        } else if (item.kind === 'Hole') {
+          continue;
+        } else {
+          assertExhaustive(
+            item,
+            `Unexpected item kind \`${(item as any).kind}\``,
+          );
+        }
+      }
+      break;
+    }
+    case 'ObjectPattern': {
+      for (const property of pattern.properties) {
+        if (property.kind === 'ObjectProperty') {
+          yield property.place;
+        } else if (property.kind === 'Spread') {
+          yield property;
+        } else {
+          assertExhaustive(
+            property,
+            `Unexpected item kind \`${(property as any).kind}\``,
+          );
+        }
+      }
+      break;
+    }
+    default: {
+      assertExhaustive(
+        pattern,
+        `Unexpected pattern kind \`${(pattern as any).kind}\``,
+      );
+    }
+  }
+}
+
 export function mapInstructionLValues(
   instr: Instruction,
   fn: (place: Place) => Place,
@@ -732,9 +777,11 @@ export function mapTerminalSuccessors(
     case 'return': {
       return {
         kind: 'return',
+        returnVariant: terminal.returnVariant,
         loc: terminal.loc,
         value: terminal.value,
         id: makeInstructionId(0),
+        effects: terminal.effects,
       };
     }
     case 'throw': {
@@ -842,6 +889,7 @@ export function mapTerminalSuccessors(
         handler,
         id: makeInstructionId(0),
         loc: terminal.loc,
+        effects: terminal.effects,
       };
     }
     case 'try': {

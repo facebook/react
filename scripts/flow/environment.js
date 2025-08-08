@@ -150,7 +150,7 @@ declare const __webpack_require__: ((id: string) => any) & {
   u: string => string,
 };
 
-declare function __turbopack_load__(id: string): Promise<mixed>;
+declare function __turbopack_load_by_url__(id: string): Promise<mixed>;
 declare const __turbopack_require__: ((id: string) => any) & {
   u: string => string,
 };
@@ -356,7 +356,9 @@ declare module 'async_hooks' {
     run<R>(store: T, callback: (...args: any[]) => R, ...args: any[]): R;
     enterWith(store: T): void;
   }
-  declare interface AsyncResource {}
+  declare class AsyncResource {
+    asyncId(): number;
+  }
   declare function executionAsyncId(): number;
   declare function executionAsyncResource(): AsyncResource;
   declare function triggerAsyncId(): number;

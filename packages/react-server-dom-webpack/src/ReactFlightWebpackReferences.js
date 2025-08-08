@@ -162,6 +162,9 @@ const deepProxyHandlers = {
       // reference.
       case 'defaultProps':
         return undefined;
+      // React looks for debugInfo on thenables.
+      case '_debugInfo':
+        return undefined;
       // Avoid this attempting to be serialized.
       case 'toJSON':
         return undefined;
@@ -210,6 +213,9 @@ function getReference(target: Function, name: string | symbol): $FlowFixMe {
     // We need to special case this because createElement reads it if we pass this
     // reference.
     case 'defaultProps':
+      return undefined;
+    // React looks for debugInfo on thenables.
+    case '_debugInfo':
       return undefined;
     // Avoid this attempting to be serialized.
     case 'toJSON':

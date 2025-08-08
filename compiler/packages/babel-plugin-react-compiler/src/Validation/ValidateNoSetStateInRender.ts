@@ -5,10 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, ErrorSeverity} from '../CompilerError';
+import {CompilerDiagnostic, CompilerError} from '../CompilerError';
 import {HIRFunction, IdentifierId, isSetStateType} from '../HIR';
 import {computeUnconditionalBlocks} from '../HIR/ComputeUnconditionalBlocks';
 import {eachInstructionValueOperand} from '../HIR/visitors';
+import {ErrorCode} from '../Utils/CompilerErrorCodes';
 import {Result} from '../Utils/Result';
 
 /**
@@ -122,23 +123,25 @@ function validateNoSetStateInRenderImpl(
             unconditionalSetStateFunctions.has(callee.identifier.id)
           ) {
             if (activeManualMemoId !== null) {
-              errors.push({
-                reason:
-                  'Calling setState from useMemo may trigger an infinite loop. (https://react.dev/reference/react/useState)',
-                description: null,
-                severity: ErrorSeverity.InvalidReact,
-                loc: callee.loc,
-                suggestions: null,
-              });
+              errors.pushDiagnostic(
+                CompilerDiagnostic.fromCode(
+                  ErrorCode.INVALID_SET_STATE_IN_MEMO,
+                ).withDetail({
+                  kind: 'error',
+                  loc: callee.loc,
+                  message: 'Found setState() within useMemo()',
+                }),
+              );
             } else if (unconditionalBlocks.has(block.id)) {
-              errors.push({
-                reason:
-                  'This is an unconditional set state during render, which will trigger an infinite loop. (https://react.dev/reference/react/useState)',
-                description: null,
-                severity: ErrorSeverity.InvalidReact,
-                loc: callee.loc,
-                suggestions: null,
-              });
+              errors.pushDiagnostic(
+                CompilerDiagnostic.fromCode(
+                  ErrorCode.INVALID_SET_STATE_IN_RENDER,
+                ).withDetail({
+                  kind: 'error',
+                  loc: callee.loc,
+                  message: 'Found setState() call here',
+                }),
+              );
             }
           }
           break;

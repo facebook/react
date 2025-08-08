@@ -291,28 +291,6 @@ describe('ReactElementClone', () => {
     );
   });
 
-  // @gate !disableDefaultPropsExceptForClasses
-  it('should normalize props with default values', () => {
-    class Component extends React.Component {
-      render() {
-        return <span />;
-      }
-    }
-    Component.defaultProps = {prop: 'testKey'};
-
-    const instance = React.createElement(Component);
-    const clonedInstance = React.cloneElement(instance, {prop: undefined});
-    expect(clonedInstance.props.prop).toBe('testKey');
-    const clonedInstance2 = React.cloneElement(instance, {prop: null});
-    expect(clonedInstance2.props.prop).toBe(null);
-
-    const instance2 = React.createElement(Component, {prop: 'newTestKey'});
-    const cloneInstance3 = React.cloneElement(instance2, {prop: undefined});
-    expect(cloneInstance3.props.prop).toBe('testKey');
-    const cloneInstance4 = React.cloneElement(instance2, {});
-    expect(cloneInstance4.props.prop).toBe('newTestKey');
-  });
-
   it('warns for keys for arrays of elements in rest args', async () => {
     const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => {

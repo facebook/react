@@ -25,7 +25,6 @@ import {
   makeBlockId,
   makeInstructionId,
   makePropertyLiteral,
-  makeType,
   markInstructionIds,
   promoteTemporary,
   reversePostorderBlocks,
@@ -146,6 +145,7 @@ function emitLoadLoweredContextCallee(
     id: makeInstructionId(0),
     loc: GeneratedSource,
     lvalue: createTemporaryPlace(env, GeneratedSource),
+    effects: null,
     value: loadGlobal,
   };
 }
@@ -192,6 +192,7 @@ function emitPropertyLoad(
     lvalue: object,
     value: loadObj,
     id: makeInstructionId(0),
+    effects: null,
     loc: GeneratedSource,
   };
 
@@ -206,6 +207,7 @@ function emitPropertyLoad(
     lvalue: element,
     value: loadProp,
     id: makeInstructionId(0),
+    effects: null,
     loc: GeneratedSource,
   };
   return {
@@ -235,8 +237,10 @@ function emitSelectorFn(env: Environment, keys: Array<string>): Instruction {
     terminal: {
       id: makeInstructionId(0),
       kind: 'return',
+      returnVariant: 'Explicit',
       loc: GeneratedSource,
       value: arrayInstr.lvalue,
+      effects: null,
     },
     preds: new Set(),
     phis: new Set(),
@@ -249,7 +253,7 @@ function emitSelectorFn(env: Environment, keys: Array<string>): Instruction {
     env,
     params: [obj],
     returnTypeAnnotation: null,
-    returnType: makeType(),
+    returns: createTemporaryPlace(env, GeneratedSource),
     context: [],
     effects: null,
     body: {
@@ -278,6 +282,7 @@ function emitSelectorFn(env: Environment, keys: Array<string>): Instruction {
       loc: GeneratedSource,
     },
     lvalue: createTemporaryPlace(env, GeneratedSource),
+    effects: null,
     loc: GeneratedSource,
   };
   return fnInstr;
@@ -294,6 +299,7 @@ function emitArrayInstr(elements: Array<Place>, env: Environment): Instruction {
     id: makeInstructionId(0),
     value: array,
     lvalue: arrayLvalue,
+    effects: null,
     loc: GeneratedSource,
   };
   return arrayInstr;

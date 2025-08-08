@@ -101,6 +101,12 @@ async function renderApp(req, res, next) {
   } else if (req.get('Content-type')) {
     proxiedHeaders['Content-type'] = req.get('Content-type');
   }
+  if (req.headers['cache-control']) {
+    proxiedHeaders['Cache-Control'] = req.get('cache-control');
+  }
+  if (req.get('rsc-request-id')) {
+    proxiedHeaders['rsc-request-id'] = req.get('rsc-request-id');
+  }
 
   const requestsPrerender = req.path === '/prerender';
 

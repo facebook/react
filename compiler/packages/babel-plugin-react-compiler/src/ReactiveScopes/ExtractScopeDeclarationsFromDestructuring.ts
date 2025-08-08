@@ -79,6 +79,10 @@ export function extractScopeDeclarationsFromDestructuring(
   fn: ReactiveFunction,
 ): void {
   const state = new State(fn.env);
+  for (const param of fn.params) {
+    const place = param.kind === 'Identifier' ? param : param.place;
+    state.declared.add(place.identifier.declarationId);
+  }
   visitReactiveFunction(fn, new Visitor(), state);
 }
 

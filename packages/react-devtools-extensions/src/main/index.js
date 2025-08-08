@@ -1,5 +1,7 @@
 /* global chrome */
 
+import type {SourceSelection} from 'react-devtools-shared/src/devtools/views/Editor/EditorPane';
+
 import {createElement} from 'react';
 import {flushSync} from 'react-dom';
 import {createRoot} from 'react-dom/client';
@@ -16,7 +18,12 @@ import {
   LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
 } from 'react-devtools-shared/src/constants';
 import {logEvent} from 'react-devtools-shared/src/Logger';
-import {normalizeUrlIfValid} from 'react-devtools-shared/src/utils';
+import {
+  getAlwaysOpenInEditor,
+  getOpenInEditorURL,
+  normalizeUrlIfValid,
+} from 'react-devtools-shared/src/utils';
+import {checkConditions} from 'react-devtools-shared/src/devtools/views/Editor/utils';
 
 import {
   setBrowserSelectionFromReact,
@@ -73,12 +80,48 @@ function createBridge() {
     );
   });
 
+  const sourcesPanel = chrome.devtools.panels.sources;
+
   const onBrowserElementSelectionChanged = () =>
     setReactSelectionFromBrowser(bridge);
+  const onBrowserSourceSelectionChanged = (location: {
+    url: string,
+    startLine: number,
+    startColumn: number,
+    endLine: number,
+    endColumn: number,
+  }) => {
+    if (
+      currentSelectedSource === null ||
+      currentSelectedSource.url !== location.url
+    ) {
+      currentSelectedSource = {
+        url: location.url,
+        selectionRef: {
+          // We use 1-based line and column, Chrome provides them 0-based.
+          line: location.startLine + 1,
+          column: location.startColumn + 1,
+        },
+      };
+      // Rerender with the new file selection.
+      render();
+    } else {
+      // Update the ref to the latest position without updating the url. No need to rerender.
+      const selectionRef = currentSelectedSource.selectionRef;
+      selectionRef.line = location.startLine + 1;
+      selectionRef.column = location.startColumn + 1;
+    }
+  };
   const onBridgeShutdown = () => {
     chrome.devtools.panels.elements.onSelectionChanged.removeListener(
       onBrowserElementSelectionChanged,
     );
+    if (sourcesPanel && sourcesPanel.onSelectionChanged) {
+      currentSelectedSource = null;
+      sourcesPanel.onSelectionChanged.removeListener(
+        onBrowserSourceSelectionChanged,
+      );
+    }
   };
 
   bridge.addListener('shutdown', onBridgeShutdown);
@@ -86,6 +129,11 @@ function createBridge() {
   chrome.devtools.panels.elements.onSelectionChanged.addListener(
     onBrowserElementSelectionChanged,
   );
+  if (sourcesPanel && sourcesPanel.onSelectionChanged) {
+    sourcesPanel.onSelectionChanged.addListener(
+      onBrowserSourceSelectionChanged,
+    );
+  }
 }
 
 function createBridgeAndStore() {
@@ -101,6 +149,10 @@ function createBridgeAndStore() {
     supportsTraceUpdates: true,
     supportsInspectMatchingDOMElement: true,
     supportsClickToInspect: true,
+  });
+
+  store.addListener('enableSuspenseTab', () => {
+    createSuspensePanel();
   });
 
   store.addListener('settingsUpdated', settings => {
@@ -124,7 +176,7 @@ function createBridgeAndStore() {
   };
 
   const viewElementSourceFunction = (source, symbolicatedSource) => {
-    const {sourceURL, line, column} = symbolicatedSource
+    const [, sourceURL, line, column] = symbolicatedSource
       ? symbolicatedSource
       : source;
 
@@ -152,13 +204,16 @@ function createBridgeAndStore() {
         bridge,
         browserTheme: getBrowserTheme(),
         componentsPortalContainer,
+        profilerPortalContainer,
+        editorPortalContainer,
+        currentSelectedSource,
         enabledInspectedElementContextMenu: true,
         fetchFileWithCaching,
         hookNamesModuleLoaderFunction,
         overrideTab,
-        profilerPortalContainer,
         showTabBar: false,
         store,
+        suspensePortalContainer,
         warnIfUnsupportedVersionDetected: true,
         viewAttributeSourceFunction,
         // Firefox doesn't support chrome.devtools.panels.openResource yet
@@ -257,6 +312,89 @@ function createProfilerPanel() {
   );
 }
 
+function createSourcesEditorPanel() {
+  if (editorPortalContainer) {
+    // Panel is created and user opened it at least once
+    ensureInitialHTMLIsCleared(editorPortalContainer);
+    render();
+
+    return;
+  }
+
+  if (editorPane) {
+    // Panel is created, but wasn't opened yet, so no document is present for it
+    return;
+  }
+
+  const sourcesPanel = chrome.devtools.panels.sources;
+  if (!sourcesPanel || !sourcesPanel.createSidebarPane) {
+    // Firefox doesn't currently support extending the source panel.
+    return;
+  }
+
+  sourcesPanel.createSidebarPane('Code Editor ⚛', createdPane => {
+    editorPane = createdPane;
+
+    createdPane.setPage('panel.html');
+    createdPane.setHeight('75px');
+
+    createdPane.onShown.addListener(portal => {
+      editorPortalContainer = portal.container;
+      if (editorPortalContainer != null && render) {
+        ensureInitialHTMLIsCleared(editorPortalContainer);
+
+        render();
+        portal.injectStyles(cloneStyleTags);
+
+        logEvent({event_name: 'selected-editor-pane'});
+      }
+    });
+
+    createdPane.onShown.addListener(() => {
+      bridge.emit('extensionEditorPaneShown');
+    });
+    createdPane.onHidden.addListener(() => {
+      bridge.emit('extensionEditorPaneHidden');
+    });
+  });
+}
+
+function createSuspensePanel() {
+  if (suspensePortalContainer) {
+    // Panel is created and user opened it at least once
+    ensureInitialHTMLIsCleared(suspensePortalContainer);
+    render('suspense');
+
+    return;
+  }
+
+  if (suspensePanel) {
+    // Panel is created, but wasn't opened yet, so no document is present for it
+    return;
+  }
+
+  chrome.devtools.panels.create(
+    __IS_CHROME__ || __IS_EDGE__ ? 'Suspense ⚛' : 'Suspense',
+    __IS_EDGE__ ? 'icons/production.svg' : '',
+    'panel.html',
+    createdPanel => {
+      suspensePanel = createdPanel;
+
+      createdPanel.onShown.addListener(portal => {
+        suspensePortalContainer = portal.container;
+        if (suspensePortalContainer != null && render) {
+          ensureInitialHTMLIsCleared(suspensePortalContainer);
+
+          render('suspense');
+          portal.injectStyles(cloneStyleTags);
+
+          logEvent({event_name: 'selected-suspense-tab'});
+        }
+      });
+    },
+  );
+}
+
 function performInTabNavigationCleanup() {
   // Potentially, if react hasn't loaded yet and user performs in-tab navigation
   clearReactPollingInstance();
@@ -268,7 +406,12 @@ function performInTabNavigationCleanup() {
 
   // If panels were already created, and we have already mounted React root to display
   // tabs (Components or Profiler), we should unmount root first and render them again
-  if ((componentsPortalContainer || profilerPortalContainer) && root) {
+  if (
+    (componentsPortalContainer ||
+      profilerPortalContainer ||
+      suspensePortalContainer) &&
+    root
+  ) {
     // It's easiest to recreate the DevTools panel (to clean up potential stale state).
     // We can revisit this in the future as a small optimization.
     // This should also emit bridge.shutdown, but only if this root was mounted
@@ -298,7 +441,12 @@ function performFullCleanup() {
   // Potentially, if react hasn't loaded yet and user closed the browser DevTools
   clearReactPollingInstance();
 
-  if ((componentsPortalContainer || profilerPortalContainer) && root) {
+  if (
+    (componentsPortalContainer ||
+      profilerPortalContainer ||
+      suspensePortalContainer) &&
+    root
+  ) {
     // This should also emit bridge.shutdown, but only if this root was mounted
     flushSync(() => root.unmount());
   } else {
@@ -307,6 +455,7 @@ function performFullCleanup() {
 
   componentsPortalContainer = null;
   profilerPortalContainer = null;
+  suspensePortalContainer = null;
   root = null;
 
   mostRecentOverrideTab = null;
@@ -356,6 +505,9 @@ function mountReactDevTools() {
 
   createComponentsPanel();
   createProfilerPanel();
+  createSourcesEditorPanel();
+  // Suspense Tab is created via the hook
+  // TODO(enableSuspenseTab): Create eagerly once Suspense tab is stable
 }
 
 let reactPollingInstance = null;
@@ -376,6 +528,12 @@ function showNoReactDisclaimer() {
       '<h1 class="no-react-disclaimer">Looks like this page doesn\'t have React, or it hasn\'t been loaded yet.</h1>';
     delete profilerPortalContainer._hasInitialHTMLBeenCleared;
   }
+
+  if (suspensePortalContainer) {
+    suspensePortalContainer.innerHTML =
+      '<h1 class="no-react-disclaimer">Looks like this page doesn\'t have React, or it hasn\'t been loaded yet.</h1>';
+    delete suspensePortalContainer._hasInitialHTMLBeenCleared;
+  }
 }
 
 function mountReactDevToolsWhenReactHasLoaded() {
@@ -394,12 +552,18 @@ let profilingData = null;
 
 let componentsPanel = null;
 let profilerPanel = null;
+let suspensePanel = null;
+let editorPane = null;
 let componentsPortalContainer = null;
 let profilerPortalContainer = null;
+let suspensePortalContainer = null;
+let editorPortalContainer = null;
 
 let mostRecentOverrideTab = null;
 let render = null;
 let root = null;
+
+let currentSelectedSource: null | SourceSelection = null;
 
 let port = null;
 
@@ -433,3 +597,45 @@ if (__IS_FIREFOX__) {
 connectExtensionPort();
 
 mountReactDevToolsWhenReactHasLoaded();
+
+function onThemeChanged(themeName) {
+  // Rerender with the new theme
+  render();
+}
+
+if (chrome.devtools.panels.setThemeChangeHandler) {
+  // Chrome
+  chrome.devtools.panels.setThemeChangeHandler(onThemeChanged);
+} else if (chrome.devtools.panels.onThemeChanged) {
+  // Firefox
+  chrome.devtools.panels.onThemeChanged.addListener(onThemeChanged);
+}
+
+// Firefox doesn't support resources handlers yet.
+if (chrome.devtools.panels.setOpenResourceHandler) {
+  chrome.devtools.panels.setOpenResourceHandler(
+    (
+      resource,
+      lineNumber = 1,
+      // The column is a new feature so we have to specify a default if it doesn't exist
+      columnNumber = 1,
+    ) => {
+      const alwaysOpenInEditor = getAlwaysOpenInEditor();
+      const editorURL = getOpenInEditorURL();
+      if (alwaysOpenInEditor && editorURL) {
+        const location = ['', resource.url, lineNumber, columnNumber];
+        const {url, shouldDisableButton} = checkConditions(editorURL, location);
+        if (!shouldDisableButton) {
+          window.open(url);
+          return;
+        }
+      }
+      // Otherwise fallback to the built-in behavior.
+      chrome.devtools.panels.openResource(
+        resource.url,
+        lineNumber - 1,
+        columnNumber - 1,
+      );
+    },
+  );
+}

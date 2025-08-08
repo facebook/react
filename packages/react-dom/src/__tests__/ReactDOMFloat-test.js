@@ -25,7 +25,7 @@ let SuspenseList;
 let textCache;
 let loadCache;
 let writable;
-const CSPnonce = null;
+let CSPnonce = null;
 let container;
 let buffer = '';
 let hasErrored = false;
@@ -69,6 +69,7 @@ describe('ReactDOMFloat', () => {
       setTimeout(cb);
     container = document.getElementById('container');
 
+    CSPnonce = null;
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
@@ -707,12 +708,12 @@ describe('ReactDOMFloat', () => {
           ? '<script src="react-dom/unstable_server-external-runtime" async=""></script>'
           : '') +
         (gate(flags => flags.enableFizzBlockingRender)
-          ? '<link rel="expect" href="#«R»" blocking="render"/>'
+          ? '<link rel="expect" href="#_R_" blocking="render"/>'
           : '') +
         '<title>foo</title></head>' +
         '<body>bar' +
         (gate(flags => flags.enableFizzBlockingRender)
-          ? '<template id="«R»"></template>'
+          ? '<template id="_R_"></template>'
           : ''),
       '</body></html>',
     ]);
@@ -5755,7 +5756,7 @@ body {
         <html>
           <body>
             <Suspense fallback="loading...">
-              <SuspenseList revealOrder="forwards">
+              <SuspenseList revealOrder="forwards" tail="visible">
                 <Suspense fallback="loading foo...">
                   <BlockedOn value="foo">
                     <link rel="stylesheet" href="foo" precedence="foo" />
@@ -7390,7 +7391,6 @@ body {
       );
     });
 
-    // @gate favorSafetyOverHydrationPerf
     it('retains styles even when a new html, head, and/body mount', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(
@@ -9357,7 +9357,6 @@ background-color: green;
       ]);
     });
 
-    // @gate favorSafetyOverHydrationPerf
     it('can render a title before a singleton even if that singleton clears its contents', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(

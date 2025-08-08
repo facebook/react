@@ -159,9 +159,8 @@ function prerender(
 type ResumeOptions = {
   nonce?: NonceOption,
   signal?: AbortSignal,
-  onError?: (error: mixed) => ?string,
-  onPostpone?: (reason: string) => void,
-  unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
+  onError?: (error: mixed, errorInfo: ErrorInfo) => ?string,
+  onPostpone?: (reason: string, postponeInfo: PostponeInfo) => void,
 };
 
 function resumeAndPrerender(
