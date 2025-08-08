@@ -17,7 +17,7 @@ function useFoo() {
 ```
 Found 1 error:
 
-Error: Cannot reassign variable after render completes
+Error: Cannot modify local variables after render completes
 
 Reassigning `x` after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.
 

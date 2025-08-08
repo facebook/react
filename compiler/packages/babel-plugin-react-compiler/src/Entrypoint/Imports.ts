@@ -38,10 +38,10 @@ export function validateRestrictedImports(
     ImportDeclaration(importDeclPath) {
       if (restrictedImports.has(importDeclPath.node.source.value)) {
         error.push({
-          severity: ErrorSeverity.Todo,
           reason: 'Bailing out due to blocklisted import',
           description: `Import from module ${importDeclPath.node.source.value}`,
           loc: importDeclPath.node.loc ?? null,
+          severity: ErrorSeverity.Todo,
         });
       }
     },
@@ -205,10 +205,10 @@ export class ProgramContext {
     }
     const error = new CompilerError();
     error.push({
-      severity: ErrorSeverity.Todo,
       reason: 'Encountered conflicting global in generated program',
       description: `Conflict from local binding ${name}`,
       loc: scope.getBinding(name)?.path.node.loc ?? null,
+      severity: ErrorSeverity.Todo,
       suggestions: null,
     });
     return Err(error);

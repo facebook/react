@@ -7,7 +7,7 @@
 
 import {Binding, NodePath} from '@babel/traverse';
 import * as t from '@babel/types';
-import {CompilerError, ErrorSeverity} from '../CompilerError';
+import {CompilerDiagnostic, CompilerError} from '../CompilerError';
 import {Environment} from './Environment';
 import {
   BasicBlock,
@@ -37,6 +37,7 @@ import {
   mapTerminalSuccessors,
   terminalFallthrough,
 } from './visitors';
+import {ErrorCode} from '../Utils/CompilerErrorCodes';
 
 /*
  * *******************************************************************************************
@@ -308,19 +309,17 @@ export default class HIRBuilder {
 
   resolveBinding(node: t.Identifier): Identifier {
     if (node.name === 'fbt') {
-      CompilerError.throwDiagnostic({
-        severity: ErrorSeverity.Todo,
-        category: 'Support local variables named `fbt`',
-        description:
-          'Local variables named `fbt` may conflict with the fbt plugin and are not yet supported',
-        details: [
-          {
-            kind: 'error',
-            message: 'Rename to avoid conflict with fbt plugin',
-            loc: node.loc ?? GeneratedSource,
-          },
-        ],
-      });
+      CompilerError.throwDiagnostic(
+        CompilerDiagnostic.fromCode(ErrorCode.TODO_CONFLICTING_FBT_IDENTIFIER, {
+          details: [
+            {
+              kind: 'error',
+              message: 'Rename to avoid conflict with fbt plugin',
+              loc: node.loc ?? GeneratedSource,
+            },
+          ],
+        }),
+      );
     }
     const originalName = node.name;
     let name = originalName;
