@@ -53,6 +53,7 @@ export default function InspectedElementView({
   symbolicatedSourcePromise,
 }: Props): React.Node {
   const {
+    stack,
     owners,
     rendererPackageName,
     rendererVersion,
@@ -69,8 +70,9 @@ export default function InspectedElementView({
       ? `${rendererPackageName}@${rendererVersion}`
       : null;
   const showOwnersList = owners !== null && owners.length > 0;
+  const showStack = stack != null && stack.length > 0;
   const showRenderedBy =
-    showOwnersList || rendererLabel !== null || rootType !== null;
+    showStack || showOwnersList || rendererLabel !== null || rootType !== null;
 
   return (
     <Fragment>
@@ -169,6 +171,7 @@ export default function InspectedElementView({
             data-testname="InspectedElementView-Owners">
             <div className={styles.OwnersHeader}>rendered by</div>
 
+            {showStack ? <StackTraceView stack={stack} /> : null}
             {showOwnersList &&
               owners?.map(owner => (
                 <>
