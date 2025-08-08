@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerDiagnostic, CompilerError, Effect, ErrorSeverity} from '..';
+import {CompilerDiagnostic, CompilerError, Effect} from '..';
 import {HIRFunction, IdentifierId, Place} from '../HIR';
 import {
   eachInstructionLValue,
@@ -13,13 +13,17 @@ import {
   eachTerminalOperand,
 } from '../HIR/visitors';
 import {getFunctionCallSignature} from '../Inference/InferReferenceEffects';
+import {ErrorCode} from '../Utils/CompilerErrorCodes';
+import {Ok, Result} from '../Utils/Result';
 
 /**
  * Validates that local variables cannot be reassigned after render.
  * This prevents a category of bugs in which a closure captures a
  * binding from one render but does not update
  */
-export function validateLocalsNotReassignedAfterRender(fn: HIRFunction): void {
+export function validateLocalsNotReassignedAfterRender(
+  fn: HIRFunction,
+): Result<void, CompilerError> {
   const contextVariables = new Set<IdentifierId>();
   const reassignment = getContextReassignment(
     fn,
@@ -35,9 +39,7 @@ export function validateLocalsNotReassignedAfterRender(fn: HIRFunction): void {
         ? `\`${reassignment.identifier.name.value}\``
         : 'variable';
     errors.pushDiagnostic(
-      CompilerDiagnostic.create({
-        severity: ErrorSeverity.InvalidReact,
-        category: 'Cannot reassign variable after render completes',
+      CompilerDiagnostic.fromCode(ErrorCode.WRITE_AFTER_RENDER, {
         description: `Reassigning ${variable} after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.`,
       }).withDetail({
         kind: 'error',
@@ -45,8 +47,9 @@ export function validateLocalsNotReassignedAfterRender(fn: HIRFunction): void {
         message: `Cannot reassign ${variable} after render completes`,
       }),
     );
-    throw errors;
+    return errors.asResult();
   }
+  return Ok(undefined);
 }
 
 function getContextReassignment(
@@ -90,9 +93,7 @@ function getContextReassignment(
                   ? `\`${reassignment.identifier.name.value}\``
                   : 'variable';
               errors.pushDiagnostic(
-                CompilerDiagnostic.create({
-                  severity: ErrorSeverity.InvalidReact,
-                  category: 'Cannot reassign variable in async function',
+                CompilerDiagnostic.fromCode(ErrorCode.REASSIGN_IN_ASYNC, {
                   description:
                     'Reassigning a variable in an async function can cause inconsistent behavior on subsequent renders. Consider using state instead',
                 }).withDetail({
