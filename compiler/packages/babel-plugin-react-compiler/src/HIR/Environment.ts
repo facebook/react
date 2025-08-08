@@ -330,6 +330,11 @@ export const EnvironmentConfigSchema = z.object({
    */
   validateNoSetStateInEffects: z.boolean().default(false),
 
+  /*
+   * Validates there are no forbidden variable names in the component.
+   */
+  validateNoForbiddenVariableNames:z.boolean().default(false),
+
   /**
    * Validates that effects are not used to calculate derived data which could instead be computed
    * during render.
