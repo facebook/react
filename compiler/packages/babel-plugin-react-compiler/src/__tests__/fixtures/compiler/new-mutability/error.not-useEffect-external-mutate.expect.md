@@ -22,7 +22,7 @@ Found 2 errors:
 
 Error: This value cannot be modified
 
-Modifying a variable defined outside a component or hook is not allowed. Consider using an effect.
+Cannot reassign variables declared outside of the component/hook.
 
 error.not-useEffect-external-mutate.ts:6:4
   4 | function Component(props) {
@@ -35,7 +35,7 @@ error.not-useEffect-external-mutate.ts:6:4
 
 Error: This value cannot be modified
 
-Modifying a variable defined outside a component or hook is not allowed. Consider using an effect.
+Cannot reassign variables declared outside of the component/hook.
 
 error.not-useEffect-external-mutate.ts:7:4
    5 |   foo(() => {
