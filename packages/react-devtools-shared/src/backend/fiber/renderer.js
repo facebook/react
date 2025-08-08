@@ -2342,6 +2342,15 @@ export function attach(
       const keyString = key === null ? null : String(key);
       const keyStringID = getStringID(keyString);
 
+      const nameProp =
+        fiber.tag === SuspenseComponent
+          ? fiber.memoizedProps.name
+          : fiber.tag === ActivityComponent
+            ? fiber.memoizedProps.name
+            : null;
+      const namePropString = nameProp == null ? null : String(nameProp);
+      const namePropStringID = getStringID(namePropString);
+
       pushOperation(TREE_OPERATION_ADD);
       pushOperation(id);
       pushOperation(elementType);
@@ -2349,6 +2358,7 @@ export function attach(
       pushOperation(ownerID);
       pushOperation(displayNameStringID);
       pushOperation(keyStringID);
+      pushOperation(namePropStringID);
 
       // If this subtree has a new mode, let the frontend know.
       if ((fiber.mode & StrictModeBits) !== 0) {
@@ -2451,6 +2461,7 @@ export function attach(
     // in such a way as to bypass the default stringification of the "key" property.
     const keyString = key === null ? null : String(key);
     const keyStringID = getStringID(keyString);
+    const namePropStringID = getStringID(null);
 
     const id = instance.id;
 
@@ -2461,6 +2472,7 @@ export function attach(
     pushOperation(ownerID);
     pushOperation(displayNameStringID);
     pushOperation(keyStringID);
+    pushOperation(namePropStringID);
 
     const componentLogsEntry =
       componentInfoToComponentLogsMap.get(componentInfo);

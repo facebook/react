@@ -426,6 +426,7 @@ export function attach(
       pushOperation(ownerID);
       pushOperation(displayNameStringID);
       pushOperation(keyStringID);
+      pushOperation(getStringID(null)); // name prop
     }
   }
 
