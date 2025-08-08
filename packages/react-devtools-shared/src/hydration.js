@@ -200,16 +200,50 @@ export function dehydrate(
         type,
       };
 
-    case 'react_lazy':
-      cleaned.push(path);
-      return {
-        inspectable: false,
+    case 'react_lazy': {
+      isPathAllowedCheck = isPathAllowed(path);
+
+      const payload = data._payload;
+
+      if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
+        cleaned.push(path);
+        const inspectable =
+          payload !== null &&
+          typeof payload === 'object' &&
+          (payload._status === 1 ||
+            payload._status === 2 ||
+            payload.status === 'fulfilled' ||
+            payload.status === 'rejected');
+        return {
+          inspectable,
+          preview_short: formatDataForPreview(data, false),
+          preview_long: formatDataForPreview(data, true),
+          name: 'lazy()',
+          type,
+        };
+      }
+
+      const unserializableValue: Unserializable = {
+        unserializable: true,
+        type: type,
         preview_short: formatDataForPreview(data, false),
         preview_long: formatDataForPreview(data, true),
-        name: 'Unknown',
-        type,
+        name: 'lazy()',
       };
-
+      // Ideally we should alias these properties to something more readable but
+      // unfortunately because of how the hydration algorithm uses a single concept of
+      // "path" we can't alias the path.
+      unserializableValue._payload = dehydrate(
+        payload,
+        cleaned,
+        unserializable,
+        path.concat(['_payload']),
+        isPathAllowed,
+        isPathAllowedCheck ? 1 : level + 1,
+      );
+      unserializable.push(path);
+      return unserializableValue;
+    }
     // ArrayBuffers error if you try to inspect them.
     case 'array_buffer':
     case 'data_view':
@@ -319,6 +353,7 @@ export function dehydrate(
       isPathAllowedCheck = isPathAllowed(path);
 
       if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
+        cleaned.push(path);
         return {
           inspectable:
             data.status === 'fulfilled' || data.status === 'rejected',
