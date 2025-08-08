@@ -75,7 +75,6 @@ import {
   ViewTransitionComponent,
   ActivityComponent,
 } from './ReactWorkTags';
-import {createInitialOffscreenInstance} from './ReactFiberOffscreenComponent';
 import {getComponentNameFromOwner} from 'react-reconciler/src/getComponentNameFromFiber';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {
@@ -830,8 +829,6 @@ export function createFiberFromOffscreen(
 ): Fiber {
   const fiber = createFiber(OffscreenComponent, pendingProps, key, mode);
   fiber.lanes = lanes;
-  const primaryChildInstance = createInitialOffscreenInstance();
-  fiber.stateNode = primaryChildInstance;
   return fiber;
 }
 export function createFiberFromActivity(
@@ -879,10 +876,6 @@ export function createFiberFromLegacyHidden(
   const fiber = createFiber(LegacyHiddenComponent, pendingProps, key, mode);
   fiber.elementType = REACT_LEGACY_HIDDEN_TYPE;
   fiber.lanes = lanes;
-  // Adding a stateNode for legacy hidden because it's currently using
-  // the offscreen implementation, which depends on a state node
-  const instance = createInitialOffscreenInstance();
-  fiber.stateNode = instance;
   return fiber;
 }
 
