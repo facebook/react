@@ -16,6 +16,8 @@ import type {
   ReactIOInfo,
 } from 'shared/ReactTypes';
 
+import {enableAsyncDebugInfo} from 'shared/ReactFeatureFlags';
+
 import {REACT_LAZY_TYPE} from 'shared/ReactSymbols';
 
 const Uninitialized = -1;
@@ -62,7 +64,7 @@ export type LazyComponent<T, P> = {
 
 function lazyInitializer<T>(payload: Payload<T>): T {
   if (payload._status === Uninitialized) {
-    if (__DEV__) {
+    if (__DEV__ && enableAsyncDebugInfo) {
       const ioInfo = payload._ioInfo;
       if (ioInfo != null) {
         // Mark when we first kicked off the lazy request.
@@ -113,7 +115,7 @@ function lazyInitializer<T>(payload: Payload<T>): T {
           const rejected: RejectedPayload = (payload: any);
           rejected._status = Rejected;
           rejected._result = error;
-          if (__DEV__) {
+          if (__DEV__ && enableAsyncDebugInfo) {
             const ioInfo = payload._ioInfo;
             if (ioInfo != null) {
               // Mark the end time of when we rejected.
@@ -131,7 +133,7 @@ function lazyInitializer<T>(payload: Payload<T>): T {
         }
       },
     );
-    if (__DEV__) {
+    if (__DEV__ && enableAsyncDebugInfo) {
       const ioInfo = payload._ioInfo;
       if (ioInfo != null) {
         // Stash the thenable for introspection of the value later.
@@ -202,7 +204,7 @@ export function lazy<T>(
     _init: lazyInitializer,
   };
 
-  if (__DEV__) {
+  if (__DEV__ && enableAsyncDebugInfo) {
     // TODO: We should really track the owner here but currently ReactIOInfo
     // can only contain ReactComponentInfo and not a Fiber. It's unusual to
     // create a lazy inside an owner though since they should be in module scope.
