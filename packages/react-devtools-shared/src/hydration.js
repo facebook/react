@@ -16,6 +16,8 @@ import {
   setInObject,
 } from 'react-devtools-shared/src/utils';
 
+import {REACT_LEGACY_ELEMENT_TYPE} from 'shared/ReactSymbols';
+
 import type {
   DehydratedData,
   InspectedElementPath,
@@ -188,18 +190,59 @@ export function dehydrate(
         type,
       };
 
-    // React Elements aren't very inspector-friendly,
-    // and often contain private fields or circular references.
-    case 'react_element':
-      cleaned.push(path);
-      return {
-        inspectable: false,
+    case 'react_element': {
+      isPathAllowedCheck = isPathAllowed(path);
+
+      if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
+        cleaned.push(path);
+        return {
+          inspectable: true,
+          preview_short: formatDataForPreview(data, false),
+          preview_long: formatDataForPreview(data, true),
+          name: getDisplayNameForReactElement(data) || 'Unknown',
+          type,
+        };
+      }
+
+      const unserializableValue: Unserializable = {
+        unserializable: true,
+        type,
+        readonly: true,
         preview_short: formatDataForPreview(data, false),
         preview_long: formatDataForPreview(data, true),
         name: getDisplayNameForReactElement(data) || 'Unknown',
-        type,
       };
+      // TODO: We can't expose type because that name is already taken on Unserializable.
+      unserializableValue.key = dehydrate(
+        data.key,
+        cleaned,
+        unserializable,
+        path.concat(['key']),
+        isPathAllowed,
+        isPathAllowedCheck ? 1 : level + 1,
+      );
+      if (data.$$typeof === REACT_LEGACY_ELEMENT_TYPE) {
+        unserializableValue.ref = dehydrate(
+          data.ref,
+          cleaned,
+          unserializable,
+          path.concat(['ref']),
+          isPathAllowed,
+          isPathAllowedCheck ? 1 : level + 1,
+        );
+      }
+      unserializableValue.props = dehydrate(
+        data.props,
+        cleaned,
+        unserializable,
+        path.concat(['props']),
+        isPathAllowed,
+        isPathAllowedCheck ? 1 : level + 1,
+      );
 
+      unserializable.push(path);
+      return unserializableValue;
+    }
     case 'react_lazy': {
       isPathAllowedCheck = isPathAllowed(path);
 
