@@ -180,7 +180,9 @@ export default function Element({data, index, style}: Props): React.Node {
               className={styles.KeyValue}
               title={key}
               onDoubleClick={handleKeyDoubleClick}>
-              <pre>{key}</pre>
+              <pre>
+                <IndexableDisplayName displayName={key} id={id} />
+              </pre>
             </span>
             "
           </Fragment>
@@ -193,7 +195,9 @@ export default function Element({data, index, style}: Props): React.Node {
               className={styles.KeyValue}
               title={nameProp}
               onDoubleClick={handleKeyDoubleClick}>
-              <pre>{nameProp}</pre>
+              <pre>
+                <IndexableDisplayName displayName={nameProp} id={id} />
+              </pre>
             </span>
             "
           </Fragment>
