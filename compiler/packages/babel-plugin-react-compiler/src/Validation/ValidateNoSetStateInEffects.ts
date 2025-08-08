@@ -5,11 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
-  CompilerDiagnostic,
-  CompilerError,
-  ErrorSeverity,
-} from '../CompilerError';
+import {CompilerDiagnostic, CompilerError} from '../CompilerError';
 import {
   HIRFunction,
   IdentifierId,
@@ -20,6 +16,7 @@ import {
   Place,
 } from '../HIR';
 import {eachInstructionValueOperand} from '../HIR/visitors';
+import {ErrorCode} from '../Utils/CompilerErrorCodes';
 import {Result} from '../Utils/Result';
 
 /**
@@ -95,19 +92,9 @@ export function validateNoSetStateInEffects(
               const setState = setStateFunctions.get(arg.identifier.id);
               if (setState !== undefined) {
                 errors.pushDiagnostic(
-                  CompilerDiagnostic.create({
-                    category:
-                      'Calling setState synchronously within an effect can trigger cascading renders',
-                    description:
-                      'Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. ' +
-                      'In general, the body of an effect should do one or both of the following:\n' +
-                      '* Update external systems with the latest state from React.\n' +
-                      '* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\n' +
-                      'Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. ' +
-                      '(https://react.dev/learn/you-might-not-need-an-effect)',
-                    severity: ErrorSeverity.InvalidReact,
-                    suggestions: null,
-                  }).withDetail({
+                  CompilerDiagnostic.fromCode(
+                    ErrorCode.INVALID_SET_STATE_IN_EFFECTS,
+                  ).withDetail({
                     kind: 'error',
                     loc: setState.loc,
                     message:
