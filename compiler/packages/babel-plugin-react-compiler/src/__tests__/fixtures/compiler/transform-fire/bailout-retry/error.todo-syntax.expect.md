@@ -33,7 +33,7 @@ Found 1 error:
 
 Error: Cannot compile `fire`
 
- Todo: (BuildHIR::lowerStatement) Handle TryStatement without a catch clause (11:4)
+ Todo: (BuildHIR::lowerStatement) Handle TryStatement without a catch clause (11:4).
 
 error.todo-syntax.ts:18:4
   16 |   };

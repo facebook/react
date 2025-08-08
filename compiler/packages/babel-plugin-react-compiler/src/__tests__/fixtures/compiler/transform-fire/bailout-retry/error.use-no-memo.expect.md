@@ -34,7 +34,7 @@ Found 1 error:
 
 Error: Cannot compile `fire`
 
- null
+ null.
 
 error.use-no-memo.ts:15:4
   13 |   };

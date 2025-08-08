@@ -89,9 +89,7 @@ function assertValidEffectImportReference(
          */
         logAndThrowDiagnostic(
           CompilerDiagnostic.fromCode(ErrorCode.DID_NOT_INFER_DEPS, {
-            description:
-              'To resolve, either pass a dependency array or fix reported compiler bailout diagnostics.' +
-              (maybeErrorDiagnostic ? ` ${maybeErrorDiagnostic}` : ''),
+            description: maybeErrorDiagnostic ? `${maybeErrorDiagnostic}` : '',
             details: [
               {
                 kind: 'error',
