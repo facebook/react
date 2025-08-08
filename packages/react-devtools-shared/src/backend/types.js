@@ -257,6 +257,7 @@ export type SerializedElement = {
   id: number,
   key: number | string | null,
   env: null | string,
+  stack: null | ReactStackTrace,
   type: ElementType,
 };
 

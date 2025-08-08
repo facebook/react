@@ -796,6 +796,7 @@ export function attach(
             id: getID(owner),
             key: element.key,
             env: null,
+            stack: null,
             type: getElementType(owner),
           });
           if (owner._currentElement) {

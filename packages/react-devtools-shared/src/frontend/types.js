@@ -209,6 +209,7 @@ export type SerializedElement = {
   id: number,
   key: number | string | null,
   env: null | string,
+  stack: null | ReactStackTrace,
   hocDisplayNames: Array<string> | null,
   compiledWithForget: boolean,
   type: ElementType,
