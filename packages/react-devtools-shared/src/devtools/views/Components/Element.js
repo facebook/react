@@ -119,6 +119,7 @@ export default function Element({data, index, style}: Props): React.Node {
     hocDisplayNames,
     isStrictModeNonCompliant,
     key,
+    nameProp,
     compiledWithForget,
   } = element;
   const {
@@ -180,6 +181,19 @@ export default function Element({data, index, style}: Props): React.Node {
               title={key}
               onDoubleClick={handleKeyDoubleClick}>
               <pre>{key}</pre>
+            </span>
+            "
+          </Fragment>
+        )}
+
+        {nameProp && (
+          <Fragment>
+            &nbsp;<span className={styles.KeyName}>name</span>="
+            <span
+              className={styles.KeyValue}
+              title={nameProp}
+              onDoubleClick={handleKeyDoubleClick}>
+              <pre>{nameProp}</pre>
             </span>
             "
           </Fragment>
