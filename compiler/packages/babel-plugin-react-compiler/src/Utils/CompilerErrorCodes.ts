@@ -147,7 +147,7 @@ export const ErrorCodeDetails: Record<ErrorCode, ErrorCodeType> = {
     severity: ErrorSeverity.InvalidReact,
     reason: 'Cannot call impure functions during render',
     description:
-      'Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).',
+      'Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent)',
     linterCategory: LinterCategory.IMPURE_FUNCTIONS,
   },
   [ErrorCode.JSX_IN_TRY]: {
@@ -186,14 +186,14 @@ export const ErrorCodeDetails: Record<ErrorCode, ErrorCodeType> = {
     code: ErrorCode.WRITE_AFTER_RENDER,
     severity: ErrorSeverity.InvalidReact,
     reason: 'Cannot modify local variables after render completes',
-    description: `This argument is a function which may reassign or mutate a variable after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.`,
+    description: `This argument is a function which may reassign or mutate a variable after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead`,
     linterCategory: LinterCategory.INVALID_WRITE,
   },
   [ErrorCode.REASSIGN_AFTER_RENDER]: {
     code: ErrorCode.REASSIGN_AFTER_RENDER,
     severity: ErrorSeverity.InvalidReact,
     reason: 'Cannot reassign local variables after render completes',
-    description: `Reassigning local variables after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.`,
+    description: `Reassigning local variables after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead`,
     linterCategory: LinterCategory.INVALID_WRITE,
   },
   [ErrorCode.REASSIGN_IN_ASYNC]: {
@@ -253,7 +253,7 @@ export const ErrorCodeDetails: Record<ErrorCode, ErrorCodeType> = {
     severity: ErrorSeverity.InvalidReact,
     reason: 'useMemo() callbacks may not accept parameters',
     description:
-      'useMemo() callbacks are called by React to cache calculations across re-renders. They should not take parameters. Instead, directly reference the props, state, or local variables needed for the computation.',
+      'useMemo() callbacks are called by React to cache calculations across re-renders. They should not take parameters. Instead, directly reference the props, state, or local variables needed for the computation',
     linterCategory: LinterCategory.VALIDATE_MANUAL_MEMO,
   },
   [ErrorCode.INVALID_USE_MEMO_CALLBACK_ASYNC]: {
@@ -261,7 +261,7 @@ export const ErrorCodeDetails: Record<ErrorCode, ErrorCodeType> = {
     severity: ErrorSeverity.InvalidReact,
     reason: 'useMemo() callbacks may not be async or generator functions',
     description:
-      'useMemo() callbacks are called once and must synchronously return a value.',
+      'useMemo() callbacks are called once and must synchronously return a value',
     linterCategory: LinterCategory.VALIDATE_MANUAL_MEMO,
   },
   [ErrorCode.INVALID_USE_MEMO_CALLBACK_RETURN]: {
@@ -331,7 +331,7 @@ export const ErrorCodeDetails: Record<ErrorCode, ErrorCodeType> = {
   [ErrorCode.INVALID_WRITE_IMMUTABLE_VALUE_USE_CONTEXT]: {
     code: ErrorCode.INVALID_WRITE_IMMUTABLE_VALUE_USE_CONTEXT,
     severity: ErrorSeverity.InvalidReact,
-    reason: `Modifying a value returned from 'useContext()' is not allowed.`,
+    reason: `Modifying a value returned from 'useContext()' is not allowed`,
     linterCategory: LinterCategory.INVALID_WRITE,
   },
   [ErrorCode.INVALID_WRITE_IMMUTABLE_VALUE_KNOWN_SIGNATURE]: {
@@ -413,7 +413,7 @@ export const ErrorCodeDetails: Record<ErrorCode, ErrorCodeType> = {
   [ErrorCode.FILENAME_NOT_SET]: {
     code: ErrorCode.FILENAME_NOT_SET,
     severity: ErrorSeverity.InvalidConfig,
-    reason: `Expected a filename but found none.`,
+    reason: `Expected a filename but found none`,
     description:
       "When the 'sources' config options is specified, the React compiler will only compile files with a name",
     linterCategory: LinterCategory.COMPILER_CONFIG,
@@ -545,7 +545,7 @@ export const ErrorCodeDetails: Record<ErrorCode, ErrorCodeType> = {
     reason:
       'Compilation skipped because existing memoization could not be preserved',
     description:
-      'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.',
+      'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output',
     severity: ErrorSeverity.CannotPreserveMemoization,
     linterCategory: LinterCategory.TODO_SYNTAX,
   },
@@ -563,6 +563,8 @@ export const ErrorCodeDetails: Record<ErrorCode, ErrorCodeType> = {
     code: ErrorCode.DID_NOT_INFER_DEPS,
     reason:
       'Cannot infer dependencies of this effect. This will break your build!',
+    description:
+      'To resolve, either pass a dependency array or fix reported compiler bailout diagnostics',
     severity: ErrorSeverity.InvalidReact,
     linterCategory: LinterCategory.UNSUPPORTED_SYNTAX,
   },
@@ -604,7 +606,7 @@ export const ErrorCodeDetails: Record<ErrorCode, ErrorCodeType> = {
       'Compilation skipped because existing memoization could not be preserved',
     description: [
       'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. ',
-      'This dependency may be mutated later, which could cause the value to change unexpectedly.',
+      'This dependency may be mutated later, which could cause the value to change unexpectedly',
     ].join(''),
     severity: ErrorSeverity.CannotPreserveMemoization,
     linterCategory: LinterCategory.UNSUPPORTED_SYNTAX,
@@ -615,7 +617,7 @@ export const ErrorCodeDetails: Record<ErrorCode, ErrorCodeType> = {
       'Compilation skipped because existing memoization could not be preserved',
     description:
       'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. ' +
-      'The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected.',
+      'The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected',
     severity: ErrorSeverity.CannotPreserveMemoization,
     linterCategory: LinterCategory.UNSUPPORTED_SYNTAX,
   },

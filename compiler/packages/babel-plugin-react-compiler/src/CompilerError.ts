@@ -129,7 +129,7 @@ export class CompilerDiagnostic {
     const errorEntry = ErrorCodeDetails[code];
     let description = undefined;
     if (errorEntry.description != null) {
-      description = errorEntry.description;
+      description = errorEntry.description + '.';
     }
     if (options?.description != null && options.description.length > 0) {
       if (description != null && description.length > 0) {
@@ -137,7 +137,7 @@ export class CompilerDiagnostic {
       } else {
         description = '';
       }
-      description += options.description;
+      description += options.description + '.';
     }
 
     const diagnosticOptions: CompilerDiagnosticOptions = {
@@ -284,22 +284,25 @@ export class CompilerErrorDetail {
     if (this.options.errorCode != null) {
       let description = undefined;
       if (ErrorCodeDetails[this.options.errorCode].description != null) {
-        description = ErrorCodeDetails[this.options.errorCode].description;
+        description =
+          ErrorCodeDetails[this.options.errorCode].description + '.';
       }
       if (
         this.options.description != null &&
         this.options.description.length > 0
       ) {
         if (description != null && description.length > 0) {
-          description += '. ';
+          description += ' ';
         } else {
           description = '';
         }
-        description += this.options.description;
+        description += this.options.description + '.';
       }
       return description;
     }
-    return this.options.description;
+    return this.options.description
+      ? this.options.description + '.'
+      : this.options.description;
   }
   get severity(): ErrorSeverity {
     if (this.options.errorCode != null) {
@@ -327,7 +330,7 @@ export class CompilerErrorDetail {
   printErrorMessage(source: string, options: PrintErrorMessageOptions): string {
     const buffer = [printErrorSummary(this.severity, this.reason)];
     if (this.description != null) {
-      buffer.push(`\n\n${this.description}.`);
+      buffer.push(`\n\n${this.description}`);
     }
     const loc = this.loc;
     if (loc != null && typeof loc !== 'symbol') {
