@@ -108,6 +108,7 @@ interface ThenableImpl<T> {
     onFulfill: (value: T) => mixed,
     onReject: (error: mixed) => mixed,
   ): void | Wakeable;
+  displayName?: string;
 }
 interface UntrackedThenable<T> extends ThenableImpl<T> {
   status?: void;
