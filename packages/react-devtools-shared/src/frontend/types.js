@@ -157,6 +157,7 @@ export type Element = {
   type: ElementType,
   displayName: string | null,
   key: number | string | null,
+  nameProp: null | string,
 
   hocDisplayNames: null | Array<string>,
 
