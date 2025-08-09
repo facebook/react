@@ -209,6 +209,7 @@ export type SerializedElement = {
   id: number,
   key: number | string | null,
   env: null | string,
+  stack: null | ReactStackTrace,
   hocDisplayNames: Array<string> | null,
   compiledWithForget: boolean,
   type: ElementType,
@@ -271,6 +272,9 @@ export type InspectedElement = {
 
   // Location of component in source code.
   source: ReactFunctionLocation | null,
+
+  // The location of the JSX creation.
+  stack: ReactStackTrace | null,
 
   type: ElementType,
 

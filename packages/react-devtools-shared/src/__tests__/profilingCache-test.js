@@ -949,6 +949,7 @@ describe('ProfilingCache', () => {
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
+              "stack": null,
               "type": 11,
             },
           ],

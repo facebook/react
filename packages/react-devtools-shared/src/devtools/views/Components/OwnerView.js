@@ -60,7 +60,8 @@ export default function OwnerView({
       <span className={styles.OwnerContent}>
         <span
           className={`${styles.Owner} ${isInStore ? '' : styles.NotInStore}`}
-          title={displayName}>
+          title={displayName}
+          data-testname="OwnerView">
           {'<' + displayName + '>'}
         </span>
 
