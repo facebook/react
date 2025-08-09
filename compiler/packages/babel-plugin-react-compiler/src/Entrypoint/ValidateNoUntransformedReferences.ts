@@ -8,27 +8,24 @@
 import {NodePath} from '@babel/core';
 import * as t from '@babel/types';
 
-import {CompilerError, EnvironmentConfig, ErrorSeverity, Logger} from '..';
+import {CompilerError, EnvironmentConfig, Logger} from '..';
 import {getOrInsertWith} from '../Utils/utils';
 import {Environment, GeneratedSource} from '../HIR';
 import {DEFAULT_EXPORT} from '../HIR/Environment';
 import {CompileProgramMetadata} from './Program';
-import {CompilerDiagnostic, CompilerDiagnosticOptions} from '../CompilerError';
+import {CompilerDiagnostic} from '../CompilerError';
+import {ErrorCode} from '../Utils/CompilerErrorCodes';
 
-function throwInvalidReact(
-  options: Omit<CompilerDiagnosticOptions, 'severity'>,
+function logAndThrowDiagnostic(
+  diagnostic: CompilerDiagnostic,
   {logger, filename}: TraversalState,
 ): never {
-  const detail: CompilerDiagnosticOptions = {
-    severity: ErrorSeverity.InvalidReact,
-    ...options,
-  };
   logger?.logEvent(filename, {
     kind: 'CompileError',
     fnLoc: null,
-    detail: new CompilerDiagnostic(detail),
+    detail: diagnostic,
   });
-  CompilerError.throwDiagnostic(detail);
+  CompilerError.throwDiagnostic(diagnostic);
 }
 
 function isAutodepsSigil(
@@ -90,13 +87,9 @@ function assertValidEffectImportReference(
          * as it may have already been transformed by the compiler (and not
          * memoized).
          */
-        throwInvalidReact(
-          {
-            category:
-              'Cannot infer dependencies of this effect. This will break your build!',
-            description:
-              'To resolve, either pass a dependency array or fix reported compiler bailout diagnostics.' +
-              (maybeErrorDiagnostic ? ` ${maybeErrorDiagnostic}` : ''),
+        logAndThrowDiagnostic(
+          CompilerDiagnostic.fromCode(ErrorCode.DID_NOT_INFER_DEPS, {
+            description: maybeErrorDiagnostic ? `${maybeErrorDiagnostic}` : '',
             details: [
               {
                 kind: 'error',
@@ -104,7 +97,7 @@ function assertValidEffectImportReference(
                 loc: parent.node.loc ?? GeneratedSource,
               },
             ],
-          },
+          }),
           context,
         );
       }
@@ -121,10 +114,8 @@ function assertValidFireImportReference(
       paths[0],
       context.transformErrors,
     );
-    throwInvalidReact(
-      {
-        category:
-          '[Fire] Untransformed reference to compiler-required feature.',
+    logAndThrowDiagnostic(
+      CompilerDiagnostic.fromCode(ErrorCode.CANNOT_COMPILE_FIRE, {
         description:
           'Either remove this `fire` call or ensure it is successfully transformed by the compiler' +
           maybeErrorDiagnostic
@@ -137,7 +128,7 @@ function assertValidFireImportReference(
             loc: paths[0].node.loc ?? GeneratedSource,
           },
         ],
-      },
+      }),
       context,
     );
   }

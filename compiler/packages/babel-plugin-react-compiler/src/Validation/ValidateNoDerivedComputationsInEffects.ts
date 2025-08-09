@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, ErrorSeverity, SourceLocation} from '..';
+import {CompilerError, SourceLocation} from '..';
 import {
   ArrayExpression,
   BlockId,
@@ -19,6 +19,8 @@ import {
   eachInstructionValueOperand,
   eachTerminalOperand,
 } from '../HIR/visitors';
+import {ErrorCode} from '../Utils/CompilerErrorCodes';
+import {Result} from '../Utils/Result';
 
 /**
  * Validates that useEffect is not used for derived computations which could/should
@@ -43,7 +45,9 @@ import {
  * const fullName = firstName + ' ' + lastName;
  * ```
  */
-export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
+export function validateNoDerivedComputationsInEffects(
+  fn: HIRFunction,
+): Result<void, CompilerError> {
   const candidateDependencies: Map<IdentifierId, ArrayExpression> = new Map();
   const functions: Map<IdentifierId, FunctionExpression> = new Map();
   const locals: Map<IdentifierId, IdentifierId> = new Map();
@@ -96,9 +100,7 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
       }
     }
   }
-  if (errors.hasErrors()) {
-    throw errors;
-  }
+  return errors.asResult();
 }
 
 function validateEffect(
@@ -218,13 +220,6 @@ function validateEffect(
   }
 
   for (const loc of setStateLocations) {
-    errors.push({
-      reason:
-        'Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)',
-      description: null,
-      severity: ErrorSeverity.InvalidReact,
-      loc,
-      suggestions: null,
-    });
+    errors.pushErrorCode(ErrorCode.NO_DERIVED_COMPUTATIONS_IN_EFFECTS, {loc});
   }
 }

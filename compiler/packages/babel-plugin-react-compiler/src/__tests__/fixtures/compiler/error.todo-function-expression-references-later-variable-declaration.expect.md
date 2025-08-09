@@ -19,9 +19,9 @@ function Component() {
 ```
 Found 1 error:
 
-Error: Cannot reassign variable after render completes
+Error: Cannot reassign local variables after render completes
 
-Reassigning `onClick` after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.
+Reassigning local variables after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.
 
 error.todo-function-expression-references-later-variable-declaration.ts:3:4
   1 | function Component() {

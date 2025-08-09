@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, ErrorSeverity} from '..';
+import {CompilerError} from '..';
 import {
   Identifier,
   Instruction,
@@ -22,6 +22,7 @@ import {
   ReactiveFunctionVisitor,
   visitReactiveFunction,
 } from '../ReactiveScopes/visitors';
+import {ErrorCode} from '../Utils/CompilerErrorCodes';
 import {Result} from '../Utils/Result';
 
 /**
@@ -108,12 +109,8 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
           isUnmemoized(deps.identifier, this.scopes))
       ) {
         state.push({
-          reason:
-            'React Compiler has skipped optimizing this component because the effect dependencies could not be memoized. Unmemoized effect dependencies can trigger an infinite loop or other unexpected behavior',
-          description: null,
-          severity: ErrorSeverity.CannotPreserveMemoization,
+          errorCode: ErrorCode.MEMOIZED_EFFECT_DEPENDENCIES,
           loc: typeof instruction.loc !== 'symbol' ? instruction.loc : null,
-          suggestions: null,
         });
       }
     }

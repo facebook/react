@@ -57,7 +57,7 @@ Found 1 error:
 
 Todo: Support duplicate fbt tags
 
-Support `<fbt>` tags with multiple `<fbt:plural>` values
+Support `<fbt>` tags with multiple `<fbt:plural>` values.
 
 error.todo-multiple-fbt-plural.ts:29:7
   27 |   return (

@@ -35,12 +35,12 @@ Found 1 error:
 
 Error: Cannot access variable before it is declared
 
-`data` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+Reading a variable before it is initialized will prevent the earlier access from updating when this value changes over time. Instead, move the variable access to after it has been initialized.
 
    9 |   // TDZ violation!
   10 |   const onRefetch = useCallback(() => {
 > 11 |     refetch(data);
-     |             ^^^^ `data` accessed before it is declared
+     |             ^^^^ `data` is accessed before it is declared
   12 |   }, [refetch]);
   13 |
   14 |   // The context variable gets frozen here since it's passed to a hook

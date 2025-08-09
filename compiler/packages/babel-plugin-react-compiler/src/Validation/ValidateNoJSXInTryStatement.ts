@@ -5,8 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerDiagnostic, CompilerError, ErrorSeverity} from '..';
+import {CompilerDiagnostic, CompilerError} from '..';
 import {BlockId, HIRFunction} from '../HIR';
+import {ErrorCode} from '../Utils/CompilerErrorCodes';
 import {Result} from '../Utils/Result';
 import {retainWhere} from '../Utils/utils';
 
@@ -35,11 +36,7 @@ export function validateNoJSXInTryStatement(
           case 'JsxExpression':
           case 'JsxFragment': {
             errors.pushDiagnostic(
-              CompilerDiagnostic.create({
-                severity: ErrorSeverity.InvalidReact,
-                category: 'Avoid constructing JSX within try/catch',
-                description: `React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary)`,
-              }).withDetail({
+              CompilerDiagnostic.fromCode(ErrorCode.JSX_IN_TRY).withDetail({
                 kind: 'error',
                 loc: value.loc,
                 message: 'Avoid constructing JSX within try/catch',

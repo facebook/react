@@ -11,7 +11,7 @@ import {
   CompilerDiagnostic,
   CompilerError,
   CompilerSuggestionOperation,
-  ErrorSeverity,
+  ErrorCode,
 } from '../CompilerError';
 import {assertExhaustive} from '../Utils/utils';
 import {GeneratedSource} from '../HIR';
@@ -165,14 +165,12 @@ export function suppressionsToCompilerError(
     let reason, suggestion;
     switch (suppressionRange.source) {
       case 'Eslint':
-        reason =
-          'React Compiler has skipped optimizing this component because one or more React ESLint rules were disabled';
+        reason = ErrorCode.BAILOUT_ESLINT_SUPPRESSION;
         suggestion =
           'Remove the ESLint suppression and address the React error';
         break;
       case 'Flow':
-        reason =
-          'React Compiler has skipped optimizing this component because one or more React rule violations were reported by Flow';
+        reason = ErrorCode.BAILOUT_FLOW_SUPPRESSION;
         suggestion = 'Remove the Flow suppression and address the React error';
         break;
       default:
@@ -182,10 +180,8 @@ export function suppressionsToCompilerError(
         );
     }
     error.pushDiagnostic(
-      CompilerDiagnostic.create({
-        category: reason,
-        description: `React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior. Found suppression \`${suppressionRange.disableComment.value.trim()}\``,
-        severity: ErrorSeverity.InvalidReact,
+      CompilerDiagnostic.fromCode(reason, {
+        description: `Found suppression \`${suppressionRange.disableComment.value.trim()}\``,
         suggestions: [
           {
             description: suggestion,

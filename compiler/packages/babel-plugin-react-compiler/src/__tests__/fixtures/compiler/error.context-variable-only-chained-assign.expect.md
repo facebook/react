@@ -30,9 +30,9 @@ export const FIXTURE_ENTRYPOINT = {
 ```
 Found 1 error:
 
-Error: Cannot reassign variable after render completes
+Error: Cannot reassign local variables after render completes
 
-Reassigning `x` after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.
+Reassigning local variables after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.
 
 error.context-variable-only-chained-assign.ts:10:19
    8 |   };

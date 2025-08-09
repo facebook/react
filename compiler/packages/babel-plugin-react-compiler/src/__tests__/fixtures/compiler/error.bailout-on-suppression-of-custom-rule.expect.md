@@ -23,7 +23,7 @@ Found 2 errors:
 
 Error: React Compiler has skipped optimizing this component because one or more React ESLint rules were disabled
 
-React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior. Found suppression `eslint-disable my-app/react-rule`
+React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior. Found suppression `eslint-disable my-app/react-rule`.
 
 error.bailout-on-suppression-of-custom-rule.ts:3:0
   1 | // @eslintSuppressionRules:["my-app","react-rule"]
@@ -36,7 +36,7 @@ error.bailout-on-suppression-of-custom-rule.ts:3:0
 
 Error: React Compiler has skipped optimizing this component because one or more React ESLint rules were disabled
 
-React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior. Found suppression `eslint-disable-next-line my-app/react-rule`
+React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior. Found suppression `eslint-disable-next-line my-app/react-rule`.
 
 error.bailout-on-suppression-of-custom-rule.ts:7:2
    5 |   'use forget';

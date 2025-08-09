@@ -30,7 +30,7 @@ function Component(props) {
 ```
 Found 1 error:
 
-Invariant: Cannot compile `fire`
+Error: Cannot compile `fire`
 
 You must use an array literal for an effect dependency array when that effect uses `fire()`.
 
