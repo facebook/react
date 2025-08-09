@@ -140,6 +140,26 @@ function isUseIdentifier(node: Node): boolean {
   return isReactFunction(node, 'use');
 }
 
+/**
+ * Checks if an anonymous function is being passed as a prop that starts with "use"
+ * This indicates it should be treated as a custom hook rather than a callback
+ */
+function isAnonymousFunctionPassedAsHookProp(node: Node): boolean {
+  // Check if this function is the value of a JSX attribute
+  if (
+    node.parent &&
+    node.parent.type === 'JSXExpressionContainer' &&
+    node.parent.parent &&
+    node.parent.parent.type === 'JSXAttribute' &&
+    node.parent.parent.name &&
+    node.parent.parent.name.type === 'JSXIdentifier'
+  ) {
+    const propName = node.parent.parent.name.name;
+    return typeof propName === 'string' && isHookName(propName);
+  }
+  return false;
+}
+
 const rule = {
   meta: {
     type: 'problem',
@@ -658,7 +678,9 @@ const rule = {
               // enough in the common case that the incorrect message in
               // uncommon cases doesn't matter.
               // `use(...)` can be called in callbacks.
-              if (isSomewhereInsideComponentOrHook && !isUseIdentifier(hook)) {
+              const isPassedAsHookProp = isAnonymousFunctionPassedAsHookProp(codePathNode);
+              
+              if (isSomewhereInsideComponentOrHook && !isUseIdentifier(hook) && !isPassedAsHookProp) {
                 const message =
                   `React Hook "${getSourceCode().getText(
                     hook,
