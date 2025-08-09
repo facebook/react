@@ -11,6 +11,12 @@ import semver from 'semver';
 
 import typeof ReactTestRenderer from 'react-test-renderer';
 
+import {
+  clearLogs,
+  clearWarnings,
+  clearErrors,
+  createLogAssertion,
+} from 'internal-test-utils/consoleMock';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
 import type {ProfilingDataFrontend} from 'react-devtools-shared/src/devtools/views/Profiler/types';
@@ -150,11 +156,9 @@ export function getLegacyRenderImplementation(): RenderImplementation {
   });
 
   function render(elements) {
-    withErrorsOrWarningsIgnored(
-      ['ReactDOM.render has not been supported since React 18'],
-      () => {
-        ReactDOM.render(elements, container);
-      },
+    ReactDOM.render(elements, container);
+    require('internal-test-utils').assertConsoleErrorDev(
+      'ReactDOM.render has not been supported since React 18',
     );
 
     return unmount;
@@ -352,11 +356,9 @@ export function legacyRender(elements, container) {
   }
 
   const ReactDOM = require('react-dom');
-  withErrorsOrWarningsIgnored(
-    ['ReactDOM.render has not been supported since React 18'],
-    () => {
-      ReactDOM.render(elements, container);
-    },
+  ReactDOM.render(elements, container);
+  require('internal-test-utils').assertConsoleErrorDev(
+    'ReactDOM.render has not been supported since React 18',
   );
 
   return () => {
@@ -425,45 +427,24 @@ export function exportImportHelper(bridge: FrontendBridge, store: Store): void {
   });
 }
 
-/**
- * Runs `fn` while preventing console error and warnings that partially match any given `errorOrWarningMessages` from appearing in the console.
- * @param errorOrWarningMessages Messages are matched partially (i.e. indexOf), pre-formatting.
- * @param fn
- */
-export function withErrorsOrWarningsIgnored<T: void | Promise<void>>(
-  errorOrWarningMessages: string[],
-  fn: () => T,
-): T {
-  // withErrorsOrWarningsIgnored() may be nested.
-  const prev = global._ignoredErrorOrWarningMessages || [];
-
-  let resetIgnoredErrorOrWarningMessages = true;
-  try {
-    global._ignoredErrorOrWarningMessages = [
-      ...prev,
-      ...errorOrWarningMessages,
-    ];
-    const maybeThenable = fn();
-    if (
-      maybeThenable !== undefined &&
-      typeof maybeThenable.then === 'function'
-    ) {
-      resetIgnoredErrorOrWarningMessages = false;
-      return maybeThenable.then(
-        () => {
-          global._ignoredErrorOrWarningMessages = prev;
-        },
-        () => {
-          global._ignoredErrorOrWarningMessages = prev;
-        },
-      );
-    }
-  } finally {
-    if (resetIgnoredErrorOrWarningMessages) {
-      global._ignoredErrorOrWarningMessages = prev;
-    }
-  }
-}
+export const assertConsoleLog = createLogAssertion(
+  'log',
+  'assertConsoleLog',
+  clearLogs,
+  true,
+);
+export const assertConsoleWarn = createLogAssertion(
+  'warn',
+  'assertConsoleWarn',
+  clearWarnings,
+  true,
+);
+export const assertConsoleError = createLogAssertion(
+  'error',
+  'assertConsoleError',
+  clearErrors,
+  true,
+);
 
 export function overrideFeatureFlags(overrideFlags) {
   jest.mock('react-devtools-feature-flags', () => {

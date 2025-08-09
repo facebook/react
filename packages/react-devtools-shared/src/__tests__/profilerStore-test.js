@@ -15,12 +15,14 @@ describe('ProfilerStore', () => {
   let React;
   let store: Store;
   let utils;
+  let assertConsoleWarn;
 
   beforeEach(() => {
     global.IS_REACT_ACT_ENVIRONMENT = true;
 
     utils = require('./utils');
     utils.beforeEachProfiling();
+    assertConsoleWarn = utils.assertConsoleWarn;
 
     store = global.store;
     store.collapseNodesByDefault = false;
@@ -71,12 +73,11 @@ describe('ProfilerStore', () => {
     const fauxProfilingData = {
       dataForRoots: new Map(),
     };
-    jest.spyOn(console, 'warn').mockImplementation(() => {});
     store.profilerStore.profilingData = fauxProfilingData;
     expect(store.profilerStore.profilingData).not.toBe(fauxProfilingData);
-    expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(
-      'Profiling data cannot be updated while profiling is in progress.',
+    assertConsoleWarn(
+      ['Profiling data cannot be updated while profiling is in progress.'],
+      {withoutStack: true},
     );
     utils.act(() => store.profilerStore.stopProfiling());
     store.profilerStore.profilingData = fauxProfilingData;
@@ -107,8 +108,12 @@ describe('ProfilerStore', () => {
     ).set;
 
     const target = inputRef.current;
-    setUntrackedValue.call(target, 'bar');
-    target.dispatchEvent(new Event('input', {bubbles: true, cancelable: true}));
+    utils.act(() => {
+      setUntrackedValue.call(target, 'bar');
+      target.dispatchEvent(
+        new Event('input', {bubbles: true, cancelable: true}),
+      );
+    });
     expect(target.value).toBe('bar');
 
     utils.act(() => store.profilerStore.stopProfiling());
@@ -212,7 +217,7 @@ describe('ProfilerStore', () => {
   });
 
   // @reactVersion >= 18.0
-  it('should not throw while initializing context values for Fibers within a not-yet-mounted subtree', () => {
+  it('should not throw while initializing context values for Fibers within a not-yet-mounted subtree', async () => {
     const promise = new Promise(resolve => {});
     const SuspendingView = () => {
       if (React.use) {
@@ -230,7 +235,7 @@ describe('ProfilerStore', () => {
       );
     };
 
-    utils.act(() => render(<App />));
+    await utils.actAsync(() => render(<App />));
     utils.act(() => store.profilerStore.startProfiling());
   });
 });

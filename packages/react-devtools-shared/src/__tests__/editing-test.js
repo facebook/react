@@ -18,6 +18,7 @@ describe('editing interface', () => {
   let bridge: FrontendBridge;
   let store: Store;
   let utils;
+  let assertConsoleErrorDev;
 
   const flushPendingUpdates = () => {
     utils.act(() => jest.runOnlyPendingTimers());
@@ -33,6 +34,8 @@ describe('editing interface', () => {
 
     PropTypes = require('prop-types');
     React = require('react');
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
   });
 
   const {render} = getVersionedRenderImplementation();
@@ -918,6 +921,10 @@ describe('editing interface', () => {
           </LegacyContextProvider>,
         ),
       );
+      assertConsoleErrorDev([
+        'LegacyContextProvider uses the legacy childContextTypes API which was removed in React 19.',
+        'ClassComponent uses the legacy contextTypes API which was removed in React 19.',
+      ]);
 
       // This test only covers Class components.
       // Function components using legacy context are not editable.

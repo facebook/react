@@ -7,19 +7,22 @@
  * @flow
  */
 
-import {
-  getVersionedRenderImplementation,
-  normalizeCodeLocInfo,
-} from 'react-devtools-shared/src/__tests__/utils';
+import {getVersionedRenderImplementation} from 'react-devtools-shared/src/__tests__/utils';
 
 describe('component stack', () => {
   let React;
   let act;
+  let assertConsoleError;
+  let assertConsoleWarn;
   let supportsOwnerStacks;
 
   beforeEach(() => {
+    global.IS_REACT_ACT_ENVIRONMENT = true;
+    jest.resetAllMocks();
     const utils = require('./utils');
     act = utils.act;
+    assertConsoleError = utils.assertConsoleError;
+    assertConsoleWarn = utils.assertConsoleWarn;
 
     React = require('react');
     if (
@@ -44,17 +47,14 @@ describe('component stack', () => {
 
     act(() => render(<Grandparent />));
 
-    expect(
-      global.consoleErrorMock.mock.calls[0].map(normalizeCodeLocInfo),
-    ).toEqual([
+    assertConsoleError([
       'Test error.',
       '\n    in Child (at **)' +
         '\n    in Parent (at **)' +
         '\n    in Grandparent (at **)',
     ]);
-    expect(
-      global.consoleWarnMock.mock.calls[0].map(normalizeCodeLocInfo),
-    ).toEqual([
+
+    assertConsoleWarn([
       'Test warning.',
       '\n    in Child (at **)' +
         '\n    in Parent (at **)' +
@@ -83,11 +83,9 @@ describe('component stack', () => {
 
     expect(useEffectCount).toBe(1);
 
-    expect(
-      global.consoleWarnMock.mock.calls[0].map(normalizeCodeLocInfo),
-    ).toEqual([
-      'Warning to trigger appended component stacks.',
-      '\n    in Example (at **)',
+    assertConsoleWarn([
+      'Warning to trigger appended component stacks.' +
+        '\n    in Example (at **)',
     ]);
   });
 
@@ -113,9 +111,7 @@ describe('component stack', () => {
 
     act(() => render(<Grandparent />));
 
-    expect(
-      global.consoleErrorMock.mock.calls[0].map(normalizeCodeLocInfo),
-    ).toEqual([
+    assertConsoleError([
       'Test error.',
       supportsOwnerStacks
         ? '\n    in Child (at **)'
@@ -124,9 +120,7 @@ describe('component stack', () => {
           '\n    in Parent (at **)' +
           '\n    in Grandparent (at **)',
     ]);
-    expect(
-      global.consoleWarnMock.mock.calls[0].map(normalizeCodeLocInfo),
-    ).toEqual([
+    assertConsoleWarn([
       'Test warning.',
       supportsOwnerStacks
         ? '\n    in Child (at **)'

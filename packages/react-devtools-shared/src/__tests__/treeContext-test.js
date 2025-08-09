@@ -23,7 +23,8 @@ describe('TreeListContext', () => {
   let bridge: FrontendBridge;
   let store: Store;
   let utils;
-  let withErrorsOrWarningsIgnored;
+  let assertConsoleError;
+  let assertConsoleWarn;
 
   let BridgeContext;
   let StoreContext;
@@ -37,8 +38,8 @@ describe('TreeListContext', () => {
 
     utils = require('./utils');
     utils.beforeEachProfiling();
-
-    withErrorsOrWarningsIgnored = utils.withErrorsOrWarningsIgnored;
+    assertConsoleError = utils.assertConsoleError;
+    assertConsoleWarn = utils.assertConsoleWarn;
 
     bridge = global.bridge;
     store = global.store;
@@ -1524,19 +1525,19 @@ describe('TreeListContext', () => {
     });
 
     it('should cycle through the next errors/warnings and wrap around', () => {
-      withErrorsOrWarningsIgnored(['test-only:'], () =>
-        utils.act(() =>
-          render(
-            <React.Fragment>
-              <Child />
-              <Child logWarning={true} />
-              <Child />
-              <Child logError={true} />
-              <Child />
-            </React.Fragment>,
-          ),
+      utils.act(() =>
+        render(
+          <React.Fragment>
+            <Child />
+            <Child logWarning={true} />
+            <Child />
+            <Child logError={true} />
+            <Child />
+          </React.Fragment>,
         ),
       );
+      assertConsoleError(['test-only: error']);
+      assertConsoleWarn(['test-only: warning']);
 
       utils.act(() => TestRenderer.create(<Contexts />));
       expect(state).toMatchInlineSnapshot(`
@@ -1584,19 +1585,19 @@ describe('TreeListContext', () => {
     });
 
     it('should cycle through the previous errors/warnings and wrap around', () => {
-      withErrorsOrWarningsIgnored(['test-only:'], () =>
-        utils.act(() =>
-          render(
-            <React.Fragment>
-              <Child />
-              <Child logWarning={true} />
-              <Child />
-              <Child logError={true} />
-              <Child />
-            </React.Fragment>,
-          ),
+      utils.act(() =>
+        render(
+          <React.Fragment>
+            <Child />
+            <Child logWarning={true} />
+            <Child />
+            <Child logError={true} />
+            <Child />
+          </React.Fragment>,
         ),
       );
+      assertConsoleError(['test-only: error']);
+      assertConsoleWarn(['test-only: warning']);
 
       utils.act(() => TestRenderer.create(<Contexts />));
       expect(state).toMatchInlineSnapshot(`
@@ -1644,26 +1645,26 @@ describe('TreeListContext', () => {
     });
 
     it('should cycle through the next errors/warnings and wrap around with multiple roots', () => {
-      withErrorsOrWarningsIgnored(['test-only:'], () => {
-        utils.act(() => {
-          render(
-            <React.Fragment>
-              <Child />
-              <Child logWarning={true} />,
-            </React.Fragment>,
-          );
+      utils.act(() => {
+        render(
+          <React.Fragment>
+            <Child />
+            <Child logWarning={true} />,
+          </React.Fragment>,
+        );
 
-          createContainer();
+        createContainer();
 
-          render(
-            <React.Fragment>
-              <Child />
-              <Child logError={true} />
-              <Child />
-            </React.Fragment>,
-          );
-        });
+        render(
+          <React.Fragment>
+            <Child />
+            <Child logError={true} />
+            <Child />
+          </React.Fragment>,
+        );
       });
+      assertConsoleError(['test-only: error']);
+      assertConsoleWarn(['test-only: warning']);
 
       utils.act(() => TestRenderer.create(<Contexts />));
       expect(state).toMatchInlineSnapshot(`
@@ -1715,26 +1716,26 @@ describe('TreeListContext', () => {
     });
 
     it('should cycle through the previous errors/warnings and wrap around with multiple roots', () => {
-      withErrorsOrWarningsIgnored(['test-only:'], () => {
-        utils.act(() => {
-          render(
-            <React.Fragment>
-              <Child />
-              <Child logWarning={true} />,
-            </React.Fragment>,
-          );
+      utils.act(() => {
+        render(
+          <React.Fragment>
+            <Child />
+            <Child logWarning={true} />,
+          </React.Fragment>,
+        );
 
-          createContainer();
+        createContainer();
 
-          render(
-            <React.Fragment>
-              <Child />
-              <Child logError={true} />
-              <Child />
-            </React.Fragment>,
-          );
-        });
+        render(
+          <React.Fragment>
+            <Child />
+            <Child logError={true} />
+            <Child />
+          </React.Fragment>,
+        );
       });
+      assertConsoleError(['test-only: error']);
+      assertConsoleWarn(['test-only: warning']);
 
       utils.act(() => TestRenderer.create(<Contexts />));
       expect(state).toMatchInlineSnapshot(`
@@ -1786,19 +1787,19 @@ describe('TreeListContext', () => {
     });
 
     it('should select the next or previous element relative to the current selection', () => {
-      withErrorsOrWarningsIgnored(['test-only:'], () =>
-        utils.act(() =>
-          render(
-            <React.Fragment>
-              <Child />
-              <Child logWarning={true} />
-              <Child />
-              <Child logError={true} />
-              <Child />
-            </React.Fragment>,
-          ),
+      utils.act(() =>
+        render(
+          <React.Fragment>
+            <Child />
+            <Child logWarning={true} />
+            <Child />
+            <Child logError={true} />
+            <Child />
+          </React.Fragment>,
         ),
       );
+      assertConsoleError(['test-only: error']);
+      assertConsoleWarn(['test-only: warning']);
 
       utils.act(() => TestRenderer.create(<Contexts />));
       utils.act(() => dispatch({type: 'SELECT_ELEMENT_AT_INDEX', payload: 2}));
@@ -1847,18 +1848,18 @@ describe('TreeListContext', () => {
     });
 
     it('should update correctly when errors/warnings are cleared for a fiber in the list', () => {
-      withErrorsOrWarningsIgnored(['test-only:'], () =>
-        utils.act(() =>
-          render(
-            <React.Fragment>
-              <Child logWarning={true} />
-              <Child logError={true} />
-              <Child logError={true} />
-              <Child logWarning={true} />
-            </React.Fragment>,
-          ),
+      utils.act(() =>
+        render(
+          <React.Fragment>
+            <Child logWarning={true} />
+            <Child logError={true} />
+            <Child logError={true} />
+            <Child logWarning={true} />
+          </React.Fragment>,
         ),
       );
+      assertConsoleError(['test-only: error', 'test-only: error']);
+      assertConsoleWarn(['test-only: warning', 'test-only: warning']);
 
       utils.act(() => TestRenderer.create(<Contexts />));
       expect(state).toMatchInlineSnapshot(`
@@ -1919,16 +1920,16 @@ describe('TreeListContext', () => {
     });
 
     it('should update correctly when errors/warnings are cleared for the currently selected fiber', () => {
-      withErrorsOrWarningsIgnored(['test-only:'], () =>
-        utils.act(() =>
-          render(
-            <React.Fragment>
-              <Child logWarning={true} />
-              <Child logError={true} />
-            </React.Fragment>,
-          ),
+      utils.act(() =>
+        render(
+          <React.Fragment>
+            <Child logWarning={true} />
+            <Child logError={true} />
+          </React.Fragment>,
         ),
       );
+      assertConsoleError(['test-only: error']);
+      assertConsoleWarn(['test-only: warning']);
 
       utils.act(() => TestRenderer.create(<Contexts />));
       expect(state).toMatchInlineSnapshot(`
@@ -1957,18 +1958,18 @@ describe('TreeListContext', () => {
     });
 
     it('should update correctly when new errors/warnings are added', () => {
-      withErrorsOrWarningsIgnored(['test-only:'], () =>
-        utils.act(() =>
-          render(
-            <React.Fragment>
-              <Child logWarning={true} />
-              <Child />
-              <Child />
-              <Child logError={true} />
-            </React.Fragment>,
-          ),
+      utils.act(() =>
+        render(
+          <React.Fragment>
+            <Child logWarning={true} />
+            <Child />
+            <Child />
+            <Child logError={true} />
+          </React.Fragment>,
         ),
       );
+      assertConsoleError(['test-only: error']);
+      assertConsoleWarn(['test-only: warning']);
 
       utils.act(() => TestRenderer.create(<Contexts />));
       expect(state).toMatchInlineSnapshot(`
@@ -1990,18 +1991,17 @@ describe('TreeListContext', () => {
              <Child> ✕
       `);
 
-      withErrorsOrWarningsIgnored(['test-only:'], () =>
-        utils.act(() =>
-          render(
-            <React.Fragment>
-              <Child />
-              <Child logWarning={true} />
-              <Child />
-              <Child />
-            </React.Fragment>,
-          ),
+      utils.act(() =>
+        render(
+          <React.Fragment>
+            <Child />
+            <Child logWarning={true} />
+            <Child />
+            <Child />
+          </React.Fragment>,
         ),
       );
+      assertConsoleWarn(['test-only: warning']);
 
       selectNextErrorOrWarning();
       expect(state).toMatchInlineSnapshot(`
@@ -2035,16 +2035,16 @@ describe('TreeListContext', () => {
     });
 
     it('should update correctly when all errors/warnings are cleared', () => {
-      withErrorsOrWarningsIgnored(['test-only:'], () =>
-        utils.act(() =>
-          render(
-            <React.Fragment>
-              <Child logWarning={true} />
-              <Child logError={true} />
-            </React.Fragment>,
-          ),
+      utils.act(() =>
+        render(
+          <React.Fragment>
+            <Child logWarning={true} />
+            <Child logError={true} />
+          </React.Fragment>,
         ),
       );
+      assertConsoleError(['test-only: error']);
+      assertConsoleWarn(['test-only: warning']);
 
       utils.act(() => TestRenderer.create(<Contexts />));
       expect(state).toMatchInlineSnapshot(`
@@ -2088,15 +2088,14 @@ describe('TreeListContext', () => {
         }
         return null;
       }
-      withErrorsOrWarningsIgnored(['test-only:'], () =>
-        utils.act(() =>
-          render(
-            <React.Fragment>
-              <ErrorOnce key="error" />
-            </React.Fragment>,
-          ),
+      utils.act(() =>
+        render(
+          <React.Fragment>
+            <ErrorOnce key="error" />
+          </React.Fragment>,
         ),
       );
+      assertConsoleError(['test-only:one-time-error']);
 
       let renderer;
       utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
@@ -2106,14 +2105,12 @@ describe('TreeListContext', () => {
              <ErrorOnce key="error"> ✕
       `);
 
-      withErrorsOrWarningsIgnored(['test-only:'], () =>
-        utils.act(() =>
-          render(
-            <React.Fragment>
-              <Child />
-              <ErrorOnce key="error" />
-            </React.Fragment>,
-          ),
+      utils.act(() =>
+        render(
+          <React.Fragment>
+            <Child />
+            <ErrorOnce key="error" />
+          </React.Fragment>,
         ),
       );
 
@@ -2143,18 +2140,20 @@ describe('TreeListContext', () => {
         }
         return null;
       }
-      withErrorsOrWarningsIgnored(['test-only:'], () =>
-        utils.act(() =>
-          render(
-            <React.Fragment>
-              <Child key="A" />
-              <ErrorOnce key="B" />
-              <Child key="C" />
-              <ErrorOnce key="D" />
-            </React.Fragment>,
-          ),
+      utils.act(() =>
+        render(
+          <React.Fragment>
+            <Child key="A" />
+            <ErrorOnce key="B" />
+            <Child key="C" />
+            <ErrorOnce key="D" />
+          </React.Fragment>,
         ),
       );
+      assertConsoleError([
+        'test-only:one-time-error',
+        'test-only:one-time-error',
+      ]);
 
       let renderer;
       utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
@@ -2180,16 +2179,14 @@ describe('TreeListContext', () => {
       `);
 
       // Re-order the tree and ensure indices are updated.
-      withErrorsOrWarningsIgnored(['test-only:'], () =>
-        utils.act(() =>
-          render(
-            <React.Fragment>
-              <ErrorOnce key="B" />
-              <Child key="A" />
-              <ErrorOnce key="D" />
-              <Child key="C" />
-            </React.Fragment>,
-          ),
+      utils.act(() =>
+        render(
+          <React.Fragment>
+            <ErrorOnce key="B" />
+            <Child key="A" />
+            <ErrorOnce key="D" />
+            <Child key="C" />
+          </React.Fragment>,
         ),
       );
       expect(state).toMatchInlineSnapshot(`
@@ -2213,16 +2210,14 @@ describe('TreeListContext', () => {
       `);
 
       // Re-order the tree and ensure indices are updated.
-      withErrorsOrWarningsIgnored(['test-only:'], () =>
-        utils.act(() =>
-          render(
-            <React.Fragment>
-              <ErrorOnce key="D" />
-              <ErrorOnce key="B" />
-              <Child key="A" />
-              <Child key="C" />
-            </React.Fragment>,
-          ),
+      utils.act(() =>
+        render(
+          <React.Fragment>
+            <ErrorOnce key="D" />
+            <ErrorOnce key="B" />
+            <Child key="A" />
+            <Child key="C" />
+          </React.Fragment>,
         ),
       );
       expect(state).toMatchInlineSnapshot(`
@@ -2240,22 +2235,21 @@ describe('TreeListContext', () => {
 
       store.collapseNodesByDefault = true;
 
-      withErrorsOrWarningsIgnored(['test-only:'], () =>
-        utils.act(() =>
-          render(
-            <React.Fragment>
+      utils.act(() =>
+        render(
+          <React.Fragment>
+            <Wrapper>
+              <Child logWarning={true} />
+            </Wrapper>
+            <Wrapper>
               <Wrapper>
                 <Child logWarning={true} />
               </Wrapper>
-              <Wrapper>
-                <Wrapper>
-                  <Child logWarning={true} />
-                </Wrapper>
-              </Wrapper>
-            </React.Fragment>,
-          ),
+            </Wrapper>
+          </React.Fragment>,
         ),
       );
+      assertConsoleWarn(['test-only: warning', 'test-only: warning']);
 
       utils.act(() => TestRenderer.create(<Contexts />));
       expect(state).toMatchInlineSnapshot(`
@@ -2289,22 +2283,21 @@ describe('TreeListContext', () => {
     it('should preserve errors for fibers even if they are filtered out of the tree initially', () => {
       const Wrapper = ({children}) => children;
 
-      withErrorsOrWarningsIgnored(['test-only:'], () =>
-        utils.act(() =>
-          render(
-            <React.Fragment>
+      utils.act(() =>
+        render(
+          <React.Fragment>
+            <Wrapper>
+              <Child logWarning={true} />
+            </Wrapper>
+            <Wrapper>
               <Wrapper>
                 <Child logWarning={true} />
               </Wrapper>
-              <Wrapper>
-                <Wrapper>
-                  <Child logWarning={true} />
-                </Wrapper>
-              </Wrapper>
-            </React.Fragment>,
-          ),
+            </Wrapper>
+          </React.Fragment>,
         ),
       );
+      assertConsoleWarn(['test-only: warning', 'test-only: warning']);
 
       store.componentFilters = [utils.createDisplayNameFilter('Child')];
 
@@ -2346,16 +2339,15 @@ describe('TreeListContext', () => {
       it('should properly handle errors/warnings from components inside of delayed Suspense', async () => {
         const NeverResolves = React.lazy(() => new Promise(() => {}));
 
-        withErrorsOrWarningsIgnored(['test-only:'], () =>
-          utils.act(() =>
-            render(
-              <React.Suspense fallback={null}>
-                <Child logWarning={true} />
-                <NeverResolves />
-              </React.Suspense>,
-            ),
+        utils.act(() =>
+          render(
+            <React.Suspense fallback={null}>
+              <Child logWarning={true} />
+              <NeverResolves />
+            </React.Suspense>,
           ),
         );
+        assertConsoleWarn(['test-only: warning', 'test-only: warning']);
         utils.act(() => TestRenderer.create(<Contexts />));
 
         jest.runAllTimers();
@@ -2379,14 +2371,12 @@ describe('TreeListContext', () => {
         }
         const LazyComponent = React.lazy(() => fakeImport(Child));
 
-        withErrorsOrWarningsIgnored(['test-only:'], () =>
-          utils.act(() =>
-            render(
-              <React.Suspense fallback={null}>
-                <Child logWarning={true} />
-                <LazyComponent />
-              </React.Suspense>,
-            ),
+        utils.act(() =>
+          render(
+            <React.Suspense fallback={null}>
+              <Child logWarning={true} />
+              <LazyComponent />
+            </React.Suspense>,
           ),
         );
         utils.act(() => TestRenderer.create(<Contexts />));
@@ -2396,17 +2386,12 @@ describe('TreeListContext', () => {
                        <Suspense>
               `);
 
-        await Promise.resolve();
-        withErrorsOrWarningsIgnored(['test-only:'], () =>
-          utils.act(() =>
-            render(
-              <React.Suspense fallback={null}>
-                <Child logWarning={true} />
-                <LazyComponent />
-              </React.Suspense>,
-            ),
-          ),
-        );
+        await utils.actAsync(() => {});
+        assertConsoleWarn([
+          'test-only: warning',
+          'test-only: warning',
+          'test-only: warning',
+        ]);
 
         expect(state).toMatchInlineSnapshot(`
           ✕ 0, ⚠ 1
@@ -2418,22 +2403,24 @@ describe('TreeListContext', () => {
       });
 
       it('should properly show errors/warnings from components in the Suspense fallback tree', async () => {
+        let resolveLazyComponent;
         async function fakeImport(result) {
-          return {default: result};
+          return new Promise(resolve => {
+            resolveLazyComponent = () => resolve({default: result});
+          });
         }
         const LazyComponent = React.lazy(() => fakeImport(Child));
 
         const Fallback = () => <Child logError={true} />;
 
-        withErrorsOrWarningsIgnored(['test-only:'], () =>
-          utils.act(() =>
-            render(
-              <React.Suspense fallback={<Fallback />}>
-                <LazyComponent />
-              </React.Suspense>,
-            ),
+        utils.act(() =>
+          render(
+            <React.Suspense fallback={<Fallback />}>
+              <LazyComponent />
+            </React.Suspense>,
           ),
         );
+        assertConsoleError(['test-only: error']);
         utils.act(() => TestRenderer.create(<Contexts />));
 
         expect(state).toMatchInlineSnapshot(`
@@ -2444,16 +2431,9 @@ describe('TreeListContext', () => {
                    <Child> ✕
         `);
 
-        await Promise.resolve();
-        withErrorsOrWarningsIgnored(['test-only:'], () =>
-          utils.act(() =>
-            render(
-              <React.Suspense fallback={<Fallback />}>
-                <LazyComponent />
-              </React.Suspense>,
-            ),
-          ),
-        );
+        await utils.actAsync(() => {
+          resolveLazyComponent();
+        });
 
         expect(state).toMatchInlineSnapshot(`
                   [root]
@@ -2464,7 +2444,7 @@ describe('TreeListContext', () => {
     });
 
     describe('error boundaries', () => {
-      it('should properly handle errors from components that dont mount because of an error', () => {
+      it('should properly handle errors from components that dont mount because of an error', async () => {
         class ErrorBoundary extends React.Component {
           state = {error: null};
           static getDerivedStateFromError(error) {
@@ -2485,18 +2465,14 @@ describe('TreeListContext', () => {
           }
         }
 
-        withErrorsOrWarningsIgnored(
-          ['test-only:', 'React will try to recreate this component tree'],
-          () => {
-            utils.act(() =>
-              render(
-                <ErrorBoundary>
-                  <BadRender />
-                </ErrorBoundary>,
-              ),
-            );
-          },
+        await utils.actAsync(() =>
+          render(
+            <ErrorBoundary>
+              <BadRender />
+            </ErrorBoundary>,
+          ),
         );
+        assertConsoleError(['test-only: error']);
 
         utils.act(() => TestRenderer.create(<Contexts />));
 
@@ -2545,18 +2521,18 @@ describe('TreeListContext', () => {
           }
         }
 
-        withErrorsOrWarningsIgnored(
-          ['test-only:', 'React will try to recreate this component tree'],
-          () => {
-            utils.act(() =>
-              render(
-                <ErrorBoundary>
-                  <LogsWarning />
-                </ErrorBoundary>,
-              ),
-            );
-          },
+        utils.act(() =>
+          render(
+            <ErrorBoundary>
+              <LogsWarning />
+            </ErrorBoundary>,
+          ),
         );
+        assertConsoleError(['test-only: error']);
+        assertConsoleWarn([
+          'test-only: I am about to throw!',
+          'test-only: I am about to throw!',
+        ]);
 
         utils.act(() => TestRenderer.create(<Contexts />));
 
@@ -2600,18 +2576,14 @@ describe('TreeListContext', () => {
           }
         }
 
-        withErrorsOrWarningsIgnored(
-          ['test-only:', 'React will try to recreate this component tree'],
-          () => {
-            utils.act(() =>
-              render(
-                <ErrorBoundary>
-                  <BadRender />
-                </ErrorBoundary>,
-              ),
-            );
-          },
+        utils.act(() =>
+          render(
+            <ErrorBoundary>
+              <BadRender />
+            </ErrorBoundary>,
+          ),
         );
+        assertConsoleError(['test-only: I am about to throw!']);
 
         utils.act(() => TestRenderer.create(<Contexts />));
 

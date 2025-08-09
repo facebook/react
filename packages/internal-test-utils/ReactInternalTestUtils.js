@@ -328,16 +328,19 @@ export const assertConsoleLogDev = createLogAssertion(
   'log',
   'assertConsoleLogDev',
   clearLogs,
+  __DEV__,
 );
 export const assertConsoleWarnDev = createLogAssertion(
   'warn',
   'assertConsoleWarnDev',
   clearWarnings,
+  __DEV__,
 );
 export const assertConsoleErrorDev = createLogAssertion(
   'error',
   'assertConsoleErrorDev',
   clearErrors,
+  __DEV__,
 );
 
 // Simulates dispatching events, waiting for microtasks in between.

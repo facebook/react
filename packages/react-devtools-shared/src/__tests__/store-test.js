@@ -16,13 +16,15 @@ describe('Store', () => {
   let agent;
   let act;
   let actAsync;
+  let assertConsoleError;
+  let assertConsoleWarn;
   let bridge;
   let createDisplayNameFilter;
   let getRendererID;
   let legacyRender;
   let previousComponentFilters;
   let store;
-  let withErrorsOrWarningsIgnored;
+  let previousAppendComponentStackSetting;
 
   beforeEach(() => {
     global.IS_REACT_ACT_ENVIRONMENT = true;
@@ -40,10 +42,19 @@ describe('Store', () => {
     const utils = require('./utils');
     act = utils.act;
     actAsync = utils.actAsync;
+    assertConsoleError = utils.assertConsoleError;
+    assertConsoleWarn = utils.assertConsoleWarn;
     getRendererID = utils.getRendererID;
     legacyRender = utils.legacyRender;
     createDisplayNameFilter = utils.createDisplayNameFilter;
-    withErrorsOrWarningsIgnored = utils.withErrorsOrWarningsIgnored;
+
+    previousAppendComponentStackSetting =
+      global.__REACT_DEVTOOLS_GLOBAL_HOOK__.settings.appendComponentStack;
+  });
+
+  afterEach(() => {
+    global.__REACT_DEVTOOLS_GLOBAL_HOOK__.settings.appendComponentStack =
+      previousAppendComponentStackSetting;
   });
 
   afterEach(() => {
@@ -108,7 +119,7 @@ describe('Store', () => {
     };
     const Child = () => null;
 
-    await act(() =>
+    await actAsync(() =>
       render(
         <>
           <React.Suspense fallback="Loading...">
@@ -131,7 +142,7 @@ describe('Store', () => {
     const Component = () => null;
     Component.displayName = '🟩💜🔵';
 
-    await act(() => render(<Component />));
+    await actAsync(() => render(<Component />));
     expect(store).toMatchInlineSnapshot(`
       [root]
           <🟩💜🔵>
@@ -473,7 +484,7 @@ describe('Store', () => {
         </React.Fragment>
       );
 
-      await act(() => render(<Wrapper shouldSuspense={true} />));
+      await actAsync(() => render(<Wrapper shouldSuspense={true} />));
       expect(store).toMatchInlineSnapshot(`
         [root]
           ▾ <Wrapper>
@@ -538,7 +549,7 @@ describe('Store', () => {
         </React.Fragment>
       );
 
-      await act(() =>
+      await actAsync(() =>
         render(
           <Wrapper
             suspendParent={false}
@@ -561,7 +572,7 @@ describe('Store', () => {
                   <Loading key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
       `);
-      await act(() =>
+      await actAsync(() =>
         render(
           <Wrapper
             suspendParent={false}
@@ -584,7 +595,7 @@ describe('Store', () => {
                   <Loading key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
       `);
-      await act(() =>
+      await actAsync(() =>
         render(
           <Wrapper
             suspendParent={false}
@@ -607,7 +618,7 @@ describe('Store', () => {
                   <Loading key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
       `);
-      await act(() =>
+      await actAsync(() =>
         render(
           <Wrapper
             suspendParent={false}
@@ -630,7 +641,7 @@ describe('Store', () => {
                   <Loading key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
       `);
-      await act(() =>
+      await actAsync(() =>
         render(
           <Wrapper
             suspendParent={true}
@@ -646,7 +657,7 @@ describe('Store', () => {
             ▾ <Suspense>
                 <Loading key="Parent Fallback">
       `);
-      await act(() =>
+      await actAsync(() =>
         render(
           <Wrapper
             suspendParent={false}
@@ -669,7 +680,7 @@ describe('Store', () => {
                   <Loading key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
       `);
-      await act(() =>
+      await actAsync(() =>
         render(
           <Wrapper
             suspendParent={false}
@@ -745,7 +756,7 @@ describe('Store', () => {
             ▾ <Suspense>
                 <Loading key="Parent Fallback">
       `);
-      await act(() =>
+      await actAsync(() =>
         agent.overrideSuspense({
           id: store.getElementIDAtIndex(2),
           rendererID,
@@ -766,7 +777,7 @@ describe('Store', () => {
                   <Loading key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
       `);
-      await act(() =>
+      await actAsync(() =>
         agent.overrideSuspense({
           id: store.getElementIDAtIndex(4),
           rendererID,
@@ -787,7 +798,7 @@ describe('Store', () => {
                   <Loading key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
       `);
-      await act(() =>
+      await actAsync(() =>
         render(
           <Wrapper
             suspendParent={false}
@@ -838,7 +849,7 @@ describe('Store', () => {
 
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
-      await act(() => {
+      await actAsync(() => {
         root.render(<Wrapper shouldSuspense={true} />);
       });
       expect(store).toMatchInlineSnapshot(`
@@ -1193,7 +1204,7 @@ describe('Store', () => {
         </React.Fragment>
       );
 
-      await act(() => render(<Wrapper shouldSuspense={true} />));
+      await actAsync(() => render(<Wrapper shouldSuspense={true} />));
       expect(store).toMatchInlineSnapshot(`
         [root]
           ▸ <Wrapper>
@@ -1723,8 +1734,13 @@ describe('Store', () => {
   });
 
   describe('Lazy', () => {
+    let resolveLazyComponent;
     async function fakeImport(result) {
-      return {default: result};
+      return new Promise(resolve => {
+        resolveLazyComponent = () => {
+          resolve({default: result});
+        };
+      });
     }
 
     const LazyInnerComponent = () => null;
@@ -1761,10 +1777,7 @@ describe('Store', () => {
               <Suspense>
       `);
 
-      await Promise.resolve();
-
-      // Render again after it resolves
-      await act(() => legacyRender(<App renderChildren={true} />, container));
+      await act(() => resolveLazyComponent());
 
       expect(store).toMatchInlineSnapshot(`
         [root]
@@ -1796,10 +1809,7 @@ describe('Store', () => {
               <Suspense>
       `);
 
-      await Promise.resolve();
-
-      // Render again after it resolves
-      await act(() => root.render(<App renderChildren={true} />));
+      await actAsync(() => resolveLazyComponent());
 
       expect(store).toMatchInlineSnapshot(`
         [root]
@@ -1832,8 +1842,7 @@ describe('Store', () => {
               <Suspense>
       `);
 
-      // Render again to unmount it before it finishes loading
-      await act(() => legacyRender(<App renderChildren={false} />, container));
+      await act(() => resolveLazyComponent());
 
       expect(store).toMatchInlineSnapshot(`
         [root]
@@ -1856,8 +1865,7 @@ describe('Store', () => {
               <Suspense>
       `);
 
-      // Render again to unmount it before it finishes loading
-      await act(() => root.render(<App renderChildren={false} />));
+      await act(() => resolveLazyComponent());
 
       expect(store).toMatchInlineSnapshot(`
         [root]
@@ -1875,9 +1883,9 @@ describe('Store', () => {
         return null;
       }
 
-      withErrorsOrWarningsIgnored(['test-only:'], async () => {
-        await act(() => render(<Example />));
-      });
+      await act(() => render(<Example />));
+      assertConsoleError(['test-only: render error']);
+      assertConsoleWarn(['test-only: render warning']);
 
       expect(store).toMatchInlineSnapshot(`
         ✕ 1, ⚠ 1
@@ -1885,9 +1893,9 @@ describe('Store', () => {
             <Example> ✕⚠
       `);
 
-      withErrorsOrWarningsIgnored(['test-only:'], async () => {
-        await act(() => render(<Example rerender={1} />));
-      });
+      await act(() => render(<Example rerender={1} />));
+      assertConsoleError(['test-only: render error']);
+      assertConsoleWarn(['test-only: render warning']);
 
       expect(store).toMatchInlineSnapshot(`
         ✕ 2, ⚠ 2
@@ -1906,9 +1914,9 @@ describe('Store', () => {
         return null;
       }
 
-      withErrorsOrWarningsIgnored(['test-only:'], async () => {
-        await act(() => render(<Example />));
-      });
+      await act(() => render(<Example />));
+      assertConsoleError(['test-only: layout error']);
+      assertConsoleWarn(['test-only: layout warning']);
 
       expect(store).toMatchInlineSnapshot(`
         ✕ 1, ⚠ 1
@@ -1916,9 +1924,9 @@ describe('Store', () => {
             <Example> ✕⚠
       `);
 
-      withErrorsOrWarningsIgnored(['test-only:'], async () => {
-        await act(() => render(<Example rerender={1} />));
-      });
+      await act(() => render(<Example rerender={1} />));
+      assertConsoleError(['test-only: layout error']);
+      assertConsoleWarn(['test-only: layout warning']);
 
       expect(store).toMatchInlineSnapshot(`
         ✕ 2, ⚠ 2
@@ -1942,11 +1950,11 @@ describe('Store', () => {
           return null;
         }
 
-        withErrorsOrWarningsIgnored(['test-only:'], async () => {
-          await act(() => {
-            render(<Example />);
-          }, false);
-        });
+        await act(() => {
+          render(<Example />);
+        }, false);
+        assertConsoleError(['test-only: passive error']);
+        assertConsoleWarn(['test-only: passive warning']);
         flushPendingBridgeOperations();
         expect(store).toMatchInlineSnapshot(`
           ✕ 1, ⚠ 1
@@ -1972,38 +1980,40 @@ describe('Store', () => {
           return null;
         }
 
-        withErrorsOrWarningsIgnored(['test-only:'], () => {
-          act(() => {
-            render(
-              <>
-                <Example />
-              </>,
-            );
-          }, false);
-          flushPendingBridgeOperations();
-          expect(store).toMatchInlineSnapshot(`
+        act(() => {
+          render(
+            <>
+              <Example />
+            </>,
+          );
+        }, false);
+        assertConsoleError(['test-only: passive error']);
+        assertConsoleWarn(['test-only: passive warning']);
+        flushPendingBridgeOperations();
+        expect(store).toMatchInlineSnapshot(`
             ✕ 1, ⚠ 1
             [root]
                 <Example> ✕⚠
           `);
 
-          // Before warnings and errors have flushed, flush another commit.
-          act(() => {
-            render(
-              <>
-                <Example />
-                <Noop />
-              </>,
-            );
-          }, false);
-          flushPendingBridgeOperations();
-          expect(store).toMatchInlineSnapshot(`
+        // Before warnings and errors have flushed, flush another commit.
+        act(() => {
+          render(
+            <>
+              <Example />
+              <Noop />
+            </>,
+          );
+        }, false);
+        assertConsoleError(['test-only: passive error']);
+        assertConsoleWarn(['test-only: passive warning']);
+        flushPendingBridgeOperations();
+        expect(store).toMatchInlineSnapshot(`
             ✕ 2, ⚠ 2
             [root]
                 <Example> ✕⚠
                 <Noop>
           `);
-        });
 
         await act(() => unmount());
         expect(store).toMatchInlineSnapshot(``);
@@ -2014,6 +2024,8 @@ describe('Store', () => {
     // The warning is moved to the Child instead of the Parent.
     // @reactVersion >= 19.0.1
     it('from react get counted [React >= 19.0.1]', async () => {
+      global.__REACT_DEVTOOLS_GLOBAL_HOOK__.settings.appendComponentStack =
+        false;
       function Example() {
         return [<Child />];
       }
@@ -2021,11 +2033,10 @@ describe('Store', () => {
         return null;
       }
 
-      withErrorsOrWarningsIgnored(
+      act(() => render(<Example />));
+      assertConsoleError(
         ['Each child in a list should have a unique "key" prop'],
-        () => {
-          act(() => render(<Example />));
-        },
+        {withoutStack: true},
       );
 
       expect(store).toMatchInlineSnapshot(`
@@ -2046,12 +2057,10 @@ describe('Store', () => {
         return null;
       }
 
-      withErrorsOrWarningsIgnored(
-        ['Each child in a list should have a unique "key" prop'],
-        () => {
-          act(() => render(<Example />));
-        },
-      );
+      act(() => render(<Example />));
+      assertConsoleError([
+        'Each child in a list should have a unique "key" prop',
+      ]);
 
       expect(store).toMatchInlineSnapshot(`
         ✕ 1, ⚠ 0
@@ -2069,16 +2078,22 @@ describe('Store', () => {
         return null;
       }
 
-      withErrorsOrWarningsIgnored(['test-only:'], async () => {
-        await act(() =>
-          render(
-            <React.Fragment>
-              <Example />
-              <Example />
-            </React.Fragment>,
-          ),
-        );
-      });
+      await act(() =>
+        render(
+          <React.Fragment>
+            <Example />
+            <Example />
+          </React.Fragment>,
+        ),
+      );
+      assertConsoleError([
+        'test-only: render error',
+        'test-only: render error',
+      ]);
+      assertConsoleWarn([
+        'test-only: render warning',
+        'test-only: render warning',
+      ]);
 
       expect(store).toMatchInlineSnapshot(`
         ✕ 2, ⚠ 2
@@ -2110,16 +2125,22 @@ describe('Store', () => {
         return null;
       }
 
-      withErrorsOrWarningsIgnored(['test-only:'], async () => {
-        await act(() =>
-          render(
-            <React.Fragment>
-              <Example />
-              <Example />
-            </React.Fragment>,
-          ),
-        );
-      });
+      await act(() =>
+        render(
+          <React.Fragment>
+            <Example />
+            <Example />
+          </React.Fragment>,
+        ),
+      );
+      assertConsoleError([
+        'test-only: render error',
+        'test-only: render error',
+      ]);
+      assertConsoleWarn([
+        'test-only: render warning',
+        'test-only: render warning',
+      ]);
 
       expect(store).toMatchInlineSnapshot(`
         ✕ 2, ⚠ 2
@@ -2155,16 +2176,22 @@ describe('Store', () => {
         return null;
       }
 
-      withErrorsOrWarningsIgnored(['test-only:'], async () => {
-        await act(() =>
-          render(
-            <React.Fragment>
-              <Example />
-              <Example />
-            </React.Fragment>,
-          ),
-        );
-      });
+      await act(() =>
+        render(
+          <React.Fragment>
+            <Example />
+            <Example />
+          </React.Fragment>,
+        ),
+      );
+      assertConsoleError([
+        'test-only: render error',
+        'test-only: render error',
+      ]);
+      assertConsoleWarn([
+        'test-only: render warning',
+        'test-only: render warning',
+      ]);
 
       expect(store).toMatchInlineSnapshot(`
         ✕ 2, ⚠ 2
@@ -2208,17 +2235,23 @@ describe('Store', () => {
         return null;
       }
 
-      withErrorsOrWarningsIgnored(['test-only:'], async () => {
-        await act(() =>
-          render(
-            <React.Fragment>
-              <ComponentWithError />
-              <ComponentWithWarning />
-              <ComponentWithWarningAndError />
-            </React.Fragment>,
-          ),
-        );
-      });
+      await act(() =>
+        render(
+          <React.Fragment>
+            <ComponentWithError />
+            <ComponentWithWarning />
+            <ComponentWithWarningAndError />
+          </React.Fragment>,
+        ),
+      );
+      assertConsoleError([
+        'test-only: render error',
+        'test-only: render error',
+      ]);
+      assertConsoleWarn([
+        'test-only: render warning',
+        'test-only: render warning',
+      ]);
       expect(store).toMatchInlineSnapshot(`
         ✕ 2, ⚠ 2
         [root]
@@ -2227,16 +2260,19 @@ describe('Store', () => {
             <ComponentWithWarningAndError> ✕⚠
       `);
 
-      withErrorsOrWarningsIgnored(['test-only:'], async () => {
-        await act(() =>
-          render(
-            <React.Fragment>
-              <ComponentWithWarning />
-              <ComponentWithWarningAndError />
-            </React.Fragment>,
-          ),
-        );
-      });
+      await act(() =>
+        render(
+          <React.Fragment>
+            <ComponentWithWarning />
+            <ComponentWithWarningAndError />
+          </React.Fragment>,
+        ),
+      );
+      assertConsoleError(['test-only: render error']);
+      assertConsoleWarn([
+        'test-only: render warning',
+        'test-only: render warning',
+      ]);
       expect(store).toMatchInlineSnapshot(`
         ✕ 1, ⚠ 2
         [root]
@@ -2244,24 +2280,21 @@ describe('Store', () => {
             <ComponentWithWarningAndError> ✕⚠
       `);
 
-      withErrorsOrWarningsIgnored(['test-only:'], async () => {
-        await act(() =>
-          render(
-            <React.Fragment>
-              <ComponentWithWarning />
-            </React.Fragment>,
-          ),
-        );
-      });
+      await act(() =>
+        render(
+          <React.Fragment>
+            <ComponentWithWarning />
+          </React.Fragment>,
+        ),
+      );
+      assertConsoleWarn(['test-only: render warning']);
       expect(store).toMatchInlineSnapshot(`
         ✕ 0, ⚠ 2
         [root]
             <ComponentWithWarning> ⚠
       `);
 
-      withErrorsOrWarningsIgnored(['test-only:'], async () => {
-        await act(() => render(<React.Fragment />));
-      });
+      await act(() => render(<React.Fragment />));
       expect(store).toMatchInlineSnapshot(`[root]`);
       expect(store.componentWithErrorCount).toBe(0);
       expect(store.componentWithWarningCount).toBe(0);
@@ -2270,8 +2303,13 @@ describe('Store', () => {
     // Regression test for https://github.com/facebook/react/issues/23202
     // @reactVersion >= 18.0
     it('suspense boundary children should not double unmount and error', async () => {
+      let resolveChild;
       async function fakeImport(result) {
-        return {default: result};
+        return new Promise(resolve => {
+          resolveChild = () => {
+            resolve({default: result});
+          };
+        });
       }
 
       const ChildA = () => null;
@@ -2289,6 +2327,7 @@ describe('Store', () => {
       }
 
       await actAsync(() => render(<App renderA={true} />));
+      await actAsync(() => resolveChild());
 
       expect(store).toMatchInlineSnapshot(`
           [root]
@@ -2298,6 +2337,7 @@ describe('Store', () => {
         `);
 
       await actAsync(() => render(<App renderA={false} />));
+      await actAsync(() => resolveChild());
 
       expect(store).toMatchInlineSnapshot(`
           [root]
