@@ -1,8 +1,9 @@
 # `eslint-plugin-react-hooks`
 
-This ESLint plugin enforces the [Rules of Hooks](https://react.dev/reference/rules/rules-of-hooks).
+This ESLint plugin:
 
-It is a part of the [Hooks API](https://react.dev/reference/react/hooks) for React.
+- reports violations of the [Rules of Hooks](https://react.dev/reference/rules/rules-of-hooks)
+- reports React code problematic for the React compiler
 
 ## Installation
 
@@ -30,6 +31,21 @@ import * as reactHooks from 'eslint-plugin-react-hooks';
 export default [
   // ...
   reactHooks.configs.recommended,
+];
+```
+
+Optionally, enable the React compiler rule:
+
+```js
+import * as reactHooks from 'eslint-plugin-react-hooks';
+
+export default [
+  reactHooks.configs.recommended,
+  {
+    rules: {
+      'react-hooks/react-compiler': 'error',
+    },
+  },
 ];
 ```
 
