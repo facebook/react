@@ -28,3 +28,11 @@ yarn start:prod
 ```
 
 This will pre-build all static resources and then start a server-side rendering HTTP server that hosts the React app and service the static resources (without hot reloading).
+
+## Deploy
+
+Deployed to https://react-fixture-view-transition-six.vercel.app
+Dashboard: https://vercel.com/react-fixtures/react-fixture-view-transition.
+
+Ask a member of React Core team for access if you need it.
+Deployments should be public and happen automatically on PRs except those only targetting `compiler/`.
