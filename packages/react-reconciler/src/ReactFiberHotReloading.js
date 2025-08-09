@@ -325,7 +325,10 @@ function scheduleFibersWithFamiliesRecursively(
         );
       }
 
+      if (sibling === null) {
+        break;
+      }
       fiber = sibling;
-    } while (fiber !== null);
+    } while (true);
   }
 }
