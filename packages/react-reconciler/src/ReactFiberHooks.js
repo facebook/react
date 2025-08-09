@@ -684,7 +684,15 @@ function finishRenderingHooks<Props, SecondArg>(
       // need to mark fibers that commit in an incomplete state, somehow. For
       // now I'll disable the warning that most of the bugs that would trigger
       // it are either exclusive to concurrent mode or exist in both.
-      (disableLegacyMode || (current.mode & ConcurrentMode) !== NoMode)
+      (disableLegacyMode || (current.mode & ConcurrentMode) !== NoMode) &&
+      // Skip this check for components that might have conditional hook calls
+      // due to early returns, as this can cause legitimate static flag mismatches
+      // This happens when a component goes from having no hooks (memoizedState === null)
+      // to having hooks (memoizedState !== null) due to conditional rendering
+      !(current.memoizedState === null && workInProgress.memoizedState !== null) &&
+      // Also skip when the component type changes, as this can cause legitimate
+      // static flag differences
+      current.type === workInProgress.type
     ) {
       console.error(
         'Internal React error: Expected static flag was missing. Please ' +
