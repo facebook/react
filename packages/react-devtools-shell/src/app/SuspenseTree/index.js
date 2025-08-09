@@ -12,6 +12,7 @@ import {
   Fragment,
   Suspense,
   unstable_SuspenseList as SuspenseList,
+  useReducer,
   useState,
 } from 'react';
 
@@ -26,7 +27,153 @@ function SuspenseTree(): React.Node {
       <NestedSuspenseTest />
       <SuspenseListTest />
       <EmptySuspense />
+      <SuspenseTreeOperations />
     </Fragment>
+  );
+}
+
+function IgnoreMePassthrough({children}: {children: React$Node}) {
+  return <span>{children}</span>;
+}
+
+const suspenseTreeOperationsChildren = {
+  a: (
+    <Suspense key="a" name="a">
+      <p>A</p>
+    </Suspense>
+  ),
+  b: (
+    <div key="b">
+      <Suspense name="b">B</Suspense>
+    </div>
+  ),
+  c: (
+    <p key="c">
+      <Suspense key="c" name="c">
+        C
+      </Suspense>
+    </p>
+  ),
+  d: (
+    <Suspense key="d" name="d">
+      <div>D</div>
+    </Suspense>
+  ),
+  e: (
+    <Suspense key="e" name="e">
+      <IgnoreMePassthrough key="e1">
+        <Suspense name="e-child-one">
+          <p>e1</p>
+        </Suspense>
+      </IgnoreMePassthrough>
+      <IgnoreMePassthrough key="e2">
+        <Suspense name="e-child-two">
+          <div>e2</div>
+        </Suspense>
+      </IgnoreMePassthrough>
+    </Suspense>
+  ),
+  eReordered: (
+    <Suspense key="e" name="e">
+      <IgnoreMePassthrough key="e2">
+        <Suspense name="e-child-two">
+          <div>e2</div>
+        </Suspense>
+      </IgnoreMePassthrough>
+      <IgnoreMePassthrough key="e1">
+        <Suspense name="e-child-one">
+          <p>e1</p>
+        </Suspense>
+      </IgnoreMePassthrough>
+    </Suspense>
+  ),
+};
+
+function SuspenseTreeOperations() {
+  const initialChildren: any[] = [
+    suspenseTreeOperationsChildren.a,
+    suspenseTreeOperationsChildren.b,
+    suspenseTreeOperationsChildren.c,
+    suspenseTreeOperationsChildren.d,
+    suspenseTreeOperationsChildren.e,
+  ];
+  const [children, dispatch] = useReducer(
+    (
+      pendingState: any[],
+      action: 'toggle-mount' | 'reorder' | 'reorder-within-filtered',
+    ): React$Node[] => {
+      switch (action) {
+        case 'toggle-mount':
+          if (pendingState.length === 5) {
+            return [
+              suspenseTreeOperationsChildren.a,
+              suspenseTreeOperationsChildren.b,
+              suspenseTreeOperationsChildren.c,
+              suspenseTreeOperationsChildren.d,
+            ];
+          } else {
+            return [
+              suspenseTreeOperationsChildren.a,
+              suspenseTreeOperationsChildren.b,
+              suspenseTreeOperationsChildren.c,
+              suspenseTreeOperationsChildren.d,
+              suspenseTreeOperationsChildren.e,
+            ];
+          }
+        case 'reorder':
+          if (pendingState[1] === suspenseTreeOperationsChildren.b) {
+            return [
+              suspenseTreeOperationsChildren.a,
+              suspenseTreeOperationsChildren.c,
+              suspenseTreeOperationsChildren.b,
+              suspenseTreeOperationsChildren.d,
+              suspenseTreeOperationsChildren.e,
+            ];
+          } else {
+            return [
+              suspenseTreeOperationsChildren.a,
+              suspenseTreeOperationsChildren.b,
+              suspenseTreeOperationsChildren.c,
+              suspenseTreeOperationsChildren.d,
+              suspenseTreeOperationsChildren.e,
+            ];
+          }
+        case 'reorder-within-filtered':
+          if (pendingState[4] === suspenseTreeOperationsChildren.e) {
+            return [
+              suspenseTreeOperationsChildren.a,
+              suspenseTreeOperationsChildren.b,
+              suspenseTreeOperationsChildren.c,
+              suspenseTreeOperationsChildren.d,
+              suspenseTreeOperationsChildren.eReordered,
+            ];
+          } else {
+            return [
+              suspenseTreeOperationsChildren.a,
+              suspenseTreeOperationsChildren.b,
+              suspenseTreeOperationsChildren.c,
+              suspenseTreeOperationsChildren.d,
+              suspenseTreeOperationsChildren.e,
+            ];
+          }
+        default:
+          return pendingState;
+      }
+    },
+    initialChildren,
+  );
+
+  return (
+    <>
+      <button onClick={() => dispatch('toggle-mount')}>Toggle Mount</button>
+      <button onClick={() => dispatch('reorder')}>Reorder</button>
+      <button onClick={() => dispatch('reorder-within-filtered')}>
+        Reorder Within Filtered
+      </button>
+      <Suspense name="operations-parent">
+        <section>{children}</section>
+      </Suspense>
+    </>
   );
 }
 
@@ -144,7 +291,8 @@ function LoadLater() {
     <Suspense
       fallback={
         <Fallback1 onClick={() => setLoadChild(true)}>Click to load</Fallback1>
-      }>
+      }
+      name="LoadLater">
       {loadChild ? (
         <Primary1 onClick={() => setLoadChild(false)}>
           Loaded! Click to suspend again.
