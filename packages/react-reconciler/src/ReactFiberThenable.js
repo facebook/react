@@ -12,6 +12,7 @@ import type {
   PendingThenable,
   FulfilledThenable,
   RejectedThenable,
+  ReactIOInfo,
 } from 'shared/ReactTypes';
 
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
@@ -21,6 +22,8 @@ import {callLazyInitInDEV} from './ReactFiberCallUserSpace';
 import {getWorkInProgressRoot} from './ReactFiberWorkLoop';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
+
+import {enableAsyncDebugInfo} from 'shared/ReactFeatureFlags';
 
 import noop from 'shared/noop';
 
@@ -151,6 +154,33 @@ export function trackUsedThenable<T>(
       // intentionally ignore.
       thenable.then(noop, noop);
       thenable = previous;
+    }
+  }
+
+  if (__DEV__ && enableAsyncDebugInfo && thenable._debugInfo === undefined) {
+    // In DEV mode if the thenable that we observed had no debug info, then we add
+    // an inferred debug info so that we're able to track its potential I/O uniquely.
+    // We don't know the real start time since the I/O could have started much
+    // earlier and this could even be a cached Promise. Could be misleading.
+    const startTime = performance.now();
+    const displayName = thenable.displayName;
+    const ioInfo: ReactIOInfo = {
+      name: typeof displayName === 'string' ? displayName : 'Promise',
+      start: startTime,
+      end: startTime,
+      value: (thenable: any),
+      // We don't know the requesting owner nor stack.
+    };
+    // We can infer the await owner/stack lazily from where this promise ends up
+    // used. It can be used in more than one place so we can't assign it here.
+    thenable._debugInfo = [{awaited: ioInfo}];
+    // Track when we resolved the Promise as the approximate end time.
+    if (thenable.status !== 'fulfilled' && thenable.status !== 'rejected') {
+      const trackEndTime = () => {
+        // $FlowFixMe[cannot-write]
+        ioInfo.end = performance.now();
+      };
+      thenable.then(trackEndTime, trackEndTime);
     }
   }
 
