@@ -597,11 +597,11 @@ describe('ReactComponent', () => {
       });
       assertConsoleErrorDev([
         'Functions are not valid as a React child. This may happen if:\n' +
-        '- You forgot to call the function: use {Foo()} instead of {Foo}\n' +
-        '- You meant to render a component: use <Foo /> instead of {Foo}\n' +
-        '- You intended to pass the function as a prop to a child component.\n' +
-        '  <Foo>{Foo}</Foo>\n' +
-        '    in Foo (at **)',
+          '- You forgot to call the function: use {Foo()} instead of {Foo}\n' +
+          '- You meant to render a component: use <Foo /> instead of {Foo}\n' +
+          '- You intended to pass the function as a prop to a child component.\n' +
+          '  <Foo>{Foo}</Foo>\n' +
+          '    in Foo (at **)',
       ]);
     });
 
@@ -619,11 +619,11 @@ describe('ReactComponent', () => {
       });
       assertConsoleErrorDev([
         'Functions are not valid as a React child. This may happen if:\n' +
-        '- You forgot to call the function: use {Foo()} instead of {Foo}\n' +
-        '- You meant to render a component: use <Foo /> instead of {Foo}\n' +
-        '- You intended to pass the function as a prop to a child component.\n' +
-        '  <Foo>{Foo}</Foo>\n' +
-        '    in Foo (at **)',
+          '- You forgot to call the function: use {Foo()} instead of {Foo}\n' +
+          '- You meant to render a component: use <Foo /> instead of {Foo}\n' +
+          '- You intended to pass the function as a prop to a child component.\n' +
+          '  <Foo>{Foo}</Foo>\n' +
+          '    in Foo (at **)',
       ]);
     });
 
@@ -642,12 +642,12 @@ describe('ReactComponent', () => {
       });
       assertConsoleErrorDev([
         'Functions are not valid as a React child. This may happen if:\n' +
-        '- You forgot to call the function: use {Foo()} instead of {Foo}\n' +
-        '- You meant to render a component: use <Foo /> instead of {Foo}\n' +
-        '- You intended to pass the function as a prop to a child component.\n' +
-        '  <span>{Foo}</span>\n' +
-        '    in span (at **)\n' +
-        '    in Foo (at **)',
+          '- You forgot to call the function: use {Foo()} instead of {Foo}\n' +
+          '- You meant to render a component: use <Foo /> instead of {Foo}\n' +
+          '- You intended to pass the function as a prop to a child component.\n' +
+          '  <span>{Foo}</span>\n' +
+          '    in span (at **)\n' +
+          '    in Foo (at **)',
       ]);
     });
 
@@ -694,19 +694,19 @@ describe('ReactComponent', () => {
       });
       assertConsoleErrorDev([
         'Functions are not valid as a React child. This may happen if:\n' +
-        '- You forgot to call the function: use {Foo()} instead of {Foo}\n' +
-        '- You meant to render a component: use <Foo /> instead of {Foo}\n' +
-        '- You intended to pass the function as a prop to a child component.\n' +
-        '  <div>{Foo}</div>\n' +
-        '    in div (at **)\n' +
-        '    in Foo (at **)',
+          '- You forgot to call the function: use {Foo()} instead of {Foo}\n' +
+          '- You meant to render a component: use <Foo /> instead of {Foo}\n' +
+          '- You intended to pass the function as a prop to a child component.\n' +
+          '  <div>{Foo}</div>\n' +
+          '    in div (at **)\n' +
+          '    in Foo (at **)',
         'Functions are not valid as a React child. This may happen if:\n' +
-        '- You forgot to call the function: use {Foo()} instead of {Foo}\n' +
-        '- You meant to render a component: use <Foo /> instead of {Foo}\n' +
-        '- You intended to pass the function as a prop to a child component.\n' +
-        '  <span>{Foo}</span>\n' +
-        '    in span (at **)\n' +
-        '    in Foo (at **)',
+          '- You forgot to call the function: use {Foo()} instead of {Foo}\n' +
+          '- You meant to render a component: use <Foo /> instead of {Foo}\n' +
+          '- You intended to pass the function as a prop to a child component.\n' +
+          '  <span>{Foo}</span>\n' +
+          '    in span (at **)\n' +
+          '    in Foo (at **)',
       ]);
       await act(() => {
         component.setState({type: 'portobello mushrooms'});
