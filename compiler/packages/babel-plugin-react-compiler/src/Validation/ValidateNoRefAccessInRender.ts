@@ -5,11 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
-  CompilerDiagnostic,
-  CompilerError,
-  ErrorSeverity,
-} from '../CompilerError';
+import {CompilerDiagnostic, CompilerError} from '../CompilerError';
 import {
   BlockId,
   HIRFunction,
@@ -26,6 +22,7 @@ import {
   eachPatternOperand,
   eachTerminalOperand,
 } from '../HIR/visitors';
+import {ErrorCode} from '../Utils/CompilerErrorCodes';
 import {Err, Ok, Result} from '../Utils/Result';
 import {retainWhere} from '../Utils/utils';
 
@@ -467,11 +464,9 @@ function validateNoRefAccessInRenderImpl(
               if (fnType.fn.readRefEffect) {
                 didError = true;
                 errors.pushDiagnostic(
-                  CompilerDiagnostic.create({
-                    severity: ErrorSeverity.InvalidReact,
-                    category: 'Cannot access refs during render',
-                    description: ERROR_DESCRIPTION,
-                  }).withDetail({
+                  CompilerDiagnostic.fromCode(
+                    ErrorCode.NO_REF_ACCESS_IN_RENDER,
+                  ).withDetail({
                     kind: 'error',
                     loc: callee.loc,
                     message: `This function accesses a ref value`,
@@ -730,15 +725,13 @@ function destructure(
 function guardCheck(errors: CompilerError, operand: Place, env: Env): void {
   if (env.get(operand.identifier.id)?.kind === 'Guard') {
     errors.pushDiagnostic(
-      CompilerDiagnostic.create({
-        severity: ErrorSeverity.InvalidReact,
-        category: 'Cannot access refs during render',
-        description: ERROR_DESCRIPTION,
-      }).withDetail({
-        kind: 'error',
-        loc: operand.loc,
-        message: `Cannot access ref value during render`,
-      }),
+      CompilerDiagnostic.fromCode(ErrorCode.NO_REF_ACCESS_IN_RENDER).withDetail(
+        {
+          kind: 'error',
+          loc: operand.loc,
+          message: `Cannot access ref value during render`,
+        },
+      ),
     );
   }
 }
@@ -754,15 +747,13 @@ function validateNoRefValueAccess(
     (type?.kind === 'Structure' && type.fn?.readRefEffect)
   ) {
     errors.pushDiagnostic(
-      CompilerDiagnostic.create({
-        severity: ErrorSeverity.InvalidReact,
-        category: 'Cannot access refs during render',
-        description: ERROR_DESCRIPTION,
-      }).withDetail({
-        kind: 'error',
-        loc: (type.kind === 'RefValue' && type.loc) || operand.loc,
-        message: `Cannot access ref value during render`,
-      }),
+      CompilerDiagnostic.fromCode(ErrorCode.NO_REF_ACCESS_IN_RENDER).withDetail(
+        {
+          kind: 'error',
+          loc: (type.kind === 'RefValue' && type.loc) || operand.loc,
+          message: `Cannot access ref value during render`,
+        },
+      ),
     );
   }
 }
@@ -780,15 +771,13 @@ function validateNoRefPassedToFunction(
     (type?.kind === 'Structure' && type.fn?.readRefEffect)
   ) {
     errors.pushDiagnostic(
-      CompilerDiagnostic.create({
-        severity: ErrorSeverity.InvalidReact,
-        category: 'Cannot access refs during render',
-        description: ERROR_DESCRIPTION,
-      }).withDetail({
-        kind: 'error',
-        loc: (type.kind === 'RefValue' && type.loc) || loc,
-        message: `Passing a ref to a function may read its value during render`,
-      }),
+      CompilerDiagnostic.fromCode(ErrorCode.NO_REF_ACCESS_IN_RENDER).withDetail(
+        {
+          kind: 'error',
+          loc: (type.kind === 'RefValue' && type.loc) || loc,
+          message: `Passing a ref to a function may read its value during render`,
+        },
+      ),
     );
   }
 }
@@ -802,15 +791,13 @@ function validateNoRefUpdate(
   const type = destructure(env.get(operand.identifier.id));
   if (type?.kind === 'Ref' || type?.kind === 'RefValue') {
     errors.pushDiagnostic(
-      CompilerDiagnostic.create({
-        severity: ErrorSeverity.InvalidReact,
-        category: 'Cannot access refs during render',
-        description: ERROR_DESCRIPTION,
-      }).withDetail({
-        kind: 'error',
-        loc: (type.kind === 'RefValue' && type.loc) || loc,
-        message: `Cannot update ref during render`,
-      }),
+      CompilerDiagnostic.fromCode(ErrorCode.NO_REF_ACCESS_IN_RENDER).withDetail(
+        {
+          kind: 'error',
+          loc: (type.kind === 'RefValue' && type.loc) || loc,
+          message: `Cannot update ref during render`,
+        },
+      ),
     );
   }
 }
@@ -823,21 +810,13 @@ function validateNoDirectRefValueAccess(
   const type = destructure(env.get(operand.identifier.id));
   if (type?.kind === 'RefValue') {
     errors.pushDiagnostic(
-      CompilerDiagnostic.create({
-        severity: ErrorSeverity.InvalidReact,
-        category: 'Cannot access refs during render',
-        description: ERROR_DESCRIPTION,
-      }).withDetail({
-        kind: 'error',
-        loc: type.loc ?? operand.loc,
-        message: `Cannot access ref value during render`,
-      }),
+      CompilerDiagnostic.fromCode(ErrorCode.NO_REF_ACCESS_IN_RENDER).withDetail(
+        {
+          kind: 'error',
+          loc: type.loc ?? operand.loc,
+          message: `Cannot access ref value during render`,
+        },
+      ),
     );
   }
 }
-
-const ERROR_DESCRIPTION =
-  'React refs are values that are not needed for rendering. Refs should only be accessed ' +
-  'outside of render, such as in event handlers or effects. ' +
-  'Accessing a ref value (the `current` property) during render can cause your component ' +
-  'not to update as expected (https://react.dev/reference/react/useRef)';

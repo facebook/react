@@ -5,9 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, EnvironmentConfig, ErrorSeverity} from '..';
+import {CompilerError, EnvironmentConfig} from '..';
 import {HIRFunction, IdentifierId} from '../HIR';
 import {DEFAULT_GLOBALS} from '../HIR/Globals';
+import {ErrorCode} from '../Utils/CompilerErrorCodes';
 import {Result} from '../Utils/Result';
 
 export function validateNoCapitalizedCalls(
@@ -33,8 +34,6 @@ export function validateNoCapitalizedCalls(
   const errors = new CompilerError();
   const capitalLoadGlobals = new Map<IdentifierId, string>();
   const capitalizedProperties = new Map<IdentifierId, string>();
-  const reason =
-    'Capitalized functions are reserved for components, which must be invoked with JSX. If this is a component, render it with JSX. Otherwise, ensure that it has no hook calls and rename it to begin with a lowercase letter. Alternatively, if you know for a fact that this function is not a component, you can allowlist it via the compiler config';
   for (const [, block] of fn.body.blocks) {
     for (const {lvalue, value} of block.instructions) {
       switch (value.kind) {
@@ -55,11 +54,9 @@ export function validateNoCapitalizedCalls(
           const calleeIdentifier = value.callee.identifier.id;
           const calleeName = capitalLoadGlobals.get(calleeIdentifier);
           if (calleeName != null) {
-            CompilerError.throwInvalidReact({
-              reason,
+            errors.pushErrorCode(ErrorCode.CAPITALIZED_CALLS, {
               description: `${calleeName} may be a component.`,
               loc: value.loc,
-              suggestions: null,
             });
           }
           break;
@@ -78,12 +75,9 @@ export function validateNoCapitalizedCalls(
           const propertyIdentifier = value.property.identifier.id;
           const propertyName = capitalizedProperties.get(propertyIdentifier);
           if (propertyName != null) {
-            errors.push({
-              severity: ErrorSeverity.InvalidReact,
-              reason,
+            errors.pushErrorCode(ErrorCode.CAPITALIZED_CALLS, {
               description: `${propertyName} may be a component.`,
               loc: value.loc,
-              suggestions: null,
             });
           }
           break;

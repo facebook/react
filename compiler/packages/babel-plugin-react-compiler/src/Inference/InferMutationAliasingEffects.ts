@@ -9,7 +9,6 @@ import {
   CompilerDiagnostic,
   CompilerError,
   Effect,
-  ErrorSeverity,
   SourceLocation,
   ValueKind,
 } from '..';
@@ -69,6 +68,7 @@ import {getWriteErrorReason} from './InferFunctionEffects';
 import prettyFormat from 'pretty-format';
 import {createTemporaryPlace} from '../HIR/HIRBuilder';
 import {AliasingEffect, AliasingSignature, hashEffect} from './AliasingEffects';
+import {ErrorCode, ErrorCodeDetails} from '../Utils/CompilerErrorCodes';
 
 const DEBUG = false;
 
@@ -442,7 +442,7 @@ function applySignature(
         const value = state.kind(effect.value);
         switch (value.kind) {
           case ValueKind.Frozen: {
-            const reason = getWriteErrorReason({
+            const errorCode = getWriteErrorReason({
               kind: value.kind,
               reason: value.reason,
               context: new Set(),
@@ -455,10 +455,9 @@ function applySignature(
             effects.push({
               kind: 'MutateFrozen',
               place: effect.value,
-              error: CompilerDiagnostic.create({
-                severity: ErrorSeverity.InvalidReact,
-                category: 'This value cannot be modified',
-                description: `${reason}.`,
+              // TODO: remove ERROR_CODE.INVALID_WRITE and update test fixtures
+              error: CompilerDiagnostic.fromCode(ErrorCode.INVALID_WRITE, {
+                description: ErrorCodeDetails[errorCode].reason + '.',
               }).withDetail({
                 kind: 'error',
                 loc: effect.value.loc,
@@ -1026,22 +1025,20 @@ function applyEffect(
           const hoistedAccess = context.hoistedContextDeclarations.get(
             effect.value.identifier.declarationId,
           );
-          const diagnostic = CompilerDiagnostic.create({
-            severity: ErrorSeverity.InvalidReact,
-            category: 'Cannot access variable before it is declared',
-            description: `${variable ?? 'This variable'} is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.`,
-          });
+          const diagnostic = CompilerDiagnostic.fromCode(
+            ErrorCode.INVALID_ACCESS_BEFORE_INIT,
+          );
           if (hoistedAccess != null && hoistedAccess.loc != effect.value.loc) {
             diagnostic.withDetail({
               kind: 'error',
               loc: hoistedAccess.loc,
-              message: `${variable ?? 'variable'} accessed before it is declared`,
+              message: `${variable ?? 'This variable'} is accessed before it is declared`,
             });
           }
           diagnostic.withDetail({
             kind: 'error',
             loc: effect.value.loc,
-            message: `${variable ?? 'variable'} is declared here`,
+            message: `${variable ?? 'This variable'} is declared here`,
           });
 
           applyEffect(
@@ -1056,7 +1053,7 @@ function applyEffect(
             effects,
           );
         } else {
-          const reason = getWriteErrorReason({
+          const errorCode = getWriteErrorReason({
             kind: value.kind,
             reason: value.reason,
             context: new Set(),
@@ -1075,10 +1072,9 @@ function applyEffect(
                   ? 'MutateFrozen'
                   : 'MutateGlobal',
               place: effect.value,
-              error: CompilerDiagnostic.create({
-                severity: ErrorSeverity.InvalidReact,
-                category: 'This value cannot be modified',
-                description: `${reason}.`,
+              // TODO: remove ERROR_CODE.INVALID_WRITE and update test fixtures
+              error: CompilerDiagnostic.fromCode(ErrorCode.INVALID_WRITE, {
+                description: ErrorCodeDetails[errorCode].reason + '.',
               }).withDetail({
                 kind: 'error',
                 loc: effect.value.loc,
@@ -2006,15 +2002,12 @@ function computeSignatureForInstruction(
       effects.push({
         kind: 'MutateGlobal',
         place: value.value,
-        error: CompilerDiagnostic.create({
-          severity: ErrorSeverity.InvalidReact,
-          category:
-            'Cannot reassign variables declared outside of the component/hook',
-          description: `Variable ${variable} is declared outside of the component/hook. Reassigning this value during render is a form of side effect, which can cause unpredictable behavior depending on when the component happens to re-render. If this variable is used in rendering, use useState instead. Otherwise, consider updating it in an effect. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render)`,
-        }).withDetail({
+        error: CompilerDiagnostic.fromCode(
+          ErrorCode.INVALID_WRITE_GLOBAL,
+        ).withDetail({
           kind: 'error',
           loc: instr.loc,
-          message: `${variable} cannot be reassigned`,
+          message: `${variable} should not be reassigned`,
         }),
       });
       effects.push({kind: 'Assign', from: value.value, into: lvalue});
@@ -2105,19 +2098,16 @@ function computeEffectsForLegacySignature(
     effects.push({
       kind: 'Impure',
       place: receiver,
-      error: CompilerDiagnostic.create({
-        severity: ErrorSeverity.InvalidReact,
-        category: 'Cannot call impure function during render',
-        description:
-          (signature.canonicalName != null
-            ? `\`${signature.canonicalName}\` is an impure function. `
-            : '') +
-          'Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent)',
-      }).withDetail({
-        kind: 'error',
-        loc,
-        message: 'Cannot call impure function',
-      }),
+      error: CompilerDiagnostic.fromCode(ErrorCode.IMPURE_FUNCTIONS).withDetail(
+        {
+          kind: 'error',
+          loc,
+          message:
+            signature.canonicalName != null
+              ? `\`${signature.canonicalName}\` is an impure function. `
+              : 'This is an impure function.',
+        },
+      ),
     });
   }
   const stores: Array<Place> = [];

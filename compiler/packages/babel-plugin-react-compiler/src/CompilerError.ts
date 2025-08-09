@@ -10,48 +10,22 @@ import {codeFrameColumns} from '@babel/code-frame';
 import type {SourceLocation} from './HIR';
 import {Err, Ok, Result} from './Utils/Result';
 import {assertExhaustive} from './Utils/utils';
-
-export enum ErrorSeverity {
-  /**
-   * Invalid JS syntax, or valid syntax that is semantically invalid which may indicate some
-   * misunderstanding on the user’s part.
-   */
-  InvalidJS = 'InvalidJS',
-  /**
-   * JS syntax that is not supported and which we do not plan to support. Developers should
-   * rewrite to use supported forms.
-   */
-  UnsupportedJS = 'UnsupportedJS',
-  /**
-   * Code that breaks the rules of React.
-   */
-  InvalidReact = 'InvalidReact',
-  /**
-   * Incorrect configuration of the compiler.
-   */
-  InvalidConfig = 'InvalidConfig',
-  /**
-   * Code that can reasonably occur and that doesn't break any rules, but is unsafe to preserve
-   * memoization.
-   */
-  CannotPreserveMemoization = 'CannotPreserveMemoization',
-  /**
-   * Unhandled syntax that we don't support yet.
-   */
-  Todo = 'Todo',
-  /**
-   * An unexpected internal error in the compiler that indicates critical issues that can panic
-   * the compiler.
-   */
-  Invariant = 'Invariant',
-}
+import {ErrorSeverity} from './Utils/CompilerErrorSeverity';
+import {
+  ErrorCode,
+  ErrorCodeDetails,
+  LinterCategory,
+} from './Utils/CompilerErrorCodes';
+export {ErrorSeverity};
+export {ErrorCode, ErrorCodeDetails, LinterCategory};
 
 export type CompilerDiagnosticOptions = {
   severity: ErrorSeverity;
   category: string;
-  description: string;
+  description?: string | null | undefined;
   details: Array<CompilerDiagnosticDetail>;
   suggestions?: Array<CompilerSuggestion> | null | undefined;
+  linterCategory?: LinterCategory | null | undefined;
 };
 
 export type CompilerDiagnosticDetail =
@@ -86,13 +60,28 @@ export type CompilerSuggestion =
       description: string;
     };
 
-export type CompilerErrorDetailOptions = {
+export type PlainCompilerErrorDetailOptions = {
+  errorCode?: void;
   reason: string;
   description?: string | null | undefined;
-  severity: ErrorSeverity;
+  severity:
+    | ErrorSeverity.Invariant
+    | ErrorSeverity.Todo
+    | ErrorSeverity.InvalidConfig;
   loc: SourceLocation | null;
   suggestions?: Array<CompilerSuggestion> | null | undefined;
 };
+export type CodedCompilerErrorDetailOptions = {
+  errorCode: ErrorCode;
+  description?: string | null | undefined;
+  loc: SourceLocation | null;
+  suggestions?: Array<CompilerSuggestion> | null | undefined;
+  linterCategory?: LinterCategory | null | undefined;
+};
+
+export type CompilerErrorDetailOptions =
+  | PlainCompilerErrorDetailOptions
+  | CodedCompilerErrorDetailOptions;
 
 export type PrintErrorMessageOptions = {
   /**
@@ -102,17 +91,70 @@ export type PrintErrorMessageOptions = {
   eslint: boolean;
 };
 
+export function makeCompilerDiagnostic(
+  code: ErrorCode,
+  options?: {
+    description?: string;
+    suggestions?: Array<CompilerSuggestion> | null | undefined;
+  },
+): CompilerDiagnostic {
+  return makeCompilerDiagnostic(code, options);
+}
+
 export class CompilerDiagnostic {
   options: CompilerDiagnosticOptions;
 
-  constructor(options: CompilerDiagnosticOptions) {
+  /**
+   * Constructor is private to enforce that we either only create invariant diagnostics
+   * or use ErrorCodes
+   */
+  private constructor(options: CompilerDiagnosticOptions) {
     this.options = options;
   }
 
-  static create(
-    options: Omit<CompilerDiagnosticOptions, 'details'>,
-  ): CompilerDiagnostic {
+  static create<
+    T extends CompilerDiagnosticOptions & {severity: ErrorSeverity.Invariant},
+  >(options: Omit<T, 'details'>): CompilerDiagnostic {
     return new CompilerDiagnostic({...options, details: []});
+  }
+
+  static fromCode(
+    code: ErrorCode,
+    options?: {
+      description?: string;
+      suggestions?: Array<CompilerSuggestion> | null | undefined;
+      details?: Array<CompilerDiagnosticDetail> | null | undefined;
+    },
+  ): CompilerDiagnostic {
+    const errorEntry = ErrorCodeDetails[code];
+    let description = undefined;
+    if (errorEntry.description != null) {
+      description = errorEntry.description;
+    }
+    if (options?.description != null && options.description.length > 0) {
+      if (description != null && description.length > 0) {
+        description += ' ';
+      } else {
+        description = '';
+      }
+      description += options.description;
+    }
+
+    const diagnosticOptions: CompilerDiagnosticOptions = {
+      severity: errorEntry.severity,
+      category: errorEntry.reason,
+      description,
+      linterCategory: errorEntry.linterCategory,
+      suggestions: options?.suggestions,
+      details: options?.details ?? [],
+    };
+
+    return new CompilerDiagnostic(diagnosticOptions);
+  }
+
+  // TODO: remove after converting test fixtures to use printErrorMessage
+  serialize(): unknown {
+    return {options: {...this.options, linterCategory: undefined}};
   }
 
   get category(): CompilerDiagnosticOptions['category'] {
@@ -127,6 +169,9 @@ export class CompilerDiagnostic {
   get suggestions(): CompilerDiagnosticOptions['suggestions'] {
     return this.options.suggestions;
   }
+  get linterCategory(): CompilerDiagnosticOptions['linterCategory'] {
+    return this.options.linterCategory;
+  }
 
   withDetail(detail: CompilerDiagnosticDetail): CompilerDiagnostic {
     this.options.details.push(detail);
@@ -138,11 +183,10 @@ export class CompilerDiagnostic {
   }
 
   printErrorMessage(source: string, options: PrintErrorMessageOptions): string {
-    const buffer = [
-      printErrorSummary(this.severity, this.category),
-      '\n\n',
-      this.description,
-    ];
+    const buffer = [printErrorSummary(this.severity, this.category)];
+    if (this.description != null) {
+      buffer.push(`\n\n${this.description}`);
+    }
     for (const detail of this.options.details) {
       switch (detail.kind) {
         case 'error': {
@@ -202,13 +246,65 @@ export class CompilerErrorDetail {
     this.options = options;
   }
 
-  get reason(): CompilerErrorDetailOptions['reason'] {
-    return this.options.reason;
+  static fromCode(
+    code: ErrorCode,
+    details?: {
+      description?: string | null;
+      loc?: SourceLocation | null;
+      suggestions?: Array<CompilerSuggestion> | null | undefined;
+    },
+  ): CompilerErrorDetail {
+    return new CompilerErrorDetail({
+      ...details,
+      errorCode: code,
+    } as CodedCompilerErrorDetailOptions);
   }
-  get description(): CompilerErrorDetailOptions['description'] {
+
+  // TODO: remove after converting test fixtures to use printErrorMessage
+  serialize(): unknown {
+    return {
+      options: {
+        reason: this.reason,
+        description: this.description,
+        severity: this.severity,
+        loc: this.loc,
+        suggestions: this.suggestions,
+      },
+    };
+  }
+
+  get reason(): string {
+    if (this.options.errorCode != null) {
+      return ErrorCodeDetails[this.options.errorCode].reason;
+    } else {
+      return this.options.reason;
+    }
+  }
+  get description(): string | null | undefined {
+    if (this.options.errorCode != null) {
+      let description = undefined;
+      if (ErrorCodeDetails[this.options.errorCode].description != null) {
+        description = ErrorCodeDetails[this.options.errorCode].description;
+      }
+      if (
+        this.options.description != null &&
+        this.options.description.length > 0
+      ) {
+        if (description != null && description.length > 0) {
+          description += '. ';
+        } else {
+          description = '';
+        }
+        description += this.options.description;
+      }
+      return description;
+    }
     return this.options.description;
   }
-  get severity(): CompilerErrorDetailOptions['severity'] {
+  get severity(): ErrorSeverity {
+    if (this.options.errorCode != null) {
+      return ErrorCodeDetails[this.options.errorCode].severity;
+    }
     return this.options.severity;
   }
   get loc(): CompilerErrorDetailOptions['loc'] {
@@ -216,6 +312,12 @@ export class CompilerErrorDetail {
   }
   get suggestions(): CompilerErrorDetailOptions['suggestions'] {
     return this.options.suggestions;
+  }
+  get linterCategory(): LinterCategory | null | undefined {
+    if (this.options.errorCode != null) {
+      return ErrorCodeDetails[this.options.errorCode].linterCategory;
+    }
+    return undefined;
   }
 
   primaryLocation(): SourceLocation | null {
@@ -266,7 +368,7 @@ export class CompilerError extends Error {
 
   static invariant(
     condition: unknown,
-    options: Omit<CompilerErrorDetailOptions, 'severity'>,
+    options: Omit<PlainCompilerErrorDetailOptions, 'severity'>,
   ): asserts condition {
     if (!condition) {
       const errors = new CompilerError();
@@ -280,14 +382,14 @@ export class CompilerError extends Error {
     }
   }
 
-  static throwDiagnostic(options: CompilerDiagnosticOptions): never {
+  static throwDiagnostic(diagnostic: CompilerDiagnostic): never {
     const errors = new CompilerError();
-    errors.pushDiagnostic(new CompilerDiagnostic(options));
+    errors.pushDiagnostic(diagnostic);
     throw errors;
   }
 
   static throwTodo(
-    options: Omit<CompilerErrorDetailOptions, 'severity'>,
+    options: Omit<PlainCompilerErrorDetailOptions, 'severity'>,
   ): never {
     const errors = new CompilerError();
     errors.pushErrorDetail(
@@ -296,34 +398,21 @@ export class CompilerError extends Error {
     throw errors;
   }
 
-  static throwInvalidJS(
-    options: Omit<CompilerErrorDetailOptions, 'severity'>,
+  static throwFromCode(
+    code: ErrorCode,
+    options?: {
+      description?: string | null;
+      loc?: SourceLocation | null;
+      suggestions?: Array<CompilerSuggestion> | null | undefined;
+    },
   ): never {
     const errors = new CompilerError();
-    errors.pushErrorDetail(
-      new CompilerErrorDetail({
-        ...options,
-        severity: ErrorSeverity.InvalidJS,
-      }),
-    );
-    throw errors;
-  }
-
-  static throwInvalidReact(
-    options: Omit<CompilerErrorDetailOptions, 'severity'>,
-  ): never {
-    const errors = new CompilerError();
-    errors.pushErrorDetail(
-      new CompilerErrorDetail({
-        ...options,
-        severity: ErrorSeverity.InvalidReact,
-      }),
-    );
+    errors.pushErrorDetail(CompilerErrorDetail.fromCode(code, options));
     throw errors;
   }
 
   static throwInvalidConfig(
-    options: Omit<CompilerErrorDetailOptions, 'severity'>,
+    options: Omit<PlainCompilerErrorDetailOptions, 'severity'>,
   ): never {
     const errors = new CompilerError();
     errors.pushErrorDetail(
@@ -392,17 +481,27 @@ export class CompilerError extends Error {
   }
 
   push(options: CompilerErrorDetailOptions): CompilerErrorDetail {
-    const detail = new CompilerErrorDetail({
-      reason: options.reason,
-      description: options.description ?? null,
-      severity: options.severity,
-      suggestions: options.suggestions,
-      loc: typeof options.loc === 'symbol' ? null : options.loc,
-    });
+    if (options instanceof CompilerErrorDetail) {
+      return this.pushErrorDetail(options);
+    }
+    const detail = new CompilerErrorDetail(options);
     return this.pushErrorDetail(detail);
   }
 
   pushErrorDetail(detail: CompilerErrorDetail): CompilerErrorDetail {
+    this.details.push(detail);
+    return detail;
+  }
+
+  pushErrorCode(
+    code: ErrorCode,
+    details?: {
+      description?: string | null;
+      loc?: SourceLocation | null;
+      suggestions?: Array<CompilerSuggestion> | null | undefined;
+    },
+  ): CompilerErrorDetail {
+    const detail = CompilerErrorDetail.fromCode(code, details);
     this.details.push(detail);
     return detail;
   }

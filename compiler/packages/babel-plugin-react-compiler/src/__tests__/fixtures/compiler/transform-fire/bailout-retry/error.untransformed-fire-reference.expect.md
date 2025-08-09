@@ -15,7 +15,7 @@ console.log(fire == null);
 ```
 Found 1 error:
 
-Error: [Fire] Untransformed reference to compiler-required feature.
+Error: Cannot compile `fire`
 
  null
 
