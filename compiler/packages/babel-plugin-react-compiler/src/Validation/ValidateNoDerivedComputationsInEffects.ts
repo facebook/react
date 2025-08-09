@@ -12,13 +12,20 @@ import {
   FunctionExpression,
   HIRFunction,
   IdentifierId,
+  Place,
   isSetStateType,
   isUseEffectHookType,
 } from '../HIR';
+import {printInstruction, printPlace} from '../HIR/PrintHIR';
 import {
   eachInstructionValueOperand,
   eachTerminalOperand,
 } from '../HIR/visitors';
+
+type SetStateCall = {
+  loc: SourceLocation;
+  propsSource: Place | null; // null means state-derived, non-null means props-derived
+};
 
 /**
  * Validates that useEffect is not used for derived computations which could/should
@@ -47,12 +54,96 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
   const candidateDependencies: Map<IdentifierId, ArrayExpression> = new Map();
   const functions: Map<IdentifierId, FunctionExpression> = new Map();
   const locals: Map<IdentifierId, IdentifierId> = new Map();
+  const derivedFromProps: Map<IdentifierId, Place> = new Map();
 
   const errors = new CompilerError();
+
+  if (fn.fnType === 'Hook') {
+    for (const param of fn.params) {
+      if (param.kind === 'Identifier') {
+        derivedFromProps.set(param.identifier.id, param);
+      }
+    }
+  } else if (fn.fnType === 'Component') {
+    const props = fn.params[0];
+    if (props != null && props.kind === 'Identifier') {
+      derivedFromProps.set(props.identifier.id, props);
+    }
+  }
 
   for (const block of fn.body.blocks.values()) {
     for (const instr of block.instructions) {
       const {lvalue, value} = instr;
+
+      // Track props derivation through instruction effects
+      if (instr.effects != null) {
+        for (const effect of instr.effects) {
+          switch (effect.kind) {
+            case 'Assign':
+            case 'Alias':
+            case 'MaybeAlias':
+            case 'Capture': {
+              const source = derivedFromProps.get(effect.from.identifier.id);
+              if (source != null) {
+                derivedFromProps.set(effect.into.identifier.id, source);
+              }
+              break;
+            }
+          }
+        }
+      }
+
+      /**
+       * TODO: figure out why property access off of props does not create an Assign or Alias/Maybe
+       * Alias
+       *
+       * import {useEffect, useState} from 'react'
+       *
+       *        function Component(props) {
+       *          const [displayValue, setDisplayValue] = useState('');
+       *
+       *          useEffect(() => {
+       *            const computed = props.prefix + props.value + props.suffix;
+       *                             ^^^^^^^^^^^^   ^^^^^^^^^^^   ^^^^^^^^^^^^
+       *                             we want to track that these are from props
+       *            setDisplayValue(computed);
+       *          }, [props.prefix, props.value, props.suffix]);
+       *
+       *          return <div>{displayValue}</div>;
+       *        }
+       */
+      if (value.kind === 'FunctionExpression') {
+        for (const [, block] of value.loweredFunc.func.body.blocks) {
+          for (const instr of block.instructions) {
+            if (instr.effects != null) {
+              console.group(printInstruction(instr));
+              for (const effect of instr.effects) {
+                console.log(effect);
+                switch (effect.kind) {
+                  case 'Assign':
+                  case 'Alias':
+                  case 'MaybeAlias':
+                  case 'Capture': {
+                    const source = derivedFromProps.get(
+                      effect.from.identifier.id,
+                    );
+                    if (source != null) {
+                      derivedFromProps.set(effect.into.identifier.id, source);
+                    }
+                    break;
+                  }
+                }
+              }
+            }
+            console.groupEnd();
+          }
+        }
+      }
+
+      for (const [, place] of derivedFromProps) {
+        console.log(printPlace(place));
+      }
+
       if (value.kind === 'LoadLocal') {
         locals.set(lvalue.identifier.id, value.place.identifier.id);
       } else if (value.kind === 'ArrayExpression') {
@@ -89,6 +180,7 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
             validateEffect(
               effectFunction.loweredFunc.func,
               dependencies,
+              derivedFromProps,
               errors,
             );
           }
@@ -104,6 +196,7 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
 function validateEffect(
   effectFunction: HIRFunction,
   effectDeps: Array<IdentifierId>,
+  derivedFromProps: Map<IdentifierId, Place>,
   errors: CompilerError,
 ): void {
   for (const operand of effectFunction.context) {
@@ -111,16 +204,22 @@ function validateEffect(
       continue;
     } else if (effectDeps.find(dep => dep === operand.identifier.id) != null) {
       continue;
+    } else if (derivedFromProps.has(operand.identifier.id)) {
+      continue;
     } else {
       // Captured something other than the effect dep or setState
+      console.log('early return 1');
       return;
     }
   }
   for (const dep of effectDeps) {
+    console.log({dep});
     if (
       effectFunction.context.find(operand => operand.identifier.id === dep) ==
-      null
+        null ||
+      derivedFromProps.has(dep) === false
     ) {
+      console.log('early return 2');
       // effect dep wasn't actually used in the function
       return;
     }
@@ -128,11 +227,18 @@ function validateEffect(
 
   const seenBlocks: Set<BlockId> = new Set();
   const values: Map<IdentifierId, Array<IdentifierId>> = new Map();
+  const effectDerivedFromProps: Map<IdentifierId, Place> = new Map();
+
   for (const dep of effectDeps) {
+    console.log({dep});
     values.set(dep, [dep]);
+    const propsSource = derivedFromProps.get(dep);
+    if (propsSource != null) {
+      effectDerivedFromProps.set(dep, propsSource);
+    }
   }
 
-  const setStateLocations: Array<SourceLocation> = [];
+  const setStateCalls: Array<SetStateCall> = [];
   for (const block of effectFunction.body.blocks.values()) {
     for (const pred of block.preds) {
       if (!seenBlocks.has(pred)) {
@@ -142,6 +248,8 @@ function validateEffect(
     }
     for (const phi of block.phis) {
       const aggregateDeps: Set<IdentifierId> = new Set();
+      let propsSource: Place | null = null;
+
       for (const operand of phi.operands.values()) {
         const deps = values.get(operand.identifier.id);
         if (deps != null) {
@@ -149,9 +257,17 @@ function validateEffect(
             aggregateDeps.add(dep);
           }
         }
+        const source = effectDerivedFromProps.get(operand.identifier.id);
+        if (source != null) {
+          propsSource = source;
+        }
       }
+
       if (aggregateDeps.size !== 0) {
         values.set(phi.place.identifier.id, Array.from(aggregateDeps));
+      }
+      if (propsSource != null) {
+        effectDerivedFromProps.set(phi.place.identifier.id, propsSource);
       }
     }
     for (const instr of block.instructions) {
@@ -195,9 +311,16 @@ function validateEffect(
           ) {
             const deps = values.get(instr.value.args[0].identifier.id);
             if (deps != null && new Set(deps).size === effectDeps.length) {
-              setStateLocations.push(instr.value.callee.loc);
+              const propsSource = effectDerivedFromProps.get(
+                instr.value.args[0].identifier.id,
+              );
+
+              setStateCalls.push({
+                loc: instr.value.callee.loc,
+                propsSource: propsSource ?? null,
+              });
             } else {
-              // doesn't depend on any deps
+              // doesn't depend on all deps
               return;
             }
           }
@@ -205,6 +328,26 @@ function validateEffect(
         }
         default: {
           return;
+        }
+      }
+
+      // Track props derivation through instruction effects
+      if (instr.effects != null) {
+        for (const effect of instr.effects) {
+          switch (effect.kind) {
+            case 'Assign':
+            case 'Alias':
+            case 'MaybeAlias':
+            case 'Capture': {
+              const source = effectDerivedFromProps.get(
+                effect.from.identifier.id,
+              );
+              if (source != null) {
+                effectDerivedFromProps.set(effect.into.identifier.id, source);
+              }
+              break;
+            }
+          }
         }
       }
     }
@@ -217,14 +360,29 @@ function validateEffect(
     seenBlocks.add(block.id);
   }
 
-  for (const loc of setStateLocations) {
-    errors.push({
-      reason:
-        'Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)',
-      description: null,
-      severity: ErrorSeverity.InvalidReact,
-      loc,
-      suggestions: null,
-    });
+  for (const call of setStateCalls) {
+    if (call.propsSource != null) {
+      const propName = call.propsSource.identifier.name?.value;
+      const propInfo = propName != null ? ` (from prop '${propName}')` : '';
+
+      errors.push({
+        reason: `Consider lifting state up to the parent component to make this a controlled component. (https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes)`,
+        description: `You are using props${propInfo} to update local state in an effect.`,
+        severity: ErrorSeverity.InvalidReact,
+        loc: call.loc,
+        suggestions: null,
+      });
+    } else {
+      errors.push({
+        reason:
+          'You may not need this effect. Values derived from state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)',
+        description:
+          'This effect updates state based on other state values. ' +
+          'Consider calculating this value directly during render',
+        severity: ErrorSeverity.InvalidReact,
+        loc: call.loc,
+        suggestions: null,
+      });
+    }
   }
 }
