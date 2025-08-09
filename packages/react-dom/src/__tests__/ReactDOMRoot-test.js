@@ -454,10 +454,11 @@ describe('ReactDOMRoot', () => {
     });
     assertConsoleErrorDev(
       [
-        'Functions are not valid as a React child. ' +
-          'This may happen if you return Component instead of <Component /> from render. ' +
-          'Or maybe you meant to call this function rather than return it.\n' +
-          '  root.render(Component)',
+        'Functions are not valid as a React child. This may happen if:\n' +
+        '- You forgot to call the function: use {Component()} instead of {Component}\n' +
+        '- You meant to render a component: use <Component /> instead of {Component}\n' +
+        '- You intended to pass the function as a prop to a child component.\n' +
+        '  root.render(Component)',
       ],
       {withoutStack: true},
     );

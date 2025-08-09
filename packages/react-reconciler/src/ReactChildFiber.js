@@ -312,25 +312,31 @@ function warnOnFunctionType(returnFiber: Fiber, invalidChild: Function) {
 
     if (returnFiber.tag === HostRoot) {
       console.error(
-        'Functions are not valid as a React child. This may happen if ' +
-          'you return %s instead of <%s /> from render. ' +
-          'Or maybe you meant to call this function rather than return it.\n' +
-          '  root.render(%s)',
+        'Functions are not valid as a React child. This may happen if:\n' +
+        '- You forgot to call the function: use {%s()} instead of {%s}\n' +
+        '- You meant to render a component: use <%s /> instead of {%s}\n' +
+        '- You intended to pass the function as a prop to a child component.\n' +
+        '  root.render(%s)',
         name,
         name,
         name,
+        name,
+        name
       );
     } else {
       console.error(
-        'Functions are not valid as a React child. This may happen if ' +
-          'you return %s instead of <%s /> from render. ' +
-          'Or maybe you meant to call this function rather than return it.\n' +
-          '  <%s>{%s}</%s>',
+        'Functions are not valid as a React child. This may happen if:\n' +
+        '- You forgot to call the function: use {%s()} instead of {%s}\n' +
+        '- You meant to render a component: use <%s /> instead of {%s}\n' +
+        '- You intended to pass the function as a prop to a child component.\n' +
+        '  <%s>{%s}</%s>',
+        name,
+        name,
         name,
         name,
         parentName,
         name,
-        parentName,
+        parentName
       );
     }
   }
