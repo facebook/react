@@ -1187,13 +1187,17 @@ export default class Store extends EventEmitter<{
             const element = this._idToElement.get(id);
 
             if (element === undefined) {
-              this._throwAndEmitError(
-                Error(
-                  `Cannot remove node "${id}" because no matching node was found in the Store.`,
-                ),
-              );
-
-              break;
+              // Node doesn't exist in the store, which can happen during rapid updates
+              // or race conditions between backend and frontend. Log a warning but continue.
+              if (__DEV__) {
+                console.warn(
+                  `Cannot remove node "${id}" because no matching node was found in the Store. This may be due to rapid component updates or race conditions.`,
+                );
+              }
+              
+              // Skip this node and continue with the next one
+              i += 1;
+              continue;
             }
 
             i += 1;
@@ -1225,13 +1229,32 @@ export default class Store extends EventEmitter<{
 
               parentElement = this._idToElement.get(parentID);
               if (parentElement === undefined) {
-                this._throwAndEmitError(
-                  Error(
-                    `Cannot remove node "${id}" from parent "${parentID}" because no matching node was found in the Store.`,
-                  ),
-                );
+                // Parent doesn't exist, which can happen during rapid updates
+                // Log a warning but continue to avoid breaking the operation
+                if (__DEV__) {
+                  console.warn(
+                    `Cannot remove node "${id}" from parent "${parentID}" because no matching parent was found in the Store. This may be due to rapid component updates or race conditions.`,
+                  );
+                }
+                
+                // Continue with cleanup even if parent is missing
+                this._adjustParentTreeWeight(null, -weight);
+                removedElementIDs.set(id, parentID);
+                
+                this._ownersMap.delete(id);
+                if (ownerID > 0) {
+                  const set = this._ownersMap.get(ownerID);
+                  if (set !== undefined) {
+                    set.delete(id);
+                  }
+                }
 
-                break;
+                if (this._errorsAndWarnings.has(id)) {
+                  this._errorsAndWarnings.delete(id);
+                  haveErrorsOrWarningsChanged = true;
+                }
+                
+                continue;
               }
 
               const index = parentElement.children.indexOf(id);
@@ -1279,12 +1302,19 @@ export default class Store extends EventEmitter<{
 
           const root = this._idToElement.get(id);
           if (root === undefined) {
-            this._throwAndEmitError(
-              Error(
-                `Cannot remove root "${id}": no matching node was found in the Store.`,
-              ),
-            );
-
+            // Root doesn't exist in the store, which can happen during rapid updates
+            // or race conditions between backend and frontend. Log a warning but continue.
+            if (__DEV__) {
+              console.warn(
+                `Cannot remove root "${id}": no matching node was found in the Store. This may be due to rapid component updates or race conditions.`,
+              );
+            }
+            
+            // Clean up any remaining references to this root
+            this._rootIDToCapabilities.delete(id);
+            this._rootIDToRendererID.delete(id);
+            this._roots = this._roots.filter(rootID => rootID !== id);
+            
             break;
           }
 

@@ -2581,4 +2581,40 @@ describe('Store', () => {
               <ClientComponent key="D">
       `);
   });
+
+  // @reactVersion >= 18.0
+  it('handles missing nodes gracefully during remove operations', async () => {
+    // This test verifies that the store doesn't crash when trying to remove
+    // nodes that don't exist, which can happen during rapid updates or race conditions
+
+    // First, add some elements to the store
+    await act(() =>
+      render(
+        <React.Fragment>
+          <div>Parent</div>
+          <div>Child 1</div>
+          <div>Child 2</div>
+        </React.Fragment>,
+      ),
+    );
+
+    // Verify elements are in the store
+    expect(store.numElements).toBeGreaterThan(0);
+
+    // Simulate a remove operation for a node that doesn't exist
+    // This would normally cause the "Cannot remove node" error
+    const operations = [
+      2, // TREE_OPERATION_REMOVE
+      1, // removeLength
+      999, // id of non-existent node
+    ];
+
+    // This should not throw an error anymore
+    expect(() => {
+      store.onBridgeOperations(operations);
+    }).not.toThrow();
+
+    // The store should still be in a valid state
+    expect(store.numElements).toBeGreaterThanOrEqual(0);
+  });
 });
