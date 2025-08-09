@@ -50,7 +50,7 @@ export type AliasingEffect =
   /**
    * Mutate the value and any direct aliases (not captures). Errors if the value is not mutable.
    */
-  | {kind: 'Mutate'; value: Place}
+  | {kind: 'Mutate'; value: Place; reason?: MutationReason | null}
   /**
    * Mutate the value and any direct aliases (not captures), but only if the value is known mutable.
    * This should be rare.
@@ -173,6 +173,8 @@ export type AliasingEffect =
       kind: 'Render';
       place: Place;
     };
+
+export type MutationReason = {kind: 'AssignCurrentProperty'};
 
 export function hashEffect(effect: AliasingEffect): string {
   switch (effect.kind) {

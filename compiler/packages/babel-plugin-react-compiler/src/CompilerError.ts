@@ -58,11 +58,15 @@ export type CompilerDiagnosticDetail =
   /**
    * A/the source of the error
    */
-  {
-    kind: 'error';
-    loc: SourceLocation | null;
-    message: string;
-  };
+  | {
+      kind: 'error';
+      loc: SourceLocation | null;
+      message: string;
+    }
+  | {
+      kind: 'hint';
+      message: string;
+    };
 
 export enum CompilerSuggestionOperation {
   InsertBefore,
@@ -134,7 +138,12 @@ export class CompilerDiagnostic {
   }
 
   primaryLocation(): SourceLocation | null {
-    return this.options.details.filter(d => d.kind === 'error')[0]?.loc ?? null;
+    const firstErrorDetail = this.options.details.filter(
+      d => d.kind === 'error',
+    )[0];
+    return firstErrorDetail != null && firstErrorDetail.kind === 'error'
+      ? firstErrorDetail.loc
+      : null;
   }
 
   printErrorMessage(source: string, options: PrintErrorMessageOptions): string {
@@ -167,9 +176,14 @@ export class CompilerDiagnostic {
           buffer.push(codeFrame);
           break;
         }
+        case 'hint': {
+          buffer.push('\n\n');
+          buffer.push(detail.message);
+          break;
+        }
         default: {
           assertExhaustive(
-            detail.kind,
+            detail,
             `Unexpected detail kind ${(detail as any).kind}`,
           );
         }
