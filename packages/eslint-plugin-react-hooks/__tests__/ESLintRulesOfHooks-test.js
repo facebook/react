@@ -1368,6 +1368,9 @@ if (__EXPERIMENTAL__) {
           useEffect(() => {
             onClick();
           });
+          React.useEffect(() => {
+            onClick();
+          });
         }
       `,
     },
@@ -1386,6 +1389,10 @@ if (__EXPERIMENTAL__) {
             deboucne(() => debounce(onClick));
           });
           useEffect(() => {
+            let id = setInterval(() => onClick(), 100);
+            return () => clearInterval(onClick);
+          }, []);
+          React.useEffect(() => {
             let id = setInterval(() => onClick(), 100);
             return () => clearInterval(onClick);
           }, []);
@@ -1408,11 +1415,15 @@ if (__EXPERIMENTAL__) {
     {
       code: normalizeIndent`
         function MyComponent({ theme }) {
+          // Can receive arguments
           const onEvent = useEffectEvent((text) => {
             console.log(text);
           });
 
           useEffect(() => {
+            onEvent('Hello world');
+          });
+          React.useEffect(() => {
             onEvent('Hello world');
           });
         }
