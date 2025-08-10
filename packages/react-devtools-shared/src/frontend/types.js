@@ -184,6 +184,13 @@ export type Element = {
   compiledWithForget: boolean,
 };
 
+export type SuspenseNode = {
+  id: Element['id'],
+  parentID: SuspenseNode['id'] | 0,
+  children: Array<SuspenseNode['id']>,
+  name: string | null,
+};
+
 // Serialized version of ReactIOInfo
 export type SerializedIOInfo = {
   name: string,
