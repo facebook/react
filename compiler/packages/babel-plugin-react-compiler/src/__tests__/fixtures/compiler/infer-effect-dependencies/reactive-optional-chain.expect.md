@@ -3,13 +3,13 @@
 
 ```javascript
 // @inferEffectDependencies
-import {useEffect} from 'react';
+import {useEffect, AUTODEPS} from 'react';
 import {print} from 'shared-runtime';
 
 function ReactiveMemberExpr({cond, propVal}) {
   const obj = {a: cond ? {b: propVal} : null, c: null};
-  useEffect(() => print(obj.a?.b));
-  useEffect(() => print(obj.c?.d));
+  useEffect(() => print(obj.a?.b), AUTODEPS);
+  useEffect(() => print(obj.c?.d), AUTODEPS);
 }
 
 export const FIXTURE_ENTRYPOINT = {
@@ -23,7 +23,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @inferEffectDependencies
-import { useEffect } from "react";
+import { useEffect, AUTODEPS } from "react";
 import { print } from "shared-runtime";
 
 function ReactiveMemberExpr(t0) {

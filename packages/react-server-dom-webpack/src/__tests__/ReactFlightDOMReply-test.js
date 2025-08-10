@@ -438,6 +438,50 @@ describe('ReactFlightDOMReply', () => {
     expect(response.obj).toBe(obj);
   });
 
+  it('can return an opaque object through an async function', async () => {
+    function fn() {
+      return 'this is a client function';
+    }
+
+    const args = [fn];
+
+    const temporaryReferences =
+      ReactServerDOMClient.createTemporaryReferenceSet();
+    const body = await ReactServerDOMClient.encodeReply(args, {
+      temporaryReferences,
+    });
+
+    const temporaryReferencesServer =
+      ReactServerDOMServer.createTemporaryReferenceSet();
+    const serverPayload = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+      {temporaryReferences: temporaryReferencesServer},
+    );
+
+    async function action(arg) {
+      return arg;
+    }
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        {
+          result: action.apply(null, serverPayload),
+        },
+        null,
+        {temporaryReferences: temporaryReferencesServer},
+      ),
+    );
+    const response = await ReactServerDOMClient.createFromReadableStream(
+      stream,
+      {
+        temporaryReferences,
+      },
+    );
+
+    expect(await response.result).toBe(fn);
+  });
+
   it('should supports streaming ReadableStream with objects', async () => {
     let controller1;
     let controller2;

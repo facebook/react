@@ -3,7 +3,7 @@
 
 ```javascript
 // @inferEffectDependencies
-import {useEffect, useState} from 'react';
+import {useEffect, useState, AUTODEPS} from 'react';
 import {print} from 'shared-runtime';
 
 /*
@@ -18,7 +18,7 @@ function ReactiveRefInEffect(props) {
   } else {
     setState = setState2;
   }
-  useEffect(() => print(setState));
+  useEffect(() => print(setState), AUTODEPS);
 }
 
 ```
@@ -27,7 +27,7 @@ function ReactiveRefInEffect(props) {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @inferEffectDependencies
-import { useEffect, useState } from "react";
+import { useEffect, useState, AUTODEPS } from "react";
 import { print } from "shared-runtime";
 
 /*

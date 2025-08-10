@@ -38,15 +38,29 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
+Found 1 error:
+
+Error: Cannot access variable before it is declared
+
+`setState` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+error.invalid-hoisting-setstate.ts:19:18
   17 |    * $2 = Function context=setState
   18 |    */
 > 19 |   useEffect(() => setState(2), []);
-     |                   ^^^^^^^^ InvalidReact: This variable is accessed before it is declared, which may prevent it from updating as the assigned value changes over time. Variable `setState` is accessed before it is declared (19:19)
-
-InvalidReact: This variable is accessed before it is declared, which prevents the earlier access from updating when this value changes over time. Variable `setState` is accessed before it is declared (21:21)
+     |                   ^^^^^^^^ `setState` accessed before it is declared
   20 |
   21 |   const [state, setState] = useState(0);
   22 |   return <Stringify state={state} />;
+
+error.invalid-hoisting-setstate.ts:21:16
+  19 |   useEffect(() => setState(2), []);
+  20 |
+> 21 |   const [state, setState] = useState(0);
+     |                 ^^^^^^^^ `setState` is declared here
+  22 |   return <Stringify state={state} />;
+  23 | }
+  24 |
 ```
           
       

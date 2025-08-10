@@ -36,7 +36,12 @@ export default function portaledContent(
         <ThemeProvider>
           <div
             data-react-devtools-portal-root={true}
-            style={{width: '100vw', height: '100vh'}}>
+            style={{
+              width: '100vw',
+              height: '100vh',
+              containerName: 'devtools',
+              containerType: 'inline-size',
+            }}>
             {children}
           </div>
         </ThemeProvider>

@@ -3,7 +3,7 @@
 
 ```javascript
 // @inferEffectDependencies
-import {useEffect, useState} from 'react';
+import {useEffect, useState, AUTODEPS} from 'react';
 import {print} from 'shared-runtime';
 
 /**
@@ -14,7 +14,7 @@ import {print} from 'shared-runtime';
  */
 function NonReactiveSetStateInEffect() {
   const [_, setState] = useState('initial value');
-  useEffect(() => print(setState));
+  useEffect(() => print(setState), AUTODEPS);
 }
 
 ```
@@ -23,7 +23,7 @@ function NonReactiveSetStateInEffect() {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @inferEffectDependencies
-import { useEffect, useState } from "react";
+import { useEffect, useState, AUTODEPS } from "react";
 import { print } from "shared-runtime";
 
 /**

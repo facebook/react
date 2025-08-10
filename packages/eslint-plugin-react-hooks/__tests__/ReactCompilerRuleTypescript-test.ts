@@ -63,8 +63,7 @@ const tests: CompilerTestCases = {
       `,
       errors: [
         {
-          message:
-            "Mutating a value returned from 'useState()', which should not be mutated. Use the setter function to update instead",
+          message: /Modifying a value returned from 'useState\(\)'/,
           line: 7,
         },
       ],
@@ -75,4 +74,4 @@ const tests: CompilerTestCases = {
 const eslintTester = new ESLintTesterV8({
   parser: require.resolve('@typescript-eslint/parser-v5'),
 });
-eslintTester.run('react-compiler - eslint: v8', ReactCompilerRule, tests);
+eslintTester.run('react-compiler', ReactCompilerRule, tests);

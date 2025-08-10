@@ -14,6 +14,7 @@ import type {HookKind} from './ObjectShape';
 import {Type, makeType} from './Types';
 import {z} from 'zod';
 import type {AliasingEffect} from '../Inference/AliasingEffects';
+import {isReservedWord} from '../Utils/Keyword';
 
 /*
  * *******************************************************************************************
@@ -446,8 +447,20 @@ export type ThrowTerminal = {
 };
 export type Case = {test: Place | null; block: BlockId};
 
+export type ReturnVariant = 'Void' | 'Implicit' | 'Explicit';
 export type ReturnTerminal = {
   kind: 'return';
+  /**
+   * Void:
+   *   () => { ... }
+   *   function() { ... }
+   * Implicit (ArrowFunctionExpression only):
+   *   () => foo
+   * Explicit:
+   *   () => { return ... }
+   *   function () { return ... }
+   */
+  returnVariant: ReturnVariant;
   loc: SourceLocation;
   value: Place;
   id: InstructionId;
@@ -1308,12 +1321,21 @@ export function forkTemporaryIdentifier(
  * original source code.
  */
 export function makeIdentifierName(name: string): ValidatedIdentifier {
-  CompilerError.invariant(t.isValidIdentifier(name), {
-    reason: `Expected a valid identifier name`,
-    loc: GeneratedSource,
-    description: `\`${name}\` is not a valid JavaScript identifier`,
-    suggestions: null,
-  });
+  if (isReservedWord(name)) {
+    CompilerError.throwInvalidJS({
+      reason: 'Expected a non-reserved identifier name',
+      loc: GeneratedSource,
+      description: `\`${name}\` is a reserved word in JavaScript and cannot be used as an identifier name`,
+      suggestions: null,
+    });
+  } else {
+    CompilerError.invariant(t.isValidIdentifier(name), {
+      reason: `Expected a valid identifier name`,
+      loc: GeneratedSource,
+      description: `\`${name}\` is not a valid JavaScript identifier`,
+      suggestions: null,
+    });
+  }
   return {
     kind: 'named',
     value: name as ValidIdentifierName,

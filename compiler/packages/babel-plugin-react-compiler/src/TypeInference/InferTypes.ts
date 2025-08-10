@@ -14,6 +14,7 @@ import {
   Identifier,
   IdentifierId,
   Instruction,
+  InstructionKind,
   makePropertyLiteral,
   makeType,
   PropType,
@@ -194,10 +195,27 @@ function* generateInstructionTypes(
       break;
     }
 
-    // We intentionally do not infer types for context variables
+    // We intentionally do not infer types for most context variables
     case 'DeclareContext':
-    case 'StoreContext':
     case 'LoadContext': {
+      break;
+    }
+    case 'StoreContext': {
+      /**
+       * The caveat is StoreContext const, where we know the value is
+       * assigned once such that everywhere the value is accessed, it
+       * must have the same type from the rvalue.
+       *
+       * A concrete example where this is useful is `const ref = useRef()`
+       * where the ref is referenced before its declaration in a function
+       * expression, causing it to be converted to a const context variable.
+       */
+      if (value.lvalue.kind === InstructionKind.Const) {
+        yield equation(
+          value.lvalue.place.identifier.type,
+          value.value.identifier.type,
+        );
+      }
       break;
     }
 
@@ -360,6 +378,12 @@ function* generateInstructionTypes(
                 value: makePropertyLiteral(propertyName),
               },
             });
+          } else if (item.kind === 'Spread') {
+            // Array pattern spread always creates an array
+            yield equation(item.place.identifier.type, {
+              kind: 'Object',
+              shapeId: BuiltInArrayId,
+            });
           } else {
             break;
           }
@@ -427,6 +451,18 @@ function* generateInstructionTypes(
 
     case 'JsxExpression':
     case 'JsxFragment': {
+      if (env.config.enableTreatRefLikeIdentifiersAsRefs) {
+        if (value.kind === 'JsxExpression') {
+          for (const prop of value.props) {
+            if (prop.kind === 'JsxAttribute' && prop.name === 'ref') {
+              yield equation(prop.place.identifier.type, {
+                kind: 'Object',
+                shapeId: BuiltInUseRefId,
+              });
+            }
+          }
+        }
+      }
       yield equation(left, {kind: 'Object', shapeId: BuiltInJsxId});
       break;
     }
@@ -442,7 +478,36 @@ function* generateInstructionTypes(
       yield equation(left, returnType);
       break;
     }
-    case 'PropertyStore':
+    case 'PropertyStore': {
+      /**
+       * Infer types based on assignments to known object properties
+       * This is important for refs, where assignment to `<maybeRef>.current`
+       * can help us infer that an object itself is a ref
+       */
+      yield equation(
+        /**
+         * Our property type declarations are best-effort and we haven't tested
+         * using them to drive inference of rvalues from lvalues. We want to emit
+         * a Property type in order to infer refs from `.current` accesses, but
+         * stay conservative by not otherwise inferring anything about rvalues.
+         * So we use a dummy type here.
+         *
+         * TODO: consider using the rvalue type here
+         */
+        makeType(),
+        // unify() only handles properties in the second position
+        {
+          kind: 'Property',
+          objectType: value.object.identifier.type,
+          objectName: getName(names, value.object.identifier.id),
+          propertyName: {
+            kind: 'literal',
+            value: value.property,
+          },
+        },
+      );
+      break;
+    }
     case 'DeclareLocal':
     case 'RegExpLiteral':
     case 'MetaProperty':

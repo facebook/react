@@ -3,7 +3,7 @@
 
 ```javascript
 // @inferEffectDependencies
-import {useEffect} from 'react';
+import {useEffect, AUTODEPS} from 'react';
 import {makeObject_Primitives, print} from 'shared-runtime';
 
 /**
@@ -25,7 +25,7 @@ import {makeObject_Primitives, print} from 'shared-runtime';
  */
 function NonReactiveDepInEffect() {
   const obj = makeObject_Primitives();
-  useEffect(() => print(obj));
+  useEffect(() => print(obj), AUTODEPS);
 }
 
 ```
@@ -34,7 +34,7 @@ function NonReactiveDepInEffect() {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @inferEffectDependencies
-import { useEffect } from "react";
+import { useEffect, AUTODEPS } from "react";
 import { makeObject_Primitives, print } from "shared-runtime";
 
 /**

@@ -267,15 +267,16 @@ import {
   blockingClampTime,
   blockingUpdateTime,
   blockingUpdateTask,
+  blockingUpdateType,
   blockingEventTime,
   blockingEventType,
   blockingEventIsRepeat,
-  blockingSpawnedUpdate,
   blockingSuspendedTime,
   transitionClampTime,
   transitionStartTime,
   transitionUpdateTime,
   transitionUpdateTask,
+  transitionUpdateType,
   transitionEventTime,
   transitionEventType,
   transitionEventIsRepeat,
@@ -302,6 +303,8 @@ import {
   startPingTimerByLanes,
   recordEffectError,
   resetCommitErrors,
+  PINGED_UPDATE,
+  SPAWNED_UPDATE,
 } from './ReactProfilerTimer';
 
 // DEV stuff
@@ -482,6 +485,9 @@ let workInProgressTransitions: Array<Transition> | null = null;
 export function getWorkInProgressTransitions(): null | Array<Transition> {
   return workInProgressTransitions;
 }
+
+// The first setState call that eventually caused the current render.
+let workInProgressUpdateTask: null | ConsoleTask = null;
 
 let currentPendingTransitionCallbacks: PendingTransitionCallbacks | null = null;
 let currentEndTime: number | null = null;
@@ -1105,7 +1111,11 @@ export function performWorkOnRoot(
       ) {
         if (enableProfilerTimer && enableComponentPerformanceTrack) {
           setCurrentTrackFromLanes(lanes);
-          logInconsistentRender(renderStartTime, renderEndTime);
+          logInconsistentRender(
+            renderStartTime,
+            renderEndTime,
+            workInProgressUpdateTask,
+          );
           finalizeRender(lanes, renderEndTime);
         }
         // A store was mutated in an interleaved event. Render again,
@@ -1131,7 +1141,12 @@ export function performWorkOnRoot(
         if (errorRetryLanes !== NoLanes) {
           if (enableProfilerTimer && enableComponentPerformanceTrack) {
             setCurrentTrackFromLanes(lanes);
-            logErroredRenderPhase(renderStartTime, renderEndTime, lanes);
+            logErroredRenderPhase(
+              renderStartTime,
+              renderEndTime,
+              lanes,
+              workInProgressUpdateTask,
+            );
             finalizeRender(lanes, renderEndTime);
           }
           lanes = errorRetryLanes;
@@ -1162,7 +1177,12 @@ export function performWorkOnRoot(
       if (exitStatus === RootFatalErrored) {
         if (enableProfilerTimer && enableComponentPerformanceTrack) {
           setCurrentTrackFromLanes(lanes);
-          logErroredRenderPhase(renderStartTime, renderEndTime, lanes);
+          logErroredRenderPhase(
+            renderStartTime,
+            renderEndTime,
+            lanes,
+            workInProgressUpdateTask,
+          );
           finalizeRender(lanes, renderEndTime);
         }
         prepareFreshStack(root, NoLanes);
@@ -1303,7 +1323,12 @@ function finishConcurrentRender(
       // until we receive more data.
       if (enableProfilerTimer && enableComponentPerformanceTrack) {
         setCurrentTrackFromLanes(lanes);
-        logSuspendedRenderPhase(renderStartTime, renderEndTime, lanes);
+        logSuspendedRenderPhase(
+          renderStartTime,
+          renderEndTime,
+          lanes,
+          workInProgressUpdateTask,
+        );
         finalizeRender(lanes, renderEndTime);
         trackSuspendedTime(lanes, renderEndTime);
       }
@@ -1868,18 +1893,22 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
           previousRenderStartTime,
           renderStartTime,
           lanes,
+          workInProgressUpdateTask,
         );
       } else {
         logInterruptedRenderPhase(
           previousRenderStartTime,
           renderStartTime,
           lanes,
+          workInProgressUpdateTask,
         );
       }
       finalizeRender(workInProgressRootRenderLanes, renderStartTime);
     }
 
+    workInProgressUpdateTask = null;
     if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
+      workInProgressUpdateTask = blockingUpdateTask;
       const clampedUpdateTime =
         blockingUpdateTime >= 0 && blockingUpdateTime < blockingClampTime
           ? blockingClampTime
@@ -1899,6 +1928,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
               ? clampedUpdateTime
               : renderStartTime,
           lanes,
+          workInProgressUpdateTask,
         );
       }
       logBlockingStart(
@@ -1906,7 +1936,8 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
         clampedEventTime,
         blockingEventType,
         blockingEventIsRepeat,
-        blockingSpawnedUpdate,
+        blockingUpdateType === SPAWNED_UPDATE,
+        blockingUpdateType === PINGED_UPDATE,
         renderStartTime,
         lanes,
         blockingUpdateTask,
@@ -1914,6 +1945,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
       clearBlockingTimers();
     }
     if (includesTransitionLane(lanes)) {
+      workInProgressUpdateTask = transitionUpdateTask;
       const clampedStartTime =
         transitionStartTime >= 0 && transitionStartTime < transitionClampTime
           ? transitionClampTime
@@ -1937,6 +1969,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
               ? clampedUpdateTime
               : renderStartTime,
           lanes,
+          workInProgressUpdateTask,
         );
       }
       logTransitionStart(
@@ -1945,6 +1978,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
         clampedEventTime,
         transitionEventType,
         transitionEventIsRepeat,
+        transitionUpdateType === PINGED_UPDATE,
         renderStartTime,
         transitionUpdateTask,
       );
@@ -2226,6 +2260,21 @@ function pushAsyncDispatcher() {
 
 function popAsyncDispatcher(prevAsyncDispatcher: any) {
   ReactSharedInternals.A = prevAsyncDispatcher;
+}
+
+export function markRenderDerivedCause(fiber: Fiber): void {
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if (__DEV__) {
+      if (workInProgressUpdateTask === null) {
+        // If we don't have a cause associated with this render, it's likely because some
+        // other render left work behind on this Fiber. The real cause is this Fiber itself.
+        // We use its debugTask as the cause for this render. This might not be the only
+        // one when multiple siblings are rendered but they ideally shouldn't be.
+        workInProgressUpdateTask =
+          fiber._debugTask == null ? null : fiber._debugTask;
+      }
+    }
+  }
 }
 
 export function markCommitTimeOfFallback() {
@@ -3240,6 +3289,7 @@ function commitRoot(
         completedRenderStartTime,
         completedRenderEndTime,
         lanes,
+        workInProgressUpdateTask,
       );
     } else if (recoverableErrors !== null) {
       const hydrationFailed =
@@ -3253,9 +3303,15 @@ function commitRoot(
         lanes,
         recoverableErrors,
         hydrationFailed,
+        workInProgressUpdateTask,
       );
     } else {
-      logRenderPhase(completedRenderStartTime, completedRenderEndTime, lanes);
+      logRenderPhase(
+        completedRenderStartTime,
+        completedRenderEndTime,
+        lanes,
+        workInProgressUpdateTask,
+      );
     }
   }
 
@@ -3426,9 +3482,17 @@ function commitRoot(
     recordCommitTime();
     if (enableComponentPerformanceTrack) {
       if (suspendedCommitReason === SUSPENDED_COMMIT) {
-        logSuspendedCommitPhase(completedRenderEndTime, commitStartTime);
+        logSuspendedCommitPhase(
+          completedRenderEndTime,
+          commitStartTime,
+          workInProgressUpdateTask,
+        );
       } else if (suspendedCommitReason === THROTTLED_COMMIT) {
-        logSuspenseThrottlePhase(completedRenderEndTime, commitStartTime);
+        logSuspenseThrottlePhase(
+          completedRenderEndTime,
+          commitStartTime,
+          workInProgressUpdateTask,
+        );
       }
     }
   }
@@ -3673,6 +3737,7 @@ function flushSpawnedWork(): void {
         : commitStartTime,
       commitEndTime,
       commitErrors,
+      workInProgressUpdateTask,
     );
   }
 
@@ -4148,6 +4213,7 @@ function flushPassiveEffectsImpl(wasDelayedCommit: void | boolean) {
       commitEndTime,
       passiveEffectStartTime,
       !!wasDelayedCommit,
+      workInProgressUpdateTask,
     );
   }
 
@@ -4183,6 +4249,7 @@ function flushPassiveEffectsImpl(wasDelayedCommit: void | boolean) {
       passiveEffectStartTime,
       passiveEffectsEndTime,
       commitErrors,
+      workInProgressUpdateTask,
     );
     finalizeRender(lanes, passiveEffectsEndTime);
   }

@@ -142,6 +142,7 @@ function parseAliasingSignatureConfig(
   const effects = typeConfig.effects.map(
     (effect: AliasingEffectConfig): AliasingEffect => {
       switch (effect.kind) {
+        case 'ImmutableCapture':
         case 'CreateFrom':
         case 'Capture':
         case 'Alias':
@@ -384,6 +385,7 @@ export const BuiltInFireId = 'BuiltInFire';
 export const BuiltInFireFunctionId = 'BuiltInFireFunction';
 export const BuiltInUseEffectEventId = 'BuiltInUseEffectEvent';
 export const BuiltinEffectEventId = 'BuiltInEffectEventFunction';
+export const BuiltInAutodepsId = 'BuiltInAutoDepsId';
 
 // See getReanimatedModuleType() in Globals.ts — this is part of supporting Reanimated's ref-like types
 export const ReanimatedSharedValueId = 'ReanimatedSharedValueId';
@@ -1209,6 +1211,8 @@ addObject(BUILTIN_SHAPES, BuiltInUseRefId, [
 addObject(BUILTIN_SHAPES, BuiltInRefValueId, [
   ['*', {kind: 'Object', shapeId: BuiltInRefValueId}],
 ]);
+
+addObject(BUILTIN_SHAPES, ReanimatedSharedValueId, []);
 
 addFunction(
   BUILTIN_SHAPES,

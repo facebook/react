@@ -803,6 +803,45 @@ type Props = {
   defaultInspectedElementIndex?: ?number,
 };
 
+function getInitialState({
+  defaultOwnerID,
+  defaultInspectedElementID,
+  defaultInspectedElementIndex,
+  store,
+}: {
+  defaultOwnerID?: ?number,
+  defaultInspectedElementID?: ?number,
+  defaultInspectedElementIndex?: ?number,
+  store: Store,
+}): State {
+  return {
+    // Tree
+    numElements: store.numElements,
+    ownerSubtreeLeafElementID: null,
+
+    // Search
+    searchIndex: null,
+    searchResults: [],
+    searchText: '',
+
+    // Owners
+    ownerID: defaultOwnerID == null ? null : defaultOwnerID,
+    ownerFlatTree: null,
+
+    // Inspection element panel
+    inspectedElementID:
+      defaultInspectedElementID != null
+        ? defaultInspectedElementID
+        : store.lastSelectedHostInstanceElementId,
+    inspectedElementIndex:
+      defaultInspectedElementIndex != null
+        ? defaultInspectedElementIndex
+        : store.lastSelectedHostInstanceElementId
+          ? store.getIndexOfElementID(store.lastSelectedHostInstanceElementId)
+          : null,
+  };
+}
+
 // TODO Remove TreeContextController wrapper element once global Context.write API exists.
 function TreeContextController({
   children,
@@ -866,32 +905,16 @@ function TreeContextController({
     [store],
   );
 
-  const [state, dispatch] = useReducer(reducer, {
-    // Tree
-    numElements: store.numElements,
-    ownerSubtreeLeafElementID: null,
-
-    // Search
-    searchIndex: null,
-    searchResults: [],
-    searchText: '',
-
-    // Owners
-    ownerID: defaultOwnerID == null ? null : defaultOwnerID,
-    ownerFlatTree: null,
-
-    // Inspection element panel
-    inspectedElementID:
-      defaultInspectedElementID != null
-        ? defaultInspectedElementID
-        : store.lastSelectedHostInstanceElementId,
-    inspectedElementIndex:
-      defaultInspectedElementIndex != null
-        ? defaultInspectedElementIndex
-        : store.lastSelectedHostInstanceElementId
-          ? store.getIndexOfElementID(store.lastSelectedHostInstanceElementId)
-          : null,
-  });
+  const [state, dispatch] = useReducer(
+    reducer,
+    {
+      defaultOwnerID,
+      defaultInspectedElementID,
+      defaultInspectedElementIndex,
+      store,
+    },
+    getInitialState,
+  );
   const transitionDispatch = useMemo(
     () => (action: Action) =>
       startTransition(() => {
@@ -931,7 +954,7 @@ function TreeContextController({
       Array<number>,
       Map<number, number>,
     ]) => {
-      transitionDispatch({
+      dispatch({
         type: 'HANDLE_STORE_MUTATION',
         payload: [addedElementIDs, removedElementIDs],
       });
@@ -942,7 +965,7 @@ function TreeContextController({
       // At the moment, we can treat this as a mutation.
       // We don't know which Elements were newly added/removed, but that should be okay in this case.
       // It would only impact the search state, which is unlikely to exist yet at this point.
-      transitionDispatch({
+      dispatch({
         type: 'HANDLE_STORE_MUTATION',
         payload: [[], new Map()],
       });

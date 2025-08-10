@@ -26,10 +26,17 @@ function useKeyedState({key, init}) {
 ## Error
 
 ```
+Found 1 error:
+
+Error: Calling setState from useMemo may trigger an infinite loop
+
+Each time the memo callback is evaluated it will change state. This can cause a memoization dependency to change, running the memo function again and causing an infinite loop. Instead of setting state in useMemo(), prefer deriving the value during render. (https://react.dev/reference/react/useState)
+
+error.invalid-setState-in-useMemo-indirect-useCallback.ts:13:4
   11 |
   12 |   useMemo(() => {
 > 13 |     fn();
-     |     ^^ InvalidReact: Calling setState from useMemo may trigger an infinite loop. (https://react.dev/reference/react/useState) (13:13)
+     |     ^^ Found setState() within useMemo()
   14 |   }, [key, init]);
   15 |
   16 |   return state;

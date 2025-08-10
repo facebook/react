@@ -215,7 +215,7 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
       break;
     }
     case 'return': {
-      value = `[${terminal.id}] Return${
+      value = `[${terminal.id}] Return ${terminal.returnVariant}${
         terminal.value != null ? ' ' + printPlace(terminal.value) : ''
       }`;
       if (terminal.effects != null) {
@@ -943,7 +943,10 @@ export function printAliasingEffect(effect: AliasingEffect): string {
       return `Assign ${printPlaceForAliasEffect(effect.into)} = ${printPlaceForAliasEffect(effect.from)}`;
     }
     case 'Alias': {
-      return `Alias ${printPlaceForAliasEffect(effect.into)} = ${printPlaceForAliasEffect(effect.from)}`;
+      return `Alias ${printPlaceForAliasEffect(effect.into)} <- ${printPlaceForAliasEffect(effect.from)}`;
+    }
+    case 'MaybeAlias': {
+      return `MaybeAlias ${printPlaceForAliasEffect(effect.into)} <- ${printPlaceForAliasEffect(effect.from)}`;
     }
     case 'Capture': {
       return `Capture ${printPlaceForAliasEffect(effect.into)} <- ${printPlaceForAliasEffect(effect.from)}`;
@@ -995,13 +998,13 @@ export function printAliasingEffect(effect: AliasingEffect): string {
       return `${effect.kind} ${printPlaceForAliasEffect(effect.value)}`;
     }
     case 'MutateFrozen': {
-      return `MutateFrozen ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.reason)}`;
+      return `MutateFrozen ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.category)}`;
     }
     case 'MutateGlobal': {
-      return `MutateGlobal ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.reason)}`;
+      return `MutateGlobal ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.category)}`;
     }
     case 'Impure': {
-      return `Impure ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.reason)}`;
+      return `Impure ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.category)}`;
     }
     case 'Render': {
       return `Render ${printPlaceForAliasEffect(effect.place)}`;

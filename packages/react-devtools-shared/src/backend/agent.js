@@ -710,6 +710,16 @@ export default class Agent extends EventEmitter<{
 
     rendererInterface.setTraceUpdatesEnabled(this._traceUpdatesEnabled);
 
+    const renderer = rendererInterface.renderer;
+    if (renderer !== null) {
+      const devRenderer = renderer.bundleType === 1;
+      const enableSuspenseTab =
+        devRenderer && renderer.version.includes('-experimental-');
+      if (enableSuspenseTab) {
+        this._bridge.send('enableSuspenseTab');
+      }
+    }
+
     // When the renderer is attached, we need to tell it whether
     // we remember the previous selection that we'd like to restore.
     // It'll start tracking mounts for matches to the last selection path.

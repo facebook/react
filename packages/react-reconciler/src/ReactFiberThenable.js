@@ -14,6 +14,10 @@ import type {
   RejectedThenable,
 } from 'shared/ReactTypes';
 
+import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
+
+import {callLazyInitInDEV} from './ReactFiberCallUserSpace';
+
 import {getWorkInProgressRoot} from './ReactFiberWorkLoop';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -258,6 +262,27 @@ export function suspendCommit(): void {
   // TODO: Factor the thenable check out of throwException
   suspendedThenable = noopSuspenseyCommitThenable;
   throw SuspenseyCommitException;
+}
+
+export function resolveLazy<T>(lazyType: LazyComponentType<T, any>): T {
+  try {
+    if (__DEV__) {
+      return callLazyInitInDEV(lazyType);
+    }
+    const payload = lazyType._payload;
+    const init = lazyType._init;
+    return init(payload);
+  } catch (x) {
+    if (x !== null && typeof x === 'object' && typeof x.then === 'function') {
+      // This lazy Suspended. Treat this as if we called use() to unwrap it.
+      suspendedThenable = x;
+      if (__DEV__) {
+        needsToResetSuspendedThenableDEV = true;
+      }
+      throw SuspenseException;
+    }
+    throw x;
+  }
 }
 
 // This is used to track the actual thenable that suspended so it can be

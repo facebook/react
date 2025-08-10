@@ -36,6 +36,13 @@ function Component() {
 ## Error
 
 ```
+Found 1 error:
+
+Error: Cannot modify local variables after render completes
+
+This argument is a function which may reassign or mutate a local variable after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.
+
+error.bug-old-inference-false-positive-ref-validation-in-use-effect.ts:20:12
   18 |   );
   19 |   const ref = useRef(null);
 > 20 |   useEffect(() => {
@@ -47,12 +54,19 @@ function Component() {
 > 23 |     }
      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 > 24 |   }, [update]);
-     | ^^^^ InvalidReact: This argument is a function which may reassign or mutate local variables after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead (20:24)
-
-InvalidReact: The function modifies a local variable here (14:14)
+     | ^^^^ This function may (indirectly) reassign or modify a local variable after render
   25 |
   26 |   return 'ok';
   27 | }
+
+error.bug-old-inference-false-positive-ref-validation-in-use-effect.ts:14:6
+  12 |         ...partialParams,
+  13 |       };
+> 14 |       nextParams.param = 'value';
+     |       ^^^^^^^^^^ This modifies a local variable
+  15 |       console.log(nextParams);
+  16 |     },
+  17 |     [params]
 ```
           
       

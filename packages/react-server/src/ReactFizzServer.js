@@ -460,7 +460,13 @@ function isEligibleForOutlining(
   // For very small boundaries, don't bother producing a fallback for outlining.
   // The larger this limit is, the more we can save on preparing fallbacks in case we end up
   // outlining.
-  return boundary.byteSize > 500;
+  return (
+    boundary.byteSize > 500 &&
+    // For boundaries that can possibly contribute to the preamble we don't want to outline
+    // them regardless of their size since the fallbacks should only be emitted if we've
+    // errored the boundary.
+    boundary.contentPreamble === null
+  );
 }
 
 function defaultErrorHandler(error: mixed) {
@@ -4153,7 +4159,10 @@ function renderNode(
         // $FlowFixMe[method-unbinding]
         if (typeof x.then === 'function') {
           const wakeable: Wakeable = (x: any);
-          const thenableState = getThenableStateAfterSuspending();
+          const thenableState =
+            thrownValue === SuspenseException
+              ? getThenableStateAfterSuspending()
+              : null;
           const newTask = spawnNewSuspendedReplayTask(
             request,
             // $FlowFixMe: Refined.
@@ -4186,7 +4195,10 @@ function renderNode(
           // performance but it can lead to stack overflows in extremely deep trees.
           // We do have the ability to create a trampoile if this happens which makes
           // this kind of zero-cost.
-          const thenableState = getThenableStateAfterSuspending();
+          const thenableState =
+            thrownValue === SuspenseException
+              ? getThenableStateAfterSuspending()
+              : null;
           const newTask = spawnNewSuspendedReplayTask(
             request,
             // $FlowFixMe: Refined.
@@ -4246,7 +4258,10 @@ function renderNode(
         // $FlowFixMe[method-unbinding]
         if (typeof x.then === 'function') {
           const wakeable: Wakeable = (x: any);
-          const thenableState = getThenableStateAfterSuspending();
+          const thenableState =
+            thrownValue === SuspenseException
+              ? getThenableStateAfterSuspending()
+              : null;
           const newTask = spawnNewSuspendedRenderTask(
             request,
             // $FlowFixMe: Refined.
@@ -4317,7 +4332,10 @@ function renderNode(
           // performance but it can lead to stack overflows in extremely deep trees.
           // We do have the ability to create a trampoile if this happens which makes
           // this kind of zero-cost.
-          const thenableState = getThenableStateAfterSuspending();
+          const thenableState =
+            thrownValue === SuspenseException
+              ? getThenableStateAfterSuspending()
+              : null;
           const newTask = spawnNewSuspendedRenderTask(
             request,
             // $FlowFixMe: Refined.
@@ -5233,7 +5251,10 @@ function retryRenderTask(
       if (typeof x.then === 'function') {
         // Something suspended again, let's pick it back up later.
         segment.status = PENDING;
-        task.thenableState = getThenableStateAfterSuspending();
+        task.thenableState =
+          thrownValue === SuspenseException
+            ? getThenableStateAfterSuspending()
+            : null;
         const ping = task.ping;
         // We've asserted that x is a thenable above
         (x: any).then(ping, ping);
@@ -5338,7 +5359,10 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
         // Something suspended again, let's pick it back up later.
         const ping = task.ping;
         x.then(ping, ping);
-        task.thenableState = getThenableStateAfterSuspending();
+        task.thenableState =
+          thrownValue === SuspenseException
+            ? getThenableStateAfterSuspending()
+            : null;
         return;
       }
     }
@@ -5480,6 +5504,9 @@ function preparePreambleFromSegment(
       // This boundary is complete. It might have inner boundaries which are pending
       // and able to provide a preamble so we have to check it's children
       hoistPreambleState(request.renderState, preamble);
+      // We track this boundary's byteSize on the request since it will always flush with
+      // the request since it may contribute to the preamble
+      request.byteSize += boundary.byteSize;
       const boundaryRootSegment = boundary.completedSegments[0];
       if (!boundaryRootSegment) {
         // Using the same error from flushSegment to avoid making a new one since conceptually the problem is still the same
@@ -5526,6 +5553,7 @@ function preparePreamble(request: Request) {
     request.completedPreambleSegments === null
   ) {
     const collectedPreambleSegments: Array<Array<Segment>> = [];
+    const originalRequestByteSize = request.byteSize;
     const hasPendingPreambles = preparePreambleFromSegment(
       request,
       request.completedRootSegment,
@@ -5533,6 +5561,10 @@ function preparePreamble(request: Request) {
     );
     if (isPreambleReady(request.renderState, hasPendingPreambles)) {
       request.completedPreambleSegments = collectedPreambleSegments;
+    } else {
+      // We restore the original size since the preamble is not ready
+      // and we will prepare it again.
+      request.byteSize = originalRequestByteSize;
     }
   }
 }

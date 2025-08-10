@@ -9,17 +9,20 @@
 
 import SourceMapConsumer from 'react-devtools-shared/src/hooks/SourceMapConsumer';
 
-import type {Source} from 'react-devtools-shared/src/shared/types';
+import type {ReactFunctionLocation} from 'shared/ReactTypes';
 import type {FetchFileWithCaching} from 'react-devtools-shared/src/devtools/views/Components/FetchFileWithCachingContext';
 
-const symbolicationCache: Map<string, Promise<Source | null>> = new Map();
+const symbolicationCache: Map<
+  string,
+  Promise<ReactFunctionLocation | null>,
+> = new Map();
 
-export async function symbolicateSourceWithCache(
+export function symbolicateSourceWithCache(
   fetchFileWithCaching: FetchFileWithCaching,
   sourceURL: string,
   line: number, // 1-based
   column: number, // 1-based
-): Promise<Source | null> {
+): Promise<ReactFunctionLocation | null> {
   const key = `${sourceURL}:${line}:${column}`;
   const cachedPromise = symbolicationCache.get(key);
   if (cachedPromise != null) {
@@ -43,7 +46,7 @@ export async function symbolicateSource(
   sourceURL: string,
   lineNumber: number, // 1-based
   columnNumber: number, // 1-based
-): Promise<Source | null> {
+): Promise<ReactFunctionLocation | null> {
   const resource = await fetchFileWithCaching(sourceURL).catch(() => null);
   if (resource == null) {
     return null;
@@ -75,14 +78,17 @@ export async function symbolicateSource(
         try {
           const parsedSourceMap = JSON.parse(sourceMap);
           const consumer = SourceMapConsumer(parsedSourceMap);
+          const functionName = ''; // TODO: Parse function name from sourceContent.
           const {
             sourceURL: possiblyURL,
             line,
-            column,
+            column: columnZeroBased,
           } = consumer.originalPositionFor({
             lineNumber, // 1-based
             columnNumber, // 1-based
           });
+
+          const column = columnZeroBased + 1;
 
           if (possiblyURL === null) {
             return null;
@@ -91,7 +97,7 @@ export async function symbolicateSource(
             // sourceMapURL = https://react.dev/script.js.map
             void new URL(possiblyURL); // test if it is a valid URL
 
-            return {sourceURL: possiblyURL, line, column};
+            return [functionName, possiblyURL, line, column];
           } catch (e) {
             // This is not valid URL
             if (
@@ -101,7 +107,7 @@ export async function symbolicateSource(
               possiblyURL.slice(1).startsWith(':\\\\')
             ) {
               // This is an absolute path
-              return {sourceURL: possiblyURL, line, column};
+              return [functionName, possiblyURL, line, column];
             }
 
             // This is a relative path
@@ -110,7 +116,7 @@ export async function symbolicateSource(
               possiblyURL,
               sourceMapURL,
             ).toString();
-            return {sourceURL: absoluteSourcePath, line, column};
+            return [functionName, absoluteSourcePath, line, column];
           }
         } catch (e) {
           return null;

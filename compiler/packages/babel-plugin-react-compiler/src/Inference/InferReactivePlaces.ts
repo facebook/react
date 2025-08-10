@@ -21,7 +21,6 @@ import {
   isStableType,
   isStableTypeContainer,
   isUseOperator,
-  isUseRefType,
 } from '../HIR';
 import {PostDominator} from '../HIR/Dominator';
 import {
@@ -70,13 +69,6 @@ class StableSidemap {
               isStable: false,
             });
           }
-        } else if (
-          this.env.config.enableTreatRefLikeIdentifiersAsRefs &&
-          isUseRefType(lvalue.identifier)
-        ) {
-          this.map.set(lvalue.identifier.id, {
-            isStable: true,
-          });
         }
         break;
       }

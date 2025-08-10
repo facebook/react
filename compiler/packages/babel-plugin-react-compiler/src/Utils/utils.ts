@@ -33,12 +33,12 @@ export function assertExhaustive(_: never, errorMsg: string): never {
 // Modifies @param array in place, retaining only the items where the predicate returns true.
 export function retainWhere<T>(
   array: Array<T>,
-  predicate: (item: T) => boolean,
+  predicate: (item: T, index: number) => boolean,
 ): void {
   let writeIndex = 0;
   for (let readIndex = 0; readIndex < array.length; readIndex++) {
     const item = array[readIndex];
-    if (predicate(item) === true) {
+    if (predicate(item, readIndex) === true) {
       array[writeIndex++] = item;
     }
   }
