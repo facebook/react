@@ -15,6 +15,8 @@ import type {
   ReactIOInfo,
 } from 'shared/ReactTypes';
 
+import type {HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
+
 import {
   ComponentFilterDisplayName,
   ComponentFilterElementType,
@@ -5187,6 +5189,32 @@ export function attach(
     return null;
   }
 
+  function inspectHooks(fiber: Fiber): HooksTree {
+    const originalConsoleMethods: {[string]: $FlowFixMe} = {};
+
+    // Temporarily disable all console logging before re-running the hook.
+    for (const method in console) {
+      try {
+        // $FlowFixMe[invalid-computed-prop]
+        originalConsoleMethods[method] = console[method];
+        // $FlowFixMe[prop-missing]
+        console[method] = () => {};
+      } catch (error) {}
+    }
+
+    try {
+      return inspectHooksOfFiber(fiber, getDispatcherRef(renderer));
+    } finally {
+      // Restore original console functionality.
+      for (const method in originalConsoleMethods) {
+        try {
+          // $FlowFixMe[prop-missing]
+          console[method] = originalConsoleMethods[method];
+        } catch (error) {}
+      }
+    }
+  }
+
   function getSuspendedByOfSuspenseNode(
     suspenseNode: SuspenseNode,
   ): Array<SerializedAsyncInfo> {
@@ -5196,6 +5224,11 @@ export function attach(
     if (!suspenseNode.hasUniqueSuspenders) {
       return result;
     }
+    // Cache the inspection of Hooks in case we need it for multiple entries.
+    // We don't need a full map here since it's likely that every ioInfo that's unique
+    // to a specific instance will have those appear in order of when that instance was discovered.
+    let hooksCacheKey: null | DevToolsInstance = null;
+    let hooksCache: null | HooksTree = null;
     suspenseNode.suspendedBy.forEach((set, ioInfo) => {
       let parentNode = suspenseNode.parent;
       while (parentNode !== null) {
@@ -5217,8 +5250,24 @@ export function attach(
           ioInfo,
         );
         if (asyncInfo !== null) {
-          const index = result.length;
-          result.push(serializeAsyncInfo(asyncInfo, index, firstInstance));
+          let hooks: null | HooksTree = null;
+          if (asyncInfo.stack == null && asyncInfo.owner == null) {
+            if (hooksCacheKey === firstInstance) {
+              hooks = hooksCache;
+            } else if (firstInstance.kind !== VIRTUAL_INSTANCE) {
+              const fiber = firstInstance.data;
+              if (
+                fiber.dependencies &&
+                fiber.dependencies._debugThenableState
+              ) {
+                // This entry had no stack nor owner but this Fiber used Hooks so we might
+                // be able to get the stack from the Hook.
+                hooksCacheKey = firstInstance;
+                hooksCache = hooks = inspectHooks(fiber);
+              }
+            }
+          }
+          result.push(serializeAsyncInfo(asyncInfo, firstInstance, hooks));
         }
       }
     });
@@ -5227,8 +5276,8 @@ export function attach(
 
   function serializeAsyncInfo(
     asyncInfo: ReactAsyncInfo,
-    index: number,
     parentInstance: DevToolsInstance,
+    hooks: null | HooksTree,
   ): SerializedAsyncInfo {
     const ioInfo = asyncInfo.awaited;
     const ioOwnerInstance = findNearestOwnerInstance(
@@ -5538,31 +5587,9 @@ export function attach(
     const owners: null | Array<SerializedElement> =
       getOwnersListFromInstance(fiberInstance);
 
-    let hooks = null;
+    let hooks: null | HooksTree = null;
     if (usesHooks) {
-      const originalConsoleMethods: {[string]: $FlowFixMe} = {};
-
-      // Temporarily disable all console logging before re-running the hook.
-      for (const method in console) {
-        try {
-          // $FlowFixMe[invalid-computed-prop]
-          originalConsoleMethods[method] = console[method];
-          // $FlowFixMe[prop-missing]
-          console[method] = () => {};
-        } catch (error) {}
-      }
-
-      try {
-        hooks = inspectHooksOfFiber(fiber, getDispatcherRef(renderer));
-      } finally {
-        // Restore original console functionality.
-        for (const method in originalConsoleMethods) {
-          try {
-            // $FlowFixMe[prop-missing]
-            console[method] = originalConsoleMethods[method];
-          } catch (error) {}
-        }
-      }
+      hooks = inspectHooks(fiber);
     }
 
     let rootType = null;
@@ -5641,8 +5668,8 @@ export function attach(
           // TODO: Prepend other suspense sources like css, images and use().
           fiberInstance.suspendedBy === null
           ? []
-          : fiberInstance.suspendedBy.map((info, index) =>
-              serializeAsyncInfo(info, index, fiberInstance),
+          : fiberInstance.suspendedBy.map(info =>
+              serializeAsyncInfo(info, fiberInstance, hooks),
             );
     return {
       id: fiberInstance.id,
@@ -5813,8 +5840,8 @@ export function attach(
       suspendedBy:
         suspendedBy === null
           ? []
-          : suspendedBy.map((info, index) =>
-              serializeAsyncInfo(info, index, virtualInstance),
+          : suspendedBy.map(info =>
+              serializeAsyncInfo(info, virtualInstance, null),
             ),
 
       // List of owners
