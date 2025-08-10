@@ -278,10 +278,7 @@ import {
   createCapturedValueFromError,
   createCapturedValueAtFiber,
 } from './ReactCapturedValue';
-import {
-  OffscreenHidden,
-  OffscreenVisible,
-} from './ReactFiberOffscreenComponent';
+import {OffscreenVisible} from './ReactFiberOffscreenComponent';
 import {
   createClassErrorUpdate,
   initializeClassErrorUpdate,
@@ -622,13 +619,11 @@ function updateOffscreenComponent(
   const prevState: OffscreenState | null =
     current !== null ? current.memoizedState : null;
 
-  const nextHidden =
-    nextProps.mode === 'hidden' ||
-    (enableLegacyHidden && nextProps.mode === 'unstable-defer-without-hiding');
-
   if (current === null && workInProgress.stateNode === null) {
-    const primaryChildInstance = {
-      _visibility: nextHidden ? OffscreenHidden : OffscreenVisible,
+    // We previously reset the work-in-progress.
+    // We need to create a new Offscreen instance.
+    const primaryChildInstance: OffscreenInstance = {
+      _visibility: OffscreenVisible,
       _pendingMarkers: null,
       _retryCache: null,
       _transitions: null,
@@ -636,7 +631,10 @@ function updateOffscreenComponent(
     workInProgress.stateNode = primaryChildInstance;
   }
 
-  if (nextHidden) {
+  if (
+    nextProps.mode === 'hidden' ||
+    (enableLegacyHidden && nextProps.mode === 'unstable-defer-without-hiding')
+  ) {
     // Rendering a hidden tree.
 
     const didSuspend = (workInProgress.flags & DidCapture) !== NoFlags;
@@ -799,6 +797,26 @@ function updateOffscreenComponent(
 
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
+}
+
+function bailoutOffscreenComponent(
+  current: Fiber | null,
+  workInProgress: Fiber,
+): Fiber | null {
+  if (
+    (current === null || current.tag !== OffscreenComponent) &&
+    workInProgress.stateNode === null
+  ) {
+    const primaryChildInstance: OffscreenInstance = {
+      _visibility: OffscreenVisible,
+      _pendingMarkers: null,
+      _retryCache: null,
+      _transitions: null,
+    };
+    workInProgress.stateNode = primaryChildInstance;
+  }
+
+  return workInProgress.sibling;
 }
 
 function deferHiddenOffscreenComponent(
@@ -1101,9 +1119,13 @@ function updateActivityComponent(
       if (nextProps.mode === 'hidden') {
         // SSR doesn't render hidden Activity so it shouldn't hydrate,
         // even at offscreen lane. Defer to a client rendered offscreen lane.
-        mountActivityChildren(workInProgress, nextProps, renderLanes);
+        const primaryChildFragment = mountActivityChildren(
+          workInProgress,
+          nextProps,
+          renderLanes,
+        );
         workInProgress.lanes = laneToLanes(OffscreenLane);
-        return null;
+        return bailoutOffscreenComponent(null, primaryChildFragment);
       } else {
         // We must push the suspense handler context *before* attempting to
         // hydrate, to avoid a mismatch in case it errors.
@@ -2369,7 +2391,7 @@ function updateSuspenseComponent(
     if (showFallback) {
       pushFallbackTreeSuspenseHandler(workInProgress);
 
-      const fallbackFragment = mountSuspenseFallbackChildren(
+      mountSuspenseFallbackChildren(
         workInProgress,
         nextPrimaryChildren,
         nextFallbackChildren,
@@ -2378,13 +2400,6 @@ function updateSuspenseComponent(
       const primaryChildFragment: Fiber = (workInProgress.child: any);
       primaryChildFragment.memoizedState =
         mountSuspenseOffscreenState(renderLanes);
-      const primaryChildInstance = {
-        _visibility: OffscreenHidden,
-        _pendingMarkers: null,
-        _retryCache: null,
-        _transitions: null,
-      };
-      primaryChildFragment.stateNode = primaryChildInstance;
       primaryChildFragment.childLanes = getRemainingWorkInPrimaryTree(
         current,
         didPrimaryChildrenDefer,
@@ -2411,7 +2426,7 @@ function updateSuspenseComponent(
         }
       }
 
-      return fallbackFragment;
+      return bailoutOffscreenComponent(null, primaryChildFragment);
     } else if (
       enableCPUSuspense &&
       typeof nextProps.unstable_expectedLoadTime === 'number'
@@ -2420,7 +2435,7 @@ function updateSuspenseComponent(
       // unblock the surrounding content. Then immediately retry after the
       // initial commit.
       pushFallbackTreeSuspenseHandler(workInProgress);
-      const fallbackFragment = mountSuspenseFallbackChildren(
+      mountSuspenseFallbackChildren(
         workInProgress,
         nextPrimaryChildren,
         nextFallbackChildren,
@@ -2447,7 +2462,7 @@ function updateSuspenseComponent(
       // RetryLane even if it's the one currently rendering since we're leaving
       // it behind on this node.
       workInProgress.lanes = SomeRetryLane;
-      return fallbackFragment;
+      return bailoutOffscreenComponent(null, primaryChildFragment);
     } else {
       pushPrimaryTreeSuspenseHandler(workInProgress);
       return mountSuspensePrimaryChildren(
@@ -2482,7 +2497,7 @@ function updateSuspenseComponent(
 
       const nextFallbackChildren = nextProps.fallback;
       const nextPrimaryChildren = nextProps.children;
-      const fallbackChildFragment = updateSuspenseFallbackChildren(
+      updateSuspenseFallbackChildren(
         current,
         workInProgress,
         nextPrimaryChildren,
@@ -2535,7 +2550,7 @@ function updateSuspenseComponent(
         renderLanes,
       );
       workInProgress.memoizedState = SUSPENDED_MARKER;
-      return fallbackChildFragment;
+      return bailoutOffscreenComponent(current.child, primaryChildFragment);
     } else {
       pushPrimaryTreeSuspenseHandler(workInProgress);
 
@@ -2780,7 +2795,7 @@ function updateSuspenseFallbackChildren(
   primaryChildFragment.sibling = fallbackChildFragment;
   workInProgress.child = primaryChildFragment;
 
-  return fallbackChildFragment;
+  return bailoutOffscreenComponent(null, primaryChildFragment);
 }
 
 function retrySuspenseComponentWithoutHydrating(
@@ -2820,7 +2835,7 @@ function mountSuspenseFallbackAfterRetryWithoutHydrating(
 ) {
   const fiberMode = workInProgress.mode;
   const primaryChildProps: OffscreenProps = {
-    mode: 'hidden',
+    mode: 'visible',
     children: primaryChildren,
   };
   const primaryChildFragment = mountWorkInProgressOffscreenFiber(
@@ -3095,7 +3110,7 @@ function updateDehydratedSuspenseComponent(
         renderLanes,
       );
       workInProgress.memoizedState = SUSPENDED_MARKER;
-      return workInProgress.child;
+      return bailoutOffscreenComponent(null, primaryChildFragment);
     }
   }
 }

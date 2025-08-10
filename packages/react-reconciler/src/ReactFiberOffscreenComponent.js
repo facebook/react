@@ -50,7 +50,6 @@ export type OffscreenQueue = {
 
 type OffscreenVisibility = number;
 
-export const OffscreenHidden = /*                      */ 0b000;
 export const OffscreenVisible = /*                     */ 0b001;
 export const OffscreenPassiveEffectsConnected = /*     */ 0b010;
 
@@ -60,12 +59,3 @@ export type OffscreenInstance = {
   _transitions: Set<Transition> | null,
   _retryCache: WeakSet<Wakeable> | Set<Wakeable> | null,
 };
-
-export function createInitialOffscreenInstance(): OffscreenInstance {
-  return {
-    _visibility: OffscreenVisible,
-    _pendingMarkers: null,
-    _retryCache: null,
-    _transitions: null,
-  };
-}
