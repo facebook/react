@@ -184,10 +184,10 @@ export type Element = {
   compiledWithForget: boolean,
 };
 
-export type Suspense = {
+export type SuspenseNode = {
   id: Element['id'],
-  parentID: Suspense['id'] | 0,
-  children: Array<Suspense['id']>,
+  parentID: SuspenseNode['id'] | 0,
+  children: Array<SuspenseNode['id']>,
   name: string | null,
 };
 

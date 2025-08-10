@@ -47,7 +47,7 @@ import type {
   Element,
   ComponentFilter,
   ElementType,
-  Suspense,
+  SuspenseNode,
 } from 'react-devtools-shared/src/frontend/types';
 import type {
   FrontendBridge,
@@ -145,7 +145,7 @@ export default class Store extends EventEmitter<{
   // The InspectedElement Suspense cache also relies on this mutability for its WeakMap usage.
   _idToElement: Map<Element['id'], Element> = new Map();
 
-  _idToSuspense: Map<Suspense['id'], Suspense> = new Map();
+  _idToSuspense: Map<SuspenseNode['id'], SuspenseNode> = new Map();
 
   // Should the React Native style editor panel be shown?
   _isNativeStyleEditorSupported: boolean = false;
@@ -608,7 +608,7 @@ export default class Store extends EventEmitter<{
     return element;
   }
 
-  getSuspenseByID(id: Suspense['id']): Suspense | null {
+  getSuspenseByID(id: SuspenseNode['id']): SuspenseNode | null {
     const suspense = this._idToSuspense.get(id);
     if (suspense === undefined) {
       console.warn(`No suspense found with id "${id}"`);
@@ -1506,7 +1506,7 @@ export default class Store extends EventEmitter<{
 
             this._idToSuspense.delete(id);
 
-            let parentSuspense: ?Suspense = null;
+            let parentSuspense: ?SuspenseNode = null;
             if (parentID === 0) {
               if (__DEBUG__) {
                 debug('Suspense remove', `node ${id} root`);

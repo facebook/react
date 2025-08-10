@@ -6,7 +6,7 @@
  *
  * @flow
  */
-import type {Suspense} from '../../../frontend/types';
+import type {SuspenseNode} from '../../../frontend/types';
 import type Store from '../../store';
 
 import * as React from 'react';
@@ -15,8 +15,8 @@ import {StoreContext} from '../context';
 import {SuspenseTreeStateContext} from './SuspenseTreeContext';
 import {TreeDispatcherContext} from '../Components/TreeContext';
 
-function getDocumentOrderSuspenseTreeList(store: Store): Array<Suspense> {
-  const suspenseTreeList: Suspense[] = [];
+function getDocumentOrderSuspenseTreeList(store: Store): Array<SuspenseNode> {
+  const suspenseTreeList: SuspenseNode[] = [];
   for (let i = 0; i < store.roots.length; i++) {
     const root = store.getElementByID(store.roots[i]);
     if (root === null) {
