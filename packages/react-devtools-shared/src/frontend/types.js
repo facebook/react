@@ -189,6 +189,10 @@ export type SuspenseNode = {
   parentID: SuspenseNode['id'] | 0,
   children: Array<SuspenseNode['id']>,
   name: string | null,
+  // How many nodes (including itself) are below this Element within the tree.
+  // This property is used to quickly determine the total number of Elements,
+  // and the Element at any given index (for windowing purposes).
+  weight: number,
 };
 
 // Serialized version of ReactIOInfo

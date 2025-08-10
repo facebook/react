@@ -10,7 +10,10 @@
 import JSON5 from 'json5';
 
 import type {ReactFunctionLocation} from 'shared/ReactTypes';
-import type {Element} from 'react-devtools-shared/src/frontend/types';
+import type {
+  Element,
+  SuspenseNode,
+} from 'react-devtools-shared/src/frontend/types';
 import type {StateContext} from './views/Components/TreeContext';
 import type Store from './store';
 
@@ -46,6 +49,26 @@ export function printElement(
   }${key}>${hocs}${suffix}`;
 }
 
+function printSuspense(
+  suspense: SuspenseNode,
+  includeWeight: boolean = false,
+): string {
+  let name = '';
+  if (suspense.name !== null) {
+    name = ` name="${suspense.name}"`;
+  }
+
+  // TODO: Use actual rects.
+  const printedRects = ' rects={?,?,?,?}';
+
+  let suffix = '';
+  if (includeWeight) {
+    suffix = ` (${suspense.weight})`;
+  }
+
+  return ` <Suspense${name}${printedRects}>${suffix}`;
+}
+
 export function printOwnersList(
   elements: Array<Element>,
   includeWeight: boolean = false,
@@ -63,6 +86,7 @@ export function printStore(
   const snapshotLines = [];
 
   let rootWeight = 0;
+  let rootWeightSuspense = 0;
 
   function printSelectedMarker(index: number): string {
     if (state === null) {
@@ -128,13 +152,46 @@ export function printStore(
         );
       }
 
+      const {weight: weightSuspense} = ((store.getSuspenseByID(
+        rootID,
+      ): any): SuspenseNode);
+      const maybeWeightLabelSuspense = includeWeight
+        ? ` (${weightSuspense})`
+        : '';
+
+      snapshotLines.push(`[shell]${maybeWeightLabelSuspense}`);
+
+      for (
+        let i = rootWeightSuspense;
+        i < rootWeightSuspense + weightSuspense;
+        i++
+      ) {
+        const suspense = store.getSuspenseAtIndex(i);
+
+        if (suspense == null) {
+          throw Error(`Could not find suspense at index "${i}"`);
+        }
+
+        const printedSelectedMarker =
+          state !== null && state.selectedSuspenseIndex === i ? `→` : ' ';
+        const printedElement = printSuspense(suspense, includeWeight);
+        snapshotLines.push(`${printedSelectedMarker}${printedElement}`);
+      }
+
       rootWeight += weight;
+      rootWeightSuspense += weightSuspense;
     });
 
     // Make sure the pretty-printed test align with the Store's reported number of total rows.
     if (rootWeight !== store.numElements) {
       throw Error(
         `Inconsistent Store state. Individual root weights ("${rootWeight}") do not match total weight ("${store.numElements}")`,
+      );
+    }
+    // Make sure the pretty-printed test align with the Store's reported number of total rows.
+    if (rootWeightSuspense !== store.numSuspense) {
+      throw Error(
+        `Inconsistent Suspense Store state. Individual root weights ("${rootWeightSuspense}") do not match total weight ("${store.numSuspense}")`,
       );
     }
 

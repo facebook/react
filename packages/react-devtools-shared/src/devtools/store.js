@@ -200,6 +200,7 @@ export default class Store extends EventEmitter<{
   // Total number of visible elements (within all roots).
   // Used for windowing purposes.
   _weightAcrossRoots: number = 0;
+  _weightAcrossRootsSuspense: number = 0;
 
   _shouldCheckBridgeProtocolCompatibility: boolean = false;
   _hookSettings: $ReadOnly<DevToolsHookSettings> | null = null;
@@ -296,6 +297,7 @@ export default class Store extends EventEmitter<{
     if (this.roots.length === 0) {
       // The only safe time to assert these maps are empty is when the store is empty.
       this.assertMapSizeMatchesRootCount(this._idToElement, '_idToElement');
+      this.assertMapSizeMatchesRootCount(this._idToSuspense, '_idToSuspense');
       this.assertMapSizeMatchesRootCount(this._ownersMap, '_ownersMap');
     }
 
@@ -426,6 +428,10 @@ export default class Store extends EventEmitter<{
 
   get numElements(): number {
     return this._weightAcrossRoots;
+  }
+
+  get numSuspense(): number {
+    return this._weightAcrossRootsSuspense;
   }
 
   get profilerStore(): ProfilerStore {
@@ -608,6 +614,88 @@ export default class Store extends EventEmitter<{
     return element;
   }
 
+  getSuspenseAtIndex(index: number): SuspenseNode | null {
+    if (index < 0 || index >= this.numElements) {
+      console.warn(
+        `Invalid index ${index} specified; store contains ${this.numElements} items.`,
+      );
+
+      return null;
+    }
+
+    // Find which root this suspense is in...
+    let root;
+    let rootWeight = 0;
+    for (let i = 0; i < this._roots.length; i++) {
+      const rootID = this._roots[i];
+      root = this._idToSuspense.get(rootID);
+
+      if (root === undefined) {
+        this._throwAndEmitError(
+          Error(
+            `Couldn't find root with id "${rootID}": no matching suspense node was found in the Store.`,
+          ),
+        );
+
+        return null;
+      }
+
+      if (root.children.length === 0) {
+        continue;
+      }
+
+      if (rootWeight + root.weight > index) {
+        break;
+      } else {
+        rootWeight += root.weight;
+      }
+    }
+
+    if (root === undefined) {
+      return null;
+    }
+
+    // Find the suspense in the tree using the weight of each node...
+    // Skip over the root itself, because shells aren't visible in the Suspense tree.
+    let currentSuspense: SuspenseNode = root;
+    let currentWeight = rootWeight - 1;
+
+    while (index !== currentWeight) {
+      const numChildren = currentSuspense.children.length;
+      for (let i = 0; i < numChildren; i++) {
+        const childID = currentSuspense.children[i];
+        const child = this._idToSuspense.get(childID);
+
+        if (child === undefined) {
+          this._throwAndEmitError(
+            Error(
+              `Couldn't find child suspense with id "${childID}": no matching node was found in the Store.`,
+            ),
+          );
+
+          return null;
+        }
+
+        const childWeight = child.weight;
+
+        if (index <= currentWeight + childWeight) {
+          currentWeight++;
+          currentSuspense = child;
+          break;
+        } else {
+          currentWeight += childWeight;
+        }
+      }
+    }
+
+    return currentSuspense || null;
+  }
+
+  getSuspenseIDAtIndex(index: number): number | null {
+    const suspense = this.getSuspenseAtIndex(index);
+    return suspense === null ? null : suspense.id;
+  }
+
   getSuspenseByID(id: SuspenseNode['id']): SuspenseNode | null {
     const suspense = this._idToSuspense.get(id);
     if (suspense === undefined) {
@@ -616,6 +704,22 @@ export default class Store extends EventEmitter<{
     }
 
     return suspense;
+  }
+
+  getNearestSuspense(elementID: Element['id']): SuspenseNode | null {
+    let currentID = elementID;
+    let maybeSuspense = this._idToSuspense.get(currentID);
+    while (maybeSuspense === undefined) {
+      const element = this._idToElement.get(currentID);
+      if (element === undefined) {
+        return null;
+      }
+
+      currentID = element.parentID;
+      maybeSuspense = this._idToSuspense.get(currentID);
+    }
+
+    return maybeSuspense;
   }
 
   // Returns a tuple of [id, index]
@@ -719,6 +823,71 @@ export default class Store extends EventEmitter<{
       }
 
       const root = this._idToElement.get(rootID);
+      if (root === undefined) {
+        return null;
+      }
+
+      index += root.weight;
+    }
+
+    return index;
+  }
+
+  getIndexOfSuspenseID(id: number): number | null {
+    const suspense = this.getSuspenseByID(id);
+
+    if (suspense === null || suspense.parentID === 0) {
+      return null;
+    }
+
+    // Walk up the tree to the root.
+    // Increment the index by one for each node we encounter,
+    // and by the weight of all nodes to the left of the current one.
+    // This should be a relatively fast way of determining the index of a node within the tree.
+    let previousID = id;
+    let currentID = suspense.parentID;
+    let index = 0;
+    while (true) {
+      const current = this._idToSuspense.get(currentID);
+      if (current === undefined) {
+        return null;
+      }
+
+      const {children} = current;
+      for (let i = 0; i < children.length; i++) {
+        const childID = children[i];
+        if (childID === previousID) {
+          break;
+        }
+
+        const child = this._idToSuspense.get(childID);
+        if (child === undefined) {
+          return null;
+        }
+
+        index += child.weight;
+      }
+
+      if (current.parentID === 0) {
+        // We found the root; stop crawling.
+        break;
+      }
+
+      index++;
+
+      previousID = current.id;
+      currentID = current.parentID;
+    }
+
+    // At this point, the current ID is a root (from the previous loop).
+    // We also need to offset the index by previous root weights.
+    for (let i = 0; i < this._roots.length; i++) {
+      const rootID = this._roots[i];
+      if (rootID === currentID) {
+        break;
+      }
+
+      const root = this._idToSuspense.get(rootID);
       if (root === undefined) {
         return null;
       }
@@ -978,6 +1147,19 @@ export default class Store extends EventEmitter<{
     if (!isInsideCollapsedSubTree) {
       this._weightAcrossRoots += weightDelta;
     }
+  };
+
+  _adjustParentSuspenseTreeWeight: (
+    parentElement: ?SuspenseNode,
+    weightDelta: number,
+  ) => void = (parentElement, weightDelta) => {
+    while (parentElement != null) {
+      parentElement.weight += weightDelta;
+
+      parentElement = this._idToSuspense.get(parentElement.parentID);
+    }
+
+    this._weightAcrossRootsSuspense += weightDelta;
   };
 
   _recursivelyUpdateSubtree(
@@ -1293,6 +1475,7 @@ export default class Store extends EventEmitter<{
           const recursivelyDeleteElements = (elementID: number) => {
             const element = this._idToElement.get(elementID);
             this._idToElement.delete(elementID);
+            this._idToSuspense.delete(elementID);
             if (element) {
               // Mostly for Flow's sake
               for (let index = 0; index < element.children.length; index++) {
@@ -1312,12 +1495,22 @@ export default class Store extends EventEmitter<{
             break;
           }
 
+          const suspenseNode = this._idToSuspense.get(id);
+          if (suspenseNode === undefined) {
+            this._throwAndEmitError(
+              Error(`Root "${id}" has no Suspense node.`),
+            );
+
+            break;
+          }
+
           recursivelyDeleteElements(id);
 
           this._rootIDToCapabilities.delete(id);
           this._rootIDToRendererID.delete(id);
           this._roots = this._roots.filter(rootID => rootID !== id);
           this._weightAcrossRoots -= root.weight;
+          this._weightAcrossRootsSuspense -= suspenseNode.weight;
           break;
         }
         case TREE_OPERATION_REORDER_CHILDREN: {
@@ -1422,6 +1615,7 @@ export default class Store extends EventEmitter<{
             );
           }
 
+          let isRoot;
           const element = this._idToElement.get(id);
           if (element === undefined) {
             this._throwAndEmitError(
@@ -1440,14 +1634,17 @@ export default class Store extends EventEmitter<{
                 name = `${owner.displayName || 'Unknown'}>?`;
               }
             }
+
+            isRoot = element.type === ElementTypeRoot;
           }
 
           if (__DEBUG__) {
             debug('Suspense Add', `node ${id} as child of ${parentID}`);
           }
 
+          let parentSuspense: ?SuspenseNode = null;
           if (parentID !== 0) {
-            const parentSuspense = this._idToSuspense.get(parentID);
+            parentSuspense = this._idToSuspense.get(parentID);
             if (parentSuspense === undefined) {
               this._throwAndEmitError(
                 Error(
@@ -1465,12 +1662,17 @@ export default class Store extends EventEmitter<{
             name = 'Unknown';
           }
 
+          const weight = isRoot ? 0 : 1;
           this._idToSuspense.set(id, {
             id,
             parentID,
             children: [],
             name,
+            weight,
           });
+          if (!isRoot) {
+            this._adjustParentSuspenseTreeWeight(parentSuspense, 1);
+          }
 
           i += 4;
 
@@ -1497,7 +1699,7 @@ export default class Store extends EventEmitter<{
 
             i += 1;
 
-            const {children, parentID} = suspense;
+            const {children, parentID, weight} = suspense;
             if (children.length > 0) {
               this._throwAndEmitError(
                 Error(`Suspense node "${id}" was removed before its children.`),
@@ -1530,6 +1732,8 @@ export default class Store extends EventEmitter<{
               const index = parentSuspense.children.indexOf(id);
               parentSuspense.children.splice(index, 1);
             }
+
+            this._adjustParentSuspenseTreeWeight(parentSuspense, -weight);
           }
 
           hasSuspenseTreeChanged = true;
