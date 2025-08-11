@@ -104,6 +104,7 @@ import {
   MEMO_NUMBER,
   MEMO_SYMBOL_STRING,
   SERVER_CONTEXT_SYMBOL_STRING,
+  LAZY_SYMBOL_STRING,
 } from '../shared/ReactSymbols';
 import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 
@@ -3161,6 +3162,25 @@ export function attach(
     return null;
   }
 
+  function trackDebugInfoFromLazyType(fiber: Fiber): void {
+    // The debugInfo from a Lazy isn't propagated onto _debugInfo of the parent Fiber the way
+    // it is when used in child position. So we need to pick it up explicitly.
+    const type = fiber.elementType;
+    const typeSymbol = getTypeSymbol(type); // The elementType might be have been a LazyComponent.
+    if (typeSymbol === LAZY_SYMBOL_STRING) {
+      const debugInfo: ?ReactDebugInfo = type._debugInfo;
+      if (debugInfo) {
+        for (let i = 0; i < debugInfo.length; i++) {
+          const debugEntry = debugInfo[i];
+          if (debugEntry.awaited) {
+            const asyncInfo: ReactAsyncInfo = (debugEntry: any);
+            insertSuspendedBy(asyncInfo);
+          }
+        }
+      }
+    }
+  }
+
   function mountVirtualChildrenRecursively(
     firstChild: Fiber,
     lastChild: null | Fiber, // non-inclusive
@@ -3378,6 +3398,8 @@ export function attach(
         // We intentionally do not re-enable the traceNearestHostComponentUpdate flag in this branch,
         // because we don't want to highlight every host node inside of a newly mounted subtree.
       }
+
+      trackDebugInfoFromLazyType(fiber);
 
       if (fiber.tag === HostHoistable) {
         const nearestInstance = reconcilingParent;
@@ -4208,6 +4230,8 @@ export function attach(
       }
     }
     try {
+      trackDebugInfoFromLazyType(nextFiber);
+
       if (
         nextFiber.tag === HostHoistable &&
         prevFiber.memoizedState !== nextFiber.memoizedState
