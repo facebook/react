@@ -139,7 +139,7 @@ function validateNoSetStateInRenderImpl(
                 ).withDetail({
                   kind: 'error',
                   loc: callee.loc,
-                  message: 'Found setState() call here',
+                  message: 'Found setState() during render',
                 }),
               );
             }

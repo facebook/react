@@ -20,7 +20,7 @@ Found 1 error:
 
 Error: This value cannot be modified
 
-Modifying a value returned from 'useReducer()', which should not be modified directly. Use the dispatch function to update instead.
+Modifying a value returned from 'useReducer()', which cannot be modified directly. Use the dispatch function to update instead.
 
 error.modify-useReducer-state.ts:5:2
   3 | function Foo() {
