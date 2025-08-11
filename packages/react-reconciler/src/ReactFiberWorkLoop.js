@@ -1244,7 +1244,7 @@ function recoverFromConcurrentError(
       // During the synchronous render, we attached additional ping listeners.
       // This is highly suggestive of an uncached promise (though it's not the
       // only reason this would happen). If it was an uncached promise, then
-      // it may have masked a downstream error from ocurring without actually
+      // it may have masked a downstream error from occurring without actually
       // fixing it. Example:
       //
       //    use(Promise.resolve('uncached'))
@@ -2800,7 +2800,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
 function workLoopConcurrent(nonIdle: boolean) {
   // We yield every other "frame" when rendering Transition or Retries. Those are blocking
   // revealing new content. The purpose of this yield is not to avoid the overhead of yielding,
-  // which is very low, but rather to intentionally block any frequently occuring other main
+  // which is very low, but rather to intentionally block any frequently occurring other main
   // thread work like animations from starving our work. In other words, the purpose of this
   // is to reduce the framerate of animations to 30 frames per second.
   // For Idle work we yield every 5ms to keep animations going smooth.
@@ -2867,7 +2867,7 @@ function performUnitOfWork(unitOfWork: Fiber): void {
 }
 
 function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
-  // This is a fork of performUnitOfWork specifcally for replaying a fiber that
+  // This is a fork of performUnitOfWork specifically for replaying a fiber that
   // just suspended.
   let next;
   if (__DEV__) {
@@ -2886,7 +2886,7 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
 }
 
 function replayBeginWork(unitOfWork: Fiber): null | Fiber {
-  // This is a fork of beginWork specifcally for replaying a fiber that
+  // This is a fork of beginWork specifically for replaying a fiber that
   // just suspended.
 
   const current = unitOfWork.alternate;
@@ -2977,7 +2977,7 @@ function throwAndUnwindWorkLoop(
   thrownValue: mixed,
   suspendedReason: SuspendedReason,
 ) {
-  // This is a fork of performUnitOfWork specifcally for unwinding a fiber
+  // This is a fork of performUnitOfWork specifically for unwinding a fiber
   // that threw an exception.
   //
   // Return to the normal work loop. This will unwind the stack, and potentially

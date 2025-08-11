@@ -236,7 +236,7 @@ describe('ReactDOMFizzServer', () => {
         bufferedContent.startsWith('<html ')
       ) {
         throw new Error(
-          'Recieved <html> without a <!DOCTYPE html> which is almost certainly a bug in React',
+          'Received <html> without a <!DOCTYPE html> which is almost certainly a bug in React',
         );
       }
 
@@ -3640,7 +3640,7 @@ describe('ReactDOMFizzServer', () => {
   });
 
   // bugfix: https://github.com/facebook/react/issues/27286
-  it('can render custom elements with children on ther server', async () => {
+  it('can render custom elements with children on the server', async () => {
     await act(() => {
       renderToPipeableStream(
         <html>
@@ -3666,10 +3666,10 @@ describe('ReactDOMFizzServer', () => {
   });
 
   // https://github.com/facebook/react/issues/27540
-  // This test is not actually asserting much because there is possibly a bug in the closeing logic for the
+  // This test is not actually asserting much because there is possibly a bug in the closing logic for the
   // Node implementation of Fizz. The close leads to an abort which sets the destination to null before the Float
   // method has an opportunity to schedule a write. We should fix this probably and once we do this test will start
-  // to fail if the underyling issue of writing after stream completion isn't fixed
+  // to fail if the underlying issue of writing after stream completion isn't fixed
   it('does not try to write to the stream after it has been closed', async () => {
     async function preloadLate() {
       await 1;
@@ -3845,7 +3845,7 @@ describe('ReactDOMFizzServer', () => {
     expect(headers).toEqual({});
   });
 
-  it('stops accumulating new headers once the maxHeadersLength limit is satisifed', async () => {
+  it('stops accumulating new headers once the maxHeadersLength limit is satisfied', async () => {
     let headers = null;
     function onHeaders(x) {
       headers = x;
@@ -4384,7 +4384,7 @@ describe('ReactDOMFizzServer', () => {
       });
 
       it('does not escape <, >, or & characters', async () => {
-        // these characters valid javascript and may be necessary in scripts and won't be interpretted properly
+        // these characters valid javascript and may be necessary in scripts and won't be interpreted properly
         // escaped outside of a string context within javascript
         window.__test_outlet = null;
         // this boolean expression will be cast to a number due to the bitwise &. we will look for a truthy value (1) below
@@ -4788,7 +4788,7 @@ describe('ReactDOMFizzServer', () => {
     await waitForAll([]);
   });
 
-  it('supresses hydration warnings when an error occurs within a Suspense boundary', async () => {
+  it('suppresses hydration warnings when an error occurs within a Suspense boundary', async () => {
     let isClient = false;
 
     function ThrowWhenHydrating({children}) {
@@ -10698,7 +10698,7 @@ describe('ReactDOMFizzServer', () => {
 
   it('should always flush the boundaries contributing the preamble regardless of their size', async () => {
     const longDescription =
-      `I need to make this segment somewhat large because it needs to be large enought to be outlined during the initial flush. Setting the progressive chunk size to near zero isn't enough because there is a fixed minimum size that we use to avoid doing the size tracking altogether and this needs to be larger than that at least.
+      `I need to make this segment somewhat large because it needs to be large enough to be outlined during the initial flush. Setting the progressive chunk size to near zero isn't enough because there is a fixed minimum size that we use to avoid doing the size tracking altogether and this needs to be larger than that at least.
 
 Unfortunately that previous paragraph wasn't quite long enough so I'll continue with some more prose and maybe throw on some repeated additional strings at the end for good measure.
 
@@ -10734,7 +10734,7 @@ Unfortunately that previous paragraph wasn't quite long enough so I'll continue 
 
   it('should track byte size of shells that may contribute to the preamble when determining if the blocking render exceeds the max size', async () => {
     const longDescription =
-      `I need to make this segment somewhat large because it needs to be large enought to be outlined during the initial flush. Setting the progressive chunk size to near zero isn't enough because there is a fixed minimum size that we use to avoid doing the size tracking altogether and this needs to be larger than that at least.
+      `I need to make this segment somewhat large because it needs to be large enough to be outlined during the initial flush. Setting the progressive chunk size to near zero isn't enough because there is a fixed minimum size that we use to avoid doing the size tracking altogether and this needs to be larger than that at least.
 
 Unfortunately that previous paragraph wasn't quite long enough so I'll continue with some more prose and maybe throw on some repeated additional strings at the end for good measure.
 

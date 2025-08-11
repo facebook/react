@@ -444,7 +444,7 @@ export function dropManualMemoization(
 
           /**
            * Bailout on void return useMemos. This is an anti-pattern where code might be using
-           * useMemo like useEffect: running arbirtary side-effects synced to changes in specific
+           * useMemo like useEffect: running arbitrary side-effects synced to changes in specific
            * values.
            */
           if (

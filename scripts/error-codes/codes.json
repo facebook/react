@@ -550,5 +550,11 @@
   "562": "The render was aborted due to a fatal error.",
   "563": "This render completed successfully. All cacheSignals are now aborted to allow clean up of any unused resources.",
   "564": "Unknown command. The debugChannel was not wired up properly.",
-  "565": "resolveDebugMessage/closeDebugChannel should not be called for a Request that wasn't kept alive. This is a bug in React."
+  "565": "resolveDebugMessage/closeDebugChannel should not be called for a Request that wasn't kept alive. This is a bug in React.",
+  "566": "Internal React Error: suspendedState null when it was expected to exist. Please report this as a React bug.",
+  "567": "The depth must equal at least zero before reaching the root. This is a bug in React.",
+  "568": "This root received an early update, before anything was able to hydrate. Switched the entire root to client rendering.",
+  "569": "acquireResource encountered a resource type it did not expect: \"%s\". This is a bug in React.",
+  "570": "getResource encountered a type it did not expect: \"%s\". This is a bug in React.",
+  "571": "React doesn't accept base64 encoded file uploads because we don't expect form data passed from a browser to ever encode data that way. If that's the wrong assumption, we can easily fix it."
 }

@@ -6,7 +6,7 @@ This is a demo of how you can configure a build system to serve **two different 
 
 Note that **this approach is meant to be an escape hatch, not the norm**.
 
-Normally, we encourage you to use a single version of React across your whole app. When you need to upgrade React, it is better to try to upgrade it all at once. We try to keep breaking changes between versions to the minimum, and often there are automatic scripts ("codemods") that can assist you with migration. You can always find the migration information for any release on [our blog](https://reactjs.org/blog/).
+Normally, we encourage you to use a single version of React across your whole app. When you need to upgrade React, it is better to try to upgrade it all at once. We try to keep breaking changes between versions to the minimum, and often there are automatic scripts ("codemods") that can assist you with migration. You can always find the migration information for any release on [our blog](https://react.dev/blog/).
 
 Using a single version of React removes a lot of complexity. It is also essential to ensure the best experience for your users who don't have to download the code twice. Always prefer using one React.
 

@@ -890,7 +890,7 @@ function getNativeTag(instance: HostInstance): number | null {
   return null;
 }
 
-function aquireHostInstance(
+function acquireHostInstance(
   nearestInstance: DevToolsInstance,
   hostInstance: HostInstance,
 ): void {
@@ -910,7 +910,7 @@ function releaseHostInstance(
   }
 }
 
-function aquireHostResource(
+function acquireHostResource(
   nearestInstance: DevToolsInstance,
   resource: ?{instance?: HostInstance},
 ): void {
@@ -1045,7 +1045,7 @@ export function attach(
     // For example, ASTs cached for the component (for named hooks) may no longer be valid.
     // Send a signal to the frontend to purge this cached information.
     // The "fastRefreshScheduled" dispatched is global (not Fiber or even Renderer specific).
-    // This is less effecient since it means the front-end will need to purge the entire cache,
+    // This is less efficient since it means the front-end will need to purge the entire cache,
     // but this is probably an okay trade off in order to reduce coupling between the DevTools and Fast Refresh.
     renderer.scheduleRefresh = (...args) => {
       try {
@@ -3308,7 +3308,7 @@ export function attach(
         reconcilingParent.source === null
       ) {
         // The new Fiber is directly owned by the parent. Therefore somewhere on the
-        // debugStack will be a stack frame inside parent that we can use as its soruce.
+        // debugStack will be a stack frame inside parent that we can use as its source.
         reconcilingParent.source = fiber._debugStack;
       }
 
@@ -3372,7 +3372,7 @@ export function attach(
         if (nearestInstance === null) {
           throw new Error('Did not expect a host hoistable to be the root');
         }
-        aquireHostResource(nearestInstance, fiber.memoizedState);
+        acquireHostResource(nearestInstance, fiber.memoizedState);
       } else if (
         fiber.tag === HostComponent ||
         fiber.tag === HostText ||
@@ -3382,7 +3382,7 @@ export function attach(
         if (nearestInstance === null) {
           throw new Error('Did not expect a host hoistable to be the root');
         }
-        aquireHostInstance(nearestInstance, fiber.stateNode);
+        acquireHostInstance(nearestInstance, fiber.stateNode);
       }
 
       if (fiber.tag === OffscreenComponent && fiber.memoizedState !== null) {
@@ -4205,7 +4205,7 @@ export function attach(
           throw new Error('Did not expect a host hoistable to be the root');
         }
         releaseHostResource(nearestInstance, prevFiber.memoizedState);
-        aquireHostResource(nearestInstance, nextFiber.memoizedState);
+        acquireHostResource(nearestInstance, nextFiber.memoizedState);
       } else if (
         (nextFiber.tag === HostComponent ||
           nextFiber.tag === HostText ||
@@ -4213,14 +4213,14 @@ export function attach(
         prevFiber.stateNode !== nextFiber.stateNode
       ) {
         // In persistent mode, it's possible for the stateNode to update with
-        // a new clone. In that case we need to release the old one and aquire
+        // a new clone. In that case we need to release the old one and acquire
         // new one instead.
         const nearestInstance = reconcilingParent;
         if (nearestInstance === null) {
           throw new Error('Did not expect a host hoistable to be the root');
         }
         releaseHostInstance(nearestInstance, prevFiber.stateNode);
-        aquireHostInstance(nearestInstance, nextFiber.stateNode);
+        acquireHostInstance(nearestInstance, nextFiber.stateNode);
       }
 
       let updateFlags = NoUpdate;

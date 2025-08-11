@@ -1119,7 +1119,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     }
     if (disableLegacyMode) {
       const previousTransition = ReactSharedInternals.T;
-      const preivousEventPriority = currentEventPriority;
+      const previousEventPriority = currentEventPriority;
       try {
         ReactSharedInternals.T = null;
         currentEventPriority = DiscreteEventPriority;
@@ -1130,7 +1130,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         }
       } finally {
         ReactSharedInternals.T = previousTransition;
-        currentEventPriority = preivousEventPriority;
+        currentEventPriority = previousEventPriority;
         NoopRenderer.flushSyncWork();
       }
     } else {

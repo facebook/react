@@ -382,7 +382,7 @@ describe('ReactInternalTestUtils console assertions', () => {
       });
 
       expect(message).toMatchInlineSnapshot(`
-        "asserConsoleLogsCleared(expected)
+        "assertConsoleLogsCleared(expected)
 
         console.log was called without assertConsoleLogDev:
         + A
@@ -701,7 +701,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         await waitFor(['foo', 'bar']);
       });
       expect(message).toMatchInlineSnapshot(`
-        "asserConsoleLogsCleared(expected)
+        "assertConsoleLogsCleared(expected)
 
         console.log was called without assertConsoleLogDev:
         + Not asserted
@@ -743,7 +743,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         await waitForThrow('Oh no!');
       });
       expect(message).toMatchInlineSnapshot(`
-        "asserConsoleLogsCleared(expected)
+        "assertConsoleLogsCleared(expected)
 
         console.log was called without assertConsoleLogDev:
         + Not asserted
@@ -778,7 +778,7 @@ describe('ReactInternalTestUtils console assertions', () => {
       });
 
       expect(message).toMatchInlineSnapshot(`
-        "asserConsoleLogsCleared(expected)
+        "assertConsoleLogsCleared(expected)
 
         console.log was called without assertConsoleLogDev:
         + Not asserted
@@ -812,7 +812,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         await waitForAll(['foo', 'bar', 'baz']);
       });
       expect(message).toMatchInlineSnapshot(`
-        "asserConsoleLogsCleared(expected)
+        "assertConsoleLogsCleared(expected)
 
         console.log was called without assertConsoleLogDev:
         + Not asserted
@@ -848,7 +848,7 @@ describe('ReactInternalTestUtils console assertions', () => {
       });
       if (!__DEV__) {
         expect(message).toMatchInlineSnapshot(`
-          "asserConsoleLogsCleared(expected)
+          "assertConsoleLogsCleared(expected)
 
           console.log was called without assertConsoleLogDev:
           + Not asserted
@@ -859,7 +859,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         `);
       } else {
         expect(message).toMatchInlineSnapshot(`
-          "asserConsoleLogsCleared(expected)
+          "assertConsoleLogsCleared(expected)
 
           console.log was called without assertConsoleLogDev:
           + Not asserted
@@ -919,7 +919,7 @@ describe('ReactInternalTestUtils console assertions', () => {
 
       if (!__DEV__) {
         expect(message).toMatchInlineSnapshot(`
-          "asserConsoleLogsCleared(expected)
+          "assertConsoleLogsCleared(expected)
 
           console.warn was called without assertConsoleWarnDev:
           + A
@@ -930,7 +930,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         `);
       } else {
         expect(message).toMatchInlineSnapshot(`
-          "asserConsoleLogsCleared(expected)
+          "assertConsoleLogsCleared(expected)
 
           console.warn was called without assertConsoleWarnDev:
           + A%s,
@@ -975,7 +975,7 @@ describe('ReactInternalTestUtils console assertions', () => {
 
       if (!__DEV__) {
         expect(message).toMatchInlineSnapshot(`
-          "asserConsoleLogsCleared(expected)
+          "assertConsoleLogsCleared(expected)
 
           console.log was called without assertConsoleLogDev:
           + A
@@ -996,7 +996,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         `);
       } else {
         expect(message).toMatchInlineSnapshot(`
-          "asserConsoleLogsCleared(expected)
+          "assertConsoleLogsCleared(expected)
 
           console.log was called without assertConsoleLogDev:
           + A
@@ -1703,7 +1703,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         await waitFor(['foo', 'bar']);
       });
       expect(message).toMatchInlineSnapshot(`
-        "asserConsoleLogsCleared(expected)
+        "assertConsoleLogsCleared(expected)
 
         console.warn was called without assertConsoleWarnDev:
         + Not asserted
@@ -1745,7 +1745,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         await waitForThrow('Oh no!');
       });
       expect(message).toMatchInlineSnapshot(`
-        "asserConsoleLogsCleared(expected)
+        "assertConsoleLogsCleared(expected)
 
         console.warn was called without assertConsoleWarnDev:
         + Not asserted
@@ -1780,7 +1780,7 @@ describe('ReactInternalTestUtils console assertions', () => {
       });
 
       expect(message).toMatchInlineSnapshot(`
-        "asserConsoleLogsCleared(expected)
+        "assertConsoleLogsCleared(expected)
 
         console.warn was called without assertConsoleWarnDev:
         + Not asserted
@@ -1814,7 +1814,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         await waitForAll(['foo', 'bar', 'baz']);
       });
       expect(message).toMatchInlineSnapshot(`
-        "asserConsoleLogsCleared(expected)
+        "assertConsoleLogsCleared(expected)
 
         console.warn was called without assertConsoleWarnDev:
         + Not asserted
@@ -1850,7 +1850,7 @@ describe('ReactInternalTestUtils console assertions', () => {
       });
       if (!__DEV__) {
         expect(message).toMatchInlineSnapshot(`
-          "asserConsoleLogsCleared(expected)
+          "assertConsoleLogsCleared(expected)
 
           console.warn was called without assertConsoleWarnDev:
           + Not asserted
@@ -1861,7 +1861,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         `);
       } else {
         expect(message).toMatchInlineSnapshot(`
-          "asserConsoleLogsCleared(expected)
+          "assertConsoleLogsCleared(expected)
 
           console.warn was called without assertConsoleWarnDev:
           + Not asserted%s,
@@ -1924,7 +1924,7 @@ describe('ReactInternalTestUtils console assertions', () => {
 
       if (!__DEV__) {
         expect(message).toMatchInlineSnapshot(`
-          "asserConsoleLogsCleared(expected)
+          "assertConsoleLogsCleared(expected)
 
           console.error was called without assertConsoleErrorDev:
           + A
@@ -1935,7 +1935,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         `);
       } else {
         expect(message).toMatchInlineSnapshot(`
-                  "asserConsoleLogsCleared(expected)
+                  "assertConsoleLogsCleared(expected)
 
                   console.error was called without assertConsoleErrorDev:
                   + A%s,
@@ -1980,7 +1980,7 @@ describe('ReactInternalTestUtils console assertions', () => {
 
       if (!__DEV__) {
         expect(message).toMatchInlineSnapshot(`
-          "asserConsoleLogsCleared(expected)
+          "assertConsoleLogsCleared(expected)
 
           console.log was called without assertConsoleLogDev:
           + A
@@ -2001,7 +2001,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         `);
       } else {
         expect(message).toMatchInlineSnapshot(`
-                  "asserConsoleLogsCleared(expected)
+                  "assertConsoleLogsCleared(expected)
 
                   console.log was called without assertConsoleLogDev:
                   + A
@@ -2752,7 +2752,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         await waitFor(['foo', 'bar']);
       });
       expect(message).toMatchInlineSnapshot(`
-        "asserConsoleLogsCleared(expected)
+        "assertConsoleLogsCleared(expected)
 
         console.error was called without assertConsoleErrorDev:
         + Not asserted
@@ -2794,7 +2794,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         await waitForThrow('Oh no!');
       });
       expect(message).toMatchInlineSnapshot(`
-        "asserConsoleLogsCleared(expected)
+        "assertConsoleLogsCleared(expected)
 
         console.error was called without assertConsoleErrorDev:
         + Not asserted
@@ -2829,7 +2829,7 @@ describe('ReactInternalTestUtils console assertions', () => {
       });
 
       expect(message).toMatchInlineSnapshot(`
-        "asserConsoleLogsCleared(expected)
+        "assertConsoleLogsCleared(expected)
 
         console.error was called without assertConsoleErrorDev:
         + Not asserted
@@ -2863,7 +2863,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         await waitForAll(['foo', 'bar', 'baz']);
       });
       expect(message).toMatchInlineSnapshot(`
-        "asserConsoleLogsCleared(expected)
+        "assertConsoleLogsCleared(expected)
 
         console.error was called without assertConsoleErrorDev:
         + Not asserted
@@ -2899,7 +2899,7 @@ describe('ReactInternalTestUtils console assertions', () => {
       });
       if (!__DEV__) {
         expect(message).toMatchInlineSnapshot(`
-          "asserConsoleLogsCleared(expected)
+          "assertConsoleLogsCleared(expected)
 
           console.error was called without assertConsoleErrorDev:
           + Not asserted
@@ -2910,7 +2910,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         `);
       } else {
         expect(message).toMatchInlineSnapshot(`
-          "asserConsoleLogsCleared(expected)
+          "assertConsoleLogsCleared(expected)
 
           console.error was called without assertConsoleErrorDev:
           + Not asserted%s,

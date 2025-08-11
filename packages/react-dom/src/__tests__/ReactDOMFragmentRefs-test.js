@@ -1289,7 +1289,7 @@ describe('FragmentRefs', () => {
         },
       );
 
-      // containerRef preceds and contains the fragment
+      // containerRef precedes and contains the fragment
       expectPosition(
         fragmentRef.current.compareDocumentPosition(containerRef.current),
         {
