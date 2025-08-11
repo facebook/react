@@ -26,13 +26,13 @@ Found 1 error:
 
 Error: Calling setState during render may trigger an infinite loop
 
-Calling setState during render will trigger another render, and can lead to infinite loops. (https://react.dev/reference/react/useState)
+Calling setState during render will trigger another render, and can lead to infinite loops. (https://react.dev/reference/react/useState).
 
 error.unconditional-set-state-in-render-with-loop-throw.ts:11:2
    9 |     }
   10 |   }
 > 11 |   setState(true);
-     |   ^^^^^^^^ Found setState() within useMemo()
+     |   ^^^^^^^^ Found setState() during render
   12 |   return state;
   13 | }
   14 |

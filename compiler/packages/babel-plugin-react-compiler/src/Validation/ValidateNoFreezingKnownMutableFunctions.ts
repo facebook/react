@@ -5,7 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerDiagnostic, CompilerError, Effect, ErrorSeverity} from '..';
+import {CompilerDiagnostic, CompilerError, Effect} from '..';
+import {ErrorCode} from '../CompilerError';
 import {
   FunctionEffect,
   HIRFunction,
@@ -65,11 +66,7 @@ export function validateNoFreezingKnownMutableFunctions(
             ? `\`${place.identifier.name.value}\``
             : 'a local variable';
         errors.pushDiagnostic(
-          CompilerDiagnostic.create({
-            severity: ErrorSeverity.InvalidReact,
-            category: 'Cannot modify local variables after render completes',
-            description: `This argument is a function which may reassign or mutate ${variable} after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.`,
-          })
+          CompilerDiagnostic.fromCode(ErrorCode.WRITE_AFTER_RENDER)
             .withDetail({
               kind: 'error',
               loc: operand.loc,

@@ -28,6 +28,8 @@ import type {Rule} from 'eslint';
 import {Statement} from 'estree';
 import * as HermesParser from 'hermes-parser';
 
+// TODO: integrate latest changes from compiler/eslint-plugin-react-compiler
+
 function assertExhaustive(_: never, errorMsg: string): never {
   throw new Error(errorMsg);
 }

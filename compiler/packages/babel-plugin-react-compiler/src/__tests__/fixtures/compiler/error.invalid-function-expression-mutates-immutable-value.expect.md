@@ -22,7 +22,7 @@ Found 1 error:
 
 Error: This value cannot be modified
 
-Modifying a value returned from 'useState()', which should not be modified directly. Use the setter function to update instead.
+Modifying a value returned from 'useState()', which cannot be modified directly. Use the setter function to update instead.
 
 error.invalid-function-expression-mutates-immutable-value.ts:5:4
   3 |   const onChange = e => {

@@ -30,9 +30,7 @@ export const FIXTURE_ENTRYPOINT = {
 ```
 Found 1 error:
 
-Error: Expected the dependency list for useMemo to be an array literal
-
-Expected the dependency list for useMemo to be an array literal
+Error: Expected the dependency list of useMemo or useCallback to be an array literal
 
 error.useMemo-non-literal-depslist.ts:10:4
    8 |       return text.toUpperCase();
