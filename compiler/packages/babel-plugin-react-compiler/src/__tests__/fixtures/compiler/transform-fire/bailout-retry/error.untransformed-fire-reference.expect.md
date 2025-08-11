@@ -17,7 +17,7 @@ Found 1 error:
 
 Error: Cannot compile `fire`
 
- null
+ null.
 
 error.untransformed-fire-reference.ts:4:12
   2 | import {fire} from 'react';

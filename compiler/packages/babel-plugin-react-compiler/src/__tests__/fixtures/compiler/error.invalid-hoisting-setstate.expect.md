@@ -42,7 +42,7 @@ Found 1 error:
 
 Error: Cannot access variable before it is declared
 
-Reading a variable before it is initialized will prevent the earlier access from updating when this value changes over time. Instead, move the variable access to after it has been initialized
+Reading a variable before it is initialized will prevent the earlier access from updating when this value changes over time. Instead, move the variable access to after it has been initialized.
 
 error.invalid-hoisting-setstate.ts:19:18
   17 |    * $2 = Function context=setState
