@@ -796,6 +796,7 @@ export function attach(
             id: getID(owner),
             key: element.key,
             env: null,
+            stack: null,
             type: getElementType(owner),
           });
           if (owner._currentElement) {
@@ -836,6 +837,8 @@ export function attach(
       canToggleSuspense: false,
 
       source: null,
+
+      stack: null,
 
       // Only legacy context exists in legacy versions.
       hasLegacyContext: true,

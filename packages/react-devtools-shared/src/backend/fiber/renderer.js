@@ -4991,6 +4991,10 @@ export function attach(
         id: instance.id,
         key: fiber.key,
         env: null,
+        stack:
+          fiber._debugOwner == null || fiber._debugStack == null
+            ? null
+            : parseStackTrace(fiber._debugStack, 1),
         type: getElementTypeForFiber(fiber),
       };
     } else {
@@ -5000,6 +5004,10 @@ export function attach(
         id: instance.id,
         key: componentInfo.key == null ? null : componentInfo.key,
         env: componentInfo.env == null ? null : componentInfo.env,
+        stack:
+          componentInfo.owner == null || componentInfo.debugStack == null
+            ? null
+            : parseStackTrace(componentInfo.debugStack, 1),
         type: ElementTypeVirtual,
       };
     }
@@ -5598,6 +5606,11 @@ export function attach(
 
       source,
 
+      stack:
+        fiber._debugOwner == null || fiber._debugStack == null
+          ? null
+          : parseStackTrace(fiber._debugStack, 1),
+
       // Does the component have legacy context attached to it.
       hasLegacyContext,
 
@@ -5697,6 +5710,11 @@ export function attach(
       canToggleSuspense: supportsTogglingSuspense && hasSuspenseBoundary,
 
       source,
+
+      stack:
+        componentInfo.owner == null || componentInfo.debugStack == null
+          ? null
+          : parseStackTrace(componentInfo.debugStack, 1),
 
       // Does the component have legacy context attached to it.
       hasLegacyContext: false,
