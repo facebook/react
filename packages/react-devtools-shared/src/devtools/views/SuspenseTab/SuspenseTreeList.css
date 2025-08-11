@@ -1,0 +1,37 @@
+.SuspenseTreeList {
+  padding: 0;
+  margin: 0;
+}
+
+.SuspenseTreeList:focus-visible {
+  outline: none;
+}
+
+.SuspenseTreeListItem {
+  list-style: none;
+  padding: 0 0.25rem;
+  margin: 0;
+  width: 100%;
+  height: var(--line-height-data);
+  line-height: var(--line-height-data);
+  background-color: initial;
+  color: var(--color-component-name);
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-normal);
+  text-align: left;
+  user-select: none;
+}
+
+
+.SuspenseTreeListItem:hover {
+  background-color: var(--color-background-hover);
+}
+
+ .SuspenseTreeListItem[aria-selected="true"] {
+  background-color: var(--color-background-inactive);
+ }
+
+.SuspenseTreeList:focus .SuspenseTreeListItem[aria-selected="true"] {
+  background-color: var(--color-background-selected);
+  color: var(--color-text-selected);
+}

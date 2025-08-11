@@ -341,6 +341,7 @@ function SuspenseTab(_: {}) {
       <div
         className={styles.InspectedElementWrapper}
         hidden={inspectedElementHidden}>
+        {/* TODO: Display the selected suspense element instead */}
         <InspectedElementErrorBoundary>
           <InspectedElement />
         </InspectedElementErrorBoundary>

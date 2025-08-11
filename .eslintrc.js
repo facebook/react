@@ -609,6 +609,7 @@ module.exports = {
     SyntheticEvent: 'readonly',
     SyntheticMouseEvent: 'readonly',
     SyntheticPointerEvent: 'readonly',
+    SyntheticKeyboardEvent: 'readonly',
     Thenable: 'readonly',
     TimeoutID: 'readonly',
     WheelEventHandler: 'readonly',

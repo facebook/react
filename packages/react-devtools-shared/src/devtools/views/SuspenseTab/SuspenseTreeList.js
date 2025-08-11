@@ -7,84 +7,97 @@
  * @flow
  */
 import type {SuspenseNode} from '../../../frontend/types';
-import type Store from '../../store';
 
 import * as React from 'react';
 import {useContext} from 'react';
+import {
+  TreeDispatcherContext,
+  TreeStateContext,
+} from '../Components/TreeContext';
 import {StoreContext} from '../context';
-import {SuspenseTreeStateContext} from './SuspenseTreeContext';
-import {TreeDispatcherContext} from '../Components/TreeContext';
+import {useHighlightHostInstance} from '../hooks';
+import styles from './SuspenseTreeList.css';
 
-function getDocumentOrderSuspenseTreeList(store: Store): Array<SuspenseNode> {
-  const suspenseTreeList: SuspenseNode[] = [];
-  for (let i = 0; i < store.roots.length; i++) {
-    const root = store.getElementByID(store.roots[i]);
-    if (root === null) {
-      continue;
-    }
-    const suspense = store.getSuspenseByID(root.id);
-    if (suspense !== null) {
-      const stack = [suspense];
-      while (stack.length > 0) {
-        const current = stack.pop();
-        if (current === undefined) {
-          continue;
-        }
-        suspenseTreeList.push(current);
-        // Add children in reverse order to maintain document order
-        for (let j = current.children.length - 1; j >= 0; j--) {
-          const childSuspense = store.getSuspenseByID(current.children[j]);
-          if (childSuspense !== null) {
-            stack.push(childSuspense);
-          }
-        }
-      }
+function SuspenseTreeListElement({
+  instance,
+}: {
+  instance: SuspenseNode,
+}): React$Node {
+  const {selectedSuspenseID} = useContext(TreeStateContext);
+  const treeDispatch = useContext(TreeDispatcherContext);
+  const {id, name} = instance;
+  const {highlightHostInstance, clearHighlightHostInstance} =
+    useHighlightHostInstance();
+
+  function handleMouseEnter() {
+    highlightHostInstance(id);
+  }
+
+  function handleMouseDown(event: SyntheticPointerEvent<HTMLElement>) {
+    if (!event.metaKey) {
+      treeDispatch({
+        type: 'SELECT_ELEMENT_BY_ID',
+        payload: id,
+      });
     }
   }
 
-  return suspenseTreeList;
+  const selected = selectedSuspenseID === id;
+
+  return (
+    <li
+      className={styles.SuspenseTreeListItem}
+      aria-selected={selected}
+      onMouseDown={handleMouseDown}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={clearHighlightHostInstance}>
+      {name === null ? `Suspense #${id}` : name}
+    </li>
+  );
 }
 
 export default function SuspenseTreeList(_: {}): React$Node {
   const store = useContext(StoreContext);
-  const treeDispatch = useContext(TreeDispatcherContext);
-  useContext(SuspenseTreeStateContext);
+  const {numSuspense} = useContext(TreeStateContext);
 
-  const suspenseTreeList = getDocumentOrderSuspenseTreeList(store);
+  // TODO: Use FixedSizeList
+  const children: React$Node[] = [];
+  for (let i = 0; i < numSuspense; i++) {
+    const suspense = store.getSuspenseAtIndex(i);
+    if (suspense !== null) {
+      children.push(
+        <SuspenseTreeListElement key={suspense.id} instance={suspense} />,
+      );
+    }
+  }
+
+  const treeDispatch = useContext(TreeDispatcherContext);
+  function handleKeyDown(event: SyntheticKeyboardEvent<HTMLElement>) {
+    switch (event.key) {
+      case 'ArrowDown': {
+        event.preventDefault();
+        treeDispatch({type: 'SELECT_NEXT_SUSPENSE_IN_TREE'});
+        break;
+      }
+      case 'ArrowUp': {
+        event.preventDefault();
+        treeDispatch({type: 'SELECT_PREVIOUS_SUSPENSE_IN_TREE'});
+        break;
+      }
+      default:
+        break;
+    }
+  }
 
   return (
-    <div>
-      <p>Suspense Tree List</p>
-      <ul>
-        {suspenseTreeList.map(suspense => {
-          const {id, parentID, children, name} = suspense;
-          return (
-            <li key={id}>
-              <div>
-                <button
-                  onClick={() => {
-                    treeDispatch({
-                      type: 'SELECT_ELEMENT_BY_ID',
-                      payload: id,
-                    });
-                  }}>
-                  inspect {name || 'N/A'} ({id})
-                </button>
-              </div>
-              <div>
-                <strong>Suspense ID:</strong> {id}
-              </div>
-              <div>
-                <strong>Parent ID:</strong> {parentID}
-              </div>
-              <div>
-                <strong>Children:</strong>{' '}
-                {children.length === 0 ? '∅' : children.join(', ')}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+    <div className={styles.SuspenseTreeListContainer}>
+      <ol
+        className={styles.SuspenseTreeList}
+        role="listbox"
+        tabIndex={0}
+        onKeyDown={handleKeyDown}>
+        {children}
+      </ol>
     </div>
   );
 }
