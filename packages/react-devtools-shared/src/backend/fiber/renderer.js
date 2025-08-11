@@ -4162,7 +4162,7 @@ export function attach(
     const stashedSuspenseParent = reconcilingParentSuspenseNode;
     const stashedSuspensePrevious = previouslyReconciledSiblingSuspenseNode;
     const stashedSuspenseRemaining = remainingReconcilingChildrenSuspenseNodes;
-    let shouldPopSuspenseNode = false;
+    let shouldMeasureSuspenseNode = false;
     let previousSuspendedBy = null;
     if (fiberInstance !== null) {
       previousSuspendedBy = fiberInstance.suspendedBy;
@@ -4192,7 +4192,7 @@ export function attach(
         previouslyReconciledSiblingSuspenseNode = null;
         remainingReconcilingChildrenSuspenseNodes = suspenseNode.firstChild;
         suspenseNode.firstChild = null;
-        shouldPopSuspenseNode = true;
+        shouldMeasureSuspenseNode = true;
       }
     }
     try {
@@ -4379,38 +4379,40 @@ export function attach(
           0,
         );
 
-        // Next, we'll pop back out of the SuspenseNode that we added above and now we'll
-        // reconcile the fallback, reconciling anything by inserting into the parent SuspenseNode.
-        // Since the fallback conceptually blocks the parent.
-        reconcilingParentSuspenseNode = stashedSuspenseParent;
-        previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
-        remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
-        shouldPopSuspenseNode = false;
+        shouldMeasureSuspenseNode = false;
         if (nextFallbackFiber !== null) {
-          updateFlags |= updateVirtualChildrenRecursively(
-            nextFallbackFiber,
-            null,
-            prevFallbackFiber,
-            traceNearestHostComponentUpdate,
-            0,
-          );
-        } else if (
-          nextFiber.memoizedState === null &&
-          fiberInstance.suspenseNode !== null
-        ) {
-          if (!isInDisconnectedSubtree) {
-            // Measure this Suspense node in case it changed. We don't update the rect while
-            // we're inside a disconnected subtree nor if we are the Suspense boundary that
-            // is suspended. This lets us keep the rectangle of the displayed content while
-            // we're suspended to visualize the resulting state.
-            const suspenseNode = fiberInstance.suspenseNode;
-            const prevRects = suspenseNode.rects;
-            const nextRects = measureInstance(fiberInstance);
-            if (!areEqualRects(prevRects, nextRects)) {
-              suspenseNode.rects = nextRects;
-              recordSuspenseResize(suspenseNode);
-            }
+          const fallbackStashedSuspenseParent = reconcilingParentSuspenseNode;
+          const fallbackStashedSuspensePrevious =
+            previouslyReconciledSiblingSuspenseNode;
+          const fallbackStashedSuspenseRemaining =
+            remainingReconcilingChildrenSuspenseNodes;
+          // Next, we'll pop back out of the SuspenseNode that we added above and now we'll
+          // reconcile the fallback, reconciling anything by inserting into the parent SuspenseNode.
+          // Since the fallback conceptually blocks the parent.
+          reconcilingParentSuspenseNode = stashedSuspenseParent;
+          previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
+          remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
+          try {
+            updateFlags |= updateVirtualChildrenRecursively(
+              nextFallbackFiber,
+              null,
+              prevFallbackFiber,
+              traceNearestHostComponentUpdate,
+              0,
+            );
+          } finally {
+            reconcilingParentSuspenseNode = fallbackStashedSuspenseParent;
+            previouslyReconciledSiblingSuspenseNode =
+              fallbackStashedSuspensePrevious;
+            remainingReconcilingChildrenSuspenseNodes =
+              fallbackStashedSuspenseRemaining;
           }
+        } else if (nextFiber.memoizedState === null) {
+          // Measure this Suspense node in case it changed. We don't update the rect while
+          // we're inside a disconnected subtree nor if we are the Suspense boundary that
+          // is suspended. This lets us keep the rectangle of the displayed content while
+          // we're suspended to visualize the resulting state.
+          shouldMeasureSuspenseNode = !isInDisconnectedSubtree;
         }
       } else {
         // Common case: Primary -> Primary.
@@ -4519,7 +4521,7 @@ export function attach(
         reconcilingParent = stashedParent;
         previouslyReconciledSibling = stashedPrevious;
         remainingReconcilingChildren = stashedRemaining;
-        if (shouldPopSuspenseNode) {
+        if (shouldMeasureSuspenseNode) {
           if (
             !isInDisconnectedSubtree &&
             reconcilingParentSuspenseNode !== null
@@ -4535,6 +4537,8 @@ export function attach(
               recordSuspenseResize(suspenseNode);
             }
           }
+        }
+        if (fiberInstance.suspenseNode !== null) {
           reconcilingParentSuspenseNode = stashedSuspenseParent;
           previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
           remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
