@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<55c6103ea58de545f02c49f20074fc32>>
+ * @generated SignedSource<<4b369b8c5325cfcf6a0f3b1054423a78>>
  */
 
 "use strict";
@@ -5253,7 +5253,7 @@ __DEV__ &&
           22 === parent.tag &&
             ((sourceFiber = parent.stateNode),
             null === sourceFiber ||
-              sourceFiber._visibility & 1 ||
+              sourceFiber._visibility & OffscreenVisible ||
               (isHidden = !0)),
           (sourceFiber = parent),
           (parent = parent.return);
@@ -8047,6 +8047,14 @@ __DEV__ &&
     ) {
       var nextChildren = nextProps.children,
         prevState = null !== current ? current.memoizedState : null;
+      null === current &&
+        null === workInProgress.stateNode &&
+        (workInProgress.stateNode = {
+          _visibility: OffscreenVisible,
+          _pendingMarkers: null,
+          _retryCache: null,
+          _transitions: null
+        });
       if ("hidden" === nextProps.mode) {
         if (0 !== (workInProgress.flags & 128)) {
           nextProps =
@@ -8107,6 +8115,17 @@ __DEV__ &&
             reuseSuspenseHandlerOnStack(workInProgress));
       reconcileChildren(current, workInProgress, nextChildren, renderLanes);
       return workInProgress.child;
+    }
+    function bailoutOffscreenComponent(current, workInProgress) {
+      (null !== current && 22 === current.tag) ||
+        null !== workInProgress.stateNode ||
+        (workInProgress.stateNode = {
+          _visibility: OffscreenVisible,
+          _pendingMarkers: null,
+          _retryCache: null,
+          _transitions: null
+        });
+      return workInProgress.sibling;
     }
     function deferHiddenOffscreenComponent(
       current,
@@ -8650,43 +8669,43 @@ __DEV__ &&
         if (showFallback)
           return (
             reuseSuspenseHandlerOnStack(workInProgress),
-            (nextProps = mountSuspenseFallbackChildren(
+            mountSuspenseFallbackChildren(
               workInProgress,
               nextPrimaryChildren,
               didSuspend,
               renderLanes
-            )),
-            (showFallback = workInProgress.child),
-            (showFallback.memoizedState =
+            ),
+            (nextProps = workInProgress.child),
+            (nextProps.memoizedState =
               mountSuspenseOffscreenState(renderLanes)),
-            (showFallback.childLanes = getRemainingWorkInPrimaryTree(
+            (nextProps.childLanes = getRemainingWorkInPrimaryTree(
               current,
               JSCompiler_temp,
               renderLanes
             )),
             (workInProgress.memoizedState = SUSPENDED_MARKER),
-            nextProps
+            bailoutOffscreenComponent(null, nextProps)
           );
         if ("number" === typeof nextProps.unstable_expectedLoadTime)
           return (
             reuseSuspenseHandlerOnStack(workInProgress),
-            (nextProps = mountSuspenseFallbackChildren(
+            mountSuspenseFallbackChildren(
               workInProgress,
               nextPrimaryChildren,
               didSuspend,
               renderLanes
-            )),
-            (showFallback = workInProgress.child),
-            (showFallback.memoizedState =
+            ),
+            (nextProps = workInProgress.child),
+            (nextProps.memoizedState =
               mountSuspenseOffscreenState(renderLanes)),
-            (showFallback.childLanes = getRemainingWorkInPrimaryTree(
+            (nextProps.childLanes = getRemainingWorkInPrimaryTree(
               current,
               JSCompiler_temp,
               renderLanes
             )),
             (workInProgress.memoizedState = SUSPENDED_MARKER),
             (workInProgress.lanes = 4194304),
-            nextProps
+            bailoutOffscreenComponent(null, nextProps)
           );
         pushPrimaryTreeSuspenseHandler(workInProgress);
         return mountSuspensePrimaryChildren(
@@ -8747,7 +8766,7 @@ __DEV__ &&
                   renderLanes
                 )),
                 (workInProgress.memoizedState = SUSPENDED_MARKER),
-                (workInProgress = showFallback));
+                (workInProgress = bailoutOffscreenComponent(null, nextProps)));
         else if (
           (pushPrimaryTreeSuspenseHandler(workInProgress),
           0 !== (renderLanes & 536870912) &&
@@ -8862,34 +8881,31 @@ __DEV__ &&
         nextProps.return = workInProgress;
         nextProps.sibling = showFallback;
         workInProgress.child = nextProps;
-        nextProps = showFallback;
-        showFallback = workInProgress.child;
-        nextPrimaryChildren = current.child.memoizedState;
-        null === nextPrimaryChildren
-          ? (nextPrimaryChildren = mountSuspenseOffscreenState(renderLanes))
-          : ((didSuspend = nextPrimaryChildren.cachePool),
-            null !== didSuspend
-              ? ((currentFallbackChildFragment = CacheContext._currentValue2),
-                (didSuspend =
-                  didSuspend.parent !== currentFallbackChildFragment
-                    ? {
-                        parent: currentFallbackChildFragment,
-                        pool: currentFallbackChildFragment
-                      }
-                    : didSuspend))
-              : (didSuspend = getSuspendedCache()),
-            (nextPrimaryChildren = {
-              baseLanes: nextPrimaryChildren.baseLanes | renderLanes,
-              cachePool: didSuspend
+        bailoutOffscreenComponent(null, nextProps);
+        nextProps = workInProgress.child;
+        showFallback = current.child.memoizedState;
+        null === showFallback
+          ? (showFallback = mountSuspenseOffscreenState(renderLanes))
+          : ((nextPrimaryChildren = showFallback.cachePool),
+            null !== nextPrimaryChildren
+              ? ((didSuspend = CacheContext._currentValue2),
+                (nextPrimaryChildren =
+                  nextPrimaryChildren.parent !== didSuspend
+                    ? { parent: didSuspend, pool: didSuspend }
+                    : nextPrimaryChildren))
+              : (nextPrimaryChildren = getSuspendedCache()),
+            (showFallback = {
+              baseLanes: showFallback.baseLanes | renderLanes,
+              cachePool: nextPrimaryChildren
             }));
-        showFallback.memoizedState = nextPrimaryChildren;
-        showFallback.childLanes = getRemainingWorkInPrimaryTree(
+        nextProps.memoizedState = showFallback;
+        nextProps.childLanes = getRemainingWorkInPrimaryTree(
           current,
           JSCompiler_temp,
           renderLanes
         );
         workInProgress.memoizedState = SUSPENDED_MARKER;
-        return nextProps;
+        return bailoutOffscreenComponent(current.child, nextProps);
       }
       null !== nextPrimaryChildren &&
         (renderLanes & 62914560) === renderLanes &&
@@ -8959,12 +8975,6 @@ __DEV__ &&
     function mountWorkInProgressOffscreenFiber(offscreenProps, mode) {
       offscreenProps = createFiber(22, offscreenProps, null, mode);
       offscreenProps.lanes = 0;
-      offscreenProps.stateNode = {
-        _visibility: 1,
-        _pendingMarkers: null,
-        _retryCache: null,
-        _transitions: null
-      };
       return offscreenProps;
     }
     function retrySuspenseComponentWithoutHydrating(
@@ -12110,8 +12120,8 @@ __DEV__ &&
           flags & 8192 &&
             ((root = finishedWork.stateNode),
             (root._visibility = pendingChildren
-              ? root._visibility & -2
-              : root._visibility | 1),
+              ? root._visibility & ~OffscreenVisible
+              : root._visibility | OffscreenVisible),
             !pendingChildren ||
               null === current ||
               retryQueue ||
@@ -12707,7 +12717,8 @@ __DEV__ &&
           wasInHydratedSubtree = finishedWork.stateNode;
           prevProfilerEffectDuration = finishedWork.alternate;
           null !== finishedWork.memoizedState
-            ? wasInHydratedSubtree._visibility & 2
+            ? wasInHydratedSubtree._visibility &
+              OffscreenPassiveEffectsConnected
               ? recursivelyTraversePassiveMountEffects(
                   finishedRoot,
                   finishedWork,
@@ -12723,7 +12734,8 @@ __DEV__ &&
                     committedTransitions,
                     endTime
                   )
-                : ((wasInHydratedSubtree._visibility |= 2),
+                : ((wasInHydratedSubtree._visibility |=
+                    OffscreenPassiveEffectsConnected),
                   recursivelyTraversePassiveMountEffects(
                     finishedRoot,
                     finishedWork,
@@ -12731,7 +12743,8 @@ __DEV__ &&
                     committedTransitions,
                     endTime
                   ))
-            : wasInHydratedSubtree._visibility & 2
+            : wasInHydratedSubtree._visibility &
+                OffscreenPassiveEffectsConnected
               ? recursivelyTraversePassiveMountEffects(
                   finishedRoot,
                   finishedWork,
@@ -12739,7 +12752,8 @@ __DEV__ &&
                   committedTransitions,
                   endTime
                 )
-              : ((wasInHydratedSubtree._visibility |= 2),
+              : ((wasInHydratedSubtree._visibility |=
+                  OffscreenPassiveEffectsConnected),
                 recursivelyTraverseReconnectPassiveEffects(
                   finishedRoot,
                   finishedWork,
@@ -12908,7 +12922,7 @@ __DEV__ &&
         case 22:
           var _instance2 = finishedWork.stateNode;
           null !== finishedWork.memoizedState
-            ? _instance2._visibility & 2
+            ? _instance2._visibility & OffscreenPassiveEffectsConnected
               ? recursivelyTraverseReconnectPassiveEffects(
                   finishedRoot,
                   finishedWork,
@@ -12925,7 +12939,7 @@ __DEV__ &&
                     committedTransitions,
                     endTime
                   )
-                : ((_instance2._visibility |= 2),
+                : ((_instance2._visibility |= OffscreenPassiveEffectsConnected),
                   recursivelyTraverseReconnectPassiveEffects(
                     finishedRoot,
                     finishedWork,
@@ -12934,7 +12948,7 @@ __DEV__ &&
                     includeWorkInProgressEffects,
                     endTime
                   ))
-            : ((_instance2._visibility |= 2),
+            : ((_instance2._visibility |= OffscreenPassiveEffectsConnected),
               recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -13189,9 +13203,11 @@ __DEV__ &&
         case 22:
           prevProfilerEffectDuration = finishedWork.stateNode;
           null !== finishedWork.memoizedState &&
-          prevProfilerEffectDuration._visibility & 2 &&
+          prevProfilerEffectDuration._visibility &
+            OffscreenPassiveEffectsConnected &&
           (null === finishedWork.return || 13 !== finishedWork.return.tag)
-            ? ((prevProfilerEffectDuration._visibility &= -3),
+            ? ((prevProfilerEffectDuration._visibility &=
+                ~OffscreenPassiveEffectsConnected),
               recursivelyTraverseDisconnectPassiveEffects(finishedWork),
               enableComponentPerformanceTrack &&
                 0 !== (finishedWork.mode & 2) &&
@@ -13273,8 +13289,8 @@ __DEV__ &&
           break;
         case 22:
           var instance = finishedWork.stateNode;
-          instance._visibility & 2 &&
-            ((instance._visibility &= -3),
+          instance._visibility & OffscreenPassiveEffectsConnected &&
+            ((instance._visibility &= ~OffscreenPassiveEffectsConnected),
             recursivelyTraverseDisconnectPassiveEffects(finishedWork));
           break;
         default:
@@ -17933,6 +17949,8 @@ __DEV__ &&
     };
     var reconcileChildFibers = createChildReconciler(!0),
       mountChildFibers = createChildReconciler(!1),
+      OffscreenVisible = 1,
+      OffscreenPassiveEffectsConnected = 2,
       concurrentQueues = [],
       concurrentQueuesIndex = 0,
       concurrentlyUpdatedLanes = 0,
@@ -19502,10 +19520,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-f1e70b5e-20250811",
+        version: "19.2.0-native-fb-ac7820a9-20250811",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-f1e70b5e-20250811"
+        reconcilerVersion: "19.2.0-native-fb-ac7820a9-20250811"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
