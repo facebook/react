@@ -121,7 +121,7 @@ function sanitize(data: Object): void {
 }
 
 export function serializeDataForCopy(props: Object): string {
-  const cloned = Object.assign({}, props);
+  const cloned = isArray(props) ? props.slice(0) : Object.assign({}, props);
 
   sanitize(cloned);
 

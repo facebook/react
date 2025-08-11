@@ -142,6 +142,7 @@ function parseAliasingSignatureConfig(
   const effects = typeConfig.effects.map(
     (effect: AliasingEffectConfig): AliasingEffect => {
       switch (effect.kind) {
+        case 'ImmutableCapture':
         case 'CreateFrom':
         case 'Capture':
         case 'Alias':
@@ -1210,6 +1211,8 @@ addObject(BUILTIN_SHAPES, BuiltInUseRefId, [
 addObject(BUILTIN_SHAPES, BuiltInRefValueId, [
   ['*', {kind: 'Object', shapeId: BuiltInRefValueId}],
 ]);
+
+addObject(BUILTIN_SHAPES, ReanimatedSharedValueId, []);
 
 addFunction(
   BUILTIN_SHAPES,

@@ -83,6 +83,7 @@ type Props = {
   children: React$Node,
   componentsPortalContainer?: Element,
   profilerPortalContainer?: Element,
+  suspensePortalContainer?: Element,
 };
 
 function SettingsContextController({
@@ -90,6 +91,7 @@ function SettingsContextController({
   children,
   componentsPortalContainer,
   profilerPortalContainer,
+  suspensePortalContainer,
 }: Props): React.Node {
   const bridge = useContext(BridgeContext);
 
@@ -128,8 +130,18 @@ function SettingsContextController({
           .documentElement: any): HTMLElement),
       );
     }
+    if (suspensePortalContainer != null) {
+      array.push(
+        ((suspensePortalContainer.ownerDocument
+          .documentElement: any): HTMLElement),
+      );
+    }
     return array;
-  }, [componentsPortalContainer, profilerPortalContainer]);
+  }, [
+    componentsPortalContainer,
+    profilerPortalContainer,
+    suspensePortalContainer,
+  ]);
 
   useLayoutEffect(() => {
     switch (displayDensity) {

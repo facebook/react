@@ -36,9 +36,16 @@ function CrimesAgainstReact() {
 ## Error
 
 ```
+Found 1 error:
+
+Error: React Compiler has skipped optimizing this component because one or more React ESLint rules were disabled
+
+React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior. Found suppression `eslint-disable react-hooks/rules-of-hooks`
+
+error.invalid-unclosed-eslint-suppression.ts:2:0
   1 | // Note: Everything below this is sketchy
 > 2 | /* eslint-disable react-hooks/rules-of-hooks */
-    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ InvalidReact: React Compiler has skipped optimizing this component because one or more React ESLint rules were disabled. React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior. eslint-disable react-hooks/rules-of-hooks (2:2)
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Found React rule suppression
   3 | function lowercasecomponent() {
   4 |   'use forget';
   5 |   const x = [];

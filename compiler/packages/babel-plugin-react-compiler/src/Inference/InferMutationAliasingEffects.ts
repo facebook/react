@@ -6,6 +6,7 @@
  */
 
 import {
+  CompilerDiagnostic,
   CompilerError,
   Effect,
   ErrorSeverity,
@@ -36,8 +37,8 @@ import {
   ValueReason,
 } from '../HIR';
 import {
-  eachInstructionValueLValue,
   eachInstructionValueOperand,
+  eachPatternItem,
   eachTerminalOperand,
   eachTerminalSuccessor,
 } from '../HIR/visitors';
@@ -446,20 +447,23 @@ function applySignature(
               reason: value.reason,
               context: new Set(),
             });
+            const variable =
+              effect.value.identifier.name !== null &&
+              effect.value.identifier.name.kind === 'named'
+                ? `\`${effect.value.identifier.name.value}\``
+                : 'value';
             effects.push({
               kind: 'MutateFrozen',
               place: effect.value,
-              error: {
+              error: CompilerDiagnostic.create({
                 severity: ErrorSeverity.InvalidReact,
-                reason,
-                description:
-                  effect.value.identifier.name !== null &&
-                  effect.value.identifier.name.kind === 'named'
-                    ? `Found mutation of \`${effect.value.identifier.name.value}\``
-                    : null,
+                category: 'This value cannot be modified',
+                description: `${reason}.`,
+              }).withDetail({
+                kind: 'error',
                 loc: effect.value.loc,
-                suggestions: null,
-              },
+                message: `${variable} cannot be modified`,
+              }),
             });
           }
         }
@@ -687,6 +691,7 @@ function applyEffect(
       }
       break;
     }
+    case 'MaybeAlias':
     case 'Alias':
     case 'Capture': {
       CompilerError.invariant(
@@ -951,7 +956,7 @@ function applyEffect(
             context,
             state,
             // OK: recording information flow
-            {kind: 'Alias', from: operand, into: effect.into},
+            {kind: 'MaybeAlias', from: operand, into: effect.into},
             initialized,
             effects,
           );
@@ -1013,33 +1018,31 @@ function applyEffect(
             effect.value.identifier.declarationId,
           )
         ) {
-          const description =
+          const variable =
             effect.value.identifier.name !== null &&
             effect.value.identifier.name.kind === 'named'
-              ? `Variable \`${effect.value.identifier.name.value}\` is accessed before it is declared`
+              ? `\`${effect.value.identifier.name.value}\``
               : null;
           const hoistedAccess = context.hoistedContextDeclarations.get(
             effect.value.identifier.declarationId,
           );
+          const diagnostic = CompilerDiagnostic.create({
+            severity: ErrorSeverity.InvalidReact,
+            category: 'Cannot access variable before it is declared',
+            description: `${variable ?? 'This variable'} is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.`,
+          });
           if (hoistedAccess != null && hoistedAccess.loc != effect.value.loc) {
-            applyEffect(
-              context,
-              state,
-              {
-                kind: 'MutateFrozen',
-                place: effect.value,
-                error: {
-                  severity: ErrorSeverity.InvalidReact,
-                  reason: `This variable is accessed before it is declared, which may prevent it from updating as the assigned value changes over time`,
-                  description,
-                  loc: hoistedAccess.loc,
-                  suggestions: null,
-                },
-              },
-              initialized,
-              effects,
-            );
+            diagnostic.withDetail({
+              kind: 'error',
+              loc: hoistedAccess.loc,
+              message: `${variable ?? 'variable'} accessed before it is declared`,
+            });
           }
+          diagnostic.withDetail({
+            kind: 'error',
+            loc: effect.value.loc,
+            message: `${variable ?? 'variable'} is declared here`,
+          });
 
           applyEffect(
             context,
@@ -1047,13 +1050,7 @@ function applyEffect(
             {
               kind: 'MutateFrozen',
               place: effect.value,
-              error: {
-                severity: ErrorSeverity.InvalidReact,
-                reason: `This variable is accessed before it is declared, which prevents the earlier access from updating when this value changes over time`,
-                description,
-                loc: effect.value.loc,
-                suggestions: null,
-              },
+              error: diagnostic,
             },
             initialized,
             effects,
@@ -1064,11 +1061,11 @@ function applyEffect(
             reason: value.reason,
             context: new Set(),
           });
-          const description =
+          const variable =
             effect.value.identifier.name !== null &&
             effect.value.identifier.name.kind === 'named'
-              ? `Found mutation of \`${effect.value.identifier.name.value}\``
-              : null;
+              ? `\`${effect.value.identifier.name.value}\``
+              : 'value';
           applyEffect(
             context,
             state,
@@ -1078,13 +1075,15 @@ function applyEffect(
                   ? 'MutateFrozen'
                   : 'MutateGlobal',
               place: effect.value,
-              error: {
+              error: CompilerDiagnostic.create({
                 severity: ErrorSeverity.InvalidReact,
-                reason,
-                description,
+                category: 'This value cannot be modified',
+                description: `${reason}.`,
+              }).withDetail({
+                kind: 'error',
                 loc: effect.value.loc,
-                suggestions: null,
-              },
+                message: `${variable} cannot be modified`,
+              }),
             },
             initialized,
             effects,
@@ -1325,7 +1324,7 @@ class InferenceState {
             return 'mutate-global';
           }
           case ValueKind.MaybeFrozen: {
-            return 'none';
+            return 'mutate-frozen';
           }
           default: {
             assertExhaustive(kind, `Unexpected kind ${kind}`);
@@ -1864,19 +1863,34 @@ function computeSignatureForInstruction(
       break;
     }
     case 'Destructure': {
-      for (const patternLValue of eachInstructionValueLValue(value)) {
-        if (isPrimitiveType(patternLValue.identifier)) {
+      for (const patternItem of eachPatternItem(value.lvalue.pattern)) {
+        const place =
+          patternItem.kind === 'Identifier' ? patternItem : patternItem.place;
+        if (isPrimitiveType(place.identifier)) {
           effects.push({
             kind: 'Create',
-            into: patternLValue,
+            into: place,
             value: ValueKind.Primitive,
             reason: ValueReason.Other,
           });
-        } else {
+        } else if (patternItem.kind === 'Identifier') {
           effects.push({
             kind: 'CreateFrom',
             from: value.value,
-            into: patternLValue,
+            into: place,
+          });
+        } else {
+          // Spread creates a new object/array that captures from the RValue
+          effects.push({
+            kind: 'Create',
+            into: place,
+            reason: ValueReason.Other,
+            value: ValueKind.Mutable,
+          });
+          effects.push({
+            kind: 'Capture',
+            from: value.value,
+            into: place,
           });
         }
       }
@@ -1988,16 +2002,20 @@ function computeSignatureForInstruction(
       break;
     }
     case 'StoreGlobal': {
+      const variable = `\`${value.name}\``;
       effects.push({
         kind: 'MutateGlobal',
         place: value.value,
-        error: {
-          reason:
-            'Unexpected reassignment of a variable which was defined outside of the component. Components and hooks should be pure and side-effect free, but variable reassignment is a form of side-effect. If this variable is used in rendering, use useState instead. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render)',
-          loc: instr.loc,
-          suggestions: null,
+        error: CompilerDiagnostic.create({
           severity: ErrorSeverity.InvalidReact,
-        },
+          category:
+            'Cannot reassign variables declared outside of the component/hook',
+          description: `Variable ${variable} is declared outside of the component/hook. Reassigning this value during render is a form of side effect, which can cause unpredictable behavior depending on when the component happens to re-render. If this variable is used in rendering, use useState instead. Otherwise, consider updating it in an effect. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render)`,
+        }).withDetail({
+          kind: 'error',
+          loc: instr.loc,
+          message: `${variable} cannot be reassigned`,
+        }),
       });
       effects.push({kind: 'Assign', from: value.value, into: lvalue});
       break;
@@ -2087,17 +2105,19 @@ function computeEffectsForLegacySignature(
     effects.push({
       kind: 'Impure',
       place: receiver,
-      error: {
-        reason:
-          'Calling an impure function can produce unstable results. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent)',
-        description:
-          signature.canonicalName != null
-            ? `\`${signature.canonicalName}\` is an impure function whose results may change on every call`
-            : null,
+      error: CompilerDiagnostic.create({
         severity: ErrorSeverity.InvalidReact,
+        category: 'Cannot call impure function during render',
+        description:
+          (signature.canonicalName != null
+            ? `\`${signature.canonicalName}\` is an impure function. `
+            : '') +
+          'Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent)',
+      }).withDetail({
+        kind: 'error',
         loc,
-        suggestions: null,
-      },
+        message: 'Cannot call impure function',
+      }),
     });
   }
   const stores: Array<Place> = [];
@@ -2357,6 +2377,7 @@ function computeEffectsForSignature(
   // Apply substitutions
   for (const effect of signature.effects) {
     switch (effect.kind) {
+      case 'MaybeAlias':
       case 'Assign':
       case 'ImmutableCapture':
       case 'Alias':

@@ -23,6 +23,11 @@ function Component(props) {
 ## Error
 
 ```
+Found 1 error:
+
+Memoization: React Compiler has skipped optimizing this component because the effect dependencies could not be memoized. Unmemoized effect dependencies can trigger an infinite loop or other unexpected behavior
+
+error.invalid-useEffect-dep-not-memoized-bc-range-overlaps-hook.ts:9:2
    7 |
    8 |   // Items is no longer mutable here, but it hasn't been memoized
 >  9 |   useEffect(() => {
@@ -30,7 +35,7 @@ function Component(props) {
 > 10 |     console.log(items);
      | ^^^^^^^^^^^^^^^^^^^^^^^
 > 11 |   }, [items]);
-     | ^^^^^^^^^^^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the effect dependencies could not be memoized. Unmemoized effect dependencies can trigger an infinite loop or other unexpected behavior (9:11)
+     | ^^^^^^^^^^^^^^ React Compiler has skipped optimizing this component because the effect dependencies could not be memoized. Unmemoized effect dependencies can trigger an infinite loop or other unexpected behavior
   12 |
   13 |   return [items, state];
   14 | }

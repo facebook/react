@@ -13,9 +13,16 @@ function Component(props) {
 ## Error
 
 ```
+Found 1 error:
+
+Error: The 'eval' function is not supported
+
+Eval is an anti-pattern in JavaScript, and the code executed cannot be evaluated by React Compiler.
+
+error.invalid-eval-unsupported.ts:2:2
   1 | function Component(props) {
 > 2 |   eval('props.x = true');
-    |   ^^^^ UnsupportedJS: The 'eval' function is not supported. Eval is an anti-pattern in JavaScript, and the code executed cannot be evaluated by React Compiler (2:2)
+    |   ^^^^ The 'eval' function is not supported
   3 |   return <div />;
   4 | }
   5 |

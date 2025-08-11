@@ -22,6 +22,13 @@ function Component({foo}) {
 ## Error
 
 ```
+Found 1 error:
+
+Error: Cannot infer dependencies of this effect. This will break your build!
+
+To resolve, either pass a dependency array or fix reported compiler bailout diagnostics.
+
+error.wrong-index.ts:6:2
    4 |
    5 | function Component({foo}) {
 >  6 |   useEffectWrapper(
@@ -37,7 +44,7 @@ function Component({foo}) {
 > 11 |     AUTODEPS
      | ^^^^^^^^^^^
 > 12 |   );
-     | ^^^^ InvalidReact: [InferEffectDependencies] React Compiler is unable to infer dependencies of this effect. This will break your build! To resolve, either pass your own dependency array or fix reported compiler bailout diagnostics. (6:12)
+     | ^^^^ Cannot infer dependencies
   13 | }
   14 |
 ```

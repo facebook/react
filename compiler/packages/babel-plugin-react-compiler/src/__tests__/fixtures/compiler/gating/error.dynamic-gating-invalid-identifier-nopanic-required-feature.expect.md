@@ -23,10 +23,17 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
+Found 1 error:
+
+Error: Cannot infer dependencies of this effect. This will break your build!
+
+To resolve, either pass a dependency array or fix reported compiler bailout diagnostics.
+
+error.dynamic-gating-invalid-identifier-nopanic-required-feature.ts:8:2
    6 |   'use memo if(invalid identifier)';
    7 |   const arr = [propVal];
 >  8 |   useEffect(() => print(arr), AUTODEPS);
-     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ InvalidReact: [InferEffectDependencies] React Compiler is unable to infer dependencies of this effect. This will break your build! To resolve, either pass your own dependency array or fix reported compiler bailout diagnostics. (8:8)
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot infer dependencies
    9 | }
   10 |
   11 | export const FIXTURE_ENTRYPOINT = {

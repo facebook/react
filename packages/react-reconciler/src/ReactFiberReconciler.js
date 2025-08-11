@@ -346,6 +346,7 @@ export function createHydrationContainer(
   update.callback =
     callback !== undefined && callback !== null ? callback : null;
   enqueueUpdate(current, update, lane);
+  startUpdateTimerByLane(lane, 'hydrateRoot()');
   scheduleInitialHydrationOnRoot(root, lane);
 
   return root;

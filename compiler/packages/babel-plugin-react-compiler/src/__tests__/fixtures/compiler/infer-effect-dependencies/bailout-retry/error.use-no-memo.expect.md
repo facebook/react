@@ -16,10 +16,17 @@ function Component({propVal}) {
 ## Error
 
 ```
+Found 1 error:
+
+Error: Cannot infer dependencies of this effect. This will break your build!
+
+To resolve, either pass a dependency array or fix reported compiler bailout diagnostics.
+
+error.use-no-memo.ts:6:2
   4 | function Component({propVal}) {
   5 |   'use no memo';
 > 6 |   useEffect(() => [propVal], AUTODEPS);
-    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ InvalidReact: [InferEffectDependencies] React Compiler is unable to infer dependencies of this effect. This will break your build! To resolve, either pass your own dependency array or fix reported compiler bailout diagnostics. (6:6)
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot infer dependencies
   7 | }
   8 |
 ```

@@ -7,46 +7,42 @@
  * @flow
  */
 
-import type {Wakeable} from 'shared/ReactTypes';
+import type {
+  Thenable,
+  FulfilledThenable,
+  RejectedThenable,
+} from 'shared/ReactTypes';
 import type {TimelineData} from './types';
 
+import * as React from 'react';
+
 import {importFile as importFileWorker} from './import-worker';
-
-const Pending = 0;
-const Resolved = 1;
-const Rejected = 2;
-
-type PendingRecord = {
-  status: 0,
-  value: Wakeable,
-};
-
-type ResolvedRecord<T> = {
-  status: 1,
-  value: T,
-};
-
-type RejectedRecord = {
-  status: 2,
-  value: Error,
-};
-
-type Record<T> = PendingRecord | ResolvedRecord<T> | RejectedRecord;
 
 // This is intentionally a module-level Map, rather than a React-managed one.
 // Otherwise, refreshing the inspected element cache would also clear this cache.
 // Profiler file contents are static anyway.
-const fileNameToProfilerDataMap: Map<string, Record<TimelineData>> = new Map();
+const fileNameToProfilerDataMap: Map<
+  string,
+  Thenable<TimelineData>,
+> = new Map();
 
-function readRecord<T>(record: Record<T>): ResolvedRecord<T> | RejectedRecord {
-  if (record.status === Resolved) {
-    // This is just a type refinement.
-    return record;
-  } else if (record.status === Rejected) {
-    // This is just a type refinement.
-    return record;
+function readRecord<T>(record: Thenable<T>): T | Error {
+  if (typeof React.use === 'function') {
+    try {
+      return React.use(record);
+    } catch (x) {
+      if (record.status === 'rejected') {
+        return (record.reason: any);
+      }
+      throw x;
+    }
+  }
+  if (record.status === 'fulfilled') {
+    return record.value;
+  } else if (record.status === 'rejected') {
+    return (record.reason: any);
   } else {
-    throw record.value;
+    throw record;
   }
 }
 
@@ -55,10 +51,15 @@ export function importFile(file: File): TimelineData | Error {
   let record = fileNameToProfilerDataMap.get(fileName);
 
   if (!record) {
-    const callbacks = new Set<() => mixed>();
-    const wakeable: Wakeable = {
-      then(callback: () => mixed) {
+    const callbacks = new Set<(value: any) => mixed>();
+    const rejectCallbacks = new Set<(reason: mixed) => mixed>();
+    const thenable: Thenable<TimelineData> = {
+      status: 'pending',
+      value: null,
+      reason: null,
+      then(callback: (value: any) => mixed, reject: (error: mixed) => mixed) {
         callbacks.add(callback);
+        rejectCallbacks.add(reject);
       },
 
       // Optional property used by Timeline:
@@ -67,37 +68,42 @@ export function importFile(file: File): TimelineData | Error {
 
     const wake = () => {
       // This assumes they won't throw.
-      callbacks.forEach(callback => callback());
+      callbacks.forEach(callback => callback((thenable: any).value));
+      callbacks.clear();
+      rejectCallbacks.clear();
+    };
+    const wakeRejections = () => {
+      // This assumes they won't throw.
+      rejectCallbacks.forEach(callback => callback((thenable: any).reason));
+      rejectCallbacks.clear();
       callbacks.clear();
     };
 
-    const newRecord: Record<TimelineData> = (record = {
-      status: Pending,
-      value: wakeable,
-    });
+    record = thenable;
 
     importFileWorker(file).then(data => {
       switch (data.status) {
         case 'SUCCESS':
-          const resolvedRecord =
-            ((newRecord: any): ResolvedRecord<TimelineData>);
-          resolvedRecord.status = Resolved;
-          resolvedRecord.value = data.processedData;
+          const fulfilledThenable: FulfilledThenable<TimelineData> =
+            (thenable: any);
+          fulfilledThenable.status = 'fulfilled';
+          fulfilledThenable.value = data.processedData;
+          wake();
           break;
         case 'INVALID_PROFILE_ERROR':
         case 'UNEXPECTED_ERROR':
-          const thrownRecord = ((newRecord: any): RejectedRecord);
-          thrownRecord.status = Rejected;
-          thrownRecord.value = data.error;
+          const rejectedThenable: RejectedThenable<TimelineData> =
+            (thenable: any);
+          rejectedThenable.status = 'rejected';
+          rejectedThenable.reason = data.error;
+          wakeRejections();
           break;
       }
-
-      wake();
     });
 
     fileNameToProfilerDataMap.set(fileName, record);
   }
 
-  const response = readRecord(record).value;
+  const response = readRecord(record);
   return response;
 }

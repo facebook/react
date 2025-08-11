@@ -23,6 +23,7 @@ import {
 } from './context';
 import Components from './Components/Components';
 import Profiler from './Profiler/Profiler';
+import SuspenseTab from './SuspenseTab/SuspenseTab';
 import TabBar from './TabBar';
 import EditorPane from './Editor/EditorPane';
 import {SettingsContextController} from './Settings/SettingsContext';
@@ -32,6 +33,7 @@ import FetchFileWithCachingContext from './Components/FetchFileWithCachingContex
 import {InspectedElementContextController} from './Components/InspectedElementContext';
 import HookNamesModuleLoaderContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import {ProfilerContextController} from './Profiler/ProfilerContext';
+import {SuspenseTreeContextController} from './SuspenseTab/SuspenseTreeContext';
 import {TimelineContextController} from 'react-devtools-timeline/src/TimelineContext';
 import {ModalDialogContextController} from './ModalDialog';
 import ReactLogo from './ReactLogo';
@@ -51,22 +53,22 @@ import type {FetchFileWithCaching} from './Components/FetchFileWithCachingContex
 import type {HookNamesModuleLoaderFunction} from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {BrowserTheme} from 'react-devtools-shared/src/frontend/types';
-import type {ReactFunctionLocation} from 'shared/ReactTypes';
+import type {ReactFunctionLocation, ReactCallSite} from 'shared/ReactTypes';
 import type {SourceSelection} from './Editor/EditorPane';
 
-export type TabID = 'components' | 'profiler';
+export type TabID = 'components' | 'profiler' | 'suspense';
 
 export type ViewElementSource = (
-  source: ReactFunctionLocation,
-  symbolicatedSource: ReactFunctionLocation | null,
+  source: ReactFunctionLocation | ReactCallSite,
+  symbolicatedSource: ReactFunctionLocation | ReactCallSite | null,
 ) => void;
 export type ViewAttributeSource = (
   id: number,
   path: Array<string | number>,
 ) => void;
 export type CanViewElementSource = (
-  source: ReactFunctionLocation,
-  symbolicatedSource: ReactFunctionLocation | null,
+  source: ReactFunctionLocation | ReactCallSite,
+  symbolicatedSource: ReactFunctionLocation | ReactCallSite | null,
 ) => boolean;
 
 export type Props = {
@@ -99,7 +101,9 @@ export type Props = {
   // but individual tabs (e.g. Components, Profiling) can be rendered into portals within their browser panels.
   componentsPortalContainer?: Element,
   profilerPortalContainer?: Element,
+  suspensePortalContainer?: Element,
   editorPortalContainer?: Element,
+
   currentSelectedSource?: null | SourceSelection,
 
   // Loads and parses source maps for function components
@@ -122,16 +126,37 @@ const profilerTab = {
   label: 'Profiler',
   title: 'React Profiler',
 };
+const suspenseTab = {
+  id: ('suspense': TabID),
+  icon: 'suspense',
+  label: 'Suspense',
+  title: 'React Suspense',
+};
 
-const tabs = [componentsTab, profilerTab];
+const defaultTabs = [componentsTab, profilerTab];
+const tabsWithSuspense = [componentsTab, profilerTab, suspenseTab];
+
+function useIsSuspenseTabEnabled(store: Store): boolean {
+  const subscribe = useCallback(
+    (onStoreChange: () => void) => {
+      store.addListener('enableSuspenseTab', onStoreChange);
+      return () => {
+        store.removeListener('enableSuspenseTab', onStoreChange);
+      };
+    },
+    [store],
+  );
+  return React.useSyncExternalStore(subscribe, () => store.supportsSuspenseTab);
+}
 
 export default function DevTools({
   bridge,
   browserTheme = 'light',
   canViewElementSourceFunction,
   componentsPortalContainer,
-  profilerPortalContainer,
   editorPortalContainer,
+  profilerPortalContainer,
+  suspensePortalContainer,
   currentSelectedSource,
   defaultTab = 'components',
   enabledInspectedElementContextMenu = false,
@@ -155,6 +180,8 @@ export default function DevTools({
     LOCAL_STORAGE_DEFAULT_TAB_KEY,
     defaultTab,
   );
+  const enableSuspenseTab = useIsSuspenseTabEnabled(store);
+  const tabs = enableSuspenseTab ? tabsWithSuspense : defaultTabs;
 
   let tab = currentTab;
 
@@ -171,6 +198,8 @@ export default function DevTools({
       if (showTabBar === true) {
         if (tabId === 'components') {
           logEvent({event_name: 'selected-components-tab'});
+        } else if (tabId === 'suspense') {
+          logEvent({event_name: 'selected-suspense-tab'});
         } else {
           logEvent({event_name: 'selected-profiler-tab'});
         }
@@ -241,6 +270,13 @@ export default function DevTools({
             event.preventDefault();
             event.stopPropagation();
             break;
+          case '3':
+            if (tabs.length > 2) {
+              selectTab(tabs[2].id);
+              event.preventDefault();
+              event.stopPropagation();
+            }
+            break;
         }
       }
     };
@@ -284,51 +320,65 @@ export default function DevTools({
                         <ProfilerContextController>
                           <TimelineContextController>
                             <InspectedElementContextController>
-                              <ThemeProvider>
-                                <div
-                                  className={styles.DevTools}
-                                  ref={devToolsRef}
-                                  data-react-devtools-portal-root={true}>
-                                  {showTabBar && (
-                                    <div className={styles.TabBar}>
-                                      <ReactLogo />
-                                      <span className={styles.DevToolsVersion}>
-                                        {process.env.DEVTOOLS_VERSION}
-                                      </span>
-                                      <div className={styles.Spacer} />
-                                      <TabBar
-                                        currentTab={tab}
-                                        id="DevTools"
-                                        selectTab={selectTab}
-                                        tabs={tabs}
-                                        type="navigation"
+                              <SuspenseTreeContextController>
+                                <ThemeProvider>
+                                  <div
+                                    className={styles.DevTools}
+                                    ref={devToolsRef}
+                                    data-react-devtools-portal-root={true}>
+                                    {showTabBar && (
+                                      <div className={styles.TabBar}>
+                                        <ReactLogo />
+                                        <span
+                                          className={styles.DevToolsVersion}>
+                                          {process.env.DEVTOOLS_VERSION}
+                                        </span>
+                                        <div className={styles.Spacer} />
+                                        <TabBar
+                                          currentTab={tab}
+                                          id="DevTools"
+                                          selectTab={selectTab}
+                                          tabs={tabs}
+                                          type="navigation"
+                                        />
+                                      </div>
+                                    )}
+                                    <div
+                                      className={styles.TabContent}
+                                      hidden={tab !== 'components'}>
+                                      <Components
+                                        portalContainer={
+                                          componentsPortalContainer
+                                        }
                                       />
                                     </div>
-                                  )}
-                                  <div
-                                    className={styles.TabContent}
-                                    hidden={tab !== 'components'}>
-                                    <Components
-                                      portalContainer={
-                                        componentsPortalContainer
-                                      }
-                                    />
+                                    <div
+                                      className={styles.TabContent}
+                                      hidden={tab !== 'profiler'}>
+                                      <Profiler
+                                        portalContainer={
+                                          profilerPortalContainer
+                                        }
+                                      />
+                                    </div>
+                                    <div
+                                      className={styles.TabContent}
+                                      hidden={tab !== 'suspense'}>
+                                      <SuspenseTab
+                                        portalContainer={
+                                          suspensePortalContainer
+                                        }
+                                      />
+                                    </div>
                                   </div>
-                                  <div
-                                    className={styles.TabContent}
-                                    hidden={tab !== 'profiler'}>
-                                    <Profiler
-                                      portalContainer={profilerPortalContainer}
+                                  {editorPortalContainer ? (
+                                    <EditorPane
+                                      selectedSource={currentSelectedSource}
+                                      portalContainer={editorPortalContainer}
                                     />
-                                  </div>
-                                </div>
-                                {editorPortalContainer ? (
-                                  <EditorPane
-                                    selectedSource={currentSelectedSource}
-                                    portalContainer={editorPortalContainer}
-                                  />
-                                ) : null}
-                              </ThemeProvider>
+                                  ) : null}
+                                </ThemeProvider>
+                              </SuspenseTreeContextController>
                             </InspectedElementContextController>
                           </TimelineContextController>
                         </ProfilerContextController>

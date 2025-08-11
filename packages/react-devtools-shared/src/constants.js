@@ -24,6 +24,9 @@ export const TREE_OPERATION_UPDATE_TREE_BASE_DURATION = 4;
 export const TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS = 5;
 export const TREE_OPERATION_REMOVE_ROOT = 6;
 export const TREE_OPERATION_SET_SUBTREE_MODE = 7;
+export const SUSPENSE_TREE_OPERATION_ADD = 8;
+export const SUSPENSE_TREE_OPERATION_REMOVE = 9;
+export const SUSPENSE_TREE_OPERATION_REORDER_CHILDREN = 10;
 
 export const PROFILING_FLAG_BASIC_SUPPORT = 0b01;
 export const PROFILING_FLAG_TIMELINE_SUPPORT = 0b10;
@@ -37,6 +40,8 @@ export const LOCAL_STORAGE_OPEN_IN_EDITOR_URL =
   'React::DevTools::openInEditorUrl';
 export const LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET =
   'React::DevTools::openInEditorUrlPreset';
+export const LOCAL_STORAGE_ALWAYS_OPEN_IN_EDITOR =
+  'React::DevTools::alwaysOpenInEditor';
 export const LOCAL_STORAGE_PARSE_HOOK_NAMES_KEY =
   'React::DevTools::parseHookNames';
 export const SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY =

@@ -10,6 +10,11 @@ function Component() {
   const items = [];
   // NOTE: `i` is a context variable because it's reassigned and also referenced
   // within a closure, the `onClick` handler of each item
+  // TODO: for loops create a unique environment on each iteration, which means
+  // that if the iteration variable is only updated in the updater, the variable
+  // is effectively const within the body and the "update" acts more like
+  // a re-initialization than a reassignment.
+  // Until we model this "new environment" semantic, we allow this case to error
   for (let i = MIN; i <= MAX; i += INCREMENT) {
     items.push(
       <Stringify key={i} onClick={() => data.get(i)} shouldInvokeFns={true} />

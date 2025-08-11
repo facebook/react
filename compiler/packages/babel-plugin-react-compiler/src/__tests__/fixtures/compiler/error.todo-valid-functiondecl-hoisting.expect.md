@@ -34,10 +34,15 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
+Found 1 error:
+
+Todo: [PruneHoistedContexts] Rewrite hoisted function references
+
+error.todo-valid-functiondecl-hoisting.ts:13:11
   11 |
   12 |   function foo() {
 > 13 |     return bar();
-     |            ^^^ Todo: [PruneHoistedContexts] Rewrite hoisted function references (13:13)
+     |            ^^^ [PruneHoistedContexts] Rewrite hoisted function references
   14 |   }
   15 |   function bar() {
   16 |     return 42;

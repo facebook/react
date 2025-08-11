@@ -21,6 +21,8 @@ import type {
   InspectedElementPath,
 } from 'react-devtools-shared/src/frontend/types';
 
+import noop from 'shared/noop';
+
 export const meta = {
   inspectable: (Symbol('inspectable'): symbol),
   inspected: (Symbol('inspected'): symbol),
@@ -315,6 +317,15 @@ export function dehydrate(
           name: data.toString(),
           type,
         };
+      }
+
+      if (
+        data.status === 'resolved_model' ||
+        data.status === 'resolve_module'
+      ) {
+        // This looks it's a lazy initialization pattern such in Flight.
+        // Since we're about to inspect it. Let's eagerly initialize it.
+        data.then(noop);
       }
 
       switch (data.status) {

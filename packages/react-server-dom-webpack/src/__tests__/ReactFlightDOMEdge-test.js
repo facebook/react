@@ -1915,4 +1915,57 @@ describe('ReactFlightDOMEdge', () => {
       expect(ownerStack).toBeNull();
     }
   });
+
+  it('can pass an async import that resolves later as a prop to a null component', async () => {
+    let resolveClientComponentChunk;
+    const client = clientExports(
+      {
+        foo: 'bar',
+      },
+      '42',
+      '/test.js',
+      new Promise(resolve => (resolveClientComponentChunk = resolve)),
+    );
+
+    function ServerComponent(props) {
+      return null;
+    }
+
+    function App() {
+      return (
+        <div>
+          <ServerComponent client={client} />
+        </div>
+      );
+    }
+
+    const stream = await serverAct(() =>
+      passThrough(
+        ReactServerDOMServer.renderToReadableStream(<App />, webpackMap),
+      ),
+    );
+
+    // Parsing the root blocks because the module hasn't loaded yet
+    const response = ReactServerDOMClient.createFromReadableStream(stream, {
+      serverConsumerManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+
+    function ClientRoot() {
+      return use(response);
+    }
+
+    // Initialize to be blocked.
+    response.then(() => {});
+    // Unblock.
+    resolveClientComponentChunk();
+
+    const ssrStream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(<ClientRoot />),
+    );
+    const result = await readResult(ssrStream);
+    expect(result).toEqual('<div></div>');
+  });
 });

@@ -29,12 +29,30 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
+Found 2 errors:
+
+Memoization: Compilation skipped because existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This dependency may be mutated later, which could cause the value to change unexpectedly.
+
+error.invalid-useCallback-captures-reassigned-context.ts:11:37
    9 |
   10 |   // makeArray() is captured, but depsList contains [props]
 > 11 |   const cb = useCallback(() => [x], [x]);
-     |                                      ^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This dependency may be mutated later, which could cause the value to change unexpectedly (11:11)
+     |                                      ^ This dependency may be modified later
+  12 |
+  13 |   x = makeArray();
+  14 |
 
-CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output. (11:11)
+Memoization: Compilation skipped because existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.
+
+error.invalid-useCallback-captures-reassigned-context.ts:11:25
+   9 |
+  10 |   // makeArray() is captured, but depsList contains [props]
+> 11 |   const cb = useCallback(() => [x], [x]);
+     |                          ^^^^^^^^^ Could not preserve existing memoization
   12 |
   13 |   x = makeArray();
   14 |

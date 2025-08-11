@@ -21,10 +21,15 @@ function Component({foo}) {
 ## Error
 
 ```
+Found 1 error:
+
+Todo: Support destructuring of context variables
+
+error.todo-reassign-const.ts:3:20
   1 | import {Stringify} from 'shared-runtime';
   2 |
 > 3 | function Component({foo}) {
-    |                     ^^^ Todo: Support destructuring of context variables (3:3)
+    |                     ^^^ Support destructuring of context variables
   4 |   let bar = foo.bar;
   5 |   return (
   6 |     <Stringify

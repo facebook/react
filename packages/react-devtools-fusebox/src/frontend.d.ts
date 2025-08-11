@@ -34,17 +34,26 @@ export type ReactFunctionLocation = [
   number, // enclosing line number
   number, // enclosing column number
 ];
+export type ReactCallSite = [
+  string, // function name
+  string, // file name TODO: model nested eval locations as nested arrays
+  number, // line number
+  number, // column number
+  number, // enclosing line number
+  number, // enclosing column number
+  boolean, // async resume
+];
 export type ViewElementSource = (
-  source: ReactFunctionLocation,
-  symbolicatedSource: ReactFunctionLocation | null,
+  source: ReactFunctionLocation | ReactCallSite,
+  symbolicatedSource: ReactFunctionLocation | ReactCallSite | null,
 ) => void;
 export type ViewAttributeSource = (
   id: number,
   path: Array<string | number>,
 ) => void;
 export type CanViewElementSource = (
-  source: ReactFunctionLocation,
-  symbolicatedSource: ReactFunctionLocation | null,
+  source: ReactFunctionLocation | ReactCallSite,
+  symbolicatedSource: ReactFunctionLocation | ReactCallSite | null,
 ) => boolean;
 
 export type InitializationOptions = {
