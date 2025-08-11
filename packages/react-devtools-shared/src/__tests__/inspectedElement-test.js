@@ -791,7 +791,7 @@ describe('InspectedElement', () => {
         "react_lazy": {
           "_payload": Dehydrated {
             "preview_short": {…},
-            "preview_long": {_result: () => {}, _status: -1},
+            "preview_long": {_ioInfo: {…}, _result: () => {}, _status: -1},
           },
         },
         "regexp": Dehydrated {

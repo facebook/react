@@ -8,6 +8,7 @@
  */
 
 import type {
+  Thenable,
   ReactComponentInfo,
   ReactDebugInfo,
   ReactAsyncInfo,
@@ -3181,6 +3182,39 @@ export function attach(
     }
   }
 
+  function trackDebugInfoFromUsedThenables(fiber: Fiber): void {
+    // If a Fiber called use() in DEV mode then we may have collected _debugThenableState on
+    // the dependencies. If so, then this will contain the thenables passed to use().
+    // These won't have their debug info picked up by fiber._debugInfo since that just
+    // contains things suspending the children. We have to collect use() separately.
+    const dependencies = fiber.dependencies;
+    if (dependencies == null) {
+      return;
+    }
+    const thenableState = dependencies._debugThenableState;
+    if (thenableState == null) {
+      return;
+    }
+    // In DEV the thenableState is an inner object.
+    const usedThenables: any = thenableState.thenables || thenableState;
+    if (!Array.isArray(usedThenables)) {
+      return;
+    }
+    for (let i = 0; i < usedThenables.length; i++) {
+      const thenable: Thenable<mixed> = usedThenables[i];
+      const debugInfo = thenable._debugInfo;
+      if (debugInfo) {
+        for (let j = 0; j < debugInfo.length; j++) {
+          const debugEntry = debugInfo[i];
+          if (debugEntry.awaited) {
+            const asyncInfo: ReactAsyncInfo = (debugEntry: any);
+            insertSuspendedBy(asyncInfo);
+          }
+        }
+      }
+    }
+  }
+
   function mountVirtualChildrenRecursively(
     firstChild: Fiber,
     lastChild: null | Fiber, // non-inclusive
@@ -3400,6 +3434,7 @@ export function attach(
       }
 
       trackDebugInfoFromLazyType(fiber);
+      trackDebugInfoFromUsedThenables(fiber);
 
       if (fiber.tag === HostHoistable) {
         const nearestInstance = reconcilingParent;
@@ -4231,6 +4266,7 @@ export function attach(
     }
     try {
       trackDebugInfoFromLazyType(nextFiber);
+      trackDebugInfoFromUsedThenables(nextFiber);
 
       if (
         nextFiber.tag === HostHoistable &&
