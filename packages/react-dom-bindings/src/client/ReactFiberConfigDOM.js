@@ -124,6 +124,7 @@ import {
   enableSrcObject,
   enableViewTransition,
   enableHydrationChangeEvent,
+  enableFragmentRefsScrollIntoView,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -3248,46 +3249,48 @@ function validateDocumentPositionWithFiberTree(
   return false;
 }
 
-// $FlowFixMe[prop-missing]
-FragmentInstance.prototype.scrollIntoView = function (
-  this: FragmentInstanceType,
-  alignToTop?: boolean,
-): void {
-  if (typeof alignToTop === 'object') {
-    throw new Error(
-      'FragmentInstance.scrollIntoView() does not support ' +
-        'scrollIntoViewOptions. Use the alignToTop boolean instead.',
-    );
-  }
-  // First, get the children nodes
-  const children: Array<Fiber> = [];
-  traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
+if (enableFragmentRefsScrollIntoView) {
+  // $FlowFixMe[prop-missing]
+  FragmentInstance.prototype.experimental_scrollIntoView = function (
+    this: FragmentInstanceType,
+    alignToTop?: boolean,
+  ): void {
+    if (typeof alignToTop === 'object') {
+      throw new Error(
+        'FragmentInstance.experimental_scrollIntoView() does not support ' +
+          'scrollIntoViewOptions. Use the alignToTop boolean instead.',
+      );
+    }
+    // First, get the children nodes
+    const children: Array<Fiber> = [];
+    traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
 
-  // If there are no children, we can use the parent and siblings to determine a position
-  if (children.length === 0) {
-    const hostSiblings = getFragmentInstanceSiblings(this._fragmentFiber);
-    const targetFiber =
-      (alignToTop === false
-        ? hostSiblings[0] || hostSiblings[1]
-        : hostSiblings[1] || hostSiblings[0]) ||
-      getFragmentParentHostFiber(this._fragmentFiber);
-    if (targetFiber === null) {
-      if (__DEV__) {
-        console.error(
-          'You are attempting to scroll a FragmentInstance that has no ' +
-            'children, siblings, or parent. No scroll was performed.',
-        );
+    // If there are no children, we can use the parent and siblings to determine a position
+    if (children.length === 0) {
+      const hostSiblings = getFragmentInstanceSiblings(this._fragmentFiber);
+      const targetFiber =
+        (alignToTop === false
+          ? hostSiblings[0] || hostSiblings[1]
+          : hostSiblings[1] || hostSiblings[0]) ||
+        getFragmentParentHostFiber(this._fragmentFiber);
+      if (targetFiber === null) {
+        if (__DEV__) {
+          console.error(
+            'You are attempting to scroll a FragmentInstance that has no ' +
+              'children, siblings, or parent. No scroll was performed.',
+          );
+        }
+        return;
       }
+      const target = getInstanceFromHostFiber<Instance>(targetFiber);
+      target.scrollIntoView(alignToTop);
       return;
     }
-    const target = getInstanceFromHostFiber<Instance>(targetFiber);
-    target.scrollIntoView(alignToTop);
-    return;
-  }
 
-  // If there are children, handle them per scroll container
-  scrollIntoViewByScrollContainer(children, alignToTop !== false);
-};
+    // If there are children, handle them per scroll container
+    scrollIntoViewByScrollContainer(children, alignToTop !== false);
+  };
+}
 
 function isInstanceScrollable(inst: Instance): 0 | 1 | 2 {
   const style = getComputedStyle(inst);

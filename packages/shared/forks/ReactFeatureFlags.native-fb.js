@@ -27,6 +27,7 @@ export const {
   passChildrenWhenCloningPersistedNodes,
   renameElementSymbol,
   enableFragmentRefs,
+  enableFragmentRefsScrollIntoView,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.

@@ -1844,7 +1844,7 @@ describe('FragmentRefs', () => {
   });
 
   describe('scrollIntoView', () => {
-    // @gate enableFragmentRefs
+    // @gate enableFragmentRefs && enableFragmentRefsScrollIntoView
     it('does not yet support options', async () => {
       const fragmentRef = React.createRef();
       const root = ReactDOMClient.createRoot(container);
@@ -1853,15 +1853,15 @@ describe('FragmentRefs', () => {
       });
 
       expect(() => {
-        fragmentRef.current.scrollIntoView({block: 'start'});
+        fragmentRef.current.experimental_scrollIntoView({block: 'start'});
       }).toThrowError(
-        'FragmentInstance.scrollIntoView() does not support ' +
+        'FragmentInstance.experimental_scrollIntoView() does not support ' +
           'scrollIntoViewOptions. Use the alignToTop boolean instead.',
       );
     });
 
     describe('with children', () => {
-      // @gate enableFragmentRefs
+      // @gate enableFragmentRefs && enableFragmentRefsScrollIntoView
       it('calls scrollIntoView on the first child by default, or if alignToTop=true', async () => {
         const fragmentRef = React.createRef();
         const childARef = React.createRef();
@@ -1883,19 +1883,19 @@ describe('FragmentRefs', () => {
         childBRef.current.scrollIntoView = jest.fn();
 
         // Default call
-        fragmentRef.current.scrollIntoView();
+        fragmentRef.current.experimental_scrollIntoView();
         expect(childARef.current.scrollIntoView).toHaveBeenCalledTimes(1);
         expect(childBRef.current.scrollIntoView).toHaveBeenCalledTimes(0);
 
         childARef.current.scrollIntoView.mockClear();
 
         // alignToTop=true
-        fragmentRef.current.scrollIntoView(true);
+        fragmentRef.current.experimental_scrollIntoView(true);
         expect(childARef.current.scrollIntoView).toHaveBeenCalledTimes(1);
         expect(childBRef.current.scrollIntoView).toHaveBeenCalledTimes(0);
       });
 
-      // @gate enableFragmentRefs
+      // @gate enableFragmentRefs && enableFragmentRefsScrollIntoView
       it('calls scrollIntoView on the last child if alignToTop is false', async () => {
         const fragmentRef = React.createRef();
         const childARef = React.createRef();
@@ -1913,12 +1913,12 @@ describe('FragmentRefs', () => {
         childARef.current.scrollIntoView = jest.fn();
         childBRef.current.scrollIntoView = jest.fn();
 
-        fragmentRef.current.scrollIntoView(false);
+        fragmentRef.current.experimental_scrollIntoView(false);
         expect(childARef.current.scrollIntoView).toHaveBeenCalledTimes(0);
         expect(childBRef.current.scrollIntoView).toHaveBeenCalledTimes(1);
       });
 
-      // @gate enableFragmentRefs
+      // @gate enableFragmentRefs && enableFragmentRefsScrollIntoView
       it('handles portaled elements -- same scroll container', async () => {
         const fragmentRef = React.createRef();
         const childARef = React.createRef();
@@ -1950,12 +1950,12 @@ describe('FragmentRefs', () => {
         childBRef.current.scrollIntoView = jest.fn();
 
         // Default call
-        fragmentRef.current.scrollIntoView();
+        fragmentRef.current.experimental_scrollIntoView();
         expect(childARef.current.scrollIntoView).toHaveBeenCalledTimes(1);
         expect(childBRef.current.scrollIntoView).toHaveBeenCalledTimes(0);
       });
 
-      // @gate enableFragmentRefs
+      // @gate enableFragmentRefs && enableFragmentRefsScrollIntoView
       it('handles portaled elements -- different scroll container', async () => {
         const fragmentRef = React.createRef();
         const headerChildRef = React.createRef();
@@ -2086,7 +2086,7 @@ describe('FragmentRefs', () => {
         });
 
         // Default call
-        fragmentRef.current.scrollIntoView();
+        fragmentRef.current.experimental_scrollIntoView();
         expect(childCRef.current.scrollIntoView).toHaveBeenCalledTimes(1);
         // In the same group as A, we use the first child
         expect(childBRef.current.scrollIntoView).toHaveBeenCalledTimes(0);
@@ -2102,7 +2102,7 @@ describe('FragmentRefs', () => {
         logs = [];
 
         // // alignToTop=false
-        fragmentRef.current.scrollIntoView(false);
+        fragmentRef.current.experimental_scrollIntoView(false);
         expect(headerChildRef.current.scrollIntoView).toHaveBeenCalledTimes(1);
         // In the same group as B, only attempt B which is the last child
         expect(childARef.current.scrollIntoView).toHaveBeenCalledTimes(0);
@@ -2116,7 +2116,7 @@ describe('FragmentRefs', () => {
     });
 
     describe('without children', () => {
-      // @gate enableFragmentRefs
+      // @gate enableFragmentRefs && enableFragmentRefsScrollIntoView
       it('calls scrollIntoView on the next sibling by default, or if alignToTop=true', async () => {
         const fragmentRef = React.createRef();
         const siblingARef = React.createRef();
@@ -2138,19 +2138,19 @@ describe('FragmentRefs', () => {
         siblingBRef.current.scrollIntoView = jest.fn();
 
         // Default call
-        fragmentRef.current.scrollIntoView();
+        fragmentRef.current.experimental_scrollIntoView();
         expect(siblingARef.current.scrollIntoView).toHaveBeenCalledTimes(0);
         expect(siblingBRef.current.scrollIntoView).toHaveBeenCalledTimes(1);
 
         siblingBRef.current.scrollIntoView.mockClear();
 
         // alignToTop=true
-        fragmentRef.current.scrollIntoView(true);
+        fragmentRef.current.experimental_scrollIntoView(true);
         expect(siblingARef.current.scrollIntoView).toHaveBeenCalledTimes(0);
         expect(siblingBRef.current.scrollIntoView).toHaveBeenCalledTimes(1);
       });
 
-      // @gate enableFragmentRefs
+      // @gate enableFragmentRefs && enableFragmentRefsScrollIntoView
       it('calls scrollIntoView on the prev sibling if alignToTop is false', async () => {
         const fragmentRef = React.createRef();
         const siblingARef = React.createRef();
@@ -2182,12 +2182,12 @@ describe('FragmentRefs', () => {
         siblingBRef.current.scrollIntoView = jest.fn();
 
         // alignToTop=false
-        fragmentRef.current.scrollIntoView(false);
+        fragmentRef.current.experimental_scrollIntoView(false);
         expect(siblingARef.current.scrollIntoView).toHaveBeenCalledTimes(1);
         expect(siblingBRef.current.scrollIntoView).toHaveBeenCalledTimes(0);
       });
 
-      // @gate enableFragmentRefs
+      // @gate enableFragmentRefs && enableFragmentRefsScrollIntoView
       it('calls scrollIntoView on the parent if there are no siblings', async () => {
         const fragmentRef = React.createRef();
         const parentRef = React.createRef();
@@ -2203,7 +2203,7 @@ describe('FragmentRefs', () => {
         });
 
         parentRef.current.scrollIntoView = jest.fn();
-        fragmentRef.current.scrollIntoView();
+        fragmentRef.current.experimental_scrollIntoView();
         expect(parentRef.current.scrollIntoView).toHaveBeenCalledTimes(1);
       });
     });
