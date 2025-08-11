@@ -3289,6 +3289,8 @@ export function attach(
       start,
       end,
       value: promise,
+      // $FlowFixMe: This field doesn't usually take a Fiber but we're only using inside this file.
+      owner: fiber, // Allow linking to the <link> if it's not filtered.
     };
     const asyncInfo: ReactAsyncInfo = {
       awaited: ioInfo,
