@@ -3219,6 +3219,94 @@ export function attach(
     }
   }
 
+  const hostAsyncInfoCache: WeakMap<{...}, ReactAsyncInfo> = new WeakMap();
+
+  function trackDebugInfoFromHostResource(
+    devtoolsInstance: DevToolsInstance,
+    fiber: Fiber,
+  ): void {
+    const resource: ?{
+      type: 'stylesheet' | 'style' | 'script' | 'void',
+      instance?: null | HostInstance,
+      ...
+    } = fiber.memoizedState;
+    if (resource == null) {
+      return;
+    }
+
+    // Use a cached entry based on the resource. This ensures that if we use the same
+    // resource in multiple places, it gets deduped and inner boundaries don't consider it
+    // as contributing to those boundaries.
+    const existingEntry = hostAsyncInfoCache.get(resource);
+    if (existingEntry !== undefined) {
+      insertSuspendedBy(existingEntry);
+      return;
+    }
+
+    const props: {
+      href?: string,
+      media?: string,
+      ...
+    } = fiber.memoizedProps;
+
+    // Stylesheet resources may suspend. We need to track that.
+    const mayResourceSuspendCommit =
+      resource.type === 'stylesheet' &&
+      // If it doesn't match the currently debugged media, then it doesn't count.
+      (typeof props.media !== 'string' ||
+        typeof matchMedia !== 'function' ||
+        matchMedia(props.media));
+    if (!mayResourceSuspendCommit) {
+      return;
+    }
+
+    const instance = resource.instance;
+    if (instance == null) {
+      return;
+    }
+
+    // Unlike props.href, this href will be fully qualified which we need for comparison below.
+    const href = instance.href;
+    if (typeof href !== 'string') {
+      return;
+    }
+    let start = -1;
+    let end = -1;
+    // $FlowFixMe[method-unbinding]
+    if (typeof performance.getEntriesByType === 'function') {
+      // We may be able to collect the start and end time of this resource from Performance Observer.
+      const resourceEntries = performance.getEntriesByType('resource');
+      for (let i = 0; i < resourceEntries.length; i++) {
+        const resourceEntry = resourceEntries[i];
+        if (resourceEntry.name === href) {
+          start = resourceEntry.startTime;
+          end = start + resourceEntry.duration;
+        }
+      }
+    }
+    const value = instance.sheet;
+    const promise = Promise.resolve(value);
+    (promise: any).status = 'fulfilled';
+    (promise: any).value = value;
+    const ioInfo: ReactIOInfo = {
+      name: 'stylesheet',
+      start,
+      end,
+      value: promise,
+      // $FlowFixMe: This field doesn't usually take a Fiber but we're only using inside this file.
+      owner: fiber, // Allow linking to the <link> if it's not filtered.
+    };
+    const asyncInfo: ReactAsyncInfo = {
+      awaited: ioInfo,
+      // $FlowFixMe: This field doesn't usually take a Fiber but we're only using inside this file.
+      owner: fiber._debugOwner == null ? null : fiber._debugOwner,
+      debugStack: fiber._debugStack == null ? null : fiber._debugStack,
+      debugTask: fiber._debugTask == null ? null : fiber._debugTask,
+    };
+    hostAsyncInfoCache.set(resource, asyncInfo);
+    insertSuspendedBy(asyncInfo);
+  }
+
   function mountVirtualChildrenRecursively(
     firstChild: Fiber,
     lastChild: null | Fiber, // non-inclusive
@@ -3446,6 +3534,7 @@ export function attach(
           throw new Error('Did not expect a host hoistable to be the root');
         }
         aquireHostResource(nearestInstance, fiber.memoizedState);
+        trackDebugInfoFromHostResource(nearestInstance, fiber);
       } else if (
         fiber.tag === HostComponent ||
         fiber.tag === HostText ||
@@ -4282,6 +4371,7 @@ export function attach(
         }
         releaseHostResource(nearestInstance, prevFiber.memoizedState);
         aquireHostResource(nearestInstance, nextFiber.memoizedState);
+        trackDebugInfoFromHostResource(nearestInstance, nextFiber);
       } else if (
         (nextFiber.tag === HostComponent ||
           nextFiber.tag === HostText ||

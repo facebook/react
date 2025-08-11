@@ -178,9 +178,12 @@ function SuspendedByRow({
               }
             />
           )}
-          {(showIOStack || !showAwaitStack) &&
-          ioOwner !== null &&
-          ioOwner.id !== inspectedElement.id ? (
+          {ioOwner !== null &&
+          ioOwner.id !== inspectedElement.id &&
+          (showIOStack ||
+            !showAwaitStack ||
+            asyncOwner === null ||
+            ioOwner.id !== asyncOwner.id) ? (
             <OwnerView
               key={ioOwner.id}
               displayName={ioOwner.displayName || 'Anonymous'}
