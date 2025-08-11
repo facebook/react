@@ -3480,7 +3480,25 @@ export function attach(
         // Measure this Suspense node. In general we shouldn't do this until we have
         // inserted the new children but since we know this is a FiberInstance we'll
         // just use the Fiber anyway.
-        newSuspenseNode.rects = measureInstance(newInstance);
+        // Fallbacks get attributed to the parent so we only measure if we're
+        // showing primary content.
+        if (OffscreenComponent === -1) {
+          const isTimedOut = fiber.memoizedState !== null;
+          if (!isTimedOut) {
+            newSuspenseNode.rects = measureInstance(newInstance);
+          }
+        } else {
+          const contentFiber = fiber.child;
+          if (contentFiber === null) {
+            throw new Error(
+              'There should always be an Offscreen Fiber child in a Suspense boundary.',
+            );
+          }
+          const isTimedOut = fiber.memoizedState !== null;
+          if (!isTimedOut) {
+            newSuspenseNode.rects = measureInstance(newInstance);
+          }
+        }
         recordSuspenseMount(newSuspenseNode, reconcilingParentSuspenseNode);
       }
       insertChild(newInstance);
@@ -3514,7 +3532,25 @@ export function attach(
         // Measure this Suspense node. In general we shouldn't do this until we have
         // inserted the new children but since we know this is a FiberInstance we'll
         // just use the Fiber anyway.
-        newSuspenseNode.rects = measureInstance(newInstance);
+        // Fallbacks get attributed to the parent so we only measure if we're
+        // showing primary content.
+        if (OffscreenComponent === -1) {
+          const isTimedOut = fiber.memoizedState !== null;
+          if (!isTimedOut) {
+            newSuspenseNode.rects = measureInstance(newInstance);
+          }
+        } else {
+          const contentFiber = fiber.child;
+          if (contentFiber === null) {
+            throw new Error(
+              'There should always be an Offscreen Fiber child in a Suspense boundary.',
+            );
+          }
+          const isTimedOut = fiber.memoizedState !== null;
+          if (!isTimedOut) {
+            newSuspenseNode.rects = measureInstance(newInstance);
+          }
+        }
       }
       insertChild(newInstance);
       if (__DEBUG__) {

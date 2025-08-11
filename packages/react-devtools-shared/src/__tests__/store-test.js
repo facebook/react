@@ -493,7 +493,7 @@ describe('Store', () => {
             ▾ <Suspense>
                 <Loading>
         [shell]
-          <Suspense name="Wrapper>?" rects={[{x:1,y:2,width:10,height:1}]}>
+          <Suspense name="Wrapper>?" rects={null}>
       `);
 
       await act(() => {
@@ -562,7 +562,7 @@ describe('Store', () => {
         </React.Fragment>
       );
 
-      await act(() =>
+      await actAsync(() =>
         render(
           <Wrapper
             suspendParent={false}
@@ -588,7 +588,7 @@ describe('Store', () => {
           <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}]}>
             <Suspense name="one" rects={null}>
             <Suspense name="two" rects={null}>
-            <Suspense name="three" rects={[{x:1,y:2,width:10,height:1}]}>
+            <Suspense name="three" rects={null}>
       `);
       await act(() =>
         render(
@@ -616,7 +616,7 @@ describe('Store', () => {
           <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
             <Suspense name="one" rects={null}>
             <Suspense name="two" rects={null}>
-            <Suspense name="three" rects={[{x:1,y:2,width:10,height:1}]}>
+            <Suspense name="three" rects={null}>
       `);
       await act(() =>
         render(
@@ -644,7 +644,7 @@ describe('Store', () => {
           <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
             <Suspense name="one" rects={null}>
             <Suspense name="two" rects={null}>
-            <Suspense name="three" rects={[{x:1,y:2,width:10,height:1}]}>
+            <Suspense name="three" rects={null}>
       `);
       await act(() =>
         render(
@@ -672,7 +672,7 @@ describe('Store', () => {
           <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
             <Suspense name="one" rects={null}>
             <Suspense name="two" rects={null}>
-            <Suspense name="three" rects={[{x:1,y:2,width:10,height:1}]}>
+            <Suspense name="three" rects={null}>
       `);
       await act(() =>
         render(
@@ -693,7 +693,7 @@ describe('Store', () => {
           <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
             <Suspense name="one" rects={null}>
             <Suspense name="two" rects={null}>
-            <Suspense name="three" rects={[{x:1,y:2,width:10,height:1}]}>
+            <Suspense name="three" rects={null}>
       `);
       await act(() =>
         render(
@@ -721,7 +721,7 @@ describe('Store', () => {
           <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
             <Suspense name="one" rects={null}>
             <Suspense name="two" rects={null}>
-            <Suspense name="three" rects={[{x:1,y:2,width:10,height:1}]}>
+            <Suspense name="three" rects={null}>
       `);
       await act(() =>
         render(
@@ -749,7 +749,7 @@ describe('Store', () => {
           <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}]}>
             <Suspense name="one" rects={null}>
             <Suspense name="two" rects={null}>
-            <Suspense name="three" rects={[{x:1,y:2,width:10,height:1}]}>
+            <Suspense name="three" rects={null}>
       `);
 
       const rendererID = getRendererID();
@@ -777,7 +777,7 @@ describe('Store', () => {
           <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
             <Suspense name="one" rects={null}>
             <Suspense name="two" rects={null}>
-            <Suspense name="three" rects={[{x:1,y:2,width:10,height:1}]}>
+            <Suspense name="three" rects={null}>
       `);
       await act(() =>
         agent.overrideSuspense({
@@ -796,7 +796,7 @@ describe('Store', () => {
           <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
             <Suspense name="one" rects={null}>
             <Suspense name="two" rects={null}>
-            <Suspense name="three" rects={[{x:1,y:2,width:10,height:1}]}>
+            <Suspense name="three" rects={null}>
       `);
       await act(() =>
         render(
@@ -817,7 +817,7 @@ describe('Store', () => {
           <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
             <Suspense name="one" rects={null}>
             <Suspense name="two" rects={null}>
-            <Suspense name="three" rects={[{x:1,y:2,width:10,height:1}]}>
+            <Suspense name="three" rects={null}>
       `);
       await act(() =>
         agent.overrideSuspense({
@@ -843,7 +843,7 @@ describe('Store', () => {
           <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
             <Suspense name="one" rects={null}>
             <Suspense name="two" rects={null}>
-            <Suspense name="three" rects={[{x:1,y:2,width:10,height:1}]}>
+            <Suspense name="three" rects={null}>
       `);
       await act(() =>
         agent.overrideSuspense({
@@ -869,7 +869,7 @@ describe('Store', () => {
           <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
             <Suspense name="one" rects={null}>
             <Suspense name="two" rects={null}>
-            <Suspense name="three" rects={[{x:1,y:2,width:10,height:1}]}>
+            <Suspense name="three" rects={null}>
       `);
       await act(() =>
         render(
@@ -897,7 +897,7 @@ describe('Store', () => {
           <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}]}>
             <Suspense name="one" rects={null}>
             <Suspense name="two" rects={null}>
-            <Suspense name="three" rects={[{x:1,y:2,width:10,height:1}]}>
+            <Suspense name="three" rects={null}>
       `);
     });
 
@@ -938,7 +938,7 @@ describe('Store', () => {
               ▾ <Suspense>
                   <Loading>
         [shell]
-          <Suspense name="Wrapper>?" rects={[{x:1,y:2,width:10,height:1}]}>
+          <Suspense name="Wrapper>?" rects={null}>
       `);
 
       await act(() => {
@@ -1291,7 +1291,7 @@ describe('Store', () => {
         [root]
           ▸ <Wrapper>
         [shell]
-          <Suspense name="Wrapper>?" rects={[{x:1,y:2,width:10,height:1}]}>
+          <Suspense name="Wrapper>?" rects={null}>
       `);
 
       // This test isn't meaningful unless we expand the suspended tree
@@ -1308,7 +1308,7 @@ describe('Store', () => {
             ▾ <Suspense>
                 <Loading>
         [shell]
-          <Suspense name="Wrapper>?" rects={[{x:1,y:2,width:10,height:1}]}>
+          <Suspense name="Wrapper>?" rects={null}>
       `);
 
       await act(() => {
