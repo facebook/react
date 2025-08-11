@@ -104,11 +104,15 @@ function SuspendedByRow({
   // Only show the awaited stack if the I/O started in a different owner
   // than where it was awaited. If it's started by the same component it's
   // probably easy enough to infer and less noise in the common case.
+  const canShowAwaitStack =
+    (asyncInfo.stack !== null && asyncInfo.stack.length > 0) ||
+    (asyncOwner !== null && asyncOwner.id !== inspectedElement.id);
   const showAwaitStack =
-    !showIOStack ||
-    (ioOwner === null
-      ? asyncOwner !== null
-      : asyncOwner === null || ioOwner.id !== asyncOwner.id);
+    canShowAwaitStack &&
+    (!showIOStack ||
+      (ioOwner === null
+        ? asyncOwner !== null
+        : asyncOwner === null || ioOwner.id !== asyncOwner.id));
 
   const value: any = ioInfo.value;
   const metaName =
