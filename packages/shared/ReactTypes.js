@@ -298,6 +298,7 @@ export type ViewTransitionProps = {
 export type ActivityProps = {
   mode?: 'hidden' | 'visible' | null | void,
   children?: ReactNodeList,
+  name?: string,
 };
 
 export type SuspenseProps = {

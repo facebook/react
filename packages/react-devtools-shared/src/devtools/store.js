@@ -1116,6 +1116,7 @@ export default class Store extends EventEmitter<{
               isCollapsed: false, // Never collapse roots; it would hide the entire tree.
               isStrictModeNonCompliant,
               key: null,
+              nameProp: null,
               ownerID: 0,
               parentID: 0,
               type,
@@ -1137,6 +1138,10 @@ export default class Store extends EventEmitter<{
 
             const keyStringID = operations[i];
             const key = stringTable[keyStringID];
+            i++;
+
+            const namePropStringID = operations[i];
+            const nameProp = stringTable[namePropStringID];
             i++;
 
             if (__DEBUG__) {
@@ -1180,6 +1185,7 @@ export default class Store extends EventEmitter<{
               isCollapsed: this._collapseNodesByDefault,
               isStrictModeNonCompliant: parentElement.isStrictModeNonCompliant,
               key,
+              nameProp,
               ownerID,
               parentID,
               type,

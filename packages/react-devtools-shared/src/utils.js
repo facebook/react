@@ -271,6 +271,7 @@ export function printOperationsArray(operations: Array<number>) {
           i++;
 
           i++; // key
+          i++; // name
 
           logs.push(
             `Add node ${id} (${displayName || 'null'}) as child of ${parentID}`,
