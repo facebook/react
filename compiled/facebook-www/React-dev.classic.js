@@ -542,12 +542,19 @@ __DEV__ &&
     }
     function lazyInitializer(payload) {
       if (-1 === payload._status) {
-        var ctor = payload._result;
-        ctor = ctor();
-        ctor.then(
+        var ctor = payload._result,
+          thenable = ctor();
+        thenable.then(
           function (moduleObject) {
-            if (0 === payload._status || -1 === payload._status)
-              (payload._status = 1), (payload._result = moduleObject);
+            if (0 === payload._status || -1 === payload._status) {
+              payload._status = 1;
+              payload._result = moduleObject;
+              var _ioInfo = payload._ioInfo;
+              null != _ioInfo && (_ioInfo.end = performance.now());
+              void 0 === thenable.status &&
+                ((thenable.status = "fulfilled"),
+                (thenable.value = moduleObject));
+            }
           },
           function (error) {
             if (0 === payload._status || -1 === payload._status)
@@ -555,7 +562,7 @@ __DEV__ &&
           }
         );
         -1 === payload._status &&
-          ((payload._status = 0), (payload._result = ctor));
+          ((payload._status = 0), (payload._result = thenable));
       }
       if (1 === payload._status)
         return (
@@ -1434,7 +1441,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.2.0-www-classic-cf6e502e-20250809";
+    exports.version = "19.2.0-www-classic-f1e70b5e-20250811";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
