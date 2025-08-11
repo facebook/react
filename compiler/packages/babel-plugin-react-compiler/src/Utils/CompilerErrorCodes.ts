@@ -147,7 +147,7 @@ export const ErrorCodeDetails: Record<ErrorCode, ErrorCodeType> = {
     severity: ErrorSeverity.InvalidReact,
     reason: 'Cannot call impure functions during render',
     description:
-      'Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent)',
+      'Calling an impure function can produce unstable results that change unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent)',
     linterCategory: LinterCategory.IMPURE_FUNCTIONS,
   },
   [ErrorCode.JSX_IN_TRY]: {
@@ -253,7 +253,7 @@ export const ErrorCodeDetails: Record<ErrorCode, ErrorCodeType> = {
     severity: ErrorSeverity.InvalidReact,
     reason: 'useMemo() callbacks may not accept parameters',
     description:
-      'useMemo() callbacks are called by React to cache calculations across re-renders. They should not take parameters. Instead, directly reference the props, state, or local variables needed for the computation',
+      'useMemo() callbacks are called by React to cache calculations across re-renders. They cannot accept parameters. Instead, directly reference the props, state, or local variables needed for the computation',
     linterCategory: LinterCategory.VALIDATE_MANUAL_MEMO,
   },
   [ErrorCode.INVALID_USE_MEMO_CALLBACK_ASYNC]: {
@@ -338,7 +338,7 @@ export const ErrorCodeDetails: Record<ErrorCode, ErrorCodeType> = {
     code: ErrorCode.INVALID_WRITE_IMMUTABLE_VALUE_KNOWN_SIGNATURE,
     severity: ErrorSeverity.InvalidReact,
     reason:
-      'Modifying a value returned from a function whose return value should not be mutated',
+      'Modifying a value returned from a function whose return value cannot be mutated',
     linterCategory: LinterCategory.INVALID_WRITE,
   },
   [ErrorCode.INVALID_WRITE_IMMUTABLE_ARGS]: {
@@ -352,14 +352,14 @@ export const ErrorCodeDetails: Record<ErrorCode, ErrorCodeType> = {
     code: ErrorCode.INVALID_WRITE_STATE,
     severity: ErrorSeverity.InvalidReact,
     reason:
-      "Modifying a value returned from 'useState()', which should not be modified directly. Use the setter function to update instead",
+      "Modifying a value returned from 'useState()', which cannot be modified directly. Use the setter function to update instead",
     linterCategory: LinterCategory.INVALID_WRITE,
   },
   [ErrorCode.INVALID_WRITE_REDUCER_STATE]: {
     code: ErrorCode.INVALID_WRITE_REDUCER_STATE,
     severity: ErrorSeverity.InvalidReact,
     reason:
-      "Modifying a value returned from 'useReducer()', which should not be modified directly. Use the dispatch function to update instead",
+      "Modifying a value returned from 'useReducer()', which cannot be modified directly. Use the dispatch function to update instead",
     linterCategory: LinterCategory.INVALID_WRITE,
   },
   [ErrorCode.INVALID_WRITE_EFFECT_DEPENDENCY]: {

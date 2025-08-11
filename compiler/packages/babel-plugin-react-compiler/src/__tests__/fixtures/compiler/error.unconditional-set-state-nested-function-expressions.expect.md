@@ -38,7 +38,7 @@ error.unconditional-set-state-nested-function-expressions.ts:16:2
   14 |     bar();
   15 |   };
 > 16 |   baz();
-     |   ^^^ Found setState() call here
+     |   ^^^ Found setState() during render
   17 |
   18 |   return [x];
   19 | }

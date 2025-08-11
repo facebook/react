@@ -32,7 +32,7 @@ error.unconditional-set-state-in-render-after-loop-break.ts:11:2
    9 |     }
   10 |   }
 > 11 |   setState(true);
-     |   ^^^^^^^^ Found setState() call here
+     |   ^^^^^^^^ Found setState() during render
   12 |   return state;
   13 | }
   14 |

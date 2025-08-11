@@ -29,7 +29,7 @@ error.invalid-unconditional-set-state-in-render.ts:6:2
   4 |   const aliased = setX;
   5 |
 > 6 |   setX(1);
-    |   ^^^^ Found setState() call here
+    |   ^^^^ Found setState() during render
   7 |   aliased(2);
   8 |
   9 |   return x;
@@ -42,7 +42,7 @@ error.invalid-unconditional-set-state-in-render.ts:7:2
    5 |
    6 |   setX(1);
 >  7 |   aliased(2);
-     |   ^^^^^^^ Found setState() call here
+     |   ^^^^^^^ Found setState() during render
    8 |
    9 |   return x;
   10 | }
