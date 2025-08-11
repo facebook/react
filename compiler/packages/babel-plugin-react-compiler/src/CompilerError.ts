@@ -129,7 +129,7 @@ export class CompilerDiagnostic {
     const errorEntry = ErrorCodeDetails[code];
     let description = undefined;
     if (errorEntry.description != null) {
-      description = errorEntry.description;
+      description = endWithPeriod(errorEntry.description);
     }
     if (options?.description != null && options.description.length > 0) {
       if (description != null && description.length > 0) {
@@ -137,7 +137,7 @@ export class CompilerDiagnostic {
       } else {
         description = '';
       }
-      description += options.description;
+      description += endWithPeriod(options.description);
     }
 
     const diagnosticOptions: CompilerDiagnosticOptions = {
@@ -185,7 +185,7 @@ export class CompilerDiagnostic {
   printErrorMessage(source: string, options: PrintErrorMessageOptions): string {
     const buffer = [printErrorSummary(this.severity, this.category)];
     if (this.description != null) {
-      buffer.push(`\n\n${this.description}`);
+      buffer.push(`\n\n${endWithPeriod(this.description)}`);
     }
     for (const detail of this.options.details) {
       switch (detail.kind) {
@@ -225,7 +225,7 @@ export class CompilerDiagnostic {
   toString(): string {
     const buffer = [printErrorSummary(this.severity, this.category)];
     if (this.description != null) {
-      buffer.push(`. ${this.description}.`);
+      buffer.push(`. ${endWithPeriod(this.description)}`);
     }
     const loc = this.primaryLocation();
     if (loc != null && typeof loc !== 'symbol') {
@@ -283,23 +283,26 @@ export class CompilerErrorDetail {
   get description(): string | null | undefined {
     if (this.options.errorCode != null) {
       let description = undefined;
-      if (ErrorCodeDetails[this.options.errorCode].description != null) {
-        description = ErrorCodeDetails[this.options.errorCode].description;
+      const errorEntry = ErrorCodeDetails[this.options.errorCode];
+      if (errorEntry.description != null) {
+        description = endWithPeriod(errorEntry.description);
       }
       if (
         this.options.description != null &&
         this.options.description.length > 0
       ) {
         if (description != null && description.length > 0) {
-          description += '. ';
+          description += ' ';
         } else {
           description = '';
         }
-        description += this.options.description;
+        description += endWithPeriod(this.options.description);
       }
       return description;
     }
-    return this.options.description;
+    return this.options.description != null
+      ? endWithPeriod(this.options.description)
+      : this.options.description;
   }
   get severity(): ErrorSeverity {
     if (this.options.errorCode != null) {
@@ -327,7 +330,7 @@ export class CompilerErrorDetail {
   printErrorMessage(source: string, options: PrintErrorMessageOptions): string {
     const buffer = [printErrorSummary(this.severity, this.reason)];
     if (this.description != null) {
-      buffer.push(`\n\n${this.description}.`);
+      buffer.push(`\n\n${endWithPeriod(this.description)}`);
     }
     const loc = this.loc;
     if (loc != null && typeof loc !== 'symbol') {
@@ -352,7 +355,7 @@ export class CompilerErrorDetail {
   toString(): string {
     const buffer = [printErrorSummary(this.severity, this.reason)];
     if (this.description != null) {
-      buffer.push(`. ${this.description}.`);
+      buffer.push(`. ${endWithPeriod(this.description)}`);
     }
     const loc = this.loc;
     if (loc != null && typeof loc !== 'symbol') {
@@ -591,4 +594,11 @@ function printErrorSummary(severity: ErrorSeverity, message: string): string {
     }
   }
   return `${severityCategory}: ${message}`;
+}
+
+function endWithPeriod(s: string): string {
+  if (s === '' || s.endsWith('.')) {
+    return s;
+  }
+  return `${s.replace(/\.+$/, '')}.`;
 }

@@ -289,7 +289,7 @@ function validateInferredDep(
               errorDiagnostic
                 ? getCompareDependencyResultDescription(errorDiagnostic)
                 : 'Inferred dependency not present in source'
-            }.`
+            }`
           : '',
       suggestions: null,
     }).withDetail({
@@ -566,7 +566,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
               state.errors.pushDiagnostic(
                 CompilerDiagnostic.fromCode(ErrorCode.MANUAL_MEMO_REMOVED, {
                   description: DEBUG
-                    ? `${printIdentifier(identifier)} was not memoized.`
+                    ? `${printIdentifier(identifier)} was not memoized`
                     : '',
                 }).withDetail({
                   kind: 'error',

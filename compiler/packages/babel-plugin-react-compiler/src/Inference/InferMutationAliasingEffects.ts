@@ -457,7 +457,7 @@ function applySignature(
               place: effect.value,
               // TODO: remove ERROR_CODE.INVALID_WRITE and update test fixtures
               error: CompilerDiagnostic.fromCode(ErrorCode.INVALID_WRITE, {
-                description: ErrorCodeDetails[errorCode].reason + '.',
+                description: ErrorCodeDetails[errorCode].reason,
               }).withDetail({
                 kind: 'error',
                 loc: effect.value.loc,
@@ -1074,7 +1074,7 @@ function applyEffect(
               place: effect.value,
               // TODO: remove ERROR_CODE.INVALID_WRITE and update test fixtures
               error: CompilerDiagnostic.fromCode(ErrorCode.INVALID_WRITE, {
-                description: ErrorCodeDetails[errorCode].reason + '.',
+                description: ErrorCodeDetails[errorCode].reason,
               }).withDetail({
                 kind: 'error',
                 loc: effect.value.loc,
