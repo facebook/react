@@ -75,6 +75,7 @@ export const enableDefaultTransitionIndicator = false;
 export const ownerStackLimit = 1e4;
 
 export const enableFragmentRefs = false;
+export const enableFragmentRefsScrollIntoView = false;
 
 // TODO: This must be in sync with the main ReactFeatureFlags file because
 // the Test Renderer's value must be the same as the one used by the
