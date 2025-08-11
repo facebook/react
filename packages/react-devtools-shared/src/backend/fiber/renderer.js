@@ -86,6 +86,7 @@ import {
   SUSPENSE_TREE_OPERATION_ADD,
   SUSPENSE_TREE_OPERATION_REMOVE,
   SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
+  SUSPENSE_TREE_OPERATION_RESIZE,
 } from '../../constants';
 import {inspectHooksOfFiber} from 'react-debug-tools';
 import {
@@ -2558,6 +2559,20 @@ export function attach(
     pushOperation(fiberID);
     pushOperation(parentID);
     pushOperation(nameStringID);
+
+    const rects = suspenseInstance.rects;
+    if (rects === null) {
+      pushOperation(-1);
+    } else {
+      pushOperation(rects.length);
+      for (let i = 0; i < rects.length; ++i) {
+        const rect = rects[i];
+        pushOperation(Math.round(rect.x));
+        pushOperation(Math.round(rect.y));
+        pushOperation(Math.round(rect.width));
+        pushOperation(Math.round(rect.height));
+      }
+    }
   }
 
   function recordUnmount(fiberInstance: FiberInstance): void {
@@ -2606,7 +2621,30 @@ export function attach(
   }
 
   function recordSuspenseResize(suspenseNode: SuspenseNode): void {
-    // TODO: Notify the front end of the change.
+    if (__DEBUG__) {
+      console.log('recordSuspenseResize()', suspenseNode);
+    }
+    const fiberInstance = suspenseNode.instance;
+    if (fiberInstance.kind !== FIBER_INSTANCE) {
+      // TODO: Resizes of filtered Suspense nodes are currently dropped.
+      return;
+    }
+
+    pushOperation(SUSPENSE_TREE_OPERATION_RESIZE);
+    pushOperation(fiberInstance.id);
+    const rects = suspenseNode.rects;
+    if (rects === null) {
+      pushOperation(-1);
+    } else {
+      pushOperation(rects.length);
+      for (let i = 0; i < rects.length; ++i) {
+        const rect = rects[i];
+        pushOperation(Math.round(rect.x));
+        pushOperation(Math.round(rect.y));
+        pushOperation(Math.round(rect.width));
+        pushOperation(Math.round(rect.height));
+      }
+    }
   }
 
   function recordSuspenseUnmount(suspenseInstance: SuspenseNode): void {

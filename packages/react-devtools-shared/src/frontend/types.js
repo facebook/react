@@ -185,11 +185,19 @@ export type Element = {
   compiledWithForget: boolean,
 };
 
+export type Rect = {
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+};
+
 export type SuspenseNode = {
   id: Element['id'],
   parentID: SuspenseNode['id'] | 0,
   children: Array<SuspenseNode['id']>,
   name: string | null,
+  rects: null | Array<Rect>,
 };
 
 // Serialized version of ReactIOInfo

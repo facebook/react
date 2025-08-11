@@ -19,6 +19,7 @@ import {
   SUSPENSE_TREE_OPERATION_ADD,
   SUSPENSE_TREE_OPERATION_REMOVE,
   SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
+  SUSPENSE_TREE_OPERATION_RESIZE,
 } from 'react-devtools-shared/src/constants';
 import {
   parseElementDisplayNameFromBackend,
@@ -376,16 +377,26 @@ function updateTree(
         const fiberID = operations[i + 1];
         const parentID = operations[i + 2];
         const nameStringID = operations[i + 3];
+        const numRects = operations[i + 4];
         const name = stringTable[nameStringID];
 
-        i += 4;
-
         if (__DEBUG__) {
+          let rects: string;
+          if (numRects === -1) {
+            rects = 'null';
+          } else {
+            rects =
+              '[' +
+              operations.slice(i + 5, i + 5 + numRects * 4).join(',') +
+              ']';
+          }
           debug(
             'Add suspense',
-            `node ${fiberID} (${String(name)}) under ${parentID}`,
+            `node ${fiberID} (name=${JSON.stringify(name)}, rects={${rects}}) under ${parentID}`,
           );
         }
+
+        i += 5 + (numRects === -1 ? 0 : numRects * 4);
         break;
       }
 
@@ -412,6 +423,30 @@ function updateTree(
             `suspense ${suspenseID} children ${children.join(',')}`,
           );
         }
+
+        break;
+      }
+
+      case SUSPENSE_TREE_OPERATION_RESIZE: {
+        const suspenseID = ((operations[i + 1]: any): number);
+        const numRects = ((operations[i + 2]: any): number);
+
+        if (__DEBUG__) {
+          if (numRects === -1) {
+            debug('Suspense resize', `suspense ${suspenseID} rects null`);
+          } else {
+            const rects = ((operations.slice(
+              i + 3,
+              i + 3 + numRects * 4,
+            ): any): Array<number>);
+            debug(
+              'Suspense resize',
+              `suspense ${suspenseID} rects [${rects.join(',')}]`,
+            );
+          }
+        }
+
+        i += 3 + (numRects === -1 ? 0 : numRects * 4);
 
         break;
       }

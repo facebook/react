@@ -23,6 +23,7 @@ import {
   SUSPENSE_TREE_OPERATION_ADD,
   SUSPENSE_TREE_OPERATION_REMOVE,
   SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
+  SUSPENSE_TREE_OPERATION_RESIZE,
 } from '../constants';
 import {ElementTypeRoot} from '../frontend/types';
 import {
@@ -1418,6 +1419,7 @@ export default class Store extends EventEmitter<{
           const id = operations[i + 1];
           const parentID = operations[i + 2];
           const nameStringID = operations[i + 3];
+          const numRects = ((operations[i + 4]: any): number);
           let name = stringTable[nameStringID];
 
           if (this._idToSuspense.has(id)) {
@@ -1445,6 +1447,22 @@ export default class Store extends EventEmitter<{
                 // TODO: This is clowny
                 name = `${owner.displayName || 'Unknown'}>?`;
               }
+            }
+          }
+
+          i += 5;
+          let rects: SuspenseNode['rects'];
+          if (numRects === -1) {
+            rects = null;
+          } else {
+            rects = [];
+            for (let rectIndex = 0; rectIndex < numRects; rectIndex++) {
+              const x = operations[i + 0];
+              const y = operations[i + 1];
+              const width = operations[i + 2];
+              const height = operations[i + 3];
+              rects.push({x, y, width, height});
+              i += 4;
             }
           }
 
@@ -1476,9 +1494,8 @@ export default class Store extends EventEmitter<{
             parentID,
             children: [],
             name,
+            rects,
           });
-
-          i += 4;
 
           hasSuspenseTreeChanged = true;
           break;
@@ -1589,6 +1606,61 @@ export default class Store extends EventEmitter<{
           }
 
           hasSuspenseTreeChanged = true;
+          break;
+        }
+        case SUSPENSE_TREE_OPERATION_RESIZE: {
+          const id = ((operations[i + 1]: any): number);
+          const numRects = ((operations[i + 2]: any): number);
+          i += 3;
+
+          const suspense = this._idToSuspense.get(id);
+          if (suspense === undefined) {
+            this._throwAndEmitError(
+              Error(
+                `Cannot set rects for suspense node "${id}" because no matching node was found in the Store.`,
+              ),
+            );
+
+            break;
+          }
+
+          let nextRects: SuspenseNode['rects'];
+          if (numRects === -1) {
+            nextRects = null;
+          } else {
+            nextRects = [];
+            for (let rectIndex = 0; rectIndex < numRects; rectIndex++) {
+              const x = operations[i + 0];
+              const y = operations[i + 1];
+              const width = operations[i + 2];
+              const height = operations[i + 3];
+
+              nextRects.push({x, y, width, height});
+
+              i += 4;
+            }
+          }
+
+          suspense.rects = nextRects;
+
+          if (__DEBUG__) {
+            debug(
+              'Resize',
+              `Suspense node ${id} resize to ${
+                nextRects === null
+                  ? 'null'
+                  : nextRects
+                      .map(
+                        rect =>
+                          `(${rect.x},${rect.y},${rect.width},${rect.height})`,
+                      )
+                      .join(',')
+              }`,
+            );
+          }
+
+          hasSuspenseTreeChanged = true;
+
           break;
         }
         default:
