@@ -777,6 +777,15 @@ class Unifier {
       return {kind: 'Phi', operands: type.operands.map(o => this.get(o))};
     }
 
+    if (type.kind === 'Function') {
+      return {
+        kind: 'Function',
+        isConstructor: type.isConstructor,
+        shapeId: type.shapeId,
+        return: this.get(type.return),
+      };
+    }
+
     return type;
   }
 }
