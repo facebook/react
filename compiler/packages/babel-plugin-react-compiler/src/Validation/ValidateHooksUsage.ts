@@ -6,7 +6,12 @@
  */
 
 import * as t from '@babel/types';
-import {CompilerError, CompilerErrorDetail} from '../CompilerError';
+import {
+  CompilerError,
+  CompilerErrorDetail,
+  ErrorCategory,
+  ErrorSeverity,
+} from '../CompilerError';
 import {computeUnconditionalBlocks} from '../HIR/ComputeUnconditionalBlocks';
 import {isHookName} from '../HIR/Environment';
 import {
@@ -23,7 +28,6 @@ import {
 } from '../HIR/visitors';
 import {assertExhaustive} from '../Utils/utils';
 import {Result} from '../Utils/Result';
-import {ErrorCode, ErrorCodeDetails} from '../Utils/CompilerErrorCodes';
 
 /**
  * Represents the possible kinds of value which may be stored at a given Place during
@@ -108,6 +112,8 @@ export function validateHooksUsage(
     // Once a particular hook has a conditional call error, don't report any further issues for this hook
     setKind(place, Kind.Error);
 
+    const reason =
+      'Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)';
     const previousError =
       typeof place.loc !== 'symbol' ? errorsByPlace.get(place.loc) : undefined;
 
@@ -115,15 +121,16 @@ export function validateHooksUsage(
      * In some circumstances such as optional calls, we may first encounter a "hook may not be referenced as normal values" error.
      * If that same place is also used as a conditional call, upgrade the error to a conditonal hook error
      */
-    if (
-      previousError === undefined ||
-      previousError.reason !==
-        ErrorCodeDetails[ErrorCode.HOOK_CALL_STATIC].reason
-    ) {
+    if (previousError === undefined || previousError.reason !== reason) {
       recordError(
         place.loc,
-        CompilerErrorDetail.fromCode(ErrorCode.HOOK_CALL_STATIC, {
+        new CompilerErrorDetail({
+          category: ErrorCategory.Hooks,
+          description: null,
+          reason,
           loc: place.loc,
+          severity: ErrorSeverity.InvalidReact,
+          suggestions: null,
         }),
       );
     }
@@ -134,8 +141,14 @@ export function validateHooksUsage(
     if (previousError === undefined) {
       recordError(
         place.loc,
-        CompilerErrorDetail.fromCode(ErrorCode.HOOK_INVALID_REFERENCE, {
+        new CompilerErrorDetail({
+          category: ErrorCategory.Hooks,
+          description: null,
+          reason:
+            'Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values',
           loc: place.loc,
+          severity: ErrorSeverity.InvalidReact,
+          suggestions: null,
         }),
       );
     }
@@ -146,12 +159,15 @@ export function validateHooksUsage(
     if (previousError === undefined) {
       recordError(
         place.loc,
-        CompilerErrorDetail.fromCode(
-          ErrorCodeDetails[ErrorCode.HOOK_CALL_REACTIVE].code,
-          {
-            loc: place.loc,
-          },
-        ),
+        new CompilerErrorDetail({
+          category: ErrorCategory.Hooks,
+          description: null,
+          reason:
+            'Hooks must be the same function on every render, but this value may change over time to a different function. See https://react.dev/reference/rules/react-calls-components-and-hooks#dont-dynamically-use-hooks',
+          loc: place.loc,
+          severity: ErrorSeverity.InvalidReact,
+          suggestions: null,
+        }),
       );
     }
   }
@@ -434,10 +450,17 @@ function visitFunctionExpression(errors: CompilerError, fn: HIRFunction): void {
               : instr.value.property;
           const hookKind = getHookKind(fn.env, callee.identifier);
           if (hookKind != null) {
-            errors.pushErrorCode(ErrorCode.HOOK_CALL_NOT_TOP_LEVEL, {
-              loc: callee.loc,
-              description: `Cannot call ${hookKind === 'Custom' ? 'hook' : hookKind} within a function expression`,
-            });
+            errors.pushErrorDetail(
+              new CompilerErrorDetail({
+                category: ErrorCategory.Hooks,
+                severity: ErrorSeverity.InvalidReact,
+                reason:
+                  'Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)',
+                loc: callee.loc,
+                description: `Cannot call ${hookKind === 'Custom' ? 'hook' : hookKind} within a function expression`,
+                suggestions: null,
+              }),
+            );
           }
           break;
         }

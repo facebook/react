@@ -11,7 +11,7 @@ import {
   CompilerDiagnostic,
   CompilerError,
   CompilerErrorDetail,
-  PlainCompilerErrorDetailOptions,
+  CompilerErrorDetailOptions,
 } from '../CompilerError';
 import {
   EnvironmentConfig,
@@ -107,8 +107,6 @@ export type PluginOptions = {
    * passes.
    *
    * Defaults to false
-   *
-   * TODO: rename this to lintOnly or something similar
    */
   noEmit: boolean;
 
@@ -236,10 +234,7 @@ export type CompileErrorEvent = {
 export type CompileDiagnosticEvent = {
   kind: 'CompileDiagnostic';
   fnLoc: t.SourceLocation | null;
-  detail: Omit<
-    Omit<PlainCompilerErrorDetailOptions, 'severity'>,
-    'suggestions'
-  >;
+  detail: Omit<Omit<CompilerErrorDetailOptions, 'severity'>, 'suggestions'>;
 };
 export type CompileSuccessEvent = {
   kind: 'CompileSuccess';

@@ -18,7 +18,7 @@ Found 1 error:
 
 Error: This value cannot be modified
 
-Modifying a value returned from 'useContext()' is not allowed.
+Modifying a value returned from 'useContext()' is not allowed..
 
 error.invalid-mutate-context.ts:3:2
   1 | function Component(props) {

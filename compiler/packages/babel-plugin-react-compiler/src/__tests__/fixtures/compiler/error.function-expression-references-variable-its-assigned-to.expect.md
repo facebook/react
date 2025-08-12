@@ -17,9 +17,9 @@ function Component() {
 ```
 Found 1 error:
 
-Error: Cannot reassign local variables after render completes
+Error: Cannot reassign variable after render completes
 
-Reassigning local variables after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.
+Reassigning `callback` after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.
 
 error.function-expression-references-variable-its-assigned-to.ts:3:4
   1 | function Component() {

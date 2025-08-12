@@ -5,7 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerDiagnostic, CompilerError, SourceLocation} from '..';
+import {
+  CompilerDiagnostic,
+  CompilerError,
+  ErrorSeverity,
+  SourceLocation,
+} from '..';
+import {ErrorCategory} from '../CompilerError';
 import {
   CallExpression,
   Effect,
@@ -30,7 +36,6 @@ import {
   makeInstructionId,
 } from '../HIR';
 import {createTemporaryPlace, markInstructionIds} from '../HIR/HIRBuilder';
-import {ErrorCode} from '../Utils/CompilerErrorCodes';
 import {Result} from '../Utils/Result';
 
 type ManualMemoCallee = {
@@ -295,11 +300,13 @@ function extractManualMemoizationArgs(
   >;
   if (fnPlace == null) {
     errors.pushDiagnostic(
-      CompilerDiagnostic.fromCode(
-        kind === 'useMemo'
-          ? ErrorCode.INVALID_USE_MEMO_NO_ARG0
-          : ErrorCode.INVALID_USE_CALLBACK_NO_ARG0,
-      ).withDetail({
+      CompilerDiagnostic.create({
+        category: ErrorCategory.UseMemo,
+        severity: ErrorSeverity.InvalidReact,
+        reason: `Expected a callback function to be passed to ${kind}`,
+        description: `Expected a callback function to be passed to ${kind}`,
+        suggestions: null,
+      }).withDetail({
         kind: 'error',
         loc: instr.value.loc,
         message: `Expected a callback function to be passed to ${kind}`,
@@ -309,11 +316,13 @@ function extractManualMemoizationArgs(
   }
   if (fnPlace.kind === 'Spread' || depsListPlace?.kind === 'Spread') {
     errors.pushDiagnostic(
-      CompilerDiagnostic.fromCode(
-        fnPlace.kind === 'Spread'
-          ? ErrorCode.DYNAMIC_USE_MEMO_SPREAD_ARGUMENT
-          : ErrorCode.DYNAMIC_USE_CALLBACK_SPREAD_ARGUMENT,
-      ).withDetail({
+      CompilerDiagnostic.create({
+        category: ErrorCategory.UseMemo,
+        severity: ErrorSeverity.InvalidReact,
+        reason: `Unexpected spread argument to ${kind}`,
+        description: `Unexpected spread argument to ${kind}`,
+        suggestions: null,
+      }).withDetail({
         kind: 'error',
         loc: instr.value.loc,
         message: `Unexpected spread argument to ${kind}`,
@@ -328,9 +337,13 @@ function extractManualMemoizationArgs(
     );
     if (maybeDepsList == null) {
       errors.pushDiagnostic(
-        CompilerDiagnostic.fromCode(
-          ErrorCode.DYNAMIC_MANUAL_MEMO_DEPENDENCY_LIST,
-        ).withDetail({
+        CompilerDiagnostic.create({
+          category: ErrorCategory.UseMemo,
+          severity: ErrorSeverity.InvalidReact,
+          reason: `Expected the dependency list for ${kind} to be an array literal`,
+          description: `Expected the dependency list for ${kind} to be an array literal`,
+          suggestions: null,
+        }).withDetail({
           kind: 'error',
           loc: depsListPlace.loc,
           message: `Expected the dependency list for ${kind} to be an array literal`,
@@ -343,9 +356,13 @@ function extractManualMemoizationArgs(
       const maybeDep = sidemap.maybeDeps.get(dep.identifier.id);
       if (maybeDep == null) {
         errors.pushDiagnostic(
-          CompilerDiagnostic.fromCode(
-            ErrorCode.COMPLEX_MANUAL_MEMO_DEPENDENCY_LIST_ENTRY,
-          ).withDetail({
+          CompilerDiagnostic.create({
+            category: ErrorCategory.UseMemo,
+            severity: ErrorSeverity.InvalidReact,
+            reason: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
+            description: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
+            suggestions: null,
+          }).withDetail({
             kind: 'error',
             loc: dep.loc,
             message: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
@@ -445,16 +462,17 @@ export function dropManualMemoization(
             if (funcToCheck !== undefined && funcToCheck.loweredFunc.func) {
               if (!hasNonVoidReturn(funcToCheck.loweredFunc.func)) {
                 errors.pushDiagnostic(
-                  CompilerDiagnostic.fromCode(
-                    ErrorCode.INVALID_USE_MEMO_CALLBACK_RETURN,
-                    {
-                      description: `This ${
-                        manualMemo.loadInstr.value.kind === 'PropertyLoad'
-                          ? 'React.useMemo'
-                          : 'useMemo'
-                      } callback doesn't return a value. useMemo is for computing and caching values, not for arbitrary side effects.`,
-                    },
-                  ).withDetail({
+                  CompilerDiagnostic.create({
+                    severity: ErrorSeverity.InvalidReact,
+                    category: ErrorCategory.UseMemo,
+                    reason: 'useMemo() callbacks must return a value',
+                    description: `This ${
+                      manualMemo.loadInstr.value.kind === 'PropertyLoad'
+                        ? 'React.useMemo'
+                        : 'useMemo'
+                    } callback doesn't return a value. useMemo is for computing and caching values, not for arbitrary side effects.`,
+                    suggestions: null,
+                  }).withDetail({
                     kind: 'error',
                     loc: instr.value.loc,
                     message: 'useMemo() callbacks must return a value',
@@ -485,9 +503,13 @@ export function dropManualMemoization(
              */
             if (!sidemap.functions.has(fnPlace.identifier.id)) {
               errors.pushDiagnostic(
-                CompilerDiagnostic.fromCode(
-                  ErrorCode.DYNAMIC_MANUAL_MEMO_CALLBACK,
-                ).withDetail({
+                CompilerDiagnostic.create({
+                  category: ErrorCategory.UseMemo,
+                  severity: ErrorSeverity.InvalidReact,
+                  reason: `Expected the first argument to be an inline function expression`,
+                  description: `Expected the first argument to be an inline function expression`,
+                  suggestions: [],
+                }).withDetail({
                   kind: 'error',
                   loc: fnPlace.loc,
                   message: `Expected the first argument to be an inline function expression`,

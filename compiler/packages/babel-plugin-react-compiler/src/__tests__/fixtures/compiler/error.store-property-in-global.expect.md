@@ -19,7 +19,7 @@ Found 1 error:
 
 Error: This value cannot be modified
 
-Cannot reassign variables declared outside of the component/hook.
+Modifying a variable defined outside a component or hook is not allowed. Consider using an effect.
 
 error.store-property-in-global.ts:4:2
   2 |

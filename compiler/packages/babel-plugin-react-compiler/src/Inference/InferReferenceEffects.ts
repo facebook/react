@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError} from '../CompilerError';
+import {CompilerError, CompilerErrorDetailOptions} from '../CompilerError';
 import {Environment} from '../HIR';
 import {
   AbstractValue,
@@ -48,7 +48,6 @@ import {
   eachTerminalOperand,
   eachTerminalSuccessor,
 } from '../HIR/visitors';
-import {Err, Ok, Result} from '../Utils/Result';
 import {assertExhaustive, Set_isSuperset} from '../Utils/utils';
 import {
   inferTerminalFunctionEffects,
@@ -107,7 +106,7 @@ const UndefinedValue: InstructionValue = {
 export default function inferReferenceEffects(
   fn: HIRFunction,
   options: {isFunctionExpression: boolean} = {isFunctionExpression: false},
-): Result<void, CompilerError> {
+): Array<CompilerErrorDetailOptions> {
   /*
    * Initial state contains function params
    * TODO: include module declarations here as well
@@ -248,17 +247,10 @@ export default function inferReferenceEffects(
 
   if (options.isFunctionExpression) {
     fn.effects = functionEffects;
+    return [];
   } else {
-    const errors = transformFunctionEffectErrors(functionEffects);
-    if (errors.length > 0) {
-      const compilerError = new CompilerError();
-      for (const detail of errors) {
-        compilerError.push(detail);
-      }
-      return Err(compilerError);
-    }
+    return transformFunctionEffectErrors(functionEffects);
   }
-  return Ok(void 0);
 }
 
 type FreezeAction = {values: Set<InstructionValue>; reason: Set<ValueReason>};

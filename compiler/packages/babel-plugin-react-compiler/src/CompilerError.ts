@@ -10,22 +10,49 @@ import {codeFrameColumns} from '@babel/code-frame';
 import type {SourceLocation} from './HIR';
 import {Err, Ok, Result} from './Utils/Result';
 import {assertExhaustive} from './Utils/utils';
-import {ErrorSeverity} from './Utils/CompilerErrorSeverity';
-import {
-  ErrorCode,
-  ErrorCodeDetails,
-  LinterCategory,
-} from './Utils/CompilerErrorCodes';
-export {ErrorSeverity};
-export {ErrorCode, ErrorCodeDetails, LinterCategory};
+
+export enum ErrorSeverity {
+  /**
+   * Invalid JS syntax, or valid syntax that is semantically invalid which may indicate some
+   * misunderstanding on the user’s part.
+   */
+  InvalidJS = 'InvalidJS',
+  /**
+   * JS syntax that is not supported and which we do not plan to support. Developers should
+   * rewrite to use supported forms.
+   */
+  UnsupportedJS = 'UnsupportedJS',
+  /**
+   * Code that breaks the rules of React.
+   */
+  InvalidReact = 'InvalidReact',
+  /**
+   * Incorrect configuration of the compiler.
+   */
+  InvalidConfig = 'InvalidConfig',
+  /**
+   * Code that can reasonably occur and that doesn't break any rules, but is unsafe to preserve
+   * memoization.
+   */
+  CannotPreserveMemoization = 'CannotPreserveMemoization',
+  /**
+   * Unhandled syntax that we don't support yet.
+   */
+  Todo = 'Todo',
+  /**
+   * An unexpected internal error in the compiler that indicates critical issues that can panic
+   * the compiler.
+   */
+  Invariant = 'Invariant',
+}
 
 export type CompilerDiagnosticOptions = {
+  category: ErrorCategory;
   severity: ErrorSeverity;
-  category: string;
-  description?: string | null | undefined;
+  reason: string;
+  description: string;
   details: Array<CompilerDiagnosticDetail>;
   suggestions?: Array<CompilerSuggestion> | null | undefined;
-  linterCategory?: LinterCategory | null | undefined;
 };
 
 export type CompilerDiagnosticDetail =
@@ -60,28 +87,14 @@ export type CompilerSuggestion =
       description: string;
     };
 
-export type PlainCompilerErrorDetailOptions = {
-  errorCode?: void;
+export type CompilerErrorDetailOptions = {
+  category: ErrorCategory;
+  severity: ErrorSeverity;
   reason: string;
   description?: string | null | undefined;
-  severity:
-    | ErrorSeverity.Invariant
-    | ErrorSeverity.Todo
-    | ErrorSeverity.InvalidConfig;
   loc: SourceLocation | null;
   suggestions?: Array<CompilerSuggestion> | null | undefined;
 };
-export type CodedCompilerErrorDetailOptions = {
-  errorCode: ErrorCode;
-  description?: string | null | undefined;
-  loc: SourceLocation | null;
-  suggestions?: Array<CompilerSuggestion> | null | undefined;
-  linterCategory?: LinterCategory | null | undefined;
-};
-
-export type CompilerErrorDetailOptions =
-  | PlainCompilerErrorDetailOptions
-  | CodedCompilerErrorDetailOptions;
 
 export type PrintErrorMessageOptions = {
   /**
@@ -91,74 +104,21 @@ export type PrintErrorMessageOptions = {
   eslint: boolean;
 };
 
-export function makeCompilerDiagnostic(
-  code: ErrorCode,
-  options?: {
-    description?: string;
-    suggestions?: Array<CompilerSuggestion> | null | undefined;
-  },
-): CompilerDiagnostic {
-  return makeCompilerDiagnostic(code, options);
-}
-
 export class CompilerDiagnostic {
   options: CompilerDiagnosticOptions;
 
-  /**
-   * Constructor is private to enforce that we either only create invariant diagnostics
-   * or use ErrorCodes
-   */
-  private constructor(options: CompilerDiagnosticOptions) {
+  constructor(options: CompilerDiagnosticOptions) {
     this.options = options;
   }
 
-  static create<
-    T extends CompilerDiagnosticOptions & {severity: ErrorSeverity.Invariant},
-  >(options: Omit<T, 'details'>): CompilerDiagnostic {
+  static create(
+    options: Omit<CompilerDiagnosticOptions, 'details'>,
+  ): CompilerDiagnostic {
     return new CompilerDiagnostic({...options, details: []});
   }
 
-  static fromCode(
-    code: ErrorCode,
-    options?: {
-      description?: string;
-      suggestions?: Array<CompilerSuggestion> | null | undefined;
-      details?: Array<CompilerDiagnosticDetail> | null | undefined;
-    },
-  ): CompilerDiagnostic {
-    const errorEntry = ErrorCodeDetails[code];
-    let description = undefined;
-    if (errorEntry.description != null) {
-      description = endWithPeriod(errorEntry.description);
-    }
-    if (options?.description != null && options.description.length > 0) {
-      if (description != null && description.length > 0) {
-        description += ' ';
-      } else {
-        description = '';
-      }
-      description += endWithPeriod(options.description);
-    }
-
-    const diagnosticOptions: CompilerDiagnosticOptions = {
-      severity: errorEntry.severity,
-      category: errorEntry.reason,
-      description,
-      linterCategory: errorEntry.linterCategory,
-      suggestions: options?.suggestions,
-      details: options?.details ?? [],
-    };
-
-    return new CompilerDiagnostic(diagnosticOptions);
-  }
-
-  // TODO: remove after converting test fixtures to use printErrorMessage
-  serialize(): unknown {
-    return {options: {...this.options, linterCategory: undefined}};
-  }
-
-  get category(): CompilerDiagnosticOptions['category'] {
-    return this.options.category;
+  get category(): CompilerDiagnosticOptions['reason'] {
+    return this.options.reason;
   }
   get description(): CompilerDiagnosticOptions['description'] {
     return this.options.description;
@@ -168,9 +128,6 @@ export class CompilerDiagnostic {
   }
   get suggestions(): CompilerDiagnosticOptions['suggestions'] {
     return this.options.suggestions;
-  }
-  get linterCategory(): CompilerDiagnosticOptions['linterCategory'] {
-    return this.options.linterCategory;
   }
 
   withDetail(detail: CompilerDiagnosticDetail): CompilerDiagnostic {
@@ -183,10 +140,11 @@ export class CompilerDiagnostic {
   }
 
   printErrorMessage(source: string, options: PrintErrorMessageOptions): string {
-    const buffer = [printErrorSummary(this.severity, this.category)];
-    if (this.description != null) {
-      buffer.push(`\n\n${endWithPeriod(this.description)}`);
-    }
+    const buffer = [
+      printErrorSummary(this.severity, this.category),
+      '\n\n',
+      this.description,
+    ];
     for (const detail of this.options.details) {
       switch (detail.kind) {
         case 'error': {
@@ -225,7 +183,7 @@ export class CompilerDiagnostic {
   toString(): string {
     const buffer = [printErrorSummary(this.severity, this.category)];
     if (this.description != null) {
-      buffer.push(`. ${endWithPeriod(this.description)}`);
+      buffer.push(`. ${this.description}.`);
     }
     const loc = this.primaryLocation();
     if (loc != null && typeof loc !== 'symbol') {
@@ -246,68 +204,13 @@ export class CompilerErrorDetail {
     this.options = options;
   }
 
-  static fromCode(
-    code: ErrorCode,
-    details?: {
-      description?: string | null;
-      loc?: SourceLocation | null;
-      suggestions?: Array<CompilerSuggestion> | null | undefined;
-    },
-  ): CompilerErrorDetail {
-    return new CompilerErrorDetail({
-      ...details,
-      errorCode: code,
-    } as CodedCompilerErrorDetailOptions);
+  get reason(): CompilerErrorDetailOptions['reason'] {
+    return this.options.reason;
   }
-
-  // TODO: remove after converting test fixtures to use printErrorMessage
-  serialize(): unknown {
-    return {
-      options: {
-        reason: this.reason,
-        description: this.description,
-        severity: this.severity,
-        loc: this.loc,
-        suggestions: this.suggestions,
-      },
-    };
+  get description(): CompilerErrorDetailOptions['description'] {
+    return this.options.description;
   }
-
-  get reason(): string {
-    if (this.options.errorCode != null) {
-      return ErrorCodeDetails[this.options.errorCode].reason;
-    } else {
-      return this.options.reason;
-    }
-  }
-  get description(): string | null | undefined {
-    if (this.options.errorCode != null) {
-      let description = undefined;
-      const errorEntry = ErrorCodeDetails[this.options.errorCode];
-      if (errorEntry.description != null) {
-        description = endWithPeriod(errorEntry.description);
-      }
-      if (
-        this.options.description != null &&
-        this.options.description.length > 0
-      ) {
-        if (description != null && description.length > 0) {
-          description += ' ';
-        } else {
-          description = '';
-        }
-        description += endWithPeriod(this.options.description);
-      }
-      return description;
-    }
-    return this.options.description != null
-      ? endWithPeriod(this.options.description)
-      : this.options.description;
-  }
-  get severity(): ErrorSeverity {
-    if (this.options.errorCode != null) {
-      return ErrorCodeDetails[this.options.errorCode].severity;
-    }
+  get severity(): CompilerErrorDetailOptions['severity'] {
     return this.options.severity;
   }
   get loc(): CompilerErrorDetailOptions['loc'] {
@@ -315,12 +218,6 @@ export class CompilerErrorDetail {
   }
   get suggestions(): CompilerErrorDetailOptions['suggestions'] {
     return this.options.suggestions;
-  }
-  get linterCategory(): LinterCategory | null | undefined {
-    if (this.options.errorCode != null) {
-      return ErrorCodeDetails[this.options.errorCode].linterCategory;
-    }
-    return undefined;
   }
 
   primaryLocation(): SourceLocation | null {
@@ -330,7 +227,7 @@ export class CompilerErrorDetail {
   printErrorMessage(source: string, options: PrintErrorMessageOptions): string {
     const buffer = [printErrorSummary(this.severity, this.reason)];
     if (this.description != null) {
-      buffer.push(`\n\n${endWithPeriod(this.description)}`);
+      buffer.push(`\n\n${this.description}.`);
     }
     const loc = this.loc;
     if (loc != null && typeof loc !== 'symbol') {
@@ -355,7 +252,7 @@ export class CompilerErrorDetail {
   toString(): string {
     const buffer = [printErrorSummary(this.severity, this.reason)];
     if (this.description != null) {
-      buffer.push(`. ${endWithPeriod(this.description)}`);
+      buffer.push(`. ${this.description}.`);
     }
     const loc = this.loc;
     if (loc != null && typeof loc !== 'symbol') {
@@ -371,13 +268,14 @@ export class CompilerError extends Error {
 
   static invariant(
     condition: unknown,
-    options: Omit<PlainCompilerErrorDetailOptions, 'severity'>,
+    options: Omit<CompilerErrorDetailOptions, 'severity' | 'category'>,
   ): asserts condition {
     if (!condition) {
       const errors = new CompilerError();
       errors.pushErrorDetail(
         new CompilerErrorDetail({
           ...options,
+          category: ErrorCategory.Invariant,
           severity: ErrorSeverity.Invariant,
         }),
       );
@@ -385,43 +283,62 @@ export class CompilerError extends Error {
     }
   }
 
-  static throwDiagnostic(diagnostic: CompilerDiagnostic): never {
+  static throwDiagnostic(options: CompilerDiagnosticOptions): never {
     const errors = new CompilerError();
-    errors.pushDiagnostic(diagnostic);
+    errors.pushDiagnostic(new CompilerDiagnostic(options));
     throw errors;
   }
 
   static throwTodo(
-    options: Omit<PlainCompilerErrorDetailOptions, 'severity'>,
+    options: Omit<CompilerErrorDetailOptions, 'severity' | 'category'>,
   ): never {
     const errors = new CompilerError();
     errors.pushErrorDetail(
-      new CompilerErrorDetail({...options, severity: ErrorSeverity.Todo}),
+      new CompilerErrorDetail({
+        ...options,
+        severity: ErrorSeverity.Todo,
+        category: ErrorCategory.Todo,
+      }),
     );
     throw errors;
   }
 
-  static throwFromCode(
-    code: ErrorCode,
-    options?: {
-      description?: string | null;
-      loc?: SourceLocation | null;
-      suggestions?: Array<CompilerSuggestion> | null | undefined;
-    },
+  static throwInvalidJS(
+    options: Omit<CompilerErrorDetailOptions, 'severity' | 'category'>,
   ): never {
     const errors = new CompilerError();
-    errors.pushErrorDetail(CompilerErrorDetail.fromCode(code, options));
+    errors.pushErrorDetail(
+      new CompilerErrorDetail({
+        ...options,
+        severity: ErrorSeverity.InvalidJS,
+        category: ErrorCategory.Syntax,
+      }),
+    );
+    throw errors;
+  }
+
+  static throwInvalidReact(
+    options: Omit<CompilerErrorDetailOptions, 'severity'>,
+  ): never {
+    const errors = new CompilerError();
+    errors.pushErrorDetail(
+      new CompilerErrorDetail({
+        ...options,
+        severity: ErrorSeverity.InvalidReact,
+      }),
+    );
     throw errors;
   }
 
   static throwInvalidConfig(
-    options: Omit<PlainCompilerErrorDetailOptions, 'severity'>,
+    options: Omit<CompilerErrorDetailOptions, 'severity' | 'category'>,
   ): never {
     const errors = new CompilerError();
     errors.pushErrorDetail(
       new CompilerErrorDetail({
         ...options,
         severity: ErrorSeverity.InvalidConfig,
+        category: ErrorCategory.Config,
       }),
     );
     throw errors;
@@ -484,27 +401,18 @@ export class CompilerError extends Error {
   }
 
   push(options: CompilerErrorDetailOptions): CompilerErrorDetail {
-    if (options instanceof CompilerErrorDetail) {
-      return this.pushErrorDetail(options);
-    }
-    const detail = new CompilerErrorDetail(options);
+    const detail = new CompilerErrorDetail({
+      category: options.category,
+      reason: options.reason,
+      description: options.description ?? null,
+      severity: options.severity,
+      suggestions: options.suggestions,
+      loc: typeof options.loc === 'symbol' ? null : options.loc,
+    });
     return this.pushErrorDetail(detail);
   }
 
   pushErrorDetail(detail: CompilerErrorDetail): CompilerErrorDetail {
-    this.details.push(detail);
-    return detail;
-  }
-
-  pushErrorCode(
-    code: ErrorCode,
-    details?: {
-      description?: string | null;
-      loc?: SourceLocation | null;
-      suggestions?: Array<CompilerSuggestion> | null | undefined;
-    },
-  ): CompilerErrorDetail {
-    const detail = CompilerErrorDetail.fromCode(code, details);
     this.details.push(detail);
     return detail;
   }
@@ -596,9 +504,275 @@ function printErrorSummary(severity: ErrorSeverity, message: string): string {
   return `${severityCategory}: ${message}`;
 }
 
-function endWithPeriod(s: string): string {
-  if (s === '' || s.endsWith('.')) {
-    return s;
-  }
-  return `${s.replace(/\.+$/, '')}.`;
+export enum ErrorCategory {
+  // Checking for valid hooks usage (non conditional, non-first class, non reactive, etc)
+  Hooks = 'Hooks',
+
+  // Checking for no capitalized calls (not definitively an error, hence separating)
+  CapitalizedCalls = 'CapitalizedCalls',
+
+  // Checking for static components
+  StaticComponents = 'StaticComponents',
+
+  // Checking for valid usage of manual memoization
+  UseMemo = 'UseMemo',
+
+  // Checks that manual memoization is preserved
+  PreserveManualMemo = 'PreserveManualMemo',
+
+  // Checking for no mutations of props, hook arguments, hook return values
+  Immutability = 'Immutability',
+
+  // Checking for assignments to globals
+  Globals = 'Globals',
+
+  // Checking for valid usage of refs, ie no access during render
+  Refs = 'Refs',
+
+  // Checks for memoized effect deps
+  EffectDependencies = 'EffectDependencies',
+
+  // Checks for no setState in effect bodies
+  EffectSetState = 'EffectSetState',
+
+  EffectDerivationsOfState = 'EffectDerivationsOfState',
+
+  // Validates against try/catch in place of error boundaries
+  ErrorBoundaries = 'ErrorBoundaries',
+
+  // Checking for pure functions
+  Purity = 'Purity',
+
+  // Validates against setState in render
+  RenderSetState = 'RenderSetState',
+
+  // Internal invariants
+  Invariant = 'Invariant',
+
+  // Todos
+  Todo = 'Todo',
+
+  // Syntax errors
+  Syntax = 'Syntax',
+
+  // Checks for use of unsupported syntax
+  UnsupportedSyntax = 'UnsupportedSyntax',
+
+  // Config errors
+  Config = 'Config',
+
+  // Gating error
+  Gating = 'Gating',
+
+  // Suppressions
+  Suppression = 'Suppression',
+
+  // Issues with auto deps
+  AutomaticEffectDependencies = 'AutomaticEffectDependencies',
+
+  // Issues with `fire`
+  Fire = 'Fire',
+
+  // fbt-specific issues
+  FBT = 'FBT',
 }
+
+export type LintRule = {
+  code: string;
+  description: string;
+  recommended: boolean;
+};
+
+function getRuleForCategory(category: ErrorCategory): LintRule {
+  switch (category) {
+    case ErrorCategory.AutomaticEffectDependencies: {
+      return {
+        code: 'automatic-effect-dependencies',
+        description:
+          'Verifies that automatic effect dependencies are compiled if opted-in',
+        recommended: true,
+      };
+    }
+    case ErrorCategory.CapitalizedCalls: {
+      return {
+        code: 'capitalized-calls',
+        description:
+          'Validates against calling capitalized functions/methods instead of using JSX',
+        recommended: false,
+      };
+    }
+    case ErrorCategory.Config: {
+      return {
+        code: 'config',
+        description: 'Validates the configuration',
+        recommended: true,
+      };
+    }
+    case ErrorCategory.EffectDependencies: {
+      return {
+        code: 'memoized-effect-dependencies',
+        description: 'Validates that effect dependencies are memoized',
+        recommended: false,
+      };
+    }
+    case ErrorCategory.EffectDerivationsOfState: {
+      return {
+        code: 'effects-deriving-from-state',
+        description:
+          'Validates against deriving values from state in an effect',
+        recommended: false,
+      };
+    }
+    case ErrorCategory.EffectSetState: {
+      return {
+        code: 'set-state-in-effect',
+        description:
+          'Validates against calling setState synchronously in an effect',
+        recommended: true,
+      };
+    }
+    case ErrorCategory.ErrorBoundaries: {
+      return {
+        code: 'error-boundaries',
+        description:
+          'Validates usage of error boundaries instead of try/catch for errors in JSX',
+        recommended: true,
+      };
+    }
+    case ErrorCategory.FBT: {
+      return {
+        code: 'fbt',
+        description: 'Validates usage of fbt',
+        recommended: false,
+      };
+    }
+    case ErrorCategory.Fire: {
+      return {
+        code: 'fire',
+        description: 'Validates usage of `fire`',
+        recommended: false,
+      };
+    }
+    case ErrorCategory.Gating: {
+      return {
+        code: 'gating',
+        description: 'Validates configuration of gating mode',
+        recommended: true,
+      };
+    }
+    case ErrorCategory.Globals: {
+      return {
+        code: 'globals',
+        description:
+          'Validates against assignment/mutation of globals during render',
+        recommended: true,
+      };
+    }
+    case ErrorCategory.Hooks: {
+      return {
+        code: 'hooks',
+        description: 'Validates the rules of hooks',
+        recommended: true,
+      };
+    }
+    case ErrorCategory.Immutability: {
+      return {
+        code: 'immutability',
+        description:
+          'Validates that immutable values (props, state, etc) are not mutated',
+        recommended: true,
+      };
+    }
+    case ErrorCategory.Invariant: {
+      return {
+        code: 'invariant',
+        description: 'Internal invariants',
+        recommended: false,
+      };
+    }
+    case ErrorCategory.PreserveManualMemo: {
+      return {
+        code: 'preserve-manual-memoization',
+        description:
+          'Validates that existing manual memoized is preserved by the compiler',
+        recommended: true,
+      };
+    }
+    case ErrorCategory.Purity: {
+      return {
+        code: 'purity',
+        description:
+          'Validates that the component/hook is pure, and does not call known-impure functions',
+        recommended: true,
+      };
+    }
+    case ErrorCategory.Refs: {
+      return {
+        code: 'refs',
+        description:
+          'Validates correct usage of refs, not reading/writing during render',
+        recommended: true,
+      };
+    }
+    case ErrorCategory.RenderSetState: {
+      return {
+        code: 'set-state-in-render',
+        description: 'Validates against setting state during render',
+        recommended: true,
+      };
+    }
+    case ErrorCategory.StaticComponents: {
+      return {
+        code: 'static-components',
+        description:
+          'Validates that components are static, not recreated every render',
+        recommended: true,
+      };
+    }
+    case ErrorCategory.Suppression: {
+      return {
+        code: 'rule-suppression',
+        description: 'Validates against suppression of other rules',
+        recommended: false,
+      };
+    }
+    case ErrorCategory.Syntax: {
+      return {
+        code: 'syntax',
+        description: 'Validates against invalid syntax',
+        recommended: false,
+      };
+    }
+    case ErrorCategory.Todo: {
+      return {
+        code: 'todo',
+        description: 'Unimplemented features',
+        recommended: false,
+      };
+    }
+    case ErrorCategory.UnsupportedSyntax: {
+      return {
+        code: 'unsupported-syntax',
+        description: 'Validates against syntax that we do not plan to support',
+        recommended: true,
+      };
+    }
+    case ErrorCategory.UseMemo: {
+      return {
+        code: 'use-memo',
+        description: 'Validates usage of the useMemo() hook',
+        recommended: true,
+      };
+    }
+    default: {
+      assertExhaustive(category, `Unsupported category ${category}`);
+    }
+  }
+}
+
+export const LintRules: Record<ErrorCategory, LintRule> = Object.fromEntries(
+  Object.keys(ErrorCategory).map(category => [
+    category as any,
+    getRuleForCategory(category as any),
+  ]),
+);
