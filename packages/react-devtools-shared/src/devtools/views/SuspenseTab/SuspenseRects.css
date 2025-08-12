@@ -1,0 +1,15 @@
+.SuspenseRectsContainer {
+  padding: .25rem;
+}
+
+.SuspenseRect {
+  fill: transparent;
+  stroke: var(--color-background-selected);
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+  paint-order: stroke;
+}
+
+[data-highlighted='true'] > .SuspenseRect {
+  fill: var(--color-selected-tree-highlight-active);
+}
