@@ -81,7 +81,21 @@ function SuspendedByRow({
 }: RowProps) {
   const [isOpen, setIsOpen] = useState(false);
   const ioInfo = asyncInfo.awaited;
-  const name = ioInfo.name;
+  let name = ioInfo.name;
+  if (name === '' || name === 'Promise') {
+    // If all we have is a generic name, we can try to infer a better name from
+    // the stack. We only do this if the stack has more than one frame since
+    // otherwise it's likely to just be the name of the component which isn't better.
+    const bestStack = ioInfo.stack || asyncInfo.stack;
+    if (bestStack !== null && bestStack.length > 1) {
+      // TODO: Ideally we'd get the name from the last ignore listed frame before the
+      // first visible frame since this is the same algorithm as the Flight server uses.
+      // Ideally, we'd also get the name from the source mapped entry instead of the
+      // original entry. However, that would require suspending the immediate display
+      // of these rows to first do source mapping before we can show the name.
+      name = bestStack[0][0];
+    }
+  }
   const description = ioInfo.description;
   const longName = description === '' ? name : name + ' (' + description + ')';
   const shortDescription = getShortDescription(name, description);
@@ -104,11 +118,15 @@ function SuspendedByRow({
   // Only show the awaited stack if the I/O started in a different owner
   // than where it was awaited. If it's started by the same component it's
   // probably easy enough to infer and less noise in the common case.
+  const canShowAwaitStack =
+    (asyncInfo.stack !== null && asyncInfo.stack.length > 0) ||
+    (asyncOwner !== null && asyncOwner.id !== inspectedElement.id);
   const showAwaitStack =
-    !showIOStack ||
-    (ioOwner === null
-      ? asyncOwner !== null
-      : asyncOwner === null || ioOwner.id !== asyncOwner.id);
+    canShowAwaitStack &&
+    (!showIOStack ||
+      (ioOwner === null
+        ? asyncOwner !== null
+        : asyncOwner === null || ioOwner.id !== asyncOwner.id));
 
   const value: any = ioInfo.value;
   const metaName =
@@ -160,9 +178,12 @@ function SuspendedByRow({
               }
             />
           )}
-          {(showIOStack || !showAwaitStack) &&
-          ioOwner !== null &&
-          ioOwner.id !== inspectedElement.id ? (
+          {ioOwner !== null &&
+          ioOwner.id !== inspectedElement.id &&
+          (showIOStack ||
+            !showAwaitStack ||
+            asyncOwner === null ||
+            ioOwner.id !== asyncOwner.id) ? (
             <OwnerView
               key={ioOwner.id}
               displayName={ioOwner.displayName || 'Anonymous'}

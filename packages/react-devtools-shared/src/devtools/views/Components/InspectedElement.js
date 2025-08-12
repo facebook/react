@@ -51,12 +51,19 @@ export default function InspectedElementWrapper(_: Props): React.Node {
 
   const fetchFileWithCaching = useContext(FetchFileWithCachingContext);
 
+  const source =
+    inspectedElement == null
+      ? null
+      : inspectedElement.source != null
+        ? inspectedElement.source
+        : inspectedElement.stack != null && inspectedElement.stack.length > 0
+          ? inspectedElement.stack[0]
+          : null;
+
   const symbolicatedSourcePromise: null | Promise<ReactFunctionLocation | null> =
     React.useMemo(() => {
-      if (inspectedElement == null) return null;
       if (fetchFileWithCaching == null) return Promise.resolve(null);
 
-      const {source} = inspectedElement;
       if (source == null) return Promise.resolve(null);
 
       const [, sourceURL, line, column] = source;
@@ -66,7 +73,7 @@ export default function InspectedElementWrapper(_: Props): React.Node {
         line,
         column,
       );
-    }, [inspectedElement]);
+    }, [source]);
 
   const element =
     inspectedElementID !== null
@@ -223,13 +230,12 @@ export default function InspectedElementWrapper(_: Props): React.Node {
 
         {!alwaysOpenInEditor &&
           !!editorURL &&
-          inspectedElement != null &&
-          inspectedElement.source != null &&
+          source != null &&
           symbolicatedSourcePromise != null && (
             <React.Suspense fallback={<Skeleton height={16} width={24} />}>
               <OpenInEditorButton
                 editorURL={editorURL}
-                source={inspectedElement.source}
+                source={source}
                 symbolicatedSourcePromise={symbolicatedSourcePromise}
               />
             </React.Suspense>
@@ -276,7 +282,7 @@ export default function InspectedElementWrapper(_: Props): React.Node {
 
         {!hideViewSourceAction && (
           <InspectedElementViewSourceButton
-            source={inspectedElement ? inspectedElement.source : null}
+            source={source}
             symbolicatedSourcePromise={symbolicatedSourcePromise}
           />
         )}

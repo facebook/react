@@ -13,7 +13,6 @@ import typeof * as ExportsType from './ReactFeatureFlags.test-renderer';
 export const alwaysThrottleRetries = false;
 export const disableClientCache = true;
 export const disableCommentsAsDOMContainers = true;
-export const disableDefaultPropsExceptForClasses = true;
 export const disableInputAttributeSyncing = false;
 export const disableLegacyContext = false;
 export const disableLegacyContextForFunctionComponents = false;

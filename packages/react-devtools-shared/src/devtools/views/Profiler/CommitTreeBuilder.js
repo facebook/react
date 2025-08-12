@@ -239,6 +239,9 @@ function updateTree(
           const key = stringTable[keyStringID];
           i++;
 
+          // skip name prop
+          i++;
+
           if (__DEBUG__) {
             debug(
               'Add',

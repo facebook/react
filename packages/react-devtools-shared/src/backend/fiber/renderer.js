@@ -8,11 +8,16 @@
  */
 
 import type {
+  Thenable,
   ReactComponentInfo,
   ReactDebugInfo,
   ReactAsyncInfo,
   ReactIOInfo,
+  ReactStackTrace,
+  ReactCallSite,
 } from 'shared/ReactTypes';
+
+import type {HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
 
 import {
   ComponentFilterDisplayName,
@@ -104,6 +109,7 @@ import {
   MEMO_NUMBER,
   MEMO_SYMBOL_STRING,
   SERVER_CONTEXT_SYMBOL_STRING,
+  LAZY_SYMBOL_STRING,
 } from '../shared/ReactSymbols';
 import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 
@@ -2369,6 +2375,15 @@ export function attach(
       const keyString = key === null ? null : String(key);
       const keyStringID = getStringID(keyString);
 
+      const nameProp =
+        fiber.tag === SuspenseComponent
+          ? fiber.memoizedProps.name
+          : fiber.tag === ActivityComponent
+            ? fiber.memoizedProps.name
+            : null;
+      const namePropString = nameProp == null ? null : String(nameProp);
+      const namePropStringID = getStringID(namePropString);
+
       pushOperation(TREE_OPERATION_ADD);
       pushOperation(id);
       pushOperation(elementType);
@@ -2376,6 +2391,7 @@ export function attach(
       pushOperation(ownerID);
       pushOperation(displayNameStringID);
       pushOperation(keyStringID);
+      pushOperation(namePropStringID);
 
       // If this subtree has a new mode, let the frontend know.
       if ((fiber.mode & StrictModeBits) !== 0) {
@@ -2478,6 +2494,7 @@ export function attach(
     // in such a way as to bypass the default stringification of the "key" property.
     const keyString = key === null ? null : String(key);
     const keyStringID = getStringID(keyString);
+    const namePropStringID = getStringID(null);
 
     const id = instance.id;
 
@@ -2488,6 +2505,7 @@ export function attach(
     pushOperation(ownerID);
     pushOperation(displayNameStringID);
     pushOperation(keyStringID);
+    pushOperation(namePropStringID);
 
     const componentLogsEntry =
       componentInfoToComponentLogsMap.get(componentInfo);
@@ -3149,6 +3167,146 @@ export function attach(
     return null;
   }
 
+  function trackDebugInfoFromLazyType(fiber: Fiber): void {
+    // The debugInfo from a Lazy isn't propagated onto _debugInfo of the parent Fiber the way
+    // it is when used in child position. So we need to pick it up explicitly.
+    const type = fiber.elementType;
+    const typeSymbol = getTypeSymbol(type); // The elementType might be have been a LazyComponent.
+    if (typeSymbol === LAZY_SYMBOL_STRING) {
+      const debugInfo: ?ReactDebugInfo = type._debugInfo;
+      if (debugInfo) {
+        for (let i = 0; i < debugInfo.length; i++) {
+          const debugEntry = debugInfo[i];
+          if (debugEntry.awaited) {
+            const asyncInfo: ReactAsyncInfo = (debugEntry: any);
+            insertSuspendedBy(asyncInfo);
+          }
+        }
+      }
+    }
+  }
+
+  function trackDebugInfoFromUsedThenables(fiber: Fiber): void {
+    // If a Fiber called use() in DEV mode then we may have collected _debugThenableState on
+    // the dependencies. If so, then this will contain the thenables passed to use().
+    // These won't have their debug info picked up by fiber._debugInfo since that just
+    // contains things suspending the children. We have to collect use() separately.
+    const dependencies = fiber.dependencies;
+    if (dependencies == null) {
+      return;
+    }
+    const thenableState = dependencies._debugThenableState;
+    if (thenableState == null) {
+      return;
+    }
+    // In DEV the thenableState is an inner object.
+    const usedThenables: any = thenableState.thenables || thenableState;
+    if (!Array.isArray(usedThenables)) {
+      return;
+    }
+    for (let i = 0; i < usedThenables.length; i++) {
+      const thenable: Thenable<mixed> = usedThenables[i];
+      const debugInfo = thenable._debugInfo;
+      if (debugInfo) {
+        for (let j = 0; j < debugInfo.length; j++) {
+          const debugEntry = debugInfo[i];
+          if (debugEntry.awaited) {
+            const asyncInfo: ReactAsyncInfo = (debugEntry: any);
+            insertSuspendedBy(asyncInfo);
+          }
+        }
+      }
+    }
+  }
+
+  const hostAsyncInfoCache: WeakMap<{...}, ReactAsyncInfo> = new WeakMap();
+
+  function trackDebugInfoFromHostResource(
+    devtoolsInstance: DevToolsInstance,
+    fiber: Fiber,
+  ): void {
+    const resource: ?{
+      type: 'stylesheet' | 'style' | 'script' | 'void',
+      instance?: null | HostInstance,
+      ...
+    } = fiber.memoizedState;
+    if (resource == null) {
+      return;
+    }
+
+    // Use a cached entry based on the resource. This ensures that if we use the same
+    // resource in multiple places, it gets deduped and inner boundaries don't consider it
+    // as contributing to those boundaries.
+    const existingEntry = hostAsyncInfoCache.get(resource);
+    if (existingEntry !== undefined) {
+      insertSuspendedBy(existingEntry);
+      return;
+    }
+
+    const props: {
+      href?: string,
+      media?: string,
+      ...
+    } = fiber.memoizedProps;
+
+    // Stylesheet resources may suspend. We need to track that.
+    const mayResourceSuspendCommit =
+      resource.type === 'stylesheet' &&
+      // If it doesn't match the currently debugged media, then it doesn't count.
+      (typeof props.media !== 'string' ||
+        typeof matchMedia !== 'function' ||
+        matchMedia(props.media));
+    if (!mayResourceSuspendCommit) {
+      return;
+    }
+
+    const instance = resource.instance;
+    if (instance == null) {
+      return;
+    }
+
+    // Unlike props.href, this href will be fully qualified which we need for comparison below.
+    const href = instance.href;
+    if (typeof href !== 'string') {
+      return;
+    }
+    let start = -1;
+    let end = -1;
+    // $FlowFixMe[method-unbinding]
+    if (typeof performance.getEntriesByType === 'function') {
+      // We may be able to collect the start and end time of this resource from Performance Observer.
+      const resourceEntries = performance.getEntriesByType('resource');
+      for (let i = 0; i < resourceEntries.length; i++) {
+        const resourceEntry = resourceEntries[i];
+        if (resourceEntry.name === href) {
+          start = resourceEntry.startTime;
+          end = start + resourceEntry.duration;
+        }
+      }
+    }
+    const value = instance.sheet;
+    const promise = Promise.resolve(value);
+    (promise: any).status = 'fulfilled';
+    (promise: any).value = value;
+    const ioInfo: ReactIOInfo = {
+      name: 'stylesheet',
+      start,
+      end,
+      value: promise,
+      // $FlowFixMe: This field doesn't usually take a Fiber but we're only using inside this file.
+      owner: fiber, // Allow linking to the <link> if it's not filtered.
+    };
+    const asyncInfo: ReactAsyncInfo = {
+      awaited: ioInfo,
+      // $FlowFixMe: This field doesn't usually take a Fiber but we're only using inside this file.
+      owner: fiber._debugOwner == null ? null : fiber._debugOwner,
+      debugStack: fiber._debugStack == null ? null : fiber._debugStack,
+      debugTask: fiber._debugTask == null ? null : fiber._debugTask,
+    };
+    hostAsyncInfoCache.set(resource, asyncInfo);
+    insertSuspendedBy(asyncInfo);
+  }
+
   function mountVirtualChildrenRecursively(
     firstChild: Fiber,
     lastChild: null | Fiber, // non-inclusive
@@ -3367,12 +3525,16 @@ export function attach(
         // because we don't want to highlight every host node inside of a newly mounted subtree.
       }
 
+      trackDebugInfoFromLazyType(fiber);
+      trackDebugInfoFromUsedThenables(fiber);
+
       if (fiber.tag === HostHoistable) {
         const nearestInstance = reconcilingParent;
         if (nearestInstance === null) {
           throw new Error('Did not expect a host hoistable to be the root');
         }
         aquireHostResource(nearestInstance, fiber.memoizedState);
+        trackDebugInfoFromHostResource(nearestInstance, fiber);
       } else if (
         fiber.tag === HostComponent ||
         fiber.tag === HostText ||
@@ -4162,7 +4324,7 @@ export function attach(
     const stashedSuspenseParent = reconcilingParentSuspenseNode;
     const stashedSuspensePrevious = previouslyReconciledSiblingSuspenseNode;
     const stashedSuspenseRemaining = remainingReconcilingChildrenSuspenseNodes;
-    let shouldPopSuspenseNode = false;
+    let shouldMeasureSuspenseNode = false;
     let previousSuspendedBy = null;
     if (fiberInstance !== null) {
       previousSuspendedBy = fiberInstance.suspendedBy;
@@ -4192,10 +4354,13 @@ export function attach(
         previouslyReconciledSiblingSuspenseNode = null;
         remainingReconcilingChildrenSuspenseNodes = suspenseNode.firstChild;
         suspenseNode.firstChild = null;
-        shouldPopSuspenseNode = true;
+        shouldMeasureSuspenseNode = true;
       }
     }
     try {
+      trackDebugInfoFromLazyType(nextFiber);
+      trackDebugInfoFromUsedThenables(nextFiber);
+
       if (
         nextFiber.tag === HostHoistable &&
         prevFiber.memoizedState !== nextFiber.memoizedState
@@ -4206,6 +4371,7 @@ export function attach(
         }
         releaseHostResource(nearestInstance, prevFiber.memoizedState);
         aquireHostResource(nearestInstance, nextFiber.memoizedState);
+        trackDebugInfoFromHostResource(nearestInstance, nextFiber);
       } else if (
         (nextFiber.tag === HostComponent ||
           nextFiber.tag === HostText ||
@@ -4379,38 +4545,40 @@ export function attach(
           0,
         );
 
-        // Next, we'll pop back out of the SuspenseNode that we added above and now we'll
-        // reconcile the fallback, reconciling anything by inserting into the parent SuspenseNode.
-        // Since the fallback conceptually blocks the parent.
-        reconcilingParentSuspenseNode = stashedSuspenseParent;
-        previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
-        remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
-        shouldPopSuspenseNode = false;
+        shouldMeasureSuspenseNode = false;
         if (nextFallbackFiber !== null) {
-          updateFlags |= updateVirtualChildrenRecursively(
-            nextFallbackFiber,
-            null,
-            prevFallbackFiber,
-            traceNearestHostComponentUpdate,
-            0,
-          );
-        } else if (
-          nextFiber.memoizedState === null &&
-          fiberInstance.suspenseNode !== null
-        ) {
-          if (!isInDisconnectedSubtree) {
-            // Measure this Suspense node in case it changed. We don't update the rect while
-            // we're inside a disconnected subtree nor if we are the Suspense boundary that
-            // is suspended. This lets us keep the rectangle of the displayed content while
-            // we're suspended to visualize the resulting state.
-            const suspenseNode = fiberInstance.suspenseNode;
-            const prevRects = suspenseNode.rects;
-            const nextRects = measureInstance(fiberInstance);
-            if (!areEqualRects(prevRects, nextRects)) {
-              suspenseNode.rects = nextRects;
-              recordSuspenseResize(suspenseNode);
-            }
+          const fallbackStashedSuspenseParent = reconcilingParentSuspenseNode;
+          const fallbackStashedSuspensePrevious =
+            previouslyReconciledSiblingSuspenseNode;
+          const fallbackStashedSuspenseRemaining =
+            remainingReconcilingChildrenSuspenseNodes;
+          // Next, we'll pop back out of the SuspenseNode that we added above and now we'll
+          // reconcile the fallback, reconciling anything by inserting into the parent SuspenseNode.
+          // Since the fallback conceptually blocks the parent.
+          reconcilingParentSuspenseNode = stashedSuspenseParent;
+          previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
+          remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
+          try {
+            updateFlags |= updateVirtualChildrenRecursively(
+              nextFallbackFiber,
+              null,
+              prevFallbackFiber,
+              traceNearestHostComponentUpdate,
+              0,
+            );
+          } finally {
+            reconcilingParentSuspenseNode = fallbackStashedSuspenseParent;
+            previouslyReconciledSiblingSuspenseNode =
+              fallbackStashedSuspensePrevious;
+            remainingReconcilingChildrenSuspenseNodes =
+              fallbackStashedSuspenseRemaining;
           }
+        } else if (nextFiber.memoizedState === null) {
+          // Measure this Suspense node in case it changed. We don't update the rect while
+          // we're inside a disconnected subtree nor if we are the Suspense boundary that
+          // is suspended. This lets us keep the rectangle of the displayed content while
+          // we're suspended to visualize the resulting state.
+          shouldMeasureSuspenseNode = !isInDisconnectedSubtree;
         }
       } else {
         // Common case: Primary -> Primary.
@@ -4519,7 +4687,7 @@ export function attach(
         reconcilingParent = stashedParent;
         previouslyReconciledSibling = stashedPrevious;
         remainingReconcilingChildren = stashedRemaining;
-        if (shouldPopSuspenseNode) {
+        if (shouldMeasureSuspenseNode) {
           if (
             !isInDisconnectedSubtree &&
             reconcilingParentSuspenseNode !== null
@@ -4535,6 +4703,8 @@ export function attach(
               recordSuspenseResize(suspenseNode);
             }
           }
+        }
+        if (fiberInstance.suspenseNode !== null) {
           reconcilingParentSuspenseNode = stashedSuspenseParent;
           previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
           remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
@@ -4987,6 +5157,10 @@ export function attach(
         id: instance.id,
         key: fiber.key,
         env: null,
+        stack:
+          fiber._debugOwner == null || fiber._debugStack == null
+            ? null
+            : parseStackTrace(fiber._debugStack, 1),
         type: getElementTypeForFiber(fiber),
       };
     } else {
@@ -4996,6 +5170,10 @@ export function attach(
         id: instance.id,
         key: componentInfo.key == null ? null : componentInfo.key,
         env: componentInfo.env == null ? null : componentInfo.env,
+        stack:
+          componentInfo.owner == null || componentInfo.debugStack == null
+            ? null
+            : parseStackTrace(componentInfo.debugStack, 1),
         type: ElementTypeVirtual,
       };
     }
@@ -5103,6 +5281,32 @@ export function attach(
     return null;
   }
 
+  function inspectHooks(fiber: Fiber): HooksTree {
+    const originalConsoleMethods: {[string]: $FlowFixMe} = {};
+
+    // Temporarily disable all console logging before re-running the hook.
+    for (const method in console) {
+      try {
+        // $FlowFixMe[invalid-computed-prop]
+        originalConsoleMethods[method] = console[method];
+        // $FlowFixMe[prop-missing]
+        console[method] = () => {};
+      } catch (error) {}
+    }
+
+    try {
+      return inspectHooksOfFiber(fiber, getDispatcherRef(renderer));
+    } finally {
+      // Restore original console functionality.
+      for (const method in originalConsoleMethods) {
+        try {
+          // $FlowFixMe[prop-missing]
+          console[method] = originalConsoleMethods[method];
+        } catch (error) {}
+      }
+    }
+  }
+
   function getSuspendedByOfSuspenseNode(
     suspenseNode: SuspenseNode,
   ): Array<SerializedAsyncInfo> {
@@ -5112,6 +5316,11 @@ export function attach(
     if (!suspenseNode.hasUniqueSuspenders) {
       return result;
     }
+    // Cache the inspection of Hooks in case we need it for multiple entries.
+    // We don't need a full map here since it's likely that every ioInfo that's unique
+    // to a specific instance will have those appear in order of when that instance was discovered.
+    let hooksCacheKey: null | DevToolsInstance = null;
+    let hooksCache: null | HooksTree = null;
     suspenseNode.suspendedBy.forEach((set, ioInfo) => {
       let parentNode = suspenseNode.parent;
       while (parentNode !== null) {
@@ -5133,18 +5342,100 @@ export function attach(
           ioInfo,
         );
         if (asyncInfo !== null) {
-          const index = result.length;
-          result.push(serializeAsyncInfo(asyncInfo, index, firstInstance));
+          let hooks: null | HooksTree = null;
+          if (asyncInfo.stack == null && asyncInfo.owner == null) {
+            if (hooksCacheKey === firstInstance) {
+              hooks = hooksCache;
+            } else if (firstInstance.kind !== VIRTUAL_INSTANCE) {
+              const fiber = firstInstance.data;
+              if (
+                fiber.dependencies &&
+                fiber.dependencies._debugThenableState
+              ) {
+                // This entry had no stack nor owner but this Fiber used Hooks so we might
+                // be able to get the stack from the Hook.
+                hooksCacheKey = firstInstance;
+                hooksCache = hooks = inspectHooks(fiber);
+              }
+            }
+          }
+          result.push(serializeAsyncInfo(asyncInfo, firstInstance, hooks));
         }
       }
     });
     return result;
   }
 
+  function getAwaitStackFromHooks(
+    hooks: HooksTree,
+    asyncInfo: ReactAsyncInfo,
+  ): null | ReactStackTrace {
+    // TODO: We search through the hooks tree generated by inspectHooksOfFiber so that we can
+    // use the information already extracted but ideally this search would be faster since we
+    // could know which index to extract from the debug state.
+    for (let i = 0; i < hooks.length; i++) {
+      const node = hooks[i];
+      const debugInfo = node.debugInfo;
+      if (debugInfo != null && debugInfo.indexOf(asyncInfo) !== -1) {
+        // Found a matching Hook. We'll now use its source location to construct a stack.
+        const source = node.hookSource;
+        if (
+          source != null &&
+          source.functionName !== null &&
+          source.fileName !== null &&
+          source.lineNumber !== null &&
+          source.columnNumber !== null
+        ) {
+          // Unfortunately this is in a slightly different format. TODO: Unify HookNode with ReactCallSite.
+          const callSite: ReactCallSite = [
+            source.functionName,
+            source.fileName,
+            source.lineNumber,
+            source.columnNumber,
+            0,
+            0,
+            false,
+          ];
+          // As we return we'll add any custom hooks parent stacks to the array.
+          return [callSite];
+        } else {
+          return [];
+        }
+      }
+      // Otherwise, search the sub hooks of any custom hook.
+      const matchedStack = getAwaitStackFromHooks(node.subHooks, asyncInfo);
+      if (matchedStack !== null) {
+        // Append this custom hook to the stack trace since it must have been called inside of it.
+        const source = node.hookSource;
+        if (
+          source != null &&
+          source.functionName !== null &&
+          source.fileName !== null &&
+          source.lineNumber !== null &&
+          source.columnNumber !== null
+        ) {
+          // Unfortunately this is in a slightly different format. TODO: Unify HookNode with ReactCallSite.
+          const callSite: ReactCallSite = [
+            source.functionName,
+            source.fileName,
+            source.lineNumber,
+            source.columnNumber,
+            0,
+            0,
+            false,
+          ];
+          matchedStack.push(callSite);
+        }
+        return matchedStack;
+      }
+    }
+    return null;
+  }
+
   function serializeAsyncInfo(
     asyncInfo: ReactAsyncInfo,
-    index: number,
     parentInstance: DevToolsInstance,
+    hooks: null | HooksTree,
   ): SerializedAsyncInfo {
     const ioInfo = asyncInfo.awaited;
     const ioOwnerInstance = findNearestOwnerInstance(
@@ -5184,6 +5475,11 @@ export function attach(
             // If we awaited in the child position of a component, then the best stack would be the
             // return callsite but we don't have that available so instead we skip. The callsite of
             // the JSX would be misleading in this case. The same thing happens with throw-a-Promise.
+            if (hooks !== null) {
+              // If this component used Hooks we might be able to instead infer the stack from the
+              // use() callsite if this async info came from a hook. Let's search the tree to find it.
+              awaitStack = getAwaitStackFromHooks(hooks, asyncInfo);
+            }
             break;
           default:
             // If we awaited by passing a Promise to a built-in element, then the JSX callsite is a
@@ -5454,31 +5750,9 @@ export function attach(
     const owners: null | Array<SerializedElement> =
       getOwnersListFromInstance(fiberInstance);
 
-    let hooks = null;
+    let hooks: null | HooksTree = null;
     if (usesHooks) {
-      const originalConsoleMethods: {[string]: $FlowFixMe} = {};
-
-      // Temporarily disable all console logging before re-running the hook.
-      for (const method in console) {
-        try {
-          // $FlowFixMe[invalid-computed-prop]
-          originalConsoleMethods[method] = console[method];
-          // $FlowFixMe[prop-missing]
-          console[method] = () => {};
-        } catch (error) {}
-      }
-
-      try {
-        hooks = inspectHooksOfFiber(fiber, getDispatcherRef(renderer));
-      } finally {
-        // Restore original console functionality.
-        for (const method in originalConsoleMethods) {
-          try {
-            // $FlowFixMe[prop-missing]
-            console[method] = originalConsoleMethods[method];
-          } catch (error) {}
-        }
-      }
+      hooks = inspectHooks(fiber);
     }
 
     let rootType = null;
@@ -5557,8 +5831,8 @@ export function attach(
           // TODO: Prepend other suspense sources like css, images and use().
           fiberInstance.suspendedBy === null
           ? []
-          : fiberInstance.suspendedBy.map((info, index) =>
-              serializeAsyncInfo(info, index, fiberInstance),
+          : fiberInstance.suspendedBy.map(info =>
+              serializeAsyncInfo(info, fiberInstance, hooks),
             );
     return {
       id: fiberInstance.id,
@@ -5593,6 +5867,11 @@ export function attach(
             forceFallbackForFibers.has(fiber.alternate))),
 
       source,
+
+      stack:
+        fiber._debugOwner == null || fiber._debugStack == null
+          ? null
+          : parseStackTrace(fiber._debugStack, 1),
 
       // Does the component have legacy context attached to it.
       hasLegacyContext,
@@ -5694,6 +5973,11 @@ export function attach(
 
       source,
 
+      stack:
+        componentInfo.owner == null || componentInfo.debugStack == null
+          ? null
+          : parseStackTrace(componentInfo.debugStack, 1),
+
       // Does the component have legacy context attached to it.
       hasLegacyContext: false,
 
@@ -5719,8 +6003,8 @@ export function attach(
       suspendedBy:
         suspendedBy === null
           ? []
-          : suspendedBy.map((info, index) =>
-              serializeAsyncInfo(info, index, virtualInstance),
+          : suspendedBy.map(info =>
+              serializeAsyncInfo(info, virtualInstance, null),
             ),
 
       // List of owners

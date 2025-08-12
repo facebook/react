@@ -271,6 +271,7 @@ export function printOperationsArray(operations: Array<number>) {
           i++;
 
           i++; // key
+          i++; // name
 
           logs.push(
             `Add node ${id} (${displayName || 'null'}) as child of ${parentID}`,
@@ -633,6 +634,7 @@ export type DataType =
   | 'thenable'
   | 'object'
   | 'react_element'
+  | 'react_lazy'
   | 'regexp'
   | 'string'
   | 'symbol'
@@ -686,11 +688,12 @@ export function getDataType(data: Object): DataType {
         return 'number';
       }
     case 'object':
-      if (
-        data.$$typeof === REACT_ELEMENT_TYPE ||
-        data.$$typeof === REACT_LEGACY_ELEMENT_TYPE
-      ) {
-        return 'react_element';
+      switch (data.$$typeof) {
+        case REACT_ELEMENT_TYPE:
+        case REACT_LEGACY_ELEMENT_TYPE:
+          return 'react_element';
+        case REACT_LAZY_TYPE:
+          return 'react_lazy';
       }
       if (isArray(data)) {
         return 'array';
@@ -906,6 +909,62 @@ export function formatDataForPreview(
       return `<${truncateForDisplay(
         getDisplayNameForReactElement(data) || 'Unknown',
       )} />`;
+    case 'react_lazy':
+      // To avoid actually initialize a lazy to cause a side-effect we make some assumptions
+      // about the structure of the payload even though that's not really part of the contract.
+      // In practice, this is really just coming from React.lazy helper or Flight.
+      const payload = data._payload;
+      if (payload !== null && typeof payload === 'object') {
+        if (payload._status === 0) {
+          // React.lazy constructor pending
+          return `pending lazy()`;
+        }
+        if (payload._status === 1 && payload._result != null) {
+          // React.lazy constructor fulfilled
+          if (showFormattedValue) {
+            const formatted = formatDataForPreview(
+              payload._result.default,
+              false,
+            );
+            return `fulfilled lazy() {${truncateForDisplay(formatted)}}`;
+          } else {
+            return `fulfilled lazy() {…}`;
+          }
+        }
+        if (payload._status === 2) {
+          // React.lazy constructor rejected
+          if (showFormattedValue) {
+            const formatted = formatDataForPreview(payload._result, false);
+            return `rejected lazy() {${truncateForDisplay(formatted)}}`;
+          } else {
+            return `rejected lazy() {…}`;
+          }
+        }
+        if (payload.status === 'pending' || payload.status === 'blocked') {
+          // React Flight pending
+          return `pending lazy()`;
+        }
+        if (payload.status === 'fulfilled') {
+          // React Flight fulfilled
+          if (showFormattedValue) {
+            const formatted = formatDataForPreview(payload.value, false);
+            return `fulfilled lazy() {${truncateForDisplay(formatted)}}`;
+          } else {
+            return `fulfilled lazy() {…}`;
+          }
+        }
+        if (payload.status === 'rejected') {
+          // React Flight rejected
+          if (showFormattedValue) {
+            const formatted = formatDataForPreview(payload.reason, false);
+            return `rejected lazy() {${truncateForDisplay(formatted)}}`;
+          } else {
+            return `rejected lazy() {…}`;
+          }
+        }
+      }
+      // Some form of uninitialized
+      return 'lazy()';
     case 'array_buffer':
       return `ArrayBuffer(${data.byteLength})`;
     case 'data_view':
