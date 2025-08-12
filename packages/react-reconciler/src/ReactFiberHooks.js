@@ -857,8 +857,8 @@ export function renderTransitionAwareHostComponentWithHooks(
   current: Fiber | null,
   workInProgress: Fiber,
   lanes: Lanes,
-): void {
-  renderWithHooks(
+): TransitionStatus {
+  return renderWithHooks(
     current,
     workInProgress,
     TransitionAwareHostComponent,

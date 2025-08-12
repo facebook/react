@@ -181,6 +181,7 @@ import {
   isPrimaryRenderer,
   getResource,
   createHoistableInstance,
+  HostTransitionContext,
 } from './ReactFiberConfig';
 import type {ActivityInstance, SuspenseInstance} from './ReactFiberConfig';
 import {shouldError, shouldSuspend} from './ReactFiberReconciler';
@@ -1935,6 +1936,8 @@ function updateHostComponent(
     tryToClaimNextHydratableInstance(workInProgress);
   }
 
+  pushHostContext(workInProgress);
+
   const type = workInProgress.type;
   const nextProps = workInProgress.pendingProps;
   const prevProps = current !== null ? current.memoizedProps : null;
@@ -1962,14 +1965,30 @@ function updateHostComponent(
     //
     // Once a fiber is upgraded to be stateful, it remains stateful for the
     // rest of its lifetime.
-    renderTransitionAwareHostComponentWithHooks(
+    const newState = renderTransitionAwareHostComponentWithHooks(
       current,
       workInProgress,
       renderLanes,
     );
-  }
 
-  pushHostContext(workInProgress);
+    // If the transition state changed, propagate the change to all the
+    // descendents. We use Context as an implementation detail for this.
+    //
+    // We need to update it here because
+    // pushHostContext gets called before we process the state hook, to avoid
+    // a state mismatch in the event that something suspends.
+    //
+    // NOTE: This assumes that there cannot be nested transition providers,
+    // because the only renderer that implements this feature is React DOM,
+    // and forms cannot be nested. If we did support nested providers, then
+    // we would need to push a context value even for host fibers that
+    // haven't been upgraded yet.
+    if (isPrimaryRenderer) {
+      HostTransitionContext._currentValue = newState;
+    } else {
+      HostTransitionContext._currentValue2 = newState;
+    }
+  }
 
   markRef(current, workInProgress);
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);

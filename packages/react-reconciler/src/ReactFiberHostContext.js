@@ -96,7 +96,7 @@ function getHostContext(): HostContext {
 function pushHostContext(fiber: Fiber): void {
   const stateHook: Hook | null = fiber.memoizedState;
   if (stateHook !== null) {
-    // Propagate the state to all the descendents.
+    // Propagate the current state to all the descendents.
     // We use Context as an implementation detail for this.
     //
     // NOTE: This assumes that there cannot be nested transition providers,
