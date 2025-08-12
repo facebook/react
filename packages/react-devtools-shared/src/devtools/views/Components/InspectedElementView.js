@@ -174,9 +174,8 @@ export default function InspectedElementView({
             {showStack ? <StackTraceView stack={stack} /> : null}
             {showOwnersList &&
               owners?.map(owner => (
-                <>
+                <Fragment key={owner.id}>
                   <OwnerView
-                    key={owner.id}
                     displayName={owner.displayName || 'Anonymous'}
                     hocDisplayNames={owner.hocDisplayNames}
                     environmentName={
@@ -190,7 +189,7 @@ export default function InspectedElementView({
                   {owner.stack != null && owner.stack.length > 0 ? (
                     <StackTraceView stack={owner.stack} />
                   ) : null}
-                </>
+                </Fragment>
               ))}
 
             {rootType !== null && (
