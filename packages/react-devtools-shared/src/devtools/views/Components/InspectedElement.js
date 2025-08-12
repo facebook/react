@@ -202,7 +202,9 @@ export default function InspectedElementWrapper(_: Props): React.Node {
   }
 
   return (
-    <div className={styles.InspectedElement}>
+    <div
+      className={styles.InspectedElement}
+      key={inspectedElementID /* Force reset when selected Element changes */}>
       <div className={styles.TitleRow} data-testname="InspectedElement-Title">
         {strictModeBadge}
 
@@ -291,9 +293,6 @@ export default function InspectedElementWrapper(_: Props): React.Node {
 
       {inspectedElement !== null && symbolicatedSourcePromise != null && (
         <InspectedElementView
-          key={
-            inspectedElementID /* Force reset when selected Element changes */
-          }
           element={element}
           hookNames={hookNames}
           inspectedElement={inspectedElement}
