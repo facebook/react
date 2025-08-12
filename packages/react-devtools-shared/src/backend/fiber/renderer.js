@@ -3247,7 +3247,7 @@ export function attach(
       const debugInfo = thenable._debugInfo;
       if (debugInfo) {
         for (let j = 0; j < debugInfo.length; j++) {
-          const debugEntry = debugInfo[i];
+          const debugEntry = debugInfo[j];
           if (debugEntry.awaited) {
             const asyncInfo: ReactAsyncInfo = (debugEntry: any);
             insertSuspendedBy(asyncInfo);
