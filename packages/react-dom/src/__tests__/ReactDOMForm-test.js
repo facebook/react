@@ -2284,8 +2284,6 @@ describe('ReactDOMForm', () => {
 
   it('form actions should retain status when nested state changes', async () => {
     const formRef = React.createRef();
-    const textRef = React.createRef();
-    const btnRef = React.createRef();
 
     let rerenderUnrelatedStatus;
     function UnrelatedStatus() {
@@ -2295,22 +2293,12 @@ describe('ReactDOMForm', () => {
       Scheduler.log(`[unrelated form] pending: ${pending}, state: ${counter}`);
     }
 
-    function Status() {
+    let rerenderTargetStatus;
+    function TargetStatus() {
       const {pending} = useFormStatus();
       const [counter, setCounter] = useState(0);
-      return (
-        <div>
-          <p ref={textRef}>
-            {pending ? `Pending` : null} with state: {counter}
-          </p>
-          <button
-            ref={btnRef}
-            onClick={() => setCounter(n => n + 1)}
-            type="button">
-            Increment
-          </button>
-        </div>
-      );
+      Scheduler.log(`[target form] pending: ${pending}, state: ${counter}`);
+      rerenderTargetStatus = () => setCounter(n => n + 1);
     }
 
     function App() {
@@ -2324,7 +2312,7 @@ describe('ReactDOMForm', () => {
         <>
           <form action={action} ref={formRef}>
             <input type="submit" />
-            <Status />
+            <TargetStatus />
           </form>
           <form>
             <UnrelatedStatus />
@@ -2336,15 +2324,18 @@ describe('ReactDOMForm', () => {
     const root = ReactDOMClient.createRoot(container);
     await act(() => root.render(<App />));
 
-    assertLog(['[unrelated form] pending: false, state: 0']);
+    assertLog([
+      '[target form] pending: false, state: 0',
+      '[unrelated form] pending: false, state: 0',
+    ]);
 
     await submit(formRef.current);
 
-    expect(textRef.current.textContent).toBe('Pending with state: 0');
+    assertLog(['[target form] pending: true, state: 0']);
 
-    await act(() => btnRef.current.click());
+    await act(() => rerenderTargetStatus());
 
-    expect(textRef.current.textContent).toBe('Pending with state: 1');
+    assertLog(['[target form] pending: true, state: 1']);
 
     await act(() => rerenderUnrelatedStatus());
 
