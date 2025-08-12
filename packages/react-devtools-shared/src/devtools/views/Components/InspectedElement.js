@@ -24,7 +24,6 @@ import FetchFileWithCachingContext from './FetchFileWithCachingContext';
 import {symbolicateSourceWithCache} from 'react-devtools-shared/src/symbolicateSource';
 import OpenInEditorButton from './OpenInEditorButton';
 import InspectedElementViewSourceButton from './InspectedElementViewSourceButton';
-import Skeleton from './Skeleton';
 import useEditorURL from '../useEditorURL';
 
 import styles from './InspectedElement.css';
@@ -232,13 +231,11 @@ export default function InspectedElementWrapper(_: Props): React.Node {
           !!editorURL &&
           source != null &&
           symbolicatedSourcePromise != null && (
-            <React.Suspense fallback={<Skeleton height={16} width={24} />}>
-              <OpenInEditorButton
-                editorURL={editorURL}
-                source={source}
-                symbolicatedSourcePromise={symbolicatedSourcePromise}
-              />
-            </React.Suspense>
+            <OpenInEditorButton
+              editorURL={editorURL}
+              source={source}
+              symbolicatedSourcePromise={symbolicatedSourcePromise}
+            />
           )}
 
         {canToggleError && (
