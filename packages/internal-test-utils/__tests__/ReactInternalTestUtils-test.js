@@ -2169,6 +2169,19 @@ describe('ReactInternalTestUtils console assertions', () => {
         + Bye      in div (at **)"
       `);
     });
+
+    // @gate __DEV__
+    it('fails if last received error containing "undefined" is not included', () => {
+      const message = expectToThrowFailure(() => {
+        console.error('Hi');
+        console.error(
+          "TypeError: Cannot read properties of undefined (reading 'stack')\n" +
+            '    in Foo (at **)'
+        );
+        assertConsoleErrorDev([['Hi', {withoutStack: true}]]);
+      });
+      expect(message).toMatchInlineSnapshot();
+    });
     // @gate __DEV__
     it('fails if only error does not contain a stack', () => {
       const message = expectToThrowFailure(() => {
