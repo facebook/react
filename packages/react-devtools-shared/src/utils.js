@@ -43,6 +43,7 @@ import {
   SUSPENSE_TREE_OPERATION_ADD,
   SUSPENSE_TREE_OPERATION_REMOVE,
   SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
+  SUSPENSE_TREE_OPERATION_RESIZE,
 } from './constants';
 import {
   ComponentFilterElementType,
@@ -339,11 +340,34 @@ export function printOperationsArray(operations: Array<number>) {
         const parentID = operations[i + 2];
         const nameStringID = operations[i + 3];
         const name = stringTable[nameStringID];
+        const numRects = operations[i + 4];
 
-        i += 4;
+        i += 5;
+
+        let rects: string;
+        if (numRects === -1) {
+          rects = 'null';
+        } else {
+          rects = '[';
+          for (let rectIndex = 0; rectIndex < numRects; rectIndex++) {
+            const offset = i + rectIndex * 4;
+            const x = operations[offset + 0];
+            const y = operations[offset + 1];
+            const width = operations[offset + 2];
+            const height = operations[offset + 3];
+
+            if (rectIndex > 0) {
+              rects += ', ';
+            }
+            rects += `(${x}, ${y}, ${width}, ${height})`;
+
+            i += 4;
+          }
+          rects += ']';
+        }
 
         logs.push(
-          `Add suspense node ${fiberID} (${String(name)}) under ${parentID}`,
+          `Add suspense node ${fiberID} (${String(name)},rects={${rects}}) under ${parentID}`,
         );
         break;
       }
@@ -370,6 +394,33 @@ export function printOperationsArray(operations: Array<number>) {
         logs.push(
           `Re-order suspense node ${id} children ${children.join(',')}`,
         );
+        break;
+      }
+      case SUSPENSE_TREE_OPERATION_RESIZE: {
+        const id = ((operations[i + 1]: any): number);
+        const numRects = ((operations[i + 2]: any): number);
+        i += 3;
+
+        if (numRects === -1) {
+          logs.push(`Resize suspense node ${id} to null`);
+        } else {
+          let line = `Resize suspense node ${id} to [`;
+          for (let rectIndex = 0; rectIndex < numRects; rectIndex++) {
+            const x = operations[i + 0];
+            const y = operations[i + 1];
+            const width = operations[i + 2];
+            const height = operations[i + 3];
+
+            if (rectIndex > 0) {
+              line += ', ';
+            }
+            line += `(${x}, ${y}, ${width}, ${height})`;
+
+            i += 4;
+          }
+          logs.push(line + ']');
+        }
+
         break;
       }
       default:
