@@ -43,9 +43,9 @@ function Component() {
 ```
 Found 1 error:
 
-Error: Cannot reassign local variables after render completes
+Error: Cannot reassign variable after render completes
 
-Reassigning local variables after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.
+Reassigning `local` after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.
 
 error.invalid-reassign-local-variable-in-jsx-callback.ts:5:4
   3 |

@@ -23,7 +23,7 @@ Found 1 error:
 
 Error: Cannot modify local variables after render completes
 
-This argument is a function which may reassign or mutate a variable after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.
+This argument is a function which may reassign or mutate `cache` after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.
 
 error.invalid-return-mutable-function-from-hook.ts:7:9
    5 |   useHook(); // for inference to kick in

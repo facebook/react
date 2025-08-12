@@ -441,7 +441,7 @@ export const NoUnusedDirectivesRule: Rule.RuleModule = {
         suggest: [
           {
             desc: 'Remove the directive',
-            fix(fixer) {
+            fix(fixer): Rule.Fix {
               return fixer.removeRange(directive.range);
             },
           },

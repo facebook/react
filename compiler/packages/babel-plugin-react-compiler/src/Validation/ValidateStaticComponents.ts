@@ -5,9 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerDiagnostic, CompilerError} from '../CompilerError';
+import {
+  CompilerDiagnostic,
+  CompilerError,
+  ErrorCategory,
+  ErrorSeverity,
+} from '../CompilerError';
 import {HIRFunction, IdentifierId, SourceLocation} from '../HIR';
-import {ErrorCode} from '../Utils/CompilerErrorCodes';
 import {Result} from '../Utils/Result';
 
 /**
@@ -61,7 +65,10 @@ export function validateStaticComponents(
             );
             if (location != null) {
               error.pushDiagnostic(
-                CompilerDiagnostic.fromCode(ErrorCode.STATIC_COMPONENTS, {
+                CompilerDiagnostic.create({
+                  category: ErrorCategory.StaticComponents,
+                  severity: ErrorSeverity.InvalidReact,
+                  reason: 'Cannot create components during render',
                   description: `Components created during render will reset their state each time they are created. Declare components outside of render. `,
                 })
                   .withDetail({

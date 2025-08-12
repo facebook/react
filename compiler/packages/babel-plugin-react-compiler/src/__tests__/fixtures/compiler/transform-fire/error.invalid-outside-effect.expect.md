@@ -26,7 +26,7 @@ function Component({props, bar}) {
 ```
 Found 2 errors:
 
-Error: Cannot compile `fire`
+Invariant: Cannot compile `fire`
 
 Cannot use `fire` outside of a useEffect function.
 
@@ -39,7 +39,7 @@ error.invalid-outside-effect.ts:8:2
   10 |   useCallback(() => {
   11 |     fire(foo(props));
 
-Error: Cannot compile `fire`
+Invariant: Cannot compile `fire`
 
 Cannot use `fire` outside of a useEffect function.
 

@@ -100,6 +100,7 @@ import {outlineJSX} from '../Optimization/OutlineJsx';
 import {optimizePropsMethodCalls} from '../Optimization/OptimizePropsMethodCalls';
 import {transformFire} from '../Transform';
 import {validateNoImpureFunctionsInRender} from '../Validation/ValidateNoImpureFunctionsInRender';
+import {CompilerError} from '..';
 import {validateStaticComponents} from '../Validation/ValidateStaticComponents';
 import {validateNoFreezingKnownMutableFunctions} from '../Validation/ValidateNoFreezingKnownMutableFunctions';
 import {inferMutationAliasingEffects} from '../Inference/InferMutationAliasingEffects';
@@ -173,7 +174,7 @@ function runWithEnvironment(
     !env.config.disableMemoizationForDebugging &&
     !env.config.enableChangeDetectionForDebugging
   ) {
-    env.logOrThrowErrors(dropManualMemoization(hir));
+    dropManualMemoization(hir).unwrap();
     log({kind: 'hir', name: 'DropManualMemoization', value: hir});
   }
 
@@ -206,10 +207,10 @@ function runWithEnvironment(
 
   if (env.isInferredMemoEnabled) {
     if (env.config.validateHooksUsage) {
-      env.logOrThrowErrors(validateHooksUsage(hir));
+      validateHooksUsage(hir).unwrap();
     }
-    if (env.config.validateNoCapitalizedCalls != null) {
-      env.logOrThrowErrors(validateNoCapitalizedCalls(hir));
+    if (env.config.validateNoCapitalizedCalls) {
+      validateNoCapitalizedCalls(hir).unwrap();
     }
   }
 
@@ -229,17 +230,20 @@ function runWithEnvironment(
   log({kind: 'hir', name: 'AnalyseFunctions', value: hir});
 
   if (!env.config.enableNewMutationAliasingModel) {
-    const fnEffectResult = inferReferenceEffects(hir);
-
+    const fnEffectErrors = inferReferenceEffects(hir);
     if (env.isInferredMemoEnabled) {
-      env.logOrThrowErrors(fnEffectResult);
+      if (fnEffectErrors.length > 0) {
+        CompilerError.throw(fnEffectErrors[0]);
+      }
     }
     log({kind: 'hir', name: 'InferReferenceEffects', value: hir});
   } else {
     const mutabilityAliasingErrors = inferMutationAliasingEffects(hir);
     log({kind: 'hir', name: 'InferMutationAliasingEffects', value: hir});
     if (env.isInferredMemoEnabled) {
-      env.logOrThrowErrors(mutabilityAliasingErrors);
+      if (mutabilityAliasingErrors.isErr()) {
+        throw mutabilityAliasingErrors.unwrapErr();
+      }
     }
   }
 
@@ -268,8 +272,10 @@ function runWithEnvironment(
     });
     log({kind: 'hir', name: 'InferMutationAliasingRanges', value: hir});
     if (env.isInferredMemoEnabled) {
-      env.logOrThrowErrors(mutabilityAliasingErrors.map(() => undefined));
-      env.logOrThrowErrors(validateLocalsNotReassignedAfterRender(hir));
+      if (mutabilityAliasingErrors.isErr()) {
+        throw mutabilityAliasingErrors.unwrapErr();
+      }
+      validateLocalsNotReassignedAfterRender(hir);
     }
   }
 
@@ -279,15 +285,15 @@ function runWithEnvironment(
     }
 
     if (env.config.validateRefAccessDuringRender) {
-      env.logOrThrowErrors(validateNoRefAccessInRender(hir));
+      validateNoRefAccessInRender(hir).unwrap();
     }
 
     if (env.config.validateNoSetStateInRender) {
-      env.logOrThrowErrors(validateNoSetStateInRender(hir));
+      validateNoSetStateInRender(hir).unwrap();
     }
 
     if (env.config.validateNoDerivedComputationsInEffects) {
-      env.logOrThrowErrors(validateNoDerivedComputationsInEffects(hir));
+      validateNoDerivedComputationsInEffects(hir);
     }
 
     if (env.config.validateNoSetStateInEffects) {
@@ -297,18 +303,16 @@ function runWithEnvironment(
     if (env.config.validateNoJSXInTryStatements) {
       env.logErrors(validateNoJSXInTryStatement(hir));
     }
-    if (
-      env.config.validateNoImpureFunctionsInRender &&
-      !env.config.enableNewMutationAliasingModel
-    ) {
-      env.logOrThrowErrors(validateNoImpureFunctionsInRender(hir));
+
+    if (env.config.validateNoImpureFunctionsInRender) {
+      validateNoImpureFunctionsInRender(hir).unwrap();
     }
 
     if (
       env.config.validateNoFreezingKnownMutableFunctions ||
       env.config.enableNewMutationAliasingModel
     ) {
-      env.logOrThrowErrors(validateNoFreezingKnownMutableFunctions(hir));
+      validateNoFreezingKnownMutableFunctions(hir).unwrap();
     }
   }
 

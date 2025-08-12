@@ -32,9 +32,9 @@ function Component({props, bar}) {
 ```
 Found 1 error:
 
-Error: Cannot compile `fire`
+Error: [Fire] Untransformed reference to compiler-required feature.
 
- null.
+ null
 
 error.use-no-memo.ts:15:4
   13 |   };

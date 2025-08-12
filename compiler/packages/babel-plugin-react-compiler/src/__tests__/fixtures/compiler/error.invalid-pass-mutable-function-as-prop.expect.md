@@ -21,7 +21,7 @@ Found 1 error:
 
 Error: Cannot modify local variables after render completes
 
-This argument is a function which may reassign or mutate a variable after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.
+This argument is a function which may reassign or mutate `cache` after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.
 
 error.invalid-pass-mutable-function-as-prop.ts:7:18
   5 |     cache.set('key', 'value');

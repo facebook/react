@@ -15,9 +15,9 @@ console.log(fire == null);
 ```
 Found 1 error:
 
-Error: Cannot compile `fire`
+Error: [Fire] Untransformed reference to compiler-required feature.
 
- null.
+ null
 
 error.untransformed-fire-reference.ts:4:12
   2 | import {fire} from 'react';

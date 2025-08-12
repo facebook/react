@@ -31,9 +31,9 @@ function Component({prop1}) {
 ```
 Found 1 error:
 
-Error: Cannot compile `fire`
+Error: [Fire] Untransformed reference to compiler-required feature.
 
- Todo: (BuildHIR::lowerStatement) Handle TryStatement without a catch clause (11:4).
+ Todo: (BuildHIR::lowerStatement) Handle TryStatement without a catch clause (11:4)
 
 error.todo-syntax.ts:18:4
   16 |   };

@@ -42,7 +42,7 @@ import {
 import {eachInstructionOperand} from '../HIR/visitors';
 import {printSourceLocationLine} from '../HIR/PrintHIR';
 import {USE_FIRE_FUNCTION_NAME} from '../HIR/Environment';
-import {ErrorCode} from '../Utils/CompilerErrorCodes';
+import {ErrorCategory} from '../CompilerError';
 
 /*
  * TODO(jmbrown):
@@ -50,6 +50,8 @@ import {ErrorCode} from '../Utils/CompilerErrorCodes';
  *   - method calls
  *   - React.useEffect calls
  */
+
+const CANNOT_COMPILE_FIRE = 'Cannot compile `fire`';
 
 export function transformFire(fn: HIRFunction): void {
   const context = new Context(fn.env);
@@ -132,6 +134,7 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
                   loc: value.loc,
                   description: null,
                   severity: ErrorSeverity.Invariant,
+                  category: ErrorCategory.Invariant,
                   reason: '[InsertFire] No LoadGlobal found for useEffect call',
                   suggestions: null,
                 });
@@ -177,7 +180,10 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
                 loc: value.args[1].loc,
                 description:
                   'You must use an array literal for an effect dependency array when that effect uses `fire()`',
-                errorCode: ErrorCode.CANNOT_COMPILE_FIRE,
+                severity: ErrorSeverity.Invariant,
+                category: ErrorCategory.Fire,
+                reason: CANNOT_COMPILE_FIRE,
+                suggestions: null,
               });
             }
           } else if (value.args.length > 1 && value.args[1].kind === 'Spread') {
@@ -185,7 +191,10 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
               loc: value.args[1].place.loc,
               description:
                 'You must use an array literal for an effect dependency array when that effect uses `fire()`',
-              errorCode: ErrorCode.CANNOT_COMPILE_FIRE,
+              severity: ErrorSeverity.Invariant,
+              category: ErrorCategory.Fire,
+              reason: CANNOT_COMPILE_FIRE,
+              suggestions: null,
             });
           }
         }
@@ -218,6 +227,7 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
                 loc: value.loc,
                 description: null,
                 severity: ErrorSeverity.Invariant,
+                category: ErrorCategory.Invariant,
                 reason:
                   '[InsertFire] No loadLocal found for fire call argument',
                 suggestions: null,
@@ -238,9 +248,12 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
           } else {
             context.pushError({
               loc: value.loc,
-              errorCode: ErrorCode.CANNOT_COMPILE_FIRE,
               description:
                 '`fire()` can only receive a function call such as `fire(fn(a,b)). Method calls and other expressions are not allowed',
+              severity: ErrorSeverity.InvalidReact,
+              category: ErrorCategory.Fire,
+              reason: CANNOT_COMPILE_FIRE,
+              suggestions: null,
             });
           }
         } else {
@@ -255,8 +268,11 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
           }
           context.pushError({
             loc: value.loc,
-            errorCode: ErrorCode.CANNOT_COMPILE_FIRE,
             description,
+            severity: ErrorSeverity.InvalidReact,
+            category: ErrorCategory.Fire,
+            reason: CANNOT_COMPILE_FIRE,
+            suggestions: null,
           });
         }
       } else if (value.kind === 'CallExpression') {
@@ -385,7 +401,10 @@ function ensureNoRemainingCalleeCaptures(
         description: `All uses of ${calleeName} must be either used with a fire() call in \
 this effect or not used with a fire() call at all. ${calleeName} was used with fire() on line \
 ${printSourceLocationLine(calleeInfo.fireLoc)} in this effect`,
-        errorCode: ErrorCode.CANNOT_COMPILE_FIRE,
+        severity: ErrorSeverity.InvalidReact,
+        category: ErrorCategory.Fire,
+        reason: CANNOT_COMPILE_FIRE,
+        suggestions: null,
       });
     }
   }
@@ -400,7 +419,10 @@ function ensureNoMoreFireUses(fn: HIRFunction, context: Context): void {
       context.pushError({
         loc: place.identifier.loc,
         description: 'Cannot use `fire` outside of a useEffect function',
-        errorCode: ErrorCode.CANNOT_COMPILE_FIRE,
+        category: ErrorCategory.Fire,
+        severity: ErrorSeverity.Invariant,
+        reason: CANNOT_COMPILE_FIRE,
+        suggestions: null,
       });
     }
   }

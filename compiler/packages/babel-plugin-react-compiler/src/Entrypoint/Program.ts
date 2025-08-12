@@ -7,7 +7,12 @@
 
 import {NodePath} from '@babel/core';
 import * as t from '@babel/types';
-import {CompilerError, ErrorSeverity} from '../CompilerError';
+import {
+  CompilerError,
+  CompilerErrorDetail,
+  ErrorCategory,
+  ErrorSeverity,
+} from '../CompilerError';
 import {ExternalFunction, ReactFunctionType} from '../HIR/Environment';
 import {CodegenFunction} from '../ReactiveScopes';
 import {isComponentDeclaration} from '../Utils/ComponentDeclaration';
@@ -28,7 +33,6 @@ import {
 } from './Suppression';
 import {GeneratedSource} from '../HIR';
 import {Err, Ok, Result} from '../Utils/Result';
-import {ErrorCode} from '../Utils/CompilerErrorCodes';
 
 export type CompilerPass = {
   opts: PluginOptions;
@@ -98,9 +102,13 @@ function findDirectivesDynamicGating(
       if (t.isValidIdentifier(maybeMatch[1])) {
         result.push({directive, match: maybeMatch[1]});
       } else {
-        errors.pushErrorCode(ErrorCode.DYNAMIC_GATING_IS_NOT_IDENTIFIER, {
+        errors.push({
+          reason: `Dynamic gating directive is not a valid JavaScript identifier`,
           description: `Found '${directive.value.value}'`,
+          severity: ErrorSeverity.InvalidReact,
+          category: ErrorCategory.Gating,
           loc: directive.loc ?? null,
+          suggestions: null,
         });
       }
     }
@@ -109,11 +117,15 @@ function findDirectivesDynamicGating(
     return Err(errors);
   } else if (result.length > 1) {
     const error = new CompilerError();
-    error.pushErrorCode(ErrorCode.DYNAMIC_GATING_MULTIPLE_DIRECTIVES, {
+    error.push({
+      reason: `Multiple dynamic gating directives found`,
       description: `Expected a single directive but found [${result
         .map(r => r.directive.value.value)
         .join(', ')}]`,
+      severity: ErrorSeverity.InvalidReact,
+      category: ErrorCategory.Gating,
       loc: result[0].directive.loc ?? null,
+      suggestions: null,
     });
     return Err(error);
   } else if (result.length === 1) {
@@ -442,12 +454,15 @@ export function compileProgram(
   if (programContext.hasModuleScopeOptOut) {
     if (compiledFns.length > 0) {
       const error = new CompilerError();
-      error.push({
-        reason:
-          'Unexpected compiled functions when module scope opt-out is present',
-        severity: ErrorSeverity.Invariant,
-        loc: null,
-      });
+      error.pushErrorDetail(
+        new CompilerErrorDetail({
+          reason:
+            'Unexpected compiled functions when module scope opt-out is present',
+          severity: ErrorSeverity.Invariant,
+          category: ErrorCategory.Invariant,
+          loc: null,
+        }),
+      );
       handleError(error, programContext, null);
     }
     return null;
@@ -580,7 +595,9 @@ function processFn(
   let compiledFn: CodegenFunction;
   const compileResult = tryCompileFunction(fn, fnType, programContext);
   if (compileResult.kind === 'error') {
-    if (directives.optOut == null) {
+    if (directives.optOut != null) {
+      logError(compileResult.error, programContext, fn.node.loc ?? null);
+    } else {
       handleError(compileResult.error, programContext, fn.node.loc ?? null);
     }
     const retryResult = retryCompileFunction(fn, fnType, programContext);
@@ -679,7 +696,7 @@ function tryCompileFunction(
         fn,
         programContext.opts.environment,
         fnType,
-        programContext.opts.noEmit ? 'lint_only' : 'all_features',
+        'all_features',
         programContext,
         programContext.opts.logger,
         programContext.filename,
@@ -792,7 +809,16 @@ function shouldSkipCompilation(
   if (pass.opts.sources) {
     if (pass.filename === null) {
       const error = new CompilerError();
-      error.pushErrorCode(ErrorCode.FILENAME_NOT_SET);
+      error.pushErrorDetail(
+        new CompilerErrorDetail({
+          reason: `Expected a filename but found none.`,
+          description:
+            "When the 'sources' config options is specified, the React compiler will only compile files with a name",
+          severity: ErrorSeverity.InvalidConfig,
+          category: ErrorCategory.Config,
+          loc: null,
+        }),
+      );
       handleError(error, pass, null);
       return true;
     }
