@@ -86,6 +86,7 @@ import {
   SUSPENSE_TREE_OPERATION_ADD,
   SUSPENSE_TREE_OPERATION_REMOVE,
   SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
+  SUSPENSE_TREE_OPERATION_RESIZE,
 } from '../../constants';
 import {inspectHooksOfFiber} from 'react-debug-tools';
 import {
@@ -2558,6 +2559,20 @@ export function attach(
     pushOperation(fiberID);
     pushOperation(parentID);
     pushOperation(nameStringID);
+
+    const rects = suspenseInstance.rects;
+    if (rects === null) {
+      pushOperation(-1);
+    } else {
+      pushOperation(rects.length);
+      for (let i = 0; i < rects.length; ++i) {
+        const rect = rects[i];
+        pushOperation(Math.round(rect.x));
+        pushOperation(Math.round(rect.y));
+        pushOperation(Math.round(rect.width));
+        pushOperation(Math.round(rect.height));
+      }
+    }
   }
 
   function recordUnmount(fiberInstance: FiberInstance): void {
@@ -2606,7 +2621,30 @@ export function attach(
   }
 
   function recordSuspenseResize(suspenseNode: SuspenseNode): void {
-    // TODO: Notify the front end of the change.
+    if (__DEBUG__) {
+      console.log('recordSuspenseResize()', suspenseNode);
+    }
+    const fiberInstance = suspenseNode.instance;
+    if (fiberInstance.kind !== FIBER_INSTANCE) {
+      // TODO: Resizes of filtered Suspense nodes are currently dropped.
+      return;
+    }
+
+    pushOperation(SUSPENSE_TREE_OPERATION_RESIZE);
+    pushOperation(fiberInstance.id);
+    const rects = suspenseNode.rects;
+    if (rects === null) {
+      pushOperation(-1);
+    } else {
+      pushOperation(rects.length);
+      for (let i = 0; i < rects.length; ++i) {
+        const rect = rects[i];
+        pushOperation(Math.round(rect.x));
+        pushOperation(Math.round(rect.y));
+        pushOperation(Math.round(rect.width));
+        pushOperation(Math.round(rect.height));
+      }
+    }
   }
 
   function recordSuspenseUnmount(suspenseInstance: SuspenseNode): void {
@@ -3209,7 +3247,7 @@ export function attach(
       const debugInfo = thenable._debugInfo;
       if (debugInfo) {
         for (let j = 0; j < debugInfo.length; j++) {
-          const debugEntry = debugInfo[i];
+          const debugEntry = debugInfo[j];
           if (debugEntry.awaited) {
             const asyncInfo: ReactAsyncInfo = (debugEntry: any);
             insertSuspendedBy(asyncInfo);
@@ -3442,7 +3480,25 @@ export function attach(
         // Measure this Suspense node. In general we shouldn't do this until we have
         // inserted the new children but since we know this is a FiberInstance we'll
         // just use the Fiber anyway.
-        newSuspenseNode.rects = measureInstance(newInstance);
+        // Fallbacks get attributed to the parent so we only measure if we're
+        // showing primary content.
+        if (OffscreenComponent === -1) {
+          const isTimedOut = fiber.memoizedState !== null;
+          if (!isTimedOut) {
+            newSuspenseNode.rects = measureInstance(newInstance);
+          }
+        } else {
+          const contentFiber = fiber.child;
+          if (contentFiber === null) {
+            throw new Error(
+              'There should always be an Offscreen Fiber child in a Suspense boundary.',
+            );
+          }
+          const isTimedOut = fiber.memoizedState !== null;
+          if (!isTimedOut) {
+            newSuspenseNode.rects = measureInstance(newInstance);
+          }
+        }
         recordSuspenseMount(newSuspenseNode, reconcilingParentSuspenseNode);
       }
       insertChild(newInstance);
@@ -3476,7 +3532,25 @@ export function attach(
         // Measure this Suspense node. In general we shouldn't do this until we have
         // inserted the new children but since we know this is a FiberInstance we'll
         // just use the Fiber anyway.
-        newSuspenseNode.rects = measureInstance(newInstance);
+        // Fallbacks get attributed to the parent so we only measure if we're
+        // showing primary content.
+        if (OffscreenComponent === -1) {
+          const isTimedOut = fiber.memoizedState !== null;
+          if (!isTimedOut) {
+            newSuspenseNode.rects = measureInstance(newInstance);
+          }
+        } else {
+          const contentFiber = fiber.child;
+          if (contentFiber === null) {
+            throw new Error(
+              'There should always be an Offscreen Fiber child in a Suspense boundary.',
+            );
+          }
+          const isTimedOut = fiber.memoizedState !== null;
+          if (!isTimedOut) {
+            newSuspenseNode.rects = measureInstance(newInstance);
+          }
+        }
       }
       insertChild(newInstance);
       if (__DEBUG__) {

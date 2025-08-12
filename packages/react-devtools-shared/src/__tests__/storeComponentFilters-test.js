@@ -156,6 +156,9 @@ describe('Store component filters', () => {
             <div>
         ▾ <Suspense>
             <div>
+      [shell]
+        <Suspense name="Unknown" rects={[]}>
+        <Suspense name="Unknown" rects={[]}>
     `);
 
     await actAsync(
@@ -171,6 +174,9 @@ describe('Store component filters', () => {
             <div>
         ▾ <Suspense>
             <div>
+      [shell]
+        <Suspense name="Unknown" rects={[]}>
+        <Suspense name="Unknown" rects={[]}>
     `);
 
     await actAsync(
@@ -186,6 +192,9 @@ describe('Store component filters', () => {
             <div>
         ▾ <Suspense>
             <div>
+      [shell]
+        <Suspense name="Unknown" rects={[]}>
+        <Suspense name="Unknown" rects={[]}>
     `);
   });
 
