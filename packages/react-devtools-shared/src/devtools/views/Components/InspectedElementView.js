@@ -24,6 +24,7 @@ import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 import InspectedElementSourcePanel from './InspectedElementSourcePanel';
 import StackTraceView from './StackTraceView';
 import OwnerView from './OwnerView';
+import Skeleton from './Skeleton';
 
 import styles from './InspectedElementView.css';
 
@@ -170,34 +171,40 @@ export default function InspectedElementView({
             className={styles.InspectedElementSection}
             data-testname="InspectedElementView-Owners">
             <div className={styles.OwnersHeader}>rendered by</div>
+            <React.Suspense
+              fallback={
+                <div className={styles.RenderedBySkeleton}>
+                  <Skeleton height={16} width="40%" />
+                </div>
+              }>
+              {showStack ? <StackTraceView stack={stack} /> : null}
+              {showOwnersList &&
+                owners?.map(owner => (
+                  <Fragment key={owner.id}>
+                    <OwnerView
+                      displayName={owner.displayName || 'Anonymous'}
+                      hocDisplayNames={owner.hocDisplayNames}
+                      environmentName={
+                        inspectedElement.env === owner.env ? null : owner.env
+                      }
+                      compiledWithForget={owner.compiledWithForget}
+                      id={owner.id}
+                      isInStore={store.containsElement(owner.id)}
+                      type={owner.type}
+                    />
+                    {owner.stack != null && owner.stack.length > 0 ? (
+                      <StackTraceView stack={owner.stack} />
+                    ) : null}
+                  </Fragment>
+                ))}
 
-            {showStack ? <StackTraceView stack={stack} /> : null}
-            {showOwnersList &&
-              owners?.map(owner => (
-                <Fragment key={owner.id}>
-                  <OwnerView
-                    displayName={owner.displayName || 'Anonymous'}
-                    hocDisplayNames={owner.hocDisplayNames}
-                    environmentName={
-                      inspectedElement.env === owner.env ? null : owner.env
-                    }
-                    compiledWithForget={owner.compiledWithForget}
-                    id={owner.id}
-                    isInStore={store.containsElement(owner.id)}
-                    type={owner.type}
-                  />
-                  {owner.stack != null && owner.stack.length > 0 ? (
-                    <StackTraceView stack={owner.stack} />
-                  ) : null}
-                </Fragment>
-              ))}
-
-            {rootType !== null && (
-              <div className={styles.OwnersMetaField}>{rootType}</div>
-            )}
-            {rendererLabel !== null && (
-              <div className={styles.OwnersMetaField}>{rendererLabel}</div>
-            )}
+              {rootType !== null && (
+                <div className={styles.OwnersMetaField}>{rootType}</div>
+              )}
+              {rendererLabel !== null && (
+                <div className={styles.OwnersMetaField}>{rendererLabel}</div>
+              )}
+            </React.Suspense>
           </div>
         )}
 
