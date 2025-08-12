@@ -2180,7 +2180,17 @@ describe('ReactInternalTestUtils console assertions', () => {
         );
         assertConsoleErrorDev([['Hi', {withoutStack: true}]]);
       });
-      expect(message).toMatchInlineSnapshot();
+      expect(message).toMatchInlineSnapshot(`
+        "assertConsoleErrorDev(expected)
+
+        Unexpected error(s) recorded.
+
+        - Expected errors
+        + Received errors
+
+          Hi
+        + TypeError: Cannot read properties of undefined (reading 'stack')     in Foo (at **)"
+      `);
     });
     // @gate __DEV__
     it('fails if only error does not contain a stack', () => {
