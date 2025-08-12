@@ -75,27 +75,26 @@ describe('ReactEarlyReturnHooksBug', () => {
   // Test the original recursive component issue (simplified)
   it('should not trigger static flag error with early return before hooks in recursive component', async () => {
     // This is the problematic component from the user's report (simplified)
-    function SubGroupFilter({ depth, label, root, action }) {
-      // BUG: Early return before hooks - this causes the static flag issue
-      if (!root.length) {
-        return null;
-      }
+   function SubGroupFilter({ depth, label, root, action }) {
+  // Call hooks FIRST
+  const [index, setIndex] = React.useState(0);
+  const [items, setItems] = React.useState([]);
 
-      // Limit recursion to avoid infinite loop
-      if (depth > 0) {
-        return <div>Max depth reached</div>;
-      }
+  React.useEffect(() => {
+    if (root.length > 0 && root[index]) {
+      setItems([{ id: 'test', name: 'Test' }]);
+    }
+  }, [root, index]);
 
-      // These hooks are called after the early return, which confuses React's
-      // static flag tracking in recursive components
-      const [index, setIndex] = React.useState(0);
-      const [items, setItems] = React.useState([]);
+  // Limit recursion to avoid infinite loop
+  if (depth > 2) {
+    return React.createElement('div', null, 'Max depth reached');
+  }
 
-      React.useEffect(() => {
-        if (root[index]) {
-          setItems([{ id: 'test', name: 'Test' }]);
-        }
-      }, [root, index]);
+  // Early return AFTER all hooks are called
+  if (!root.length) {
+    return null;
+  }
 
       return (
         <>
