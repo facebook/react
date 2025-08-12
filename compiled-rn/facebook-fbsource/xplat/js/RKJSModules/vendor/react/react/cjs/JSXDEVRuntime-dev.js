@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<af4a2e1a80c66ed456f9810728af474f>>
+ * @generated SignedSource<<e502a1d12b67fc5abbb37d62c984f0f0>>
  */
 
 "use strict";
@@ -152,17 +152,8 @@ __DEV__ &&
       componentName = this.props.ref;
       return void 0 !== componentName ? componentName : null;
     }
-    function ReactElement(
-      type,
-      key,
-      self,
-      source,
-      owner,
-      props,
-      debugStack,
-      debugTask
-    ) {
-      self = props.ref;
+    function ReactElement(type, key, props, owner, debugStack, debugTask) {
+      var refProp = props.ref;
       type = {
         $$typeof: REACT_ELEMENT_TYPE,
         type: type,
@@ -170,7 +161,7 @@ __DEV__ &&
         props: props,
         _owner: owner
       };
-      null !== (void 0 !== self ? self : null)
+      null !== (void 0 !== refProp ? refProp : null)
         ? Object.defineProperty(type, "ref", {
             enumerable: !1,
             get: elementRefGetterWithDeprecationWarning
@@ -209,8 +200,6 @@ __DEV__ &&
       config,
       maybeKey,
       isStaticChildren,
-      source,
-      self,
       debugStack,
       debugTask
     ) {
@@ -271,10 +260,8 @@ __DEV__ &&
       return ReactElement(
         type,
         children,
-        self,
-        source,
-        getOwner(),
         maybeKey,
+        getOwner(),
         debugStack,
         debugTask
       );
@@ -329,14 +316,7 @@ __DEV__ &&
     var unknownOwnerDebugTask = createTask(getTaskName(UnknownOwner));
     var didWarnAboutKeySpread = {};
     exports.Fragment = REACT_FRAGMENT_TYPE;
-    exports.jsxDEV = function (
-      type,
-      config,
-      maybeKey,
-      isStaticChildren,
-      source,
-      self
-    ) {
+    exports.jsxDEV = function (type, config, maybeKey, isStaticChildren) {
       var trackActualOwner =
         1e4 > ReactSharedInternals.recentlyCreatedOwnerStacks++;
       return jsxDEVImpl(
@@ -344,8 +324,6 @@ __DEV__ &&
         config,
         maybeKey,
         isStaticChildren,
-        source,
-        self,
         trackActualOwner
           ? Error("react-stack-top-frame")
           : unknownOwnerDebugStack,

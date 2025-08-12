@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<65635d35a8847138eb7a84fad1233975>>
+ * @generated SignedSource<<765ee96fe72cbc64c4594c4de693d338>>
  */
 
 "use strict";
@@ -92,13 +92,13 @@ var isArrayImpl = Array.isArray;
 function noop() {}
 var ReactSharedInternals = { H: null, A: null, T: null, S: null },
   hasOwnProperty = Object.prototype.hasOwnProperty;
-function ReactElement(type, key, self, source, owner, props) {
-  self = props.ref;
+function ReactElement(type, key, props) {
+  var refProp = props.ref;
   return {
     $$typeof: REACT_ELEMENT_TYPE,
     type: type,
     key: key,
-    ref: void 0 !== self ? self : null,
+    ref: void 0 !== refProp ? refProp : null,
     props: props
   };
 }
@@ -111,17 +111,10 @@ function jsxProd(type, config, maybeKey) {
     for (var propName in config)
       "key" !== propName && (maybeKey[propName] = config[propName]);
   } else maybeKey = config;
-  return ReactElement(type, key, void 0, void 0, null, maybeKey);
+  return ReactElement(type, key, maybeKey);
 }
 function cloneAndReplaceKey(oldElement, newKey) {
-  return ReactElement(
-    oldElement.type,
-    newKey,
-    void 0,
-    void 0,
-    void 0,
-    oldElement.props
-  );
+  return ReactElement(oldElement.type, newKey, oldElement.props);
 }
 function isValidElement(object) {
   return (
@@ -408,12 +401,9 @@ exports.cloneElement = function (element, config, children) {
       "The argument must be a React element, but you passed " + element + "."
     );
   var props = assign({}, element.props),
-    key = element.key,
-    owner = void 0;
+    key = element.key;
   if (null != config)
-    for (propName in (void 0 !== config.ref && (owner = void 0),
-    void 0 !== config.key && (key = "" + config.key),
-    config))
+    for (propName in (void 0 !== config.key && (key = "" + config.key), config))
       !hasOwnProperty.call(config, propName) ||
         "key" === propName ||
         "__self" === propName ||
@@ -427,7 +417,7 @@ exports.cloneElement = function (element, config, children) {
       childArray[i] = arguments[i + 2];
     props.children = childArray;
   }
-  return ReactElement(element.type, key, void 0, void 0, owner, props);
+  return ReactElement(element.type, key, props);
 };
 exports.createContext = function (defaultValue) {
   defaultValue = {
@@ -467,7 +457,7 @@ exports.createElement = function (type, config, children) {
     for (propName in ((childrenLength = type.defaultProps), childrenLength))
       void 0 === props[propName] &&
         (props[propName] = childrenLength[propName]);
-  return ReactElement(type, key, void 0, void 0, null, props);
+  return ReactElement(type, key, props);
 };
 exports.createRef = function () {
   return { current: null };
@@ -593,7 +583,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.2.0-native-fb-ac7820a9-20250811";
+exports.version = "19.2.0-native-fb-47fd2f5e-20250812";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

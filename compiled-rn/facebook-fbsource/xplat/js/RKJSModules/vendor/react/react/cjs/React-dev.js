@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0d7a208c8b3a1db5510743716efa723b>>
+ * @generated SignedSource<<8240c510f40c2e3659cbc2e51118f827>>
  */
 
 "use strict";
@@ -199,17 +199,8 @@ __DEV__ &&
       componentName = this.props.ref;
       return void 0 !== componentName ? componentName : null;
     }
-    function ReactElement(
-      type,
-      key,
-      self,
-      source,
-      owner,
-      props,
-      debugStack,
-      debugTask
-    ) {
-      self = props.ref;
+    function ReactElement(type, key, props, owner, debugStack, debugTask) {
+      var refProp = props.ref;
       type = {
         $$typeof: REACT_ELEMENT_TYPE,
         type: type,
@@ -217,7 +208,7 @@ __DEV__ &&
         props: props,
         _owner: owner
       };
-      null !== (void 0 !== self ? self : null)
+      null !== (void 0 !== refProp ? refProp : null)
         ? Object.defineProperty(type, "ref", {
             enumerable: !1,
             get: elementRefGetterWithDeprecationWarning
@@ -256,8 +247,6 @@ __DEV__ &&
       config,
       maybeKey,
       isStaticChildren,
-      source,
-      self,
       debugStack,
       debugTask
     ) {
@@ -318,10 +307,8 @@ __DEV__ &&
       return ReactElement(
         type,
         children,
-        self,
-        source,
-        getOwner(),
         maybeKey,
+        getOwner(),
         debugStack,
         debugTask
       );
@@ -330,10 +317,8 @@ __DEV__ &&
       newKey = ReactElement(
         oldElement.type,
         newKey,
-        void 0,
-        void 0,
-        oldElement._owner,
         oldElement.props,
+        oldElement._owner,
         oldElement._debugStack,
         oldElement._debugTask
       );
@@ -1058,10 +1043,8 @@ __DEV__ &&
       props = ReactElement(
         element.type,
         key,
-        void 0,
-        void 0,
-        owner,
         props,
+        owner,
         element._debugStack,
         element._debugTask
       );
@@ -1134,10 +1117,8 @@ __DEV__ &&
       return ReactElement(
         type,
         key,
-        void 0,
-        void 0,
-        getOwner(),
         i,
+        getOwner(),
         propName ? Error("react-stack-top-frame") : unknownOwnerDebugStack,
         propName ? createTask(getTaskName(type)) : unknownOwnerDebugTask
       );
@@ -1192,7 +1173,7 @@ __DEV__ &&
       return elementType;
     };
     exports.isValidElement = isValidElement;
-    exports.jsx = function (type, config, maybeKey, source, self) {
+    exports.jsx = function (type, config, maybeKey) {
       var trackActualOwner =
         1e4 > ReactSharedInternals.recentlyCreatedOwnerStacks++;
       return jsxDEVImpl(
@@ -1200,22 +1181,13 @@ __DEV__ &&
         config,
         maybeKey,
         !1,
-        source,
-        self,
         trackActualOwner
           ? Error("react-stack-top-frame")
           : unknownOwnerDebugStack,
         trackActualOwner ? createTask(getTaskName(type)) : unknownOwnerDebugTask
       );
     };
-    exports.jsxDEV = function (
-      type,
-      config,
-      maybeKey,
-      isStaticChildren,
-      source,
-      self
-    ) {
+    exports.jsxDEV = function (type, config, maybeKey, isStaticChildren) {
       var trackActualOwner =
         1e4 > ReactSharedInternals.recentlyCreatedOwnerStacks++;
       return jsxDEVImpl(
@@ -1223,15 +1195,13 @@ __DEV__ &&
         config,
         maybeKey,
         isStaticChildren,
-        source,
-        self,
         trackActualOwner
           ? Error("react-stack-top-frame")
           : unknownOwnerDebugStack,
         trackActualOwner ? createTask(getTaskName(type)) : unknownOwnerDebugTask
       );
     };
-    exports.jsxs = function (type, config, maybeKey, source, self) {
+    exports.jsxs = function (type, config, maybeKey) {
       var trackActualOwner =
         1e4 > ReactSharedInternals.recentlyCreatedOwnerStacks++;
       return jsxDEVImpl(
@@ -1239,8 +1209,6 @@ __DEV__ &&
         config,
         maybeKey,
         !0,
-        source,
-        self,
         trackActualOwner
           ? Error("react-stack-top-frame")
           : unknownOwnerDebugStack,
@@ -1420,7 +1388,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.2.0-native-fb-ac7820a9-20250811";
+    exports.version = "19.2.0-native-fb-47fd2f5e-20250812";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
