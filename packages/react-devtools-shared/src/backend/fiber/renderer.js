@@ -2935,7 +2935,7 @@ export function attach(
       }
       if (suspenseNode.parent !== parentNode) {
         throw new Error(
-          'Cannot remove a node from a different parent than is being reconciled.',
+          'Cannot remove a Suspense node from a different parent than is being reconciled.',
         );
       }
       let previousSuspenseSibling = remainingReconcilingChildrenSuspenseNodes;
