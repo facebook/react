@@ -355,7 +355,7 @@ export function createLogAssertion(
         let argIndex = 0;
         // console.* could have been called with a non-string e.g. `console.error(new Error())`
         // eslint-disable-next-line react-internal/safe-string-coercion
-        String(format).replace(/%s|%c/g, () => argIndex++);
+        String(format).replace(/%s|%c|%o/g, () => argIndex++);
         if (argIndex !== args.length) {
           if (format.includes('%c%s')) {
             // We intentionally use mismatching formatting when printing badging because we don't know
