@@ -11,7 +11,6 @@ import * as React from 'react';
 
 import ButtonIcon from '../ButtonIcon';
 import Button from '../Button';
-import Skeleton from './Skeleton';
 
 import type {ReactFunctionLocation} from 'shared/ReactTypes';
 
@@ -27,7 +26,12 @@ function InspectedElementViewSourceButton({
   symbolicatedSourcePromise,
 }: Props): React.Node {
   return (
-    <React.Suspense fallback={<Skeleton height={16} width={24} />}>
+    <React.Suspense
+      fallback={
+        <Button disabled={true} title="Loading source maps...">
+          <ButtonIcon type="view-source" />
+        </Button>
+      }>
       <ActualSourceButton
         source={source}
         symbolicatedSourcePromise={symbolicatedSourcePromise}

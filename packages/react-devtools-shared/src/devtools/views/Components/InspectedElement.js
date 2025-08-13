@@ -24,7 +24,6 @@ import FetchFileWithCachingContext from './FetchFileWithCachingContext';
 import {symbolicateSourceWithCache} from 'react-devtools-shared/src/symbolicateSource';
 import OpenInEditorButton from './OpenInEditorButton';
 import InspectedElementViewSourceButton from './InspectedElementViewSourceButton';
-import Skeleton from './Skeleton';
 import useEditorURL from '../useEditorURL';
 
 import styles from './InspectedElement.css';
@@ -203,7 +202,9 @@ export default function InspectedElementWrapper(_: Props): React.Node {
   }
 
   return (
-    <div className={styles.InspectedElement}>
+    <div
+      className={styles.InspectedElement}
+      key={inspectedElementID /* Force reset when selected Element changes */}>
       <div className={styles.TitleRow} data-testname="InspectedElement-Title">
         {strictModeBadge}
 
@@ -232,13 +233,11 @@ export default function InspectedElementWrapper(_: Props): React.Node {
           !!editorURL &&
           source != null &&
           symbolicatedSourcePromise != null && (
-            <React.Suspense fallback={<Skeleton height={16} width={24} />}>
-              <OpenInEditorButton
-                editorURL={editorURL}
-                source={source}
-                symbolicatedSourcePromise={symbolicatedSourcePromise}
-              />
-            </React.Suspense>
+            <OpenInEditorButton
+              editorURL={editorURL}
+              source={source}
+              symbolicatedSourcePromise={symbolicatedSourcePromise}
+            />
           )}
 
         {canToggleError && (
@@ -294,9 +293,6 @@ export default function InspectedElementWrapper(_: Props): React.Node {
 
       {inspectedElement !== null && symbolicatedSourcePromise != null && (
         <InspectedElementView
-          key={
-            inspectedElementID /* Force reset when selected Element changes */
-          }
           element={element}
           hookNames={hookNames}
           inspectedElement={inspectedElement}
