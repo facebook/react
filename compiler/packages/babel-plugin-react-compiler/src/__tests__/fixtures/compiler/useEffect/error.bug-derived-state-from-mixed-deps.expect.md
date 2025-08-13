@@ -34,13 +34,15 @@ export const FIXTURE_ENTRYPOINT = {
 ```
 Found 1 error:
 
-Error: Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)
+Error: You may not need this effect. Values derived from state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)
 
-error.derived-state-from-mixed-deps-no-error.ts:9:4
+This effect updates state based on other state values. Consider calculating this value directly during render.
+
+error.bug-derived-state-from-mixed-deps.ts:9:4
    7 |
    8 |   useEffect(() => {
 >  9 |     setDisplayName(prefix + name);
-     |     ^^^^^^^^^^^^^^ Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)
+     |     ^^^^^^^^^^^^^^ You may not need this effect. Values derived from state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)
   10 |   }, [prefix, name]);
   11 |
   12 |   return (
