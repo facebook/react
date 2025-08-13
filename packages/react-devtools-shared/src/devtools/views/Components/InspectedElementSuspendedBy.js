@@ -27,6 +27,13 @@ import type {
 } from 'react-devtools-shared/src/frontend/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 
+import {
+  UNKNOWN_SUSPENDERS_NONE,
+  UNKNOWN_SUSPENDERS_REASON_PRODUCTION,
+  UNKNOWN_SUSPENDERS_REASON_OLD_VERSION,
+  UNKNOWN_SUSPENDERS_REASON_THROWN_PROMISE,
+} from '../../../constants';
+
 type RowProps = {
   bridge: FrontendBridge,
   element: Element,
@@ -295,7 +302,10 @@ export default function InspectedElementSuspendedBy({
   const {suspendedBy, suspendedByRange} = inspectedElement;
 
   // Skip the section if nothing suspended this component.
-  if (suspendedBy == null || suspendedBy.length === 0) {
+  if (
+    (suspendedBy == null || suspendedBy.length === 0) &&
+    inspectedElement.unknownSuspenders === UNKNOWN_SUSPENDERS_NONE
+  ) {
     return null;
   }
 
@@ -327,8 +337,40 @@ export default function InspectedElementSuspendedBy({
     minTime = maxTime - 25;
   }
 
-  const sortedSuspendedBy = suspendedBy.slice(0);
+  const sortedSuspendedBy = suspendedBy === null ? [] : suspendedBy.slice(0);
   sortedSuspendedBy.sort(compareTime);
+
+  let unknownSuspenders = null;
+  switch (inspectedElement.unknownSuspenders) {
+    case UNKNOWN_SUSPENDERS_REASON_PRODUCTION:
+      unknownSuspenders = (
+        <div className={styles.InfoRow}>
+          Something suspended but we don't know the exact reason in production
+          builds of React. Test this in development mode to see exactly what
+          might suspend.
+        </div>
+      );
+      break;
+    case UNKNOWN_SUSPENDERS_REASON_OLD_VERSION:
+      unknownSuspenders = (
+        <div className={styles.InfoRow}>
+          Something suspended but we don't track all the necessary information
+          in older versions of React. Upgrade to the latest version of React to
+          see exactly what might suspend.
+        </div>
+      );
+      break;
+    case UNKNOWN_SUSPENDERS_REASON_THROWN_PROMISE:
+      unknownSuspenders = (
+        <div className={styles.InfoRow}>
+          Something threw a Promise to suspend this boundary. It's likely an
+          outdated version of a library that doesn't yet fully take advantage of
+          use(). Upgrade your data fetching library to see exactly what might
+          suspend.
+        </div>
+      );
+      break;
+  }
 
   return (
     <div>
@@ -351,6 +393,7 @@ export default function InspectedElementSuspendedBy({
           maxTime={maxTime}
         />
       ))}
+      {unknownSuspenders}
     </div>
   );
 }
