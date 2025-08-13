@@ -147,6 +147,8 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
 let currentFiber: null | Fiber = null;
 let currentHook: null | Hook = null;
 let currentContextDependency: null | ContextDependency<mixed> = null;
+let currentThenableIndex: number = 0;
+let currentThenableState: null | Array<Thenable<mixed>> = null;
 
 function nextHook(): null | Hook {
   const hook = currentHook;
@@ -201,7 +203,15 @@ function use<T>(usable: Usable<T>): T {
   if (usable !== null && typeof usable === 'object') {
     // $FlowFixMe[method-unbinding]
     if (typeof usable.then === 'function') {
-      const thenable: Thenable<any> = (usable: any);
+      const thenable: Thenable<any> =
+        // If we have thenable state, then the actually used thenable will be the one
+        // stashed in it. It's possible for uncached Promises to be new each render
+        // and in that case the one we're inspecting is the in the thenable state.
+        currentThenableState !== null &&
+        currentThenableIndex < currentThenableState.length
+          ? currentThenableState[currentThenableIndex++]
+          : (usable: any);
+
       switch (thenable.status) {
         case 'fulfilled': {
           const fulfilledValue: T = thenable.value;
@@ -1285,6 +1295,14 @@ export function inspectHooksOfFiber(
   // current state from them.
   currentHook = (fiber.memoizedState: Hook);
   currentFiber = fiber;
+  const thenableState =
+    fiber.dependencies && fiber.dependencies._debugThenableState;
+  // In DEV the thenableState is an inner object.
+  const usedThenables: any = thenableState
+    ? thenableState.thenables || thenableState
+    : null;
+  currentThenableState = Array.isArray(usedThenables) ? usedThenables : null;
+  currentThenableIndex = 0;
 
   if (hasOwnProperty.call(currentFiber, 'dependencies')) {
     // $FlowFixMe[incompatible-use]: Flow thinks hasOwnProperty might have nulled `currentFiber`
@@ -1339,6 +1357,8 @@ export function inspectHooksOfFiber(
     currentFiber = null;
     currentHook = null;
     currentContextDependency = null;
+    currentThenableState = null;
+    currentThenableIndex = 0;
 
     restoreContexts(contextMap);
   }

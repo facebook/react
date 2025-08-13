@@ -157,6 +157,7 @@ export type Element = {
   type: ElementType,
   displayName: string | null,
   key: number | string | null,
+  nameProp: null | string,
 
   hocDisplayNames: null | Array<string>,
 
@@ -184,6 +185,21 @@ export type Element = {
   compiledWithForget: boolean,
 };
 
+export type Rect = {
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+};
+
+export type SuspenseNode = {
+  id: Element['id'],
+  parentID: SuspenseNode['id'] | 0,
+  children: Array<SuspenseNode['id']>,
+  name: string | null,
+  rects: null | Array<Rect>,
+};
+
 // Serialized version of ReactIOInfo
 export type SerializedIOInfo = {
   name: string,
@@ -209,6 +225,7 @@ export type SerializedElement = {
   id: number,
   key: number | string | null,
   env: null | string,
+  stack: null | ReactStackTrace,
   hocDisplayNames: Array<string> | null,
   compiledWithForget: boolean,
   type: ElementType,
@@ -271,6 +288,9 @@ export type InspectedElement = {
 
   // Location of component in source code.
   source: ReactFunctionLocation | null,
+
+  // The location of the JSX creation.
+  stack: ReactStackTrace | null,
 
   type: ElementType,
 

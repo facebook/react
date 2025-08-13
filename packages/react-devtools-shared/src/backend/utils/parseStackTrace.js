@@ -284,7 +284,7 @@ export function parseStackTrace(
 export function extractLocationFromOwnerStack(
   error: Error,
 ): ReactFunctionLocation | null {
-  const stackTrace = parseStackTrace(error, 0);
+  const stackTrace = parseStackTrace(error, 1);
   const stack = error.stack;
   if (
     !stack.includes('react_stack_bottom_frame') &&
