@@ -9,7 +9,8 @@
 
 import typeof ReactTestRenderer from 'react-test-renderer';
 import {
-  withErrorsOrWarningsIgnored,
+  assertConsoleError,
+  assertConsoleWarn,
   getLegacyRenderImplementation,
   getModernRenderImplementation,
   getVersionedRenderImplementation,
@@ -24,6 +25,7 @@ describe('InspectedElement', () => {
   let ReactDOMClient;
   let PropTypes;
   let TestRenderer: ReactTestRenderer;
+  let assertConsoleErrorDev;
   let bridge: FrontendBridge;
   let store: Store;
   let utils;
@@ -45,9 +47,13 @@ describe('InspectedElement', () => {
   let ErrorBoundary;
   let errorBoundaryInstance;
 
+  let previousAppendComponentStackSetting;
+
   global.IS_REACT_ACT_ENVIRONMENT = true;
 
   beforeEach(() => {
+    previousAppendComponentStackSetting =
+      global.__REACT_DEVTOOLS_GLOBAL_HOOK__.settings.appendComponentStack;
     utils = require('./utils');
     utils.beforeEachProfiling();
 
@@ -62,6 +68,8 @@ describe('InspectedElement', () => {
     TestUtilsAct = require('internal-test-utils').act;
     TestRenderer = utils.requireTestRenderer();
     TestRendererAct = require('internal-test-utils').act;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
 
     BridgeContext =
       require('react-devtools-shared/src/devtools/views/context').BridgeContext;
@@ -106,6 +114,8 @@ describe('InspectedElement', () => {
   });
 
   afterEach(() => {
+    global.__REACT_DEVTOOLS_GLOBAL_HOOK__.settings.appendComponentStack =
+      previousAppendComponentStackSetting;
     jest.restoreAllMocks();
   });
 
@@ -327,6 +337,17 @@ describe('InspectedElement', () => {
       ),
     );
 
+    assertConsoleErrorDev([
+      [
+        'LegacyContextProvider uses the legacy childContextTypes API which was removed in React 19.',
+        {withoutStack: true},
+      ],
+      [
+        'LegacyContextConsumer uses the legacy contextTypes API which was removed in React 19.',
+        {withoutStack: true},
+      ],
+    ]);
+
     const cases = [
       {
         // <LegacyContextConsumer />
@@ -357,16 +378,17 @@ describe('InspectedElement', () => {
       // from props like defaultInspectedElementID and it's easier to reset here than
       // to read the TreeDispatcherContext and update the selected ID that way.
       // We're testing the inspected values here, not the context wiring, so that's ok.
-      withErrorsOrWarningsIgnored(
-        ['An update to %s inside a test was not wrapped in act'],
-        () => {
-          testRendererInstance = TestRenderer.create(null, {
-            unstable_isConcurrent: true,
-          });
-        },
-      );
+      testRendererInstance = TestRenderer.create(null, {
+        unstable_isConcurrent: true,
+      });
 
       const inspectedElement = await inspectElementAtIndex(index);
+      assertConsoleErrorDev([
+        [
+          'An update to Root inside a test was not wrapped in act',
+          {withoutStack: true},
+        ],
+      ]);
 
       expect(inspectedElement.context).not.toBe(null);
       expect(inspectedElement.hasLegacyContext).toBe(shouldHaveLegacyContext);
@@ -504,21 +526,14 @@ describe('InspectedElement', () => {
 
     const prevInspectedElement = inspectedElement;
 
-    // This test causes an intermediate error to be logged but we can ignore it.
-    jest.spyOn(console, 'error').mockImplementation(() => {});
-
     // Clear the frontend cache to simulate DevTools being closed and re-opened.
     // The backend still thinks the most recently-inspected element is still cached,
     // so the frontend needs to tell it to resend a full value.
     // We can verify this by asserting that the component is re-rendered again.
-    withErrorsOrWarningsIgnored(
-      ['An update to %s inside a test was not wrapped in act'],
-      () => {
-        testRendererInstance = TestRenderer.create(null, {
-          unstable_isConcurrent: true,
-        });
-      },
-    );
+
+    testRendererInstance = TestRenderer.create(null, {
+      unstable_isConcurrent: true,
+    });
 
     const {
       clearCacheForTests,
@@ -527,6 +542,13 @@ describe('InspectedElement', () => {
 
     targetRenderCount = 0;
     inspectedElement = await inspectElementAtIndex(1);
+    assertConsoleErrorDev([
+      [
+        'An update to Root inside a test was not wrapped in act',
+        {withoutStack: true},
+      ],
+      'Error: Cached data for element "3" not found',
+    ]);
     expect(targetRenderCount).toBe(1);
     expect(inspectedElement).toEqual(prevInspectedElement);
   });
@@ -884,6 +906,7 @@ describe('InspectedElement', () => {
         </>,
       ),
     );
+    assertConsoleError(['Error: test-error-do-not-surface']);
 
     const inspectedElement = await inspectElementAtIndex(0);
 
@@ -2192,30 +2215,26 @@ describe('InspectedElement', () => {
     `);
 
     await utils.actAsync(async () => {
-      // Ignore transient warning this causes
-      withErrorsOrWarningsIgnored(['No element found with id'], () => {
-        store.componentFilters = [];
+      store.componentFilters = [];
 
-        // Flush events to the renderer.
-        jest.runOnlyPendingTimers();
-      });
+      // Flush events to the renderer.
+      jest.runOnlyPendingTimers();
     }, false);
+    // Ignore transient warning this causes
+    assertConsoleError(['No element found with id']);
 
     // HACK: Recreate TestRenderer instance because we rely on default state values
     // from props like defaultInspectedElementID and it's easier to reset here than
     // to read the TreeDispatcherContext and update the selected ID that way.
     // We're testing the inspected values here, not the context wiring, so that's ok.
-    withErrorsOrWarningsIgnored(
-      ['An update to %s inside a test was not wrapped in act'],
-      () => {
-        testRendererInstance = TestRenderer.create(null, {
-          unstable_isConcurrent: true,
-        });
-      },
-    );
+
+    testRendererInstance = TestRenderer.create(null, {
+      unstable_isConcurrent: true,
+    });
 
     // Select/inspect the same element again
     inspectedElement = await inspectElementAtIndex(0);
+
     expect(inspectedElement).toMatchInlineSnapshot(`
       {
         "context": null,
@@ -2252,30 +2271,28 @@ describe('InspectedElement', () => {
     `);
 
     await utils.actAsync(async () => {
-      // Ignore transient warning this causes
-      withErrorsOrWarningsIgnored(['No element found with id'], () => {
-        store.componentFilters = [];
+      store.componentFilters = [];
 
-        // Flush events to the renderer.
-        jest.runOnlyPendingTimers();
-      });
+      // Flush events to the renderer.
+      jest.runOnlyPendingTimers();
     }, false);
 
     // HACK: Recreate TestRenderer instance because we rely on default state values
     // from props like defaultInspectedElementID and it's easier to reset here than
     // to read the TreeDispatcherContext and update the selected ID that way.
     // We're testing the inspected values here, not the context wiring, so that's ok.
-    withErrorsOrWarningsIgnored(
-      ['An update to %s inside a test was not wrapped in act'],
-      () => {
-        testRendererInstance = TestRenderer.create(null, {
-          unstable_isConcurrent: true,
-        });
-      },
-    );
+    testRendererInstance = TestRenderer.create(null, {
+      unstable_isConcurrent: true,
+    });
 
     // Select/inspect the same element again
     inspectedElement = await inspectElementAtIndex(0);
+    assertConsoleErrorDev([
+      [
+        'An update to Root inside a test was not wrapped in act(...)',
+        {withoutStack: true},
+      ],
+    ]);
     expect(inspectedElement).toMatchInlineSnapshot(`
       {
         "context": null,
@@ -2299,12 +2316,10 @@ describe('InspectedElement', () => {
     await utils.actAsync(() => {
       const container = document.createElement('div');
       container.innerHTML = '<div></div>';
-      withErrorsOrWarningsIgnored(
-        ['ReactDOM.hydrate has not been supported since React 18'],
-        () => {
-          ReactDOM.hydrate(<Example />, container);
-        },
-      );
+      ReactDOM.hydrate(<Example />, container);
+      assertConsoleErrorDev([
+        'ReactDOM.hydrate has not been supported since React 18',
+      ]);
     }, false);
 
     const inspectedElement = await inspectElementAtIndex(0);
@@ -2351,8 +2366,6 @@ describe('InspectedElement', () => {
   });
 
   it('should gracefully surface backend errors on the frontend rather than timing out', async () => {
-    jest.spyOn(console, 'error').mockImplementation(() => {});
-
     let shouldThrow = false;
 
     const Example = () => {
@@ -2372,6 +2385,7 @@ describe('InspectedElement', () => {
     shouldThrow = true;
 
     const value = await inspectElementAtIndex(0, noop, true);
+    assertConsoleError(['Error rendering inspected element.']);
 
     expect(value).toBe(null);
 
@@ -2564,9 +2578,9 @@ describe('InspectedElement', () => {
         return null;
       };
 
-      await withErrorsOrWarningsIgnored(['test-only: '], async () => {
-        await utils.actAsync(() => render(<Example repeatWarningCount={1} />));
-      });
+      await utils.actAsync(() => render(<Example repeatWarningCount={1} />));
+      assertConsoleError(['test-only: render error']);
+      assertConsoleWarn(['test-only: render warning']);
 
       const data = await getErrorsAndWarningsForElementAtIndex(0);
       expect(data).toMatchInlineSnapshot(`
@@ -2597,9 +2611,16 @@ describe('InspectedElement', () => {
         return null;
       };
 
-      await withErrorsOrWarningsIgnored(['test-only:'], async () => {
-        await utils.actAsync(() => render(<Example repeatWarningCount={1} />));
-      });
+      await utils.actAsync(() => render(<Example repeatWarningCount={1} />));
+      assertConsoleError([
+        'test-only: render error',
+        'test-only: render error',
+      ]);
+      assertConsoleWarn([
+        'test-only: render warning',
+        'test-only: render warning',
+        'test-only: render warning',
+      ]);
       const data = await getErrorsAndWarningsForElementAtIndex(0);
       expect(data).toMatchInlineSnapshot(`
         {
@@ -2630,9 +2651,9 @@ describe('InspectedElement', () => {
         return null;
       };
 
-      await withErrorsOrWarningsIgnored(['test-only:'], async () => {
-        await utils.actAsync(() => render(<Example repeatWarningCount={1} />));
-      });
+      await utils.actAsync(() => render(<Example repeatWarningCount={1} />));
+      assertConsoleError(['test-only: useLayoutEffect error']);
+      assertConsoleWarn(['test-only: useLayoutEffect warning']);
 
       const data = await getErrorsAndWarningsForElementAtIndex(0);
       expect(data).toMatchInlineSnapshot(`
@@ -2664,9 +2685,9 @@ describe('InspectedElement', () => {
         return null;
       };
 
-      await withErrorsOrWarningsIgnored(['test-only:'], async () => {
-        await utils.actAsync(() => render(<Example repeatWarningCount={1} />));
-      });
+      await utils.actAsync(() => render(<Example repeatWarningCount={1} />));
+      assertConsoleError(['test-only: useEffect error']);
+      assertConsoleWarn(['test-only: useEffect warning']);
 
       const data = await getErrorsAndWarningsForElementAtIndex(0);
       expect(data).toMatchInlineSnapshot(`
@@ -2688,17 +2709,16 @@ describe('InspectedElement', () => {
     });
 
     it('from react get recorded without a component stack', async () => {
+      global.__REACT_DEVTOOLS_GLOBAL_HOOK__.settings.appendComponentStack =
+        false;
       const Example = () => {
         return [<div />];
       };
 
-      await withErrorsOrWarningsIgnored(
+      await utils.actAsync(() => render(<Example />));
+      assertConsoleErrorDev(
         ['Each child in a list should have a unique "key" prop.'],
-        async () => {
-          await utils.actAsync(() =>
-            render(<Example repeatWarningCount={1} />),
-          );
-        },
+        {withoutStack: true},
       );
 
       const data = await getErrorsAndWarningsForElementAtIndex(0);
@@ -2717,9 +2737,9 @@ describe('InspectedElement', () => {
         return null;
       };
 
-      await withErrorsOrWarningsIgnored(['test-only:'], async () => {
-        await utils.actAsync(() => render(<Example repeatWarningCount={1} />));
-      });
+      await utils.actAsync(() => render(<Example repeatWarningCount={1} />));
+      assertConsoleError(['test-only: render error']);
+      assertConsoleWarn(['test-only: render warning']);
 
       const {
         clearErrorsAndWarnings,
@@ -2745,16 +2765,22 @@ describe('InspectedElement', () => {
         return null;
       };
 
-      await withErrorsOrWarningsIgnored(['test-only:'], async () => {
-        await utils.actAsync(() =>
-          render(
-            <React.Fragment>
-              <Example id={1} />
-              <Example id={2} />
-            </React.Fragment>,
-          ),
-        );
-      });
+      await utils.actAsync(() =>
+        render(
+          <React.Fragment>
+            <Example id={1} />
+            <Example id={2} />
+          </React.Fragment>,
+        ),
+      );
+      assertConsoleError([
+        'test-only: render error #1',
+        'test-only: render error #2',
+      ]);
+      assertConsoleWarn([
+        'test-only: render warning #1',
+        'test-only: render warning #2',
+      ]);
 
       let id = ((store.getElementIDAtIndex(1): any): number);
       const rendererID = store.getRendererIDForElement(id);
@@ -2840,16 +2866,22 @@ describe('InspectedElement', () => {
         return null;
       };
 
-      await withErrorsOrWarningsIgnored(['test-only:'], async () => {
-        await utils.actAsync(() =>
-          render(
-            <React.Fragment>
-              <Example id={1} />
-              <Example id={2} />
-            </React.Fragment>,
-          ),
-        );
-      });
+      await utils.actAsync(() =>
+        render(
+          <React.Fragment>
+            <Example id={1} />
+            <Example id={2} />
+          </React.Fragment>,
+        ),
+      );
+      assertConsoleError([
+        'test-only: render error #1',
+        'test-only: render error #2',
+      ]);
+      assertConsoleWarn([
+        'test-only: render warning #1',
+        'test-only: render warning #2',
+      ]);
 
       let id = ((store.getElementIDAtIndex(1): any): number);
       const rendererID = store.getRendererIDForElement(id);
@@ -2991,8 +3023,6 @@ describe('InspectedElement', () => {
   });
 
   it('inspecting nested renderers should not throw (createRoot)', async () => {
-    // Ignoring react art warnings
-    jest.spyOn(console, 'error').mockImplementation(() => {});
     const ReactArt = require('react-art');
     const ArtSVGMode = require('art/modes/svg');
     const ARTCurrentMode = require('art/modes/current');
@@ -3015,6 +3045,10 @@ describe('InspectedElement', () => {
     await utils.actAsync(() => {
       modernRender(<App />);
     });
+    assertConsoleError([
+      // react-art
+      'Error: Not implemented:',
+    ]);
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <App>
@@ -3079,30 +3113,17 @@ describe('InspectedElement', () => {
       ): any): number);
       const inspect = index => {
         // HACK: Recreate TestRenderer instance so we can inspect different elements
-        withErrorsOrWarningsIgnored(
-          ['An update to %s inside a test was not wrapped in act'],
-          () => {
-            testRendererInstance = TestRenderer.create(null, {
-              unstable_isConcurrent: true,
-            });
-          },
-        );
-        return inspectElementAtIndex(index);
-      };
-      const toggleError = async forceError => {
-        await withErrorsOrWarningsIgnored(['ErrorBoundary'], async () => {
-          await TestUtilsAct(async () => {
-            bridge.send('overrideError', {
-              id: targetErrorBoundaryID,
-              rendererID: store.getRendererIDForElement(targetErrorBoundaryID),
-              forceError,
-            });
-          });
+        testRendererInstance = TestRenderer.create(null, {
+          unstable_isConcurrent: true,
         });
-
-        await TestUtilsAct(async () => {
-          jest.runOnlyPendingTimers();
-        });
+        const element = inspectElementAtIndex(index);
+        assertConsoleErrorDev([
+          [
+            'An update to Root inside a test was not wrapped in act',
+            {withoutStack: true},
+          ],
+        ]);
+        return element;
       };
 
       // Inspect <ErrorBoundary /> and see that we cannot toggle error state
@@ -3115,31 +3136,49 @@ describe('InspectedElement', () => {
       expect(inspectedElement.canToggleError).toBe(true);
       expect(inspectedElement.isErrored).toBe(false);
 
-      // Suppress expected error and warning.
-      const consoleErrorMock = jest
-        .spyOn(console, 'error')
-        .mockImplementation(() => {});
-      const consoleWarnMock = jest
-        .spyOn(console, 'warn')
-        .mockImplementation(() => {});
-
       // now force error state on <Example />
-      await toggleError(true);
+      await TestUtilsAct(async () => {
+        bridge.send('overrideError', {
+          id: targetErrorBoundaryID,
+          rendererID: store.getRendererIDForElement(targetErrorBoundaryID),
+          forceError: true,
+        });
+      });
+      assertConsoleWarn([
+        ['Could not find DevToolsInstance with id "3"', {withoutStack: true}],
+        ['Could not find DevToolsInstance with id "3"', {withoutStack: true}],
+      ]);
+      assertConsoleError(['Error: Simulated error coming from DevTools']);
 
-      consoleErrorMock.mockRestore();
-      consoleWarnMock.mockRestore();
-
-      // we are in error state now, <Example /> won't show up
-      withErrorsOrWarningsIgnored(['Invalid index'], () => {
-        expect(store.getElementIDAtIndex(1)).toBe(null);
+      await TestUtilsAct(async () => {
+        jest.runOnlyPendingTimers();
       });
 
-      // Inpsect <ErrorBoundary /> to toggle off the error state
+      // we are in error state now, <Example /> won't show up
+      expect(store.getElementIDAtIndex(1)).toBe(null);
+      assertConsoleWarn([
+        [
+          'Invalid index 1 specified; store contains 1 items.',
+          {withoutStack: true},
+        ],
+      ]);
+
+      // Inspect <ErrorBoundary /> to toggle off the error state
       inspectedElement = await inspect(0);
       expect(inspectedElement.canToggleError).toBe(true);
       expect(inspectedElement.isErrored).toBe(true);
 
-      await toggleError(false);
+      await TestUtilsAct(async () => {
+        bridge.send('overrideError', {
+          id: targetErrorBoundaryID,
+          rendererID: store.getRendererIDForElement(targetErrorBoundaryID),
+          forceError: false,
+        });
+      });
+
+      await TestUtilsAct(async () => {
+        jest.runOnlyPendingTimers();
+      });
 
       // We can now inspect <Example /> with ability to toggle again
       inspectedElement = await inspect(1);
@@ -3187,22 +3226,21 @@ describe('InspectedElement', () => {
       );
     }
 
-    withErrorsOrWarningsIgnored(['test-only:'], () =>
-      utils.act(() =>
-        render(
-          <React.Fragment>
+    utils.act(() =>
+      render(
+        <React.Fragment>
+          <Wrapper>
+            <Child logWarning={true} />
+          </Wrapper>
+          <Wrapper>
             <Wrapper>
               <Child logWarning={true} />
             </Wrapper>
-            <Wrapper>
-              <Wrapper>
-                <Child logWarning={true} />
-              </Wrapper>
-            </Wrapper>
-          </React.Fragment>,
-        ),
+          </Wrapper>
+        </React.Fragment>,
       ),
     );
+    assertConsoleWarn(['test-only: warning', 'test-only: warning']);
 
     utils.act(() =>
       TestRenderer.create(
