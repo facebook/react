@@ -257,6 +257,7 @@ export function convertInspectedElementBackendToFrontend(
     owners,
     env,
     source,
+    stack,
     context,
     hooks,
     plugins,
@@ -295,6 +296,7 @@ export function convertInspectedElementBackendToFrontend(
     // Previous backend implementations (<= 6.1.5) have a different interface for Source.
     // This gates the source features for only compatible backends: >= 6.1.6
     source: Array.isArray(source) ? source : null,
+    stack: stack,
     type,
     owners:
       owners === null

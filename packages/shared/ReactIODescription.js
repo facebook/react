@@ -24,6 +24,8 @@ export function getIODescription(value: any): string {
           return String(value.message);
         } else if (typeof value.url === 'string') {
           return value.url;
+        } else if (typeof value.href === 'string') {
+          return value.href;
         } else if (typeof value.command === 'string') {
           return value.command;
         } else if (
