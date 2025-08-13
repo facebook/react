@@ -12,6 +12,10 @@ if (process.env.NODE_ENV === 'production') {
 
 exports.version = b.version;
 exports.renderToReadableStream = b.renderToReadableStream;
+exports.renderToPipeableStream = b.renderToPipeableStream;
+if (b.resumeToPipeableStream) {
+  exports.resumeToPipeableStream = b.resumeToPipeableStream;
+}
 if (b.resume) {
   exports.resume = b.resume;
 }
