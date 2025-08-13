@@ -34,6 +34,7 @@ import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_REORDER_CHILDREN,
+  UNKNOWN_SUSPENDERS_NONE,
 } from '../../constants';
 import {decorateMany, forceUpdate, restoreMany} from './utils';
 
@@ -859,6 +860,7 @@ export function attach(
       // Not supported in legacy renderers.
       suspendedBy: [],
       suspendedByRange: null,
+      unknownSuspenders: UNKNOWN_SUSPENDERS_NONE,
 
       // List of owners
       owners,
