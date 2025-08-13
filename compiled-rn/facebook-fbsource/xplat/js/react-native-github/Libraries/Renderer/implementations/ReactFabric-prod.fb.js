@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<aca0285694ab2d5557870b2f27ac8870>>
+ * @generated SignedSource<<b5851d5d469eda7479aff1809d4be6f4>>
  */
 
 "use strict";
@@ -8369,9 +8369,11 @@ function getRetryCache(finishedWork) {
 function attachSuspenseRetryListeners(finishedWork, wakeables) {
   var retryCache = getRetryCache(finishedWork);
   wakeables.forEach(function (wakeable) {
-    var retry = resolveRetryWakeable.bind(null, finishedWork, wakeable);
-    retryCache.has(wakeable) ||
-      (retryCache.add(wakeable), wakeable.then(retry, retry));
+    if (!retryCache.has(wakeable)) {
+      retryCache.add(wakeable);
+      var retry = resolveRetryWakeable.bind(null, finishedWork, wakeable);
+      wakeable.then(retry, retry);
+    }
   });
 }
 function recursivelyTraverseMutationEffects(root, parentFiber) {
@@ -11026,10 +11028,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1232 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-47fd2f5e-20250812",
+    version: "19.2.0-native-fb-f1222f76-20250812",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-47fd2f5e-20250812"
+    reconcilerVersion: "19.2.0-native-fb-f1222f76-20250812"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1232.rendererConfig = extraDevToolsConfig);

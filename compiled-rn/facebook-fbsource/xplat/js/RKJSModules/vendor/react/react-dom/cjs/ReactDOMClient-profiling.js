@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f0b1701c94739d9d0f96cfb91e033597>>
+ * @generated SignedSource<<52c3b6f740372e5d1d4a77c565bf63f1>>
  */
 
 /*
@@ -10953,13 +10953,13 @@ function getRetryCache(finishedWork) {
 function attachSuspenseRetryListeners(finishedWork, wakeables) {
   var retryCache = getRetryCache(finishedWork);
   wakeables.forEach(function (wakeable) {
-    var retry = resolveRetryWakeable.bind(null, finishedWork, wakeable);
     if (!retryCache.has(wakeable)) {
       retryCache.add(wakeable);
       if (isDevToolsPresent)
         if (null !== inProgressLanes && null !== inProgressRoot)
           restorePendingUpdaters(inProgressRoot, inProgressLanes);
         else throw Error(formatProdErrorMessage(413));
+      var retry = resolveRetryWakeable.bind(null, finishedWork, wakeable);
       wakeable.then(retry, retry);
     }
   });
@@ -19148,14 +19148,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2251 = React.version;
 if (
-  "19.2.0-native-fb-47fd2f5e-20250812" !==
+  "19.2.0-native-fb-f1222f76-20250812" !==
   isomorphicReactPackageVersion$jscomp$inline_2251
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2251,
-      "19.2.0-native-fb-47fd2f5e-20250812"
+      "19.2.0-native-fb-f1222f76-20250812"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -19177,10 +19177,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2258 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-47fd2f5e-20250812",
+  version: "19.2.0-native-fb-f1222f76-20250812",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-47fd2f5e-20250812",
+  reconcilerVersion: "19.2.0-native-fb-f1222f76-20250812",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$321 = 0;
@@ -19294,4 +19294,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.2.0-native-fb-47fd2f5e-20250812";
+exports.version = "19.2.0-native-fb-f1222f76-20250812";

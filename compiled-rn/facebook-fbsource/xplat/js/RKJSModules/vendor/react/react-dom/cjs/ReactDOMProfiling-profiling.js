@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<dd9a8b98375d998521cbee674ee1d7c4>>
+ * @generated SignedSource<<5f41b6a935f4f852fbc6950e86296b9b>>
  */
 
 /*
@@ -10957,13 +10957,13 @@ function getRetryCache(finishedWork) {
 function attachSuspenseRetryListeners(finishedWork, wakeables) {
   var retryCache = getRetryCache(finishedWork);
   wakeables.forEach(function (wakeable) {
-    var retry = resolveRetryWakeable.bind(null, finishedWork, wakeable);
     if (!retryCache.has(wakeable)) {
       retryCache.add(wakeable);
       if (isDevToolsPresent)
         if (null !== inProgressLanes && null !== inProgressRoot)
           restorePendingUpdaters(inProgressRoot, inProgressLanes);
         else throw Error(formatProdErrorMessage(413));
+      var retry = resolveRetryWakeable.bind(null, finishedWork, wakeable);
       wakeable.then(retry, retry);
     }
   });
@@ -19163,14 +19163,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2252 = React.version;
 if (
-  "19.2.0-native-fb-47fd2f5e-20250812" !==
+  "19.2.0-native-fb-f1222f76-20250812" !==
   isomorphicReactPackageVersion$jscomp$inline_2252
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2252,
-      "19.2.0-native-fb-47fd2f5e-20250812"
+      "19.2.0-native-fb-f1222f76-20250812"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -19192,10 +19192,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2259 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-47fd2f5e-20250812",
+  version: "19.2.0-native-fb-f1222f76-20250812",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-47fd2f5e-20250812",
+  reconcilerVersion: "19.2.0-native-fb-f1222f76-20250812",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$321 = 0;
@@ -19462,7 +19462,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-native-fb-47fd2f5e-20250812";
+exports.version = "19.2.0-native-fb-f1222f76-20250812";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

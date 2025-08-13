@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<555b96c9bdd9bf8270fbfc958a0e1f06>>
+ * @generated SignedSource<<06a00c9033617868585ba783bf2cfe61>>
  */
 
 "use strict";
@@ -9175,7 +9175,6 @@ function getRetryCache(finishedWork) {
 function attachSuspenseRetryListeners(finishedWork, wakeables) {
   var retryCache = getRetryCache(finishedWork);
   wakeables.forEach(function (wakeable) {
-    var retry = resolveRetryWakeable.bind(null, finishedWork, wakeable);
     if (!retryCache.has(wakeable)) {
       retryCache.add(wakeable);
       if (isDevToolsPresent)
@@ -9185,6 +9184,7 @@ function attachSuspenseRetryListeners(finishedWork, wakeables) {
           throw Error(
             "Expected finished root and lanes to be set. This is a bug in React."
           );
+      var retry = resolveRetryWakeable.bind(null, finishedWork, wakeable);
       wakeable.then(retry, retry);
     }
   });
@@ -12979,10 +12979,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1476 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-47fd2f5e-20250812",
+    version: "19.2.0-native-fb-f1222f76-20250812",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-47fd2f5e-20250812"
+    reconcilerVersion: "19.2.0-native-fb-f1222f76-20250812"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1476.rendererConfig = extraDevToolsConfig);
