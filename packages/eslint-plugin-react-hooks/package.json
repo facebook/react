@@ -48,7 +48,6 @@
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.11.4",
-    "babel-plugin-react-compiler": "link:../../compiler/packages/babel-plugin-react-compiler",
     "@babel/preset-typescript": "^7.26.0",
     "@babel/types": "^7.19.0",
     "@tsconfig/strictest": "^2.0.5",
