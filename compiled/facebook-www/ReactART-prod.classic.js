@@ -8231,9 +8231,11 @@ function getRetryCache(finishedWork) {
 function attachSuspenseRetryListeners(finishedWork, wakeables) {
   var retryCache = getRetryCache(finishedWork);
   wakeables.forEach(function (wakeable) {
-    var retry = resolveRetryWakeable.bind(null, finishedWork, wakeable);
-    retryCache.has(wakeable) ||
-      (retryCache.add(wakeable), wakeable.then(retry, retry));
+    if (!retryCache.has(wakeable)) {
+      retryCache.add(wakeable);
+      var retry = resolveRetryWakeable.bind(null, finishedWork, wakeable);
+      wakeable.then(retry, retry);
+    }
   });
 }
 function recursivelyTraverseMutationEffects(root$jscomp$0, parentFiber, lanes) {
@@ -11296,10 +11298,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1603 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-9baecbf0-20250812",
+  version: "19.2.0-www-classic-f1222f76-20250812",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-9baecbf0-20250812"
+  reconcilerVersion: "19.2.0-www-classic-f1222f76-20250812"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1604 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11325,4 +11327,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.2.0-www-classic-9baecbf0-20250812";
+exports.version = "19.2.0-www-classic-f1222f76-20250812";

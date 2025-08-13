@@ -9189,9 +9189,11 @@ module.exports = function ($$$config) {
   function attachSuspenseRetryListeners(finishedWork, wakeables) {
     var retryCache = getRetryCache(finishedWork);
     wakeables.forEach(function (wakeable) {
-      var retry = resolveRetryWakeable.bind(null, finishedWork, wakeable);
-      retryCache.has(wakeable) ||
-        (retryCache.add(wakeable), wakeable.then(retry, retry));
+      if (!retryCache.has(wakeable)) {
+        retryCache.add(wakeable);
+        var retry = resolveRetryWakeable.bind(null, finishedWork, wakeable);
+        wakeable.then(retry, retry);
+      }
     });
   }
   function recursivelyTraverseMutationEffects(
@@ -14046,7 +14048,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-classic-9baecbf0-20250812"
+      reconcilerVersion: "19.2.0-www-classic-f1222f76-20250812"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

@@ -9995,9 +9995,11 @@ __DEV__ &&
     function attachSuspenseRetryListeners(finishedWork, wakeables) {
       var retryCache = getRetryCache(finishedWork);
       wakeables.forEach(function (wakeable) {
-        var retry = resolveRetryWakeable.bind(null, finishedWork, wakeable);
-        retryCache.has(wakeable) ||
-          (retryCache.add(wakeable), wakeable.then(retry, retry));
+        if (!retryCache.has(wakeable)) {
+          retryCache.add(wakeable);
+          var retry = resolveRetryWakeable.bind(null, finishedWork, wakeable);
+          wakeable.then(retry, retry);
+        }
       });
     }
     function recursivelyTraverseMutationEffects(root$jscomp$0, parentFiber) {
@@ -15462,10 +15464,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-modern-9baecbf0-20250812",
+        version: "19.2.0-www-modern-f1222f76-20250812",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-9baecbf0-20250812"
+        reconcilerVersion: "19.2.0-www-modern-f1222f76-20250812"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15600,5 +15602,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.2.0-www-modern-9baecbf0-20250812";
+    exports.version = "19.2.0-www-modern-f1222f76-20250812";
   })();
