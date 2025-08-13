@@ -398,7 +398,7 @@ const bundles = [
     global: 'ReactDOMServer',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'util', 'crypto', 'async_hooks', 'react-dom'],
+    externals: ['react', 'util', 'react-dom'],
   },
 
   /******* React DOM Fizz Server External Runtime *******/
