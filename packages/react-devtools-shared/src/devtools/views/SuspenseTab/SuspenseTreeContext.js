@@ -17,9 +17,12 @@ import {
   useMemo,
   useReducer,
 } from 'react';
+import type {SuspenseNode} from '../../../frontend/types';
 import {StoreContext} from '../context';
 
-export type SuspenseTreeState = {};
+export type SuspenseTreeState = {
+  shells: $ReadOnlyArray<SuspenseNode['id']>,
+};
 
 type ACTION_HANDLE_SUSPENSE_TREE_MUTATION = {
   type: 'HANDLE_SUSPENSE_TREE_MUTATION',
@@ -56,7 +59,7 @@ function SuspenseTreeContextController({children}: Props): React.Node {
         const {type} = action;
         switch (type) {
           case 'HANDLE_SUSPENSE_TREE_MUTATION':
-            return {...state};
+            return {...state, shells: store.roots};
           default:
             throw new Error(`Unrecognized action "${type}"`);
         }
@@ -64,7 +67,10 @@ function SuspenseTreeContextController({children}: Props): React.Node {
     [],
   );
 
-  const [state, dispatch] = useReducer(reducer, {});
+  const initialState: SuspenseTreeState = {
+    shells: store.roots,
+  };
+  const [state, dispatch] = useReducer(reducer, initialState);
   const transitionDispatch = useMemo(
     () => (action: SuspenseTreeAction) =>
       startTransition(() => {
