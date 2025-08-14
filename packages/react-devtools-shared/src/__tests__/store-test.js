@@ -2767,6 +2767,12 @@ describe('Store', () => {
       resolveContent();
     });
 
-    expect(store).toMatchInlineSnapshot();
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense name="content">
+            <Component key="content">
+      [shell]
+        <Suspense name="content" rects={[{x:1,y:2,width:4,height:1}]}>
+    `);
   });
 });
