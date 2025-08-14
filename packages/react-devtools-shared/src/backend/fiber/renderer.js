@@ -6149,7 +6149,8 @@ export function attach(
     let unknownSuspenders = UNKNOWN_SUSPENDERS_NONE;
     if (
       fiberInstance.suspenseNode !== null &&
-      fiberInstance.suspenseNode.hasUnknownSuspenders
+      fiberInstance.suspenseNode.hasUnknownSuspenders &&
+      !isTimedOutSuspense
     ) {
       // Something unknown threw to suspended this boundary. Let's figure out why that might be.
       if (renderer.bundleType === 0) {
