@@ -858,6 +858,7 @@ export function attach(
 
       // Not supported in legacy renderers.
       suspendedBy: [],
+      suspendedByRange: null,
 
       // List of owners
       owners,

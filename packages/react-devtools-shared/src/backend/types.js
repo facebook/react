@@ -300,6 +300,7 @@ export type InspectedElement = {
 
   // Things that suspended this Instances
   suspendedBy: Object, // DehydratedData or Array<SerializedAsyncInfo>
+  suspendedByRange: null | [number, number],
 
   // List of owners
   owners: Array<SerializedElement> | null,

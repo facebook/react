@@ -5268,6 +5268,18 @@ export function attach(
     }
   }
 
+  function getNearestSuspenseNode(instance: DevToolsInstance): SuspenseNode {
+    while (instance.suspenseNode === null) {
+      if (instance.parent === null) {
+        throw new Error(
+          'There should always be a SuspenseNode parent on a mounted instance.',
+        );
+      }
+      instance = instance.parent;
+    }
+    return instance.suspenseNode;
+  }
+
   function getNearestMountedDOMNode(publicInstance: Element): null | Element {
     let domNode: null | Element = publicInstance;
     while (domNode && !publicInstanceToDevToolsInstanceMap.has(domNode)) {
@@ -5554,6 +5566,56 @@ export function attach(
       }
     });
     return result;
+  }
+
+  const FALLBACK_THROTTLE_MS: number = 300;
+
+  function getSuspendedByRange(
+    suspenseNode: SuspenseNode,
+  ): null | [number, number] {
+    let min = Infinity;
+    let max = -Infinity;
+    suspenseNode.suspendedBy.forEach((_, ioInfo) => {
+      if (ioInfo.end > max) {
+        max = ioInfo.end;
+      }
+      if (ioInfo.start < min) {
+        min = ioInfo.start;
+      }
+    });
+    const parentSuspenseNode = suspenseNode.parent;
+    if (parentSuspenseNode !== null) {
+      let parentMax = -Infinity;
+      parentSuspenseNode.suspendedBy.forEach((_, ioInfo) => {
+        if (ioInfo.end > parentMax) {
+          parentMax = ioInfo.end;
+        }
+      });
+      // The parent max is theoretically the earlier the parent could've committed.
+      // Therefore, the theoretical max that the child could be throttled is that plus 300ms.
+      const throttleTime = parentMax + FALLBACK_THROTTLE_MS;
+      if (throttleTime > max) {
+        // If the theoretical throttle time is later than the earliest reveal then we extend
+        // the max time to show that this is timespan could possibly get throttled.
+        max = throttleTime;
+      }
+
+      // We use the end of the previous boundary as the start time for this boundary unless,
+      // that's earlier than we'd need to expand to the full fallback throttle range. It
+      // suggests that the parent was loaded earlier than this one.
+      let startTime = max - FALLBACK_THROTTLE_MS;
+      if (parentMax > startTime) {
+        startTime = parentMax;
+      }
+      // If the first fetch of this boundary starts before that, then we use that as the start.
+      if (startTime < min) {
+        min = startTime;
+      }
+    }
+    if (min < Infinity && max > -Infinity) {
+      return [min, max];
+    }
+    return null;
   }
 
   function getAwaitStackFromHooks(
@@ -6024,6 +6086,10 @@ export function attach(
           : fiberInstance.suspendedBy.map(info =>
               serializeAsyncInfo(info, fiberInstance, hooks),
             );
+    const suspendedByRange = getSuspendedByRange(
+      getNearestSuspenseNode(fiberInstance),
+    );
+
     return {
       id: fiberInstance.id,
 
@@ -6086,6 +6152,7 @@ export function attach(
           : Array.from(componentLogsEntry.warnings.entries()),
 
       suspendedBy: suspendedBy,
+      suspendedByRange: suspendedByRange,
 
       // List of owners
       owners,
@@ -6144,6 +6211,9 @@ export function attach(
 
     // Things that Suspended this Server Component (use(), awaits and direct child promises)
     const suspendedBy = virtualInstance.suspendedBy;
+    const suspendedByRange = getSuspendedByRange(
+      getNearestSuspenseNode(virtualInstance),
+    );
 
     return {
       id: virtualInstance.id,
@@ -6196,6 +6266,7 @@ export function attach(
           : suspendedBy.map(info =>
               serializeAsyncInfo(info, virtualInstance, null),
             ),
+      suspendedByRange: suspendedByRange,
 
       // List of owners
       owners,

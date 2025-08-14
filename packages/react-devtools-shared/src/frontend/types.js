@@ -279,6 +279,8 @@ export type InspectedElement = {
 
   // Things that suspended this Instances
   suspendedBy: Object,
+  // Minimum start time to maximum end time + a potential (not actual) throttle, within the nearest boundary.
+  suspendedByRange: null | [number, number],
 
   // List of owners
   owners: Array<SerializedElement> | null,
