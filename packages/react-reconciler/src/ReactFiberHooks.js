@@ -555,9 +555,7 @@ export function renderWithHooks<Props, SecondArg>(
     }
   } else {
     ReactSharedInternals.H =
-      current === null
-        ? HooksDispatcherOnMount
-        : HooksDispatcherOnUpdate;
+      current === null ? HooksDispatcherOnMount : HooksDispatcherOnUpdate;
   }
 
   // In Strict Mode, during development, user functions are double invoked to

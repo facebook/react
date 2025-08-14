@@ -4,8 +4,7 @@ const React = require('react');
 const ReactNoop = require('react-noop-renderer');
 const act = require('internal-test-utils').act;
 
-
-function TestComponent({ i }) {
+function TestComponent({i}) {
   if (i % 2 === 0) {
     React.useEffect(() => {}, []);
   }
