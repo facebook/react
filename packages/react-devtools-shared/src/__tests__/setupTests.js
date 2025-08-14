@@ -141,7 +141,7 @@ function patchConsoleForTestingBeforeHookInstallation() {
       // if they use this code path.
       firstArg = firstArg.slice(9);
     }
-    if (firstArg === 'React instrumentation encountered an error: %s') {
+    if (firstArg === 'React instrumentation encountered an error: %o') {
       // Rethrow errors from React.
       throw args[1];
     } else if (

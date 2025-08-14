@@ -1368,6 +1368,9 @@ describe('TreeListContext', () => {
                ▾ <Child>
                  ▾ <Suspense>
                      <Grandchild>
+        [shell]
+          <Suspense name="Parent>?" rects={null}>
+            <Suspense name="Child>?" rects={null}>
       `);
 
       const outerSuspenseID = ((store.getElementIDAtIndex(1): any): number);
@@ -1407,6 +1410,9 @@ describe('TreeListContext', () => {
                ▾ <Child>
                  ▾ <Suspense>
                      <Grandchild>
+        [shell]
+          <Suspense name="Parent>?" rects={null}>
+            <Suspense name="Child>?" rects={null}>
       `);
     });
   });
@@ -2361,16 +2367,20 @@ describe('TreeListContext', () => {
         jest.runAllTimers();
 
         expect(state).toMatchInlineSnapshot(`
-                  [root]
-                       <Suspense>
-              `);
+          [root]
+               <Suspense>
+          [shell]
+            <Suspense name="Unknown" rects={null}>
+        `);
 
         selectNextErrorOrWarning();
 
         expect(state).toMatchInlineSnapshot(`
-                  [root]
-                       <Suspense>
-              `);
+          [root]
+               <Suspense>
+          [shell]
+            <Suspense name="Unknown" rects={null}>
+        `);
       });
 
       it('should properly handle errors/warnings from components that dont mount because of Suspense', async () => {
@@ -2392,9 +2402,11 @@ describe('TreeListContext', () => {
         utils.act(() => TestRenderer.create(<Contexts />));
 
         expect(state).toMatchInlineSnapshot(`
-                  [root]
-                       <Suspense>
-              `);
+          [root]
+               <Suspense>
+          [shell]
+            <Suspense name="Unknown" rects={null}>
+        `);
 
         await Promise.resolve();
         withErrorsOrWarningsIgnored(['test-only:'], () =>
@@ -2414,6 +2426,8 @@ describe('TreeListContext', () => {
              ▾ <Suspense>
                  <Child> ⚠
                  <Child>
+          [shell]
+            <Suspense name="Unknown" rects={null}>
         `);
       });
 
@@ -2442,6 +2456,8 @@ describe('TreeListContext', () => {
              ▾ <Suspense>
                ▾ <Fallback>
                    <Child> ✕
+          [shell]
+            <Suspense name="Unknown" rects={null}>
         `);
 
         await Promise.resolve();
@@ -2456,10 +2472,12 @@ describe('TreeListContext', () => {
         );
 
         expect(state).toMatchInlineSnapshot(`
-                  [root]
-                     ▾ <Suspense>
-                         <Child>
-              `);
+          [root]
+             ▾ <Suspense>
+                 <Child>
+          [shell]
+            <Suspense name="Unknown" rects={null}>
+        `);
       });
     });
 

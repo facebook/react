@@ -24,7 +24,11 @@ type Props = {
   className?: string,
 };
 
-function OpenInEditorButton({editorURL, source, className}: Props): React.Node {
+function ActualOpenInEditorButton({
+  editorURL,
+  source,
+  className,
+}: Props): React.Node {
   let disable;
   if (source == null) {
     disable = true;
@@ -65,6 +69,24 @@ function OpenInEditorButton({editorURL, source, className}: Props): React.Node {
       <ButtonIcon type="editor" />
       <ButtonLabel>Open in editor</ButtonLabel>
     </Button>
+  );
+}
+
+function OpenInEditorButton({editorURL, source, className}: Props): React.Node {
+  return (
+    <React.Suspense
+      fallback={
+        <Button disabled={true} className={className}>
+          <ButtonIcon type="editor" />
+          <ButtonLabel>Loading source maps...</ButtonLabel>
+        </Button>
+      }>
+      <ActualOpenInEditorButton
+        editorURL={editorURL}
+        source={source}
+        className={className}
+      />
+    </React.Suspense>
   );
 }
 

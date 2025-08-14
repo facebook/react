@@ -108,6 +108,7 @@ interface ThenableImpl<T> {
     onFulfill: (value: T) => mixed,
     onReject: (error: mixed) => mixed,
   ): void | Wakeable;
+  displayName?: string;
 }
 interface UntrackedThenable<T> extends ThenableImpl<T> {
   status?: void;
@@ -298,6 +299,7 @@ export type ViewTransitionProps = {
 export type ActivityProps = {
   mode?: 'hidden' | 'visible' | null | void,
   children?: ReactNodeList,
+  name?: string,
 };
 
 export type SuspenseProps = {

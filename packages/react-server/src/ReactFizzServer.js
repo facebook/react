@@ -4155,7 +4155,9 @@ function renderNode(
             getSuspendedThenable()
           : thrownValue;
 
-      if (typeof x === 'object' && x !== null) {
+      if (request.status === ABORTING) {
+        // We are aborting so we can just bubble up to the task by falling through
+      } else if (typeof x === 'object' && x !== null) {
         // $FlowFixMe[method-unbinding]
         if (typeof x.then === 'function') {
           const wakeable: Wakeable = (x: any);
@@ -4254,7 +4256,9 @@ function renderNode(
             getSuspendedThenable()
           : thrownValue;
 
-      if (typeof x === 'object' && x !== null) {
+      if (request.status === ABORTING) {
+        // We are aborting so we can just bubble up to the task by falling through
+      } else if (typeof x === 'object' && x !== null) {
         // $FlowFixMe[method-unbinding]
         if (typeof x.then === 'function') {
           const wakeable: Wakeable = (x: any);

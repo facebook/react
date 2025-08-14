@@ -3354,6 +3354,27 @@ function renderModelDestructive(
           task.debugOwner = element._owner;
           task.debugStack = element._debugStack;
           task.debugTask = element._debugTask;
+          if (
+            element._owner === undefined ||
+            element._debugStack === undefined ||
+            element._debugTask === undefined
+          ) {
+            let key = '';
+            if (element.key !== null) {
+              key = ' key="' + element.key + '"';
+            }
+
+            console.error(
+              'Attempted to render <%s%s> without development properties. ' +
+                'This is not supported. It can happen if:' +
+                '\n- The element is created with a production version of React but rendered in development.' +
+                '\n- The element was cloned with a custom function instead of `React.cloneElement`.\n' +
+                'The props of this element may help locate this element: %o',
+              element.type,
+              key,
+              element.props,
+            );
+          }
           // TODO: Pop this. Since we currently don't have a point where we can pop the stack
           // this debug information will be used for errors inside sibling properties that
           // are not elements. Leading to the wrong attribution on the server. We could fix

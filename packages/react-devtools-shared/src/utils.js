@@ -40,6 +40,10 @@ import {
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
   SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
   SESSION_STORAGE_RECORD_TIMELINE_KEY,
+  SUSPENSE_TREE_OPERATION_ADD,
+  SUSPENSE_TREE_OPERATION_REMOVE,
+  SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
+  SUSPENSE_TREE_OPERATION_RESIZE,
 } from './constants';
 import {
   ComponentFilterElementType,
@@ -268,6 +272,7 @@ export function printOperationsArray(operations: Array<number>) {
           i++;
 
           i++; // key
+          i++; // name
 
           logs.push(
             `Add node ${id} (${displayName || 'null'}) as child of ${parentID}`,
@@ -318,7 +323,7 @@ export function printOperationsArray(operations: Array<number>) {
         // The profiler UI uses them lazily in order to generate the tree.
         i += 3;
         break;
-      case TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS:
+      case TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS: {
         const id = operations[i + 1];
         const numErrors = operations[i + 2];
         const numWarnings = operations[i + 3];
@@ -329,6 +334,95 @@ export function printOperationsArray(operations: Array<number>) {
           `Node ${id} has ${numErrors} errors and ${numWarnings} warnings`,
         );
         break;
+      }
+      case SUSPENSE_TREE_OPERATION_ADD: {
+        const fiberID = operations[i + 1];
+        const parentID = operations[i + 2];
+        const nameStringID = operations[i + 3];
+        const name = stringTable[nameStringID];
+        const numRects = operations[i + 4];
+
+        i += 5;
+
+        let rects: string;
+        if (numRects === -1) {
+          rects = 'null';
+        } else {
+          rects = '[';
+          for (let rectIndex = 0; rectIndex < numRects; rectIndex++) {
+            const offset = i + rectIndex * 4;
+            const x = operations[offset + 0];
+            const y = operations[offset + 1];
+            const width = operations[offset + 2];
+            const height = operations[offset + 3];
+
+            if (rectIndex > 0) {
+              rects += ', ';
+            }
+            rects += `(${x}, ${y}, ${width}, ${height})`;
+
+            i += 4;
+          }
+          rects += ']';
+        }
+
+        logs.push(
+          `Add suspense node ${fiberID} (${String(name)},rects={${rects}}) under ${parentID}`,
+        );
+        break;
+      }
+      case SUSPENSE_TREE_OPERATION_REMOVE: {
+        const removeLength = ((operations[i + 1]: any): number);
+        i += 2;
+
+        for (let removeIndex = 0; removeIndex < removeLength; removeIndex++) {
+          const id = ((operations[i]: any): number);
+          i += 1;
+
+          logs.push(`Remove suspense node ${id}`);
+        }
+
+        break;
+      }
+      case SUSPENSE_TREE_OPERATION_REORDER_CHILDREN: {
+        const id = ((operations[i + 1]: any): number);
+        const numChildren = ((operations[i + 2]: any): number);
+        i += 3;
+        const children = operations.slice(i, i + numChildren);
+        i += numChildren;
+
+        logs.push(
+          `Re-order suspense node ${id} children ${children.join(',')}`,
+        );
+        break;
+      }
+      case SUSPENSE_TREE_OPERATION_RESIZE: {
+        const id = ((operations[i + 1]: any): number);
+        const numRects = ((operations[i + 2]: any): number);
+        i += 3;
+
+        if (numRects === -1) {
+          logs.push(`Resize suspense node ${id} to null`);
+        } else {
+          let line = `Resize suspense node ${id} to [`;
+          for (let rectIndex = 0; rectIndex < numRects; rectIndex++) {
+            const x = operations[i + 0];
+            const y = operations[i + 1];
+            const width = operations[i + 2];
+            const height = operations[i + 3];
+
+            if (rectIndex > 0) {
+              line += ', ';
+            }
+            line += `(${x}, ${y}, ${width}, ${height})`;
+
+            i += 4;
+          }
+          logs.push(line + ']');
+        }
+
+        break;
+      }
       default:
         throw Error(`Unsupported Bridge operation "${operation}"`);
     }
@@ -591,6 +685,7 @@ export type DataType =
   | 'thenable'
   | 'object'
   | 'react_element'
+  | 'react_lazy'
   | 'regexp'
   | 'string'
   | 'symbol'
@@ -644,11 +739,12 @@ export function getDataType(data: Object): DataType {
         return 'number';
       }
     case 'object':
-      if (
-        data.$$typeof === REACT_ELEMENT_TYPE ||
-        data.$$typeof === REACT_LEGACY_ELEMENT_TYPE
-      ) {
-        return 'react_element';
+      switch (data.$$typeof) {
+        case REACT_ELEMENT_TYPE:
+        case REACT_LEGACY_ELEMENT_TYPE:
+          return 'react_element';
+        case REACT_LAZY_TYPE:
+          return 'react_lazy';
       }
       if (isArray(data)) {
         return 'array';
@@ -864,6 +960,62 @@ export function formatDataForPreview(
       return `<${truncateForDisplay(
         getDisplayNameForReactElement(data) || 'Unknown',
       )} />`;
+    case 'react_lazy':
+      // To avoid actually initialize a lazy to cause a side-effect we make some assumptions
+      // about the structure of the payload even though that's not really part of the contract.
+      // In practice, this is really just coming from React.lazy helper or Flight.
+      const payload = data._payload;
+      if (payload !== null && typeof payload === 'object') {
+        if (payload._status === 0) {
+          // React.lazy constructor pending
+          return `pending lazy()`;
+        }
+        if (payload._status === 1 && payload._result != null) {
+          // React.lazy constructor fulfilled
+          if (showFormattedValue) {
+            const formatted = formatDataForPreview(
+              payload._result.default,
+              false,
+            );
+            return `fulfilled lazy() {${truncateForDisplay(formatted)}}`;
+          } else {
+            return `fulfilled lazy() {…}`;
+          }
+        }
+        if (payload._status === 2) {
+          // React.lazy constructor rejected
+          if (showFormattedValue) {
+            const formatted = formatDataForPreview(payload._result, false);
+            return `rejected lazy() {${truncateForDisplay(formatted)}}`;
+          } else {
+            return `rejected lazy() {…}`;
+          }
+        }
+        if (payload.status === 'pending' || payload.status === 'blocked') {
+          // React Flight pending
+          return `pending lazy()`;
+        }
+        if (payload.status === 'fulfilled') {
+          // React Flight fulfilled
+          if (showFormattedValue) {
+            const formatted = formatDataForPreview(payload.value, false);
+            return `fulfilled lazy() {${truncateForDisplay(formatted)}}`;
+          } else {
+            return `fulfilled lazy() {…}`;
+          }
+        }
+        if (payload.status === 'rejected') {
+          // React Flight rejected
+          if (showFormattedValue) {
+            const formatted = formatDataForPreview(payload.reason, false);
+            return `rejected lazy() {${truncateForDisplay(formatted)}}`;
+          } else {
+            return `rejected lazy() {…}`;
+          }
+        }
+      }
+      // Some form of uninitialized
+      return 'lazy()';
     case 'array_buffer':
       return `ArrayBuffer(${data.byteLength})`;
     case 'data_view':
