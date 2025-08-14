@@ -367,6 +367,7 @@ export function getInternalReactConstants(version: string): {
   ReactPriorityLevels: ReactPriorityLevelsType,
   ReactTypeOfWork: WorkTagMap,
   StrictModeBits: number,
+  SuspenseyImagesMode: number,
 } {
   // **********************************************************
   // The section below is copied from files in React repo.
@@ -406,6 +407,8 @@ export function getInternalReactConstants(version: string): {
     // 16.3 - 16.8
     StrictModeBits = 0b10;
   }
+
+  const SuspenseyImagesMode = 0b0100000;
 
   let ReactTypeOfWork: WorkTagMap = ((null: any): WorkTagMap);
 
@@ -820,6 +823,7 @@ export function getInternalReactConstants(version: string): {
     ReactPriorityLevels,
     ReactTypeOfWork,
     StrictModeBits,
+    SuspenseyImagesMode,
   };
 }
 
@@ -988,6 +992,7 @@ export function attach(
     ReactPriorityLevels,
     ReactTypeOfWork,
     StrictModeBits,
+    SuspenseyImagesMode,
   } = getInternalReactConstants(version);
   const {
     ActivityComponent,
@@ -2930,7 +2935,7 @@ export function attach(
       }
       if (suspenseNode.parent !== parentNode) {
         throw new Error(
-          'Cannot remove a node from a different parent than is being reconciled.',
+          'Cannot remove a Suspense node from a different parent than is being reconciled.',
         );
       }
       let previousSuspenseSibling = remainingReconcilingChildrenSuspenseNodes;
@@ -3345,6 +3350,114 @@ export function attach(
     insertSuspendedBy(asyncInfo);
   }
 
+  function trackDebugInfoFromHostComponent(
+    devtoolsInstance: DevToolsInstance,
+    fiber: Fiber,
+  ): void {
+    if (fiber.tag !== HostComponent) {
+      return;
+    }
+    if ((fiber.mode & SuspenseyImagesMode) === 0) {
+      // In any released version, Suspensey Images are only enabled inside a ViewTransition
+      // subtree, which is enabled by the SuspenseyImagesMode.
+      // TODO: If we ever enable the enableSuspenseyImages flag then it would be enabled for
+      // all images and we'd need some other check for if the version of React has that enabled.
+      return;
+    }
+
+    const type = fiber.type;
+    const props: {
+      src?: string,
+      onLoad?: (event: any) => void,
+      loading?: 'eager' | 'lazy',
+      ...
+    } = fiber.memoizedProps;
+
+    const maySuspendCommit =
+      type === 'img' &&
+      props.src != null &&
+      props.src !== '' &&
+      props.onLoad == null &&
+      props.loading !== 'lazy';
+
+    // Note: We don't track "maySuspendCommitOnUpdate" separately because it doesn't matter if
+    // it didn't suspend this particular update if it would've suspended if it mounted in this
+    // state, since we're tracking the dependencies inside the current state.
+
+    if (!maySuspendCommit) {
+      return;
+    }
+
+    const instance = fiber.stateNode;
+    if (instance == null) {
+      // Should never happen.
+      return;
+    }
+
+    // Unlike props.src, currentSrc will be fully qualified which we need for comparison below.
+    // Unlike instance.src it will be resolved into the media queries currently matching which is
+    // the state we're inspecting.
+    const src = instance.currentSrc;
+    if (typeof src !== 'string' || src === '') {
+      return;
+    }
+    let start = -1;
+    let end = -1;
+    let fileSize = 0;
+    // $FlowFixMe[method-unbinding]
+    if (typeof performance.getEntriesByType === 'function') {
+      // We may be able to collect the start and end time of this resource from Performance Observer.
+      const resourceEntries = performance.getEntriesByType('resource');
+      for (let i = 0; i < resourceEntries.length; i++) {
+        const resourceEntry = resourceEntries[i];
+        if (resourceEntry.name === src) {
+          start = resourceEntry.startTime;
+          end = start + resourceEntry.duration;
+          // $FlowFixMe[prop-missing]
+          fileSize = (resourceEntry.encodedBodySize: any) || 0;
+        }
+      }
+    }
+    // A representation of the image data itself.
+    // TODO: We could render a little preview in the front end from the resource API.
+    const value: {
+      currentSrc: string,
+      naturalWidth?: number,
+      naturalHeight?: number,
+      fileSize?: number,
+    } = {
+      currentSrc: src,
+    };
+    if (instance.naturalWidth > 0 && instance.naturalHeight > 0) {
+      // The intrinsic size of the file value itself, if it's loaded
+      value.naturalWidth = instance.naturalWidth;
+      value.naturalHeight = instance.naturalHeight;
+    }
+    if (fileSize > 0) {
+      // Cross-origin images won't have a file size that we can access.
+      value.fileSize = fileSize;
+    }
+    const promise = Promise.resolve(value);
+    (promise: any).status = 'fulfilled';
+    (promise: any).value = value;
+    const ioInfo: ReactIOInfo = {
+      name: 'img',
+      start,
+      end,
+      value: promise,
+      // $FlowFixMe: This field doesn't usually take a Fiber but we're only using inside this file.
+      owner: fiber, // Allow linking to the <link> if it's not filtered.
+    };
+    const asyncInfo: ReactAsyncInfo = {
+      awaited: ioInfo,
+      // $FlowFixMe: This field doesn't usually take a Fiber but we're only using inside this file.
+      owner: fiber._debugOwner == null ? null : fiber._debugOwner,
+      debugStack: fiber._debugStack == null ? null : fiber._debugStack,
+      debugTask: fiber._debugTask == null ? null : fiber._debugTask,
+    };
+    insertSuspendedBy(asyncInfo);
+  }
+
   function mountVirtualChildrenRecursively(
     firstChild: Fiber,
     lastChild: null | Fiber, // non-inclusive
@@ -3619,6 +3732,7 @@ export function attach(
           throw new Error('Did not expect a host hoistable to be the root');
         }
         aquireHostInstance(nearestInstance, fiber.stateNode);
+        trackDebugInfoFromHostComponent(nearestInstance, fiber);
       }
 
       if (fiber.tag === OffscreenComponent && fiber.memoizedState !== null) {
@@ -4447,20 +4561,22 @@ export function attach(
         aquireHostResource(nearestInstance, nextFiber.memoizedState);
         trackDebugInfoFromHostResource(nearestInstance, nextFiber);
       } else if (
-        (nextFiber.tag === HostComponent ||
-          nextFiber.tag === HostText ||
-          nextFiber.tag === HostSingleton) &&
-        prevFiber.stateNode !== nextFiber.stateNode
+        nextFiber.tag === HostComponent ||
+        nextFiber.tag === HostText ||
+        nextFiber.tag === HostSingleton
       ) {
-        // In persistent mode, it's possible for the stateNode to update with
-        // a new clone. In that case we need to release the old one and aquire
-        // new one instead.
         const nearestInstance = reconcilingParent;
         if (nearestInstance === null) {
           throw new Error('Did not expect a host hoistable to be the root');
         }
-        releaseHostInstance(nearestInstance, prevFiber.stateNode);
-        aquireHostInstance(nearestInstance, nextFiber.stateNode);
+        if (prevFiber.stateNode !== nextFiber.stateNode) {
+          // In persistent mode, it's possible for the stateNode to update with
+          // a new clone. In that case we need to release the old one and aquire
+          // new one instead.
+          releaseHostInstance(nearestInstance, prevFiber.stateNode);
+          aquireHostInstance(nearestInstance, nextFiber.stateNode);
+        }
+        trackDebugInfoFromHostComponent(nearestInstance, nextFiber);
       }
 
       let updateFlags = NoUpdate;
