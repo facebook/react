@@ -563,6 +563,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         },
       );
       const reassignments = state.manualMemoState.reassignments;
+      const hadEmptyDeps = state.manualMemoState.depsFromSource?.length === 0;
       state.manualMemoState = null;
       if (!value.pruned) {
         for (const {identifier, loc} of eachInstructionValueOperand(
@@ -580,7 +581,14 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
           }
 
           for (const identifier of decls) {
-            if (isUnmemoized(identifier, this.scopes)) {
+            /**
+             * Allow self-references in callbacks with empty deps (e.g. recursive animations)
+             */
+            const isSelfReferenceWithEmptyDeps = 
+              hadEmptyDeps && 
+              value.decl.identifier.declarationId === identifier.declarationId;
+            
+            if (!isSelfReferenceWithEmptyDeps && isUnmemoized(identifier, this.scopes)) {
               state.errors.pushDiagnostic(
                 CompilerDiagnostic.create({
                   severity: ErrorSeverity.CannotPreserveMemoization,
