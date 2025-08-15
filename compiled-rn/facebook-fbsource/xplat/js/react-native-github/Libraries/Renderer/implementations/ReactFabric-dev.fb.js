@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2c800a41bd6ca6397c110416e0e19a75>>
+ * @generated SignedSource<<4779885a5f0593aa38abe24b0131ce19>>
  */
 
 "use strict";
@@ -1861,15 +1861,9 @@ __DEV__ &&
       }
       return !1;
     }
-    function getInstanceFromHostFiber(fiber) {
-      switch (fiber.tag) {
-        case 5:
-          return fiber.stateNode;
-        case 3:
-          return fiber.stateNode.containerInfo;
-        default:
-          throw Error("Expected to find a host node. This is a bug in React.");
-      }
+    function findNextSibling(child) {
+      searchTarget = child;
+      return !0;
     }
     function createCursor(defaultValue) {
       return { current: defaultValue };
@@ -16519,6 +16513,22 @@ __DEV__ &&
       }
       return null != instance._nativeTag ? instance : null;
     }
+    function getPublicInstanceFromHostFiber(fiber) {
+      a: switch (fiber.tag) {
+        case 5:
+          fiber = fiber.stateNode;
+          break a;
+        case 3:
+          fiber = fiber.stateNode.containerInfo;
+          break a;
+        default:
+          throw Error("Expected to find a host node. This is a bug in React.");
+      }
+      fiber = getPublicInstance(fiber);
+      if (null == fiber)
+        throw Error("Expected to find a host node. This is a bug in React.");
+      return fiber;
+    }
     function resolveUpdatePriority() {
       if (0 !== currentUpdatePriority) return currentUpdatePriority;
       var currentEventPriority = fabricGetCurrentEventPriority
@@ -16554,19 +16564,17 @@ __DEV__ &&
       this._observers = null;
     }
     function observeChild(child, observer) {
-      child = getInstanceFromHostFiber(child);
-      child = getPublicInstance(child);
-      if (null == child)
-        throw Error("Expected to find a host node. This is a bug in React.");
+      child = getPublicInstanceFromHostFiber(child);
       observer.observe(child);
       return !1;
     }
     function unobserveChild(child, observer) {
-      child = getInstanceFromHostFiber(child);
-      child = getPublicInstance(child);
-      if (null == child)
-        throw Error("Expected to find a host node. This is a bug in React.");
+      child = getPublicInstanceFromHostFiber(child);
       observer.unobserve(child);
+      return !1;
+    }
+    function collectChildren(child, collection) {
+      collection.push(child);
       return !1;
     }
     function commitNewChildToFragmentInstance(childInstance, fragmentInstance) {
@@ -17363,6 +17371,7 @@ __DEV__ &&
       ContinuousEventPriority = 8,
       DefaultEventPriority = 32,
       IdleEventPriority = 268435456,
+      searchTarget = null,
       instanceCache = new Map(),
       bind = Function.prototype.bind,
       valueStack = [];
@@ -19435,6 +19444,70 @@ __DEV__ &&
             "You are calling unobserveUsing() with an observer that is not being observed with this fragment instance. First attach the observer with observeUsing()"
           );
     };
+    FragmentInstance.prototype.compareDocumentPosition = function (otherNode) {
+      var parentHostFiber;
+      a: {
+        for (
+          parentHostFiber = this._fragmentFiber.return;
+          null !== parentHostFiber;
+
+        ) {
+          if (3 === parentHostFiber.tag || 5 === parentHostFiber.tag) break a;
+          parentHostFiber = parentHostFiber.return;
+        }
+        parentHostFiber = null;
+      }
+      if (null === parentHostFiber) return Node.DOCUMENT_POSITION_DISCONNECTED;
+      parentHostFiber = getPublicInstanceFromHostFiber(parentHostFiber);
+      var children = [];
+      traverseVisibleHostChildren(
+        this._fragmentFiber.child,
+        !1,
+        collectChildren,
+        children,
+        void 0,
+        void 0
+      );
+      if (0 === children.length) {
+        children = this._fragmentFiber;
+        var parentResult = parentHostFiber.compareDocumentPosition(otherNode);
+        var result = parentResult;
+        parentHostFiber === otherNode
+          ? (result = Node.DOCUMENT_POSITION_CONTAINS)
+          : parentResult & Node.DOCUMENT_POSITION_CONTAINED_BY &&
+            (traverseVisibleHostChildren(children.sibling, !1, findNextSibling),
+            (parentHostFiber = searchTarget),
+            (searchTarget = null),
+            null === parentHostFiber
+              ? (result = Node.DOCUMENT_POSITION_PRECEDING)
+              : ((otherNode =
+                  getPublicInstanceFromHostFiber(
+                    parentHostFiber
+                  ).compareDocumentPosition(otherNode)),
+                (result =
+                  0 === otherNode ||
+                  otherNode & Node.DOCUMENT_POSITION_FOLLOWING
+                    ? Node.DOCUMENT_POSITION_FOLLOWING
+                    : Node.DOCUMENT_POSITION_PRECEDING)));
+        return (result |= Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
+      }
+      parentHostFiber = getPublicInstanceFromHostFiber(children[0]);
+      children = getPublicInstanceFromHostFiber(children[children.length - 1]);
+      result = parentHostFiber.compareDocumentPosition(otherNode);
+      var lastResult = children.compareDocumentPosition(otherNode);
+      parentResult =
+        result & Node.DOCUMENT_POSITION_CONTAINED_BY ||
+        lastResult & Node.DOCUMENT_POSITION_CONTAINED_BY;
+      lastResult =
+        result & Node.DOCUMENT_POSITION_FOLLOWING &&
+        lastResult & Node.DOCUMENT_POSITION_PRECEDING;
+      return parentHostFiber === otherNode ||
+        children === otherNode ||
+        parentResult ||
+        lastResult
+        ? Node.DOCUMENT_POSITION_CONTAINED_BY
+        : result;
+    };
     var NotPendingTransition = null,
       HostTransitionContext = {
         $$typeof: REACT_CONTEXT_TYPE,
@@ -19520,10 +19593,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-a96a0f39-20250815",
+        version: "19.2.0-native-fb-45a6532a-20250815",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-a96a0f39-20250815"
+        reconcilerVersion: "19.2.0-native-fb-45a6532a-20250815"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
