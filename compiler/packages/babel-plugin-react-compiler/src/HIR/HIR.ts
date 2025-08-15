@@ -827,6 +827,10 @@ export type StartMemoize = {
    * (e.g. useMemo without a second arg)
    */
   deps: Array<ManualMemoDependency> | null;
+  /**
+   * The type of manual memoization hook (useCallback or useMemo)
+   */
+  memoType: 'useCallback' | 'useMemo';
   loc: SourceLocation;
 };
 export type FinishMemoize = {
@@ -834,6 +838,10 @@ export type FinishMemoize = {
   // Start/FinishMemoize markers should have matching ids
   manualMemoId: number;
   decl: Place;
+  /**
+   * The type of manual memoization hook (useCallback or useMemo)
+   */
+  memoType: 'useCallback' | 'useMemo';
   pruned?: true;
   loc: SourceLocation;
 };
