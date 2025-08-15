@@ -421,4 +421,22 @@ export function typedMutate(x: any, v: any = null): void {
   x.property = v;
 }
 
+type PrimitiveValue =
+  | number
+  | string
+  | boolean
+  | symbol
+  | null
+  | undefined
+  | bigint;
+export class PrimitiveBox<T extends PrimitiveValue> {
+  value: T;
+  constructor(value: T) {
+    this.value = value;
+  }
+  get(): T {
+    return this.value;
+  }
+}
+
 export default typedLog;
