@@ -34,6 +34,7 @@ import type {TimelineDataExport} from 'react-devtools-timeline/src/types';
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 import type {ReactFunctionLocation, ReactStackTrace} from 'shared/ReactTypes';
 import type Agent from './agent';
+import type {UnknownSuspendersReason} from '../constants';
 
 type BundleType =
   | 0 // PROD
@@ -303,6 +304,7 @@ export type InspectedElement = {
   // Things that suspended this Instances
   suspendedBy: Object, // DehydratedData or Array<SerializedAsyncInfo>
   suspendedByRange: null | [number, number],
+  unknownSuspenders: UnknownSuspendersReason,
 
   // List of owners
   owners: Array<SerializedElement> | null,

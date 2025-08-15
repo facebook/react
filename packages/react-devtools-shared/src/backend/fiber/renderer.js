@@ -15,6 +15,7 @@ import type {
   ReactIOInfo,
   ReactStackTrace,
   ReactCallSite,
+  Wakeable,
 } from 'shared/ReactTypes';
 
 import type {HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
@@ -87,6 +88,10 @@ import {
   SUSPENSE_TREE_OPERATION_REMOVE,
   SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
   SUSPENSE_TREE_OPERATION_RESIZE,
+  UNKNOWN_SUSPENDERS_NONE,
+  UNKNOWN_SUSPENDERS_REASON_PRODUCTION,
+  UNKNOWN_SUSPENDERS_REASON_OLD_VERSION,
+  UNKNOWN_SUSPENDERS_REASON_THROWN_PROMISE,
 } from '../../constants';
 import {inspectHooksOfFiber} from 'react-debug-tools';
 import {
@@ -296,6 +301,9 @@ type SuspenseNode = {
   // Track whether any of the items in suspendedBy are unique this this Suspense boundaries or if they're all
   // also in the parent sets. This determine whether this could contribute in the loading sequence.
   hasUniqueSuspenders: boolean,
+  // Track whether anything suspended in this boundary that we can't track either because it was using throw
+  // a promise, an older version of React or because we're inspecting prod.
+  hasUnknownSuspenders: boolean,
 };
 
 function createSuspenseNode(
@@ -309,6 +317,7 @@ function createSuspenseNode(
     rects: null,
     suspendedBy: new Map(),
     hasUniqueSuspenders: false,
+    hasUnknownSuspenders: false,
   });
 }
 
@@ -2745,6 +2754,8 @@ export function attach(
         parentSuspenseNode.hasUniqueSuspenders = true;
       }
     }
+    // We have observed at least one known reason this might have been suspended.
+    parentSuspenseNode.hasUnknownSuspenders = false;
     // Suspending right below the root is not attributed to any particular component in UI
     // other than the SuspenseNode and the HostRoot's FiberInstance.
     const suspendedBy = parentInstance.suspendedBy;
@@ -2783,6 +2794,7 @@ export function attach(
         // It can now be marked as having unique suspenders. We can skip its children
         // since they'll still be blocked by this one.
         node.hasUniqueSuspenders = true;
+        node.hasUnknownSuspenders = false;
       } else if (node.firstChild !== null) {
         node = node.firstChild;
         continue;
@@ -3458,6 +3470,25 @@ export function attach(
     insertSuspendedBy(asyncInfo);
   }
 
+  function trackThrownPromisesFromRetryCache(
+    suspenseNode: SuspenseNode,
+    retryCache: ?WeakSet<Wakeable>,
+  ): void {
+    if (retryCache != null) {
+      // If a Suspense boundary ever committed in fallback state with a retryCache, that
+      // suggests that something unique to that boundary was suspensey since otherwise
+      // it wouldn't have thrown and so never created the retryCache.
+      // Unfortunately if we don't have any DEV time debug info or debug thenables then
+      // we have no meta data to show. However, we still mark this Suspense boundary as
+      // participating in the loading sequence since apparently it can suspend.
+      suspenseNode.hasUniqueSuspenders = true;
+      // We have not seen any reason yet for why this suspense node might have been
+      // suspended but it clearly has been at some point. If we later discover a reason
+      // we'll clear this flag again.
+      suspenseNode.hasUnknownSuspenders = true;
+    }
+  }
+
   function mountVirtualChildrenRecursively(
     firstChild: Fiber,
     lastChild: null | Fiber, // non-inclusive
@@ -3749,6 +3780,9 @@ export function attach(
       } else if (fiber.tag === SuspenseComponent && OffscreenComponent === -1) {
         // Legacy Suspense without the Offscreen wrapper. For the modern Suspense we just handle the
         // Offscreen wrapper itself specially.
+        if (newSuspenseNode !== null) {
+          trackThrownPromisesFromRetryCache(newSuspenseNode, fiber.stateNode);
+        }
         const isTimedOut = fiber.memoizedState !== null;
         if (isTimedOut) {
           // Special case: if Suspense mounts in a timed-out state,
@@ -3791,6 +3825,9 @@ export function attach(
             'There should always be an Offscreen Fiber child in a Suspense boundary.',
           );
         }
+
+        trackThrownPromisesFromRetryCache(newSuspenseNode, fiber.stateNode);
+
         const fallbackFiber = contentFiber.sibling;
 
         // First update only the Offscreen boundary. I.e. the main content.
@@ -4600,6 +4637,18 @@ export function attach(
       const prevWasHidden = isOffscreen && prevFiber.memoizedState !== null;
       const nextIsHidden = isOffscreen && nextFiber.memoizedState !== null;
 
+      if (isLegacySuspense) {
+        if (
+          fiberInstance !== null &&
+          fiberInstance.suspenseNode !== null &&
+          (prevFiber.stateNode === null) !== (nextFiber.stateNode === null)
+        ) {
+          trackThrownPromisesFromRetryCache(
+            fiberInstance.suspenseNode,
+            nextFiber.stateNode,
+          );
+        }
+      }
       // The logic below is inspired by the code paths in updateSuspenseComponent()
       // inside ReactFiberBeginWork in the React source code.
       if (prevDidTimeout && nextDidTimeOut) {
@@ -4725,6 +4774,13 @@ export function attach(
         }
         const prevFallbackFiber = prevContentFiber.sibling;
         const nextFallbackFiber = nextContentFiber.sibling;
+
+        if ((prevFiber.stateNode === null) !== (nextFiber.stateNode === null)) {
+          trackThrownPromisesFromRetryCache(
+            fiberInstance.suspenseNode,
+            nextFiber.stateNode,
+          );
+        }
 
         // First update only the Offscreen boundary. I.e. the main content.
         updateFlags |= updateVirtualChildrenRecursively(
@@ -6100,6 +6156,23 @@ export function attach(
       getNearestSuspenseNode(fiberInstance),
     );
 
+    let unknownSuspenders = UNKNOWN_SUSPENDERS_NONE;
+    if (
+      fiberInstance.suspenseNode !== null &&
+      fiberInstance.suspenseNode.hasUnknownSuspenders &&
+      !isTimedOutSuspense
+    ) {
+      // Something unknown threw to suspended this boundary. Let's figure out why that might be.
+      if (renderer.bundleType === 0) {
+        unknownSuspenders = UNKNOWN_SUSPENDERS_REASON_PRODUCTION;
+      } else if (!('_debugInfo' in fiber)) {
+        // TODO: We really should detect _debugThenable and the auto-instrumentation for lazy/thenables too.
+        unknownSuspenders = UNKNOWN_SUSPENDERS_REASON_OLD_VERSION;
+      } else {
+        unknownSuspenders = UNKNOWN_SUSPENDERS_REASON_THROWN_PROMISE;
+      }
+    }
+
     return {
       id: fiberInstance.id,
 
@@ -6164,6 +6237,7 @@ export function attach(
 
       suspendedBy: suspendedBy,
       suspendedByRange: suspendedByRange,
+      unknownSuspenders: unknownSuspenders,
 
       // List of owners
       owners,
@@ -6280,6 +6354,7 @@ export function attach(
               serializeAsyncInfo(info, virtualInstance, null),
             ),
       suspendedByRange: suspendedByRange,
+      unknownSuspenders: UNKNOWN_SUSPENDERS_NONE,
 
       // List of owners
       owners,

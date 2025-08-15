@@ -19,6 +19,7 @@ import type {
   Unserializable,
 } from 'react-devtools-shared/src/hydration';
 import type {ReactFunctionLocation, ReactStackTrace} from 'shared/ReactTypes';
+import type {UnknownSuspendersReason} from '../constants';
 
 export type BrowserTheme = 'dark' | 'light';
 
@@ -283,6 +284,7 @@ export type InspectedElement = {
   suspendedBy: Object,
   // Minimum start time to maximum end time + a potential (not actual) throttle, within the nearest boundary.
   suspendedByRange: null | [number, number],
+  unknownSuspenders: UnknownSuspendersReason,
 
   // List of owners
   owners: Array<SerializedElement> | null,
