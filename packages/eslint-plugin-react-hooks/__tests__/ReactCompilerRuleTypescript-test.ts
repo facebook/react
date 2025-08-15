@@ -6,7 +6,7 @@
  */
 
 import {RuleTester} from 'eslint';
-import ReactCompilerRule from '../src/rules/ReactCompiler';
+import ReactCompilerRule from '../src/shared/ReactCompiler';
 
 const ESLintTesterV8 = require('eslint-v8').RuleTester;
 
