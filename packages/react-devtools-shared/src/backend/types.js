@@ -285,6 +285,8 @@ export type InspectedElement = {
 
   // Is this Suspense, and can its value be overridden now?
   canToggleSuspense: boolean,
+  // If this Element is suspended. Currently only set on Suspense boundaries.
+  isSuspended: boolean | null,
 
   // Does the component have legacy context attached to it.
   hasLegacyContext: boolean,
