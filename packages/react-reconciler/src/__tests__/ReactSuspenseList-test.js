@@ -256,7 +256,7 @@ describe('ReactSuspenseList', () => {
 
     assertConsoleErrorDev([
       'The default for the <SuspenseList revealOrder="..."> prop is changing. ' +
-        'To be future compatible you must explictly specify either ' +
+        'To be future compatible you must explicitly specify either ' +
         '"independent" (the current default), "together", "forwards" or "legacy_unstable-backwards".' +
         '\n    in SuspenseList (at **)' +
         '\n    in Foo (at **)',
@@ -1714,7 +1714,7 @@ describe('ReactSuspenseList', () => {
     });
     assertConsoleErrorDev([
       'The default for the <SuspenseList tail="..."> prop is changing. ' +
-        'To be future compatible you must explictly specify either ' +
+        'To be future compatible you must explicitly specify either ' +
         '"visible" (the current default), "collapsed" or "hidden".' +
         '\n    in SuspenseList (at **)' +
         '\n    in Foo (at **)',
