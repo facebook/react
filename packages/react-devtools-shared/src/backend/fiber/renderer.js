@@ -4736,26 +4736,30 @@ export function attach(
         );
 
         shouldMeasureSuspenseNode = false;
-        if (nextFallbackFiber !== null) {
+        if (prevFallbackFiber !== null || nextFallbackFiber !== null) {
           const fallbackStashedSuspenseParent = reconcilingParentSuspenseNode;
           const fallbackStashedSuspensePrevious =
             previouslyReconciledSiblingSuspenseNode;
           const fallbackStashedSuspenseRemaining =
             remainingReconcilingChildrenSuspenseNodes;
           // Next, we'll pop back out of the SuspenseNode that we added above and now we'll
-          // reconcile the fallback, reconciling anything by inserting into the parent SuspenseNode.
+          // reconcile the fallback, reconciling anything in the context of the parent SuspenseNode.
           // Since the fallback conceptually blocks the parent.
           reconcilingParentSuspenseNode = stashedSuspenseParent;
           previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
           remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
           try {
-            updateFlags |= updateVirtualChildrenRecursively(
-              nextFallbackFiber,
-              null,
-              prevFallbackFiber,
-              traceNearestHostComponentUpdate,
-              0,
-            );
+            if (nextFallbackFiber === null) {
+              unmountRemainingChildren();
+            } else {
+              updateFlags |= updateVirtualChildrenRecursively(
+                nextFallbackFiber,
+                null,
+                prevFallbackFiber,
+                traceNearestHostComponentUpdate,
+                0,
+              );
+            }
           } finally {
             reconcilingParentSuspenseNode = fallbackStashedSuspenseParent;
             previouslyReconciledSiblingSuspenseNode =
@@ -4763,7 +4767,8 @@ export function attach(
             remainingReconcilingChildrenSuspenseNodes =
               fallbackStashedSuspenseRemaining;
           }
-        } else if (nextFiber.memoizedState === null) {
+        }
+        if (nextFiber.memoizedState === null) {
           // Measure this Suspense node in case it changed. We don't update the rect while
           // we're inside a disconnected subtree nor if we are the Suspense boundary that
           // is suspended. This lets us keep the rectangle of the displayed content while
