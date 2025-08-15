@@ -18424,9 +18424,6 @@ function makeInstructionId(id) {
 function isObjectMethodType(id) {
     return id.type.kind == 'ObjectMethod';
 }
-function isObjectType(id) {
-    return id.type.kind === 'Object';
-}
 function isPrimitiveType(id) {
     return id.type.kind === 'Primitive';
 }
@@ -18662,44 +18659,6 @@ function printHIR(ir, options = null) {
         }
     }
     return output.map(line => indent + line).join('\n');
-}
-function printMixedHIR(value) {
-    if (!('kind' in value)) {
-        return printInstruction(value);
-    }
-    switch (value.kind) {
-        case 'try':
-        case 'maybe-throw':
-        case 'sequence':
-        case 'label':
-        case 'optional':
-        case 'branch':
-        case 'if':
-        case 'logical':
-        case 'ternary':
-        case 'return':
-        case 'switch':
-        case 'throw':
-        case 'while':
-        case 'for':
-        case 'unreachable':
-        case 'unsupported':
-        case 'goto':
-        case 'do-while':
-        case 'for-in':
-        case 'for-of':
-        case 'scope':
-        case 'pruned-scope': {
-            const terminal = printTerminal(value);
-            if (Array.isArray(terminal)) {
-                return terminal.join('; ');
-            }
-            return terminal;
-        }
-        default: {
-            return printInstructionValue(value);
-        }
-    }
 }
 function printInstruction(instr) {
     const id = `[${instr.id}]`;
@@ -22376,7 +22335,7 @@ function signatureArgument(id) {
     return place;
 }
 
-function lower$1(func, env, bindings = null, capturedRefs = new Map()) {
+function lower(func, env, bindings = null, capturedRefs = new Map()) {
     var _a, _b, _c;
     const builder = new HIRBuilder(env, {
         bindings,
@@ -25250,7 +25209,7 @@ function lowerFunctionToValue(builder, expr) {
 function lowerFunction(builder, expr) {
     const componentScope = builder.environment.parentFunction.scope;
     const capturedContext = gatherCapturedContext(expr, componentScope);
-    const lowering = lower$1(expr, builder.environment, builder.bindings, new Map([...builder.context, ...capturedContext]));
+    const lowering = lower(expr, builder.environment, builder.bindings, new Map([...builder.context, ...capturedContext]));
     let loweredFunc;
     if (lowering.isErr()) {
         const functionErrors = lowering.unwrapErr();
@@ -31347,7 +31306,6 @@ const EnvironmentConfigSchema = zod.z.object({
     enableForest: zod.z.boolean().default(false),
     enableUseTypeAnnotations: zod.z.boolean().default(false),
     flowTypeProvider: zod.z.nullable(zod.z.function().args(zod.z.string())).default(null),
-    enableNewMutationAliasingModel: zod.z.boolean().default(true),
     enableOptionalDependencies: zod.z.boolean().default(true),
     enableFire: zod.z.boolean().default(false),
     inferEffectDependencies: zod.z
@@ -38885,2944 +38843,6 @@ let Visitor$8 = class Visitor extends ReactiveFunctionTransform {
     }
 };
 
-function inferOperandEffect(state, place) {
-    const value = state.kind(place);
-    CompilerError.invariant(value != null, {
-        reason: 'Expected operand to have a kind',
-        loc: null,
-    });
-    switch (place.effect) {
-        case Effect.Store:
-        case Effect.Mutate: {
-            if (isRefOrRefValue(place.identifier)) {
-                break;
-            }
-            else if (value.kind === ValueKind.Context) {
-                CompilerError.invariant(value.context.size > 0, {
-                    reason: "[InferFunctionEffects] Expected Context-kind value's capture list to be non-empty.",
-                    loc: place.loc,
-                });
-                return {
-                    kind: 'ContextMutation',
-                    loc: place.loc,
-                    effect: place.effect,
-                    places: value.context,
-                };
-            }
-            else if (value.kind !== ValueKind.Mutable &&
-                value.kind !== ValueKind.Primitive) {
-                let reason = getWriteErrorReason(value);
-                return {
-                    kind: value.reason.size === 1 && value.reason.has(ValueReason.Global)
-                        ? 'GlobalMutation'
-                        : 'ReactMutation',
-                    error: {
-                        reason,
-                        description: place.identifier.name !== null &&
-                            place.identifier.name.kind === 'named'
-                            ? `Found mutation of \`${place.identifier.name.value}\``
-                            : null,
-                        loc: place.loc,
-                        suggestions: null,
-                        severity: ErrorSeverity.InvalidReact,
-                    },
-                };
-            }
-            break;
-        }
-    }
-    return null;
-}
-function inheritFunctionEffects(state, place) {
-    const effects = inferFunctionInstrEffects(state, place);
-    return effects
-        .flatMap(effect => {
-        if (effect.kind === 'GlobalMutation' || effect.kind === 'ReactMutation') {
-            return [effect];
-        }
-        else {
-            const effects = [];
-            CompilerError.invariant(effect.kind === 'ContextMutation', {
-                reason: 'Expected ContextMutation',
-                loc: null,
-            });
-            for (const place of effect.places) {
-                if (state.isDefined(place)) {
-                    const replayedEffect = inferOperandEffect(state, Object.assign(Object.assign({}, place), { loc: effect.loc, effect: effect.effect }));
-                    if (replayedEffect != null) {
-                        if (replayedEffect.kind === 'ContextMutation') {
-                            effects.push(effect);
-                        }
-                        else {
-                            effects.push(replayedEffect);
-                        }
-                    }
-                }
-            }
-            return effects;
-        }
-    })
-        .filter((effect) => effect != null);
-}
-function inferFunctionInstrEffects(state, place) {
-    const effects = [];
-    const instrs = state.values(place);
-    CompilerError.invariant(instrs != null, {
-        reason: 'Expected operand to have instructions',
-        loc: null,
-    });
-    for (const instr of instrs) {
-        if ((instr.kind === 'FunctionExpression' || instr.kind === 'ObjectMethod') &&
-            instr.loweredFunc.func.effects != null) {
-            effects.push(...instr.loweredFunc.func.effects);
-        }
-    }
-    return effects;
-}
-function operandEffects(state, place, filterRenderSafe) {
-    const functionEffects = [];
-    const effect = inferOperandEffect(state, place);
-    effect && functionEffects.push(effect);
-    functionEffects.push(...inheritFunctionEffects(state, place));
-    if (filterRenderSafe) {
-        return functionEffects.filter(effect => !isEffectSafeOutsideRender(effect));
-    }
-    else {
-        return functionEffects;
-    }
-}
-function inferInstructionFunctionEffects(env, state, instr) {
-    var _a, _b;
-    var _c;
-    const functionEffects = [];
-    switch (instr.value.kind) {
-        case 'JsxExpression': {
-            if (instr.value.tag.kind === 'Identifier') {
-                functionEffects.push(...operandEffects(state, instr.value.tag, false));
-            }
-            (_a = instr.value.children) === null || _a === void 0 ? void 0 : _a.forEach(child => functionEffects.push(...operandEffects(state, child, false)));
-            for (const attr of instr.value.props) {
-                if (attr.kind === 'JsxSpreadAttribute') {
-                    functionEffects.push(...operandEffects(state, attr.argument, false));
-                }
-                else {
-                    functionEffects.push(...operandEffects(state, attr.place, true));
-                }
-            }
-            break;
-        }
-        case 'ObjectMethod':
-        case 'FunctionExpression': {
-            for (const operand of eachInstructionOperand(instr)) {
-                (_b = (_c = instr.value.loweredFunc.func).effects) !== null && _b !== void 0 ? _b : (_c.effects = []);
-                instr.value.loweredFunc.func.effects.push(...inferFunctionInstrEffects(state, operand));
-            }
-            break;
-        }
-        case 'MethodCall':
-        case 'CallExpression': {
-            let callee;
-            if (instr.value.kind === 'MethodCall') {
-                callee = instr.value.property;
-                functionEffects.push(...operandEffects(state, instr.value.receiver, false));
-            }
-            else {
-                callee = instr.value.callee;
-            }
-            functionEffects.push(...operandEffects(state, callee, false));
-            let isHook = getHookKind(env, callee.identifier) != null;
-            for (const arg of instr.value.args) {
-                const place = arg.kind === 'Identifier' ? arg : arg.place;
-                functionEffects.push(...operandEffects(state, place, isHook));
-            }
-            break;
-        }
-        case 'StartMemoize':
-        case 'FinishMemoize':
-        case 'LoadLocal':
-        case 'StoreLocal': {
-            break;
-        }
-        case 'StoreGlobal': {
-            functionEffects.push({
-                kind: 'GlobalMutation',
-                error: {
-                    reason: 'Unexpected reassignment of a variable which was defined outside of the component. Components and hooks should be pure and side-effect free, but variable reassignment is a form of side-effect. If this variable is used in rendering, use useState instead. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render)',
-                    loc: instr.loc,
-                    suggestions: null,
-                    severity: ErrorSeverity.InvalidReact,
-                },
-            });
-            break;
-        }
-        default: {
-            for (const operand of eachInstructionOperand(instr)) {
-                functionEffects.push(...operandEffects(state, operand, false));
-            }
-        }
-    }
-    return functionEffects;
-}
-function inferTerminalFunctionEffects(state, block) {
-    const functionEffects = [];
-    for (const operand of eachTerminalOperand(block.terminal)) {
-        functionEffects.push(...operandEffects(state, operand, true));
-    }
-    return functionEffects;
-}
-function transformFunctionEffectErrors(functionEffects) {
-    return functionEffects.map(eff => {
-        switch (eff.kind) {
-            case 'ReactMutation':
-            case 'GlobalMutation': {
-                return eff.error;
-            }
-            case 'ContextMutation': {
-                return {
-                    severity: ErrorSeverity.Invariant,
-                    reason: `Unexpected ContextMutation in top-level function effects`,
-                    loc: eff.loc,
-                };
-            }
-            default:
-                assertExhaustive$1(eff, `Unexpected function effect kind \`${eff.kind}\``);
-        }
-    });
-}
-function isEffectSafeOutsideRender(effect) {
-    return effect.kind === 'GlobalMutation';
-}
-function getWriteErrorReason(abstractValue) {
-    if (abstractValue.reason.has(ValueReason.Global)) {
-        return 'Modifying a variable defined outside a component or hook is not allowed. Consider using an effect';
-    }
-    else if (abstractValue.reason.has(ValueReason.JsxCaptured)) {
-        return 'Modifying a value used previously in JSX is not allowed. Consider moving the modification before the JSX';
-    }
-    else if (abstractValue.reason.has(ValueReason.Context)) {
-        return `Modifying a value returned from 'useContext()' is not allowed.`;
-    }
-    else if (abstractValue.reason.has(ValueReason.KnownReturnSignature)) {
-        return 'Modifying a value returned from a function whose return value should not be mutated';
-    }
-    else if (abstractValue.reason.has(ValueReason.ReactiveFunctionArgument)) {
-        return 'Modifying component props or hook arguments is not allowed. Consider using a local variable instead';
-    }
-    else if (abstractValue.reason.has(ValueReason.State)) {
-        return "Modifying a value returned from 'useState()', which should not be modified directly. Use the setter function to update instead";
-    }
-    else if (abstractValue.reason.has(ValueReason.ReducerState)) {
-        return "Modifying a value returned from 'useReducer()', which should not be modified directly. Use the dispatch function to update instead";
-    }
-    else if (abstractValue.reason.has(ValueReason.Effect)) {
-        return 'Modifying a value used previously in an effect function or as an effect dependency is not allowed. Consider moving the modification before calling useEffect()';
-    }
-    else if (abstractValue.reason.has(ValueReason.HookCaptured)) {
-        return 'Modifying a value previously passed as an argument to a hook is not allowed. Consider moving the modification before calling the hook';
-    }
-    else if (abstractValue.reason.has(ValueReason.HookReturn)) {
-        return 'Modifying a value returned from a hook is not allowed. Consider moving the modification into the hook where the value is constructed';
-    }
-    else {
-        return 'This modifies a variable that React considers immutable';
-    }
-}
-
-var _InferenceState_isFunctionExpression$1, _InferenceState_values$1, _InferenceState_variables$1;
-const UndefinedValue = {
-    kind: 'Primitive',
-    loc: GeneratedSource,
-    value: undefined,
-};
-function inferReferenceEffects(fn, options = { isFunctionExpression: false }) {
-    var _a;
-    const initialState = InferenceState$1.empty(fn.env, options.isFunctionExpression);
-    const value = {
-        kind: 'Primitive',
-        loc: fn.loc,
-        value: undefined,
-    };
-    initialState.initialize(value, {
-        kind: ValueKind.Frozen,
-        reason: new Set([ValueReason.Other]),
-        context: new Set(),
-    });
-    for (const ref of fn.context) {
-        const value = {
-            kind: 'ObjectExpression',
-            properties: [],
-            loc: ref.loc,
-        };
-        initialState.initialize(value, {
-            kind: ValueKind.Context,
-            reason: new Set([ValueReason.Other]),
-            context: new Set([ref]),
-        });
-        initialState.define(ref, value);
-    }
-    const paramKind = options.isFunctionExpression
-        ? {
-            kind: ValueKind.Mutable,
-            reason: new Set([ValueReason.Other]),
-            context: new Set(),
-        }
-        : {
-            kind: ValueKind.Frozen,
-            reason: new Set([ValueReason.ReactiveFunctionArgument]),
-            context: new Set(),
-        };
-    if (fn.fnType === 'Component') {
-        CompilerError.invariant(fn.params.length <= 2, {
-            reason: 'Expected React component to have not more than two parameters: one for props and for ref',
-            description: null,
-            loc: fn.loc,
-            suggestions: null,
-        });
-        const [props, ref] = fn.params;
-        let value;
-        let place;
-        if (props) {
-            inferParam$1(props, initialState, paramKind);
-        }
-        if (ref) {
-            if (ref.kind === 'Identifier') {
-                place = ref;
-                value = {
-                    kind: 'ObjectExpression',
-                    properties: [],
-                    loc: ref.loc,
-                };
-            }
-            else {
-                place = ref.place;
-                value = {
-                    kind: 'ObjectExpression',
-                    properties: [],
-                    loc: ref.place.loc,
-                };
-            }
-            initialState.initialize(value, {
-                kind: ValueKind.Mutable,
-                reason: new Set([ValueReason.Other]),
-                context: new Set(),
-            });
-            initialState.define(place, value);
-        }
-    }
-    else {
-        for (const param of fn.params) {
-            inferParam$1(param, initialState, paramKind);
-        }
-    }
-    const statesByBlock = new Map();
-    const queuedStates = new Map();
-    function queue(blockId, state) {
-        var _a;
-        let queuedState = queuedStates.get(blockId);
-        if (queuedState != null) {
-            state = (_a = queuedState.merge(state)) !== null && _a !== void 0 ? _a : queuedState;
-            queuedStates.set(blockId, state);
-        }
-        else {
-            const prevState = statesByBlock.get(blockId);
-            const nextState = prevState != null ? prevState.merge(state) : state;
-            if (nextState != null) {
-                queuedStates.set(blockId, nextState);
-            }
-        }
-    }
-    queue(fn.body.entry, initialState);
-    const functionEffects = (_a = fn.effects) !== null && _a !== void 0 ? _a : [];
-    while (queuedStates.size !== 0) {
-        for (const [blockId, block] of fn.body.blocks) {
-            const incomingState = queuedStates.get(blockId);
-            queuedStates.delete(blockId);
-            if (incomingState == null) {
-                continue;
-            }
-            statesByBlock.set(blockId, incomingState);
-            const state = incomingState.clone();
-            inferBlock$1(fn.env, state, block, functionEffects);
-            for (const nextBlockId of eachTerminalSuccessor(block.terminal)) {
-                queue(nextBlockId, state);
-            }
-        }
-    }
-    if (options.isFunctionExpression) {
-        fn.effects = functionEffects;
-        return [];
-    }
-    else {
-        return transformFunctionEffectErrors(functionEffects);
-    }
-}
-let InferenceState$1 = class InferenceState {
-    constructor(env, isFunctionExpression, values, variables) {
-        _InferenceState_isFunctionExpression$1.set(this, void 0);
-        _InferenceState_values$1.set(this, void 0);
-        _InferenceState_variables$1.set(this, void 0);
-        this.env = env;
-        __classPrivateFieldSet(this, _InferenceState_isFunctionExpression$1, isFunctionExpression, "f");
-        __classPrivateFieldSet(this, _InferenceState_values$1, values, "f");
-        __classPrivateFieldSet(this, _InferenceState_variables$1, variables, "f");
-    }
-    static empty(env, isFunctionExpression) {
-        return new InferenceState(env, isFunctionExpression, new Map(), new Map());
-    }
-    get isFunctionExpression() {
-        return __classPrivateFieldGet(this, _InferenceState_isFunctionExpression$1, "f");
-    }
-    initialize(value, kind) {
-        CompilerError.invariant(value.kind !== 'LoadLocal', {
-            reason: 'Expected all top-level identifiers to be defined as variables, not values',
-            description: null,
-            loc: value.loc,
-            suggestions: null,
-        });
-        __classPrivateFieldGet(this, _InferenceState_values$1, "f").set(value, kind);
-    }
-    values(place) {
-        const values = __classPrivateFieldGet(this, _InferenceState_variables$1, "f").get(place.identifier.id);
-        CompilerError.invariant(values != null, {
-            reason: `[hoisting] Expected value kind to be initialized`,
-            description: `${printPlace(place)}`,
-            loc: place.loc,
-            suggestions: null,
-        });
-        return Array.from(values);
-    }
-    kind(place) {
-        const values = __classPrivateFieldGet(this, _InferenceState_variables$1, "f").get(place.identifier.id);
-        CompilerError.invariant(values != null, {
-            reason: `[hoisting] Expected value kind to be initialized`,
-            description: `${printPlace(place)}`,
-            loc: place.loc,
-            suggestions: null,
-        });
-        let mergedKind = null;
-        for (const value of values) {
-            const kind = __classPrivateFieldGet(this, _InferenceState_values$1, "f").get(value);
-            mergedKind =
-                mergedKind !== null ? mergeAbstractValues$1(mergedKind, kind) : kind;
-        }
-        CompilerError.invariant(mergedKind !== null, {
-            reason: `InferReferenceEffects::kind: Expected at least one value`,
-            description: `No value found at \`${printPlace(place)}\``,
-            loc: place.loc,
-            suggestions: null,
-        });
-        return mergedKind;
-    }
-    alias(place, value) {
-        const values = __classPrivateFieldGet(this, _InferenceState_variables$1, "f").get(value.identifier.id);
-        CompilerError.invariant(values != null, {
-            reason: `[hoisting] Expected value for identifier to be initialized`,
-            description: `${printIdentifier(value.identifier)}`,
-            loc: value.loc,
-            suggestions: null,
-        });
-        __classPrivateFieldGet(this, _InferenceState_variables$1, "f").set(place.identifier.id, new Set(values));
-    }
-    define(place, value) {
-        CompilerError.invariant(__classPrivateFieldGet(this, _InferenceState_values$1, "f").has(value), {
-            reason: `Expected value to be initialized at '${printSourceLocation(value.loc)}'`,
-            description: null,
-            loc: value.loc,
-            suggestions: null,
-        });
-        __classPrivateFieldGet(this, _InferenceState_variables$1, "f").set(place.identifier.id, new Set([value]));
-    }
-    isDefined(place) {
-        return __classPrivateFieldGet(this, _InferenceState_variables$1, "f").has(place.identifier.id);
-    }
-    referenceAndRecordEffects(freezeActions, place, effectKind, reason) {
-        const values = __classPrivateFieldGet(this, _InferenceState_variables$1, "f").get(place.identifier.id);
-        if (values === undefined) {
-            CompilerError.invariant(effectKind !== Effect.Store, {
-                reason: '[InferReferenceEffects] Unhandled store reference effect',
-                description: null,
-                loc: place.loc,
-                suggestions: null,
-            });
-            place.effect =
-                effectKind === Effect.ConditionallyMutate
-                    ? Effect.ConditionallyMutate
-                    : Effect.Read;
-            return;
-        }
-        const action = this.reference(place, effectKind, reason);
-        action && freezeActions.push(action);
-    }
-    freezeValues(values, reason) {
-        for (const value of values) {
-            if (value.kind === 'DeclareContext' ||
-                (value.kind === 'StoreContext' &&
-                    (value.lvalue.kind === InstructionKind.Let ||
-                        value.lvalue.kind === InstructionKind.Const))) {
-                continue;
-            }
-            __classPrivateFieldGet(this, _InferenceState_values$1, "f").set(value, {
-                kind: ValueKind.Frozen,
-                reason,
-                context: new Set(),
-            });
-            if (value.kind === 'FunctionExpression' &&
-                (this.env.config.enablePreserveExistingMemoizationGuarantees ||
-                    this.env.config.enableTransitivelyFreezeFunctionExpressions)) {
-                for (const operand of value.loweredFunc.func.context) {
-                    const operandValues = __classPrivateFieldGet(this, _InferenceState_variables$1, "f").get(operand.identifier.id);
-                    if (operandValues !== undefined) {
-                        this.freezeValues(operandValues, reason);
-                    }
-                }
-            }
-        }
-    }
-    reference(place, effectKind, reason) {
-        const values = __classPrivateFieldGet(this, _InferenceState_variables$1, "f").get(place.identifier.id);
-        CompilerError.invariant(values !== undefined, {
-            reason: '[InferReferenceEffects] Expected value to be initialized',
-            description: null,
-            loc: place.loc,
-            suggestions: null,
-        });
-        let valueKind = this.kind(place);
-        let effect = null;
-        let freeze = null;
-        switch (effectKind) {
-            case Effect.Freeze: {
-                if (valueKind.kind === ValueKind.Mutable ||
-                    valueKind.kind === ValueKind.Context ||
-                    valueKind.kind === ValueKind.MaybeFrozen) {
-                    const reasonSet = new Set([reason]);
-                    effect = Effect.Freeze;
-                    valueKind = {
-                        kind: ValueKind.Frozen,
-                        reason: reasonSet,
-                        context: new Set(),
-                    };
-                    freeze = { values, reason: reasonSet };
-                }
-                else {
-                    effect = Effect.Read;
-                }
-                break;
-            }
-            case Effect.ConditionallyMutate: {
-                if (valueKind.kind === ValueKind.Mutable ||
-                    valueKind.kind === ValueKind.Context) {
-                    effect = Effect.ConditionallyMutate;
-                }
-                else {
-                    effect = Effect.Read;
-                }
-                break;
-            }
-            case Effect.ConditionallyMutateIterator: {
-                if (valueKind.kind === ValueKind.Mutable ||
-                    valueKind.kind === ValueKind.Context) {
-                    if (isArrayType(place.identifier) ||
-                        isSetType(place.identifier) ||
-                        isMapType(place.identifier)) {
-                        effect = Effect.Capture;
-                    }
-                    else {
-                        effect = Effect.ConditionallyMutate;
-                    }
-                }
-                else {
-                    effect = Effect.Read;
-                }
-                break;
-            }
-            case Effect.Mutate: {
-                effect = Effect.Mutate;
-                break;
-            }
-            case Effect.Store: {
-                effect = isObjectType(place.identifier) ? Effect.Store : Effect.Mutate;
-                break;
-            }
-            case Effect.Capture: {
-                if (valueKind.kind === ValueKind.Primitive ||
-                    valueKind.kind === ValueKind.Global ||
-                    valueKind.kind === ValueKind.Frozen ||
-                    valueKind.kind === ValueKind.MaybeFrozen) {
-                    effect = Effect.Read;
-                }
-                else {
-                    effect = Effect.Capture;
-                }
-                break;
-            }
-            case Effect.Read: {
-                effect = Effect.Read;
-                break;
-            }
-            case Effect.Unknown: {
-                CompilerError.invariant(false, {
-                    reason: 'Unexpected unknown effect, expected to infer a precise effect kind',
-                    description: null,
-                    loc: place.loc,
-                    suggestions: null,
-                });
-            }
-            default: {
-                assertExhaustive$1(effectKind, `Unexpected reference kind \`${effectKind}\``);
-            }
-        }
-        CompilerError.invariant(effect !== null, {
-            reason: 'Expected effect to be set',
-            description: null,
-            loc: place.loc,
-            suggestions: null,
-        });
-        place.effect = effect;
-        return freeze;
-    }
-    merge(other) {
-        let nextValues = null;
-        let nextVariables = null;
-        for (const [id, thisValue] of __classPrivateFieldGet(this, _InferenceState_values$1, "f")) {
-            const otherValue = __classPrivateFieldGet(other, _InferenceState_values$1, "f").get(id);
-            if (otherValue !== undefined) {
-                const mergedValue = mergeAbstractValues$1(thisValue, otherValue);
-                if (mergedValue !== thisValue) {
-                    nextValues = nextValues !== null && nextValues !== void 0 ? nextValues : new Map(__classPrivateFieldGet(this, _InferenceState_values$1, "f"));
-                    nextValues.set(id, mergedValue);
-                }
-            }
-        }
-        for (const [id, otherValue] of __classPrivateFieldGet(other, _InferenceState_values$1, "f")) {
-            if (__classPrivateFieldGet(this, _InferenceState_values$1, "f").has(id)) {
-                continue;
-            }
-            nextValues = nextValues !== null && nextValues !== void 0 ? nextValues : new Map(__classPrivateFieldGet(this, _InferenceState_values$1, "f"));
-            nextValues.set(id, otherValue);
-        }
-        for (const [id, thisValues] of __classPrivateFieldGet(this, _InferenceState_variables$1, "f")) {
-            const otherValues = __classPrivateFieldGet(other, _InferenceState_variables$1, "f").get(id);
-            if (otherValues !== undefined) {
-                let mergedValues = null;
-                for (const otherValue of otherValues) {
-                    if (!thisValues.has(otherValue)) {
-                        mergedValues = mergedValues !== null && mergedValues !== void 0 ? mergedValues : new Set(thisValues);
-                        mergedValues.add(otherValue);
-                    }
-                }
-                if (mergedValues !== null) {
-                    nextVariables = nextVariables !== null && nextVariables !== void 0 ? nextVariables : new Map(__classPrivateFieldGet(this, _InferenceState_variables$1, "f"));
-                    nextVariables.set(id, mergedValues);
-                }
-            }
-        }
-        for (const [id, otherValues] of __classPrivateFieldGet(other, _InferenceState_variables$1, "f")) {
-            if (__classPrivateFieldGet(this, _InferenceState_variables$1, "f").has(id)) {
-                continue;
-            }
-            nextVariables = nextVariables !== null && nextVariables !== void 0 ? nextVariables : new Map(__classPrivateFieldGet(this, _InferenceState_variables$1, "f"));
-            nextVariables.set(id, new Set(otherValues));
-        }
-        if (nextVariables === null && nextValues === null) {
-            return null;
-        }
-        else {
-            return new InferenceState(this.env, __classPrivateFieldGet(this, _InferenceState_isFunctionExpression$1, "f"), nextValues !== null && nextValues !== void 0 ? nextValues : new Map(__classPrivateFieldGet(this, _InferenceState_values$1, "f")), nextVariables !== null && nextVariables !== void 0 ? nextVariables : new Map(__classPrivateFieldGet(this, _InferenceState_variables$1, "f")));
-        }
-    }
-    clone() {
-        return new InferenceState(this.env, __classPrivateFieldGet(this, _InferenceState_isFunctionExpression$1, "f"), new Map(__classPrivateFieldGet(this, _InferenceState_values$1, "f")), new Map(__classPrivateFieldGet(this, _InferenceState_variables$1, "f")));
-    }
-    debug() {
-        const result = { values: {}, variables: {} };
-        const objects = new Map();
-        function identify(value) {
-            let id = objects.get(value);
-            if (id == null) {
-                id = objects.size;
-                objects.set(value, id);
-            }
-            return id;
-        }
-        for (const [value, kind] of __classPrivateFieldGet(this, _InferenceState_values$1, "f")) {
-            const id = identify(value);
-            result.values[id] = { kind, value: printMixedHIR(value) };
-        }
-        for (const [variable, values] of __classPrivateFieldGet(this, _InferenceState_variables$1, "f")) {
-            result.variables[`$${variable}`] = [...values].map(identify);
-        }
-        return result;
-    }
-    inferPhi(phi) {
-        const values = new Set();
-        for (const [_, operand] of phi.operands) {
-            const operandValues = __classPrivateFieldGet(this, _InferenceState_variables$1, "f").get(operand.identifier.id);
-            if (operandValues === undefined)
-                continue;
-            for (const v of operandValues) {
-                values.add(v);
-            }
-        }
-        if (values.size > 0) {
-            __classPrivateFieldGet(this, _InferenceState_variables$1, "f").set(phi.place.identifier.id, values);
-        }
-    }
-};
-_InferenceState_isFunctionExpression$1 = new WeakMap(), _InferenceState_values$1 = new WeakMap(), _InferenceState_variables$1 = new WeakMap();
-function inferParam$1(param, initialState, paramKind) {
-    let value;
-    let place;
-    if (param.kind === 'Identifier') {
-        place = param;
-        value = {
-            kind: 'Primitive',
-            loc: param.loc,
-            value: undefined,
-        };
-    }
-    else {
-        place = param.place;
-        value = {
-            kind: 'Primitive',
-            loc: param.place.loc,
-            value: undefined,
-        };
-    }
-    initialState.initialize(value, paramKind);
-    initialState.define(place, value);
-}
-function mergeValueKinds(a, b) {
-    if (a === b) {
-        return a;
-    }
-    else if (a === ValueKind.MaybeFrozen || b === ValueKind.MaybeFrozen) {
-        return ValueKind.MaybeFrozen;
-    }
-    else if (a === ValueKind.Mutable || b === ValueKind.Mutable) {
-        if (a === ValueKind.Frozen || b === ValueKind.Frozen) {
-            return ValueKind.MaybeFrozen;
-        }
-        else if (a === ValueKind.Context || b === ValueKind.Context) {
-            return ValueKind.Context;
-        }
-        else {
-            return ValueKind.Mutable;
-        }
-    }
-    else if (a === ValueKind.Context || b === ValueKind.Context) {
-        if (a === ValueKind.Frozen || b === ValueKind.Frozen) {
-            return ValueKind.MaybeFrozen;
-        }
-        else {
-            return ValueKind.Context;
-        }
-    }
-    else if (a === ValueKind.Frozen || b === ValueKind.Frozen) {
-        return ValueKind.Frozen;
-    }
-    else if (a === ValueKind.Global || b === ValueKind.Global) {
-        return ValueKind.Global;
-    }
-    else {
-        CompilerError.invariant(a === ValueKind.Primitive && b == ValueKind.Primitive, {
-            reason: `Unexpected value kind in mergeValues()`,
-            description: `Found kinds ${a} and ${b}`,
-            loc: GeneratedSource,
-        });
-        return ValueKind.Primitive;
-    }
-}
-function mergeAbstractValues$1(a, b) {
-    const kind = mergeValueKinds(a.kind, b.kind);
-    if (kind === a.kind &&
-        kind === b.kind &&
-        Set_isSuperset(a.reason, b.reason) &&
-        Set_isSuperset(a.context, b.context)) {
-        return a;
-    }
-    const reason = new Set(a.reason);
-    for (const r of b.reason) {
-        reason.add(r);
-    }
-    const context = new Set(a.context);
-    for (const c of b.context) {
-        context.add(c);
-    }
-    return { kind, reason, context };
-}
-function inferBlock$1(env, state, block, functionEffects) {
-    var _a, _b, _c;
-    for (const phi of block.phis) {
-        state.inferPhi(phi);
-    }
-    for (const instr of block.instructions) {
-        const instrValue = instr.value;
-        const defaultLvalueEffect = Effect.ConditionallyMutate;
-        let continuation;
-        const freezeActions = [];
-        switch (instrValue.kind) {
-            case 'BinaryExpression': {
-                continuation = {
-                    kind: 'initialize',
-                    valueKind: {
-                        kind: ValueKind.Primitive,
-                        reason: new Set([ValueReason.Other]),
-                        context: new Set(),
-                    },
-                    effect: {
-                        kind: Effect.Read,
-                        reason: ValueReason.Other,
-                    },
-                };
-                break;
-            }
-            case 'ArrayExpression': {
-                const contextRefOperands = getContextRefOperand(state, instrValue);
-                const valueKind = contextRefOperands.length > 0
-                    ? {
-                        kind: ValueKind.Context,
-                        reason: new Set([ValueReason.Other]),
-                        context: new Set(contextRefOperands),
-                    }
-                    : {
-                        kind: ValueKind.Mutable,
-                        reason: new Set([ValueReason.Other]),
-                        context: new Set(),
-                    };
-                for (const element of instrValue.elements) {
-                    if (element.kind === 'Spread') {
-                        state.referenceAndRecordEffects(freezeActions, element.place, Effect.ConditionallyMutateIterator, ValueReason.Other);
-                    }
-                    else if (element.kind === 'Identifier') {
-                        state.referenceAndRecordEffects(freezeActions, element, Effect.Capture, ValueReason.Other);
-                    }
-                    else ;
-                }
-                state.initialize(instrValue, valueKind);
-                state.define(instr.lvalue, instrValue);
-                instr.lvalue.effect = Effect.Store;
-                continuation = {
-                    kind: 'funeffects',
-                };
-                break;
-            }
-            case 'NewExpression': {
-                inferCallEffects(state, instr, freezeActions, getFunctionCallSignature(env, instrValue.callee.identifier.type));
-                continuation = { kind: 'funeffects' };
-                break;
-            }
-            case 'ObjectExpression': {
-                const contextRefOperands = getContextRefOperand(state, instrValue);
-                const valueKind = contextRefOperands.length > 0
-                    ? {
-                        kind: ValueKind.Context,
-                        reason: new Set([ValueReason.Other]),
-                        context: new Set(contextRefOperands),
-                    }
-                    : {
-                        kind: ValueKind.Mutable,
-                        reason: new Set([ValueReason.Other]),
-                        context: new Set(),
-                    };
-                for (const property of instrValue.properties) {
-                    switch (property.kind) {
-                        case 'ObjectProperty': {
-                            if (property.key.kind === 'computed') {
-                                state.referenceAndRecordEffects(freezeActions, property.key.name, Effect.Freeze, ValueReason.Other);
-                            }
-                            state.referenceAndRecordEffects(freezeActions, property.place, Effect.Capture, ValueReason.Other);
-                            break;
-                        }
-                        case 'Spread': {
-                            state.referenceAndRecordEffects(freezeActions, property.place, Effect.Capture, ValueReason.Other);
-                            break;
-                        }
-                        default: {
-                            assertExhaustive$1(property, `Unexpected property kind \`${property.kind}\``);
-                        }
-                    }
-                }
-                state.initialize(instrValue, valueKind);
-                state.define(instr.lvalue, instrValue);
-                instr.lvalue.effect = Effect.Store;
-                continuation = { kind: 'funeffects' };
-                break;
-            }
-            case 'UnaryExpression': {
-                continuation = {
-                    kind: 'initialize',
-                    valueKind: {
-                        kind: ValueKind.Primitive,
-                        reason: new Set([ValueReason.Other]),
-                        context: new Set(),
-                    },
-                    effect: { kind: Effect.Read, reason: ValueReason.Other },
-                };
-                break;
-            }
-            case 'UnsupportedNode': {
-                continuation = {
-                    kind: 'initialize',
-                    valueKind: {
-                        kind: ValueKind.Mutable,
-                        reason: new Set([ValueReason.Other]),
-                        context: new Set(),
-                    },
-                    effect: null,
-                };
-                break;
-            }
-            case 'JsxExpression': {
-                if (instrValue.tag.kind === 'Identifier') {
-                    state.referenceAndRecordEffects(freezeActions, instrValue.tag, Effect.Freeze, ValueReason.JsxCaptured);
-                }
-                if (instrValue.children !== null) {
-                    for (const child of instrValue.children) {
-                        state.referenceAndRecordEffects(freezeActions, child, Effect.Freeze, ValueReason.JsxCaptured);
-                    }
-                }
-                for (const attr of instrValue.props) {
-                    if (attr.kind === 'JsxSpreadAttribute') {
-                        state.referenceAndRecordEffects(freezeActions, attr.argument, Effect.Freeze, ValueReason.JsxCaptured);
-                    }
-                    else {
-                        state.referenceAndRecordEffects(freezeActions, attr.place, Effect.Freeze, ValueReason.JsxCaptured);
-                    }
-                }
-                state.initialize(instrValue, {
-                    kind: ValueKind.Frozen,
-                    reason: new Set([ValueReason.Other]),
-                    context: new Set(),
-                });
-                state.define(instr.lvalue, instrValue);
-                instr.lvalue.effect = Effect.ConditionallyMutate;
-                continuation = { kind: 'funeffects' };
-                break;
-            }
-            case 'JsxFragment': {
-                continuation = {
-                    kind: 'initialize',
-                    valueKind: {
-                        kind: ValueKind.Frozen,
-                        reason: new Set([ValueReason.Other]),
-                        context: new Set(),
-                    },
-                    effect: {
-                        kind: Effect.Freeze,
-                        reason: ValueReason.Other,
-                    },
-                };
-                break;
-            }
-            case 'TemplateLiteral': {
-                continuation = {
-                    kind: 'initialize',
-                    valueKind: {
-                        kind: ValueKind.Primitive,
-                        reason: new Set([ValueReason.Other]),
-                        context: new Set(),
-                    },
-                    effect: { kind: Effect.Read, reason: ValueReason.Other },
-                };
-                break;
-            }
-            case 'RegExpLiteral': {
-                continuation = {
-                    kind: 'initialize',
-                    valueKind: {
-                        kind: ValueKind.Mutable,
-                        reason: new Set([ValueReason.Other]),
-                        context: new Set(),
-                    },
-                    effect: {
-                        kind: Effect.ConditionallyMutate,
-                        reason: ValueReason.Other,
-                    },
-                };
-                break;
-            }
-            case 'MetaProperty': {
-                if (instrValue.meta !== 'import' || instrValue.property !== 'meta') {
-                    continuation = { kind: 'funeffects' };
-                    break;
-                }
-                continuation = {
-                    kind: 'initialize',
-                    valueKind: {
-                        kind: ValueKind.Global,
-                        reason: new Set([ValueReason.Global]),
-                        context: new Set(),
-                    },
-                    effect: null,
-                };
-                break;
-            }
-            case 'LoadGlobal':
-                continuation = {
-                    kind: 'initialize',
-                    valueKind: {
-                        kind: ValueKind.Global,
-                        reason: new Set([ValueReason.Global]),
-                        context: new Set(),
-                    },
-                    effect: null,
-                };
-                break;
-            case 'Debugger':
-            case 'JSXText':
-            case 'Primitive': {
-                continuation = {
-                    kind: 'initialize',
-                    valueKind: {
-                        kind: ValueKind.Primitive,
-                        reason: new Set([ValueReason.Other]),
-                        context: new Set(),
-                    },
-                    effect: null,
-                };
-                break;
-            }
-            case 'ObjectMethod':
-            case 'FunctionExpression': {
-                let hasMutableOperand = false;
-                for (const operand of eachInstructionOperand(instr)) {
-                    CompilerError.invariant(operand.effect !== Effect.Unknown, {
-                        reason: 'Expected fn effects to be populated',
-                        loc: operand.loc,
-                    });
-                    state.referenceAndRecordEffects(freezeActions, operand, operand.effect, ValueReason.Other);
-                    hasMutableOperand || (hasMutableOperand = isMutableEffect(operand.effect, operand.loc));
-                }
-                state.initialize(instrValue, {
-                    kind: hasMutableOperand ? ValueKind.Mutable : ValueKind.Frozen,
-                    reason: new Set([ValueReason.Other]),
-                    context: new Set(),
-                });
-                state.define(instr.lvalue, instrValue);
-                instr.lvalue.effect = Effect.Store;
-                continuation = { kind: 'funeffects' };
-                break;
-            }
-            case 'TaggedTemplateExpression': {
-                const operands = [...eachInstructionValueOperand(instrValue)];
-                if (operands.length !== 1) {
-                    CompilerError.throwTodo({
-                        reason: 'Support tagged template expressions with interpolations',
-                        loc: instrValue.loc,
-                    });
-                }
-                const signature = getFunctionCallSignature(env, instrValue.tag.identifier.type);
-                let calleeEffect = (_a = signature === null || signature === void 0 ? void 0 : signature.calleeEffect) !== null && _a !== void 0 ? _a : Effect.ConditionallyMutate;
-                const returnValueKind = signature !== null
-                    ? {
-                        kind: signature.returnValueKind,
-                        reason: new Set([
-                            (_b = signature.returnValueReason) !== null && _b !== void 0 ? _b : ValueReason.KnownReturnSignature,
-                        ]),
-                        context: new Set(),
-                    }
-                    : {
-                        kind: ValueKind.Mutable,
-                        reason: new Set([ValueReason.Other]),
-                        context: new Set(),
-                    };
-                state.referenceAndRecordEffects(freezeActions, instrValue.tag, calleeEffect, ValueReason.Other);
-                state.initialize(instrValue, returnValueKind);
-                state.define(instr.lvalue, instrValue);
-                instr.lvalue.effect = Effect.ConditionallyMutate;
-                continuation = { kind: 'funeffects' };
-                break;
-            }
-            case 'CallExpression': {
-                inferCallEffects(state, instr, freezeActions, getFunctionCallSignature(env, instrValue.callee.identifier.type));
-                continuation = { kind: 'funeffects' };
-                break;
-            }
-            case 'MethodCall': {
-                CompilerError.invariant(state.isDefined(instrValue.receiver), {
-                    reason: '[InferReferenceEffects] Internal error: receiver of PropertyCall should have been defined by corresponding PropertyLoad',
-                    description: null,
-                    loc: instrValue.loc,
-                    suggestions: null,
-                });
-                state.referenceAndRecordEffects(freezeActions, instrValue.property, Effect.Read, ValueReason.Other);
-                inferCallEffects(state, instr, freezeActions, getFunctionCallSignature(env, instrValue.property.identifier.type));
-                continuation = { kind: 'funeffects' };
-                break;
-            }
-            case 'PropertyStore': {
-                const effect = state.kind(instrValue.object).kind === ValueKind.Context
-                    ? Effect.ConditionallyMutate
-                    : Effect.Capture;
-                state.referenceAndRecordEffects(freezeActions, instrValue.value, effect, ValueReason.Other);
-                state.referenceAndRecordEffects(freezeActions, instrValue.object, Effect.Store, ValueReason.Other);
-                const lvalue = instr.lvalue;
-                state.alias(lvalue, instrValue.value);
-                lvalue.effect = Effect.Store;
-                continuation = { kind: 'funeffects' };
-                break;
-            }
-            case 'PropertyDelete': {
-                continuation = {
-                    kind: 'initialize',
-                    valueKind: {
-                        kind: ValueKind.Primitive,
-                        reason: new Set([ValueReason.Other]),
-                        context: new Set(),
-                    },
-                    effect: { kind: Effect.Mutate, reason: ValueReason.Other },
-                };
-                break;
-            }
-            case 'PropertyLoad': {
-                state.referenceAndRecordEffects(freezeActions, instrValue.object, Effect.Read, ValueReason.Other);
-                const lvalue = instr.lvalue;
-                lvalue.effect = Effect.ConditionallyMutate;
-                state.initialize(instrValue, state.kind(instrValue.object));
-                state.define(lvalue, instrValue);
-                continuation = { kind: 'funeffects' };
-                break;
-            }
-            case 'ComputedStore': {
-                const effect = state.kind(instrValue.object).kind === ValueKind.Context
-                    ? Effect.ConditionallyMutate
-                    : Effect.Capture;
-                state.referenceAndRecordEffects(freezeActions, instrValue.value, effect, ValueReason.Other);
-                state.referenceAndRecordEffects(freezeActions, instrValue.property, Effect.Capture, ValueReason.Other);
-                state.referenceAndRecordEffects(freezeActions, instrValue.object, Effect.Store, ValueReason.Other);
-                const lvalue = instr.lvalue;
-                state.alias(lvalue, instrValue.value);
-                lvalue.effect = Effect.Store;
-                continuation = { kind: 'funeffects' };
-                break;
-            }
-            case 'ComputedDelete': {
-                state.referenceAndRecordEffects(freezeActions, instrValue.object, Effect.Mutate, ValueReason.Other);
-                state.referenceAndRecordEffects(freezeActions, instrValue.property, Effect.Read, ValueReason.Other);
-                state.initialize(instrValue, {
-                    kind: ValueKind.Primitive,
-                    reason: new Set([ValueReason.Other]),
-                    context: new Set(),
-                });
-                state.define(instr.lvalue, instrValue);
-                instr.lvalue.effect = Effect.Mutate;
-                continuation = { kind: 'funeffects' };
-                break;
-            }
-            case 'ComputedLoad': {
-                state.referenceAndRecordEffects(freezeActions, instrValue.object, Effect.Read, ValueReason.Other);
-                state.referenceAndRecordEffects(freezeActions, instrValue.property, Effect.Read, ValueReason.Other);
-                const lvalue = instr.lvalue;
-                lvalue.effect = Effect.ConditionallyMutate;
-                state.initialize(instrValue, state.kind(instrValue.object));
-                state.define(lvalue, instrValue);
-                continuation = { kind: 'funeffects' };
-                break;
-            }
-            case 'Await': {
-                state.initialize(instrValue, state.kind(instrValue.value));
-                state.referenceAndRecordEffects(freezeActions, instrValue.value, Effect.ConditionallyMutate, ValueReason.Other);
-                const lvalue = instr.lvalue;
-                lvalue.effect = Effect.ConditionallyMutate;
-                state.alias(lvalue, instrValue.value);
-                continuation = { kind: 'funeffects' };
-                break;
-            }
-            case 'TypeCastExpression': {
-                state.initialize(instrValue, state.kind(instrValue.value));
-                state.referenceAndRecordEffects(freezeActions, instrValue.value, Effect.Read, ValueReason.Other);
-                const lvalue = instr.lvalue;
-                lvalue.effect = Effect.ConditionallyMutate;
-                state.alias(lvalue, instrValue.value);
-                continuation = { kind: 'funeffects' };
-                break;
-            }
-            case 'StartMemoize':
-            case 'FinishMemoize': {
-                for (const val of eachInstructionValueOperand(instrValue)) {
-                    if (env.config.enablePreserveExistingMemoizationGuarantees) {
-                        state.referenceAndRecordEffects(freezeActions, val, Effect.Freeze, ValueReason.Other);
-                    }
-                    else {
-                        state.referenceAndRecordEffects(freezeActions, val, Effect.Read, ValueReason.Other);
-                    }
-                }
-                const lvalue = instr.lvalue;
-                lvalue.effect = Effect.ConditionallyMutate;
-                state.initialize(instrValue, {
-                    kind: ValueKind.Frozen,
-                    reason: new Set([ValueReason.Other]),
-                    context: new Set(),
-                });
-                state.define(lvalue, instrValue);
-                continuation = { kind: 'funeffects' };
-                break;
-            }
-            case 'LoadLocal': {
-                const lvalue = instr.lvalue;
-                state.referenceAndRecordEffects(freezeActions, instrValue.place, Effect.Capture, ValueReason.Other);
-                lvalue.effect = Effect.ConditionallyMutate;
-                state.alias(lvalue, instrValue.place);
-                continuation = { kind: 'funeffects' };
-                break;
-            }
-            case 'LoadContext': {
-                state.referenceAndRecordEffects(freezeActions, instrValue.place, Effect.Capture, ValueReason.Other);
-                const lvalue = instr.lvalue;
-                lvalue.effect = Effect.ConditionallyMutate;
-                const valueKind = state.kind(instrValue.place);
-                state.initialize(instrValue, valueKind);
-                state.define(lvalue, instrValue);
-                continuation = { kind: 'funeffects' };
-                break;
-            }
-            case 'DeclareLocal': {
-                const value = UndefinedValue;
-                state.initialize(value, instrValue.lvalue.kind === InstructionKind.Catch
-                    ? {
-                        kind: ValueKind.Mutable,
-                        reason: new Set([ValueReason.Other]),
-                        context: new Set(),
-                    }
-                    : {
-                        kind: ValueKind.Primitive,
-                        reason: new Set([ValueReason.Other]),
-                        context: new Set(),
-                    });
-                state.define(instrValue.lvalue.place, value);
-                continuation = { kind: 'funeffects' };
-                break;
-            }
-            case 'DeclareContext': {
-                state.initialize(instrValue, {
-                    kind: ValueKind.Mutable,
-                    reason: new Set([ValueReason.Other]),
-                    context: new Set(),
-                });
-                state.define(instrValue.lvalue.place, instrValue);
-                continuation = { kind: 'funeffects' };
-                break;
-            }
-            case 'PostfixUpdate':
-            case 'PrefixUpdate': {
-                const effect = state.isDefined(instrValue.lvalue) &&
-                    state.kind(instrValue.lvalue).kind === ValueKind.Context
-                    ? Effect.ConditionallyMutate
-                    : Effect.Capture;
-                state.referenceAndRecordEffects(freezeActions, instrValue.value, effect, ValueReason.Other);
-                const lvalue = instr.lvalue;
-                state.alias(lvalue, instrValue.value);
-                lvalue.effect = Effect.Store;
-                state.alias(instrValue.lvalue, instrValue.value);
-                instrValue.lvalue.effect = Effect.Store;
-                continuation = { kind: 'funeffects' };
-                break;
-            }
-            case 'StoreLocal': {
-                const effect = state.isDefined(instrValue.lvalue.place) &&
-                    state.kind(instrValue.lvalue.place).kind === ValueKind.Context
-                    ? Effect.ConditionallyMutate
-                    : Effect.Capture;
-                state.referenceAndRecordEffects(freezeActions, instrValue.value, effect, ValueReason.Other);
-                const lvalue = instr.lvalue;
-                state.alias(lvalue, instrValue.value);
-                lvalue.effect = Effect.Store;
-                state.alias(instrValue.lvalue.place, instrValue.value);
-                instrValue.lvalue.place.effect = Effect.Store;
-                continuation = { kind: 'funeffects' };
-                break;
-            }
-            case 'StoreContext': {
-                state.referenceAndRecordEffects(freezeActions, instrValue.value, Effect.ConditionallyMutate, ValueReason.Other);
-                state.referenceAndRecordEffects(freezeActions, instrValue.lvalue.place, Effect.Mutate, ValueReason.Other);
-                const lvalue = instr.lvalue;
-                if (instrValue.lvalue.kind !== InstructionKind.Reassign) {
-                    state.initialize(instrValue, {
-                        kind: ValueKind.Mutable,
-                        reason: new Set([ValueReason.Other]),
-                        context: new Set(),
-                    });
-                    state.define(instrValue.lvalue.place, instrValue);
-                }
-                state.alias(lvalue, instrValue.value);
-                lvalue.effect = Effect.Store;
-                continuation = { kind: 'funeffects' };
-                break;
-            }
-            case 'StoreGlobal': {
-                state.referenceAndRecordEffects(freezeActions, instrValue.value, Effect.Capture, ValueReason.Other);
-                const lvalue = instr.lvalue;
-                lvalue.effect = Effect.Store;
-                continuation = { kind: 'funeffects' };
-                break;
-            }
-            case 'Destructure': {
-                let effect = Effect.Capture;
-                for (const place of eachPatternOperand(instrValue.lvalue.pattern)) {
-                    if (state.isDefined(place) &&
-                        state.kind(place).kind === ValueKind.Context) {
-                        effect = Effect.ConditionallyMutate;
-                        break;
-                    }
-                }
-                state.referenceAndRecordEffects(freezeActions, instrValue.value, effect, ValueReason.Other);
-                const lvalue = instr.lvalue;
-                state.alias(lvalue, instrValue.value);
-                lvalue.effect = Effect.Store;
-                for (const place of eachPatternOperand(instrValue.lvalue.pattern)) {
-                    state.alias(place, instrValue.value);
-                    place.effect = Effect.Store;
-                }
-                continuation = { kind: 'funeffects' };
-                break;
-            }
-            case 'GetIterator': {
-                const kind = state.kind(instrValue.collection).kind;
-                const isMutable = kind === ValueKind.Mutable || kind === ValueKind.Context;
-                let effect;
-                let valueKind;
-                const iterator = instrValue.collection.identifier;
-                if (!isMutable ||
-                    isArrayType(iterator) ||
-                    isMapType(iterator) ||
-                    isSetType(iterator)) {
-                    effect = {
-                        kind: Effect.Read,
-                        reason: ValueReason.Other,
-                    };
-                    valueKind = {
-                        kind: ValueKind.Mutable,
-                        reason: new Set([ValueReason.Other]),
-                        context: new Set(),
-                    };
-                }
-                else {
-                    effect = {
-                        kind: Effect.Capture,
-                        reason: ValueReason.Other,
-                    };
-                    valueKind = state.kind(instrValue.collection);
-                }
-                continuation = {
-                    kind: 'initialize',
-                    effect,
-                    valueKind,
-                    lvalueEffect: Effect.Store,
-                };
-                break;
-            }
-            case 'IteratorNext': {
-                state.referenceAndRecordEffects(freezeActions, instrValue.iterator, Effect.ConditionallyMutateIterator, ValueReason.Other);
-                state.referenceAndRecordEffects(freezeActions, instrValue.collection, Effect.Capture, ValueReason.Other);
-                state.initialize(instrValue, state.kind(instrValue.collection));
-                state.define(instr.lvalue, instrValue);
-                instr.lvalue.effect = Effect.Store;
-                continuation = { kind: 'funeffects' };
-                break;
-            }
-            case 'NextPropertyOf': {
-                continuation = {
-                    kind: 'initialize',
-                    effect: { kind: Effect.Read, reason: ValueReason.Other },
-                    lvalueEffect: Effect.Store,
-                    valueKind: {
-                        kind: ValueKind.Primitive,
-                        reason: new Set([ValueReason.Other]),
-                        context: new Set(),
-                    },
-                };
-                break;
-            }
-            default: {
-                assertExhaustive$1(instrValue, 'Unexpected instruction kind');
-            }
-        }
-        if (continuation.kind === 'initialize') {
-            for (const operand of eachInstructionOperand(instr)) {
-                CompilerError.invariant(continuation.effect != null, {
-                    reason: `effectKind must be set for instruction value \`${instrValue.kind}\``,
-                    description: null,
-                    loc: instrValue.loc,
-                    suggestions: null,
-                });
-                state.referenceAndRecordEffects(freezeActions, operand, continuation.effect.kind, continuation.effect.reason);
-            }
-            state.initialize(instrValue, continuation.valueKind);
-            state.define(instr.lvalue, instrValue);
-            instr.lvalue.effect = (_c = continuation.lvalueEffect) !== null && _c !== void 0 ? _c : defaultLvalueEffect;
-        }
-        functionEffects.push(...inferInstructionFunctionEffects(env, state, instr));
-        freezeActions.forEach(({ values, reason }) => state.freezeValues(values, reason));
-    }
-    const terminalFreezeActions = [];
-    for (const operand of eachTerminalOperand(block.terminal)) {
-        let effect;
-        if (block.terminal.kind === 'return' || block.terminal.kind === 'throw') {
-            if (state.isDefined(operand) &&
-                ((operand.identifier.type.kind === 'Function' &&
-                    state.isFunctionExpression) ||
-                    state.kind(operand).kind === ValueKind.Context)) {
-                effect = Effect.ConditionallyMutate;
-            }
-            else {
-                effect = Effect.Freeze;
-            }
-        }
-        else {
-            effect = Effect.Read;
-        }
-        state.referenceAndRecordEffects(terminalFreezeActions, operand, effect, ValueReason.Other);
-    }
-    functionEffects.push(...inferTerminalFunctionEffects(state, block));
-    terminalFreezeActions.forEach(({ values, reason }) => state.freezeValues(values, reason));
-}
-function getContextRefOperand(state, instrValue) {
-    const result = [];
-    for (const place of eachInstructionValueOperand(instrValue)) {
-        if (state.isDefined(place) &&
-            state.kind(place).kind === ValueKind.Context) {
-            result.push(place);
-        }
-    }
-    return result;
-}
-function getFunctionCallSignature(env, type) {
-    if (type.kind !== 'Function') {
-        return null;
-    }
-    return env.getFunctionSignature(type);
-}
-function getFunctionEffects(fn, sig) {
-    const results = [];
-    for (let i = 0; i < fn.args.length; i++) {
-        const arg = fn.args[i];
-        if (i < sig.positionalParams.length) {
-            if (arg.kind === 'Identifier') {
-                results.push(sig.positionalParams[i]);
-            }
-            else {
-                return null;
-            }
-        }
-        else if (sig.restParam !== null) {
-            results.push(sig.restParam);
-        }
-        else {
-            return null;
-        }
-    }
-    return results;
-}
-function isKnownMutableEffect(effect) {
-    switch (effect) {
-        case Effect.Store:
-        case Effect.ConditionallyMutate:
-        case Effect.ConditionallyMutateIterator:
-        case Effect.Mutate: {
-            return true;
-        }
-        case Effect.Unknown: {
-            CompilerError.invariant(false, {
-                reason: 'Unexpected unknown effect',
-                description: null,
-                loc: GeneratedSource,
-                suggestions: null,
-            });
-        }
-        case Effect.Read:
-        case Effect.Capture:
-        case Effect.Freeze: {
-            return false;
-        }
-        default: {
-            assertExhaustive$1(effect, `Unexpected effect \`${effect}\``);
-        }
-    }
-}
-function areArgumentsImmutableAndNonMutating$1(state, args) {
-    for (const arg of args) {
-        if (arg.kind === 'Identifier' && arg.identifier.type.kind === 'Function') {
-            const fnShape = state.env.getFunctionSignature(arg.identifier.type);
-            if (fnShape != null) {
-                return (!fnShape.positionalParams.some(isKnownMutableEffect) &&
-                    (fnShape.restParam == null ||
-                        !isKnownMutableEffect(fnShape.restParam)));
-            }
-        }
-        const place = arg.kind === 'Identifier' ? arg : arg.place;
-        const kind = state.kind(place).kind;
-        switch (kind) {
-            case ValueKind.Primitive:
-            case ValueKind.Frozen: {
-                break;
-            }
-            default: {
-                return false;
-            }
-        }
-        const values = state.values(place);
-        for (const value of values) {
-            if (value.kind === 'FunctionExpression' &&
-                value.loweredFunc.func.params.some(param => {
-                    const place = param.kind === 'Identifier' ? param : param.place;
-                    const range = place.identifier.mutableRange;
-                    return range.end > range.start + 1;
-                })) {
-                return false;
-            }
-        }
-    }
-    return true;
-}
-function getArgumentEffect(signatureEffect, arg) {
-    if (signatureEffect != null) {
-        if (arg.kind === 'Identifier') {
-            return signatureEffect;
-        }
-        else if (signatureEffect === Effect.Mutate ||
-            signatureEffect === Effect.ConditionallyMutate) {
-            return signatureEffect;
-        }
-        else {
-            if (signatureEffect === Effect.Freeze) {
-                CompilerError.throwTodo({
-                    reason: 'Support spread syntax for hook arguments',
-                    loc: arg.place.loc,
-                });
-            }
-            return Effect.ConditionallyMutateIterator;
-        }
-    }
-    else {
-        return Effect.ConditionallyMutate;
-    }
-}
-function inferCallEffects(state, instr, freezeActions, signature) {
-    var _a;
-    const instrValue = instr.value;
-    const returnValueKind = signature !== null
-        ? {
-            kind: signature.returnValueKind,
-            reason: new Set([
-                (_a = signature.returnValueReason) !== null && _a !== void 0 ? _a : ValueReason.KnownReturnSignature,
-            ]),
-            context: new Set(),
-        }
-        : {
-            kind: ValueKind.Mutable,
-            reason: new Set([ValueReason.Other]),
-            context: new Set(),
-        };
-    if (instrValue.kind === 'MethodCall' &&
-        signature !== null &&
-        signature.mutableOnlyIfOperandsAreMutable &&
-        areArgumentsImmutableAndNonMutating$1(state, instrValue.args)) {
-        for (const arg of instrValue.args) {
-            const place = arg.kind === 'Identifier' ? arg : arg.place;
-            state.referenceAndRecordEffects(freezeActions, place, Effect.Read, ValueReason.Other);
-        }
-        state.referenceAndRecordEffects(freezeActions, instrValue.receiver, Effect.Capture, ValueReason.Other);
-        state.initialize(instrValue, returnValueKind);
-        state.define(instr.lvalue, instrValue);
-        instr.lvalue.effect =
-            instrValue.receiver.effect === Effect.Capture
-                ? Effect.Store
-                : Effect.ConditionallyMutate;
-        return;
-    }
-    const effects = signature !== null ? getFunctionEffects(instrValue, signature) : null;
-    let hasCaptureArgument = false;
-    for (let i = 0; i < instrValue.args.length; i++) {
-        const arg = instrValue.args[i];
-        const place = arg.kind === 'Identifier' ? arg : arg.place;
-        state.referenceAndRecordEffects(freezeActions, place, getArgumentEffect(effects != null ? effects[i] : null, arg), ValueReason.Other);
-        hasCaptureArgument || (hasCaptureArgument = place.effect === Effect.Capture);
-    }
-    const callee = instrValue.kind === 'MethodCall' ? instrValue.receiver : instrValue.callee;
-    if (signature !== null) {
-        state.referenceAndRecordEffects(freezeActions, callee, signature.calleeEffect, ValueReason.Other);
-    }
-    else {
-        state.referenceAndRecordEffects(freezeActions, callee, instrValue.kind === 'NewExpression'
-            ? Effect.Read
-            : Effect.ConditionallyMutate, ValueReason.Other);
-    }
-    hasCaptureArgument || (hasCaptureArgument = callee.effect === Effect.Capture);
-    state.initialize(instrValue, returnValueKind);
-    state.define(instr.lvalue, instrValue);
-    instr.lvalue.effect = hasCaptureArgument
-        ? Effect.Store
-        : Effect.ConditionallyMutate;
-}
-
-function pruneNonEscapingScopes(fn) {
-    const state = new State(fn.env);
-    for (const param of fn.params) {
-        if (param.kind === 'Identifier') {
-            state.declare(param.identifier.declarationId);
-        }
-        else {
-            state.declare(param.place.identifier.declarationId);
-        }
-    }
-    visitReactiveFunction(fn, new CollectDependenciesVisitor(fn.env, state), []);
-    const memoized = computeMemoizedIdentifiers(state);
-    visitReactiveFunction(fn, new PruneScopesTransform(), memoized);
-}
-var MemoizationLevel;
-(function (MemoizationLevel) {
-    MemoizationLevel["Memoized"] = "Memoized";
-    MemoizationLevel["Conditional"] = "Conditional";
-    MemoizationLevel["Unmemoized"] = "Unmemoized";
-    MemoizationLevel["Never"] = "Never";
-})(MemoizationLevel || (MemoizationLevel = {}));
-function joinAliases(kind1, kind2) {
-    if (kind1 === MemoizationLevel.Memoized ||
-        kind2 === MemoizationLevel.Memoized) {
-        return MemoizationLevel.Memoized;
-    }
-    else if (kind1 === MemoizationLevel.Conditional ||
-        kind2 === MemoizationLevel.Conditional) {
-        return MemoizationLevel.Conditional;
-    }
-    else if (kind1 === MemoizationLevel.Unmemoized ||
-        kind2 === MemoizationLevel.Unmemoized) {
-        return MemoizationLevel.Unmemoized;
-    }
-    else {
-        return MemoizationLevel.Never;
-    }
-}
-class State {
-    constructor(env) {
-        this.definitions = new Map();
-        this.identifiers = new Map();
-        this.scopes = new Map();
-        this.escapingValues = new Set();
-        this.env = env;
-    }
-    declare(id) {
-        this.identifiers.set(id, {
-            level: MemoizationLevel.Never,
-            memoized: false,
-            dependencies: new Set(),
-            scopes: new Set(),
-            seen: false,
-        });
-    }
-    visitOperand(id, place, identifier) {
-        const scope = getPlaceScope(id, place);
-        if (scope !== null) {
-            let node = this.scopes.get(scope.id);
-            if (node === undefined) {
-                node = {
-                    dependencies: [...scope.dependencies].map(dep => dep.identifier.declarationId),
-                    seen: false,
-                };
-                this.scopes.set(scope.id, node);
-            }
-            const identifierNode = this.identifiers.get(identifier);
-            CompilerError.invariant(identifierNode !== undefined, {
-                reason: 'Expected identifier to be initialized',
-                description: `[${id}] operand=${printPlace(place)} for identifier declaration ${identifier}`,
-                loc: place.loc,
-                suggestions: null,
-            });
-            identifierNode.scopes.add(scope.id);
-        }
-    }
-}
-function computeMemoizedIdentifiers(state) {
-    const memoized = new Set();
-    function visit(id, forceMemoize = false) {
-        const node = state.identifiers.get(id);
-        CompilerError.invariant(node !== undefined, {
-            reason: `Expected a node for all identifiers, none found for \`${id}\``,
-            description: null,
-            loc: null,
-            suggestions: null,
-        });
-        if (node.seen) {
-            return node.memoized;
-        }
-        node.seen = true;
-        node.memoized = false;
-        let hasMemoizedDependency = false;
-        for (const dep of node.dependencies) {
-            const isDepMemoized = visit(dep);
-            hasMemoizedDependency || (hasMemoizedDependency = isDepMemoized);
-        }
-        if (node.level === MemoizationLevel.Memoized ||
-            (node.level === MemoizationLevel.Conditional &&
-                (hasMemoizedDependency || forceMemoize)) ||
-            (node.level === MemoizationLevel.Unmemoized && forceMemoize)) {
-            node.memoized = true;
-            memoized.add(id);
-            for (const scope of node.scopes) {
-                forceMemoizeScopeDependencies(scope);
-            }
-        }
-        return node.memoized;
-    }
-    function forceMemoizeScopeDependencies(id) {
-        const node = state.scopes.get(id);
-        CompilerError.invariant(node !== undefined, {
-            reason: 'Expected a node for all scopes',
-            description: null,
-            loc: null,
-            suggestions: null,
-        });
-        if (node.seen) {
-            return;
-        }
-        node.seen = true;
-        for (const dep of node.dependencies) {
-            visit(dep, true);
-        }
-        return;
-    }
-    for (const value of state.escapingValues) {
-        visit(value);
-    }
-    return memoized;
-}
-function computePatternLValues(pattern) {
-    const lvalues = [];
-    switch (pattern.kind) {
-        case 'ArrayPattern': {
-            for (const item of pattern.items) {
-                if (item.kind === 'Identifier') {
-                    lvalues.push({ place: item, level: MemoizationLevel.Conditional });
-                }
-                else if (item.kind === 'Spread') {
-                    lvalues.push({ place: item.place, level: MemoizationLevel.Memoized });
-                }
-            }
-            break;
-        }
-        case 'ObjectPattern': {
-            for (const property of pattern.properties) {
-                if (property.kind === 'ObjectProperty') {
-                    lvalues.push({
-                        place: property.place,
-                        level: MemoizationLevel.Conditional,
-                    });
-                }
-                else {
-                    lvalues.push({
-                        place: property.place,
-                        level: MemoizationLevel.Memoized,
-                    });
-                }
-            }
-            break;
-        }
-        default: {
-            assertExhaustive$1(pattern, `Unexpected pattern kind \`${pattern.kind}\``);
-        }
-    }
-    return lvalues;
-}
-class CollectDependenciesVisitor extends ReactiveFunctionVisitor {
-    constructor(env, state) {
-        super();
-        this.env = env;
-        this.state = state;
-        this.options = {
-            memoizeJsxElements: !this.env.config.enableForest,
-            forceMemoizePrimitives: this.env.config.enableForest,
-        };
-    }
-    computeMemoizationInputs(value, lvalue) {
-        const env = this.env;
-        const options = this.options;
-        switch (value.kind) {
-            case 'ConditionalExpression': {
-                return {
-                    lvalues: lvalue !== null
-                        ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
-                        : [],
-                    rvalues: [
-                        ...this.computeMemoizationInputs(value.consequent, null).rvalues,
-                        ...this.computeMemoizationInputs(value.alternate, null).rvalues,
-                    ],
-                };
-            }
-            case 'LogicalExpression': {
-                return {
-                    lvalues: lvalue !== null
-                        ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
-                        : [],
-                    rvalues: [
-                        ...this.computeMemoizationInputs(value.left, null).rvalues,
-                        ...this.computeMemoizationInputs(value.right, null).rvalues,
-                    ],
-                };
-            }
-            case 'SequenceExpression': {
-                for (const instr of value.instructions) {
-                    this.visitValueForMemoization(instr.id, instr.value, instr.lvalue);
-                }
-                return {
-                    lvalues: lvalue !== null
-                        ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
-                        : [],
-                    rvalues: this.computeMemoizationInputs(value.value, null).rvalues,
-                };
-            }
-            case 'JsxExpression': {
-                const operands = [];
-                if (value.tag.kind === 'Identifier') {
-                    operands.push(value.tag);
-                }
-                for (const prop of value.props) {
-                    if (prop.kind === 'JsxAttribute') {
-                        operands.push(prop.place);
-                    }
-                    else {
-                        operands.push(prop.argument);
-                    }
-                }
-                if (value.children !== null) {
-                    for (const child of value.children) {
-                        operands.push(child);
-                    }
-                }
-                const level = options.memoizeJsxElements
-                    ? MemoizationLevel.Memoized
-                    : MemoizationLevel.Unmemoized;
-                return {
-                    lvalues: lvalue !== null ? [{ place: lvalue, level }] : [],
-                    rvalues: operands,
-                };
-            }
-            case 'JsxFragment': {
-                const level = options.memoizeJsxElements
-                    ? MemoizationLevel.Memoized
-                    : MemoizationLevel.Unmemoized;
-                return {
-                    lvalues: lvalue !== null ? [{ place: lvalue, level }] : [],
-                    rvalues: value.children,
-                };
-            }
-            case 'NextPropertyOf':
-            case 'StartMemoize':
-            case 'FinishMemoize':
-            case 'Debugger':
-            case 'ComputedDelete':
-            case 'PropertyDelete':
-            case 'LoadGlobal':
-            case 'MetaProperty':
-            case 'TemplateLiteral':
-            case 'Primitive':
-            case 'JSXText':
-            case 'BinaryExpression':
-            case 'UnaryExpression': {
-                const level = options.forceMemoizePrimitives
-                    ? MemoizationLevel.Memoized
-                    : MemoizationLevel.Never;
-                return {
-                    lvalues: lvalue !== null ? [{ place: lvalue, level }] : [],
-                    rvalues: [],
-                };
-            }
-            case 'Await':
-            case 'TypeCastExpression': {
-                return {
-                    lvalues: lvalue !== null
-                        ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
-                        : [],
-                    rvalues: [value.value],
-                };
-            }
-            case 'IteratorNext': {
-                return {
-                    lvalues: lvalue !== null
-                        ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
-                        : [],
-                    rvalues: [value.iterator, value.collection],
-                };
-            }
-            case 'GetIterator': {
-                return {
-                    lvalues: lvalue !== null
-                        ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
-                        : [],
-                    rvalues: [value.collection],
-                };
-            }
-            case 'LoadLocal': {
-                return {
-                    lvalues: lvalue !== null
-                        ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
-                        : [],
-                    rvalues: [value.place],
-                };
-            }
-            case 'LoadContext': {
-                return {
-                    lvalues: lvalue !== null
-                        ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
-                        : [],
-                    rvalues: [value.place],
-                };
-            }
-            case 'DeclareContext': {
-                const lvalues = [
-                    { place: value.lvalue.place, level: MemoizationLevel.Memoized },
-                ];
-                if (lvalue !== null) {
-                    lvalues.push({ place: lvalue, level: MemoizationLevel.Unmemoized });
-                }
-                return {
-                    lvalues,
-                    rvalues: [],
-                };
-            }
-            case 'DeclareLocal': {
-                const lvalues = [
-                    { place: value.lvalue.place, level: MemoizationLevel.Unmemoized },
-                ];
-                if (lvalue !== null) {
-                    lvalues.push({ place: lvalue, level: MemoizationLevel.Unmemoized });
-                }
-                return {
-                    lvalues,
-                    rvalues: [],
-                };
-            }
-            case 'PrefixUpdate':
-            case 'PostfixUpdate': {
-                const lvalues = [
-                    { place: value.lvalue, level: MemoizationLevel.Conditional },
-                ];
-                if (lvalue !== null) {
-                    lvalues.push({ place: lvalue, level: MemoizationLevel.Conditional });
-                }
-                return {
-                    lvalues,
-                    rvalues: [value.value],
-                };
-            }
-            case 'StoreLocal': {
-                const lvalues = [
-                    { place: value.lvalue.place, level: MemoizationLevel.Conditional },
-                ];
-                if (lvalue !== null) {
-                    lvalues.push({ place: lvalue, level: MemoizationLevel.Conditional });
-                }
-                return {
-                    lvalues,
-                    rvalues: [value.value],
-                };
-            }
-            case 'StoreContext': {
-                const lvalues = [
-                    { place: value.lvalue.place, level: MemoizationLevel.Memoized },
-                ];
-                if (lvalue !== null) {
-                    lvalues.push({ place: lvalue, level: MemoizationLevel.Conditional });
-                }
-                return {
-                    lvalues,
-                    rvalues: [value.value],
-                };
-            }
-            case 'StoreGlobal': {
-                const lvalues = [];
-                if (lvalue !== null) {
-                    lvalues.push({ place: lvalue, level: MemoizationLevel.Unmemoized });
-                }
-                return {
-                    lvalues,
-                    rvalues: [value.value],
-                };
-            }
-            case 'Destructure': {
-                const lvalues = [];
-                if (lvalue !== null) {
-                    lvalues.push({ place: lvalue, level: MemoizationLevel.Conditional });
-                }
-                lvalues.push(...computePatternLValues(value.lvalue.pattern));
-                return {
-                    lvalues: lvalues,
-                    rvalues: [value.value],
-                };
-            }
-            case 'ComputedLoad':
-            case 'PropertyLoad': {
-                const level = options.forceMemoizePrimitives
-                    ? MemoizationLevel.Memoized
-                    : MemoizationLevel.Conditional;
-                return {
-                    lvalues: lvalue !== null ? [{ place: lvalue, level }] : [],
-                    rvalues: [value.object],
-                };
-            }
-            case 'ComputedStore': {
-                const lvalues = [
-                    { place: value.object, level: MemoizationLevel.Conditional },
-                ];
-                if (lvalue !== null) {
-                    lvalues.push({ place: lvalue, level: MemoizationLevel.Conditional });
-                }
-                return {
-                    lvalues,
-                    rvalues: [value.value],
-                };
-            }
-            case 'OptionalExpression': {
-                const lvalues = [];
-                if (lvalue !== null) {
-                    lvalues.push({ place: lvalue, level: MemoizationLevel.Conditional });
-                }
-                return {
-                    lvalues: lvalues,
-                    rvalues: [
-                        ...this.computeMemoizationInputs(value.value, null).rvalues,
-                    ],
-                };
-            }
-            case 'TaggedTemplateExpression': {
-                const signature = getFunctionCallSignature(env, value.tag.identifier.type);
-                let lvalues = [];
-                if (lvalue !== null) {
-                    lvalues.push({ place: lvalue, level: MemoizationLevel.Memoized });
-                }
-                if ((signature === null || signature === void 0 ? void 0 : signature.noAlias) === true) {
-                    return {
-                        lvalues,
-                        rvalues: [],
-                    };
-                }
-                const operands = [...eachReactiveValueOperand(value)];
-                lvalues.push(...operands
-                    .filter(operand => isMutableEffect(operand.effect, operand.loc))
-                    .map(place => ({ place, level: MemoizationLevel.Memoized })));
-                return {
-                    lvalues,
-                    rvalues: operands,
-                };
-            }
-            case 'CallExpression': {
-                const signature = getFunctionCallSignature(env, value.callee.identifier.type);
-                let lvalues = [];
-                if (lvalue !== null) {
-                    lvalues.push({ place: lvalue, level: MemoizationLevel.Memoized });
-                }
-                if ((signature === null || signature === void 0 ? void 0 : signature.noAlias) === true) {
-                    return {
-                        lvalues,
-                        rvalues: [],
-                    };
-                }
-                const operands = [...eachReactiveValueOperand(value)];
-                lvalues.push(...operands
-                    .filter(operand => isMutableEffect(operand.effect, operand.loc))
-                    .map(place => ({ place, level: MemoizationLevel.Memoized })));
-                return {
-                    lvalues,
-                    rvalues: operands,
-                };
-            }
-            case 'MethodCall': {
-                const signature = getFunctionCallSignature(env, value.property.identifier.type);
-                let lvalues = [];
-                if (lvalue !== null) {
-                    lvalues.push({ place: lvalue, level: MemoizationLevel.Memoized });
-                }
-                if ((signature === null || signature === void 0 ? void 0 : signature.noAlias) === true) {
-                    return {
-                        lvalues,
-                        rvalues: [],
-                    };
-                }
-                const operands = [...eachReactiveValueOperand(value)];
-                lvalues.push(...operands
-                    .filter(operand => isMutableEffect(operand.effect, operand.loc))
-                    .map(place => ({ place, level: MemoizationLevel.Memoized })));
-                return {
-                    lvalues,
-                    rvalues: operands,
-                };
-            }
-            case 'RegExpLiteral':
-            case 'ObjectMethod':
-            case 'FunctionExpression':
-            case 'ArrayExpression':
-            case 'NewExpression':
-            case 'ObjectExpression':
-            case 'PropertyStore': {
-                const operands = [...eachReactiveValueOperand(value)];
-                const lvalues = operands
-                    .filter(operand => isMutableEffect(operand.effect, operand.loc))
-                    .map(place => ({ place, level: MemoizationLevel.Memoized }));
-                if (lvalue !== null) {
-                    lvalues.push({ place: lvalue, level: MemoizationLevel.Memoized });
-                }
-                return {
-                    lvalues,
-                    rvalues: operands,
-                };
-            }
-            case 'UnsupportedNode': {
-                const lvalues = [];
-                if (lvalue !== null) {
-                    lvalues.push({ place: lvalue, level: MemoizationLevel.Never });
-                }
-                return {
-                    lvalues,
-                    rvalues: [],
-                };
-            }
-            default: {
-                assertExhaustive$1(value, `Unexpected value kind \`${value.kind}\``);
-            }
-        }
-    }
-    visitValueForMemoization(id, value, lvalue) {
-        var _a, _b, _c;
-        const state = this.state;
-        const aliasing = this.computeMemoizationInputs(value, lvalue);
-        for (const operand of aliasing.rvalues) {
-            const operandId = (_a = state.definitions.get(operand.identifier.declarationId)) !== null && _a !== void 0 ? _a : operand.identifier.declarationId;
-            state.visitOperand(id, operand, operandId);
-        }
-        for (const { place: lvalue, level } of aliasing.lvalues) {
-            const lvalueId = (_b = state.definitions.get(lvalue.identifier.declarationId)) !== null && _b !== void 0 ? _b : lvalue.identifier.declarationId;
-            let node = state.identifiers.get(lvalueId);
-            if (node === undefined) {
-                node = {
-                    level: MemoizationLevel.Never,
-                    memoized: false,
-                    dependencies: new Set(),
-                    scopes: new Set(),
-                    seen: false,
-                };
-                state.identifiers.set(lvalueId, node);
-            }
-            node.level = joinAliases(node.level, level);
-            for (const operand of aliasing.rvalues) {
-                const operandId = (_c = state.definitions.get(operand.identifier.declarationId)) !== null && _c !== void 0 ? _c : operand.identifier.declarationId;
-                if (operandId === lvalueId) {
-                    continue;
-                }
-                node.dependencies.add(operandId);
-            }
-            state.visitOperand(id, lvalue, lvalueId);
-        }
-        if (value.kind === 'LoadLocal' && lvalue !== null) {
-            state.definitions.set(lvalue.identifier.declarationId, value.place.identifier.declarationId);
-        }
-        else if (value.kind === 'CallExpression' || value.kind === 'MethodCall') {
-            let callee = value.kind === 'CallExpression' ? value.callee : value.property;
-            if (getHookKind(state.env, callee.identifier) != null) {
-                const signature = getFunctionCallSignature(this.env, callee.identifier.type);
-                if (signature && signature.noAlias === true) {
-                    return;
-                }
-                for (const operand of value.args) {
-                    const place = operand.kind === 'Spread' ? operand.place : operand;
-                    state.escapingValues.add(place.identifier.declarationId);
-                }
-            }
-        }
-    }
-    visitInstruction(instruction, _scopes) {
-        this.visitValueForMemoization(instruction.id, instruction.value, instruction.lvalue);
-    }
-    visitTerminal(stmt, scopes) {
-        this.traverseTerminal(stmt, scopes);
-        if (stmt.terminal.kind === 'return') {
-            this.state.escapingValues.add(stmt.terminal.value.identifier.declarationId);
-            const identifierNode = this.state.identifiers.get(stmt.terminal.value.identifier.declarationId);
-            CompilerError.invariant(identifierNode !== undefined, {
-                reason: 'Expected identifier to be initialized',
-                description: null,
-                loc: stmt.terminal.loc,
-                suggestions: null,
-            });
-            for (const scope of scopes) {
-                identifierNode.scopes.add(scope.id);
-            }
-        }
-    }
-    visitScope(scope, scopes) {
-        for (const reassignment of scope.scope.reassignments) {
-            const identifierNode = this.state.identifiers.get(reassignment.declarationId);
-            CompilerError.invariant(identifierNode !== undefined, {
-                reason: 'Expected identifier to be initialized',
-                description: null,
-                loc: reassignment.loc,
-                suggestions: null,
-            });
-            for (const scope of scopes) {
-                identifierNode.scopes.add(scope.id);
-            }
-            identifierNode.scopes.add(scope.scope.id);
-        }
-        this.traverseScope(scope, [...scopes, scope.scope]);
-    }
-}
-class PruneScopesTransform extends ReactiveFunctionTransform {
-    constructor() {
-        super(...arguments);
-        this.prunedScopes = new Set();
-        this.reassignments = new Map();
-    }
-    transformScope(scopeBlock, state) {
-        this.visitScope(scopeBlock, state);
-        if ((scopeBlock.scope.declarations.size === 0 &&
-            scopeBlock.scope.reassignments.size === 0) ||
-            scopeBlock.scope.earlyReturnValue !== null) {
-            return { kind: 'keep' };
-        }
-        const hasMemoizedOutput = Array.from(scopeBlock.scope.declarations.values()).some(decl => state.has(decl.identifier.declarationId)) ||
-            Array.from(scopeBlock.scope.reassignments).some(identifier => state.has(identifier.declarationId));
-        if (hasMemoizedOutput) {
-            return { kind: 'keep' };
-        }
-        else {
-            this.prunedScopes.add(scopeBlock.scope.id);
-            return {
-                kind: 'replace-many',
-                value: scopeBlock.instructions,
-            };
-        }
-    }
-    transformInstruction(instruction, state) {
-        var _a;
-        this.traverseInstruction(instruction, state);
-        const value = instruction.value;
-        if (value.kind === 'StoreLocal' && value.lvalue.kind === 'Reassign') {
-            const ids = getOrInsertDefault(this.reassignments, value.lvalue.place.identifier.declarationId, new Set());
-            ids.add(value.value.identifier);
-        }
-        else if (value.kind === 'LoadLocal' &&
-            value.place.identifier.scope != null &&
-            instruction.lvalue != null &&
-            instruction.lvalue.identifier.scope == null) {
-            const ids = getOrInsertDefault(this.reassignments, instruction.lvalue.identifier.declarationId, new Set());
-            ids.add(value.place.identifier);
-        }
-        else if (value.kind === 'FinishMemoize') {
-            let decls;
-            if (value.decl.identifier.scope == null) {
-                decls = (_a = this.reassignments.get(value.decl.identifier.declarationId)) !== null && _a !== void 0 ? _a : [
-                    value.decl.identifier,
-                ];
-            }
-            else {
-                decls = [value.decl.identifier];
-            }
-            if ([...decls].every(decl => decl.scope == null || this.prunedScopes.has(decl.scope.id))) {
-                value.pruned = true;
-            }
-        }
-        return { kind: 'keep' };
-    }
-}
-
-let Visitor$7 = class Visitor extends ReactiveFunctionVisitor {
-    visitLValue(id, lvalue, state) {
-        this.visitPlace(id, lvalue, state);
-    }
-    visitPlace(_id, place, state) {
-        if (place.reactive) {
-            state.add(place.identifier.id);
-        }
-    }
-    visitPrunedScope(scopeBlock, state) {
-        this.traversePrunedScope(scopeBlock, state);
-        for (const [id, decl] of scopeBlock.scope.declarations) {
-            if (!isPrimitiveType(decl.identifier) &&
-                !isStableRefType(decl.identifier, state)) {
-                state.add(id);
-            }
-        }
-    }
-};
-function isStableRefType(identifier, reactiveIdentifiers) {
-    return isUseRefType(identifier) && !reactiveIdentifiers.has(identifier.id);
-}
-function collectReactiveIdentifiers(fn) {
-    const visitor = new Visitor$7();
-    const state = new Set();
-    visitReactiveFunction(fn, visitor, state);
-    return state;
-}
-
-function pruneNonReactiveDependencies(fn) {
-    const reactiveIdentifiers = collectReactiveIdentifiers(fn);
-    visitReactiveFunction(fn, new Visitor$6(), reactiveIdentifiers);
-}
-let Visitor$6 = class Visitor extends ReactiveFunctionVisitor {
-    visitInstruction(instruction, state) {
-        this.traverseInstruction(instruction, state);
-        const { lvalue, value } = instruction;
-        switch (value.kind) {
-            case 'LoadLocal': {
-                if (lvalue !== null && state.has(value.place.identifier.id)) {
-                    state.add(lvalue.identifier.id);
-                }
-                break;
-            }
-            case 'StoreLocal': {
-                if (state.has(value.value.identifier.id)) {
-                    state.add(value.lvalue.place.identifier.id);
-                    if (lvalue !== null) {
-                        state.add(lvalue.identifier.id);
-                    }
-                }
-                break;
-            }
-            case 'Destructure': {
-                if (state.has(value.value.identifier.id)) {
-                    for (const lvalue of eachPatternOperand(value.lvalue.pattern)) {
-                        if (isStableType(lvalue.identifier)) {
-                            continue;
-                        }
-                        state.add(lvalue.identifier.id);
-                    }
-                    if (lvalue !== null) {
-                        state.add(lvalue.identifier.id);
-                    }
-                }
-                break;
-            }
-            case 'PropertyLoad': {
-                if (lvalue !== null &&
-                    state.has(value.object.identifier.id) &&
-                    !isStableType(lvalue.identifier)) {
-                    state.add(lvalue.identifier.id);
-                }
-                break;
-            }
-            case 'ComputedLoad': {
-                if (lvalue !== null &&
-                    (state.has(value.object.identifier.id) ||
-                        state.has(value.property.identifier.id))) {
-                    state.add(lvalue.identifier.id);
-                }
-                break;
-            }
-        }
-    }
-    visitScope(scopeBlock, state) {
-        this.traverseScope(scopeBlock, state);
-        for (const dep of scopeBlock.scope.dependencies) {
-            const isReactive = state.has(dep.identifier.id);
-            if (!isReactive) {
-                scopeBlock.scope.dependencies.delete(dep);
-            }
-        }
-        if (scopeBlock.scope.dependencies.size !== 0) {
-            for (const [, declaration] of scopeBlock.scope.declarations) {
-                state.add(declaration.identifier.id);
-            }
-            for (const reassignment of scopeBlock.scope.reassignments) {
-                state.add(reassignment.id);
-            }
-        }
-    }
-};
-
-function pruneUnusedLValues(fn) {
-    const lvalues = new Map();
-    visitReactiveFunction(fn, new Visitor$5(), lvalues);
-    for (const [, instr] of lvalues) {
-        instr.lvalue = null;
-    }
-}
-let Visitor$5 = class Visitor extends ReactiveFunctionVisitor {
-    visitPlace(id, place, state) {
-        state.delete(place.identifier.declarationId);
-    }
-    visitInstruction(instruction, state) {
-        this.traverseInstruction(instruction, state);
-        if (instruction.lvalue !== null &&
-            instruction.lvalue.identifier.name === null) {
-            state.set(instruction.lvalue.identifier.declarationId, instruction);
-        }
-    }
-};
-
-function pruneUnusedLabels(fn) {
-    const labels = new Set();
-    visitReactiveFunction(fn, new Transform$2(), labels);
-}
-let Transform$2 = class Transform extends ReactiveFunctionTransform {
-    transformTerminal(stmt, state) {
-        this.traverseTerminal(stmt, state);
-        const { terminal } = stmt;
-        if ((terminal.kind === 'break' || terminal.kind === 'continue') &&
-            terminal.targetKind === 'labeled') {
-            state.add(terminal.target);
-        }
-        const isReachableLabel = stmt.label !== null && state.has(stmt.label.id);
-        if (stmt.terminal.kind === 'label' && !isReachableLabel) {
-            const block = [...stmt.terminal.block];
-            const last = block.at(-1);
-            if (last !== undefined &&
-                last.kind === 'terminal' &&
-                last.terminal.kind === 'break' &&
-                last.terminal.target === null) {
-                block.pop();
-            }
-            return { kind: 'replace-many', value: block };
-        }
-        else {
-            if (!isReachableLabel && stmt.label != null) {
-                stmt.label.implicit = true;
-            }
-            return { kind: 'keep' };
-        }
-    }
-};
-
-function pruneUnusedScopes(fn) {
-    visitReactiveFunction(fn, new Transform$1(), {
-        hasReturnStatement: false,
-    });
-}
-let Transform$1 = class Transform extends ReactiveFunctionTransform {
-    visitTerminal(stmt, state) {
-        this.traverseTerminal(stmt, state);
-        if (stmt.terminal.kind === 'return') {
-            state.hasReturnStatement = true;
-        }
-    }
-    transformScope(scopeBlock, _state) {
-        const scopeState = { hasReturnStatement: false };
-        this.visitScope(scopeBlock, scopeState);
-        if (!scopeState.hasReturnStatement &&
-            scopeBlock.scope.reassignments.size === 0 &&
-            (scopeBlock.scope.declarations.size === 0 ||
-                !hasOwnDeclaration(scopeBlock))) {
-            return {
-                kind: 'replace',
-                value: {
-                    kind: 'pruned-scope',
-                    scope: scopeBlock.scope,
-                    instructions: scopeBlock.instructions,
-                },
-            };
-        }
-        else {
-            return { kind: 'keep' };
-        }
-    }
-};
-function hasOwnDeclaration(block) {
-    for (const declaration of block.scope.declarations.values()) {
-        if (declaration.scope.id === block.scope.id) {
-            return true;
-        }
-    }
-    return false;
-}
-
-function collectReferencedGlobals(fn) {
-    const identifiers = new Set();
-    visitReactiveFunction(fn, new Visitor$4(), identifiers);
-    return identifiers;
-}
-let Visitor$4 = class Visitor extends ReactiveFunctionVisitor {
-    visitValue(id, value, state) {
-        this.traverseValue(id, value, state);
-        if (value.kind === 'FunctionExpression' || value.kind === 'ObjectMethod') {
-            this.visitHirFunction(value.loweredFunc.func, state);
-        }
-        else if (value.kind === 'LoadGlobal') {
-            state.add(value.binding.name);
-        }
-    }
-    visitReactiveFunctionValue(_id, _dependencies, fn, state) {
-        visitReactiveFunction(fn, this, state);
-    }
-};
-
-var _Scopes_instances, _Scopes_seen, _Scopes_stack, _Scopes_globals, _Scopes_programContext, _Scopes_lookup;
-function renameVariables(fn) {
-    const globals = collectReferencedGlobals(fn);
-    const scopes = new Scopes(globals, fn.env.programContext);
-    renameVariablesImpl(fn, new Visitor$3(), scopes);
-    return new Set([...scopes.names, ...globals]);
-}
-function renameVariablesImpl(fn, visitor, scopes) {
-    scopes.enter(() => {
-        for (const param of fn.params) {
-            if (param.kind === 'Identifier') {
-                scopes.visit(param.identifier);
-            }
-            else {
-                scopes.visit(param.place.identifier);
-            }
-        }
-        visitReactiveFunction(fn, visitor, scopes);
-    });
-}
-let Visitor$3 = class Visitor extends ReactiveFunctionVisitor {
-    visitParam(place, state) {
-        state.visit(place.identifier);
-    }
-    visitLValue(_id, lvalue, state) {
-        state.visit(lvalue.identifier);
-    }
-    visitPlace(id, place, state) {
-        state.visit(place.identifier);
-    }
-    visitBlock(block, state) {
-        state.enter(() => {
-            this.traverseBlock(block, state);
-        });
-    }
-    visitPrunedScope(scopeBlock, state) {
-        this.traverseBlock(scopeBlock.instructions, state);
-    }
-    visitScope(scope, state) {
-        for (const [_, declaration] of scope.scope.declarations) {
-            state.visit(declaration.identifier);
-        }
-        this.traverseScope(scope, state);
-    }
-    visitValue(id, value, state) {
-        this.traverseValue(id, value, state);
-        if (value.kind === 'FunctionExpression' || value.kind === 'ObjectMethod') {
-            this.visitHirFunction(value.loweredFunc.func, state);
-        }
-    }
-    visitReactiveFunctionValue(_id, _dependencies, _fn, _state) {
-        renameVariablesImpl(_fn, this, _state);
-    }
-};
-class Scopes {
-    constructor(globals, programContext) {
-        _Scopes_instances.add(this);
-        _Scopes_seen.set(this, new Map());
-        _Scopes_stack.set(this, [new Map()]);
-        _Scopes_globals.set(this, void 0);
-        _Scopes_programContext.set(this, void 0);
-        this.names = new Set();
-        __classPrivateFieldSet(this, _Scopes_globals, globals, "f");
-        __classPrivateFieldSet(this, _Scopes_programContext, programContext, "f");
-    }
-    visit(identifier) {
-        const originalName = identifier.name;
-        if (originalName === null) {
-            return;
-        }
-        const mappedName = __classPrivateFieldGet(this, _Scopes_seen, "f").get(identifier.declarationId);
-        if (mappedName !== undefined) {
-            identifier.name = mappedName;
-            return;
-        }
-        let name = originalName.value;
-        let id = 0;
-        if (isPromotedTemporary(originalName.value)) {
-            name = `t${id++}`;
-        }
-        else if (isPromotedJsxTemporary(originalName.value)) {
-            name = `T${id++}`;
-        }
-        while (__classPrivateFieldGet(this, _Scopes_instances, "m", _Scopes_lookup).call(this, name) !== null || __classPrivateFieldGet(this, _Scopes_globals, "f").has(name)) {
-            if (isPromotedTemporary(originalName.value)) {
-                name = `t${id++}`;
-            }
-            else if (isPromotedJsxTemporary(originalName.value)) {
-                name = `T${id++}`;
-            }
-            else {
-                name = `${originalName.value}$${id++}`;
-            }
-        }
-        __classPrivateFieldGet(this, _Scopes_programContext, "f").addNewReference(name);
-        const identifierName = makeIdentifierName(name);
-        identifier.name = identifierName;
-        __classPrivateFieldGet(this, _Scopes_seen, "f").set(identifier.declarationId, identifierName);
-        __classPrivateFieldGet(this, _Scopes_stack, "f").at(-1).set(identifierName.value, identifier.declarationId);
-        this.names.add(identifierName.value);
-    }
-    enter(fn) {
-        const next = new Map();
-        __classPrivateFieldGet(this, _Scopes_stack, "f").push(next);
-        fn();
-        const last = __classPrivateFieldGet(this, _Scopes_stack, "f").pop();
-        CompilerError.invariant(last === next, {
-            reason: 'Mismatch push/pop calls',
-            description: null,
-            loc: null,
-            suggestions: null,
-        });
-    }
-}
-_Scopes_seen = new WeakMap(), _Scopes_stack = new WeakMap(), _Scopes_globals = new WeakMap(), _Scopes_programContext = new WeakMap(), _Scopes_instances = new WeakSet(), _Scopes_lookup = function _Scopes_lookup(name) {
-    for (let i = __classPrivateFieldGet(this, _Scopes_stack, "f").length - 1; i >= 0; i--) {
-        const scope = __classPrivateFieldGet(this, _Scopes_stack, "f")[i];
-        const entry = scope.get(name);
-        if (entry !== undefined) {
-            return entry;
-        }
-    }
-    return null;
-};
-
-function stabilizeBlockIds(fn) {
-    const referenced = new Set();
-    visitReactiveFunction(fn, new CollectReferencedLabels(), referenced);
-    const mappings = new Map();
-    for (const blockId of referenced) {
-        mappings.set(blockId, makeBlockId(mappings.size));
-    }
-    visitReactiveFunction(fn, new RewriteBlockIds(), mappings);
-}
-class CollectReferencedLabels extends ReactiveFunctionVisitor {
-    visitScope(scope, state) {
-        const { earlyReturnValue } = scope.scope;
-        if (earlyReturnValue != null) {
-            state.add(earlyReturnValue.label);
-        }
-        this.traverseScope(scope, state);
-    }
-    visitTerminal(stmt, state) {
-        if (stmt.label != null) {
-            if (!stmt.label.implicit) {
-                state.add(stmt.label.id);
-            }
-        }
-        this.traverseTerminal(stmt, state);
-    }
-}
-class RewriteBlockIds extends ReactiveFunctionVisitor {
-    visitScope(scope, state) {
-        const { earlyReturnValue } = scope.scope;
-        if (earlyReturnValue != null) {
-            const rewrittenId = getOrInsertDefault(state, earlyReturnValue.label, state.size);
-            earlyReturnValue.label = makeBlockId(rewrittenId);
-        }
-        this.traverseScope(scope, state);
-    }
-    visitTerminal(stmt, state) {
-        if (stmt.label != null) {
-            const rewrittenId = getOrInsertDefault(state, stmt.label.id, state.size);
-            stmt.label.id = makeBlockId(rewrittenId);
-        }
-        const terminal = stmt.terminal;
-        if (terminal.kind === 'break' || terminal.kind === 'continue') {
-            const rewrittenId = getOrInsertDefault(state, terminal.target, state.size);
-            terminal.target = makeBlockId(rewrittenId);
-        }
-        this.traverseTerminal(stmt, state);
-    }
-}
-
-function inferAliasForUncalledFunctions(fn, aliases) {
-    var _a;
-    for (const block of fn.body.blocks.values()) {
-        instrs: for (const instr of block.instructions) {
-            const { lvalue, value } = instr;
-            if (value.kind !== 'ObjectMethod' &&
-                value.kind !== 'FunctionExpression') {
-                continue;
-            }
-            const range = lvalue.identifier.mutableRange;
-            if (range.end > range.start + 1) {
-                continue;
-            }
-            for (const operand of eachInstructionValueOperand(value)) {
-                if (isMutable(instr, operand)) {
-                    continue instrs;
-                }
-            }
-            const operands = new Set();
-            for (const effect of (_a = value.loweredFunc.func.effects) !== null && _a !== void 0 ? _a : []) {
-                if (effect.kind !== 'ContextMutation') {
-                    continue;
-                }
-                if (effect.effect === Effect.Store || effect.effect === Effect.Mutate) {
-                    for (const operand of effect.places) {
-                        if (isMutableEffect(operand.effect, operand.loc) &&
-                            !isRefOrRefLikeMutableType(operand.identifier.type)) {
-                            operands.add(operand.identifier);
-                        }
-                    }
-                }
-            }
-            if (operands.size !== 0) {
-                operands.add(lvalue.identifier);
-                aliases.union([...operands]);
-                for (const operand of operands) {
-                    operand.mutableRange.end = makeInstructionId(instr.id + 1);
-                }
-            }
-        }
-    }
-}
-
-function inferAliases(func) {
-    const aliases = new DisjointSet();
-    for (const [_, block] of func.body.blocks) {
-        for (const instr of block.instructions) {
-            inferInstr(instr, aliases);
-        }
-    }
-    return aliases;
-}
-function inferInstr(instr, aliases) {
-    const { lvalue, value: instrValue } = instr;
-    let alias = null;
-    switch (instrValue.kind) {
-        case 'LoadLocal':
-        case 'LoadContext': {
-            if (isPrimitiveType(instrValue.place.identifier)) {
-                return;
-            }
-            alias = instrValue.place;
-            break;
-        }
-        case 'StoreLocal':
-        case 'StoreContext': {
-            alias = instrValue.value;
-            break;
-        }
-        case 'Destructure': {
-            alias = instrValue.value;
-            break;
-        }
-        case 'ComputedLoad':
-        case 'PropertyLoad': {
-            alias = instrValue.object;
-            break;
-        }
-        case 'TypeCastExpression': {
-            alias = instrValue.value;
-            break;
-        }
-        default:
-            return;
-    }
-    aliases.union([lvalue.identifier, alias.identifier]);
-}
-
-function inferAliasForPhis(func, aliases) {
-    var _a, _b;
-    for (const [_, block] of func.body.blocks) {
-        for (const phi of block.phis) {
-            const isPhiMutatedAfterCreation = phi.place.identifier.mutableRange.end >
-                ((_b = (_a = block.instructions.at(0)) === null || _a === void 0 ? void 0 : _a.id) !== null && _b !== void 0 ? _b : block.terminal.id);
-            if (isPhiMutatedAfterCreation) {
-                for (const [, operand] of phi.operands) {
-                    aliases.union([phi.place.identifier, operand.identifier]);
-                }
-            }
-        }
-    }
-}
-
-function inferAliasForStores(func, aliases) {
-    for (const [_, block] of func.body.blocks) {
-        for (const instr of block.instructions) {
-            const { value, lvalue } = instr;
-            const isStore = lvalue.effect === Effect.Store ||
-                ![...eachInstructionValueOperand(value)].every(operand => operand.effect !== Effect.Store);
-            if (!isStore) {
-                continue;
-            }
-            for (const operand of eachInstructionLValue(instr)) {
-                maybeAlias(aliases, lvalue, operand, instr.id);
-            }
-            for (const operand of eachInstructionValueOperand(value)) {
-                if (operand.effect === Effect.Capture ||
-                    operand.effect === Effect.Store) {
-                    maybeAlias(aliases, lvalue, operand, instr.id);
-                }
-            }
-        }
-    }
-}
-function maybeAlias(aliases, lvalue, rvalue, id) {
-    if (lvalue.identifier.mutableRange.end > id + 1 ||
-        rvalue.identifier.mutableRange.end > id) {
-        aliases.union([lvalue.identifier, rvalue.identifier]);
-    }
-}
-
-function infer$1(place, instrId) {
-    if (!isRefOrRefValue(place.identifier)) {
-        place.identifier.mutableRange.end = makeInstructionId(instrId + 1);
-    }
-}
-function inferPlace(place, instrId, inferMutableRangeForStores) {
-    switch (place.effect) {
-        case Effect.Unknown: {
-            throw new Error(`Found an unknown place ${printPlace(place)}}!`);
-        }
-        case Effect.Capture:
-        case Effect.Read:
-        case Effect.Freeze:
-            return;
-        case Effect.Store:
-            if (inferMutableRangeForStores) {
-                infer$1(place, instrId);
-            }
-            return;
-        case Effect.ConditionallyMutateIterator: {
-            const identifier = place.identifier;
-            if (!isArrayType(identifier) &&
-                !isSetType(identifier) &&
-                !isMapType(identifier)) {
-                infer$1(place, instrId);
-            }
-            return;
-        }
-        case Effect.ConditionallyMutate:
-        case Effect.Mutate: {
-            infer$1(place, instrId);
-            return;
-        }
-        default:
-            assertExhaustive$1(place.effect, `Unexpected ${printPlace(place)} effect`);
-    }
-}
-function inferMutableLifetimes(func, inferMutableRangeForStores) {
-    var _a, _b;
-    const contextVariableDeclarationInstructions = new Map();
-    for (const [_, block] of func.body.blocks) {
-        for (const phi of block.phis) {
-            const isPhiMutatedAfterCreation = phi.place.identifier.mutableRange.end >
-                ((_b = (_a = block.instructions.at(0)) === null || _a === void 0 ? void 0 : _a.id) !== null && _b !== void 0 ? _b : block.terminal.id);
-            if (inferMutableRangeForStores &&
-                isPhiMutatedAfterCreation &&
-                phi.place.identifier.mutableRange.start === 0) {
-                for (const [, operand] of phi.operands) {
-                    if (phi.place.identifier.mutableRange.start === 0) {
-                        phi.place.identifier.mutableRange.start =
-                            operand.identifier.mutableRange.start;
-                    }
-                    else {
-                        phi.place.identifier.mutableRange.start = makeInstructionId(Math.min(phi.place.identifier.mutableRange.start, operand.identifier.mutableRange.start));
-                    }
-                }
-            }
-        }
-        for (const instr of block.instructions) {
-            for (const operand of eachInstructionLValue(instr)) {
-                const lvalueId = operand.identifier;
-                lvalueId.mutableRange.start = instr.id;
-                lvalueId.mutableRange.end = makeInstructionId(instr.id + 1);
-            }
-            for (const operand of eachInstructionOperand(instr)) {
-                inferPlace(operand, instr.id, inferMutableRangeForStores);
-            }
-            if (instr.value.kind === 'DeclareContext' ||
-                (instr.value.kind === 'StoreContext' &&
-                    instr.value.lvalue.kind !== InstructionKind.Reassign &&
-                    !contextVariableDeclarationInstructions.has(instr.value.lvalue.place.identifier))) {
-                contextVariableDeclarationInstructions.set(instr.value.lvalue.place.identifier, instr.id);
-            }
-            else if (instr.value.kind === 'StoreContext') {
-                const declaration = contextVariableDeclarationInstructions.get(instr.value.lvalue.place.identifier);
-                if (declaration != null &&
-                    !isRefOrRefValue(instr.value.lvalue.place.identifier)) {
-                    const range = instr.value.lvalue.place.identifier.mutableRange;
-                    if (range.start === 0) {
-                        range.start = declaration;
-                    }
-                    else {
-                        range.start = makeInstructionId(Math.min(range.start, declaration));
-                    }
-                }
-            }
-        }
-        for (const operand of eachTerminalOperand(block.terminal)) {
-            inferPlace(operand, block.terminal.id, inferMutableRangeForStores);
-        }
-    }
-}
-
-function inferMutableRangesForAlias(_fn, aliases) {
-    const aliasSets = aliases.buildSets();
-    for (const aliasSet of aliasSets) {
-        const mutatingIdentifiers = [...aliasSet].filter(id => id.mutableRange.end - id.mutableRange.start > 1 && !isRefOrRefValue(id));
-        if (mutatingIdentifiers.length > 0) {
-            let lastMutatingInstructionId = 0;
-            for (const id of mutatingIdentifiers) {
-                if (id.mutableRange.end > lastMutatingInstructionId) {
-                    lastMutatingInstructionId = id.mutableRange.end;
-                }
-            }
-            for (const alias of aliasSet) {
-                if (alias.mutableRange.end < lastMutatingInstructionId &&
-                    !isRefOrRefValue(alias)) {
-                    alias.mutableRange.end = lastMutatingInstructionId;
-                }
-            }
-        }
-    }
-}
-
-function inferTryCatchAliases(fn, aliases) {
-    const handlerParams = new Map();
-    for (const [_, block] of fn.body.blocks) {
-        if (block.terminal.kind === 'try' &&
-            block.terminal.handlerBinding !== null) {
-            handlerParams.set(block.terminal.handler, block.terminal.handlerBinding.identifier);
-        }
-        else if (block.terminal.kind === 'maybe-throw') {
-            const handlerParam = handlerParams.get(block.terminal.handler);
-            if (handlerParam === undefined) {
-                continue;
-            }
-            for (const instr of block.instructions) {
-                aliases.union([handlerParam, instr.lvalue.identifier]);
-            }
-        }
-    }
-}
-
-function inferMutableRanges(ir) {
-    inferMutableLifetimes(ir, false);
-    const aliases = inferAliases(ir);
-    inferTryCatchAliases(ir, aliases);
-    let prevAliases = aliases.canonicalize();
-    while (true) {
-        inferMutableRangesForAlias(ir, aliases);
-        inferAliasForStores(ir, aliases);
-        inferAliasForPhis(ir, aliases);
-        const nextAliases = aliases.canonicalize();
-        if (areEqualMaps(prevAliases, nextAliases)) {
-            break;
-        }
-        prevAliases = nextAliases;
-    }
-    inferMutableLifetimes(ir, true);
-    prevAliases = aliases.canonicalize();
-    while (true) {
-        inferMutableRangesForAlias(ir, aliases);
-        inferAliasForPhis(ir, aliases);
-        inferAliasForUncalledFunctions(ir, aliases);
-        const nextAliases = aliases.canonicalize();
-        if (areEqualMaps(prevAliases, nextAliases)) {
-            break;
-        }
-        prevAliases = nextAliases;
-    }
-}
-function areEqualMaps(a, b) {
-    if (a.size !== b.size) {
-        return false;
-    }
-    for (const [key, value] of a) {
-        if (!b.has(key)) {
-            return false;
-        }
-        if (b.get(key) !== value) {
-            return false;
-        }
-    }
-    return true;
-}
-
 function hashEffect(effect) {
     var _a;
     switch (effect.kind) {
@@ -42143,7 +39163,6 @@ function applySignature(context, state, signature, instruction) {
                         const reason = getWriteErrorReason({
                             kind: value.kind,
                             reason: value.reason,
-                            context: new Set(),
                         });
                         const variable = effect.value.identifier.name !== null &&
                             effect.value.identifier.name.kind === 'named'
@@ -42571,7 +39590,6 @@ function applyEffect(context, state, _effect, initialized, effects) {
                     const reason = getWriteErrorReason({
                         kind: value.kind,
                         reason: value.reason,
-                        context: new Set(),
                     });
                     const variable = effect.value.identifier.name !== null &&
                         effect.value.identifier.name.kind === 'named'
@@ -43740,6 +40758,1198 @@ function buildSignatureFromFunctionExpression(env, fn) {
         temporaries: [],
     };
 }
+function getWriteErrorReason(abstractValue) {
+    if (abstractValue.reason.has(ValueReason.Global)) {
+        return 'Modifying a variable defined outside a component or hook is not allowed. Consider using an effect';
+    }
+    else if (abstractValue.reason.has(ValueReason.JsxCaptured)) {
+        return 'Modifying a value used previously in JSX is not allowed. Consider moving the modification before the JSX';
+    }
+    else if (abstractValue.reason.has(ValueReason.Context)) {
+        return `Modifying a value returned from 'useContext()' is not allowed.`;
+    }
+    else if (abstractValue.reason.has(ValueReason.KnownReturnSignature)) {
+        return 'Modifying a value returned from a function whose return value should not be mutated';
+    }
+    else if (abstractValue.reason.has(ValueReason.ReactiveFunctionArgument)) {
+        return 'Modifying component props or hook arguments is not allowed. Consider using a local variable instead';
+    }
+    else if (abstractValue.reason.has(ValueReason.State)) {
+        return "Modifying a value returned from 'useState()', which should not be modified directly. Use the setter function to update instead";
+    }
+    else if (abstractValue.reason.has(ValueReason.ReducerState)) {
+        return "Modifying a value returned from 'useReducer()', which should not be modified directly. Use the dispatch function to update instead";
+    }
+    else if (abstractValue.reason.has(ValueReason.Effect)) {
+        return 'Modifying a value used previously in an effect function or as an effect dependency is not allowed. Consider moving the modification before calling useEffect()';
+    }
+    else if (abstractValue.reason.has(ValueReason.HookCaptured)) {
+        return 'Modifying a value previously passed as an argument to a hook is not allowed. Consider moving the modification before calling the hook';
+    }
+    else if (abstractValue.reason.has(ValueReason.HookReturn)) {
+        return 'Modifying a value returned from a hook is not allowed. Consider moving the modification into the hook where the value is constructed';
+    }
+    else {
+        return 'This modifies a variable that React considers immutable';
+    }
+}
+function getArgumentEffect(signatureEffect, arg) {
+    if (signatureEffect != null) {
+        if (arg.kind === 'Identifier') {
+            return signatureEffect;
+        }
+        else if (signatureEffect === Effect.Mutate ||
+            signatureEffect === Effect.ConditionallyMutate) {
+            return signatureEffect;
+        }
+        else {
+            if (signatureEffect === Effect.Freeze) {
+                CompilerError.throwTodo({
+                    reason: 'Support spread syntax for hook arguments',
+                    loc: arg.place.loc,
+                });
+            }
+            return Effect.ConditionallyMutateIterator;
+        }
+    }
+    else {
+        return Effect.ConditionallyMutate;
+    }
+}
+function getFunctionCallSignature(env, type) {
+    if (type.kind !== 'Function') {
+        return null;
+    }
+    return env.getFunctionSignature(type);
+}
+function isKnownMutableEffect(effect) {
+    switch (effect) {
+        case Effect.Store:
+        case Effect.ConditionallyMutate:
+        case Effect.ConditionallyMutateIterator:
+        case Effect.Mutate: {
+            return true;
+        }
+        case Effect.Unknown: {
+            CompilerError.invariant(false, {
+                reason: 'Unexpected unknown effect',
+                description: null,
+                loc: GeneratedSource,
+                suggestions: null,
+            });
+        }
+        case Effect.Read:
+        case Effect.Capture:
+        case Effect.Freeze: {
+            return false;
+        }
+        default: {
+            assertExhaustive$1(effect, `Unexpected effect \`${effect}\``);
+        }
+    }
+}
+function mergeValueKinds(a, b) {
+    if (a === b) {
+        return a;
+    }
+    else if (a === ValueKind.MaybeFrozen || b === ValueKind.MaybeFrozen) {
+        return ValueKind.MaybeFrozen;
+    }
+    else if (a === ValueKind.Mutable || b === ValueKind.Mutable) {
+        if (a === ValueKind.Frozen || b === ValueKind.Frozen) {
+            return ValueKind.MaybeFrozen;
+        }
+        else if (a === ValueKind.Context || b === ValueKind.Context) {
+            return ValueKind.Context;
+        }
+        else {
+            return ValueKind.Mutable;
+        }
+    }
+    else if (a === ValueKind.Context || b === ValueKind.Context) {
+        if (a === ValueKind.Frozen || b === ValueKind.Frozen) {
+            return ValueKind.MaybeFrozen;
+        }
+        else {
+            return ValueKind.Context;
+        }
+    }
+    else if (a === ValueKind.Frozen || b === ValueKind.Frozen) {
+        return ValueKind.Frozen;
+    }
+    else if (a === ValueKind.Global || b === ValueKind.Global) {
+        return ValueKind.Global;
+    }
+    else {
+        CompilerError.invariant(a === ValueKind.Primitive && b == ValueKind.Primitive, {
+            reason: `Unexpected value kind in mergeValues()`,
+            description: `Found kinds ${a} and ${b}`,
+            loc: GeneratedSource,
+        });
+        return ValueKind.Primitive;
+    }
+}
+
+function pruneNonEscapingScopes(fn) {
+    const state = new State(fn.env);
+    for (const param of fn.params) {
+        if (param.kind === 'Identifier') {
+            state.declare(param.identifier.declarationId);
+        }
+        else {
+            state.declare(param.place.identifier.declarationId);
+        }
+    }
+    visitReactiveFunction(fn, new CollectDependenciesVisitor(fn.env, state), []);
+    const memoized = computeMemoizedIdentifiers(state);
+    visitReactiveFunction(fn, new PruneScopesTransform(), memoized);
+}
+var MemoizationLevel;
+(function (MemoizationLevel) {
+    MemoizationLevel["Memoized"] = "Memoized";
+    MemoizationLevel["Conditional"] = "Conditional";
+    MemoizationLevel["Unmemoized"] = "Unmemoized";
+    MemoizationLevel["Never"] = "Never";
+})(MemoizationLevel || (MemoizationLevel = {}));
+function joinAliases(kind1, kind2) {
+    if (kind1 === MemoizationLevel.Memoized ||
+        kind2 === MemoizationLevel.Memoized) {
+        return MemoizationLevel.Memoized;
+    }
+    else if (kind1 === MemoizationLevel.Conditional ||
+        kind2 === MemoizationLevel.Conditional) {
+        return MemoizationLevel.Conditional;
+    }
+    else if (kind1 === MemoizationLevel.Unmemoized ||
+        kind2 === MemoizationLevel.Unmemoized) {
+        return MemoizationLevel.Unmemoized;
+    }
+    else {
+        return MemoizationLevel.Never;
+    }
+}
+class State {
+    constructor(env) {
+        this.definitions = new Map();
+        this.identifiers = new Map();
+        this.scopes = new Map();
+        this.escapingValues = new Set();
+        this.env = env;
+    }
+    declare(id) {
+        this.identifiers.set(id, {
+            level: MemoizationLevel.Never,
+            memoized: false,
+            dependencies: new Set(),
+            scopes: new Set(),
+            seen: false,
+        });
+    }
+    visitOperand(id, place, identifier) {
+        const scope = getPlaceScope(id, place);
+        if (scope !== null) {
+            let node = this.scopes.get(scope.id);
+            if (node === undefined) {
+                node = {
+                    dependencies: [...scope.dependencies].map(dep => dep.identifier.declarationId),
+                    seen: false,
+                };
+                this.scopes.set(scope.id, node);
+            }
+            const identifierNode = this.identifiers.get(identifier);
+            CompilerError.invariant(identifierNode !== undefined, {
+                reason: 'Expected identifier to be initialized',
+                description: `[${id}] operand=${printPlace(place)} for identifier declaration ${identifier}`,
+                loc: place.loc,
+                suggestions: null,
+            });
+            identifierNode.scopes.add(scope.id);
+        }
+    }
+}
+function computeMemoizedIdentifiers(state) {
+    const memoized = new Set();
+    function visit(id, forceMemoize = false) {
+        const node = state.identifiers.get(id);
+        CompilerError.invariant(node !== undefined, {
+            reason: `Expected a node for all identifiers, none found for \`${id}\``,
+            description: null,
+            loc: null,
+            suggestions: null,
+        });
+        if (node.seen) {
+            return node.memoized;
+        }
+        node.seen = true;
+        node.memoized = false;
+        let hasMemoizedDependency = false;
+        for (const dep of node.dependencies) {
+            const isDepMemoized = visit(dep);
+            hasMemoizedDependency || (hasMemoizedDependency = isDepMemoized);
+        }
+        if (node.level === MemoizationLevel.Memoized ||
+            (node.level === MemoizationLevel.Conditional &&
+                (hasMemoizedDependency || forceMemoize)) ||
+            (node.level === MemoizationLevel.Unmemoized && forceMemoize)) {
+            node.memoized = true;
+            memoized.add(id);
+            for (const scope of node.scopes) {
+                forceMemoizeScopeDependencies(scope);
+            }
+        }
+        return node.memoized;
+    }
+    function forceMemoizeScopeDependencies(id) {
+        const node = state.scopes.get(id);
+        CompilerError.invariant(node !== undefined, {
+            reason: 'Expected a node for all scopes',
+            description: null,
+            loc: null,
+            suggestions: null,
+        });
+        if (node.seen) {
+            return;
+        }
+        node.seen = true;
+        for (const dep of node.dependencies) {
+            visit(dep, true);
+        }
+        return;
+    }
+    for (const value of state.escapingValues) {
+        visit(value);
+    }
+    return memoized;
+}
+function computePatternLValues(pattern) {
+    const lvalues = [];
+    switch (pattern.kind) {
+        case 'ArrayPattern': {
+            for (const item of pattern.items) {
+                if (item.kind === 'Identifier') {
+                    lvalues.push({ place: item, level: MemoizationLevel.Conditional });
+                }
+                else if (item.kind === 'Spread') {
+                    lvalues.push({ place: item.place, level: MemoizationLevel.Memoized });
+                }
+            }
+            break;
+        }
+        case 'ObjectPattern': {
+            for (const property of pattern.properties) {
+                if (property.kind === 'ObjectProperty') {
+                    lvalues.push({
+                        place: property.place,
+                        level: MemoizationLevel.Conditional,
+                    });
+                }
+                else {
+                    lvalues.push({
+                        place: property.place,
+                        level: MemoizationLevel.Memoized,
+                    });
+                }
+            }
+            break;
+        }
+        default: {
+            assertExhaustive$1(pattern, `Unexpected pattern kind \`${pattern.kind}\``);
+        }
+    }
+    return lvalues;
+}
+class CollectDependenciesVisitor extends ReactiveFunctionVisitor {
+    constructor(env, state) {
+        super();
+        this.env = env;
+        this.state = state;
+        this.options = {
+            memoizeJsxElements: !this.env.config.enableForest,
+            forceMemoizePrimitives: this.env.config.enableForest,
+        };
+    }
+    computeMemoizationInputs(value, lvalue) {
+        const env = this.env;
+        const options = this.options;
+        switch (value.kind) {
+            case 'ConditionalExpression': {
+                return {
+                    lvalues: lvalue !== null
+                        ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
+                        : [],
+                    rvalues: [
+                        ...this.computeMemoizationInputs(value.consequent, null).rvalues,
+                        ...this.computeMemoizationInputs(value.alternate, null).rvalues,
+                    ],
+                };
+            }
+            case 'LogicalExpression': {
+                return {
+                    lvalues: lvalue !== null
+                        ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
+                        : [],
+                    rvalues: [
+                        ...this.computeMemoizationInputs(value.left, null).rvalues,
+                        ...this.computeMemoizationInputs(value.right, null).rvalues,
+                    ],
+                };
+            }
+            case 'SequenceExpression': {
+                for (const instr of value.instructions) {
+                    this.visitValueForMemoization(instr.id, instr.value, instr.lvalue);
+                }
+                return {
+                    lvalues: lvalue !== null
+                        ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
+                        : [],
+                    rvalues: this.computeMemoizationInputs(value.value, null).rvalues,
+                };
+            }
+            case 'JsxExpression': {
+                const operands = [];
+                if (value.tag.kind === 'Identifier') {
+                    operands.push(value.tag);
+                }
+                for (const prop of value.props) {
+                    if (prop.kind === 'JsxAttribute') {
+                        operands.push(prop.place);
+                    }
+                    else {
+                        operands.push(prop.argument);
+                    }
+                }
+                if (value.children !== null) {
+                    for (const child of value.children) {
+                        operands.push(child);
+                    }
+                }
+                const level = options.memoizeJsxElements
+                    ? MemoizationLevel.Memoized
+                    : MemoizationLevel.Unmemoized;
+                return {
+                    lvalues: lvalue !== null ? [{ place: lvalue, level }] : [],
+                    rvalues: operands,
+                };
+            }
+            case 'JsxFragment': {
+                const level = options.memoizeJsxElements
+                    ? MemoizationLevel.Memoized
+                    : MemoizationLevel.Unmemoized;
+                return {
+                    lvalues: lvalue !== null ? [{ place: lvalue, level }] : [],
+                    rvalues: value.children,
+                };
+            }
+            case 'NextPropertyOf':
+            case 'StartMemoize':
+            case 'FinishMemoize':
+            case 'Debugger':
+            case 'ComputedDelete':
+            case 'PropertyDelete':
+            case 'LoadGlobal':
+            case 'MetaProperty':
+            case 'TemplateLiteral':
+            case 'Primitive':
+            case 'JSXText':
+            case 'BinaryExpression':
+            case 'UnaryExpression': {
+                const level = options.forceMemoizePrimitives
+                    ? MemoizationLevel.Memoized
+                    : MemoizationLevel.Never;
+                return {
+                    lvalues: lvalue !== null ? [{ place: lvalue, level }] : [],
+                    rvalues: [],
+                };
+            }
+            case 'Await':
+            case 'TypeCastExpression': {
+                return {
+                    lvalues: lvalue !== null
+                        ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
+                        : [],
+                    rvalues: [value.value],
+                };
+            }
+            case 'IteratorNext': {
+                return {
+                    lvalues: lvalue !== null
+                        ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
+                        : [],
+                    rvalues: [value.iterator, value.collection],
+                };
+            }
+            case 'GetIterator': {
+                return {
+                    lvalues: lvalue !== null
+                        ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
+                        : [],
+                    rvalues: [value.collection],
+                };
+            }
+            case 'LoadLocal': {
+                return {
+                    lvalues: lvalue !== null
+                        ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
+                        : [],
+                    rvalues: [value.place],
+                };
+            }
+            case 'LoadContext': {
+                return {
+                    lvalues: lvalue !== null
+                        ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
+                        : [],
+                    rvalues: [value.place],
+                };
+            }
+            case 'DeclareContext': {
+                const lvalues = [
+                    { place: value.lvalue.place, level: MemoizationLevel.Memoized },
+                ];
+                if (lvalue !== null) {
+                    lvalues.push({ place: lvalue, level: MemoizationLevel.Unmemoized });
+                }
+                return {
+                    lvalues,
+                    rvalues: [],
+                };
+            }
+            case 'DeclareLocal': {
+                const lvalues = [
+                    { place: value.lvalue.place, level: MemoizationLevel.Unmemoized },
+                ];
+                if (lvalue !== null) {
+                    lvalues.push({ place: lvalue, level: MemoizationLevel.Unmemoized });
+                }
+                return {
+                    lvalues,
+                    rvalues: [],
+                };
+            }
+            case 'PrefixUpdate':
+            case 'PostfixUpdate': {
+                const lvalues = [
+                    { place: value.lvalue, level: MemoizationLevel.Conditional },
+                ];
+                if (lvalue !== null) {
+                    lvalues.push({ place: lvalue, level: MemoizationLevel.Conditional });
+                }
+                return {
+                    lvalues,
+                    rvalues: [value.value],
+                };
+            }
+            case 'StoreLocal': {
+                const lvalues = [
+                    { place: value.lvalue.place, level: MemoizationLevel.Conditional },
+                ];
+                if (lvalue !== null) {
+                    lvalues.push({ place: lvalue, level: MemoizationLevel.Conditional });
+                }
+                return {
+                    lvalues,
+                    rvalues: [value.value],
+                };
+            }
+            case 'StoreContext': {
+                const lvalues = [
+                    { place: value.lvalue.place, level: MemoizationLevel.Memoized },
+                ];
+                if (lvalue !== null) {
+                    lvalues.push({ place: lvalue, level: MemoizationLevel.Conditional });
+                }
+                return {
+                    lvalues,
+                    rvalues: [value.value],
+                };
+            }
+            case 'StoreGlobal': {
+                const lvalues = [];
+                if (lvalue !== null) {
+                    lvalues.push({ place: lvalue, level: MemoizationLevel.Unmemoized });
+                }
+                return {
+                    lvalues,
+                    rvalues: [value.value],
+                };
+            }
+            case 'Destructure': {
+                const lvalues = [];
+                if (lvalue !== null) {
+                    lvalues.push({ place: lvalue, level: MemoizationLevel.Conditional });
+                }
+                lvalues.push(...computePatternLValues(value.lvalue.pattern));
+                return {
+                    lvalues: lvalues,
+                    rvalues: [value.value],
+                };
+            }
+            case 'ComputedLoad':
+            case 'PropertyLoad': {
+                const level = options.forceMemoizePrimitives
+                    ? MemoizationLevel.Memoized
+                    : MemoizationLevel.Conditional;
+                return {
+                    lvalues: lvalue !== null ? [{ place: lvalue, level }] : [],
+                    rvalues: [value.object],
+                };
+            }
+            case 'ComputedStore': {
+                const lvalues = [
+                    { place: value.object, level: MemoizationLevel.Conditional },
+                ];
+                if (lvalue !== null) {
+                    lvalues.push({ place: lvalue, level: MemoizationLevel.Conditional });
+                }
+                return {
+                    lvalues,
+                    rvalues: [value.value],
+                };
+            }
+            case 'OptionalExpression': {
+                const lvalues = [];
+                if (lvalue !== null) {
+                    lvalues.push({ place: lvalue, level: MemoizationLevel.Conditional });
+                }
+                return {
+                    lvalues: lvalues,
+                    rvalues: [
+                        ...this.computeMemoizationInputs(value.value, null).rvalues,
+                    ],
+                };
+            }
+            case 'TaggedTemplateExpression': {
+                const signature = getFunctionCallSignature(env, value.tag.identifier.type);
+                let lvalues = [];
+                if (lvalue !== null) {
+                    lvalues.push({ place: lvalue, level: MemoizationLevel.Memoized });
+                }
+                if ((signature === null || signature === void 0 ? void 0 : signature.noAlias) === true) {
+                    return {
+                        lvalues,
+                        rvalues: [],
+                    };
+                }
+                const operands = [...eachReactiveValueOperand(value)];
+                lvalues.push(...operands
+                    .filter(operand => isMutableEffect(operand.effect, operand.loc))
+                    .map(place => ({ place, level: MemoizationLevel.Memoized })));
+                return {
+                    lvalues,
+                    rvalues: operands,
+                };
+            }
+            case 'CallExpression': {
+                const signature = getFunctionCallSignature(env, value.callee.identifier.type);
+                let lvalues = [];
+                if (lvalue !== null) {
+                    lvalues.push({ place: lvalue, level: MemoizationLevel.Memoized });
+                }
+                if ((signature === null || signature === void 0 ? void 0 : signature.noAlias) === true) {
+                    return {
+                        lvalues,
+                        rvalues: [],
+                    };
+                }
+                const operands = [...eachReactiveValueOperand(value)];
+                lvalues.push(...operands
+                    .filter(operand => isMutableEffect(operand.effect, operand.loc))
+                    .map(place => ({ place, level: MemoizationLevel.Memoized })));
+                return {
+                    lvalues,
+                    rvalues: operands,
+                };
+            }
+            case 'MethodCall': {
+                const signature = getFunctionCallSignature(env, value.property.identifier.type);
+                let lvalues = [];
+                if (lvalue !== null) {
+                    lvalues.push({ place: lvalue, level: MemoizationLevel.Memoized });
+                }
+                if ((signature === null || signature === void 0 ? void 0 : signature.noAlias) === true) {
+                    return {
+                        lvalues,
+                        rvalues: [],
+                    };
+                }
+                const operands = [...eachReactiveValueOperand(value)];
+                lvalues.push(...operands
+                    .filter(operand => isMutableEffect(operand.effect, operand.loc))
+                    .map(place => ({ place, level: MemoizationLevel.Memoized })));
+                return {
+                    lvalues,
+                    rvalues: operands,
+                };
+            }
+            case 'RegExpLiteral':
+            case 'ObjectMethod':
+            case 'FunctionExpression':
+            case 'ArrayExpression':
+            case 'NewExpression':
+            case 'ObjectExpression':
+            case 'PropertyStore': {
+                const operands = [...eachReactiveValueOperand(value)];
+                const lvalues = operands
+                    .filter(operand => isMutableEffect(operand.effect, operand.loc))
+                    .map(place => ({ place, level: MemoizationLevel.Memoized }));
+                if (lvalue !== null) {
+                    lvalues.push({ place: lvalue, level: MemoizationLevel.Memoized });
+                }
+                return {
+                    lvalues,
+                    rvalues: operands,
+                };
+            }
+            case 'UnsupportedNode': {
+                const lvalues = [];
+                if (lvalue !== null) {
+                    lvalues.push({ place: lvalue, level: MemoizationLevel.Never });
+                }
+                return {
+                    lvalues,
+                    rvalues: [],
+                };
+            }
+            default: {
+                assertExhaustive$1(value, `Unexpected value kind \`${value.kind}\``);
+            }
+        }
+    }
+    visitValueForMemoization(id, value, lvalue) {
+        var _a, _b, _c;
+        const state = this.state;
+        const aliasing = this.computeMemoizationInputs(value, lvalue);
+        for (const operand of aliasing.rvalues) {
+            const operandId = (_a = state.definitions.get(operand.identifier.declarationId)) !== null && _a !== void 0 ? _a : operand.identifier.declarationId;
+            state.visitOperand(id, operand, operandId);
+        }
+        for (const { place: lvalue, level } of aliasing.lvalues) {
+            const lvalueId = (_b = state.definitions.get(lvalue.identifier.declarationId)) !== null && _b !== void 0 ? _b : lvalue.identifier.declarationId;
+            let node = state.identifiers.get(lvalueId);
+            if (node === undefined) {
+                node = {
+                    level: MemoizationLevel.Never,
+                    memoized: false,
+                    dependencies: new Set(),
+                    scopes: new Set(),
+                    seen: false,
+                };
+                state.identifiers.set(lvalueId, node);
+            }
+            node.level = joinAliases(node.level, level);
+            for (const operand of aliasing.rvalues) {
+                const operandId = (_c = state.definitions.get(operand.identifier.declarationId)) !== null && _c !== void 0 ? _c : operand.identifier.declarationId;
+                if (operandId === lvalueId) {
+                    continue;
+                }
+                node.dependencies.add(operandId);
+            }
+            state.visitOperand(id, lvalue, lvalueId);
+        }
+        if (value.kind === 'LoadLocal' && lvalue !== null) {
+            state.definitions.set(lvalue.identifier.declarationId, value.place.identifier.declarationId);
+        }
+        else if (value.kind === 'CallExpression' || value.kind === 'MethodCall') {
+            let callee = value.kind === 'CallExpression' ? value.callee : value.property;
+            if (getHookKind(state.env, callee.identifier) != null) {
+                const signature = getFunctionCallSignature(this.env, callee.identifier.type);
+                if (signature && signature.noAlias === true) {
+                    return;
+                }
+                for (const operand of value.args) {
+                    const place = operand.kind === 'Spread' ? operand.place : operand;
+                    state.escapingValues.add(place.identifier.declarationId);
+                }
+            }
+        }
+    }
+    visitInstruction(instruction, _scopes) {
+        this.visitValueForMemoization(instruction.id, instruction.value, instruction.lvalue);
+    }
+    visitTerminal(stmt, scopes) {
+        this.traverseTerminal(stmt, scopes);
+        if (stmt.terminal.kind === 'return') {
+            this.state.escapingValues.add(stmt.terminal.value.identifier.declarationId);
+            const identifierNode = this.state.identifiers.get(stmt.terminal.value.identifier.declarationId);
+            CompilerError.invariant(identifierNode !== undefined, {
+                reason: 'Expected identifier to be initialized',
+                description: null,
+                loc: stmt.terminal.loc,
+                suggestions: null,
+            });
+            for (const scope of scopes) {
+                identifierNode.scopes.add(scope.id);
+            }
+        }
+    }
+    visitScope(scope, scopes) {
+        for (const reassignment of scope.scope.reassignments) {
+            const identifierNode = this.state.identifiers.get(reassignment.declarationId);
+            CompilerError.invariant(identifierNode !== undefined, {
+                reason: 'Expected identifier to be initialized',
+                description: null,
+                loc: reassignment.loc,
+                suggestions: null,
+            });
+            for (const scope of scopes) {
+                identifierNode.scopes.add(scope.id);
+            }
+            identifierNode.scopes.add(scope.scope.id);
+        }
+        this.traverseScope(scope, [...scopes, scope.scope]);
+    }
+}
+class PruneScopesTransform extends ReactiveFunctionTransform {
+    constructor() {
+        super(...arguments);
+        this.prunedScopes = new Set();
+        this.reassignments = new Map();
+    }
+    transformScope(scopeBlock, state) {
+        this.visitScope(scopeBlock, state);
+        if ((scopeBlock.scope.declarations.size === 0 &&
+            scopeBlock.scope.reassignments.size === 0) ||
+            scopeBlock.scope.earlyReturnValue !== null) {
+            return { kind: 'keep' };
+        }
+        const hasMemoizedOutput = Array.from(scopeBlock.scope.declarations.values()).some(decl => state.has(decl.identifier.declarationId)) ||
+            Array.from(scopeBlock.scope.reassignments).some(identifier => state.has(identifier.declarationId));
+        if (hasMemoizedOutput) {
+            return { kind: 'keep' };
+        }
+        else {
+            this.prunedScopes.add(scopeBlock.scope.id);
+            return {
+                kind: 'replace-many',
+                value: scopeBlock.instructions,
+            };
+        }
+    }
+    transformInstruction(instruction, state) {
+        var _a;
+        this.traverseInstruction(instruction, state);
+        const value = instruction.value;
+        if (value.kind === 'StoreLocal' && value.lvalue.kind === 'Reassign') {
+            const ids = getOrInsertDefault(this.reassignments, value.lvalue.place.identifier.declarationId, new Set());
+            ids.add(value.value.identifier);
+        }
+        else if (value.kind === 'LoadLocal' &&
+            value.place.identifier.scope != null &&
+            instruction.lvalue != null &&
+            instruction.lvalue.identifier.scope == null) {
+            const ids = getOrInsertDefault(this.reassignments, instruction.lvalue.identifier.declarationId, new Set());
+            ids.add(value.place.identifier);
+        }
+        else if (value.kind === 'FinishMemoize') {
+            let decls;
+            if (value.decl.identifier.scope == null) {
+                decls = (_a = this.reassignments.get(value.decl.identifier.declarationId)) !== null && _a !== void 0 ? _a : [
+                    value.decl.identifier,
+                ];
+            }
+            else {
+                decls = [value.decl.identifier];
+            }
+            if ([...decls].every(decl => decl.scope == null || this.prunedScopes.has(decl.scope.id))) {
+                value.pruned = true;
+            }
+        }
+        return { kind: 'keep' };
+    }
+}
+
+let Visitor$7 = class Visitor extends ReactiveFunctionVisitor {
+    visitLValue(id, lvalue, state) {
+        this.visitPlace(id, lvalue, state);
+    }
+    visitPlace(_id, place, state) {
+        if (place.reactive) {
+            state.add(place.identifier.id);
+        }
+    }
+    visitPrunedScope(scopeBlock, state) {
+        this.traversePrunedScope(scopeBlock, state);
+        for (const [id, decl] of scopeBlock.scope.declarations) {
+            if (!isPrimitiveType(decl.identifier) &&
+                !isStableRefType(decl.identifier, state)) {
+                state.add(id);
+            }
+        }
+    }
+};
+function isStableRefType(identifier, reactiveIdentifiers) {
+    return isUseRefType(identifier) && !reactiveIdentifiers.has(identifier.id);
+}
+function collectReactiveIdentifiers(fn) {
+    const visitor = new Visitor$7();
+    const state = new Set();
+    visitReactiveFunction(fn, visitor, state);
+    return state;
+}
+
+function pruneNonReactiveDependencies(fn) {
+    const reactiveIdentifiers = collectReactiveIdentifiers(fn);
+    visitReactiveFunction(fn, new Visitor$6(), reactiveIdentifiers);
+}
+let Visitor$6 = class Visitor extends ReactiveFunctionVisitor {
+    visitInstruction(instruction, state) {
+        this.traverseInstruction(instruction, state);
+        const { lvalue, value } = instruction;
+        switch (value.kind) {
+            case 'LoadLocal': {
+                if (lvalue !== null && state.has(value.place.identifier.id)) {
+                    state.add(lvalue.identifier.id);
+                }
+                break;
+            }
+            case 'StoreLocal': {
+                if (state.has(value.value.identifier.id)) {
+                    state.add(value.lvalue.place.identifier.id);
+                    if (lvalue !== null) {
+                        state.add(lvalue.identifier.id);
+                    }
+                }
+                break;
+            }
+            case 'Destructure': {
+                if (state.has(value.value.identifier.id)) {
+                    for (const lvalue of eachPatternOperand(value.lvalue.pattern)) {
+                        if (isStableType(lvalue.identifier)) {
+                            continue;
+                        }
+                        state.add(lvalue.identifier.id);
+                    }
+                    if (lvalue !== null) {
+                        state.add(lvalue.identifier.id);
+                    }
+                }
+                break;
+            }
+            case 'PropertyLoad': {
+                if (lvalue !== null &&
+                    state.has(value.object.identifier.id) &&
+                    !isStableType(lvalue.identifier)) {
+                    state.add(lvalue.identifier.id);
+                }
+                break;
+            }
+            case 'ComputedLoad': {
+                if (lvalue !== null &&
+                    (state.has(value.object.identifier.id) ||
+                        state.has(value.property.identifier.id))) {
+                    state.add(lvalue.identifier.id);
+                }
+                break;
+            }
+        }
+    }
+    visitScope(scopeBlock, state) {
+        this.traverseScope(scopeBlock, state);
+        for (const dep of scopeBlock.scope.dependencies) {
+            const isReactive = state.has(dep.identifier.id);
+            if (!isReactive) {
+                scopeBlock.scope.dependencies.delete(dep);
+            }
+        }
+        if (scopeBlock.scope.dependencies.size !== 0) {
+            for (const [, declaration] of scopeBlock.scope.declarations) {
+                state.add(declaration.identifier.id);
+            }
+            for (const reassignment of scopeBlock.scope.reassignments) {
+                state.add(reassignment.id);
+            }
+        }
+    }
+};
+
+function pruneUnusedLValues(fn) {
+    const lvalues = new Map();
+    visitReactiveFunction(fn, new Visitor$5(), lvalues);
+    for (const [, instr] of lvalues) {
+        instr.lvalue = null;
+    }
+}
+let Visitor$5 = class Visitor extends ReactiveFunctionVisitor {
+    visitPlace(id, place, state) {
+        state.delete(place.identifier.declarationId);
+    }
+    visitInstruction(instruction, state) {
+        this.traverseInstruction(instruction, state);
+        if (instruction.lvalue !== null &&
+            instruction.lvalue.identifier.name === null) {
+            state.set(instruction.lvalue.identifier.declarationId, instruction);
+        }
+    }
+};
+
+function pruneUnusedLabels(fn) {
+    const labels = new Set();
+    visitReactiveFunction(fn, new Transform$2(), labels);
+}
+let Transform$2 = class Transform extends ReactiveFunctionTransform {
+    transformTerminal(stmt, state) {
+        this.traverseTerminal(stmt, state);
+        const { terminal } = stmt;
+        if ((terminal.kind === 'break' || terminal.kind === 'continue') &&
+            terminal.targetKind === 'labeled') {
+            state.add(terminal.target);
+        }
+        const isReachableLabel = stmt.label !== null && state.has(stmt.label.id);
+        if (stmt.terminal.kind === 'label' && !isReachableLabel) {
+            const block = [...stmt.terminal.block];
+            const last = block.at(-1);
+            if (last !== undefined &&
+                last.kind === 'terminal' &&
+                last.terminal.kind === 'break' &&
+                last.terminal.target === null) {
+                block.pop();
+            }
+            return { kind: 'replace-many', value: block };
+        }
+        else {
+            if (!isReachableLabel && stmt.label != null) {
+                stmt.label.implicit = true;
+            }
+            return { kind: 'keep' };
+        }
+    }
+};
+
+function pruneUnusedScopes(fn) {
+    visitReactiveFunction(fn, new Transform$1(), {
+        hasReturnStatement: false,
+    });
+}
+let Transform$1 = class Transform extends ReactiveFunctionTransform {
+    visitTerminal(stmt, state) {
+        this.traverseTerminal(stmt, state);
+        if (stmt.terminal.kind === 'return') {
+            state.hasReturnStatement = true;
+        }
+    }
+    transformScope(scopeBlock, _state) {
+        const scopeState = { hasReturnStatement: false };
+        this.visitScope(scopeBlock, scopeState);
+        if (!scopeState.hasReturnStatement &&
+            scopeBlock.scope.reassignments.size === 0 &&
+            (scopeBlock.scope.declarations.size === 0 ||
+                !hasOwnDeclaration(scopeBlock))) {
+            return {
+                kind: 'replace',
+                value: {
+                    kind: 'pruned-scope',
+                    scope: scopeBlock.scope,
+                    instructions: scopeBlock.instructions,
+                },
+            };
+        }
+        else {
+            return { kind: 'keep' };
+        }
+    }
+};
+function hasOwnDeclaration(block) {
+    for (const declaration of block.scope.declarations.values()) {
+        if (declaration.scope.id === block.scope.id) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function collectReferencedGlobals(fn) {
+    const identifiers = new Set();
+    visitReactiveFunction(fn, new Visitor$4(), identifiers);
+    return identifiers;
+}
+let Visitor$4 = class Visitor extends ReactiveFunctionVisitor {
+    visitValue(id, value, state) {
+        this.traverseValue(id, value, state);
+        if (value.kind === 'FunctionExpression' || value.kind === 'ObjectMethod') {
+            this.visitHirFunction(value.loweredFunc.func, state);
+        }
+        else if (value.kind === 'LoadGlobal') {
+            state.add(value.binding.name);
+        }
+    }
+    visitReactiveFunctionValue(_id, _dependencies, fn, state) {
+        visitReactiveFunction(fn, this, state);
+    }
+};
+
+var _Scopes_instances, _Scopes_seen, _Scopes_stack, _Scopes_globals, _Scopes_programContext, _Scopes_lookup;
+function renameVariables(fn) {
+    const globals = collectReferencedGlobals(fn);
+    const scopes = new Scopes(globals, fn.env.programContext);
+    renameVariablesImpl(fn, new Visitor$3(), scopes);
+    return new Set([...scopes.names, ...globals]);
+}
+function renameVariablesImpl(fn, visitor, scopes) {
+    scopes.enter(() => {
+        for (const param of fn.params) {
+            if (param.kind === 'Identifier') {
+                scopes.visit(param.identifier);
+            }
+            else {
+                scopes.visit(param.place.identifier);
+            }
+        }
+        visitReactiveFunction(fn, visitor, scopes);
+    });
+}
+let Visitor$3 = class Visitor extends ReactiveFunctionVisitor {
+    visitParam(place, state) {
+        state.visit(place.identifier);
+    }
+    visitLValue(_id, lvalue, state) {
+        state.visit(lvalue.identifier);
+    }
+    visitPlace(id, place, state) {
+        state.visit(place.identifier);
+    }
+    visitBlock(block, state) {
+        state.enter(() => {
+            this.traverseBlock(block, state);
+        });
+    }
+    visitPrunedScope(scopeBlock, state) {
+        this.traverseBlock(scopeBlock.instructions, state);
+    }
+    visitScope(scope, state) {
+        for (const [_, declaration] of scope.scope.declarations) {
+            state.visit(declaration.identifier);
+        }
+        this.traverseScope(scope, state);
+    }
+    visitValue(id, value, state) {
+        this.traverseValue(id, value, state);
+        if (value.kind === 'FunctionExpression' || value.kind === 'ObjectMethod') {
+            this.visitHirFunction(value.loweredFunc.func, state);
+        }
+    }
+    visitReactiveFunctionValue(_id, _dependencies, _fn, _state) {
+        renameVariablesImpl(_fn, this, _state);
+    }
+};
+class Scopes {
+    constructor(globals, programContext) {
+        _Scopes_instances.add(this);
+        _Scopes_seen.set(this, new Map());
+        _Scopes_stack.set(this, [new Map()]);
+        _Scopes_globals.set(this, void 0);
+        _Scopes_programContext.set(this, void 0);
+        this.names = new Set();
+        __classPrivateFieldSet(this, _Scopes_globals, globals, "f");
+        __classPrivateFieldSet(this, _Scopes_programContext, programContext, "f");
+    }
+    visit(identifier) {
+        const originalName = identifier.name;
+        if (originalName === null) {
+            return;
+        }
+        const mappedName = __classPrivateFieldGet(this, _Scopes_seen, "f").get(identifier.declarationId);
+        if (mappedName !== undefined) {
+            identifier.name = mappedName;
+            return;
+        }
+        let name = originalName.value;
+        let id = 0;
+        if (isPromotedTemporary(originalName.value)) {
+            name = `t${id++}`;
+        }
+        else if (isPromotedJsxTemporary(originalName.value)) {
+            name = `T${id++}`;
+        }
+        while (__classPrivateFieldGet(this, _Scopes_instances, "m", _Scopes_lookup).call(this, name) !== null || __classPrivateFieldGet(this, _Scopes_globals, "f").has(name)) {
+            if (isPromotedTemporary(originalName.value)) {
+                name = `t${id++}`;
+            }
+            else if (isPromotedJsxTemporary(originalName.value)) {
+                name = `T${id++}`;
+            }
+            else {
+                name = `${originalName.value}$${id++}`;
+            }
+        }
+        __classPrivateFieldGet(this, _Scopes_programContext, "f").addNewReference(name);
+        const identifierName = makeIdentifierName(name);
+        identifier.name = identifierName;
+        __classPrivateFieldGet(this, _Scopes_seen, "f").set(identifier.declarationId, identifierName);
+        __classPrivateFieldGet(this, _Scopes_stack, "f").at(-1).set(identifierName.value, identifier.declarationId);
+        this.names.add(identifierName.value);
+    }
+    enter(fn) {
+        const next = new Map();
+        __classPrivateFieldGet(this, _Scopes_stack, "f").push(next);
+        fn();
+        const last = __classPrivateFieldGet(this, _Scopes_stack, "f").pop();
+        CompilerError.invariant(last === next, {
+            reason: 'Mismatch push/pop calls',
+            description: null,
+            loc: null,
+            suggestions: null,
+        });
+    }
+}
+_Scopes_seen = new WeakMap(), _Scopes_stack = new WeakMap(), _Scopes_globals = new WeakMap(), _Scopes_programContext = new WeakMap(), _Scopes_instances = new WeakSet(), _Scopes_lookup = function _Scopes_lookup(name) {
+    for (let i = __classPrivateFieldGet(this, _Scopes_stack, "f").length - 1; i >= 0; i--) {
+        const scope = __classPrivateFieldGet(this, _Scopes_stack, "f")[i];
+        const entry = scope.get(name);
+        if (entry !== undefined) {
+            return entry;
+        }
+    }
+    return null;
+};
+
+function stabilizeBlockIds(fn) {
+    const referenced = new Set();
+    visitReactiveFunction(fn, new CollectReferencedLabels(), referenced);
+    const mappings = new Map();
+    for (const blockId of referenced) {
+        mappings.set(blockId, makeBlockId(mappings.size));
+    }
+    visitReactiveFunction(fn, new RewriteBlockIds(), mappings);
+}
+class CollectReferencedLabels extends ReactiveFunctionVisitor {
+    visitScope(scope, state) {
+        const { earlyReturnValue } = scope.scope;
+        if (earlyReturnValue != null) {
+            state.add(earlyReturnValue.label);
+        }
+        this.traverseScope(scope, state);
+    }
+    visitTerminal(stmt, state) {
+        if (stmt.label != null) {
+            if (!stmt.label.implicit) {
+                state.add(stmt.label.id);
+            }
+        }
+        this.traverseTerminal(stmt, state);
+    }
+}
+class RewriteBlockIds extends ReactiveFunctionVisitor {
+    visitScope(scope, state) {
+        const { earlyReturnValue } = scope.scope;
+        if (earlyReturnValue != null) {
+            const rewrittenId = getOrInsertDefault(state, earlyReturnValue.label, state.size);
+            earlyReturnValue.label = makeBlockId(rewrittenId);
+        }
+        this.traverseScope(scope, state);
+    }
+    visitTerminal(stmt, state) {
+        if (stmt.label != null) {
+            const rewrittenId = getOrInsertDefault(state, stmt.label.id, state.size);
+            stmt.label.id = makeBlockId(rewrittenId);
+        }
+        const terminal = stmt.terminal;
+        if (terminal.kind === 'break' || terminal.kind === 'continue') {
+            const rewrittenId = getOrInsertDefault(state, terminal.target, state.size);
+            terminal.target = makeBlockId(rewrittenId);
+        }
+        this.traverseTerminal(stmt, state);
+    }
+}
 
 function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
     var _a, _b, _c, _d, _e, _f;
@@ -44290,13 +42500,7 @@ function analyseFunctions(func) {
             switch (instr.value.kind) {
                 case 'ObjectMethod':
                 case 'FunctionExpression': {
-                    if (!func.env.config.enableNewMutationAliasingModel) {
-                        lower(instr.value.loweredFunc.func);
-                        infer(instr.value.loweredFunc);
-                    }
-                    else {
-                        lowerWithMutationAliasing(instr.value.loweredFunc.func);
-                    }
+                    lowerWithMutationAliasing(instr.value.loweredFunc.func);
                     for (const operand of instr.value.loweredFunc.func.context) {
                         operand.identifier.mutableRange = {
                             start: makeInstructionId(0),
@@ -44374,41 +42578,6 @@ function lowerWithMutationAliasing(fn) {
         name: 'AnalyseFunction (inner)',
         value: fn,
     });
-}
-function lower(func) {
-    var _a, _b;
-    analyseFunctions(func);
-    inferReferenceEffects(func, { isFunctionExpression: true });
-    deadCodeElimination(func);
-    inferMutableRanges(func);
-    rewriteInstructionKindsBasedOnReassignment(func);
-    inferReactiveScopeVariables(func);
-    (_b = (_a = func.env.logger) === null || _a === void 0 ? void 0 : _a.debugLogIRs) === null || _b === void 0 ? void 0 : _b.call(_a, {
-        kind: 'hir',
-        name: 'AnalyseFunction (inner)',
-        value: func,
-    });
-}
-function infer(loweredFunc) {
-    for (const operand of loweredFunc.func.context) {
-        const identifier = operand.identifier;
-        CompilerError.invariant(operand.effect === Effect.Unknown, {
-            reason: '[AnalyseFunctions] Expected Function context effects to not have been set',
-            loc: operand.loc,
-        });
-        if (isRefOrRefValue(identifier)) {
-            operand.effect = Effect.Capture;
-        }
-        else if (isMutatedOrReassigned(identifier)) {
-            operand.effect = Effect.Capture;
-        }
-        else {
-            operand.effect = Effect.Read;
-        }
-    }
-}
-function isMutatedOrReassigned(id) {
-    return id.mutableRange.end > id.mutableRange.start;
 }
 
 function collectMaybeMemoDependencies(value, maybeDeps, optional) {
@@ -51495,8 +49664,7 @@ function validateNoFreezingKnownMutableFunctions(fn) {
                     if (knownMutation && knownMutation.kind === 'ContextMutation') {
                         contextMutationEffects.set(lvalue.identifier.id, knownMutation);
                     }
-                    else if (fn.env.config.enableNewMutationAliasingModel &&
-                        value.loweredFunc.func.aliasingEffects != null) {
+                    else if (value.loweredFunc.func.aliasingEffects != null) {
                         const context = new Set(value.loweredFunc.func.context.map(p => p.identifier.id));
                         effects: for (const effect of value.loweredFunc.func
                             .aliasingEffects) {
@@ -51723,7 +49891,7 @@ function runWithEnvironment(func, env) {
         var _a, _b;
         (_b = (_a = env.logger) === null || _a === void 0 ? void 0 : _a.debugLogIRs) === null || _b === void 0 ? void 0 : _b.call(_a, value);
     };
-    const hir = lower$1(func, env).unwrap();
+    const hir = lower(func, env).unwrap();
     log({ kind: 'hir', name: 'HIR', value: hir });
     pruneMaybeThrows(hir);
     log({ kind: 'hir', name: 'PruneMaybeThrows', value: hir });
@@ -51774,26 +49942,12 @@ function runWithEnvironment(func, env) {
     log({ kind: 'hir', name: 'OptimizePropsMethodCalls', value: hir });
     analyseFunctions(hir);
     log({ kind: 'hir', name: 'AnalyseFunctions', value: hir });
-    if (!env.config.enableNewMutationAliasingModel) {
-        const fnEffectErrors = inferReferenceEffects(hir);
-        if (env.isInferredMemoEnabled) {
-            if (fnEffectErrors.length > 0) {
-                CompilerError.throw(fnEffectErrors[0]);
-            }
+    const mutabilityAliasingErrors = inferMutationAliasingEffects(hir);
+    log({ kind: 'hir', name: 'InferMutationAliasingEffects', value: hir });
+    if (env.isInferredMemoEnabled) {
+        if (mutabilityAliasingErrors.isErr()) {
+            throw mutabilityAliasingErrors.unwrapErr();
         }
-        log({ kind: 'hir', name: 'InferReferenceEffects', value: hir });
-    }
-    else {
-        const mutabilityAliasingErrors = inferMutationAliasingEffects(hir);
-        log({ kind: 'hir', name: 'InferMutationAliasingEffects', value: hir });
-        if (env.isInferredMemoEnabled) {
-            if (mutabilityAliasingErrors.isErr()) {
-                throw mutabilityAliasingErrors.unwrapErr();
-            }
-        }
-    }
-    if (!env.config.enableNewMutationAliasingModel) {
-        validateLocalsNotReassignedAfterRender(hir);
     }
     deadCodeElimination(hir);
     log({ kind: 'hir', name: 'DeadCodeElimination', value: hir });
@@ -51803,21 +49957,15 @@ function runWithEnvironment(func, env) {
     }
     pruneMaybeThrows(hir);
     log({ kind: 'hir', name: 'PruneMaybeThrows', value: hir });
-    if (!env.config.enableNewMutationAliasingModel) {
-        inferMutableRanges(hir);
-        log({ kind: 'hir', name: 'InferMutableRanges', value: hir });
-    }
-    else {
-        const mutabilityAliasingErrors = inferMutationAliasingRanges(hir, {
-            isFunctionExpression: false,
-        });
-        log({ kind: 'hir', name: 'InferMutationAliasingRanges', value: hir });
-        if (env.isInferredMemoEnabled) {
-            if (mutabilityAliasingErrors.isErr()) {
-                throw mutabilityAliasingErrors.unwrapErr();
-            }
-            validateLocalsNotReassignedAfterRender(hir);
+    const mutabilityAliasingRangeErrors = inferMutationAliasingRanges(hir, {
+        isFunctionExpression: false,
+    });
+    log({ kind: 'hir', name: 'InferMutationAliasingRanges', value: hir });
+    if (env.isInferredMemoEnabled) {
+        if (mutabilityAliasingRangeErrors.isErr()) {
+            throw mutabilityAliasingRangeErrors.unwrapErr();
         }
+        validateLocalsNotReassignedAfterRender(hir);
     }
     if (env.isInferredMemoEnabled) {
         if (env.config.assertValidMutableRanges) {
@@ -51841,10 +49989,7 @@ function runWithEnvironment(func, env) {
         if (env.config.validateNoImpureFunctionsInRender) {
             validateNoImpureFunctionsInRender(hir).unwrap();
         }
-        if (env.config.validateNoFreezingKnownMutableFunctions ||
-            env.config.enableNewMutationAliasingModel) {
-            validateNoFreezingKnownMutableFunctions(hir).unwrap();
-        }
+        validateNoFreezingKnownMutableFunctions(hir).unwrap();
     }
     inferReactivePlaces(hir);
     log({ kind: 'hir', name: 'InferReactivePlaces', value: hir });
