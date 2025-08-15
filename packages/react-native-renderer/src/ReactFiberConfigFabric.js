@@ -24,6 +24,7 @@ import {
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import {HostText} from 'react-reconciler/src/ReactWorkTags';
 import {
+  getFragmentParentHostFiber,
   getInstanceFromHostFiber,
   traverseFragmentInstance,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
@@ -59,6 +60,7 @@ const {
 } = nativeFabricUIManager;
 
 import {getClosestInstanceFromNode} from './ReactFabricComponentTree';
+import {compareDocumentPositionForEmptyFragment} from 'shared/ReactDOMFragmentRefShared';
 
 import {
   getInspectorDataForViewTag,
@@ -87,7 +89,7 @@ const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 let nextReactTag = 2;
 
 type InternalInstanceHandle = Object;
-type Node = Object;
+
 export type Type = string;
 export type Props = Object;
 export type Instance = {
@@ -342,6 +344,15 @@ export function getPublicInstanceFromInternalInstanceHandle(
 
   const elementInstance: Instance = internalInstanceHandle.stateNode;
   return getPublicInstance(elementInstance);
+}
+
+function getPublicInstanceFromHostFiber(fiber: Fiber): PublicInstance {
+  const instance = getInstanceFromHostFiber<Instance>(fiber);
+  const publicInstance = getPublicInstance(instance);
+  if (publicInstance == null) {
+    throw new Error('Expected to find a host node. This is a bug in React.');
+  }
+  return publicInstance;
 }
 
 export function prepareForCommit(containerInfo: Container): null | Object {
@@ -610,6 +621,7 @@ export type FragmentInstanceType = {
   _observers: null | Set<IntersectionObserver>,
   observeUsing: (observer: IntersectionObserver) => void,
   unobserveUsing: (observer: IntersectionObserver) => void,
+  compareDocumentPosition: (otherNode: PublicInstance) => number,
 };
 
 function FragmentInstance(this: FragmentInstanceType, fragmentFiber: Fiber) {
@@ -629,12 +641,8 @@ FragmentInstance.prototype.observeUsing = function (
   traverseFragmentInstance(this._fragmentFiber, observeChild, observer);
 };
 function observeChild(child: Fiber, observer: IntersectionObserver) {
-  const instance = getInstanceFromHostFiber<Instance>(child);
-  const publicInstance = getPublicInstance(instance);
-  if (publicInstance == null) {
-    throw new Error('Expected to find a host node. This is a bug in React.');
-  }
-  // $FlowFixMe[incompatible-call] Element types are behind a flag in RN
+  const publicInstance = getPublicInstanceFromHostFiber(child);
+  // $FlowFixMe[incompatible-call] DOM types expect Element
   observer.observe(publicInstance);
   return false;
 }
@@ -656,13 +664,69 @@ FragmentInstance.prototype.unobserveUsing = function (
   }
 };
 function unobserveChild(child: Fiber, observer: IntersectionObserver) {
-  const instance = getInstanceFromHostFiber<Instance>(child);
-  const publicInstance = getPublicInstance(instance);
-  if (publicInstance == null) {
-    throw new Error('Expected to find a host node. This is a bug in React.');
-  }
-  // $FlowFixMe[incompatible-call] Element types are behind a flag in RN
+  const publicInstance = getPublicInstanceFromHostFiber(child);
+  // $FlowFixMe[incompatible-call] DOM types expect Element
   observer.unobserve(publicInstance);
+  return false;
+}
+
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.compareDocumentPosition = function (
+  this: FragmentInstanceType,
+  otherNode: PublicInstance,
+): number {
+  const parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
+  if (parentHostFiber === null) {
+    return Node.DOCUMENT_POSITION_DISCONNECTED;
+  }
+  const parentHostInstance = getPublicInstanceFromHostFiber(parentHostFiber);
+  const children: Array<Fiber> = [];
+  traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
+  if (children.length === 0) {
+    return compareDocumentPositionForEmptyFragment(
+      this._fragmentFiber,
+      parentHostInstance,
+      otherNode,
+      getPublicInstanceFromHostFiber,
+    );
+  }
+
+  const firstInstance = getPublicInstanceFromHostFiber(children[0]);
+  const lastInstance = getPublicInstanceFromHostFiber(
+    children[children.length - 1],
+  );
+
+  // $FlowFixMe[incompatible-use] Fabric PublicInstance is opaque
+  // $FlowFixMe[prop-missing]
+  const firstResult = firstInstance.compareDocumentPosition(otherNode);
+  // $FlowFixMe[incompatible-use] Fabric PublicInstance is opaque
+  // $FlowFixMe[prop-missing]
+  const lastResult = lastInstance.compareDocumentPosition(otherNode);
+
+  const otherNodeIsFirstOrLastChild =
+    firstInstance === otherNode || lastInstance === otherNode;
+  const otherNodeIsWithinFirstOrLastChild =
+    firstResult & Node.DOCUMENT_POSITION_CONTAINED_BY ||
+    lastResult & Node.DOCUMENT_POSITION_CONTAINED_BY;
+  const otherNodeIsBetweenFirstAndLastChildren =
+    firstResult & Node.DOCUMENT_POSITION_FOLLOWING &&
+    lastResult & Node.DOCUMENT_POSITION_PRECEDING;
+  let result;
+  if (
+    otherNodeIsFirstOrLastChild ||
+    otherNodeIsWithinFirstOrLastChild ||
+    otherNodeIsBetweenFirstAndLastChildren
+  ) {
+    result = Node.DOCUMENT_POSITION_CONTAINED_BY;
+  } else {
+    result = firstResult;
+  }
+
+  return result;
+};
+
+function collectChildren(child: Fiber, collection: Array<Fiber>): boolean {
+  collection.push(child);
   return false;
 }
 

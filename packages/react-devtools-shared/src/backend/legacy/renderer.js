@@ -836,6 +836,7 @@ export function attach(
 
       // Suspense did not exist in legacy versions
       canToggleSuspense: false,
+      isSuspended: null,
 
       source: null,
 
@@ -858,6 +859,7 @@ export function attach(
 
       // Not supported in legacy renderers.
       suspendedBy: [],
+      suspendedByRange: null,
 
       // List of owners
       owners,

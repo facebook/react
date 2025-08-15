@@ -4736,26 +4736,30 @@ export function attach(
         );
 
         shouldMeasureSuspenseNode = false;
-        if (nextFallbackFiber !== null) {
+        if (prevFallbackFiber !== null || nextFallbackFiber !== null) {
           const fallbackStashedSuspenseParent = reconcilingParentSuspenseNode;
           const fallbackStashedSuspensePrevious =
             previouslyReconciledSiblingSuspenseNode;
           const fallbackStashedSuspenseRemaining =
             remainingReconcilingChildrenSuspenseNodes;
           // Next, we'll pop back out of the SuspenseNode that we added above and now we'll
-          // reconcile the fallback, reconciling anything by inserting into the parent SuspenseNode.
+          // reconcile the fallback, reconciling anything in the context of the parent SuspenseNode.
           // Since the fallback conceptually blocks the parent.
           reconcilingParentSuspenseNode = stashedSuspenseParent;
           previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
           remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
           try {
-            updateFlags |= updateVirtualChildrenRecursively(
-              nextFallbackFiber,
-              null,
-              prevFallbackFiber,
-              traceNearestHostComponentUpdate,
-              0,
-            );
+            if (nextFallbackFiber === null) {
+              unmountRemainingChildren();
+            } else {
+              updateFlags |= updateVirtualChildrenRecursively(
+                nextFallbackFiber,
+                null,
+                prevFallbackFiber,
+                traceNearestHostComponentUpdate,
+                0,
+              );
+            }
           } finally {
             reconcilingParentSuspenseNode = fallbackStashedSuspenseParent;
             previouslyReconciledSiblingSuspenseNode =
@@ -4763,7 +4767,8 @@ export function attach(
             remainingReconcilingChildrenSuspenseNodes =
               fallbackStashedSuspenseRemaining;
           }
-        } else if (nextFiber.memoizedState === null) {
+        }
+        if (nextFiber.memoizedState === null) {
           // Measure this Suspense node in case it changed. We don't update the rect while
           // we're inside a disconnected subtree nor if we are the Suspense boundary that
           // is suspended. This lets us keep the rectangle of the displayed content while
@@ -5268,6 +5273,18 @@ export function attach(
     }
   }
 
+  function getNearestSuspenseNode(instance: DevToolsInstance): SuspenseNode {
+    while (instance.suspenseNode === null) {
+      if (instance.parent === null) {
+        throw new Error(
+          'There should always be a SuspenseNode parent on a mounted instance.',
+        );
+      }
+      instance = instance.parent;
+    }
+    return instance.suspenseNode;
+  }
+
   function getNearestMountedDOMNode(publicInstance: Element): null | Element {
     let domNode: null | Element = publicInstance;
     while (domNode && !publicInstanceToDevToolsInstanceMap.has(domNode)) {
@@ -5554,6 +5571,56 @@ export function attach(
       }
     });
     return result;
+  }
+
+  const FALLBACK_THROTTLE_MS: number = 300;
+
+  function getSuspendedByRange(
+    suspenseNode: SuspenseNode,
+  ): null | [number, number] {
+    let min = Infinity;
+    let max = -Infinity;
+    suspenseNode.suspendedBy.forEach((_, ioInfo) => {
+      if (ioInfo.end > max) {
+        max = ioInfo.end;
+      }
+      if (ioInfo.start < min) {
+        min = ioInfo.start;
+      }
+    });
+    const parentSuspenseNode = suspenseNode.parent;
+    if (parentSuspenseNode !== null) {
+      let parentMax = -Infinity;
+      parentSuspenseNode.suspendedBy.forEach((_, ioInfo) => {
+        if (ioInfo.end > parentMax) {
+          parentMax = ioInfo.end;
+        }
+      });
+      // The parent max is theoretically the earlier the parent could've committed.
+      // Therefore, the theoretical max that the child could be throttled is that plus 300ms.
+      const throttleTime = parentMax + FALLBACK_THROTTLE_MS;
+      if (throttleTime > max) {
+        // If the theoretical throttle time is later than the earliest reveal then we extend
+        // the max time to show that this is timespan could possibly get throttled.
+        max = throttleTime;
+      }
+
+      // We use the end of the previous boundary as the start time for this boundary unless,
+      // that's earlier than we'd need to expand to the full fallback throttle range. It
+      // suggests that the parent was loaded earlier than this one.
+      let startTime = max - FALLBACK_THROTTLE_MS;
+      if (parentMax > startTime) {
+        startTime = parentMax;
+      }
+      // If the first fetch of this boundary starts before that, then we use that as the start.
+      if (startTime < min) {
+        min = startTime;
+      }
+    }
+    if (min < Infinity && max > -Infinity) {
+      return [min, max];
+    }
+    return null;
   }
 
   function getAwaitStackFromHooks(
@@ -6009,6 +6076,11 @@ export function attach(
       nativeTag = getNativeTag(fiber.stateNode);
     }
 
+    let isSuspended: boolean | null = null;
+    if (tag === SuspenseComponent) {
+      isSuspended = memoizedState !== null;
+    }
+
     const suspendedBy =
       fiberInstance.suspenseNode !== null
         ? // If this is a Suspense boundary, then we include everything in the subtree that might suspend
@@ -6024,6 +6096,10 @@ export function attach(
           : fiberInstance.suspendedBy.map(info =>
               serializeAsyncInfo(info, fiberInstance, hooks),
             );
+    const suspendedByRange = getSuspendedByRange(
+      getNearestSuspenseNode(fiberInstance),
+    );
+
     return {
       id: fiberInstance.id,
 
@@ -6055,6 +6131,7 @@ export function attach(
           forceFallbackForFibers.has(fiber) ||
           (fiber.alternate !== null &&
             forceFallbackForFibers.has(fiber.alternate))),
+      isSuspended: isSuspended,
 
       source,
 
@@ -6086,6 +6163,7 @@ export function attach(
           : Array.from(componentLogsEntry.warnings.entries()),
 
       suspendedBy: suspendedBy,
+      suspendedByRange: suspendedByRange,
 
       // List of owners
       owners,
@@ -6142,8 +6220,12 @@ export function attach(
     const componentLogsEntry =
       componentInfoToComponentLogsMap.get(componentInfo);
 
+    const isSuspended = null;
     // Things that Suspended this Server Component (use(), awaits and direct child promises)
     const suspendedBy = virtualInstance.suspendedBy;
+    const suspendedByRange = getSuspendedByRange(
+      getNearestSuspenseNode(virtualInstance),
+    );
 
     return {
       id: virtualInstance.id,
@@ -6160,6 +6242,7 @@ export function attach(
       isErrored: false,
 
       canToggleSuspense: supportsTogglingSuspense && hasSuspenseBoundary,
+      isSuspended: isSuspended,
 
       source,
 
@@ -6196,6 +6279,7 @@ export function attach(
           : suspendedBy.map(info =>
               serializeAsyncInfo(info, virtualInstance, null),
             ),
+      suspendedByRange: suspendedByRange,
 
       // List of owners
       owners,

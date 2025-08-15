@@ -292,7 +292,7 @@ export default function InspectedElementSuspendedBy({
   inspectedElement,
   store,
 }: Props): React.Node {
-  const {suspendedBy} = inspectedElement;
+  const {suspendedBy, suspendedByRange} = inspectedElement;
 
   // Skip the section if nothing suspended this component.
   if (suspendedBy == null || suspendedBy.length === 0) {
@@ -306,6 +306,11 @@ export default function InspectedElementSuspendedBy({
 
   let minTime = Infinity;
   let maxTime = -Infinity;
+  if (suspendedByRange !== null) {
+    // The range of the whole suspense boundary.
+    minTime = suspendedByRange[0];
+    maxTime = suspendedByRange[1];
+  }
   for (let i = 0; i < suspendedBy.length; i++) {
     const asyncInfo: SerializedAsyncInfo = suspendedBy[i];
     if (asyncInfo.awaited.start < minTime) {

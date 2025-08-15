@@ -113,7 +113,7 @@ export default function InspectedElementWrapper(_: Props): React.Node {
     element !== null &&
     element.type === ElementTypeSuspense &&
     inspectedElement != null &&
-    inspectedElement.state != null;
+    inspectedElement.isSuspended;
 
   const canToggleError =
     !hideToggleErrorAction &&
