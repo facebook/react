@@ -16,11 +16,9 @@ import ElementBadges from './ElementBadges';
 
 import styles from './StackTraceView.css';
 
-import type {
-  ReactStackTrace,
-  ReactCallSite,
-  ReactFunctionLocation,
-} from 'shared/ReactTypes';
+import type {ReactStackTrace, ReactCallSite} from 'shared/ReactTypes';
+
+import type {SourceMappedLocation} from 'react-devtools-shared/src/symbolicateSource';
 
 import FetchFileWithCachingContext from './FetchFileWithCachingContext';
 
@@ -42,7 +40,7 @@ export function CallSiteView({
   const [virtualFunctionName, virtualURL, virtualLine, virtualColumn] =
     callSite;
 
-  const symbolicatedCallSite: null | ReactFunctionLocation =
+  const symbolicatedCallSite: null | SourceMappedLocation =
     fetchFileWithCaching !== null
       ? use(
           symbolicateSourceWithCache(
@@ -56,10 +54,10 @@ export function CallSiteView({
 
   const [linkIsEnabled, viewSource] = useOpenResource(
     callSite,
-    symbolicatedCallSite,
+    symbolicatedCallSite == null ? null : symbolicatedCallSite.location,
   );
   const [functionName, url, line, column] =
-    symbolicatedCallSite !== null ? symbolicatedCallSite : callSite;
+    symbolicatedCallSite !== null ? symbolicatedCallSite.location : callSite;
   return (
     <div className={styles.CallSite}>
       {functionName || virtualFunctionName}
