@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b1726a9da570a9d1c2334b57428a3c2b>>
+ * @generated SignedSource<<6d5198173e44a3227083fa167021dbbd>>
  */
 
 "use strict";
@@ -583,7 +583,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.2.0-native-fb-6ffcac85-20250815";
+exports.version = "19.2.0-native-fb-eaf6adb1-20250815";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
