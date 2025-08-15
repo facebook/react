@@ -5278,14 +5278,9 @@ export function attach(
       // TODO: relying on this seems a bit fishy.
       const wasMounted =
         prevFiber.memoizedState != null &&
-        prevFiber.memoizedState.element != null &&
-        // A dehydrated root is not considered mounted
-        prevFiber.memoizedState.isDehydrated !== true;
+        prevFiber.memoizedState.element != null;
       const isMounted =
-        current.memoizedState != null &&
-        current.memoizedState.element != null &&
-        // A dehydrated root is not considered mounted
-        current.memoizedState.isDehydrated !== true;
+        current.memoizedState != null && current.memoizedState.element != null;
       if (!wasMounted && isMounted) {
         // Mount a new root.
         setRootPseudoKey(currentRoot.id, current);
