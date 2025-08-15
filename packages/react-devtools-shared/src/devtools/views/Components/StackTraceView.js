@@ -58,8 +58,10 @@ export function CallSiteView({
   );
   const [functionName, url, line, column] =
     symbolicatedCallSite !== null ? symbolicatedCallSite.location : callSite;
+  const ignored =
+    symbolicatedCallSite !== null ? symbolicatedCallSite.ignored : false;
   return (
-    <div className={styles.CallSite}>
+    <div className={ignored ? styles.IgnoredCallSite : styles.CallSite}>
       {functionName || virtualFunctionName}
       {url !== '' && (
         <>
