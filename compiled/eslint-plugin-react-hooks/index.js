@@ -18823,7 +18823,7 @@ function printObjectPropertyKey(key) {
     }
 }
 function printInstructionValue(instrValue) {
-    var _a, _b, _c, _d, _e, _f, _g;
+    var _a, _b, _c, _d, _e;
     let value = '';
     switch (instrValue.kind) {
         case 'ArrayExpression': {
@@ -18996,18 +18996,8 @@ function printInstructionValue(instrValue) {
             const context = instrValue.loweredFunc.func.context
                 .map(dep => printPlace(dep))
                 .join(',');
-            const effects = (_b = (_a = instrValue.loweredFunc.func.effects) === null || _a === void 0 ? void 0 : _a.map(effect => {
-                if (effect.kind === 'ContextMutation') {
-                    return `ContextMutation places=[${[...effect.places]
-                        .map(place => printPlace(place))
-                        .join(', ')}] effect=${effect.effect}`;
-                }
-                else {
-                    return `GlobalMutation`;
-                }
-            }).join(', ')) !== null && _b !== void 0 ? _b : '';
-            const aliasingEffects = (_e = (_d = (_c = instrValue.loweredFunc.func.aliasingEffects) === null || _c === void 0 ? void 0 : _c.map(printAliasingEffect)) === null || _d === void 0 ? void 0 : _d.join(', ')) !== null && _e !== void 0 ? _e : '';
-            value = `${kind} ${name} @context[${context}] @effects[${effects}] @aliasingEffects=[${aliasingEffects}]\n${fn}`;
+            const aliasingEffects = (_c = (_b = (_a = instrValue.loweredFunc.func.aliasingEffects) === null || _a === void 0 ? void 0 : _a.map(printAliasingEffect)) === null || _b === void 0 ? void 0 : _b.join(', ')) !== null && _c !== void 0 ? _c : '';
+            value = `${kind} ${name} @context[${context}] @aliasingEffects=[${aliasingEffects}]\n${fn}`;
             break;
         }
         case 'TaggedTemplateExpression': {
@@ -19123,7 +19113,7 @@ function printInstructionValue(instrValue) {
             break;
         }
         case 'StartMemoize': {
-            value = `StartMemoize deps=${(_g = (_f = instrValue.deps) === null || _f === void 0 ? void 0 : _f.map(dep => printManualMemoDependency(dep, false))) !== null && _g !== void 0 ? _g : '(none)'}`;
+            value = `StartMemoize deps=${(_e = (_d = instrValue.deps) === null || _d === void 0 ? void 0 : _d.map(dep => printManualMemoDependency(dep, false))) !== null && _e !== void 0 ? _e : '(none)'}`;
             break;
         }
         case 'FinishMemoize': {
@@ -48505,7 +48495,6 @@ function emitSelectorFn(env, keys) {
         returnTypeAnnotation: null,
         returns: createTemporaryPlace(env, GeneratedSource),
         context: [],
-        effects: null,
         body: {
             entry: block.id,
             blocks: new Map([[block.id, block]]),
@@ -48513,6 +48502,7 @@ function emitSelectorFn(env, keys) {
         generator: false,
         async: false,
         directives: [],
+        aliasingEffects: [],
     };
     reversePostorderBlocks(fn.body);
     markInstructionIds(fn.body);
@@ -48937,7 +48927,6 @@ function emitOutlinedFn(env, jsx, oldProps, globals) {
         returnTypeAnnotation: null,
         returns: createTemporaryPlace(env, GeneratedSource),
         context: [],
-        effects: null,
         body: {
             entry: block.id,
             blocks: new Map([[block.id, block]]),
@@ -48945,6 +48934,7 @@ function emitOutlinedFn(env, jsx, oldProps, globals) {
         generator: false,
         async: false,
         directives: [],
+        aliasingEffects: [],
     };
     return fn;
 }
@@ -49601,14 +49591,13 @@ function validateStaticComponents(fn) {
 }
 
 function validateNoFreezingKnownMutableFunctions(fn) {
-    var _a;
     const errors = new CompilerError();
     const contextMutationEffects = new Map();
     function visitOperand(operand) {
         if (operand.effect === Effect.Freeze) {
             const effect = contextMutationEffects.get(operand.identifier.id);
             if (effect != null) {
-                const place = [...effect.places][0];
+                const place = effect.value;
                 const variable = place != null &&
                     place.identifier.name != null &&
                     place.identifier.name.kind === 'named'
@@ -49626,7 +49615,7 @@ function validateNoFreezingKnownMutableFunctions(fn) {
                 })
                     .withDetail({
                     kind: 'error',
-                    loc: effect.loc,
+                    loc: effect.value.loc,
                     message: `This modifies ${variable}`,
                 }));
             }
@@ -49652,19 +49641,7 @@ function validateNoFreezingKnownMutableFunctions(fn) {
                     break;
                 }
                 case 'FunctionExpression': {
-                    const knownMutation = ((_a = value.loweredFunc.func.effects) !== null && _a !== void 0 ? _a : []).find(effect => {
-                        return (effect.kind === 'ContextMutation' &&
-                            (effect.effect === Effect.Store ||
-                                effect.effect === Effect.Mutate) &&
-                            Iterable_some(effect.places, place => {
-                                return (isMutableEffect(place.effect, place.loc) &&
-                                    !isRefOrRefLikeMutableType(place.identifier.type));
-                            }));
-                    });
-                    if (knownMutation && knownMutation.kind === 'ContextMutation') {
-                        contextMutationEffects.set(lvalue.identifier.id, knownMutation);
-                    }
-                    else if (value.loweredFunc.func.aliasingEffects != null) {
+                    if (value.loweredFunc.func.aliasingEffects != null) {
                         const context = new Set(value.loweredFunc.func.context.map(p => p.identifier.id));
                         effects: for (const effect of value.loweredFunc.func
                             .aliasingEffects) {
@@ -49677,12 +49654,7 @@ function validateNoFreezingKnownMutableFunctions(fn) {
                                     }
                                     else if (context.has(effect.value.identifier.id) &&
                                         !isRefOrRefLikeMutableType(effect.value.identifier.type)) {
-                                        contextMutationEffects.set(lvalue.identifier.id, {
-                                            kind: 'ContextMutation',
-                                            effect: Effect.Mutate,
-                                            loc: effect.value.loc,
-                                            places: new Set([effect.value]),
-                                        });
+                                        contextMutationEffects.set(lvalue.identifier.id, effect);
                                         break effects;
                                     }
                                     break;
