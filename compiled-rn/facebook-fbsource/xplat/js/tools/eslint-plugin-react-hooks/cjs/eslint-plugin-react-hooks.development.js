@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<1a300f09668356506d665a91d9e3f732>>
+ * @generated SignedSource<<022b992a8d8a4233d4f4df69626d4322>>
  */
 
 'use strict';
@@ -42120,7 +42120,7 @@ function inferBlock(context, state, block) {
     }
 }
 function applySignature(context, state, signature, instruction) {
-    var _a;
+    var _a, _b;
     const effects = [];
     if (instruction.value.kind === 'FunctionExpression' ||
         instruction.value.kind === 'ObjectMethod') {
@@ -42143,18 +42143,27 @@ function applySignature(context, state, signature, instruction) {
                             effect.value.identifier.name.kind === 'named'
                             ? `\`${effect.value.identifier.name.value}\``
                             : 'value';
+                        const diagnostic = CompilerDiagnostic.create({
+                            severity: ErrorSeverity.InvalidReact,
+                            category: 'This value cannot be modified',
+                            description: `${reason}.`,
+                        }).withDetail({
+                            kind: 'error',
+                            loc: effect.value.loc,
+                            message: `${variable} cannot be modified`,
+                        });
+                        if (effect.kind === 'Mutate' &&
+                            ((_b = effect.reason) === null || _b === void 0 ? void 0 : _b.kind) === 'AssignCurrentProperty') {
+                            diagnostic.withDetail({
+                                kind: 'error',
+                                loc: effect.value.loc,
+                                message: `Hint: If this value is a Ref (value returned by \`useRef()\`), rename the variable to end in "Ref".`,
+                            });
+                        }
                         effects.push({
                             kind: 'MutateFrozen',
                             place: effect.value,
-                            error: CompilerDiagnostic.create({
-                                severity: ErrorSeverity.InvalidReact,
-                                category: 'This value cannot be modified',
-                                description: `${reason}.`,
-                            }).withDetail({
-                                kind: 'error',
-                                loc: effect.value.loc,
-                                message: `${variable} cannot be modified`,
-                            }),
+                            error: diagnostic,
                         });
                     }
                 }
@@ -42174,7 +42183,7 @@ function applySignature(context, state, signature, instruction) {
     return effects.length !== 0 ? effects : null;
 }
 function applyEffect(context, state, _effect, initialized, effects) {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e;
     const effect = context.internEffect(_effect);
     switch (effect.kind) {
         case 'Freeze': {
@@ -42563,20 +42572,29 @@ function applyEffect(context, state, _effect, initialized, effects) {
                         effect.value.identifier.name.kind === 'named'
                         ? `\`${effect.value.identifier.name.value}\``
                         : 'value';
+                    const diagnostic = CompilerDiagnostic.create({
+                        severity: ErrorSeverity.InvalidReact,
+                        category: 'This value cannot be modified',
+                        description: `${reason}.`,
+                    }).withDetail({
+                        kind: 'error',
+                        loc: effect.value.loc,
+                        message: `${variable} cannot be modified`,
+                    });
+                    if (effect.kind === 'Mutate' &&
+                        ((_e = effect.reason) === null || _e === void 0 ? void 0 : _e.kind) === 'AssignCurrentProperty') {
+                        diagnostic.withDetail({
+                            kind: 'error',
+                            loc: effect.value.loc,
+                            message: `Hint: If this value is a Ref (value returned by \`useRef()\`), rename the variable to end in "Ref".`,
+                        });
+                    }
                     applyEffect(context, state, {
                         kind: value.kind === ValueKind.Frozen
                             ? 'MutateFrozen'
                             : 'MutateGlobal',
                         place: effect.value,
-                        error: CompilerDiagnostic.create({
-                            severity: ErrorSeverity.InvalidReact,
-                            category: 'This value cannot be modified',
-                            description: `${reason}.`,
-                        }).withDetail({
-                            kind: 'error',
-                            loc: effect.value.loc,
-                            message: `${variable} cannot be modified`,
-                        }),
+                        error: diagnostic,
                     }, initialized, effects);
                 }
             }
@@ -43033,7 +43051,14 @@ function computeSignatureForInstruction(context, env, instr) {
         }
         case 'PropertyStore':
         case 'ComputedStore': {
-            effects.push({ kind: 'Mutate', value: value.object });
+            const mutationReason = value.kind === 'PropertyStore' && value.property === 'current'
+                ? { kind: 'AssignCurrentProperty' }
+                : null;
+            effects.push({
+                kind: 'Mutate',
+                value: value.object,
+                reason: mutationReason,
+            });
             effects.push({
                 kind: 'Capture',
                 from: value.value,
