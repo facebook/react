@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<a1612b3c621bb25681f51231f5e34ee1>>
+ * @generated SignedSource<<0b913bdfe75ddc4b4511b0be83778a00>>
  */
 
 'use strict';
@@ -17636,8 +17636,10 @@ class CompilerDiagnostic {
         return this;
     }
     primaryLocation() {
-        var _a, _b;
-        return (_b = (_a = this.options.details.filter(d => d.kind === 'error')[0]) === null || _a === void 0 ? void 0 : _a.loc) !== null && _b !== void 0 ? _b : null;
+        const firstErrorDetail = this.options.details.filter(d => d.kind === 'error')[0];
+        return firstErrorDetail != null && firstErrorDetail.kind === 'error'
+            ? firstErrorDetail.loc
+            : null;
     }
     printErrorMessage(source, options) {
         const buffer = [
@@ -17670,8 +17672,13 @@ class CompilerDiagnostic {
                     buffer.push(codeFrame);
                     break;
                 }
+                case 'hint': {
+                    buffer.push('\n\n');
+                    buffer.push(detail.message);
+                    break;
+                }
                 default: {
-                    assertExhaustive$1(detail.kind, `Unexpected detail kind ${detail.kind}`);
+                    assertExhaustive$1(detail, `Unexpected detail kind ${detail.kind}`);
                 }
             }
         }
@@ -41934,8 +41941,7 @@ function applySignature(context, state, signature, instruction) {
                         if (effect.kind === 'Mutate' &&
                             ((_b = effect.reason) === null || _b === void 0 ? void 0 : _b.kind) === 'AssignCurrentProperty') {
                             diagnostic.withDetail({
-                                kind: 'error',
-                                loc: effect.value.loc,
+                                kind: 'hint',
                                 message: `Hint: If this value is a Ref (value returned by \`useRef()\`), rename the variable to end in "Ref".`,
                             });
                         }
@@ -42363,8 +42369,7 @@ function applyEffect(context, state, _effect, initialized, effects) {
                     if (effect.kind === 'Mutate' &&
                         ((_e = effect.reason) === null || _e === void 0 ? void 0 : _e.kind) === 'AssignCurrentProperty') {
                         diagnostic.withDetail({
-                            kind: 'error',
-                            loc: effect.value.loc,
+                            kind: 'hint',
                             message: `Hint: If this value is a Ref (value returned by \`useRef()\`), rename the variable to end in "Ref".`,
                         });
                     }

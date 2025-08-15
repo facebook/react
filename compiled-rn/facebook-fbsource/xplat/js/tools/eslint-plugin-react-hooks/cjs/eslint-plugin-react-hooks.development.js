@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<022b992a8d8a4233d4f4df69626d4322>>
+ * @generated SignedSource<<01c6e0f9e38b534264f8b75c421a7c4e>>
  */
 
 'use strict';
@@ -17651,8 +17651,10 @@ class CompilerDiagnostic {
         return this;
     }
     primaryLocation() {
-        var _a, _b;
-        return (_b = (_a = this.options.details.filter(d => d.kind === 'error')[0]) === null || _a === void 0 ? void 0 : _a.loc) !== null && _b !== void 0 ? _b : null;
+        const firstErrorDetail = this.options.details.filter(d => d.kind === 'error')[0];
+        return firstErrorDetail != null && firstErrorDetail.kind === 'error'
+            ? firstErrorDetail.loc
+            : null;
     }
     printErrorMessage(source, options) {
         const buffer = [
@@ -17685,8 +17687,13 @@ class CompilerDiagnostic {
                     buffer.push(codeFrame);
                     break;
                 }
+                case 'hint': {
+                    buffer.push('\n\n');
+                    buffer.push(detail.message);
+                    break;
+                }
                 default: {
-                    assertExhaustive$1(detail.kind, `Unexpected detail kind ${detail.kind}`);
+                    assertExhaustive$1(detail, `Unexpected detail kind ${detail.kind}`);
                 }
             }
         }
@@ -42155,8 +42162,7 @@ function applySignature(context, state, signature, instruction) {
                         if (effect.kind === 'Mutate' &&
                             ((_b = effect.reason) === null || _b === void 0 ? void 0 : _b.kind) === 'AssignCurrentProperty') {
                             diagnostic.withDetail({
-                                kind: 'error',
-                                loc: effect.value.loc,
+                                kind: 'hint',
                                 message: `Hint: If this value is a Ref (value returned by \`useRef()\`), rename the variable to end in "Ref".`,
                             });
                         }
@@ -42584,8 +42590,7 @@ function applyEffect(context, state, _effect, initialized, effects) {
                     if (effect.kind === 'Mutate' &&
                         ((_e = effect.reason) === null || _e === void 0 ? void 0 : _e.kind) === 'AssignCurrentProperty') {
                         diagnostic.withDetail({
-                            kind: 'error',
-                            loc: effect.value.loc,
+                            kind: 'hint',
                             message: `Hint: If this value is a Ref (value returned by \`useRef()\`), rename the variable to end in "Ref".`,
                         });
                     }
