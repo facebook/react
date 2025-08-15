@@ -42,6 +42,7 @@ import {
   mapInstructionValueOperands,
   mapTerminalOperands,
 } from '../HIR/visitors';
+import {ErrorCategory} from '../CompilerError';
 
 type InlinedJsxDeclarationMap = Map<
   DeclarationId,
@@ -83,6 +84,7 @@ export function inlineJsxTransform(
           kind: 'CompileDiagnostic',
           fnLoc: null,
           detail: {
+            category: ErrorCategory.Todo,
             reason: 'JSX Inlining is not supported on value blocks',
             loc: instr.loc,
           },
