@@ -251,11 +251,6 @@ export const EnvironmentConfigSchema = z.object({
   flowTypeProvider: z.nullable(z.function().args(z.string())).default(null),
 
   /**
-   * Enable a new model for mutability and aliasing inference
-   */
-  enableNewMutationAliasingModel: z.boolean().default(true),
-
-  /**
    * Enables inference of optional dependency chains. Without this flag
    * a property chain such as `props?.items?.foo` will infer as a dep on
    * just `props`. With this flag enabled, we'll infer that full path as
