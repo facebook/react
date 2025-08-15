@@ -234,23 +234,6 @@ function findNextSibling(child) {
   searchTarget = child;
   return !0;
 }
-function isFiberContainedBy(maybeChild, maybeParent) {
-  maybeParent = maybeParent.return;
-  if (maybeParent === maybeChild || maybeParent === maybeChild.alternate)
-    return !0;
-  for (; null !== maybeParent && maybeParent !== maybeChild; ) {
-    if (
-      !(
-        (5 !== maybeParent.tag && 3 !== maybeParent.tag) ||
-        (maybeParent.return !== maybeChild &&
-          maybeParent.return !== maybeChild.alternate)
-      )
-    )
-      return !0;
-    maybeParent = maybeParent.return;
-  }
-  return !1;
-}
 function isFiberPrecedingCheck(child, target, boundary) {
   return child === boundary
     ? !0
@@ -15034,20 +15017,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1814 = 0;
-  i$jscomp$inline_1814 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1814++
+  var i$jscomp$inline_1817 = 0;
+  i$jscomp$inline_1817 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1817++
 ) {
-  var eventName$jscomp$inline_1815 =
-      simpleEventPluginEvents[i$jscomp$inline_1814],
-    domEventName$jscomp$inline_1816 =
-      eventName$jscomp$inline_1815.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1817 =
-      eventName$jscomp$inline_1815[0].toUpperCase() +
-      eventName$jscomp$inline_1815.slice(1);
+  var eventName$jscomp$inline_1818 =
+      simpleEventPluginEvents[i$jscomp$inline_1817],
+    domEventName$jscomp$inline_1819 =
+      eventName$jscomp$inline_1818.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1820 =
+      eventName$jscomp$inline_1818[0].toUpperCase() +
+      eventName$jscomp$inline_1818.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1816,
-    "on" + capitalizedEvent$jscomp$inline_1817
+    domEventName$jscomp$inline_1819,
+    "on" + capitalizedEvent$jscomp$inline_1820
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17633,43 +17616,75 @@ FragmentInstance.prototype.compareDocumentPosition = function (otherNode) {
     void 0,
     void 0
   );
-  if (0 === children.length) {
-    children = getInstanceFromHostFiber(parentHostFiber);
-    var parentResult = children.compareDocumentPosition(otherNode);
-    parentHostFiber = parentResult;
-    children === otherNode
-      ? (parentHostFiber = Node.DOCUMENT_POSITION_CONTAINS)
-      : parentResult & Node.DOCUMENT_POSITION_CONTAINED_BY &&
-        (traverseVisibleHostChildren(
-          this._fragmentFiber.sibling,
-          !1,
-          findNextSibling
-        ),
-        (children = searchTarget),
-        (searchTarget = null),
-        null === children
-          ? (parentHostFiber = Node.DOCUMENT_POSITION_PRECEDING)
-          : ((otherNode =
-              getInstanceFromHostFiber(children).compareDocumentPosition(
-                otherNode
-              )),
-            (parentHostFiber =
-              0 === otherNode || otherNode & Node.DOCUMENT_POSITION_FOLLOWING
-                ? Node.DOCUMENT_POSITION_FOLLOWING
-                : Node.DOCUMENT_POSITION_PRECEDING)));
-    return (parentHostFiber |= Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
-  }
+  var parentHostInstance = getInstanceFromHostFiber(parentHostFiber);
+  if (0 === children.length)
+    return (
+      (parentHostFiber = children =
+        parentHostInstance.compareDocumentPosition(otherNode)),
+      parentHostInstance === otherNode
+        ? (parentHostFiber = Node.DOCUMENT_POSITION_CONTAINS)
+        : children & Node.DOCUMENT_POSITION_CONTAINED_BY &&
+          (traverseVisibleHostChildren(
+            this._fragmentFiber.sibling,
+            !1,
+            findNextSibling
+          ),
+          (children = searchTarget),
+          (searchTarget = null),
+          null === children
+            ? (parentHostFiber = Node.DOCUMENT_POSITION_PRECEDING)
+            : ((otherNode =
+                getInstanceFromHostFiber(children).compareDocumentPosition(
+                  otherNode
+                )),
+              (parentHostFiber =
+                0 === otherNode || otherNode & Node.DOCUMENT_POSITION_FOLLOWING
+                  ? Node.DOCUMENT_POSITION_FOLLOWING
+                  : Node.DOCUMENT_POSITION_PRECEDING))),
+      (parentHostFiber |= Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC)
+    );
   parentHostFiber = getInstanceFromHostFiber(children[0]);
-  parentResult = getInstanceFromHostFiber(children[children.length - 1]);
-  var firstResult = parentHostFiber.compareDocumentPosition(otherNode),
-    lastResult = parentResult.compareDocumentPosition(otherNode);
+  for (
+    var lastElement = getInstanceFromHostFiber(children[children.length - 1]),
+      foundPortalParent = !1,
+      parent = this._fragmentFiber.return;
+    null !== parent;
+
+  ) {
+    4 === parent.tag && (foundPortalParent = !0);
+    if (3 === parent.tag || 5 === parent.tag) break;
+    parent = parent.return;
+  }
+  foundPortalParent = foundPortalParent
+    ? getInstanceFromHostFiber(children[0]).parentElement
+    : parentHostInstance;
+  if (null == foundPortalParent) return Node.DOCUMENT_POSITION_DISCONNECTED;
+  parentHostInstance =
+    foundPortalParent.compareDocumentPosition(parentHostFiber) &
+    Node.DOCUMENT_POSITION_CONTAINED_BY;
+  foundPortalParent =
+    foundPortalParent.compareDocumentPosition(lastElement) &
+    Node.DOCUMENT_POSITION_CONTAINED_BY;
+  parent = parentHostFiber.compareDocumentPosition(otherNode);
+  var lastResult = lastElement.compareDocumentPosition(otherNode),
+    otherNodeIsWithinFirstOrLastChild =
+      parent & Node.DOCUMENT_POSITION_CONTAINED_BY ||
+      lastResult & Node.DOCUMENT_POSITION_CONTAINED_BY;
+  lastResult =
+    parentHostInstance &&
+    foundPortalParent &&
+    parent & Node.DOCUMENT_POSITION_FOLLOWING &&
+    lastResult & Node.DOCUMENT_POSITION_PRECEDING;
   parentHostFiber =
-    (firstResult & Node.DOCUMENT_POSITION_FOLLOWING &&
-      lastResult & Node.DOCUMENT_POSITION_PRECEDING) ||
-    otherNode === parentHostFiber ||
-    otherNode === parentResult
+    (parentHostInstance && parentHostFiber === otherNode) ||
+    (foundPortalParent && lastElement === otherNode) ||
+    otherNodeIsWithinFirstOrLastChild ||
+    lastResult
       ? Node.DOCUMENT_POSITION_CONTAINED_BY
-      : firstResult;
+      : (!parentHostInstance && parentHostFiber === otherNode) ||
+          (!foundPortalParent && lastElement === otherNode)
+        ? Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC
+        : parent;
   return parentHostFiber & Node.DOCUMENT_POSITION_DISCONNECTED ||
     parentHostFiber & Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC ||
     validateDocumentPositionWithFiberTree(
@@ -17690,57 +17705,96 @@ function validateDocumentPositionWithFiberTree(
   otherNode
 ) {
   var otherFiber = getClosestInstanceFromNode(otherNode);
-  return documentPosition & Node.DOCUMENT_POSITION_CONTAINED_BY
-    ? !!otherFiber && isFiberContainedBy(fragmentFiber, otherFiber)
-    : documentPosition & Node.DOCUMENT_POSITION_CONTAINS
-      ? null === otherFiber
-        ? ((otherFiber = otherNode.ownerDocument),
-          otherNode === otherFiber || otherNode === otherFiber.body)
-        : isFiberContainedBy(otherFiber, fragmentFiber)
-      : documentPosition & Node.DOCUMENT_POSITION_PRECEDING
-        ? ((followingBoundaryFiber = !!otherFiber) &&
-            !(followingBoundaryFiber = otherFiber === precedingBoundaryFiber) &&
-            ((followingBoundaryFiber = getLowestCommonAncestor(
-              precedingBoundaryFiber,
+  if (documentPosition & Node.DOCUMENT_POSITION_CONTAINED_BY) {
+    if ((precedingBoundaryFiber = !!otherFiber))
+      a: {
+        for (; null !== otherFiber; ) {
+          if (
+            7 === otherFiber.tag &&
+            (otherFiber === fragmentFiber ||
+              otherFiber.alternate === fragmentFiber)
+          ) {
+            precedingBoundaryFiber = !0;
+            break a;
+          }
+          otherFiber = otherFiber.return;
+        }
+        precedingBoundaryFiber = !1;
+      }
+    return precedingBoundaryFiber;
+  }
+  if (documentPosition & Node.DOCUMENT_POSITION_CONTAINS) {
+    if (null === otherFiber)
+      return (
+        (otherFiber = otherNode.ownerDocument),
+        otherNode === otherFiber || otherNode === otherFiber.body
+      );
+    a: {
+      otherFiber = fragmentFiber;
+      for (
+        fragmentFiber = getFragmentParentHostFiber(fragmentFiber);
+        null !== otherFiber;
+
+      ) {
+        if (
+          !(
+            (5 !== otherFiber.tag && 3 !== otherFiber.tag) ||
+            (otherFiber !== fragmentFiber &&
+              otherFiber.alternate !== fragmentFiber)
+          )
+        ) {
+          otherFiber = !0;
+          break a;
+        }
+        otherFiber = otherFiber.return;
+      }
+      otherFiber = !1;
+    }
+    return otherFiber;
+  }
+  return documentPosition & Node.DOCUMENT_POSITION_PRECEDING
+    ? ((fragmentFiber = !!otherFiber) &&
+        !(fragmentFiber = otherFiber === precedingBoundaryFiber) &&
+        ((fragmentFiber = getLowestCommonAncestor(
+          precedingBoundaryFiber,
+          otherFiber,
+          getParentForFragmentAncestors
+        )),
+        null === fragmentFiber
+          ? (fragmentFiber = !1)
+          : (traverseVisibleHostChildren(
+              fragmentFiber,
+              !0,
+              isFiberPrecedingCheck,
               otherFiber,
-              getParentForFragmentAncestors
-            )),
-            null === followingBoundaryFiber
-              ? (followingBoundaryFiber = !1)
-              : (traverseVisibleHostChildren(
-                  followingBoundaryFiber,
-                  !0,
-                  isFiberPrecedingCheck,
-                  otherFiber,
-                  precedingBoundaryFiber
-                ),
-                (otherFiber = searchTarget),
-                (searchTarget = null),
-                (followingBoundaryFiber = null !== otherFiber))),
-          followingBoundaryFiber)
-        : documentPosition & Node.DOCUMENT_POSITION_FOLLOWING
-          ? ((precedingBoundaryFiber = !!otherFiber) &&
-              !(precedingBoundaryFiber =
-                otherFiber === followingBoundaryFiber) &&
-              ((precedingBoundaryFiber = getLowestCommonAncestor(
-                followingBoundaryFiber,
+              precedingBoundaryFiber
+            ),
+            (otherFiber = searchTarget),
+            (searchTarget = null),
+            (fragmentFiber = null !== otherFiber))),
+      fragmentFiber)
+    : documentPosition & Node.DOCUMENT_POSITION_FOLLOWING
+      ? ((fragmentFiber = !!otherFiber) &&
+          !(fragmentFiber = otherFiber === followingBoundaryFiber) &&
+          ((fragmentFiber = getLowestCommonAncestor(
+            followingBoundaryFiber,
+            otherFiber,
+            getParentForFragmentAncestors
+          )),
+          null === fragmentFiber
+            ? (fragmentFiber = !1)
+            : (traverseVisibleHostChildren(
+                fragmentFiber,
+                !0,
+                isFiberFollowingCheck,
                 otherFiber,
-                getParentForFragmentAncestors
-              )),
-              null === precedingBoundaryFiber
-                ? (precedingBoundaryFiber = !1)
-                : (traverseVisibleHostChildren(
-                    precedingBoundaryFiber,
-                    !0,
-                    isFiberFollowingCheck,
-                    otherFiber,
-                    followingBoundaryFiber
-                  ),
-                  (otherFiber = searchTarget),
-                  (searchBoundary = searchTarget = null),
-                  (precedingBoundaryFiber = null !== otherFiber))),
-            precedingBoundaryFiber)
-          : !1;
+                followingBoundaryFiber
+              ),
+              (otherFiber = searchTarget),
+              (searchBoundary = searchTarget = null),
+              (fragmentFiber = null !== otherFiber))),
+        fragmentFiber)
+      : !1;
 }
 function normalizeListenerOptions(opts) {
   return null == opts
@@ -19545,16 +19599,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_2064 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2080 = React.version;
 if (
-  "19.2.0-www-classic-379a083b-20250813" !==
-  isomorphicReactPackageVersion$jscomp$inline_2064
+  "19.2.0-www-classic-a96a0f39-20250815" !==
+  isomorphicReactPackageVersion$jscomp$inline_2080
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2064,
-      "19.2.0-www-classic-379a083b-20250813"
+      isomorphicReactPackageVersion$jscomp$inline_2080,
+      "19.2.0-www-classic-a96a0f39-20250815"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -19570,24 +19624,24 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2687 = {
+var internals$jscomp$inline_2703 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-379a083b-20250813",
+  version: "19.2.0-www-classic-a96a0f39-20250815",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-379a083b-20250813"
+  reconcilerVersion: "19.2.0-www-classic-a96a0f39-20250815"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2688 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2704 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2688.isDisabled &&
-    hook$jscomp$inline_2688.supportsFiber
+    !hook$jscomp$inline_2704.isDisabled &&
+    hook$jscomp$inline_2704.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2688.inject(
-        internals$jscomp$inline_2687
+      (rendererID = hook$jscomp$inline_2704.inject(
+        internals$jscomp$inline_2703
       )),
-        (injectedHook = hook$jscomp$inline_2688);
+        (injectedHook = hook$jscomp$inline_2704);
     } catch (err) {}
 }
 function defaultOnDefaultTransitionIndicator() {
@@ -19987,4 +20041,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-classic-379a083b-20250813";
+exports.version = "19.2.0-www-classic-a96a0f39-20250815";
