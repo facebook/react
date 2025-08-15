@@ -44,7 +44,6 @@ import {
   isFragmentContainedByFiber,
   traverseFragmentInstance,
   getFragmentParentHostFiber,
-  getNextSiblingHostFiber,
   getInstanceFromHostFiber,
   traverseFragmentInstanceDeeply,
   fiberIsPortaledIntoHost,
@@ -70,6 +69,7 @@ import {
   markNodeAsHoistable,
   isOwnedInstance,
 } from './ReactDOMComponentTree';
+import {compareDocumentPositionForEmptyFragment} from 'shared/ReactDOMFragmentRefShared';
 
 export {detachDeletedInstance};
 import {hasRole} from './DOMAccessibilityRoles';
@@ -3055,40 +3055,13 @@ FragmentInstance.prototype.compareDocumentPosition = function (
   const parentHostInstance =
     getInstanceFromHostFiber<Instance>(parentHostFiber);
 
-  let result = Node.DOCUMENT_POSITION_DISCONNECTED;
   if (children.length === 0) {
-    // If the fragment has no children, we can use the parent and
-    // siblings to determine a position.
-    const parentResult = parentHostInstance.compareDocumentPosition(otherNode);
-    result = parentResult;
-    if (parentHostInstance === otherNode) {
-      result = Node.DOCUMENT_POSITION_CONTAINS;
-    } else {
-      if (parentResult & Node.DOCUMENT_POSITION_CONTAINED_BY) {
-        // otherNode is one of the fragment's siblings. Use the next
-        // sibling to determine if its preceding or following.
-        const nextSiblingFiber = getNextSiblingHostFiber(this._fragmentFiber);
-        if (nextSiblingFiber === null) {
-          result = Node.DOCUMENT_POSITION_PRECEDING;
-        } else {
-          const nextSiblingInstance =
-            getInstanceFromHostFiber<Instance>(nextSiblingFiber);
-          const nextSiblingResult =
-            nextSiblingInstance.compareDocumentPosition(otherNode);
-          if (
-            nextSiblingResult === 0 ||
-            nextSiblingResult & Node.DOCUMENT_POSITION_FOLLOWING
-          ) {
-            result = Node.DOCUMENT_POSITION_FOLLOWING;
-          } else {
-            result = Node.DOCUMENT_POSITION_PRECEDING;
-          }
-        }
-      }
-    }
-
-    result |= Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC;
-    return result;
+    return compareDocumentPositionForEmptyFragment(
+      this._fragmentFiber,
+      parentHostInstance,
+      otherNode,
+      getInstanceFromHostFiber,
+    );
   }
 
   const firstElement = getInstanceFromHostFiber<Instance>(children[0]);
@@ -3099,8 +3072,9 @@ FragmentInstance.prototype.compareDocumentPosition = function (
   // If the fragment has been portaled into another host instance, we need to
   // our best guess is to use the parent of the child instance, rather than
   // the fiber tree host parent.
+  const firstInstance = getInstanceFromHostFiber<Instance>(children[0]);
   const parentHostInstanceFromDOM = fiberIsPortaledIntoHost(this._fragmentFiber)
-    ? (getInstanceFromHostFiber<Instance>(children[0]).parentElement: ?Instance)
+    ? (firstInstance.parentElement: ?Instance)
     : parentHostInstance;
 
   if (parentHostInstanceFromDOM == null) {
@@ -3133,6 +3107,7 @@ FragmentInstance.prototype.compareDocumentPosition = function (
     firstResult & Node.DOCUMENT_POSITION_FOLLOWING &&
     lastResult & Node.DOCUMENT_POSITION_PRECEDING;
 
+  let result = Node.DOCUMENT_POSITION_DISCONNECTED;
   if (
     otherNodeIsFirstOrLastChild ||
     otherNodeIsWithinFirstOrLastChild ||
