@@ -69,6 +69,32 @@ function createFormDataWithSubmitter(
   return formData;
 }
 
+function createPendingFormStatus(
+  form: HTMLFormElement,
+  formData: FormData,
+  action: FormStatus['action'],
+  submitter: HTMLInputElement | HTMLButtonElement | null | void,
+): FormStatus {
+  const method =
+    submitter && submitter.hasAttribute('formmethod')
+      ? (submitter.getAttribute('formmethod') || '').toLowerCase() ||
+        form.method
+      : form.method;
+
+  const pendingState: FormStatus = {
+    pending: true,
+    data: formData,
+    method,
+    action,
+  };
+
+  if (__DEV__) {
+    Object.freeze(pendingState);
+  }
+
+  return pendingState;
+}
+
 /**
  * This plugin invokes action functions on forms, inputs and buttons if
  * the form doesn't prevent default.
@@ -132,15 +158,12 @@ function extractEvents(
         const formData = submitter
           ? createFormDataWithSubmitter(form, submitter)
           : new FormData(form);
-        const pendingState: FormStatus = {
-          pending: true,
-          data: formData,
-          method: form.method,
-          action: action,
-        };
-        if (__DEV__) {
-          Object.freeze(pendingState);
-        }
+        const pendingState = createPendingFormStatus(
+          form,
+          formData,
+          action,
+          submitter,
+        );
         startHostTransition(
           formInst,
           pendingState,
@@ -163,15 +186,12 @@ function extractEvents(
       const formData = submitter
         ? createFormDataWithSubmitter(form, submitter)
         : new FormData(form);
-      const pendingState: FormStatus = {
-        pending: true,
-        data: formData,
-        method: form.method,
-        action: action,
-      };
-      if (__DEV__) {
-        Object.freeze(pendingState);
-      }
+      const pendingState = createPendingFormStatus(
+        form,
+        formData,
+        action,
+        submitter,
+      );
       startHostTransition(formInst, pendingState, action, formData);
     } else {
       // No earlier event prevented the default submission, and no action was
@@ -196,17 +216,24 @@ export {extractEvents};
 export function dispatchReplayedFormAction(
   formInst: Fiber,
   form: HTMLFormElement,
-  action: FormData => void | Promise<void>,
+  submitterOrAction:
+    | HTMLInputElement
+    | HTMLButtonElement
+    | (FormData => void | Promise<void>)
+    | null,
   formData: FormData,
 ): void {
-  const pendingState: FormStatus = {
-    pending: true,
-    data: formData,
-    method: form.method,
-    action: action,
-  };
-  if (__DEV__) {
-    Object.freeze(pendingState);
-  }
-  startHostTransition(formInst, pendingState, action, formData);
+  const action = submitterOrAction;
+  const pendingState = createPendingFormStatus(
+    form,
+    formData,
+    typeof action === 'function' ? action : null,
+    typeof action === 'function' ? null : action,
+  );
+  startHostTransition(
+    formInst,
+    pendingState,
+    typeof action === 'function' ? ((action: any): any) : null,
+    formData,
+  );
 }
