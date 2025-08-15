@@ -6071,6 +6071,11 @@ export function attach(
       nativeTag = getNativeTag(fiber.stateNode);
     }
 
+    let isSuspended: boolean | null = null;
+    if (tag === SuspenseComponent) {
+      isSuspended = memoizedState !== null;
+    }
+
     const suspendedBy =
       fiberInstance.suspenseNode !== null
         ? // If this is a Suspense boundary, then we include everything in the subtree that might suspend
@@ -6121,6 +6126,7 @@ export function attach(
           forceFallbackForFibers.has(fiber) ||
           (fiber.alternate !== null &&
             forceFallbackForFibers.has(fiber.alternate))),
+      isSuspended: isSuspended,
 
       source,
 
@@ -6209,6 +6215,7 @@ export function attach(
     const componentLogsEntry =
       componentInfoToComponentLogsMap.get(componentInfo);
 
+    const isSuspended = null;
     // Things that Suspended this Server Component (use(), awaits and direct child promises)
     const suspendedBy = virtualInstance.suspendedBy;
     const suspendedByRange = getSuspendedByRange(
@@ -6230,6 +6237,7 @@ export function attach(
       isErrored: false,
 
       canToggleSuspense: supportsTogglingSuspense && hasSuspenseBoundary,
+      isSuspended: isSuspended,
 
       source,
 

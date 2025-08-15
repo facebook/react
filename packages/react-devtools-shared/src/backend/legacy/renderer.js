@@ -836,6 +836,7 @@ export function attach(
 
       // Suspense did not exist in legacy versions
       canToggleSuspense: false,
+      isSuspended: null,
 
       source: null,
 

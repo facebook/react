@@ -30,14 +30,12 @@ export default function InspectedElementSuspenseToggle({
 }: Props): React.Node {
   const {readOnly} = React.useContext(OptionsContext);
 
-  const {id, state, type} = inspectedElement;
+  const {id, isSuspended, type} = inspectedElement;
   const canToggleSuspense = !readOnly && inspectedElement.canToggleSuspense;
 
   if (type !== ElementTypeSuspense) {
     return null;
   }
-
-  const isSuspended = state !== null;
 
   const toggleSuspense = (path: any, value: boolean) => {
     const rendererID = store.getRendererIDForElement(id);
