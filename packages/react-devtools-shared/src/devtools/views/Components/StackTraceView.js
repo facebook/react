@@ -60,6 +60,12 @@ export function CallSiteView({
     symbolicatedCallSite !== null ? symbolicatedCallSite.location : callSite;
   const ignored =
     symbolicatedCallSite !== null ? symbolicatedCallSite.ignored : false;
+  if (ignored) {
+    // TODO: Make an option to be able to toggle the display of ignore listed rows.
+    // Ideally this UI should be higher than a single Stack Trace so that there's not
+    // multiple buttons in a single inspection taking up space.
+    return null;
+  }
   return (
     <div className={ignored ? styles.IgnoredCallSite : styles.CallSite}>
       {functionName || virtualFunctionName}
