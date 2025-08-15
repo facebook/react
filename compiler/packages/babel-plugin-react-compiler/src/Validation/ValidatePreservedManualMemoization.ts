@@ -590,12 +590,15 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
             /**
              * Allow self-references in useCallback with empty deps (e.g. recursive animations)
              */
-            const isSelfReferenceInUseCallback = 
+            const isSelfReferenceInUseCallback =
               wasUseCallback &&
-              hadEmptyDeps && 
+              hadEmptyDeps &&
               value.decl.identifier.declarationId === identifier.declarationId;
-            
-            if (!isSelfReferenceInUseCallback && isUnmemoized(identifier, this.scopes)) {
+
+            if (
+              !isSelfReferenceInUseCallback &&
+              isUnmemoized(identifier, this.scopes)
+            ) {
               state.errors.pushDiagnostic(
                 CompilerDiagnostic.create({
                   severity: ErrorSeverity.CannotPreserveMemoization,
