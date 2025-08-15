@@ -1543,6 +1543,22 @@ export function attach(
     return Array.from(knownEnvironmentNames);
   }
 
+  function isFiberHydrated(fiber: Fiber): boolean {
+    if (OffscreenComponent === -1) {
+      throw new Error('not implemented for legacy suspense');
+    }
+    switch (fiber.tag) {
+      case HostRoot:
+        const rootState = fiber.memoizedState;
+        return !rootState.isDehydrated;
+      case SuspenseComponent:
+        const suspenseState = fiber.memoizedState;
+        return suspenseState === null || suspenseState.dehydrated === null;
+      default:
+        throw new Error('not implemented for work tag ' + fiber.tag);
+    }
+  }
+
   function shouldFilterVirtual(
     data: ReactComponentInfo,
     secondaryEnv: null | string,
@@ -3610,6 +3626,50 @@ export function attach(
     );
   }
 
+  function mountSuspenseChildrenRecursively(
+    contentFiber: Fiber,
+    traceNearestHostComponentUpdate: boolean,
+    stashedSuspenseParent: SuspenseNode | null,
+    stashedSuspensePrevious: SuspenseNode | null,
+    stashedSuspenseRemaining: SuspenseNode | null,
+  ) {
+    const fallbackFiber = contentFiber.sibling;
+
+    // First update only the Offscreen boundary. I.e. the main content.
+    mountVirtualChildrenRecursively(
+      contentFiber,
+      fallbackFiber,
+      traceNearestHostComponentUpdate,
+      0, // first level
+    );
+
+    if (fallbackFiber !== null) {
+      const fallbackStashedSuspenseParent = stashedSuspenseParent;
+      const fallbackStashedSuspensePrevious = stashedSuspensePrevious;
+      const fallbackStashedSuspenseRemaining = stashedSuspenseRemaining;
+      // Next, we'll pop back out of the SuspenseNode that we added above and now we'll
+      // reconcile the fallback, reconciling anything by inserting into the parent SuspenseNode.
+      // Since the fallback conceptually blocks the parent.
+      reconcilingParentSuspenseNode = stashedSuspenseParent;
+      previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
+      remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
+      try {
+        mountVirtualChildrenRecursively(
+          fallbackFiber,
+          null,
+          traceNearestHostComponentUpdate,
+          0, // first level
+        );
+      } finally {
+        reconcilingParentSuspenseNode = fallbackStashedSuspenseParent;
+        previouslyReconciledSiblingSuspenseNode =
+          fallbackStashedSuspensePrevious;
+        remainingReconcilingChildrenSuspenseNodes =
+          fallbackStashedSuspenseRemaining;
+      }
+    }
+  }
+
   function mountFiberRecursively(
     fiber: Fiber,
     traceNearestHostComponentUpdate: boolean,
@@ -3632,14 +3692,15 @@ export function attach(
             newSuspenseNode.rects = measureInstance(newInstance);
           }
         } else {
-          const contentFiber = fiber.child;
-          if (contentFiber === null) {
-            const suspenseState = fiber.memoizedState;
-            if (suspenseState === null || suspenseState.dehydrated === null) {
+          const hydrated = isFiberHydrated(fiber);
+          if (hydrated) {
+            const contentFiber = fiber.child;
+            if (contentFiber === null) {
               throw new Error(
                 'There should always be an Offscreen Fiber child in a hydrated Suspense boundary.',
               );
             }
+          } else {
             // This Suspense Fiber is still dehydrated. It won't have any children
             // until hydration.
           }
@@ -3689,17 +3750,19 @@ export function attach(
             newSuspenseNode.rects = measureInstance(newInstance);
           }
         } else {
-          const contentFiber = fiber.child;
-          const suspenseState = fiber.memoizedState;
-          if (contentFiber === null) {
-            if (suspenseState === null || suspenseState.dehydrated === null) {
+          const hydrated = isFiberHydrated(fiber);
+          if (hydrated) {
+            const contentFiber = fiber.child;
+            if (contentFiber === null) {
               throw new Error(
                 'There should always be an Offscreen Fiber child in a hydrated Suspense boundary.',
               );
             }
+          } else {
             // This Suspense Fiber is still dehydrated. It won't have any children
             // until hydration.
           }
+          const suspenseState = fiber.memoizedState;
           const isTimedOut = suspenseState !== null;
           if (!isTimedOut) {
             newSuspenseNode.rects = measureInstance(newInstance);
@@ -3830,43 +3893,26 @@ export function attach(
       ) {
         // Modern Suspense path
         const contentFiber = fiber.child;
-        if (contentFiber === null) {
-          const suspenseState = fiber.memoizedState;
-          if (suspenseState === null || suspenseState.dehydrated === null) {
+        const hydrated = isFiberHydrated(fiber);
+        if (hydrated) {
+          if (contentFiber === null) {
             throw new Error(
               'There should always be an Offscreen Fiber child in a hydrated Suspense boundary.',
             );
           }
-          // This Suspense Fiber is still dehydrated. It won't have any children
-          // until hydration.
-        } else {
+
           trackThrownPromisesFromRetryCache(newSuspenseNode, fiber.stateNode);
 
-          const fallbackFiber = contentFiber.sibling;
-
-          // First update only the Offscreen boundary. I.e. the main content.
-          mountVirtualChildrenRecursively(
+          mountSuspenseChildrenRecursively(
             contentFiber,
-            fallbackFiber,
             traceNearestHostComponentUpdate,
-            0, // first level
+            stashedSuspenseParent,
+            stashedSuspensePrevious,
+            stashedSuspenseRemaining,
           );
-
-          // Next, we'll pop back out of the SuspenseNode that we added above and now we'll
-          // reconcile the fallback, reconciling anything by inserting into the parent SuspenseNode.
-          // Since the fallback conceptually blocks the parent.
-          reconcilingParentSuspenseNode = stashedSuspenseParent;
-          previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
-          remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
-          shouldPopSuspenseNode = false;
-          if (fallbackFiber !== null) {
-            mountVirtualChildrenRecursively(
-              fallbackFiber,
-              null,
-              traceNearestHostComponentUpdate,
-              0, // first level
-            );
-          }
+        } else {
+          // This Suspense Fiber is still dehydrated. It won't have any children
+          // until hydration.
         }
       } else {
         if (fiber.child !== null) {
@@ -4520,6 +4566,63 @@ export function attach(
     );
   }
 
+  function updateSuspenseChildrenRecursively(
+    nextContentFiber: Fiber,
+    prevContentFiber: Fiber,
+    traceNearestHostComponentUpdate: boolean,
+    stashedSuspenseParent: null | SuspenseNode,
+    stashedSuspensePrevious: null | SuspenseNode,
+    stashedSuspenseRemaining: null | SuspenseNode,
+  ): number {
+    let updateFlags = NoUpdate;
+    const prevFallbackFiber = prevContentFiber.sibling;
+    const nextFallbackFiber = nextContentFiber.sibling;
+
+    // First update only the Offscreen boundary. I.e. the main content.
+    updateFlags |= updateVirtualChildrenRecursively(
+      nextContentFiber,
+      nextFallbackFiber,
+      prevContentFiber,
+      traceNearestHostComponentUpdate,
+      0,
+    );
+
+    if (prevFallbackFiber !== null || nextFallbackFiber !== null) {
+      const fallbackStashedSuspenseParent = reconcilingParentSuspenseNode;
+      const fallbackStashedSuspensePrevious =
+        previouslyReconciledSiblingSuspenseNode;
+      const fallbackStashedSuspenseRemaining =
+        remainingReconcilingChildrenSuspenseNodes;
+      // Next, we'll pop back out of the SuspenseNode that we added above and now we'll
+      // reconcile the fallback, reconciling anything in the context of the parent SuspenseNode.
+      // Since the fallback conceptually blocks the parent.
+      reconcilingParentSuspenseNode = stashedSuspenseParent;
+      previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
+      remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
+      try {
+        if (nextFallbackFiber === null) {
+          unmountRemainingChildren();
+        } else {
+          updateFlags |= updateVirtualChildrenRecursively(
+            nextFallbackFiber,
+            null,
+            prevFallbackFiber,
+            traceNearestHostComponentUpdate,
+            0,
+          );
+        }
+      } finally {
+        reconcilingParentSuspenseNode = fallbackStashedSuspenseParent;
+        previouslyReconciledSiblingSuspenseNode =
+          fallbackStashedSuspensePrevious;
+        remainingReconcilingChildrenSuspenseNodes =
+          fallbackStashedSuspenseRemaining;
+      }
+    }
+
+    return updateFlags;
+  }
+
   // Returns whether closest unfiltered fiber parent needs to reset its child list.
   function updateFiberRecursively(
     fiberInstance: null | FiberInstance | FilteredFiberInstance, // null if this should be filtered
@@ -4780,80 +4883,37 @@ export function attach(
         fiberInstance.suspenseNode !== null
       ) {
         // Modern Suspense path
+        const suspenseNode = fiberInstance.suspenseNode;
         const prevContentFiber = prevFiber.child;
         const nextContentFiber = nextFiber.child;
-        if (nextContentFiber === null || prevContentFiber === null) {
-          const previousSuspenseState = prevFiber.memoizedState;
-          const nextSuspenseState = nextFiber.memoizedState;
-          if (
-            previousSuspenseState === null ||
-            previousSuspenseState.dehydrated === null ||
-            nextSuspenseState === null ||
-            nextSuspenseState.dehydrated === null
-          ) {
+        const previousHydrated = isFiberHydrated(prevFiber);
+        const nextHydrated = isFiberHydrated(nextFiber);
+        if (previousHydrated && nextHydrated) {
+          if (nextContentFiber === null || prevContentFiber === null) {
             throw new Error(
               'There should always be an Offscreen Fiber child in a hydrated Suspense boundary.',
             );
           }
-          // This Suspense Fiber is still dehydrated. It won't have any children
-          // until hydration.
-        } else {
-          const prevFallbackFiber = prevContentFiber.sibling;
-          const nextFallbackFiber = nextContentFiber.sibling;
 
           if (
             (prevFiber.stateNode === null) !==
             (nextFiber.stateNode === null)
           ) {
             trackThrownPromisesFromRetryCache(
-              fiberInstance.suspenseNode,
+              suspenseNode,
               nextFiber.stateNode,
             );
           }
 
-          // First update only the Offscreen boundary. I.e. the main content.
-          updateFlags |= updateVirtualChildrenRecursively(
+          shouldMeasureSuspenseNode = false;
+          updateFlags |= updateSuspenseChildrenRecursively(
             nextContentFiber,
-            nextFallbackFiber,
             prevContentFiber,
             traceNearestHostComponentUpdate,
-            0,
+            stashedSuspenseParent,
+            stashedSuspensePrevious,
+            stashedSuspenseRemaining,
           );
-
-          shouldMeasureSuspenseNode = false;
-          if (prevFallbackFiber !== null || nextFallbackFiber !== null) {
-            const fallbackStashedSuspenseParent = reconcilingParentSuspenseNode;
-            const fallbackStashedSuspensePrevious =
-              previouslyReconciledSiblingSuspenseNode;
-            const fallbackStashedSuspenseRemaining =
-              remainingReconcilingChildrenSuspenseNodes;
-            // Next, we'll pop back out of the SuspenseNode that we added above and now we'll
-            // reconcile the fallback, reconciling anything in the context of the parent SuspenseNode.
-            // Since the fallback conceptually blocks the parent.
-            reconcilingParentSuspenseNode = stashedSuspenseParent;
-            previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
-            remainingReconcilingChildrenSuspenseNodes =
-              stashedSuspenseRemaining;
-            try {
-              if (nextFallbackFiber === null) {
-                unmountRemainingChildren();
-              } else {
-                updateFlags |= updateVirtualChildrenRecursively(
-                  nextFallbackFiber,
-                  null,
-                  prevFallbackFiber,
-                  traceNearestHostComponentUpdate,
-                  0,
-                );
-              }
-            } finally {
-              reconcilingParentSuspenseNode = fallbackStashedSuspenseParent;
-              previouslyReconciledSiblingSuspenseNode =
-                fallbackStashedSuspensePrevious;
-              remainingReconcilingChildrenSuspenseNodes =
-                fallbackStashedSuspenseRemaining;
-            }
-          }
           if (nextFiber.memoizedState === null) {
             // Measure this Suspense node in case it changed. We don't update the rect while
             // we're inside a disconnected subtree nor if we are the Suspense boundary that
@@ -4861,6 +4921,29 @@ export function attach(
             // we're suspended to visualize the resulting state.
             shouldMeasureSuspenseNode = !isInDisconnectedSubtree;
           }
+        } else if (!previousHydrated && nextHydrated) {
+          if (nextContentFiber === null) {
+            throw new Error(
+              'There should always be an Offscreen Fiber child in a hydrated Suspense boundary.',
+            );
+          }
+
+          trackThrownPromisesFromRetryCache(suspenseNode, nextFiber.stateNode);
+
+          mountSuspenseChildrenRecursively(
+            nextContentFiber,
+            traceNearestHostComponentUpdate,
+            stashedSuspenseParent,
+            stashedSuspensePrevious,
+            stashedSuspenseRemaining,
+          );
+        } else if (previousHydrated && !nextHydrated) {
+          throw new Error(
+            'Encountered a dehydrated Suspense boundary that was previously hydrated.',
+          );
+        } else {
+          // This Suspense Fiber is still dehydrated. It won't have any children
+          // until hydration.
         }
       } else {
         // Common case: Primary -> Primary.
