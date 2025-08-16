@@ -309,7 +309,8 @@
         for (; contentNode.firstChild; )
           parentInstance.insertBefore(contentNode.firstChild, suspenseIdNode);
         suspenseNode.data = "$";
-        suspenseNode._reactRetry && suspenseNode._reactRetry();
+        suspenseNode._reactRetry &&
+          requestAnimationFrame(suspenseNode._reactRetry);
       }
     }
     batch.length = 0;
