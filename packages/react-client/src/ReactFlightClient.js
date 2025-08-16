@@ -55,6 +55,7 @@ import {
   resolveServerReference,
   preloadModule,
   requireModule,
+  getModuleDebugInfo,
   dispatchHint,
   readPartialStringChunk,
   readFinalStringChunk,
@@ -790,8 +791,14 @@ function resolveModuleChunk<T>(
   resolvedChunk.status = RESOLVED_MODULE;
   resolvedChunk.value = value;
   if (__DEV__) {
-    // We don't expect to have any debug info for this row.
-    resolvedChunk._debugInfo = null;
+    const debugInfo = getModuleDebugInfo(value);
+    if (debugInfo !== null && resolvedChunk._debugInfo != null) {
+      // Add to the live set if it was already initialized.
+      // $FlowFixMe[method-unbinding]
+      resolvedChunk._debugInfo.push.apply(resolvedChunk._debugInfo, debugInfo);
+    } else {
+      resolvedChunk._debugInfo = debugInfo;
+    }
   }
   if (resolveListeners !== null) {
     initializeModuleChunk(resolvedChunk);

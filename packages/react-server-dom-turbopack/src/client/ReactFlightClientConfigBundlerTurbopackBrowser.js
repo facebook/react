@@ -7,6 +7,15 @@
  * @flow
  */
 
+import type {ReactDebugInfo} from 'shared/ReactTypes';
+
 export function loadChunk(filename: string): Promise<mixed> {
   return __turbopack_load_by_url__(filename);
+}
+
+export function addChunkDebugInfo(
+  target: ReactDebugInfo,
+  filename: string,
+): void {
+  // TODO
 }

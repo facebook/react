@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {ReactDebugInfo} from 'shared/ReactTypes';
+
 const chunkMap: Map<string, string> = new Map();
 
 /**
@@ -25,4 +27,12 @@ __webpack_require__.u = function (chunkId: string) {
 export function loadChunk(chunkId: string, filename: string): Promise<mixed> {
   chunkMap.set(chunkId, filename);
   return __webpack_chunk_load__(chunkId);
+}
+
+export function addChunkDebugInfo(
+  target: ReactDebugInfo,
+  chunkId: string,
+  filename: string,
+): void {
+  // TODO
 }

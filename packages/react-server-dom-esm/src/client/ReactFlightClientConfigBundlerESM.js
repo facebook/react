@@ -11,6 +11,7 @@ import type {
   Thenable,
   FulfilledThenable,
   RejectedThenable,
+  ReactDebugInfo,
 } from 'shared/ReactTypes';
 import type {ModuleLoading} from 'react-client/src/ReactFlightClientConfig';
 
@@ -117,4 +118,11 @@ export function requireModule<T>(metadata: ClientReference<T>): T {
     throw promise.reason;
   }
   return moduleExports[metadata.name];
+}
+
+export function getModuleDebugInfo<T>(
+  metadata: ClientReference<T>,
+): null | ReactDebugInfo {
+  // TODO
+  return null;
 }
