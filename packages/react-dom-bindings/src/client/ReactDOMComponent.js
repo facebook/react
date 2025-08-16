@@ -111,6 +111,39 @@ function validatePropertiesInDevelopment(type: string, props: any) {
           'probably not intentional.',
       );
     }
+
+    // Dev-time accessibility hint: certain controls (for example sliders)
+    // must have an accessible name for screen readers to announce them
+    // correctly on some platforms (notably Windows). We can't reliably
+    // detect associated <label> elements here, so warn when common name
+    // sources are missing to help authors catch the issue early.
+    try {
+      const hasAccessibleNameProp =
+        props['aria-label'] != null || props['aria-labelledby'] != null ||
+        props.title != null;
+
+      // Check for implicit input type=range -> role=slider
+      if (type === 'input') {
+        const inputType = props.type;
+        if (inputType === 'range' && !hasAccessibleNameProp) {
+          console.error(
+            'A control with role `slider` (\"<input type=\"range\">\") ' +
+              'is missing an accessible name. Add `aria-label`, `aria-labelledby` ' +
+              'or a `title` so screen readers can announce the control.',
+          );
+        }
+      }
+
+      // Check for explicit role=slider on any element
+      if (props.role === 'slider' && !hasAccessibleNameProp) {
+        console.error(
+          'An element with `role="slider"` is missing an accessible name. ' +
+            'Add `aria-label`, `aria-labelledby` or `title` so screen readers can announce the control.',
+        );
+      }
+    } catch (e) {
+      // Defensive: in case props accessors throw.
+    }
   }
 }
 
