@@ -3343,6 +3343,7 @@ export function attach(
     }
     let start = -1;
     let end = -1;
+    let byteSize = 0;
     // $FlowFixMe[method-unbinding]
     if (typeof performance.getEntriesByType === 'function') {
       // We may be able to collect the start and end time of this resource from Performance Observer.
@@ -3352,6 +3353,8 @@ export function attach(
         if (resourceEntry.name === href) {
           start = resourceEntry.startTime;
           end = start + resourceEntry.duration;
+          // $FlowFixMe[prop-missing]
+          byteSize = (resourceEntry.transferSize: any) || 0;
         }
       }
     }
@@ -3367,6 +3370,10 @@ export function attach(
       // $FlowFixMe: This field doesn't usually take a Fiber but we're only using inside this file.
       owner: fiber, // Allow linking to the <link> if it's not filtered.
     };
+    if (byteSize > 0) {
+      // $FlowFixMe[cannot-write]
+      ioInfo.byteSize = byteSize;
+    }
     const asyncInfo: ReactAsyncInfo = {
       awaited: ioInfo,
       // $FlowFixMe: This field doesn't usually take a Fiber but we're only using inside this file.
@@ -3431,6 +3438,7 @@ export function attach(
     }
     let start = -1;
     let end = -1;
+    let byteSize = 0;
     let fileSize = 0;
     // $FlowFixMe[method-unbinding]
     if (typeof performance.getEntriesByType === 'function') {
@@ -3442,7 +3450,9 @@ export function attach(
           start = resourceEntry.startTime;
           end = start + resourceEntry.duration;
           // $FlowFixMe[prop-missing]
-          fileSize = (resourceEntry.encodedBodySize: any) || 0;
+          fileSize = (resourceEntry.decodedBodySize: any) || 0;
+          // $FlowFixMe[prop-missing]
+          byteSize = (resourceEntry.transferSize: any) || 0;
         }
       }
     }
@@ -3476,6 +3486,10 @@ export function attach(
       // $FlowFixMe: This field doesn't usually take a Fiber but we're only using inside this file.
       owner: fiber, // Allow linking to the <link> if it's not filtered.
     };
+    if (byteSize > 0) {
+      // $FlowFixMe[cannot-write]
+      ioInfo.byteSize = byteSize;
+    }
     const asyncInfo: ReactAsyncInfo = {
       awaited: ioInfo,
       // $FlowFixMe: This field doesn't usually take a Fiber but we're only using inside this file.
@@ -4704,16 +4718,15 @@ export function attach(
       trackDebugInfoFromLazyType(nextFiber);
       trackDebugInfoFromUsedThenables(nextFiber);
 
-      if (
-        nextFiber.tag === HostHoistable &&
-        prevFiber.memoizedState !== nextFiber.memoizedState
-      ) {
+      if (nextFiber.tag === HostHoistable) {
         const nearestInstance = reconcilingParent;
         if (nearestInstance === null) {
           throw new Error('Did not expect a host hoistable to be the root');
         }
-        releaseHostResource(nearestInstance, prevFiber.memoizedState);
-        aquireHostResource(nearestInstance, nextFiber.memoizedState);
+        if (prevFiber.memoizedState !== nextFiber.memoizedState) {
+          releaseHostResource(nearestInstance, prevFiber.memoizedState);
+          aquireHostResource(nearestInstance, nextFiber.memoizedState);
+        }
         trackDebugInfoFromHostResource(nearestInstance, nextFiber);
       } else if (
         nextFiber.tag === HostComponent ||
@@ -5948,6 +5961,7 @@ export function attach(
         description: getIODescription(resolvedValue),
         start: ioInfo.start,
         end: ioInfo.end,
+        byteSize: ioInfo.byteSize == null ? null : ioInfo.byteSize,
         value: ioInfo.value == null ? null : ioInfo.value,
         env: ioInfo.env == null ? null : ioInfo.env,
         owner:
