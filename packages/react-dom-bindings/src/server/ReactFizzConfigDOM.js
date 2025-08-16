@@ -541,7 +541,11 @@ export function createRenderState(
     // like a module global for currently rendering boundary
     hoistableState: null,
     stylesToHoist: false,
+
+    disableAutoPreload: options?.disableAutoPreload,
+
   };
+  request.renderState=renderState
 
   if (bootstrapScripts !== undefined) {
     for (let i = 0; i < bootstrapScripts.length; i++) {
