@@ -4563,16 +4563,15 @@ export function attach(
       trackDebugInfoFromLazyType(nextFiber);
       trackDebugInfoFromUsedThenables(nextFiber);
 
-      if (
-        nextFiber.tag === HostHoistable &&
-        prevFiber.memoizedState !== nextFiber.memoizedState
-      ) {
+      if (nextFiber.tag === HostHoistable) {
         const nearestInstance = reconcilingParent;
         if (nearestInstance === null) {
           throw new Error('Did not expect a host hoistable to be the root');
         }
-        releaseHostResource(nearestInstance, prevFiber.memoizedState);
-        aquireHostResource(nearestInstance, nextFiber.memoizedState);
+        if (prevFiber.memoizedState !== nextFiber.memoizedState) {
+          releaseHostResource(nearestInstance, prevFiber.memoizedState);
+          aquireHostResource(nearestInstance, nextFiber.memoizedState);
+        }
         trackDebugInfoFromHostResource(nearestInstance, nextFiber);
       } else if (
         nextFiber.tag === HostComponent ||
