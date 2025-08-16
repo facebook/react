@@ -3315,6 +3315,7 @@ export function attach(
     }
     let start = -1;
     let end = -1;
+    let byteSize = 0;
     // $FlowFixMe[method-unbinding]
     if (typeof performance.getEntriesByType === 'function') {
       // We may be able to collect the start and end time of this resource from Performance Observer.
@@ -3324,6 +3325,8 @@ export function attach(
         if (resourceEntry.name === href) {
           start = resourceEntry.startTime;
           end = start + resourceEntry.duration;
+          // $FlowFixMe[prop-missing]
+          byteSize = (resourceEntry.encodedBodySize: any) || 0;
         }
       }
     }
@@ -3339,6 +3342,10 @@ export function attach(
       // $FlowFixMe: This field doesn't usually take a Fiber but we're only using inside this file.
       owner: fiber, // Allow linking to the <link> if it's not filtered.
     };
+    if (byteSize > 0) {
+      // $FlowFixMe[cannot-write]
+      ioInfo.byteSize = byteSize;
+    }
     const asyncInfo: ReactAsyncInfo = {
       awaited: ioInfo,
       // $FlowFixMe: This field doesn't usually take a Fiber but we're only using inside this file.
@@ -3403,7 +3410,7 @@ export function attach(
     }
     let start = -1;
     let end = -1;
-    let fileSize = 0;
+    let byteSize = 0;
     // $FlowFixMe[method-unbinding]
     if (typeof performance.getEntriesByType === 'function') {
       // We may be able to collect the start and end time of this resource from Performance Observer.
@@ -3414,7 +3421,7 @@ export function attach(
           start = resourceEntry.startTime;
           end = start + resourceEntry.duration;
           // $FlowFixMe[prop-missing]
-          fileSize = (resourceEntry.encodedBodySize: any) || 0;
+          byteSize = (resourceEntry.encodedBodySize: any) || 0;
         }
       }
     }
@@ -3433,10 +3440,6 @@ export function attach(
       value.naturalWidth = instance.naturalWidth;
       value.naturalHeight = instance.naturalHeight;
     }
-    if (fileSize > 0) {
-      // Cross-origin images won't have a file size that we can access.
-      value.fileSize = fileSize;
-    }
     const promise = Promise.resolve(value);
     (promise: any).status = 'fulfilled';
     (promise: any).value = value;
@@ -3448,6 +3451,12 @@ export function attach(
       // $FlowFixMe: This field doesn't usually take a Fiber but we're only using inside this file.
       owner: fiber, // Allow linking to the <link> if it's not filtered.
     };
+    if (byteSize > 0) {
+      // Cross-origin images won't have a file size that we can access.
+      value.fileSize = byteSize;
+      // $FlowFixMe[cannot-write]
+      ioInfo.byteSize = byteSize;
+    }
     const asyncInfo: ReactAsyncInfo = {
       awaited: ioInfo,
       // $FlowFixMe: This field doesn't usually take a Fiber but we're only using inside this file.
@@ -5778,6 +5787,7 @@ export function attach(
         description: getIODescription(resolvedValue),
         start: ioInfo.start,
         end: ioInfo.end,
+        byteSize: ioInfo.byteSize == null ? null : ioInfo.byteSize,
         value: ioInfo.value == null ? null : ioInfo.value,
         env: ioInfo.env == null ? null : ioInfo.env,
         owner:
