@@ -6,7 +6,7 @@
  */
 
 import {RuleTester} from 'eslint';
-import ReactCompilerRule from '../src/rules/ReactCompiler';
+import {allRules} from '../src/shared/ReactCompiler';
 
 const ESLintTesterV8 = require('eslint-v8').RuleTester;
 
@@ -74,4 +74,4 @@ const tests: CompilerTestCases = {
 const eslintTester = new ESLintTesterV8({
   parser: require.resolve('@typescript-eslint/parser-v5'),
 });
-eslintTester.run('react-compiler', ReactCompilerRule, tests);
+eslintTester.run('react-compiler', allRules['immutability'], tests);

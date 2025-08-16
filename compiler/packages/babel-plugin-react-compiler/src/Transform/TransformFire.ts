@@ -42,6 +42,7 @@ import {
 import {eachInstructionOperand} from '../HIR/visitors';
 import {printSourceLocationLine} from '../HIR/PrintHIR';
 import {USE_FIRE_FUNCTION_NAME} from '../HIR/Environment';
+import {ErrorCategory} from '../CompilerError';
 
 /*
  * TODO(jmbrown):
@@ -133,6 +134,7 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
                   loc: value.loc,
                   description: null,
                   severity: ErrorSeverity.Invariant,
+                  category: ErrorCategory.Invariant,
                   reason: '[InsertFire] No LoadGlobal found for useEffect call',
                   suggestions: null,
                 });
@@ -179,6 +181,7 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
                 description:
                   'You must use an array literal for an effect dependency array when that effect uses `fire()`',
                 severity: ErrorSeverity.Invariant,
+                category: ErrorCategory.Fire,
                 reason: CANNOT_COMPILE_FIRE,
                 suggestions: null,
               });
@@ -189,6 +192,7 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
               description:
                 'You must use an array literal for an effect dependency array when that effect uses `fire()`',
               severity: ErrorSeverity.Invariant,
+              category: ErrorCategory.Fire,
               reason: CANNOT_COMPILE_FIRE,
               suggestions: null,
             });
@@ -223,6 +227,7 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
                 loc: value.loc,
                 description: null,
                 severity: ErrorSeverity.Invariant,
+                category: ErrorCategory.Invariant,
                 reason:
                   '[InsertFire] No loadLocal found for fire call argument',
                 suggestions: null,
@@ -246,6 +251,7 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
               description:
                 '`fire()` can only receive a function call such as `fire(fn(a,b)). Method calls and other expressions are not allowed',
               severity: ErrorSeverity.InvalidReact,
+              category: ErrorCategory.Fire,
               reason: CANNOT_COMPILE_FIRE,
               suggestions: null,
             });
@@ -264,6 +270,7 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
             loc: value.loc,
             description,
             severity: ErrorSeverity.InvalidReact,
+            category: ErrorCategory.Fire,
             reason: CANNOT_COMPILE_FIRE,
             suggestions: null,
           });
@@ -395,6 +402,7 @@ function ensureNoRemainingCalleeCaptures(
 this effect or not used with a fire() call at all. ${calleeName} was used with fire() on line \
 ${printSourceLocationLine(calleeInfo.fireLoc)} in this effect`,
         severity: ErrorSeverity.InvalidReact,
+        category: ErrorCategory.Fire,
         reason: CANNOT_COMPILE_FIRE,
         suggestions: null,
       });
@@ -411,6 +419,7 @@ function ensureNoMoreFireUses(fn: HIRFunction, context: Context): void {
       context.pushError({
         loc: place.identifier.loc,
         description: 'Cannot use `fire` outside of a useEffect function',
+        category: ErrorCategory.Fire,
         severity: ErrorSeverity.Invariant,
         reason: CANNOT_COMPILE_FIRE,
         suggestions: null,

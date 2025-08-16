@@ -8,6 +8,7 @@
 import {
   CompilerDiagnostic,
   CompilerError,
+  ErrorCategory,
   ErrorSeverity,
 } from '../CompilerError';
 import {
@@ -468,8 +469,9 @@ function validateNoRefAccessInRenderImpl(
                 didError = true;
                 errors.pushDiagnostic(
                   CompilerDiagnostic.create({
+                    category: ErrorCategory.Refs,
                     severity: ErrorSeverity.InvalidReact,
-                    category: 'Cannot access refs during render',
+                    reason: 'Cannot access refs during render',
                     description: ERROR_DESCRIPTION,
                   }).withDetail({
                     kind: 'error',
@@ -731,8 +733,9 @@ function guardCheck(errors: CompilerError, operand: Place, env: Env): void {
   if (env.get(operand.identifier.id)?.kind === 'Guard') {
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
+        category: ErrorCategory.Refs,
         severity: ErrorSeverity.InvalidReact,
-        category: 'Cannot access refs during render',
+        reason: 'Cannot access refs during render',
         description: ERROR_DESCRIPTION,
       }).withDetail({
         kind: 'error',
@@ -755,8 +758,9 @@ function validateNoRefValueAccess(
   ) {
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
+        category: ErrorCategory.Refs,
         severity: ErrorSeverity.InvalidReact,
-        category: 'Cannot access refs during render',
+        reason: 'Cannot access refs during render',
         description: ERROR_DESCRIPTION,
       }).withDetail({
         kind: 'error',
@@ -781,8 +785,9 @@ function validateNoRefPassedToFunction(
   ) {
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
+        category: ErrorCategory.Refs,
         severity: ErrorSeverity.InvalidReact,
-        category: 'Cannot access refs during render',
+        reason: 'Cannot access refs during render',
         description: ERROR_DESCRIPTION,
       }).withDetail({
         kind: 'error',
@@ -803,8 +808,9 @@ function validateNoRefUpdate(
   if (type?.kind === 'Ref' || type?.kind === 'RefValue') {
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
+        category: ErrorCategory.Refs,
         severity: ErrorSeverity.InvalidReact,
-        category: 'Cannot access refs during render',
+        reason: 'Cannot access refs during render',
         description: ERROR_DESCRIPTION,
       }).withDetail({
         kind: 'error',
@@ -824,8 +830,9 @@ function validateNoDirectRefValueAccess(
   if (type?.kind === 'RefValue') {
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
+        category: ErrorCategory.Refs,
         severity: ErrorSeverity.InvalidReact,
-        category: 'Cannot access refs during render',
+        reason: 'Cannot access refs during render',
         description: ERROR_DESCRIPTION,
       }).withDetail({
         kind: 'error',

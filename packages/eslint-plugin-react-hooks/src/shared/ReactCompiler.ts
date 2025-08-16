@@ -4,19 +4,18 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+/* eslint-disable no-for-of-loops/no-for-of-loops */
 
 import type {SourceLocation as BabelSourceLocation} from '@babel/types';
 import {
-  CompilerDiagnosticOptions,
-  CompilerErrorDetailOptions,
+  type CompilerDiagnosticOptions,
+  type CompilerErrorDetailOptions,
   CompilerSuggestionOperation,
-} from 'babel-plugin-react-compiler/src';
-import type {Rule} from 'eslint';
-import runReactCompiler, {RunCacheEntry} from '../shared/RunReactCompiler';
-import {
   LintRules,
   type LintRule,
-} from 'babel-plugin-react-compiler/src/CompilerError';
+} from 'babel-plugin-react-compiler';
+import type {Rule} from 'eslint';
+import runReactCompiler, {RunCacheEntry} from './RunReactCompiler';
 
 function assertExhaustive(_: never, errorMsg: string): never {
   throw new Error(errorMsg);

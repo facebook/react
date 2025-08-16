@@ -338,7 +338,16 @@ export async function transformFixtureInput(
   if (logs.length !== 0) {
     formattedLogs = logs
       .map(({event}) => {
-        return JSON.stringify(event);
+        return JSON.stringify(event, (key, value) => {
+          if (
+            key === 'detail' &&
+            value != null &&
+            typeof value.serialize === 'function'
+          ) {
+            return value.serialize();
+          }
+          return value;
+        });
       })
       .join('\n');
   }

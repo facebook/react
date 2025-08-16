@@ -12,9 +12,11 @@ export {
   CompilerDiagnostic,
   CompilerSuggestionOperation,
   ErrorSeverity,
+  LintRules,
   type CompilerErrorDetailOptions,
   type CompilerDiagnosticOptions,
   type CompilerDiagnosticDetail,
+  type LintRule,
 } from './CompilerError';
 export {
   compileFn as compile,

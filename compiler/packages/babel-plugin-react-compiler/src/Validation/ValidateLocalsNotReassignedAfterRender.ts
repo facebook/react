@@ -6,6 +6,7 @@
  */
 
 import {CompilerDiagnostic, CompilerError, Effect, ErrorSeverity} from '..';
+import {ErrorCategory} from '../CompilerError';
 import {HIRFunction, IdentifierId, Place} from '../HIR';
 import {
   eachInstructionLValue,
@@ -36,8 +37,9 @@ export function validateLocalsNotReassignedAfterRender(fn: HIRFunction): void {
         : 'variable';
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
+        category: ErrorCategory.Immutability,
         severity: ErrorSeverity.InvalidReact,
-        category: 'Cannot reassign variable after render completes',
+        reason: 'Cannot reassign variable after render completes',
         description: `Reassigning ${variable} after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.`,
       }).withDetail({
         kind: 'error',
@@ -91,8 +93,9 @@ function getContextReassignment(
                   : 'variable';
               errors.pushDiagnostic(
                 CompilerDiagnostic.create({
+                  category: ErrorCategory.Immutability,
                   severity: ErrorSeverity.InvalidReact,
-                  category: 'Cannot reassign variable in async function',
+                  reason: 'Cannot reassign variable in async function',
                   description:
                     'Reassigning a variable in an async function can cause inconsistent behavior on subsequent renders. Consider using state instead',
                 }).withDetail({

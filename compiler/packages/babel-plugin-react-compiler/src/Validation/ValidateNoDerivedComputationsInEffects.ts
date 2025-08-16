@@ -6,6 +6,7 @@
  */
 
 import {CompilerError, ErrorSeverity, SourceLocation} from '..';
+import {ErrorCategory} from '../CompilerError';
 import {
   ArrayExpression,
   BlockId,
@@ -219,6 +220,7 @@ function validateEffect(
 
   for (const loc of setStateLocations) {
     errors.push({
+      category: ErrorCategory.EffectDerivationsOfState,
       reason:
         'Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)',
       description: null,

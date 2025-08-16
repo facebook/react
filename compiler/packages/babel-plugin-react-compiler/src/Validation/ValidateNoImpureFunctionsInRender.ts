@@ -6,6 +6,7 @@
  */
 
 import {CompilerDiagnostic, CompilerError, ErrorSeverity} from '..';
+import {ErrorCategory} from '../CompilerError';
 import {HIRFunction} from '../HIR';
 import {getFunctionCallSignature} from '../Inference/InferMutationAliasingEffects';
 import {Result} from '../Utils/Result';
@@ -36,7 +37,8 @@ export function validateNoImpureFunctionsInRender(
         if (signature != null && signature.impure === true) {
           errors.pushDiagnostic(
             CompilerDiagnostic.create({
-              category: 'Cannot call impure function during render',
+              category: ErrorCategory.Purity,
+              reason: 'Cannot call impure function during render',
               description:
                 (signature.canonicalName != null
                   ? `\`${signature.canonicalName}\` is an impure function. `

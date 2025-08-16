@@ -8,6 +8,7 @@
 import {
   CompilerDiagnostic,
   CompilerError,
+  ErrorCategory,
   ErrorSeverity,
 } from '../CompilerError';
 import {
@@ -281,8 +282,9 @@ function validateInferredDep(
   }
   errorState.pushDiagnostic(
     CompilerDiagnostic.create({
+      category: ErrorCategory.PreserveManualMemo,
       severity: ErrorSeverity.CannotPreserveMemoization,
-      category:
+      reason:
         'Compilation skipped because existing memoization could not be preserved',
       description: [
         'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. ',
@@ -535,8 +537,9 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         ) {
           state.errors.pushDiagnostic(
             CompilerDiagnostic.create({
+              category: ErrorCategory.PreserveManualMemo,
               severity: ErrorSeverity.CannotPreserveMemoization,
-              category:
+              reason:
                 'Compilation skipped because existing memoization could not be preserved',
               description: [
                 'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. ',
@@ -583,8 +586,9 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
             if (isUnmemoized(identifier, this.scopes)) {
               state.errors.pushDiagnostic(
                 CompilerDiagnostic.create({
+                  category: ErrorCategory.PreserveManualMemo,
                   severity: ErrorSeverity.CannotPreserveMemoization,
-                  category:
+                  reason:
                     'Compilation skipped because existing memoization could not be preserved',
                   description: [
                     'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output. ',

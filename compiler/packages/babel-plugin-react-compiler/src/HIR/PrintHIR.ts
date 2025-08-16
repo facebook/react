@@ -986,13 +986,13 @@ export function printAliasingEffect(effect: AliasingEffect): string {
       return `${effect.kind} ${printPlaceForAliasEffect(effect.value)}`;
     }
     case 'MutateFrozen': {
-      return `MutateFrozen ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.category)}`;
+      return `MutateFrozen ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.reason)}`;
     }
     case 'MutateGlobal': {
-      return `MutateGlobal ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.category)}`;
+      return `MutateGlobal ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.reason)}`;
     }
     case 'Impure': {
-      return `Impure ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.category)}`;
+      return `Impure ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.reason)}`;
     }
     case 'Render': {
       return `Render ${printPlaceForAliasEffect(effect.place)}`;
