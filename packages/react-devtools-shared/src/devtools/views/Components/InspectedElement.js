@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {SourceMappedLocation} from 'react-devtools-shared/src/symbolicateSource';
+
 import * as React from 'react';
 import {useCallback, useContext, useSyncExternalStore} from 'react';
 import {TreeStateContext} from './TreeContext';
@@ -27,8 +29,6 @@ import InspectedElementViewSourceButton from './InspectedElementViewSourceButton
 import useEditorURL from '../useEditorURL';
 
 import styles from './InspectedElement.css';
-
-import type {ReactFunctionLocation} from 'shared/ReactTypes';
 
 export type Props = {};
 
@@ -59,7 +59,7 @@ export default function InspectedElementWrapper(_: Props): React.Node {
           ? inspectedElement.stack[0]
           : null;
 
-  const symbolicatedSourcePromise: null | Promise<ReactFunctionLocation | null> =
+  const symbolicatedSourcePromise: null | Promise<SourceMappedLocation | null> =
     React.useMemo(() => {
       if (fetchFileWithCaching == null) return Promise.resolve(null);
 
