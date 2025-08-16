@@ -1206,6 +1206,14 @@ export default class Store extends EventEmitter<{
               }
               set.add(id);
             }
+
+            const suspense = this._idToSuspense.get(id);
+            if (suspense !== undefined) {
+              // We're reconnecting a node.
+              if (suspense.name === null) {
+                suspense.name = this._guessSuspenseName(element);
+              }
+            }
           }
           break;
         }
@@ -1432,21 +1440,12 @@ export default class Store extends EventEmitter<{
 
           const element = this._idToElement.get(id);
           if (element === undefined) {
-            this._throwAndEmitError(
-              Error(
-                `Cannot add suspense node "${id}" because no matching element was found in the Store.`,
-              ),
-            );
+            // This element isn't connected yet.
           } else {
             if (name === null) {
               // The boundary isn't explicitly named.
               // Pick a sensible default.
-              // TODO: Use key
-              const owner = this._idToElement.get(element.ownerID);
-              if (owner !== undefined) {
-                // TODO: This is clowny
-                name = `${owner.displayName || 'Unknown'}>?`;
-              }
+              name = this._guessSuspenseName(element);
             }
           }
 
@@ -1935,5 +1934,16 @@ export default class Store extends EventEmitter<{
     // Throwing is still valuable for local development
     // and for unit testing the Store itself.
     throw error;
+  }
+
+  _guessSuspenseName(element: Element): string | null {
+    // TODO: Use key
+    const owner = this._idToElement.get(element.ownerID);
+    if (owner !== undefined) {
+      // TODO: This is clowny
+      return `${owner.displayName || 'Unknown'}>?`;
+    }
+
+    return null;
   }
 }
