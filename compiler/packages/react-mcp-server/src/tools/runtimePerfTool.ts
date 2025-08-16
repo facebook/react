@@ -53,7 +53,7 @@ function delay(time: number) {
   });
 }
 
-export async function measurePerformance(
+export async function runtimePerfTool(
   code: string,
   iterations: number,
 ): Promise<PerformanceResults> {
@@ -69,23 +69,27 @@ export async function measurePerformance(
     throw new Error('Failed to parse code');
   }
 
-  const transformResult = await babel.transformFromAstAsync(parsed, undefined, {
-    ...babelOptions,
-    plugins: [
-      () => ({
-        visitor: {
-          ImportDeclaration(
-            path: babel.NodePath<babel.types.ImportDeclaration>,
-          ) {
-            const value = path.node.source.value;
-            if (value === 'react' || value === 'react-dom') {
-              path.remove();
-            }
+  const transformResult = await babel.transformFromAstAsync(
+    parsed as babel.types.Node,
+    undefined,
+    {
+      ...babelOptions,
+      plugins: [
+        () => ({
+          visitor: {
+            ImportDeclaration(
+              path: babel.NodePath<babel.types.ImportDeclaration>,
+            ) {
+              const value = path.node.source.value;
+              if (value === 'react' || value === 'react-dom') {
+                path.remove();
+              }
+            },
           },
-        },
-      }),
-    ],
-  });
+        }),
+      ],
+    },
+  );
 
   const transpiled = transformResult?.code || undefined;
   if (!transpiled) {
@@ -125,14 +129,16 @@ export async function measurePerformance(
 
     // ui chaos monkey
     const selectors = await page.evaluate(() => {
-      window.__INTERACTABLE_SELECTORS__ = [];
+      (window as any).__INTERACTABLE_SELECTORS__ = [];
       const elements = Array.from(document.querySelectorAll('a')).concat(
-        Array.from(document.querySelectorAll('button')),
+        Array.from(document.querySelectorAll('button')) as any,
       );
       for (const el of elements) {
-        window.__INTERACTABLE_SELECTORS__.push(el.tagName.toLowerCase());
+        (window as any).__INTERACTABLE_SELECTORS__.push(
+          el.tagName.toLowerCase(),
+        );
       }
-      return window.__INTERACTABLE_SELECTORS__;
+      return (window as any).__INTERACTABLE_SELECTORS__;
     });
 
     await Promise.all(
