@@ -634,6 +634,8 @@ module.exports = {
     __PROFILE__: 'readonly',
     __TEST__: 'readonly',
     __VARIANT__: 'readonly',
+    __LOGGER__: 'readonly',
+    __TEST_LOGS__: 'writable',
     __unmockReact: 'readonly',
     gate: 'readonly',
     trustedTypes: 'readonly',
