@@ -13,13 +13,14 @@ import Button from 'react-devtools-shared/src/devtools/views/Button';
 import ButtonIcon from 'react-devtools-shared/src/devtools/views/ButtonIcon';
 
 import type {ReactFunctionLocation} from 'shared/ReactTypes';
+import type {SourceMappedLocation} from 'react-devtools-shared/src/symbolicateSource';
 
 import {checkConditions} from '../Editor/utils';
 
 type Props = {
   editorURL: string,
   source: ReactFunctionLocation,
-  symbolicatedSourcePromise: Promise<ReactFunctionLocation | null>,
+  symbolicatedSourcePromise: Promise<SourceMappedLocation | null>,
 };
 
 function OpenInEditorButton({
@@ -31,7 +32,7 @@ function OpenInEditorButton({
 
   const {url, shouldDisableButton} = checkConditions(
     editorURL,
-    symbolicatedSource ? symbolicatedSource : source,
+    symbolicatedSource ? symbolicatedSource.location : source,
   );
 
   return (
