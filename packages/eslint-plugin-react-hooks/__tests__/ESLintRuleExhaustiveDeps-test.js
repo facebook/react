@@ -7735,6 +7735,9 @@ if (__EXPERIMENTAL__) {
           useEffect(() => {
             onStuff();
           }, []);
+          React.useEffect(() => {
+            onStuff();
+          }, []);
         }
       `,
     },
@@ -7749,6 +7752,9 @@ if (__EXPERIMENTAL__) {
             showNotification(theme);
           });
           useEffect(() => {
+            onStuff();
+          }, [onStuff]);
+          React.useEffect(() => {
             onStuff();
           }, [onStuff]);
         }
@@ -7767,6 +7773,32 @@ if (__EXPERIMENTAL__) {
                     showNotification(theme);
                   });
                   useEffect(() => {
+                    onStuff();
+                  }, []);
+                  React.useEffect(() => {
+                    onStuff();
+                  }, [onStuff]);
+                }
+              `,
+            },
+          ],
+        },
+        {
+          message:
+            'Functions returned from `useEffectEvent` must not be included in the dependency array. ' +
+            'Remove `onStuff` from the list.',
+          suggestions: [
+            {
+              desc: 'Remove the dependency `onStuff`',
+              output: normalizeIndent`
+                function MyComponent({ theme }) {
+                  const onStuff = useEffectEvent(() => {
+                    showNotification(theme);
+                  });
+                  useEffect(() => {
+                    onStuff();
+                  }, [onStuff]);
+                  React.useEffect(() => {
                     onStuff();
                   }, []);
                 }
