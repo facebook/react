@@ -3326,7 +3326,7 @@ export function attach(
           start = resourceEntry.startTime;
           end = start + resourceEntry.duration;
           // $FlowFixMe[prop-missing]
-          byteSize = (resourceEntry.encodedBodySize: any) || 0;
+          byteSize = (resourceEntry.transferSize: any) || 0;
         }
       }
     }
@@ -3411,6 +3411,7 @@ export function attach(
     let start = -1;
     let end = -1;
     let byteSize = 0;
+    let fileSize = 0;
     // $FlowFixMe[method-unbinding]
     if (typeof performance.getEntriesByType === 'function') {
       // We may be able to collect the start and end time of this resource from Performance Observer.
@@ -3421,7 +3422,9 @@ export function attach(
           start = resourceEntry.startTime;
           end = start + resourceEntry.duration;
           // $FlowFixMe[prop-missing]
-          byteSize = (resourceEntry.encodedBodySize: any) || 0;
+          fileSize = (resourceEntry.decodedBodySize: any) || 0;
+          // $FlowFixMe[prop-missing]
+          byteSize = (resourceEntry.transferSize: any) || 0;
         }
       }
     }
@@ -3440,6 +3443,10 @@ export function attach(
       value.naturalWidth = instance.naturalWidth;
       value.naturalHeight = instance.naturalHeight;
     }
+    if (fileSize > 0) {
+      // Cross-origin images won't have a file size that we can access.
+      value.fileSize = fileSize;
+    }
     const promise = Promise.resolve(value);
     (promise: any).status = 'fulfilled';
     (promise: any).value = value;
@@ -3452,8 +3459,6 @@ export function attach(
       owner: fiber, // Allow linking to the <link> if it's not filtered.
     };
     if (byteSize > 0) {
-      // Cross-origin images won't have a file size that we can access.
-      value.fileSize = byteSize;
       // $FlowFixMe[cannot-write]
       ioInfo.byteSize = byteSize;
     }
