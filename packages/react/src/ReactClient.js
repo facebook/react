@@ -28,6 +28,7 @@ import {
   createElement,
   cloneElement,
   isValidElement,
+  isValidNode,
 } from './jsx/ReactJSXElement';
 import {createContext} from './ReactContext';
 import {lazy} from './ReactLazy';
@@ -107,6 +108,7 @@ export {
   createElement,
   cloneElement,
   isValidElement,
+  isValidNode,
   ReactVersion as version,
   ReactSharedInternals as __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   ReactCompilerRuntime as __COMPILER_RUNTIME,
