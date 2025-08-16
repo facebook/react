@@ -472,6 +472,32 @@ const warnedUnknownTags: {
   webview: true,
 };
 
+/**
+ * Creates a new host environment instance for a React element during the render phase.
+ * This method is called when React needs to create a new node in the host tree.
+ * 
+ * For DOM: creates an element via document.createElement(type)
+ * For Native: creates a native view component
+ * For Three.js: creates a 3D object instance
+ * 
+ * @internal
+ * @param {string} type - The element type (e.g., 'div', 'span' for DOM)
+ * @param {Object} props - The initial props/attributes for the element
+ * @param {Container} rootContainerInstance - The root container of the tree
+ * @param {HostContext} hostContext - Host-specific context from parent
+ * @param {Object} internalInstanceHandle - React's internal fiber handle
+ * @returns {Instance} The newly created host instance
+ * 
+ * @example
+ * // DOM implementation
+ * createInstance('div', { className: 'container' }, rootContainer, context, fiber)
+ * // Returns: HTMLDivElement
+ * 
+ * @see {@link https://github.com/facebook/react/tree/main/packages/react-reconciler#createinstance}
+ * 
+ * @unstable This is an internal React Reconciler API. It may change between 
+ * minor releases without notice. Use at your own risk when building custom renderers.
+ */
 export function createInstance(
   type: string,
   props: Props,
@@ -905,6 +931,33 @@ export function commitHydratedInstance(
   }
 }
 
+/**
+ * Applies property updates to the host instance during the commit phase.
+ * This method mutates the host instance to reflect the new props.
+ * 
+ * Called when React determines that properties need to be updated after reconciliation.
+ * Executes in the commit phase when React is ready to flush changes to the host environment.
+ * 
+ * @internal
+ * @param {Instance} domElement - The host instance to update
+ * @param {string} type - The element type
+ * @param {Props} oldProps - Previous props (before update)
+ * @param {Props} newProps - New props (after update)
+ * @param {Object} internalInstanceHandle - React's internal fiber handle
+ * @returns {void}
+ * 
+ * @example
+ * // Apply style and event listener updates
+ * commitUpdate(divElement, 'div', 
+ *   { className: 'old', onClick: handler1 },
+ *   { className: 'new', onClick: handler2 },
+ *   fiber)
+ * 
+ * @see {@link https://github.com/facebook/react/tree/main/packages/react-reconciler#commitupdate}
+ * 
+ * @unstable This is an internal React Reconciler API. It may change between 
+ * minor releases without notice. Use at your own risk when building custom renderers.
+ */
 export function commitUpdate(
   domElement: Instance,
   type: string,
