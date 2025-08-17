@@ -650,6 +650,14 @@ export const EnvironmentConfigSchema = z.object({
    *   useMemo(() => { ... }, [...]);
    */
   validateNoVoidUseMemo: z.boolean().default(false),
+
+  /**
+   * A list of function identifier names that should never be skipped by
+   * memoization/flattening optimizations. Calls to any identifier with a name
+   * in this list behave like the `use` operator in terms of never being
+   * skipped, and may be called conditionally.
+   */
+  neverSkipFunctionName: z.array(z.string()).default([]),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;

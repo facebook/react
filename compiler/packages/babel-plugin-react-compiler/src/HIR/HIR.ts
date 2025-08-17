@@ -1915,6 +1915,34 @@ export function isUseOperator(id: Identifier): boolean {
   );
 }
 
+/**
+ * Treat any call with a neverSkip identifier name similar to the `use` operator:
+ * - It may be called conditionally.
+ * - It should never be skipped by memoization/flattening logic.
+ */
+export function isNeverSkipIdentifier(
+  env: Environment,
+  id: Identifier,
+): boolean {
+  const list = env.config.neverSkipFunctionName;
+  if (list == null || list.length === 0) {
+    return false;
+  }
+  if (id.name != null && list.includes(id.name.value)) {
+    return true;
+  }
+  const loc = id.loc as any;
+  if (
+    loc &&
+    typeof loc !== 'symbol' &&
+    typeof loc.identifierName === 'string' &&
+    list.includes(loc.identifierName)
+  ) {
+    return true;
+  }
+  return false;
+}
+
 export function getHookKindForType(
   env: Environment,
   type: Type,
