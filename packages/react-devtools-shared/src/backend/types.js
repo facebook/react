@@ -239,6 +239,7 @@ export type SerializedIOInfo = {
   description: string,
   start: number,
   end: number,
+  byteSize: null | number,
   value: null | Promise<mixed>,
   env: null | string,
   owner: null | SerializedElement,
