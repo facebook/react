@@ -1811,40 +1811,59 @@ function codegenInstructionValue(
       const isHook =
         getHookKind(cx.env, instrValue.property.identifier) != null;
       const memberExpr = codegenPlaceToExpression(cx, instrValue.property);
-      CompilerError.invariant(
-        t.isMemberExpression(memberExpr) ||
-          t.isOptionalMemberExpression(memberExpr),
-        {
-          reason:
-            '[Codegen] Internal error: MethodCall::property must be an unpromoted + unmemoized MemberExpression. ' +
-            `Got a \`${memberExpr.type}\``,
-          description: null,
-          loc: memberExpr.loc ?? null,
-          suggestions: null,
-        },
-      );
-      CompilerError.invariant(
-        t.isNodesEquivalent(
-          memberExpr.object,
-          codegenPlaceToExpression(cx, instrValue.receiver),
-        ),
-        {
-          reason:
-            '[Codegen] Internal error: Forget should always generate MethodCall::property ' +
-            'as a MemberExpression of MethodCall::receiver',
-          description: null,
-          loc: memberExpr.loc ?? null,
-          suggestions: null,
-        },
-      );
-      const args = instrValue.args.map(arg => codegenArgument(cx, arg));
-      value = createCallExpression(
-        cx.env,
-        memberExpr,
-        args,
-        instrValue.loc,
-        isHook,
-      );
+
+      // Handle the case where the property was promoted to an identifier
+      // This happens in nested method calls where the inner property gets promoted
+      // despite the logic in PromoteUsedTemporaries trying to prevent it
+      if (t.isIdentifier(memberExpr)) {
+        // The property has been promoted, which means it was stored in a temporary variable
+        // The temporary variable should contain the result of the PropertyLoad/ComputedLoad
+        // We convert this to a regular CallExpression since the property is now a standalone value
+        const args = instrValue.args.map(arg => codegenArgument(cx, arg));
+        value = createCallExpression(
+          cx.env,
+          memberExpr,
+          args,
+          instrValue.loc,
+          isHook,
+        );
+      } else {
+        // Original validation for non-promoted cases
+        CompilerError.invariant(
+          t.isMemberExpression(memberExpr) ||
+            t.isOptionalMemberExpression(memberExpr),
+          {
+            reason:
+              '[Codegen] Internal error: MethodCall::property must be an unpromoted + unmemoized MemberExpression. ' +
+              `Got a \`${memberExpr.type}\``,
+            description: null,
+            loc: memberExpr.loc ?? null,
+            suggestions: null,
+          },
+        );
+        CompilerError.invariant(
+          t.isNodesEquivalent(
+            memberExpr.object,
+            codegenPlaceToExpression(cx, instrValue.receiver),
+          ),
+          {
+            reason:
+              '[Codegen] Internal error: Forget should always generate MethodCall::property ' +
+              'as a MemberExpression of MethodCall::receiver',
+            description: null,
+            loc: memberExpr.loc ?? null,
+            suggestions: null,
+          },
+        );
+        const args = instrValue.args.map(arg => codegenArgument(cx, arg));
+        value = createCallExpression(
+          cx.env,
+          memberExpr,
+          args,
+          instrValue.loc,
+          isHook,
+        );
+      }
       break;
     }
     case 'NewExpression': {
