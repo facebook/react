@@ -52,6 +52,15 @@
   min-width: 1rem;
 }
 
+.InfoRow {
+  border-top: 1px solid var(--color-border);
+  padding: 0.5rem 1rem;
+}
+
+.InfoRow:last-child {
+  margin-bottom: -0.25rem;
+}
+
 .CollapsableRow {
   border-top: 1px solid var(--color-border);
 }

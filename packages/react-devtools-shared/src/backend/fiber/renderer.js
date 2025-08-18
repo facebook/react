@@ -15,6 +15,7 @@ import type {
   ReactIOInfo,
   ReactStackTrace,
   ReactCallSite,
+  Wakeable,
 } from 'shared/ReactTypes';
 
 import type {HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
@@ -87,6 +88,10 @@ import {
   SUSPENSE_TREE_OPERATION_REMOVE,
   SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
   SUSPENSE_TREE_OPERATION_RESIZE,
+  UNKNOWN_SUSPENDERS_NONE,
+  UNKNOWN_SUSPENDERS_REASON_PRODUCTION,
+  UNKNOWN_SUSPENDERS_REASON_OLD_VERSION,
+  UNKNOWN_SUSPENDERS_REASON_THROWN_PROMISE,
 } from '../../constants';
 import {inspectHooksOfFiber} from 'react-debug-tools';
 import {
@@ -296,6 +301,9 @@ type SuspenseNode = {
   // Track whether any of the items in suspendedBy are unique this this Suspense boundaries or if they're all
   // also in the parent sets. This determine whether this could contribute in the loading sequence.
   hasUniqueSuspenders: boolean,
+  // Track whether anything suspended in this boundary that we can't track either because it was using throw
+  // a promise, an older version of React or because we're inspecting prod.
+  hasUnknownSuspenders: boolean,
 };
 
 function createSuspenseNode(
@@ -309,6 +317,7 @@ function createSuspenseNode(
     rects: null,
     suspendedBy: new Map(),
     hasUniqueSuspenders: false,
+    hasUnknownSuspenders: false,
   });
 }
 
@@ -367,6 +376,7 @@ export function getInternalReactConstants(version: string): {
   ReactPriorityLevels: ReactPriorityLevelsType,
   ReactTypeOfWork: WorkTagMap,
   StrictModeBits: number,
+  SuspenseyImagesMode: number,
 } {
   // **********************************************************
   // The section below is copied from files in React repo.
@@ -406,6 +416,8 @@ export function getInternalReactConstants(version: string): {
     // 16.3 - 16.8
     StrictModeBits = 0b10;
   }
+
+  const SuspenseyImagesMode = 0b0100000;
 
   let ReactTypeOfWork: WorkTagMap = ((null: any): WorkTagMap);
 
@@ -820,6 +832,7 @@ export function getInternalReactConstants(version: string): {
     ReactPriorityLevels,
     ReactTypeOfWork,
     StrictModeBits,
+    SuspenseyImagesMode,
   };
 }
 
@@ -988,6 +1001,7 @@ export function attach(
     ReactPriorityLevels,
     ReactTypeOfWork,
     StrictModeBits,
+    SuspenseyImagesMode,
   } = getInternalReactConstants(version);
   const {
     ActivityComponent,
@@ -1527,6 +1541,22 @@ export function attach(
 
   function getEnvironmentNames(): Array<string> {
     return Array.from(knownEnvironmentNames);
+  }
+
+  function isFiberHydrated(fiber: Fiber): boolean {
+    if (OffscreenComponent === -1) {
+      throw new Error('not implemented for legacy suspense');
+    }
+    switch (fiber.tag) {
+      case HostRoot:
+        const rootState = fiber.memoizedState;
+        return !rootState.isDehydrated;
+      case SuspenseComponent:
+        const suspenseState = fiber.memoizedState;
+        return suspenseState === null || suspenseState.dehydrated === null;
+      default:
+        throw new Error('not implemented for work tag ' + fiber.tag);
+    }
   }
 
   function shouldFilterVirtual(
@@ -2740,6 +2770,8 @@ export function attach(
         parentSuspenseNode.hasUniqueSuspenders = true;
       }
     }
+    // We have observed at least one known reason this might have been suspended.
+    parentSuspenseNode.hasUnknownSuspenders = false;
     // Suspending right below the root is not attributed to any particular component in UI
     // other than the SuspenseNode and the HostRoot's FiberInstance.
     const suspendedBy = parentInstance.suspendedBy;
@@ -2778,6 +2810,7 @@ export function attach(
         // It can now be marked as having unique suspenders. We can skip its children
         // since they'll still be blocked by this one.
         node.hasUniqueSuspenders = true;
+        node.hasUnknownSuspenders = false;
       } else if (node.firstChild !== null) {
         node = node.firstChild;
         continue;
@@ -2930,7 +2963,7 @@ export function attach(
       }
       if (suspenseNode.parent !== parentNode) {
         throw new Error(
-          'Cannot remove a node from a different parent than is being reconciled.',
+          'Cannot remove a Suspense node from a different parent than is being reconciled.',
         );
       }
       let previousSuspenseSibling = remainingReconcilingChildrenSuspenseNodes;
@@ -3310,6 +3343,7 @@ export function attach(
     }
     let start = -1;
     let end = -1;
+    let byteSize = 0;
     // $FlowFixMe[method-unbinding]
     if (typeof performance.getEntriesByType === 'function') {
       // We may be able to collect the start and end time of this resource from Performance Observer.
@@ -3319,6 +3353,8 @@ export function attach(
         if (resourceEntry.name === href) {
           start = resourceEntry.startTime;
           end = start + resourceEntry.duration;
+          // $FlowFixMe[prop-missing]
+          byteSize = (resourceEntry.transferSize: any) || 0;
         }
       }
     }
@@ -3334,6 +3370,10 @@ export function attach(
       // $FlowFixMe: This field doesn't usually take a Fiber but we're only using inside this file.
       owner: fiber, // Allow linking to the <link> if it's not filtered.
     };
+    if (byteSize > 0) {
+      // $FlowFixMe[cannot-write]
+      ioInfo.byteSize = byteSize;
+    }
     const asyncInfo: ReactAsyncInfo = {
       awaited: ioInfo,
       // $FlowFixMe: This field doesn't usually take a Fiber but we're only using inside this file.
@@ -3343,6 +3383,140 @@ export function attach(
     };
     hostAsyncInfoCache.set(resource, asyncInfo);
     insertSuspendedBy(asyncInfo);
+  }
+
+  function trackDebugInfoFromHostComponent(
+    devtoolsInstance: DevToolsInstance,
+    fiber: Fiber,
+  ): void {
+    if (fiber.tag !== HostComponent) {
+      return;
+    }
+    if ((fiber.mode & SuspenseyImagesMode) === 0) {
+      // In any released version, Suspensey Images are only enabled inside a ViewTransition
+      // subtree, which is enabled by the SuspenseyImagesMode.
+      // TODO: If we ever enable the enableSuspenseyImages flag then it would be enabled for
+      // all images and we'd need some other check for if the version of React has that enabled.
+      return;
+    }
+
+    const type = fiber.type;
+    const props: {
+      src?: string,
+      onLoad?: (event: any) => void,
+      loading?: 'eager' | 'lazy',
+      ...
+    } = fiber.memoizedProps;
+
+    const maySuspendCommit =
+      type === 'img' &&
+      props.src != null &&
+      props.src !== '' &&
+      props.onLoad == null &&
+      props.loading !== 'lazy';
+
+    // Note: We don't track "maySuspendCommitOnUpdate" separately because it doesn't matter if
+    // it didn't suspend this particular update if it would've suspended if it mounted in this
+    // state, since we're tracking the dependencies inside the current state.
+
+    if (!maySuspendCommit) {
+      return;
+    }
+
+    const instance = fiber.stateNode;
+    if (instance == null) {
+      // Should never happen.
+      return;
+    }
+
+    // Unlike props.src, currentSrc will be fully qualified which we need for comparison below.
+    // Unlike instance.src it will be resolved into the media queries currently matching which is
+    // the state we're inspecting.
+    const src = instance.currentSrc;
+    if (typeof src !== 'string' || src === '') {
+      return;
+    }
+    let start = -1;
+    let end = -1;
+    let byteSize = 0;
+    let fileSize = 0;
+    // $FlowFixMe[method-unbinding]
+    if (typeof performance.getEntriesByType === 'function') {
+      // We may be able to collect the start and end time of this resource from Performance Observer.
+      const resourceEntries = performance.getEntriesByType('resource');
+      for (let i = 0; i < resourceEntries.length; i++) {
+        const resourceEntry = resourceEntries[i];
+        if (resourceEntry.name === src) {
+          start = resourceEntry.startTime;
+          end = start + resourceEntry.duration;
+          // $FlowFixMe[prop-missing]
+          fileSize = (resourceEntry.decodedBodySize: any) || 0;
+          // $FlowFixMe[prop-missing]
+          byteSize = (resourceEntry.transferSize: any) || 0;
+        }
+      }
+    }
+    // A representation of the image data itself.
+    // TODO: We could render a little preview in the front end from the resource API.
+    const value: {
+      currentSrc: string,
+      naturalWidth?: number,
+      naturalHeight?: number,
+      fileSize?: number,
+    } = {
+      currentSrc: src,
+    };
+    if (instance.naturalWidth > 0 && instance.naturalHeight > 0) {
+      // The intrinsic size of the file value itself, if it's loaded
+      value.naturalWidth = instance.naturalWidth;
+      value.naturalHeight = instance.naturalHeight;
+    }
+    if (fileSize > 0) {
+      // Cross-origin images won't have a file size that we can access.
+      value.fileSize = fileSize;
+    }
+    const promise = Promise.resolve(value);
+    (promise: any).status = 'fulfilled';
+    (promise: any).value = value;
+    const ioInfo: ReactIOInfo = {
+      name: 'img',
+      start,
+      end,
+      value: promise,
+      // $FlowFixMe: This field doesn't usually take a Fiber but we're only using inside this file.
+      owner: fiber, // Allow linking to the <link> if it's not filtered.
+    };
+    if (byteSize > 0) {
+      // $FlowFixMe[cannot-write]
+      ioInfo.byteSize = byteSize;
+    }
+    const asyncInfo: ReactAsyncInfo = {
+      awaited: ioInfo,
+      // $FlowFixMe: This field doesn't usually take a Fiber but we're only using inside this file.
+      owner: fiber._debugOwner == null ? null : fiber._debugOwner,
+      debugStack: fiber._debugStack == null ? null : fiber._debugStack,
+      debugTask: fiber._debugTask == null ? null : fiber._debugTask,
+    };
+    insertSuspendedBy(asyncInfo);
+  }
+
+  function trackThrownPromisesFromRetryCache(
+    suspenseNode: SuspenseNode,
+    retryCache: ?WeakSet<Wakeable>,
+  ): void {
+    if (retryCache != null) {
+      // If a Suspense boundary ever committed in fallback state with a retryCache, that
+      // suggests that something unique to that boundary was suspensey since otherwise
+      // it wouldn't have thrown and so never created the retryCache.
+      // Unfortunately if we don't have any DEV time debug info or debug thenables then
+      // we have no meta data to show. However, we still mark this Suspense boundary as
+      // participating in the loading sequence since apparently it can suspend.
+      suspenseNode.hasUniqueSuspenders = true;
+      // We have not seen any reason yet for why this suspense node might have been
+      // suspended but it clearly has been at some point. If we later discover a reason
+      // we'll clear this flag again.
+      suspenseNode.hasUnknownSuspenders = true;
+    }
   }
 
   function mountVirtualChildrenRecursively(
@@ -3466,6 +3640,50 @@ export function attach(
     );
   }
 
+  function mountSuspenseChildrenRecursively(
+    contentFiber: Fiber,
+    traceNearestHostComponentUpdate: boolean,
+    stashedSuspenseParent: SuspenseNode | null,
+    stashedSuspensePrevious: SuspenseNode | null,
+    stashedSuspenseRemaining: SuspenseNode | null,
+  ) {
+    const fallbackFiber = contentFiber.sibling;
+
+    // First update only the Offscreen boundary. I.e. the main content.
+    mountVirtualChildrenRecursively(
+      contentFiber,
+      fallbackFiber,
+      traceNearestHostComponentUpdate,
+      0, // first level
+    );
+
+    if (fallbackFiber !== null) {
+      const fallbackStashedSuspenseParent = stashedSuspenseParent;
+      const fallbackStashedSuspensePrevious = stashedSuspensePrevious;
+      const fallbackStashedSuspenseRemaining = stashedSuspenseRemaining;
+      // Next, we'll pop back out of the SuspenseNode that we added above and now we'll
+      // reconcile the fallback, reconciling anything by inserting into the parent SuspenseNode.
+      // Since the fallback conceptually blocks the parent.
+      reconcilingParentSuspenseNode = stashedSuspenseParent;
+      previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
+      remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
+      try {
+        mountVirtualChildrenRecursively(
+          fallbackFiber,
+          null,
+          traceNearestHostComponentUpdate,
+          0, // first level
+        );
+      } finally {
+        reconcilingParentSuspenseNode = fallbackStashedSuspenseParent;
+        previouslyReconciledSiblingSuspenseNode =
+          fallbackStashedSuspensePrevious;
+        remainingReconcilingChildrenSuspenseNodes =
+          fallbackStashedSuspenseRemaining;
+      }
+    }
+  }
+
   function mountFiberRecursively(
     fiber: Fiber,
     traceNearestHostComponentUpdate: boolean,
@@ -3488,11 +3706,17 @@ export function attach(
             newSuspenseNode.rects = measureInstance(newInstance);
           }
         } else {
-          const contentFiber = fiber.child;
-          if (contentFiber === null) {
-            throw new Error(
-              'There should always be an Offscreen Fiber child in a Suspense boundary.',
-            );
+          const hydrated = isFiberHydrated(fiber);
+          if (hydrated) {
+            const contentFiber = fiber.child;
+            if (contentFiber === null) {
+              throw new Error(
+                'There should always be an Offscreen Fiber child in a hydrated Suspense boundary.',
+              );
+            }
+          } else {
+            // This Suspense Fiber is still dehydrated. It won't have any children
+            // until hydration.
           }
           const isTimedOut = fiber.memoizedState !== null;
           if (!isTimedOut) {
@@ -3540,13 +3764,20 @@ export function attach(
             newSuspenseNode.rects = measureInstance(newInstance);
           }
         } else {
-          const contentFiber = fiber.child;
-          if (contentFiber === null) {
-            throw new Error(
-              'There should always be an Offscreen Fiber child in a Suspense boundary.',
-            );
+          const hydrated = isFiberHydrated(fiber);
+          if (hydrated) {
+            const contentFiber = fiber.child;
+            if (contentFiber === null) {
+              throw new Error(
+                'There should always be an Offscreen Fiber child in a hydrated Suspense boundary.',
+              );
+            }
+          } else {
+            // This Suspense Fiber is still dehydrated. It won't have any children
+            // until hydration.
           }
-          const isTimedOut = fiber.memoizedState !== null;
+          const suspenseState = fiber.memoizedState;
+          const isTimedOut = suspenseState !== null;
           if (!isTimedOut) {
             newSuspenseNode.rects = measureInstance(newInstance);
           }
@@ -3619,6 +3850,7 @@ export function attach(
           throw new Error('Did not expect a host hoistable to be the root');
         }
         aquireHostInstance(nearestInstance, fiber.stateNode);
+        trackDebugInfoFromHostComponent(nearestInstance, fiber);
       }
 
       if (fiber.tag === OffscreenComponent && fiber.memoizedState !== null) {
@@ -3635,6 +3867,9 @@ export function attach(
       } else if (fiber.tag === SuspenseComponent && OffscreenComponent === -1) {
         // Legacy Suspense without the Offscreen wrapper. For the modern Suspense we just handle the
         // Offscreen wrapper itself specially.
+        if (newSuspenseNode !== null) {
+          trackThrownPromisesFromRetryCache(newSuspenseNode, fiber.stateNode);
+        }
         const isTimedOut = fiber.memoizedState !== null;
         if (isTimedOut) {
           // Special case: if Suspense mounts in a timed-out state,
@@ -3672,35 +3907,26 @@ export function attach(
       ) {
         // Modern Suspense path
         const contentFiber = fiber.child;
-        if (contentFiber === null) {
-          throw new Error(
-            'There should always be an Offscreen Fiber child in a Suspense boundary.',
-          );
-        }
-        const fallbackFiber = contentFiber.sibling;
+        const hydrated = isFiberHydrated(fiber);
+        if (hydrated) {
+          if (contentFiber === null) {
+            throw new Error(
+              'There should always be an Offscreen Fiber child in a hydrated Suspense boundary.',
+            );
+          }
 
-        // First update only the Offscreen boundary. I.e. the main content.
-        mountVirtualChildrenRecursively(
-          contentFiber,
-          fallbackFiber,
-          traceNearestHostComponentUpdate,
-          0, // first level
-        );
+          trackThrownPromisesFromRetryCache(newSuspenseNode, fiber.stateNode);
 
-        // Next, we'll pop back out of the SuspenseNode that we added above and now we'll
-        // reconcile the fallback, reconciling anything by inserting into the parent SuspenseNode.
-        // Since the fallback conceptually blocks the parent.
-        reconcilingParentSuspenseNode = stashedSuspenseParent;
-        previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
-        remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
-        shouldPopSuspenseNode = false;
-        if (fallbackFiber !== null) {
-          mountVirtualChildrenRecursively(
-            fallbackFiber,
-            null,
+          mountSuspenseChildrenRecursively(
+            contentFiber,
             traceNearestHostComponentUpdate,
-            0, // first level
+            stashedSuspenseParent,
+            stashedSuspensePrevious,
+            stashedSuspenseRemaining,
           );
+        } else {
+          // This Suspense Fiber is still dehydrated. It won't have any children
+          // until hydration.
         }
       } else {
         if (fiber.child !== null) {
@@ -4354,6 +4580,63 @@ export function attach(
     );
   }
 
+  function updateSuspenseChildrenRecursively(
+    nextContentFiber: Fiber,
+    prevContentFiber: Fiber,
+    traceNearestHostComponentUpdate: boolean,
+    stashedSuspenseParent: null | SuspenseNode,
+    stashedSuspensePrevious: null | SuspenseNode,
+    stashedSuspenseRemaining: null | SuspenseNode,
+  ): number {
+    let updateFlags = NoUpdate;
+    const prevFallbackFiber = prevContentFiber.sibling;
+    const nextFallbackFiber = nextContentFiber.sibling;
+
+    // First update only the Offscreen boundary. I.e. the main content.
+    updateFlags |= updateVirtualChildrenRecursively(
+      nextContentFiber,
+      nextFallbackFiber,
+      prevContentFiber,
+      traceNearestHostComponentUpdate,
+      0,
+    );
+
+    if (prevFallbackFiber !== null || nextFallbackFiber !== null) {
+      const fallbackStashedSuspenseParent = reconcilingParentSuspenseNode;
+      const fallbackStashedSuspensePrevious =
+        previouslyReconciledSiblingSuspenseNode;
+      const fallbackStashedSuspenseRemaining =
+        remainingReconcilingChildrenSuspenseNodes;
+      // Next, we'll pop back out of the SuspenseNode that we added above and now we'll
+      // reconcile the fallback, reconciling anything in the context of the parent SuspenseNode.
+      // Since the fallback conceptually blocks the parent.
+      reconcilingParentSuspenseNode = stashedSuspenseParent;
+      previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
+      remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
+      try {
+        if (nextFallbackFiber === null) {
+          unmountRemainingChildren();
+        } else {
+          updateFlags |= updateVirtualChildrenRecursively(
+            nextFallbackFiber,
+            null,
+            prevFallbackFiber,
+            traceNearestHostComponentUpdate,
+            0,
+          );
+        }
+      } finally {
+        reconcilingParentSuspenseNode = fallbackStashedSuspenseParent;
+        previouslyReconciledSiblingSuspenseNode =
+          fallbackStashedSuspensePrevious;
+        remainingReconcilingChildrenSuspenseNodes =
+          fallbackStashedSuspenseRemaining;
+      }
+    }
+
+    return updateFlags;
+  }
+
   // Returns whether closest unfiltered fiber parent needs to reset its child list.
   function updateFiberRecursively(
     fiberInstance: null | FiberInstance | FilteredFiberInstance, // null if this should be filtered
@@ -4435,32 +4718,33 @@ export function attach(
       trackDebugInfoFromLazyType(nextFiber);
       trackDebugInfoFromUsedThenables(nextFiber);
 
-      if (
-        nextFiber.tag === HostHoistable &&
-        prevFiber.memoizedState !== nextFiber.memoizedState
-      ) {
+      if (nextFiber.tag === HostHoistable) {
         const nearestInstance = reconcilingParent;
         if (nearestInstance === null) {
           throw new Error('Did not expect a host hoistable to be the root');
         }
-        releaseHostResource(nearestInstance, prevFiber.memoizedState);
-        aquireHostResource(nearestInstance, nextFiber.memoizedState);
+        if (prevFiber.memoizedState !== nextFiber.memoizedState) {
+          releaseHostResource(nearestInstance, prevFiber.memoizedState);
+          aquireHostResource(nearestInstance, nextFiber.memoizedState);
+        }
         trackDebugInfoFromHostResource(nearestInstance, nextFiber);
       } else if (
-        (nextFiber.tag === HostComponent ||
-          nextFiber.tag === HostText ||
-          nextFiber.tag === HostSingleton) &&
-        prevFiber.stateNode !== nextFiber.stateNode
+        nextFiber.tag === HostComponent ||
+        nextFiber.tag === HostText ||
+        nextFiber.tag === HostSingleton
       ) {
-        // In persistent mode, it's possible for the stateNode to update with
-        // a new clone. In that case we need to release the old one and aquire
-        // new one instead.
         const nearestInstance = reconcilingParent;
         if (nearestInstance === null) {
           throw new Error('Did not expect a host hoistable to be the root');
         }
-        releaseHostInstance(nearestInstance, prevFiber.stateNode);
-        aquireHostInstance(nearestInstance, nextFiber.stateNode);
+        if (prevFiber.stateNode !== nextFiber.stateNode) {
+          // In persistent mode, it's possible for the stateNode to update with
+          // a new clone. In that case we need to release the old one and aquire
+          // new one instead.
+          releaseHostInstance(nearestInstance, prevFiber.stateNode);
+          aquireHostInstance(nearestInstance, nextFiber.stateNode);
+        }
+        trackDebugInfoFromHostComponent(nearestInstance, nextFiber);
       }
 
       let updateFlags = NoUpdate;
@@ -4484,6 +4768,18 @@ export function attach(
       const prevWasHidden = isOffscreen && prevFiber.memoizedState !== null;
       const nextIsHidden = isOffscreen && nextFiber.memoizedState !== null;
 
+      if (isLegacySuspense) {
+        if (
+          fiberInstance !== null &&
+          fiberInstance.suspenseNode !== null &&
+          (prevFiber.stateNode === null) !== (nextFiber.stateNode === null)
+        ) {
+          trackThrownPromisesFromRetryCache(
+            fiberInstance.suspenseNode,
+            nextFiber.stateNode,
+          );
+        }
+      }
       // The logic below is inspired by the code paths in updateSuspenseComponent()
       // inside ReactFiberBeginWork in the React source code.
       if (prevDidTimeout && nextDidTimeOut) {
@@ -4600,59 +4896,67 @@ export function attach(
         fiberInstance.suspenseNode !== null
       ) {
         // Modern Suspense path
+        const suspenseNode = fiberInstance.suspenseNode;
         const prevContentFiber = prevFiber.child;
         const nextContentFiber = nextFiber.child;
-        if (nextContentFiber === null || prevContentFiber === null) {
-          throw new Error(
-            'There should always be an Offscreen Fiber child in a Suspense boundary.',
-          );
-        }
-        const prevFallbackFiber = prevContentFiber.sibling;
-        const nextFallbackFiber = nextContentFiber.sibling;
-
-        // First update only the Offscreen boundary. I.e. the main content.
-        updateFlags |= updateVirtualChildrenRecursively(
-          nextContentFiber,
-          nextFallbackFiber,
-          prevContentFiber,
-          traceNearestHostComponentUpdate,
-          0,
-        );
-
-        shouldMeasureSuspenseNode = false;
-        if (nextFallbackFiber !== null) {
-          const fallbackStashedSuspenseParent = reconcilingParentSuspenseNode;
-          const fallbackStashedSuspensePrevious =
-            previouslyReconciledSiblingSuspenseNode;
-          const fallbackStashedSuspenseRemaining =
-            remainingReconcilingChildrenSuspenseNodes;
-          // Next, we'll pop back out of the SuspenseNode that we added above and now we'll
-          // reconcile the fallback, reconciling anything by inserting into the parent SuspenseNode.
-          // Since the fallback conceptually blocks the parent.
-          reconcilingParentSuspenseNode = stashedSuspenseParent;
-          previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
-          remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
-          try {
-            updateFlags |= updateVirtualChildrenRecursively(
-              nextFallbackFiber,
-              null,
-              prevFallbackFiber,
-              traceNearestHostComponentUpdate,
-              0,
+        const previousHydrated = isFiberHydrated(prevFiber);
+        const nextHydrated = isFiberHydrated(nextFiber);
+        if (previousHydrated && nextHydrated) {
+          if (nextContentFiber === null || prevContentFiber === null) {
+            throw new Error(
+              'There should always be an Offscreen Fiber child in a hydrated Suspense boundary.',
             );
-          } finally {
-            reconcilingParentSuspenseNode = fallbackStashedSuspenseParent;
-            previouslyReconciledSiblingSuspenseNode =
-              fallbackStashedSuspensePrevious;
-            remainingReconcilingChildrenSuspenseNodes =
-              fallbackStashedSuspenseRemaining;
           }
-        } else if (nextFiber.memoizedState === null) {
-          // Measure this Suspense node in case it changed. We don't update the rect while
-          // we're inside a disconnected subtree nor if we are the Suspense boundary that
-          // is suspended. This lets us keep the rectangle of the displayed content while
-          // we're suspended to visualize the resulting state.
-          shouldMeasureSuspenseNode = !isInDisconnectedSubtree;
+
+          if (
+            (prevFiber.stateNode === null) !==
+            (nextFiber.stateNode === null)
+          ) {
+            trackThrownPromisesFromRetryCache(
+              suspenseNode,
+              nextFiber.stateNode,
+            );
+          }
+
+          shouldMeasureSuspenseNode = false;
+          updateFlags |= updateSuspenseChildrenRecursively(
+            nextContentFiber,
+            prevContentFiber,
+            traceNearestHostComponentUpdate,
+            stashedSuspenseParent,
+            stashedSuspensePrevious,
+            stashedSuspenseRemaining,
+          );
+          if (nextFiber.memoizedState === null) {
+            // Measure this Suspense node in case it changed. We don't update the rect while
+            // we're inside a disconnected subtree nor if we are the Suspense boundary that
+            // is suspended. This lets us keep the rectangle of the displayed content while
+            // we're suspended to visualize the resulting state.
+            shouldMeasureSuspenseNode = !isInDisconnectedSubtree;
+          }
+        } else if (!previousHydrated && nextHydrated) {
+          if (nextContentFiber === null) {
+            throw new Error(
+              'There should always be an Offscreen Fiber child in a hydrated Suspense boundary.',
+            );
+          }
+
+          trackThrownPromisesFromRetryCache(suspenseNode, nextFiber.stateNode);
+
+          mountSuspenseChildrenRecursively(
+            nextContentFiber,
+            traceNearestHostComponentUpdate,
+            stashedSuspenseParent,
+            stashedSuspensePrevious,
+            stashedSuspenseRemaining,
+          );
+        } else if (previousHydrated && !nextHydrated) {
+          throw new Error(
+            'Encountered a dehydrated Suspense boundary that was previously hydrated.',
+          );
+        } else {
+          // This Suspense Fiber is still dehydrated. It won't have any children
+          // until hydration.
         }
       } else {
         // Common case: Primary -> Primary.
@@ -4987,14 +5291,9 @@ export function attach(
       // TODO: relying on this seems a bit fishy.
       const wasMounted =
         prevFiber.memoizedState != null &&
-        prevFiber.memoizedState.element != null &&
-        // A dehydrated root is not considered mounted
-        prevFiber.memoizedState.isDehydrated !== true;
+        prevFiber.memoizedState.element != null;
       const isMounted =
-        current.memoizedState != null &&
-        current.memoizedState.element != null &&
-        // A dehydrated root is not considered mounted
-        current.memoizedState.isDehydrated !== true;
+        current.memoizedState != null && current.memoizedState.element != null;
       if (!wasMounted && isMounted) {
         // Mount a new root.
         setRootPseudoKey(currentRoot.id, current);
@@ -5150,6 +5449,18 @@ export function attach(
     } else {
       return devtoolsInstance.data.name || '';
     }
+  }
+
+  function getNearestSuspenseNode(instance: DevToolsInstance): SuspenseNode {
+    while (instance.suspenseNode === null) {
+      if (instance.parent === null) {
+        throw new Error(
+          'There should always be a SuspenseNode parent on a mounted instance.',
+        );
+      }
+      instance = instance.parent;
+    }
+    return instance.suspenseNode;
   }
 
   function getNearestMountedDOMNode(publicInstance: Element): null | Element {
@@ -5440,6 +5751,56 @@ export function attach(
     return result;
   }
 
+  const FALLBACK_THROTTLE_MS: number = 300;
+
+  function getSuspendedByRange(
+    suspenseNode: SuspenseNode,
+  ): null | [number, number] {
+    let min = Infinity;
+    let max = -Infinity;
+    suspenseNode.suspendedBy.forEach((_, ioInfo) => {
+      if (ioInfo.end > max) {
+        max = ioInfo.end;
+      }
+      if (ioInfo.start < min) {
+        min = ioInfo.start;
+      }
+    });
+    const parentSuspenseNode = suspenseNode.parent;
+    if (parentSuspenseNode !== null) {
+      let parentMax = -Infinity;
+      parentSuspenseNode.suspendedBy.forEach((_, ioInfo) => {
+        if (ioInfo.end > parentMax) {
+          parentMax = ioInfo.end;
+        }
+      });
+      // The parent max is theoretically the earlier the parent could've committed.
+      // Therefore, the theoretical max that the child could be throttled is that plus 300ms.
+      const throttleTime = parentMax + FALLBACK_THROTTLE_MS;
+      if (throttleTime > max) {
+        // If the theoretical throttle time is later than the earliest reveal then we extend
+        // the max time to show that this is timespan could possibly get throttled.
+        max = throttleTime;
+      }
+
+      // We use the end of the previous boundary as the start time for this boundary unless,
+      // that's earlier than we'd need to expand to the full fallback throttle range. It
+      // suggests that the parent was loaded earlier than this one.
+      let startTime = max - FALLBACK_THROTTLE_MS;
+      if (parentMax > startTime) {
+        startTime = parentMax;
+      }
+      // If the first fetch of this boundary starts before that, then we use that as the start.
+      if (startTime < min) {
+        min = startTime;
+      }
+    }
+    if (min < Infinity && max > -Infinity) {
+      return [min, max];
+    }
+    return null;
+  }
+
   function getAwaitStackFromHooks(
     hooks: HooksTree,
     asyncInfo: ReactAsyncInfo,
@@ -5600,6 +5961,7 @@ export function attach(
         description: getIODescription(resolvedValue),
         start: ioInfo.start,
         end: ioInfo.end,
+        byteSize: ioInfo.byteSize == null ? null : ioInfo.byteSize,
         value: ioInfo.value == null ? null : ioInfo.value,
         env: ioInfo.env == null ? null : ioInfo.env,
         owner:
@@ -5893,6 +6255,11 @@ export function attach(
       nativeTag = getNativeTag(fiber.stateNode);
     }
 
+    let isSuspended: boolean | null = null;
+    if (tag === SuspenseComponent) {
+      isSuspended = memoizedState !== null;
+    }
+
     const suspendedBy =
       fiberInstance.suspenseNode !== null
         ? // If this is a Suspense boundary, then we include everything in the subtree that might suspend
@@ -5908,6 +6275,27 @@ export function attach(
           : fiberInstance.suspendedBy.map(info =>
               serializeAsyncInfo(info, fiberInstance, hooks),
             );
+    const suspendedByRange = getSuspendedByRange(
+      getNearestSuspenseNode(fiberInstance),
+    );
+
+    let unknownSuspenders = UNKNOWN_SUSPENDERS_NONE;
+    if (
+      fiberInstance.suspenseNode !== null &&
+      fiberInstance.suspenseNode.hasUnknownSuspenders &&
+      !isTimedOutSuspense
+    ) {
+      // Something unknown threw to suspended this boundary. Let's figure out why that might be.
+      if (renderer.bundleType === 0) {
+        unknownSuspenders = UNKNOWN_SUSPENDERS_REASON_PRODUCTION;
+      } else if (!('_debugInfo' in fiber)) {
+        // TODO: We really should detect _debugThenable and the auto-instrumentation for lazy/thenables too.
+        unknownSuspenders = UNKNOWN_SUSPENDERS_REASON_OLD_VERSION;
+      } else {
+        unknownSuspenders = UNKNOWN_SUSPENDERS_REASON_THROWN_PROMISE;
+      }
+    }
+
     return {
       id: fiberInstance.id,
 
@@ -5939,6 +6327,7 @@ export function attach(
           forceFallbackForFibers.has(fiber) ||
           (fiber.alternate !== null &&
             forceFallbackForFibers.has(fiber.alternate))),
+      isSuspended: isSuspended,
 
       source,
 
@@ -5970,6 +6359,8 @@ export function attach(
           : Array.from(componentLogsEntry.warnings.entries()),
 
       suspendedBy: suspendedBy,
+      suspendedByRange: suspendedByRange,
+      unknownSuspenders: unknownSuspenders,
 
       // List of owners
       owners,
@@ -6026,8 +6417,12 @@ export function attach(
     const componentLogsEntry =
       componentInfoToComponentLogsMap.get(componentInfo);
 
+    const isSuspended = null;
     // Things that Suspended this Server Component (use(), awaits and direct child promises)
     const suspendedBy = virtualInstance.suspendedBy;
+    const suspendedByRange = getSuspendedByRange(
+      getNearestSuspenseNode(virtualInstance),
+    );
 
     return {
       id: virtualInstance.id,
@@ -6044,6 +6439,7 @@ export function attach(
       isErrored: false,
 
       canToggleSuspense: supportsTogglingSuspense && hasSuspenseBoundary,
+      isSuspended: isSuspended,
 
       source,
 
@@ -6080,6 +6476,8 @@ export function attach(
           : suspendedBy.map(info =>
               serializeAsyncInfo(info, virtualInstance, null),
             ),
+      suspendedByRange: suspendedByRange,
+      unknownSuspenders: UNKNOWN_SUSPENDERS_NONE,
 
       // List of owners
       owners,

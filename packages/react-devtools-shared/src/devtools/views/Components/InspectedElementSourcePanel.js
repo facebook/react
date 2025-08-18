@@ -36,7 +36,12 @@ function InspectedElementSourcePanel({
       <div className={styles.SourceHeaderRow}>
         <div className={styles.SourceHeader}>source</div>
 
-        <React.Suspense fallback={<Skeleton height={16} width={16} />}>
+        <React.Suspense
+          fallback={
+            <Button disabled={true} title="Loading source maps...">
+              <ButtonIcon type="copy" />
+            </Button>
+          }>
           <CopySourceButton
             source={source}
             symbolicatedSourcePromise={symbolicatedSourcePromise}

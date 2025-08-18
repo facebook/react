@@ -7,7 +7,7 @@
 
 import {CompilerDiagnostic, CompilerError, ErrorSeverity} from '..';
 import {HIRFunction} from '../HIR';
-import {getFunctionCallSignature} from '../Inference/InferReferenceEffects';
+import {getFunctionCallSignature} from '../Inference/InferMutationAliasingEffects';
 import {Result} from '../Utils/Result';
 
 /**
