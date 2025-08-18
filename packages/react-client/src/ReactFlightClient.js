@@ -637,7 +637,7 @@ function triggerErrorOnChunk<T>(
       cyclicChunk.status = BLOCKED;
       cyclicChunk.value = null;
       cyclicChunk.reason = null;
-      if (enableProfilerTimer && enableComponentPerformanceTrack) {
+      if ((enableProfilerTimer && enableComponentPerformanceTrack) || __DEV__) {
         initializingChunk = cyclicChunk;
       }
       try {
@@ -919,7 +919,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
   cyclicChunk.value = null;
   cyclicChunk.reason = null;
 
-  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+  if ((enableProfilerTimer && enableComponentPerformanceTrack) || __DEV__) {
     initializingChunk = cyclicChunk;
   }
 
@@ -961,7 +961,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
     erroredChunk.reason = error;
   } finally {
     initializingHandler = prevHandler;
-    if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if ((enableProfilerTimer && enableComponentPerformanceTrack) || __DEV__) {
       initializingChunk = prevChunk;
     }
   }
@@ -1728,6 +1728,49 @@ function loadServerReference<A: Iterable<any>, T>(
   return (null: any);
 }
 
+function transferReferencedDebugInfo(
+  parentChunk: null | SomeChunk<any>,
+  referencedChunk: SomeChunk<any>,
+  referencedValue: mixed,
+): void {
+  if (__DEV__ && referencedChunk._debugInfo) {
+    const referencedDebugInfo = referencedChunk._debugInfo;
+    // If we have a direct reference to an object that was rendered by a synchronous
+    // server component, it might have some debug info about how it was rendered.
+    // We forward this to the underlying object. This might be a React Element or
+    // an Array fragment.
+    // If this was a string / number return value we lose the debug info. We choose
+    // that tradeoff to allow sync server components to return plain values and not
+    // use them as React Nodes necessarily. We could otherwise wrap them in a Lazy.
+    if (
+      typeof referencedValue === 'object' &&
+      referencedValue !== null &&
+      (isArray(referencedValue) ||
+        typeof referencedValue[ASYNC_ITERATOR] === 'function' ||
+        referencedValue.$$typeof === REACT_ELEMENT_TYPE) &&
+      !referencedValue._debugInfo
+    ) {
+      // We should maybe use a unique symbol for arrays but this is a React owned array.
+      // $FlowFixMe[prop-missing]: This should be added to elements.
+      Object.defineProperty((referencedValue: any), '_debugInfo', {
+        configurable: false,
+        enumerable: false,
+        writable: true,
+        value: referencedDebugInfo,
+      });
+    }
+    // We also add it to the initializing chunk since the resolution of that promise is
+    // also blocked by these. By adding it to both we can track it even if the array/element
+    // is extracted, or if the root is rendered as is.
+    if (parentChunk !== null) {
+      const parentDebugInfo =
+        parentChunk._debugInfo || (parentChunk._debugInfo = []);
+      // $FlowFixMe[method-unbinding]
+      parentDebugInfo.push.apply(parentDebugInfo, referencedDebugInfo);
+    }
+  }
+}
+
 function getOutlinedModel<T>(
   response: Response,
   reference: string,
@@ -1825,32 +1868,7 @@ function getOutlinedModel<T>(
         value = value[path[i]];
       }
       const chunkValue = map(response, value, parentObject, key);
-      if (__DEV__ && chunk._debugInfo) {
-        // If we have a direct reference to an object that was rendered by a synchronous
-        // server component, it might have some debug info about how it was rendered.
-        // We forward this to the underlying object. This might be a React Element or
-        // an Array fragment.
-        // If this was a string / number return value we lose the debug info. We choose
-        // that tradeoff to allow sync server components to return plain values and not
-        // use them as React Nodes necessarily. We could otherwise wrap them in a Lazy.
-        if (
-          typeof chunkValue === 'object' &&
-          chunkValue !== null &&
-          (isArray(chunkValue) ||
-            typeof chunkValue[ASYNC_ITERATOR] === 'function' ||
-            chunkValue.$$typeof === REACT_ELEMENT_TYPE) &&
-          !chunkValue._debugInfo
-        ) {
-          // We should maybe use a unique symbol for arrays but this is a React owned array.
-          // $FlowFixMe[prop-missing]: This should be added to elements.
-          Object.defineProperty((chunkValue: any), '_debugInfo', {
-            configurable: false,
-            enumerable: false,
-            writable: true,
-            value: chunk._debugInfo,
-          });
-        }
-      }
+      transferReferencedDebugInfo(initializingChunk, chunk, chunkValue);
       return chunkValue;
     case PENDING:
     case BLOCKED:
@@ -2621,7 +2639,7 @@ function resolveStream<T: ReadableStream | $AsyncIterable<any, any, void>>(
       cyclicChunk.status = BLOCKED;
       cyclicChunk.value = null;
       cyclicChunk.reason = null;
-      if (enableProfilerTimer && enableComponentPerformanceTrack) {
+      if ((enableProfilerTimer && enableComponentPerformanceTrack) || __DEV__) {
         initializingChunk = cyclicChunk;
       }
       try {
