@@ -496,13 +496,14 @@ function createErrorChunk<T>(
 function wakeChunk<T>(
   listeners: Array<InitializationReference | (T => mixed)>,
   value: T,
+  chunk: SomeChunk<T>,
 ): void {
   for (let i = 0; i < listeners.length; i++) {
     const listener = listeners[i];
     if (typeof listener === 'function') {
       listener(value);
     } else {
-      fulfillReference(listener, value);
+      fulfillReference(listener, value, chunk);
     }
   }
 }
@@ -555,7 +556,7 @@ function wakeChunkIfInitialized<T>(
 ): void {
   switch (chunk.status) {
     case INITIALIZED:
-      wakeChunk(resolveListeners, chunk.value);
+      wakeChunk(resolveListeners, chunk.value, chunk);
       break;
     case BLOCKED:
       // It is possible that we're blocked on our own chunk if it's a cycle.
@@ -569,7 +570,7 @@ function wakeChunkIfInitialized<T>(
           if (cyclicHandler !== null) {
             // This reference points back to this chunk. We can resolve the cycle by
             // using the value from that handler.
-            fulfillReference(reference, cyclicHandler.value);
+            fulfillReference(reference, cyclicHandler.value, chunk);
             resolveListeners.splice(i, 1);
             i--;
             if (rejectListeners !== null) {
@@ -938,7 +939,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
     if (resolveListeners !== null) {
       cyclicChunk.value = null;
       cyclicChunk.reason = null;
-      wakeChunk(resolveListeners, value);
+      wakeChunk(resolveListeners, value, cyclicChunk);
     }
     if (initializingHandler !== null) {
       if (initializingHandler.errored) {
@@ -1298,6 +1299,7 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
 function fulfillReference(
   reference: InitializationReference,
   value: any,
+  fulfilledChunk: SomeChunk<any>,
 ): void {
   const {response, handler, parentObject, key, map, path} = reference;
 
@@ -1376,6 +1378,8 @@ function fulfillReference(
   const mappedValue = map(response, value, parentObject, key);
   parentObject[key] = mappedValue;
 
+  transferReferencedDebugInfo(handler.chunk, fulfilledChunk, mappedValue);
+
   // If this is the root object for a model reference, where `handler.value`
   // is a stale `null`, the resolved value can be used directly.
   if (key === '' && handler.value === null) {
@@ -1422,7 +1426,7 @@ function fulfillReference(
     initializedChunk.value = handler.value;
     initializedChunk.reason = handler.reason; // Used by streaming chunks
     if (resolveListeners !== null) {
-      wakeChunk(resolveListeners, handler.value);
+      wakeChunk(resolveListeners, handler.value, initializedChunk);
     }
   }
 }
@@ -1669,7 +1673,7 @@ function loadServerReference<A: Iterable<any>, T>(
       initializedChunk.status = INITIALIZED;
       initializedChunk.value = handler.value;
       if (resolveListeners !== null) {
-        wakeChunk(resolveListeners, handler.value);
+        wakeChunk(resolveListeners, handler.value, initializedChunk);
       }
     }
   }
@@ -2668,7 +2672,7 @@ function resolveStream<T: ReadableStream | $AsyncIterable<any, any, void>>(
   resolvedChunk.value = stream;
   resolvedChunk.reason = controller;
   if (resolveListeners !== null) {
-    wakeChunk(resolveListeners, chunk.value);
+    wakeChunk(resolveListeners, chunk.value, chunk);
   }
 }
 
