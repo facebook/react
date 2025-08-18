@@ -3984,7 +3984,11 @@ function flushComponentPerformance(
             // Track the root most component of the result for deduping logging.
             result.component = componentInfo;
             isLastComponent = false;
-          } else if (candidateInfo.awaited) {
+          } else if (
+            candidateInfo.awaited &&
+            // Skip awaits on client resources since they didn't block the server component.
+            candidateInfo.awaited.env != null
+          ) {
             if (endTime > childrenEndTime) {
               childrenEndTime = endTime;
             }
@@ -4066,7 +4070,11 @@ function flushComponentPerformance(
             // Track the root most component of the result for deduping logging.
             result.component = componentInfo;
             isLastComponent = false;
-          } else if (candidateInfo.awaited) {
+          } else if (
+            candidateInfo.awaited &&
+            // Skip awaits on client resources since they didn't block the server component.
+            candidateInfo.awaited.env != null
+          ) {
             // If we don't have an end time for an await, that means we aborted.
             const asyncInfo: ReactAsyncInfo = candidateInfo;
             const env = response._rootEnvironmentName;
