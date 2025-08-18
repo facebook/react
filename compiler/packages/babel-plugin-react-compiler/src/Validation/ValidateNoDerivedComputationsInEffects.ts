@@ -13,12 +13,17 @@ import {
   FunctionExpression,
   HIRFunction,
   IdentifierId,
+  InstructionValue,
   Place,
   isSetStateType,
   isUseEffectHookType,
 } from '../HIR';
 import {printInstruction, printPlace} from '../HIR/PrintHIR';
-import {eachInstructionOperand, eachTerminalOperand} from '../HIR/visitors';
+import {
+  eachInstructionValueOperand,
+  eachInstructionOperand,
+  eachTerminalOperand,
+} from '../HIR/visitors';
 
 type SetStateCall = {
   loc: SourceLocation;
@@ -34,6 +39,22 @@ function joinValue(
   if (valueType === 'ignored') return lvalueType;
   if (lvalueType === valueType) return lvalueType;
   return 'fromPropsOrState';
+}
+
+function propagateDerivation(
+  dest: Place,
+  source: Place | undefined,
+  derivedFromProps: Map<IdentifierId, Place>,
+) {
+  if (source === undefined) {
+    return;
+  }
+
+  if (source.identifier.name?.kind === 'promoted') {
+    derivedFromProps.set(dest.identifier.id, dest);
+  } else {
+    derivedFromProps.set(dest.identifier.id, source);
+  }
 }
 
 /**
@@ -86,7 +107,6 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
     }
   }
 
-  let i = 0;
   for (const block of fn.body.blocks.values()) {
     for (const phi of block.phis) {
       for (const operand of phi.operands.values()) {
@@ -109,42 +129,154 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
       }
     }
 
-    console.log(`derivedFromProps [${i}]`, derivedFromProps);
-    i++;
-
     for (const instr of block.instructions) {
       const {lvalue, value} = instr;
 
       let typeOfValue: TypeOfValue = 'ignored';
 
       // DERIVATION LOGIC-----------------------------------------------------
-      for (const operand of eachInstructionOperand(instr)) {
-        console.log(`operand [${i}]`, operand);
-        let type: TypeOfValue = 'ignored';
-        // TODO: Add 'fromState' and 'fromPropsOrState'
-        if (derivedFromProps.get(operand.identifier.id)) {
-          type = 'fromProps';
-        }
+      console.log('instr', printInstruction(instr));
+      console.log('instr', instr);
+      console.log('instr lValue', instr.lvalue);
 
-        typeOfValue = joinValue(typeOfValue, type);
-        // TODO: Add 'fromState' and 'fromPropsOrState'
-        if (type === 'fromProps') {
-          if (valueToSourceProps.has(lvalue.identifier.id)) {
-            valueToSourceProps.get(lvalue.identifier.id)?.add(operand);
-          } else {
-            valueToSourceProps.set(lvalue.identifier.id, new Set([operand]));
+      let source;
+      switch (value.kind) {
+        // We only need to propagate to the lValue from the operands
+        case 'LoadLocal':
+        case 'LoadContext':
+        case 'NewExpression':
+        case 'CallExpression':
+        case 'MethodCall':
+        case 'UnaryExpression':
+        case 'TypeCastExpression':
+        case 'JsxExpression':
+        case 'ObjectExpression':
+        // TODO: ObjectMethod looks complicated, I'm not sure how to trigger it and would
+        // like to double check if the generic solution is enough
+        case 'ObjectMethod':
+        case 'ArrayExpression':
+        case 'JsxFragment':
+          for (const operand of eachInstructionValueOperand(value)) {
+            const opSource = derivedFromProps.get(operand.identifier.id);
+            propagateDerivation(lvalue, opSource, derivedFromProps);
           }
-        }
-        continue;
+          break;
+        // We have a nested lValue so we need to first propagate the operands to the
+        // nested lValue and then to the instruction's lValue
+        case 'StoreLocal':
+        case 'StoreContext':
+          // store state on value lValue
+          source = derivedFromProps.get(value.value.identifier.id);
+          if (source !== undefined) {
+            propagateDerivation(value.lvalue.place, source, derivedFromProps);
+          }
+
+          // store on instruction lValue
+          source = derivedFromProps.get(value.lvalue.place.identifier.id);
+          if (source !== undefined) {
+            propagateDerivation(lvalue, source, derivedFromProps);
+          }
+
+          break;
+        // special Destructure case
+        case 'Destructure':
+          source = derivedFromProps.get(value.value.identifier.id);
+
+          if (value.lvalue.pattern.kind === 'ArrayPattern') {
+            for (const item of value.lvalue.pattern.items) {
+              if (item.kind === 'Identifier') {
+                propagateDerivation(item, source, derivedFromProps);
+                propagateDerivation(
+                  lvalue,
+                  derivedFromProps.get(item.identifier.id),
+                  derivedFromProps,
+                );
+              } else if (item.kind === 'Spread') {
+                propagateDerivation(item.place, source, derivedFromProps);
+                propagateDerivation(
+                  lvalue,
+                  derivedFromProps.get(item.place.identifier.id),
+                  derivedFromProps,
+                );
+              }
+            }
+          } else if (value.lvalue.pattern.kind === 'ObjectPattern') {
+            for (const property of value.lvalue.pattern.properties) {
+              propagateDerivation(property.place, source, derivedFromProps);
+              propagateDerivation(
+                lvalue,
+                derivedFromProps.get(property.place.identifier.id),
+                derivedFromProps,
+              );
+            }
+          }
+
+          break;
+        case 'BinaryExpression':
+          propagateDerivation(lvalue, value.left, derivedFromProps);
+          propagateDerivation(lvalue, value.right, derivedFromProps);
+          break;
+
+        // No clue
+        case 'DeclareLocal':
+        case 'DeclareContext':
+        // No clue
+        // Will never be derived from props
+        case 'Primitive':
+        case 'JSXText':
+        case 'RegExpLiteral':
+        case 'MetaProperty':
+        // Will never be derived from props
+
+        case 'PropertyStore':
+        case 'PropertyLoad':
+        case 'PropertyDelete':
+        case 'ComputedStore':
+        case 'ComputedLoad':
+        case 'ComputedDelete':
+        case 'LoadGlobal':
+        case 'StoreGlobal':
+        case 'FunctionExpression':
+        case 'TaggedTemplateExpression':
+        case 'TemplateLiteral':
+        case 'Await':
+        case 'GetIterator':
+        case 'IteratorNext':
+        case 'NextPropertyOf':
+        case 'PrefixUpdate':
+        case 'PostfixUpdate':
+        case 'Debugger':
+        case 'StartMemoize':
+        case 'FinishMemoize':
+        case 'UnsupportedNode':
       }
+
+      for (const operand of eachInstructionOperand(instr)) {
+        console.log('operand: ', operand);
+      }
+
+      // for (const operand of eachInstructionOperand(instr)) {
+      //   console.log('operand: ', operand);
+      //   let type: TypeOfValue = 'ignored';
+      //   // TODO: Add 'fromState' and 'fromPropsOrState'
+      //   if (derivedFromProps.get(operand.identifier.id)) {
+      //     type = 'fromProps';
+      //   }
+
+      //   typeOfValue = joinValue(typeOfValue, type);
+      //   // TODO: Add 'fromState' and 'fromPropsOrState'
+      //   if (type === 'fromProps') {
+      //     if (valueToSourceProps.has(lvalue.identifier.id)) {
+      //       valueToSourceProps.get(lvalue.identifier.id)?.add(operand);
+      //     } else {
+      //       valueToSourceProps.set(lvalue.identifier.id, new Set([operand]));
+      //     }
+      //   }
+      //   continue;
+      // }
 
       valueToType.set(lvalue.identifier.id, typeOfValue);
       // DERIVATION LOGIC-----------------------------------------------------
-
-      console.log(`LValue [${i}]`, lvalue);
-      console.log(`valueToType [${i}]`, valueToType);
-      console.log(`instruction [${i}]`, instr);
-      i++;
 
       if (value.kind === 'CallExpression' || value.kind === 'MethodCall') {
         const callee =
