@@ -55,6 +55,7 @@ import {
   resolveServerReference,
   preloadModule,
   requireModule,
+  getModuleDebugInfo,
   dispatchHint,
   readPartialStringChunk,
   readFinalStringChunk,
@@ -790,8 +791,14 @@ function resolveModuleChunk<T>(
   resolvedChunk.status = RESOLVED_MODULE;
   resolvedChunk.value = value;
   if (__DEV__) {
-    // We don't expect to have any debug info for this row.
-    resolvedChunk._debugInfo = null;
+    const debugInfo = getModuleDebugInfo(value);
+    if (debugInfo !== null && resolvedChunk._debugInfo != null) {
+      // Add to the live set if it was already initialized.
+      // $FlowFixMe[method-unbinding]
+      resolvedChunk._debugInfo.push.apply(resolvedChunk._debugInfo, debugInfo);
+    } else {
+      resolvedChunk._debugInfo = debugInfo;
+    }
   }
   if (resolveListeners !== null) {
     initializeModuleChunk(resolvedChunk);
@@ -3977,7 +3984,11 @@ function flushComponentPerformance(
             // Track the root most component of the result for deduping logging.
             result.component = componentInfo;
             isLastComponent = false;
-          } else if (candidateInfo.awaited) {
+          } else if (
+            candidateInfo.awaited &&
+            // Skip awaits on client resources since they didn't block the server component.
+            candidateInfo.awaited.env != null
+          ) {
             if (endTime > childrenEndTime) {
               childrenEndTime = endTime;
             }
@@ -4059,7 +4070,11 @@ function flushComponentPerformance(
             // Track the root most component of the result for deduping logging.
             result.component = componentInfo;
             isLastComponent = false;
-          } else if (candidateInfo.awaited) {
+          } else if (
+            candidateInfo.awaited &&
+            // Skip awaits on client resources since they didn't block the server component.
+            candidateInfo.awaited.env != null
+          ) {
             // If we don't have an end time for an await, that means we aborted.
             const asyncInfo: ReactAsyncInfo = candidateInfo;
             const env = response._rootEnvironmentName;
