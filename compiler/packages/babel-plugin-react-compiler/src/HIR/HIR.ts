@@ -1915,6 +1915,22 @@ export function isUseOperator(id: Identifier): boolean {
   );
 }
 
+export function isCustomReactiveSourceIdentifier(
+  env: Environment,
+  id: Identifier,
+): boolean {
+  const list = env.config.reactiveSourceIdentifiers;
+  if (list == null || list.length === 0) {
+    return false;
+  }
+  const loc = id.loc;
+  return (
+    typeof loc !== 'symbol' &&
+    typeof loc.identifierName === 'string' &&
+    list.includes(loc.identifierName)
+  );
+}
+
 export function getHookKindForType(
   env: Environment,
   type: Type,

@@ -12,6 +12,7 @@ import {
   LabelTerminal,
   PrunedScopeTerminal,
   getHookKind,
+  isCustomReactiveSourceIdentifier,
   isUseOperator,
 } from '../HIR';
 import {retainWhere} from '../Utils/utils';
@@ -53,7 +54,8 @@ export function flattenScopesWithHooksOrUseHIR(fn: HIRFunction): void {
             value.kind === 'MethodCall' ? value.property : value.callee;
           if (
             getHookKind(fn.env, callee.identifier) != null ||
-            isUseOperator(callee.identifier)
+            isUseOperator(callee.identifier) ||
+            isCustomReactiveSourceIdentifier(fn.env, callee.identifier)
           ) {
             prune.push(...activeScopes.map(entry => entry.block));
             activeScopes.length = 0;

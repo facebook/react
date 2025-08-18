@@ -21,6 +21,7 @@ import {
   isStableType,
   isStableTypeContainer,
   isUseOperator,
+  isCustomReactiveSourceIdentifier,
 } from '../HIR';
 import {PostDominator} from '../HIR/Dominator';
 import {
@@ -302,13 +303,15 @@ export function inferReactivePlaces(fn: HIRFunction): void {
         if (
           value.kind === 'CallExpression' &&
           (getHookKind(fn.env, value.callee.identifier) != null ||
-            isUseOperator(value.callee.identifier))
+            isUseOperator(value.callee.identifier) ||
+            isCustomReactiveSourceIdentifier(fn.env, value.callee.identifier))
         ) {
           hasReactiveInput = true;
         } else if (
           value.kind === 'MethodCall' &&
           (getHookKind(fn.env, value.property.identifier) != null ||
-            isUseOperator(value.property.identifier))
+            isUseOperator(value.property.identifier) ||
+            isCustomReactiveSourceIdentifier(fn.env, value.property.identifier))
         ) {
           hasReactiveInput = true;
         }

@@ -650,6 +650,14 @@ export const EnvironmentConfigSchema = z.object({
    *   useMemo(() => { ... }, [...]);
    */
   validateNoVoidUseMemo: z.boolean().default(false),
+
+  /**
+   * A list of function identifier names that are considered sources of
+   * reactivity. Calls to any identifier with a name in this list behave like
+   * the `use` operator: they may be called conditionally and are never skipped
+   * by memoization/flattening optimizations.
+   */
+  reactiveSourceIdentifiers: z.array(z.string()).default([]),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
