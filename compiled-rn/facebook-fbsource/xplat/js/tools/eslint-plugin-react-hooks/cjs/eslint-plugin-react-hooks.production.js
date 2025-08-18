@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<3e8071675ac8848c762ee884ed9f093c>>
+ * @generated SignedSource<<3fc4d42c30370bf2a270131609a69bc9>>
  */
 
 'use strict';
@@ -914,7 +914,7 @@ const rule$2 = {
             }
             let callback = node.arguments[callbackIndex];
             const reactiveHook = node.callee;
-            const nodeWithoutNamespace = getNodeWithoutReactNamespace(reactiveHook);
+            const nodeWithoutNamespace = getNodeWithoutReactNamespace$1(reactiveHook);
             const reactiveHookName = 'name' in nodeWithoutNamespace ? nodeWithoutNamespace.name : '';
             const maybeNode = node.arguments[callbackIndex + 1];
             const declaredDependenciesNode = maybeNode &&
@@ -1321,7 +1321,7 @@ function analyzePropertyChain(node, optionalChains) {
         throw new Error(`Unsupported node type: ${node.type}`);
     }
 }
-function getNodeWithoutReactNamespace(node) {
+function getNodeWithoutReactNamespace$1(node) {
     if (node.type === 'MemberExpression' &&
         node.object.type === 'Identifier' &&
         node.object.name === 'React' &&
@@ -1332,7 +1332,7 @@ function getNodeWithoutReactNamespace(node) {
     return node;
 }
 function getReactiveHookCallbackIndex(calleeNode, options) {
-    const node = getNodeWithoutReactNamespace(calleeNode);
+    const node = getNodeWithoutReactNamespace$1(calleeNode);
     if (node.type !== 'Identifier') {
         return -1;
     }
@@ -54648,6 +54648,19 @@ function isInsideTryCatch(node) {
     }
     return false;
 }
+function getNodeWithoutReactNamespace(node) {
+    if (node.type === 'MemberExpression' &&
+        node.object.type === 'Identifier' &&
+        node.object.name === 'React' &&
+        node.property.type === 'Identifier' &&
+        !node.computed) {
+        return node.property;
+    }
+    return node;
+}
+function isUseEffectIdentifier(node) {
+    return node.type === 'Identifier' && node.name === 'useEffect';
+}
 function isUseEffectEventIdentifier(node) {
     {
         return node.type === 'Identifier' && node.name === 'useEffectEvent';
@@ -54945,9 +54958,9 @@ const rule = {
                     }
                     reactHooks.push(node.callee);
                 }
-                if (node.callee.type === 'Identifier' &&
-                    (node.callee.name === 'useEffect' ||
-                        isUseEffectEventIdentifier(node.callee)) &&
+                const nodeWithoutNamespace = getNodeWithoutReactNamespace(node.callee);
+                if ((isUseEffectIdentifier(nodeWithoutNamespace) ||
+                    isUseEffectEventIdentifier(nodeWithoutNamespace)) &&
                     node.arguments.length > 0) {
                     lastEffect = node;
                 }
