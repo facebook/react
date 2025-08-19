@@ -6247,9 +6247,7 @@ export function startFlowing(request: Request, destination: Destination): void {
   request.destination = destination;
 
   try {
-    if (!request.renderState.disableAutoPreload) {
       flushCompletedQueues(request, destination);
-}
   } catch (error) {
     const errorInfo: ThrownInfo = {};
     logRecoverableError(request, error, errorInfo, null);
