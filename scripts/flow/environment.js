@@ -146,6 +146,7 @@ declare module 'EventListener' {
 }
 
 declare function __webpack_chunk_load__(id: string): Promise<mixed>;
+declare function __webpack_get_script_filename__(id: string): string;
 declare const __webpack_require__: ((id: string) => any) & {
   u: string => string,
 };

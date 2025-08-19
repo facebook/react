@@ -160,3 +160,9 @@ export function requireModule<T>(metadata: ClientReference<T>): T {
   }
   return moduleExports[metadata.name];
 }
+
+export function getModuleDebugInfo<T>(metadata: ClientReference<T>): null {
+  // We don't emit any debug info on the server since we assume the loading
+  // of the bundle is insignificant on the server.
+  return null;
+}

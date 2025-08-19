@@ -76,6 +76,19 @@ function getShortDescription(name: string, description: string): string {
   return '';
 }
 
+function formatBytes(bytes: number) {
+  if (bytes < 1_000) {
+    return bytes + ' bytes';
+  }
+  if (bytes < 1_000_000) {
+    return (bytes / 1_000).toFixed(1) + ' kB';
+  }
+  if (bytes < 1_000_000_000) {
+    return (bytes / 1_000_000).toFixed(1) + ' mB';
+  }
+  return (bytes / 1_000_000_000).toFixed(1) + ' gB';
+}
+
 function SuspendedByRow({
   bridge,
   element,
@@ -145,7 +158,13 @@ function SuspendedByRow({
       <Button
         className={styles.CollapsableHeader}
         onClick={() => setIsOpen(prevIsOpen => !prevIsOpen)}
-        title={longName + ' — ' + (end - start).toFixed(2) + ' ms'}>
+        title={
+          longName +
+          ' — ' +
+          (end - start).toFixed(2) +
+          ' ms' +
+          (ioInfo.byteSize != null ? ' — ' + formatBytes(ioInfo.byteSize) : '')
+        }>
         <ButtonIcon
           className={styles.CollapsableHeaderIcon}
           type={isOpen ? 'expanded' : 'collapsed'}
