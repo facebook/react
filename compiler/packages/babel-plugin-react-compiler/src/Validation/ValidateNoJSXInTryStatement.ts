@@ -6,6 +6,7 @@
  */
 
 import {CompilerDiagnostic, CompilerError, ErrorSeverity} from '..';
+import {ErrorCategory} from '../CompilerError';
 import {BlockId, HIRFunction} from '../HIR';
 import {Result} from '../Utils/Result';
 import {retainWhere} from '../Utils/utils';
@@ -36,8 +37,9 @@ export function validateNoJSXInTryStatement(
           case 'JsxFragment': {
             errors.pushDiagnostic(
               CompilerDiagnostic.create({
+                category: ErrorCategory.ErrorBoundaries,
                 severity: ErrorSeverity.InvalidReact,
-                category: 'Avoid constructing JSX within try/catch',
+                reason: 'Avoid constructing JSX within try/catch',
                 description: `React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary)`,
               }).withDetail({
                 kind: 'error',
