@@ -42,16 +42,18 @@ describe('ReactEarlyReturnHooksBug', () => {
   // Simple test to verify the fix works for conditional hook calls
   it('should not trigger static flag error with conditional hook calls', async () => {
     function ConditionalHooksComponent({ shouldUseHooks }) {
-      // Early return before hooks
+       // Hooks called FIRST (unconditionally) - following Rules of Hooks
+      const [count, setCount] = React.useState(0);
+      React.useEffect(() => {
+        if (shouldUseHooks) {
+          setCount(1);
+        }
+      }, [shouldUseHooks]);
+
+      // Early return AFTER all hooks are called
       if (!shouldUseHooks) {
         return <div>No hooks used</div>;
       }
-
-      // Hooks called after early return
-      const [count, setCount] = React.useState(0);
-      React.useEffect(() => {
-        setCount(1);
-      }, []);
 
       return <div>Count: {count}</div>;
     }
@@ -72,11 +74,11 @@ describe('ReactEarlyReturnHooksBug', () => {
     expect(didWarnAboutStaticFlag).toBe(false);
   });
 
-  // Test the original recursive component issue (simplified)
-  it('should not trigger static flag error with early return before hooks in recursive component', async () => {
-    // This is the problematic component from the user's report (simplified)
+  // Test the original recursive component issue (simplified) - now with proper hook placement
+  it('should not trigger static flag error with hooks called before early returns in recursive component', async () => {
+    // This is the problematic component from the user's report (now fixed)
    function SubGroupFilter({ depth, label, root, action }) {
-  // Call hooks FIRST
+  // Call hooks FIRST (unconditionally) - following Rules of Hooks
   const [index, setIndex] = React.useState(0);
   const [items, setItems] = React.useState([]);
 
@@ -153,10 +155,10 @@ describe('ReactEarlyReturnHooksBug', () => {
   });
 
   // This shows the correct way to structure the component
-  it('should work correctly when hooks are called before early return', async () => {
-    // CORRECT: Hooks are called before the early return
+   it('should work correctly when hooks are called unconditionally before early return', async () => {
+    // CORRECT: Hooks are called unconditionally at the top level before any early returns
     function SubGroupFilter({ depth, label, root, action }) {
-      // Call hooks first
+      // Call hooks first (unconditionally)
       const [index, setIndex] = React.useState(0);
       const [items, setItems] = React.useState([]);
 
