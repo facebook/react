@@ -321,13 +321,14 @@
         ? ((suspenseBoundaryID.previousSibling.data = "$~"),
           $RB.push(suspenseBoundaryID, contentID),
           2 === $RB.length &&
-            ((suspenseBoundaryID = "number" !== typeof $RT ? 0 : $RT),
-            (contentID = performance.now()),
-            (suspenseBoundaryID =
-              2300 > contentID && 2e3 < contentID
-                ? 2300 - contentID
-                : suspenseBoundaryID + 300 - contentID),
-            setTimeout($RV.bind(null, $RB), suspenseBoundaryID)))
+            ("number" !== typeof $RT
+              ? requestAnimationFrame($RV.bind(null, $RB))
+              : ((suspenseBoundaryID = performance.now()),
+                (suspenseBoundaryID =
+                  2300 > suspenseBoundaryID && 2e3 < suspenseBoundaryID
+                    ? 2300 - suspenseBoundaryID
+                    : $RT + 300 - suspenseBoundaryID),
+                setTimeout($RV.bind(null, $RB), suspenseBoundaryID))))
         : contentID.parentNode.removeChild(contentID);
   };
   var $RR = function (suspenseBoundaryID, contentID, stylesheetDescriptors) {
