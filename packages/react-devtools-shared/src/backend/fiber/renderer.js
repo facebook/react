@@ -7455,6 +7455,13 @@ export function attach(
   }
 
   function overrideSuspense(id: number, forceFallback: boolean) {
+    if (!supportsTogglingSuspense) {
+      // TODO:: Add getter to decide if overrideSuspense is available.
+      // Currently only available on inspectElement.
+      // Probably need a different affordance to batch since the timeline
+      // fallback is not the same as resuspending.
+      return;
+    }
     if (
       typeof setSuspenseHandler !== 'function' ||
       typeof scheduleUpdate !== 'function'

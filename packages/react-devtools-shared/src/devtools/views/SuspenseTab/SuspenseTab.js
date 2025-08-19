@@ -20,6 +20,7 @@ import InspectedElement from '../Components/InspectedElement';
 import portaledContent from '../portaledContent';
 import styles from './SuspenseTab.css';
 import SuspenseRects from './SuspenseRects';
+import SuspenseTimeline from './SuspenseTimeline';
 import SuspenseTreeList from './SuspenseTreeList';
 import Button from '../Button';
 
@@ -44,10 +45,6 @@ type LayoutState = {
   inspectedElementVerticalFraction: number,
 };
 type LayoutDispatch = (action: LayoutAction) => void;
-
-function SuspenseTimeline() {
-  return <div className={styles.Timeline}>timeline</div>;
-}
 
 function ToggleTreeList({
   dispatch,
@@ -308,7 +305,9 @@ function SuspenseTab(_: {}) {
         <div className={styles.TreeView}>
           <div className={styles.TimelineWrapper}>
             <ToggleTreeList dispatch={dispatch} state={state} />
-            <SuspenseTimeline />
+            <div className={styles.Timeline}>
+              <SuspenseTimeline />
+            </div>
             <ToggleInspectedElement
               dispatch={dispatch}
               state={state}
