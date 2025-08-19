@@ -12,7 +12,7 @@ import {
   eachInstructionValueOperand,
   eachTerminalOperand,
 } from '../HIR/visitors';
-import {getFunctionCallSignature} from '../Inference/InferReferenceEffects';
+import {getFunctionCallSignature} from '../Inference/InferMutationAliasingEffects';
 
 /**
  * Validates that local variables cannot be reassigned after render.

@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Thenable} from 'shared/ReactTypes';
+import type {Thenable, ReactDebugInfo} from 'shared/ReactTypes';
 
 import type {ImportMetadata} from '../shared/ReactFlightImportMetadata';
 
@@ -79,4 +79,11 @@ export function preloadModule<T>(
 export function requireModule<T>(metadata: ClientReference<T>): T {
   const moduleExports = parcelRequire(metadata[ID]);
   return moduleExports[metadata[NAME]];
+}
+
+export function getModuleDebugInfo<T>(
+  metadata: ClientReference<T>,
+): null | ReactDebugInfo {
+  // TODO
+  return null;
 }

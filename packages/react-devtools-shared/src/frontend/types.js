@@ -19,6 +19,7 @@ import type {
   Unserializable,
 } from 'react-devtools-shared/src/hydration';
 import type {ReactFunctionLocation, ReactStackTrace} from 'shared/ReactTypes';
+import type {UnknownSuspendersReason} from '../constants';
 
 export type BrowserTheme = 'dark' | 'light';
 
@@ -206,6 +207,7 @@ export type SerializedIOInfo = {
   description: string,
   start: number,
   end: number,
+  byteSize: null | number,
   value: null | Promise<mixed>,
   env: null | string,
   owner: null | SerializedElement,
@@ -264,6 +266,8 @@ export type InspectedElement = {
 
   // Is this Suspense, and can its value be overridden now?
   canToggleSuspense: boolean,
+  // If this Element is suspended. Currently only set on Suspense boundaries.
+  isSuspended: boolean | null,
 
   // Does the component have legacy context attached to it.
   hasLegacyContext: boolean,
@@ -279,6 +283,9 @@ export type InspectedElement = {
 
   // Things that suspended this Instances
   suspendedBy: Object,
+  // Minimum start time to maximum end time + a potential (not actual) throttle, within the nearest boundary.
+  suspendedByRange: null | [number, number],
+  unknownSuspenders: UnknownSuspendersReason,
 
   // List of owners
   owners: Array<SerializedElement> | null,

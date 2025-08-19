@@ -11,6 +11,7 @@ import type {
   Thenable,
   FulfilledThenable,
   RejectedThenable,
+  ReactDebugInfo,
 } from 'shared/ReactTypes';
 
 import type {
@@ -28,7 +29,10 @@ import {
 
 import {prepareDestinationWithChunks} from 'react-client/src/ReactFlightClientConfig';
 
-import {loadChunk} from 'react-client/src/ReactFlightClientConfig';
+import {
+  loadChunk,
+  addChunkDebugInfo,
+} from 'react-client/src/ReactFlightClientConfig';
 
 export type ServerConsumerModuleMap = null | {
   [clientId: string]: {
@@ -230,4 +234,20 @@ export function requireModule<T>(metadata: ClientReference<T>): T {
     return moduleExports.__esModule ? moduleExports.default : moduleExports;
   }
   return moduleExports[metadata[NAME]];
+}
+
+export function getModuleDebugInfo<T>(
+  metadata: ClientReference<T>,
+): null | ReactDebugInfo {
+  if (!__DEV__) {
+    return null;
+  }
+  const chunks = metadata[CHUNKS];
+  const debugInfo: ReactDebugInfo = [];
+  let i = 0;
+  while (i < chunks.length) {
+    const chunkFilename = chunks[i++];
+    addChunkDebugInfo(debugInfo, chunkFilename);
+  }
+  return debugInfo;
 }

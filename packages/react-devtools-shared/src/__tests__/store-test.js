@@ -2696,4 +2696,83 @@ describe('Store', () => {
               <ClientComponent key="D">
       `);
   });
+
+  // @reactVersion >= 18.0
+  it('can reconcile Suspense in fallback positions', async () => {
+    let resolveFallback;
+    const fallbackPromise = new Promise(resolve => {
+      resolveFallback = resolve;
+    });
+    let resolveContent;
+    const contentPromise = new Promise(resolve => {
+      resolveContent = resolve;
+    });
+
+    function Component({children, promise}) {
+      if (promise) {
+        React.use(promise);
+      }
+      return <div>{children}</div>;
+    }
+
+    await actAsync(() =>
+      render(
+        <React.Suspense
+          name="content"
+          fallback={
+            <React.Suspense
+              name="fallback"
+              fallback={
+                <Component key="fallback-fallback">
+                  Loading fallback...
+                </Component>
+              }>
+              <Component key="fallback-content" promise={fallbackPromise}>
+                Loading...
+              </Component>
+            </React.Suspense>
+          }>
+          <Component key="content" promise={contentPromise}>
+            done
+          </Component>
+        </React.Suspense>,
+      ),
+    );
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense name="content">
+          ▾ <Suspense name="fallback">
+              <Component key="fallback-fallback">
+      [shell]
+        <Suspense name="content" rects={null}>
+        <Suspense name="fallback" rects={null}>
+    `);
+
+    await actAsync(() => {
+      resolveFallback();
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense name="content">
+          ▾ <Suspense name="fallback">
+              <Component key="fallback-content">
+      [shell]
+        <Suspense name="content" rects={null}>
+        <Suspense name="fallback" rects={[{x:1,y:2,width:10,height:1}]}>
+    `);
+
+    await actAsync(() => {
+      resolveContent();
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense name="content">
+            <Component key="content">
+      [shell]
+        <Suspense name="content" rects={[{x:1,y:2,width:4,height:1}]}>
+    `);
+  });
 });
