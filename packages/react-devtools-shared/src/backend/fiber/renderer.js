@@ -306,6 +306,16 @@ type SuspenseNode = {
   hasUnknownSuspenders: boolean,
 };
 
+// Update flags need to be propagated up until the caller that put the corresponding
+// node on the stack.
+// If you push a new node, you need to handle ShouldResetChildren when you pop it.
+// If you push a new Suspense node, you need to handle ShouldResetSuspenseChildren when you pop it.
+type UpdateFlags = number;
+const NoUpdate = /*                          */ 0b000;
+const ShouldResetChildren = /*               */ 0b001;
+const ShouldResetSuspenseChildren = /*       */ 0b010;
+const ShouldResetParentSuspenseChildren = /* */ 0b100;
+
 function createSuspenseNode(
   instance: FiberInstance | FilteredFiberInstance,
 ): SuspenseNode {
@@ -2828,10 +2838,10 @@ export function attach(
   function removePreviousSuspendedBy(
     instance: DevToolsInstance,
     previousSuspendedBy: null | Array<ReactAsyncInfo>,
+    parentSuspenseNode: null | SuspenseNode,
   ): void {
     // Remove any async info from the parent, if they were in the previous set but
     // is no longer in the new set.
-    const parentSuspenseNode = reconcilingParentSuspenseNode;
     if (previousSuspendedBy !== null && parentSuspenseNode !== null) {
       const nextSuspendedBy = instance.suspendedBy;
       for (let i = 0; i < previousSuspendedBy.length; i++) {
@@ -3657,30 +3667,19 @@ export function attach(
       0, // first level
     );
 
+    // Next, we'll pop back out of the SuspenseNode that we added above and now we'll
+    // reconcile the fallback, reconciling anything by inserting into the parent SuspenseNode.
+    // Since the fallback conceptually blocks the parent.
+    reconcilingParentSuspenseNode = stashedSuspenseParent;
+    previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
+    remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
     if (fallbackFiber !== null) {
-      const fallbackStashedSuspenseParent = stashedSuspenseParent;
-      const fallbackStashedSuspensePrevious = stashedSuspensePrevious;
-      const fallbackStashedSuspenseRemaining = stashedSuspenseRemaining;
-      // Next, we'll pop back out of the SuspenseNode that we added above and now we'll
-      // reconcile the fallback, reconciling anything by inserting into the parent SuspenseNode.
-      // Since the fallback conceptually blocks the parent.
-      reconcilingParentSuspenseNode = stashedSuspenseParent;
-      previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
-      remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
-      try {
-        mountVirtualChildrenRecursively(
-          fallbackFiber,
-          null,
-          traceNearestHostComponentUpdate,
-          0, // first level
-        );
-      } finally {
-        reconcilingParentSuspenseNode = fallbackStashedSuspenseParent;
-        previouslyReconciledSiblingSuspenseNode =
-          fallbackStashedSuspensePrevious;
-        remainingReconcilingChildrenSuspenseNodes =
-          fallbackStashedSuspenseRemaining;
-      }
+      mountVirtualChildrenRecursively(
+        fallbackFiber,
+        null,
+        traceNearestHostComponentUpdate,
+        0, // first level
+      );
     }
   }
 
@@ -3924,6 +3923,8 @@ export function attach(
             stashedSuspensePrevious,
             stashedSuspenseRemaining,
           );
+          // mountSuspenseChildrenRecursively popped already
+          shouldPopSuspenseNode = false;
         } else {
           // This Suspense Fiber is still dehydrated. It won't have any children
           // until hydration.
@@ -3979,13 +3980,18 @@ export function attach(
     if (instance.suspenseNode !== null) {
       reconcilingParentSuspenseNode = instance.suspenseNode;
       previouslyReconciledSiblingSuspenseNode = null;
-      remainingReconcilingChildrenSuspenseNodes = null;
+      remainingReconcilingChildrenSuspenseNodes =
+        instance.suspenseNode.firstChild;
     }
 
     try {
       // Unmount the remaining set.
       unmountRemainingChildren();
-      removePreviousSuspendedBy(instance, previousSuspendedBy);
+      removePreviousSuspendedBy(
+        instance,
+        previousSuspendedBy,
+        reconcilingParentSuspenseNode,
+      );
     } finally {
       reconcilingParent = stashedParent;
       previouslyReconciledSibling = stashedPrevious;
@@ -4222,10 +4228,6 @@ export function attach(
     }
   }
 
-  const NoUpdate = /*                      */ 0b00;
-  const ShouldResetChildren = /*           */ 0b01;
-  const ShouldResetSuspenseChildren = /*   */ 0b10;
-
   function updateVirtualInstanceRecursively(
     virtualInstance: VirtualInstance,
     nextFirstChild: Fiber,
@@ -4233,7 +4235,7 @@ export function attach(
     prevFirstChild: null | Fiber,
     traceNearestHostComponentUpdate: boolean,
     virtualLevel: number, // the nth level of virtual instances
-  ): number {
+  ): UpdateFlags {
     const stashedParent = reconcilingParent;
     const stashedPrevious = previouslyReconciledSibling;
     const stashedRemaining = remainingReconcilingChildren;
@@ -4258,7 +4260,11 @@ export function attach(
         recordResetChildren(virtualInstance);
         updateFlags &= ~ShouldResetChildren;
       }
-      removePreviousSuspendedBy(virtualInstance, previousSuspendedBy);
+      removePreviousSuspendedBy(
+        virtualInstance,
+        previousSuspendedBy,
+        reconcilingParentSuspenseNode,
+      );
       // Update the errors/warnings count. If this Instance has switched to a different
       // ReactComponentInfo instance, such as when refreshing Server Components, then
       // we replace all the previous logs with the ones associated with the new ones rather
@@ -4285,7 +4291,7 @@ export function attach(
     prevFirstChild: null | Fiber,
     traceNearestHostComponentUpdate: boolean,
     virtualLevel: number, // the nth level of virtual instances
-  ): number {
+  ): UpdateFlags {
     let updateFlags = NoUpdate;
     // If the first child is different, we need to traverse them.
     // Each next child will be either a new child (mount) or an alternate (update).
@@ -4567,7 +4573,7 @@ export function attach(
     nextFirstChild: null | Fiber,
     prevFirstChild: null | Fiber,
     traceNearestHostComponentUpdate: boolean,
-  ): number {
+  ): UpdateFlags {
     if (nextFirstChild === null) {
       return prevFirstChild !== null ? ShouldResetChildren : NoUpdate;
     }
@@ -4587,7 +4593,7 @@ export function attach(
     stashedSuspenseParent: null | SuspenseNode,
     stashedSuspensePrevious: null | SuspenseNode,
     stashedSuspenseRemaining: null | SuspenseNode,
-  ): number {
+  ): UpdateFlags {
     let updateFlags = NoUpdate;
     const prevFallbackFiber = prevContentFiber.sibling;
     const nextFallbackFiber = nextContentFiber.sibling;
@@ -4601,36 +4607,28 @@ export function attach(
       0,
     );
 
+    // Next, we'll pop back out of the SuspenseNode that we added above and now we'll
+    // reconcile the fallback, reconciling anything in the context of the parent SuspenseNode.
+    // Since the fallback conceptually blocks the parent.
+    reconcilingParentSuspenseNode = stashedSuspenseParent;
+    previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
+    remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
     if (prevFallbackFiber !== null || nextFallbackFiber !== null) {
-      const fallbackStashedSuspenseParent = reconcilingParentSuspenseNode;
-      const fallbackStashedSuspensePrevious =
-        previouslyReconciledSiblingSuspenseNode;
-      const fallbackStashedSuspenseRemaining =
-        remainingReconcilingChildrenSuspenseNodes;
-      // Next, we'll pop back out of the SuspenseNode that we added above and now we'll
-      // reconcile the fallback, reconciling anything in the context of the parent SuspenseNode.
-      // Since the fallback conceptually blocks the parent.
-      reconcilingParentSuspenseNode = stashedSuspenseParent;
-      previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
-      remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
-      try {
-        if (nextFallbackFiber === null) {
-          unmountRemainingChildren();
-        } else {
-          updateFlags |= updateVirtualChildrenRecursively(
-            nextFallbackFiber,
-            null,
-            prevFallbackFiber,
-            traceNearestHostComponentUpdate,
-            0,
-          );
+      if (nextFallbackFiber === null) {
+        unmountRemainingChildren();
+      } else {
+        updateFlags |= updateVirtualChildrenRecursively(
+          nextFallbackFiber,
+          null,
+          prevFallbackFiber,
+          traceNearestHostComponentUpdate,
+          0,
+        );
+
+        if ((updateFlags & ShouldResetSuspenseChildren) !== NoUpdate) {
+          updateFlags |= ShouldResetParentSuspenseChildren;
+          updateFlags &= ~ShouldResetSuspenseChildren;
         }
-      } finally {
-        reconcilingParentSuspenseNode = fallbackStashedSuspenseParent;
-        previouslyReconciledSiblingSuspenseNode =
-          fallbackStashedSuspensePrevious;
-        remainingReconcilingChildrenSuspenseNodes =
-          fallbackStashedSuspenseRemaining;
       }
     }
 
@@ -4643,7 +4641,7 @@ export function attach(
     nextFiber: Fiber,
     prevFiber: Fiber,
     traceNearestHostComponentUpdate: boolean,
-  ): number {
+  ): UpdateFlags {
     if (__DEBUG__) {
       if (fiberInstance !== null) {
         debug('updateFiberRecursively()', fiberInstance, reconcilingParent);
@@ -4681,7 +4679,9 @@ export function attach(
     const stashedSuspenseParent = reconcilingParentSuspenseNode;
     const stashedSuspensePrevious = previouslyReconciledSiblingSuspenseNode;
     const stashedSuspenseRemaining = remainingReconcilingChildrenSuspenseNodes;
+    let updateFlags = NoUpdate;
     let shouldMeasureSuspenseNode = false;
+    let shouldPopSuspenseNode = false;
     let previousSuspendedBy = null;
     if (fiberInstance !== null) {
       previousSuspendedBy = fiberInstance.suspendedBy;
@@ -4712,6 +4712,7 @@ export function attach(
         remainingReconcilingChildrenSuspenseNodes = suspenseNode.firstChild;
         suspenseNode.firstChild = null;
         shouldMeasureSuspenseNode = true;
+        shouldPopSuspenseNode = true;
       }
     }
     try {
@@ -4746,8 +4747,6 @@ export function attach(
         }
         trackDebugInfoFromHostComponent(nearestInstance, nextFiber);
       }
-
-      let updateFlags = NoUpdate;
 
       // The behavior of timed-out legacy Suspense trees is unique. Without the Offscreen wrapper.
       // Rather than unmount the timed out content (and possibly lose important state),
@@ -4927,6 +4926,8 @@ export function attach(
             stashedSuspensePrevious,
             stashedSuspenseRemaining,
           );
+          // updateSuspenseChildrenRecursively popped already
+          shouldPopSuspenseNode = false;
           if (nextFiber.memoizedState === null) {
             // Measure this Suspense node in case it changed. We don't update the rect while
             // we're inside a disconnected subtree nor if we are the Suspense boundary that
@@ -4950,6 +4951,8 @@ export function attach(
             stashedSuspensePrevious,
             stashedSuspenseRemaining,
           );
+          // mountSuspenseChildrenRecursively popped already
+          shouldPopSuspenseNode = false;
         } else if (previousHydrated && !nextHydrated) {
           throw new Error(
             'Encountered a dehydrated Suspense boundary that was previously hydrated.',
@@ -5007,7 +5010,13 @@ export function attach(
       }
 
       if (fiberInstance !== null) {
-        removePreviousSuspendedBy(fiberInstance, previousSuspendedBy);
+        removePreviousSuspendedBy(
+          fiberInstance,
+          previousSuspendedBy,
+          shouldPopSuspenseNode
+            ? reconcilingParentSuspenseNode
+            : stashedSuspenseParent,
+        );
 
         if (fiberInstance.kind === FIBER_INSTANCE) {
           let componentLogsEntry = fiberToComponentLogsMap.get(
@@ -5057,6 +5066,17 @@ export function attach(
           // Let the closest unfiltered parent Fiber reset its child order instead.
         }
       }
+      if ((updateFlags & ShouldResetParentSuspenseChildren) !== NoUpdate) {
+        if (fiberInstance !== null && fiberInstance.kind === FIBER_INSTANCE) {
+          const suspenseNode = fiberInstance.suspenseNode;
+          if (suspenseNode !== null) {
+            updateFlags &= ~ShouldResetParentSuspenseChildren;
+            updateFlags |= ShouldResetSuspenseChildren;
+          }
+        } else {
+          // Let the closest unfiltered parent Fiber reset its child order instead.
+        }
+      }
 
       return updateFlags;
     } finally {
@@ -5066,14 +5086,16 @@ export function attach(
         previouslyReconciledSibling = stashedPrevious;
         remainingReconcilingChildren = stashedRemaining;
         if (shouldMeasureSuspenseNode) {
-          if (
-            !isInDisconnectedSubtree &&
-            reconcilingParentSuspenseNode !== null
-          ) {
+          if (!isInDisconnectedSubtree) {
             // Measure this Suspense node in case it changed. We don't update the rect
             // while we're inside a disconnected subtree so that we keep the outline
             // as it was before we hid the parent.
-            const suspenseNode = reconcilingParentSuspenseNode;
+            const suspenseNode = fiberInstance.suspenseNode;
+            if (suspenseNode === null) {
+              throw new Error(
+                'Attempted to measure a Suspense node that does not exist.',
+              );
+            }
             const prevRects = suspenseNode.rects;
             const nextRects = measureInstance(fiberInstance);
             if (!areEqualRects(prevRects, nextRects)) {
@@ -5082,7 +5104,7 @@ export function attach(
             }
           }
         }
-        if (fiberInstance.suspenseNode !== null) {
+        if (shouldPopSuspenseNode) {
           reconcilingParentSuspenseNode = stashedSuspenseParent;
           previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
           remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
