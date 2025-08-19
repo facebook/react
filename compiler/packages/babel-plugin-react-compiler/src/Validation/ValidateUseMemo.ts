@@ -8,6 +8,7 @@
 import {
   CompilerDiagnostic,
   CompilerError,
+  ErrorCategory,
   ErrorSeverity,
 } from '../CompilerError';
 import {FunctionExpression, HIRFunction, IdentifierId} from '../HIR';
@@ -74,8 +75,9 @@ export function validateUseMemo(fn: HIRFunction): Result<void, CompilerError> {
                 : firstParam.place.loc;
             errors.pushDiagnostic(
               CompilerDiagnostic.create({
+                category: ErrorCategory.UseMemo,
                 severity: ErrorSeverity.InvalidReact,
-                category: 'useMemo() callbacks may not accept parameters',
+                reason: 'useMemo() callbacks may not accept parameters',
                 description:
                   'useMemo() callbacks are called by React to cache calculations across re-renders. They should not take parameters. Instead, directly reference the props, state, or local variables needed for the computation.',
                 suggestions: null,
@@ -90,8 +92,9 @@ export function validateUseMemo(fn: HIRFunction): Result<void, CompilerError> {
           if (body.loweredFunc.func.async || body.loweredFunc.func.generator) {
             errors.pushDiagnostic(
               CompilerDiagnostic.create({
+                category: ErrorCategory.UseMemo,
                 severity: ErrorSeverity.InvalidReact,
-                category:
+                reason:
                   'useMemo() callbacks may not be async or generator functions',
                 description:
                   'useMemo() callbacks are called once and must synchronously return a value.',

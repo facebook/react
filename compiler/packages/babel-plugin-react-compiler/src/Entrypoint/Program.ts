@@ -10,6 +10,7 @@ import * as t from '@babel/types';
 import {
   CompilerError,
   CompilerErrorDetail,
+  ErrorCategory,
   ErrorSeverity,
 } from '../CompilerError';
 import {ExternalFunction, ReactFunctionType} from '../HIR/Environment';
@@ -105,6 +106,7 @@ function findDirectivesDynamicGating(
           reason: `Dynamic gating directive is not a valid JavaScript identifier`,
           description: `Found '${directive.value.value}'`,
           severity: ErrorSeverity.InvalidReact,
+          category: ErrorCategory.Gating,
           loc: directive.loc ?? null,
           suggestions: null,
         });
@@ -121,6 +123,7 @@ function findDirectivesDynamicGating(
         .map(r => r.directive.value.value)
         .join(', ')}]`,
       severity: ErrorSeverity.InvalidReact,
+      category: ErrorCategory.Gating,
       loc: result[0].directive.loc ?? null,
       suggestions: null,
     });
@@ -456,6 +459,7 @@ export function compileProgram(
           reason:
             'Unexpected compiled functions when module scope opt-out is present',
           severity: ErrorSeverity.Invariant,
+          category: ErrorCategory.Invariant,
           loc: null,
         }),
       );
@@ -811,6 +815,7 @@ function shouldSkipCompilation(
           description:
             "When the 'sources' config options is specified, the React compiler will only compile files with a name",
           severity: ErrorSeverity.InvalidConfig,
+          category: ErrorCategory.Config,
           loc: null,
         }),
       );
