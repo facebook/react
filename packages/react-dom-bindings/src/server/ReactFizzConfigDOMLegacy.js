@@ -325,5 +325,9 @@ export function writePreambleStart(
   );
 }
 
+export function preloadInstance(resource,instance){
+  return;
+}
+
 export type TransitionStatus = FormStatus;
 export const NotPendingTransition: TransitionStatus = NotPending;
