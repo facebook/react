@@ -325,7 +325,7 @@ export function writePreambleStart(
   );
 }
 
-export function preloadInstance(resource,instance){
+export function preloadInstance(resource, instance) {
   return;
 }
 
