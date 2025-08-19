@@ -995,7 +995,14 @@ function recursivelySearchTree(
     return;
   }
 
-  const {children, displayName, hocDisplayNames, compiledWithForget} = element;
+  const {
+    children,
+    displayName,
+    hocDisplayNames,
+    compiledWithForget,
+    key,
+    nameProp,
+  } = element;
   if (displayName != null && regExp.test(displayName) === true) {
     searchResults.push(elementID);
   } else if (
@@ -1005,6 +1012,10 @@ function recursivelySearchTree(
   ) {
     searchResults.push(elementID);
   } else if (compiledWithForget && regExp.test('Forget')) {
+    searchResults.push(elementID);
+  } else if (typeof key === 'string' && regExp.test(key)) {
+    searchResults.push(elementID);
+  } else if (typeof nameProp === 'string' && regExp.test(nameProp)) {
     searchResults.push(elementID);
   }
 
