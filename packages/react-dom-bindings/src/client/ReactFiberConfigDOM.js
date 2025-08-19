@@ -38,9 +38,15 @@ import hasOwnProperty from 'shared/hasOwnProperty';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import {
-  isFiberContainedBy,
+  isFiberContainedByFragment,
   isFiberFollowing,
   isFiberPreceding,
+  isFragmentContainedByFiber,
+  traverseFragmentInstance,
+  getFragmentParentHostFiber,
+  getInstanceFromHostFiber,
+  traverseFragmentInstanceDeeply,
+  fiberIsPortaledIntoHost,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
 
 export {
@@ -63,13 +69,7 @@ import {
   markNodeAsHoistable,
   isOwnedInstance,
 } from './ReactDOMComponentTree';
-import {
-  traverseFragmentInstance,
-  getFragmentParentHostFiber,
-  getNextSiblingHostFiber,
-  getInstanceFromHostFiber,
-  traverseFragmentInstanceDeeply,
-} from 'react-reconciler/src/ReactFiberTreeReflection';
+import {compareDocumentPositionForEmptyFragment} from 'shared/ReactDOMFragmentRefShared';
 
 export {detachDeletedInstance};
 import {hasRole} from './DOMAccessibilityRoles';
@@ -3052,58 +3052,71 @@ FragmentInstance.prototype.compareDocumentPosition = function (
   }
   const children: Array<Fiber> = [];
   traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
+  const parentHostInstance =
+    getInstanceFromHostFiber<Instance>(parentHostFiber);
 
-  let result = Node.DOCUMENT_POSITION_DISCONNECTED;
   if (children.length === 0) {
-    // If the fragment has no children, we can use the parent and
-    // siblings to determine a position.
-    const parentHostInstance =
-      getInstanceFromHostFiber<Instance>(parentHostFiber);
-    const parentResult = parentHostInstance.compareDocumentPosition(otherNode);
-    result = parentResult;
-    if (parentHostInstance === otherNode) {
-      result = Node.DOCUMENT_POSITION_CONTAINS;
-    } else {
-      if (parentResult & Node.DOCUMENT_POSITION_CONTAINED_BY) {
-        // otherNode is one of the fragment's siblings. Use the next
-        // sibling to determine if its preceding or following.
-        const nextSiblingFiber = getNextSiblingHostFiber(this._fragmentFiber);
-        if (nextSiblingFiber === null) {
-          result = Node.DOCUMENT_POSITION_PRECEDING;
-        } else {
-          const nextSiblingInstance =
-            getInstanceFromHostFiber<Instance>(nextSiblingFiber);
-          const nextSiblingResult =
-            nextSiblingInstance.compareDocumentPosition(otherNode);
-          if (
-            nextSiblingResult === 0 ||
-            nextSiblingResult & Node.DOCUMENT_POSITION_FOLLOWING
-          ) {
-            result = Node.DOCUMENT_POSITION_FOLLOWING;
-          } else {
-            result = Node.DOCUMENT_POSITION_PRECEDING;
-          }
-        }
-      }
-    }
-
-    result |= Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC;
-    return result;
+    return compareDocumentPositionForEmptyFragment(
+      this._fragmentFiber,
+      parentHostInstance,
+      otherNode,
+      getInstanceFromHostFiber,
+    );
   }
 
   const firstElement = getInstanceFromHostFiber<Instance>(children[0]);
   const lastElement = getInstanceFromHostFiber<Instance>(
     children[children.length - 1],
   );
+
+  // If the fragment has been portaled into another host instance, we need to
+  // our best guess is to use the parent of the child instance, rather than
+  // the fiber tree host parent.
+  const firstInstance = getInstanceFromHostFiber<Instance>(children[0]);
+  const parentHostInstanceFromDOM = fiberIsPortaledIntoHost(this._fragmentFiber)
+    ? (firstInstance.parentElement: ?Instance)
+    : parentHostInstance;
+
+  if (parentHostInstanceFromDOM == null) {
+    return Node.DOCUMENT_POSITION_DISCONNECTED;
+  }
+
+  // Check if first and last element are actually in the expected document position
+  // before relying on them as source of truth for other contained elements
+  const firstElementIsContained =
+    parentHostInstanceFromDOM.compareDocumentPosition(firstElement) &
+    Node.DOCUMENT_POSITION_CONTAINED_BY;
+  const lastElementIsContained =
+    parentHostInstanceFromDOM.compareDocumentPosition(lastElement) &
+    Node.DOCUMENT_POSITION_CONTAINED_BY;
   const firstResult = firstElement.compareDocumentPosition(otherNode);
   const lastResult = lastElement.compareDocumentPosition(otherNode);
+
+  const otherNodeIsFirstOrLastChild =
+    (firstElementIsContained && firstElement === otherNode) ||
+    (lastElementIsContained && lastElement === otherNode);
+  const otherNodeIsFirstOrLastChildDisconnected =
+    (!firstElementIsContained && firstElement === otherNode) ||
+    (!lastElementIsContained && lastElement === otherNode);
+  const otherNodeIsWithinFirstOrLastChild =
+    firstResult & Node.DOCUMENT_POSITION_CONTAINED_BY ||
+    lastResult & Node.DOCUMENT_POSITION_CONTAINED_BY;
+  const otherNodeIsBetweenFirstAndLastChildren =
+    firstElementIsContained &&
+    lastElementIsContained &&
+    firstResult & Node.DOCUMENT_POSITION_FOLLOWING &&
+    lastResult & Node.DOCUMENT_POSITION_PRECEDING;
+
+  let result = Node.DOCUMENT_POSITION_DISCONNECTED;
   if (
-    (firstResult & Node.DOCUMENT_POSITION_FOLLOWING &&
-      lastResult & Node.DOCUMENT_POSITION_PRECEDING) ||
-    otherNode === firstElement ||
-    otherNode === lastElement
+    otherNodeIsFirstOrLastChild ||
+    otherNodeIsWithinFirstOrLastChild ||
+    otherNodeIsBetweenFirstAndLastChildren
   ) {
     result = Node.DOCUMENT_POSITION_CONTAINED_BY;
+  } else if (otherNodeIsFirstOrLastChildDisconnected) {
+    // otherNode has been portaled into another container
+    result = Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC;
   } else {
     result = firstResult;
   }
@@ -3141,7 +3154,9 @@ function validateDocumentPositionWithFiberTree(
 ): boolean {
   const otherFiber = getClosestInstanceFromNode(otherNode);
   if (documentPosition & Node.DOCUMENT_POSITION_CONTAINED_BY) {
-    return !!otherFiber && isFiberContainedBy(fragmentFiber, otherFiber);
+    return (
+      !!otherFiber && isFiberContainedByFragment(otherFiber, fragmentFiber)
+    );
   }
   if (documentPosition & Node.DOCUMENT_POSITION_CONTAINS) {
     if (otherFiber === null) {
@@ -3149,7 +3164,7 @@ function validateDocumentPositionWithFiberTree(
       const ownerDocument = otherNode.ownerDocument;
       return otherNode === ownerDocument || otherNode === ownerDocument.body;
     }
-    return isFiberContainedBy(otherFiber, fragmentFiber);
+    return isFragmentContainedByFiber(fragmentFiber, otherFiber);
   }
   if (documentPosition & Node.DOCUMENT_POSITION_PRECEDING) {
     return (

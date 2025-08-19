@@ -19,6 +19,7 @@ import {
   DeclarationId,
   Environment,
   FunctionExpression,
+  GeneratedSource,
   HIRFunction,
   Hole,
   IdentifierId,
@@ -34,6 +35,7 @@ import {
   Phi,
   Place,
   SpreadPattern,
+  Type,
   ValueReason,
 } from '../HIR';
 import {
@@ -43,12 +45,6 @@ import {
   eachTerminalSuccessor,
 } from '../HIR/visitors';
 import {Ok, Result} from '../Utils/Result';
-import {
-  getArgumentEffect,
-  getFunctionCallSignature,
-  isKnownMutableEffect,
-  mergeValueKinds,
-} from './InferReferenceEffects';
 import {
   assertExhaustive,
   getOrInsertDefault,
@@ -65,10 +61,14 @@ import {
   printSourceLocation,
 } from '../HIR/PrintHIR';
 import {FunctionSignature} from '../HIR/ObjectShape';
-import {getWriteErrorReason} from './InferFunctionEffects';
 import prettyFormat from 'pretty-format';
 import {createTemporaryPlace} from '../HIR/HIRBuilder';
-import {AliasingEffect, AliasingSignature, hashEffect} from './AliasingEffects';
+import {
+  AliasingEffect,
+  AliasingSignature,
+  hashEffect,
+  MutationReason,
+} from './AliasingEffects';
 
 const DEBUG = false;
 
@@ -445,25 +445,34 @@ function applySignature(
             const reason = getWriteErrorReason({
               kind: value.kind,
               reason: value.reason,
-              context: new Set(),
             });
             const variable =
               effect.value.identifier.name !== null &&
               effect.value.identifier.name.kind === 'named'
                 ? `\`${effect.value.identifier.name.value}\``
                 : 'value';
+            const diagnostic = CompilerDiagnostic.create({
+              severity: ErrorSeverity.InvalidReact,
+              category: 'This value cannot be modified',
+              description: `${reason}.`,
+            }).withDetail({
+              kind: 'error',
+              loc: effect.value.loc,
+              message: `${variable} cannot be modified`,
+            });
+            if (
+              effect.kind === 'Mutate' &&
+              effect.reason?.kind === 'AssignCurrentProperty'
+            ) {
+              diagnostic.withDetail({
+                kind: 'hint',
+                message: `Hint: If this value is a Ref (value returned by \`useRef()\`), rename the variable to end in "Ref".`,
+              });
+            }
             effects.push({
               kind: 'MutateFrozen',
               place: effect.value,
-              error: CompilerDiagnostic.create({
-                severity: ErrorSeverity.InvalidReact,
-                category: 'This value cannot be modified',
-                description: `${reason}.`,
-              }).withDetail({
-                kind: 'error',
-                loc: effect.value.loc,
-                message: `${variable} cannot be modified`,
-              }),
+              error: diagnostic,
             });
           }
         }
@@ -1059,13 +1068,30 @@ function applyEffect(
           const reason = getWriteErrorReason({
             kind: value.kind,
             reason: value.reason,
-            context: new Set(),
           });
           const variable =
             effect.value.identifier.name !== null &&
             effect.value.identifier.name.kind === 'named'
               ? `\`${effect.value.identifier.name.value}\``
               : 'value';
+          const diagnostic = CompilerDiagnostic.create({
+            severity: ErrorSeverity.InvalidReact,
+            category: 'This value cannot be modified',
+            description: `${reason}.`,
+          }).withDetail({
+            kind: 'error',
+            loc: effect.value.loc,
+            message: `${variable} cannot be modified`,
+          });
+          if (
+            effect.kind === 'Mutate' &&
+            effect.reason?.kind === 'AssignCurrentProperty'
+          ) {
+            diagnostic.withDetail({
+              kind: 'hint',
+              message: `Hint: If this value is a Ref (value returned by \`useRef()\`), rename the variable to end in "Ref".`,
+            });
+          }
           applyEffect(
             context,
             state,
@@ -1075,15 +1101,7 @@ function applyEffect(
                   ? 'MutateFrozen'
                   : 'MutateGlobal',
               place: effect.value,
-              error: CompilerDiagnostic.create({
-                severity: ErrorSeverity.InvalidReact,
-                category: 'This value cannot be modified',
-                description: `${reason}.`,
-              }).withDetail({
-                kind: 'error',
-                loc: effect.value.loc,
-                message: `${variable} cannot be modified`,
-              }),
+              error: diagnostic,
             },
             initialized,
             effects,
@@ -1680,7 +1698,15 @@ function computeSignatureForInstruction(
     }
     case 'PropertyStore':
     case 'ComputedStore': {
-      effects.push({kind: 'Mutate', value: value.object});
+      const mutationReason: MutationReason | null =
+        value.kind === 'PropertyStore' && value.property === 'current'
+          ? {kind: 'AssignCurrentProperty'}
+          : null;
+      effects.push({
+        kind: 'Mutate',
+        value: value.object,
+        reason: mutationReason,
+      });
       effects.push({
         kind: 'Capture',
         from: value.value,
@@ -2534,3 +2560,196 @@ export type AbstractValue = {
   kind: ValueKind;
   reason: ReadonlySet<ValueReason>;
 };
+
+export function getWriteErrorReason(abstractValue: AbstractValue): string {
+  if (abstractValue.reason.has(ValueReason.Global)) {
+    return 'Modifying a variable defined outside a component or hook is not allowed. Consider using an effect';
+  } else if (abstractValue.reason.has(ValueReason.JsxCaptured)) {
+    return 'Modifying a value used previously in JSX is not allowed. Consider moving the modification before the JSX';
+  } else if (abstractValue.reason.has(ValueReason.Context)) {
+    return `Modifying a value returned from 'useContext()' is not allowed.`;
+  } else if (abstractValue.reason.has(ValueReason.KnownReturnSignature)) {
+    return 'Modifying a value returned from a function whose return value should not be mutated';
+  } else if (abstractValue.reason.has(ValueReason.ReactiveFunctionArgument)) {
+    return 'Modifying component props or hook arguments is not allowed. Consider using a local variable instead';
+  } else if (abstractValue.reason.has(ValueReason.State)) {
+    return "Modifying a value returned from 'useState()', which should not be modified directly. Use the setter function to update instead";
+  } else if (abstractValue.reason.has(ValueReason.ReducerState)) {
+    return "Modifying a value returned from 'useReducer()', which should not be modified directly. Use the dispatch function to update instead";
+  } else if (abstractValue.reason.has(ValueReason.Effect)) {
+    return 'Modifying a value used previously in an effect function or as an effect dependency is not allowed. Consider moving the modification before calling useEffect()';
+  } else if (abstractValue.reason.has(ValueReason.HookCaptured)) {
+    return 'Modifying a value previously passed as an argument to a hook is not allowed. Consider moving the modification before calling the hook';
+  } else if (abstractValue.reason.has(ValueReason.HookReturn)) {
+    return 'Modifying a value returned from a hook is not allowed. Consider moving the modification into the hook where the value is constructed';
+  } else {
+    return 'This modifies a variable that React considers immutable';
+  }
+}
+
+function getArgumentEffect(
+  signatureEffect: Effect | null,
+  arg: Place | SpreadPattern,
+): Effect {
+  if (signatureEffect != null) {
+    if (arg.kind === 'Identifier') {
+      return signatureEffect;
+    } else if (
+      signatureEffect === Effect.Mutate ||
+      signatureEffect === Effect.ConditionallyMutate
+    ) {
+      return signatureEffect;
+    } else {
+      // see call-spread-argument-mutable-iterator test fixture
+      if (signatureEffect === Effect.Freeze) {
+        CompilerError.throwTodo({
+          reason: 'Support spread syntax for hook arguments',
+          loc: arg.place.loc,
+        });
+      }
+      // effects[i] is Effect.Capture | Effect.Read | Effect.Store
+      return Effect.ConditionallyMutateIterator;
+    }
+  } else {
+    return Effect.ConditionallyMutate;
+  }
+}
+
+export function getFunctionCallSignature(
+  env: Environment,
+  type: Type,
+): FunctionSignature | null {
+  if (type.kind !== 'Function') {
+    return null;
+  }
+  return env.getFunctionSignature(type);
+}
+
+export function isKnownMutableEffect(effect: Effect): boolean {
+  switch (effect) {
+    case Effect.Store:
+    case Effect.ConditionallyMutate:
+    case Effect.ConditionallyMutateIterator:
+    case Effect.Mutate: {
+      return true;
+    }
+
+    case Effect.Unknown: {
+      CompilerError.invariant(false, {
+        reason: 'Unexpected unknown effect',
+        description: null,
+        loc: GeneratedSource,
+        suggestions: null,
+      });
+    }
+    case Effect.Read:
+    case Effect.Capture:
+    case Effect.Freeze: {
+      return false;
+    }
+    default: {
+      assertExhaustive(effect, `Unexpected effect \`${effect}\``);
+    }
+  }
+}
+
+/**
+ * Joins two values using the following rules:
+ * == Effect Transitions ==
+ *
+ * Freezing an immutable value has not effect:
+ *                ┌───────────────┐
+ *                │               │
+ *                ▼               │ Freeze
+ * ┌──────────────────────────┐  │
+ * │        Immutable         │──┘
+ * └──────────────────────────┘
+ *
+ * Freezing a mutable or maybe-frozen value makes it frozen. Freezing a frozen
+ * value has no effect:
+ *                                                     ┌───────────────┐
+ * ┌─────────────────────────┐     Freeze             │               │
+ * │       MaybeFrozen       │────┐                   ▼               │ Freeze
+ * └─────────────────────────┘    │     ┌──────────────────────────┐  │
+ *                                 ├────▶│          Frozen          │──┘
+ *                                 │     └──────────────────────────┘
+ * ┌─────────────────────────┐    │
+ * │         Mutable         │────┘
+ * └─────────────────────────┘
+ *
+ * == Join Lattice ==
+ * - immutable | mutable => mutable
+ *     The justification is that immutable and mutable values are different types,
+ *     and functions can introspect them to tell the difference (if the argument
+ *     is null return early, else if its an object mutate it).
+ * - frozen | mutable => maybe-frozen
+ *     Frozen values are indistinguishable from mutable values at runtime, so callers
+ *     cannot dynamically avoid mutation of "frozen" values. If a value could be
+ *     frozen we have to distinguish it from a mutable value. But it also isn't known
+ *     frozen yet, so we distinguish as maybe-frozen.
+ * - immutable | frozen => frozen
+ *     This is subtle and falls out of the above rules. If a value could be any of
+ *     immutable, mutable, or frozen, then at runtime it could either be a primitive
+ *     or a reference type, and callers can't distinguish frozen or not for reference
+ *     types. To ensure that any sequence of joins btw those three states yields the
+ *     correct maybe-frozen, these two have to produce a frozen value.
+ * - <any> | maybe-frozen => maybe-frozen
+ * - immutable | context => context
+ * - mutable | context => context
+ * - frozen | context => maybe-frozen
+ *
+ * ┌──────────────────────────┐
+ * │        Immutable         │───┐
+ * └──────────────────────────┘   │
+ *                                 │    ┌─────────────────────────┐
+ *                                 ├───▶│         Frozen          │──┐
+ * ┌──────────────────────────┐   │    └─────────────────────────┘  │
+ * │          Frozen          │───┤                                 │  ┌─────────────────────────┐
+ * └──────────────────────────┘   │                                 ├─▶│       MaybeFrozen       │
+ *                                 │    ┌─────────────────────────┐  │  └─────────────────────────┘
+ *                                 ├───▶│       MaybeFrozen       │──┘
+ * ┌──────────────────────────┐   │    └─────────────────────────┘
+ * │         Mutable          │───┘
+ * └──────────────────────────┘
+ */
+function mergeValueKinds(a: ValueKind, b: ValueKind): ValueKind {
+  if (a === b) {
+    return a;
+  } else if (a === ValueKind.MaybeFrozen || b === ValueKind.MaybeFrozen) {
+    return ValueKind.MaybeFrozen;
+    // after this a and b differ and neither are MaybeFrozen
+  } else if (a === ValueKind.Mutable || b === ValueKind.Mutable) {
+    if (a === ValueKind.Frozen || b === ValueKind.Frozen) {
+      // frozen | mutable
+      return ValueKind.MaybeFrozen;
+    } else if (a === ValueKind.Context || b === ValueKind.Context) {
+      // context | mutable
+      return ValueKind.Context;
+    } else {
+      // mutable | immutable
+      return ValueKind.Mutable;
+    }
+  } else if (a === ValueKind.Context || b === ValueKind.Context) {
+    if (a === ValueKind.Frozen || b === ValueKind.Frozen) {
+      // frozen | context
+      return ValueKind.MaybeFrozen;
+    } else {
+      // context | immutable
+      return ValueKind.Context;
+    }
+  } else if (a === ValueKind.Frozen || b === ValueKind.Frozen) {
+    return ValueKind.Frozen;
+  } else if (a === ValueKind.Global || b === ValueKind.Global) {
+    return ValueKind.Global;
+  } else {
+    CompilerError.invariant(
+      a === ValueKind.Primitive && b == ValueKind.Primitive,
+      {
+        reason: `Unexpected value kind in mergeValues()`,
+        description: `Found kinds ${a} and ${b}`,
+        loc: GeneratedSource,
+      },
+    );
+    return ValueKind.Primitive;
+  }
+}

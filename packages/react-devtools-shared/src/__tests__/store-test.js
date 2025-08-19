@@ -2698,38 +2698,270 @@ describe('Store', () => {
   });
 
   // @reactVersion >= 18.0
-  it('handles missing nodes gracefully during remove operations', async () => {
-    // This test verifies that the store doesn't crash when trying to remove
-    // nodes that don't exist, which can happen during rapid updates or race conditions
+  it('can reconcile Suspense in fallback positions', async () => {
+    let resolveFallback;
+    const fallbackPromise = new Promise(resolve => {
+      resolveFallback = resolve;
+    });
+    let resolveContent;
+    const contentPromise = new Promise(resolve => {
+      resolveContent = resolve;
+    });
 
-    // First, add some elements to the store
-    await act(() =>
+    function Component({children, promise}) {
+      if (promise) {
+        React.use(promise);
+      }
+      return <div>{children}</div>;
+    }
+
+    await actAsync(() =>
       render(
-        <React.Fragment>
-          <div>Parent</div>
-          <div>Child 1</div>
-          <div>Child 2</div>
-        </React.Fragment>,
+        <React.Suspense
+          name="content"
+          fallback={
+            <React.Suspense
+              name="fallback"
+              fallback={
+                <Component key="fallback-fallback">
+                  Loading fallback...
+                </Component>
+              }>
+              <Component key="fallback-content" promise={fallbackPromise}>
+                Loading...
+              </Component>
+            </React.Suspense>
+          }>
+          <Component key="content" promise={contentPromise}>
+            done
+          </Component>
+        </React.Suspense>,
       ),
     );
 
-    // Verify elements are in the store
-    expect(store.numElements).toBeGreaterThan(0);
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense name="content">
+          ▾ <Suspense name="fallback">
+              <Component key="fallback-fallback">
+      [shell]
+        <Suspense name="content" rects={null}>
+        <Suspense name="fallback" rects={null}>
+    `);
 
-    // Simulate a remove operation for a node that doesn't exist
-    // This would normally cause the "Cannot remove node" error
-    const operations = [
-      2, // TREE_OPERATION_REMOVE
-      1, // removeLength
-      999, // id of non-existent node
-    ];
+    await actAsync(() => {
+      resolveFallback();
+    });
 
-    // This should not throw an error anymore
-    expect(() => {
-      store.onBridgeOperations(operations);
-    }).not.toThrow();
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense name="content">
+          ▾ <Suspense name="fallback">
+              <Component key="fallback-content">
+      [shell]
+        <Suspense name="content" rects={null}>
+        <Suspense name="fallback" rects={[{x:1,y:2,width:10,height:1}]}>
+    `);
 
-    // The store should still be in a valid state
-    expect(store.numElements).toBeGreaterThanOrEqual(0);
+    await actAsync(() => {
+      resolveContent();
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense name="content">
+            <Component key="content">
+      [shell]
+        <Suspense name="content" rects={[{x:1,y:2,width:4,height:1}]}>
+    `);
+  });
+
+  // @reactVersion >= 18.0
+  it('can reconcile resuspended Suspense with Suspense in fallback positions', async () => {
+    let resolveHeadFallback;
+    let resolveHeadContent;
+    let resolveMainFallback;
+    let resolveMainContent;
+
+    function Component({children, promise}) {
+      if (promise) {
+        React.use(promise);
+      }
+      return <div>{children}</div>;
+    }
+
+    function WithSuspenseInFallback({fallbackPromise, contentPromise, name}) {
+      return (
+        <React.Suspense
+          name={name}
+          fallback={
+            <React.Suspense
+              name={`${name}-fallback`}
+              fallback={
+                <Component key={`${name}-fallback-fallback`}>
+                  Loading fallback...
+                </Component>
+              }>
+              <Component
+                key={`${name}-fallback-content`}
+                promise={fallbackPromise}>
+                Loading...
+              </Component>
+            </React.Suspense>
+          }>
+          <Component key={`${name}-content`} promise={contentPromise}>
+            done
+          </Component>
+        </React.Suspense>
+      );
+    }
+
+    function App({
+      headFallbackPromise,
+      headContentPromise,
+      mainContentPromise,
+      mainFallbackPromise,
+      tailContentPromise,
+      tailFallbackPromise,
+    }) {
+      return (
+        <>
+          <WithSuspenseInFallback
+            fallbackPromise={headFallbackPromise}
+            contentPromise={headContentPromise}
+            name="head"
+          />
+          <WithSuspenseInFallback
+            fallbackPromise={mainFallbackPromise}
+            contentPromise={mainContentPromise}
+            name="main"
+          />
+        </>
+      );
+    }
+
+    const initialHeadContentPromise = new Promise(resolve => {
+      resolveHeadContent = resolve;
+    });
+    const initialHeadFallbackPromise = new Promise(resolve => {
+      resolveHeadFallback = resolve;
+    });
+    const initialMainContentPromise = new Promise(resolve => {
+      resolveMainContent = resolve;
+    });
+    const initialMainFallbackPromise = new Promise(resolve => {
+      resolveMainFallback = resolve;
+    });
+    await actAsync(() =>
+      render(
+        <App
+          headFallbackPromise={initialHeadFallbackPromise}
+          headContentPromise={initialHeadContentPromise}
+          mainContentPromise={initialMainContentPromise}
+          mainFallbackPromise={initialMainFallbackPromise}
+        />,
+      ),
+    );
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <WithSuspenseInFallback>
+            ▾ <Suspense name="head">
+              ▾ <Suspense name="head-fallback">
+                  <Component key="head-fallback-fallback">
+          ▾ <WithSuspenseInFallback>
+            ▾ <Suspense name="main">
+              ▾ <Suspense name="main-fallback">
+                  <Component key="main-fallback-fallback">
+      [shell]
+        <Suspense name="head" rects={null}>
+        <Suspense name="head-fallback" rects={null}>
+        <Suspense name="main" rects={null}>
+        <Suspense name="main-fallback" rects={null}>
+    `);
+
+    await actAsync(() => {
+      resolveHeadFallback();
+      resolveMainFallback();
+      resolveHeadContent();
+      resolveMainContent();
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <WithSuspenseInFallback>
+            ▾ <Suspense name="head">
+                <Component key="head-content">
+          ▾ <WithSuspenseInFallback>
+            ▾ <Suspense name="main">
+                <Component key="main-content">
+      [shell]
+        <Suspense name="head" rects={[{x:1,y:2,width:4,height:1}]}>
+        <Suspense name="main" rects={[{x:1,y:2,width:4,height:1}]}>
+    `);
+
+    // Resuspend head content
+    const nextHeadContentPromise = new Promise(resolve => {
+      resolveHeadContent = resolve;
+    });
+    await actAsync(() =>
+      render(
+        <App
+          headFallbackPromise={initialHeadFallbackPromise}
+          headContentPromise={nextHeadContentPromise}
+          mainContentPromise={initialMainContentPromise}
+          mainFallbackPromise={initialMainFallbackPromise}
+        />,
+      ),
+    );
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <WithSuspenseInFallback>
+            ▾ <Suspense name="head">
+              ▾ <Suspense name="head-fallback">
+                  <Component key="head-fallback-content">
+          ▾ <WithSuspenseInFallback>
+            ▾ <Suspense name="main">
+                <Component key="main-content">
+      [shell]
+        <Suspense name="head" rects={[{x:1,y:2,width:4,height:1}]}>
+        <Suspense name="head-fallback" rects={[{x:1,y:2,width:10,height:1}]}>
+        <Suspense name="main" rects={[{x:1,y:2,width:4,height:1}]}>
+    `);
+
+    // Resuspend head fallback
+    const nextHeadFallbackPromise = new Promise(resolve => {
+      resolveHeadFallback = resolve;
+    });
+    await actAsync(() =>
+      render(
+        <App
+          headFallbackPromise={nextHeadFallbackPromise}
+          headContentPromise={nextHeadContentPromise}
+          mainContentPromise={initialMainContentPromise}
+          mainFallbackPromise={initialMainFallbackPromise}
+        />,
+      ),
+    );
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <WithSuspenseInFallback>
+            ▾ <Suspense name="head">
+              ▾ <Suspense name="head-fallback">
+                  <Component key="head-fallback-fallback">
+          ▾ <WithSuspenseInFallback>
+            ▾ <Suspense name="main">
+                <Component key="main-content">
+      [shell]
+        <Suspense name="head" rects={[{x:1,y:2,width:4,height:1}]}>
+        <Suspense name="head-fallback" rects={[{x:1,y:2,width:10,height:1}]}>
+        <Suspense name="main" rects={[{x:1,y:2,width:4,height:1}]}>
+    `);
   });
 });
