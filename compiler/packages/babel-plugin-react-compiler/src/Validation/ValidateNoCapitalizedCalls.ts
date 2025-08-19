@@ -6,6 +6,7 @@
  */
 
 import {CompilerError, EnvironmentConfig, ErrorSeverity} from '..';
+import {ErrorCategory} from '../CompilerError';
 import {HIRFunction, IdentifierId} from '../HIR';
 import {DEFAULT_GLOBALS} from '../HIR/Globals';
 import {Result} from '../Utils/Result';
@@ -56,6 +57,7 @@ export function validateNoCapitalizedCalls(
           const calleeName = capitalLoadGlobals.get(calleeIdentifier);
           if (calleeName != null) {
             CompilerError.throwInvalidReact({
+              category: ErrorCategory.CapitalizedCalls,
               reason,
               description: `${calleeName} may be a component.`,
               loc: value.loc,
@@ -79,6 +81,7 @@ export function validateNoCapitalizedCalls(
           const propertyName = capitalizedProperties.get(propertyIdentifier);
           if (propertyName != null) {
             errors.push({
+              category: ErrorCategory.CapitalizedCalls,
               severity: ErrorSeverity.InvalidReact,
               reason,
               description: `${propertyName} may be a component.`,
