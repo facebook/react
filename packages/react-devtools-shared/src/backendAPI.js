@@ -221,6 +221,7 @@ function backendToFrontendSerializedAsyncInfo(
       description: ioInfo.description,
       start: ioInfo.start,
       end: ioInfo.end,
+      byteSize: ioInfo.byteSize,
       value: ioInfo.value,
       env: ioInfo.env,
       owner:
@@ -272,6 +273,7 @@ export function convertInspectedElementBackendToFrontend(
     warnings,
     suspendedBy,
     suspendedByRange,
+    unknownSuspenders,
     nativeTag,
   } = inspectedElementBackend;
 
@@ -317,6 +319,7 @@ export function convertInspectedElementBackendToFrontend(
         ? []
         : hydratedSuspendedBy.map(backendToFrontendSerializedAsyncInfo),
     suspendedByRange,
+    unknownSuspenders,
     nativeTag,
   };
 

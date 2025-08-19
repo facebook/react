@@ -237,6 +237,7 @@ export type ReactIOInfo = {
   +name: string, // the name of the async function being called (e.g. "fetch")
   +start: number, // the start time
   +end: number, // the end time (this might be different from the time the await was unblocked)
+  +byteSize?: number, // the byte size of this resource across the network. (should only be included if affecting the client.)
   +value?: null | Promise<mixed>, // the Promise that was awaited if any, may be rejected
   +env?: string, // the environment where this I/O was spawned.
   +owner?: null | ReactComponentInfo,

@@ -40,6 +40,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     // We need the mocked version of setTimeout inside the document.
     window.setTimeout = setTimeout;
+    window.requestAnimationFrame = setTimeout;
 
     patchMessageChannel();
     serverAct = require('internal-test-utils').serverAct;

@@ -34,6 +34,8 @@ export type Props = {};
 
 // TODO Make edits and deletes also use transition API!
 
+const noSourcePromise = Promise.resolve(null);
+
 export default function InspectedElementWrapper(_: Props): React.Node {
   const {inspectedElementID} = useContext(TreeStateContext);
   const bridge = useContext(BridgeContext);
@@ -59,11 +61,11 @@ export default function InspectedElementWrapper(_: Props): React.Node {
           ? inspectedElement.stack[0]
           : null;
 
-  const symbolicatedSourcePromise: null | Promise<ReactFunctionLocation | null> =
+  const symbolicatedSourcePromise: Promise<ReactFunctionLocation | null> =
     React.useMemo(() => {
-      if (fetchFileWithCaching == null) return Promise.resolve(null);
+      if (fetchFileWithCaching == null) return noSourcePromise;
 
-      if (source == null) return Promise.resolve(null);
+      if (source == null) return noSourcePromise;
 
       const [, sourceURL, line, column] = source;
       return symbolicateSourceWithCache(
@@ -291,7 +293,7 @@ export default function InspectedElementWrapper(_: Props): React.Node {
         <div className={styles.Loading}>Loading...</div>
       )}
 
-      {inspectedElement !== null && symbolicatedSourcePromise != null && (
+      {inspectedElement !== null && (
         <InspectedElementView
           element={element}
           hookNames={hookNames}

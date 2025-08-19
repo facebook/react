@@ -300,7 +300,7 @@ export function printOperationsArray(operations: Array<number>) {
       }
       case TREE_OPERATION_SET_SUBTREE_MODE: {
         const id = operations[i + 1];
-        const mode = operations[i + 1];
+        const mode = operations[i + 2];
 
         i += 3;
 
@@ -339,11 +339,11 @@ export function printOperationsArray(operations: Array<number>) {
         const fiberID = operations[i + 1];
         const parentID = operations[i + 2];
         const nameStringID = operations[i + 3];
-        const name = stringTable[nameStringID];
         const numRects = operations[i + 4];
 
         i += 5;
 
+        const name = stringTable[nameStringID];
         let rects: string;
         if (numRects === -1) {
           rects = 'null';
