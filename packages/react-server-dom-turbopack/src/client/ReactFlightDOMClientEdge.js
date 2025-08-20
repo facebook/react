@@ -104,6 +104,7 @@ function createResponseFromOptions(options: Options) {
 function startReadingFromStream(
   response: FlightResponse,
   stream: ReadableStream,
+  isSecondaryStream: boolean,
 ): void {
   const streamState = createStreamState();
   const reader = stream.getReader();
@@ -116,7 +117,11 @@ function startReadingFromStream(
     ...
   }): void | Promise<void> {
     if (done) {
-      close(response);
+      // If we're the secondary stream, then we don't close the response until
+      // the debug channel closes.
+      if (!isSecondaryStream) {
+        close(response);
+      }
       return;
     }
     const buffer: Uint8Array = (value: any);
@@ -134,7 +139,19 @@ function createFromReadableStream<T>(
   options: Options,
 ): Thenable<T> {
   const response: FlightResponse = createResponseFromOptions(options);
-  startReadingFromStream(response, stream);
+
+  if (
+    __DEV__ &&
+    options &&
+    options.debugChannel &&
+    options.debugChannel.readable
+  ) {
+    startReadingFromStream(response, options.debugChannel.readable, false);
+    startReadingFromStream(response, stream, true);
+  } else {
+    startReadingFromStream(response, stream, false);
+  }
+
   return getRoot(response);
 }
 
@@ -145,7 +162,17 @@ function createFromFetch<T>(
   const response: FlightResponse = createResponseFromOptions(options);
   promiseForResponse.then(
     function (r) {
-      startReadingFromStream(response, (r.body: any));
+      if (
+        __DEV__ &&
+        options &&
+        options.debugChannel &&
+        options.debugChannel.readable
+      ) {
+        startReadingFromStream(response, options.debugChannel.readable, false);
+        startReadingFromStream(response, (r.body: any), true);
+      } else {
+        startReadingFromStream(response, (r.body: any), false);
+      }
     },
     function (e) {
       reportGlobalError(response, e);
