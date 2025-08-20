@@ -293,6 +293,8 @@ type BaseFiberRootProperties = {
   pendingGestures: null | ScheduledGesture,
   stoppingGestures: null | ScheduledGesture,
   gestureClone: null | Instance,
+
+  _debugRootType: null | string,
 };
 
 // The following attributes are only used by DevTools and are only present in DEV builds.

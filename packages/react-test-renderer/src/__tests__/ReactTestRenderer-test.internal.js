@@ -94,6 +94,7 @@ describe('ReactTestRenderer', () => {
         null,
         expect.anything(),
         false,
+        'create()',
         expect.anything(),
         expect.anything(),
         expect.anything(),

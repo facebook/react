@@ -130,6 +130,7 @@ function render(
   let root = roots.get(containerTag);
 
   if (!root) {
+    let displayName = '';
     // TODO: these defaults are for backwards compatibility.
     // Once RN implements these options internally,
     // we can remove the defaults and ReactFiberErrorDialog.
@@ -137,6 +138,9 @@ function render(
     let onCaughtError = nativeOnCaughtError;
     let onRecoverableError = defaultOnRecoverableError;
 
+    if (options && options.displayName !== undefined) {
+      displayName = options.displayName;
+    }
     if (options && options.onUncaughtError !== undefined) {
       onUncaughtError = options.onUncaughtError;
     }
@@ -161,6 +165,7 @@ function render(
       null,
       false,
       null,
+      'legacy render(' + displayName + ')',
       '',
       onUncaughtError,
       onCaughtError,

@@ -239,6 +239,7 @@ export function createContainer(
   isStrictMode: boolean,
   // TODO: Remove `concurrentUpdatesByDefaultOverride`. It is now ignored.
   concurrentUpdatesByDefaultOverride: null | boolean,
+  displayName: string | null,
   identifierPrefix: string,
   onUncaughtError: (
     error: mixed,
@@ -267,6 +268,7 @@ export function createContainer(
     initialChildren,
     hydrationCallbacks,
     isStrictMode,
+    displayName,
     identifierPrefix,
     null,
     onUncaughtError,
@@ -289,6 +291,7 @@ export function createHydrationContainer(
   isStrictMode: boolean,
   // TODO: Remove `concurrentUpdatesByDefaultOverride`. It is now ignored.
   concurrentUpdatesByDefaultOverride: null | boolean,
+  displayName: string | null,
   identifierPrefix: string,
   onUncaughtError: (
     error: mixed,
@@ -317,6 +320,7 @@ export function createHydrationContainer(
     initialChildren,
     hydrationCallbacks,
     isStrictMode,
+    displayName,
     identifierPrefix,
     formState,
     onUncaughtError,
@@ -346,7 +350,10 @@ export function createHydrationContainer(
   update.callback =
     callback !== undefined && callback !== null ? callback : null;
   enqueueUpdate(current, update, lane);
-  startUpdateTimerByLane(lane, 'hydrateRoot()');
+  startUpdateTimerByLane(
+    lane,
+    'hydrateRoot(' + (displayName === null ? '' : displayName) + ')',
+  );
   scheduleInitialHydrationOnRoot(root, lane);
 
   return root;

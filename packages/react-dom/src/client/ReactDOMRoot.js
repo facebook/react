@@ -30,6 +30,7 @@ export type RootType = {
 export type CreateRootOptions = {
   unstable_strictMode?: boolean,
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
+  displayName?: string,
   identifierPrefix?: string,
   onUncaughtError?: (
     error: mixed,
@@ -56,6 +57,7 @@ export type HydrateRootOptions = {
   // Options for all roots
   unstable_strictMode?: boolean,
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
+  displayName?: string,
   identifierPrefix?: string,
   onUncaughtError?: (
     error: mixed,
@@ -179,6 +181,7 @@ export function createRoot(
   warnIfReactDOMContainerInDEV(container);
 
   const concurrentUpdatesByDefaultOverride = false;
+  let displayName = '';
   let isStrictMode = false;
   let identifierPrefix = '';
   let onUncaughtError = defaultOnUncaughtError;
@@ -212,6 +215,9 @@ export function createRoot(
     if (options.unstable_strictMode === true) {
       isStrictMode = true;
     }
+    if (options.displayName !== undefined) {
+      displayName = options.displayName;
+    }
     if (options.identifierPrefix !== undefined) {
       identifierPrefix = options.identifierPrefix;
     }
@@ -240,6 +246,7 @@ export function createRoot(
     null,
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
+    'createRoot(' + displayName + ')',
     identifierPrefix,
     onUncaughtError,
     onCaughtError,
@@ -297,6 +304,7 @@ export function hydrateRoot(
 
   const concurrentUpdatesByDefaultOverride = false;
   let isStrictMode = false;
+  let displayName = '';
   let identifierPrefix = '';
   let onUncaughtError = defaultOnUncaughtError;
   let onCaughtError = defaultOnCaughtError;
@@ -307,6 +315,9 @@ export function hydrateRoot(
   if (options !== null && options !== undefined) {
     if (options.unstable_strictMode === true) {
       isStrictMode = true;
+    }
+    if (options.displayName !== undefined) {
+      displayName = options.displayName;
     }
     if (options.identifierPrefix !== undefined) {
       identifierPrefix = options.identifierPrefix;
@@ -341,6 +352,7 @@ export function hydrateRoot(
     hydrationCallbacks,
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
+    'hydrateRoot(' + displayName + ')',
     identifierPrefix,
     onUncaughtError,
     onCaughtError,

@@ -78,6 +78,7 @@ type TextInstance = {
 type HostContext = Object;
 type CreateRootOptions = {
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
+  displayName?: string,
   onUncaughtError?: (error: mixed, errorInfo: {componentStack: string}) => void,
   onCaughtError?: (error: mixed, errorInfo: {componentStack: string}) => void,
   onDefaultTransitionIndicator?: () => void | (() => void),
@@ -1194,6 +1195,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           null,
           null,
           false,
+          null,
           '',
           NoopRenderer.defaultOnUncaughtError,
           NoopRenderer.defaultOnCaughtError,
@@ -1213,12 +1215,17 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         pendingChildren: [],
         children: [],
       };
+      let displayName = '';
+      if (options && options.displayName !== undefined) {
+        displayName = options.displayName;
+      }
       const fiberRoot = NoopRenderer.createContainer(
         container,
         ConcurrentRoot,
         null,
         null,
         false,
+        'createRoot(' + displayName + ')',
         '',
         options && options.onUncaughtError
           ? options.onUncaughtError
@@ -1264,6 +1271,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         null,
         null,
         false,
+        'createLegacyRoot()',
         '',
         NoopRenderer.defaultOnUncaughtError,
         NoopRenderer.defaultOnCaughtError,

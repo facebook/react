@@ -117,6 +117,7 @@ export type TouchedViewDataAtPoint = $ReadOnly<
 >;
 
 export type RenderRootOptions = {
+  displayName?: string,
   onUncaughtError?: (
     error: mixed,
     errorInfo: {+componentStack?: ?string},

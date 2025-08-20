@@ -121,6 +121,7 @@ describe('ReactFiberHostContext', () => {
       null,
       false,
       null,
+      null,
       '',
       () => {},
       () => {},

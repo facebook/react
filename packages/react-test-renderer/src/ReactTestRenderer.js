@@ -517,6 +517,7 @@ function create(
     null,
     isStrictMode,
     false,
+    'create()',
     '',
     defaultOnUncaughtError,
     defaultOnCaughtError,

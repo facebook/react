@@ -2338,6 +2338,21 @@ describe('InspectedElement', () => {
     expect(inspectedElement.rootType).toMatchInlineSnapshot(`"hydrateRoot()"`);
   });
 
+  it('should display the root type for named ReactDOMClient.hydrateRoot', async () => {
+    const Example = () => <div />;
+
+    await utils.actAsync(() => {
+      const container = document.createElement('div');
+      container.innerHTML = '<div></div>';
+      ReactDOMClient.hydrateRoot(container, <Example />, {displayName: 'App'});
+    }, false);
+
+    const inspectedElement = await inspectElementAtIndex(0);
+    expect(inspectedElement.rootType).toMatchInlineSnapshot(
+      `"hydrateRoot(App)"`,
+    );
+  });
+
   it('should display the root type for ReactDOMClient.createRoot', async () => {
     const Example = () => <div />;
 
@@ -2348,6 +2363,22 @@ describe('InspectedElement', () => {
 
     const inspectedElement = await inspectElementAtIndex(0);
     expect(inspectedElement.rootType).toMatchInlineSnapshot(`"createRoot()"`);
+  });
+
+  it('should display the root type for named ReactDOMClient.createRoot', async () => {
+    const Example = () => <div />;
+
+    await utils.actAsync(() => {
+      const container = document.createElement('div');
+      ReactDOMClient.createRoot(container, {
+        displayName: 'App',
+      }).render(<Example />);
+    }, false);
+
+    const inspectedElement = await inspectElementAtIndex(0);
+    expect(inspectedElement.rootType).toMatchInlineSnapshot(
+      `"createRoot(App)"`,
+    );
   });
 
   it('should gracefully surface backend errors on the frontend rather than timing out', async () => {

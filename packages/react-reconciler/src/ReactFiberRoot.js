@@ -38,7 +38,7 @@ import {
   enableDefaultTransitionIndicator,
 } from 'shared/ReactFeatureFlags';
 import {initializeUpdateQueue} from './ReactFiberClassUpdateQueue';
-import {LegacyRoot, ConcurrentRoot} from './ReactRootTags';
+import {ConcurrentRoot} from './ReactRootTags';
 import {createCache, retainCache} from './ReactFiberCacheComponent';
 
 export type RootState = {
@@ -52,7 +52,7 @@ function FiberRootNode(
   containerInfo: any,
   // $FlowFixMe[missing-local-annot]
   tag,
-  hydrate: any,
+  displayName: string | null,
   identifierPrefix: any,
   onUncaughtError: any,
   onCaughtError: any,
@@ -138,21 +138,7 @@ function FiberRootNode(
     }
   }
 
-  if (__DEV__) {
-    if (disableLegacyMode) {
-      // TODO: This varies by each renderer.
-      this._debugRootType = hydrate ? 'hydrateRoot()' : 'createRoot()';
-    } else {
-      switch (tag) {
-        case ConcurrentRoot:
-          this._debugRootType = hydrate ? 'hydrateRoot()' : 'createRoot()';
-          break;
-        case LegacyRoot:
-          this._debugRootType = hydrate ? 'hydrate()' : 'render()';
-          break;
-      }
-    }
-  }
+  this._debugRootType = displayName;
 }
 
 export function createFiberRoot(
@@ -166,6 +152,7 @@ export function createFiberRoot(
   // host config, but because they are passed in at runtime, we have to thread
   // them through the root constructor. Perhaps we should put them all into a
   // single type, like a DynamicHostConfig that is defined by the renderer.
+  displayName: string | null,
   identifierPrefix: string,
   formState: ReactFormState<any, any> | null,
   onUncaughtError: (
@@ -190,7 +177,7 @@ export function createFiberRoot(
   const root: FiberRoot = (new FiberRootNode(
     containerInfo,
     tag,
-    hydrate,
+    displayName,
     identifierPrefix,
     onUncaughtError,
     onCaughtError,

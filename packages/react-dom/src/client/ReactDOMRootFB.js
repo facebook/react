@@ -239,6 +239,7 @@ function legacyCreateRootFromDOMContainer(
       null, // hydrationCallbacks
       false, // isStrictMode
       false, // concurrentUpdatesByDefaultOverride,
+      'hydrate()', // displayName
       '', // identifierPrefix
       wwwOnUncaughtError,
       wwwOnCaughtError,
@@ -278,6 +279,7 @@ function legacyCreateRootFromDOMContainer(
       null, // hydrationCallbacks
       false, // isStrictMode
       false, // concurrentUpdatesByDefaultOverride,
+      'render()', // displayName
       '', // identifierPrefix
       wwwOnUncaughtError,
       wwwOnCaughtError,

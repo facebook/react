@@ -82,6 +82,7 @@ class Surface extends React.Component {
       null,
       false,
       false,
+      'new Surface()',
       '',
       defaultOnUncaughtError,
       defaultOnCaughtError,
