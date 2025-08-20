@@ -168,7 +168,7 @@ export const SyntheticUIEvent: $FlowFixMe =
 
 let lastMovementX;
 let lastMovementY;
-let lastMouseEvent;
+let lastMouseEvent: ?{[propName: string]: mixed};
 
 function updateMouseMovementPolyfillState(event: {[propName: string]: mixed}) {
   if (event !== lastMouseEvent) {
