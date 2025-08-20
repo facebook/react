@@ -35,6 +35,7 @@ export const resolveClientReference = $$$config.resolveClientReference;
 export const resolveServerReference = $$$config.resolveServerReference;
 export const preloadModule = $$$config.preloadModule;
 export const requireModule = $$$config.requireModule;
+export const getModuleDebugInfo = $$$config.getModuleDebugInfo;
 export const dispatchHint = $$$config.dispatchHint;
 export const prepareDestinationForModule =
   $$$config.prepareDestinationForModule;
