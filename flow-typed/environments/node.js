@@ -3236,7 +3236,7 @@ declare module 'util' {
   declare class TextDecoder {
     constructor(
       encoding?: string,
-      options: {
+      options?: {
         fatal?: boolean,
         ignoreBOM?: boolean,
         ...
@@ -3253,8 +3253,12 @@ declare module 'util' {
 
   declare class TextEncoder {
     constructor(): void;
-    encode(input?: string): Uint8Array;
-    encoding: string;
+    encode(input: string): Uint8Array;
+    encodeInto(
+      input: string,
+      buffer: Uint8Array
+    ): {written: number, read: number};
+    encoding: 'utf-8';
   }
 
   declare var types: {
