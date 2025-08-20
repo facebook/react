@@ -17,11 +17,16 @@ let turbopackModules;
 let turbopackModuleLoading;
 let React;
 let ReactDOMServer;
+let ReactServer;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 let Stream;
 let use;
 let serverAct;
+
+const streamOptions = {
+  objectMode: true,
+};
 
 describe('ReactFlightTurbopackDOMNode', () => {
   beforeEach(() => {
@@ -35,6 +40,7 @@ describe('ReactFlightTurbopackDOMNode', () => {
     jest.mock('react-server-dom-turbopack/server', () =>
       require('react-server-dom-turbopack/server.node'),
     );
+    ReactServer = require('react');
     ReactServerDOMServer = require('react-server-dom-turbopack/server');
 
     const TurbopackMock = require('./utils/TurbopackMock');
@@ -73,6 +79,15 @@ describe('ReactFlightTurbopackDOMNode', () => {
       });
       stream.pipe(writable);
     });
+  }
+
+  function normalizeCodeLocInfo(str) {
+    return (
+      str &&
+      str.replace(/^ +(?:at|in) ([\S]+)[^\n]*/gm, function (m, name) {
+        return '    in ' + name + (/\d/.test(m) ? ' (at **)' : '');
+      })
+    );
   }
 
   it('should allow an alternative module mapping to be used for SSR', async () => {
@@ -128,6 +143,92 @@ describe('ReactFlightTurbopackDOMNode', () => {
     const result = await readResult(ssrStream);
     expect(result).toEqual(
       '<script src="/prefix/path/to/chunk.js" async=""></script><span>Client Component</span>',
+    );
+  });
+
+  // @gate __DEV__
+  it('can transport debug info through a separate debug channel', async () => {
+    function Thrower() {
+      throw new Error('ssr-throw');
+    }
+
+    const ClientComponentOnTheClient = clientExports(
+      Thrower,
+      123,
+      'path/to/chunk.js',
+    );
+
+    const ClientComponentOnTheServer = clientExports(Thrower);
+
+    function App() {
+      return ReactServer.createElement(
+        ReactServer.Suspense,
+        null,
+        ReactServer.createElement(ClientComponentOnTheClient, null),
+      );
+    }
+
+    const debugReadable = new Stream.PassThrough(streamOptions);
+
+    const rscStream = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        ReactServer.createElement(App, null),
+        turbopackMap,
+        {
+          debugChannel: new Stream.Writable({
+            write(chunk, encoding, callback) {
+              debugReadable.write(chunk, encoding);
+              callback();
+            },
+          }),
+        },
+      ),
+    );
+
+    const readable = new Stream.PassThrough(streamOptions);
+
+    rscStream.pipe(readable);
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const serverConsumerManifest = {
+      moduleMap: {
+        [turbopackMap[ClientComponentOnTheClient.$$id].id]: {
+          '*': turbopackMap[ClientComponentOnTheServer.$$id],
+        },
+      },
+      moduleLoading: null,
+    };
+
+    const response = ReactServerDOMClient.createFromNodeStream(
+      readable,
+      serverConsumerManifest,
+      {debugChannel: debugReadable},
+    );
+
+    let ownerStack;
+
+    const ssrStream = await serverAct(() =>
+      ReactDOMServer.renderToPipeableStream(
+        <ClientRoot response={response} />,
+        {
+          onError(err, errorInfo) {
+            ownerStack = React.captureOwnerStack
+              ? React.captureOwnerStack()
+              : null;
+          },
+        },
+      ),
+    );
+
+    const result = await readResult(ssrStream);
+
+    expect(normalizeCodeLocInfo(ownerStack)).toBe('\n    in App (at **)');
+
+    expect(result).toContain(
+      'Switched to client rendering because the server rendering errored:\n\nssr-throw',
     );
   });
 });
