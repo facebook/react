@@ -522,7 +522,7 @@ export function createHostRootFiber(
   tag: RootTag,
   isStrictMode: boolean,
 ): Fiber {
-  let mode;
+  let mode: number;
   if (disableLegacyMode || tag === ConcurrentRoot) {
     mode = ConcurrentMode;
     if (isStrictMode === true) {
@@ -551,7 +551,7 @@ export function createFiberFromTypeAndProps(
   mode: TypeOfMode,
   lanes: Lanes,
 ): Fiber {
-  let fiberTag = FunctionComponent;
+  let fiberTag: WorkTag = FunctionComponent;
   // The resolved type is set if we know what the final type will be. I.e. it's not lazy.
   let resolvedType = type;
   if (typeof type === 'function') {

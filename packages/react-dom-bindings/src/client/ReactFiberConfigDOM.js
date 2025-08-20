@@ -746,7 +746,7 @@ export const scheduleTimeout: any =
   typeof setTimeout === 'function' ? setTimeout : (undefined: any);
 export const cancelTimeout: any =
   typeof clearTimeout === 'function' ? clearTimeout : (undefined: any);
-export const noTimeout = -1;
+export const noTimeout: -1 = -1;
 const localPromise = typeof Promise === 'function' ? Promise : undefined;
 const localRequestAnimationFrame =
   typeof requestAnimationFrame === 'function'
