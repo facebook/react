@@ -196,7 +196,7 @@ export function unstable_getCurrentPriorityLevel(): PriorityLevel {
 }
 
 export function unstable_next<T>(callback: () => T): T {
-  let priorityLevel;
+  let priorityLevel: PriorityLevel;
   switch (currentPriorityLevel_DEPRECATED) {
     case ImmediatePriority:
     case UserBlockingPriority:
