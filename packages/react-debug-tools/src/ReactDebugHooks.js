@@ -6,7 +6,7 @@
  *
  * @flow
  */
-
+import type {StackFrame as ParsedStackFrame} from 'error-stack-parser';
 import type {
   Awaited,
   ReactContext,
@@ -844,7 +844,11 @@ export type HooksTree = Array<HooksNode>;
 
 let mostLikelyAncestorIndex = 0;
 
-function findSharedIndex(hookStack: any, rootStack: any, rootIndex: number) {
+function findSharedIndex(
+  hookStack: ParsedStackFrame[],
+  rootStack: ParsedStackFrame[],
+  rootIndex: number,
+) {
   const source = rootStack[rootIndex].source;
   hookSearch: for (let i = 0; i < hookStack.length; i++) {
     if (hookStack[i].source === source) {
@@ -865,7 +869,10 @@ function findSharedIndex(hookStack: any, rootStack: any, rootIndex: number) {
   return -1;
 }
 
-function findCommonAncestorIndex(rootStack: any, hookStack: any) {
+function findCommonAncestorIndex(
+  rootStack: ParsedStackFrame[],
+  hookStack: ParsedStackFrame[],
+) {
   let rootIndex = findSharedIndex(
     hookStack,
     rootStack,
@@ -886,7 +893,7 @@ function findCommonAncestorIndex(rootStack: any, hookStack: any) {
   return -1;
 }
 
-function isReactWrapper(functionName: any, wrapperName: string) {
+function isReactWrapper(functionName: void | string, wrapperName: string) {
   const hookName = parseHookName(functionName);
   if (wrapperName === 'HostTransitionStatus') {
     return hookName === wrapperName || hookName === 'FormStatus';
@@ -895,7 +902,7 @@ function isReactWrapper(functionName: any, wrapperName: string) {
   return hookName === wrapperName;
 }
 
-function findPrimitiveIndex(hookStack: any, hook: HookLogEntry) {
+function findPrimitiveIndex(hookStack: ParsedStackFrame[], hook: HookLogEntry) {
   const stackCache = getPrimitiveStackCache();
   const primitiveStack = stackCache.get(hook.primitive);
   if (primitiveStack === undefined) {
@@ -926,7 +933,7 @@ function findPrimitiveIndex(hookStack: any, hook: HookLogEntry) {
   return -1;
 }
 
-function parseTrimmedStack(rootStack: any, hook: HookLogEntry) {
+function parseTrimmedStack(rootStack: ParsedStackFrame[], hook: HookLogEntry) {
   // Get the stack trace between the primitive hook function and
   // the root function call. I.e. the stack frames of custom hooks.
   const hookStack = ErrorStackParser.parse(hook.stackError);
@@ -987,7 +994,7 @@ function parseHookName(functionName: void | string): string {
 }
 
 function buildTree(
-  rootStack: any,
+  rootStack: ParsedStackFrame[],
   readHookLog: Array<HookLogEntry>,
 ): HooksTree {
   const rootChildren: Array<HooksNode> = [];
@@ -1044,10 +1051,20 @@ function buildTree(
           subHooks: children,
           debugInfo: null,
           hookSource: {
-            lineNumber: stackFrame.lineNumber,
-            columnNumber: stackFrame.columnNumber,
-            functionName: stackFrame.functionName,
-            fileName: stackFrame.fileName,
+            lineNumber:
+              stackFrame.lineNumber === undefined
+                ? null
+                : stackFrame.lineNumber,
+            columnNumber:
+              stackFrame.columnNumber === undefined
+                ? null
+                : stackFrame.columnNumber,
+            functionName:
+              stackFrame.functionName === undefined
+                ? null
+                : stackFrame.functionName,
+            fileName:
+              stackFrame.fileName === undefined ? null : stackFrame.fileName,
           },
         };
 
@@ -1092,10 +1109,14 @@ function buildTree(
     };
     if (stack && stack.length >= 1) {
       const stackFrame = stack[0];
-      hookSource.lineNumber = stackFrame.lineNumber;
-      hookSource.functionName = stackFrame.functionName;
-      hookSource.fileName = stackFrame.fileName;
-      hookSource.columnNumber = stackFrame.columnNumber;
+      hookSource.lineNumber =
+        stackFrame.lineNumber === undefined ? null : stackFrame.lineNumber;
+      hookSource.functionName =
+        stackFrame.functionName === undefined ? null : stackFrame.functionName;
+      hookSource.fileName =
+        stackFrame.fileName === undefined ? null : stackFrame.fileName;
+      hookSource.columnNumber =
+        stackFrame.columnNumber === undefined ? null : stackFrame.columnNumber;
     }
 
     levelChild.hookSource = hookSource;
@@ -1201,7 +1222,10 @@ export function inspectHooks<Props>(
     // $FlowFixMe[incompatible-use] found when upgrading Flow
     currentDispatcher.H = previousDispatcher;
   }
-  const rootStack = ErrorStackParser.parse(ancestorStackError);
+  const rootStack =
+    ancestorStackError === undefined
+      ? ([]: ParsedStackFrame[])
+      : ErrorStackParser.parse(ancestorStackError);
   return buildTree(rootStack, readHookLog);
 }
 
@@ -1249,7 +1273,10 @@ function inspectHooksOfForwardRef<Props, Ref>(
     hookLog = [];
     currentDispatcher.H = previousDispatcher;
   }
-  const rootStack = ErrorStackParser.parse(ancestorStackError);
+  const rootStack =
+    ancestorStackError === undefined
+      ? ([]: ParsedStackFrame[])
+      : ErrorStackParser.parse(ancestorStackError);
   return buildTree(rootStack, readHookLog);
 }
 
