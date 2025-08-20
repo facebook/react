@@ -67,7 +67,12 @@ export default function GeneralSettings(_: {}): React.Node {
         <div className={styles.RadioLabel}>Theme</div>
         <select
           value={theme}
-          onChange={({currentTarget}) => setTheme(currentTarget.value)}>
+          onChange={({currentTarget}) =>
+            setTheme(
+              // $FlowFixMe[incompatible-call]
+              currentTarget.value,
+            )
+          }>
           <option value="auto">Auto</option>
           <option value="light">Light</option>
           <option value="dark">Dark</option>
@@ -79,7 +84,10 @@ export default function GeneralSettings(_: {}): React.Node {
         <select
           value={displayDensity}
           onChange={({currentTarget}) =>
-            setDisplayDensity(currentTarget.value)
+            setDisplayDensity(
+              // $FlowFixMe[incompatible-call]
+              currentTarget.value,
+            )
           }>
           <option value="compact">Compact</option>
           <option value="comfortable">Comfortable</option>
@@ -109,7 +117,10 @@ export default function GeneralSettings(_: {}): React.Node {
         <select
           value={displayDensity}
           onChange={({currentTarget}) =>
-            setDisplayDensity(currentTarget.value)
+            setDisplayDensity(
+              // $FlowFixMe[incompatible-call]
+              currentTarget.value,
+            )
           }>
           <option value="compact">Compact</option>
           <option value="comfortable">Comfortable</option>

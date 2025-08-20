@@ -191,7 +191,12 @@ function PrimaryFallbackTest({initialSuspend}) {
       <label>
         <input
           checked={suspend}
-          onChange={e => setSuspend(e.target.checked)}
+          onChange={e =>
+            setSuspend(
+              // $FlowFixMe[prop-missing]
+              e.target.checked,
+            )
+          }
           type="checkbox"
         />
         Suspend

@@ -40,7 +40,10 @@ export default function CodeEditorOptions({
         value={openInEditorURLPreset}
         onChange={({currentTarget}) => {
           const selectedValue = currentTarget.value;
-          setOpenInEditorURLPreset(selectedValue);
+          setOpenInEditorURLPreset(
+            // $FlowFixMe[incompatible-call]
+            selectedValue,
+          );
         }}>
         <option value="vscode">VS Code</option>
         <option value="custom">Custom</option>
@@ -52,7 +55,10 @@ export default function CodeEditorOptions({
           placeholder={getDefaultOpenInEditorURL()}
           value={openInEditorURL}
           onChange={event => {
-            setOpenInEditorURL(event.target.value);
+            setOpenInEditorURL(
+              // $FlowFixMe[prop-missing]
+              event.target.value,
+            );
           }}
         />
       )}

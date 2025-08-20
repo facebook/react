@@ -226,7 +226,15 @@ function FunctionalContextConsumerWithContextUpdates() {
         {state}
         <div>
           test state:{' '}
-          <input value={state} onChange={e => setState(e.target.value)} />
+          <input
+            value={state}
+            onChange={e =>
+              setState(
+                // $FlowFixMe[prop-missing]
+                e.target.value,
+              )
+            }
+          />
         </div>
       </div>
     </>
@@ -265,7 +273,15 @@ class ModernClassContextConsumerWithUpdates extends Component<any> {
               'ModernClassContextConsumerWithUpdates',
               string,
             )}
-            <input value={string} onChange={e => setString(e.target.value)} />
+            <input
+              value={string}
+              onChange={e =>
+                setString(
+                  // $FlowFixMe[prop-missing]
+                  e.target.value,
+                )
+              }
+            />
           </>
         )}
       </StringContextWithUpdates.Consumer>

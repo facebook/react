@@ -1,0 +1,4 @@
+{
+  "env": ["node", "dom", "bom", "intl", "cssom", "indexeddb", "serviceworkers", "webassembly", "html", "web-animations"],
+  "ignore": ["webpack", "ws", "regenerator-runtime", "jest", "create-react-class"]
+}
