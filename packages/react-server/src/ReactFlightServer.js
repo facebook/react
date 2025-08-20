@@ -408,7 +408,7 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
 
         emitConsoleChunk(request, methodName, owner, env, stack, args);
       }
-      // $FlowFixMe[prop-missing]
+      // $FlowFixMe[incompatible-call]
       return originalMethod.apply(this, arguments);
     };
     if (originalName) {
