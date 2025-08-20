@@ -78,6 +78,8 @@ export type Options = {
   findSourceMapURL?: FindSourceMapURLCallback,
   replayConsoleLogs?: boolean,
   environmentName?: string,
+  // For the Edge client we only support a single-direction debug channel.
+  debugChannel?: {readable?: ReadableStream, ...},
 };
 
 function createResponseFromOptions(options: Options) {
