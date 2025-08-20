@@ -565,6 +565,7 @@ module.exports = {
     BigInt: 'readonly',
     BigInt64Array: 'readonly',
     BigUint64Array: 'readonly',
+    CacheType: 'readonly',
     Class: 'readonly',
     ClientRect: 'readonly',
     CopyInspectedElementPath: 'readonly',

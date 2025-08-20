@@ -76,7 +76,7 @@ export function unstable_scheduleCallback<T>(
   callback: SchedulerCallback<T>,
   options?: {delay?: number},
 ): CallbackNode {
-  let postTaskPriority;
+  let postTaskPriority: PostTaskPriorityLevel;
   switch (priorityLevel) {
     case ImmediatePriority:
     case UserBlockingPriority:

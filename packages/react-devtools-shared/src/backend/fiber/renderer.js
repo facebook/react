@@ -6705,7 +6705,7 @@ export function attach(
     if (isMostRecentlyInspectedElement(id) && !forceFullData) {
       if (!hasElementUpdatedSinceLastInspected) {
         if (path !== null) {
-          let secondaryCategory = null;
+          let secondaryCategory: 'suspendedBy' | 'hooks' | null = null;
           if (path[0] === 'hooks') {
             secondaryCategory = 'hooks';
           }
