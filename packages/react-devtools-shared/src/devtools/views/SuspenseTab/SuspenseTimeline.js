@@ -32,14 +32,19 @@ import typeof {
 // TODO: This returns the roots which would mean we attempt to suspend the shell.
 // Suspending the shell is currently not supported and we don't have a good view
 // for inspecting the root. But we probably should?
-function getDocumentOrderSuspense(
+function getSuspendableDocumentOrderSuspense(
   store: Store,
   roots: $ReadOnlyArray<Element['id']>,
 ): Array<SuspenseNode> {
   const suspenseTreeList: SuspenseNode[] = [];
+  // TODO: Consider multi-root documents. Maybe each root should get its own timeline
+  // instead. In that world, roots should get a display name.
   for (let i = 0; i < roots.length; i++) {
     const root = store.getElementByID(roots[i]);
     if (root === null) {
+      continue;
+    }
+    if (!store.supportsTogglingSuspense(root.id)) {
       continue;
     }
     const suspense = store.getSuspenseByID(root.id);
@@ -72,7 +77,7 @@ export default function SuspenseTimeline(): React$Node {
   const {shells} = useContext(SuspenseTreeStateContext);
 
   const timeline = useMemo(() => {
-    return getDocumentOrderSuspense(store, shells);
+    return getSuspendableDocumentOrderSuspense(store, shells);
   }, [store, shells]);
 
   const {highlightHostInstance, clearHighlightHostInstance} =
@@ -81,6 +86,10 @@ export default function SuspenseTimeline(): React$Node {
   const inputRef = useRef<HTMLElement | null>(null);
   const inputBBox = useRef<ClientRect | null>(null);
   useLayoutEffect(() => {
+    if (timeline.length === 0) {
+      return;
+    }
+
     const input = inputRef.current;
     if (input === null) {
       throw new Error('Expected an input HTML element to be present.');
@@ -99,8 +108,8 @@ export default function SuspenseTimeline(): React$Node {
 
   const min = 0;
   const max = timeline.length > 0 ? timeline.length - 1 : 0;
-
   const [value, setValue] = useState(max);
+
   if (value > max) {
     // TODO: Handle timeline changes
     setValue(max);
@@ -129,6 +138,10 @@ export default function SuspenseTimeline(): React$Node {
       );
     });
   }, [timeline, value]);
+
+  if (timeline.length === 0) {
+    return <div>Can't step through Suspense in production apps.</div>;
+  }
 
   function handleChange(event: SyntheticEvent) {
     const pendingValue = +event.currentTarget.value;

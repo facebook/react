@@ -2366,6 +2366,7 @@ export function attach(
         !isProductionBuildOfRenderer && StrictModeBits !== 0 ? 1 : 0,
       );
       pushOperation(hasOwnerMetadata ? 1 : 0);
+      pushOperation(supportsTogglingSuspense ? 1 : 0);
 
       if (isProfiling) {
         if (displayNamesByRootID !== null) {
@@ -7455,13 +7456,6 @@ export function attach(
   }
 
   function overrideSuspense(id: number, forceFallback: boolean) {
-    if (!supportsTogglingSuspense) {
-      // TODO:: Add getter to decide if overrideSuspense is available.
-      // Currently only available on inspectElement.
-      // Probably need a different affordance to batch since the timeline
-      // fallback is not the same as resuspending.
-      return;
-    }
     if (
       typeof setSuspenseHandler !== 'function' ||
       typeof scheduleUpdate !== 'function'
@@ -8014,6 +8008,7 @@ export function attach(
     startProfiling,
     stopProfiling,
     storeAsGlobal,
+    supportsTogglingSuspense,
     updateComponentFilters,
     getEnvironmentNames,
     ...internalMcpFunctions,
