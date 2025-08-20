@@ -789,7 +789,7 @@ const Dispatcher: DispatcherType = {
 
 // create a proxy to throw a custom error
 // in case future versions of React adds more hooks
-const DispatcherProxyHandler = {
+const DispatcherProxyHandler: Proxy$traps<DispatcherType> = {
   get(target: DispatcherType, prop: string) {
     if (target.hasOwnProperty(prop)) {
       // $FlowFixMe[invalid-computed-prop]
