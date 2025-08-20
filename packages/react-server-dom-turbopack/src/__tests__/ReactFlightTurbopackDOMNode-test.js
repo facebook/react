@@ -146,6 +146,7 @@ describe('ReactFlightTurbopackDOMNode', () => {
     );
   });
 
+  // @gate __DEV__
   it('can transport debug info through a separate debug channel', async () => {
     function Thrower() {
       throw new Error('ssr-throw');
@@ -224,11 +225,7 @@ describe('ReactFlightTurbopackDOMNode', () => {
 
     const result = await readResult(ssrStream);
 
-    if (__DEV__) {
-      expect(normalizeCodeLocInfo(ownerStack)).toBe('\n    in App (at **)');
-    } else {
-      expect(ownerStack).toBeNull();
-    }
+    expect(normalizeCodeLocInfo(ownerStack)).toBe('\n    in App (at **)');
 
     expect(result).toContain(
       'Switched to client rendering because the server rendering errored:\n\nssr-throw',
