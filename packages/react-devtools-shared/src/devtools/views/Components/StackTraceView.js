@@ -63,13 +63,18 @@ export function CallSiteView({
   return (
     <div className={styles.CallSite}>
       {functionName || virtualFunctionName}
-      {' @ '}
-      <span
-        className={linkIsEnabled ? styles.Link : null}
-        onClick={viewSource}
-        title={url + ':' + line}>
-        {formatLocationForDisplay(url, line, column)}
-      </span>
+      {url !== '' && (
+        <>
+          {' @ '}
+          <span
+            className={linkIsEnabled ? styles.Link : null}
+            onClick={viewSource}
+            title={url + ':' + line}>
+            {formatLocationForDisplay(url, line, column)}
+          </span>
+        </>
+      )}
+
       <ElementBadges environmentName={environmentName} />
     </div>
   );
