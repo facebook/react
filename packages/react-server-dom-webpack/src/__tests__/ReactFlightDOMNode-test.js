@@ -927,12 +927,23 @@ describe('ReactFlightDOMNode', () => {
       );
     }
 
+    const debugReadable = new Stream.PassThrough(streamOptions);
+
     const rscStream = await serverAct(() =>
       ReactServerDOMServer.renderToPipeableStream(
         ReactServer.createElement(App, null),
         webpackMap,
+        {
+          debugChannel: new Stream.Writable({
+            write(chunk, encoding, callback) {
+              debugReadable.write(chunk, encoding);
+              callback();
+            },
+          }),
+        },
       ),
     );
+
     const readable = new Stream.PassThrough(streamOptions);
 
     rscStream.pipe(readable);
@@ -941,14 +952,20 @@ describe('ReactFlightDOMNode', () => {
       return use(response);
     }
 
-    const response = ReactServerDOMClient.createFromNodeStream(readable, {
+    const serverConsumerManifest = {
       moduleMap: {
         [webpackMap[ClientComponentOnTheClient.$$id].id]: {
           '*': webpackMap[ClientComponentOnTheServer.$$id],
         },
       },
       moduleLoading: webpackModuleLoading,
-    });
+    };
+
+    const response = ReactServerDOMClient.createFromNodeStream(
+      readable,
+      serverConsumerManifest,
+      {debugChannel: debugReadable},
+    );
 
     let ownerStack;
 
