@@ -2775,4 +2775,193 @@ describe('Store', () => {
         <Suspense name="content" rects={[{x:1,y:2,width:4,height:1}]}>
     `);
   });
+
+  // @reactVersion >= 18.0
+  it('can reconcile resuspended Suspense with Suspense in fallback positions', async () => {
+    let resolveHeadFallback;
+    let resolveHeadContent;
+    let resolveMainFallback;
+    let resolveMainContent;
+
+    function Component({children, promise}) {
+      if (promise) {
+        React.use(promise);
+      }
+      return <div>{children}</div>;
+    }
+
+    function WithSuspenseInFallback({fallbackPromise, contentPromise, name}) {
+      return (
+        <React.Suspense
+          name={name}
+          fallback={
+            <React.Suspense
+              name={`${name}-fallback`}
+              fallback={
+                <Component key={`${name}-fallback-fallback`}>
+                  Loading fallback...
+                </Component>
+              }>
+              <Component
+                key={`${name}-fallback-content`}
+                promise={fallbackPromise}>
+                Loading...
+              </Component>
+            </React.Suspense>
+          }>
+          <Component key={`${name}-content`} promise={contentPromise}>
+            done
+          </Component>
+        </React.Suspense>
+      );
+    }
+
+    function App({
+      headFallbackPromise,
+      headContentPromise,
+      mainContentPromise,
+      mainFallbackPromise,
+      tailContentPromise,
+      tailFallbackPromise,
+    }) {
+      return (
+        <>
+          <WithSuspenseInFallback
+            fallbackPromise={headFallbackPromise}
+            contentPromise={headContentPromise}
+            name="head"
+          />
+          <WithSuspenseInFallback
+            fallbackPromise={mainFallbackPromise}
+            contentPromise={mainContentPromise}
+            name="main"
+          />
+        </>
+      );
+    }
+
+    const initialHeadContentPromise = new Promise(resolve => {
+      resolveHeadContent = resolve;
+    });
+    const initialHeadFallbackPromise = new Promise(resolve => {
+      resolveHeadFallback = resolve;
+    });
+    const initialMainContentPromise = new Promise(resolve => {
+      resolveMainContent = resolve;
+    });
+    const initialMainFallbackPromise = new Promise(resolve => {
+      resolveMainFallback = resolve;
+    });
+    await actAsync(() =>
+      render(
+        <App
+          headFallbackPromise={initialHeadFallbackPromise}
+          headContentPromise={initialHeadContentPromise}
+          mainContentPromise={initialMainContentPromise}
+          mainFallbackPromise={initialMainFallbackPromise}
+        />,
+      ),
+    );
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <WithSuspenseInFallback>
+            ▾ <Suspense name="head">
+              ▾ <Suspense name="head-fallback">
+                  <Component key="head-fallback-fallback">
+          ▾ <WithSuspenseInFallback>
+            ▾ <Suspense name="main">
+              ▾ <Suspense name="main-fallback">
+                  <Component key="main-fallback-fallback">
+      [shell]
+        <Suspense name="head" rects={null}>
+        <Suspense name="head-fallback" rects={null}>
+        <Suspense name="main" rects={null}>
+        <Suspense name="main-fallback" rects={null}>
+    `);
+
+    await actAsync(() => {
+      resolveHeadFallback();
+      resolveMainFallback();
+      resolveHeadContent();
+      resolveMainContent();
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <WithSuspenseInFallback>
+            ▾ <Suspense name="head">
+                <Component key="head-content">
+          ▾ <WithSuspenseInFallback>
+            ▾ <Suspense name="main">
+                <Component key="main-content">
+      [shell]
+        <Suspense name="head" rects={[{x:1,y:2,width:4,height:1}]}>
+        <Suspense name="main" rects={[{x:1,y:2,width:4,height:1}]}>
+    `);
+
+    // Resuspend head content
+    const nextHeadContentPromise = new Promise(resolve => {
+      resolveHeadContent = resolve;
+    });
+    await actAsync(() =>
+      render(
+        <App
+          headFallbackPromise={initialHeadFallbackPromise}
+          headContentPromise={nextHeadContentPromise}
+          mainContentPromise={initialMainContentPromise}
+          mainFallbackPromise={initialMainFallbackPromise}
+        />,
+      ),
+    );
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <WithSuspenseInFallback>
+            ▾ <Suspense name="head">
+              ▾ <Suspense name="head-fallback">
+                  <Component key="head-fallback-content">
+          ▾ <WithSuspenseInFallback>
+            ▾ <Suspense name="main">
+                <Component key="main-content">
+      [shell]
+        <Suspense name="head" rects={[{x:1,y:2,width:4,height:1}]}>
+        <Suspense name="head-fallback" rects={[{x:1,y:2,width:10,height:1}]}>
+        <Suspense name="main" rects={[{x:1,y:2,width:4,height:1}]}>
+    `);
+
+    // Resuspend head fallback
+    const nextHeadFallbackPromise = new Promise(resolve => {
+      resolveHeadFallback = resolve;
+    });
+    await actAsync(() =>
+      render(
+        <App
+          headFallbackPromise={nextHeadFallbackPromise}
+          headContentPromise={nextHeadContentPromise}
+          mainContentPromise={initialMainContentPromise}
+          mainFallbackPromise={initialMainFallbackPromise}
+        />,
+      ),
+    );
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <WithSuspenseInFallback>
+            ▾ <Suspense name="head">
+              ▾ <Suspense name="head-fallback">
+                  <Component key="head-fallback-fallback">
+          ▾ <WithSuspenseInFallback>
+            ▾ <Suspense name="main">
+                <Component key="main-content">
+      [shell]
+        <Suspense name="head" rects={[{x:1,y:2,width:4,height:1}]}>
+        <Suspense name="head-fallback" rects={[{x:1,y:2,width:10,height:1}]}>
+        <Suspense name="main" rects={[{x:1,y:2,width:4,height:1}]}>
+    `);
+  });
 });
