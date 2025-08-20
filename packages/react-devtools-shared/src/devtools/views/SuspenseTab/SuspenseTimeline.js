@@ -11,7 +11,14 @@ import type {Element, SuspenseNode} from '../../../frontend/types';
 import type Store from '../../store';
 
 import * as React from 'react';
-import {useContext, useLayoutEffect, useMemo, useRef} from 'react';
+import {
+  useContext,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {BridgeContext, StoreContext} from '../context';
 import {TreeDispatcherContext} from '../Components/TreeContext';
 import {useHighlightHostInstance} from '../hooks';
@@ -87,17 +94,47 @@ export default function SuspenseTimeline(): React$Node {
   }, []);
 
   const min = 0;
-  const max = timeline.length - 1;
+  const max = timeline.length > 0 ? timeline.length - 1 : 0;
+
+  const [value, setValue] = useState(max);
+  if (value > max) {
+    // TODO: Handle timeline changes
+    setValue(max);
+  }
+
+  const markersID = useId();
+  const markers: React.Node[] = useMemo(() => {
+    return timeline.map((suspense, index) => {
+      const takesUpSpace =
+        suspense.rects !== null &&
+        suspense.rects.some(rect => {
+          return rect.width > 0 && rect.height > 0;
+        });
+
+      return takesUpSpace ? (
+        <option
+          key={suspense.id}
+          className={
+            index === value ? styles.SuspenseTimelineActiveMarker : undefined
+          }
+          value={index}>
+          #{index + 1}
+        </option>
+      ) : (
+        <option key={suspense.id} />
+      );
+    });
+  }, [timeline, value]);
 
   function handleChange(event: SyntheticEvent<HTMLInputElement>) {
-    const value = +event.currentTarget.value;
+    const pendingValue = +event.currentTarget.value;
     for (let i = 0; i < timeline.length; i++) {
-      const forceFallback = i > value;
+      const forceFallback = i > pendingValue;
       const suspense = timeline[i];
       const elementID = suspense.id;
       const rendererID = store.getRendererIDForElement(elementID);
       if (rendererID === null) {
-        // TODO: This sounds like a bug.
+        // TODO: Handle disconnected elements.
         console.warn(
           `No renderer ID found for element ${elementID} in suspense timeline.`,
         );
@@ -110,18 +147,18 @@ export default function SuspenseTimeline(): React$Node {
       }
     }
 
-    const suspense = timeline[value];
+    const suspense = timeline[pendingValue];
     const elementID = suspense.id;
     highlightHostInstance(elementID);
     dispatch({type: 'SELECT_ELEMENT_BY_ID', payload: elementID});
+    setValue(pendingValue);
   }
 
   function handleBlur() {
     clearHighlightHostInstance();
   }
 
-  function handleFocus(event: SyntheticEvent<HTMLInputElement>) {
-    const value = +event.currentTarget.value;
+  function handleFocus() {
     const suspense = timeline[value];
 
     highlightHostInstance(suspense.id);
@@ -133,7 +170,7 @@ export default function SuspenseTimeline(): React$Node {
       throw new Error('Bounding box of slider is unknown.');
     }
 
-    const value = Math.max(
+    const hoveredValue = Math.max(
       min,
       Math.min(
         Math.round(
@@ -142,10 +179,10 @@ export default function SuspenseTimeline(): React$Node {
         max,
       ),
     );
-    const suspense = timeline[value];
+    const suspense = timeline[hoveredValue];
     if (suspense === undefined) {
       throw new Error(
-        `Suspense node not found for value ${value} in timeline when on ${event.clientX} in bounding box ${JSON.stringify(bbox)}.`,
+        `Suspense node not found for value ${hoveredValue} in timeline when on ${event.clientX} in bounding box ${JSON.stringify(bbox)}.`,
       );
     }
     highlightHostInstance(suspense.id);
@@ -158,7 +195,8 @@ export default function SuspenseTimeline(): React$Node {
         type="range"
         min={min}
         max={max}
-        defaultValue={max}
+        list={markersID}
+        value={value}
         onBlur={handleBlur}
         onChange={handleChange}
         onFocus={handleFocus}
@@ -166,6 +204,9 @@ export default function SuspenseTimeline(): React$Node {
         onPointerUp={clearHighlightHostInstance}
         ref={inputRef}
       />
+      <datalist id={markersID} className={styles.SuspenseTimelineMarkers}>
+        {markers}
+      </datalist>
     </div>
   );
 }
