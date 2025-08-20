@@ -905,4 +905,90 @@ describe('ReactFlightDOMNode', () => {
     // We don't really have an assertion other than to make sure
     // the stream doesn't hang.
   });
+
+  // @gate __DEV__
+  it('can transport debug info through a separate debug channel', async () => {
+    function Thrower() {
+      throw new Error('ssr-throw');
+    }
+
+    const ClientComponentOnTheClient = clientExports(
+      Thrower,
+      123,
+      'path/to/chunk.js',
+    );
+
+    const ClientComponentOnTheServer = clientExports(Thrower);
+
+    function App() {
+      return ReactServer.createElement(
+        ReactServer.Suspense,
+        null,
+        ReactServer.createElement(ClientComponentOnTheClient, null),
+      );
+    }
+
+    const debugReadable = new Stream.PassThrough(streamOptions);
+
+    const rscStream = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        ReactServer.createElement(App, null),
+        webpackMap,
+        {
+          debugChannel: new Stream.Writable({
+            write(chunk, encoding, callback) {
+              debugReadable.write(chunk, encoding);
+              callback();
+            },
+          }),
+        },
+      ),
+    );
+
+    const readable = new Stream.PassThrough(streamOptions);
+
+    rscStream.pipe(readable);
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const serverConsumerManifest = {
+      moduleMap: {
+        [webpackMap[ClientComponentOnTheClient.$$id].id]: {
+          '*': webpackMap[ClientComponentOnTheServer.$$id],
+        },
+      },
+      moduleLoading: webpackModuleLoading,
+    };
+
+    const response = ReactServerDOMClient.createFromNodeStream(
+      readable,
+      serverConsumerManifest,
+      {debugChannel: debugReadable},
+    );
+
+    let ownerStack;
+
+    const ssrStream = await serverAct(() =>
+      ReactDOMServer.renderToPipeableStream(
+        <ClientRoot response={response} />,
+        {
+          onError(err, errorInfo) {
+            ownerStack = React.captureOwnerStack
+              ? React.captureOwnerStack()
+              : null;
+          },
+        },
+      ),
+    );
+
+    const result = await readResult(ssrStream);
+
+    expect(normalizeCodeLocInfo(ownerStack)).toBe('\n    in App (at **)');
+
+    expect(result).toContain(
+      'Switched to client rendering because the server rendering errored:\n\nssr-throw',
+    );
+  });
 });
