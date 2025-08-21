@@ -42,7 +42,7 @@ type SetStateName = string | undefined | null;
 type DerivationMetadata = {
   typeOfValue: TypeOfValue;
   place: Place;
-  sources: Place[];
+  sources: Array<Place>;
 };
 
 type ErrorMetadata = {
@@ -64,7 +64,7 @@ function joinValue(
 
 function updateDerivationMetadata(
   target: Place,
-  sources: DerivationMetadata[],
+  sources: Array<DerivationMetadata>,
   typeOfValue: TypeOfValue,
   derivedTuple: Map<IdentifierId, DerivationMetadata>,
 ): void {
@@ -75,8 +75,10 @@ function updateDerivationMetadata(
   };
 
   for (const source of sources) {
-    // If the identifier of the source is a promoted identifier, then
-    // we should set the target as the source.
+    /*
+     * If the identifier of the source is a promoted identifier, then
+     *  we should set the target as the source.
+     */
     if (source.place.identifier.name?.kind === 'promoted') {
       newValue.sources.push(target);
     } else {
@@ -89,10 +91,8 @@ function updateDerivationMetadata(
 function parseInstr(
   instr: Instruction,
   derivedTuple: Map<IdentifierId, DerivationMetadata>,
-  setStateCalls: Map<SetStateName, Place[]>,
-) {
-  // console.log(printInstruction(instr));
-  // console.log(instr);
+  setStateCalls: Map<SetStateName, Array<Place>>,
+): void {
   let typeOfValue: TypeOfValue = 'ignored';
 
   // TODO: Not sure if this will catch every time we create a new useState
@@ -129,7 +129,7 @@ function parseInstr(
     }
   }
 
-  let sources: DerivationMetadata[] = [];
+  let sources: Array<DerivationMetadata> = [];
   for (const operand of eachInstructionOperand(instr)) {
     const opSource = derivedTuple.get(operand.identifier.id);
     if (opSource === undefined) {
@@ -189,7 +189,7 @@ function parseInstr(
 function parseBlockPhi(
   block: BasicBlock,
   derivedTuple: Map<IdentifierId, DerivationMetadata>,
-) {
+): void {
   for (const phi of block.phis) {
     for (const operand of phi.operands.values()) {
       const source = derivedTuple.get(operand.identifier.id);
@@ -244,10 +244,10 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
   const locals: Map<IdentifierId, IdentifierId> = new Map();
   const derivedTuple: Map<IdentifierId, DerivationMetadata> = new Map();
 
-  const effectSetStates: Map<SetStateName, Place[]> = new Map();
-  const setStateCalls: Map<SetStateName, Place[]> = new Map();
+  const effectSetStates: Map<SetStateName, Array<Place>> = new Map();
+  const setStateCalls: Map<SetStateName, Array<Place>> = new Map();
 
-  const errors: ErrorMetadata[] = [];
+  const errors: Array<ErrorMetadata> = [];
 
   if (fn.fnType === 'Hook') {
     for (const param of fn.params) {
@@ -374,8 +374,8 @@ function validateEffect(
   effectFunction: HIRFunction,
   effectDeps: Array<IdentifierId>,
   derivedTuple: Map<IdentifierId, DerivationMetadata>,
-  effectSetStates: Map<SetStateName, Place[]>,
-  errors: ErrorMetadata[],
+  effectSetStates: Map<SetStateName, Array<Place>>,
+  errors: Array<ErrorMetadata>,
 ): void {
   /*
    * TODO: This makes it so we only capture single line useEffects.
