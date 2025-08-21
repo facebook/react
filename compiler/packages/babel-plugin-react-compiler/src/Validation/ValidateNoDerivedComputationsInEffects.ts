@@ -5,13 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {effect} from 'zod';
 import {CompilerError, Effect, ErrorSeverity, SourceLocation} from '..';
 import {
   ArrayExpression,
   BasicBlock,
   BlockId,
-  Identifier,
   FunctionExpression,
   HIRFunction,
   IdentifierId,
@@ -20,15 +18,12 @@ import {
   isSetStateType,
   isUseEffectHookType,
   isUseStateType,
-  IdentifierName,
   GeneratedSource,
 } from '../HIR';
-import {printInstruction} from '../HIR/PrintHIR';
 import {
   eachInstructionOperand,
   eachTerminalOperand,
   eachInstructionLValue,
-  eachPatternOperand,
 } from '../HIR/visitors';
 import {isMutable} from '../ReactiveScopes/InferReactiveScopeVariables';
 import {assertExhaustive} from '../Utils/utils';
@@ -46,12 +41,10 @@ type SetStateName = string | undefined | null;
 
 type DerivationMetadata = {
   typeOfValue: TypeOfValue;
-  // TODO: Rename to place
-  identifierPlace: Place;
+  place: Place;
   sources: Place[];
 };
 
-// TODO: This needs refining
 type ErrorMetadata = {
   errorType: TypeOfValue;
   invalidDepInfo: string | undefined;
@@ -76,7 +69,7 @@ function updateDerivationMetadata(
   derivedTuple: Map<IdentifierId, DerivationMetadata>,
 ): void {
   let newValue: DerivationMetadata = {
-    identifierPlace: target,
+    place: target,
     sources: [],
     typeOfValue: typeOfValue,
   };
@@ -84,7 +77,7 @@ function updateDerivationMetadata(
   for (const source of sources) {
     // If the identifier of the source is a promoted identifier, then
     // we should set the target as the source.
-    if (source.identifierPlace.identifier.name?.kind === 'promoted') {
+    if (source.place.identifier.name?.kind === 'promoted') {
       newValue.sources.push(target);
     } else {
       newValue.sources.push(...source.sources);
@@ -111,7 +104,7 @@ function parseInstr(
     const value = instr.value.lvalue.pattern.items[0];
     if (value.kind === 'Identifier') {
       derivedTuple.set(value.identifier.id, {
-        identifierPlace: value,
+        place: value,
         sources: [value],
         typeOfValue: 'fromState',
       });
@@ -202,17 +195,17 @@ function parseBlockPhi(
       const source = derivedTuple.get(operand.identifier.id);
       if (source !== undefined && source.typeOfValue === 'fromProps') {
         if (
-          source.identifierPlace.identifier.name === null ||
-          source.identifierPlace.identifier.name?.kind === 'promoted'
+          source.place.identifier.name === null ||
+          source.place.identifier.name?.kind === 'promoted'
         ) {
           derivedTuple.set(phi.place.identifier.id, {
-            identifierPlace: phi.place,
+            place: phi.place,
             sources: [phi.place],
             typeOfValue: 'fromProps',
           });
         } else {
           derivedTuple.set(phi.place.identifier.id, {
-            identifierPlace: phi.place,
+            place: phi.place,
             sources: source.sources,
             typeOfValue: 'fromProps',
           });
@@ -260,7 +253,7 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
     for (const param of fn.params) {
       if (param.kind === 'Identifier') {
         derivedTuple.set(param.identifier.id, {
-          identifierPlace: param,
+          place: param,
           sources: [param],
           typeOfValue: 'fromProps',
         });
@@ -270,7 +263,7 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
     const props = fn.params[0];
     if (props != null && props.kind === 'Identifier') {
       derivedTuple.set(props.identifier.id, {
-        identifierPlace: props,
+        place: props,
         sources: [props],
         typeOfValue: 'fromProps',
       });
@@ -347,7 +340,6 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
   const throwableErrors = new CompilerError();
   for (const error of errors) {
     let reason;
-    let description = '';
     // TODO: Not sure if this is robust enough.
     /*
      * If we use a setState from an invalid useEffect elsewhere then we probably have to
@@ -552,6 +544,12 @@ function validateEffect(
       sourceNames = sourceNames.slice(0, -2);
       invalidDepInfo = sourceNames
         ? `Invalid deps from local state: ${sourceNames}`
+        : '';
+    } else {
+      sourceNames += `[${placeNames}], `;
+      sourceNames = sourceNames.slice(0, -2);
+      invalidDepInfo = sourceNames
+        ? `Invalid deps from both props and local state: ${sourceNames}`
         : '';
     }
 

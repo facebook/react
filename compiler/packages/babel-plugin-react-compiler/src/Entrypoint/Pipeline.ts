@@ -86,7 +86,6 @@ import {
   validateMemoizedEffectDependencies,
   validateNoCapitalizedCalls,
   validateNoRefAccessInRender,
-  validateNoForbiddenVariableNames,
   validateNoSetStateInRender,
   validatePreservedManualMemoization,
   validateUseMemo,
@@ -246,10 +245,6 @@ function runWithEnvironment(
         throw mutabilityAliasingErrors.unwrapErr();
       }
     }
-  }
-
-  if (env.config.validateNoForbiddenVariableNames) {
-    validateNoForbiddenVariableNames(hir);
   }
 
   if (!env.config.enableNewMutationAliasingModel) {

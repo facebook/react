@@ -11,6 +11,5 @@ export {validateMemoizedEffectDependencies} from './ValidateMemoizedEffectDepend
 export {validateNoCapitalizedCalls} from './ValidateNoCapitalizedCalls';
 export {validateNoRefAccessInRender} from './ValidateNoRefAccessInRender';
 export {validateNoSetStateInRender} from './ValidateNoSetStateInRender';
-export {validateNoForbiddenVariableNames} from './ValidateNoForbiddenVariableNames';
 export {validatePreservedManualMemoization} from './ValidatePreservedManualMemoization';
 export {validateUseMemo} from './ValidateUseMemo';
