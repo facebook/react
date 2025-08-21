@@ -83,7 +83,7 @@ var timerQueue: Array<Task> = [];
 var taskIdCounter = 1;
 
 var currentTask = null;
-var currentPriorityLevel = NormalPriority;
+var currentPriorityLevel: PriorityLevel = NormalPriority;
 
 // This is set while performing work, to prevent re-entrance.
 var isPerformingWork = false;
@@ -441,7 +441,7 @@ let taskTimeoutID: TimeoutID = (-1: any);
 // thread, like user events. By default, it yields multiple times per frame.
 // It does not attempt to align with frame boundaries, since most tasks don't
 // need to be frame aligned; for those that do, use requestAnimationFrame.
-let frameInterval = frameYieldMs;
+let frameInterval: number = frameYieldMs;
 let startTime = -1;
 
 function shouldYieldToHost(): boolean {

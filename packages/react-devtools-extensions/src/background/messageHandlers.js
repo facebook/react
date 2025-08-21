@@ -46,21 +46,25 @@ export function handleDevToolsPageMessage(message) {
         payload: {tabId, url},
       } = message;
 
-      if (!tabId) {
-        throw new Error("Couldn't fetch file sources: tabId not specified");
+      if (!tabId || !url) {
+        // Send a response straight away to get the Promise fulfilled.
+        chrome.runtime.sendMessage({
+          source: 'react-devtools-background',
+          payload: {
+            type: 'fetch-file-with-cache-error',
+            url,
+            value: null,
+          },
+        });
+      } else {
+        chrome.tabs.sendMessage(tabId, {
+          source: 'devtools-page',
+          payload: {
+            type: 'fetch-file-with-cache',
+            url,
+          },
+        });
       }
-
-      if (!url) {
-        throw new Error("Couldn't fetch file sources: url not specified");
-      }
-
-      chrome.tabs.sendMessage(tabId, {
-        source: 'devtools-page',
-        payload: {
-          type: 'fetch-file-with-cache',
-          url,
-        },
-      });
 
       break;
     }

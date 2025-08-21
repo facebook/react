@@ -70,7 +70,7 @@ var timerQueue: Array<Task> = [];
 var taskIdCounter = 1;
 
 var currentTask = null;
-var currentPriorityLevel = NormalPriority;
+var currentPriorityLevel: PriorityLevel = NormalPriority;
 
 // This is set while performing work, to prevent re-entrance.
 var isPerformingWork = false;
