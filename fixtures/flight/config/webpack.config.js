@@ -688,7 +688,6 @@ module.exports = function (webpackEnv) {
       // Fork Start
       new DevToolsIgnorePlugin({
         shouldIgnorePath: function (path) {
-          console.log(path);
           return (
             path.includes('/node_modules/') ||
             path.includes('/webpack/') ||
