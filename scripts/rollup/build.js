@@ -144,7 +144,6 @@ function getBabelConfig(
   updateBabelOptions,
   bundleType,
   packageName,
-  externals,
   isDevelopment,
   bundle
 ) {
@@ -354,7 +353,7 @@ function forbidFBJSImports() {
 
 function getPlugins(
   entry,
-  externals,
+  unusedExternals,
   updateBabelOptions,
   filename,
   packageName,
@@ -402,8 +401,8 @@ function getPlugins(
       forbidFBJSImports(),
       // Use Node resolution mechanism.
       resolve({
-        // skip: externals, // TODO: options.skip was removed in @rollup/plugin-node-resolve 3.0.0
-        preferBuiltins: bundle.preferBuiltins,
+        // `external` rollup config takes care of marking builtins as externals
+        preferBuiltins: false,
       }),
       // Remove license headers from individual modules
       stripBanner({
@@ -415,7 +414,6 @@ function getPlugins(
           updateBabelOptions,
           bundleType,
           packageName,
-          externals,
           !isProduction,
           bundle
         )
@@ -539,6 +537,18 @@ function getPlugins(
           };
         },
       }),
+      {
+        name: 'fail-with-unused-externals',
+        buildEnd(error) {
+          if (!error) {
+            if (unusedExternals.size > 0) {
+              throw new Error(
+                `${entry}: You can remove these unused externals from the bundle entry: ${[...unusedExternals]}.`
+              );
+            }
+          }
+        },
+      },
     ].filter(Boolean);
   } catch (error) {
     console.error(
@@ -650,6 +660,7 @@ async function createBundle(bundle, bundleType) {
     !isProductionBundleType(bundleType)
   );
 
+  const unusedExternals = new Set(bundle.externals);
   const peerGlobals = Modules.getPeerGlobals(bundle.externals, bundleType);
   let externals = Object.keys(peerGlobals);
 
@@ -671,6 +682,7 @@ async function createBundle(bundle, bundleType) {
     external(id) {
       const containsThisModule = pkg => id === pkg || id.startsWith(pkg + '/');
       const isProvidedByDependency = externals.some(containsThisModule);
+      let isExternal;
       if (isProvidedByDependency) {
         if (id.indexOf('/src/') !== -1) {
           throw Error(
@@ -683,14 +695,20 @@ async function createBundle(bundle, bundleType) {
               'to create a new bundle entry point for it instead.'
           );
         }
-        return true;
+        isExternal = true;
+      } else {
+        isExternal = !!peerGlobals[id];
       }
-      return !!peerGlobals[id];
+
+      if (isExternal) {
+        unusedExternals.delete(id);
+      }
+      return isExternal;
     },
     onwarn: handleRollupWarning,
     plugins: getPlugins(
       bundle.entry,
-      externals,
+      unusedExternals,
       bundle.babel,
       filename,
       packageName,
