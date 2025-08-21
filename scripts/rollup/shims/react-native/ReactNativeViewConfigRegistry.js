@@ -81,6 +81,8 @@ export function register(name: string, callback: () => ViewConfig): string {
     typeof callback === 'function',
     'View config getter callback for component `%s` must be a function (received `%s`)',
     name,
+    /* $FlowFixMe[invalid-compare] Error discovered during Constant Condition
+     * roll out. See https://fburl.com/workplace/5whu3i34. */
     callback === null ? 'null' : typeof callback,
   );
   viewConfigCallbacks.set(name, callback);
