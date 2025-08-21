@@ -381,18 +381,18 @@ function validateEffect(
    * TODO: This makes it so we only capture single line useEffects.
    * We should be able to capture multiline as well
    */
-  for (const operand of effectFunction.context) {
-    if (isSetStateType(operand.identifier)) {
-      continue;
-    } else if (effectDeps.find(dep => dep === operand.identifier.id) != null) {
-      continue;
-    } else if (derivedTuple.has(operand.identifier.id)) {
-      continue;
-    } else {
-      // Captured something other than the effect dep or setState
-      return;
-    }
-  }
+  // for (const operand of effectFunction.context) {
+  //   if (isSetStateType(operand.identifier)) {
+  //     continue;
+  //   } else if (effectDeps.find(dep => dep === operand.identifier.id) != null) {
+  //     continue;
+  //   } else if (derivedTuple.has(operand.identifier.id)) {
+  //     continue;
+  //   } else {
+  //     // Captured something other than the effect dep or setState
+  //     return;
+  //   }
+  // }
 
   // TODO: This might be wrong gotta double check
   let hasInvalidDep = false;
@@ -509,10 +509,6 @@ function validateEffect(
             }
           }
           break;
-        }
-        default: {
-          console.log('early return 4');
-          return;
         }
       }
     }
