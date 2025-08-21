@@ -353,7 +353,6 @@ function forbidFBJSImports() {
 
 function getPlugins(
   entry,
-  unusedExternals,
   updateBabelOptions,
   filename,
   packageName,
@@ -537,18 +536,6 @@ function getPlugins(
           };
         },
       }),
-      {
-        name: 'fail-with-unused-externals',
-        buildEnd(error) {
-          if (!error) {
-            if (unusedExternals.size > 0) {
-              throw new Error(
-                `${entry}: You can remove these unused externals from the bundle entry: ${[...unusedExternals]}.`
-              );
-            }
-          }
-        },
-      },
     ].filter(Boolean);
   } catch (error) {
     console.error(
@@ -660,7 +647,6 @@ async function createBundle(bundle, bundleType) {
     !isProductionBundleType(bundleType)
   );
 
-  const unusedExternals = new Set(bundle.externals);
   const peerGlobals = Modules.getPeerGlobals(bundle.externals, bundleType);
   let externals = Object.keys(peerGlobals);
 
@@ -682,7 +668,6 @@ async function createBundle(bundle, bundleType) {
     external(id) {
       const containsThisModule = pkg => id === pkg || id.startsWith(pkg + '/');
       const isProvidedByDependency = externals.some(containsThisModule);
-      let isExternal;
       if (isProvidedByDependency) {
         if (id.indexOf('/src/') !== -1) {
           throw Error(
@@ -695,20 +680,13 @@ async function createBundle(bundle, bundleType) {
               'to create a new bundle entry point for it instead.'
           );
         }
-        isExternal = true;
-      } else {
-        isExternal = !!peerGlobals[id];
+        return true;
       }
-
-      if (isExternal) {
-        unusedExternals.delete(id);
-      }
-      return isExternal;
+      return !!peerGlobals[id];
     },
     onwarn: handleRollupWarning,
     plugins: getPlugins(
       bundle.entry,
-      unusedExternals,
       bundle.babel,
       filename,
       packageName,
