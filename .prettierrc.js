@@ -12,7 +12,7 @@ module.exports = {
   arrowParens: 'avoid',
   overrides: [
     {
-      files: ['*.code-workspace'],
+      files: ['*.code-workspace', '*.json'],
       options: {
         parser: 'json-stringify',
       },
