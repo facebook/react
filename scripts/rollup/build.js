@@ -403,6 +403,7 @@ function getPlugins(
       // Use Node resolution mechanism.
       resolve({
         // skip: externals, // TODO: options.skip was removed in @rollup/plugin-node-resolve 3.0.0
+        preferBuiltins: bundle.preferBuiltins,
       }),
       // Remove license headers from individual modules
       stripBanner({

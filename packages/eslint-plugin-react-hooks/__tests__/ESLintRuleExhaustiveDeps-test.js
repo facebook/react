@@ -12,7 +12,8 @@
 const ESLintTesterV7 = require('eslint-v7').RuleTester;
 const ESLintTesterV9 = require('eslint-v9').RuleTester;
 const ReactHooksESLintPlugin = require('eslint-plugin-react-hooks');
-const ReactHooksESLintRule = ReactHooksESLintPlugin.rules['exhaustive-deps'];
+const ReactHooksESLintRule =
+  ReactHooksESLintPlugin.default.rules['exhaustive-deps'];
 
 /**
  * A string template tag that removes padding from the left side of multi-line strings
