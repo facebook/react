@@ -220,13 +220,8 @@ describe('ReactFabric', () => {
         true,
       );
     });
-    const argIndex = gate(flags => flags.passChildrenWhenCloningPersistedNodes)
-      ? 2
-      : 1;
     expect(
-      nativeFabricUIManager.cloneNodeWithNewChildrenAndProps.mock.calls[0][
-        argIndex
-      ],
+      nativeFabricUIManager.cloneNodeWithNewChildrenAndProps.mock.calls[0][2],
     ).toEqual({
       foo: 'b',
     });
@@ -268,19 +263,11 @@ describe('ReactFabric', () => {
     expect(
       nativeFabricUIManager.cloneNodeWithNewChildren,
     ).toHaveBeenCalledTimes(1);
-    if (gate(flags => flags.passChildrenWhenCloningPersistedNodes)) {
-      expect(
-        nativeFabricUIManager.cloneNodeWithNewChildren,
-      ).toHaveBeenCalledWith(expect.anything(), [
-        expect.objectContaining({props: {foo: false}}),
-      ]);
-      expect(nativeFabricUIManager.appendChild).not.toBeCalled();
-    } else {
-      expect(
-        nativeFabricUIManager.cloneNodeWithNewChildren,
-      ).toHaveBeenCalledWith(expect.anything());
-      expect(nativeFabricUIManager.appendChild).toHaveBeenCalledTimes(1);
-    }
+    expect(nativeFabricUIManager.cloneNodeWithNewChildren).toHaveBeenCalledWith(
+      expect.anything(),
+      [expect.objectContaining({props: {foo: false}})],
+    );
+    expect(nativeFabricUIManager.appendChild).not.toBeCalled();
     expect(
       nativeFabricUIManager.cloneNodeWithNewChildrenAndProps,
     ).not.toBeCalled();
