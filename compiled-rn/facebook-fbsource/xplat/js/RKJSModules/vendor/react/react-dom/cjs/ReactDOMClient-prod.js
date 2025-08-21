@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<86c2124447f43e6756d1899192fb8017>>
+ * @generated SignedSource<<218a2de6e7818b197922fe542af8786c>>
  */
 
 /*
@@ -15106,9 +15106,10 @@ function observeChild(child, observer) {
   return !1;
 }
 FragmentInstance.prototype.unobserveUsing = function (observer) {
-  null !== this._observers &&
-    this._observers.has(observer) &&
-    (this._observers.delete(observer),
+  var observers = this._observers;
+  null !== observers &&
+    observers.has(observer) &&
+    (observers.delete(observer),
     traverseVisibleHostChildren(
       this._fragmentFiber.child,
       !1,
@@ -17189,14 +17190,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2023 = React.version;
 if (
-  "19.2.0-native-fb-83c7379b-20250820" !==
+  "19.2.0-native-fb-d73b6f11-20250821" !==
   isomorphicReactPackageVersion$jscomp$inline_2023
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2023,
-      "19.2.0-native-fb-83c7379b-20250820"
+      "19.2.0-native-fb-d73b6f11-20250821"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17218,10 +17219,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2554 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-83c7379b-20250820",
+  version: "19.2.0-native-fb-d73b6f11-20250821",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-83c7379b-20250820"
+  reconcilerVersion: "19.2.0-native-fb-d73b6f11-20250821"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2555 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17319,4 +17320,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.2.0-native-fb-83c7379b-20250820";
+exports.version = "19.2.0-native-fb-d73b6f11-20250821";

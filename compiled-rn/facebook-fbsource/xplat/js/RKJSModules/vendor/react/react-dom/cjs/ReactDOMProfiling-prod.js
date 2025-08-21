@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e2c8a9f63416397d8787e17574a480e0>>
+ * @generated SignedSource<<3ef43558220c578698dba0adffdb4879>>
  */
 
 /*
@@ -15106,9 +15106,10 @@ function observeChild(child, observer) {
   return !1;
 }
 FragmentInstance.prototype.unobserveUsing = function (observer) {
-  null !== this._observers &&
-    this._observers.has(observer) &&
-    (this._observers.delete(observer),
+  var observers = this._observers;
+  null !== observers &&
+    observers.has(observer) &&
+    (observers.delete(observer),
     traverseVisibleHostChildren(
       this._fragmentFiber.child,
       !1,
@@ -17200,14 +17201,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2024 = React.version;
 if (
-  "19.2.0-native-fb-83c7379b-20250820" !==
+  "19.2.0-native-fb-d73b6f11-20250821" !==
   isomorphicReactPackageVersion$jscomp$inline_2024
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2024,
-      "19.2.0-native-fb-83c7379b-20250820"
+      "19.2.0-native-fb-d73b6f11-20250821"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17229,10 +17230,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2557 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-83c7379b-20250820",
+  version: "19.2.0-native-fb-d73b6f11-20250821",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-83c7379b-20250820"
+  reconcilerVersion: "19.2.0-native-fb-d73b6f11-20250821"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2558 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17483,4 +17484,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-native-fb-83c7379b-20250820";
+exports.version = "19.2.0-native-fb-d73b6f11-20250821";
