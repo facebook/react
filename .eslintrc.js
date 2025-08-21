@@ -547,7 +547,6 @@ module.exports = {
   },
 
   globals: {
-    $Call: 'readonly',
     $ElementType: 'readonly',
     $Flow$ModuleRef: 'readonly',
     $FlowFixMe: 'readonly',
