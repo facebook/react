@@ -3,18 +3,22 @@
 
 ```javascript
 // @validateNoDerivedComputationsInEffects
-function BadExample() {
-  const [firstName, setFirstName] = useState('Taylor');
-  const [lastName, setLastName] = useState('Swift');
+import {useEffect, useState} from 'react';
 
-  // 🔴 Avoid: redundant state and unnecessary Effect
+function Component({firstName, lastName}) {
   const [fullName, setFullName] = useState('');
+
   useEffect(() => {
-    setFullName(capitalize(firstName + ' ' + lastName));
+    setFullName(firstName + ' ' + lastName);
   }, [firstName, lastName]);
 
   return <div>{fullName}</div>;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{firstName: 'John', lastName: 'Doe'}],
+};
 
 ```
 
@@ -28,14 +32,14 @@ Error: You may not need this effect. Values derived from state should be calcula
 
 This effect updates state based on other state values. Consider calculating this value directly during render.
 
-error.invalid-derived-computation-in-effect.ts:9:4
-   7 |   const [fullName, setFullName] = useState('');
-   8 |   useEffect(() => {
->  9 |     setFullName(capitalize(firstName + ' ' + lastName));
+error.invalid-derived-state-from-props-in-effect.ts:8:4
+   6 |
+   7 |   useEffect(() => {
+>  8 |     setFullName(firstName + ' ' + lastName);
      |     ^^^^^^^^^^^ You may not need this effect. Values derived from state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)
-  10 |   }, [firstName, lastName]);
-  11 |
-  12 |   return <div>{fullName}</div>;
+   9 |   }, [firstName, lastName]);
+  10 |
+  11 |   return <div>{fullName}</div>;
 ```
           
       
