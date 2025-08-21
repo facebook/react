@@ -7,8 +7,8 @@
 
 import * as t from '@babel/types';
 import {
+  CompilerDiagnostic,
   CompilerError,
-  CompilerErrorDetail,
   ErrorCategory,
   ErrorSeverity,
 } from '../CompilerError';
@@ -95,16 +95,16 @@ export function validateHooksUsage(
   const unconditionalBlocks = computeUnconditionalBlocks(fn);
 
   const errors = new CompilerError();
-  const errorsByPlace = new Map<t.SourceLocation, CompilerErrorDetail>();
+  const errorsByPlace = new Map<t.SourceLocation, CompilerDiagnostic>();
 
   function recordError(
     loc: SourceLocation,
-    errorDetail: CompilerErrorDetail,
+    diagnostic: CompilerDiagnostic,
   ): void {
     if (typeof loc === 'symbol') {
-      errors.pushErrorDetail(errorDetail);
+      errors.pushDiagnostic(diagnostic);
     } else {
-      errorsByPlace.set(loc, errorDetail);
+      errorsByPlace.set(loc, diagnostic);
     }
   }
 
@@ -112,7 +112,7 @@ export function validateHooksUsage(
     // Once a particular hook has a conditional call error, don't report any further issues for this hook
     setKind(place, Kind.Error);
 
-    const reason =
+    const description =
       'Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)';
     const previousError =
       typeof place.loc !== 'symbol' ? errorsByPlace.get(place.loc) : undefined;
@@ -121,16 +121,19 @@ export function validateHooksUsage(
      * In some circumstances such as optional calls, we may first encounter a "hook may not be referenced as normal values" error.
      * If that same place is also used as a conditional call, upgrade the error to a conditonal hook error
      */
-    if (previousError === undefined || previousError.reason !== reason) {
+    if (previousError === undefined || previousError.reason !== description) {
       recordError(
         place.loc,
-        new CompilerErrorDetail({
+        CompilerDiagnostic.create({
           category: ErrorCategory.Hooks,
-          description: null,
-          reason,
-          loc: place.loc,
           severity: ErrorSeverity.InvalidReact,
+          reason: 'Cannot call hooks conditionally',
+          description,
           suggestions: null,
+        }).withDetail({
+          kind: 'error',
+          loc: place.loc,
+          message: 'Cannot call hook conditionally',
         }),
       );
     }
@@ -141,14 +144,17 @@ export function validateHooksUsage(
     if (previousError === undefined) {
       recordError(
         place.loc,
-        new CompilerErrorDetail({
+        CompilerDiagnostic.create({
           category: ErrorCategory.Hooks,
-          description: null,
-          reason:
-            'Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values',
-          loc: place.loc,
           severity: ErrorSeverity.InvalidReact,
+          reason: 'Cannot reference hooks as regular values',
+          description:
+            'Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values',
           suggestions: null,
+        }).withDetail({
+          kind: 'error',
+          loc: place.loc,
+          message: 'Hooks may not be referenced as values',
         }),
       );
     }
@@ -159,14 +165,17 @@ export function validateHooksUsage(
     if (previousError === undefined) {
       recordError(
         place.loc,
-        new CompilerErrorDetail({
+        CompilerDiagnostic.create({
           category: ErrorCategory.Hooks,
-          description: null,
-          reason:
-            'Hooks must be the same function on every render, but this value may change over time to a different function. See https://react.dev/reference/rules/react-calls-components-and-hooks#dont-dynamically-use-hooks',
-          loc: place.loc,
           severity: ErrorSeverity.InvalidReact,
+          reason: 'Hooks must be the same on every render',
+          description:
+            'Hooks must be the same function on every render, but this value may change over time to a different function. See https://react.dev/reference/rules/react-calls-components-and-hooks#dont-dynamically-use-hooks',
           suggestions: null,
+        }).withDetail({
+          kind: 'error',
+          loc: place.loc,
+          message: 'This value may change to a different function',
         }),
       );
     }
@@ -427,8 +436,8 @@ export function validateHooksUsage(
     }
   }
 
-  for (const [, error] of errorsByPlace) {
-    errors.pushErrorDetail(error);
+  for (const [, diagnostic] of errorsByPlace) {
+    errors.pushDiagnostic(diagnostic);
   }
   return errors.asResult();
 }
@@ -450,15 +459,18 @@ function visitFunctionExpression(errors: CompilerError, fn: HIRFunction): void {
               : instr.value.property;
           const hookKind = getHookKind(fn.env, callee.identifier);
           if (hookKind != null) {
-            errors.pushErrorDetail(
-              new CompilerErrorDetail({
+            errors.pushDiagnostic(
+              CompilerDiagnostic.create({
                 category: ErrorCategory.Hooks,
                 severity: ErrorSeverity.InvalidReact,
-                reason:
+                reason: 'Cannot call hooks within function expressions',
+                description:
                   'Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)',
-                loc: callee.loc,
-                description: `Cannot call ${hookKind === 'Custom' ? 'hook' : hookKind} within a function expression`,
                 suggestions: null,
+              }).withDetail({
+                kind: 'error',
+                loc: callee.loc,
+                message: `Cannot call ${hookKind === 'Custom' ? 'hook' : hookKind} within a function expression`,
               }),
             );
           }

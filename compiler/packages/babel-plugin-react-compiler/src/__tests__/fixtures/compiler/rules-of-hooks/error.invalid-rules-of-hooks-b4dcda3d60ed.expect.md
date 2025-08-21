@@ -18,13 +18,15 @@ function ComponentWithTernaryHook() {
 ```
 Found 1 error:
 
-Error: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
+Error: Cannot call hooks conditionally
+
+Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
 
 error.invalid-rules-of-hooks-b4dcda3d60ed.ts:6:9
   4 | // This *must* be invalid.
   5 | function ComponentWithTernaryHook() {
 > 6 |   cond ? useTernaryHook() : null;
-    |          ^^^^^^^^^^^^^^ Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
+    |          ^^^^^^^^^^^^^^ Cannot call hook conditionally
   7 | }
   8 |
 ```
