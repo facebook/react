@@ -355,8 +355,12 @@ export function useHighlightHostInstance(): {
       const element = store.getElementByID(id);
       const rendererID = store.getRendererIDForElement(id);
       if (element !== null && rendererID !== null) {
+        let displayName = element.displayName;
+        if (displayName !== null && element.nameProp !== null) {
+          displayName += ` name="${element.nameProp}"`;
+        }
         bridge.send('highlightHostInstance', {
-          displayName: element.displayName,
+          displayName,
           hideAfterTimeout: false,
           id,
           openBuiltinElementsPanel: false,
