@@ -61,6 +61,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 
 import noop from 'shared/noop';
+import type {WorkTag} from 'react-reconciler/src/ReactWorkTags';
 
 const defaultOnDefaultTransitionIndicator: () => void | (() => void) = noop;
 
@@ -244,7 +245,7 @@ function toTree(node: null | Fiber): $FlowFixMe {
   }
 }
 
-const validWrapperTypes = new Set([
+const validWrapperTypes: Set<WorkTag> = new Set([
   FunctionComponent,
   ClassComponent,
   HostComponent,
