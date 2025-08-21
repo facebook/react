@@ -20,15 +20,15 @@ function createComponent() {
 ```
 Found 1 error:
 
-Error: Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
+Error: Cannot call hooks within function expressions
 
-Cannot call hook within a function expression.
+Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
 
 error.invalid.invalid-rules-of-hooks-d842d36db450.ts:6:6
   4 |   return function ComponentWithConditionalHook() {
   5 |     if (cond) {
 > 6 |       useConditionalHook();
-    |       ^^^^^^^^^^^^^^^^^^ Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
+    |       ^^^^^^^^^^^^^^^^^^ Cannot call hook within a function expression
   7 |     }
   8 |   };
   9 | }

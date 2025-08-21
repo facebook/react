@@ -20,13 +20,15 @@ function Component(props) {
 ```
 Found 1 error:
 
-Error: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
+Error: Cannot call hooks conditionally
+
+Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
 
 error.invalid-conditional-call-aliased-hook-import.ts:6:11
   4 |   let data;
   5 |   if (props.cond) {
 > 6 |     data = readFragment();
-    |            ^^^^^^^^^^^^ Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
+    |            ^^^^^^^^^^^^ Cannot call hook conditionally
   7 |   }
   8 |   return data;
   9 | }

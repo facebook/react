@@ -24,13 +24,15 @@ function useHook() {
 ```
 Found 1 error:
 
-Error: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
+Error: Cannot call hooks conditionally
+
+Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
 
 error.invalid-rules-of-hooks-f3d6c5e9c83d.ts:12:2
   10 |   }
   11 |   if (a) return;
 > 12 |   useState();
-     |   ^^^^^^^^ Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
+     |   ^^^^^^^^ Cannot call hook conditionally
   13 | }
   14 |
 ```
