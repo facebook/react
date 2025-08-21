@@ -7,30 +7,28 @@
 import type {ESLint, Linter, Rule} from 'eslint';
 
 import ExhaustiveDeps from './rules/ExhaustiveDeps';
-import ReactCompiler from './rules/ReactCompiler';
+import {allRules, recommendedRules} from './shared/ReactCompiler';
 import RulesOfHooks from './rules/RulesOfHooks';
 
 // All rules
 const rules = {
   'exhaustive-deps': ExhaustiveDeps,
-  'react-compiler': ReactCompiler,
   'rules-of-hooks': RulesOfHooks,
+  ...allRules,
 } satisfies Record<string, Rule.RuleModule>;
 
 // Config rules
 const configRules = {
   'react-hooks/rules-of-hooks': 'error',
   'react-hooks/exhaustive-deps': 'warn',
+  ...Object.fromEntries(
+    Object.keys(recommendedRules).map(name => ['react-hooks/' + name, 'error']),
+  ),
 } satisfies Linter.RulesRecord;
 
 // Flat config
 const recommendedConfig = {
   name: 'react-hooks/recommended',
-  plugins: {
-    get 'react-hooks'(): ESLint.Plugin {
-      return plugin;
-    },
-  },
   rules: configRules,
 };
 

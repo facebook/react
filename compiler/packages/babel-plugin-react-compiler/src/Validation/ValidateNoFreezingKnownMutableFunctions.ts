@@ -6,6 +6,7 @@
  */
 
 import {CompilerDiagnostic, CompilerError, Effect, ErrorSeverity} from '..';
+import {ErrorCategory} from '../CompilerError';
 import {
   HIRFunction,
   IdentifierId,
@@ -64,8 +65,9 @@ export function validateNoFreezingKnownMutableFunctions(
             : 'a local variable';
         errors.pushDiagnostic(
           CompilerDiagnostic.create({
+            category: ErrorCategory.Immutability,
             severity: ErrorSeverity.InvalidReact,
-            category: 'Cannot modify local variables after render completes',
+            reason: 'Cannot modify local variables after render completes',
             description: `This argument is a function which may reassign or mutate ${variable} after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.`,
           })
             .withDetail({
