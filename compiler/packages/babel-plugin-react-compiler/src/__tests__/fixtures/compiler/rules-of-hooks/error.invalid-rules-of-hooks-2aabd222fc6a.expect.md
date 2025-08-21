@@ -20,13 +20,15 @@ function ComponentWithConditionalHook() {
 ```
 Found 1 error:
 
-Error: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
+Error: Cannot call hooks conditionally
+
+Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
 
 error.invalid-rules-of-hooks-2aabd222fc6a.ts:7:4
    5 | function ComponentWithConditionalHook() {
    6 |   if (cond) {
 >  7 |     useConditionalHook();
-     |     ^^^^^^^^^^^^^^^^^^ Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
+     |     ^^^^^^^^^^^^^^^^^^ Cannot call hook conditionally
    8 |   }
    9 | }
   10 |

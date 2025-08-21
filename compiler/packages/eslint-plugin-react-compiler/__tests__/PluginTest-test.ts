@@ -68,9 +68,7 @@ testRule('plugin-recommended', TestRecommendedRules, {
           </>;
         }
       `,
-      errors: [
-        makeTestCaseError('Hooks must always be called in a consistent order'),
-      ],
+      errors: [makeTestCaseError('Cannot call hooks conditionally')],
     },
     {
       name: 'Multiple diagnostics within the same file are surfaced',
@@ -84,8 +82,8 @@ testRule('plugin-recommended', TestRecommendedRules, {
           return props.cond && useConditionalHook();
         }`,
       errors: [
-        makeTestCaseError('Hooks must always be called in a consistent order'),
-        makeTestCaseError('Hooks must always be called in a consistent order'),
+        makeTestCaseError('Cannot call hooks conditionally'),
+        makeTestCaseError('Cannot call hooks conditionally'),
       ],
     },
     {
@@ -98,9 +96,7 @@ testRule('plugin-recommended', TestRecommendedRules, {
 
         }
       `,
-      errors: [
-        makeTestCaseError('Hooks must always be called in a consistent order'),
-      ],
+      errors: [makeTestCaseError('Cannot call hooks conditionally')],
     },
     {
       name: 'Multiple non-fatal useMemo diagnostics are surfaced',

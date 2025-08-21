@@ -22,15 +22,15 @@ const ComponentWithHookInsideCallback = React.forwardRef((props, ref) => {
 ```
 Found 1 error:
 
-Error: Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
+Error: Cannot call hooks within function expressions
 
-Cannot call hook within a function expression.
+Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
 
 error.bail.rules-of-hooks-3d692676194b.ts:8:4
    6 | const ComponentWithHookInsideCallback = React.forwardRef((props, ref) => {
    7 |   useEffect(() => {
 >  8 |     useHookInsideCallback();
-     |     ^^^^^^^^^^^^^^^^^^^^^ Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
+     |     ^^^^^^^^^^^^^^^^^^^^^ Cannot call hook within a function expression
    9 |   });
   10 |   return <button {...props} ref={ref} />;
   11 | });

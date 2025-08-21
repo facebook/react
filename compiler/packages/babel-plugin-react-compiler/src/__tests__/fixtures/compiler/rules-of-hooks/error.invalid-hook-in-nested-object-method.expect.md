@@ -26,15 +26,15 @@ function Component() {
 ```
 Found 1 error:
 
-Error: Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
+Error: Cannot call hooks within function expressions
 
-Cannot call hook within a function expression.
+Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
 
 error.invalid-hook-in-nested-object-method.ts:8:17
    6 |       const y = {
    7 |         inner() {
 >  8 |           return useFoo();
-     |                  ^^^^^^ Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
+     |                  ^^^^^^ Cannot call hook within a function expression
    9 |         },
   10 |       };
   11 |       return y;
