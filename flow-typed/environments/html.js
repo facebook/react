@@ -45,7 +45,7 @@ declare class DataTransferItem {
   getAsFileSystemHandle?: () => Promise<?FileSystemHandle>;
 }
 
-declare type DOMStringMap = { [key: string]: string, ... };
+declare type DOMStringMap = {[key: string]: string, ...};
 
 declare class DOMStringList {
   @@iterator(): Iterator<string>;
@@ -55,7 +55,7 @@ declare class DOMStringList {
   contains(string): boolean;
 }
 
-declare type ElementDefinitionOptions = {| extends?: string |};
+declare type ElementDefinitionOptions = {|extends?: string|};
 
 declare interface CustomElementRegistry {
   define(
@@ -71,7 +71,7 @@ declare interface CustomElementRegistry {
 declare class EventSource extends EventTarget {
   constructor(
     url: string,
-    configuration?: { withCredentials: boolean, ... }
+    configuration?: {withCredentials: boolean, ...}
   ): void;
   +CLOSED: 2;
   +CONNECTING: 0;
@@ -145,7 +145,7 @@ declare class ToggleEvent extends Event {
 }
 
 // TODO: HTMLDocument
-type FocusOptions = { preventScroll?: boolean, ... };
+type FocusOptions = {preventScroll?: boolean, ...};
 
 declare class HTMLElement extends Element {
   blur(): void;
@@ -154,10 +154,10 @@ declare class HTMLElement extends Element {
   getBoundingClientRect(): DOMRect;
   forceSpellcheck(): void;
 
-  showPopover(options?: {| source?: HTMLElement |}): void;
+  showPopover(options?: {|source?: HTMLElement|}): void;
   hidePopover(): void;
   togglePopover(
-    options?: boolean | {| force?: boolean, source?: HTMLElement |}
+    options?: boolean | {|force?: boolean, source?: HTMLElement|}
   ): boolean;
 
   accessKey: string;
@@ -261,7 +261,7 @@ declare class HTMLElement extends Element {
 
 declare class HTMLSlotElement extends HTMLElement {
   name: string;
-  assignedNodes(options?: { flatten: boolean, ... }): Node[];
+  assignedNodes(options?: {flatten: boolean, ...}): Node[];
 }
 
 declare class HTMLTableElement extends HTMLElement {
@@ -1566,7 +1566,7 @@ declare function requestIdleCallback(
     timeRemaining: () => number,
     ...
   }) => void,
-  opts?: { timeout: number, ... }
+  opts?: {timeout: number, ...}
 ): IdleCallbackID;
 declare function cancelIdleCallback(id: IdleCallbackID): void;
 declare var localStorage: Storage;

@@ -33,13 +33,19 @@ declare class WebAssembly$Module {
     kind: ImportExportKind,
     ...
   }>;
-  static customSections(moduleObject: WebAssembly$Module, sectionName: string): Array<ArrayBuffer>;
+  static customSections(
+    moduleObject: WebAssembly$Module,
+    sectionName: string
+  ): Array<ArrayBuffer>;
 }
 
 declare class WebAssembly$Instance {
-  constructor(moduleObject: WebAssembly$Module, importObject?: ImportObject): void;
+  constructor(
+    moduleObject: WebAssembly$Module,
+    importObject?: ImportObject
+  ): void;
 
-  +exports: { [exportedFunction: string]: ExportedFunctionExoticObject, ... };
+  +exports: {[exportedFunction: string]: ExportedFunctionExoticObject, ...};
 }
 
 type MemoryDescriptor = {
@@ -77,8 +83,14 @@ declare class WebAssembly$CompileError extends Error {}
 declare class WebAssembly$LinkError extends Error {}
 declare class WebAssembly$RuntimeError extends Error {}
 
-declare function WebAssembly$instantiate(bufferSource: BufferSource, importObject?: ImportObject): Promise<ResultObject>;
-declare function WebAssembly$instantiate(moduleObject: WebAssembly$Module, importObject?: ImportObject): Promise<WebAssembly$Instance>;
+declare function WebAssembly$instantiate(
+  bufferSource: BufferSource,
+  importObject?: ImportObject
+): Promise<ResultObject>;
+declare function WebAssembly$instantiate(
+  moduleObject: WebAssembly$Module,
+  importObject?: ImportObject
+): Promise<WebAssembly$Instance>;
 
 declare var WebAssembly: {
   Module: typeof WebAssembly$Module,
@@ -92,7 +104,12 @@ declare var WebAssembly: {
   compile(bufferSource: BufferSource): Promise<WebAssembly$Module>,
   instantiate: typeof WebAssembly$instantiate,
   // web embedding API
-  compileStreaming(source: Response | Promise<Response>): Promise<WebAssembly$Module>,
-  instantiateStreaming(source: Response | Promise<Response>, importObject?: ImportObject): Promise<ResultObject>,
+  compileStreaming(
+    source: Response | Promise<Response>
+  ): Promise<WebAssembly$Module>,
+  instantiateStreaming(
+    source: Response | Promise<Response>,
+    importObject?: ImportObject
+  ): Promise<ResultObject>,
   ...
-}
+};

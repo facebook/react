@@ -9,13 +9,13 @@ declare var Intl: {
   PluralRules: ?Class<Intl$PluralRules>,
   getCanonicalLocales?: (locales?: Intl$Locales) => Intl$Locale[],
   ...
-}
+};
 
-type Intl$Locale = string
-type Intl$Locales = Intl$Locale | Intl$Locale[]
+type Intl$Locale = string;
+type Intl$Locales = Intl$Locale | Intl$Locale[];
 
 declare class Intl$Collator {
-  constructor (
+  constructor(
     locales?: Intl$Locales,
     options?: Intl$CollatorOptions
   ): Intl$Collator;
@@ -25,9 +25,9 @@ declare class Intl$Collator {
     options?: Intl$CollatorOptions
   ): Intl$Collator;
 
-  compare (string, string): number;
+  compare(string, string): number;
 
-  resolvedOptions (): {
+  resolvedOptions(): {
     locale: Intl$Locale,
     usage: 'sort' | 'search',
     sensitivity: 'base' | 'accent' | 'case' | 'variant',
@@ -38,14 +38,24 @@ declare class Intl$Collator {
     ...
   };
 
-  static supportedLocalesOf (locales?: Intl$Locales): Intl$Locale[];
+  static supportedLocalesOf(locales?: Intl$Locales): Intl$Locale[];
 }
 
-type FormatToPartsType = | 'day' | 'dayPeriod' | 'era' | 'hour' | 'literal'
-  | 'minute' | 'month' | 'second' | 'timeZoneName' | 'weekday' | 'year';
+type FormatToPartsType =
+  | 'day'
+  | 'dayPeriod'
+  | 'era'
+  | 'hour'
+  | 'literal'
+  | 'minute'
+  | 'month'
+  | 'second'
+  | 'timeZoneName'
+  | 'weekday'
+  | 'year';
 
 declare class Intl$DateTimeFormat {
-  constructor (
+  constructor(
     locales?: Intl$Locales,
     options?: Intl$DateTimeFormatOptions
   ): Intl$DateTimeFormat;
@@ -55,17 +65,17 @@ declare class Intl$DateTimeFormat {
     options?: Intl$DateTimeFormatOptions
   ): Intl$DateTimeFormat;
 
-  format (value?: Date | number): string;
+  format(value?: Date | number): string;
 
   formatRange(startDate?: Date | number, endDate?: Date | number): string;
 
-  formatToParts (value?: Date | number): Array<{
+  formatToParts(value?: Date | number): Array<{
     type: FormatToPartsType,
     value: string,
     ...
   }>;
 
-  resolvedOptions (): {
+  resolvedOptions(): {
     locale: Intl$Locale,
     calendar: string,
     numberingSystem: string,
@@ -83,25 +93,22 @@ declare class Intl$DateTimeFormat {
     ...
   };
 
-  static supportedLocalesOf (locales?: Intl$Locales): Intl$Locale[];
+  static supportedLocalesOf(locales?: Intl$Locales): Intl$Locale[];
 }
 
 declare class Intl$LocaleClass {
-  baseName: string,
-  calendar?: string,
-  caseFirst?: 'upper' | 'lower' | 'false',
-  collation?: string,
-  hourCycle?: 'h11' | 'h12' | 'h23' | 'h24',
-  language: string,
-  numberingSystem?: string,
-  numeric?: boolean,
-  region?: string,
-  script?: string,
+  baseName: string;
+  calendar?: string;
+  caseFirst?: 'upper' | 'lower' | 'false';
+  collation?: string;
+  hourCycle?: 'h11' | 'h12' | 'h23' | 'h24';
+  language: string;
+  numberingSystem?: string;
+  numeric?: boolean;
+  region?: string;
+  script?: string;
 
-  constructor(
-    tag: string,
-    options?: Intl$LocaleOptions,
-  ): Intl$LocaleClass;
+  constructor(tag: string, options?: Intl$LocaleOptions): Intl$LocaleClass;
 
   maximize(): Intl$LocaleClass;
 
@@ -119,7 +126,7 @@ declare type Intl$LocaleOptions = {
 };
 
 declare class Intl$NumberFormat {
-  constructor (
+  constructor(
     locales?: Intl$Locales,
     options?: Intl$NumberFormatOptions
   ): Intl$NumberFormat;
@@ -129,9 +136,9 @@ declare class Intl$NumberFormat {
     options?: Intl$NumberFormatOptions
   ): Intl$NumberFormat;
 
-  format (number): string;
+  format(number): string;
 
-  resolvedOptions (): {
+  resolvedOptions(): {
     locale: Intl$Locale,
     numberingSystem: string,
     style: 'decimal' | 'currency' | 'percent' | 'unit',
@@ -146,18 +153,18 @@ declare class Intl$NumberFormat {
     ...
   };
 
-  static supportedLocalesOf (locales?: Intl$Locales): Intl$Locale[];
+  static supportedLocalesOf(locales?: Intl$Locales): Intl$Locale[];
 }
 
 declare class Intl$PluralRules {
-  constructor (
+  constructor(
     locales?: Intl$Locales,
     options?: Intl$PluralRulesOptions
   ): Intl$PluralRules;
 
-  select (number): Intl$PluralRule;
+  select(number): Intl$PluralRule;
 
-  resolvedOptions (): {
+  resolvedOptions(): {
     locale: Intl$Locale,
     type: 'cardinal' | 'ordinal',
     minimumIntegerDigits?: number,
@@ -169,10 +176,10 @@ declare class Intl$PluralRules {
     ...
   };
 
-  static supportedLocalesOf (locales?: Intl$Locales): Intl$Locale[];
+  static supportedLocalesOf(locales?: Intl$Locales): Intl$Locale[];
 }
 
-type Intl$PluralRule = 'zero' | 'one' | 'two' | 'few' | 'many' | 'other'
+type Intl$PluralRule = 'zero' | 'one' | 'two' | 'few' | 'many' | 'other';
 
 declare type Intl$PluralRulesOptions = {
   localeMatcher?: 'lookup' | 'best fit',
@@ -183,4 +190,4 @@ declare type Intl$PluralRulesOptions = {
   minimumSignificantDigits?: number,
   maximumSignificantDigits?: number,
   ...
-}
+};

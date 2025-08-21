@@ -20,7 +20,7 @@ declare interface IDBFactory {
    * For more details, see https://caniuse.com/mdn-api_idbfactory_databases
    */
   databases?: () => Promise<Array<IDBDatabaseInfo>>;
-  cmp(a: any, b: any): -1|0|1;
+  cmp(a: any, b: any): -1 | 0 | 1;
 }
 
 declare interface IDBDatabaseInfo {
@@ -33,7 +33,7 @@ declare interface IDBRequest extends EventTarget {
   error: Error;
   source: ?(IDBIndex | IDBObjectStore | IDBCursor);
   transaction: IDBTransaction;
-  readyState: 'pending'|'done';
+  readyState: 'pending' | 'done';
   onerror: (err: any) => mixed;
   onsuccess: (e: any) => mixed;
 }
@@ -49,11 +49,14 @@ declare interface IDBTransactionOptions {
 
 declare interface IDBDatabase extends EventTarget {
   close(): void;
-  createObjectStore(name: string, options?: {
-    keyPath?: ?(string|string[]),
-    autoIncrement?: boolean,
-    ...
-  }): IDBObjectStore;
+  createObjectStore(
+    name: string,
+    options?: {
+      keyPath?: ?(string | string[]),
+      autoIncrement?: boolean,
+      ...
+    }
+  ): IDBObjectStore;
   deleteObjectStore(name: string): void;
   transaction(
     storeNames: string | string[] | DOMStringList,
@@ -74,7 +77,7 @@ declare interface IDBTransaction extends EventTarget {
   db: IDBDatabase;
   +durability: IDBTransactionDurability;
   error: Error;
-  mode: 'readonly'|'readwrite'|'versionchange';
+  mode: 'readonly' | 'readwrite' | 'versionchange';
   name: string;
   objectStore(name: string): IDBObjectStore;
   onabort: (e: any) => mixed;
@@ -86,12 +89,16 @@ declare interface IDBObjectStore {
   add(value: any, key?: any): IDBRequest;
   autoIncrement: boolean;
   clear(): IDBRequest;
-  createIndex(indexName: string, keyPath: string|string[], optionalParameter?: {
-    unique?: boolean,
-    multiEntry?: boolean,
-    ...
-  }): IDBIndex;
-  count(keyRange?: any|IDBKeyRange): IDBRequest;
+  createIndex(
+    indexName: string,
+    keyPath: string | string[],
+    optionalParameter?: {
+      unique?: boolean,
+      multiEntry?: boolean,
+      ...
+    }
+  ): IDBIndex;
+  count(keyRange?: any | IDBKeyRange): IDBRequest;
   delete(key: any): IDBRequest;
   deleteIndex(indexName: string): void;
   get(key: any): IDBRequest;
@@ -99,18 +106,24 @@ declare interface IDBObjectStore {
   indexNames: string[];
   name: string;
   keyPath: any;
-  openCursor(range?: any|IDBKeyRange, direction?: IDBDirection): IDBRequest;
-  openKeyCursor(range?: any|IDBKeyRange, direction?: IDBDirection): IDBRequest;
+  openCursor(range?: any | IDBKeyRange, direction?: IDBDirection): IDBRequest;
+  openKeyCursor(
+    range?: any | IDBKeyRange,
+    direction?: IDBDirection
+  ): IDBRequest;
   put(value: any, key?: any): IDBRequest;
-  transaction : IDBTransaction;
+  transaction: IDBTransaction;
 }
 
 declare interface IDBIndex extends EventTarget {
-  count(key?: any|IDBKeyRange): IDBRequest;
-  get(key: any|IDBKeyRange): IDBRequest;
-  getKey(key: any|IDBKeyRange): IDBRequest;
-  openCursor(range?: any|IDBKeyRange, direction?: IDBDirection): IDBRequest;
-  openKeyCursor(range?: any|IDBKeyRange, direction?: IDBDirection): IDBRequest;
+  count(key?: any | IDBKeyRange): IDBRequest;
+  get(key: any | IDBKeyRange): IDBRequest;
+  getKey(key: any | IDBKeyRange): IDBRequest;
+  openCursor(range?: any | IDBKeyRange, direction?: IDBDirection): IDBRequest;
+  openKeyCursor(
+    range?: any | IDBKeyRange,
+    direction?: IDBDirection
+  ): IDBRequest;
   name: string;
   objectStore: IDBObjectStore;
   keyPath: any;
@@ -119,7 +132,12 @@ declare interface IDBIndex extends EventTarget {
 }
 
 declare interface IDBKeyRange {
-  bound(lower: any, upper: any, lowerOpen?: boolean, upperOpen?: boolean): IDBKeyRange;
+  bound(
+    lower: any,
+    upper: any,
+    lowerOpen?: boolean,
+    upperOpen?: boolean
+  ): IDBKeyRange;
   only(value: any): IDBKeyRange;
   lowerBound(bound: any, open?: boolean): IDBKeyRange;
   upperBound(bound: any, open?: boolean): IDBKeyRange;
@@ -134,7 +152,7 @@ declare interface IDBCursor {
   continue(key?: any): void;
   delete(): IDBRequest;
   update(newValue: any): IDBRequest;
-  source: IDBObjectStore|IDBIndex;
+  source: IDBObjectStore | IDBIndex;
   direction: IDBDirection;
   key: any;
   primaryKey: any;

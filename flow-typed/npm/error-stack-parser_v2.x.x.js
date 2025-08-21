@@ -1,7 +1,7 @@
 // flow-typed signature: 132e48034ef4756600e1d98681a166b5
 // flow-typed version: c6154227d1/error-stack-parser_v2.x.x/flow_>=v0.104.x
 
-declare module "error-stack-parser" {
+declare module 'error-stack-parser' {
   declare interface StackFrame {
     constructor(object: StackFrame): StackFrame;
 

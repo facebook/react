@@ -4,19 +4,22 @@
 /* Files */
 
 declare class Blob {
-  constructor(blobParts?: Array<any>, options?: {
-         type?: string,
-         endings?: string,
-         ...
-  }): void;
+  constructor(
+    blobParts?: Array<any>,
+    options?: {
+      type?: string,
+      endings?: string,
+      ...
+    }
+  ): void;
   isClosed: boolean;
   size: number;
   type: string;
   close(): void;
   slice(start?: number, end?: number, contentType?: string): Blob;
   arrayBuffer(): Promise<ArrayBuffer>;
-  text(): Promise<string>,
-  stream(): ReadableStream,
+  text(): Promise<string>;
+  stream(): ReadableStream;
 }
 
 declare class FileReader extends EventTarget {
@@ -27,12 +30,12 @@ declare class FileReader extends EventTarget {
   +readyState: 0 | 1 | 2;
   +result: null | string | ArrayBuffer;
   abort(): void;
-  onabort: null | (ev: ProgressEvent) => any;
-  onerror: null | (ev: ProgressEvent) => any;
-  onload: null | (ev: ProgressEvent) => any;
-  onloadend: null | (ev: ProgressEvent) => any;
-  onloadstart: null | (ev: ProgressEvent) => any;
-  onprogress: null | (ev: ProgressEvent) => any;
+  onabort: null | ((ev: ProgressEvent) => any);
+  onerror: null | ((ev: ProgressEvent) => any);
+  onload: null | ((ev: ProgressEvent) => any);
+  onloadend: null | ((ev: ProgressEvent) => any);
+  onloadstart: null | ((ev: ProgressEvent) => any);
+  onprogress: null | ((ev: ProgressEvent) => any);
   readAsArrayBuffer(blob: Blob): void;
   readAsBinaryString(blob: Blob): void;
   readAsDataURL(blob: Blob): void;
@@ -40,15 +43,15 @@ declare class FileReader extends EventTarget {
 }
 
 declare type FilePropertyBag = {
-       type?: string,
-       lastModified?: number,
-       ...
+  type?: string,
+  lastModified?: number,
+  ...
 };
 declare class File extends Blob {
   constructor(
     fileBits: $ReadOnlyArray<string | BufferDataSource | Blob>,
     filename: string,
-    options?: FilePropertyBag,
+    options?: FilePropertyBag
   ): void;
   lastModified: number;
   name: string;
@@ -79,166 +82,473 @@ declare interface ShadowRoot extends DocumentFragment {
   adoptedStyleSheets: Array<CSSStyleSheet>;
 }
 
-declare type ShadowRootMode = 'open'|'closed';
+declare type ShadowRootMode = 'open' | 'closed';
 
 declare type ShadowRootInit = {
-       delegatesFocus?: boolean,
-       mode: ShadowRootMode,
-       ...
-}
+  delegatesFocus?: boolean,
+  mode: ShadowRootMode,
+  ...
+};
 
 declare type ScrollToOptions = {
-  top?: number;
-  left?: number;
-  behavior?: 'auto' | 'smooth';
+  top?: number,
+  left?: number,
+  behavior?: 'auto' | 'smooth',
   ...
-}
+};
 
-type EventHandler = (event: Event) => mixed
-type EventListener = { handleEvent: EventHandler, ... } | EventHandler
-type MouseEventHandler = (event: MouseEvent) => mixed
-type MouseEventListener = { handleEvent: MouseEventHandler, ... } | MouseEventHandler
-type FocusEventHandler = (event: FocusEvent) => mixed
-type FocusEventListener = { handleEvent: FocusEventHandler, ... } | FocusEventHandler
-type KeyboardEventHandler = (event: KeyboardEvent) => mixed
-type KeyboardEventListener = { handleEvent: KeyboardEventHandler, ... } | KeyboardEventHandler
-type InputEventHandler = (event: InputEvent) => mixed
-type InputEventListener = { handleEvent: InputEventHandler, ... } | InputEventHandler
-type TouchEventHandler = (event: TouchEvent) => mixed
-type TouchEventListener = { handleEvent: TouchEventHandler, ... } | TouchEventHandler
-type WheelEventHandler = (event: WheelEvent) => mixed
-type WheelEventListener = { handleEvent: WheelEventHandler, ... } | WheelEventHandler
-type AbortProgressEventHandler = (event: ProgressEvent) => mixed
-type AbortProgressEventListener = { handleEvent: AbortProgressEventHandler, ... } | AbortProgressEventHandler
-type ProgressEventHandler = (event: ProgressEvent) => mixed
-type ProgressEventListener = { handleEvent: ProgressEventHandler, ... } | ProgressEventHandler
-type DragEventHandler = (event: DragEvent) => mixed
-type DragEventListener = { handleEvent: DragEventHandler, ... } | DragEventHandler
-type PointerEventHandler = (event: PointerEvent) => mixed
-type PointerEventListener = { handleEvent: PointerEventHandler, ... } | PointerEventHandler
-type AnimationEventHandler = (event: AnimationEvent) => mixed
-type AnimationEventListener = { handleEvent: AnimationEventHandler, ... } | AnimationEventHandler
-type ClipboardEventHandler = (event: ClipboardEvent) => mixed
-type ClipboardEventListener = { handleEvent: ClipboardEventHandler, ... } | ClipboardEventHandler
-type TransitionEventHandler = (event: TransitionEvent) => mixed
-type TransitionEventListener = { handleEvent: TransitionEventHandler, ... } | TransitionEventHandler
-type MessageEventHandler = (event: MessageEvent) => mixed
-type MessageEventListener = { handleEvent: MessageEventHandler, ... } | MessageEventHandler
-type BeforeUnloadEventHandler = (event: BeforeUnloadEvent) => mixed
-type BeforeUnloadEventListener = { handleEvent: BeforeUnloadEventHandler, ... } | BeforeUnloadEventHandler
-type StorageEventHandler = (event: StorageEvent) => mixed
-type StorageEventListener = { handleEvent: StorageEventHandler, ... } | StorageEventHandler
-type SecurityPolicyViolationEventHandler = (event: SecurityPolicyViolationEvent) => mixed
-type SecurityPolicyViolationEventListener = { handleEvent: SecurityPolicyViolationEventHandler, ... } | SecurityPolicyViolationEventHandler
-type USBConnectionEventHandler = (event: USBConnectionEvent) => mixed
-type USBConnectionEventListener = { handleEvent: USBConnectionEventHandler, ... } | USBConnectionEventHandler
+type EventHandler = (event: Event) => mixed;
+type EventListener = {handleEvent: EventHandler, ...} | EventHandler;
+type MouseEventHandler = (event: MouseEvent) => mixed;
+type MouseEventListener =
+  | {handleEvent: MouseEventHandler, ...}
+  | MouseEventHandler;
+type FocusEventHandler = (event: FocusEvent) => mixed;
+type FocusEventListener =
+  | {handleEvent: FocusEventHandler, ...}
+  | FocusEventHandler;
+type KeyboardEventHandler = (event: KeyboardEvent) => mixed;
+type KeyboardEventListener =
+  | {handleEvent: KeyboardEventHandler, ...}
+  | KeyboardEventHandler;
+type InputEventHandler = (event: InputEvent) => mixed;
+type InputEventListener =
+  | {handleEvent: InputEventHandler, ...}
+  | InputEventHandler;
+type TouchEventHandler = (event: TouchEvent) => mixed;
+type TouchEventListener =
+  | {handleEvent: TouchEventHandler, ...}
+  | TouchEventHandler;
+type WheelEventHandler = (event: WheelEvent) => mixed;
+type WheelEventListener =
+  | {handleEvent: WheelEventHandler, ...}
+  | WheelEventHandler;
+type AbortProgressEventHandler = (event: ProgressEvent) => mixed;
+type AbortProgressEventListener =
+  | {handleEvent: AbortProgressEventHandler, ...}
+  | AbortProgressEventHandler;
+type ProgressEventHandler = (event: ProgressEvent) => mixed;
+type ProgressEventListener =
+  | {handleEvent: ProgressEventHandler, ...}
+  | ProgressEventHandler;
+type DragEventHandler = (event: DragEvent) => mixed;
+type DragEventListener =
+  | {handleEvent: DragEventHandler, ...}
+  | DragEventHandler;
+type PointerEventHandler = (event: PointerEvent) => mixed;
+type PointerEventListener =
+  | {handleEvent: PointerEventHandler, ...}
+  | PointerEventHandler;
+type AnimationEventHandler = (event: AnimationEvent) => mixed;
+type AnimationEventListener =
+  | {handleEvent: AnimationEventHandler, ...}
+  | AnimationEventHandler;
+type ClipboardEventHandler = (event: ClipboardEvent) => mixed;
+type ClipboardEventListener =
+  | {handleEvent: ClipboardEventHandler, ...}
+  | ClipboardEventHandler;
+type TransitionEventHandler = (event: TransitionEvent) => mixed;
+type TransitionEventListener =
+  | {handleEvent: TransitionEventHandler, ...}
+  | TransitionEventHandler;
+type MessageEventHandler = (event: MessageEvent) => mixed;
+type MessageEventListener =
+  | {handleEvent: MessageEventHandler, ...}
+  | MessageEventHandler;
+type BeforeUnloadEventHandler = (event: BeforeUnloadEvent) => mixed;
+type BeforeUnloadEventListener =
+  | {handleEvent: BeforeUnloadEventHandler, ...}
+  | BeforeUnloadEventHandler;
+type StorageEventHandler = (event: StorageEvent) => mixed;
+type StorageEventListener =
+  | {handleEvent: StorageEventHandler, ...}
+  | StorageEventHandler;
+type SecurityPolicyViolationEventHandler = (
+  event: SecurityPolicyViolationEvent
+) => mixed;
+type SecurityPolicyViolationEventListener =
+  | {handleEvent: SecurityPolicyViolationEventHandler, ...}
+  | SecurityPolicyViolationEventHandler;
+type USBConnectionEventHandler = (event: USBConnectionEvent) => mixed;
+type USBConnectionEventListener =
+  | {handleEvent: USBConnectionEventHandler, ...}
+  | USBConnectionEventHandler;
 
 type MediaKeySessionType = 'temporary' | 'persistent-license';
-type MediaKeyStatus = 'usable' | 'expired' | 'released' | 'output-restricted' | 'output-downscaled' | 'status-pending' | 'internal-error';
-type MouseEventTypes = 'contextmenu' | 'mousedown' | 'mouseenter' | 'mouseleave' | 'mousemove' | 'mouseout' | 'mouseover' | 'mouseup' | 'click' | 'dblclick';
+type MediaKeyStatus =
+  | 'usable'
+  | 'expired'
+  | 'released'
+  | 'output-restricted'
+  | 'output-downscaled'
+  | 'status-pending'
+  | 'internal-error';
+type MouseEventTypes =
+  | 'contextmenu'
+  | 'mousedown'
+  | 'mouseenter'
+  | 'mouseleave'
+  | 'mousemove'
+  | 'mouseout'
+  | 'mouseover'
+  | 'mouseup'
+  | 'click'
+  | 'dblclick';
 type FocusEventTypes = 'blur' | 'focus' | 'focusin' | 'focusout';
 type KeyboardEventTypes = 'keydown' | 'keyup' | 'keypress';
-type InputEventTypes = 'input' | 'beforeinput'
+type InputEventTypes = 'input' | 'beforeinput';
 type TouchEventTypes = 'touchstart' | 'touchmove' | 'touchend' | 'touchcancel';
 type WheelEventTypes = 'wheel';
 type AbortProgressEventTypes = 'abort';
-type ProgressEventTypes = 'abort' | 'error' | 'load' | 'loadend' | 'loadstart' | 'progress' | 'timeout';
-type DragEventTypes = 'drag' | 'dragend' | 'dragenter' | 'dragexit' | 'dragleave' | 'dragover' | 'dragstart' | 'drop';
-type PointerEventTypes = 'pointerover' | 'pointerenter' | 'pointerdown' | 'pointermove' | 'pointerup' | 'pointercancel' | 'pointerout' | 'pointerleave' | 'gotpointercapture' | 'lostpointercapture';
-type AnimationEventTypes = 'animationstart' | 'animationend' | 'animationiteration';
+type ProgressEventTypes =
+  | 'abort'
+  | 'error'
+  | 'load'
+  | 'loadend'
+  | 'loadstart'
+  | 'progress'
+  | 'timeout';
+type DragEventTypes =
+  | 'drag'
+  | 'dragend'
+  | 'dragenter'
+  | 'dragexit'
+  | 'dragleave'
+  | 'dragover'
+  | 'dragstart'
+  | 'drop';
+type PointerEventTypes =
+  | 'pointerover'
+  | 'pointerenter'
+  | 'pointerdown'
+  | 'pointermove'
+  | 'pointerup'
+  | 'pointercancel'
+  | 'pointerout'
+  | 'pointerleave'
+  | 'gotpointercapture'
+  | 'lostpointercapture';
+type AnimationEventTypes =
+  | 'animationstart'
+  | 'animationend'
+  | 'animationiteration';
 type ClipboardEventTypes = 'clipboardchange' | 'cut' | 'copy' | 'paste';
-type TransitionEventTypes = 'transitionrun' | 'transitionstart' | 'transitionend' | 'transitioncancel';
+type TransitionEventTypes =
+  | 'transitionrun'
+  | 'transitionstart'
+  | 'transitionend'
+  | 'transitioncancel';
 type MessageEventTypes = string;
 type BeforeUnloadEventTypes = 'beforeunload';
 type StorageEventTypes = 'storage';
 type SecurityPolicyViolationEventTypes = 'securitypolicyviolation';
 type USBConnectionEventTypes = 'connect' | 'disconnect';
 type ToggleEventTypes = 'beforetoggle' | 'toggle';
-type EventListenerOptionsOrUseCapture = boolean | {
-       capture?: boolean,
-       once?: boolean,
-       passive?: boolean,
-       signal?: AbortSignal,
-       ...
-};
+type EventListenerOptionsOrUseCapture =
+  | boolean
+  | {
+      capture?: boolean,
+      once?: boolean,
+      passive?: boolean,
+      signal?: AbortSignal,
+      ...
+    };
 
 declare class EventTarget {
-  addEventListener(type: MouseEventTypes, listener: MouseEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  addEventListener(type: FocusEventTypes, listener: FocusEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  addEventListener(type: KeyboardEventTypes, listener: KeyboardEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  addEventListener(type: InputEventTypes, listener: InputEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  addEventListener(type: TouchEventTypes, listener: TouchEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  addEventListener(type: WheelEventTypes, listener: WheelEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  addEventListener(type: AbortProgressEventTypes, listener: AbortProgressEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  addEventListener(type: ProgressEventTypes, listener: ProgressEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  addEventListener(type: DragEventTypes, listener: DragEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  addEventListener(type: PointerEventTypes, listener: PointerEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  addEventListener(type: AnimationEventTypes, listener: AnimationEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  addEventListener(type: ClipboardEventTypes, listener: ClipboardEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  addEventListener(type: TransitionEventTypes, listener: TransitionEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  addEventListener(type: MessageEventTypes, listener: MessageEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  addEventListener(type: BeforeUnloadEventTypes, listener: BeforeUnloadEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  addEventListener(type: StorageEventTypes, listener: StorageEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  addEventListener(type: SecurityPolicyViolationEventTypes, listener: SecurityPolicyViolationEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  addEventListener(type: USBConnectionEventTypes, listener: USBConnectionEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  addEventListener(type: string, listener: EventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
+  addEventListener(
+    type: MouseEventTypes,
+    listener: MouseEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  addEventListener(
+    type: FocusEventTypes,
+    listener: FocusEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  addEventListener(
+    type: KeyboardEventTypes,
+    listener: KeyboardEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  addEventListener(
+    type: InputEventTypes,
+    listener: InputEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  addEventListener(
+    type: TouchEventTypes,
+    listener: TouchEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  addEventListener(
+    type: WheelEventTypes,
+    listener: WheelEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  addEventListener(
+    type: AbortProgressEventTypes,
+    listener: AbortProgressEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  addEventListener(
+    type: ProgressEventTypes,
+    listener: ProgressEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  addEventListener(
+    type: DragEventTypes,
+    listener: DragEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  addEventListener(
+    type: PointerEventTypes,
+    listener: PointerEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  addEventListener(
+    type: AnimationEventTypes,
+    listener: AnimationEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  addEventListener(
+    type: ClipboardEventTypes,
+    listener: ClipboardEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  addEventListener(
+    type: TransitionEventTypes,
+    listener: TransitionEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  addEventListener(
+    type: MessageEventTypes,
+    listener: MessageEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  addEventListener(
+    type: BeforeUnloadEventTypes,
+    listener: BeforeUnloadEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  addEventListener(
+    type: StorageEventTypes,
+    listener: StorageEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  addEventListener(
+    type: SecurityPolicyViolationEventTypes,
+    listener: SecurityPolicyViolationEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  addEventListener(
+    type: USBConnectionEventTypes,
+    listener: USBConnectionEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  addEventListener(
+    type: string,
+    listener: EventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
 
-  removeEventListener(type: MouseEventTypes, listener: MouseEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  removeEventListener(type: FocusEventTypes, listener: FocusEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  removeEventListener(type: KeyboardEventTypes, listener: KeyboardEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  removeEventListener(type: InputEventTypes, listener: InputEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  removeEventListener(type: TouchEventTypes, listener: TouchEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  removeEventListener(type: WheelEventTypes, listener: WheelEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  removeEventListener(type: AbortProgressEventTypes, listener: AbortProgressEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  removeEventListener(type: ProgressEventTypes, listener: ProgressEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  removeEventListener(type: DragEventTypes, listener: DragEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  removeEventListener(type: PointerEventTypes, listener: PointerEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  removeEventListener(type: AnimationEventTypes, listener: AnimationEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  removeEventListener(type: ClipboardEventTypes, listener: ClipboardEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  removeEventListener(type: TransitionEventTypes, listener: TransitionEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  removeEventListener(type: MessageEventTypes, listener: MessageEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  removeEventListener(type: BeforeUnloadEventTypes, listener: BeforeUnloadEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  removeEventListener(type: StorageEventTypes, listener: StorageEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  removeEventListener(type: SecurityPolicyViolationEventTypes, listener: SecurityPolicyViolationEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  removeEventListener(type: USBConnectionEventTypes, listener: USBConnectionEventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
-  removeEventListener(type: string, listener: EventListener, optionsOrUseCapture?: EventListenerOptionsOrUseCapture): void;
+  removeEventListener(
+    type: MouseEventTypes,
+    listener: MouseEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  removeEventListener(
+    type: FocusEventTypes,
+    listener: FocusEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  removeEventListener(
+    type: KeyboardEventTypes,
+    listener: KeyboardEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  removeEventListener(
+    type: InputEventTypes,
+    listener: InputEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  removeEventListener(
+    type: TouchEventTypes,
+    listener: TouchEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  removeEventListener(
+    type: WheelEventTypes,
+    listener: WheelEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  removeEventListener(
+    type: AbortProgressEventTypes,
+    listener: AbortProgressEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  removeEventListener(
+    type: ProgressEventTypes,
+    listener: ProgressEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  removeEventListener(
+    type: DragEventTypes,
+    listener: DragEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  removeEventListener(
+    type: PointerEventTypes,
+    listener: PointerEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  removeEventListener(
+    type: AnimationEventTypes,
+    listener: AnimationEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  removeEventListener(
+    type: ClipboardEventTypes,
+    listener: ClipboardEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  removeEventListener(
+    type: TransitionEventTypes,
+    listener: TransitionEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  removeEventListener(
+    type: MessageEventTypes,
+    listener: MessageEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  removeEventListener(
+    type: BeforeUnloadEventTypes,
+    listener: BeforeUnloadEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  removeEventListener(
+    type: StorageEventTypes,
+    listener: StorageEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  removeEventListener(
+    type: SecurityPolicyViolationEventTypes,
+    listener: SecurityPolicyViolationEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  removeEventListener(
+    type: USBConnectionEventTypes,
+    listener: USBConnectionEventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
+  removeEventListener(
+    type: string,
+    listener: EventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture
+  ): void;
 
   attachEvent?: (type: MouseEventTypes, listener: MouseEventListener) => void;
   attachEvent?: (type: FocusEventTypes, listener: FocusEventListener) => void;
-  attachEvent?: (type: KeyboardEventTypes, listener: KeyboardEventListener) => void;
+  attachEvent?: (
+    type: KeyboardEventTypes,
+    listener: KeyboardEventListener
+  ) => void;
   attachEvent?: (type: InputEventTypes, listener: InputEventListener) => void;
   attachEvent?: (type: TouchEventTypes, listener: TouchEventListener) => void;
   attachEvent?: (type: WheelEventTypes, listener: WheelEventListener) => void;
-  attachEvent?: (type: AbortProgressEventTypes, listener: AbortProgressEventListener) => void;
-  attachEvent?: (type: ProgressEventTypes, listener: ProgressEventListener) => void;
+  attachEvent?: (
+    type: AbortProgressEventTypes,
+    listener: AbortProgressEventListener
+  ) => void;
+  attachEvent?: (
+    type: ProgressEventTypes,
+    listener: ProgressEventListener
+  ) => void;
   attachEvent?: (type: DragEventTypes, listener: DragEventListener) => void;
-  attachEvent?: (type: PointerEventTypes, listener: PointerEventListener) => void;
-  attachEvent?: (type: AnimationEventTypes, listener: AnimationEventListener) => void;
-  attachEvent?: (type: ClipboardEventTypes, listener: ClipboardEventListener) => void;
-  attachEvent?: (type: TransitionEventTypes, listener: TransitionEventListener) => void;
-  attachEvent?: (type: MessageEventTypes, listener: MessageEventListener) => void;
-  attachEvent?: (type: BeforeUnloadEventTypes, listener: BeforeUnloadEventListener) => void;
-  attachEvent?: (type: StorageEventTypes, listener: StorageEventListener) => void;
-  attachEvent?: (type: USBConnectionEventTypes, listener: USBConnectionEventListener) => void;
+  attachEvent?: (
+    type: PointerEventTypes,
+    listener: PointerEventListener
+  ) => void;
+  attachEvent?: (
+    type: AnimationEventTypes,
+    listener: AnimationEventListener
+  ) => void;
+  attachEvent?: (
+    type: ClipboardEventTypes,
+    listener: ClipboardEventListener
+  ) => void;
+  attachEvent?: (
+    type: TransitionEventTypes,
+    listener: TransitionEventListener
+  ) => void;
+  attachEvent?: (
+    type: MessageEventTypes,
+    listener: MessageEventListener
+  ) => void;
+  attachEvent?: (
+    type: BeforeUnloadEventTypes,
+    listener: BeforeUnloadEventListener
+  ) => void;
+  attachEvent?: (
+    type: StorageEventTypes,
+    listener: StorageEventListener
+  ) => void;
+  attachEvent?: (
+    type: USBConnectionEventTypes,
+    listener: USBConnectionEventListener
+  ) => void;
   attachEvent?: (type: string, listener: EventListener) => void;
 
   detachEvent?: (type: MouseEventTypes, listener: MouseEventListener) => void;
   detachEvent?: (type: FocusEventTypes, listener: FocusEventListener) => void;
-  detachEvent?: (type: KeyboardEventTypes, listener: KeyboardEventListener) => void;
+  detachEvent?: (
+    type: KeyboardEventTypes,
+    listener: KeyboardEventListener
+  ) => void;
   detachEvent?: (type: InputEventTypes, listener: InputEventListener) => void;
   detachEvent?: (type: TouchEventTypes, listener: TouchEventListener) => void;
   detachEvent?: (type: WheelEventTypes, listener: WheelEventListener) => void;
-  detachEvent?: (type: AbortProgressEventTypes, listener: AbortProgressEventListener) => void;
-  detachEvent?: (type: ProgressEventTypes, listener: ProgressEventListener) => void;
+  detachEvent?: (
+    type: AbortProgressEventTypes,
+    listener: AbortProgressEventListener
+  ) => void;
+  detachEvent?: (
+    type: ProgressEventTypes,
+    listener: ProgressEventListener
+  ) => void;
   detachEvent?: (type: DragEventTypes, listener: DragEventListener) => void;
-  detachEvent?: (type: PointerEventTypes, listener: PointerEventListener) => void;
-  detachEvent?: (type: AnimationEventTypes, listener: AnimationEventListener) => void;
-  detachEvent?: (type: ClipboardEventTypes, listener: ClipboardEventListener) => void;
-  detachEvent?: (type: TransitionEventTypes, listener: TransitionEventListener) => void;
-  detachEvent?: (type: MessageEventTypes, listener: MessageEventListener) => void;
-  detachEvent?: (type: BeforeUnloadEventTypes, listener: BeforeUnloadEventListener) => void;
-  detachEvent?: (type: StorageEventTypes, listener: StorageEventListener) => void;
-  detachEvent?: (type: USBConnectionEventTypes, listener: USBConnectionEventListener) => void;
+  detachEvent?: (
+    type: PointerEventTypes,
+    listener: PointerEventListener
+  ) => void;
+  detachEvent?: (
+    type: AnimationEventTypes,
+    listener: AnimationEventListener
+  ) => void;
+  detachEvent?: (
+    type: ClipboardEventTypes,
+    listener: ClipboardEventListener
+  ) => void;
+  detachEvent?: (
+    type: TransitionEventTypes,
+    listener: TransitionEventListener
+  ) => void;
+  detachEvent?: (
+    type: MessageEventTypes,
+    listener: MessageEventListener
+  ) => void;
+  detachEvent?: (
+    type: BeforeUnloadEventTypes,
+    listener: BeforeUnloadEventListener
+  ) => void;
+  detachEvent?: (
+    type: StorageEventTypes,
+    listener: StorageEventListener
+  ) => void;
+  detachEvent?: (
+    type: USBConnectionEventTypes,
+    listener: USBConnectionEventListener
+  ) => void;
   detachEvent?: (type: string, listener: EventListener) => void;
 
   dispatchEvent(evt: Event): boolean;
@@ -246,7 +556,11 @@ declare class EventTarget {
   // Deprecated
 
   cancelBubble: boolean;
-  initEvent(eventTypeArg: string, canBubbleArg: boolean, cancelableArg: boolean): void;
+  initEvent(
+    eventTypeArg: string,
+    canBubbleArg: boolean,
+    cancelableArg: boolean
+  ): void;
 }
 
 // https://dom.spec.whatwg.org/#dictdef-eventinit
@@ -257,7 +571,7 @@ type Event$Init = {
   /** Non-standard. See `composed` instead. */
   scoped?: boolean,
   ...
-}
+};
 
 // https://dom.spec.whatwg.org/#interface-event
 declare class Event {
@@ -357,14 +671,10 @@ declare class Event {
   /**
    * @deprecated
    */
-  initEvent(
-    type: string,
-    bubbles: boolean,
-    cancelable: boolean
-  ): void;
+  initEvent(type: string, bubbles: boolean, cancelable: boolean): void;
 }
 
-type CustomEvent$Init = { ...Event$Init, detail?: any, ... }
+type CustomEvent$Init = {...Event$Init, detail?: any, ...};
 
 declare class CustomEvent extends Event {
   constructor(type: string, eventInitDict?: CustomEvent$Init): void;
@@ -379,7 +689,7 @@ declare class CustomEvent extends Event {
   ): CustomEvent;
 }
 
-type UIEvent$Init = { ...Event$Init, detail?: number, view?: any, ... }
+type UIEvent$Init = {...Event$Init, detail?: number, view?: any, ...};
 
 declare class UIEvent extends Event {
   constructor(typeArg: string, uiEventInit?: UIEvent$Init): void;
@@ -389,29 +699,29 @@ declare class UIEvent extends Event {
 
 declare class CompositionEvent extends UIEvent {
   data: string | null;
-  locale: string,
+  locale: string;
 }
 
 type MouseEvent$MouseEventInit = {
-       screenX?: number,
-       screenY?: number,
-       clientX?: number,
-       clientY?: number,
-       ctrlKey?: boolean,
-       shiftKey?: boolean,
-       altKey?: boolean,
-       metaKey?: boolean,
-       button?: number,
-       buttons?: number,
-       region?: string | null,
-       relatedTarget?: EventTarget | null,
-       ...
+  screenX?: number,
+  screenY?: number,
+  clientX?: number,
+  clientY?: number,
+  ctrlKey?: boolean,
+  shiftKey?: boolean,
+  altKey?: boolean,
+  metaKey?: boolean,
+  button?: number,
+  buttons?: number,
+  region?: string | null,
+  relatedTarget?: EventTarget | null,
+  ...
 };
 
 declare class MouseEvent extends UIEvent {
   constructor(
     typeArg: string,
-    mouseEventInit?: MouseEvent$MouseEventInit,
+    mouseEventInit?: MouseEvent$MouseEventInit
   ): void;
   altKey: boolean;
   button: number;
@@ -444,10 +754,10 @@ type WheelEvent$Init = {
   ...MouseEvent$MouseEventInit,
   deltaX?: number,
   deltaY?: number,
-  deltaZ?: number;
+  deltaZ?: number,
   deltaMode?: 0x00 | 0x01 | 0x02,
   ...
-}
+};
 
 declare class WheelEvent extends MouseEvent {
   static +DOM_DELTA_PIXEL: 0x00;
@@ -466,23 +776,23 @@ declare class DragEvent extends MouseEvent {
 }
 
 type PointerEvent$PointerEventInit = MouseEvent$MouseEventInit & {
-       pointerId?: number,
-       width?: number,
-       height?: number,
-       pressure?: number,
-       tangentialPressure?: number,
-       tiltX?: number,
-       tiltY?: number,
-       twist?: number,
-       pointerType?: string,
-       isPrimary?: boolean,
-       ...
+  pointerId?: number,
+  width?: number,
+  height?: number,
+  pressure?: number,
+  tangentialPressure?: number,
+  tiltX?: number,
+  tiltY?: number,
+  twist?: number,
+  pointerType?: string,
+  isPrimary?: boolean,
+  ...
 };
 
 declare class PointerEvent extends MouseEvent {
   constructor(
     typeArg: string,
-    pointerEventInit?: PointerEvent$PointerEventInit,
+    pointerEventInit?: PointerEvent$PointerEventInit
   ): void;
   pointerId: number;
   width: number;
@@ -521,7 +831,7 @@ type PageTransitionEventInit = {
   ...Event$Init,
   persisted: boolean,
   ...
-}
+};
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#the-pagetransitionevent-interface
 declare class PageTransitionEvent extends Event {
@@ -622,7 +932,7 @@ type KeyboardEvent$Init = {
   /** Initializes the `which` attribute */
   which?: number,
   ...
-}
+};
 
 // https://w3c.github.io/uievents/#idl-keyboardevent
 declare class KeyboardEvent extends UIEvent {
@@ -704,7 +1014,7 @@ type InputEvent$Init = {
   isComposing?: boolean,
   ranges?: Array<any>, // TODO: StaticRange
   ...
-}
+};
 
 declare class InputEvent extends UIEvent {
   constructor(typeArg: string, inputEventInit: InputEvent$Init): void;
@@ -733,14 +1043,14 @@ declare class AnimationEvent extends Event {
 
 // https://www.w3.org/TR/touch-events/#idl-def-Touch
 declare class Touch {
-  clientX: number,
-  clientY: number,
-  identifier: number,
-  pageX: number,
-  pageY: number,
-  screenX: number,
-  screenY: number,
-  target: EventTarget,
+  clientX: number;
+  clientY: number;
+  identifier: number;
+  pageX: number;
+  pageY: number;
+  screenX: number;
+  screenY: number;
+  target: EventTarget;
 }
 
 // https://www.w3.org/TR/touch-events/#idl-def-TouchList
@@ -748,37 +1058,40 @@ declare class Touch {
 // return type just been Touch?
 declare class TouchList {
   @@iterator(): Iterator<Touch>;
-  length: number,
-  item(index: number): null | Touch,
-  [index: number]: Touch,
+  length: number;
+  item(index: number): null | Touch;
+  [index: number]: Touch;
 }
 
 // https://www.w3.org/TR/touch-events/#touchevent-interface
 declare class TouchEvent extends UIEvent {
-  altKey: boolean,
-  changedTouches: TouchList,
-  ctrlKey: boolean,
-  metaKey: boolean,
-  shiftKey: boolean,
-  targetTouches: TouchList,
-  touches: TouchList,
+  altKey: boolean;
+  changedTouches: TouchList;
+  ctrlKey: boolean;
+  metaKey: boolean;
+  shiftKey: boolean;
+  targetTouches: TouchList;
+  touches: TouchList;
 }
 
 // https://www.w3.org/TR/clipboard-apis/#typedefdef-clipboarditemdata
 // Raw string | Blob are allowed per https://webidl.spec.whatwg.org/#es-promise
 type ClipboardItemData = string | Blob | Promise<string | Blob>;
 
-type PresentationStyle = "attachment" | "inline" | "unspecified";
+type PresentationStyle = 'attachment' | 'inline' | 'unspecified';
 
 type ClipboardItemOptions = {
-  presentationStyle?: PresentationStyle;
+  presentationStyle?: PresentationStyle,
   ...
-}
+};
 
 declare class ClipboardItem {
   +types: $ReadOnlyArray<string>;
   getType(type: string): Promise<Blob>;
-  constructor(items: {[type: string]: ClipboardItemData}, options?: ClipboardItemOptions): void;
+  constructor(
+    items: {[type: string]: ClipboardItemData},
+    options?: ClipboardItemOptions
+  ): void;
 }
 
 // https://w3c.github.io/clipboard-apis/ as of 15 May 2018
@@ -803,7 +1116,10 @@ type TransitionEvent$Init = {
 };
 
 declare class TransitionEvent extends Event {
-  constructor(type: TransitionEventTypes, eventInit?: TransitionEvent$Init): void;
+  constructor(
+    type: TransitionEventTypes,
+    eventInit?: TransitionEvent$Init
+  ): void;
 
   +propertyName: string; // readonly
   +elapsedTime: number; // readonly
@@ -819,32 +1135,32 @@ declare class SecurityPolicyViolationEvent extends Event {
   +originalPolicy: string;
   +sourceFile: string;
   +sample: string;
-  +disposition: "enforce" | "report";
+  +disposition: 'enforce' | 'report';
   +statusCode: number;
   +lineNumber: number;
   +columnNumber: number;
-};
+}
 
 // https://developer.mozilla.org/en-US/docs/Web/API/USBConnectionEvent
 declare class USBConnectionEvent extends Event {
-  device: USBDevice,
+  device: USBDevice;
 }
 
 // TODO: *Event
 
 declare class AbortController {
-    constructor(): void;
-    +signal: AbortSignal;
-    abort(reason?: any): void;
+  constructor(): void;
+  +signal: AbortSignal;
+  abort(reason?: any): void;
 }
 
 declare class AbortSignal extends EventTarget {
-    +aborted: boolean;
-    +reason: any;
-    abort(reason?: any): AbortSignal;
-    onabort: (event: Event) => mixed;
-    throwIfAborted(): void;
-    timeout(time: number): AbortSignal;
+  +aborted: boolean;
+  +reason: any;
+  abort(reason?: any): AbortSignal;
+  onabort: (event: Event) => mixed;
+  throwIfAborted(): void;
+  timeout(time: number): AbortSignal;
 }
 
 declare class Node extends EventTarget {
@@ -867,7 +1183,7 @@ declare class Node extends EventTarget {
   cloneNode(deep?: boolean): this;
   compareDocumentPosition(other: Node): number;
   contains(other: ?Node): boolean;
-  getRootNode(options?: { composed: boolean, ... }): Node;
+  getRootNode(options?: {composed: boolean, ...}): Node;
   hasChildNodes(): boolean;
   insertBefore<T: Node>(newChild: T, refChild?: ?Node): T;
   isDefaultNamespace(namespaceURI: string): boolean;
@@ -909,7 +1225,10 @@ declare class NodeList<T> {
   item(index: number): T;
   [index: number]: T;
 
-  forEach<This>(callbackfn: (this : This, value: T, index: number, list: NodeList<T>) => any, thisArg: This): void;
+  forEach<This>(
+    callbackfn: (this: This, value: T, index: number, list: NodeList<T>) => any,
+    thisArg: This
+  ): void;
   entries(): Iterator<[number, T]>;
   keys(): Iterator<number>;
   values(): Iterator<T>;
@@ -950,41 +1269,40 @@ declare class HTMLCollection<+Elem: Element> {
 // from https://www.w3.org/TR/custom-elements/#extensions-to-document-interface-to-register
 // See also https://github.com/w3c/webcomponents/
 type ElementRegistrationOptions = {
-       +prototype?: {
-              // from https://www.w3.org/TR/custom-elements/#types-of-callbacks
-              // See also https://github.com/w3c/webcomponents/
-              +createdCallback?: () => mixed,
-              +attachedCallback?: () => mixed,
-              +detachedCallback?: () => mixed,
-              +attributeChangedCallback?:
-              // attribute is set
-              ((
-                attributeLocalName: string,
-                oldAttributeValue: null,
-                newAttributeValue: string,
-                attributeNamespace: string
-              ) => mixed) &
-              // attribute is changed
-              ((
-                attributeLocalName: string,
-                oldAttributeValue: string,
-                newAttributeValue: string,
-                attributeNamespace: string
-              ) => mixed) &
-              // attribute is removed
-              ((
-                attributeLocalName: string,
-                oldAttributeValue: string,
-                newAttributeValue: null,
-                attributeNamespace: string
-              ) => mixed),
-              ...
-       },
-       +extends?: string,
-       ...
-}
+  +prototype?: {
+    // from https://www.w3.org/TR/custom-elements/#types-of-callbacks
+    // See also https://github.com/w3c/webcomponents/
+    +createdCallback?: () => mixed,
+    +attachedCallback?: () => mixed,
+    +detachedCallback?: () => mixed,
+    +attributeChangedCallback?: // attribute is set
+    ((
+      attributeLocalName: string,
+      oldAttributeValue: null,
+      newAttributeValue: string,
+      attributeNamespace: string
+    ) => mixed) &
+      // attribute is changed
+      ((
+        attributeLocalName: string,
+        oldAttributeValue: string,
+        newAttributeValue: string,
+        attributeNamespace: string
+      ) => mixed) &
+      // attribute is removed
+      ((
+        attributeLocalName: string,
+        oldAttributeValue: string,
+        newAttributeValue: null,
+        attributeNamespace: string
+      ) => mixed),
+    ...
+  },
+  +extends?: string,
+  ...
+};
 
-type ElementCreationOptions = { is: string, ...}
+type ElementCreationOptions = {is: string, ...};
 
 declare class MutationRecord {
   type: 'attributes' | 'characterData' | 'childList';
@@ -999,9 +1317,9 @@ declare class MutationRecord {
 }
 
 type MutationObserverInitRequired =
-  | { childList: true, ... }
-  | { attributes: true, ... }
-  | { characterData: true, ... }
+  | {childList: true, ...}
+  | {attributes: true, ...}
+  | {characterData: true, ...};
 
 declare type MutationObserverInit = MutationObserverInitRequired & {
   subtree?: boolean,
@@ -1009,10 +1327,12 @@ declare type MutationObserverInit = MutationObserverInitRequired & {
   characterDataOldValue?: boolean,
   attributeFilter?: Array<string>,
   ...
-}
+};
 
 declare class MutationObserver {
-  constructor(callback: (arr: Array<MutationRecord>, observer: MutationObserver) => mixed): void;
+  constructor(
+    callback: (arr: Array<MutationRecord>, observer: MutationObserver) => mixed
+  ): void;
   observe(target: Node, options: MutationObserverInit): void;
   takeRecords(): Array<MutationRecord>;
   disconnect(): void;
@@ -1040,9 +1360,20 @@ declare class Document extends Node {
   createCDATASection(data: string): Text;
   createComment(data: string): Comment;
   createDocumentFragment(): DocumentFragment;
-  createElement<TName: $Keys<HTMLElementTagNameMap>>(localName: TName, options?: string | ElementCreationOptions): HTMLElementTagNameMap[TName];
-  createElementNS<TName: $Keys<HTMLElementTagNameMap>>(namespaceURI: 'http://www.w3.org/1999/xhtml', qualifiedName: TName, options?: string | ElementCreationOptions): HTMLElementTagNameMap[TName];
-  createElementNS(namespaceURI: string | null, qualifiedName: string, options?: string | ElementCreationOptions): Element;
+  createElement<TName: $Keys<HTMLElementTagNameMap>>(
+    localName: TName,
+    options?: string | ElementCreationOptions
+  ): HTMLElementTagNameMap[TName];
+  createElementNS<TName: $Keys<HTMLElementTagNameMap>>(
+    namespaceURI: 'http://www.w3.org/1999/xhtml',
+    qualifiedName: TName,
+    options?: string | ElementCreationOptions
+  ): HTMLElementTagNameMap[TName];
+  createElementNS(
+    namespaceURI: string | null,
+    qualifiedName: string,
+    options?: string | ElementCreationOptions
+  ): Element;
   createTextNode(data: string): Text;
   currentScript: HTMLScriptElement | null;
   dir: 'rtl' | 'ltr';
@@ -1052,7 +1383,7 @@ declare class Document extends Node {
   +documentURI: string;
   domain: string | null;
   embeds: HTMLCollection<HTMLEmbedElement>;
-  exitFullscreen(): Promise<void>,
+  exitFullscreen(): Promise<void>;
   queryCommandSupported(cmdID: string): boolean;
   execCommand(cmdID: string, showUI?: boolean, value?: any): boolean;
   forms: HTMLCollection<HTMLFormElement>;
@@ -1060,9 +1391,17 @@ declare class Document extends Node {
   fullscreenEnabled: boolean;
   getElementsByClassName(classNames: string): HTMLCollection<HTMLElement>;
   getElementsByName(elementName: string): HTMLCollection<HTMLElement>;
-  getElementsByTagName<TName: $Keys<HTMLElementTagNameMap>>(qualifiedName: TName): HTMLCollection<HTMLElementTagNameMap[TName]>;
-  getElementsByTagNameNS<TName: $Keys<HTMLElementTagNameMap>>(namespaceURI: 'http://www.w3.org/1999/xhtml', qualifiedName: TName): HTMLCollection<HTMLElementTagNameMap[TName]>;
-  getElementsByTagNameNS(namespaceURI: string | null, qualifiedName: string): HTMLCollection<Element>;
+  getElementsByTagName<TName: $Keys<HTMLElementTagNameMap>>(
+    qualifiedName: TName
+  ): HTMLCollection<HTMLElementTagNameMap[TName]>;
+  getElementsByTagNameNS<TName: $Keys<HTMLElementTagNameMap>>(
+    namespaceURI: 'http://www.w3.org/1999/xhtml',
+    qualifiedName: TName
+  ): HTMLCollection<HTMLElementTagNameMap[TName]>;
+  getElementsByTagNameNS(
+    namespaceURI: string | null,
+    qualifiedName: string
+  ): HTMLCollection<Element>;
   head: HTMLHeadElement | null;
   images: HTMLCollection<HTMLImageElement>;
   +implementation: DOMImplementation;
@@ -1118,8 +1457,12 @@ declare class Document extends Node {
   append(...nodes: Array<string | Node>): void;
   prepend(...nodes: Array<string | Node>): void;
 
-  querySelector<TSelector: $Keys<HTMLElementTagNameMap>>(selector: TSelector): HTMLElementTagNameMap[TSelector] | null;
-  querySelectorAll<TSelector: $Keys<HTMLElementTagNameMap>>(selector: TSelector): NodeList<HTMLElementTagNameMap[TSelector]>;
+  querySelector<TSelector: $Keys<HTMLElementTagNameMap>>(
+    selector: TSelector
+  ): HTMLElementTagNameMap[TSelector] | null;
+  querySelectorAll<TSelector: $Keys<HTMLElementTagNameMap>>(
+    selector: TSelector
+  ): NodeList<HTMLElementTagNameMap[TSelector]>;
   // Interface DocumentTraversal
   // http://www.w3.org/TR/2000/REC-DOM-Level-2-Traversal-Range-20001113/traversal.html#Traversal-Document
 
@@ -1135,104 +1478,476 @@ declare class Document extends Node {
   // NodeFilter.SHOW_ATTRIBUTE === 1), RootNodeT must be Attr, and when
   // RootNodeT is Attr, bitmasks other than NodeFilter.SHOW_ATTRIBUTE are
   // meaningless.
-  createNodeIterator<RootNodeT: Attr>(root: RootNodeT, whatToShow: 2, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Attr>;
-  createTreeWalker<RootNodeT: Attr>(root: RootNodeT, whatToShow: 2, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Attr>;
+  createNodeIterator<RootNodeT: Attr>(
+    root: RootNodeT,
+    whatToShow: 2,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, Attr>;
+  createTreeWalker<RootNodeT: Attr>(
+    root: RootNodeT,
+    whatToShow: 2,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, Attr>;
 
   // NodeFilter.SHOW_PROCESSING_INSTRUCTION is not implemented because Flow
   // does not currently define a ProcessingInstruction class.
 
   // When (whatToShow & NodeFilter.SHOW_DOCUMENT === 1 || whatToShow &
   // NodeFilter.SHOW_DOCUMENT_TYPE === 1), RootNodeT must be Document.
-  createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 256, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document>;
-  createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 257, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Element>;
-  createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 260, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Text>;
-  createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 261, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Element|Text>;
-  createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 384, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Comment>;
-  createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 385, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Element|Comment>;
-  createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 388, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Text|Comment>;
-  createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 389, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Element|Text|Comment>;
-  createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 512, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType>;
-  createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 513, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Element>;
-  createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 516, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Text>;
-  createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 517, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Element|Text>;
-  createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 640, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Comment>;
-  createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 641, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Element|Comment>;
-  createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 644, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Text|Comment>;
-  createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 645, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Element|Text|Comment>;
-  createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 768, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document>;
-  createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 769, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Element>;
-  createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 772, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Text>;
-  createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 773, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Element|Text>;
-  createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 896, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Comment>;
-  createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 897, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Element|Comment>;
-  createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 900, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Text|Comment>;
-  createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 901, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Element|Text|Comment>;
-  createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 256, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document>;
-  createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 257, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Element>;
-  createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 260, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Text>;
-  createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 261, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Element|Text>;
-  createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 384, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Comment>;
-  createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 385, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Element|Comment>;
-  createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 388, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Text|Comment>;
-  createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 389, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Element|Text|Comment>;
-  createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 512, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType>;
-  createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 513, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Element>;
-  createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 516, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Text>;
-  createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 517, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Element|Text>;
-  createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 640, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Comment>;
-  createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 641, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Element|Comment>;
-  createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 644, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Text|Comment>;
-  createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 645, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Element|Text|Comment>;
-  createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 768, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document>;
-  createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 769, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Element>;
-  createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 772, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Text>;
-  createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 773, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Element|Text>;
-  createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 896, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Comment>;
-  createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 897, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Element|Comment>;
-  createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 900, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Text|Comment>;
-  createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 901, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Element|Text|Comment>;
+  createNodeIterator<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 256,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, Document>;
+  createNodeIterator<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 257,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, Document | Element>;
+  createNodeIterator<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 260,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, Document | Text>;
+  createNodeIterator<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 261,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, Document | Element | Text>;
+  createNodeIterator<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 384,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, Document | Comment>;
+  createNodeIterator<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 385,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, Document | Element | Comment>;
+  createNodeIterator<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 388,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, Document | Text | Comment>;
+  createNodeIterator<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 389,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, Document | Element | Text | Comment>;
+  createNodeIterator<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 512,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, DocumentType>;
+  createNodeIterator<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 513,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, DocumentType | Element>;
+  createNodeIterator<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 516,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, DocumentType | Text>;
+  createNodeIterator<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 517,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, DocumentType | Element | Text>;
+  createNodeIterator<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 640,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, DocumentType | Comment>;
+  createNodeIterator<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 641,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, DocumentType | Element | Comment>;
+  createNodeIterator<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 644,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, DocumentType | Text | Comment>;
+  createNodeIterator<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 645,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, DocumentType | Element | Text | Comment>;
+  createNodeIterator<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 768,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, DocumentType | Document>;
+  createNodeIterator<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 769,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, DocumentType | Document | Element>;
+  createNodeIterator<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 772,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, DocumentType | Document | Text>;
+  createNodeIterator<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 773,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, DocumentType | Document | Element | Text>;
+  createNodeIterator<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 896,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, DocumentType | Document | Comment>;
+  createNodeIterator<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 897,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, DocumentType | Document | Element | Comment>;
+  createNodeIterator<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 900,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, DocumentType | Document | Text | Comment>;
+  createNodeIterator<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 901,
+    filter?: NodeFilterInterface
+  ): NodeIterator<
+    RootNodeT,
+    DocumentType | Document | Element | Text | Comment,
+  >;
+  createTreeWalker<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 256,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, Document>;
+  createTreeWalker<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 257,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, Document | Element>;
+  createTreeWalker<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 260,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, Document | Text>;
+  createTreeWalker<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 261,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, Document | Element | Text>;
+  createTreeWalker<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 384,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, Document | Comment>;
+  createTreeWalker<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 385,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, Document | Element | Comment>;
+  createTreeWalker<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 388,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, Document | Text | Comment>;
+  createTreeWalker<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 389,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, Document | Element | Text | Comment>;
+  createTreeWalker<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 512,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, DocumentType>;
+  createTreeWalker<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 513,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, DocumentType | Element>;
+  createTreeWalker<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 516,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, DocumentType | Text>;
+  createTreeWalker<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 517,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, DocumentType | Element | Text>;
+  createTreeWalker<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 640,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, DocumentType | Comment>;
+  createTreeWalker<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 641,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, DocumentType | Element | Comment>;
+  createTreeWalker<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 644,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, DocumentType | Text | Comment>;
+  createTreeWalker<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 645,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, DocumentType | Element | Text | Comment>;
+  createTreeWalker<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 768,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, DocumentType | Document>;
+  createTreeWalker<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 769,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, DocumentType | Document | Element>;
+  createTreeWalker<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 772,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, DocumentType | Document | Text>;
+  createTreeWalker<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 773,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, DocumentType | Document | Element | Text>;
+  createTreeWalker<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 896,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, DocumentType | Document | Comment>;
+  createTreeWalker<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 897,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, DocumentType | Document | Element | Comment>;
+  createTreeWalker<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 900,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, DocumentType | Document | Text | Comment>;
+  createTreeWalker<RootNodeT: Document>(
+    root: RootNodeT,
+    whatToShow: 901,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, DocumentType | Document | Element | Text | Comment>;
 
   // When (whatToShow & NodeFilter.SHOW_DOCUMENT_FRAGMENT === 1), RootNodeT
   // must be a DocumentFragment.
-  createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1024, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment>;
-  createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1025, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Element>;
-  createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1028, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Text>;
-  createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1029, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Element|Text>;
-  createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1152, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Comment>;
-  createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1153, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Element|Comment>;
-  createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1156, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Text|Comment>;
-  createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1157, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Element|Text|Comment>;
-  createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1024, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment>;
-  createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1025, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Element>;
-  createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1028, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Text>;
-  createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1029, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Element|Text>;
-  createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1152, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Comment>;
-  createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1153, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Element|Comment>;
-  createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1156, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Text|Comment>;
-  createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1157, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Element|Text|Comment>;
+  createNodeIterator<RootNodeT: DocumentFragment>(
+    root: RootNodeT,
+    whatToShow: 1024,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, DocumentFragment>;
+  createNodeIterator<RootNodeT: DocumentFragment>(
+    root: RootNodeT,
+    whatToShow: 1025,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, DocumentFragment | Element>;
+  createNodeIterator<RootNodeT: DocumentFragment>(
+    root: RootNodeT,
+    whatToShow: 1028,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, DocumentFragment | Text>;
+  createNodeIterator<RootNodeT: DocumentFragment>(
+    root: RootNodeT,
+    whatToShow: 1029,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, DocumentFragment | Element | Text>;
+  createNodeIterator<RootNodeT: DocumentFragment>(
+    root: RootNodeT,
+    whatToShow: 1152,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, DocumentFragment | Comment>;
+  createNodeIterator<RootNodeT: DocumentFragment>(
+    root: RootNodeT,
+    whatToShow: 1153,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, DocumentFragment | Element | Comment>;
+  createNodeIterator<RootNodeT: DocumentFragment>(
+    root: RootNodeT,
+    whatToShow: 1156,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, DocumentFragment | Text | Comment>;
+  createNodeIterator<RootNodeT: DocumentFragment>(
+    root: RootNodeT,
+    whatToShow: 1157,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, DocumentFragment | Element | Text | Comment>;
+  createTreeWalker<RootNodeT: DocumentFragment>(
+    root: RootNodeT,
+    whatToShow: 1024,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, DocumentFragment>;
+  createTreeWalker<RootNodeT: DocumentFragment>(
+    root: RootNodeT,
+    whatToShow: 1025,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, DocumentFragment | Element>;
+  createTreeWalker<RootNodeT: DocumentFragment>(
+    root: RootNodeT,
+    whatToShow: 1028,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, DocumentFragment | Text>;
+  createTreeWalker<RootNodeT: DocumentFragment>(
+    root: RootNodeT,
+    whatToShow: 1029,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, DocumentFragment | Element | Text>;
+  createTreeWalker<RootNodeT: DocumentFragment>(
+    root: RootNodeT,
+    whatToShow: 1152,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, DocumentFragment | Comment>;
+  createTreeWalker<RootNodeT: DocumentFragment>(
+    root: RootNodeT,
+    whatToShow: 1153,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, DocumentFragment | Element | Comment>;
+  createTreeWalker<RootNodeT: DocumentFragment>(
+    root: RootNodeT,
+    whatToShow: 1156,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, DocumentFragment | Text | Comment>;
+  createTreeWalker<RootNodeT: DocumentFragment>(
+    root: RootNodeT,
+    whatToShow: 1157,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, DocumentFragment | Element | Text | Comment>;
 
   // In the general case, RootNodeT may be any Node and whatToShow may be
   // NodeFilter.SHOW_ALL or any combination of NodeFilter.SHOW_ELEMENT,
   // NodeFilter.SHOW_TEXT and/or NodeFilter.SHOW_COMMENT
-  createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 1, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Element>;
-  createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 4, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text>;
-  createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 5, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Element|Text>;
-  createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 128, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Comment>;
-  createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 129, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Element|Comment>;
-  createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 132, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text|Comment>;
-  createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 133, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text|Element|Comment>;
-  createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 1, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Element>;
-  createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 4, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text>;
-  createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 5, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Element|Text>;
-  createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 128, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Comment>;
-  createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 129, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Element|Comment>;
-  createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 132, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text|Comment>;
-  createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 133, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text|Element|Comment>;
+  createNodeIterator<RootNodeT: Node>(
+    root: RootNodeT,
+    whatToShow: 1,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, Element>;
+  createNodeIterator<RootNodeT: Node>(
+    root: RootNodeT,
+    whatToShow: 4,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, Text>;
+  createNodeIterator<RootNodeT: Node>(
+    root: RootNodeT,
+    whatToShow: 5,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, Element | Text>;
+  createNodeIterator<RootNodeT: Node>(
+    root: RootNodeT,
+    whatToShow: 128,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, Comment>;
+  createNodeIterator<RootNodeT: Node>(
+    root: RootNodeT,
+    whatToShow: 129,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, Element | Comment>;
+  createNodeIterator<RootNodeT: Node>(
+    root: RootNodeT,
+    whatToShow: 132,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, Text | Comment>;
+  createNodeIterator<RootNodeT: Node>(
+    root: RootNodeT,
+    whatToShow: 133,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, Text | Element | Comment>;
+  createTreeWalker<RootNodeT: Node>(
+    root: RootNodeT,
+    whatToShow: 1,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, Element>;
+  createTreeWalker<RootNodeT: Node>(
+    root: RootNodeT,
+    whatToShow: 4,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, Text>;
+  createTreeWalker<RootNodeT: Node>(
+    root: RootNodeT,
+    whatToShow: 5,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, Element | Text>;
+  createTreeWalker<RootNodeT: Node>(
+    root: RootNodeT,
+    whatToShow: 128,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, Comment>;
+  createTreeWalker<RootNodeT: Node>(
+    root: RootNodeT,
+    whatToShow: 129,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, Element | Comment>;
+  createTreeWalker<RootNodeT: Node>(
+    root: RootNodeT,
+    whatToShow: 132,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, Text | Comment>;
+  createTreeWalker<RootNodeT: Node>(
+    root: RootNodeT,
+    whatToShow: 133,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, Text | Element | Comment>;
 
   // Catch all for when we don't know the value of `whatToShow`
   // And for when whatToShow is not provided, it is assumed to be SHOW_ALL
-  createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow?: number, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Node>;
-  createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow?: number, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Node>;
+  createNodeIterator<RootNodeT: Node>(
+    root: RootNodeT,
+    whatToShow?: number,
+    filter?: NodeFilterInterface
+  ): NodeIterator<RootNodeT, Node>;
+  createTreeWalker<RootNodeT: Node>(
+    root: RootNodeT,
+    whatToShow?: number,
+    filter?: NodeFilterInterface,
+    entityReferenceExpansion?: boolean
+  ): TreeWalker<RootNodeT, Node>;
 
   // From NonElementParentNode Mixin.
   getElementById(elementId: string): HTMLElement | null;
@@ -1279,11 +1994,17 @@ declare class Selection {
   empty(): void;
   selectAllChildren(parentNode: Node): void;
   setPosition(aNode: Node | null, offset?: number): void;
-  setBaseAndExtent(anchorNode: Node, anchorOffset: number, focusNode: Node, focusOffset: number): void;
+  setBaseAndExtent(
+    anchorNode: Node,
+    anchorOffset: number,
+    focusNode: Node,
+    focusOffset: number
+  ): void;
   toString(): string;
 }
 
-declare class Range { // extension
+declare class Range {
+  // extension
   startOffset: number;
   collapsed: boolean;
   endOffset: number;
@@ -1331,13 +2052,15 @@ declare class DOMTokenList {
   toggle(token: string, force?: boolean): boolean;
   replace(oldToken: string, newToken: string): boolean;
 
-  forEach(callbackfn: (value: string, index: number, list: DOMTokenList) => any, thisArg?: any): void;
+  forEach(
+    callbackfn: (value: string, index: number, list: DOMTokenList) => any,
+    thisArg?: any
+  ): void;
   entries(): Iterator<[number, string]>;
   keys(): Iterator<number>;
   values(): Iterator<string>;
   [index: number]: string;
 }
-
 
 declare class Element extends Node mixins mixin$Animatable {
   assignedSlot: ?HTMLSlotElement;
@@ -1378,34 +2101,61 @@ declare class Element extends Node mixins mixin$Animatable {
   getAttributeNames(): Array<string>;
   getAttributeNS(namespaceURI: string | null, localName: string): string | null;
   getAttributeNode(name: string): Attr | null;
-  getAttributeNodeNS(namespaceURI: string | null, localName: string): Attr | null;
+  getAttributeNodeNS(
+    namespaceURI: string | null,
+    localName: string
+  ): Attr | null;
   getBoundingClientRect(): DOMRect;
   getClientRects(): DOMRectList;
   getElementsByClassName(names: string): HTMLCollection<HTMLElement>;
-  getElementsByTagName<TName: $Keys<HTMLElementTagNameMap>>(qualifiedName: TName): HTMLCollection<HTMLElementTagNameMap[TName]>;
-  getElementsByTagNameNS<TName: $Keys<HTMLElementTagNameMap>>(namespaceURI: 'http://www.w3.org/1999/xhtml', qualifiedName: TName): HTMLCollection<HTMLElementTagNameMap[TName]>;
-  getElementsByTagNameNS(namespaceURI: string | null, qualifiedName: string): HTMLCollection<Element>;
+  getElementsByTagName<TName: $Keys<HTMLElementTagNameMap>>(
+    qualifiedName: TName
+  ): HTMLCollection<HTMLElementTagNameMap[TName]>;
+  getElementsByTagNameNS<TName: $Keys<HTMLElementTagNameMap>>(
+    namespaceURI: 'http://www.w3.org/1999/xhtml',
+    qualifiedName: TName
+  ): HTMLCollection<HTMLElementTagNameMap[TName]>;
+  getElementsByTagNameNS(
+    namespaceURI: string | null,
+    qualifiedName: string
+  ): HTMLCollection<Element>;
 
   hasAttribute(name: string): boolean;
   hasAttributeNS(namespaceURI: string | null, localName: string): boolean;
   hasAttributes(): boolean;
   hasPointerCapture(pointerId: number): boolean;
-  insertAdjacentElement(position: 'beforebegin' | 'afterbegin' | 'beforeend' | 'afterend', element: Element): void;
-  insertAdjacentHTML(position: 'beforebegin' | 'afterbegin' | 'beforeend' | 'afterend', html: string | TrustedHTML): void;
-  insertAdjacentText(position: 'beforebegin' | 'afterbegin' | 'beforeend' | 'afterend', text: string): void;
+  insertAdjacentElement(
+    position: 'beforebegin' | 'afterbegin' | 'beforeend' | 'afterend',
+    element: Element
+  ): void;
+  insertAdjacentHTML(
+    position: 'beforebegin' | 'afterbegin' | 'beforeend' | 'afterend',
+    html: string | TrustedHTML
+  ): void;
+  insertAdjacentText(
+    position: 'beforebegin' | 'afterbegin' | 'beforeend' | 'afterend',
+    text: string
+  ): void;
   matches(selector: string): boolean;
   releasePointerCapture(pointerId: number): void;
   removeAttribute(name?: string): void;
   removeAttributeNode(attributeNode: Attr): Attr;
   removeAttributeNS(namespaceURI: string | null, localName: string): void;
-  requestFullscreen(options?: { navigationUI: 'auto' | 'show' | 'hide', ... }): Promise<void>;
+  requestFullscreen(options?: {
+    navigationUI: 'auto' | 'show' | 'hide',
+    ...
+  }): Promise<void>;
   requestPointerLock(): void;
-  scrollIntoView(arg?: (boolean | {
-         behavior?: ('auto' | 'instant' | 'smooth'),
-         block?: ('start' | 'center' | 'end' | 'nearest'),
-         inline?: ('start' | 'center' | 'end' | 'nearest'),
-         ...
-  })): void;
+  scrollIntoView(
+    arg?:
+      | boolean
+      | {
+          behavior?: 'auto' | 'instant' | 'smooth',
+          block?: 'start' | 'center' | 'end' | 'nearest',
+          inline?: 'start' | 'center' | 'end' | 'nearest',
+          ...
+        }
+  ): void;
   scroll(x: number, y: number): void;
   scroll(options: ScrollToOptions): void;
   scrollTo(x: number, y: number): void;
@@ -1414,7 +2164,11 @@ declare class Element extends Node mixins mixin$Animatable {
   scrollBy(options: ScrollToOptions): void;
   setAttribute(name?: string, value?: string): void;
   toggleAttribute(name?: string, force?: boolean): void;
-  setAttributeNS(namespaceURI: string | null, qualifiedName: string, value: string): void;
+  setAttributeNS(
+    namespaceURI: string | null,
+    qualifiedName: string,
+    value: string
+  ): void;
   setAttributeNode(newAttr: Attr): Attr | null;
   setAttributeNodeNS(newAttr: Attr): Attr | null;
   setPointerCapture(pointerId: number): void;
@@ -1429,8 +2183,12 @@ declare class Element extends Node mixins mixin$Animatable {
   append(...nodes: Array<string | Node>): void;
   prepend(...nodes: Array<string | Node>): void;
 
-  querySelector<TSelector: $Keys<HTMLElementTagNameMap>>(selector: TSelector): HTMLElementTagNameMap[TSelector] | null;
-  querySelectorAll<TSelector: $Keys<HTMLElementTagNameMap>>(selector: TSelector): NodeList<HTMLElementTagNameMap[TSelector]>;
+  querySelector<TSelector: $Keys<HTMLElementTagNameMap>>(
+    selector: TSelector
+  ): HTMLElementTagNameMap[TSelector] | null;
+  querySelectorAll<TSelector: $Keys<HTMLElementTagNameMap>>(
+    selector: TSelector
+  ): NodeList<HTMLElementTagNameMap[TSelector]>;
 
   // from ChildNode interface
   after(...nodes: Array<string | Node>): void;
@@ -1440,15 +2198,15 @@ declare class Element extends Node mixins mixin$Animatable {
 }
 
 declare class HitRegionOptions {
-  path?: Path2D,
-  fillRule?: CanvasFillRule,
-  id?: string,
+  path?: Path2D;
+  fillRule?: CanvasFillRule;
+  id?: string;
   parentID?: string;
   cursor?: string;
   control?: Element;
   label: ?string;
   role: ?string;
-};
+}
 
 declare class SVGMatrix {
   getComponent(index: number): number;
@@ -1457,667 +2215,657 @@ declare class SVGMatrix {
   mTranslate(x: number, y: number): SVGMatrix;
   mScale(scaleFactor: number): SVGMatrix;
   mRotate(angle: number): SVGMatrix;
-};
+}
 
 // WebGL idl: https://www.khronos.org/registry/webgl/specs/latest/1.0/webgl.idl
 
 type WebGLContextAttributes = {
-       alpha: boolean,
-       depth: boolean,
-       stencil: boolean,
-       antialias: boolean,
-       premultipliedAlpha: boolean,
-       preserveDrawingBuffer: boolean,
-       preferLowPowerToHighPerformance: boolean,
-       failIfMajorPerformanceCaveat: boolean,
-       ...
+  alpha: boolean,
+  depth: boolean,
+  stencil: boolean,
+  antialias: boolean,
+  premultipliedAlpha: boolean,
+  preserveDrawingBuffer: boolean,
+  preferLowPowerToHighPerformance: boolean,
+  failIfMajorPerformanceCaveat: boolean,
+  ...
 };
 
-interface WebGLObject {
-};
+interface WebGLObject {}
 
-interface WebGLBuffer extends WebGLObject {
-};
+interface WebGLBuffer extends WebGLObject {}
 
-interface WebGLFramebuffer extends WebGLObject {
-};
+interface WebGLFramebuffer extends WebGLObject {}
 
-interface WebGLProgram extends WebGLObject {
-};
+interface WebGLProgram extends WebGLObject {}
 
-interface WebGLRenderbuffer extends WebGLObject {
-};
+interface WebGLRenderbuffer extends WebGLObject {}
 
-interface WebGLShader extends WebGLObject {
-};
+interface WebGLShader extends WebGLObject {}
 
-interface WebGLTexture extends WebGLObject {
-};
+interface WebGLTexture extends WebGLObject {}
 
-interface WebGLUniformLocation {
-};
+interface WebGLUniformLocation {}
 
 interface WebGLActiveInfo {
-    size: number;
-    type: number;
-    name: string;
-};
+  size: number;
+  type: number;
+  name: string;
+}
 
 interface WebGLShaderPrecisionFormat {
   rangeMin: number;
   rangeMax: number;
   precision: number;
-};
+}
 
 type BufferDataSource = ArrayBuffer | $ArrayBufferView;
 
 type TexImageSource =
-  ImageBitmap |
-  ImageData |
-  HTMLImageElement |
-  HTMLCanvasElement |
-  HTMLVideoElement;
+  | ImageBitmap
+  | ImageData
+  | HTMLImageElement
+  | HTMLCanvasElement
+  | HTMLVideoElement;
 
-type VertexAttribFVSource =
-  Float32Array |
-  Array<number>;
+type VertexAttribFVSource = Float32Array | Array<number>;
 
 /* flow */
 declare class WebGLRenderingContext {
-  static DEPTH_BUFFER_BIT               : 0x00000100;
-         DEPTH_BUFFER_BIT               : 0x00000100;
-  static STENCIL_BUFFER_BIT             : 0x00000400;
-         STENCIL_BUFFER_BIT             : 0x00000400;
-  static COLOR_BUFFER_BIT               : 0x00004000;
-         COLOR_BUFFER_BIT               : 0x00004000;
-  static POINTS                         : 0x0000;
-         POINTS                         : 0x0000;
-  static LINES                          : 0x0001;
-         LINES                          : 0x0001;
-  static LINE_LOOP                      : 0x0002;
-         LINE_LOOP                      : 0x0002;
-  static LINE_STRIP                     : 0x0003;
-         LINE_STRIP                     : 0x0003;
-  static TRIANGLES                      : 0x0004;
-         TRIANGLES                      : 0x0004;
-  static TRIANGLE_STRIP                 : 0x0005;
-         TRIANGLE_STRIP                 : 0x0005;
-  static TRIANGLE_FAN                   : 0x0006;
-         TRIANGLE_FAN                   : 0x0006;
-  static ZERO                           : 0;
-         ZERO                           : 0;
-  static ONE                            : 1;
-         ONE                            : 1;
-  static SRC_COLOR                      : 0x0300;
-         SRC_COLOR                      : 0x0300;
-  static ONE_MINUS_SRC_COLOR            : 0x0301;
-         ONE_MINUS_SRC_COLOR            : 0x0301;
-  static SRC_ALPHA                      : 0x0302;
-         SRC_ALPHA                      : 0x0302;
-  static ONE_MINUS_SRC_ALPHA            : 0x0303;
-         ONE_MINUS_SRC_ALPHA            : 0x0303;
-  static DST_ALPHA                      : 0x0304;
-         DST_ALPHA                      : 0x0304;
-  static ONE_MINUS_DST_ALPHA            : 0x0305;
-         ONE_MINUS_DST_ALPHA            : 0x0305;
-  static DST_COLOR                      : 0x0306;
-         DST_COLOR                      : 0x0306;
-  static ONE_MINUS_DST_COLOR            : 0x0307;
-         ONE_MINUS_DST_COLOR            : 0x0307;
-  static SRC_ALPHA_SATURATE             : 0x0308;
-         SRC_ALPHA_SATURATE             : 0x0308;
-  static FUNC_ADD                       : 0x8006;
-         FUNC_ADD                       : 0x8006;
-  static BLEND_EQUATION                 : 0x8009;
-         BLEND_EQUATION                 : 0x8009;
-  static BLEND_EQUATION_RGB             : 0x8009;
-         BLEND_EQUATION_RGB             : 0x8009;
-  static BLEND_EQUATION_ALPHA           : 0x883D;
-         BLEND_EQUATION_ALPHA           : 0x883D;
-  static FUNC_SUBTRACT                  : 0x800A;
-         FUNC_SUBTRACT                  : 0x800A;
-  static FUNC_REVERSE_SUBTRACT          : 0x800B;
-         FUNC_REVERSE_SUBTRACT          : 0x800B;
-  static BLEND_DST_RGB                  : 0x80C8;
-         BLEND_DST_RGB                  : 0x80C8;
-  static BLEND_SRC_RGB                  : 0x80C9;
-         BLEND_SRC_RGB                  : 0x80C9;
-  static BLEND_DST_ALPHA                : 0x80CA;
-         BLEND_DST_ALPHA                : 0x80CA;
-  static BLEND_SRC_ALPHA                : 0x80CB;
-         BLEND_SRC_ALPHA                : 0x80CB;
-  static CONSTANT_COLOR                 : 0x8001;
-         CONSTANT_COLOR                 : 0x8001;
-  static ONE_MINUS_CONSTANT_COLOR       : 0x8002;
-         ONE_MINUS_CONSTANT_COLOR       : 0x8002;
-  static CONSTANT_ALPHA                 : 0x8003;
-         CONSTANT_ALPHA                 : 0x8003;
-  static ONE_MINUS_CONSTANT_ALPHA       : 0x8004;
-         ONE_MINUS_CONSTANT_ALPHA       : 0x8004;
-  static BLEND_COLOR                    : 0x8005;
-         BLEND_COLOR                    : 0x8005;
-  static ARRAY_BUFFER                   : 0x8892;
-         ARRAY_BUFFER                   : 0x8892;
-  static ELEMENT_ARRAY_BUFFER           : 0x8893;
-         ELEMENT_ARRAY_BUFFER           : 0x8893;
-  static ARRAY_BUFFER_BINDING           : 0x8894;
-         ARRAY_BUFFER_BINDING           : 0x8894;
-  static ELEMENT_ARRAY_BUFFER_BINDING   : 0x8895;
-         ELEMENT_ARRAY_BUFFER_BINDING   : 0x8895;
-  static STREAM_DRAW                    : 0x88E0;
-         STREAM_DRAW                    : 0x88E0;
-  static STATIC_DRAW                    : 0x88E4;
-         STATIC_DRAW                    : 0x88E4;
-  static DYNAMIC_DRAW                   : 0x88E8;
-         DYNAMIC_DRAW                   : 0x88E8;
-  static BUFFER_SIZE                    : 0x8764;
-         BUFFER_SIZE                    : 0x8764;
-  static BUFFER_USAGE                   : 0x8765;
-         BUFFER_USAGE                   : 0x8765;
-  static CURRENT_VERTEX_ATTRIB          : 0x8626;
-         CURRENT_VERTEX_ATTRIB          : 0x8626;
-  static FRONT                          : 0x0404;
-         FRONT                          : 0x0404;
-  static BACK                           : 0x0405;
-         BACK                           : 0x0405;
-  static FRONT_AND_BACK                 : 0x0408;
-         FRONT_AND_BACK                 : 0x0408;
-  static CULL_FACE                      : 0x0B44;
-         CULL_FACE                      : 0x0B44;
-  static BLEND                          : 0x0BE2;
-         BLEND                          : 0x0BE2;
-  static DITHER                         : 0x0BD0;
-         DITHER                         : 0x0BD0;
-  static STENCIL_TEST                   : 0x0B90;
-         STENCIL_TEST                   : 0x0B90;
-  static DEPTH_TEST                     : 0x0B71;
-         DEPTH_TEST                     : 0x0B71;
-  static SCISSOR_TEST                   : 0x0C11;
-         SCISSOR_TEST                   : 0x0C11;
-  static POLYGON_OFFSET_FILL            : 0x8037;
-         POLYGON_OFFSET_FILL            : 0x8037;
-  static SAMPLE_ALPHA_TO_COVERAGE       : 0x809E;
-         SAMPLE_ALPHA_TO_COVERAGE       : 0x809E;
-  static SAMPLE_COVERAGE                : 0x80A0;
-         SAMPLE_COVERAGE                : 0x80A0;
-  static NO_ERROR                       : 0;
-         NO_ERROR                       : 0;
-  static INVALID_ENUM                   : 0x0500;
-         INVALID_ENUM                   : 0x0500;
-  static INVALID_VALUE                  : 0x0501;
-         INVALID_VALUE                  : 0x0501;
-  static INVALID_OPERATION              : 0x0502;
-         INVALID_OPERATION              : 0x0502;
-  static OUT_OF_MEMORY                  : 0x0505;
-         OUT_OF_MEMORY                  : 0x0505;
-  static CW                             : 0x0900;
-         CW                             : 0x0900;
-  static CCW                            : 0x0901;
-         CCW                            : 0x0901;
-  static LINE_WIDTH                     : 0x0B21;
-         LINE_WIDTH                     : 0x0B21;
-  static ALIASED_POINT_SIZE_RANGE       : 0x846D;
-         ALIASED_POINT_SIZE_RANGE       : 0x846D;
-  static ALIASED_LINE_WIDTH_RANGE       : 0x846E;
-         ALIASED_LINE_WIDTH_RANGE       : 0x846E;
-  static CULL_FACE_MODE                 : 0x0B45;
-         CULL_FACE_MODE                 : 0x0B45;
-  static FRONT_FACE                     : 0x0B46;
-         FRONT_FACE                     : 0x0B46;
-  static DEPTH_RANGE                    : 0x0B70;
-         DEPTH_RANGE                    : 0x0B70;
-  static DEPTH_WRITEMASK                : 0x0B72;
-         DEPTH_WRITEMASK                : 0x0B72;
-  static DEPTH_CLEAR_VALUE              : 0x0B73;
-         DEPTH_CLEAR_VALUE              : 0x0B73;
-  static DEPTH_FUNC                     : 0x0B74;
-         DEPTH_FUNC                     : 0x0B74;
-  static STENCIL_CLEAR_VALUE            : 0x0B91;
-         STENCIL_CLEAR_VALUE            : 0x0B91;
-  static STENCIL_FUNC                   : 0x0B92;
-         STENCIL_FUNC                   : 0x0B92;
-  static STENCIL_FAIL                   : 0x0B94;
-         STENCIL_FAIL                   : 0x0B94;
-  static STENCIL_PASS_DEPTH_FAIL        : 0x0B95;
-         STENCIL_PASS_DEPTH_FAIL        : 0x0B95;
-  static STENCIL_PASS_DEPTH_PASS        : 0x0B96;
-         STENCIL_PASS_DEPTH_PASS        : 0x0B96;
-  static STENCIL_REF                    : 0x0B97;
-         STENCIL_REF                    : 0x0B97;
-  static STENCIL_VALUE_MASK             : 0x0B93;
-         STENCIL_VALUE_MASK             : 0x0B93;
-  static STENCIL_WRITEMASK              : 0x0B98;
-         STENCIL_WRITEMASK              : 0x0B98;
-  static STENCIL_BACK_FUNC              : 0x8800;
-         STENCIL_BACK_FUNC              : 0x8800;
-  static STENCIL_BACK_FAIL              : 0x8801;
-         STENCIL_BACK_FAIL              : 0x8801;
-  static STENCIL_BACK_PASS_DEPTH_FAIL   : 0x8802;
-         STENCIL_BACK_PASS_DEPTH_FAIL   : 0x8802;
-  static STENCIL_BACK_PASS_DEPTH_PASS   : 0x8803;
-         STENCIL_BACK_PASS_DEPTH_PASS   : 0x8803;
-  static STENCIL_BACK_REF               : 0x8CA3;
-         STENCIL_BACK_REF               : 0x8CA3;
-  static STENCIL_BACK_VALUE_MASK        : 0x8CA4;
-         STENCIL_BACK_VALUE_MASK        : 0x8CA4;
-  static STENCIL_BACK_WRITEMASK         : 0x8CA5;
-         STENCIL_BACK_WRITEMASK         : 0x8CA5;
-  static VIEWPORT                       : 0x0BA2;
-         VIEWPORT                       : 0x0BA2;
-  static SCISSOR_BOX                    : 0x0C10;
-         SCISSOR_BOX                    : 0x0C10;
-  static COLOR_CLEAR_VALUE              : 0x0C22;
-         COLOR_CLEAR_VALUE              : 0x0C22;
-  static COLOR_WRITEMASK                : 0x0C23;
-         COLOR_WRITEMASK                : 0x0C23;
-  static UNPACK_ALIGNMENT               : 0x0CF5;
-         UNPACK_ALIGNMENT               : 0x0CF5;
-  static PACK_ALIGNMENT                 : 0x0D05;
-         PACK_ALIGNMENT                 : 0x0D05;
-  static MAX_TEXTURE_SIZE               : 0x0D33;
-         MAX_TEXTURE_SIZE               : 0x0D33;
-  static MAX_VIEWPORT_DIMS              : 0x0D3A;
-         MAX_VIEWPORT_DIMS              : 0x0D3A;
-  static SUBPIXEL_BITS                  : 0x0D50;
-         SUBPIXEL_BITS                  : 0x0D50;
-  static RED_BITS                       : 0x0D52;
-         RED_BITS                       : 0x0D52;
-  static GREEN_BITS                     : 0x0D53;
-         GREEN_BITS                     : 0x0D53;
-  static BLUE_BITS                      : 0x0D54;
-         BLUE_BITS                      : 0x0D54;
-  static ALPHA_BITS                     : 0x0D55;
-         ALPHA_BITS                     : 0x0D55;
-  static DEPTH_BITS                     : 0x0D56;
-         DEPTH_BITS                     : 0x0D56;
-  static STENCIL_BITS                   : 0x0D57;
-         STENCIL_BITS                   : 0x0D57;
-  static POLYGON_OFFSET_UNITS           : 0x2A00;
-         POLYGON_OFFSET_UNITS           : 0x2A00;
-  static POLYGON_OFFSET_FACTOR          : 0x8038;
-         POLYGON_OFFSET_FACTOR          : 0x8038;
-  static TEXTURE_BINDING_2D             : 0x8069;
-         TEXTURE_BINDING_2D             : 0x8069;
-  static SAMPLE_BUFFERS                 : 0x80A8;
-         SAMPLE_BUFFERS                 : 0x80A8;
-  static SAMPLES                        : 0x80A9;
-         SAMPLES                        : 0x80A9;
-  static SAMPLE_COVERAGE_VALUE          : 0x80AA;
-         SAMPLE_COVERAGE_VALUE          : 0x80AA;
-  static SAMPLE_COVERAGE_INVERT         : 0x80AB;
-         SAMPLE_COVERAGE_INVERT         : 0x80AB;
-  static COMPRESSED_TEXTURE_FORMATS     : 0x86A3;
-         COMPRESSED_TEXTURE_FORMATS     : 0x86A3;
-  static DONT_CARE                      : 0x1100;
-         DONT_CARE                      : 0x1100;
-  static FASTEST                        : 0x1101;
-         FASTEST                        : 0x1101;
-  static NICEST                         : 0x1102;
-         NICEST                         : 0x1102;
-  static GENERATE_MIPMAP_HINT            : 0x8192;
-         GENERATE_MIPMAP_HINT            : 0x8192;
-  static BYTE                           : 0x1400;
-         BYTE                           : 0x1400;
-  static UNSIGNED_BYTE                  : 0x1401;
-         UNSIGNED_BYTE                  : 0x1401;
-  static SHORT                          : 0x1402;
-         SHORT                          : 0x1402;
-  static UNSIGNED_SHORT                 : 0x1403;
-         UNSIGNED_SHORT                 : 0x1403;
-  static INT                            : 0x1404;
-         INT                            : 0x1404;
-  static UNSIGNED_INT                   : 0x1405;
-         UNSIGNED_INT                   : 0x1405;
-  static FLOAT                          : 0x1406;
-         FLOAT                          : 0x1406;
-  static DEPTH_COMPONENT                : 0x1902;
-         DEPTH_COMPONENT                : 0x1902;
-  static ALPHA                          : 0x1906;
-         ALPHA                          : 0x1906;
-  static RGB                            : 0x1907;
-         RGB                            : 0x1907;
-  static RGBA                           : 0x1908;
-         RGBA                           : 0x1908;
-  static LUMINANCE                      : 0x1909;
-         LUMINANCE                      : 0x1909;
-  static LUMINANCE_ALPHA                : 0x190A;
-         LUMINANCE_ALPHA                : 0x190A;
-  static UNSIGNED_SHORT_4_4_4_4         : 0x8033;
-         UNSIGNED_SHORT_4_4_4_4         : 0x8033;
-  static UNSIGNED_SHORT_5_5_5_1         : 0x8034;
-         UNSIGNED_SHORT_5_5_5_1         : 0x8034;
-  static UNSIGNED_SHORT_5_6_5           : 0x8363;
-         UNSIGNED_SHORT_5_6_5           : 0x8363;
-  static FRAGMENT_SHADER                  : 0x8B30;
-         FRAGMENT_SHADER                  : 0x8B30;
-  static VERTEX_SHADER                    : 0x8B31;
-         VERTEX_SHADER                    : 0x8B31;
-  static MAX_VERTEX_ATTRIBS               : 0x8869;
-         MAX_VERTEX_ATTRIBS               : 0x8869;
-  static MAX_VERTEX_UNIFORM_VECTORS       : 0x8DFB;
-         MAX_VERTEX_UNIFORM_VECTORS       : 0x8DFB;
-  static MAX_VARYING_VECTORS              : 0x8DFC;
-         MAX_VARYING_VECTORS              : 0x8DFC;
-  static MAX_COMBINED_TEXTURE_IMAGE_UNITS : 0x8B4D;
-         MAX_COMBINED_TEXTURE_IMAGE_UNITS : 0x8B4D;
-  static MAX_VERTEX_TEXTURE_IMAGE_UNITS   : 0x8B4C;
-         MAX_VERTEX_TEXTURE_IMAGE_UNITS   : 0x8B4C;
-  static MAX_TEXTURE_IMAGE_UNITS          : 0x8872;
-         MAX_TEXTURE_IMAGE_UNITS          : 0x8872;
-  static MAX_FRAGMENT_UNIFORM_VECTORS     : 0x8DFD;
-         MAX_FRAGMENT_UNIFORM_VECTORS     : 0x8DFD;
-  static SHADER_TYPE                      : 0x8B4F;
-         SHADER_TYPE                      : 0x8B4F;
-  static DELETE_STATUS                    : 0x8B80;
-         DELETE_STATUS                    : 0x8B80;
-  static LINK_STATUS                      : 0x8B82;
-         LINK_STATUS                      : 0x8B82;
-  static VALIDATE_STATUS                  : 0x8B83;
-         VALIDATE_STATUS                  : 0x8B83;
-  static ATTACHED_SHADERS                 : 0x8B85;
-         ATTACHED_SHADERS                 : 0x8B85;
-  static ACTIVE_UNIFORMS                  : 0x8B86;
-         ACTIVE_UNIFORMS                  : 0x8B86;
-  static ACTIVE_ATTRIBUTES                : 0x8B89;
-         ACTIVE_ATTRIBUTES                : 0x8B89;
-  static SHADING_LANGUAGE_VERSION         : 0x8B8C;
-         SHADING_LANGUAGE_VERSION         : 0x8B8C;
-  static CURRENT_PROGRAM                  : 0x8B8D;
-         CURRENT_PROGRAM                  : 0x8B8D;
-  static NEVER                          : 0x0200;
-         NEVER                          : 0x0200;
-  static LESS                           : 0x0201;
-         LESS                           : 0x0201;
-  static EQUAL                          : 0x0202;
-         EQUAL                          : 0x0202;
-  static LEQUAL                         : 0x0203;
-         LEQUAL                         : 0x0203;
-  static GREATER                        : 0x0204;
-         GREATER                        : 0x0204;
-  static NOTEQUAL                       : 0x0205;
-         NOTEQUAL                       : 0x0205;
-  static GEQUAL                         : 0x0206;
-         GEQUAL                         : 0x0206;
-  static ALWAYS                         : 0x0207;
-         ALWAYS                         : 0x0207;
-  static KEEP                           : 0x1E00;
-         KEEP                           : 0x1E00;
-  static REPLACE                        : 0x1E01;
-         REPLACE                        : 0x1E01;
-  static INCR                           : 0x1E02;
-         INCR                           : 0x1E02;
-  static DECR                           : 0x1E03;
-         DECR                           : 0x1E03;
-  static INVERT                         : 0x150A;
-         INVERT                         : 0x150A;
-  static INCR_WRAP                      : 0x8507;
-         INCR_WRAP                      : 0x8507;
-  static DECR_WRAP                      : 0x8508;
-         DECR_WRAP                      : 0x8508;
-  static VENDOR                         : 0x1F00;
-         VENDOR                         : 0x1F00;
-  static RENDERER                       : 0x1F01;
-         RENDERER                       : 0x1F01;
-  static VERSION                        : 0x1F02;
-         VERSION                        : 0x1F02;
-  static NEAREST                        : 0x2600;
-         NEAREST                        : 0x2600;
-  static LINEAR                         : 0x2601;
-         LINEAR                         : 0x2601;
-  static NEAREST_MIPMAP_NEAREST         : 0x2700;
-         NEAREST_MIPMAP_NEAREST         : 0x2700;
-  static LINEAR_MIPMAP_NEAREST          : 0x2701;
-         LINEAR_MIPMAP_NEAREST          : 0x2701;
-  static NEAREST_MIPMAP_LINEAR          : 0x2702;
-         NEAREST_MIPMAP_LINEAR          : 0x2702;
-  static LINEAR_MIPMAP_LINEAR           : 0x2703;
-         LINEAR_MIPMAP_LINEAR           : 0x2703;
-  static TEXTURE_MAG_FILTER             : 0x2800;
-         TEXTURE_MAG_FILTER             : 0x2800;
-  static TEXTURE_MIN_FILTER             : 0x2801;
-         TEXTURE_MIN_FILTER             : 0x2801;
-  static TEXTURE_WRAP_S                 : 0x2802;
-         TEXTURE_WRAP_S                 : 0x2802;
-  static TEXTURE_WRAP_T                 : 0x2803;
-         TEXTURE_WRAP_T                 : 0x2803;
-  static TEXTURE_2D                     : 0x0DE1;
-         TEXTURE_2D                     : 0x0DE1;
-  static TEXTURE                        : 0x1702;
-         TEXTURE                        : 0x1702;
-  static TEXTURE_CUBE_MAP               : 0x8513;
-         TEXTURE_CUBE_MAP               : 0x8513;
-  static TEXTURE_BINDING_CUBE_MAP       : 0x8514;
-         TEXTURE_BINDING_CUBE_MAP       : 0x8514;
-  static TEXTURE_CUBE_MAP_POSITIVE_X    : 0x8515;
-         TEXTURE_CUBE_MAP_POSITIVE_X    : 0x8515;
-  static TEXTURE_CUBE_MAP_NEGATIVE_X    : 0x8516;
-         TEXTURE_CUBE_MAP_NEGATIVE_X    : 0x8516;
-  static TEXTURE_CUBE_MAP_POSITIVE_Y    : 0x8517;
-         TEXTURE_CUBE_MAP_POSITIVE_Y    : 0x8517;
-  static TEXTURE_CUBE_MAP_NEGATIVE_Y    : 0x8518;
-         TEXTURE_CUBE_MAP_NEGATIVE_Y    : 0x8518;
-  static TEXTURE_CUBE_MAP_POSITIVE_Z    : 0x8519;
-         TEXTURE_CUBE_MAP_POSITIVE_Z    : 0x8519;
-  static TEXTURE_CUBE_MAP_NEGATIVE_Z    : 0x851A;
-         TEXTURE_CUBE_MAP_NEGATIVE_Z    : 0x851A;
-  static MAX_CUBE_MAP_TEXTURE_SIZE      : 0x851C;
-         MAX_CUBE_MAP_TEXTURE_SIZE      : 0x851C;
-  static TEXTURE0                       : 0x84C0;
-         TEXTURE0                       : 0x84C0;
-  static TEXTURE1                       : 0x84C1;
-         TEXTURE1                       : 0x84C1;
-  static TEXTURE2                       : 0x84C2;
-         TEXTURE2                       : 0x84C2;
-  static TEXTURE3                       : 0x84C3;
-         TEXTURE3                       : 0x84C3;
-  static TEXTURE4                       : 0x84C4;
-         TEXTURE4                       : 0x84C4;
-  static TEXTURE5                       : 0x84C5;
-         TEXTURE5                       : 0x84C5;
-  static TEXTURE6                       : 0x84C6;
-         TEXTURE6                       : 0x84C6;
-  static TEXTURE7                       : 0x84C7;
-         TEXTURE7                       : 0x84C7;
-  static TEXTURE8                       : 0x84C8;
-         TEXTURE8                       : 0x84C8;
-  static TEXTURE9                       : 0x84C9;
-         TEXTURE9                       : 0x84C9;
-  static TEXTURE10                      : 0x84CA;
-         TEXTURE10                      : 0x84CA;
-  static TEXTURE11                      : 0x84CB;
-         TEXTURE11                      : 0x84CB;
-  static TEXTURE12                      : 0x84CC;
-         TEXTURE12                      : 0x84CC;
-  static TEXTURE13                      : 0x84CD;
-         TEXTURE13                      : 0x84CD;
-  static TEXTURE14                      : 0x84CE;
-         TEXTURE14                      : 0x84CE;
-  static TEXTURE15                      : 0x84CF;
-         TEXTURE15                      : 0x84CF;
-  static TEXTURE16                      : 0x84D0;
-         TEXTURE16                      : 0x84D0;
-  static TEXTURE17                      : 0x84D1;
-         TEXTURE17                      : 0x84D1;
-  static TEXTURE18                      : 0x84D2;
-         TEXTURE18                      : 0x84D2;
-  static TEXTURE19                      : 0x84D3;
-         TEXTURE19                      : 0x84D3;
-  static TEXTURE20                      : 0x84D4;
-         TEXTURE20                      : 0x84D4;
-  static TEXTURE21                      : 0x84D5;
-         TEXTURE21                      : 0x84D5;
-  static TEXTURE22                      : 0x84D6;
-         TEXTURE22                      : 0x84D6;
-  static TEXTURE23                      : 0x84D7;
-         TEXTURE23                      : 0x84D7;
-  static TEXTURE24                      : 0x84D8;
-         TEXTURE24                      : 0x84D8;
-  static TEXTURE25                      : 0x84D9;
-         TEXTURE25                      : 0x84D9;
-  static TEXTURE26                      : 0x84DA;
-         TEXTURE26                      : 0x84DA;
-  static TEXTURE27                      : 0x84DB;
-         TEXTURE27                      : 0x84DB;
-  static TEXTURE28                      : 0x84DC;
-         TEXTURE28                      : 0x84DC;
-  static TEXTURE29                      : 0x84DD;
-         TEXTURE29                      : 0x84DD;
-  static TEXTURE30                      : 0x84DE;
-         TEXTURE30                      : 0x84DE;
-  static TEXTURE31                      : 0x84DF;
-         TEXTURE31                      : 0x84DF;
-  static ACTIVE_TEXTURE                 : 0x84E0;
-         ACTIVE_TEXTURE                 : 0x84E0;
-  static REPEAT                         : 0x2901;
-         REPEAT                         : 0x2901;
-  static CLAMP_TO_EDGE                  : 0x812F;
-         CLAMP_TO_EDGE                  : 0x812F;
-  static MIRRORED_REPEAT                : 0x8370;
-         MIRRORED_REPEAT                : 0x8370;
-  static FLOAT_VEC2                     : 0x8B50;
-         FLOAT_VEC2                     : 0x8B50;
-  static FLOAT_VEC3                     : 0x8B51;
-         FLOAT_VEC3                     : 0x8B51;
-  static FLOAT_VEC4                     : 0x8B52;
-         FLOAT_VEC4                     : 0x8B52;
-  static INT_VEC2                       : 0x8B53;
-         INT_VEC2                       : 0x8B53;
-  static INT_VEC3                       : 0x8B54;
-         INT_VEC3                       : 0x8B54;
-  static INT_VEC4                       : 0x8B55;
-         INT_VEC4                       : 0x8B55;
-  static BOOL                           : 0x8B56;
-         BOOL                           : 0x8B56;
-  static BOOL_VEC2                      : 0x8B57;
-         BOOL_VEC2                      : 0x8B57;
-  static BOOL_VEC3                      : 0x8B58;
-         BOOL_VEC3                      : 0x8B58;
-  static BOOL_VEC4                      : 0x8B59;
-         BOOL_VEC4                      : 0x8B59;
-  static FLOAT_MAT2                     : 0x8B5A;
-         FLOAT_MAT2                     : 0x8B5A;
-  static FLOAT_MAT3                     : 0x8B5B;
-         FLOAT_MAT3                     : 0x8B5B;
-  static FLOAT_MAT4                     : 0x8B5C;
-         FLOAT_MAT4                     : 0x8B5C;
-  static SAMPLER_2D                     : 0x8B5E;
-         SAMPLER_2D                     : 0x8B5E;
-  static SAMPLER_CUBE                   : 0x8B60;
-         SAMPLER_CUBE                   : 0x8B60;
-  static VERTEX_ATTRIB_ARRAY_ENABLED        : 0x8622;
-         VERTEX_ATTRIB_ARRAY_ENABLED        : 0x8622;
-  static VERTEX_ATTRIB_ARRAY_SIZE           : 0x8623;
-         VERTEX_ATTRIB_ARRAY_SIZE           : 0x8623;
-  static VERTEX_ATTRIB_ARRAY_STRIDE         : 0x8624;
-         VERTEX_ATTRIB_ARRAY_STRIDE         : 0x8624;
-  static VERTEX_ATTRIB_ARRAY_TYPE           : 0x8625;
-         VERTEX_ATTRIB_ARRAY_TYPE           : 0x8625;
-  static VERTEX_ATTRIB_ARRAY_NORMALIZED     : 0x886A;
-         VERTEX_ATTRIB_ARRAY_NORMALIZED     : 0x886A;
-  static VERTEX_ATTRIB_ARRAY_POINTER        : 0x8645;
-         VERTEX_ATTRIB_ARRAY_POINTER        : 0x8645;
-  static VERTEX_ATTRIB_ARRAY_BUFFER_BINDING : 0x889F;
-         VERTEX_ATTRIB_ARRAY_BUFFER_BINDING : 0x889F;
-  static IMPLEMENTATION_COLOR_READ_TYPE   : 0x8B9A;
-         IMPLEMENTATION_COLOR_READ_TYPE   : 0x8B9A;
-  static IMPLEMENTATION_COLOR_READ_FORMAT : 0x8B9B;
-         IMPLEMENTATION_COLOR_READ_FORMAT : 0x8B9B;
-  static COMPILE_STATUS                 : 0x8B81;
-         COMPILE_STATUS                 : 0x8B81;
-  static LOW_FLOAT                      : 0x8DF0;
-         LOW_FLOAT                      : 0x8DF0;
-  static MEDIUM_FLOAT                   : 0x8DF1;
-         MEDIUM_FLOAT                   : 0x8DF1;
-  static HIGH_FLOAT                     : 0x8DF2;
-         HIGH_FLOAT                     : 0x8DF2;
-  static LOW_INT                        : 0x8DF3;
-         LOW_INT                        : 0x8DF3;
-  static MEDIUM_INT                     : 0x8DF4;
-         MEDIUM_INT                     : 0x8DF4;
-  static HIGH_INT                       : 0x8DF5;
-         HIGH_INT                       : 0x8DF5;
-  static FRAMEBUFFER                    : 0x8D40;
-         FRAMEBUFFER                    : 0x8D40;
-  static RENDERBUFFER                   : 0x8D41;
-         RENDERBUFFER                   : 0x8D41;
-  static RGBA4                          : 0x8056;
-         RGBA4                          : 0x8056;
-  static RGB5_A1                        : 0x8057;
-         RGB5_A1                        : 0x8057;
-  static RGB565                         : 0x8D62;
-         RGB565                         : 0x8D62;
-  static DEPTH_COMPONENT16              : 0x81A5;
-         DEPTH_COMPONENT16              : 0x81A5;
-  static STENCIL_INDEX                  : 0x1901;
-         STENCIL_INDEX                  : 0x1901;
-  static STENCIL_INDEX8                 : 0x8D48;
-         STENCIL_INDEX8                 : 0x8D48;
-  static DEPTH_STENCIL                  : 0x84F9;
-         DEPTH_STENCIL                  : 0x84F9;
-  static RENDERBUFFER_WIDTH             : 0x8D42;
-         RENDERBUFFER_WIDTH             : 0x8D42;
-  static RENDERBUFFER_HEIGHT            : 0x8D43;
-         RENDERBUFFER_HEIGHT            : 0x8D43;
-  static RENDERBUFFER_INTERNAL_FORMAT   : 0x8D44;
-         RENDERBUFFER_INTERNAL_FORMAT   : 0x8D44;
-  static RENDERBUFFER_RED_SIZE          : 0x8D50;
-         RENDERBUFFER_RED_SIZE          : 0x8D50;
-  static RENDERBUFFER_GREEN_SIZE        : 0x8D51;
-         RENDERBUFFER_GREEN_SIZE        : 0x8D51;
-  static RENDERBUFFER_BLUE_SIZE         : 0x8D52;
-         RENDERBUFFER_BLUE_SIZE         : 0x8D52;
-  static RENDERBUFFER_ALPHA_SIZE        : 0x8D53;
-         RENDERBUFFER_ALPHA_SIZE        : 0x8D53;
-  static RENDERBUFFER_DEPTH_SIZE        : 0x8D54;
-         RENDERBUFFER_DEPTH_SIZE        : 0x8D54;
-  static RENDERBUFFER_STENCIL_SIZE      : 0x8D55;
-         RENDERBUFFER_STENCIL_SIZE      : 0x8D55;
-  static FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE           : 0x8CD0;
-         FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE           : 0x8CD0;
-  static FRAMEBUFFER_ATTACHMENT_OBJECT_NAME           : 0x8CD1;
-         FRAMEBUFFER_ATTACHMENT_OBJECT_NAME           : 0x8CD1;
-  static FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL         : 0x8CD2;
-         FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL         : 0x8CD2;
-  static FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE : 0x8CD3;
-         FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE : 0x8CD3;
-  static COLOR_ATTACHMENT0              : 0x8CE0;
-         COLOR_ATTACHMENT0              : 0x8CE0;
-  static DEPTH_ATTACHMENT               : 0x8D00;
-         DEPTH_ATTACHMENT               : 0x8D00;
-  static STENCIL_ATTACHMENT             : 0x8D20;
-         STENCIL_ATTACHMENT             : 0x8D20;
-  static DEPTH_STENCIL_ATTACHMENT       : 0x821A;
-         DEPTH_STENCIL_ATTACHMENT       : 0x821A;
-  static NONE                           : 0;
-         NONE                           : 0;
-  static FRAMEBUFFER_COMPLETE                      : 0x8CD5;
-         FRAMEBUFFER_COMPLETE                      : 0x8CD5;
-  static FRAMEBUFFER_INCOMPLETE_ATTACHMENT         : 0x8CD6;
-         FRAMEBUFFER_INCOMPLETE_ATTACHMENT         : 0x8CD6;
-  static FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT : 0x8CD7;
-         FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT : 0x8CD7;
-  static FRAMEBUFFER_INCOMPLETE_DIMENSIONS         : 0x8CD9;
-         FRAMEBUFFER_INCOMPLETE_DIMENSIONS         : 0x8CD9;
-  static FRAMEBUFFER_UNSUPPORTED                   : 0x8CDD;
-         FRAMEBUFFER_UNSUPPORTED                   : 0x8CDD;
-  static FRAMEBUFFER_BINDING            : 0x8CA6;
-         FRAMEBUFFER_BINDING            : 0x8CA6;
-  static RENDERBUFFER_BINDING           : 0x8CA7;
-         RENDERBUFFER_BINDING           : 0x8CA7;
-  static MAX_RENDERBUFFER_SIZE          : 0x84E8;
-         MAX_RENDERBUFFER_SIZE          : 0x84E8;
-  static INVALID_FRAMEBUFFER_OPERATION  : 0x0506;
-         INVALID_FRAMEBUFFER_OPERATION  : 0x0506;
-  static UNPACK_FLIP_Y_WEBGL            : 0x9240;
-         UNPACK_FLIP_Y_WEBGL            : 0x9240;
-  static UNPACK_PREMULTIPLY_ALPHA_WEBGL : 0x9241;
-         UNPACK_PREMULTIPLY_ALPHA_WEBGL : 0x9241;
-  static CONTEXT_LOST_WEBGL             : 0x9242;
-         CONTEXT_LOST_WEBGL             : 0x9242;
-  static UNPACK_COLORSPACE_CONVERSION_WEBGL : 0x9243;
-         UNPACK_COLORSPACE_CONVERSION_WEBGL : 0x9243;
-  static BROWSER_DEFAULT_WEBGL          : 0x9244;
-         BROWSER_DEFAULT_WEBGL          : 0x9244;
+  static DEPTH_BUFFER_BIT: 0x00000100;
+  DEPTH_BUFFER_BIT: 0x00000100;
+  static STENCIL_BUFFER_BIT: 0x00000400;
+  STENCIL_BUFFER_BIT: 0x00000400;
+  static COLOR_BUFFER_BIT: 0x00004000;
+  COLOR_BUFFER_BIT: 0x00004000;
+  static POINTS: 0x0000;
+  POINTS: 0x0000;
+  static LINES: 0x0001;
+  LINES: 0x0001;
+  static LINE_LOOP: 0x0002;
+  LINE_LOOP: 0x0002;
+  static LINE_STRIP: 0x0003;
+  LINE_STRIP: 0x0003;
+  static TRIANGLES: 0x0004;
+  TRIANGLES: 0x0004;
+  static TRIANGLE_STRIP: 0x0005;
+  TRIANGLE_STRIP: 0x0005;
+  static TRIANGLE_FAN: 0x0006;
+  TRIANGLE_FAN: 0x0006;
+  static ZERO: 0;
+  ZERO: 0;
+  static ONE: 1;
+  ONE: 1;
+  static SRC_COLOR: 0x0300;
+  SRC_COLOR: 0x0300;
+  static ONE_MINUS_SRC_COLOR: 0x0301;
+  ONE_MINUS_SRC_COLOR: 0x0301;
+  static SRC_ALPHA: 0x0302;
+  SRC_ALPHA: 0x0302;
+  static ONE_MINUS_SRC_ALPHA: 0x0303;
+  ONE_MINUS_SRC_ALPHA: 0x0303;
+  static DST_ALPHA: 0x0304;
+  DST_ALPHA: 0x0304;
+  static ONE_MINUS_DST_ALPHA: 0x0305;
+  ONE_MINUS_DST_ALPHA: 0x0305;
+  static DST_COLOR: 0x0306;
+  DST_COLOR: 0x0306;
+  static ONE_MINUS_DST_COLOR: 0x0307;
+  ONE_MINUS_DST_COLOR: 0x0307;
+  static SRC_ALPHA_SATURATE: 0x0308;
+  SRC_ALPHA_SATURATE: 0x0308;
+  static FUNC_ADD: 0x8006;
+  FUNC_ADD: 0x8006;
+  static BLEND_EQUATION: 0x8009;
+  BLEND_EQUATION: 0x8009;
+  static BLEND_EQUATION_RGB: 0x8009;
+  BLEND_EQUATION_RGB: 0x8009;
+  static BLEND_EQUATION_ALPHA: 0x883d;
+  BLEND_EQUATION_ALPHA: 0x883d;
+  static FUNC_SUBTRACT: 0x800a;
+  FUNC_SUBTRACT: 0x800a;
+  static FUNC_REVERSE_SUBTRACT: 0x800b;
+  FUNC_REVERSE_SUBTRACT: 0x800b;
+  static BLEND_DST_RGB: 0x80c8;
+  BLEND_DST_RGB: 0x80c8;
+  static BLEND_SRC_RGB: 0x80c9;
+  BLEND_SRC_RGB: 0x80c9;
+  static BLEND_DST_ALPHA: 0x80ca;
+  BLEND_DST_ALPHA: 0x80ca;
+  static BLEND_SRC_ALPHA: 0x80cb;
+  BLEND_SRC_ALPHA: 0x80cb;
+  static CONSTANT_COLOR: 0x8001;
+  CONSTANT_COLOR: 0x8001;
+  static ONE_MINUS_CONSTANT_COLOR: 0x8002;
+  ONE_MINUS_CONSTANT_COLOR: 0x8002;
+  static CONSTANT_ALPHA: 0x8003;
+  CONSTANT_ALPHA: 0x8003;
+  static ONE_MINUS_CONSTANT_ALPHA: 0x8004;
+  ONE_MINUS_CONSTANT_ALPHA: 0x8004;
+  static BLEND_COLOR: 0x8005;
+  BLEND_COLOR: 0x8005;
+  static ARRAY_BUFFER: 0x8892;
+  ARRAY_BUFFER: 0x8892;
+  static ELEMENT_ARRAY_BUFFER: 0x8893;
+  ELEMENT_ARRAY_BUFFER: 0x8893;
+  static ARRAY_BUFFER_BINDING: 0x8894;
+  ARRAY_BUFFER_BINDING: 0x8894;
+  static ELEMENT_ARRAY_BUFFER_BINDING: 0x8895;
+  ELEMENT_ARRAY_BUFFER_BINDING: 0x8895;
+  static STREAM_DRAW: 0x88e0;
+  STREAM_DRAW: 0x88e0;
+  static STATIC_DRAW: 0x88e4;
+  STATIC_DRAW: 0x88e4;
+  static DYNAMIC_DRAW: 0x88e8;
+  DYNAMIC_DRAW: 0x88e8;
+  static BUFFER_SIZE: 0x8764;
+  BUFFER_SIZE: 0x8764;
+  static BUFFER_USAGE: 0x8765;
+  BUFFER_USAGE: 0x8765;
+  static CURRENT_VERTEX_ATTRIB: 0x8626;
+  CURRENT_VERTEX_ATTRIB: 0x8626;
+  static FRONT: 0x0404;
+  FRONT: 0x0404;
+  static BACK: 0x0405;
+  BACK: 0x0405;
+  static FRONT_AND_BACK: 0x0408;
+  FRONT_AND_BACK: 0x0408;
+  static CULL_FACE: 0x0b44;
+  CULL_FACE: 0x0b44;
+  static BLEND: 0x0be2;
+  BLEND: 0x0be2;
+  static DITHER: 0x0bd0;
+  DITHER: 0x0bd0;
+  static STENCIL_TEST: 0x0b90;
+  STENCIL_TEST: 0x0b90;
+  static DEPTH_TEST: 0x0b71;
+  DEPTH_TEST: 0x0b71;
+  static SCISSOR_TEST: 0x0c11;
+  SCISSOR_TEST: 0x0c11;
+  static POLYGON_OFFSET_FILL: 0x8037;
+  POLYGON_OFFSET_FILL: 0x8037;
+  static SAMPLE_ALPHA_TO_COVERAGE: 0x809e;
+  SAMPLE_ALPHA_TO_COVERAGE: 0x809e;
+  static SAMPLE_COVERAGE: 0x80a0;
+  SAMPLE_COVERAGE: 0x80a0;
+  static NO_ERROR: 0;
+  NO_ERROR: 0;
+  static INVALID_ENUM: 0x0500;
+  INVALID_ENUM: 0x0500;
+  static INVALID_VALUE: 0x0501;
+  INVALID_VALUE: 0x0501;
+  static INVALID_OPERATION: 0x0502;
+  INVALID_OPERATION: 0x0502;
+  static OUT_OF_MEMORY: 0x0505;
+  OUT_OF_MEMORY: 0x0505;
+  static CW: 0x0900;
+  CW: 0x0900;
+  static CCW: 0x0901;
+  CCW: 0x0901;
+  static LINE_WIDTH: 0x0b21;
+  LINE_WIDTH: 0x0b21;
+  static ALIASED_POINT_SIZE_RANGE: 0x846d;
+  ALIASED_POINT_SIZE_RANGE: 0x846d;
+  static ALIASED_LINE_WIDTH_RANGE: 0x846e;
+  ALIASED_LINE_WIDTH_RANGE: 0x846e;
+  static CULL_FACE_MODE: 0x0b45;
+  CULL_FACE_MODE: 0x0b45;
+  static FRONT_FACE: 0x0b46;
+  FRONT_FACE: 0x0b46;
+  static DEPTH_RANGE: 0x0b70;
+  DEPTH_RANGE: 0x0b70;
+  static DEPTH_WRITEMASK: 0x0b72;
+  DEPTH_WRITEMASK: 0x0b72;
+  static DEPTH_CLEAR_VALUE: 0x0b73;
+  DEPTH_CLEAR_VALUE: 0x0b73;
+  static DEPTH_FUNC: 0x0b74;
+  DEPTH_FUNC: 0x0b74;
+  static STENCIL_CLEAR_VALUE: 0x0b91;
+  STENCIL_CLEAR_VALUE: 0x0b91;
+  static STENCIL_FUNC: 0x0b92;
+  STENCIL_FUNC: 0x0b92;
+  static STENCIL_FAIL: 0x0b94;
+  STENCIL_FAIL: 0x0b94;
+  static STENCIL_PASS_DEPTH_FAIL: 0x0b95;
+  STENCIL_PASS_DEPTH_FAIL: 0x0b95;
+  static STENCIL_PASS_DEPTH_PASS: 0x0b96;
+  STENCIL_PASS_DEPTH_PASS: 0x0b96;
+  static STENCIL_REF: 0x0b97;
+  STENCIL_REF: 0x0b97;
+  static STENCIL_VALUE_MASK: 0x0b93;
+  STENCIL_VALUE_MASK: 0x0b93;
+  static STENCIL_WRITEMASK: 0x0b98;
+  STENCIL_WRITEMASK: 0x0b98;
+  static STENCIL_BACK_FUNC: 0x8800;
+  STENCIL_BACK_FUNC: 0x8800;
+  static STENCIL_BACK_FAIL: 0x8801;
+  STENCIL_BACK_FAIL: 0x8801;
+  static STENCIL_BACK_PASS_DEPTH_FAIL: 0x8802;
+  STENCIL_BACK_PASS_DEPTH_FAIL: 0x8802;
+  static STENCIL_BACK_PASS_DEPTH_PASS: 0x8803;
+  STENCIL_BACK_PASS_DEPTH_PASS: 0x8803;
+  static STENCIL_BACK_REF: 0x8ca3;
+  STENCIL_BACK_REF: 0x8ca3;
+  static STENCIL_BACK_VALUE_MASK: 0x8ca4;
+  STENCIL_BACK_VALUE_MASK: 0x8ca4;
+  static STENCIL_BACK_WRITEMASK: 0x8ca5;
+  STENCIL_BACK_WRITEMASK: 0x8ca5;
+  static VIEWPORT: 0x0ba2;
+  VIEWPORT: 0x0ba2;
+  static SCISSOR_BOX: 0x0c10;
+  SCISSOR_BOX: 0x0c10;
+  static COLOR_CLEAR_VALUE: 0x0c22;
+  COLOR_CLEAR_VALUE: 0x0c22;
+  static COLOR_WRITEMASK: 0x0c23;
+  COLOR_WRITEMASK: 0x0c23;
+  static UNPACK_ALIGNMENT: 0x0cf5;
+  UNPACK_ALIGNMENT: 0x0cf5;
+  static PACK_ALIGNMENT: 0x0d05;
+  PACK_ALIGNMENT: 0x0d05;
+  static MAX_TEXTURE_SIZE: 0x0d33;
+  MAX_TEXTURE_SIZE: 0x0d33;
+  static MAX_VIEWPORT_DIMS: 0x0d3a;
+  MAX_VIEWPORT_DIMS: 0x0d3a;
+  static SUBPIXEL_BITS: 0x0d50;
+  SUBPIXEL_BITS: 0x0d50;
+  static RED_BITS: 0x0d52;
+  RED_BITS: 0x0d52;
+  static GREEN_BITS: 0x0d53;
+  GREEN_BITS: 0x0d53;
+  static BLUE_BITS: 0x0d54;
+  BLUE_BITS: 0x0d54;
+  static ALPHA_BITS: 0x0d55;
+  ALPHA_BITS: 0x0d55;
+  static DEPTH_BITS: 0x0d56;
+  DEPTH_BITS: 0x0d56;
+  static STENCIL_BITS: 0x0d57;
+  STENCIL_BITS: 0x0d57;
+  static POLYGON_OFFSET_UNITS: 0x2a00;
+  POLYGON_OFFSET_UNITS: 0x2a00;
+  static POLYGON_OFFSET_FACTOR: 0x8038;
+  POLYGON_OFFSET_FACTOR: 0x8038;
+  static TEXTURE_BINDING_2D: 0x8069;
+  TEXTURE_BINDING_2D: 0x8069;
+  static SAMPLE_BUFFERS: 0x80a8;
+  SAMPLE_BUFFERS: 0x80a8;
+  static SAMPLES: 0x80a9;
+  SAMPLES: 0x80a9;
+  static SAMPLE_COVERAGE_VALUE: 0x80aa;
+  SAMPLE_COVERAGE_VALUE: 0x80aa;
+  static SAMPLE_COVERAGE_INVERT: 0x80ab;
+  SAMPLE_COVERAGE_INVERT: 0x80ab;
+  static COMPRESSED_TEXTURE_FORMATS: 0x86a3;
+  COMPRESSED_TEXTURE_FORMATS: 0x86a3;
+  static DONT_CARE: 0x1100;
+  DONT_CARE: 0x1100;
+  static FASTEST: 0x1101;
+  FASTEST: 0x1101;
+  static NICEST: 0x1102;
+  NICEST: 0x1102;
+  static GENERATE_MIPMAP_HINT: 0x8192;
+  GENERATE_MIPMAP_HINT: 0x8192;
+  static BYTE: 0x1400;
+  BYTE: 0x1400;
+  static UNSIGNED_BYTE: 0x1401;
+  UNSIGNED_BYTE: 0x1401;
+  static SHORT: 0x1402;
+  SHORT: 0x1402;
+  static UNSIGNED_SHORT: 0x1403;
+  UNSIGNED_SHORT: 0x1403;
+  static INT: 0x1404;
+  INT: 0x1404;
+  static UNSIGNED_INT: 0x1405;
+  UNSIGNED_INT: 0x1405;
+  static FLOAT: 0x1406;
+  FLOAT: 0x1406;
+  static DEPTH_COMPONENT: 0x1902;
+  DEPTH_COMPONENT: 0x1902;
+  static ALPHA: 0x1906;
+  ALPHA: 0x1906;
+  static RGB: 0x1907;
+  RGB: 0x1907;
+  static RGBA: 0x1908;
+  RGBA: 0x1908;
+  static LUMINANCE: 0x1909;
+  LUMINANCE: 0x1909;
+  static LUMINANCE_ALPHA: 0x190a;
+  LUMINANCE_ALPHA: 0x190a;
+  static UNSIGNED_SHORT_4_4_4_4: 0x8033;
+  UNSIGNED_SHORT_4_4_4_4: 0x8033;
+  static UNSIGNED_SHORT_5_5_5_1: 0x8034;
+  UNSIGNED_SHORT_5_5_5_1: 0x8034;
+  static UNSIGNED_SHORT_5_6_5: 0x8363;
+  UNSIGNED_SHORT_5_6_5: 0x8363;
+  static FRAGMENT_SHADER: 0x8b30;
+  FRAGMENT_SHADER: 0x8b30;
+  static VERTEX_SHADER: 0x8b31;
+  VERTEX_SHADER: 0x8b31;
+  static MAX_VERTEX_ATTRIBS: 0x8869;
+  MAX_VERTEX_ATTRIBS: 0x8869;
+  static MAX_VERTEX_UNIFORM_VECTORS: 0x8dfb;
+  MAX_VERTEX_UNIFORM_VECTORS: 0x8dfb;
+  static MAX_VARYING_VECTORS: 0x8dfc;
+  MAX_VARYING_VECTORS: 0x8dfc;
+  static MAX_COMBINED_TEXTURE_IMAGE_UNITS: 0x8b4d;
+  MAX_COMBINED_TEXTURE_IMAGE_UNITS: 0x8b4d;
+  static MAX_VERTEX_TEXTURE_IMAGE_UNITS: 0x8b4c;
+  MAX_VERTEX_TEXTURE_IMAGE_UNITS: 0x8b4c;
+  static MAX_TEXTURE_IMAGE_UNITS: 0x8872;
+  MAX_TEXTURE_IMAGE_UNITS: 0x8872;
+  static MAX_FRAGMENT_UNIFORM_VECTORS: 0x8dfd;
+  MAX_FRAGMENT_UNIFORM_VECTORS: 0x8dfd;
+  static SHADER_TYPE: 0x8b4f;
+  SHADER_TYPE: 0x8b4f;
+  static DELETE_STATUS: 0x8b80;
+  DELETE_STATUS: 0x8b80;
+  static LINK_STATUS: 0x8b82;
+  LINK_STATUS: 0x8b82;
+  static VALIDATE_STATUS: 0x8b83;
+  VALIDATE_STATUS: 0x8b83;
+  static ATTACHED_SHADERS: 0x8b85;
+  ATTACHED_SHADERS: 0x8b85;
+  static ACTIVE_UNIFORMS: 0x8b86;
+  ACTIVE_UNIFORMS: 0x8b86;
+  static ACTIVE_ATTRIBUTES: 0x8b89;
+  ACTIVE_ATTRIBUTES: 0x8b89;
+  static SHADING_LANGUAGE_VERSION: 0x8b8c;
+  SHADING_LANGUAGE_VERSION: 0x8b8c;
+  static CURRENT_PROGRAM: 0x8b8d;
+  CURRENT_PROGRAM: 0x8b8d;
+  static NEVER: 0x0200;
+  NEVER: 0x0200;
+  static LESS: 0x0201;
+  LESS: 0x0201;
+  static EQUAL: 0x0202;
+  EQUAL: 0x0202;
+  static LEQUAL: 0x0203;
+  LEQUAL: 0x0203;
+  static GREATER: 0x0204;
+  GREATER: 0x0204;
+  static NOTEQUAL: 0x0205;
+  NOTEQUAL: 0x0205;
+  static GEQUAL: 0x0206;
+  GEQUAL: 0x0206;
+  static ALWAYS: 0x0207;
+  ALWAYS: 0x0207;
+  static KEEP: 0x1e00;
+  KEEP: 0x1e00;
+  static REPLACE: 0x1e01;
+  REPLACE: 0x1e01;
+  static INCR: 0x1e02;
+  INCR: 0x1e02;
+  static DECR: 0x1e03;
+  DECR: 0x1e03;
+  static INVERT: 0x150a;
+  INVERT: 0x150a;
+  static INCR_WRAP: 0x8507;
+  INCR_WRAP: 0x8507;
+  static DECR_WRAP: 0x8508;
+  DECR_WRAP: 0x8508;
+  static VENDOR: 0x1f00;
+  VENDOR: 0x1f00;
+  static RENDERER: 0x1f01;
+  RENDERER: 0x1f01;
+  static VERSION: 0x1f02;
+  VERSION: 0x1f02;
+  static NEAREST: 0x2600;
+  NEAREST: 0x2600;
+  static LINEAR: 0x2601;
+  LINEAR: 0x2601;
+  static NEAREST_MIPMAP_NEAREST: 0x2700;
+  NEAREST_MIPMAP_NEAREST: 0x2700;
+  static LINEAR_MIPMAP_NEAREST: 0x2701;
+  LINEAR_MIPMAP_NEAREST: 0x2701;
+  static NEAREST_MIPMAP_LINEAR: 0x2702;
+  NEAREST_MIPMAP_LINEAR: 0x2702;
+  static LINEAR_MIPMAP_LINEAR: 0x2703;
+  LINEAR_MIPMAP_LINEAR: 0x2703;
+  static TEXTURE_MAG_FILTER: 0x2800;
+  TEXTURE_MAG_FILTER: 0x2800;
+  static TEXTURE_MIN_FILTER: 0x2801;
+  TEXTURE_MIN_FILTER: 0x2801;
+  static TEXTURE_WRAP_S: 0x2802;
+  TEXTURE_WRAP_S: 0x2802;
+  static TEXTURE_WRAP_T: 0x2803;
+  TEXTURE_WRAP_T: 0x2803;
+  static TEXTURE_2D: 0x0de1;
+  TEXTURE_2D: 0x0de1;
+  static TEXTURE: 0x1702;
+  TEXTURE: 0x1702;
+  static TEXTURE_CUBE_MAP: 0x8513;
+  TEXTURE_CUBE_MAP: 0x8513;
+  static TEXTURE_BINDING_CUBE_MAP: 0x8514;
+  TEXTURE_BINDING_CUBE_MAP: 0x8514;
+  static TEXTURE_CUBE_MAP_POSITIVE_X: 0x8515;
+  TEXTURE_CUBE_MAP_POSITIVE_X: 0x8515;
+  static TEXTURE_CUBE_MAP_NEGATIVE_X: 0x8516;
+  TEXTURE_CUBE_MAP_NEGATIVE_X: 0x8516;
+  static TEXTURE_CUBE_MAP_POSITIVE_Y: 0x8517;
+  TEXTURE_CUBE_MAP_POSITIVE_Y: 0x8517;
+  static TEXTURE_CUBE_MAP_NEGATIVE_Y: 0x8518;
+  TEXTURE_CUBE_MAP_NEGATIVE_Y: 0x8518;
+  static TEXTURE_CUBE_MAP_POSITIVE_Z: 0x8519;
+  TEXTURE_CUBE_MAP_POSITIVE_Z: 0x8519;
+  static TEXTURE_CUBE_MAP_NEGATIVE_Z: 0x851a;
+  TEXTURE_CUBE_MAP_NEGATIVE_Z: 0x851a;
+  static MAX_CUBE_MAP_TEXTURE_SIZE: 0x851c;
+  MAX_CUBE_MAP_TEXTURE_SIZE: 0x851c;
+  static TEXTURE0: 0x84c0;
+  TEXTURE0: 0x84c0;
+  static TEXTURE1: 0x84c1;
+  TEXTURE1: 0x84c1;
+  static TEXTURE2: 0x84c2;
+  TEXTURE2: 0x84c2;
+  static TEXTURE3: 0x84c3;
+  TEXTURE3: 0x84c3;
+  static TEXTURE4: 0x84c4;
+  TEXTURE4: 0x84c4;
+  static TEXTURE5: 0x84c5;
+  TEXTURE5: 0x84c5;
+  static TEXTURE6: 0x84c6;
+  TEXTURE6: 0x84c6;
+  static TEXTURE7: 0x84c7;
+  TEXTURE7: 0x84c7;
+  static TEXTURE8: 0x84c8;
+  TEXTURE8: 0x84c8;
+  static TEXTURE9: 0x84c9;
+  TEXTURE9: 0x84c9;
+  static TEXTURE10: 0x84ca;
+  TEXTURE10: 0x84ca;
+  static TEXTURE11: 0x84cb;
+  TEXTURE11: 0x84cb;
+  static TEXTURE12: 0x84cc;
+  TEXTURE12: 0x84cc;
+  static TEXTURE13: 0x84cd;
+  TEXTURE13: 0x84cd;
+  static TEXTURE14: 0x84ce;
+  TEXTURE14: 0x84ce;
+  static TEXTURE15: 0x84cf;
+  TEXTURE15: 0x84cf;
+  static TEXTURE16: 0x84d0;
+  TEXTURE16: 0x84d0;
+  static TEXTURE17: 0x84d1;
+  TEXTURE17: 0x84d1;
+  static TEXTURE18: 0x84d2;
+  TEXTURE18: 0x84d2;
+  static TEXTURE19: 0x84d3;
+  TEXTURE19: 0x84d3;
+  static TEXTURE20: 0x84d4;
+  TEXTURE20: 0x84d4;
+  static TEXTURE21: 0x84d5;
+  TEXTURE21: 0x84d5;
+  static TEXTURE22: 0x84d6;
+  TEXTURE22: 0x84d6;
+  static TEXTURE23: 0x84d7;
+  TEXTURE23: 0x84d7;
+  static TEXTURE24: 0x84d8;
+  TEXTURE24: 0x84d8;
+  static TEXTURE25: 0x84d9;
+  TEXTURE25: 0x84d9;
+  static TEXTURE26: 0x84da;
+  TEXTURE26: 0x84da;
+  static TEXTURE27: 0x84db;
+  TEXTURE27: 0x84db;
+  static TEXTURE28: 0x84dc;
+  TEXTURE28: 0x84dc;
+  static TEXTURE29: 0x84dd;
+  TEXTURE29: 0x84dd;
+  static TEXTURE30: 0x84de;
+  TEXTURE30: 0x84de;
+  static TEXTURE31: 0x84df;
+  TEXTURE31: 0x84df;
+  static ACTIVE_TEXTURE: 0x84e0;
+  ACTIVE_TEXTURE: 0x84e0;
+  static REPEAT: 0x2901;
+  REPEAT: 0x2901;
+  static CLAMP_TO_EDGE: 0x812f;
+  CLAMP_TO_EDGE: 0x812f;
+  static MIRRORED_REPEAT: 0x8370;
+  MIRRORED_REPEAT: 0x8370;
+  static FLOAT_VEC2: 0x8b50;
+  FLOAT_VEC2: 0x8b50;
+  static FLOAT_VEC3: 0x8b51;
+  FLOAT_VEC3: 0x8b51;
+  static FLOAT_VEC4: 0x8b52;
+  FLOAT_VEC4: 0x8b52;
+  static INT_VEC2: 0x8b53;
+  INT_VEC2: 0x8b53;
+  static INT_VEC3: 0x8b54;
+  INT_VEC3: 0x8b54;
+  static INT_VEC4: 0x8b55;
+  INT_VEC4: 0x8b55;
+  static BOOL: 0x8b56;
+  BOOL: 0x8b56;
+  static BOOL_VEC2: 0x8b57;
+  BOOL_VEC2: 0x8b57;
+  static BOOL_VEC3: 0x8b58;
+  BOOL_VEC3: 0x8b58;
+  static BOOL_VEC4: 0x8b59;
+  BOOL_VEC4: 0x8b59;
+  static FLOAT_MAT2: 0x8b5a;
+  FLOAT_MAT2: 0x8b5a;
+  static FLOAT_MAT3: 0x8b5b;
+  FLOAT_MAT3: 0x8b5b;
+  static FLOAT_MAT4: 0x8b5c;
+  FLOAT_MAT4: 0x8b5c;
+  static SAMPLER_2D: 0x8b5e;
+  SAMPLER_2D: 0x8b5e;
+  static SAMPLER_CUBE: 0x8b60;
+  SAMPLER_CUBE: 0x8b60;
+  static VERTEX_ATTRIB_ARRAY_ENABLED: 0x8622;
+  VERTEX_ATTRIB_ARRAY_ENABLED: 0x8622;
+  static VERTEX_ATTRIB_ARRAY_SIZE: 0x8623;
+  VERTEX_ATTRIB_ARRAY_SIZE: 0x8623;
+  static VERTEX_ATTRIB_ARRAY_STRIDE: 0x8624;
+  VERTEX_ATTRIB_ARRAY_STRIDE: 0x8624;
+  static VERTEX_ATTRIB_ARRAY_TYPE: 0x8625;
+  VERTEX_ATTRIB_ARRAY_TYPE: 0x8625;
+  static VERTEX_ATTRIB_ARRAY_NORMALIZED: 0x886a;
+  VERTEX_ATTRIB_ARRAY_NORMALIZED: 0x886a;
+  static VERTEX_ATTRIB_ARRAY_POINTER: 0x8645;
+  VERTEX_ATTRIB_ARRAY_POINTER: 0x8645;
+  static VERTEX_ATTRIB_ARRAY_BUFFER_BINDING: 0x889f;
+  VERTEX_ATTRIB_ARRAY_BUFFER_BINDING: 0x889f;
+  static IMPLEMENTATION_COLOR_READ_TYPE: 0x8b9a;
+  IMPLEMENTATION_COLOR_READ_TYPE: 0x8b9a;
+  static IMPLEMENTATION_COLOR_READ_FORMAT: 0x8b9b;
+  IMPLEMENTATION_COLOR_READ_FORMAT: 0x8b9b;
+  static COMPILE_STATUS: 0x8b81;
+  COMPILE_STATUS: 0x8b81;
+  static LOW_FLOAT: 0x8df0;
+  LOW_FLOAT: 0x8df0;
+  static MEDIUM_FLOAT: 0x8df1;
+  MEDIUM_FLOAT: 0x8df1;
+  static HIGH_FLOAT: 0x8df2;
+  HIGH_FLOAT: 0x8df2;
+  static LOW_INT: 0x8df3;
+  LOW_INT: 0x8df3;
+  static MEDIUM_INT: 0x8df4;
+  MEDIUM_INT: 0x8df4;
+  static HIGH_INT: 0x8df5;
+  HIGH_INT: 0x8df5;
+  static FRAMEBUFFER: 0x8d40;
+  FRAMEBUFFER: 0x8d40;
+  static RENDERBUFFER: 0x8d41;
+  RENDERBUFFER: 0x8d41;
+  static RGBA4: 0x8056;
+  RGBA4: 0x8056;
+  static RGB5_A1: 0x8057;
+  RGB5_A1: 0x8057;
+  static RGB565: 0x8d62;
+  RGB565: 0x8d62;
+  static DEPTH_COMPONENT16: 0x81a5;
+  DEPTH_COMPONENT16: 0x81a5;
+  static STENCIL_INDEX: 0x1901;
+  STENCIL_INDEX: 0x1901;
+  static STENCIL_INDEX8: 0x8d48;
+  STENCIL_INDEX8: 0x8d48;
+  static DEPTH_STENCIL: 0x84f9;
+  DEPTH_STENCIL: 0x84f9;
+  static RENDERBUFFER_WIDTH: 0x8d42;
+  RENDERBUFFER_WIDTH: 0x8d42;
+  static RENDERBUFFER_HEIGHT: 0x8d43;
+  RENDERBUFFER_HEIGHT: 0x8d43;
+  static RENDERBUFFER_INTERNAL_FORMAT: 0x8d44;
+  RENDERBUFFER_INTERNAL_FORMAT: 0x8d44;
+  static RENDERBUFFER_RED_SIZE: 0x8d50;
+  RENDERBUFFER_RED_SIZE: 0x8d50;
+  static RENDERBUFFER_GREEN_SIZE: 0x8d51;
+  RENDERBUFFER_GREEN_SIZE: 0x8d51;
+  static RENDERBUFFER_BLUE_SIZE: 0x8d52;
+  RENDERBUFFER_BLUE_SIZE: 0x8d52;
+  static RENDERBUFFER_ALPHA_SIZE: 0x8d53;
+  RENDERBUFFER_ALPHA_SIZE: 0x8d53;
+  static RENDERBUFFER_DEPTH_SIZE: 0x8d54;
+  RENDERBUFFER_DEPTH_SIZE: 0x8d54;
+  static RENDERBUFFER_STENCIL_SIZE: 0x8d55;
+  RENDERBUFFER_STENCIL_SIZE: 0x8d55;
+  static FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE: 0x8cd0;
+  FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE: 0x8cd0;
+  static FRAMEBUFFER_ATTACHMENT_OBJECT_NAME: 0x8cd1;
+  FRAMEBUFFER_ATTACHMENT_OBJECT_NAME: 0x8cd1;
+  static FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL: 0x8cd2;
+  FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL: 0x8cd2;
+  static FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE: 0x8cd3;
+  FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE: 0x8cd3;
+  static COLOR_ATTACHMENT0: 0x8ce0;
+  COLOR_ATTACHMENT0: 0x8ce0;
+  static DEPTH_ATTACHMENT: 0x8d00;
+  DEPTH_ATTACHMENT: 0x8d00;
+  static STENCIL_ATTACHMENT: 0x8d20;
+  STENCIL_ATTACHMENT: 0x8d20;
+  static DEPTH_STENCIL_ATTACHMENT: 0x821a;
+  DEPTH_STENCIL_ATTACHMENT: 0x821a;
+  static NONE: 0;
+  NONE: 0;
+  static FRAMEBUFFER_COMPLETE: 0x8cd5;
+  FRAMEBUFFER_COMPLETE: 0x8cd5;
+  static FRAMEBUFFER_INCOMPLETE_ATTACHMENT: 0x8cd6;
+  FRAMEBUFFER_INCOMPLETE_ATTACHMENT: 0x8cd6;
+  static FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT: 0x8cd7;
+  FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT: 0x8cd7;
+  static FRAMEBUFFER_INCOMPLETE_DIMENSIONS: 0x8cd9;
+  FRAMEBUFFER_INCOMPLETE_DIMENSIONS: 0x8cd9;
+  static FRAMEBUFFER_UNSUPPORTED: 0x8cdd;
+  FRAMEBUFFER_UNSUPPORTED: 0x8cdd;
+  static FRAMEBUFFER_BINDING: 0x8ca6;
+  FRAMEBUFFER_BINDING: 0x8ca6;
+  static RENDERBUFFER_BINDING: 0x8ca7;
+  RENDERBUFFER_BINDING: 0x8ca7;
+  static MAX_RENDERBUFFER_SIZE: 0x84e8;
+  MAX_RENDERBUFFER_SIZE: 0x84e8;
+  static INVALID_FRAMEBUFFER_OPERATION: 0x0506;
+  INVALID_FRAMEBUFFER_OPERATION: 0x0506;
+  static UNPACK_FLIP_Y_WEBGL: 0x9240;
+  UNPACK_FLIP_Y_WEBGL: 0x9240;
+  static UNPACK_PREMULTIPLY_ALPHA_WEBGL: 0x9241;
+  UNPACK_PREMULTIPLY_ALPHA_WEBGL: 0x9241;
+  static CONTEXT_LOST_WEBGL: 0x9242;
+  CONTEXT_LOST_WEBGL: 0x9242;
+  static UNPACK_COLORSPACE_CONVERSION_WEBGL: 0x9243;
+  UNPACK_COLORSPACE_CONVERSION_WEBGL: 0x9243;
+  static BROWSER_DEFAULT_WEBGL: 0x9244;
+  BROWSER_DEFAULT_WEBGL: 0x9244;
 
   canvas: HTMLCanvasElement;
   drawingBufferWidth: number;
@@ -2140,7 +2888,12 @@ declare class WebGLRenderingContext {
   blendEquation(mode: number): void;
   blendEquationSeparate(modeRGB: number, modeAlpha: number): void;
   blendFunc(sfactor: number, dfactor: number): void;
-  blendFuncSeparate(srcRGB: number, dstRGB: number, srcAlpha: number, dstAlpha: number): void;
+  blendFuncSeparate(
+    srcRGB: number,
+    dstRGB: number,
+    srcAlpha: number,
+    dstAlpha: number
+  ): void;
 
   bufferData(target: number, size: number, usage: number): void;
   bufferData(target: number, data: ?ArrayBuffer, usage: number): void;
@@ -2155,20 +2908,47 @@ declare class WebGLRenderingContext {
   colorMask(red: boolean, green: boolean, blue: boolean, alpha: boolean): void;
   compileShader(shader: WebGLShader): void;
 
-  compressedTexImage2D(target: number, level: number, internalformat: number,
-                       width: number, height: number, border: number,
-                       data: $ArrayBufferView): void;
+  compressedTexImage2D(
+    target: number,
+    level: number,
+    internalformat: number,
+    width: number,
+    height: number,
+    border: number,
+    data: $ArrayBufferView
+  ): void;
 
-  compressedTexSubImage2D(target: number, level: number,
-                          xoffset: number, yoffset: number,
-                          width: number, height: number, format: number,
-                          data: $ArrayBufferView): void;
+  compressedTexSubImage2D(
+    target: number,
+    level: number,
+    xoffset: number,
+    yoffset: number,
+    width: number,
+    height: number,
+    format: number,
+    data: $ArrayBufferView
+  ): void;
 
-  copyTexImage2D(target: number, level: number, internalformat: number,
-                x: number, y: number, width: number, height: number,
-                border: number): void;
-  copyTexSubImage2D(target: number, level: number, xoffset: number, yoffset: number,
-                    x: number, y: number, width: number, height: number): void;
+  copyTexImage2D(
+    target: number,
+    level: number,
+    internalformat: number,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    border: number
+  ): void;
+  copyTexSubImage2D(
+    target: number,
+    level: number,
+    xoffset: number,
+    yoffset: number,
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ): void;
 
   createBuffer(): ?WebGLBuffer;
   createFramebuffer(): ?WebGLFramebuffer;
@@ -2199,11 +2979,19 @@ declare class WebGLRenderingContext {
   enableVertexAttribArray(index: number): void;
   finish(): void;
   flush(): void;
-  framebufferRenderbuffer(target: number, attachment: number,
-                          renderbuffertarget: number,
-                          renderbuffer: ?WebGLRenderbuffer): void;
-  framebufferTexture2D(target: number, attachment: number, textarget: number,
-                       texture: ?WebGLTexture, level: number): void;
+  framebufferRenderbuffer(
+    target: number,
+    attachment: number,
+    renderbuffertarget: number,
+    renderbuffer: ?WebGLRenderbuffer
+  ): void;
+  framebufferTexture2D(
+    target: number,
+    attachment: number,
+    textarget: number,
+    texture: ?WebGLTexture,
+    level: number
+  ): void;
   frontFace(mode: number): void;
 
   generateMipmap(target: number): void;
@@ -2219,13 +3007,19 @@ declare class WebGLRenderingContext {
 
   getError(): number;
 
-  getFramebufferAttachmentParameter(target: number, attachment: number,
-                                    pname: number): any;
+  getFramebufferAttachmentParameter(
+    target: number,
+    attachment: number,
+    pname: number
+  ): any;
   getProgramParameter(program: WebGLProgram, pname: number): any;
   getProgramInfoLog(program: WebGLProgram): ?string;
   getRenderbufferParameter(target: number, pname: number): any;
   getShaderParameter(shader: WebGLShader, pname: number): any;
-  getShaderPrecisionFormat(shadertype: number, precisiontype: number): ?WebGLShaderPrecisionFormat;
+  getShaderPrecisionFormat(
+    shadertype: number,
+    precisiontype: number
+  ): ?WebGLShaderPrecisionFormat;
   getShaderInfoLog(shader: WebGLShader): ?string;
 
   getShaderSource(shader: WebGLShader): ?string;
@@ -2234,7 +3028,10 @@ declare class WebGLRenderingContext {
 
   getUniform(program: WebGLProgram, location: WebGLUniformLocation): any;
 
-  getUniformLocation(program: WebGLProgram, name: string): ?WebGLUniformLocation;
+  getUniformLocation(
+    program: WebGLProgram,
+    name: string
+  ): ?WebGLUniformLocation;
 
   getVertexAttrib(index: number, pname: number): any;
 
@@ -2253,37 +3050,87 @@ declare class WebGLRenderingContext {
   pixelStorei(pname: number, param: number): void;
   polygonOffset(factor: number, units: number): void;
 
-  readPixels(x: number, y: number, width: number, height: number,
-             format: number, type: number, pixels: ?$ArrayBufferView): void;
+  readPixels(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    format: number,
+    type: number,
+    pixels: ?$ArrayBufferView
+  ): void;
 
-  renderbufferStorage(target: number, internalformat: number,
-                           width: number, height: number): void;
+  renderbufferStorage(
+    target: number,
+    internalformat: number,
+    width: number,
+    height: number
+  ): void;
   sampleCoverage(value: number, invert: boolean): void;
   scissor(x: number, y: number, width: number, height: number): void;
 
   shaderSource(shader: WebGLShader, source: string): void;
 
   stencilFunc(func: number, ref: number, mask: number): void;
-  stencilFuncSeparate(face: number, func: number, ref: number, mask: number): void;
+  stencilFuncSeparate(
+    face: number,
+    func: number,
+    ref: number,
+    mask: number
+  ): void;
   stencilMask(mask: number): void;
   stencilMaskSeparate(face: number, mask: number): void;
   stencilOp(fail: number, zfail: number, zpass: number): void;
-  stencilOpSeparate(face: number, fail: number, zfail: number, zpass: number): void;
+  stencilOpSeparate(
+    face: number,
+    fail: number,
+    zfail: number,
+    zpass: number
+  ): void;
 
-  texImage2D(target: number, level: number, internalformat: number,
-             width: number, height: number, border: number, format: number,
-             type: number, pixels: ?$ArrayBufferView): void;
-  texImage2D(target: number, level: number, internalformat: number,
-             format: number, type: number, source: TexImageSource): void;
+  texImage2D(
+    target: number,
+    level: number,
+    internalformat: number,
+    width: number,
+    height: number,
+    border: number,
+    format: number,
+    type: number,
+    pixels: ?$ArrayBufferView
+  ): void;
+  texImage2D(
+    target: number,
+    level: number,
+    internalformat: number,
+    format: number,
+    type: number,
+    source: TexImageSource
+  ): void;
 
   texParameterf(target: number, pname: number, param: number): void;
   texParameteri(target: number, pname: number, param: number): void;
 
-  texSubImage2D(target: number, level: number, xoffset: number, yoffset: number,
-                width: number, height: number,
-                format: number, type: number, pixels: ?$ArrayBufferView): void;
-  texSubImage2D(target: number, level: number, xoffset: number, yoffset: number,
-                format: number, type: number, source: TexImageSource): void;
+  texSubImage2D(
+    target: number,
+    level: number,
+    xoffset: number,
+    yoffset: number,
+    width: number,
+    height: number,
+    format: number,
+    type: number,
+    pixels: ?$ArrayBufferView
+  ): void;
+  texSubImage2D(
+    target: number,
+    level: number,
+    xoffset: number,
+    yoffset: number,
+    format: number,
+    type: number,
+    source: TexImageSource
+  ): void;
 
   uniform1f(location: ?WebGLUniformLocation, x: number): void;
   uniform1fv(location: ?WebGLUniformLocation, v: Float32Array): void;
@@ -2301,35 +3148,87 @@ declare class WebGLRenderingContext {
   uniform2iv(location: ?WebGLUniformLocation, v: Int32Array): void;
   uniform2iv(location: ?WebGLUniformLocation, v: Array<number>): void;
   uniform2iv(location: ?WebGLUniformLocation, v: [number, number]): void;
-  uniform3f(location: ?WebGLUniformLocation, x: number, y: number, z: number): void;
+  uniform3f(
+    location: ?WebGLUniformLocation,
+    x: number,
+    y: number,
+    z: number
+  ): void;
   uniform3fv(location: ?WebGLUniformLocation, v: Float32Array): void;
   uniform3fv(location: ?WebGLUniformLocation, v: Array<number>): void;
-  uniform3fv(location: ?WebGLUniformLocation, v: [number, number, number]): void;
-  uniform3i(location: ?WebGLUniformLocation, x: number, y: number, z: number): void;
+  uniform3fv(
+    location: ?WebGLUniformLocation,
+    v: [number, number, number]
+  ): void;
+  uniform3i(
+    location: ?WebGLUniformLocation,
+    x: number,
+    y: number,
+    z: number
+  ): void;
   uniform3iv(location: ?WebGLUniformLocation, v: Int32Array): void;
   uniform3iv(location: ?WebGLUniformLocation, v: Array<number>): void;
-  uniform3iv(location: ?WebGLUniformLocation, v: [number, number, number]): void;
-  uniform4f(location: ?WebGLUniformLocation, x: number, y: number, z: number, w: number): void;
+  uniform3iv(
+    location: ?WebGLUniformLocation,
+    v: [number, number, number]
+  ): void;
+  uniform4f(
+    location: ?WebGLUniformLocation,
+    x: number,
+    y: number,
+    z: number,
+    w: number
+  ): void;
   uniform4fv(location: ?WebGLUniformLocation, v: Float32Array): void;
   uniform4fv(location: ?WebGLUniformLocation, v: Array<number>): void;
-  uniform4fv(location: ?WebGLUniformLocation, v: [number, number, number, number]): void;
-  uniform4i(location: ?WebGLUniformLocation, x: number, y: number, z: number, w: number): void;
+  uniform4fv(
+    location: ?WebGLUniformLocation,
+    v: [number, number, number, number]
+  ): void;
+  uniform4i(
+    location: ?WebGLUniformLocation,
+    x: number,
+    y: number,
+    z: number,
+    w: number
+  ): void;
   uniform4iv(location: ?WebGLUniformLocation, v: Int32Array): void;
   uniform4iv(location: ?WebGLUniformLocation, v: Array<number>): void;
-  uniform4iv(location: ?WebGLUniformLocation, v: [number, number, number, number]): void;
+  uniform4iv(
+    location: ?WebGLUniformLocation,
+    v: [number, number, number, number]
+  ): void;
 
-  uniformMatrix2fv(location: ?WebGLUniformLocation, transpose: boolean,
-                        value: Float32Array): void;
-  uniformMatrix2fv(location: ?WebGLUniformLocation, transpose: boolean,
-                        value: Array<number>): void;
-  uniformMatrix3fv(location: ?WebGLUniformLocation, transpose: boolean,
-                        value: Float32Array): void;
-  uniformMatrix3fv(location: ?WebGLUniformLocation, transpose: boolean,
-                        value: Array<number>): void;
-  uniformMatrix4fv(location: ?WebGLUniformLocation, transpose: boolean,
-                        value: Float32Array): void;
-  uniformMatrix4fv(location: ?WebGLUniformLocation, transpose: boolean,
-                        value: Array<number>): void;
+  uniformMatrix2fv(
+    location: ?WebGLUniformLocation,
+    transpose: boolean,
+    value: Float32Array
+  ): void;
+  uniformMatrix2fv(
+    location: ?WebGLUniformLocation,
+    transpose: boolean,
+    value: Array<number>
+  ): void;
+  uniformMatrix3fv(
+    location: ?WebGLUniformLocation,
+    transpose: boolean,
+    value: Float32Array
+  ): void;
+  uniformMatrix3fv(
+    location: ?WebGLUniformLocation,
+    transpose: boolean,
+    value: Array<number>
+  ): void;
+  uniformMatrix4fv(
+    location: ?WebGLUniformLocation,
+    transpose: boolean,
+    value: Float32Array
+  ): void;
+  uniformMatrix4fv(
+    location: ?WebGLUniformLocation,
+    transpose: boolean,
+    value: Array<number>
+  ): void;
 
   useProgram(program: ?WebGLProgram): void;
   validateProgram(program: WebGLProgram): void;
@@ -2340,23 +3239,42 @@ declare class WebGLRenderingContext {
   vertexAttrib2fv(index: number, values: VertexAttribFVSource): void;
   vertexAttrib3f(index: number, x: number, y: number, z: number): void;
   vertexAttrib3fv(index: number, values: VertexAttribFVSource): void;
-  vertexAttrib4f(index: number, x: number, y: number, z: number, w: number): void;
+  vertexAttrib4f(
+    index: number,
+    x: number,
+    y: number,
+    z: number,
+    w: number
+  ): void;
   vertexAttrib4fv(index: number, values: VertexAttribFVSource): void;
-  vertexAttribPointer(index: number, size: number, type: number,
-                           normalized: boolean, stride: number, offset: number): void;
+  vertexAttribPointer(
+    index: number,
+    size: number,
+    type: number,
+    normalized: boolean,
+    stride: number,
+    offset: number
+  ): void;
 
   viewport(x: number, y: number, width: number, height: number): void;
-};
+}
 
 declare class WebGLContextEvent extends Event {
   statusMessage: string;
-};
+}
 
 declare class MediaKeyStatusMap<BufferDataSource, MediaKeyStatus> {
   @@iterator(): Iterator<[BufferDataSource, MediaKeyStatus]>;
   size: number;
   entries(): Iterator<[BufferDataSource, MediaKeyStatus]>;
-  forEach(callbackfn: (value: MediaKeyStatus, key: BufferDataSource, map: MediaKeyStatusMap<BufferDataSource, MediaKeyStatus>) => any, thisArg?: any): void;
+  forEach(
+    callbackfn: (
+      value: MediaKeyStatus,
+      key: BufferDataSource,
+      map: MediaKeyStatusMap<BufferDataSource, MediaKeyStatus>
+    ) => any,
+    thisArg?: any
+  ): void;
   get(key: BufferDataSource): MediaKeyStatus;
   has(key: BufferDataSource): boolean;
   keys(): Iterator<BufferDataSource>;
@@ -2369,7 +3287,10 @@ declare class MediaKeySession extends EventTarget {
   closed: Promise<void>;
   keyStatuses: MediaKeyStatusMap<BufferDataSource, MediaKeyStatus>;
 
-  generateRequest(initDataType: string, initData: BufferDataSource): Promise<void>;
+  generateRequest(
+    initDataType: string,
+    initData: BufferDataSource
+  ): Promise<void>;
   load(sessionId: string): Promise<boolean>;
   update(response: BufferDataSource): Promise<void>;
   close(): Promise<void>;
@@ -2433,8 +3354,16 @@ declare type ClientRectList = DOMRectList;
 // TODO: HTML*Element
 
 declare class DOMImplementation {
-  createDocumentType(qualifiedName: string, publicId: string, systemId: string): DocumentType;
-  createDocument(namespaceURI: string | null, qualifiedName: string, doctype?: DocumentType | null): Document;
+  createDocumentType(
+    qualifiedName: string,
+    publicId: string,
+    systemId: string
+  ): DocumentType;
+  createDocument(
+    namespaceURI: string | null,
+    qualifiedName: string,
+    doctype?: DocumentType | null
+  ): Document;
   hasFeature(feature: string, version?: string): boolean;
 
   // non-standard
@@ -2506,14 +3435,13 @@ declare class URL {
   toJSON(): string;
 }
 
-declare interface MediaSourceHandle {
-}
+declare interface MediaSourceHandle {}
 
 declare class MediaSource extends EventTarget {
   sourceBuffers: SourceBufferList;
   activeSourceBuffers: SourceBufferList;
   // https://w3c.github.io/media-source/#dom-readystate
-  readyState: "closed" | "open" | "ended";
+  readyState: 'closed' | 'open' | 'ended';
   duration: number;
   handle: MediaSourceHandle;
   addSourceBuffer(type: string): SourceBuffer;
@@ -2523,7 +3451,7 @@ declare class MediaSource extends EventTarget {
 }
 
 declare class SourceBuffer extends EventTarget {
-  mode: "segments" | "sequence";
+  mode: 'segments' | 'sequence';
   updating: boolean;
   buffered: TimeRanges;
   timestampOffset: number;
@@ -2554,7 +3482,7 @@ declare class TrackDefaultList {
 }
 
 declare class TrackDefault {
-  type: "audio" | "video" | "text";
+  type: 'audio' | 'video' | 'text';
   byteStreamTrackID: string;
   language: string;
   label: string;
@@ -2563,12 +3491,16 @@ declare class TrackDefault {
 
 // TODO: The use of `typeof` makes this function signature effectively
 // (node: Node) => number, but it should be (node: Node) => 1|2|3
-type NodeFilterCallback = (node: Node) =>
-typeof NodeFilter.FILTER_ACCEPT |
-typeof NodeFilter.FILTER_REJECT |
-typeof NodeFilter.FILTER_SKIP;
+type NodeFilterCallback = (
+  node: Node
+) =>
+  | typeof NodeFilter.FILTER_ACCEPT
+  | typeof NodeFilter.FILTER_REJECT
+  | typeof NodeFilter.FILTER_SKIP;
 
-type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback, ... }
+type NodeFilterInterface =
+  | NodeFilterCallback
+  | {acceptNode: NodeFilterCallback, ...};
 
 // TODO: window.NodeFilter exists at runtime and behaves as a constructor
 //       as far as `instanceof` is concerned, but it is not callable.
@@ -2644,12 +3576,12 @@ type WindowBaseFilePickerOptions = {|
   id?: number,
   startIn?:
     | FileSystemHandle
-    | "desktop"
-    | "documents"
-    | "downloads"
-    | "music"
-    | "pictures"
-    | "videos",
+    | 'desktop'
+    | 'documents'
+    | 'downloads'
+    | 'music'
+    | 'pictures'
+    | 'videos',
 |};
 
 type WindowFilePickerOptions = WindowBaseFilePickerOptions & {|
@@ -2666,7 +3598,7 @@ type WindowSaveFilePickerOptions = WindowFilePickerOptions & {|
 |};
 
 type WindowDirectoryFilePickerOptions = WindowBaseFilePickerOptions & {|
-  mode?: "read" | "readwrite",
+  mode?: 'read' | 'readwrite',
 |};
 
 // https://wicg.github.io/file-system-access/#api-showopenfilepicker
@@ -2689,28 +3621,28 @@ type NotificationPermission = 'default' | 'denied' | 'granted';
 type NotificationDirection = 'auto' | 'ltr' | 'rtl';
 type VibratePattern = number | Array<number>;
 type NotificationAction = {
-       action: string,
-       title: string,
-       icon?: string,
-       ...
+  action: string,
+  title: string,
+  icon?: string,
+  ...
 };
 type NotificationOptions = {
-       dir?: NotificationDirection,
-       lang?: string,
-       body?: string,
-       tag?: string,
-       image?: string,
-       icon?: string,
-       badge?: string,
-       sound?: string,
-       vibrate?: VibratePattern,
-       timestamp?: number,
-       renotify?: boolean,
-       silent?: boolean,
-       requireInteraction?: boolean,
-       data?: ?any,
-       actions?: Array<NotificationAction>,
-       ...
+  dir?: NotificationDirection,
+  lang?: string,
+  body?: string,
+  tag?: string,
+  image?: string,
+  icon?: string,
+  badge?: string,
+  sound?: string,
+  vibrate?: VibratePattern,
+  timestamp?: number,
+  renotify?: boolean,
+  silent?: boolean,
+  requireInteraction?: boolean,
+  data?: ?any,
+  actions?: Array<NotificationAction>,
+  ...
 };
 
 declare class Notification extends EventTarget {
@@ -2742,4 +3674,3 @@ declare class Notification extends EventTarget {
 
   close(): void;
 }
-

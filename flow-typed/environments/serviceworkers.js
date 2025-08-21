@@ -5,22 +5,22 @@ type FrameType = 'auxiliary' | 'top-level' | 'nested' | 'none';
 type VisibilityState = 'hidden' | 'visible' | 'prerender' | 'unloaded';
 
 declare class WindowClient extends Client {
-  visibilityState: VisibilityState,
-  focused: boolean,
-  focus(): Promise<WindowClient>,
-  navigate(url: string): Promise<WindowClient>,
+  visibilityState: VisibilityState;
+  focused: boolean;
+  focus(): Promise<WindowClient>;
+  navigate(url: string): Promise<WindowClient>;
 }
 
 declare class Client {
-  id: string,
-  reserved: boolean,
-  url: string,
-  frameType: FrameType,
-  postMessage(message: any, transfer?: Iterator<any> | Array<any>): void,
+  id: string;
+  reserved: boolean;
+  url: string;
+  frameType: FrameType;
+  postMessage(message: any, transfer?: Iterator<any> | Array<any>): void;
 }
 
 declare class ExtendableEvent extends Event {
-  waitUntil(f: Promise<mixed>): void,
+  waitUntil(f: Promise<mixed>): void;
 }
 
 type NotificationEvent$Init = {
@@ -28,12 +28,12 @@ type NotificationEvent$Init = {
   notification: Notification,
   action?: string,
   ...
-}
+};
 
 declare class NotificationEvent extends ExtendableEvent {
-  constructor(type: string, eventInitDict?: NotificationEvent$Init):void;
-  +notification: Notification,
-  +action: string,
+  constructor(type: string, eventInitDict?: NotificationEvent$Init): void;
+  +notification: Notification;
+  +action: string;
 }
 
 type ForeignFetchOptions = {
@@ -43,15 +43,15 @@ type ForeignFetchOptions = {
 };
 
 declare class InstallEvent extends ExtendableEvent {
-  registerForeignFetch(options: ForeignFetchOptions): void,
+  registerForeignFetch(options: ForeignFetchOptions): void;
 }
 
 declare class FetchEvent extends ExtendableEvent {
-  request: Request,
-  clientId: string,
-  isReload: boolean,
-  respondWith(response: Response | Promise<Response>): void,
-  preloadResponse: Promise<?Response>,
+  request: Request;
+  clientId: string;
+  isReload: boolean;
+  respondWith(response: Response | Promise<Response>): void;
+  preloadResponse: Promise<?Response>;
 }
 
 type ClientType = 'window' | 'worker' | 'sharedworker' | 'all';
@@ -63,65 +63,68 @@ type ClientQueryOptions = {
 };
 
 declare class Clients {
-  get(id: string): Promise<?Client>,
-  matchAll(options?: ClientQueryOptions): Promise<Array<Client>>,
-  openWindow(url: string): Promise<?WindowClient>,
-  claim(): Promise<void>,
+  get(id: string): Promise<?Client>;
+  matchAll(options?: ClientQueryOptions): Promise<Array<Client>>;
+  openWindow(url: string): Promise<?WindowClient>;
+  claim(): Promise<void>;
 }
 
-type ServiceWorkerState = 'installing'
+type ServiceWorkerState =
+  | 'installing'
   | 'installed'
   | 'activating'
   | 'activated'
   | 'redundant';
 
 declare class ServiceWorker extends EventTarget {
-  scriptURL: string,
-  state: ServiceWorkerState,
+  scriptURL: string;
+  state: ServiceWorkerState;
 
-  postMessage(message: any, transfer?: Iterator<any>): void,
+  postMessage(message: any, transfer?: Iterator<any>): void;
 
-  onstatechange?: EventHandler,
+  onstatechange?: EventHandler;
 }
 
 declare class NavigationPreloadState {
-  enabled: boolean,
-  headerValue: string,
+  enabled: boolean;
+  headerValue: string;
 }
 
 declare class NavigationPreloadManager {
-  enable: Promise<void>,
-  disable: Promise<void>,
-  setHeaderValue(value: string): Promise<void>,
-  getState: Promise<NavigationPreloadState>,
+  enable: Promise<void>;
+  disable: Promise<void>;
+  setHeaderValue(value: string): Promise<void>;
+  getState: Promise<NavigationPreloadState>;
 }
 
 type PushSubscriptionOptions = {
   userVisibleOnly?: boolean,
   applicationServerKey?: string | ArrayBuffer | $ArrayBufferView,
   ...
-}
+};
 
 declare class PushSubscriptionJSON {
-  endpoint: string,
-  expirationTime: number | null,
-  keys: { [string]: string, ... };
+  endpoint: string;
+  expirationTime: number | null;
+  keys: {[string]: string, ...};
 }
 
 declare class PushSubscription {
-  +endpoint: string,
-  +expirationTime: number | null,
-  +options: PushSubscriptionOptions,
-  getKey(name: string): ArrayBuffer | null,
-  toJSON(): PushSubscriptionJSON,
-  unsubscribe(): Promise<boolean>,
+  +endpoint: string;
+  +expirationTime: number | null;
+  +options: PushSubscriptionOptions;
+  getKey(name: string): ArrayBuffer | null;
+  toJSON(): PushSubscriptionJSON;
+  unsubscribe(): Promise<boolean>;
 }
 
 declare class PushManager {
-  +supportedContentEncodings: Array<string>,
-  subscribe(options?: PushSubscriptionOptions): Promise<PushSubscription>,
-  getSubscription(): Promise<PushSubscription | null>,
-  permissionState(options?: PushSubscriptionOptions): Promise<'granted' | 'denied' | 'prompt'>,
+  +supportedContentEncodings: Array<string>;
+  subscribe(options?: PushSubscriptionOptions): Promise<PushSubscription>;
+  getSubscription(): Promise<PushSubscription | null>;
+  permissionState(
+    options?: PushSubscriptionOptions
+  ): Promise<'granted' | 'denied' | 'prompt'>;
 }
 
 type ServiceWorkerUpdateViaCache = 'imports' | 'all' | 'none';
@@ -132,20 +135,25 @@ type GetNotificationOptions = {
 };
 
 declare class ServiceWorkerRegistration extends EventTarget {
-  +installing: ?ServiceWorker,
-  +waiting: ?ServiceWorker,
-  +active: ?ServiceWorker,
-  +navigationPreload: NavigationPreloadManager,
-  +scope: string,
-  +updateViaCache: ServiceWorkerUpdateViaCache,
-  +pushManager: PushManager,
+  +installing: ?ServiceWorker;
+  +waiting: ?ServiceWorker;
+  +active: ?ServiceWorker;
+  +navigationPreload: NavigationPreloadManager;
+  +scope: string;
+  +updateViaCache: ServiceWorkerUpdateViaCache;
+  +pushManager: PushManager;
 
-  getNotifications?: (filter?: GetNotificationOptions) => Promise<$ReadOnlyArray<Notification>>,
-  showNotification?: (title: string, options?: NotificationOptions) => Promise<void>,
-  update(): Promise<void>,
-  unregister(): Promise<boolean>,
+  getNotifications?: (
+    filter?: GetNotificationOptions
+  ) => Promise<$ReadOnlyArray<Notification>>;
+  showNotification?: (
+    title: string,
+    options?: NotificationOptions
+  ) => Promise<void>;
+  update(): Promise<void>;
+  unregister(): Promise<boolean>;
 
-  onupdatefound?: EventHandler,
+  onupdatefound?: EventHandler;
 }
 
 type WorkerType = 'classic' | 'module';
@@ -158,39 +166,41 @@ type RegistrationOptions = {
 };
 
 declare class ServiceWorkerContainer extends EventTarget {
-  +controller: ?ServiceWorker,
-  +ready: Promise<ServiceWorkerRegistration>,
+  +controller: ?ServiceWorker;
+  +ready: Promise<ServiceWorkerRegistration>;
 
-  getRegistration(clientURL?: string): Promise<ServiceWorkerRegistration | void>,
-  getRegistrations(): Promise<Iterator<ServiceWorkerRegistration>>,
+  getRegistration(
+    clientURL?: string
+  ): Promise<ServiceWorkerRegistration | void>;
+  getRegistrations(): Promise<Iterator<ServiceWorkerRegistration>>;
   register(
     scriptURL: string | TrustedScriptURL,
     options?: RegistrationOptions
-  ): Promise<ServiceWorkerRegistration>,
-  startMessages(): void,
+  ): Promise<ServiceWorkerRegistration>;
+  startMessages(): void;
 
-  oncontrollerchange?: EventHandler,
-  onmessage?: EventHandler,
-  onmessageerror?: EventHandler,
+  oncontrollerchange?: EventHandler;
+  onmessage?: EventHandler;
+  onmessageerror?: EventHandler;
 }
 
 /**
  * This feature has been removed from the Web standards.
  */
 declare class ServiceWorkerMessageEvent extends Event {
-  data: any,
-  lastEventId: string,
-  origin: string,
-  ports: Array<MessagePort>,
-  source: ?(ServiceWorker | MessagePort),
+  data: any;
+  lastEventId: string;
+  origin: string;
+  ports: Array<MessagePort>;
+  source: ?(ServiceWorker | MessagePort);
 }
 
 declare class ExtendableMessageEvent extends ExtendableEvent {
-  data: any,
-  lastEventId: string,
-  origin: string,
-  ports: Array<MessagePort>,
-  source: ?(ServiceWorker | MessagePort),
+  data: any;
+  lastEventId: string;
+  origin: string;
+  ports: Array<MessagePort>;
+  source: ?(ServiceWorker | MessagePort);
 }
 
 type CacheQueryOptions = {
@@ -199,30 +209,30 @@ type CacheQueryOptions = {
   ignoreVary?: boolean,
   cacheName?: string,
   ...
-}
+};
 
 declare class Cache {
-  match(request: RequestInfo, options?: CacheQueryOptions): Promise<Response>,
+  match(request: RequestInfo, options?: CacheQueryOptions): Promise<Response>;
   matchAll(
     request: RequestInfo,
     options?: CacheQueryOptions
-  ): Promise<Array<Response>>,
-  add(request: RequestInfo): Promise<void>,
-  addAll(requests: Array<RequestInfo>): Promise<void>,
-  put(request: RequestInfo, response: Response): Promise<void>,
-  delete(request: RequestInfo, options?: CacheQueryOptions): Promise<boolean>,
+  ): Promise<Array<Response>>;
+  add(request: RequestInfo): Promise<void>;
+  addAll(requests: Array<RequestInfo>): Promise<void>;
+  put(request: RequestInfo, response: Response): Promise<void>;
+  delete(request: RequestInfo, options?: CacheQueryOptions): Promise<boolean>;
   keys(
     request?: RequestInfo,
     options?: CacheQueryOptions
-  ): Promise<Array<Request>>,
+  ): Promise<Array<Request>>;
 }
 
 declare class CacheStorage {
-  match(request: RequestInfo, options?: CacheQueryOptions): Promise<Response>,
-  has(cacheName: string): Promise<true>,
-  open(cacheName: string): Promise<Cache>,
-  delete(cacheName: string): Promise<boolean>,
-  keys(): Promise<Array<string>>,
+  match(request: RequestInfo, options?: CacheQueryOptions): Promise<Response>;
+  has(cacheName: string): Promise<true>;
+  open(cacheName: string): Promise<Cache>;
+  delete(cacheName: string): Promise<boolean>;
+  keys(): Promise<Array<string>>;
 }
 
 // Service worker global scope
