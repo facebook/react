@@ -1275,8 +1275,8 @@ type ElementRegistrationOptions = {
     +createdCallback?: () => mixed,
     +attachedCallback?: () => mixed,
     +detachedCallback?: () => mixed,
-    +attributeChangedCallback?: // attribute is set
-    ((
+    +attributeChangedCallback?: ((
+      // attribute is set
       attributeLocalName: string,
       oldAttributeValue: null,
       newAttributeValue: string,
