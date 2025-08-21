@@ -1073,6 +1073,9 @@ export function attach(
   const overrideSuspense = () => {
     throw new Error('overrideSuspense not supported by this renderer');
   };
+  const overrideSuspenseMilestone = () => {
+    throw new Error('overrideSuspenseMilestone not supported by this renderer');
+  };
   const startProfiling = () => {
     // Do not throw, since this would break a multi-root scenario where v15 and v16 were both present.
   };
@@ -1156,6 +1159,7 @@ export function attach(
     logElementToConsole,
     overrideError,
     overrideSuspense,
+    overrideSuspenseMilestone,
     overrideValueAtPath,
     renamePath,
     getElementAttributeByPath,

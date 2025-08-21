@@ -140,6 +140,12 @@ type OverrideSuspense = {
   forceFallback: boolean,
 };
 
+type OverrideSuspenseMilestone = {
+  rendererID: number,
+  rootID: number,
+  suspendedSet: Array<number>,
+};
+
 type CopyElementPathParams = {
   ...ElementAndRendererID,
   path: Array<string | number>,
@@ -237,6 +243,7 @@ type FrontendEvents = {
   logElementToConsole: [ElementAndRendererID],
   overrideError: [OverrideError],
   overrideSuspense: [OverrideSuspense],
+  overrideSuspenseMilestone: [OverrideSuspenseMilestone],
   overrideValueAtPath: [OverrideValueAtPath],
   profilingData: [ProfilingDataBackend],
   reloadAndProfile: [ReloadAndProfilingParams],

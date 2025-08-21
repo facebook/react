@@ -901,6 +901,94 @@ describe('Store', () => {
       `);
     });
 
+    // @reactVersion >= 18.0
+    it('can override multiple Suspense simultaneously', async () => {
+      const Component = () => {
+        return <div>Hello</div>;
+      };
+      const App = () => (
+        <React.Fragment>
+          <Component key="Outside" />
+          <React.Suspense
+            name="parent"
+            fallback={<Component key="Parent Fallback" />}>
+            <Component key="Unrelated at Start" />
+            <React.Suspense
+              name="one"
+              fallback={<Component key="Suspense 1 Fallback" />}>
+              <Component key="Suspense 1 Content" />
+            </React.Suspense>
+            <React.Suspense
+              name="two"
+              fallback={<Component key="Suspense 2 Fallback" />}>
+              <Component key="Suspense 2 Content" />
+            </React.Suspense>
+            <React.Suspense
+              name="three"
+              fallback={<Component key="Suspense 3 Fallback" />}>
+              <Component key="Suspense 3 Content" />
+            </React.Suspense>
+            <Component key="Unrelated at End" />
+          </React.Suspense>
+        </React.Fragment>
+      );
+
+      await actAsync(() => render(<App />));
+
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+          ▾ <App>
+              <Component key="Outside">
+            ▾ <Suspense name="parent">
+                <Component key="Unrelated at Start">
+              ▾ <Suspense name="one">
+                  <Component key="Suspense 1 Content">
+              ▾ <Suspense name="two">
+                  <Component key="Suspense 2 Content">
+              ▾ <Suspense name="three">
+                  <Component key="Suspense 3 Content">
+                <Component key="Unrelated at End">
+        [shell]
+          <Suspense name="parent" rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}]}>
+            <Suspense name="one" rects={[{x:1,y:2,width:5,height:1}]}>
+            <Suspense name="two" rects={[{x:1,y:2,width:5,height:1}]}>
+            <Suspense name="three" rects={[{x:1,y:2,width:5,height:1}]}>
+      `);
+
+      const rendererID = getRendererID();
+      const rootID = store.getRootIDForElement(store.getElementIDAtIndex(0));
+      await actAsync(() => {
+        agent.overrideSuspenseMilestone({
+          rendererID,
+          rootID,
+          suspendedSet: [
+            store.getElementIDAtIndex(4),
+            store.getElementIDAtIndex(8),
+          ],
+        });
+      });
+
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+          ▾ <App>
+              <Component key="Outside">
+            ▾ <Suspense name="parent">
+                <Component key="Unrelated at Start">
+              ▾ <Suspense name="one">
+                  <Component key="Suspense 1 Fallback">
+              ▾ <Suspense name="two">
+                  <Component key="Suspense 2 Content">
+              ▾ <Suspense name="three">
+                  <Component key="Suspense 3 Fallback">
+                <Component key="Unrelated at End">
+        [shell]
+          <Suspense name="parent" rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}]}>
+            <Suspense name="one" rects={[{x:1,y:2,width:5,height:1}]}>
+            <Suspense name="two" rects={[{x:1,y:2,width:5,height:1}]}>
+            <Suspense name="three" rects={[{x:1,y:2,width:5,height:1}]}>
+      `);
+    });
+
     it('should display a partially rendered SuspenseList', async () => {
       const Loading = () => <div>Loading...</div>;
       const SuspendingComponent = () => {

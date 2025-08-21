@@ -130,6 +130,12 @@ type OverrideSuspenseParams = {
   forceFallback: boolean,
 };
 
+type OverrideSuspenseMilestoneParams = {
+  rendererID: number,
+  rootID: number,
+  suspendedSet: Array<number>,
+};
+
 type PersistedSelection = {
   rendererID: number,
   path: Array<PathFrame>,
@@ -198,6 +204,10 @@ export default class Agent extends EventEmitter<{
     bridge.addListener('logElementToConsole', this.logElementToConsole);
     bridge.addListener('overrideError', this.overrideError);
     bridge.addListener('overrideSuspense', this.overrideSuspense);
+    bridge.addListener(
+      'overrideSuspenseMilestone',
+      this.overrideSuspenseMilestone,
+    );
     bridge.addListener('overrideValueAtPath', this.overrideValueAtPath);
     bridge.addListener('reloadAndProfile', this.reloadAndProfile);
     bridge.addListener('renamePath', this.renamePath);
@@ -553,6 +563,21 @@ export default class Agent extends EventEmitter<{
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
     } else {
       renderer.overrideSuspense(id, forceFallback);
+    }
+  };
+
+  overrideSuspenseMilestone: OverrideSuspenseMilestoneParams => void = ({
+    rendererID,
+    rootID,
+    suspendedSet,
+  }) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(
+        `Invalid renderer id "${rendererID}" to override suspense milestone`,
+      );
+    } else {
+      renderer.overrideSuspenseMilestone(rootID, suspendedSet);
     }
   };
 
