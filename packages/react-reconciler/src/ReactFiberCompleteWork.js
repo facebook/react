@@ -190,6 +190,7 @@ import {
   popRootMarkerInstance,
 } from './ReactFiberTracingMarkerComponent';
 import {suspendCommit} from './ReactFiberThenable';
+import type {Flags} from './ReactFiberFlags';
 
 /**
  * Tag the fiber with an update effect. This turns a Placement into
@@ -780,7 +781,7 @@ function bubbleProperties(completedWork: Fiber) {
     completedWork.alternate.child === completedWork.child;
 
   let newChildLanes: Lanes = NoLanes;
-  let subtreeFlags = NoFlags;
+  let subtreeFlags: Flags = NoFlags;
 
   if (!didBailout) {
     // Bubble up the earliest expiration time.

@@ -19,7 +19,6 @@ export type Portal = React$Portal;
 export type ElementProps<C> = React$ElementProps<C>;
 export type ElementConfig<C> = React$ElementConfig<C>;
 export type ElementRef<C> = React$ElementRef<C>;
-export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
 export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
 
 // Export all exports so that they're available in tests.

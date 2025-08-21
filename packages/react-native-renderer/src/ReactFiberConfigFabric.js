@@ -431,7 +431,7 @@ export const warnsIfNotActing = false;
 
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
-export const noTimeout = -1;
+export const noTimeout: -1 = -1;
 
 // -------------------
 //     Persistence
