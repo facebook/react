@@ -13,7 +13,11 @@ import {getOrInsertWith} from '../Utils/utils';
 import {Environment, GeneratedSource} from '../HIR';
 import {DEFAULT_EXPORT} from '../HIR/Environment';
 import {CompileProgramMetadata} from './Program';
-import {CompilerDiagnostic, CompilerDiagnosticOptions} from '../CompilerError';
+import {
+  CompilerDiagnostic,
+  CompilerDiagnosticOptions,
+  ErrorCategory,
+} from '../CompilerError';
 
 function throwInvalidReact(
   options: Omit<CompilerDiagnosticOptions, 'severity'>,
@@ -92,7 +96,8 @@ function assertValidEffectImportReference(
          */
         throwInvalidReact(
           {
-            category:
+            category: ErrorCategory.AutomaticEffectDependencies,
+            reason:
               'Cannot infer dependencies of this effect. This will break your build!',
             description:
               'To resolve, either pass a dependency array or fix reported compiler bailout diagnostics.' +
@@ -123,8 +128,8 @@ function assertValidFireImportReference(
     );
     throwInvalidReact(
       {
-        category:
-          '[Fire] Untransformed reference to compiler-required feature.',
+        category: ErrorCategory.Fire,
+        reason: '[Fire] Untransformed reference to compiler-required feature.',
         description:
           'Either remove this `fire` call or ensure it is successfully transformed by the compiler' +
           maybeErrorDiagnostic
