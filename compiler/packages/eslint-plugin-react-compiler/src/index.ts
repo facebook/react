@@ -5,29 +5,26 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import ReactCompilerRule from './rules/ReactCompilerRule';
+import {allRules, recommendedRules} from './rules/ReactCompilerRule';
 
 const meta = {
   name: 'eslint-plugin-react-compiler',
-};
-
-const rules = {
-  'react-compiler': ReactCompilerRule,
 };
 
 const configs = {
   recommended: {
     plugins: {
       'react-compiler': {
-        rules: {
-          'react-compiler': ReactCompilerRule,
-        },
+        rules: allRules,
       },
     },
-    rules: {
-      'react-compiler/react-compiler': 'error' as const,
-    },
+    rules: Object.fromEntries(
+      Object.keys(recommendedRules).map(ruleName => [
+        'react-compiler/' + ruleName,
+        'error',
+      ]),
+    ) as Record<string, 'error' | 'warn'>,
   },
 };
 
-export {configs, rules, meta};
+export {configs, allRules as rules, meta};

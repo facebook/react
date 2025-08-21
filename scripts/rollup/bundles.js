@@ -1208,7 +1208,14 @@ const bundles = [
     global: 'ESLintPluginReactHooks',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: [],
+    preferBuiltins: true,
+    externals: [
+      '@babel/core',
+      '@babel/plugin-proposal-private-methods',
+      'hermes-parser',
+      'zod',
+      'zod-validation-error',
+    ],
     tsconfig: './packages/eslint-plugin-react-hooks/tsconfig.json',
     prebuild: `mkdir -p ./compiler/packages/babel-plugin-react-compiler/dist && echo "module.exports = require('../src/index.ts');" > ./compiler/packages/babel-plugin-react-compiler/dist/index.js`,
   },
@@ -1296,9 +1303,21 @@ function getFilename(bundle, bundleType) {
   }
 }
 
+let activeBundles = bundles;
+if (process.env.BUNDLES_FILTER != null) {
+  activeBundles = activeBundles.filter(
+    bundle => bundle.name === process.env.BUNDLES_FILTER
+  );
+  if (activeBundles.length === 0) {
+    throw new Error(
+      `No bundles matched for BUNDLES_FILTER=${process.env.BUNDLES_FILTER}`
+    );
+  }
+}
+
 module.exports = {
   bundleTypes,
   moduleTypes,
-  bundles,
+  bundles: activeBundles,
   getFilename,
 };
