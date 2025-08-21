@@ -204,6 +204,7 @@ export function attach(
     onErrorOrWarning,
     overrideError() {},
     overrideSuspense() {},
+    overrideSuspenseMilestone() {},
     overrideValueAtPath() {},
     renamePath() {},
     renderer,

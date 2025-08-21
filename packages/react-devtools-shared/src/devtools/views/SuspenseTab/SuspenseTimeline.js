@@ -29,39 +29,38 @@ import typeof {
   SyntheticPointerEvent,
 } from 'react-dom-bindings/src/events/SyntheticEvent';
 
-// TODO: This returns the roots which would mean we attempt to suspend the shell.
-// Suspending the shell is currently not supported and we don't have a good view
-// for inspecting the root. But we probably should?
 function getSuspendableDocumentOrderSuspense(
   store: Store,
-  roots: $ReadOnlyArray<Element['id']>,
+  rootID: Element['id'] | void,
 ): Array<SuspenseNode> {
+  if (rootID === undefined) {
+    return [];
+  }
+  const root = store.getElementByID(rootID);
+  if (root === null) {
+    return [];
+  }
+  if (!store.supportsTogglingSuspense(root.id)) {
+    return [];
+  }
   const suspenseTreeList: SuspenseNode[] = [];
-  // TODO: Consider multi-root documents. Maybe each root should get its own timeline
-  // instead. In that world, roots should get a display name.
-  for (let i = 0; i < roots.length; i++) {
-    const root = store.getElementByID(roots[i]);
-    if (root === null) {
-      continue;
-    }
-    if (!store.supportsTogglingSuspense(root.id)) {
-      continue;
-    }
-    const suspense = store.getSuspenseByID(root.id);
-    if (suspense !== null) {
-      const stack = [suspense];
-      while (stack.length > 0) {
-        const current = stack.pop();
-        if (current === undefined) {
-          continue;
-        }
+  const suspense = store.getSuspenseByID(root.id);
+  if (suspense !== null) {
+    const stack = [suspense];
+    while (stack.length > 0) {
+      const current = stack.pop();
+      if (current === undefined) {
+        continue;
+      }
+      // Don't include the root. It's currently not supported to suspend the shell.
+      if (current !== suspense) {
         suspenseTreeList.push(current);
-        // Add children in reverse order to maintain document order
-        for (let j = current.children.length - 1; j >= 0; j--) {
-          const childSuspense = store.getSuspenseByID(current.children[j]);
-          if (childSuspense !== null) {
-            stack.push(childSuspense);
-          }
+      }
+      // Add children in reverse order to maintain document order
+      for (let j = current.children.length - 1; j >= 0; j--) {
+        const childSuspense = store.getSuspenseByID(current.children[j]);
+        if (childSuspense !== null) {
+          stack.push(childSuspense);
         }
       }
     }
@@ -70,18 +69,16 @@ function getSuspendableDocumentOrderSuspense(
   return suspenseTreeList;
 }
 
-export default function SuspenseTimeline(): React$Node {
+function SuspenseTimelineInput({rootID}: {rootID: Element['id'] | void}) {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
   const dispatch = useContext(TreeDispatcherContext);
-  const {shells} = useContext(SuspenseTreeStateContext);
-
-  const timeline = useMemo(() => {
-    return getSuspendableDocumentOrderSuspense(store, shells);
-  }, [store, shells]);
-
   const {highlightHostInstance, clearHighlightHostInstance} =
     useHighlightHostInstance();
+
+  const timeline = useMemo(() => {
+    return getSuspendableDocumentOrderSuspense(store, rootID);
+  }, [store, rootID]);
 
   const inputRef = useRef<HTMLElement | null>(null);
   const inputBBox = useRef<ClientRect | null>(null);
@@ -104,7 +101,7 @@ export default function SuspenseTimeline(): React$Node {
       inputBBox.current = null;
       observer.disconnect();
     };
-  }, []);
+  }, [timeline.length]);
 
   const min = 0;
   const max = timeline.length > 0 ? timeline.length - 1 : 0;
@@ -139,8 +136,24 @@ export default function SuspenseTimeline(): React$Node {
     });
   }, [timeline, value]);
 
+  if (rootID === undefined) {
+    return <div className={styles.SuspenseTimelineInput}>Root not found.</div>;
+  }
+
+  if (!store.supportsTogglingSuspense(rootID)) {
+    return (
+      <div className={styles.SuspenseTimelineInput}>
+        Can't step through Suspense in production apps.
+      </div>
+    );
+  }
+
   if (timeline.length === 0) {
-    return <div>Can't step through Suspense in production apps.</div>;
+    return (
+      <div className={styles.SuspenseTimelineInput}>
+        Root contains no Suspense nodes.
+      </div>
+    );
   }
 
   function handleChange(event: SyntheticEvent) {
@@ -206,7 +219,7 @@ export default function SuspenseTimeline(): React$Node {
   }
 
   return (
-    <div>
+    <div className={styles.SuspenseTimelineInput}>
       <input
         className={styles.SuspenseTimelineSlider}
         type="range"
@@ -224,6 +237,57 @@ export default function SuspenseTimeline(): React$Node {
       <datalist id={markersID} className={styles.SuspenseTimelineMarkers}>
         {markers}
       </datalist>
+    </div>
+  );
+}
+
+export default function SuspenseTimeline(): React$Node {
+  const store = useContext(StoreContext);
+  const {shells} = useContext(SuspenseTreeStateContext);
+
+  const defaultSelectedRootID = shells.find(rootID => {
+    const suspense = store.getSuspenseByID(rootID);
+    return (
+      store.supportsTogglingSuspense(rootID) &&
+      suspense !== null &&
+      suspense.children.length > 1
+    );
+  });
+  const [selectedRootID, setSelectedRootID] = useState(defaultSelectedRootID);
+
+  if (selectedRootID === undefined && defaultSelectedRootID !== undefined) {
+    setSelectedRootID(defaultSelectedRootID);
+  }
+
+  function handleChange(event: SyntheticEvent) {
+    const newRootID = +event.currentTarget.value;
+    // TODO: scrollIntoView both suspense rects and host instance.
+    setSelectedRootID(newRootID);
+  }
+
+  return (
+    <div className={styles.SuspenseTimelineContainer}>
+      <SuspenseTimelineInput key={selectedRootID} rootID={selectedRootID} />
+      {shells.length > 0 && (
+        <select
+          aria-label="Select Suspense Root"
+          className={styles.SuspenseTimelineRootSwitcher}
+          onChange={handleChange}>
+          {shells.map(rootID => {
+            // TODO: Use name
+            const name = '#' + rootID;
+            // TODO: Highlight host on hover
+            return (
+              <option
+                key={rootID}
+                selected={rootID === selectedRootID}
+                value={rootID}>
+                {name}
+              </option>
+            );
+          })}
+        </select>
+      )}
     </div>
   );
 }
