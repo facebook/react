@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import {effect} from 'zod';
 import {CompilerError, Effect, ErrorSeverity, SourceLocation} from '..';
 import {
   ArrayExpression,
@@ -18,11 +19,16 @@ import {
   Place,
   isSetStateType,
   isUseEffectHookType,
+  isUseStateType,
+  IdentifierName,
+  GeneratedSource,
 } from '../HIR';
+import {printInstruction} from '../HIR/PrintHIR';
 import {
   eachInstructionOperand,
   eachTerminalOperand,
   eachInstructionLValue,
+  eachPatternOperand,
 } from '../HIR/visitors';
 import {isMutable} from '../ReactiveScopes/InferReactiveScopeVariables';
 import {assertExhaustive} from '../Utils/utils';
@@ -30,13 +36,23 @@ import {assertExhaustive} from '../Utils/utils';
 type SetStateCall = {
   loc: SourceLocation;
   invalidDeps: Map<Identifier, Place[]> | undefined;
+  setStateId: IdentifierId;
 };
 type TypeOfValue = 'ignored' | 'fromProps' | 'fromState' | 'fromPropsOrState';
 
 type DerivationMetadata = {
+  typeOfValue: TypeOfValue;
+  // TODO: Rename to place
   identifierPlace: Place;
   sources: Place[];
-  typeOfValue: TypeOfValue;
+};
+
+// TODO: This needs refining
+type ErrorMetadata = {
+  errorType: 'HoistState' | 'CalculateInRender';
+  propInfo: string | undefined;
+  loc: SourceLocation;
+  setStateId: IdentifierId;
 };
 
 function joinValue(
@@ -76,10 +92,44 @@ function updateDerivationMetadata(
 function parseInstr(
   instr: Instruction,
   derivedTuple: Map<IdentifierId, DerivationMetadata>,
+  setStateCalls: Map<string, Place>,
 ) {
+  // console.log(printInstruction(instr));
+  // console.log(instr);
   let typeOfValue: TypeOfValue = 'ignored';
 
-  // TODO: Add handling for state derived props
+  // If the instruction is destructuring a useState hook call
+  if (
+    instr.value.kind === 'Destructure' &&
+    instr.value.lvalue.pattern.kind === 'ArrayPattern' &&
+    isUseStateType(instr.value.value.identifier)
+  ) {
+    const value = instr.value.lvalue.pattern.items[0];
+    if (value.kind === 'Identifier') {
+      derivedTuple.set(value.identifier.id, {
+        identifierPlace: value,
+        sources: [value],
+        typeOfValue: 'fromState',
+      });
+    }
+  }
+
+  // If the instruction is calling a setState
+  if (
+    instr.value.kind === 'CallExpression' &&
+    isSetStateType(instr.value.callee.identifier) &&
+    instr.value.args.length === 1 &&
+    instr.value.args[0].kind === 'Identifier' &&
+    instr.value.callee.loc !== GeneratedSource &&
+    instr.value.callee.loc.identifierName !== undefined &&
+    instr.value.callee.loc.identifierName !== null
+  ) {
+    setStateCalls.set(
+      instr.value.callee.loc.identifierName,
+      instr.value.callee,
+    );
+  }
+
   let sources: DerivationMetadata[] = [];
   for (const operand of eachInstructionOperand(instr)) {
     const opSource = derivedTuple.get(operand.identifier.id);
@@ -91,7 +141,6 @@ function parseInstr(
     sources.push(opSource);
   }
 
-  // TODO: Add handling for state derived props
   if (typeOfValue !== 'ignored') {
     for (const lvalue of eachInstructionLValue(instr)) {
       updateDerivationMetadata(lvalue, sources, typeOfValue, derivedTuple);
@@ -196,7 +245,13 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
   const locals: Map<IdentifierId, IdentifierId> = new Map();
   const derivedTuple: Map<IdentifierId, DerivationMetadata> = new Map();
 
-  const errors = new CompilerError();
+  // Investigating
+  const effectSetStates: Map<string, Place> = new Map();
+  const setStateCalls: Map<string, Place> = new Map();
+
+  // let shouldCalculateInRender: boolean = true;
+
+  const errors: ErrorMetadata[] = [];
 
   if (fn.fnType === 'Hook') {
     for (const param of fn.params) {
@@ -225,7 +280,7 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
     for (const instr of block.instructions) {
       const {lvalue, value} = instr;
 
-      parseInstr(instr, derivedTuple);
+      parseInstr(instr, derivedTuple, setStateCalls);
 
       /*
        * Special case for function expressions, we need to parse nested instructions
@@ -234,11 +289,12 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
       if (value.kind === 'FunctionExpression') {
         for (const [, block] of value.loweredFunc.func.body.blocks) {
           for (const instr of block.instructions) {
-            parseInstr(instr, derivedTuple);
+            parseInstr(instr, derivedTuple, setStateCalls);
           }
         }
       }
 
+      // Maybe this should run for every instruction being parsed
       if (value.kind === 'LoadLocal') {
         locals.set(lvalue.identifier.id, value.place.identifier.id);
       } else if (value.kind === 'ArrayExpression') {
@@ -277,6 +333,7 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
               effectFunction.loweredFunc.func,
               dependencies,
               derivedTuple,
+              effectSetStates,
               errors,
             );
           }
@@ -284,8 +341,21 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
       }
     }
   }
-  if (errors.hasErrors()) {
-    throw errors;
+
+  console.log('setStateCalls: ', setStateCalls);
+  console.log('effectSetStates: ', effectSetStates);
+  const throwableErrors = new CompilerError();
+  for (const error of errors) {
+    throwableErrors.push({
+      reason: `You may not need an effect. Values derived from state should be calculated in render, not in an effect. `,
+      description: `You are using a value derived from props${error.propInfo} to update local state in an effect.`,
+      severity: ErrorSeverity.InvalidReact,
+      loc: error.loc,
+    });
+  }
+
+  if (throwableErrors.hasErrors()) {
+    throw throwableErrors;
   }
 }
 
@@ -293,7 +363,8 @@ function validateEffect(
   effectFunction: HIRFunction,
   effectDeps: Array<IdentifierId>,
   derivedTuple: Map<IdentifierId, DerivationMetadata>,
-  errors: CompilerError,
+  effectSetStates: Map<string, Place>,
+  errors: ErrorMetadata[],
 ): void {
   /*
    * TODO: This makes it so we only capture single line useEffects.
@@ -345,7 +416,7 @@ function validateEffect(
     }
   }
 
-  const setStateCalls: Array<SetStateCall> = [];
+  const setStateCallsInEffect: Array<SetStateCall> = [];
   for (const block of effectFunction.body.blocks.values()) {
     for (const pred of block.preds) {
       if (!seenBlocks.has(pred)) {
@@ -357,6 +428,20 @@ function validateEffect(
     parseBlockPhi(block, effectInvalidlyDerived);
 
     for (const instr of block.instructions) {
+      if (
+        instr.value.kind === 'CallExpression' &&
+        isSetStateType(instr.value.callee.identifier) &&
+        instr.value.args.length === 1 &&
+        instr.value.args[0].kind === 'Identifier' &&
+        instr.value.callee.loc !== GeneratedSource &&
+        instr.value.callee.loc.identifierName !== undefined &&
+        instr.value.callee.loc.identifierName !== null
+      ) {
+        effectSetStates.set(
+          instr.value.callee.loc.identifierName,
+          instr.value.callee,
+        );
+      }
       switch (instr.value.kind) {
         case 'Primitive':
         case 'JSXText':
@@ -398,18 +483,19 @@ function validateEffect(
             const propSources = derivedTuple.get(
               instr.value.args[0].identifier.id,
             );
-            console.log('arg: ', instr.value.args[0].identifier.id);
 
             if (propSources !== undefined) {
-              setStateCalls.push({
+              setStateCallsInEffect.push({
                 loc: instr.value.callee.loc,
+                setStateId: instr.value.callee.identifier.id,
                 invalidDeps: new Map([
                   [instr.value.args[0].identifier, propSources.sources],
                 ]),
               });
             } else {
-              setStateCalls.push({
+              setStateCallsInEffect.push({
                 loc: instr.value.callee.loc,
+                setStateId: instr.value.callee.identifier.id,
                 invalidDeps: undefined,
               });
             }
@@ -422,6 +508,7 @@ function validateEffect(
         }
       }
     }
+
     for (const operand of eachTerminalOperand(block.terminal)) {
       if (values.has(operand.identifier.id)) {
         return;
@@ -430,37 +517,36 @@ function validateEffect(
     seenBlocks.add(block.id);
   }
 
-  console.log('setStateCalls', setStateCalls);
-  for (const call of setStateCalls) {
+  // need to track if the setState call has been used elsewhere
+  // if it is then the solution should be to lift the state up to the parent component
+  // if not the solution should be to calculate the value in rende
+  //
+  // If the same setState is used both inside and outside the effect
+
+  for (const call of setStateCallsInEffect) {
     if (call.invalidDeps != null) {
       let propNames = '';
-      console.log(call.invalidDeps);
       for (const [, places] of call.invalidDeps.entries()) {
         const placeNames = places
           .map(place => place.identifier.name?.value)
           .join(', ');
         propNames += `[${placeNames}], `;
       }
-      propNames = propNames.slice(0, -2); // Remove trailing comma and space
+      propNames = propNames.slice(0, -2);
       const propInfo = propNames ? ` (from props '${propNames}')` : '';
 
       errors.push({
-        reason: `Consider lifting state up to the parent component to make this a controlled component. (https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes)`,
-        description: `You are using a value derived from props${propInfo} to update local state in an effect.`,
-        severity: ErrorSeverity.InvalidReact,
+        errorType: 'HoistState',
+        propInfo: propInfo,
         loc: call.loc,
-        suggestions: null,
+        setStateId: call.setStateId,
       });
     } else {
       errors.push({
-        reason:
-          'You may not need this effect. Values derived from state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)',
-        description:
-          'This effect updates state based on other state values. ' +
-          'Consider calculating this value directly during render',
-        severity: ErrorSeverity.InvalidReact,
+        errorType: 'CalculateInRender',
+        propInfo: undefined,
         loc: call.loc,
-        suggestions: null,
+        setStateId: call.setStateId,
       });
     }
   }
