@@ -7,7 +7,7 @@
 
 import {Binding, NodePath} from '@babel/traverse';
 import * as t from '@babel/types';
-import {CompilerError, ErrorSeverity} from '../CompilerError';
+import {CompilerError, ErrorCategory, ErrorSeverity} from '../CompilerError';
 import {Environment} from './Environment';
 import {
   BasicBlock,
@@ -310,7 +310,8 @@ export default class HIRBuilder {
     if (node.name === 'fbt') {
       CompilerError.throwDiagnostic({
         severity: ErrorSeverity.Todo,
-        category: 'Support local variables named `fbt`',
+        category: ErrorCategory.FBT,
+        reason: 'Support local variables named `fbt`',
         description:
           'Local variables named `fbt` may conflict with the fbt plugin and are not yet supported',
         details: [

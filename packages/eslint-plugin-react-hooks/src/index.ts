@@ -4,63 +4,64 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import type {ESLint, Linter, Rule} from 'eslint';
+import type {Linter, Rule} from 'eslint';
 
 import ExhaustiveDeps from './rules/ExhaustiveDeps';
-import ReactCompiler from './rules/ReactCompiler';
+import {allRules, recommendedRules} from './shared/ReactCompiler';
 import RulesOfHooks from './rules/RulesOfHooks';
 
 // All rules
 const rules = {
   'exhaustive-deps': ExhaustiveDeps,
-  'react-compiler': ReactCompiler,
   'rules-of-hooks': RulesOfHooks,
+  ...allRules,
 } satisfies Record<string, Rule.RuleModule>;
 
 // Config rules
-const configRules = {
+const ruleConfigs = {
   'react-hooks/rules-of-hooks': 'error',
   'react-hooks/exhaustive-deps': 'warn',
+  ...Object.fromEntries(
+    Object.keys(recommendedRules).map(name => ['react-hooks/' + name, 'error']),
+  ),
 } satisfies Linter.RulesRecord;
 
-// Flat config
-const recommendedConfig = {
-  name: 'react-hooks/recommended',
-  plugins: {
-    get 'react-hooks'(): ESLint.Plugin {
-      return plugin;
-    },
+const plugin = {
+  meta: {
+    name: 'eslint-plugin-react-hooks',
   },
-  rules: configRules,
+  configs: {},
+  rules,
 };
 
-// Plugin object
-const plugin = {
-  // TODO: Make this more dynamic to populate version from package.json.
-  // This can be done by injecting at build time, since importing the package.json isn't an option in Meta
-  meta: {name: 'eslint-plugin-react-hooks'},
-  rules,
-  configs: {
-    /** Legacy recommended config, to be used with rc-based configurations */
-    'recommended-legacy': {
-      plugins: ['react-hooks'],
-      rules: configRules,
-    },
-
-    /**
-     * Recommended config, to be used with flat configs.
-     */
-    recommended: recommendedConfig,
-
-    /** @deprecated please use `recommended`; will be removed in v7  */
-    'recommended-latest': recommendedConfig,
+Object.assign(plugin.configs, {
+  'recommended-legacy': {
+    plugins: ['react-hooks'],
+    rules: ruleConfigs,
   },
-} satisfies ESLint.Plugin;
 
-const configs = plugin.configs;
-const meta = plugin.meta;
-export {configs, meta, rules};
+  'flat/recommended': [
+    {
+      plugins: {
+        'react-hooks': plugin,
+      },
+      rules: ruleConfigs,
+    },
+  ],
 
-// TODO: If the plugin is ever updated to be pure ESM and drops support for rc-based configs, then it should be exporting the plugin as default
-// instead of individual named exports.
-// export default plugin;
+  'recommended-latest': [
+    {
+      plugins: {
+        'react-hooks': plugin,
+      },
+      rules: ruleConfigs,
+    },
+  ],
+
+  recommended: {
+    plugins: ['react-hooks'],
+    rules: ruleConfigs,
+  },
+});
+
+export default plugin;
