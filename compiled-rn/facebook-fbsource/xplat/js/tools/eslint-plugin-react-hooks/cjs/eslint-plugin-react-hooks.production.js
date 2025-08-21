@@ -6,20 +6,21 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<3fc4d42c30370bf2a270131609a69bc9>>
+ * @generated SignedSource<<f08c4c2827b1856ef12ecb97a6f7a2c5>>
  */
 
 'use strict';
 
 var core$1 = require('@babel/core');
-var PluginProposalPrivateMethods = require('@babel/plugin-transform-private-methods');
-require('@babel/parser');
+var BabelParser = require('@babel/parser');
 var zod = require('zod');
 var zodValidationError = require('zod-validation-error');
 var crypto = require('crypto');
+var PluginProposalPrivateMethods = require('@babel/plugin-proposal-private-methods');
 var HermesParser = require('hermes-parser');
+var util = require('util');
 
-const rule$2 = {
+const rule$1 = {
     meta: {
         type: 'suggestion',
         docs: {
@@ -17368,27 +17369,59 @@ function requireLib () {
 
 var libExports = requireLib();
 
+/*! *****************************************************************************
+Copyright (c) Microsoft Corporation.
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+***************************************************************************** */
+/* global Reflect, Promise */
+
+
+function __classPrivateFieldGet(receiver, state, kind, f) {
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
+    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
+}
+
+function __classPrivateFieldSet(receiver, state, value, kind, f) {
+    if (kind === "m") throw new TypeError("Private method is not writable");
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
+    return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
+}
+
+var _OkImpl_val, _ErrImpl_val;
 function Ok(val) {
     return new OkImpl(val);
 }
 class OkImpl {
     constructor(val) {
-        this.val = val;
+        _OkImpl_val.set(this, void 0);
+        __classPrivateFieldSet(this, _OkImpl_val, val, "f");
     }
     map(fn) {
-        return new OkImpl(fn(this.val));
+        return new OkImpl(fn(__classPrivateFieldGet(this, _OkImpl_val, "f")));
     }
     mapErr(_fn) {
         return this;
     }
     mapOr(_fallback, fn) {
-        return fn(this.val);
+        return fn(__classPrivateFieldGet(this, _OkImpl_val, "f"));
     }
     mapOrElse(_fallback, fn) {
-        return fn(this.val);
+        return fn(__classPrivateFieldGet(this, _OkImpl_val, "f"));
     }
     andThen(fn) {
-        return fn(this.val);
+        return fn(__classPrivateFieldGet(this, _OkImpl_val, "f"));
     }
     and(res) {
         return res;
@@ -17406,39 +17439,41 @@ class OkImpl {
         return false;
     }
     expect(_msg) {
-        return this.val;
+        return __classPrivateFieldGet(this, _OkImpl_val, "f");
     }
     expectErr(msg) {
-        throw new Error(`${msg}: ${this.val}`);
+        throw new Error(`${msg}: ${__classPrivateFieldGet(this, _OkImpl_val, "f")}`);
     }
     unwrap() {
-        return this.val;
+        return __classPrivateFieldGet(this, _OkImpl_val, "f");
     }
     unwrapOr(_fallback) {
-        return this.val;
+        return __classPrivateFieldGet(this, _OkImpl_val, "f");
     }
     unwrapOrElse(_fallback) {
-        return this.val;
+        return __classPrivateFieldGet(this, _OkImpl_val, "f");
     }
     unwrapErr() {
-        if (this.val instanceof Error) {
-            throw this.val;
+        if (__classPrivateFieldGet(this, _OkImpl_val, "f") instanceof Error) {
+            throw __classPrivateFieldGet(this, _OkImpl_val, "f");
         }
-        throw new Error(`Can't unwrap \`Ok\` to \`Err\`: ${this.val}`);
+        throw new Error(`Can't unwrap \`Ok\` to \`Err\`: ${__classPrivateFieldGet(this, _OkImpl_val, "f")}`);
     }
 }
+_OkImpl_val = new WeakMap();
 function Err(val) {
     return new ErrImpl(val);
 }
 class ErrImpl {
     constructor(val) {
-        this.val = val;
+        _ErrImpl_val.set(this, void 0);
+        __classPrivateFieldSet(this, _ErrImpl_val, val, "f");
     }
     map(_fn) {
         return this;
     }
     mapErr(fn) {
-        return new ErrImpl(fn(this.val));
+        return new ErrImpl(fn(__classPrivateFieldGet(this, _ErrImpl_val, "f")));
     }
     mapOr(fallback, _fn) {
         return fallback;
@@ -17456,7 +17491,7 @@ class ErrImpl {
         return res;
     }
     orElse(fn) {
-        return fn(this.val);
+        return fn(__classPrivateFieldGet(this, _ErrImpl_val, "f"));
     }
     isOk() {
         return false;
@@ -17465,27 +17500,28 @@ class ErrImpl {
         return true;
     }
     expect(msg) {
-        throw new Error(`${msg}: ${this.val}`);
+        throw new Error(`${msg}: ${__classPrivateFieldGet(this, _ErrImpl_val, "f")}`);
     }
     expectErr(_msg) {
-        return this.val;
+        return __classPrivateFieldGet(this, _ErrImpl_val, "f");
     }
     unwrap() {
-        if (this.val instanceof Error) {
-            throw this.val;
+        if (__classPrivateFieldGet(this, _ErrImpl_val, "f") instanceof Error) {
+            throw __classPrivateFieldGet(this, _ErrImpl_val, "f");
         }
-        throw new Error(`Can't unwrap \`Err\` to \`Ok\`: ${this.val}`);
+        throw new Error(`Can't unwrap \`Err\` to \`Ok\`: ${__classPrivateFieldGet(this, _ErrImpl_val, "f")}`);
     }
     unwrapOr(fallback) {
         return fallback;
     }
     unwrapOrElse(fallback) {
-        return fallback(this.val);
+        return fallback(__classPrivateFieldGet(this, _ErrImpl_val, "f"));
     }
     unwrapErr() {
-        return this.val;
+        return __classPrivateFieldGet(this, _ErrImpl_val, "f");
     }
 }
+_ErrImpl_val = new WeakMap();
 
 function assertExhaustive$1(_, errorMsg) {
     throw new Error(errorMsg);
@@ -17619,8 +17655,8 @@ class CompilerDiagnostic {
     static create(options) {
         return new CompilerDiagnostic(Object.assign(Object.assign({}, options), { details: [] }));
     }
-    get category() {
-        return this.options.category;
+    get reason() {
+        return this.options.reason;
     }
     get description() {
         return this.options.description;
@@ -17630,6 +17666,9 @@ class CompilerDiagnostic {
     }
     get suggestions() {
         return this.options.suggestions;
+    }
+    get category() {
+        return this.options.category;
     }
     withDetail(detail) {
         this.options.details.push(detail);
@@ -17643,7 +17682,7 @@ class CompilerDiagnostic {
     }
     printErrorMessage(source, options) {
         const buffer = [
-            printErrorSummary(this.severity, this.category),
+            printErrorSummary(this.severity, this.reason),
             '\n\n',
             this.description,
         ];
@@ -17685,7 +17724,7 @@ class CompilerDiagnostic {
         return buffer.join('');
     }
     toString() {
-        const buffer = [printErrorSummary(this.severity, this.category)];
+        const buffer = [printErrorSummary(this.severity, this.reason)];
         if (this.description != null) {
             buffer.push(`. ${this.description}.`);
         }
@@ -17714,6 +17753,9 @@ class CompilerErrorDetail {
     }
     get suggestions() {
         return this.options.suggestions;
+    }
+    get category() {
+        return this.options.category;
     }
     primaryLocation() {
         return this.loc;
@@ -17759,7 +17801,7 @@ class CompilerError extends Error {
     static invariant(condition, options) {
         if (!condition) {
             const errors = new CompilerError();
-            errors.pushErrorDetail(new CompilerErrorDetail(Object.assign(Object.assign({}, options), { severity: ErrorSeverity.Invariant })));
+            errors.pushErrorDetail(new CompilerErrorDetail(Object.assign(Object.assign({}, options), { category: ErrorCategory.Invariant, severity: ErrorSeverity.Invariant })));
             throw errors;
         }
     }
@@ -17770,12 +17812,12 @@ class CompilerError extends Error {
     }
     static throwTodo(options) {
         const errors = new CompilerError();
-        errors.pushErrorDetail(new CompilerErrorDetail(Object.assign(Object.assign({}, options), { severity: ErrorSeverity.Todo })));
+        errors.pushErrorDetail(new CompilerErrorDetail(Object.assign(Object.assign({}, options), { severity: ErrorSeverity.Todo, category: ErrorCategory.Todo })));
         throw errors;
     }
     static throwInvalidJS(options) {
         const errors = new CompilerError();
-        errors.pushErrorDetail(new CompilerErrorDetail(Object.assign(Object.assign({}, options), { severity: ErrorSeverity.InvalidJS })));
+        errors.pushErrorDetail(new CompilerErrorDetail(Object.assign(Object.assign({}, options), { severity: ErrorSeverity.InvalidJS, category: ErrorCategory.Syntax })));
         throw errors;
     }
     static throwInvalidReact(options) {
@@ -17785,7 +17827,7 @@ class CompilerError extends Error {
     }
     static throwInvalidConfig(options) {
         const errors = new CompilerError();
-        errors.pushErrorDetail(new CompilerErrorDetail(Object.assign(Object.assign({}, options), { severity: ErrorSeverity.InvalidConfig })));
+        errors.pushErrorDetail(new CompilerErrorDetail(Object.assign(Object.assign({}, options), { severity: ErrorSeverity.InvalidConfig, category: ErrorCategory.Config })));
         throw errors;
     }
     static throw(options) {
@@ -17836,6 +17878,7 @@ class CompilerError extends Error {
     push(options) {
         var _a;
         const detail = new CompilerErrorDetail({
+            category: options.category,
             reason: options.reason,
             description: (_a = options.description) !== null && _a !== void 0 ? _a : null,
             severity: options.severity,
@@ -17917,6 +17960,233 @@ function printErrorSummary(severity, message) {
     }
     return `${severityCategory}: ${message}`;
 }
+var ErrorCategory;
+(function (ErrorCategory) {
+    ErrorCategory["Hooks"] = "Hooks";
+    ErrorCategory["CapitalizedCalls"] = "CapitalizedCalls";
+    ErrorCategory["StaticComponents"] = "StaticComponents";
+    ErrorCategory["UseMemo"] = "UseMemo";
+    ErrorCategory["PreserveManualMemo"] = "PreserveManualMemo";
+    ErrorCategory["Immutability"] = "Immutability";
+    ErrorCategory["Globals"] = "Globals";
+    ErrorCategory["Refs"] = "Refs";
+    ErrorCategory["EffectDependencies"] = "EffectDependencies";
+    ErrorCategory["EffectSetState"] = "EffectSetState";
+    ErrorCategory["EffectDerivationsOfState"] = "EffectDerivationsOfState";
+    ErrorCategory["ErrorBoundaries"] = "ErrorBoundaries";
+    ErrorCategory["Purity"] = "Purity";
+    ErrorCategory["RenderSetState"] = "RenderSetState";
+    ErrorCategory["Invariant"] = "Invariant";
+    ErrorCategory["Todo"] = "Todo";
+    ErrorCategory["Syntax"] = "Syntax";
+    ErrorCategory["UnsupportedSyntax"] = "UnsupportedSyntax";
+    ErrorCategory["Config"] = "Config";
+    ErrorCategory["Gating"] = "Gating";
+    ErrorCategory["Suppression"] = "Suppression";
+    ErrorCategory["AutomaticEffectDependencies"] = "AutomaticEffectDependencies";
+    ErrorCategory["Fire"] = "Fire";
+    ErrorCategory["FBT"] = "FBT";
+})(ErrorCategory || (ErrorCategory = {}));
+function getRuleForCategory(category) {
+    switch (category) {
+        case ErrorCategory.AutomaticEffectDependencies: {
+            return {
+                category,
+                name: 'automatic-effect-dependencies',
+                description: 'Verifies that automatic effect dependencies are compiled if opted-in',
+                recommended: true,
+            };
+        }
+        case ErrorCategory.CapitalizedCalls: {
+            return {
+                category,
+                name: 'capitalized-calls',
+                description: 'Validates against calling capitalized functions/methods instead of using JSX',
+                recommended: false,
+            };
+        }
+        case ErrorCategory.Config: {
+            return {
+                category,
+                name: 'config',
+                description: 'Validates the configuration',
+                recommended: true,
+            };
+        }
+        case ErrorCategory.EffectDependencies: {
+            return {
+                category,
+                name: 'memoized-effect-dependencies',
+                description: 'Validates that effect dependencies are memoized',
+                recommended: false,
+            };
+        }
+        case ErrorCategory.EffectDerivationsOfState: {
+            return {
+                category,
+                name: 'no-deriving-state-in-effects',
+                description: 'Validates against deriving values from state in an effect',
+                recommended: false,
+            };
+        }
+        case ErrorCategory.EffectSetState: {
+            return {
+                category,
+                name: 'set-state-in-effect',
+                description: 'Validates against calling setState synchronously in an effect',
+                recommended: true,
+            };
+        }
+        case ErrorCategory.ErrorBoundaries: {
+            return {
+                category,
+                name: 'error-boundaries',
+                description: 'Validates usage of error boundaries instead of try/catch for errors in JSX',
+                recommended: true,
+            };
+        }
+        case ErrorCategory.FBT: {
+            return {
+                category,
+                name: 'fbt',
+                description: 'Validates usage of fbt',
+                recommended: false,
+            };
+        }
+        case ErrorCategory.Fire: {
+            return {
+                category,
+                name: 'fire',
+                description: 'Validates usage of `fire`',
+                recommended: false,
+            };
+        }
+        case ErrorCategory.Gating: {
+            return {
+                category,
+                name: 'gating',
+                description: 'Validates configuration of gating mode',
+                recommended: true,
+            };
+        }
+        case ErrorCategory.Globals: {
+            return {
+                category,
+                name: 'globals',
+                description: 'Validates against assignment/mutation of globals during render',
+                recommended: true,
+            };
+        }
+        case ErrorCategory.Hooks: {
+            return {
+                category,
+                name: 'hooks',
+                description: 'Validates the rules of hooks',
+                recommended: false,
+            };
+        }
+        case ErrorCategory.Immutability: {
+            return {
+                category,
+                name: 'immutability',
+                description: 'Validates that immutable values (props, state, etc) are not mutated',
+                recommended: true,
+            };
+        }
+        case ErrorCategory.Invariant: {
+            return {
+                category,
+                name: 'invariant',
+                description: 'Internal invariants',
+                recommended: false,
+            };
+        }
+        case ErrorCategory.PreserveManualMemo: {
+            return {
+                category,
+                name: 'preserve-manual-memoization',
+                description: 'Validates that existing manual memoized is preserved by the compiler',
+                recommended: true,
+            };
+        }
+        case ErrorCategory.Purity: {
+            return {
+                category,
+                name: 'purity',
+                description: 'Validates that the component/hook is pure, and does not call known-impure functions',
+                recommended: true,
+            };
+        }
+        case ErrorCategory.Refs: {
+            return {
+                category,
+                name: 'refs',
+                description: 'Validates correct usage of refs, not reading/writing during render',
+                recommended: true,
+            };
+        }
+        case ErrorCategory.RenderSetState: {
+            return {
+                category,
+                name: 'set-state-in-render',
+                description: 'Validates against setting state during render',
+                recommended: true,
+            };
+        }
+        case ErrorCategory.StaticComponents: {
+            return {
+                category,
+                name: 'static-components',
+                description: 'Validates that components are static, not recreated every render',
+                recommended: true,
+            };
+        }
+        case ErrorCategory.Suppression: {
+            return {
+                category,
+                name: 'rule-suppression',
+                description: 'Validates against suppression of other rules',
+                recommended: false,
+            };
+        }
+        case ErrorCategory.Syntax: {
+            return {
+                category,
+                name: 'syntax',
+                description: 'Validates against invalid syntax',
+                recommended: false,
+            };
+        }
+        case ErrorCategory.Todo: {
+            return {
+                category,
+                name: 'todo',
+                description: 'Unimplemented features',
+                recommended: false,
+            };
+        }
+        case ErrorCategory.UnsupportedSyntax: {
+            return {
+                category,
+                name: 'unsupported-syntax',
+                description: 'Validates against syntax that we do not plan to support',
+                recommended: true,
+            };
+        }
+        case ErrorCategory.UseMemo: {
+            return {
+                category,
+                name: 'use-memo',
+                description: 'Validates usage of the useMemo() hook',
+                recommended: true,
+            };
+        }
+        default: {
+            assertExhaustive$1(category, `Unsupported category ${category}`);
+        }
+    }
+}
+const LintRules = Object.keys(ErrorCategory).map(category => getRuleForCategory(category));
 
 function insertAdditionalFunctionDeclaration(fnPath, compiled, programContext, gatingFunctionIdentifierName) {
     var _a, _b;
@@ -18526,36 +18796,6 @@ function getHookKindForType(env, type) {
         return (_a = signature === null || signature === void 0 ? void 0 : signature.hookKind) !== null && _a !== void 0 ? _a : null;
     }
     return null;
-}
-
-/*! *****************************************************************************
-Copyright (c) Microsoft Corporation.
-
-Permission to use, copy, modify, and/or distribute this software for any
-purpose with or without fee is hereby granted.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
-REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
-INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
-LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
-OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-PERFORMANCE OF THIS SOFTWARE.
-***************************************************************************** */
-/* global Reflect, Promise */
-
-
-function __classPrivateFieldGet(receiver, state, kind, f) {
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
-    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
-}
-
-function __classPrivateFieldSet(receiver, state, value, kind, f) {
-    if (kind === "m") throw new TypeError("Private method is not writable");
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
-    return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
 }
 
 function printReactiveScopeSummary(scope) {
@@ -19305,13 +19545,13 @@ function printAliasingEffect(effect) {
             return `${effect.kind} ${printPlaceForAliasEffect(effect.value)}`;
         }
         case 'MutateFrozen': {
-            return `MutateFrozen ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.category)}`;
+            return `MutateFrozen ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.reason)}`;
         }
         case 'MutateGlobal': {
-            return `MutateGlobal ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.category)}`;
+            return `MutateGlobal ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.reason)}`;
         }
         case 'Impure': {
-            return `Impure ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.category)}`;
+            return `Impure ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.reason)}`;
         }
         case 'Render': {
             return `Render ${printPlaceForAliasEffect(effect.place)}`;
@@ -20818,7 +21058,8 @@ class HIRBuilder {
         if (node.name === 'fbt') {
             CompilerError.throwDiagnostic({
                 severity: ErrorSeverity.Todo,
-                category: 'Support local variables named `fbt`',
+                category: ErrorCategory.FBT,
+                reason: 'Support local variables named `fbt`',
                 description: 'Local variables named `fbt` may conflict with the fbt plugin and are not yet supported',
                 details: [
                     {
@@ -22342,7 +22583,8 @@ function lower(func, env, bindings = null, capturedRefs = new Map()) {
             if (binding.kind !== 'Identifier') {
                 builder.errors.pushDiagnostic(CompilerDiagnostic.create({
                     severity: ErrorSeverity.Invariant,
-                    category: 'Could not find binding',
+                    category: ErrorCategory.Invariant,
+                    reason: 'Could not find binding',
                     description: `[BuildHIR] Could not find binding for param \`${param.node.name}\`.`,
                 }).withDetail({
                     kind: 'error',
@@ -22391,7 +22633,8 @@ function lower(func, env, bindings = null, capturedRefs = new Map()) {
         else {
             builder.errors.pushDiagnostic(CompilerDiagnostic.create({
                 severity: ErrorSeverity.Todo,
-                category: `Handle ${param.node.type} parameters`,
+                category: ErrorCategory.Todo,
+                reason: `Handle ${param.node.type} parameters`,
                 description: `[BuildHIR] Add support for ${param.node.type} parameters.`,
             }).withDetail({
                 kind: 'error',
@@ -22421,7 +22664,8 @@ function lower(func, env, bindings = null, capturedRefs = new Map()) {
     else {
         builder.errors.pushDiagnostic(CompilerDiagnostic.create({
             severity: ErrorSeverity.InvalidJS,
-            category: `Unexpected function body kind`,
+            category: ErrorCategory.Syntax,
+            reason: `Unexpected function body kind`,
             description: `Expected function body to be an expression or a block statement, got \`${body.type}\`.`,
         }).withDetail({
             kind: 'error',
@@ -22473,6 +22717,7 @@ function lowerStatement(builder, stmtPath, label = null) {
                 builder.errors.push({
                     reason: '(BuildHIR::lowerStatement) Support ThrowStatement inside of try/catch',
                     severity: ErrorSeverity.Todo,
+                    category: ErrorCategory.Todo,
                     loc: (_a = stmt.node.loc) !== null && _a !== void 0 ? _a : null,
                     suggestions: null,
                 });
@@ -22627,6 +22872,7 @@ function lowerStatement(builder, stmtPath, label = null) {
                     else if (!binding.path.isVariableDeclarator()) {
                         builder.errors.push({
                             severity: ErrorSeverity.Todo,
+                            category: ErrorCategory.Todo,
                             reason: 'Unsupported declaration type for hoisting',
                             description: `variable "${binding.identifier.name}" declared with ${binding.path.type}`,
                             suggestions: null,
@@ -22637,6 +22883,7 @@ function lowerStatement(builder, stmtPath, label = null) {
                     else {
                         builder.errors.push({
                             severity: ErrorSeverity.Todo,
+                            category: ErrorCategory.Todo,
                             reason: 'Handle non-const declarations for hoisting',
                             description: `variable "${binding.identifier.name}" declared with ${binding.kind}`,
                             suggestions: null,
@@ -22705,6 +22952,7 @@ function lowerStatement(builder, stmtPath, label = null) {
                     builder.errors.push({
                         reason: '(BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement',
                         severity: ErrorSeverity.Todo,
+                        category: ErrorCategory.Todo,
                         loc: (_a = stmt.node.loc) !== null && _a !== void 0 ? _a : null,
                         suggestions: null,
                     });
@@ -22767,6 +23015,7 @@ function lowerStatement(builder, stmtPath, label = null) {
                 builder.errors.push({
                     reason: `(BuildHIR::lowerStatement) Handle empty test in ForStatement`,
                     severity: ErrorSeverity.Todo,
+                    category: ErrorCategory.Todo,
                     loc: (_t = stmt.node.loc) !== null && _t !== void 0 ? _t : null,
                     suggestions: null,
                 });
@@ -22878,6 +23127,7 @@ function lowerStatement(builder, stmtPath, label = null) {
                         builder.errors.push({
                             reason: `Expected at most one \`default\` branch in a switch statement, this code should have failed to parse`,
                             severity: ErrorSeverity.InvalidJS,
+                            category: ErrorCategory.Syntax,
                             loc: (_y = case_.node.loc) !== null && _y !== void 0 ? _y : null,
                             suggestions: null,
                         });
@@ -22932,6 +23182,7 @@ function lowerStatement(builder, stmtPath, label = null) {
                 builder.errors.push({
                     reason: `(BuildHIR::lowerStatement) Handle ${nodeKind} kinds in VariableDeclaration`,
                     severity: ErrorSeverity.Todo,
+                    category: ErrorCategory.Todo,
                     loc: (_0 = stmt.node.loc) !== null && _0 !== void 0 ? _0 : null,
                     suggestions: null,
                 });
@@ -22953,6 +23204,7 @@ function lowerStatement(builder, stmtPath, label = null) {
                         builder.errors.push({
                             reason: `(BuildHIR::lowerAssignment) Could not find binding for declaration.`,
                             severity: ErrorSeverity.Invariant,
+                            category: ErrorCategory.Invariant,
                             loc: (_2 = id.node.loc) !== null && _2 !== void 0 ? _2 : null,
                             suggestions: null,
                         });
@@ -22971,6 +23223,7 @@ function lowerStatement(builder, stmtPath, label = null) {
                                 builder.errors.push({
                                     reason: `Expect \`const\` declaration not to be reassigned`,
                                     severity: ErrorSeverity.InvalidJS,
+                                    category: ErrorCategory.Syntax,
                                     loc: (_4 = id.node.loc) !== null && _4 !== void 0 ? _4 : null,
                                     suggestions: [
                                         {
@@ -23022,6 +23275,7 @@ function lowerStatement(builder, stmtPath, label = null) {
                         reason: `Expected variable declaration to be an identifier if no initializer was provided`,
                         description: `Got a \`${id.type}\``,
                         severity: ErrorSeverity.InvalidJS,
+                        category: ErrorCategory.Syntax,
                         loc: (_7 = stmt.node.loc) !== null && _7 !== void 0 ? _7 : null,
                         suggestions: null,
                     });
@@ -23098,6 +23352,7 @@ function lowerStatement(builder, stmtPath, label = null) {
                 builder.errors.push({
                     reason: `(BuildHIR::lowerStatement) Handle for-await loops`,
                     severity: ErrorSeverity.Todo,
+                    category: ErrorCategory.Todo,
                     loc: (_11 = stmt.node.loc) !== null && _11 !== void 0 ? _11 : null,
                     suggestions: null,
                 });
@@ -23273,6 +23528,7 @@ function lowerStatement(builder, stmtPath, label = null) {
                 builder.errors.push({
                     reason: `(BuildHIR::lowerStatement) Handle TryStatement without a catch clause`,
                     severity: ErrorSeverity.Todo,
+                    category: ErrorCategory.Todo,
                     loc: (_22 = stmt.node.loc) !== null && _22 !== void 0 ? _22 : null,
                     suggestions: null,
                 });
@@ -23282,6 +23538,7 @@ function lowerStatement(builder, stmtPath, label = null) {
                 builder.errors.push({
                     reason: `(BuildHIR::lowerStatement) Handle TryStatement with a finalizer ('finally') clause`,
                     severity: ErrorSeverity.Todo,
+                    category: ErrorCategory.Todo,
                     loc: (_23 = stmt.node.loc) !== null && _23 !== void 0 ? _23 : null,
                     suggestions: null,
                 });
@@ -23355,6 +23612,7 @@ function lowerStatement(builder, stmtPath, label = null) {
                 reason: `JavaScript 'with' syntax is not supported`,
                 description: `'with' syntax is considered deprecated and removed from JavaScript standards, consider alternatives`,
                 severity: ErrorSeverity.UnsupportedJS,
+                category: ErrorCategory.UnsupportedSyntax,
                 loc: (_28 = stmtPath.node.loc) !== null && _28 !== void 0 ? _28 : null,
                 suggestions: null,
             });
@@ -23370,6 +23628,7 @@ function lowerStatement(builder, stmtPath, label = null) {
                 reason: 'Inline `class` declarations are not supported',
                 description: `Move class declarations outside of components/hooks`,
                 severity: ErrorSeverity.UnsupportedJS,
+                category: ErrorCategory.UnsupportedSyntax,
                 loc: (_30 = stmtPath.node.loc) !== null && _30 !== void 0 ? _30 : null,
                 suggestions: null,
             });
@@ -23398,6 +23657,7 @@ function lowerStatement(builder, stmtPath, label = null) {
             builder.errors.push({
                 reason: 'JavaScript `import` and `export` statements may only appear at the top level of a module',
                 severity: ErrorSeverity.InvalidJS,
+                category: ErrorCategory.Syntax,
                 loc: (_33 = stmtPath.node.loc) !== null && _33 !== void 0 ? _33 : null,
                 suggestions: null,
             });
@@ -23412,6 +23672,7 @@ function lowerStatement(builder, stmtPath, label = null) {
             builder.errors.push({
                 reason: 'TypeScript `namespace` statements may only appear at the top level of a module',
                 severity: ErrorSeverity.InvalidJS,
+                category: ErrorCategory.Syntax,
                 loc: (_35 = stmtPath.node.loc) !== null && _35 !== void 0 ? _35 : null,
                 suggestions: null,
             });
@@ -23473,6 +23734,7 @@ function lowerObjectPropertyKey(builder, property) {
             builder.errors.push({
                 reason: `(BuildHIR::lowerExpression) Expected Identifier, got ${key.type} key in ObjectExpression`,
                 severity: ErrorSeverity.Todo,
+                category: ErrorCategory.Todo,
                 loc: (_a = key.node.loc) !== null && _a !== void 0 ? _a : null,
                 suggestions: null,
             });
@@ -23499,6 +23761,7 @@ function lowerObjectPropertyKey(builder, property) {
     builder.errors.push({
         reason: `(BuildHIR::lowerExpression) Expected Identifier, got ${key.type} key in ObjectExpression`,
         severity: ErrorSeverity.Todo,
+        category: ErrorCategory.Todo,
         loc: (_b = key.node.loc) !== null && _b !== void 0 ? _b : null,
         suggestions: null,
     });
@@ -23551,6 +23814,7 @@ function lowerExpression(builder, exprPath) {
                         builder.errors.push({
                             reason: `(BuildHIR::lowerExpression) Handle ${valuePath.type} values in ObjectExpression`,
                             severity: ErrorSeverity.Todo,
+                            category: ErrorCategory.Todo,
                             loc: (_b = valuePath.node.loc) !== null && _b !== void 0 ? _b : null,
                             suggestions: null,
                         });
@@ -23576,6 +23840,7 @@ function lowerExpression(builder, exprPath) {
                         builder.errors.push({
                             reason: `(BuildHIR::lowerExpression) Handle ${propertyPath.node.kind} functions in ObjectExpression`,
                             severity: ErrorSeverity.Todo,
+                            category: ErrorCategory.Todo,
                             loc: (_c = propertyPath.node.loc) !== null && _c !== void 0 ? _c : null,
                             suggestions: null,
                         });
@@ -23598,6 +23863,7 @@ function lowerExpression(builder, exprPath) {
                     builder.errors.push({
                         reason: `(BuildHIR::lowerExpression) Handle ${propertyPath.type} properties in ObjectExpression`,
                         severity: ErrorSeverity.Todo,
+                        category: ErrorCategory.Todo,
                         loc: (_d = propertyPath.node.loc) !== null && _d !== void 0 ? _d : null,
                         suggestions: null,
                     });
@@ -23631,6 +23897,7 @@ function lowerExpression(builder, exprPath) {
                     builder.errors.push({
                         reason: `(BuildHIR::lowerExpression) Handle ${element.type} elements in ArrayExpression`,
                         severity: ErrorSeverity.Todo,
+                        category: ErrorCategory.Todo,
                         loc: (_e = element.node.loc) !== null && _e !== void 0 ? _e : null,
                         suggestions: null,
                     });
@@ -23651,6 +23918,7 @@ function lowerExpression(builder, exprPath) {
                     reason: `Expected an expression as the \`new\` expression receiver (v8 intrinsics are not supported)`,
                     description: `Got a \`${calleePath.node.type}\``,
                     severity: ErrorSeverity.InvalidJS,
+                    category: ErrorCategory.Syntax,
                     loc: (_f = calleePath.node.loc) !== null && _f !== void 0 ? _f : null,
                     suggestions: null,
                 });
@@ -23676,6 +23944,7 @@ function lowerExpression(builder, exprPath) {
                 builder.errors.push({
                     reason: `Expected Expression, got ${calleePath.type} in CallExpression (v8 intrinsics not supported). This error is likely caused by a bug in React Compiler. Please file an issue`,
                     severity: ErrorSeverity.Todo,
+                    category: ErrorCategory.Todo,
                     loc: (_g = calleePath.node.loc) !== null && _g !== void 0 ? _g : null,
                     suggestions: null,
                 });
@@ -23711,6 +23980,7 @@ function lowerExpression(builder, exprPath) {
                 builder.errors.push({
                     reason: `(BuildHIR::lowerExpression) Expected Expression, got ${leftPath.type} lval in BinaryExpression`,
                     severity: ErrorSeverity.Todo,
+                    category: ErrorCategory.Todo,
                     loc: (_h = leftPath.node.loc) !== null && _h !== void 0 ? _h : null,
                     suggestions: null,
                 });
@@ -23723,6 +23993,7 @@ function lowerExpression(builder, exprPath) {
                 builder.errors.push({
                     reason: `(BuildHIR::lowerExpression) Pipe operator not supported`,
                     severity: ErrorSeverity.Todo,
+                    category: ErrorCategory.Todo,
                     loc: (_j = leftPath.node.loc) !== null && _j !== void 0 ? _j : null,
                     suggestions: null,
                 });
@@ -23751,6 +24022,7 @@ function lowerExpression(builder, exprPath) {
                     builder.errors.push({
                         reason: `Expected sequence expression to have at least one expression`,
                         severity: ErrorSeverity.InvalidJS,
+                        category: ErrorCategory.Syntax,
                         loc: (_a = expr.node.loc) !== null && _a !== void 0 ? _a : null,
                         suggestions: null,
                     });
@@ -23930,6 +24202,7 @@ function lowerExpression(builder, exprPath) {
                         reason: `(BuildHIR::lowerExpression) Unsupported syntax on the left side of an AssignmentExpression`,
                         description: `Expected an LVal, got: ${left.type}`,
                         severity: ErrorSeverity.Todo,
+                        category: ErrorCategory.Todo,
                         loc: (_q = left.node.loc) !== null && _q !== void 0 ? _q : null,
                         suggestions: null,
                     });
@@ -23955,6 +24228,7 @@ function lowerExpression(builder, exprPath) {
                 builder.errors.push({
                     reason: `(BuildHIR::lowerExpression) Handle ${operator} operators in AssignmentExpression`,
                     severity: ErrorSeverity.Todo,
+                    category: ErrorCategory.Todo,
                     loc: (_r = expr.node.loc) !== null && _r !== void 0 ? _r : null,
                     suggestions: null,
                 });
@@ -24048,6 +24322,7 @@ function lowerExpression(builder, exprPath) {
                     builder.errors.push({
                         reason: `(BuildHIR::lowerExpression) Expected Identifier or MemberExpression, got ${expr.type} lval in AssignmentExpression`,
                         severity: ErrorSeverity.Todo,
+                        category: ErrorCategory.Todo,
                         loc: (_v = expr.node.loc) !== null && _v !== void 0 ? _v : null,
                         suggestions: null,
                     });
@@ -24082,6 +24357,7 @@ function lowerExpression(builder, exprPath) {
                     builder.errors.push({
                         reason: `(BuildHIR::lowerExpression) Handle ${attribute.type} attributes in JSXElement`,
                         severity: ErrorSeverity.Todo,
+                        category: ErrorCategory.Todo,
                         loc: (_x = attribute.node.loc) !== null && _x !== void 0 ? _x : null,
                         suggestions: null,
                     });
@@ -24095,6 +24371,7 @@ function lowerExpression(builder, exprPath) {
                         builder.errors.push({
                             reason: `(BuildHIR::lowerExpression) Unexpected colon in attribute name \`${propName}\``,
                             severity: ErrorSeverity.Todo,
+                            category: ErrorCategory.Todo,
                             loc: (_y = namePath.node.loc) !== null && _y !== void 0 ? _y : null,
                             suggestions: null,
                         });
@@ -24128,6 +24405,7 @@ function lowerExpression(builder, exprPath) {
                         builder.errors.push({
                             reason: `(BuildHIR::lowerExpression) Handle ${valueExpr.type} attribute values in JSXElement`,
                             severity: ErrorSeverity.Todo,
+                            category: ErrorCategory.Todo,
                             loc: (_2 = (_1 = valueExpr.node) === null || _1 === void 0 ? void 0 : _1.loc) !== null && _2 !== void 0 ? _2 : null,
                             suggestions: null,
                         });
@@ -24138,6 +24416,7 @@ function lowerExpression(builder, exprPath) {
                         builder.errors.push({
                             reason: `(BuildHIR::lowerExpression) Handle ${expression.type} expressions in JSXExpressionContainer within JSXElement`,
                             severity: ErrorSeverity.Todo,
+                            category: ErrorCategory.Todo,
                             loc: (_3 = valueExpr.node.loc) !== null && _3 !== void 0 ? _3 : null,
                             suggestions: null,
                         });
@@ -24192,7 +24471,8 @@ function lowerExpression(builder, exprPath) {
                     if (locations.length > 1) {
                         CompilerError.throwDiagnostic({
                             severity: ErrorSeverity.Todo,
-                            category: 'Support duplicate fbt tags',
+                            category: ErrorCategory.FBT,
+                            reason: 'Support duplicate fbt tags',
                             description: `Support \`<${tagName}>\` tags with multiple \`<${tagName}:${name}>\` values`,
                             details: locations.map(loc => {
                                 return {
@@ -24244,6 +24524,7 @@ function lowerExpression(builder, exprPath) {
                 builder.errors.push({
                     reason: '(BuildHIR::lowerExpression) Handle tagged template with interpolations',
                     severity: ErrorSeverity.Todo,
+                    category: ErrorCategory.Todo,
                     loc: (_7 = exprPath.node.loc) !== null && _7 !== void 0 ? _7 : null,
                     suggestions: null,
                 });
@@ -24260,6 +24541,7 @@ function lowerExpression(builder, exprPath) {
                 builder.errors.push({
                     reason: '(BuildHIR::lowerExpression) Handle tagged template where cooked value is different from raw value',
                     severity: ErrorSeverity.Todo,
+                    category: ErrorCategory.Todo,
                     loc: (_9 = exprPath.node.loc) !== null && _9 !== void 0 ? _9 : null,
                     suggestions: null,
                 });
@@ -24280,6 +24562,7 @@ function lowerExpression(builder, exprPath) {
                 builder.errors.push({
                     reason: `Unexpected quasi and subexpression lengths in template literal`,
                     severity: ErrorSeverity.InvalidJS,
+                    category: ErrorCategory.Syntax,
                     loc: (_10 = exprPath.node.loc) !== null && _10 !== void 0 ? _10 : null,
                     suggestions: null,
                 });
@@ -24289,6 +24572,7 @@ function lowerExpression(builder, exprPath) {
                 builder.errors.push({
                     reason: `(BuildHIR::lowerAssignment) Handle TSType in TemplateLiteral.`,
                     severity: ErrorSeverity.Todo,
+                    category: ErrorCategory.Todo,
                     loc: (_11 = exprPath.node.loc) !== null && _11 !== void 0 ? _11 : null,
                     suggestions: null,
                 });
@@ -24329,6 +24613,7 @@ function lowerExpression(builder, exprPath) {
                     builder.errors.push({
                         reason: `Only object properties can be deleted`,
                         severity: ErrorSeverity.InvalidJS,
+                        category: ErrorCategory.Syntax,
                         loc: (_12 = expr.node.loc) !== null && _12 !== void 0 ? _12 : null,
                         suggestions: [
                             {
@@ -24345,6 +24630,7 @@ function lowerExpression(builder, exprPath) {
                 builder.errors.push({
                     reason: `Throw expressions are not supported`,
                     severity: ErrorSeverity.InvalidJS,
+                    category: ErrorCategory.Syntax,
                     loc: (_13 = expr.node.loc) !== null && _13 !== void 0 ? _13 : null,
                     suggestions: [
                         {
@@ -24458,6 +24744,7 @@ function lowerExpression(builder, exprPath) {
                 builder.errors.push({
                     reason: `(BuildHIR::lowerExpression) Handle UpdateExpression with ${argument.type} argument`,
                     severity: ErrorSeverity.Todo,
+                    category: ErrorCategory.Todo,
                     loc: (_17 = exprPath.node.loc) !== null && _17 !== void 0 ? _17 : null,
                     suggestions: null,
                 });
@@ -24467,6 +24754,7 @@ function lowerExpression(builder, exprPath) {
                 builder.errors.push({
                     reason: `(BuildHIR::lowerExpression) Handle UpdateExpression to variables captured within lambdas.`,
                     severity: ErrorSeverity.Todo,
+                    category: ErrorCategory.Todo,
                     loc: (_18 = exprPath.node.loc) !== null && _18 !== void 0 ? _18 : null,
                     suggestions: null,
                 });
@@ -24478,6 +24766,7 @@ function lowerExpression(builder, exprPath) {
                     builder.errors.push({
                         reason: `(BuildHIR::lowerExpression) Found an invalid UpdateExpression without a previously reported error`,
                         severity: ErrorSeverity.Invariant,
+                        category: ErrorCategory.Invariant,
                         loc: exprLoc,
                         suggestions: null,
                     });
@@ -24488,6 +24777,7 @@ function lowerExpression(builder, exprPath) {
                 builder.errors.push({
                     reason: `(BuildHIR::lowerExpression) Support UpdateExpression where argument is a global`,
                     severity: ErrorSeverity.Todo,
+                    category: ErrorCategory.Todo,
                     loc: exprLoc,
                     suggestions: null,
                 });
@@ -24541,6 +24831,7 @@ function lowerExpression(builder, exprPath) {
             builder.errors.push({
                 reason: `(BuildHIR::lowerExpression) Handle MetaProperty expressions other than import.meta`,
                 severity: ErrorSeverity.Todo,
+                category: ErrorCategory.Todo,
                 loc: (_22 = exprPath.node.loc) !== null && _22 !== void 0 ? _22 : null,
                 suggestions: null,
             });
@@ -24550,6 +24841,7 @@ function lowerExpression(builder, exprPath) {
             builder.errors.push({
                 reason: `(BuildHIR::lowerExpression) Handle ${exprPath.type} expressions`,
                 severity: ErrorSeverity.Todo,
+                category: ErrorCategory.Todo,
                 loc: (_23 = exprPath.node.loc) !== null && _23 !== void 0 ? _23 : null,
                 suggestions: null,
             });
@@ -24783,6 +25075,7 @@ function lowerReorderableExpression(builder, expr) {
         builder.errors.push({
             reason: `(BuildHIR::node.lowerReorderableExpression) Expression type \`${expr.type}\` cannot be safely reordered`,
             severity: ErrorSeverity.Todo,
+            category: ErrorCategory.Todo,
             loc: (_a = expr.node.loc) !== null && _a !== void 0 ? _a : null,
             suggestions: null,
         });
@@ -24912,6 +25205,7 @@ function lowerArguments(builder, expr) {
             builder.errors.push({
                 reason: `(BuildHIR::lowerExpression) Handle ${argPath.type} arguments in CallExpression`,
                 severity: ErrorSeverity.Todo,
+                category: ErrorCategory.Todo,
                 loc: (_a = argPath.node.loc) !== null && _a !== void 0 ? _a : null,
                 suggestions: null,
             });
@@ -24938,6 +25232,7 @@ function lowerMemberExpression(builder, expr, loweredObject = null) {
             builder.errors.push({
                 reason: `(BuildHIR::lowerMemberExpression) Handle ${propertyNode.type} property`,
                 severity: ErrorSeverity.Todo,
+                category: ErrorCategory.Todo,
                 loc: (_b = propertyNode.node.loc) !== null && _b !== void 0 ? _b : null,
                 suggestions: null,
             });
@@ -24960,6 +25255,7 @@ function lowerMemberExpression(builder, expr, loweredObject = null) {
             builder.errors.push({
                 reason: `(BuildHIR::lowerMemberExpression) Expected Expression, got ${propertyNode.type} property`,
                 severity: ErrorSeverity.Todo,
+                category: ErrorCategory.Todo,
                 loc: (_c = propertyNode.node.loc) !== null && _c !== void 0 ? _c : null,
                 suggestions: null,
             });
@@ -25017,6 +25313,7 @@ function lowerJsxElementName(builder, exprPath) {
                 reason: `Expected JSXNamespacedName to have no colons in the namespace or name`,
                 description: `Got \`${namespace}\` : \`${name}\``,
                 severity: ErrorSeverity.InvalidJS,
+                category: ErrorCategory.Syntax,
                 loc: (_b = exprPath.node.loc) !== null && _b !== void 0 ? _b : null,
                 suggestions: null,
             });
@@ -25032,6 +25329,7 @@ function lowerJsxElementName(builder, exprPath) {
         builder.errors.push({
             reason: `(BuildHIR::lowerJsxElementName) Handle ${exprPath.type} tags`,
             severity: ErrorSeverity.Todo,
+            category: ErrorCategory.Todo,
             loc: (_c = exprPath.node.loc) !== null && _c !== void 0 ? _c : null,
             suggestions: null,
         });
@@ -25116,6 +25414,7 @@ function lowerJsxElement(builder, exprPath) {
         builder.errors.push({
             reason: `(BuildHIR::lowerJsxElement) Unhandled JsxElement, got: ${exprPath.type}`,
             severity: ErrorSeverity.Todo,
+            category: ErrorCategory.Todo,
             loc: (_c = exprPath.node.loc) !== null && _c !== void 0 ? _c : null,
             suggestions: null,
         });
@@ -25237,6 +25536,7 @@ function lowerIdentifier(builder, exprPath) {
                     reason: `The 'eval' function is not supported`,
                     description: 'Eval is an anti-pattern in JavaScript, and the code executed cannot be evaluated by React Compiler',
                     severity: ErrorSeverity.UnsupportedJS,
+                    category: ErrorCategory.UnsupportedSyntax,
                     loc: (_b = exprPath.node.loc) !== null && _b !== void 0 ? _b : null,
                     suggestions: null,
                 });
@@ -25278,6 +25578,7 @@ function lowerIdentifierForAssignment(builder, loc, kind, path) {
             builder.errors.push({
                 reason: `(BuildHIR::lowerAssignment) Could not find binding for declaration.`,
                 severity: ErrorSeverity.Invariant,
+                category: ErrorCategory.Invariant,
                 loc: (_a = path.node.loc) !== null && _a !== void 0 ? _a : null,
                 suggestions: null,
             });
@@ -25289,6 +25590,7 @@ function lowerIdentifierForAssignment(builder, loc, kind, path) {
         builder.errors.push({
             reason: `Cannot reassign a \`const\` variable`,
             severity: ErrorSeverity.InvalidJS,
+            category: ErrorCategory.Syntax,
             loc: (_b = path.node.loc) !== null && _b !== void 0 ? _b : null,
             description: binding.identifier.name != null
                 ? `\`${binding.identifier.name.value}\` is declared as const`
@@ -25335,6 +25637,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                     builder.errors.push({
                         reason: `Expected \`const\` declaration not to be reassigned`,
                         severity: ErrorSeverity.InvalidJS,
+                        category: ErrorCategory.Syntax,
                         loc: (_b = lvalue.node.loc) !== null && _b !== void 0 ? _b : null,
                         suggestions: null,
                     });
@@ -25346,6 +25649,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                     builder.errors.push({
                         reason: `Unexpected context variable kind`,
                         severity: ErrorSeverity.InvalidJS,
+                        category: ErrorCategory.Syntax,
                         loc: (_c = lvalue.node.loc) !== null && _c !== void 0 ? _c : null,
                         suggestions: null,
                     });
@@ -25422,6 +25726,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                     builder.errors.push({
                         reason: `(BuildHIR::lowerAssignment) Handle ${property.type} properties in MemberExpression`,
                         severity: ErrorSeverity.Todo,
+                        category: ErrorCategory.Todo,
                         loc: (_f = property.node.loc) !== null && _f !== void 0 ? _f : null,
                         suggestions: null,
                     });
@@ -25434,6 +25739,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                     builder.errors.push({
                         reason: '(BuildHIR::lowerAssignment) Expected private name to appear as a non-computed property',
                         severity: ErrorSeverity.Todo,
+                        category: ErrorCategory.Todo,
                         loc: (_g = property.node.loc) !== null && _g !== void 0 ? _g : null,
                         suggestions: null,
                     });
@@ -25481,6 +25787,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                         else if (identifier.kind === 'Global') {
                             builder.errors.push({
                                 severity: ErrorSeverity.Todo,
+                                category: ErrorCategory.Todo,
                                 reason: 'Expected reassignment of globals to enable forceTemporaries',
                                 loc: (_j = element.node.loc) !== null && _j !== void 0 ? _j : GeneratedSource,
                             });
@@ -25512,6 +25819,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                     else if (identifier.kind === 'Global') {
                         builder.errors.push({
                             severity: ErrorSeverity.Todo,
+                            category: ErrorCategory.Todo,
                             reason: 'Expected reassignment of globals to enable forceTemporaries',
                             loc: (_m = element.node.loc) !== null && _m !== void 0 ? _m : GeneratedSource,
                         });
@@ -25561,6 +25869,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                         builder.errors.push({
                             reason: `(BuildHIR::lowerAssignment) Handle ${argument.node.type} rest element in ObjectPattern`,
                             severity: ErrorSeverity.Todo,
+                            category: ErrorCategory.Todo,
                             loc: (_q = argument.node.loc) !== null && _q !== void 0 ? _q : null,
                             suggestions: null,
                         });
@@ -25584,6 +25893,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                         else if (identifier.kind === 'Global') {
                             builder.errors.push({
                                 severity: ErrorSeverity.Todo,
+                                category: ErrorCategory.Todo,
                                 reason: 'Expected reassignment of globals to enable forceTemporaries',
                                 loc: (_t = property.node.loc) !== null && _t !== void 0 ? _t : GeneratedSource,
                             });
@@ -25600,6 +25910,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                         builder.errors.push({
                             reason: `(BuildHIR::lowerAssignment) Handle ${property.type} properties in ObjectPattern`,
                             severity: ErrorSeverity.Todo,
+                            category: ErrorCategory.Todo,
                             loc: (_u = property.node.loc) !== null && _u !== void 0 ? _u : null,
                             suggestions: null,
                         });
@@ -25609,6 +25920,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                         builder.errors.push({
                             reason: `(BuildHIR::lowerAssignment) Handle computed properties in ObjectPattern`,
                             severity: ErrorSeverity.Todo,
+                            category: ErrorCategory.Todo,
                             loc: (_v = property.node.loc) !== null && _v !== void 0 ? _v : null,
                             suggestions: null,
                         });
@@ -25623,6 +25935,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                         builder.errors.push({
                             reason: `(BuildHIR::lowerAssignment) Expected object property value to be an LVal, got: ${element.type}`,
                             severity: ErrorSeverity.Todo,
+                            category: ErrorCategory.Todo,
                             loc: (_w = element.node.loc) !== null && _w !== void 0 ? _w : null,
                             suggestions: null,
                         });
@@ -25639,6 +25952,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                         else if (identifier.kind === 'Global') {
                             builder.errors.push({
                                 severity: ErrorSeverity.Todo,
+                                category: ErrorCategory.Todo,
                                 reason: 'Expected reassignment of globals to enable forceTemporaries',
                                 loc: (_y = element.node.loc) !== null && _y !== void 0 ? _y : GeneratedSource,
                             });
@@ -25754,6 +26068,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
             builder.errors.push({
                 reason: `(BuildHIR::lowerAssignment) Handle ${lvaluePath.type} assignments`,
                 severity: ErrorSeverity.Todo,
+                category: ErrorCategory.Todo,
                 loc: (_2 = lvaluePath.node.loc) !== null && _2 !== void 0 ? _2 : null,
                 suggestions: null,
             });
@@ -33466,6 +33781,7 @@ function inlineJsxTransform(fn, inlineJsxTransformConfig) {
                     kind: 'CompileDiagnostic',
                     fnLoc: null,
                     detail: {
+                        category: ErrorCategory.Todo,
                         reason: 'JSX Inlining is not supported on value blocks',
                         loc: instr.loc,
                     },
@@ -37254,6 +37570,7 @@ function codegenInstructionValue(cx, instrValue) {
                         cx.errors.push({
                             reason: `(CodegenReactiveFunction::codegenInstructionValue) Cannot declare variables in a value block, tried to declare '${declarator.id.name}'`,
                             severity: ErrorSeverity.Todo,
+                            category: ErrorCategory.Todo,
                             loc: (_a = declarator.loc) !== null && _a !== void 0 ? _a : null,
                             suggestions: null,
                         });
@@ -37263,6 +37580,7 @@ function codegenInstructionValue(cx, instrValue) {
                         cx.errors.push({
                             reason: `(CodegenReactiveFunction::codegenInstructionValue) Handle conversion of ${stmt.type} to expression`,
                             severity: ErrorSeverity.Todo,
+                            category: ErrorCategory.Todo,
                             loc: (_b = stmt.loc) !== null && _b !== void 0 ? _b : null,
                             suggestions: null,
                         });
@@ -38671,7 +38989,7 @@ function hashEffect(effect) {
                 effect.kind,
                 effect.place.identifier.id,
                 effect.error.severity,
-                effect.error.category,
+                effect.error.reason,
                 effect.error.description,
                 printSourceLocation((_a = effect.error.primaryLocation()) !== null && _a !== void 0 ? _a : GeneratedSource),
             ].join(':');
@@ -38939,8 +39257,9 @@ function applySignature(context, state, signature, instruction) {
                             ? `\`${effect.value.identifier.name.value}\``
                             : 'value';
                         const diagnostic = CompilerDiagnostic.create({
+                            category: ErrorCategory.Immutability,
                             severity: ErrorSeverity.InvalidReact,
-                            category: 'This value cannot be modified',
+                            reason: 'This value cannot be modified',
                             description: `${reason}.`,
                         }).withDetail({
                             kind: 'error',
@@ -39334,8 +39653,9 @@ function applyEffect(context, state, _effect, initialized, effects) {
                         : null;
                     const hoistedAccess = context.hoistedContextDeclarations.get(effect.value.identifier.declarationId);
                     const diagnostic = CompilerDiagnostic.create({
+                        category: ErrorCategory.Immutability,
                         severity: ErrorSeverity.InvalidReact,
-                        category: 'Cannot access variable before it is declared',
+                        reason: 'Cannot access variable before it is declared',
                         description: `${variable !== null && variable !== void 0 ? variable : 'This variable'} is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.`,
                     });
                     if (hoistedAccess != null && hoistedAccess.loc != effect.value.loc) {
@@ -39366,8 +39686,9 @@ function applyEffect(context, state, _effect, initialized, effects) {
                         ? `\`${effect.value.identifier.name.value}\``
                         : 'value';
                     const diagnostic = CompilerDiagnostic.create({
+                        category: ErrorCategory.Immutability,
                         severity: ErrorSeverity.InvalidReact,
-                        category: 'This value cannot be modified',
+                        reason: 'This value cannot be modified',
                         description: `${reason}.`,
                     }).withDetail({
                         kind: 'error',
@@ -40089,8 +40410,9 @@ function computeSignatureForInstruction(context, env, instr) {
                 kind: 'MutateGlobal',
                 place: value.value,
                 error: CompilerDiagnostic.create({
+                    category: ErrorCategory.Globals,
                     severity: ErrorSeverity.InvalidReact,
-                    category: 'Cannot reassign variables declared outside of the component/hook',
+                    reason: 'Cannot reassign variables declared outside of the component/hook',
                     description: `Variable ${variable} is declared outside of the component/hook. Reassigning this value during render is a form of side effect, which can cause unpredictable behavior depending on when the component happens to re-render. If this variable is used in rendering, use useState instead. Otherwise, consider updating it in an effect. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render)`,
                 }).withDetail({
                     kind: 'error',
@@ -40171,8 +40493,9 @@ function computeEffectsForLegacySignature(state, signature, lvalue, receiver, ar
             kind: 'Impure',
             place: receiver,
             error: CompilerDiagnostic.create({
+                category: ErrorCategory.Purity,
                 severity: ErrorSeverity.InvalidReact,
-                category: 'Cannot call impure function during render',
+                reason: 'Cannot call impure function during render',
                 description: (signature.canonicalName != null
                     ? `\`${signature.canonicalName}\` is an impure function. `
                     : '') +
@@ -42504,8 +42827,9 @@ function extractManualMemoizationArgs(instr, kind, sidemap, errors) {
     const [fnPlace, depsListPlace] = instr.value.args;
     if (fnPlace == null) {
         errors.pushDiagnostic(CompilerDiagnostic.create({
+            category: ErrorCategory.UseMemo,
             severity: ErrorSeverity.InvalidReact,
-            category: `Expected a callback function to be passed to ${kind}`,
+            reason: `Expected a callback function to be passed to ${kind}`,
             description: `Expected a callback function to be passed to ${kind}`,
             suggestions: null,
         }).withDetail({
@@ -42517,8 +42841,9 @@ function extractManualMemoizationArgs(instr, kind, sidemap, errors) {
     }
     if (fnPlace.kind === 'Spread' || (depsListPlace === null || depsListPlace === void 0 ? void 0 : depsListPlace.kind) === 'Spread') {
         errors.pushDiagnostic(CompilerDiagnostic.create({
+            category: ErrorCategory.UseMemo,
             severity: ErrorSeverity.InvalidReact,
-            category: `Unexpected spread argument to ${kind}`,
+            reason: `Unexpected spread argument to ${kind}`,
             description: `Unexpected spread argument to ${kind}`,
             suggestions: null,
         }).withDetail({
@@ -42533,8 +42858,9 @@ function extractManualMemoizationArgs(instr, kind, sidemap, errors) {
         const maybeDepsList = sidemap.maybeDepsLists.get(depsListPlace.identifier.id);
         if (maybeDepsList == null) {
             errors.pushDiagnostic(CompilerDiagnostic.create({
+                category: ErrorCategory.UseMemo,
                 severity: ErrorSeverity.InvalidReact,
-                category: `Expected the dependency list for ${kind} to be an array literal`,
+                reason: `Expected the dependency list for ${kind} to be an array literal`,
                 description: `Expected the dependency list for ${kind} to be an array literal`,
                 suggestions: null,
             }).withDetail({
@@ -42549,8 +42875,9 @@ function extractManualMemoizationArgs(instr, kind, sidemap, errors) {
             const maybeDep = sidemap.maybeDeps.get(dep.identifier.id);
             if (maybeDep == null) {
                 errors.pushDiagnostic(CompilerDiagnostic.create({
+                    category: ErrorCategory.UseMemo,
                     severity: ErrorSeverity.InvalidReact,
-                    category: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
+                    reason: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
                     description: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
                     suggestions: null,
                 }).withDetail({
@@ -42607,7 +42934,8 @@ function dropManualMemoization(func) {
                             if (!hasNonVoidReturn(funcToCheck.loweredFunc.func)) {
                                 errors.pushDiagnostic(CompilerDiagnostic.create({
                                     severity: ErrorSeverity.InvalidReact,
-                                    category: 'useMemo() callbacks must return a value',
+                                    category: ErrorCategory.UseMemo,
+                                    reason: 'useMemo() callbacks must return a value',
                                     description: `This ${manualMemo.loadInstr.value.kind === 'PropertyLoad'
                                         ? 'React.useMemo'
                                         : 'useMemo'} callback doesn't return a value. useMemo is for computing and caching values, not for arbitrary side effects.`,
@@ -42624,8 +42952,9 @@ function dropManualMemoization(func) {
                     if (isValidationEnabled) {
                         if (!sidemap.functions.has(fnPlace.identifier.id)) {
                             errors.pushDiagnostic(CompilerDiagnostic.create({
+                                category: ErrorCategory.UseMemo,
                                 severity: ErrorSeverity.InvalidReact,
-                                category: `Expected the first argument to be an inline function expression`,
+                                reason: `Expected the first argument to be an inline function expression`,
                                 description: `Expected the first argument to be an inline function expression`,
                                 suggestions: [],
                             }).withDetail({
@@ -46414,6 +46743,7 @@ function validateHooksUsage(fn) {
         const previousError = typeof place.loc !== 'symbol' ? errorsByPlace.get(place.loc) : undefined;
         if (previousError === undefined || previousError.reason !== reason) {
             recordError(place.loc, new CompilerErrorDetail({
+                category: ErrorCategory.Hooks,
                 description: null,
                 reason,
                 loc: place.loc,
@@ -46426,6 +46756,7 @@ function validateHooksUsage(fn) {
         const previousError = typeof place.loc !== 'symbol' ? errorsByPlace.get(place.loc) : undefined;
         if (previousError === undefined) {
             recordError(place.loc, new CompilerErrorDetail({
+                category: ErrorCategory.Hooks,
                 description: null,
                 reason: 'Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values',
                 loc: place.loc,
@@ -46438,6 +46769,7 @@ function validateHooksUsage(fn) {
         const previousError = typeof place.loc !== 'symbol' ? errorsByPlace.get(place.loc) : undefined;
         if (previousError === undefined) {
             recordError(place.loc, new CompilerErrorDetail({
+                category: ErrorCategory.Hooks,
                 description: null,
                 reason: 'Hooks must be the same function on every render, but this value may change over time to a different function. See https://react.dev/reference/rules/react-calls-components-and-hooks#dont-dynamically-use-hooks',
                 loc: place.loc,
@@ -46641,7 +46973,7 @@ function validateHooksUsage(fn) {
         }
     }
     for (const [, error] of errorsByPlace) {
-        errors.push(error);
+        errors.pushErrorDetail(error);
     }
     return errors.asResult();
 }
@@ -46662,6 +46994,7 @@ function visitFunctionExpression(errors, fn) {
                     const hookKind = getHookKind(fn.env, callee.identifier);
                     if (hookKind != null) {
                         errors.pushErrorDetail(new CompilerErrorDetail({
+                            category: ErrorCategory.Hooks,
                             severity: ErrorSeverity.InvalidReact,
                             reason: 'Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)',
                             loc: callee.loc,
@@ -46712,6 +47045,7 @@ let Visitor$1 = class Visitor extends ReactiveFunctionVisitor {
                 (isMutable(instruction, deps) ||
                     isUnmemoized$1(deps.identifier, this.scopes))) {
                 state.push({
+                    category: ErrorCategory.EffectDependencies,
                     reason: 'React Compiler has skipped optimizing this component because the effect dependencies could not be memoized. Unmemoized effect dependencies can trigger an infinite loop or other unexpected behavior',
                     description: null,
                     severity: ErrorSeverity.CannotPreserveMemoization,
@@ -46763,6 +47097,7 @@ function validateNoCapitalizedCalls(fn) {
                     const calleeName = capitalLoadGlobals.get(calleeIdentifier);
                     if (calleeName != null) {
                         CompilerError.throwInvalidReact({
+                            category: ErrorCategory.CapitalizedCalls,
                             reason,
                             description: `${calleeName} may be a component.`,
                             loc: value.loc,
@@ -46783,6 +47118,7 @@ function validateNoCapitalizedCalls(fn) {
                     const propertyName = capitalizedProperties.get(propertyIdentifier);
                     if (propertyName != null) {
                         errors.push({
+                            category: ErrorCategory.CapitalizedCalls,
                             severity: ErrorSeverity.InvalidReact,
                             reason,
                             description: `${propertyName} may be a component.`,
@@ -47147,8 +47483,9 @@ function validateNoRefAccessInRenderImpl(fn, env) {
                             if (fnType.fn.readRefEffect) {
                                 didError = true;
                                 errors.pushDiagnostic(CompilerDiagnostic.create({
+                                    category: ErrorCategory.Refs,
                                     severity: ErrorSeverity.InvalidReact,
-                                    category: 'Cannot access refs during render',
+                                    reason: 'Cannot access refs during render',
                                     description: ERROR_DESCRIPTION,
                                 }).withDetail({
                                     kind: 'error',
@@ -47330,8 +47667,9 @@ function guardCheck(errors, operand, env) {
     var _a;
     if (((_a = env.get(operand.identifier.id)) === null || _a === void 0 ? void 0 : _a.kind) === 'Guard') {
         errors.pushDiagnostic(CompilerDiagnostic.create({
+            category: ErrorCategory.Refs,
             severity: ErrorSeverity.InvalidReact,
-            category: 'Cannot access refs during render',
+            reason: 'Cannot access refs during render',
             description: ERROR_DESCRIPTION,
         }).withDetail({
             kind: 'error',
@@ -47346,8 +47684,9 @@ function validateNoRefValueAccess(errors, env, operand) {
     if ((type === null || type === void 0 ? void 0 : type.kind) === 'RefValue' ||
         ((type === null || type === void 0 ? void 0 : type.kind) === 'Structure' && ((_a = type.fn) === null || _a === void 0 ? void 0 : _a.readRefEffect))) {
         errors.pushDiagnostic(CompilerDiagnostic.create({
+            category: ErrorCategory.Refs,
             severity: ErrorSeverity.InvalidReact,
-            category: 'Cannot access refs during render',
+            reason: 'Cannot access refs during render',
             description: ERROR_DESCRIPTION,
         }).withDetail({
             kind: 'error',
@@ -47363,8 +47702,9 @@ function validateNoRefPassedToFunction(errors, env, operand, loc) {
         (type === null || type === void 0 ? void 0 : type.kind) === 'RefValue' ||
         ((type === null || type === void 0 ? void 0 : type.kind) === 'Structure' && ((_a = type.fn) === null || _a === void 0 ? void 0 : _a.readRefEffect))) {
         errors.pushDiagnostic(CompilerDiagnostic.create({
+            category: ErrorCategory.Refs,
             severity: ErrorSeverity.InvalidReact,
-            category: 'Cannot access refs during render',
+            reason: 'Cannot access refs during render',
             description: ERROR_DESCRIPTION,
         }).withDetail({
             kind: 'error',
@@ -47377,8 +47717,9 @@ function validateNoRefUpdate(errors, env, operand, loc) {
     const type = destructure(env.get(operand.identifier.id));
     if ((type === null || type === void 0 ? void 0 : type.kind) === 'Ref' || (type === null || type === void 0 ? void 0 : type.kind) === 'RefValue') {
         errors.pushDiagnostic(CompilerDiagnostic.create({
+            category: ErrorCategory.Refs,
             severity: ErrorSeverity.InvalidReact,
-            category: 'Cannot access refs during render',
+            reason: 'Cannot access refs during render',
             description: ERROR_DESCRIPTION,
         }).withDetail({
             kind: 'error',
@@ -47392,8 +47733,9 @@ function validateNoDirectRefValueAccess(errors, operand, env) {
     const type = destructure(env.get(operand.identifier.id));
     if ((type === null || type === void 0 ? void 0 : type.kind) === 'RefValue') {
         errors.pushDiagnostic(CompilerDiagnostic.create({
+            category: ErrorCategory.Refs,
             severity: ErrorSeverity.InvalidReact,
-            category: 'Cannot access refs during render',
+            reason: 'Cannot access refs during render',
             description: ERROR_DESCRIPTION,
         }).withDetail({
             kind: 'error',
@@ -47462,7 +47804,8 @@ function validateNoSetStateInRenderImpl(fn, unconditionalSetStateFunctions) {
                         unconditionalSetStateFunctions.has(callee.identifier.id)) {
                         if (activeManualMemoId !== null) {
                             errors.pushDiagnostic(CompilerDiagnostic.create({
-                                category: 'Calling setState from useMemo may trigger an infinite loop',
+                                category: ErrorCategory.RenderSetState,
+                                reason: 'Calling setState from useMemo may trigger an infinite loop',
                                 description: 'Each time the memo callback is evaluated it will change state. This can cause a memoization dependency to change, running the memo function again and causing an infinite loop. Instead of setting state in useMemo(), prefer deriving the value during render. (https://react.dev/reference/react/useState)',
                                 severity: ErrorSeverity.InvalidReact,
                                 suggestions: null,
@@ -47474,14 +47817,15 @@ function validateNoSetStateInRenderImpl(fn, unconditionalSetStateFunctions) {
                         }
                         else if (unconditionalBlocks.has(block.id)) {
                             errors.pushDiagnostic(CompilerDiagnostic.create({
-                                category: 'Calling setState during render may trigger an infinite loop',
+                                category: ErrorCategory.RenderSetState,
+                                reason: 'Calling setState during render may trigger an infinite loop',
                                 description: 'Calling setState during render will trigger another render, and can lead to infinite loops. (https://react.dev/reference/react/useState)',
                                 severity: ErrorSeverity.InvalidReact,
                                 suggestions: null,
                             }).withDetail({
                                 kind: 'error',
                                 loc: callee.loc,
-                                message: 'Found setState() within useMemo()',
+                                message: 'Found setState() in render',
                             }));
                         }
                     }
@@ -47624,8 +47968,9 @@ function validateInferredDep(dep, temporaries, declsWithinMemoBlock, validDepsIn
         }
     }
     errorState.pushDiagnostic(CompilerDiagnostic.create({
+        category: ErrorCategory.PreserveManualMemo,
         severity: ErrorSeverity.CannotPreserveMemoization,
-        category: 'Compilation skipped because existing memoization could not be preserved',
+        reason: 'Compilation skipped because existing memoization could not be preserved',
         description: [
             'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. ',
             'The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. ',
@@ -47784,8 +48129,9 @@ class Visitor extends ReactiveFunctionVisitor {
                     !this.scopes.has(identifier.scope.id) &&
                     !this.prunedScopes.has(identifier.scope.id)) {
                     state.errors.pushDiagnostic(CompilerDiagnostic.create({
+                        category: ErrorCategory.PreserveManualMemo,
                         severity: ErrorSeverity.CannotPreserveMemoization,
-                        category: 'Compilation skipped because existing memoization could not be preserved',
+                        reason: 'Compilation skipped because existing memoization could not be preserved',
                         description: [
                             'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. ',
                             'This dependency may be mutated later, which could cause the value to change unexpectedly.',
@@ -47820,8 +48166,9 @@ class Visitor extends ReactiveFunctionVisitor {
                     for (const identifier of decls) {
                         if (isUnmemoized(identifier, this.scopes)) {
                             state.errors.pushDiagnostic(CompilerDiagnostic.create({
+                                category: ErrorCategory.PreserveManualMemo,
                                 severity: ErrorSeverity.CannotPreserveMemoization,
-                                category: 'Compilation skipped because existing memoization could not be preserved',
+                                reason: 'Compilation skipped because existing memoization could not be preserved',
                                 description: [
                                     'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output. ',
                                     '',
@@ -47896,8 +48243,9 @@ function validateUseMemo(fn) {
                             ? firstParam.loc
                             : firstParam.place.loc;
                         errors.pushDiagnostic(CompilerDiagnostic.create({
+                            category: ErrorCategory.UseMemo,
                             severity: ErrorSeverity.InvalidReact,
-                            category: 'useMemo() callbacks may not accept parameters',
+                            reason: 'useMemo() callbacks may not accept parameters',
                             description: 'useMemo() callbacks are called by React to cache calculations across re-renders. They should not take parameters. Instead, directly reference the props, state, or local variables needed for the computation.',
                             suggestions: null,
                         }).withDetail({
@@ -47908,8 +48256,9 @@ function validateUseMemo(fn) {
                     }
                     if (body.loweredFunc.func.async || body.loweredFunc.func.generator) {
                         errors.pushDiagnostic(CompilerDiagnostic.create({
+                            category: ErrorCategory.UseMemo,
                             severity: ErrorSeverity.InvalidReact,
-                            category: 'useMemo() callbacks may not be async or generator functions',
+                            reason: 'useMemo() callbacks may not be async or generator functions',
                             description: 'useMemo() callbacks are called once and must synchronously return a value.',
                             suggestions: null,
                         }).withDetail({
@@ -47936,8 +48285,9 @@ function validateLocalsNotReassignedAfterRender(fn) {
             ? `\`${reassignment.identifier.name.value}\``
             : 'variable';
         errors.pushDiagnostic(CompilerDiagnostic.create({
+            category: ErrorCategory.Immutability,
             severity: ErrorSeverity.InvalidReact,
-            category: 'Cannot reassign variable after render completes',
+            reason: 'Cannot reassign variable after render completes',
             description: `Reassigning ${variable} after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.`,
         }).withDetail({
             kind: 'error',
@@ -47973,8 +48323,9 @@ function getContextReassignment(fn, contextVariables, isFunctionExpression, isAs
                                 ? `\`${reassignment.identifier.name.value}\``
                                 : 'variable';
                             errors.pushDiagnostic(CompilerDiagnostic.create({
+                                category: ErrorCategory.Immutability,
                                 severity: ErrorSeverity.InvalidReact,
-                                category: 'Cannot reassign variable in async function',
+                                reason: 'Cannot reassign variable in async function',
                                 description: 'Reassigning a variable in an async function can cause inconsistent behavior on subsequent renders. Consider using state instead',
                             }).withDetail({
                                 kind: 'error',
@@ -48364,7 +48715,8 @@ function validateNoSetStateInEffects(fn) {
                             const setState = setStateFunctions.get(arg.identifier.id);
                             if (setState !== undefined) {
                                 errors.pushDiagnostic(CompilerDiagnostic.create({
-                                    category: 'Calling setState synchronously within an effect can trigger cascading renders',
+                                    category: ErrorCategory.EffectSetState,
+                                    reason: 'Calling setState synchronously within an effect can trigger cascading renders',
                                     description: 'Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. ' +
                                         'In general, the body of an effect should do one or both of the following:\n' +
                                         '* Update external systems with the latest state from React.\n' +
@@ -48430,8 +48782,9 @@ function validateNoJSXInTryStatement(fn) {
                     case 'JsxExpression':
                     case 'JsxFragment': {
                         errors.pushDiagnostic(CompilerDiagnostic.create({
+                            category: ErrorCategory.ErrorBoundaries,
                             severity: ErrorSeverity.InvalidReact,
-                            category: 'Avoid constructing JSX within try/catch',
+                            reason: 'Avoid constructing JSX within try/catch',
                             description: `React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary)`,
                         }).withDetail({
                             kind: 'error',
@@ -48874,6 +49227,7 @@ function replaceFireFunctions(fn, context) {
                                     loc: value.loc,
                                     description: null,
                                     severity: ErrorSeverity.Invariant,
+                                    category: ErrorCategory.Invariant,
                                     reason: '[InsertFire] No LoadGlobal found for useEffect call',
                                     suggestions: null,
                                 });
@@ -48907,6 +49261,7 @@ function replaceFireFunctions(fn, context) {
                                 loc: value.args[1].loc,
                                 description: 'You must use an array literal for an effect dependency array when that effect uses `fire()`',
                                 severity: ErrorSeverity.Invariant,
+                                category: ErrorCategory.Fire,
                                 reason: CANNOT_COMPILE_FIRE,
                                 suggestions: null,
                             });
@@ -48917,6 +49272,7 @@ function replaceFireFunctions(fn, context) {
                             loc: value.args[1].place.loc,
                             description: 'You must use an array literal for an effect dependency array when that effect uses `fire()`',
                             severity: ErrorSeverity.Invariant,
+                            category: ErrorCategory.Fire,
                             reason: CANNOT_COMPILE_FIRE,
                             suggestions: null,
                         });
@@ -48937,6 +49293,7 @@ function replaceFireFunctions(fn, context) {
                                 loc: value.loc,
                                 description: null,
                                 severity: ErrorSeverity.Invariant,
+                                category: ErrorCategory.Invariant,
                                 reason: '[InsertFire] No loadLocal found for fire call argument',
                                 suggestions: null,
                             });
@@ -48951,6 +49308,7 @@ function replaceFireFunctions(fn, context) {
                             loc: value.loc,
                             description: '`fire()` can only receive a function call such as `fire(fn(a,b)). Method calls and other expressions are not allowed',
                             severity: ErrorSeverity.InvalidReact,
+                            category: ErrorCategory.Fire,
                             reason: CANNOT_COMPILE_FIRE,
                             suggestions: null,
                         });
@@ -48971,6 +49329,7 @@ function replaceFireFunctions(fn, context) {
                         loc: value.loc,
                         description,
                         severity: ErrorSeverity.InvalidReact,
+                        category: ErrorCategory.Fire,
                         reason: CANNOT_COMPILE_FIRE,
                         suggestions: null,
                     });
@@ -49056,6 +49415,7 @@ function ensureNoRemainingCalleeCaptures(fn, context, capturedCallees) {
 this effect or not used with a fire() call at all. ${calleeName} was used with fire() on line \
 ${printSourceLocationLine(calleeInfo.fireLoc)} in this effect`,
                 severity: ErrorSeverity.InvalidReact,
+                category: ErrorCategory.Fire,
                 reason: CANNOT_COMPILE_FIRE,
                 suggestions: null,
             });
@@ -49069,6 +49429,7 @@ function ensureNoMoreFireUses(fn, context) {
             context.pushError({
                 loc: place.identifier.loc,
                 description: 'Cannot use `fire` outside of a useEffect function',
+                category: ErrorCategory.Fire,
                 severity: ErrorSeverity.Invariant,
                 reason: CANNOT_COMPILE_FIRE,
                 suggestions: null,
@@ -49285,7 +49646,8 @@ function validateNoImpureFunctionsInRender(fn) {
                 const signature = getFunctionCallSignature(fn.env, callee.identifier.type);
                 if (signature != null && signature.impure === true) {
                     errors.pushDiagnostic(CompilerDiagnostic.create({
-                        category: 'Cannot call impure function during render',
+                        category: ErrorCategory.Purity,
+                        reason: 'Cannot call impure function during render',
                         description: (signature.canonicalName != null
                             ? `\`${signature.canonicalName}\` is an impure function. `
                             : '') +
@@ -49347,8 +49709,9 @@ function validateStaticComponents(fn) {
                         const location = knownDynamicComponents.get(value.tag.identifier.id);
                         if (location != null) {
                             error.pushDiagnostic(CompilerDiagnostic.create({
+                                category: ErrorCategory.StaticComponents,
                                 severity: ErrorSeverity.InvalidReact,
-                                category: 'Cannot create components during render',
+                                reason: 'Cannot create components during render',
                                 description: `Components created during render will reset their state each time they are created. Declare components outside of render. `,
                             })
                                 .withDetail({
@@ -49384,8 +49747,9 @@ function validateNoFreezingKnownMutableFunctions(fn) {
                     ? `\`${place.identifier.name.value}\``
                     : 'a local variable';
                 errors.pushDiagnostic(CompilerDiagnostic.create({
+                    category: ErrorCategory.Immutability,
                     severity: ErrorSeverity.InvalidReact,
-                    category: 'Cannot modify local variables after render completes',
+                    reason: 'Cannot modify local variables after render completes',
                     description: `This argument is a function which may reassign or mutate ${variable} after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.`,
                 })
                     .withDetail({
@@ -49618,6 +49982,7 @@ function validateEffect(effectFunction, effectDeps, errors) {
     }
     for (const loc of setStateLocations) {
         errors.push({
+            category: ErrorCategory.EffectDerivationsOfState,
             reason: 'Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)',
             description: null,
             severity: ErrorSeverity.InvalidReact,
@@ -50063,9 +50428,10 @@ function suppressionsToCompilerError(suppressionRanges) {
                 assertExhaustive$1(suppressionRange.source, 'Unhandled suppression source');
         }
         error.pushDiagnostic(CompilerDiagnostic.create({
-            category: reason,
+            reason: reason,
             description: `React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior. Found suppression \`${suppressionRange.disableComment.value.trim()}\``,
             severity: ErrorSeverity.InvalidReact,
+            category: ErrorCategory.Suppression,
             suggestions: [
                 {
                     description: suggestion,
@@ -50127,6 +50493,7 @@ function findDirectivesDynamicGating(directives, opts) {
                     reason: `Dynamic gating directive is not a valid JavaScript identifier`,
                     description: `Found '${directive.value.value}'`,
                     severity: ErrorSeverity.InvalidReact,
+                    category: ErrorCategory.Gating,
                     loc: (_a = directive.loc) !== null && _a !== void 0 ? _a : null,
                     suggestions: null,
                 });
@@ -50144,6 +50511,7 @@ function findDirectivesDynamicGating(directives, opts) {
                 .map(r => r.directive.value.value)
                 .join(', ')}]`,
             severity: ErrorSeverity.InvalidReact,
+            category: ErrorCategory.Gating,
             loc: (_b = result[0].directive.loc) !== null && _b !== void 0 ? _b : null,
             suggestions: null,
         });
@@ -50357,6 +50725,7 @@ function compileProgram(program, pass) {
             error.pushErrorDetail(new CompilerErrorDetail({
                 reason: 'Unexpected compiled functions when module scope opt-out is present',
                 severity: ErrorSeverity.Invariant,
+                category: ErrorCategory.Invariant,
                 loc: null,
             }));
             handleError(error, programContext, null);
@@ -50543,6 +50912,7 @@ function shouldSkipCompilation(program, pass) {
                 reason: `Expected a filename but found none.`,
                 description: "When the 'sources' config options is specified, the React compiler will only compile files with a name",
                 severity: ErrorSeverity.InvalidConfig,
+                category: ErrorCategory.Config,
                 loc: null,
             }));
             handleError(error, pass, null);
@@ -50910,6 +51280,7 @@ function validateRestrictedImports(path, { validateBlocklistedImports }) {
             var _a;
             if (restrictedImports.has(importDeclPath.node.source.value)) {
                 error.push({
+                    category: ErrorCategory.Todo,
                     severity: ErrorSeverity.Todo,
                     reason: 'Bailing out due to blocklisted import',
                     description: `Import from module ${importDeclPath.node.source.value}`,
@@ -51006,6 +51377,7 @@ class ProgramContext {
         }
         const error = new CompilerError();
         error.push({
+            category: ErrorCategory.Todo,
             severity: ErrorSeverity.Todo,
             reason: 'Encountered conflicting global in generated program',
             description: `Conflict from local binding ${name}`,
@@ -51294,7 +51666,8 @@ function assertValidEffectImportReference(autodepsIndex, paths, context) {
             if (hasAutodepsArg && !hasInferredEffect) {
                 const maybeErrorDiagnostic = matchCompilerDiagnostic(path, context.transformErrors);
                 throwInvalidReact({
-                    category: 'Cannot infer dependencies of this effect. This will break your build!',
+                    category: ErrorCategory.AutomaticEffectDependencies,
+                    reason: 'Cannot infer dependencies of this effect. This will break your build!',
                     description: 'To resolve, either pass a dependency array or fix reported compiler bailout diagnostics.' +
                         (maybeErrorDiagnostic ? ` ${maybeErrorDiagnostic}` : ''),
                     details: [
@@ -51314,7 +51687,8 @@ function assertValidFireImportReference(paths, context) {
     if (paths.length > 0) {
         const maybeErrorDiagnostic = matchCompilerDiagnostic(paths[0], context.transformErrors);
         throwInvalidReact({
-            category: '[Fire] Untransformed reference to compiler-required feature.',
+            category: ErrorCategory.Fire,
+            reason: '[Fire] Untransformed reference to compiler-required feature.',
             description: 'Either remove this `fire` call or ensure it is successfully transformed by the compiler' +
                 maybeErrorDiagnostic
                 ? ` ${maybeErrorDiagnostic}`
@@ -51510,16 +51884,195 @@ function BabelPluginReactCompiler(_babel) {
     };
 }
 
+var _LRUCache_values, _LRUCache_headIdx;
+const COMPILER_OPTIONS = {
+    noEmit: true,
+    panicThreshold: 'none',
+    flowSuppressions: false,
+    environment: validateEnvironmentConfig({
+        validateRefAccessDuringRender: true,
+        validateNoSetStateInRender: true,
+        validateNoSetStateInEffects: true,
+        validateNoJSXInTryStatements: true,
+        validateNoImpureFunctionsInRender: true,
+        validateStaticComponents: true,
+        validateNoFreezingKnownMutableFunctions: true,
+        validateNoVoidUseMemo: true,
+        validateNoCapitalizedCalls: [],
+        validateHooksUsage: true,
+        validateNoDerivedComputationsInEffects: true,
+    }),
+};
+const FLOW_SUPPRESSION_REGEX = /\$FlowFixMe\[([^\]]*)\]/g;
+function getFlowSuppressions(sourceCode) {
+    const comments = sourceCode.getAllComments();
+    const results = [];
+    for (const commentNode of comments) {
+        const matches = commentNode.value.matchAll(FLOW_SUPPRESSION_REGEX);
+        for (const match of matches) {
+            if (match.index != null && commentNode.loc != null) {
+                const code = match[1];
+                results.push({
+                    line: commentNode.loc.end.line,
+                    code,
+                });
+            }
+        }
+    }
+    return results;
+}
+function filterUnusedOptOutDirectives(directives) {
+    const results = [];
+    for (const directive of directives) {
+        if (OPT_OUT_DIRECTIVES.has(directive.value.value) &&
+            directive.loc != null) {
+            results.push({
+                loc: directive.loc,
+                directive: directive.value.value,
+                range: [directive.start, directive.end],
+            });
+        }
+    }
+    return results;
+}
+function runReactCompilerImpl({ sourceCode, filename, userOpts, }) {
+    var _a, _b;
+    const options = parsePluginOptions(Object.assign(Object.assign(Object.assign({}, COMPILER_OPTIONS), userOpts), { environment: Object.assign(Object.assign({}, COMPILER_OPTIONS.environment), userOpts.environment) }));
+    const results = {
+        sourceCode: sourceCode.text,
+        filename,
+        userOpts,
+        flowSuppressions: [],
+        unusedOptOutDirectives: [],
+        events: [],
+    };
+    const userLogger = options.logger;
+    options.logger = {
+        logEvent: (eventFilename, event) => {
+            userLogger === null || userLogger === void 0 ? void 0 : userLogger.logEvent(eventFilename, event);
+            results.events.push(event);
+        },
+    };
+    try {
+        options.environment = validateEnvironmentConfig((_a = options.environment) !== null && _a !== void 0 ? _a : {});
+    }
+    catch (err) {
+        (_b = options.logger) === null || _b === void 0 ? void 0 : _b.logEvent(filename, err);
+    }
+    let babelAST = null;
+    if (filename.endsWith('.tsx') || filename.endsWith('.ts')) {
+        try {
+            babelAST = BabelParser.parse(sourceCode.text, {
+                sourceFilename: filename,
+                sourceType: 'unambiguous',
+                plugins: ['typescript', 'jsx'],
+            });
+        }
+        catch (_c) {
+        }
+    }
+    else {
+        try {
+            babelAST = HermesParser.parse(sourceCode.text, {
+                babel: true,
+                enableExperimentalComponentSyntax: true,
+                sourceFilename: filename,
+                sourceType: 'module',
+            });
+        }
+        catch (_d) {
+        }
+    }
+    if (babelAST != null) {
+        results.flowSuppressions = getFlowSuppressions(sourceCode);
+        try {
+            core$1.transformFromAstSync(babelAST, sourceCode.text, {
+                filename,
+                highlightCode: false,
+                retainLines: true,
+                plugins: [
+                    [PluginProposalPrivateMethods.default, { loose: true }],
+                    [BabelPluginReactCompiler, options],
+                ],
+                sourceType: 'module',
+                configFile: false,
+                babelrc: false,
+            });
+            if (results.events.filter(e => e.kind === 'CompileError').length === 0) {
+                core$1.traverse(babelAST, {
+                    FunctionDeclaration(path) {
+                        results.unusedOptOutDirectives.push(...filterUnusedOptOutDirectives(path.node.body.directives));
+                    },
+                    ArrowFunctionExpression(path) {
+                        if (path.node.body.type === 'BlockStatement') {
+                            results.unusedOptOutDirectives.push(...filterUnusedOptOutDirectives(path.node.body.directives));
+                        }
+                    },
+                    FunctionExpression(path) {
+                        results.unusedOptOutDirectives.push(...filterUnusedOptOutDirectives(path.node.body.directives));
+                    },
+                });
+            }
+        }
+        catch (err) {
+        }
+    }
+    return results;
+}
+const SENTINEL = Symbol();
+class LRUCache {
+    constructor(size) {
+        _LRUCache_values.set(this, void 0);
+        _LRUCache_headIdx.set(this, 0);
+        __classPrivateFieldSet(this, _LRUCache_values, new Array(size).fill(SENTINEL), "f");
+    }
+    get(key) {
+        const idx = __classPrivateFieldGet(this, _LRUCache_values, "f").findIndex(entry => entry[0] === key);
+        if (idx === __classPrivateFieldGet(this, _LRUCache_headIdx, "f")) {
+            return __classPrivateFieldGet(this, _LRUCache_values, "f")[__classPrivateFieldGet(this, _LRUCache_headIdx, "f")][1];
+        }
+        else if (idx < 0) {
+            return null;
+        }
+        const entry = __classPrivateFieldGet(this, _LRUCache_values, "f")[idx];
+        const len = __classPrivateFieldGet(this, _LRUCache_values, "f").length;
+        for (let i = 0; i < Math.min(idx, len - 1); i++) {
+            __classPrivateFieldGet(this, _LRUCache_values, "f")[(__classPrivateFieldGet(this, _LRUCache_headIdx, "f") + i + 1) % len] =
+                __classPrivateFieldGet(this, _LRUCache_values, "f")[(__classPrivateFieldGet(this, _LRUCache_headIdx, "f") + i) % len];
+        }
+        __classPrivateFieldGet(this, _LRUCache_values, "f")[__classPrivateFieldGet(this, _LRUCache_headIdx, "f")] = entry;
+        return entry[1];
+    }
+    push(key, value) {
+        __classPrivateFieldSet(this, _LRUCache_headIdx, (__classPrivateFieldGet(this, _LRUCache_headIdx, "f") - 1 + __classPrivateFieldGet(this, _LRUCache_values, "f").length) % __classPrivateFieldGet(this, _LRUCache_values, "f").length, "f");
+        __classPrivateFieldGet(this, _LRUCache_values, "f")[__classPrivateFieldGet(this, _LRUCache_headIdx, "f")] = [key, value];
+    }
+}
+_LRUCache_values = new WeakMap(), _LRUCache_headIdx = new WeakMap();
+const cache = new LRUCache(10);
+function runReactCompiler({ sourceCode, filename, userOpts, }) {
+    const entry = cache.get(filename);
+    if (entry != null &&
+        entry.sourceCode === sourceCode.text &&
+        util.isDeepStrictEqual(entry.userOpts, userOpts)) {
+        return entry;
+    }
+    const runEntry = runReactCompilerImpl({
+        sourceCode,
+        filename,
+        userOpts,
+    });
+    if (entry != null) {
+        Object.assign(entry, runEntry);
+    }
+    else {
+        cache.push(filename, runEntry);
+    }
+    return Object.assign({}, runEntry);
+}
+
 function assertExhaustive(_, errorMsg) {
     throw new Error(errorMsg);
-}
-const DEFAULT_REPORTABLE_LEVELS = new Set([
-    ErrorSeverity.InvalidReact,
-    ErrorSeverity.InvalidJS,
-]);
-let reportableLevels = DEFAULT_REPORTABLE_LEVELS;
-function isReportableDiagnostic(detail) {
-    return reportableLevels.has(detail.severity);
 }
 function makeSuggestions(detail) {
     const suggest = [];
@@ -51565,26 +52118,74 @@ function makeSuggestions(detail) {
     }
     return suggest;
 }
-const COMPILER_OPTIONS = {
-    noEmit: true,
-    panicThreshold: 'none',
-    flowSuppressions: false,
-    environment: validateEnvironmentConfig({
-        validateRefAccessDuringRender: true,
-        validateNoSetStateInRender: true,
-        validateNoSetStateInEffects: true,
-        validateNoJSXInTryStatements: true,
-        validateNoImpureFunctionsInRender: true,
-        validateStaticComponents: true,
-        validateNoFreezingKnownMutableFunctions: true,
-        validateNoVoidUseMemo: true,
-    }),
-};
-const rule$1 = {
+function getReactCompilerResult(context) {
+    var _a, _b, _c;
+    const sourceCode = (_a = context.sourceCode) !== null && _a !== void 0 ? _a : context.getSourceCode();
+    const filename = (_b = context.filename) !== null && _b !== void 0 ? _b : context.getFilename();
+    const userOpts = (_c = context.options[0]) !== null && _c !== void 0 ? _c : {};
+    const results = runReactCompiler({
+        sourceCode,
+        filename,
+        userOpts,
+    });
+    return results;
+}
+function hasFlowSuppression(program, nodeLoc, suppressions) {
+    for (const commentNode of program.flowSuppressions) {
+        if (suppressions.includes(commentNode.code) &&
+            commentNode.line === nodeLoc.start.line - 1) {
+            return true;
+        }
+    }
+    return false;
+}
+function makeRule(rule) {
+    const create = (context) => {
+        const result = getReactCompilerResult(context);
+        for (const event of result.events) {
+            if (event.kind === 'CompileError') {
+                const detail = event.detail;
+                if (detail.category === rule.category) {
+                    const loc = detail.primaryLocation();
+                    if (loc == null || typeof loc === 'symbol') {
+                        continue;
+                    }
+                    if (hasFlowSuppression(result, loc, [
+                        'react-rule-hook',
+                        'react-rule-unsafe-ref',
+                    ])) {
+                        continue;
+                    }
+                    context.report({
+                        message: detail.printErrorMessage(result.sourceCode, {
+                            eslint: true,
+                        }),
+                        loc,
+                        suggest: makeSuggestions(detail.options),
+                    });
+                }
+            }
+        }
+        return {};
+    };
+    return {
+        meta: {
+            type: 'problem',
+            docs: {
+                description: rule.description,
+                recommended: rule.recommended,
+            },
+            fixable: 'code',
+            hasSuggestions: true,
+            schema: [{ type: 'object', additionalProperties: true }],
+        },
+        create,
+    };
+}
+const NoUnusedDirectivesRule = {
     meta: {
-        type: 'problem',
+        type: 'suggestion',
         docs: {
-            description: 'Surfaces diagnostics from React Forget',
             recommended: true,
         },
         fixable: 'code',
@@ -51592,187 +52193,36 @@ const rule$1 = {
         schema: [{ type: 'object', additionalProperties: true }],
     },
     create(context) {
-        var _a, _b, _c, _d, _e;
-        const sourceCode = (_a = context.sourceCode) !== null && _a !== void 0 ? _a : context.getSourceCode();
-        const filename = (_b = context.filename) !== null && _b !== void 0 ? _b : context.getFilename();
-        const userOpts = (_c = context.options[0]) !== null && _c !== void 0 ? _c : {};
-        if (userOpts.reportableLevels != null &&
-            userOpts.reportableLevels instanceof Set) {
-            reportableLevels = userOpts.reportableLevels;
-        }
-        else {
-            reportableLevels = DEFAULT_REPORTABLE_LEVELS;
-        }
-        let __unstable_donotuse_reportAllBailouts = false;
-        if (userOpts.__unstable_donotuse_reportAllBailouts != null &&
-            typeof userOpts.__unstable_donotuse_reportAllBailouts === 'boolean') {
-            __unstable_donotuse_reportAllBailouts =
-                userOpts.__unstable_donotuse_reportAllBailouts;
-        }
-        let shouldReportUnusedOptOutDirective = true;
-        const options = parsePluginOptions(Object.assign(Object.assign(Object.assign({}, COMPILER_OPTIONS), userOpts), { environment: Object.assign(Object.assign({}, COMPILER_OPTIONS.environment), userOpts.environment) }));
-        const userLogger = options.logger;
-        options.logger = {
-            logEvent: (eventFilename, event) => {
-                var _a, _b;
-                userLogger === null || userLogger === void 0 ? void 0 : userLogger.logEvent(eventFilename, event);
-                if (event.kind === 'CompileError') {
-                    shouldReportUnusedOptOutDirective = false;
-                    const detail = event.detail;
-                    const suggest = makeSuggestions(detail.options);
-                    if (__unstable_donotuse_reportAllBailouts && event.fnLoc != null) {
-                        const loc = detail.primaryLocation();
-                        const locStr = loc != null && typeof loc !== 'symbol'
-                            ? ` (@:${loc.start.line}:${loc.start.column})`
-                            : '';
-                        let endLoc;
-                        if (event.fnLoc.end.line === event.fnLoc.start.line) {
-                            endLoc = event.fnLoc.end;
-                        }
-                        else {
-                            endLoc = {
-                                line: event.fnLoc.start.line,
-                                column: (_b = (_a = sourceCode.text.split(/\r?\n|\r|\n/g)[event.fnLoc.start.line - 1]) === null || _a === void 0 ? void 0 : _a.length) !== null && _b !== void 0 ? _b : 0,
-                            };
-                        }
-                        const firstLineLoc = {
-                            start: event.fnLoc.start,
-                            end: endLoc,
-                        };
-                        context.report({
-                            message: `${detail.printErrorMessage(sourceCode.text, { eslint: true })} ${locStr}`,
-                            loc: firstLineLoc,
-                            suggest,
-                        });
-                    }
-                    const loc = detail.primaryLocation();
-                    if (!isReportableDiagnostic(detail) ||
-                        loc == null ||
-                        typeof loc === 'symbol') {
-                        return;
-                    }
-                    if (hasFlowSuppression(loc, 'react-rule-hook') ||
-                        hasFlowSuppression(loc, 'react-rule-unsafe-ref')) {
-                        return;
-                    }
-                    if (loc != null) {
-                        context.report({
-                            message: detail.printErrorMessage(sourceCode.text, {
-                                eslint: true,
-                            }),
-                            loc,
-                            suggest,
-                        });
-                    }
-                }
-            },
-        };
-        try {
-            options.environment = validateEnvironmentConfig((_d = options.environment) !== null && _d !== void 0 ? _d : {});
-        }
-        catch (err) {
-            (_e = options.logger) === null || _e === void 0 ? void 0 : _e.logEvent('', err);
-        }
-        function hasFlowSuppression(nodeLoc, suppression) {
-            const comments = sourceCode.getAllComments();
-            const flowSuppressionRegex = new RegExp('\\$FlowFixMe\\[' + suppression + '\\]');
-            for (const commentNode of comments) {
-                if (flowSuppressionRegex.test(commentNode.value) &&
-                    commentNode.loc.end.line === nodeLoc.start.line - 1) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        let babelAST;
-        if (filename.endsWith('.tsx') || filename.endsWith('.ts')) {
-            try {
-                const { parse: babelParse } = require('@babel/parser');
-                babelAST = babelParse(sourceCode.text, {
-                    filename,
-                    sourceType: 'unambiguous',
-                    plugins: ['typescript', 'jsx'],
-                });
-            }
-            catch (_f) {
-            }
-        }
-        else {
-            try {
-                babelAST = HermesParser.parse(sourceCode.text, {
-                    babel: true,
-                    enableExperimentalComponentSyntax: true,
-                    sourceFilename: filename,
-                    sourceType: 'module',
-                });
-            }
-            catch (_g) {
-            }
-        }
-        if (babelAST != null) {
-            try {
-                core$1.transformFromAstSync(babelAST, sourceCode.text, {
-                    filename,
-                    highlightCode: false,
-                    retainLines: true,
-                    plugins: [
-                        [PluginProposalPrivateMethods.default, { loose: true }],
-                        [BabelPluginReactCompiler, options],
-                    ],
-                    sourceType: 'module',
-                    configFile: false,
-                    babelrc: false,
-                });
-            }
-            catch (err) {
-            }
-        }
-        function reportUnusedOptOutDirective(stmt) {
-            if (stmt.type === 'ExpressionStatement' &&
-                stmt.expression.type === 'Literal' &&
-                typeof stmt.expression.value === 'string' &&
-                OPT_OUT_DIRECTIVES.has(stmt.expression.value) &&
-                stmt.loc != null) {
-                context.report({
-                    message: `Unused '${stmt.expression.value}' directive`,
-                    loc: stmt.loc,
-                    suggest: [
-                        {
-                            desc: 'Remove the directive',
-                            fix(fixer) {
-                                return fixer.remove(stmt);
-                            },
+        const results = getReactCompilerResult(context);
+        for (const directive of results.unusedOptOutDirectives) {
+            context.report({
+                message: `Unused '${directive.directive}' directive`,
+                loc: directive.loc,
+                suggest: [
+                    {
+                        desc: 'Remove the directive',
+                        fix(fixer) {
+                            return fixer.removeRange(directive.range);
                         },
-                    ],
-                });
-            }
+                    },
+                ],
+            });
         }
-        if (shouldReportUnusedOptOutDirective) {
-            return {
-                FunctionDeclaration(fnDecl) {
-                    for (const stmt of fnDecl.body.body) {
-                        reportUnusedOptOutDirective(stmt);
-                    }
-                },
-                ArrowFunctionExpression(fnExpr) {
-                    if (fnExpr.body.type === 'BlockStatement') {
-                        for (const stmt of fnExpr.body.body) {
-                            reportUnusedOptOutDirective(stmt);
-                        }
-                    }
-                },
-                FunctionExpression(fnExpr) {
-                    for (const stmt of fnExpr.body.body) {
-                        reportUnusedOptOutDirective(stmt);
-                    }
-                },
-            };
-        }
-        else {
-            return {};
-        }
+        return {};
     },
 };
+const allRules = LintRules.reduce((acc, rule) => {
+    acc[rule.name] = makeRule(rule);
+    return acc;
+}, {
+    'no-unused-directives': NoUnusedDirectivesRule,
+});
+const recommendedRules = LintRules.filter(rule => rule.recommended).reduce((acc, rule) => {
+    acc[rule.name] = makeRule(rule);
+    return acc;
+}, {
+    'no-unused-directives': NoUnusedDirectivesRule,
+});
 
 var assert_1;
 var hasRequiredAssert;
@@ -55037,39 +55487,40 @@ function last(array) {
     return array[array.length - 1];
 }
 
-const rules = {
-    'exhaustive-deps': rule$2,
-    'react-compiler': rule$1,
-    'rules-of-hooks': rule,
-};
-const configRules = {
-    'react-hooks/rules-of-hooks': 'error',
-    'react-hooks/exhaustive-deps': 'warn',
-};
-const recommendedConfig = {
-    name: 'react-hooks/recommended',
-    plugins: {
-        get 'react-hooks'() {
-            return plugin;
-        },
-    },
-    rules: configRules,
-};
+const rules = Object.assign({ 'exhaustive-deps': rule$1, 'rules-of-hooks': rule }, allRules);
+const ruleConfigs = Object.assign({ 'react-hooks/rules-of-hooks': 'error', 'react-hooks/exhaustive-deps': 'warn' }, Object.fromEntries(Object.keys(recommendedRules).map(name => ['react-hooks/' + name, 'error'])));
 const plugin = {
-    meta: { name: 'eslint-plugin-react-hooks' },
-    rules,
-    configs: {
-        'recommended-legacy': {
-            plugins: ['react-hooks'],
-            rules: configRules,
-        },
-        recommended: recommendedConfig,
-        'recommended-latest': recommendedConfig,
+    meta: {
+        name: 'eslint-plugin-react-hooks',
     },
+    configs: {},
+    rules,
 };
-const configs = plugin.configs;
-const meta = plugin.meta;
+Object.assign(plugin.configs, {
+    'recommended-legacy': {
+        plugins: ['react-hooks'],
+        rules: ruleConfigs,
+    },
+    'flat/recommended': [
+        {
+            plugins: {
+                'react-hooks': plugin,
+            },
+            rules: ruleConfigs,
+        },
+    ],
+    'recommended-latest': [
+        {
+            plugins: {
+                'react-hooks': plugin,
+            },
+            rules: ruleConfigs,
+        },
+    ],
+    recommended: {
+        plugins: ['react-hooks'],
+        rules: ruleConfigs,
+    },
+});
 
-exports.configs = configs;
-exports.meta = meta;
-exports.rules = rules;
+module.exports = plugin;
