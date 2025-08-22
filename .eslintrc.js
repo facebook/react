@@ -547,12 +547,10 @@ module.exports = {
   },
 
   globals: {
-    $ElementType: 'readonly',
     $Flow$ModuleRef: 'readonly',
     $FlowFixMe: 'readonly',
     $Keys: 'readonly',
     $NonMaybeType: 'readonly',
-    $PropertyType: 'readonly',
     $ReadOnly: 'readonly',
     $ReadOnlyArray: 'readonly',
     $ArrayBufferView: 'readonly',
@@ -586,9 +584,7 @@ module.exports = {
     NavigateEvent: 'readonly',
     PropagationPhases: 'readonly',
     PropertyDescriptor: 'readonly',
-    React$AbstractComponent: 'readonly',
     React$Component: 'readonly',
-    React$ComponentType: 'readonly',
     React$Config: 'readonly',
     React$Context: 'readonly',
     React$Element: 'readonly',

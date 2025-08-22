@@ -235,4 +235,4 @@ function setResizeCSSVariable(
   }
 }
 
-export default (portaledContent(Components): React$ComponentType<{}>);
+export default (portaledContent(Components): component());
