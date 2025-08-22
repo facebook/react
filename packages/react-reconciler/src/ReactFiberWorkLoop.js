@@ -1060,7 +1060,7 @@ export function performWorkOnRoot(
     // even for regular pings.
     checkIfRootIsPrerendering(root, lanes);
 
-  let exitStatus = shouldTimeSlice
+  let exitStatus: RootExitStatus = shouldTimeSlice
     ? renderRootConcurrent(root, lanes)
     : renderRootSync(root, lanes, true);
 
@@ -1212,7 +1212,7 @@ function recoverFromConcurrentError(
   root: FiberRoot,
   originallyAttemptedLanes: Lanes,
   errorRetryLanes: Lanes,
-) {
+): RootExitStatus {
   // If an error occurred during hydration, discard server response and fall
   // back to client side render.
 
@@ -2520,7 +2520,7 @@ function workLoopSync() {
   }
 }
 
-function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
+function renderRootConcurrent(root: FiberRoot, lanes: Lanes): RootExitStatus {
   const prevExecutionContext = executionContext;
   executionContext |= RenderContext;
   const prevDispatcher = pushDispatcher(root.containerInfo);

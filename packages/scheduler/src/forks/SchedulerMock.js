@@ -286,7 +286,7 @@ function unstable_runWithPriority<T>(
 }
 
 function unstable_next<T>(eventHandler: () => T): T {
-  var priorityLevel;
+  var priorityLevel: PriorityLevel;
   switch (currentPriorityLevel) {
     case ImmediatePriority:
     case UserBlockingPriority:
