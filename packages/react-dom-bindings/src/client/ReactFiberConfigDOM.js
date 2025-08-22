@@ -242,10 +242,10 @@ export type TransitionStatus = FormStatus;
 
 export type ViewTransitionInstance = {
   name: string,
-  group: Animatable,
-  imagePair: Animatable,
-  old: Animatable,
-  new: Animatable,
+  group: mixin$Animatable,
+  imagePair: mixin$Animatable,
+  old: mixin$Animatable,
+  new: mixin$Animatable,
 };
 
 type SelectionInformation = {
@@ -1430,7 +1430,10 @@ export function applyViewTransitionName(
     // simple case by converting it automatically to display: inline-block.
     // https://bugs.webkit.org/show_bug.cgi?id=290923
     const rects = instance.getClientRects();
-    if (countClientRects(rects) === 1) {
+    if (
+      // $FlowFixMe[incompatible-call]
+      countClientRects(rects) === 1
+    ) {
       // If the instance has a single client rect, that means that it can be
       // expressed as a display: inline-block or block.
       // This will cause layout thrash but we live with it since inline view transitions
@@ -1535,6 +1538,7 @@ export function cancelViewTransitionName(
   if (documentElement !== null) {
     documentElement.animate(
       {opacity: [0, 0], pointerEvents: ['none', 'none']},
+      // $FlowFixMe[incompatible-call]
       {
         duration: 0,
         fill: 'forwards',
@@ -1571,6 +1575,7 @@ export function cancelRootViewTransitionName(rootContainer: Container): void {
     documentElement.style.viewTransitionName = 'none';
     documentElement.animate(
       {opacity: [0, 0], pointerEvents: ['none', 'none']},
+      // $FlowFixMe[incompatible-call]
       {
         duration: 0,
         fill: 'forwards',
@@ -1586,6 +1591,7 @@ export function cancelRootViewTransitionName(rootContainer: Container): void {
     // whatever is below the animation.
     documentElement.animate(
       {width: [0, 0], height: [0, 0]},
+      // $FlowFixMe[incompatible-call]
       {
         duration: 0,
         fill: 'forwards',
@@ -1970,6 +1976,7 @@ export function hasInstanceAffectedParent(
 function cancelAllViewTransitionAnimations(scope: Element) {
   // In Safari, we need to manually cancel all manually start animations
   // or it'll block or interfer with future transitions.
+  // $FlowFixMe[prop-missing]
   const animations = scope.getAnimations({subtree: true});
   for (let i = 0; i < animations.length; i++) {
     const anim = animations[i];
@@ -2137,6 +2144,7 @@ export function startViewTransition(
     const readyCallback = () => {
       const documentElement: Element = (ownerDocument.documentElement: any);
       // Loop through all View Transition Animations.
+      // $FlowFixMe[prop-missing]
       const animations = documentElement.getAnimations({subtree: true});
       for (let i = 0; i < animations.length; i++) {
         const animation = animations[i];
@@ -2383,6 +2391,7 @@ function animateGesture(
   const reverse = rangeStart > rangeEnd;
   if (timeline instanceof AnimationTimeline) {
     // Native Timeline
+    // $FlowFixMe[incompatible-call]
     targetElement.animate(keyframes, {
       pseudoElement: pseudoElement,
       // Set the timeline to the current gesture timeline to drive the updates.
@@ -2403,6 +2412,7 @@ function animateGesture(
     });
   } else {
     // Custom Timeline
+    // $FlowFixMe[incompatible-call]
     const animation = targetElement.animate(keyframes, {
       pseudoElement: pseudoElement,
       // We reset all easing functions to linear so that it feels like you
@@ -2456,6 +2466,7 @@ export function startGestureTransition(
     const readyCallback = () => {
       const documentElement: Element = (ownerDocument.documentElement: any);
       // Loop through all View Transition Animations.
+      // $FlowFixMe[prop-missing]
       const animations = documentElement.getAnimations({subtree: true});
       // First do a pass to collect all known group and new items so we can look
       // up if they exist later.
@@ -2471,8 +2482,11 @@ export function startGestureTransition(
         } else if (pseudoElement.startsWith('::view-transition')) {
           const timing = effect.getTiming();
           const duration =
+            // $FlowFixMe[prop-missing]
             typeof timing.duration === 'number' ? timing.duration : 0;
           // TODO: Consider interation count higher than 1.
+          // $FlowFixMe[prop-missing]
+          // $FlowFixMe[unsafe-addition]
           const durationWithDelay = timing.delay + duration;
           if (durationWithDelay > longestDuration) {
             longestDuration = durationWithDelay;
@@ -2532,11 +2546,17 @@ export function startGestureTransition(
           // therefore the timing is from the rangeEnd to the start.
           const timing = effect.getTiming();
           const duration =
+            // $FlowFixMe[prop-missing]
             typeof timing.duration === 'number' ? timing.duration : 0;
           let adjustedRangeStart =
+            // $FlowFixMe[unsafe-addition]
+            // $FlowFixMe[prop-missing]
             rangeEnd - (duration + timing.delay) * durationToRangeMultipler;
           let adjustedRangeEnd =
-            rangeEnd - timing.delay * durationToRangeMultipler;
+            rangeEnd -
+            // $FlowFixMe[prop-missing]
+            // $FlowFixMe[unsafe-arithmetic]
+            timing.delay * durationToRangeMultipler;
           if (
             timing.direction === 'reverse' ||
             timing.direction === 'alternate-reverse'
@@ -2594,6 +2614,7 @@ export function startGestureTransition(
       // you can swipe back again. We can prevent this by adding a paused Animation
       // that never stops. This seems to keep all running Animations alive until
       // we explicitly abort (or something forces the View Transition to cancel).
+      // $FlowFixMe[incompatible-call]
       const blockingAnim = documentElement.animate([{}, {}], {
         pseudoElement: '::view-transition',
         duration: 1,
@@ -2658,7 +2679,7 @@ export function stopViewTransition(transition: RunningViewTransition) {
   transition.skipTransition();
 }
 
-interface ViewTransitionPseudoElementType extends Animatable {
+interface ViewTransitionPseudoElementType extends mixin$Animatable {
   _scope: HTMLElement;
   _selector: string;
   getComputedStyle(): CSSStyleDeclaration;
@@ -2684,7 +2705,11 @@ ViewTransitionPseudoElement.prototype.animate = function (
       ? {
           duration: options,
         }
-      : Object.assign(({}: KeyframeAnimationOptions), options);
+      : Object.assign(
+          (// $FlowFixMe[prop-missing]
+          {}: KeyframeAnimationOptions),
+          options,
+        );
   opts.pseudoElement = this._selector;
   // TODO: Handle multiple child instances.
   return this._scope.animate(keyframes, opts);
@@ -2696,7 +2721,10 @@ ViewTransitionPseudoElement.prototype.getAnimations = function (
 ): Animation[] {
   const scope = this._scope;
   const selector = this._selector;
-  const animations = scope.getAnimations({subtree: true});
+  const animations = scope.getAnimations(
+    // $FlowFixMe[prop-missing]
+    {subtree: true},
+  );
   const result = [];
   for (let i = 0; i < animations.length; i++) {
     const effect: null | {
@@ -5335,6 +5363,7 @@ function insertStylesheet(
   let prior = last;
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i];
+    // $FlowFixMe[prop-missing]
     const nodePrecedence = node.dataset.precedence;
     if (nodePrecedence === precedence) {
       prior = node;
@@ -6110,7 +6139,11 @@ function insertStylesheetIntoRoot(
         // and will be hoisted by the Fizz runtime imminently.
         node.getAttribute('media') !== 'not all'
       ) {
-        precedences.set(node.dataset.precedence, node);
+        precedences.set(
+          // $FlowFixMe[prop-missing]
+          node.dataset.precedence,
+          node,
+        );
         last = node;
       }
     }
