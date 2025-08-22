@@ -229,6 +229,7 @@ const MouseEventInterface: EventInterfaceType = {
     return lastMovementY;
   },
 };
+
 export const SyntheticMouseEvent: $FlowFixMe =
   createSyntheticEvent(MouseEventInterface);
 

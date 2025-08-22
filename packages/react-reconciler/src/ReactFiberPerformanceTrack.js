@@ -712,7 +712,6 @@ export function logTransitionStart(
       const color = eventIsRepeat ? 'secondary-light' : 'warning';
       if (__DEV__ && debugTask) {
         debugTask.run(
-          // $FlowFixMe[method-unbinding]
           console.timeStamp.bind(
             console,
             eventIsRepeat ? '' : 'Event: ' + eventType,
