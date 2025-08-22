@@ -65,29 +65,32 @@ function joinValue(
 
 function updateDerivationMetadata(
   target: Place,
-  sources: Array<DerivationMetadata>,
-  typeOfValue: TypeOfValue,
+  sources: Array<DerivationMetadata> | undefined,
+  typeOfValue: TypeOfValue | undefined,
   derivedTuple: Map<IdentifierId, DerivationMetadata>,
 ): void {
   let newValue: DerivationMetadata = {
     place: target,
     sources: new Set(),
-    typeOfValue: typeOfValue,
+    typeOfValue: typeOfValue ?? 'ignored',
   };
 
-  for (const source of sources) {
-    /*
-     * If the identifier of the source is a promoted identifier, then
-     *  we should set the target as the source.
-     */
-    if (source.place.identifier.name?.kind === 'promoted') {
-      newValue.sources.add(target);
-    } else {
-      for (const place of source.sources) {
-        newValue.sources.add(place);
+  if (sources !== undefined) {
+    for (const source of sources) {
+      /*
+       * If the identifier of the source is a promoted identifier, then
+       *  we should set the target as the source.
+       */
+      if (source.place.identifier.name?.kind === 'promoted') {
+        newValue.sources.add(target);
+      } else {
+        for (const place of source.sources) {
+          newValue.sources.add(place);
+        }
       }
     }
   }
+
   derivedTuple.set(target.identifier.id, newValue);
 }
 
@@ -96,8 +99,15 @@ function parseInstr(
   derivedTuple: Map<IdentifierId, DerivationMetadata>,
   setStateCalls: Map<SetStateName, Array<Place>>,
 ): void {
-  console.log('instr: ', printInstruction(instr));
-  console.log('derived before: ', derivedTuple);
+  // Recursively parse function expressions
+  if (instr.value.kind === 'FunctionExpression') {
+    for (const [, block] of instr.value.loweredFunc.func.body.blocks) {
+      for (const instr of block.instructions) {
+        parseInstr(instr, derivedTuple, setStateCalls);
+      }
+    }
+  }
+
   let typeOfValue: TypeOfValue = 'ignored';
 
   // TODO: Not sure if this will catch every time we create a new useState
@@ -200,24 +210,12 @@ function parseBlockPhi(
   for (const phi of block.phis) {
     for (const operand of phi.operands.values()) {
       const source = derivedTuple.get(operand.identifier.id);
-      if (source !== undefined && source.typeOfValue === 'fromProps') {
-        if (
-          source.place.identifier.name === null ||
-          source.place.identifier.name?.kind === 'promoted'
-        ) {
-          derivedTuple.set(phi.place.identifier.id, {
-            place: phi.place,
-            sources: new Set([phi.place]),
-            typeOfValue: 'fromProps',
-          });
-        } else {
-          derivedTuple.set(phi.place.identifier.id, {
-            place: phi.place,
-            sources: source.sources,
-            typeOfValue: 'fromProps',
-          });
-        }
-      }
+      updateDerivationMetadata(
+        phi.place,
+        source !== undefined ? [source] : undefined,
+        source?.typeOfValue,
+        derivedTuple,
+      );
     }
   }
 }
@@ -284,18 +282,6 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
       const {lvalue, value} = instr;
 
       parseInstr(instr, derivedTuple, setStateCalls);
-
-      /*
-       * Special case for function expressions, we need to parse nested instructions
-       * TODO: Can there be more recursive levels?
-       */
-      if (value.kind === 'FunctionExpression') {
-        for (const [, block] of value.loweredFunc.func.body.blocks) {
-          for (const instr of block.instructions) {
-            parseInstr(instr, derivedTuple, setStateCalls);
-          }
-        }
-      }
 
       if (value.kind === 'LoadLocal') {
         locals.set(lvalue.identifier.id, value.place.identifier.id);
@@ -384,23 +370,6 @@ function validateEffect(
   effectSetStates: Map<SetStateName, Array<Place>>,
   errors: Array<ErrorMetadata>,
 ): void {
-  /*
-   * TODO: This makes it so we only capture single line useEffects.
-   * We should be able to capture multiline as well
-   */
-  // for (const operand of effectFunction.context) {
-  //   if (isSetStateType(operand.identifier)) {
-  //     continue;
-  //   } else if (effectDeps.find(dep => dep === operand.identifier.id) != null) {
-  //     continue;
-  //   } else if (derivedTuple.has(operand.identifier.id)) {
-  //     continue;
-  //   } else {
-  //     // Captured something other than the effect dep or setState
-  //     return;
-  //   }
-  // }
-
   // TODO: This might be wrong gotta double check
   let hasInvalidDep = false;
   for (const dep of effectDeps) {
@@ -537,7 +506,7 @@ function validateEffect(
 
     let sourceNames = '';
     let invalidDepInfo = '';
-    console.log(call.invalidDeps);
+
     if (call.invalidDeps.typeOfValue === 'fromProps') {
       sourceNames += `[${placeNames}], `;
       sourceNames = sourceNames.slice(0, -2);
