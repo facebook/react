@@ -20,6 +20,7 @@ import {
   isUseStateType,
   GeneratedSource,
 } from '../HIR';
+import {printInstruction} from '../HIR/PrintHIR';
 import {
   eachInstructionOperand,
   eachTerminalOperand,
@@ -95,20 +96,25 @@ function parseInstr(
   derivedTuple: Map<IdentifierId, DerivationMetadata>,
   setStateCalls: Map<SetStateName, Array<Place>>,
 ): void {
+  console.log('instr: ', printInstruction(instr));
+  console.log('derived before: ', derivedTuple);
   let typeOfValue: TypeOfValue = 'ignored';
 
   // TODO: Not sure if this will catch every time we create a new useState
+  let sources: Array<DerivationMetadata> = [];
   if (
     instr.value.kind === 'Destructure' &&
     instr.value.lvalue.pattern.kind === 'ArrayPattern' &&
     isUseStateType(instr.value.value.identifier)
   ) {
-    const value = instr.value.lvalue.pattern.items[0];
-    if (value.kind === 'Identifier') {
-      derivedTuple.set(value.identifier.id, {
-        place: value,
-        sources: new Set([value]),
-        typeOfValue: 'fromState',
+    typeOfValue = 'fromState';
+
+    const stateValueSource = instr.value.lvalue.pattern.items[0];
+    if (stateValueSource.kind === 'Identifier') {
+      sources.push({
+        place: stateValueSource,
+        typeOfValue: typeOfValue,
+        sources: new Set([stateValueSource]),
       });
     }
   }
@@ -131,7 +137,6 @@ function parseInstr(
     }
   }
 
-  let sources: Array<DerivationMetadata> = [];
   for (const operand of eachInstructionOperand(instr)) {
     const opSource = derivedTuple.get(operand.identifier.id);
     if (opSource === undefined) {
