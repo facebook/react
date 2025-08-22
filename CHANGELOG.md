@@ -32,7 +32,7 @@ An Owner Stack is a string representing the components that are directly respons
 
 ### React DOM
 * Fixed double warning when the `href` attribute is an empty string [#31783](https://github.com/facebook/react/pull/31783)
- * Fixed an edge case where `getHoistableRoot()` didn’t work properly when the container was a Document [#32321](https://github.com/facebook/react/pull/32321)
+* Fixed an edge case where `getHoistableRoot()` didn't work properly when the container was a Document [#32321](https://github.com/facebook/react/pull/32321)
 * Removed support for using HTML comments (e.g. `<!-- -->`) as a DOM container. [#32250](https://github.com/facebook/react/pull/32250)
 * Added support for `<script>` and `<template>` tags to be nested within `<select>` tags. [#31837](https://github.com/facebook/react/pull/31837)
 * Fixed responsive images to be preloaded as HTML instead of headers [#32445](https://github.com/facebook/react/pull/32445)
