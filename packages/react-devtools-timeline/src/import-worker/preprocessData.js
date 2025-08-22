@@ -123,7 +123,7 @@ function updateLaneToLabelMap(
 
 let profilerVersion = null;
 
-function getLastType(stack: $PropertyType<ProcessorState, 'measureStack'>) {
+function getLastType(stack: ProcessorState['measureStack']) {
   if (stack.length > 0) {
     const {type} = stack[stack.length - 1];
     return type;
@@ -131,7 +131,7 @@ function getLastType(stack: $PropertyType<ProcessorState, 'measureStack'>) {
   return null;
 }
 
-function getDepth(stack: $PropertyType<ProcessorState, 'measureStack'>) {
+function getDepth(stack: ProcessorState['measureStack']) {
   if (stack.length > 0) {
     const {depth, type} = stack[stack.length - 1];
     return type === 'render-idle' ? depth : depth + 1;
@@ -180,7 +180,7 @@ function markWorkCompleted(
   type: ReactMeasureType,
   stopTime: Milliseconds,
   currentProfilerData: TimelineData,
-  stack: $PropertyType<ProcessorState, 'measureStack'>,
+  stack: ProcessorState['measureStack'],
 ) {
   if (stack.length === 0) {
     console.error(
@@ -214,7 +214,7 @@ function markWorkCompleted(
 
 function throwIfIncomplete(
   type: ReactMeasureType,
-  stack: $PropertyType<ProcessorState, 'measureStack'>,
+  stack: ProcessorState['measureStack'],
 ) {
   const lastIndex = stack.length - 1;
   if (lastIndex >= 0) {
@@ -509,7 +509,7 @@ function processTimelineEvent(
       } else if (name.startsWith('--schedule-forced-update-')) {
         const [laneBitmaskString, componentName] = name.slice(25).split('-');
 
-        const forceUpdateEvent = {
+        const forceUpdateEvent: SchedulingEvent = {
           type: 'schedule-force-update',
           lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
           componentName,
@@ -527,7 +527,7 @@ function processTimelineEvent(
       } else if (name.startsWith('--schedule-state-update-')) {
         const [laneBitmaskString, componentName] = name.slice(24).split('-');
 
-        const stateUpdateEvent = {
+        const stateUpdateEvent: SchedulingEvent = {
           type: 'schedule-state-update',
           lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
           componentName,
@@ -578,7 +578,7 @@ function processTimelineEvent(
         // We can't know if they'll be resolved or not at this point.
         // We'll just give them a default (fake) duration width.
 
-        const suspenseEvent = {
+        const suspenseEvent: SuspenseEvent = {
           componentName,
           depth,
           duration: null,

@@ -11,6 +11,7 @@ import {
   ErrorSeverity,
   SourceLocation,
 } from '..';
+import {ErrorCategory} from '../CompilerError';
 import {
   CallExpression,
   Effect,
@@ -300,8 +301,9 @@ function extractManualMemoizationArgs(
   if (fnPlace == null) {
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
+        category: ErrorCategory.UseMemo,
         severity: ErrorSeverity.InvalidReact,
-        category: `Expected a callback function to be passed to ${kind}`,
+        reason: `Expected a callback function to be passed to ${kind}`,
         description: `Expected a callback function to be passed to ${kind}`,
         suggestions: null,
       }).withDetail({
@@ -315,8 +317,9 @@ function extractManualMemoizationArgs(
   if (fnPlace.kind === 'Spread' || depsListPlace?.kind === 'Spread') {
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
+        category: ErrorCategory.UseMemo,
         severity: ErrorSeverity.InvalidReact,
-        category: `Unexpected spread argument to ${kind}`,
+        reason: `Unexpected spread argument to ${kind}`,
         description: `Unexpected spread argument to ${kind}`,
         suggestions: null,
       }).withDetail({
@@ -335,8 +338,9 @@ function extractManualMemoizationArgs(
     if (maybeDepsList == null) {
       errors.pushDiagnostic(
         CompilerDiagnostic.create({
+          category: ErrorCategory.UseMemo,
           severity: ErrorSeverity.InvalidReact,
-          category: `Expected the dependency list for ${kind} to be an array literal`,
+          reason: `Expected the dependency list for ${kind} to be an array literal`,
           description: `Expected the dependency list for ${kind} to be an array literal`,
           suggestions: null,
         }).withDetail({
@@ -353,8 +357,9 @@ function extractManualMemoizationArgs(
       if (maybeDep == null) {
         errors.pushDiagnostic(
           CompilerDiagnostic.create({
+            category: ErrorCategory.UseMemo,
             severity: ErrorSeverity.InvalidReact,
-            category: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
+            reason: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
             description: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
             suggestions: null,
           }).withDetail({
@@ -459,7 +464,8 @@ export function dropManualMemoization(
                 errors.pushDiagnostic(
                   CompilerDiagnostic.create({
                     severity: ErrorSeverity.InvalidReact,
-                    category: 'useMemo() callbacks must return a value',
+                    category: ErrorCategory.UseMemo,
+                    reason: 'useMemo() callbacks must return a value',
                     description: `This ${
                       manualMemo.loadInstr.value.kind === 'PropertyLoad'
                         ? 'React.useMemo'
@@ -498,8 +504,9 @@ export function dropManualMemoization(
             if (!sidemap.functions.has(fnPlace.identifier.id)) {
               errors.pushDiagnostic(
                 CompilerDiagnostic.create({
+                  category: ErrorCategory.UseMemo,
                   severity: ErrorSeverity.InvalidReact,
-                  category: `Expected the first argument to be an inline function expression`,
+                  reason: `Expected the first argument to be an inline function expression`,
                   description: `Expected the first argument to be an inline function expression`,
                   suggestions: [],
                 }).withDetail({

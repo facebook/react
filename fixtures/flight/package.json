@@ -29,6 +29,7 @@
     "concurrently": "^7.3.0",
     "css-loader": "^6.5.1",
     "css-minimizer-webpack-plugin": "^3.2.0",
+    "devtools-ignore-webpack-plugin": "^0.2.0",
     "dotenv": "^10.0.0",
     "dotenv-expand": "^5.1.0",
     "file-loader": "^6.2.0",

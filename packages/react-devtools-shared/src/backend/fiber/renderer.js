@@ -1317,9 +1317,9 @@ export function attach(
     if (componentLogsEntry === undefined) {
       componentLogsEntry = {
         errors: new Map(),
-        errorsCount: 0,
+        errorsCount: 0 as number,
         warnings: new Map(),
-        warningsCount: 0,
+        warningsCount: 0 as number,
       };
       fiberToComponentLogsMap.set(fiber, componentLogsEntry);
     }
@@ -6705,7 +6705,7 @@ export function attach(
     if (isMostRecentlyInspectedElement(id) && !forceFullData) {
       if (!hasElementUpdatedSinceLastInspected) {
         if (path !== null) {
-          let secondaryCategory = null;
+          let secondaryCategory: 'suspendedBy' | 'hooks' | null = null;
           if (path[0] === 'hooks') {
             secondaryCategory = 'hooks';
           }

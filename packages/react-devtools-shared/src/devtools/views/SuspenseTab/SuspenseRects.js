@@ -23,6 +23,10 @@ import {StoreContext} from '../context';
 import {useHighlightHostInstance} from '../hooks';
 import styles from './SuspenseRects.css';
 import {SuspenseTreeStateContext} from './SuspenseTreeContext';
+import typeof {
+  SyntheticMouseEvent,
+  SyntheticPointerEvent,
+} from 'react-dom-bindings/src/events/SyntheticEvent';
 
 function SuspenseRect({rect}: {rect: Rect}): React$Node {
   return (
@@ -55,7 +59,7 @@ function SuspenseRects({
     return null;
   }
 
-  function handleClick(event: SyntheticMouseEvent<>) {
+  function handleClick(event: SyntheticMouseEvent) {
     if (event.defaultPrevented) {
       // Already clicked on an inner rect
       return;
@@ -64,7 +68,7 @@ function SuspenseRects({
     dispatch({type: 'SELECT_ELEMENT_BY_ID', payload: suspenseID});
   }
 
-  function handlePointerOver(event: SyntheticPointerEvent<>) {
+  function handlePointerOver(event: SyntheticPointerEvent) {
     if (event.defaultPrevented) {
       // Already hovered an inner rect
       return;
@@ -73,7 +77,7 @@ function SuspenseRects({
     highlightHostInstance(suspenseID);
   }
 
-  function handlePointerLeave(event: SyntheticPointerEvent<>) {
+  function handlePointerLeave(event: SyntheticPointerEvent) {
     if (event.defaultPrevented) {
       // Already hovered an inner rect
       return;

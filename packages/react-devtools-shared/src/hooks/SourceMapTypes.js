@@ -25,6 +25,7 @@ export type BasicSourceMap = {
   +version: number,
   +x_facebook_sources?: FBSourcesArray,
   +x_react_sources?: ReactSourcesArray,
+  +ignoreList?: Array<number>,
 };
 
 export type IndexSourceMapSection = {
