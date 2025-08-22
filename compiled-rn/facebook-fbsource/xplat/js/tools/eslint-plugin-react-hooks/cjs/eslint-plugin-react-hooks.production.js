@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<f08c4c2827b1856ef12ecb97a6f7a2c5>>
+ * @generated SignedSource<<e889d2875cc3705d804f26c9d2866cf6>>
  */
 
 'use strict';
@@ -17987,14 +17987,20 @@ var ErrorCategory;
     ErrorCategory["Fire"] = "Fire";
     ErrorCategory["FBT"] = "FBT";
 })(ErrorCategory || (ErrorCategory = {}));
+const RULE_NAME_PATTERN = /^[a-z]+(-[a-z]+)*$/;
 function getRuleForCategory(category) {
+    const rule = getRuleForCategoryImpl(category);
+    invariant(RULE_NAME_PATTERN.test(rule.name), `Invalid rule name, got '${rule.name}' but rules must match ${RULE_NAME_PATTERN.toString()}`);
+    return rule;
+}
+function getRuleForCategoryImpl(category) {
     switch (category) {
         case ErrorCategory.AutomaticEffectDependencies: {
             return {
                 category,
                 name: 'automatic-effect-dependencies',
                 description: 'Verifies that automatic effect dependencies are compiled if opted-in',
-                recommended: true,
+                recommended: false,
             };
         }
         case ErrorCategory.CapitalizedCalls: {
@@ -18009,7 +18015,7 @@ function getRuleForCategory(category) {
             return {
                 category,
                 name: 'config',
-                description: 'Validates the configuration',
+                description: 'Validates the compiler configuration options',
                 recommended: true,
             };
         }
@@ -18033,7 +18039,7 @@ function getRuleForCategory(category) {
             return {
                 category,
                 name: 'set-state-in-effect',
-                description: 'Validates against calling setState synchronously in an effect',
+                description: 'Validates against calling setState synchronously in an effect, which can lead to re-renders that degrade performance',
                 recommended: true,
             };
         }
@@ -18041,7 +18047,7 @@ function getRuleForCategory(category) {
             return {
                 category,
                 name: 'error-boundaries',
-                description: 'Validates usage of error boundaries instead of try/catch for errors in JSX',
+                description: 'Validates usage of error boundaries instead of try/catch for errors in child components',
                 recommended: true,
             };
         }
@@ -18065,7 +18071,7 @@ function getRuleForCategory(category) {
             return {
                 category,
                 name: 'gating',
-                description: 'Validates configuration of gating mode',
+                description: 'Validates configuration of [gating mode](https://react.dev/reference/react-compiler/gating)',
                 recommended: true,
             };
         }
@@ -18073,7 +18079,8 @@ function getRuleForCategory(category) {
             return {
                 category,
                 name: 'globals',
-                description: 'Validates against assignment/mutation of globals during render',
+                description: 'Validates against assignment/mutation of globals during render, part of ensuring that ' +
+                    '[side effects must render outside of render](https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render)',
                 recommended: true,
             };
         }
@@ -18089,7 +18096,7 @@ function getRuleForCategory(category) {
             return {
                 category,
                 name: 'immutability',
-                description: 'Validates that immutable values (props, state, etc) are not mutated',
+                description: 'Validates against mutating props, state, and other values that [are immutable](https://react.dev/reference/rules/components-and-hooks-must-be-pure#props-and-state-are-immutable)',
                 recommended: true,
             };
         }
@@ -18105,7 +18112,9 @@ function getRuleForCategory(category) {
             return {
                 category,
                 name: 'preserve-manual-memoization',
-                description: 'Validates that existing manual memoized is preserved by the compiler',
+                description: 'Validates that existing manual memoized is preserved by the compiler. ' +
+                    'React Compiler will only compile components and hooks if its inference ' +
+                    '[matches or exceeds the existing manual memoization](https://react.dev/learn/react-compiler/introduction#what-should-i-do-about-usememo-usecallback-and-reactmemo)',
                 recommended: true,
             };
         }
@@ -18113,7 +18122,7 @@ function getRuleForCategory(category) {
             return {
                 category,
                 name: 'purity',
-                description: 'Validates that the component/hook is pure, and does not call known-impure functions',
+                description: 'Validates that [components/hooks are pure](https://react.dev/reference/rules/components-and-hooks-must-be-pure) by checking that they do not call known-impure functions',
                 recommended: true,
             };
         }
@@ -18121,7 +18130,7 @@ function getRuleForCategory(category) {
             return {
                 category,
                 name: 'refs',
-                description: 'Validates correct usage of refs, not reading/writing during render',
+                description: 'Validates correct usage of refs, not reading/writing during render. See the "pitfalls" section in [`useRef()` usage](https://react.dev/reference/react/useRef#usage)',
                 recommended: true,
             };
         }
@@ -18129,7 +18138,7 @@ function getRuleForCategory(category) {
             return {
                 category,
                 name: 'set-state-in-render',
-                description: 'Validates against setting state during render',
+                description: 'Validates against setting state during render, which can trigger additional renders and potential infinite render loops',
                 recommended: true,
             };
         }
@@ -18137,7 +18146,7 @@ function getRuleForCategory(category) {
             return {
                 category,
                 name: 'static-components',
-                description: 'Validates that components are static, not recreated every render',
+                description: 'Validates that components are static, not recreated every render. Components that are recreated dynamically can reset state and trigger excessive re-rendering',
                 recommended: true,
             };
         }
@@ -18169,7 +18178,7 @@ function getRuleForCategory(category) {
             return {
                 category,
                 name: 'unsupported-syntax',
-                description: 'Validates against syntax that we do not plan to support',
+                description: 'Validates against syntax that we do not plan to support in React Compiler',
                 recommended: true,
             };
         }
@@ -18177,7 +18186,7 @@ function getRuleForCategory(category) {
             return {
                 category,
                 name: 'use-memo',
-                description: 'Validates usage of the useMemo() hook',
+                description: 'Validates usage of the useMemo() hook against common mistakes. See [`useMemo()` docs](https://react.dev/reference/react/useMemo) for more information.',
                 recommended: true,
             };
         }
