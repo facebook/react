@@ -42,7 +42,7 @@ type SetStateName = string | undefined | null;
 type DerivationMetadata = {
   typeOfValue: TypeOfValue;
   place: Place;
-  sources: Array<Place>;
+  sources: Set<Place>;
 };
 
 type ErrorMetadata = {
@@ -70,7 +70,7 @@ function updateDerivationMetadata(
 ): void {
   let newValue: DerivationMetadata = {
     place: target,
-    sources: [],
+    sources: new Set(),
     typeOfValue: typeOfValue,
   };
 
@@ -80,9 +80,11 @@ function updateDerivationMetadata(
      *  we should set the target as the source.
      */
     if (source.place.identifier.name?.kind === 'promoted') {
-      newValue.sources.push(target);
+      newValue.sources.add(target);
     } else {
-      newValue.sources.push(...source.sources);
+      for (const place of source.sources) {
+        newValue.sources.add(place);
+      }
     }
   }
   derivedTuple.set(target.identifier.id, newValue);
@@ -105,7 +107,7 @@ function parseInstr(
     if (value.kind === 'Identifier') {
       derivedTuple.set(value.identifier.id, {
         place: value,
-        sources: [value],
+        sources: new Set([value]),
         typeOfValue: 'fromState',
       });
     }
@@ -200,7 +202,7 @@ function parseBlockPhi(
         ) {
           derivedTuple.set(phi.place.identifier.id, {
             place: phi.place,
-            sources: [phi.place],
+            sources: new Set([phi.place]),
             typeOfValue: 'fromProps',
           });
         } else {
@@ -254,7 +256,7 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
       if (param.kind === 'Identifier') {
         derivedTuple.set(param.identifier.id, {
           place: param,
-          sources: [param],
+          sources: new Set([param]),
           typeOfValue: 'fromProps',
         });
       }
@@ -264,7 +266,7 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
     if (props != null && props.kind === 'Identifier') {
       derivedTuple.set(props.identifier.id, {
         place: props,
-        sources: [props],
+        sources: new Set([props]),
         typeOfValue: 'fromProps',
       });
     }
@@ -432,6 +434,7 @@ function validateEffect(
     for (const pred of block.preds) {
       if (!seenBlocks.has(pred)) {
         // skip if block has a back edge
+        console.log('skipping block');
         return;
       }
     }
@@ -522,8 +525,9 @@ function validateEffect(
   }
 
   for (const call of setStateCallsInEffect) {
-    const placeNames = call.invalidDeps.sources
+    const placeNames = Array.from(call.invalidDeps.sources)
       .map(place => place.identifier.name?.value)
+      .filter(Boolean)
       .join(', ');
 
     let sourceNames = '';
