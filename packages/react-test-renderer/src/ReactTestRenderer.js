@@ -9,6 +9,7 @@
 
 import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {
+  Container,
   PublicInstance,
   Instance,
   TextInstance,
@@ -505,7 +506,7 @@ function create(
       isStrictMode = true;
     }
   }
-  let container = {
+  let container: Container = {
     children: ([]: Array<Instance | TextInstance>),
     createNodeMock,
     tag: 'CONTAINER',
