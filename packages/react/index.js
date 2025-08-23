@@ -38,6 +38,7 @@ export {
   use,
   forwardRef,
   isValidElement,
+  isValidNode,
   lazy,
   memo,
   cache,
