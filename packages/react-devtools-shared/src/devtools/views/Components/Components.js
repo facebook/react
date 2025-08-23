@@ -24,6 +24,7 @@ import SettingsModal from 'react-devtools-shared/src/devtools/views/Settings/Set
 import {NativeStyleContextController} from './NativeStyleEditor/context';
 
 import styles from './Components.css';
+import typeof {SyntheticPointerEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
 
 type Orientation = 'horizontal' | 'vertical';
 
@@ -79,17 +80,17 @@ function Components(_: {}) {
     return () => clearTimeout(timeoutID);
   }, [horizontalPercentage, verticalPercentage]);
 
-  const onResizeStart = (event: SyntheticPointerEvent<HTMLElement>) => {
+  const onResizeStart = (event: SyntheticPointerEvent) => {
     const element = event.currentTarget;
     element.setPointerCapture(event.pointerId);
   };
 
-  const onResizeEnd = (event: SyntheticPointerEvent<HTMLElement>) => {
+  const onResizeEnd = (event: SyntheticPointerEvent) => {
     const element = event.currentTarget;
     element.releasePointerCapture(event.pointerId);
   };
 
-  const onResize = (event: SyntheticPointerEvent<HTMLElement>) => {
+  const onResize = (event: SyntheticPointerEvent) => {
     const element = event.currentTarget;
     const isResizing = element.hasPointerCapture(event.pointerId);
     if (!isResizing) {
@@ -234,4 +235,4 @@ function setResizeCSSVariable(
   }
 }
 
-export default (portaledContent(Components): React$ComponentType<{}>);
+export default (portaledContent(Components): component());

@@ -1183,7 +1183,7 @@ function bind(this: Function): Function {
   const referenceClosure = knownServerReferences.get(this);
 
   if (!referenceClosure) {
-    // $FlowFixMe[prop-missing]
+    // $FlowFixMe[incompatible-call]
     return FunctionBind.apply(this, arguments);
   }
 

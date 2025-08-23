@@ -314,7 +314,7 @@ class Bridge<
 
   send<EventName: $Keys<OutgoingEvents>>(
     event: EventName,
-    ...payload: $ElementType<OutgoingEvents, EventName>
+    ...payload: OutgoingEvents[EventName]
   ) {
     if (this._isShutdown) {
       console.warn(

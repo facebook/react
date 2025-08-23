@@ -386,6 +386,6 @@ function HookView({
   }
 }
 
-export default (React.memo(
-  InspectedElementHooksTree,
-): React.ComponentType<HookViewProps>);
+export default (React.memo(InspectedElementHooksTree): component(
+  ...props: HookViewProps
+));

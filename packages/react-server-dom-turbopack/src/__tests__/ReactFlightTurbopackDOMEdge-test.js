@@ -12,25 +12,27 @@
 // Polyfills for test environment
 global.ReadableStream =
   require('web-streams-polyfill/ponyfill/es6').ReadableStream;
+global.WritableStream =
+  require('web-streams-polyfill/ponyfill/es6').WritableStream;
 global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
-
-// Don't wait before processing work on the server.
-// TODO: we can replace this with FlightServer.act().
-global.setTimeout = cb => cb();
 
 let clientExports;
 let turbopackMap;
 let turbopackModules;
 let React;
+let ReactServer;
 let ReactDOMServer;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 let use;
+let serverAct;
 
 describe('ReactFlightTurbopackDOMEdge', () => {
   beforeEach(() => {
     jest.resetModules();
+
+    serverAct = require('internal-test-utils').serverAct;
 
     // Simulate the condition resolution
     jest.mock('react', () => require('react/react.react-server'));
@@ -43,6 +45,7 @@ describe('ReactFlightTurbopackDOMEdge', () => {
     turbopackMap = TurbopackMock.turbopackMap;
     turbopackModules = TurbopackMock.turbopackModules;
 
+    ReactServer = require('react');
     ReactServerDOMServer = require('react-server-dom-turbopack/server.edge');
 
     jest.resetModules();
@@ -64,6 +67,15 @@ describe('ReactFlightTurbopackDOMEdge', () => {
       }
       result += Buffer.from(value).toString('utf8');
     }
+  }
+
+  function normalizeCodeLocInfo(str) {
+    return (
+      str &&
+      str.replace(/^ +(?:at|in) ([\S]+)[^\n]*/gm, function (m, name) {
+        return '    in ' + name + (/\d/.test(m) ? ' (at **)' : '');
+      })
+    );
   }
 
   it('should allow an alternative module mapping to be used for SSR', async () => {
@@ -92,9 +104,8 @@ describe('ReactFlightTurbopackDOMEdge', () => {
       return <ClientComponentOnTheClient />;
     }
 
-    const stream = ReactServerDOMServer.renderToReadableStream(
-      <App />,
-      turbopackMap,
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(<App />, turbopackMap),
     );
     const response = ReactServerDOMClient.createFromReadableStream(stream, {
       serverConsumerManifest: {
@@ -107,10 +118,98 @@ describe('ReactFlightTurbopackDOMEdge', () => {
       return use(response);
     }
 
-    const ssrStream = await ReactDOMServer.renderToReadableStream(
-      <ClientRoot />,
+    const ssrStream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(<ClientRoot />),
     );
     const result = await readResult(ssrStream);
     expect(result).toEqual('<span>Client Component</span>');
+  });
+
+  // @gate __DEV__
+  it('can transport debug info through a separate debug channel', async () => {
+    function Thrower() {
+      throw new Error('ssr-throw');
+    }
+
+    const ClientComponentOnTheClient = clientExports(
+      Thrower,
+      123,
+      'path/to/chunk.js',
+    );
+
+    const ClientComponentOnTheServer = clientExports(Thrower);
+
+    function App() {
+      return ReactServer.createElement(
+        ReactServer.Suspense,
+        null,
+        ReactServer.createElement(ClientComponentOnTheClient, null),
+      );
+    }
+
+    let debugReadableStreamController;
+
+    const debugReadableStream = new ReadableStream({
+      start(controller) {
+        debugReadableStreamController = controller;
+      },
+    });
+
+    const rscStream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        ReactServer.createElement(App, null),
+        turbopackMap,
+        {
+          debugChannel: {
+            writable: new WritableStream({
+              write(chunk) {
+                debugReadableStreamController.enqueue(chunk);
+              },
+            }),
+          },
+        },
+      ),
+    );
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const serverConsumerManifest = {
+      moduleMap: {
+        [turbopackMap[ClientComponentOnTheClient.$$id].id]: {
+          '*': turbopackMap[ClientComponentOnTheServer.$$id],
+        },
+      },
+      moduleLoading: null,
+    };
+
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
+      serverConsumerManifest,
+      debugChannel: {readable: debugReadableStream},
+    });
+
+    let ownerStack;
+
+    const ssrStream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(
+        <ClientRoot response={response} />,
+        {
+          onError(err, errorInfo) {
+            ownerStack = React.captureOwnerStack
+              ? React.captureOwnerStack()
+              : null;
+          },
+        },
+      ),
+    );
+
+    const result = await readResult(ssrStream);
+
+    expect(normalizeCodeLocInfo(ownerStack)).toBe('\n    in App (at **)');
+
+    expect(result).toContain(
+      'Switched to client rendering because the server rendering errored:\n\nssr-throw',
+    );
   });
 });
