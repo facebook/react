@@ -283,6 +283,7 @@ import {
   untrackNamedViewTransition,
 } from './ReactFiberDuplicateViewTransitions';
 import {markIndicatorHandled} from './ReactFiberRootScheduler';
+import type {Flags} from './ReactFiberFlags';
 
 // Used during the commit phase to track the state of the Offscreen component stack.
 // Allows us to avoid traversing the return path to find the nearest Offscreen ancestor.
@@ -4490,7 +4491,7 @@ export function commitPassiveUnmountEffects(finishedWork: Fiber): void {
 // Note that MaySuspendCommit and ShouldSuspendCommit also includes named
 // ViewTransitions so that we know to also visit those to collect appearing
 // pairs.
-let suspenseyCommitFlag = ShouldSuspendCommit;
+let suspenseyCommitFlag: Flags = ShouldSuspendCommit;
 export function accumulateSuspenseyCommit(
   finishedWork: Fiber,
   committedLanes: Lanes,
@@ -5019,7 +5020,7 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
         const instance: OffscreenInstance = offscreenFiber.stateNode;
         const transitions = instance._transitions;
         if (transitions !== null) {
-          const abortReason = {
+          const abortReason: TransitionAbort = {
             reason: 'suspense',
             name: current.memoizedProps.name || null,
           };
@@ -5060,7 +5061,7 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
         const instance: TracingMarkerInstance = current.stateNode;
         const transitions = instance.transitions;
         if (transitions !== null) {
-          const abortReason = {
+          const abortReason: TransitionAbort = {
             reason: 'marker',
             name: current.memoizedProps.name,
           };

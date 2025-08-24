@@ -64,7 +64,7 @@ import type {FetchFileWithCaching} from 'react-devtools-shared/src/devtools/view
 
 // Prefer a cached albeit stale response to reduce download time.
 // We wouldn't want to load/parse a newer version of the source (even if one existed).
-const FETCH_OPTIONS = {cache: 'force-cache'};
+const FETCH_OPTIONS = {cache: 'force-cache' as CacheType};
 
 const MAX_SOURCE_LENGTH = 100_000_000;
 

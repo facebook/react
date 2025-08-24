@@ -8,8 +8,6 @@
  */
 
 // Keep in sync with https://github.com/facebook/flow/blob/main/lib/react.js
-export type ComponentType<-P> = React$ComponentType<P>;
-export type AbstractComponent<-Config> = React$AbstractComponent<Config>;
 export type ElementType = React$ElementType;
 export type Element<+C> = React$Element<C>;
 export type MixedElement = React$Element<ElementType>;
@@ -21,7 +19,6 @@ export type RefSetter<-I> = React$RefSetter<I>;
 export type ElementProps<C> = React$ElementProps<C>;
 export type ElementConfig<C> = React$ElementConfig<C>;
 export type ElementRef<C> = React$ElementRef<C>;
-export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
 export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
 
 export {

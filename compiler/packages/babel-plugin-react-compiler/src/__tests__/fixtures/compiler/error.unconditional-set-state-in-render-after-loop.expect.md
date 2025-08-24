@@ -27,7 +27,7 @@ error.unconditional-set-state-in-render-after-loop.ts:6:2
   4 |   for (const _ of props) {
   5 |   }
 > 6 |   setState(true);
-    |   ^^^^^^^^ Found setState() within useMemo()
+    |   ^^^^^^^^ Found setState() in render
   7 |   return state;
   8 | }
   9 |

@@ -22,6 +22,7 @@ import styles from './SuspenseTab.css';
 import SuspenseRects from './SuspenseRects';
 import SuspenseTreeList from './SuspenseTreeList';
 import Button from '../Button';
+import typeof {SyntheticPointerEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
 
 type Orientation = 'horizontal' | 'vertical';
 
@@ -180,17 +181,17 @@ function SuspenseTab(_: {}) {
     treeListHorizontalFraction,
   ]);
 
-  const onResizeStart = (event: SyntheticPointerEvent<HTMLElement>) => {
+  const onResizeStart = (event: SyntheticPointerEvent) => {
     const element = event.currentTarget;
     element.setPointerCapture(event.pointerId);
   };
 
-  const onResizeEnd = (event: SyntheticPointerEvent<HTMLElement>) => {
+  const onResizeEnd = (event: SyntheticPointerEvent) => {
     const element = event.currentTarget;
     element.releasePointerCapture(event.pointerId);
   };
 
-  const onResizeTree = (event: SyntheticPointerEvent<HTMLElement>) => {
+  const onResizeTree = (event: SyntheticPointerEvent) => {
     const element = event.currentTarget;
     const isResizing = element.hasPointerCapture(event.pointerId);
     if (!isResizing) {
@@ -241,7 +242,7 @@ function SuspenseTab(_: {}) {
     }
   };
 
-  const onResizeTreeList = (event: SyntheticPointerEvent<HTMLElement>) => {
+  const onResizeTreeList = (event: SyntheticPointerEvent) => {
     const element = event.currentTarget;
     const isResizing = element.hasPointerCapture(event.pointerId);
     if (!isResizing) {
@@ -436,4 +437,4 @@ function setResizeCSSVariable(
   }
 }
 
-export default (portaledContent(SuspenseTab): React$ComponentType<{}>);
+export default (portaledContent(SuspenseTab): component());

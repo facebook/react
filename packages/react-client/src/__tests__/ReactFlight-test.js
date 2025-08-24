@@ -2957,6 +2957,19 @@ describe('ReactFlight', () => {
                   transport: expect.arrayContaining([]),
                 },
               },
+              {
+                time: 16,
+              },
+              {
+                env: 'third-party',
+                key: null,
+                name: 'ThirdPartyAsyncIterableComponent',
+                props: {},
+                stack: '    in Object.<anonymous> (at **)',
+              },
+              {
+                time: 16,
+              },
               {time: 17},
             ]
           : undefined,
@@ -2975,6 +2988,19 @@ describe('ReactFlight', () => {
                 props: {
                   children: {},
                 },
+              },
+              {
+                time: 19,
+              },
+              {
+                time: 19,
+              },
+              {
+                env: 'third-party',
+                key: null,
+                name: 'ThirdPartyAsyncIterableComponent',
+                props: {},
+                stack: '    in Object.<anonymous> (at **)',
               },
               {time: 19},
             ]

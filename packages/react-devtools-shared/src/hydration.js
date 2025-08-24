@@ -133,7 +133,7 @@ export function dehydrate(
   path: Array<string | number>,
   isPathAllowed: (path: Array<string | number>) => boolean,
   level: number = 0,
-): $PropertyType<DehydratedData, 'data'> {
+): DehydratedData['data'] {
   const type = getDataType(data);
 
   let isPathAllowedCheck;
@@ -479,7 +479,7 @@ export function dehydrate(
         return createDehydrated(type, true, data, cleaned, path);
       } else {
         const object: {
-          [string]: $PropertyType<DehydratedData, 'data'>,
+          [string]: DehydratedData['data'],
         } = {};
         getAllEnumerableKeys(data).forEach(key => {
           const name = key.toString();
@@ -616,7 +616,7 @@ function dehydrateKey(
   path: Array<string | number>,
   isPathAllowed: (path: Array<string | number>) => boolean,
   level: number = 0,
-): $PropertyType<DehydratedData, 'data'> {
+): DehydratedData['data'] {
   try {
     return dehydrate(
       parent[key],

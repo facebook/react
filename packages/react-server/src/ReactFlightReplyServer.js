@@ -556,7 +556,7 @@ function createModelResolver<T>(
     }
   } else {
     blocked = initializingChunkBlockedModel = {
-      deps: cyclic ? 0 : 1,
+      deps: (cyclic ? 0 : 1) as number,
       value: (null: any),
     };
   }

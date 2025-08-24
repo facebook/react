@@ -58,7 +58,8 @@ function filterStackFrame(sourceURL, functionName) {
     sourceURL !== '' &&
     !sourceURL.startsWith('node:') &&
     !sourceURL.includes('node_modules') &&
-    !sourceURL.endsWith('library.js')
+    !sourceURL.endsWith('library.js') &&
+    !sourceURL.includes('/server/region.js')
   );
 }
 
