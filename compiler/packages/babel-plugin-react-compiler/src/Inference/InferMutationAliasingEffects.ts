@@ -27,6 +27,7 @@ import {
   InstructionKind,
   InstructionValue,
   isArrayType,
+  isJsxType,
   isMapType,
   isPrimitiveType,
   isRefOrRefValue,
@@ -1868,6 +1869,23 @@ function computeSignatureForInstruction(
             effects.push({
               kind: 'Render',
               place: child,
+            });
+          }
+        }
+        for (const prop of value.props) {
+          if (
+            prop.kind === 'JsxAttribute' &&
+            prop.place.identifier.type.kind === 'Function' &&
+            (isJsxType(prop.place.identifier.type.return) ||
+              (prop.place.identifier.type.return.kind === 'Phi' &&
+                prop.place.identifier.type.return.operands.some(operand =>
+                  isJsxType(operand),
+                )))
+          ) {
+            // Any props which return jsx are assumed to be called during render
+            effects.push({
+              kind: 'Render',
+              place: prop.place,
             });
           }
         }
