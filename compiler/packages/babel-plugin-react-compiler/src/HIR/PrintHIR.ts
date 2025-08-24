@@ -880,7 +880,8 @@ export function printType(type: Type): string {
   if (type.kind === 'Object' && type.shapeId != null) {
     return `:T${type.kind}<${type.shapeId}>`;
   } else if (type.kind === 'Function' && type.shapeId != null) {
-    return `:T${type.kind}<${type.shapeId}>`;
+    const returnType = printType(type.return);
+    return `:T${type.kind}<${type.shapeId}>()${returnType !== '' ? `:  ${returnType}` : ''}`;
   } else {
     return `:T${type.kind}`;
   }
