@@ -132,7 +132,7 @@ export class ReactMeasuresView extends View {
         textFillStyle = COLORS.REACT_COMMIT_TEXT;
 
         // Commit phase rects are overlapped by layout and passive rects,
-        // and it looks bad if text flows underneath/behind these overlayed rects.
+        // and it looks bad if text flows underneath/behind these overlaid rects.
         if (nextMeasure != null) {
           // This clipping shouldn't apply for measures that don't overlap though,
           // like passive effects that are processed after a delay,

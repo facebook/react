@@ -194,7 +194,7 @@ describe('Timeline profiler', () => {
       });
 
       // These should be dynamic to mimic a real profile,
-      // but reprooducible between test runs.
+      // but reproducible between test runs.
       let pid = 0;
       let tid = 0;
       let startTime = 0;
@@ -1272,7 +1272,7 @@ describe('Timeline profiler', () => {
         describe('long event handlers', () => {
           // @reactVersion >= 18.0
           // @reactVersion <= 18.2
-          it('should not warn when React scedules a (sync) update inside of a short event handler', async () => {
+          it('should not warn when React schedules a (sync) update inside of a short event handler', async () => {
             function App() {
               return null;
             }
@@ -1320,7 +1320,7 @@ describe('Timeline profiler', () => {
 
           // @reactVersion >= 18.0
           // @reactVersion <= 18.2
-          it('should warn when React scedules a long (sync) update inside of an event', async () => {
+          it('should warn when React schedules a long (sync) update inside of an event', async () => {
             function App() {
               return null;
             }
@@ -1748,7 +1748,7 @@ describe('Timeline profiler', () => {
 
         describe('errors thrown while rendering', () => {
           // @reactVersion >= 18.0
-          it('shoult parse Errors thrown during render', async () => {
+          it('should parse Errors thrown during render', async () => {
             jest.spyOn(console, 'error');
 
             class ErrorBoundary extends React.Component {

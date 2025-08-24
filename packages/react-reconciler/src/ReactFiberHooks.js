@@ -575,7 +575,7 @@ export function renderWithHooks<Props, SecondArg>(
   //
   // We want memoized functions to run twice, too, so account for this, user
   // functions are double invoked during the *first* invocation of the component
-  // function, and are *not* double invoked during the second incovation:
+  // function, and are *not* double invoked during the second invocation:
   //
   // - First execution of component function: user functions are double invoked
   // - Second execution of component function (in Strict Mode, during
@@ -923,7 +923,7 @@ export function bailoutHooks(
 }
 
 export function resetHooksAfterThrow(): void {
-  // This is called immediaetly after a throw. It shouldn't reset the entire
+  // This is called immediately after a throw. It shouldn't reset the entire
   // module state, because the work loop might decide to replay the component
   // again without rewinding.
   //
@@ -1846,7 +1846,7 @@ function updateStoreInstance<T>(
   // Something may have been mutated in between render and commit. This could
   // have been in an event that fired before the passive effects, or it could
   // have been in a layout effect. In that case, we would have used the old
-  // snapsho and getSnapshot values to bail out. We need to check one more time.
+  // snapshot and getSnapshot values to bail out. We need to check one more time.
   if (checkIfSnapshotChanged(inst)) {
     // Force a re-render.
     // We intentionally don't log update times and stacks here because this
@@ -2014,7 +2014,7 @@ function rerenderOptimistic<S, A>(
   // the passthrough value changed.
   //
   // So instead of a forked re-render implementation that knows how to handle
-  // render phase udpates, we can use the same implementation as during a
+  // render phase updates, we can use the same implementation as during a
   // regular mount or update.
   const hook = updateWorkInProgressHook();
 
@@ -2527,7 +2527,7 @@ function rerenderActionState<S, P>(
   // the passthrough value changed.
   //
   // So instead of a forked re-render implementation that knows how to handle
-  // render phase udpates, we can use the same implementation as during a
+  // render phase updates, we can use the same implementation as during a
   // regular mount or update.
   const stateHook = updateWorkInProgressHook();
   const currentStateHook = currentHook;
@@ -3448,7 +3448,7 @@ function mountId(): string {
   if (getIsHydrating()) {
     const treeId = getTreeId();
 
-    // Use a captial R prefix for server-generated ids.
+    // Use a capital R prefix for server-generated ids.
     id = '_' + identifierPrefix + 'R_' + treeId;
 
     // Unless this is the first id at this level, append a number at the end
@@ -3755,7 +3755,7 @@ function dispatchOptimisticSetState<S, A>(
       throw new Error('Cannot update optimistic state while rendering.');
     } else {
       // startTransition was called during render. We don't need to do anything
-      // besides warn here because the render phase update would be overidden by
+      // besides warn here because the render phase update would be overridden by
       // the second update, anyway. We can remove this branch and make it throw
       // in a future release.
       if (__DEV__) {
