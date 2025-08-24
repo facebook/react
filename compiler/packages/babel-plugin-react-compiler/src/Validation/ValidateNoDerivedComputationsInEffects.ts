@@ -69,6 +69,10 @@ function updateDerivationMetadata(
   typeOfValue: TypeOfValue | undefined,
   derivedTuple: Map<IdentifierId, DerivationMetadata>,
 ): void {
+  // console.log('NEW DERIVATION');
+  // console.log('target', target);
+  // console.log('sources', sources);
+  // console.log('derivedTuple', new Map(derivedTuple));
   let newValue: DerivationMetadata = {
     place: target,
     sources: new Set(),
@@ -210,12 +214,14 @@ function parseBlockPhi(
   for (const phi of block.phis) {
     for (const operand of phi.operands.values()) {
       const source = derivedTuple.get(operand.identifier.id);
-      updateDerivationMetadata(
-        phi.place,
-        source !== undefined ? [source] : undefined,
-        source?.typeOfValue,
-        derivedTuple,
-      );
+      if (source !== undefined) {
+        updateDerivationMetadata(
+          phi.place,
+          [source],
+          source?.typeOfValue,
+          derivedTuple,
+        );
+      }
     }
   }
 }
@@ -476,6 +482,7 @@ function validateEffect(
             const invalidDeps = derivedTuple.get(
               instr.value.args[0].identifier.id,
             );
+            console.log('GUILTY PLACE', instr.value.args[0].identifier.id);
 
             if (invalidDeps !== undefined) {
               setStateCallsInEffect.push({
@@ -499,8 +506,11 @@ function validateEffect(
   }
 
   for (const call of setStateCallsInEffect) {
+    console.log('SOURCES', call.invalidDeps.sources);
     const placeNames = Array.from(call.invalidDeps.sources)
-      .map(place => place.identifier.name?.value)
+      .map(place => {
+        return place.identifier.name?.value;
+      })
       .filter(Boolean)
       .join(', ');
 
