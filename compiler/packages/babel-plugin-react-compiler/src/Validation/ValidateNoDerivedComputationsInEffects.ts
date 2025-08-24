@@ -358,7 +358,7 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
 
     throwableErrors.push({
       reason: reason,
-      description: `You are using invalid dependencies: \n\n${error.invalidDepInfo}`,
+      description: `You are using invalid dependencies:\n\n${error.invalidDepInfo}`,
       severity: ErrorSeverity.InvalidReact,
       loc: error.loc,
     });

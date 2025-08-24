@@ -26,7 +26,9 @@ Found 1 error:
 
 Error: You may not need this effect. Values derived from state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)
 
-This effect updates state based on other state values. Consider calculating this value directly during render.
+You are using invalid dependencies:
+
+Invalid deps from local state: [firstName, lastName].
 
 error.invalid-derived-computation-in-effect.ts:9:4
    7 |   const [fullName, setFullName] = useState('');

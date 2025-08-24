@@ -38,7 +38,7 @@ Error: You may not need this effect. Values derived from state should be calcula
 
 You are using invalid dependencies:
 
-Invalid deps from both props and local state: [].
+Invalid deps from both props and local state: [prefix, name].
 
 error.bug-derived-state-from-mixed-deps.ts:9:4
    7 |
@@ -49,3 +49,5 @@ error.bug-derived-state-from-mixed-deps.ts:9:4
   11 |
   12 |   return (
 ```
+          
+      

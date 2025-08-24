@@ -1,0 +1,4 @@
+yarn run v1.22.22
+$ ./scripts/link-react-compiler-runtime.sh && yarn snap:ci
+success Using linked package for "react-compiler-runtime".
+$ yarn snap:build && yarn snap

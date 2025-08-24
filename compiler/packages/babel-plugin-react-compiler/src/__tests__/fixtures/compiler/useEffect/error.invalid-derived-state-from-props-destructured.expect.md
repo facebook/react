@@ -5,7 +5,7 @@
 // @validateNoDerivedComputationsInEffects
 import {useEffect, useState} from 'react';
 
-function Component({user: {firstName, lastName}}) {
+function Component({firstName, lastName}) {
   const [fullName, setFullName] = useState('');
 
   useEffect(() => {
@@ -17,7 +17,7 @@ function Component({user: {firstName, lastName}}) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{user: {firstName: 'John', lastName: 'Doe'}}],
+  params: [{firstName: 'John', lastName: 'Doe'}],
 };
 
 ```
@@ -30,7 +30,9 @@ Found 1 error:
 
 Error: You may not need this effect. Values derived from state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)
 
-This effect updates state based on other state values. Consider calculating this value directly during render.
+You are using invalid dependencies:
+
+Invalid deps from props [firstName, lastName].
 
 error.invalid-derived-state-from-props-destructured.ts:8:4
    6 |

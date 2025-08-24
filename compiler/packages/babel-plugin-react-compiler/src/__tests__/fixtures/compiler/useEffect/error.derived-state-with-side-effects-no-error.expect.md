@@ -24,6 +24,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 
+
 ## Error
 
 ```
@@ -33,9 +34,9 @@ Error: You may not need this effect. Values derived from state should be calcula
 
 You are using invalid dependencies:
 
-Invalid deps from props [].
+Invalid deps from props [value].
 
-derived-state-with-side-effects-no-error.ts:9:4
+error.derived-state-with-side-effects-no-error.ts:9:4
    7 |   useEffect(() => {
    8 |     console.log('Value changed:', value);
 >  9 |     setLocalValue(value);
@@ -44,3 +45,5 @@ derived-state-with-side-effects-no-error.ts:9:4
   11 |   }, [value]);
   12 |
 ```
+          
+      
