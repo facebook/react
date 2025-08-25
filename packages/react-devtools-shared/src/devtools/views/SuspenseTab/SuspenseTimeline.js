@@ -24,6 +24,10 @@ import {TreeDispatcherContext} from '../Components/TreeContext';
 import {useHighlightHostInstance} from '../hooks';
 import {SuspenseTreeStateContext} from './SuspenseTreeContext';
 import styles from './SuspenseTimeline.css';
+import typeof {
+  SyntheticEvent,
+  SyntheticPointerEvent,
+} from 'react-dom-bindings/src/events/SyntheticEvent';
 
 // TODO: This returns the roots which would mean we attempt to suspend the shell.
 // Suspending the shell is currently not supported and we don't have a good view
@@ -126,7 +130,7 @@ export default function SuspenseTimeline(): React$Node {
     });
   }, [timeline, value]);
 
-  function handleChange(event: SyntheticEvent<HTMLInputElement>) {
+  function handleChange(event: SyntheticEvent) {
     const pendingValue = +event.currentTarget.value;
     for (let i = 0; i < timeline.length; i++) {
       const forceFallback = i > pendingValue;
@@ -164,7 +168,7 @@ export default function SuspenseTimeline(): React$Node {
     highlightHostInstance(suspense.id);
   }
 
-  function handlePointerMove(event: SyntheticPointerEvent<HTMLInputElement>) {
+  function handlePointerMove(event: SyntheticPointerEvent) {
     const bbox = inputBBox.current;
     if (bbox === null) {
       throw new Error('Bounding box of slider is unknown.');
