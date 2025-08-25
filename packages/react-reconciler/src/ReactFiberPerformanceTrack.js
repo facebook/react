@@ -179,7 +179,7 @@ const reusableComponentDevToolDetails = {
   track: COMPONENTS_TRACK,
 };
 
-const reusableComponentOptions = {
+const reusableComponentOptions: PerformanceMeasureOptions = {
   start: -0,
   end: -0,
   detail: {
@@ -351,7 +351,7 @@ export function logComponentErrored(
         // error boundary itself.
         debugTask = fiber._debugTask;
       }
-      const options = {
+      const options: PerformanceMeasureOptions = {
         start: startTime,
         end: endTime,
         detail: {
@@ -992,7 +992,7 @@ export function logRecoveredRenderPhase(
               String(error);
         properties.push(['Recoverable Error', message]);
       }
-      const options = {
+      const options: PerformanceMeasureOptions = {
         start: startTime,
         end: endTime,
         detail: {
@@ -1199,7 +1199,7 @@ export function logCommitErrored(
               String(error);
         properties.push(['Error', message]);
       }
-      const options = {
+      const options: PerformanceMeasureOptions = {
         start: startTime,
         end: endTime,
         detail: {

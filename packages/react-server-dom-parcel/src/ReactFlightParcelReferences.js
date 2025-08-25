@@ -73,7 +73,7 @@ function bind(this: ServerReference<any>): any {
     const $$bound = {value: this.$$bound ? this.$$bound.concat(args) : args};
     return Object.defineProperties(
       (newFn: any),
-      __DEV__
+      (__DEV__
         ? {
             $$typeof,
             $$id,
@@ -89,7 +89,7 @@ function bind(this: ServerReference<any>): any {
             $$id,
             $$bound,
             bind: {value: bind, configurable: true},
-          },
+          }) as PropertyDescriptorMap,
     );
   }
   return newFn;
@@ -108,7 +108,7 @@ export function registerServerReference<T>(
   const $$bound = {value: null, configurable: true};
   return Object.defineProperties(
     (reference: any),
-    __DEV__
+    (__DEV__
       ? {
           $$typeof,
           $$id,
@@ -124,6 +124,6 @@ export function registerServerReference<T>(
           $$id,
           $$bound,
           bind: {value: bind, configurable: true},
-        },
+        }) as PropertyDescriptorMap,
   );
 }

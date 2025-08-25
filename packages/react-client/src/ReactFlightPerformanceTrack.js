@@ -153,7 +153,7 @@ export function logComponentAborted(
     const entryName =
       isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']';
     if (__DEV__) {
-      const properties = [
+      const properties: Array<[string, string]> = [
         [
           'Aborted',
           'The stream was aborted before this Component finished rendering.',
@@ -215,7 +215,7 @@ export function logComponentErrored(
             String(error.message)
           : // eslint-disable-next-line react-internal/safe-string-coercion
             String(error);
-      const properties = [['Error', message]];
+      const properties: Array<[string, string]> = [['Error', message]];
       if (componentInfo.key != null) {
         addValueToProperties('key', componentInfo.key, properties, 0, '');
       }

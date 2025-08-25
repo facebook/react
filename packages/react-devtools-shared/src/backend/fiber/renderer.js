@@ -2217,7 +2217,7 @@ export function attach(
     }
     if (typeof instance.getClientRects === 'function') {
       // DOM
-      const result = [];
+      const result: Array<Rect> = [];
       const doc = instance.ownerDocument;
       const win = doc && doc.defaultView;
       const scrollX = win ? win.scrollX : 0;
