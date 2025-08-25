@@ -3244,7 +3244,7 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
       if (revealOrder == null) {
         console.error(
           'The default for the <SuspenseList revealOrder="..."> prop is changing. ' +
-            'To be future compatible you must explictly specify either ' +
+            'To be future compatible you must explicitly specify either ' +
             '"independent" (the current default), "together", "forwards" or "legacy_unstable-backwards".',
         );
       } else if (revealOrder === 'backwards') {
@@ -3311,7 +3311,7 @@ function validateTailOptions(
           didWarnAboutTailOptions[cacheKey] = true;
           console.error(
             'The default for the <SuspenseList tail="..."> prop is changing. ' +
-              'To be future compatible you must explictly specify either ' +
+              'To be future compatible you must explicitly specify either ' +
               '"visible" (the current default), "collapsed" or "hidden".',
           );
         }
