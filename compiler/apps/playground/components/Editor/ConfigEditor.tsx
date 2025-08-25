@@ -106,10 +106,10 @@ function formatConfigAsJavaScript(config: any): string {
   };
 
   // Assign the config object to a const
-  return `const config = ${formatValue(config)};`;
+  return `const overrides = ${formatValue(config)};`;
 }
 
-export default function ConfigEditor(): React.JSX.Element {
+export default function ConfigEditor(): JSX.Element {
   const [monaco, setMonaco] = useState<Monaco | null>(null);
   const store = useStore();
 
