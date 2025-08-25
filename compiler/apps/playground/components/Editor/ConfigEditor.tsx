@@ -28,18 +28,18 @@ function isEqual(a: any, b: any): boolean {
   if (typeof a === 'function') {
     return a.toString() === b.toString();
   }
-  else if (a instanceof Map && b instanceof Map) {
+  if (a instanceof Map && b instanceof Map) {
     if (a.size !== b.size) return false;
     for (const [key, value] of a) {
       if (!b.has(key) || !isEqual(value, b.get(key))) return false;
     }
     return true;
   }
-  else if (Array.isArray(a) && Array.isArray(b)) {
+  if (Array.isArray(a) && Array.isArray(b)) {
     if (a.length !== b.length) return false;
     return a.every((item, index) => isEqual(item, b[index]));
   }
-  else if (typeof a === 'object') {
+  if (typeof a === 'object') {
     const keysA = Object.keys(a);
     const keysB = Object.keys(b);
     if (keysA.length !== keysB.length) return false;
@@ -53,25 +53,22 @@ function isEqual(a: any, b: any): boolean {
  * Recursive function to extract overridden values
  */
 function getOverriddenValues(current: any, defaults: any): Record<string, any> {
-  if (!isEqual(current, defaults)) {
-    if (current && defaults &&
-        typeof current === 'object' && typeof defaults === 'object' &&
-        !Array.isArray(current) && !Array.isArray(defaults)) {
+  if (isEqual(current, defaults)) return {};
+  if (current && defaults &&
+      typeof current === 'object' && typeof defaults === 'object' &&
+      !Array.isArray(current) && !Array.isArray(defaults)) {
 
-      const overrides: Record<string, any> = {};
+    const overrides: Record<string, any> = {};
 
-      for (const key in current) {
-        const nested = getOverriddenValues(current[key], defaults[key]);
-        if (Object.keys(nested).length > 0 || !isEqual(current[key], defaults[key])) {
-          overrides[key] = Object.keys(nested).length > 0 ? nested : current[key];
-        }
+    for (const key in current) {
+      const nested = getOverriddenValues(current[key], defaults[key]);
+      if (Object.keys(nested).length > 0 || !isEqual(current[key], defaults[key])) {
+        overrides[key] = Object.keys(nested).length > 0 ? nested : current[key];
       }
-      return overrides;
     }
-    return current;
+    return overrides;
   }
-
-  return {};
+  return current;
 }
 
 /**
