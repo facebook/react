@@ -36,7 +36,7 @@ You are using invalid dependencies:
 
 Invalid deps from props [value].
 
-error.derived-state-with-side-effects-no-error.ts:9:4
+error.derived-state-with-side-effects.ts:9:4
    7 |   useEffect(() => {
    8 |     console.log('Value changed:', value);
 >  9 |     setLocalValue(value);
