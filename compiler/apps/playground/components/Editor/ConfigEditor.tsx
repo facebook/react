@@ -9,15 +9,75 @@ import MonacoEditor, {loader, type Monaco} from '@monaco-editor/react';
 import {parseConfigPragmaForTests, parsePluginOptions} from 'babel-plugin-react-compiler';
 import type {editor} from 'monaco-editor';
 import * as monaco from 'monaco-editor';
-import {useEffect, useState, useMemo} from 'react';
+import {useState, useMemo} from 'react';
 import {Resizable} from 're-resizable';
 import {useStore} from '../StoreContext';
 import {monacoOptions} from './monacoOptions';
 
 loader.config({monaco});
 
+// Calculate default config
+const DEFAULT_CONFIG = parsePluginOptions({});
+
+/**
+ * Deep equality check for various types
+ */
+function isEqual(a: any, b: any): boolean {
+  if (a === b) return true;
+  if (typeof a !== typeof b) return false;
+  if (typeof a === 'function') {
+    return a.toString() === b.toString();
+  }
+  else if (a instanceof Map && b instanceof Map) {
+    if (a.size !== b.size) return false;
+    for (const [key, value] of a) {
+      if (!b.has(key) || !isEqual(value, b.get(key))) return false;
+    }
+    return true;
+  }
+  else if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+    return a.every((item, index) => isEqual(item, b[index]));
+  }
+  else if (typeof a === 'object') {
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+    if (keysA.length !== keysB.length) return false;
+    return keysA.every(key => keysB.includes(key) && isEqual(a[key], b[key]));
+  }
+
+  return false;
+}
+
+/**
+ * Recursive function to extract overridden values
+ */
+function getOverriddenValues(current: any, defaults: any): Record<string, any> {
+  if (!isEqual(current, defaults)) {
+    if (current && defaults &&
+        typeof current === 'object' && typeof defaults === 'object' &&
+        !Array.isArray(current) && !Array.isArray(defaults)) {
+
+      const overrides: Record<string, any> = {};
+
+      for (const key in current) {
+        const nested = getOverriddenValues(current[key], defaults[key]);
+        if (Object.keys(nested).length > 0 || !isEqual(current[key], defaults[key])) {
+          overrides[key] = Object.keys(nested).length > 0 ? nested : current[key];
+        }
+      }
+      return overrides;
+    }
+    return current;
+  }
+
+  return {};
+}
+
+/**
+ * Format the config object as readable JavaScript, assigned to a const
+ */
 function formatConfigAsJavaScript(config: any): string {
-  // Format the config object as readable JavaScript, assigned to a const
   const formatValue = (value: any, indent: number = 0): string => {
     const spaces = '  '.repeat(indent);
 
@@ -52,21 +112,25 @@ function formatConfigAsJavaScript(config: any): string {
   return `const config = ${formatValue(config)};`;
 }
 
-export default function ConfigEditor(): JSX.Element {
+export default function ConfigEditor(): React.JSX.Element {
   const [monaco, setMonaco] = useState<Monaco | null>(null);
   const store = useStore();
 
-  // Parse current config from source pragma
+  // Parse current config from source pragma and show only overridden values
   const currentConfig = useMemo(() => {
     try {
       const pragma = store.source.substring(0, store.source.indexOf('\n'));
       const parsedConfig = parseConfigPragmaForTests(pragma, {
         compilationMode: 'infer',
       });
-      return parsedConfig;
+
+      // Extract overridden values
+      const overrides = getOverriddenValues(parsedConfig, DEFAULT_CONFIG);
+
+      return overrides;
     } catch (error) {
-      // If parsing fails, return default config structure with all PluginOptions fields
-      return parsePluginOptions({});
+      // If parsing fails, return empty object (no overrides)
+      return {};
     }
   }, [store.source]);
 
@@ -97,7 +161,7 @@ export default function ConfigEditor(): JSX.Element {
   return (
     <div className="relative flex flex-col flex-none border-r border-gray-200">
       <h2 className="p-4 duration-150 ease-in border-b cursor-default border-grey-200 font-light text-secondary">
-        Compiler Config
+        Config Overrides
       </h2>
       <Resizable
         minWidth={300}
