@@ -917,7 +917,7 @@ class Driver {
           /*
            * Value blocks generally end in a StoreLocal to assign the value of the
            * expression for this branch. These StoreLocal instructions can be pruned,
-           * since we represent the value blocks as a compund value in ReactiveFunction
+           * since we represent the value blocks as a compound value in ReactiveFunction
            * (no phis). However, it's also possible to have a value block that ends in
            * an AssignmentExpression, which we need to keep. So we only prune
            * StoreLocal for temporaries — any named/promoted values must be used
@@ -947,7 +947,7 @@ class Driver {
           /*
            * Value blocks generally end in a StoreLocal to assign the value of the
            * expression for this branch. These StoreLocal instructions can be pruned,
-           * since we represent the value blocks as a compund value in ReactiveFunction
+           * since we represent the value blocks as a compound value in ReactiveFunction
            * (no phis). However, it's also possible to have a value block that ends in
            * an AssignmentExpression, which we need to keep. So we only prune
            * StoreLocal for temporaries — any named/promoted values must be used

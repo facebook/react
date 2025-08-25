@@ -24,7 +24,7 @@ The goal of mutability and aliasing inference is to understand the set of instru
 
 In code, the mutability and aliasing model is compromised of the following phases:
 
-* `InferMutationAliasingEffects`. Infers a set of mutation and aliasing effects for each instruction. The approach is to generate a set of candidate effects based purely on the semantics of each instruction and the types of the operands, then use abstract interpretation to determine the actual effects (or errros) that would apply. For example, an instruction that by default has a Capture effect might downgrade to an ImmutableCapture effect if the value is known to be frozen.
+* `InferMutationAliasingEffects`. Infers a set of mutation and aliasing effects for each instruction. The approach is to generate a set of candidate effects based purely on the semantics of each instruction and the types of the operands, then use abstract interpretation to determine the actual effects (or errors) that would apply. For example, an instruction that by default has a Capture effect might downgrade to an ImmutableCapture effect if the value is known to be frozen.
 * `InferMutationAliasingRanges`. Infers a mutable range (start:end instruction ids) for each value in the program, and annotates each Place with its effect type for usage in later passes. This builds a graph of data flow through the program over time in order to understand which mutations effect which values.
 * `InferReactiveScopeVariables`. Given the per-Place effects, determines disjoint sets of values that mutate together and assigns all identifiers in each set to a unique scope, and updates the range to include the ranges of all constituent values.
 

@@ -90,7 +90,7 @@ const DEBUG = false;
  * - Then we do abstract interpretation over the HIR, iterating until reaching a fixpoint.
  *   This phase tracks the abstract kind of each value (mutable, primitive, frozen, etc)
  *   and the set of values pointed to by each identifier. Each candidate effect is "applied"
- *   to the current abtract state, and effects may be dropped or rewritten accordingly.
+ *   to the current abstract state, and effects may be dropped or rewritten accordingly.
  *   For example, a "MutateConditionally <x>" effect may be dropped if x is not a mutable
  *   value. A "Mutate <y>" effect may get converted into a "MutateFrozen <error>" effect
  *   if y is mutable, etc.
@@ -273,7 +273,7 @@ class Context {
   catchHandlers: Map<BlockId, Place> = new Map();
   functionSignatureCache: Map<FunctionExpression, AliasingSignature> =
     new Map();
-  isFuctionExpression: boolean;
+  isFunctionExpression: boolean;
   fn: HIRFunction;
   hoistedContextDeclarations: Map<DeclarationId, Place | null>;
 
@@ -282,7 +282,7 @@ class Context {
     fn: HIRFunction,
     hoistedContextDeclarations: Map<DeclarationId, Place | null>,
   ) {
-    this.isFuctionExpression = isFunctionExpression;
+    this.isFunctionExpression = isFunctionExpression;
     this.fn = fn;
     this.hoistedContextDeclarations = hoistedContextDeclarations;
   }
@@ -356,7 +356,7 @@ function inferBlock(
     if (handlerParam != null) {
       CompilerError.invariant(state.kind(handlerParam) != null, {
         reason:
-          'Expected catch binding to be intialized with a DeclareLocal Catch instruction',
+          'Expected catch binding to be initialized with a DeclareLocal Catch instruction',
         loc: terminal.loc,
       });
       const effects: Array<AliasingEffect> = [];
@@ -391,7 +391,7 @@ function inferBlock(
       terminal.effects = effects.length !== 0 ? effects : null;
     }
   } else if (terminal.kind === 'return') {
-    if (!context.isFuctionExpression) {
+    if (!context.isFunctionExpression) {
       terminal.effects = [
         context.internEffect({
           kind: 'Freeze',
@@ -719,16 +719,16 @@ function applyEffect(
        * copy-on-write semantics, then we can prune the effect
        */
       const intoKind = state.kind(effect.into).kind;
-      let isMutableDesination: boolean;
+      let isMutableDestination: boolean;
       switch (intoKind) {
         case ValueKind.Context:
         case ValueKind.Mutable:
         case ValueKind.MaybeFrozen: {
-          isMutableDesination = true;
+          isMutableDestination = true;
           break;
         }
         default: {
-          isMutableDesination = false;
+          isMutableDestination = false;
           break;
         }
       }
@@ -760,7 +760,7 @@ function applyEffect(
           break;
         }
       }
-      if (isMutableDesination && isMutableReferenceType) {
+      if (isMutableDestination && isMutableReferenceType) {
         effects.push(effect);
       }
       break;
@@ -1138,7 +1138,7 @@ class InferenceState {
   #values: Map<InstructionValue, AbstractValue>;
   /*
    * The set of values pointed to by each identifier. This is a set
-   * to accomodate phi points (where a variable may have different
+   * to accommodate phi points (where a variable may have different
    * values from different control flow paths).
    */
   #variables: Map<IdentifierId, Set<InstructionValue>>;
