@@ -20,7 +20,6 @@ import {
   isUseStateType,
   GeneratedSource,
 } from '../HIR';
-import {printInstruction} from '../HIR/PrintHIR';
 import {
   eachInstructionOperand,
   eachTerminalOperand,
@@ -69,10 +68,6 @@ function updateDerivationMetadata(
   typeOfValue: TypeOfValue | undefined,
   derivedTuple: Map<IdentifierId, DerivationMetadata>,
 ): void {
-  // console.log('NEW DERIVATION');
-  // console.log('target', target);
-  // console.log('sources', sources);
-  // console.log('derivedTuple', new Map(derivedTuple));
   let newValue: DerivationMetadata = {
     place: target,
     sources: new Set(),
@@ -85,10 +80,13 @@ function updateDerivationMetadata(
        * If the identifier of the source is a promoted identifier, then
        *  we should set the target as the source.
        */
-      if (source.place.identifier.name?.kind === 'promoted') {
-        newValue.sources.add(target);
-      } else {
-        for (const place of source.sources) {
+      for (const place of source.sources) {
+        if (
+          place.identifier.name === null ||
+          place.identifier.name?.kind === 'promoted'
+        ) {
+          newValue.sources.add(target);
+        } else {
           newValue.sources.add(place);
         }
       }
@@ -103,6 +101,8 @@ function parseInstr(
   derivedTuple: Map<IdentifierId, DerivationMetadata>,
   setStateCalls: Map<SetStateName, Array<Place>>,
 ): void {
+  console.log('NEW DERIVATION');
+  console.log('derivedTuple', new Map(derivedTuple));
   // Recursively parse function expressions
   if (instr.value.kind === 'FunctionExpression') {
     for (const [, block] of instr.value.loweredFunc.func.body.blocks) {
