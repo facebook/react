@@ -107,4 +107,27 @@ describe('ReactDOMInvalidARIAHook', () => {
       ]);
     });
   });
+
+  describe('slider accessible name warning', () => {
+    it('should warn when <input type="range"> is missing an accessible name', async () => {
+      jest.resetModules();
+      const React = require('react');
+      const ReactDOMClient = require('react-dom/client');
+      const act = require('internal-test-utils').act;
+      const assertConsoleErrorDev =
+        require('internal-test-utils').assertConsoleErrorDev;
+
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() => {
+        root.render(<input type="range" />);
+      });
+
+      assertConsoleErrorDev([
+        'A control with role `slider` ("<input type="range">") is missing an accessible name. Add `aria-label`, `aria-labelledby` or a `title` so screen readers can announce the control.\n' +
+          '    in input (at **)',
+      ]);
+    });
+  });
 });
