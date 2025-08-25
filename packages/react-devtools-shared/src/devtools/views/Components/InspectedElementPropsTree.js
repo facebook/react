@@ -43,7 +43,7 @@ export default function InspectedElementPropsTree({
     canEditFunctionProps,
     canEditFunctionPropsDeletePaths,
     canEditFunctionPropsRenamePaths,
-    props,
+    props: rawProps,
     type,
   } = inspectedElement;
 
@@ -54,10 +54,7 @@ export default function InspectedElementPropsTree({
   const canRenamePaths =
     type === ElementTypeClass || canEditFunctionPropsRenamePaths;
 
-  // Skip the section for null props.
-  if (props == null) {
-    return null;
-  }
+  const props = rawProps ?? {};
 
   const entries = Object.entries(props);
   entries.sort(alphaSortEntries);
