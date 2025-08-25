@@ -180,6 +180,8 @@ export function attach(
     };
   }
 
+  const supportsTogglingSuspense = false;
+
   function getDisplayNameForElementID(id: number): string | null {
     const internalInstance = idToInternalInstanceMap.get(id);
     return internalInstance ? getData(internalInstance).displayName : null;
@@ -408,6 +410,7 @@ export function attach(
       pushOperation(0); // Profiling flag
       pushOperation(0); // StrictMode supported?
       pushOperation(hasOwnerMetadata ? 1 : 0);
+      pushOperation(supportsTogglingSuspense ? 1 : 0);
     } else {
       const type = getElementType(internalInstance);
       const {displayName, key} = getData(internalInstance);
@@ -1163,6 +1166,7 @@ export function attach(
     startProfiling,
     stopProfiling,
     storeAsGlobal,
+    supportsTogglingSuspense,
     updateComponentFilters,
     getEnvironmentNames,
   };

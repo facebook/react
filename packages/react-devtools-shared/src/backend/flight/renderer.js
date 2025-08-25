@@ -140,6 +140,8 @@ export function attach(
     // The changes will be flushed later when we commit this tree to Fiber.
   }
 
+  const supportsTogglingSuspense = false;
+
   return {
     cleanup() {},
     clearErrorsAndWarnings() {},
@@ -210,6 +212,7 @@ export function attach(
     startProfiling() {},
     stopProfiling() {},
     storeAsGlobal() {},
+    supportsTogglingSuspense,
     updateComponentFilters() {},
     getEnvironmentNames() {
       return [];
