@@ -37,6 +37,7 @@ import {
   type Store,
 } from '../../lib/stores';
 import {useStore, useStoreDispatch} from '../StoreContext';
+import ConfigEditor from './ConfigEditor';
 import Input from './Input';
 import {
   CompilerOutput,
@@ -328,6 +329,7 @@ export default function Editor(): JSX.Element {
   return (
     <>
       <div className="relative flex basis top-14">
+        <ConfigEditor />
         <div className={clsx('relative sm:basis-1/4')}>
           <Input language={language} errors={errors} />
         </div>
