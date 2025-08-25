@@ -110,6 +110,7 @@
   padding: 0.25rem;
   display: flex;
   flex-direction: row;
+  align-items: flex-start;
 }
 
 .Timeline {

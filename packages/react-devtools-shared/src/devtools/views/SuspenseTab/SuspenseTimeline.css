@@ -1,0 +1,20 @@
+.SuspenseTimelineSlider {
+  width: 100%;
+}
+
+.SuspenseTimelineMarkers {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.SuspenseTimelineMarkers > * {
+  flex: 1 1 0;
+  overflow: visible;
+  visibility: hidden;
+  width: 0
+}
+
+.SuspenseTimelineActiveMarker {
+  visibility: visible;
+}
