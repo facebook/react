@@ -1,19 +1,15 @@
 }
-
 // We can assume the previous dispatcher is always this one, since we set it
 // at the beginning of the render phase and there's no re-entrance.
 ReactSharedInternals.H = ContextOnlyDispatcher;
-
 // This check uses currentHook so that it works the same in DEV and prod bundles.
 // hookTypesDev could catch more cases (e.g. context) but only in DEV bundles.
 const didRenderTooFewHooks =
   currentHook !== null && currentHook.next !== null;
-
 renderLanes = NoLanes;
 currentlyRenderingFiber = (null: any);
 currentHook = null;
 workInProgressHook = null;
-
 if (__DEV__) {
   currentHookNameInDev = null;
   hookTypesDev = null;
@@ -38,20 +34,17 @@ if (__DEV__) {
     );
   }
 }
-
 didScheduleRenderPhaseUpdate = false;
 // This is reset by checkDidRenderIdHook
 // localIdCounter = 0;
 thenableIndexCounter = 0;
 thenableState = null;
-
 if (didRenderTooFewHooks) {
   throw new Error(
     'Rendered fewer hooks than expected. This may be caused by an accidental ' +
       'early return statement.',
   );
 }
-
 if (current !== null) {
   if (!checkIfWorkInProgressReceivedUpdate()) {
     // If there were no changes to props or state, we need to check if there
