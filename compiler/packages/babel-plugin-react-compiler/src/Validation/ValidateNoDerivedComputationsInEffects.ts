@@ -389,17 +389,15 @@ function validateEffect(
 
   if (!hasInvalidDep) {
     // effect dep wasn't actually used in the function
+    console.log('early return 1');
     return;
   }
 
   const seenBlocks: Set<BlockId> = new Set();
-  // This variable is suspicious maybe we don't need it?
-  const values: Map<IdentifierId, Array<IdentifierId>> = new Map();
   const effectInvalidlyDerived: Map<IdentifierId, DerivationMetadata> =
     new Map();
 
   for (const dep of effectDeps) {
-    values.set(dep, [dep]);
     const depMetadata = derivedTuple.get(dep);
     if (depMetadata !== undefined) {
       effectInvalidlyDerived.set(dep, depMetadata);
@@ -411,6 +409,7 @@ function validateEffect(
     for (const pred of block.preds) {
       if (!seenBlocks.has(pred)) {
         // skip if block has a back edge
+        console.log('early return 2');
         return;
       }
     }
@@ -444,10 +443,6 @@ function validateEffect(
           break;
         }
         case 'LoadLocal': {
-          const deps = values.get(instr.value.place.identifier.id);
-          if (deps != null) {
-            values.set(instr.lvalue.identifier.id, deps);
-          }
           break;
         }
         case 'ComputedLoad':
@@ -456,19 +451,6 @@ function validateEffect(
         case 'TemplateLiteral':
         case 'CallExpression':
         case 'MethodCall': {
-          const aggregateDeps: Set<IdentifierId> = new Set();
-          for (const operand of eachInstructionOperand(instr)) {
-            const deps = values.get(operand.identifier.id);
-            if (deps != null) {
-              for (const dep of deps) {
-                aggregateDeps.add(dep);
-              }
-            }
-          }
-          if (aggregateDeps.size !== 0) {
-            values.set(instr.lvalue.identifier.id, Array.from(aggregateDeps));
-          }
-
           if (
             instr.value.kind === 'CallExpression' &&
             isSetStateType(instr.value.callee.identifier) &&
@@ -492,11 +474,6 @@ function validateEffect(
       }
     }
 
-    for (const operand of eachTerminalOperand(block.terminal)) {
-      if (values.has(operand.identifier.id)) {
-        return;
-      }
-    }
     seenBlocks.add(block.id);
   }
 
