@@ -101,8 +101,6 @@ function parseInstr(
   derivedTuple: Map<IdentifierId, DerivationMetadata>,
   setStateCalls: Map<SetStateName, Array<Place>>,
 ): void {
-  console.log('NEW DERIVATION');
-  console.log('derivedTuple', new Map(derivedTuple));
   // Recursively parse function expressions
   if (instr.value.kind === 'FunctionExpression') {
     for (const [, block] of instr.value.loweredFunc.func.body.blocks) {
@@ -390,7 +388,6 @@ function validateEffect(
   }
 
   if (!hasInvalidDep) {
-    console.log('early return 2');
     // effect dep wasn't actually used in the function
     return;
   }
@@ -414,7 +411,6 @@ function validateEffect(
     for (const pred of block.preds) {
       if (!seenBlocks.has(pred)) {
         // skip if block has a back edge
-        console.log('skipping block');
         return;
       }
     }
@@ -482,7 +478,6 @@ function validateEffect(
             const invalidDeps = derivedTuple.get(
               instr.value.args[0].identifier.id,
             );
-            console.log('GUILTY PLACE', instr.value.args[0].identifier.id);
 
             if (invalidDeps !== undefined) {
               setStateCallsInEffect.push({
@@ -506,7 +501,6 @@ function validateEffect(
   }
 
   for (const call of setStateCallsInEffect) {
-    console.log('SOURCES', call.invalidDeps.sources);
     const placeNames = Array.from(call.invalidDeps.sources)
       .map(place => {
         return place.identifier.name?.value;
