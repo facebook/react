@@ -295,7 +295,7 @@ function SuspenseTab(_: {}) {
           ref={resizeTreeListRef}>
           <SuspenseTreeList />
         </div>
-        <div className={styles.ResizeBarWrapper}>
+        <div className={styles.ResizeBarWrapper} hidden={treeListHidden}>
           <div
             onPointerDown={onResizeStart}
             onPointerMove={onResizeTreeList}
@@ -327,7 +327,7 @@ function SuspenseTab(_: {}) {
           </footer>
         </div>
       </div>
-      <div className={styles.ResizeBarWrapper}>
+      <div className={styles.ResizeBarWrapper} hidden={inspectedElementHidden}>
         <div
           onPointerDown={onResizeStart}
           onPointerMove={onResizeTree}
