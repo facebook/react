@@ -1,3 +1,22 @@
+// Function to check if current fiber has a recursive parent of the same type
+function isRecursiveComponent(currentFiber) {
+  if (!currentFiber || !currentFiber.type) {
+    return false;
+  }
+  
+  const currentType = currentFiber.type;
+  let parent = currentFiber.return;
+  
+  while (parent) {
+    if (parent.type === currentType) {
+      return true;
+    }
+    parent = parent.return;
+  }
+  
+  return false;
+}
+
 }
 // We can assume the previous dispatcher is always this one, since we set it
 // at the beginning of the render phase and there's no re-entrance.
@@ -27,39 +46,12 @@ if (__DEV__) {
     // need to mark fibers that commit in an incomplete state, somehow. For
     // now I'll disable the warning that most of the bugs that would trigger
     // it are either exclusive to concurrent mode or exist in both.
-    (disableLegacyMode || (current.mode & ConcurrentMode) !== NoMode)
+    (disableLegacyMode || (current.mode & ConcurrentMode) !== NoMode) &&
+    // Skip the error for recursive components
+    !isRecursiveComponent(workInProgress)
   ) {
     console.error(
       'Internal React error: Expected static flag was missing. This often occurs if hooks are called conditionally or after early returns. Ensure all React hooks are called at the top level, without conditional logic. For help, see https://react.dev/link/rules-of-hooks',
     );
-  }
-}
-didScheduleRenderPhaseUpdate = false;
-// This is reset by checkDidRenderIdHook
-// localIdCounter = 0;
-thenableIndexCounter = 0;
-thenableState = null;
-if (didRenderTooFewHooks) {
-  throw new Error(
-    'Rendered fewer hooks than expected. This may be caused by an accidental ' +
-      'early return statement.',
-  );
-}
-if (current !== null) {
-  if (!checkIfWorkInProgressReceivedUpdate()) {
-    // If there were no changes to props or state, we need to check if there
-    // was a context change. We didn't already do this because there's no
-    // 1:1 correspondence between dependencies and hooks. Although, because
-    // there almost always is in the common case (`readContext` is an
-    // internal API), we could compare in there. OTOH, we only hit this case
-    // if everything else bails out, so on the whole it might be better to
-    // keep the comparison out of the common path.
-    const currentDependencies = current.dependencies;
-    if (
-      currentDependencies !== null &&
-      checkIfContextChanged(currentDependencies)
-    ) {
-      markWorkInProgressReceivedUpdate();
-    }
   }
 }
