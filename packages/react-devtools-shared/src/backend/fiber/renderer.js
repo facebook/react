@@ -4039,7 +4039,19 @@ export function attach(
         pushOperation(convertedTreeBaseDuration);
       }
 
-      if (prevFiber == null || didFiberRender(prevFiber, fiber)) {
+      // Prevent false positive render detection when identical Fiber objects
+      // are nested under HostComponents (like div) that get filtered out by DevTools.
+      // This addresses cases where a parent HostComponent re-renders but its child
+      // components (like function components) remain referentially identical and
+      // should not be reported as having re-rendered in profiler data collection.
+      if (
+        prevFiber == null || 
+        (!(
+          prevFiber === fiber &&
+          fiber.return != null &&
+          (fiber.return.tag === HostComponent || fiber.return.tag === HostSingleton)
+        ) && didFiberRender(prevFiber, fiber))
+      ) {
         if (actualDuration != null) {
           // The actual duration reported by React includes time spent working on children.
           // This is useful information, but it's also useful to be able to exclude child durations.
@@ -4664,11 +4676,25 @@ export function attach(
           elementType === ElementTypeMemo ||
           elementType === ElementTypeForwardRef
         ) {
-          // Otherwise if this is a traced ancestor, flag for the nearest host descendant(s).
-          traceNearestHostComponentUpdate = didFiberRender(
-            prevFiber,
-            nextFiber,
-          );
+          // Prevent false positive render highlighting when identical Fiber objects
+          // are nested under HostComponents that get filtered out by DevTools.
+          // When a HostComponent (like div) re-renders but its child components
+          // remain referentially identical (prevFiber === nextFiber), those children
+          // should not be highlighted as having re-rendered since they were effectively
+          // skipped during React's reconciliation process.
+          if (
+            prevFiber === nextFiber &&
+            nextFiber.return != null &&
+            (nextFiber.return.tag === HostComponent || nextFiber.return.tag === HostSingleton)
+          ) {
+            traceNearestHostComponentUpdate = false; // No actual render for this component
+          } else {
+            // Otherwise if this is a traced ancestor, flag for the nearest host descendant(s).
+            traceNearestHostComponentUpdate = didFiberRender(
+              prevFiber,
+              nextFiber,
+            );
+          }
         }
       }
     }
@@ -4690,6 +4716,15 @@ export function attach(
       if (
         mostRecentlyInspectedElement !== null &&
         mostRecentlyInspectedElement.id === fiberInstance.id &&
+        // Prevent unnecessary inspector cache invalidation when identical Fiber objects
+        // are nested under HostComponents that get filtered out by DevTools.
+        // When a component hasn't actually re-rendered (same Fiber reference under a HostComponent),
+        // we should preserve the cached inspection data to avoid unnecessary re-computation.
+        !(
+          prevFiber === nextFiber &&
+          nextFiber.return != null &&
+          (nextFiber.return.tag === HostComponent || nextFiber.return.tag === HostSingleton)
+        ) &&
         didFiberRender(prevFiber, nextFiber)
       ) {
         // If this Fiber has updated, clear cached inspected data.
