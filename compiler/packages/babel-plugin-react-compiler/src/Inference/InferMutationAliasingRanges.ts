@@ -27,7 +27,7 @@ import {
 } from '../HIR/visitors';
 import {assertExhaustive, getOrInsertWith} from '../Utils/utils';
 import {Err, Ok, Result} from '../Utils/Result';
-import {AliasingEffect} from './AliasingEffects';
+import {AliasingEffect, MutationReason} from './AliasingEffects';
 
 /**
  * This pass builds an abstract model of the heap and interprets the effects of the
@@ -101,6 +101,7 @@ export function inferMutationAliasingRanges(
     transitive: boolean;
     kind: MutationKind;
     place: Place;
+    reason: MutationReason | null;
   }> = [];
   const renders: Array<{index: number; place: Place}> = [];
 
@@ -176,6 +177,7 @@ export function inferMutationAliasingRanges(
               effect.kind === 'MutateTransitive'
                 ? MutationKind.Definite
                 : MutationKind.Conditional,
+            reason: null,
             place: effect.value,
           });
         } else if (
@@ -190,6 +192,7 @@ export function inferMutationAliasingRanges(
               effect.kind === 'Mutate'
                 ? MutationKind.Definite
                 : MutationKind.Conditional,
+            reason: effect.kind === 'Mutate' ? (effect.reason ?? null) : null,
             place: effect.value,
           });
         } else if (
@@ -241,6 +244,7 @@ export function inferMutationAliasingRanges(
       mutation.transitive,
       mutation.kind,
       mutation.place.loc,
+      mutation.reason,
       errors,
     );
   }
@@ -267,6 +271,7 @@ export function inferMutationAliasingRanges(
         functionEffects.push({
           kind: 'Mutate',
           value: {...place, loc: node.local.loc},
+          reason: node.mutationReason,
         });
       }
     }
@@ -507,6 +512,7 @@ export function inferMutationAliasingRanges(
       true,
       MutationKind.Conditional,
       into.loc,
+      null,
       ignoredErrors,
     );
     for (const from of tracked) {
@@ -580,6 +586,7 @@ type Node = {
   transitive: {kind: MutationKind; loc: SourceLocation} | null;
   local: {kind: MutationKind; loc: SourceLocation} | null;
   lastMutated: number;
+  mutationReason: MutationReason | null;
   value:
     | {kind: 'Object'}
     | {kind: 'Phi'}
@@ -599,6 +606,7 @@ class AliasingState {
       transitive: null,
       local: null,
       lastMutated: 0,
+      mutationReason: null,
       value,
     });
   }
@@ -697,6 +705,7 @@ class AliasingState {
     transitive: boolean,
     startKind: MutationKind,
     loc: SourceLocation,
+    reason: MutationReason | null,
     errors: CompilerError,
   ): void {
     const seen = new Map<Identifier, MutationKind>();
@@ -717,6 +726,7 @@ class AliasingState {
       if (node == null) {
         continue;
       }
+      node.mutationReason ??= reason;
       node.lastMutated = Math.max(node.lastMutated, index);
       if (end != null) {
         node.id.mutableRange.end = makeInstructionId(
