@@ -20,6 +20,7 @@ import {
   cloneElement,
   createElement,
   isValidElement,
+  isValidNode,
 } from './jsx/ReactJSXElement';
 import {createRef} from './ReactCreateRef';
 import {use, useId, useCallback, useDebugValue, useMemo} from './ReactHooks';
@@ -50,6 +51,7 @@ export {
   use,
   forwardRef,
   isValidElement,
+  isValidNode,
   lazy,
   memo,
   cache,
