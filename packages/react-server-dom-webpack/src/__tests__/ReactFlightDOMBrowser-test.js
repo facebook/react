@@ -2781,7 +2781,7 @@ describe('ReactFlightDOMBrowser', () => {
     let ownerStack;
 
     const ClientComponent = clientExports(() => {
-      ownerStack = React.captureOwnerStack();
+      ownerStack = React.captureOwnerStack ? React.captureOwnerStack() : null;
       return <p>Hi</p>;
     });
 
