@@ -28,6 +28,7 @@ import {
   isUseStateType,
   GeneratedSource,
 } from '../HIR';
+import {printInstruction} from '../HIR/PrintHIR';
 import {
   eachInstructionOperand,
   eachTerminalOperand,
@@ -170,6 +171,22 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
     }
   }
 
+  const compilerError = generateCompilerError(
+    setStateCalls,
+    effectSetStates,
+    errors,
+  );
+
+  if (compilerError.hasErrors()) {
+    throw compilerError;
+  }
+}
+
+function generateCompilerError(
+  setStateCalls: Map<SetStateName, Array<Place>>,
+  effectSetStates: Map<SetStateName, Array<Place>>,
+  errors: Array<ErrorMetadata>,
+): CompilerError {
   const throwableErrors = new CompilerError();
   for (const error of errors) {
     let compilerDiagnostic: CompilerDiagnostic | undefined = undefined;
@@ -194,19 +211,8 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
       error.type !== 'fromState'
     ) {
       compilerDiagnostic = CompilerDiagnostic.create({
-        description: `${error.description} Derived values should be computed during render, rather than in effects. Using an effect triggers an additional render which can hurt performance and user experience,
-        potentially briefly showing stale values to the user.`,
-        category: `Local state shadows parent state.`,
-        severity: ErrorSeverity.InvalidReact,
-      }).withDetail({
-        kind: 'error',
-        loc: error.loc,
-        message: detailMessage,
-      });
-    } else {
-      compilerDiagnostic = CompilerDiagnostic.create({
         description: `${error.description} This state value shadows a value passed as a prop. Instead of shadowing the prop with local state, hoist the state to the parent component and update it there.`,
-        category: `Derive values in render, not effects.`,
+        category: `Local state shadows parent state.`,
         severity: ErrorSeverity.InvalidReact,
       }).withDetail({
         kind: 'error',
@@ -218,14 +224,11 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
         if (setStateCallArray.length === 0) {
           continue;
         }
-        const otherCalls = setStateCalls.get(key);
-        if (otherCalls && otherCalls.length > 1) {
-          for (const place of otherCalls) {
-            if (
-              !setStateCallArray.some(
-                existing => JSON.stringify(existing) === JSON.stringify(place),
-              )
-            ) {
+
+        const nonUseEffectSetStateCalls = setStateCalls.get(key);
+        if (nonUseEffectSetStateCalls) {
+          for (const place of nonUseEffectSetStateCalls) {
+            if (!setStateCallArray.includes(place)) {
               compilerDiagnostic.withDetail({
                 kind: 'error',
                 loc: place.loc,
@@ -236,6 +239,16 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
           }
         }
       }
+    } else {
+      compilerDiagnostic = CompilerDiagnostic.create({
+        description: `${error.description} Derived values should be computed during render, rather than in effects. Using an effect triggers an additional render which can hurt performance and user experience, potentially briefly showing stale values to the user.`,
+        category: `Derive values in render, not effects.`,
+        severity: ErrorSeverity.InvalidReact,
+      }).withDetail({
+        kind: 'error',
+        loc: error.loc,
+        message: detailMessage,
+      });
     }
 
     if (compilerDiagnostic) {
@@ -243,9 +256,7 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
     }
   }
 
-  if (throwableErrors.hasErrors()) {
-    throw throwableErrors;
-  }
+  return throwableErrors;
 }
 
 function joinValue(
@@ -440,7 +451,7 @@ function validateEffect(
   }
 
   if (!isUsingDerivedDeps) {
-    // no effect prop/state derived deps were used in the body
+    // no prop/state derived deps were used in the body of the effect
     return;
   }
 
