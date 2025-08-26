@@ -26,7 +26,7 @@ Found 1 error:
 
 Error: Derive values in render, not effects.
 
-This setState() appears to derive a value local state [firstName, lastName]. Derived values should be computed during render, rather than in effects. Using an effect triggers an additional render which can hurt performance and user experience, potentially briefly showing stale values to the user.
+This setState() appears to derive a value from local state [firstName, lastName]. Derived values should be computed during render, rather than in effects. Using an effect triggers an additional render which can hurt performance and user experience, potentially briefly showing stale values to the user.
 
 error.invalid-derived-computation-in-effect.ts:9:4
    7 |   const [fullName, setFullName] = useState('');

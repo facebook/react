@@ -36,13 +36,13 @@ Found 1 error:
 
 Error: Derive values in render, not effects.
 
-This setState() appears to derive a value both props and local state [prefix, name]. Derived values should be computed during render, rather than in effects. Using an effect triggers an additional render which can hurt performance and user experience, potentially briefly showing stale values to the user.
+This setState() appears to derive a value from both props and local state [prefix, name]. Derived values should be computed during render, rather than in effects. Using an effect triggers an additional render which can hurt performance and user experience, potentially briefly showing stale values to the user.
 
 error.bug-derived-state-from-mixed-deps.ts:9:4
    7 |
    8 |   useEffect(() => {
 >  9 |     setDisplayName(prefix + name);
-     |     ^^^^^^^^^^^^^^ This state value shadows a value passed as a prop or a value from state.
+     |     ^^^^^^^^^^^^^^ This should be computed during render, not in an effect
   10 |   }, [prefix, name]);
   11 |
   12 |   return (

@@ -7,9 +7,7 @@
 
 import {
   CompilerDiagnostic,
-  CompilerDiagnosticDetail,
   CompilerError,
-  CompilerErrorDetail,
   Effect,
   ErrorSeverity,
   SourceLocation,
@@ -28,25 +26,17 @@ import {
   isUseStateType,
   GeneratedSource,
 } from '../HIR';
-import {printInstruction} from '../HIR/PrintHIR';
-import {
-  eachInstructionOperand,
-  eachTerminalOperand,
-  eachInstructionLValue,
-} from '../HIR/visitors';
+import {eachInstructionOperand, eachInstructionLValue} from '../HIR/visitors';
 import {isMutable} from '../ReactiveScopes/InferReactiveScopeVariables';
 import {assertExhaustive} from '../Utils/utils';
 
-// TODO: Maybe I can consolidate some types
 type SetStateCall = {
   loc: SourceLocation;
-  invalidDeps: DerivationMetadata;
+  derivedDep: DerivationMetadata;
   setStateId: IdentifierId;
 };
 
 type TypeOfValue = 'ignored' | 'fromProps' | 'fromState' | 'fromPropsOrState';
-
-type SetStateName = string | undefined | null;
 
 type DerivationMetadata = {
   typeOfValue: TypeOfValue;
@@ -58,7 +48,7 @@ type ErrorMetadata = {
   type: TypeOfValue;
   description: string | undefined;
   loc: SourceLocation;
-  setStateName: SetStateName;
+  setStateName: string | undefined | null;
 };
 
 /**
@@ -88,17 +78,20 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
   const candidateDependencies: Map<IdentifierId, ArrayExpression> = new Map();
   const functions: Map<IdentifierId, FunctionExpression> = new Map();
   const locals: Map<IdentifierId, IdentifierId> = new Map();
-  const derivedTuple: Map<IdentifierId, DerivationMetadata> = new Map();
+  const derivationCache: Map<IdentifierId, DerivationMetadata> = new Map();
 
-  const effectSetStates: Map<SetStateName, Array<Place>> = new Map();
-  const setStateCalls: Map<SetStateName, Array<Place>> = new Map();
+  const effectSetStates: Map<
+    string | undefined | null,
+    Array<Place>
+  > = new Map();
+  const setStateCalls: Map<string | undefined | null, Array<Place>> = new Map();
 
   const errors: Array<ErrorMetadata> = [];
 
   if (fn.fnType === 'Hook') {
     for (const param of fn.params) {
       if (param.kind === 'Identifier') {
-        derivedTuple.set(param.identifier.id, {
+        derivationCache.set(param.identifier.id, {
           place: param,
           sources: new Set([param]),
           typeOfValue: 'fromProps',
@@ -108,7 +101,7 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
   } else if (fn.fnType === 'Component') {
     const props = fn.params[0];
     if (props != null && props.kind === 'Identifier') {
-      derivedTuple.set(props.identifier.id, {
+      derivationCache.set(props.identifier.id, {
         place: props,
         sources: new Set([props]),
         typeOfValue: 'fromProps',
@@ -117,12 +110,12 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
   }
 
   for (const block of fn.body.blocks.values()) {
-    parseBlockPhi(block, derivedTuple);
+    parseBlockPhi(block, derivationCache);
 
     for (const instr of block.instructions) {
       const {lvalue, value} = instr;
 
-      parseInstr(instr, derivedTuple, setStateCalls);
+      parseInstr(instr, derivationCache, setStateCalls);
 
       if (value.kind === 'LoadLocal') {
         locals.set(lvalue.identifier.id, value.place.identifier.id);
@@ -161,7 +154,7 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
             validateEffect(
               effectFunction.loweredFunc.func,
               dependencies,
-              derivedTuple,
+              derivationCache,
               effectSetStates,
               errors,
             );
@@ -183,8 +176,8 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
 }
 
 function generateCompilerError(
-  setStateCalls: Map<SetStateName, Array<Place>>,
-  effectSetStates: Map<SetStateName, Array<Place>>,
+  setStateCalls: Map<string | undefined | null, Array<Place>>,
+  effectSetStates: Map<string | undefined | null, Array<Place>>,
   errors: Array<ErrorMetadata>,
 ): CompilerError {
   const throwableErrors = new CompilerError();
@@ -217,7 +210,7 @@ function generateCompilerError(
       }).withDetail({
         kind: 'error',
         loc: error.loc,
-        message: detailMessage,
+        message: 'this setState synchronizes the state',
       });
 
       for (const [key, setStateCallArray] of effectSetStates) {
@@ -247,7 +240,7 @@ function generateCompilerError(
       }).withDetail({
         kind: 'error',
         loc: error.loc,
-        message: detailMessage,
+        message: 'This should be computed during render, not in an effect',
       });
     }
 
@@ -273,7 +266,7 @@ function updateDerivationMetadata(
   target: Place,
   sources: Array<DerivationMetadata> | undefined,
   typeOfValue: TypeOfValue | undefined,
-  derivedTuple: Map<IdentifierId, DerivationMetadata>,
+  derivationCache: Map<IdentifierId, DerivationMetadata>,
 ): void {
   let newValue: DerivationMetadata = {
     place: target,
@@ -300,19 +293,19 @@ function updateDerivationMetadata(
     }
   }
 
-  derivedTuple.set(target.identifier.id, newValue);
+  derivationCache.set(target.identifier.id, newValue);
 }
 
 function parseInstr(
   instr: Instruction,
-  derivedTuple: Map<IdentifierId, DerivationMetadata>,
-  setStateCalls: Map<SetStateName, Array<Place>>,
+  derivationCache: Map<IdentifierId, DerivationMetadata>,
+  setStateCalls: Map<string | undefined | null, Array<Place>>,
 ): void {
   // Recursively parse function expressions
   if (instr.value.kind === 'FunctionExpression') {
     for (const [, block] of instr.value.loweredFunc.func.body.blocks) {
       for (const instr of block.instructions) {
-        parseInstr(instr, derivedTuple, setStateCalls);
+        parseInstr(instr, derivationCache, setStateCalls);
       }
     }
   }
@@ -357,7 +350,7 @@ function parseInstr(
   }
 
   for (const operand of eachInstructionOperand(instr)) {
-    const opSource = derivedTuple.get(operand.identifier.id);
+    const opSource = derivationCache.get(operand.identifier.id);
     if (opSource === undefined) {
       continue;
     }
@@ -368,7 +361,7 @@ function parseInstr(
 
   if (typeOfValue !== 'ignored') {
     for (const lvalue of eachInstructionLValue(instr)) {
-      updateDerivationMetadata(lvalue, sources, typeOfValue, derivedTuple);
+      updateDerivationMetadata(lvalue, sources, typeOfValue, derivationCache);
     }
 
     for (const operand of eachInstructionOperand(instr)) {
@@ -383,7 +376,7 @@ function parseInstr(
               operand,
               sources,
               typeOfValue,
-              derivedTuple,
+              derivationCache,
             );
           }
           break;
@@ -414,17 +407,17 @@ function parseInstr(
 
 function parseBlockPhi(
   block: BasicBlock,
-  derivedTuple: Map<IdentifierId, DerivationMetadata>,
+  derivationCache: Map<IdentifierId, DerivationMetadata>,
 ): void {
   for (const phi of block.phis) {
     for (const operand of phi.operands.values()) {
-      const source = derivedTuple.get(operand.identifier.id);
-      if (source !== undefined) {
+      const phiSource = derivationCache.get(operand.identifier.id);
+      if (phiSource !== undefined) {
         updateDerivationMetadata(
           phi.place,
-          [source],
-          source?.typeOfValue,
-          derivedTuple,
+          [phiSource],
+          phiSource?.typeOfValue,
+          derivationCache,
         );
       }
     }
@@ -434,13 +427,13 @@ function parseBlockPhi(
 function validateEffect(
   effectFunction: HIRFunction,
   effectDeps: Array<IdentifierId>,
-  derivedTuple: Map<IdentifierId, DerivationMetadata>,
-  effectSetStates: Map<SetStateName, Array<Place>>,
+  derivationCache: Map<IdentifierId, DerivationMetadata>,
+  effectSetStates: Map<string | undefined | null, Array<Place>>,
   errors: Array<ErrorMetadata>,
 ): void {
   let isUsingDerivedDeps = false;
   for (const dep of effectDeps) {
-    const depMetadata = derivedTuple.get(dep);
+    const depMetadata = derivationCache.get(dep);
     if (
       effectFunction.context.find(operand => operand.identifier.id === dep) !=
         null ||
@@ -457,7 +450,7 @@ function validateEffect(
 
   const seenBlocks: Set<BlockId> = new Set();
 
-  const setStateCallsInEffect: Array<SetStateCall> = [];
+  const derivedSetStateCall: Array<SetStateCall> = [];
   for (const block of effectFunction.body.blocks.values()) {
     for (const pred of block.preds) {
       if (!seenBlocks.has(pred)) {
@@ -466,7 +459,7 @@ function validateEffect(
       }
     }
 
-    parseBlockPhi(block, derivedTuple);
+    parseBlockPhi(block, derivationCache);
 
     for (const instr of block.instructions) {
       if (
@@ -509,15 +502,15 @@ function validateEffect(
             instr.value.args.length === 1 &&
             instr.value.args[0].kind === 'Identifier'
           ) {
-            const invalidDeps = derivedTuple.get(
+            const derivedDep = derivationCache.get(
               instr.value.args[0].identifier.id,
             );
 
-            if (invalidDeps !== undefined) {
-              setStateCallsInEffect.push({
+            if (derivedDep !== undefined) {
+              derivedSetStateCall.push({
                 loc: instr.value.callee.loc,
                 setStateId: instr.value.callee.identifier.id,
-                invalidDeps: invalidDeps,
+                derivedDep: derivedDep,
               });
             }
           }
@@ -529,40 +522,27 @@ function validateEffect(
     seenBlocks.add(block.id);
   }
 
-  for (const call of setStateCallsInEffect) {
-    const placeNames = Array.from(call.invalidDeps.sources)
+  for (const call of derivedSetStateCall) {
+    const placeNames = Array.from(call.derivedDep.sources)
       .map(place => {
         return place.identifier.name?.value;
       })
       .filter(Boolean)
       .join(', ');
 
-    let sourceNames = '';
     let errorDescription = '';
 
-    if (call.invalidDeps.typeOfValue === 'fromProps') {
-      sourceNames += `[${placeNames}], `;
-      sourceNames = sourceNames.slice(0, -2);
-      errorDescription = sourceNames
-        ? `This setState() appears to derive a value from props ${sourceNames}.`
-        : '';
-    } else if (call.invalidDeps.typeOfValue === 'fromState') {
-      sourceNames += `[${placeNames}], `;
-      sourceNames = sourceNames.slice(0, -2);
-      errorDescription = sourceNames
-        ? `This setState() appears to derive a value local state ${sourceNames}.`
-        : '';
+    if (call.derivedDep.typeOfValue === 'fromProps') {
+      errorDescription = `props [${placeNames}].`;
+    } else if (call.derivedDep.typeOfValue === 'fromState') {
+      errorDescription = `local state [${placeNames}].`;
     } else {
-      sourceNames += `[${placeNames}], `;
-      sourceNames = sourceNames.slice(0, -2);
-      errorDescription = sourceNames
-        ? `This setState() appears to derive a value both props and local state ${sourceNames}.`
-        : '';
+      errorDescription = `both props and local state [${placeNames}].`;
     }
 
     errors.push({
-      type: call.invalidDeps.typeOfValue,
-      description: errorDescription,
+      type: call.derivedDep.typeOfValue,
+      description: `This setState() appears to derive a value from ${errorDescription}`,
       loc: call.loc,
       setStateName:
         call.loc !== GeneratedSource ? call.loc.identifierName : undefined,

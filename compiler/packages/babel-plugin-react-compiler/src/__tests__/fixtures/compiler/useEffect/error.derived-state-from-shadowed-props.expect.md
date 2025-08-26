@@ -49,7 +49,7 @@ error.derived-state-from-shadowed-props.ts:16:8
   14 |     <div
   15 |       onClick={() => {
 > 16 |         setDisplayValue('clicked');
-     |         ^^^^^^^^^^^^^^^ this setState updates the shadowed state, but should call an onChange event from the parent
+     |         ^^^^^^^^^^^^^^^ this setState synchronizes the state
   17 |       }}>
   18 |       {displayValue}
   19 |     </div>
