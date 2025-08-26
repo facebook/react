@@ -241,11 +241,16 @@ export function createFromFetch<T>(
     __DEV__ && options && options.environmentName
       ? options.environmentName
       : undefined,
-    __DEV__ &&
-      options &&
-      options.debugChannel !== undefined &&
-      options.debugChannel.writable !== undefined
-      ? createDebugCallbackFromWritableStream(options.debugChannel.writable)
+    __DEV__ && options && options.debugChannel !== undefined
+      ? {
+          hasReadable: options.debugChannel.readable !== undefined,
+          writable:
+            options.debugChannel.writable !== undefined
+              ? createDebugCallbackFromWritableStream(
+                  options.debugChannel.writable,
+                )
+              : undefined,
+        }
       : undefined,
   );
   promiseForResponse.then(

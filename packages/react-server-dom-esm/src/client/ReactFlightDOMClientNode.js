@@ -103,6 +103,9 @@ function createFromNodeStream<T>(
     __DEV__ && options && options.environmentName
       ? options.environmentName
       : undefined,
+    __DEV__ && options && options.debugChannel !== undefined
+      ? {hasReadable: options.debugChannel.readable !== undefined}
+      : undefined,
   );
 
   if (__DEV__ && options && options.debugChannel) {
