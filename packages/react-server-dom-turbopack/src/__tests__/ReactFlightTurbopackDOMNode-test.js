@@ -90,6 +90,18 @@ describe('ReactFlightTurbopackDOMNode', () => {
     );
   }
 
+  function createDelayedStream() {
+    return new Stream.Transform({
+      ...streamOptions,
+      transform(chunk, encoding, callback) {
+        setTimeout(() => {
+          this.push(chunk);
+          callback();
+        });
+      },
+    });
+  }
+
   it('should allow an alternative module mapping to be used for SSR', async () => {
     function ClientComponent() {
       return <span>Client Component</span>;
@@ -180,12 +192,18 @@ describe('ReactFlightTurbopackDOMNode', () => {
               debugReadable.write(chunk, encoding);
               callback();
             },
+            final() {
+              debugReadable.end();
+            },
           }),
         },
       ),
     );
 
-    const readable = new Stream.PassThrough(streamOptions);
+    // Create a delayed stream to simulate that the RSC stream might be
+    // transported slower than the debug channel, which must not lead to a
+    // `controller.enqueueModel is not a function` error in the Flight client.
+    const readable = createDelayedStream();
 
     rscStream.pipe(readable);
 

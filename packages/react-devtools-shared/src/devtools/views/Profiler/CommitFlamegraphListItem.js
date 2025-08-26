@@ -17,6 +17,7 @@ import {SettingsContext} from '../Settings/SettingsContext';
 
 import type {ChartNode as ChartNodeType} from './FlamegraphChartBuilder';
 import type {ItemData} from './CommitFlamegraph';
+import typeof {SyntheticMouseEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
 
 type Props = {
   data: ItemData,
@@ -41,7 +42,7 @@ function CommitFlamegraphListItem({data, index, style}: Props): React.Node {
   const {lineHeight} = useContext(SettingsContext);
 
   const handleClick = useCallback(
-    (event: SyntheticMouseEvent<EventTarget>, id: number, name: string) => {
+    (event: SyntheticMouseEvent, id: number, name: string) => {
       event.stopPropagation();
       selectFiber(id, name);
     },
@@ -131,7 +132,6 @@ function CommitFlamegraphListItem({data, index, style}: Props): React.Node {
   );
 }
 
-export default (memo(
-  CommitFlamegraphListItem,
-  areEqual,
-): React.ComponentType<Props>);
+export default (memo(CommitFlamegraphListItem, areEqual): component(
+  ...props: Props
+));

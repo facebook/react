@@ -231,7 +231,7 @@ export function hashEffect(effect: AliasingEffect): string {
         effect.kind,
         effect.place.identifier.id,
         effect.error.severity,
-        effect.error.category,
+        effect.error.reason,
         effect.error.description,
         printSourceLocation(effect.error.primaryLocation() ?? GeneratedSource),
       ].join(':');

@@ -2,9 +2,13 @@
   padding: 0.25rem;
 }
 
-.CallSite {
+.CallSite, .IgnoredCallSite {
   display: block;
   padding-left: 1rem;
+}
+
+.IgnoredCallSite {
+  opacity: 0.5;
 }
 
 .Link {

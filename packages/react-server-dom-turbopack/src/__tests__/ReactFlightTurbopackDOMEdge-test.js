@@ -78,6 +78,26 @@ describe('ReactFlightTurbopackDOMEdge', () => {
     );
   }
 
+  function createDelayedStream(
+    stream: ReadableStream<Uint8Array>,
+  ): ReadableStream<Uint8Array> {
+    return new ReadableStream({
+      async start(controller) {
+        const reader = stream.getReader();
+        while (true) {
+          const {done, value} = await reader.read();
+          if (done) {
+            controller.close();
+          } else {
+            // Artificially delay between enqueuing chunks.
+            await new Promise(resolve => setTimeout(resolve));
+            controller.enqueue(value);
+          }
+        }
+      },
+    });
+  }
+
   it('should allow an alternative module mapping to be used for SSR', async () => {
     function ClientComponent() {
       return <span>Client Component</span>;
@@ -165,6 +185,9 @@ describe('ReactFlightTurbopackDOMEdge', () => {
               write(chunk) {
                 debugReadableStreamController.enqueue(chunk);
               },
+              close() {
+                debugReadableStreamController.close();
+              },
             }),
           },
         },
@@ -184,10 +207,16 @@ describe('ReactFlightTurbopackDOMEdge', () => {
       moduleLoading: null,
     };
 
-    const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
-      serverConsumerManifest,
-      debugChannel: {readable: debugReadableStream},
-    });
+    const response = ReactServerDOMClient.createFromReadableStream(
+      // Create a delayed stream to simulate that the RSC stream might be
+      // transported slower than the debug channel, which must not lead to a
+      // `Connection closed` error in the Flight client.
+      createDelayedStream(rscStream),
+      {
+        serverConsumerManifest,
+        debugChannel: {readable: debugReadableStream},
+      },
+    );
 
     let ownerStack;
 

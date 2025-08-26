@@ -10,6 +10,7 @@ import * as t from '@babel/types';
 import {
   CompilerError,
   CompilerErrorDetail,
+  ErrorCategory,
   ErrorSeverity,
 } from '../CompilerError';
 import {ExternalFunction, ReactFunctionType} from '../HIR/Environment';
@@ -105,6 +106,7 @@ function findDirectivesDynamicGating(
           reason: `Dynamic gating directive is not a valid JavaScript identifier`,
           description: `Found '${directive.value.value}'`,
           severity: ErrorSeverity.InvalidReact,
+          category: ErrorCategory.Gating,
           loc: directive.loc ?? null,
           suggestions: null,
         });
@@ -121,6 +123,7 @@ function findDirectivesDynamicGating(
         .map(r => r.directive.value.value)
         .join(', ')}]`,
       severity: ErrorSeverity.InvalidReact,
+      category: ErrorCategory.Gating,
       loc: result[0].directive.loc ?? null,
       suggestions: null,
     });
@@ -456,6 +459,7 @@ export function compileProgram(
           reason:
             'Unexpected compiled functions when module scope opt-out is present',
           severity: ErrorSeverity.Invariant,
+          category: ErrorCategory.Invariant,
           loc: null,
         }),
       );
@@ -490,8 +494,29 @@ function findFunctionsToCompile(
 ): Array<CompileSource> {
   const queue: Array<CompileSource> = [];
   const traverseFunction = (fn: BabelFn, pass: CompilerPass): void => {
+    // In 'all' mode, compile only top level functions
+    if (
+      pass.opts.compilationMode === 'all' &&
+      fn.scope.getProgramParent() !== fn.scope.parent
+    ) {
+      return;
+    }
+
     const fnType = getReactFunctionType(fn, pass);
-    if (fnType === null || programContext.alreadyCompiled.has(fn.node)) {
+
+    if (fnType === null) {
+      return;
+    }
+
+    if (
+      pass.opts.environment?.validateNoComponentOrHookFactories &&
+      fnType !== 'Component' &&
+      fnType !== 'Hook'
+    ) {
+      validateNoNestedComponentsOrHookFactories(fn, pass, programContext);
+    }
+
+    if (programContext.alreadyCompiled.has(fn.node)) {
       return;
     }
 
@@ -811,6 +836,7 @@ function shouldSkipCompilation(
           description:
             "When the 'sources' config options is specified, the React compiler will only compile files with a name",
           severity: ErrorSeverity.InvalidConfig,
+          category: ErrorCategory.Config,
           loc: null,
         }),
       );
@@ -832,6 +858,70 @@ function shouldSkipCompilation(
     return true;
   }
   return false;
+}
+
+/**
+ * Validates that non-React functions (not components or hooks) do not define
+ * nested components or hooks. This prevents scope reference errors that occur
+ * when the compiler attempts to optimize the nested component/hook while its
+ * parent function remains uncompiled.
+ */
+function validateNoNestedComponentsOrHookFactories(
+  fn: BabelFn,
+  pass: CompilerPass,
+  programContext: ProgramContext,
+): void {
+  const parentNameExpr = getFunctionName(fn);
+  const parentName =
+    parentNameExpr !== null && parentNameExpr.isIdentifier()
+      ? parentNameExpr.node.name
+      : '<anonymous>';
+
+  const validateNestedFunction = (
+    nestedFn: NodePath<
+      t.FunctionDeclaration | t.FunctionExpression | t.ArrowFunctionExpression
+    >,
+  ): void => {
+    if (
+      nestedFn.node === fn.node ||
+      programContext.alreadyCompiled.has(nestedFn.node)
+    ) {
+      return;
+    }
+
+    const nestedFnType = getReactFunctionType(
+      nestedFn as BabelFn,
+      pass,
+    );
+    if (nestedFnType === 'Component' || nestedFnType === 'Hook') {
+      const nestedFnNameExpr = getFunctionName(nestedFn as BabelFn);
+      const nestedName =
+        nestedFnNameExpr !== null && nestedFnNameExpr.isIdentifier()
+          ? nestedFnNameExpr.node.name
+          : '<anonymous>';
+
+      CompilerError.throwInvalidReact({
+        category: ErrorCategory.Factories,
+        reason: `Cannot compile nested ${nestedFnType.toLowerCase()} inside a non-React function`,
+        description:
+          `The function "${nestedName}" appears to be a React ${nestedFnType.toLowerCase()}, ` +
+          `but it's defined inside "${parentName}", which is not a React component or hook. ` +
+          `The compiler cannot optimize nested React functions when the parent function is not compiled, ` +
+          `as this leads to scope reference errors. Either move "${nestedName}" to the module level, ` +
+          `or ensure the parent function follows React naming conventions (PascalCase for components, ` +
+          `"use" prefix for hooks).`,
+        loc: nestedFn.node.loc ?? null,
+      });
+    }
+
+    nestedFn.skip();
+  };
+
+  fn.traverse({
+    FunctionDeclaration: validateNestedFunction,
+    FunctionExpression: validateNestedFunction,
+    ArrowFunctionExpression: validateNestedFunction,
+  });
 }
 
 function getReactFunctionType(
@@ -872,11 +962,6 @@ function getReactFunctionType(
       return componentSyntaxType;
     }
     case 'all': {
-      // Compile only top level functions
-      if (fn.scope.getProgramParent() !== fn.scope.parent) {
-        return null;
-      }
-
       return getComponentOrHookLike(fn, hookPattern) ?? 'Other';
     }
     default: {
@@ -1077,7 +1162,7 @@ function isValidComponentParams(
  * Adapted from the ESLint rule at
  * https://github.com/facebook/react/blob/main/packages/eslint-plugin-react-hooks/src/RulesOfHooks.js#L90-L103
  */
-function getComponentOrHookLike(
+export function getComponentOrHookLike(
   node: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,
@@ -1204,7 +1289,7 @@ function returnsNonNode(
  * same AST nodes with some exceptions to better fit our use case.
  */
 
-function getFunctionName(
+export function getFunctionName(
   path: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,

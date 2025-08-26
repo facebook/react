@@ -110,8 +110,10 @@
   padding: 0.25rem;
   display: flex;
   flex-direction: row;
+  align-items: flex-start;
 }
 
 .Timeline {
   flex-grow: 1;
+  align-self: anchor-center;
 }

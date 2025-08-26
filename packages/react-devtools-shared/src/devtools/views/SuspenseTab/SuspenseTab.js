@@ -20,8 +20,10 @@ import InspectedElement from '../Components/InspectedElement';
 import portaledContent from '../portaledContent';
 import styles from './SuspenseTab.css';
 import SuspenseRects from './SuspenseRects';
+import SuspenseTimeline from './SuspenseTimeline';
 import SuspenseTreeList from './SuspenseTreeList';
 import Button from '../Button';
+import typeof {SyntheticPointerEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
 
 type Orientation = 'horizontal' | 'vertical';
 
@@ -44,10 +46,6 @@ type LayoutState = {
   inspectedElementVerticalFraction: number,
 };
 type LayoutDispatch = (action: LayoutAction) => void;
-
-function SuspenseTimeline() {
-  return <div className={styles.Timeline}>timeline</div>;
-}
 
 function ToggleTreeList({
   dispatch,
@@ -180,17 +178,17 @@ function SuspenseTab(_: {}) {
     treeListHorizontalFraction,
   ]);
 
-  const onResizeStart = (event: SyntheticPointerEvent<HTMLElement>) => {
+  const onResizeStart = (event: SyntheticPointerEvent) => {
     const element = event.currentTarget;
     element.setPointerCapture(event.pointerId);
   };
 
-  const onResizeEnd = (event: SyntheticPointerEvent<HTMLElement>) => {
+  const onResizeEnd = (event: SyntheticPointerEvent) => {
     const element = event.currentTarget;
     element.releasePointerCapture(event.pointerId);
   };
 
-  const onResizeTree = (event: SyntheticPointerEvent<HTMLElement>) => {
+  const onResizeTree = (event: SyntheticPointerEvent) => {
     const element = event.currentTarget;
     const isResizing = element.hasPointerCapture(event.pointerId);
     if (!isResizing) {
@@ -241,7 +239,7 @@ function SuspenseTab(_: {}) {
     }
   };
 
-  const onResizeTreeList = (event: SyntheticPointerEvent<HTMLElement>) => {
+  const onResizeTreeList = (event: SyntheticPointerEvent) => {
     const element = event.currentTarget;
     const isResizing = element.hasPointerCapture(event.pointerId);
     if (!isResizing) {
@@ -297,7 +295,7 @@ function SuspenseTab(_: {}) {
           ref={resizeTreeListRef}>
           <SuspenseTreeList />
         </div>
-        <div className={styles.ResizeBarWrapper}>
+        <div className={styles.ResizeBarWrapper} hidden={treeListHidden}>
           <div
             onPointerDown={onResizeStart}
             onPointerMove={onResizeTreeList}
@@ -308,7 +306,9 @@ function SuspenseTab(_: {}) {
         <div className={styles.TreeView}>
           <div className={styles.TimelineWrapper}>
             <ToggleTreeList dispatch={dispatch} state={state} />
-            <SuspenseTimeline />
+            <div className={styles.Timeline}>
+              <SuspenseTimeline />
+            </div>
             <ToggleInspectedElement
               dispatch={dispatch}
               state={state}
@@ -327,7 +327,7 @@ function SuspenseTab(_: {}) {
           </footer>
         </div>
       </div>
-      <div className={styles.ResizeBarWrapper}>
+      <div className={styles.ResizeBarWrapper} hidden={inspectedElementHidden}>
         <div
           onPointerDown={onResizeStart}
           onPointerMove={onResizeTree}
@@ -436,4 +436,4 @@ function setResizeCSSVariable(
   }
 }
 
-export default (portaledContent(SuspenseTab): React$ComponentType<{}>);
+export default (portaledContent(SuspenseTab): component());

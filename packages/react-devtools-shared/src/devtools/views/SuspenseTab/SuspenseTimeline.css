@@ -1,0 +1,34 @@
+.SuspenseTimelineContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
+.SuspenseTimelineInput {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.SuspenseTimelineRootSwitcher {
+  height: fit-content;
+  max-width: 3rem;
+}
+
+.SuspenseTimelineMarkers {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.SuspenseTimelineMarkers > * {
+  flex: 1 1 0;
+  overflow: visible;
+  visibility: hidden;
+  width: 0
+}
+
+.SuspenseTimelineActiveMarker {
+  visibility: visible;
+}
+

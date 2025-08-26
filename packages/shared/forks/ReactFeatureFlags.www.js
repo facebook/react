@@ -43,19 +43,19 @@ export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableUpdaterTracking = __PROFILE__;
 
-export const enableSuspenseAvoidThisFallback = true;
+export const enableSuspenseAvoidThisFallback: boolean = true;
 
-export const enableCPUSuspense = true;
-export const enableUseEffectEventHook = true;
-export const enableMoveBefore = false;
-export const disableInputAttributeSyncing = false;
-export const enableLegacyFBSupport = true;
+export const enableCPUSuspense: boolean = true;
+export const enableUseEffectEventHook: boolean = true;
+export const enableMoveBefore: boolean = false;
+export const disableInputAttributeSyncing: boolean = false;
+export const enableLegacyFBSupport: boolean = true;
 
-export const enableYieldingBeforePassive = false;
+export const enableYieldingBeforePassive: boolean = false;
 
-export const enableThrottledScheduling = false;
+export const enableThrottledScheduling: boolean = false;
 
-export const enableHydrationLaneScheduling = true;
+export const enableHydrationLaneScheduling: boolean = true;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler: boolean =
@@ -63,52 +63,52 @@ export const enableSchedulingProfiler: boolean =
 
 export const disableLegacyContext = __EXPERIMENTAL__;
 
-export const enableLegacyCache = true;
+export const enableLegacyCache: boolean = true;
 
-export const enableAsyncIterableChildren = false;
+export const enableAsyncIterableChildren: boolean = false;
 
-export const enableTaint = false;
+export const enableTaint: boolean = false;
 
-export const enablePostpone = false;
+export const enablePostpone: boolean = false;
 
-export const enableHalt = false;
+export const enableHalt: boolean = false;
 
 // TODO: www currently relies on this feature. It's disabled in open source.
 // Need to remove it.
-export const disableCommentsAsDOMContainers = false;
+export const disableCommentsAsDOMContainers: boolean = false;
 
-export const enableCreateEventHandleAPI = true;
+export const enableCreateEventHandleAPI: boolean = true;
 
-export const enableScopeAPI = true;
+export const enableScopeAPI: boolean = true;
 
-export const enableSuspenseCallback = true;
+export const enableSuspenseCallback: boolean = true;
 
-export const enableLegacyHidden = true;
+export const enableLegacyHidden: boolean = true;
 
 export const disableTextareaChildren = __EXPERIMENTAL__;
 
-export const enableFizzExternalRuntime = true;
+export const enableFizzExternalRuntime: boolean = true;
 
-export const passChildrenWhenCloningPersistedNodes = false;
+export const passChildrenWhenCloningPersistedNodes: boolean = false;
 
-export const enablePersistedModeClonedFlag = false;
+export const enablePersistedModeClonedFlag: boolean = false;
 
-export const enableAsyncDebugInfo = false;
-export const disableClientCache = true;
+export const enableAsyncDebugInfo: boolean = false;
+export const disableClientCache: boolean = true;
 
-export const enableReactTestRendererWarning = false;
+export const enableReactTestRendererWarning: boolean = false;
 
-export const disableLegacyMode = true;
+export const disableLegacyMode: boolean = true;
 
-export const enableEagerAlternateStateNodeCleanup = true;
+export const enableEagerAlternateStateNodeCleanup: boolean = true;
 
-export const enableGestureTransition = false;
+export const enableGestureTransition: boolean = false;
 
-export const enableSuspenseyImages = false;
-export const enableFizzBlockingRender = true;
-export const enableSrcObject = false;
-export const enableHydrationChangeEvent = false;
-export const enableDefaultTransitionIndicator = false;
+export const enableSuspenseyImages: boolean = false;
+export const enableFizzBlockingRender: boolean = true;
+export const enableSrcObject: boolean = false;
+export const enableHydrationChangeEvent: boolean = false;
+export const enableDefaultTransitionIndicator: boolean = false;
 
 export const ownerStackLimit = 1e4;
 
