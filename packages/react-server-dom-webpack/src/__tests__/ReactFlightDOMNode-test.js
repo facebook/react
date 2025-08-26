@@ -128,10 +128,10 @@ describe('ReactFlightDOMNode', () => {
   }
 
   async function createBufferedUnclosingStream(
-    prelude: ReadableStream<Uint8Array>,
+    stream: ReadableStream<Uint8Array>,
   ): ReadableStream<Uint8Array> {
     const chunks: Array<Uint8Array> = [];
-    const reader = prelude.getReader();
+    const reader = stream.getReader();
     while (true) {
       const {done, value} = await reader.read();
       if (done) {
@@ -147,6 +147,19 @@ describe('ReactFlightDOMNode', () => {
         if (i < chunks.length) {
           controller.enqueue(chunks[i++]);
         }
+      },
+    });
+  }
+
+  function createDelayedStream() {
+    return new Stream.Transform({
+      ...streamOptions,
+      transform(chunk, encoding, callback) {
+        // Artificially delay between pushing chunks.
+        setTimeout(() => {
+          this.push(chunk);
+          callback();
+        });
       },
     });
   }
@@ -940,12 +953,18 @@ describe('ReactFlightDOMNode', () => {
               debugReadable.write(chunk, encoding);
               callback();
             },
+            final() {
+              debugReadable.end();
+            },
           }),
         },
       ),
     );
 
-    const readable = new Stream.PassThrough(streamOptions);
+    // Create a delayed stream to simulate that the RSC stream might be
+    // transported slower than the debug channel, which must not lead to a
+    // `controller.enqueueModel is not a function` error in the Flight client.
+    const readable = createDelayedStream();
 
     rscStream.pipe(readable);
 

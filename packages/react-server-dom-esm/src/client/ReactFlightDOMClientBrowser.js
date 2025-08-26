@@ -101,6 +101,7 @@ function createResponseFromOptions(options: void | Options) {
 function startReadingFromUniversalStream(
   response: FlightResponse,
   stream: ReadableStream,
+  onDone: () => void,
 ): void {
   // This is the same as startReadingFromStream except this allows WebSocketStreams which
   // return ArrayBuffer and string chunks instead of Uint8Array chunks. We could potentially
@@ -116,8 +117,7 @@ function startReadingFromUniversalStream(
     ...
   }): void | Promise<void> {
     if (done) {
-      close(response);
-      return;
+      return onDone();
     }
     if (value instanceof ArrayBuffer) {
       // WebSockets can produce ArrayBuffer values in ReadableStreams.
@@ -139,7 +139,7 @@ function startReadingFromUniversalStream(
 function startReadingFromStream(
   response: FlightResponse,
   stream: ReadableStream,
-  isSecondaryStream: boolean,
+  onDone: () => void,
 ): void {
   const streamState = createStreamState();
   const reader = stream.getReader();
@@ -152,11 +152,7 @@ function startReadingFromStream(
     ...
   }): void | Promise<void> {
     if (done) {
-      // If we're the secondary stream, then we don't close the response until the debug channel closes.
-      if (!isSecondaryStream) {
-        close(response);
-      }
-      return;
+      return onDone();
     }
     const buffer: Uint8Array = (value: any);
     processBinaryChunk(response, streamState, buffer);
@@ -178,10 +174,20 @@ function createFromReadableStream<T>(
     options.debugChannel &&
     options.debugChannel.readable
   ) {
-    startReadingFromUniversalStream(response, options.debugChannel.readable);
-    startReadingFromStream(response, stream, true);
+    let streamDoneCount = 0;
+    const handleDone = () => {
+      if (++streamDoneCount === 2) {
+        close(response);
+      }
+    };
+    startReadingFromUniversalStream(
+      response,
+      options.debugChannel.readable,
+      handleDone,
+    );
+    startReadingFromStream(response, stream, handleDone);
   } else {
-    startReadingFromStream(response, stream, false);
+    startReadingFromStream(response, stream, close.bind(null, response));
   }
   return getRoot(response);
 }
@@ -199,13 +205,24 @@ function createFromFetch<T>(
         options.debugChannel &&
         options.debugChannel.readable
       ) {
+        let streamDoneCount = 0;
+        const handleDone = () => {
+          if (++streamDoneCount === 2) {
+            close(response);
+          }
+        };
         startReadingFromUniversalStream(
           response,
           options.debugChannel.readable,
+          handleDone,
         );
-        startReadingFromStream(response, (r.body: any), true);
+        startReadingFromStream(response, (r.body: any), handleDone);
       } else {
-        startReadingFromStream(response, (r.body: any), false);
+        startReadingFromStream(
+          response,
+          (r.body: any),
+          close.bind(null, response),
+        );
       }
     },
     function (e) {
