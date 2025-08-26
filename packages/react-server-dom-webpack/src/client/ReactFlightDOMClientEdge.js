@@ -152,7 +152,7 @@ function createFromReadableStream<T>(
     startReadingFromStream(response, options.debugChannel.readable, handleDone);
     startReadingFromStream(response, stream, handleDone);
   } else {
-    startReadingFromStream(response, stream, () => close(response));
+    startReadingFromStream(response, stream, close.bind(null, response));
   }
 
   return getRoot(response);
@@ -184,7 +184,11 @@ function createFromFetch<T>(
         );
         startReadingFromStream(response, (r.body: any), handleDone);
       } else {
-        startReadingFromStream(response, (r.body: any), () => close(response));
+        startReadingFromStream(
+          response,
+          (r.body: any),
+          close.bind(null, response),
+        );
       }
     },
     function (e) {
