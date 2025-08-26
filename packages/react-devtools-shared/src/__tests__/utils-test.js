@@ -401,7 +401,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.f = f;
 function f() { }
 //# sourceMappingURL=`;
-    const result = ['', 'http://test/a.mts', 1, 17];
+    const result = {
+      location: ['', 'http://test/a.mts', 1, 17],
+      ignored: false,
+    };
     const fs = {
       'http://test/a.mts': `export function f() {}`,
       'http://test/a.mjs.map': `{"version":3,"file":"a.mjs","sourceRoot":"","sources":["a.mts"],"names":[],"mappings":";;AAAA,cAAsB;AAAtB,SAAgB,CAAC,KAAI,CAAC"}`,

@@ -19,7 +19,7 @@ const COMPLEX_ARRAY = 1;
 const PRIMITIVE_ARRAY = 2; // Primitive values only
 const ENTRIES_ARRAY = 3; // Tuple arrays of string and value (like Headers, Map, etc)
 function getArrayKind(array: Object): 0 | 1 | 2 | 3 {
-  let kind = EMPTY_ARRAY;
+  let kind: 0 | 1 | 2 | 3 = EMPTY_ARRAY;
   for (let i = 0; i < array.length; i++) {
     const value = array[i];
     if (typeof value === 'object' && value !== null) {

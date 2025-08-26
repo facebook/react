@@ -32,7 +32,7 @@ error.unconditional-set-state-in-render-with-loop-throw.ts:11:2
    9 |     }
   10 |   }
 > 11 |   setState(true);
-     |   ^^^^^^^^ Found setState() within useMemo()
+     |   ^^^^^^^^ Found setState() in render
   12 |   return state;
   13 | }
   14 |

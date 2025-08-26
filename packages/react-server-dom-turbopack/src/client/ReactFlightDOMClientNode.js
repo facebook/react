@@ -66,7 +66,7 @@ export type Options = {
 function startReadingFromStream(
   response: Response,
   stream: Readable,
-  isSecondaryStream: boolean,
+  onEnd: () => void,
 ): void {
   const streamState = createStreamState();
 
@@ -82,13 +82,7 @@ function startReadingFromStream(
     reportGlobalError(response, error);
   });
 
-  stream.on('end', () => {
-    // If we're the secondary stream, then we don't close the response until the
-    // debug channel closes.
-    if (!isSecondaryStream) {
-      close(response);
-    }
-  });
+  stream.on('end', onEnd);
 }
 
 function createFromNodeStream<T>(
@@ -114,10 +108,16 @@ function createFromNodeStream<T>(
   );
 
   if (__DEV__ && options && options.debugChannel) {
-    startReadingFromStream(response, options.debugChannel, false);
-    startReadingFromStream(response, stream, true);
+    let streamEndedCount = 0;
+    const handleEnd = () => {
+      if (++streamEndedCount === 2) {
+        close(response);
+      }
+    };
+    startReadingFromStream(response, options.debugChannel, handleEnd);
+    startReadingFromStream(response, stream, handleEnd);
   } else {
-    startReadingFromStream(response, stream, false);
+    startReadingFromStream(response, stream, close.bind(null, response));
   }
 
   return getRoot(response);

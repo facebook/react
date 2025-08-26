@@ -437,6 +437,10 @@ export type RendererInterface = {
   onErrorOrWarning?: OnErrorOrWarning,
   overrideError: (id: number, forceError: boolean) => void,
   overrideSuspense: (id: number, forceFallback: boolean) => void,
+  overrideSuspenseMilestone: (
+    rootID: number,
+    suspendedSet: Array<number>,
+  ) => void,
   overrideValueAtPath: (
     type: Type,
     id: number,
@@ -469,6 +473,7 @@ export type RendererInterface = {
     path: Array<string | number>,
     count: number,
   ) => void,
+  supportsTogglingSuspense: boolean,
   updateComponentFilters: (componentFilters: Array<ComponentFilter>) => void,
   getEnvironmentNames: () => Array<string>,
 

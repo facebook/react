@@ -496,13 +496,14 @@ function createErrorChunk<T>(
 function wakeChunk<T>(
   listeners: Array<InitializationReference | (T => mixed)>,
   value: T,
+  chunk: SomeChunk<T>,
 ): void {
   for (let i = 0; i < listeners.length; i++) {
     const listener = listeners[i];
     if (typeof listener === 'function') {
       listener(value);
     } else {
-      fulfillReference(listener, value);
+      fulfillReference(listener, value, chunk);
     }
   }
 }
@@ -555,7 +556,7 @@ function wakeChunkIfInitialized<T>(
 ): void {
   switch (chunk.status) {
     case INITIALIZED:
-      wakeChunk(resolveListeners, chunk.value);
+      wakeChunk(resolveListeners, chunk.value, chunk);
       break;
     case BLOCKED:
       // It is possible that we're blocked on our own chunk if it's a cycle.
@@ -569,7 +570,7 @@ function wakeChunkIfInitialized<T>(
           if (cyclicHandler !== null) {
             // This reference points back to this chunk. We can resolve the cycle by
             // using the value from that handler.
-            fulfillReference(reference, cyclicHandler.value);
+            fulfillReference(reference, cyclicHandler.value, chunk);
             resolveListeners.splice(i, 1);
             i--;
             if (rejectListeners !== null) {
@@ -637,7 +638,7 @@ function triggerErrorOnChunk<T>(
       cyclicChunk.status = BLOCKED;
       cyclicChunk.value = null;
       cyclicChunk.reason = null;
-      if (enableProfilerTimer && enableComponentPerformanceTrack) {
+      if ((enableProfilerTimer && enableComponentPerformanceTrack) || __DEV__) {
         initializingChunk = cyclicChunk;
       }
       try {
@@ -919,7 +920,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
   cyclicChunk.value = null;
   cyclicChunk.reason = null;
 
-  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+  if ((enableProfilerTimer && enableComponentPerformanceTrack) || __DEV__) {
     initializingChunk = cyclicChunk;
   }
 
@@ -938,7 +939,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
     if (resolveListeners !== null) {
       cyclicChunk.value = null;
       cyclicChunk.reason = null;
-      wakeChunk(resolveListeners, value);
+      wakeChunk(resolveListeners, value, cyclicChunk);
     }
     if (initializingHandler !== null) {
       if (initializingHandler.errored) {
@@ -961,7 +962,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
     erroredChunk.reason = error;
   } finally {
     initializingHandler = prevHandler;
-    if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if ((enableProfilerTimer && enableComponentPerformanceTrack) || __DEV__) {
       initializingChunk = prevChunk;
     }
   }
@@ -1298,6 +1299,7 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
 function fulfillReference(
   reference: InitializationReference,
   value: any,
+  fulfilledChunk: SomeChunk<any>,
 ): void {
   const {response, handler, parentObject, key, map, path} = reference;
 
@@ -1376,6 +1378,8 @@ function fulfillReference(
   const mappedValue = map(response, value, parentObject, key);
   parentObject[key] = mappedValue;
 
+  transferReferencedDebugInfo(handler.chunk, fulfilledChunk, mappedValue);
+
   // If this is the root object for a model reference, where `handler.value`
   // is a stale `null`, the resolved value can be used directly.
   if (key === '' && handler.value === null) {
@@ -1422,7 +1426,7 @@ function fulfillReference(
     initializedChunk.value = handler.value;
     initializedChunk.reason = handler.reason; // Used by streaming chunks
     if (resolveListeners !== null) {
-      wakeChunk(resolveListeners, handler.value);
+      wakeChunk(resolveListeners, handler.value, initializedChunk);
     }
   }
 }
@@ -1669,7 +1673,7 @@ function loadServerReference<A: Iterable<any>, T>(
       initializedChunk.status = INITIALIZED;
       initializedChunk.value = handler.value;
       if (resolveListeners !== null) {
-        wakeChunk(resolveListeners, handler.value);
+        wakeChunk(resolveListeners, handler.value, initializedChunk);
       }
     }
   }
@@ -1726,6 +1730,49 @@ function loadServerReference<A: Iterable<any>, T>(
 
   // Return a place holder value for now.
   return (null: any);
+}
+
+function transferReferencedDebugInfo(
+  parentChunk: null | SomeChunk<any>,
+  referencedChunk: SomeChunk<any>,
+  referencedValue: mixed,
+): void {
+  if (__DEV__ && referencedChunk._debugInfo) {
+    const referencedDebugInfo = referencedChunk._debugInfo;
+    // If we have a direct reference to an object that was rendered by a synchronous
+    // server component, it might have some debug info about how it was rendered.
+    // We forward this to the underlying object. This might be a React Element or
+    // an Array fragment.
+    // If this was a string / number return value we lose the debug info. We choose
+    // that tradeoff to allow sync server components to return plain values and not
+    // use them as React Nodes necessarily. We could otherwise wrap them in a Lazy.
+    if (
+      typeof referencedValue === 'object' &&
+      referencedValue !== null &&
+      (isArray(referencedValue) ||
+        typeof referencedValue[ASYNC_ITERATOR] === 'function' ||
+        referencedValue.$$typeof === REACT_ELEMENT_TYPE) &&
+      !referencedValue._debugInfo
+    ) {
+      // We should maybe use a unique symbol for arrays but this is a React owned array.
+      // $FlowFixMe[prop-missing]: This should be added to elements.
+      Object.defineProperty((referencedValue: any), '_debugInfo', {
+        configurable: false,
+        enumerable: false,
+        writable: true,
+        value: referencedDebugInfo,
+      });
+    }
+    // We also add it to the initializing chunk since the resolution of that promise is
+    // also blocked by these. By adding it to both we can track it even if the array/element
+    // is extracted, or if the root is rendered as is.
+    if (parentChunk !== null) {
+      const parentDebugInfo =
+        parentChunk._debugInfo || (parentChunk._debugInfo = []);
+      // $FlowFixMe[method-unbinding]
+      parentDebugInfo.push.apply(parentDebugInfo, referencedDebugInfo);
+    }
+  }
 }
 
 function getOutlinedModel<T>(
@@ -1825,32 +1872,7 @@ function getOutlinedModel<T>(
         value = value[path[i]];
       }
       const chunkValue = map(response, value, parentObject, key);
-      if (__DEV__ && chunk._debugInfo) {
-        // If we have a direct reference to an object that was rendered by a synchronous
-        // server component, it might have some debug info about how it was rendered.
-        // We forward this to the underlying object. This might be a React Element or
-        // an Array fragment.
-        // If this was a string / number return value we lose the debug info. We choose
-        // that tradeoff to allow sync server components to return plain values and not
-        // use them as React Nodes necessarily. We could otherwise wrap them in a Lazy.
-        if (
-          typeof chunkValue === 'object' &&
-          chunkValue !== null &&
-          (isArray(chunkValue) ||
-            typeof chunkValue[ASYNC_ITERATOR] === 'function' ||
-            chunkValue.$$typeof === REACT_ELEMENT_TYPE) &&
-          !chunkValue._debugInfo
-        ) {
-          // We should maybe use a unique symbol for arrays but this is a React owned array.
-          // $FlowFixMe[prop-missing]: This should be added to elements.
-          Object.defineProperty((chunkValue: any), '_debugInfo', {
-            configurable: false,
-            enumerable: false,
-            writable: true,
-            value: chunk._debugInfo,
-          });
-        }
-      }
+      transferReferencedDebugInfo(initializingChunk, chunk, chunkValue);
       return chunkValue;
     case PENDING:
     case BLOCKED:
@@ -2621,7 +2643,7 @@ function resolveStream<T: ReadableStream | $AsyncIterable<any, any, void>>(
       cyclicChunk.status = BLOCKED;
       cyclicChunk.value = null;
       cyclicChunk.reason = null;
-      if (enableProfilerTimer && enableComponentPerformanceTrack) {
+      if ((enableProfilerTimer && enableComponentPerformanceTrack) || __DEV__) {
         initializingChunk = cyclicChunk;
       }
       try {
@@ -2650,7 +2672,7 @@ function resolveStream<T: ReadableStream | $AsyncIterable<any, any, void>>(
   resolvedChunk.value = stream;
   resolvedChunk.reason = controller;
   if (resolveListeners !== null) {
-    wakeChunk(resolveListeners, chunk.value);
+    wakeChunk(resolveListeners, chunk.value, chunk);
   }
 }
 

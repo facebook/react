@@ -79,7 +79,7 @@ export type SchedulingEvent =
   | ReactScheduleRenderEvent
   | ReactScheduleStateUpdateEvent
   | ReactScheduleForceUpdateEvent;
-export type SchedulingEventType = $PropertyType<SchedulingEvent, 'type'>;
+export type SchedulingEventType = SchedulingEvent['type'];
 
 export type ReactMeasureType =
   | 'commit'

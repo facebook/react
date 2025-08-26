@@ -8,6 +8,7 @@
 import {
   CompilerDiagnostic,
   CompilerError,
+  ErrorCategory,
   ErrorSeverity,
 } from '../CompilerError';
 import {
@@ -96,7 +97,8 @@ export function validateNoSetStateInEffects(
               if (setState !== undefined) {
                 errors.pushDiagnostic(
                   CompilerDiagnostic.create({
-                    category:
+                    category: ErrorCategory.EffectSetState,
+                    reason:
                       'Calling setState synchronously within an effect can trigger cascading renders',
                     description:
                       'Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. ' +

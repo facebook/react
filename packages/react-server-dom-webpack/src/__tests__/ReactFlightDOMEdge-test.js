@@ -233,10 +233,10 @@ describe('ReactFlightDOMEdge', () => {
   }
 
   async function createBufferedUnclosingStream(
-    prelude: ReadableStream<Uint8Array>,
+    stream: ReadableStream<Uint8Array>,
   ): ReadableStream<Uint8Array> {
     const chunks: Array<Uint8Array> = [];
-    const reader = prelude.getReader();
+    const reader = stream.getReader();
     while (true) {
       const {done, value} = await reader.read();
       if (done) {
@@ -251,6 +251,26 @@ describe('ReactFlightDOMEdge', () => {
       async pull(controller) {
         if (i < chunks.length) {
           controller.enqueue(chunks[i++]);
+        }
+      },
+    });
+  }
+
+  function createDelayedStream(
+    stream: ReadableStream<Uint8Array>,
+  ): ReadableStream<Uint8Array> {
+    return new ReadableStream({
+      async start(controller) {
+        const reader = stream.getReader();
+        while (true) {
+          const {done, value} = await reader.read();
+          if (done) {
+            controller.close();
+          } else {
+            // Artificially delay between enqueuing chunks.
+            await new Promise(resolve => setTimeout(resolve));
+            controller.enqueue(value);
+          }
         }
       },
     });
@@ -2012,6 +2032,9 @@ describe('ReactFlightDOMEdge', () => {
                 write(chunk) {
                   debugReadableStreamController.enqueue(chunk);
                 },
+                close() {
+                  debugReadableStreamController.close();
+                },
               }),
             },
           },
@@ -2032,10 +2055,16 @@ describe('ReactFlightDOMEdge', () => {
       moduleLoading: webpackModuleLoading,
     };
 
-    const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
-      serverConsumerManifest,
-      debugChannel: {readable: debugReadableStream},
-    });
+    const response = ReactServerDOMClient.createFromReadableStream(
+      // Create a delayed stream to simulate that the RSC stream might be
+      // transported slower than the debug channel, which must not lead to a
+      // `Connection closed` error in the Flight client.
+      createDelayedStream(rscStream),
+      {
+        serverConsumerManifest,
+        debugChannel: {readable: debugReadableStream},
+      },
+    );
 
     let ownerStack;
 

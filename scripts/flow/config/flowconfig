@@ -31,6 +31,7 @@
 untyped-type-import=error
 internal-type=off
 deprecated-type=off
+unsafe-object-assign=off
 
 [options]
 munge_underscores=false
