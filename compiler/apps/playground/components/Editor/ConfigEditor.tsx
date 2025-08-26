@@ -6,7 +6,10 @@
  */
 
 import MonacoEditor, {loader, type Monaco} from '@monaco-editor/react';
-import {parseConfigPragmaForTests, parsePluginOptions} from 'babel-plugin-react-compiler';
+import {
+  parseConfigPragmaForTests,
+  parsePluginOptions,
+} from 'babel-plugin-react-compiler';
 import type {editor} from 'monaco-editor';
 import * as monaco from 'monaco-editor';
 import {useState, useMemo} from 'react';
@@ -54,15 +57,22 @@ function isEqual(a: any, b: any): boolean {
  */
 function getOverriddenValues(current: any, defaults: any): Record<string, any> {
   if (isEqual(current, defaults)) return {};
-  if (current && defaults &&
-      typeof current === 'object' && typeof defaults === 'object' &&
-      !Array.isArray(current) && !Array.isArray(defaults)) {
-
+  if (
+    current &&
+    defaults &&
+    typeof current === 'object' &&
+    typeof defaults === 'object' &&
+    !Array.isArray(current) &&
+    !Array.isArray(defaults)
+  ) {
     const overrides: Record<string, any> = {};
 
     for (const key in current) {
       const nested = getOverriddenValues(current[key], defaults[key]);
-      if (Object.keys(nested).length > 0 || !isEqual(current[key], defaults[key])) {
+      if (
+        Object.keys(nested).length > 0 ||
+        !isEqual(current[key], defaults[key])
+      ) {
         overrides[key] = Object.keys(nested).length > 0 ? nested : current[key];
       }
     }
@@ -88,17 +98,21 @@ function formatConfigAsJavaScript(config: any): string {
       if (value.length === 0) {
         return '[]';
       }
-      const items = value.map(item => `${spaces}  ${formatValue(item, indent + 1)}`).join(',\n');
+      const items = value
+        .map(item => `${spaces}  ${formatValue(item, indent + 1)}`)
+        .join(',\n');
       return `[\n${items}\n${spaces}]`;
     } else if (typeof value === 'object' && value !== null) {
       const keys = Object.keys(value);
       if (keys.length === 0) {
         return '{}';
       }
-      const items = keys.map(key => {
-        const formattedValue = formatValue(value[key], indent + 1);
-        return `${spaces}  ${key}: ${formattedValue}`;
-      }).join(',\n');
+      const items = keys
+        .map(key => {
+          const formattedValue = formatValue(value[key], indent + 1);
+          return `${spaces}  ${key}: ${formattedValue}`;
+        })
+        .join(',\n');
       return `{\n${items}\n${spaces}}`;
     } else {
       return String(value);
@@ -110,7 +124,7 @@ function formatConfigAsJavaScript(config: any): string {
 }
 
 export default function ConfigEditor(): JSX.Element {
-  const [monaco, setMonaco] = useState<Monaco | null>(null);
+  const [, setMonaco] = useState<Monaco | null>(null);
   const store = useStore();
 
   // Parse current config from source pragma and show only overridden values
@@ -125,7 +139,7 @@ export default function ConfigEditor(): JSX.Element {
       const overrides = getOverriddenValues(parsedConfig, DEFAULT_CONFIG);
 
       return overrides;
-    } catch (error) {
+    } catch (_) {
       // If parsing fails, return empty object (no overrides)
       return {};
     }
