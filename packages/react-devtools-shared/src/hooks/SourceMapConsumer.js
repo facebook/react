@@ -145,13 +145,21 @@ type Section = {
 };
 
 function IndexedSourceMapConsumer(sourceMapJSON: IndexSourceMap) {
-  let lastOffset = {
+  let lastOffset: {
+    line: number,
+    column: number,
+    ...
+  } = {
     line: -1,
     column: 0,
   };
 
   const sections: Array<Section> = sourceMapJSON.sections.map(section => {
-    const offset = section.offset;
+    const offset: {
+      line: number,
+      column: number,
+      ...
+    } = section.offset;
     const offsetLine = offset.line;
     const offsetColumn = offset.column;
 

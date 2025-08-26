@@ -2274,6 +2274,7 @@ function mergeTranslate(translateA: ?string, translateB: ?string): string {
     return translateB || '';
   }
   if (!translateB || translateB === 'none') {
+    // $FlowFixMe[constant-condition]
     return translateA || '';
   }
   const partsA = translateA.split(' ');

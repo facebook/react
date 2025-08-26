@@ -1375,7 +1375,11 @@ function renderSuspenseBoundary(
     // where we try to skip rendering the fallback if the content itself can render synchronously
     const trackedPostpones = request.trackedPostpones;
 
-    const fallbackKeyPath = [keyPath[0], 'Suspense Fallback', keyPath[2]];
+    const fallbackKeyPath: KeyNode = [
+      keyPath[0],
+      'Suspense Fallback',
+      keyPath[2],
+    ];
     const fallbackReplayNode: ReplayNode = [
       fallbackKeyPath[1],
       fallbackKeyPath[2],
@@ -1575,7 +1579,11 @@ function renderSuspenseBoundary(
       task.row = prevRow;
     }
 
-    const fallbackKeyPath = [keyPath[0], 'Suspense Fallback', keyPath[2]];
+    const fallbackKeyPath: KeyNode = [
+      keyPath[0],
+      'Suspense Fallback',
+      keyPath[2],
+    ];
     // We create suspended task for the fallback because we don't want to actually work
     // on it yet in case we finish the main content, so we queue for later.
     const suspendedFallbackTask = createRenderTask(
@@ -1744,7 +1752,11 @@ function replaySuspenseBoundary(
     task.row = prevRow;
   }
 
-  const fallbackKeyPath = [keyPath[0], 'Suspense Fallback', keyPath[2]];
+  const fallbackKeyPath: KeyNode = [
+    keyPath[0],
+    'Suspense Fallback',
+    keyPath[2],
+  ];
 
   // We create suspended task for the fallback because we don't want to actually work
   // on it yet in case we finish the main content, so we queue for later.
