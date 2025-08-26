@@ -26446,7 +26446,13 @@ __DEV__ &&
     }
     function canHydrateHydrationBoundary(instance, inRootOrSingleton) {
       for (; instance.nodeType !== COMMENT_NODE; ) {
-        if (!inRootOrSingleton) return null;
+        if (
+          (1 !== instance.nodeType ||
+            "INPUT" !== instance.nodeName ||
+            "hidden" !== instance.type) &&
+          !inRootOrSingleton
+        )
+          return null;
         instance = getNextHydratable(instance.nextSibling);
         if (null === instance) return null;
       }
@@ -32436,11 +32442,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-www-classic-425ba0ad-20250822" !== isomorphicReactPackageVersion)
+      if ("19.2.0-www-classic-4123f6b7-20250826" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-www-classic-425ba0ad-20250822\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-www-classic-4123f6b7-20250826\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -32483,10 +32489,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-www-classic-425ba0ad-20250822",
+          version: "19.2.0-www-classic-4123f6b7-20250826",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-www-classic-425ba0ad-20250822"
+          reconcilerVersion: "19.2.0-www-classic-4123f6b7-20250826"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -33253,5 +33259,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-www-classic-425ba0ad-20250822";
+    exports.version = "19.2.0-www-classic-4123f6b7-20250826";
   })();
