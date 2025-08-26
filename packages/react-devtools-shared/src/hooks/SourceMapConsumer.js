@@ -136,9 +136,9 @@ function BasicSourceMapConsumer(sourceMapJSON: BasicSourceMap) {
 }
 
 type Section = {
-  +generatedColumn: number,
-  +generatedLine: number,
-  +map: MixedSourceMap,
+  +offsetColumn0: number,
+  +offsetLine0: number,
+  +map: BasicSourceMap,
 
   // Lazily parsed only when/as the section is needed.
   sourceMapConsumer: SourceMapConsumerType | null,
@@ -160,12 +160,12 @@ function IndexedSourceMapConsumer(sourceMapJSON: IndexSourceMap) {
       column: number,
       ...
     } = section.offset;
-    const offsetLine = offset.line;
-    const offsetColumn = offset.column;
+    const offsetLine0 = offset.line;
+    const offsetColumn0 = offset.column;
 
     if (
-      offsetLine < lastOffset.line ||
-      (offsetLine === lastOffset.line && offsetColumn < lastOffset.column)
+      offsetLine0 < lastOffset.line ||
+      (offsetLine0 === lastOffset.line && offsetColumn0 < lastOffset.column)
     ) {
       throw new Error('Section offsets must be ordered and non-overlapping.');
     }
@@ -173,9 +173,8 @@ function IndexedSourceMapConsumer(sourceMapJSON: IndexSourceMap) {
     lastOffset = offset;
 
     return {
-      // The offset fields are 0-based, but we use 1-based indices when encoding/decoding from VLQ.
-      generatedLine: offsetLine + 1,
-      generatedColumn: offsetColumn + 1,
+      offsetLine0,
+      offsetColumn0,
       map: section.map,
       sourceMapConsumer: null,
     };
@@ -186,55 +185,29 @@ function IndexedSourceMapConsumer(sourceMapJSON: IndexSourceMap) {
     lineNumber,
   }: SearchPosition): ResultPosition {
     // Error.prototype.stack columns are 1-based (like most IDEs) but ASTs are 0-based.
-    const targetColumnNumber = columnNumber - 1;
+    const column0 = columnNumber - 1;
+    const line0 = lineNumber - 1;
 
-    let section = null;
+    // Sections must not overlap and must be sorted: https://tc39.es/source-map/#section-object
+    // Therefore the last section that has an offset less than or equal to the frame is the applicable one.
+    let left = 0;
+    let right = sections.length - 1;
+    let section: Section | null = null;
 
-    let startIndex = 0;
-    let stopIndex = sections.length - 1;
-    let index = -1;
-    while (startIndex <= stopIndex) {
-      index = Math.floor((stopIndex + startIndex) / 2);
-      section = sections[index];
+    while (left <= right) {
+      // fast Math.floor
+      const middle = ~~((left + right) / 2);
+      const currentSection = sections[middle];
 
-      const currentLine = section.generatedLine;
-      if (currentLine === lineNumber) {
-        const currentColumn = section.generatedColumn;
-        if (currentColumn === lineNumber) {
-          break;
-        } else {
-          if (currentColumn > targetColumnNumber) {
-            if (stopIndex - index > 0) {
-              stopIndex = index;
-            } else {
-              index = stopIndex;
-              break;
-            }
-          } else {
-            if (index - startIndex > 0) {
-              startIndex = index;
-            } else {
-              index = startIndex;
-              break;
-            }
-          }
-        }
+      if (
+        currentSection.offsetLine0 < line0 ||
+        (currentSection.offsetLine0 === line0 &&
+          currentSection.offsetColumn0 <= column0)
+      ) {
+        section = currentSection;
+        left = middle + 1;
       } else {
-        if (currentLine > lineNumber) {
-          if (stopIndex - index > 0) {
-            stopIndex = index;
-          } else {
-            index = stopIndex;
-            break;
-          }
-        } else {
-          if (index - startIndex > 0) {
-            startIndex = index;
-          } else {
-            index = startIndex;
-            break;
-          }
-        }
+        right = middle - 1;
       }
     }
 
@@ -252,8 +225,9 @@ function IndexedSourceMapConsumer(sourceMapJSON: IndexSourceMap) {
     }
 
     return section.sourceMapConsumer.originalPositionFor({
-      columnNumber,
-      lineNumber,
+      // The mappings in a Source Map section are relative to the section offset.
+      columnNumber: columnNumber - section.offsetColumn0,
+      lineNumber: lineNumber - section.offsetLine0,
     });
   }
 
