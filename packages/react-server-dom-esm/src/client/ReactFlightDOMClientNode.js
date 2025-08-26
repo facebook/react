@@ -10,8 +10,9 @@
 import type {Thenable, ReactCustomFormAction} from 'shared/ReactTypes.js';
 
 import type {
-  Response,
+  DebugChannel,
   FindSourceMapURLCallback,
+  Response,
 } from 'react-client/src/ReactFlightClient';
 
 import type {Readable} from 'stream';
@@ -88,6 +89,11 @@ function createFromNodeStream<T>(
   moduleBaseURL: string,
   options?: Options,
 ): Thenable<T> {
+  const debugChannel: DebugChannel | undefined =
+    __DEV__ && options && options.debugChannel !== undefined
+      ? {hasReadable: options.debugChannel.readable !== undefined}
+      : undefined;
+
   const response: Response = createResponse(
     moduleRootPath,
     null,
@@ -103,9 +109,7 @@ function createFromNodeStream<T>(
     __DEV__ && options && options.environmentName
       ? options.environmentName
       : undefined,
-    __DEV__ && options && options.debugChannel !== undefined
-      ? {hasReadable: options.debugChannel.readable !== undefined}
-      : undefined,
+    debugChannel,
   );
 
   if (__DEV__ && options && options.debugChannel) {

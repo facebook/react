@@ -8,7 +8,7 @@
  */
 
 import type {Thenable, ReactCustomFormAction} from 'shared/ReactTypes.js';
-import type {Response} from 'react-client/src/ReactFlightClient';
+import type {DebugChannel, Response} from 'react-client/src/ReactFlightClient';
 import type {Readable} from 'stream';
 
 import {
@@ -82,6 +82,11 @@ export function createFromNodeStream<T>(
   stream: Readable,
   options?: Options,
 ): Thenable<T> {
+  const debugChannel: DebugChannel | undefined =
+    __DEV__ && options && options.debugChannel !== undefined
+      ? {hasReadable: options.debugChannel.readable !== undefined}
+      : undefined;
+
   const response: Response = createResponse(
     null, // bundlerConfig
     null, // serverReferenceConfig
@@ -95,9 +100,7 @@ export function createFromNodeStream<T>(
     __DEV__ && options && options.environmentName
       ? options.environmentName
       : undefined,
-    __DEV__ && options && options.debugChannel !== undefined
-      ? {hasReadable: options.debugChannel.readable !== undefined}
-      : undefined,
+    debugChannel,
   );
 
   if (__DEV__ && options && options.debugChannel) {

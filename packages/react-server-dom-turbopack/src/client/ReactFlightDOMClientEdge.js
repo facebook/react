@@ -10,6 +10,7 @@
 import type {Thenable, ReactCustomFormAction} from 'shared/ReactTypes.js';
 
 import type {
+  DebugChannel,
   Response as FlightResponse,
   FindSourceMapURLCallback,
 } from 'react-client/src/ReactFlightClient';
@@ -83,6 +84,11 @@ export type Options = {
 };
 
 function createResponseFromOptions(options: Options) {
+  const debugChannel: DebugChannel | undefined =
+    __DEV__ && options && options.debugChannel !== undefined
+      ? {hasReadable: options.debugChannel.readable !== undefined}
+      : undefined;
+
   return createResponse(
     options.serverConsumerManifest.moduleMap,
     options.serverConsumerManifest.serverModuleMap,
@@ -100,9 +106,7 @@ function createResponseFromOptions(options: Options) {
     __DEV__ && options && options.environmentName
       ? options.environmentName
       : undefined,
-    __DEV__ && options && options.debugChannel !== undefined
-      ? {hasReadable: options.debugChannel.readable !== undefined}
-      : undefined,
+    debugChannel,
   );
 }
 

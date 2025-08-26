@@ -9,8 +9,9 @@
 
 import type {Thenable} from 'shared/ReactTypes.js';
 import type {
-  Response as FlightResponse,
+  DebugChannel,
   DebugChannelCallback,
+  Response as FlightResponse,
 } from 'react-client/src/ReactFlightClient';
 import type {ReactServerValue} from 'react-client/src/ReactFlightReplyClient';
 import type {ServerReferenceId} from '../client/ReactFlightClientConfigBundlerParcel';
@@ -100,6 +101,19 @@ function createDebugCallbackFromWritableStream(
 }
 
 function createResponseFromOptions(options: void | Options) {
+  const debugChannel: DebugChannel | undefined =
+    __DEV__ && options && options.debugChannel !== undefined
+      ? {
+          hasReadable: options.debugChannel.readable !== undefined,
+          callback:
+            options.debugChannel.writable !== undefined
+              ? createDebugCallbackFromWritableStream(
+                  options.debugChannel.writable,
+                )
+              : undefined,
+        }
+      : undefined;
+
   return createResponse(
     null, // bundlerConfig
     null, // serverReferenceConfig
@@ -115,17 +129,7 @@ function createResponseFromOptions(options: void | Options) {
     __DEV__ && options && options.environmentName
       ? options.environmentName
       : undefined,
-    __DEV__ && options && options.debugChannel !== undefined
-      ? {
-          hasReadable: options.debugChannel.readable !== undefined,
-          writable:
-            options.debugChannel.writable !== undefined
-              ? createDebugCallbackFromWritableStream(
-                  options.debugChannel.writable,
-                )
-              : undefined,
-        }
-      : undefined,
+    debugChannel,
   );
 }
 
