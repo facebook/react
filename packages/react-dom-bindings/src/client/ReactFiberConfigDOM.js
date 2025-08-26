@@ -3580,7 +3580,14 @@ function canHydrateHydrationBoundary(
   inRootOrSingleton: boolean,
 ): null | SuspenseInstance | ActivityInstance {
   while (instance.nodeType !== COMMENT_NODE) {
-    if (!inRootOrSingleton) {
+    if (
+      instance.nodeType === ELEMENT_NODE &&
+      instance.nodeName === 'INPUT' &&
+      (instance: any).type === 'hidden'
+    ) {
+      // If we have extra hidden inputs, we don't mismatch. This allows us to
+      // embed extra form data in the original form.
+    } else if (!inRootOrSingleton) {
       return null;
     }
     const nextInstance = getNextHydratableSibling(instance);
