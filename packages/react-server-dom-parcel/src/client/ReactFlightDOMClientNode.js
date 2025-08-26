@@ -82,7 +82,7 @@ export function createFromNodeStream<T>(
   stream: Readable,
   options?: Options,
 ): Thenable<T> {
-  const debugChannel: DebugChannel | undefined =
+  const debugChannel: void | DebugChannel =
     __DEV__ && options && options.debugChannel !== undefined
       ? {hasReadable: options.debugChannel.readable !== undefined}
       : undefined;

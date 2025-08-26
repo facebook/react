@@ -84,7 +84,7 @@ export type Options = {
 };
 
 function createResponseFromOptions(options: Options) {
-  const debugChannel: DebugChannel | undefined =
+  const debugChannel: void | DebugChannel =
     __DEV__ && options && options.debugChannel !== undefined
       ? {hasReadable: options.debugChannel.readable !== undefined}
       : undefined;

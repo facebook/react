@@ -72,7 +72,7 @@ function createDebugCallbackFromWritableStream(
 }
 
 function createResponseFromOptions(options: void | Options) {
-  const debugChannel: DebugChannel | undefined =
+  const debugChannel: void | DebugChannel =
     __DEV__ && options && options.debugChannel !== undefined
       ? {
           hasReadable: options.debugChannel.readable !== undefined,
