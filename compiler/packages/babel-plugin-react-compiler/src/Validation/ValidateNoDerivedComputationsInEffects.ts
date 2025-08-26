@@ -5,7 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, Effect, ErrorSeverity, SourceLocation} from '..';
+import {
+  CompilerDiagnostic,
+  CompilerDiagnosticDetail,
+  CompilerError,
+  CompilerErrorDetail,
+  Effect,
+  ErrorSeverity,
+  SourceLocation,
+} from '..';
 import {
   ArrayExpression,
   BasicBlock,
@@ -46,8 +54,8 @@ type DerivationMetadata = {
 };
 
 type ErrorMetadata = {
-  errorType: TypeOfValue;
-  invalidDepInfo: string | undefined;
+  type: TypeOfValue;
+  description: string | undefined;
   loc: SourceLocation;
   setStateName: SetStateName;
 };
@@ -164,7 +172,18 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
 
   const throwableErrors = new CompilerError();
   for (const error of errors) {
-    let reason;
+    let compilerDiagnostic: CompilerDiagnostic | undefined = undefined;
+    let detailMessage = '';
+    switch (error.type) {
+      case 'fromProps':
+        detailMessage = 'This state value shadows a value passed as a prop.';
+        break;
+      case 'fromPropsOrState':
+        detailMessage =
+          'This state value shadows a value passed as a prop or a value from state.';
+        break;
+    }
+
     /*
      * If we use a setState from an invalid useEffect elsewhere then we probably have to
      * hoist state up, else we should calculate in render
@@ -172,21 +191,56 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
     if (
       setStateCalls.get(error.setStateName)?.length !=
         effectSetStates.get(error.setStateName)?.length &&
-      error.errorType !== 'fromState'
+      error.type !== 'fromState'
     ) {
-      reason =
-        'Consider lifting state up to the parent component to make this a controlled component. (https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes)';
+      compilerDiagnostic = CompilerDiagnostic.create({
+        description: `${error.description} Derived values should be computed during render, rather than in effects. Using an effect triggers an additional render which can hurt performance and user experience,
+        potentially briefly showing stale values to the user.`,
+        category: `Local state shadows parent state.`,
+        severity: ErrorSeverity.InvalidReact,
+      }).withDetail({
+        kind: 'error',
+        loc: error.loc,
+        message: detailMessage,
+      });
     } else {
-      reason =
-        'You may not need this effect. Values derived from state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)';
+      compilerDiagnostic = CompilerDiagnostic.create({
+        description: `${error.description} This state value shadows a value passed as a prop. Instead of shadowing the prop with local state, hoist the state to the parent component and update it there.`,
+        category: `Derive values in render, not effects.`,
+        severity: ErrorSeverity.InvalidReact,
+      }).withDetail({
+        kind: 'error',
+        loc: error.loc,
+        message: detailMessage,
+      });
+
+      for (const [key, setStateCallArray] of effectSetStates) {
+        if (setStateCallArray.length === 0) {
+          continue;
+        }
+        const otherCalls = setStateCalls.get(key);
+        if (otherCalls && otherCalls.length > 1) {
+          for (const place of otherCalls) {
+            if (
+              !setStateCallArray.some(
+                existing => JSON.stringify(existing) === JSON.stringify(place),
+              )
+            ) {
+              compilerDiagnostic.withDetail({
+                kind: 'error',
+                loc: place.loc,
+                message:
+                  'this setState updates the shadowed state, but should call an onChange event from the parent',
+              });
+            }
+          }
+        }
+      }
     }
 
-    throwableErrors.push({
-      reason: reason,
-      description: `You are using invalid dependencies:\n\n${error.invalidDepInfo}`,
-      severity: ErrorSeverity.InvalidReact,
-      loc: error.loc,
-    });
+    if (compilerDiagnostic) {
+      throwableErrors.pushDiagnostic(compilerDiagnostic);
+    }
   }
 
   if (throwableErrors.hasErrors()) {
@@ -473,31 +527,31 @@ function validateEffect(
       .join(', ');
 
     let sourceNames = '';
-    let invalidDepInfo = '';
+    let errorDescription = '';
 
     if (call.invalidDeps.typeOfValue === 'fromProps') {
       sourceNames += `[${placeNames}], `;
       sourceNames = sourceNames.slice(0, -2);
-      invalidDepInfo = sourceNames
-        ? `Invalid deps from props ${sourceNames}`
+      errorDescription = sourceNames
+        ? `This setState() appears to derive a value from props ${sourceNames}.`
         : '';
     } else if (call.invalidDeps.typeOfValue === 'fromState') {
       sourceNames += `[${placeNames}], `;
       sourceNames = sourceNames.slice(0, -2);
-      invalidDepInfo = sourceNames
-        ? `Invalid deps from local state: ${sourceNames}`
+      errorDescription = sourceNames
+        ? `This setState() appears to derive a value local state ${sourceNames}.`
         : '';
     } else {
       sourceNames += `[${placeNames}], `;
       sourceNames = sourceNames.slice(0, -2);
-      invalidDepInfo = sourceNames
-        ? `Invalid deps from both props and local state: ${sourceNames}`
+      errorDescription = sourceNames
+        ? `This setState() appears to derive a value both props and local state ${sourceNames}.`
         : '';
     }
 
     errors.push({
-      errorType: call.invalidDeps.typeOfValue,
-      invalidDepInfo: invalidDepInfo,
+      type: call.invalidDeps.typeOfValue,
+      description: errorDescription,
       loc: call.loc,
       setStateName:
         call.loc !== GeneratedSource ? call.loc.identifierName : undefined,

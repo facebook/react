@@ -34,17 +34,15 @@ export const FIXTURE_ENTRYPOINT = {
 ```
 Found 1 error:
 
-Error: You may not need this effect. Values derived from state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)
+Error: Derive values in render, not effects.
 
-You are using invalid dependencies:
-
-Invalid deps from both props and local state: [prefix, name].
+This setState() appears to derive a value both props and local state [prefix, name]. This state value shadows a value passed as a prop. Instead of shadowing the prop with local state, hoist the state to the parent component and update it there.
 
 error.bug-derived-state-from-mixed-deps.ts:9:4
    7 |
    8 |   useEffect(() => {
 >  9 |     setDisplayName(prefix + name);
-     |     ^^^^^^^^^^^^^^ You may not need this effect. Values derived from state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)
+     |     ^^^^^^^^^^^^^^ This state value shadows a value passed as a prop or a value from state.
   10 |   }, [prefix, name]);
   11 |
   12 |   return (
