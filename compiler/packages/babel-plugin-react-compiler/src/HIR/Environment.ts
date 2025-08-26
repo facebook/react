@@ -650,6 +650,14 @@ export const EnvironmentConfigSchema = z.object({
    *   useMemo(() => { ... }, [...]);
    */
   validateNoVoidUseMemo: z.boolean().default(false),
+
+  /**
+   * Validates against non-React functions (not components or hooks) defining
+   * nested components or hooks. This prevents scope reference errors that occur
+   * when the compiler attempts to optimize the nested component/hook while its
+   * parent function remains uncompiled.
+   */
+  validateNoComponentOrHookFactories: z.boolean().default(false),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
