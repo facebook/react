@@ -99,6 +99,36 @@ function createDebugCallbackFromWritableStream(
   };
 }
 
+function createResponseFromOptions(options: void | Options) {
+  return createResponse(
+    null, // bundlerConfig
+    null, // serverReferenceConfig
+    null, // moduleLoading
+    callCurrentServerCallback,
+    undefined, // encodeFormAction
+    undefined, // nonce
+    options && options.temporaryReferences
+      ? options.temporaryReferences
+      : undefined,
+    __DEV__ ? findSourceMapURL : undefined,
+    __DEV__ ? (options ? options.replayConsoleLogs !== false : true) : false, // defaults to true
+    __DEV__ && options && options.environmentName
+      ? options.environmentName
+      : undefined,
+    __DEV__ && options && options.debugChannel !== undefined
+      ? {
+          hasReadable: options.debugChannel.readable !== undefined,
+          writable:
+            options.debugChannel.writable !== undefined
+              ? createDebugCallbackFromWritableStream(
+                  options.debugChannel.writable,
+                )
+              : undefined,
+        }
+      : undefined,
+  );
+}
+
 function startReadingFromUniversalStream(
   response: FlightResponse,
   stream: ReadableStream,
@@ -176,28 +206,7 @@ export function createFromReadableStream<T>(
   stream: ReadableStream,
   options?: Options,
 ): Thenable<T> {
-  const response: FlightResponse = createResponse(
-    null, // bundlerConfig
-    null, // serverReferenceConfig
-    null, // moduleLoading
-    callCurrentServerCallback,
-    undefined, // encodeFormAction
-    undefined, // nonce
-    options && options.temporaryReferences
-      ? options.temporaryReferences
-      : undefined,
-    __DEV__ ? findSourceMapURL : undefined,
-    __DEV__ ? (options ? options.replayConsoleLogs !== false : true) : false, // defaults to true
-    __DEV__ && options && options.environmentName
-      ? options.environmentName
-      : undefined,
-    __DEV__ &&
-      options &&
-      options.debugChannel !== undefined &&
-      options.debugChannel.writable !== undefined
-      ? createDebugCallbackFromWritableStream(options.debugChannel.writable)
-      : undefined,
-  );
+  const response: FlightResponse = createResponseFromOptions(options);
   if (
     __DEV__ &&
     options &&
@@ -226,33 +235,7 @@ export function createFromFetch<T>(
   promiseForResponse: Promise<Response>,
   options?: Options,
 ): Thenable<T> {
-  const response: FlightResponse = createResponse(
-    null, // bundlerConfig
-    null, // serverReferenceConfig
-    null, // moduleLoading
-    callCurrentServerCallback,
-    undefined, // encodeFormAction
-    undefined, // nonce
-    options && options.temporaryReferences
-      ? options.temporaryReferences
-      : undefined,
-    __DEV__ ? findSourceMapURL : undefined,
-    __DEV__ ? (options ? options.replayConsoleLogs !== false : true) : false, // defaults to true
-    __DEV__ && options && options.environmentName
-      ? options.environmentName
-      : undefined,
-    __DEV__ && options && options.debugChannel !== undefined
-      ? {
-          hasReadable: options.debugChannel.readable !== undefined,
-          writable:
-            options.debugChannel.writable !== undefined
-              ? createDebugCallbackFromWritableStream(
-                  options.debugChannel.writable,
-                )
-              : undefined,
-        }
-      : undefined,
-  );
+  const response: FlightResponse = createResponseFromOptions(options);
   promiseForResponse.then(
     function (r) {
       if (
