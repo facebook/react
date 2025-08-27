@@ -20,9 +20,6 @@ let Activity;
 let mockIntersectionObserver;
 let simulateIntersection;
 let setClientRects;
-let setViewportSize;
-let setScrollContainerHeight;
-let setBoundingClientRect;
 let assertConsoleErrorDev;
 
 function Wrapper({children}) {
@@ -43,9 +40,6 @@ describe('FragmentRefs', () => {
     mockIntersectionObserver = IntersectionMocks.mockIntersectionObserver;
     simulateIntersection = IntersectionMocks.simulateIntersection;
     setClientRects = IntersectionMocks.setClientRects;
-    setBoundingClientRect = IntersectionMocks.setBoundingClientRect;
-    setViewportSize = IntersectionMocks.setViewportSize;
-    setScrollContainerHeight = IntersectionMocks.setScrollContainerHeight;
     assertConsoleErrorDev =
       require('internal-test-utils').assertConsoleErrorDev;
 
@@ -1844,6 +1838,9 @@ describe('FragmentRefs', () => {
   });
 
   describe('scrollIntoView', () => {
+    function expectLast(arr, test) {
+      expect(arr[arr.length - 1]).toBe(test);
+    }
     // @gate enableFragmentRefs && enableFragmentRefsScrollIntoView
     it('does not yet support options', async () => {
       const fragmentRef = React.createRef();
@@ -1862,7 +1859,7 @@ describe('FragmentRefs', () => {
 
     describe('with children', () => {
       // @gate enableFragmentRefs && enableFragmentRefsScrollIntoView
-      it('calls scrollIntoView on the first child by default, or if alignToTop=true', async () => {
+      it('settles scroll on the first child by default, or if alignToTop=true', async () => {
         const fragmentRef = React.createRef();
         const childARef = React.createRef();
         const childBRef = React.createRef();
@@ -1879,20 +1876,22 @@ describe('FragmentRefs', () => {
             </React.Fragment>,
           );
         });
-        childARef.current.scrollIntoView = jest.fn();
-        childBRef.current.scrollIntoView = jest.fn();
+
+        let logs = [];
+        childARef.current.scrollIntoView = jest.fn().mockImplementation(() => {
+          logs.push('childA');
+        });
+        childBRef.current.scrollIntoView = jest.fn().mockImplementation(() => {
+          logs.push('childB');
+        });
 
         // Default call
         fragmentRef.current.experimental_scrollIntoView();
-        expect(childARef.current.scrollIntoView).toHaveBeenCalledTimes(1);
-        expect(childBRef.current.scrollIntoView).toHaveBeenCalledTimes(0);
-
-        childARef.current.scrollIntoView.mockClear();
-
+        expectLast(logs, 'childA');
+        logs = [];
         // alignToTop=true
         fragmentRef.current.experimental_scrollIntoView(true);
-        expect(childARef.current.scrollIntoView).toHaveBeenCalledTimes(1);
-        expect(childBRef.current.scrollIntoView).toHaveBeenCalledTimes(0);
+        expectLast(logs, 'childA');
       });
 
       // @gate enableFragmentRefs && enableFragmentRefsScrollIntoView
@@ -1910,12 +1909,16 @@ describe('FragmentRefs', () => {
           );
         });
 
-        childARef.current.scrollIntoView = jest.fn();
-        childBRef.current.scrollIntoView = jest.fn();
+        const logs = [];
+        childARef.current.scrollIntoView = jest.fn().mockImplementation(() => {
+          logs.push('childA');
+        });
+        childBRef.current.scrollIntoView = jest.fn().mockImplementation(() => {
+          logs.push('childB');
+        });
 
         fragmentRef.current.experimental_scrollIntoView(false);
-        expect(childARef.current.scrollIntoView).toHaveBeenCalledTimes(0);
-        expect(childBRef.current.scrollIntoView).toHaveBeenCalledTimes(1);
+        expectLast(logs, 'childB');
       });
 
       // @gate enableFragmentRefs && enableFragmentRefsScrollIntoView
@@ -1946,13 +1949,17 @@ describe('FragmentRefs', () => {
           root.render(<Test />);
         });
 
-        childARef.current.scrollIntoView = jest.fn();
-        childBRef.current.scrollIntoView = jest.fn();
+        const logs = [];
+        childARef.current.scrollIntoView = jest.fn().mockImplementation(() => {
+          logs.push('childA');
+        });
+        childBRef.current.scrollIntoView = jest.fn().mockImplementation(() => {
+          logs.push('childB');
+        });
 
         // Default call
         fragmentRef.current.experimental_scrollIntoView();
-        expect(childARef.current.scrollIntoView).toHaveBeenCalledTimes(1);
-        expect(childBRef.current.scrollIntoView).toHaveBeenCalledTimes(0);
+        expectLast(logs, 'childA');
       });
 
       // @gate enableFragmentRefs && enableFragmentRefsScrollIntoView
@@ -2025,52 +2032,6 @@ describe('FragmentRefs', () => {
           root.render(<Test mountFragment={true} />);
         });
 
-        setViewportSize(500, 500);
-        setBoundingClientRect(headerChildRef.current, {
-          x: 0,
-          y: 150,
-          width: 100,
-          height: 100,
-        });
-        Object.defineProperty(headerChildRef.current, 'clientHeight', {
-          value: 100,
-          writable: true,
-        });
-        setBoundingClientRect(childARef.current, {
-          x: 0,
-          y: 600, // outside of initial viewport
-          width: 100,
-          height: 100,
-        });
-        Object.defineProperty(childARef.current, 'clientHeight', {
-          value: 100,
-          writable: true,
-        });
-        setBoundingClientRect(childBRef.current, {
-          x: 0,
-          y: 1200, // outside of viewport after scroll to top of scrollContainerAll
-          width: 100,
-          height: 100,
-        });
-        Object.defineProperty(childBRef.current, 'clientHeight', {
-          value: 100,
-          writable: true,
-        });
-        setBoundingClientRect(childCRef.current, {
-          x: 0,
-          y: 1800,
-          width: 100,
-          height: 100,
-        });
-        Object.defineProperty(childCRef.current, 'clientHeight', {
-          value: 100,
-          writable: true,
-        });
-
-        // Make containers scrollable
-        setScrollContainerHeight(scrollContainerRef.current, 100, 200);
-        setScrollContainerHeight(scrollContainerNestedRef.current, 100, 200);
-
         let logs = [];
         headerChildRef.current.scrollIntoView = jest.fn(() => {
           logs.push('header');
@@ -2087,31 +2048,17 @@ describe('FragmentRefs', () => {
 
         // Default call
         fragmentRef.current.experimental_scrollIntoView();
-        expect(childCRef.current.scrollIntoView).toHaveBeenCalledTimes(1);
-        // In the same group as A, we use the first child
-        expect(childBRef.current.scrollIntoView).toHaveBeenCalledTimes(0);
-        // Scrolling to A would push C out of the viewport, don't scroll
-        expect(childARef.current.scrollIntoView).toHaveBeenCalledTimes(0);
-        // Scrolling to header would push C out of the viewport, don't scroll
-        expect(headerChildRef.current.scrollIntoView).toHaveBeenCalledTimes(0);
-        expect(logs).toEqual(['C']);
+        expectLast(logs, 'header');
 
         childARef.current.scrollIntoView.mockClear();
         childBRef.current.scrollIntoView.mockClear();
         childCRef.current.scrollIntoView.mockClear();
+
         logs = [];
 
         // // alignToTop=false
         fragmentRef.current.experimental_scrollIntoView(false);
-        expect(headerChildRef.current.scrollIntoView).toHaveBeenCalledTimes(1);
-        // In the same group as B, only attempt B which is the last child
-        expect(childARef.current.scrollIntoView).toHaveBeenCalledTimes(0);
-        // Previous scroll had fixed parent, scroll to B
-        // even if it would otherwise push prev out of viewport
-        expect(childBRef.current.scrollIntoView).toHaveBeenCalledTimes(1);
-        // Scrolling to C would push A out of the viewport, don't scroll to it
-        expect(childCRef.current.scrollIntoView).toHaveBeenCalledTimes(0);
-        expect(logs).toEqual(['header', 'B']);
+        expectLast(logs, 'C');
       });
     });
 

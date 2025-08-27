@@ -90,17 +90,9 @@ export default function ScrollIntoViewCase() {
         <TestCase.ExpectedResult>
           <p>When the Fragment has children:</p>
           <p>
-            The simple path is that all children are in the same scroll
-            container. If alignToTop=true|undefined, we will select the first
-            Fragment host child to call scrollIntoView on. Otherwise we'll call
-            on the last host child.
-          </p>
-          <p>
-            In the case of fixed elements and inserted elements or portals
-            causing fragment siblings to be in different scroll containers, we
-            split up the host children into groups of scroll containers. If we
-            hit a fixed element, we'll always attempt to scroll on the first or
-            last element of the next group, depending on alignToTop value.
+            In order to handle the case where children are split between
+            multiple scroll containers, we call scrollIntoView on each child in
+            reverse order.
           </p>
           <p>When the Fragment does not have children:</p>
           <p>

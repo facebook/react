@@ -93,25 +93,3 @@ export function setClientRects(target, rects) {
     }));
   };
 }
-
-export function setViewportSize(width, height) {
-  Object.defineProperty(window, 'innerWidth', {
-    value: width,
-    writable: true,
-  });
-  Object.defineProperty(window, 'innerHeight', {
-    value: height,
-    writable: true,
-  });
-}
-
-export function setScrollContainerHeight(target, clientHeight, scrollHeight) {
-  Object.defineProperty(target, 'clientHeight', {
-    value: clientHeight,
-    writable: true,
-  });
-  Object.defineProperty(target, 'scrollHeight', {
-    value: scrollHeight,
-    writable: true,
-  });
-}
