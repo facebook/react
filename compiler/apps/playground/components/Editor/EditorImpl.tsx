@@ -26,7 +26,7 @@ import BabelPluginReactCompiler, {
 import clsx from 'clsx';
 import invariant from 'invariant';
 import {useSnackbar} from 'notistack';
-import {useDeferredValue, useMemo} from 'react';
+import {useDeferredValue, useMemo, useState} from 'react';
 import {useMountEffect} from '../../hooks';
 import {defaultStore} from '../../lib/defaultStore';
 import {
@@ -292,7 +292,16 @@ export default function Editor(): JSX.Element {
     [deferredStore.source],
   );
 
+  // TODO: Remove this once the config editor is more stable
+  const [shouldShowConfig, setShouldShowConfig] = useState(false);
+
   useMountEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      setShouldShowConfig(urlParams.get('showConfig') === 'true');
+    }
+
+    // Initialize store
     let mountStore: Store;
     try {
       mountStore = initStoreFromUrlOrLocalStorage();
@@ -329,7 +338,7 @@ export default function Editor(): JSX.Element {
   return (
     <>
       <div className="relative flex basis top-14">
-        <ConfigEditor />
+        {shouldShowConfig && <ConfigEditor />}
         <div className={clsx('relative sm:basis-1/4')}>
           <Input language={language} errors={errors} />
         </div>

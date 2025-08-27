@@ -12,7 +12,10 @@ import {
 } from 'babel-plugin-react-compiler';
 import type {editor} from 'monaco-editor';
 import * as monaco from 'monaco-editor';
-import {useState, useMemo} from 'react';
+import parserBabel from 'prettier/plugins/babel';
+import * as prettierPluginEstree from 'prettier/plugins/estree';
+import * as prettier from 'prettier/standalone';
+import {useState, useMemo, useEffect} from 'react';
 import {Resizable} from 're-resizable';
 import {useStore} from '../StoreContext';
 import {monacoOptions} from './monacoOptions';
@@ -188,6 +191,7 @@ export default function ConfigEditor(): JSX.Element {
           onChange={handleChange}
           options={{
             ...monacoOptions,
+            readOnly: true,
             lineNumbers: 'off',
             folding: false,
             renderLineHighlight: 'none',
