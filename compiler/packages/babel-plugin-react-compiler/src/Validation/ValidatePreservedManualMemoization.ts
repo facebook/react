@@ -17,6 +17,7 @@ import {
   GeneratedSource,
   Identifier,
   IdentifierId,
+  InstructionId,
   InstructionValue,
   ManualMemoDependency,
   Place,
@@ -109,6 +110,7 @@ type ManualMemoBlockState = {
    */
   depsFromSource: Array<ManualMemoDependency> | null;
   manualMemoId: number;
+  start: InstructionId;
 };
 
 type VisitorState = {
@@ -234,6 +236,8 @@ function validateInferredDep(
   validDepsInMemoBlock: Array<ManualMemoDependency>,
   errorState: CompilerError,
   memoLocation: SourceLocation,
+  memoStartInstruction: InstructionId,
+  scopes: Set<ScopeId>,
 ): void {
   let normalizedDep: ManualMemoDependency;
   const maybeNormalizedRoot = temporaries.get(dep.identifier.id);
@@ -271,6 +275,13 @@ function validateInferredDep(
       return;
     }
   }
+  if (
+    dep.identifier.mutableRange.start > memoStartInstruction &&
+    !isUnmemoized(dep.identifier, scopes)
+  ) {
+    return;
+  }
+
   let errorDiagnostic: CompareDependencyResult | null = null;
   for (const originalDep of validDepsInMemoBlock) {
     const compareResult = compareDeps(normalizedDep, originalDep);
@@ -433,6 +444,8 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
           state.manualMemoState.depsFromSource,
           state.errors,
           state.manualMemoState.loc,
+          state.manualMemoState.start,
+          this.scopes,
         );
       }
     }
@@ -508,6 +521,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         depsFromSource,
         manualMemoId: value.manualMemoId,
         reassignments: new Map(),
+        start: instruction.id,
       };
 
       /**
