@@ -223,7 +223,10 @@ function HookView({
   const hookDisplayName = hookName ? (
     <>
       {name}
-      {!!hookName && <span className={styles.HookName}>({hookName})</span>}
+      {
+        // $FlowFixMe[constant-condition]
+        !!hookName && <span className={styles.HookName}>({hookName})</span>
+      }
     </>
   ) : (
     name

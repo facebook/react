@@ -27,7 +27,7 @@ export type BridgeProtocol = {
   // Version supported by the current frontend/backend.
   version: number,
 
-  // NPM version range that also supports this version.
+  // NPM version range of `react-devtools-inline` that also supports this version.
   // Note that 'maxNpmVersion' is only set when the version is bumped.
   minNpmVersion: string,
   maxNpmVersion: string | null,
@@ -65,6 +65,12 @@ export const BRIDGE_PROTOCOL: Array<BridgeProtocol> = [
   {
     version: 2,
     minNpmVersion: '4.22.0',
+    maxNpmVersion: '6.2.0',
+  },
+  // Version 3 adds supports-toggling-suspense bit to add-root
+  {
+    version: 3,
+    minNpmVersion: '6.2.0',
     maxNpmVersion: null,
   },
 ];
@@ -132,6 +138,12 @@ type OverrideError = {
 type OverrideSuspense = {
   ...ElementAndRendererID,
   forceFallback: boolean,
+};
+
+type OverrideSuspenseMilestone = {
+  rendererID: number,
+  rootID: number,
+  suspendedSet: Array<number>,
 };
 
 type CopyElementPathParams = {
@@ -231,6 +243,7 @@ type FrontendEvents = {
   logElementToConsole: [ElementAndRendererID],
   overrideError: [OverrideError],
   overrideSuspense: [OverrideSuspense],
+  overrideSuspenseMilestone: [OverrideSuspenseMilestone],
   overrideValueAtPath: [OverrideValueAtPath],
   profilingData: [ProfilingDataBackend],
   reloadAndProfile: [ReloadAndProfilingParams],

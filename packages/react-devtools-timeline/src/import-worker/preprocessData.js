@@ -28,6 +28,7 @@ import type {
   TimelineData,
   SchedulingEvent,
   SuspenseEvent,
+  Snapshot,
 } from '../types';
 import {
   REACT_TOTAL_NUM_LANES,
@@ -350,7 +351,7 @@ function processScreenshot(
 ) {
   const encodedSnapshot = event.args.snapshot; // Base 64 encoded
 
-  const snapshot = {
+  const snapshot: Snapshot = {
     height: 0,
     image: null,
     imageSource: `data:image/png;base64,${encodedSnapshot}`,

@@ -64,7 +64,7 @@ function getTooltipPosition(
     mouseY: number,
     width: number,
   },
-) {
+): {left: string, top: string} {
   const {height, mouseX, mouseY, width} = mousePosition;
   let top: number | string = 0;
   let left: number | string = 0;
@@ -108,7 +108,13 @@ function getMousePosition(
       }
     }
 
-    const {height, left, top, width} = targetContainer.getBoundingClientRect();
+    const {height, left, top, width} =
+      targetContainer.getBoundingClientRect() as {
+        height: number,
+        left: number,
+        top: number,
+        width: number,
+      };
 
     const mouseX = mouseEvent.clientX - left;
     const mouseY = mouseEvent.clientY - top;

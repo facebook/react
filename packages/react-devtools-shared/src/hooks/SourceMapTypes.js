@@ -29,7 +29,7 @@ export type BasicSourceMap = {
 };
 
 export type IndexSourceMapSection = {
-  map: IndexSourceMap | BasicSourceMap,
+  map: BasicSourceMap,
   offset: {
     line: number,
     column: number,

@@ -57,8 +57,6 @@ jobs:
           key: playwright-browsers-v6-${{ runner.arch }}-${{ runner.os }}-${{ steps.playwright_version.outputs.playwright_version }}
       - run: npx playwright install --with-deps chromium
         if: steps.cache_playwright_browsers.outputs.cache-hit != 'true'
-      - run: npx playwright install-deps
-        if: steps.cache_playwright_browsers.outputs.cache-hit == 'true'
       - run: CI=true yarn test
       - run: ls -R test-results
         if: '!cancelled()'

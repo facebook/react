@@ -144,7 +144,6 @@ function getBabelConfig(
   updateBabelOptions,
   bundleType,
   packageName,
-  externals,
   isDevelopment,
   bundle
 ) {
@@ -354,7 +353,6 @@ function forbidFBJSImports() {
 
 function getPlugins(
   entry,
-  externals,
   updateBabelOptions,
   filename,
   packageName,
@@ -402,8 +400,8 @@ function getPlugins(
       forbidFBJSImports(),
       // Use Node resolution mechanism.
       resolve({
-        // skip: externals, // TODO: options.skip was removed in @rollup/plugin-node-resolve 3.0.0
-        preferBuiltins: bundle.preferBuiltins,
+        // `external` rollup config takes care of marking builtins as externals
+        preferBuiltins: false,
       }),
       // Remove license headers from individual modules
       stripBanner({
@@ -415,7 +413,6 @@ function getPlugins(
           updateBabelOptions,
           bundleType,
           packageName,
-          externals,
           !isProduction,
           bundle
         )
@@ -690,7 +687,6 @@ async function createBundle(bundle, bundleType) {
     onwarn: handleRollupWarning,
     plugins: getPlugins(
       bundle.entry,
-      externals,
       bundle.babel,
       filename,
       packageName,
