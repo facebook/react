@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<e889d2875cc3705d804f26c9d2866cf6>>
+ * @generated SignedSource<<dab3ca9292d7774bef55e8f45c133291>>
  */
 
 'use strict';
@@ -19461,7 +19461,8 @@ function printType(type) {
         return `:T${type.kind}<${type.shapeId}>`;
     }
     else if (type.kind === 'Function' && type.shapeId != null) {
-        return `:T${type.kind}<${type.shapeId}>`;
+        const returnType = printType(type.return);
+        return `:T${type.kind}<${type.shapeId}>()${returnType !== '' ? `:  ${returnType}` : ''}`;
     }
     else {
         return `:T${type.kind}`;
@@ -40282,6 +40283,18 @@ function computeSignatureForInstruction(context, env, instr) {
                         });
                     }
                 }
+                for (const prop of value.props) {
+                    if (prop.kind === 'JsxAttribute' &&
+                        prop.place.identifier.type.kind === 'Function' &&
+                        (isJsxType(prop.place.identifier.type.return) ||
+                            (prop.place.identifier.type.return.kind === 'Phi' &&
+                                prop.place.identifier.type.return.operands.some(operand => isJsxType(operand))))) {
+                        effects.push({
+                            kind: 'Render',
+                            place: prop.place,
+                        });
+                    }
+                }
             }
             break;
         }
@@ -46574,6 +46587,14 @@ class Unifier {
         }
         if (type.kind === 'Phi') {
             return { kind: 'Phi', operands: type.operands.map(o => this.get(o)) };
+        }
+        if (type.kind === 'Function') {
+            return {
+                kind: 'Function',
+                isConstructor: type.isConstructor,
+                shapeId: type.shapeId,
+                return: this.get(type.return),
+            };
         }
         return type;
     }
