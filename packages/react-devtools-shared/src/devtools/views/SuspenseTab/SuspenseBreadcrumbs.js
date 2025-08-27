@@ -18,12 +18,10 @@ import {
 import {StoreContext} from '../context';
 import {useHighlightHostInstance} from '../hooks';
 import styles from './SuspenseBreadcrumbs.css';
-import {SuspenseTreeStateContext} from './SuspenseTreeContext';
 import typeof {SyntheticMouseEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
 
 export default function SuspenseBreadcrumbs(): React$Node {
   const store = useContext(StoreContext);
-  useContext(SuspenseTreeStateContext);
   const dispatch = useContext(TreeDispatcherContext);
   const {inspectedElementID} = useContext(TreeStateContext);
 
