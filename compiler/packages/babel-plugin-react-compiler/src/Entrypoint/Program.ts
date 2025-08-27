@@ -494,8 +494,25 @@ function findFunctionsToCompile(
 ): Array<CompileSource> {
   const queue: Array<CompileSource> = [];
   const traverseFunction = (fn: BabelFn, pass: CompilerPass): void => {
+    // In 'all' mode, compile only top level functions
+    if (
+      pass.opts.compilationMode === 'all' &&
+      fn.scope.getProgramParent() !== fn.scope.parent
+    ) {
+      return;
+    }
+
     const fnType = getReactFunctionType(fn, pass);
-    if (fnType === null || programContext.alreadyCompiled.has(fn.node)) {
+
+    if (pass.opts.environment?.validateNoComponentOrHookFactories) {
+      validateNoNestedComponentsOrHookFactories(fn, pass, programContext);
+    }
+
+    if (fnType === null) {
+      return;
+    }
+
+    if (programContext.alreadyCompiled.has(fn.node)) {
       return;
     }
 
@@ -839,6 +856,61 @@ function shouldSkipCompilation(
   return false;
 }
 
+/**
+ * Validates that Components/Hooks are always defined at module level. This prevents scope reference
+ * errors that occur when the compiler attempts to optimize the nested component/hook while its
+ * parent function remains uncompiled.
+ */
+function validateNoNestedComponentsOrHookFactories(
+  fn: BabelFn,
+  pass: CompilerPass,
+  programContext: ProgramContext,
+): void {
+  const parentNameExpr = getFunctionName(fn);
+  const parentName =
+    parentNameExpr !== null && parentNameExpr.isIdentifier()
+      ? parentNameExpr.node.name
+      : '<anonymous>';
+
+  const validateNestedFunction = (
+    nestedFn: NodePath<
+      t.FunctionDeclaration | t.FunctionExpression | t.ArrowFunctionExpression
+    >,
+  ): void => {
+    if (
+      nestedFn.node === fn.node ||
+      programContext.alreadyCompiled.has(nestedFn.node)
+    ) {
+      return;
+    }
+
+    if (nestedFn.scope.getProgramParent() !== nestedFn.scope.parent) {
+      const nestedFnType = getReactFunctionType(nestedFn as BabelFn, pass);
+      const nestedFnNameExpr = getFunctionName(nestedFn as BabelFn);
+      const nestedName =
+        nestedFnNameExpr !== null && nestedFnNameExpr.isIdentifier()
+          ? nestedFnNameExpr.node.name
+          : '<anonymous>';
+      if (nestedFnType === 'Component' || nestedFnType === 'Hook') {
+        CompilerError.throwInvalidReact({
+          category: ErrorCategory.Factories,
+          reason: `Cannot compile nested ${nestedFnType.toLowerCase()}`,
+          description: `The function \`${nestedName}\` appears to be a React ${nestedFnType.toLowerCase()}, but it's defined inside \`${parentName}\`. Components and Hooks should always be declared at module scope`,
+          loc: nestedFn.node.loc ?? null,
+        });
+      }
+    }
+
+    nestedFn.skip();
+  };
+
+  fn.traverse({
+    FunctionDeclaration: validateNestedFunction,
+    FunctionExpression: validateNestedFunction,
+    ArrowFunctionExpression: validateNestedFunction,
+  });
+}
+
 function getReactFunctionType(
   fn: BabelFn,
   pass: CompilerPass,
@@ -877,11 +949,6 @@ function getReactFunctionType(
       return componentSyntaxType;
     }
     case 'all': {
-      // Compile only top level functions
-      if (fn.scope.getProgramParent() !== fn.scope.parent) {
-        return null;
-      }
-
       return getComponentOrHookLike(fn, hookPattern) ?? 'Other';
     }
     default: {
