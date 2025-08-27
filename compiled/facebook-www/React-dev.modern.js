@@ -1409,7 +1409,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.2.0-www-modern-33a1095d-20250827";
+    exports.version = "19.2.0-www-modern-b8700429-20250827";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
