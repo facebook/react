@@ -1008,7 +1008,7 @@ function isSignatureEqual(
     }
     default: {
       if (typeof boundPromise.status === 'string') {
-        // Only instrument the thenable if the status if not defined.
+        // Only instrument the thenable if the status is not defined.
       } else {
         const pendingThenable: PendingThenable<Array<any>> =
           (boundPromise: any);
