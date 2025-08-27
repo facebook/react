@@ -541,6 +541,9 @@ export enum ErrorCategory {
   // Checking for valid usage of manual memoization
   UseMemo = 'UseMemo',
 
+  // Checking for higher order functions acting as factories for components/hooks
+  Factories = 'Factories',
+
   // Checks that manual memoization is preserved
   PreserveManualMemo = 'PreserveManualMemo',
 
@@ -700,6 +703,16 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
         name: 'error-boundaries',
         description:
           'Validates usage of error boundaries instead of try/catch for errors in child components',
+        recommended: true,
+      };
+    }
+    case ErrorCategory.Factories: {
+      return {
+        category,
+        name: 'component-hook-factories',
+        description:
+          'Validates against higher order functions defining nested components or hooks. ' +
+          'Components and hooks should be defined at the module level',
         recommended: true,
       };
     }
