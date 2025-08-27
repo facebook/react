@@ -32,7 +32,7 @@ error.invalid-derived-computation-in-effect.ts:9:4
    7 |   const [fullName, setFullName] = useState('');
    8 |   useEffect(() => {
 >  9 |     setFullName(capitalize(firstName + ' ' + lastName));
-     |     ^^^^^^^^^^^
+     |     ^^^^^^^^^^^ This should be computed during render, not in an effect
   10 |   }, [firstName, lastName]);
   11 |
   12 |   return <div>{fullName}</div>;

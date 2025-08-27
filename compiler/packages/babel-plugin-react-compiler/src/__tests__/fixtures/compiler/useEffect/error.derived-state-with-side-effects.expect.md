@@ -38,7 +38,7 @@ error.derived-state-with-side-effects.ts:9:4
    7 |   useEffect(() => {
    8 |     console.log('Value changed:', value);
 >  9 |     setLocalValue(value);
-     |     ^^^^^^^^^^^^^ This state value shadows a value passed as a prop.
+     |     ^^^^^^^^^^^^^ This should be computed during render, not in an effect
   10 |     document.title = `Value: ${value}`;
   11 |   }, [value]);
   12 |

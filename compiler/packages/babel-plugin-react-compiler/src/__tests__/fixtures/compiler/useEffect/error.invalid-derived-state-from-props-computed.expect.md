@@ -37,7 +37,7 @@ error.invalid-derived-state-from-props-computed.ts:9:4
    7 |   useEffect(() => {
    8 |     const computed = props.prefix + props.value + props.suffix;
 >  9 |     setDisplayValue(computed);
-     |     ^^^^^^^^^^^^^^^ This state value shadows a value passed as a prop.
+     |     ^^^^^^^^^^^^^^^ This should be computed during render, not in an effect
   10 |   }, [props.prefix, props.value, props.suffix]);
   11 |
   12 |   return <div>{displayValue}</div>;

@@ -4,7 +4,7 @@ import {useState, useEffect} from 'react';
 function Component({props, number}) {
   const nothing = 0;
   const missDirection = number;
-  const [displayValue, setDisplayValue] = useState('');
+  const [displayValue, setDisplayValue] = useState(props.prefix + missDirection + nothing);
 
   useEffect(() => {
     setDisplayValue(props.prefix + missDirection + nothing);

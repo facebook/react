@@ -36,7 +36,7 @@ error.invalid-derived-state-from-props-in-effect.ts:8:4
    6 |
    7 |   useEffect(() => {
 >  8 |     setFullName(firstName + ' ' + lastName);
-     |     ^^^^^^^^^^^ This state value shadows a value passed as a prop.
+     |     ^^^^^^^^^^^ This should be computed during render, not in an effect
    9 |   }, [firstName, lastName]);
   10 |
   11 |   return <div>{fullName}</div>;

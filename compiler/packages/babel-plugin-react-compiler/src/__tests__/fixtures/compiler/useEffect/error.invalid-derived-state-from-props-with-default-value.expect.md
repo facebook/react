@@ -34,7 +34,7 @@ error.invalid-derived-state-from-props-with-default-value.ts:9:4
    7 |
    8 |   useEffect(() => {
 >  9 |     setCurrInput(input)
-     |     ^^^^^^^^^^^^ This state value shadows a value passed as a prop.
+     |     ^^^^^^^^^^^^ This should be computed during render, not in an effect
   10 |   }, [input]);
   11 |
   12 |   return (

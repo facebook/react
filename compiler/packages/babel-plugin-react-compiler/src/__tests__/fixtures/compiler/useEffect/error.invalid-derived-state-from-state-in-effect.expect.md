@@ -44,7 +44,7 @@ error.invalid-derived-state-from-state-in-effect.ts:10:4
    8 |
    9 |   useEffect(() => {
 > 10 |     setFullName(firstName + ' ' + lastName);
-     |     ^^^^^^^^^^^
+     |     ^^^^^^^^^^^ This should be computed during render, not in an effect
   11 |   }, [firstName, lastName]);
   12 |
   13 |   return (

@@ -40,7 +40,7 @@ error.derived-state-with-conditional.ts:9:6
    7 |   useEffect(() => {
    8 |     if (enabled) {
 >  9 |       setLocalValue(value);
-     |       ^^^^^^^^^^^^^ This state value shadows a value passed as a prop.
+     |       ^^^^^^^^^^^^^ This should be computed during render, not in an effect
   10 |     } else {
   11 |       setLocalValue('disabled');
   12 |     }
