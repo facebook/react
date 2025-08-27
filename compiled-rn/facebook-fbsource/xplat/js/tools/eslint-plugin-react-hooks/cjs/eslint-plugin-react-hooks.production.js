@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<dab3ca9292d7774bef55e8f45c133291>>
+ * @generated SignedSource<<ef6b4b821712d59847b298597abf1e8b>>
  */
 
 'use strict';
@@ -17966,6 +17966,7 @@ var ErrorCategory;
     ErrorCategory["CapitalizedCalls"] = "CapitalizedCalls";
     ErrorCategory["StaticComponents"] = "StaticComponents";
     ErrorCategory["UseMemo"] = "UseMemo";
+    ErrorCategory["Factories"] = "Factories";
     ErrorCategory["PreserveManualMemo"] = "PreserveManualMemo";
     ErrorCategory["Immutability"] = "Immutability";
     ErrorCategory["Globals"] = "Globals";
@@ -18048,6 +18049,15 @@ function getRuleForCategoryImpl(category) {
                 category,
                 name: 'error-boundaries',
                 description: 'Validates usage of error boundaries instead of try/catch for errors in child components',
+                recommended: true,
+            };
+        }
+        case ErrorCategory.Factories: {
+            return {
+                category,
+                name: 'component-hook-factories',
+                description: 'Validates against higher order functions defining nested components or hooks. ' +
+                    'Components and hooks should be defined at the module level',
                 recommended: true,
             };
         }
@@ -31442,6 +31452,7 @@ const EnvironmentConfigSchema = zod.z.object({
     enableTreatRefLikeIdentifiersAsRefs: zod.z.boolean().default(true),
     lowerContextAccess: ExternalFunctionSchema.nullable().default(null),
     validateNoVoidUseMemo: zod.z.boolean().default(false),
+    validateNoDynamicallyCreatedComponentsOrHooks: zod.z.boolean().default(false),
 });
 class Environment {
     constructor(scope, fnType, compilerMode, config, contextIdentifiers, parentFunction, logger, filename, code, programContext) {
@@ -50772,7 +50783,14 @@ function findFunctionsToCompile(program, pass, programContext) {
     var _a;
     const queue = [];
     const traverseFunction = (fn, pass) => {
+        if (pass.opts.compilationMode === 'all' &&
+            fn.scope.getProgramParent() !== fn.scope.parent) {
+            return;
+        }
         const fnType = getReactFunctionType(fn, pass);
+        if (pass.opts.environment.validateNoDynamicallyCreatedComponentsOrHooks) {
+            validateNoDynamicallyCreatedComponentsOrHooks(fn, pass, programContext);
+        }
         if (fnType === null || programContext.alreadyCompiled.has(fn.node)) {
             return;
         }
@@ -50957,6 +50975,52 @@ function shouldSkipCompilation(program, pass) {
     }
     return false;
 }
+function validateNoDynamicallyCreatedComponentsOrHooks(fn, pass, programContext) {
+    const parentNameExpr = getFunctionName$1(fn);
+    const parentName = parentNameExpr !== null && parentNameExpr.isIdentifier()
+        ? parentNameExpr.node.name
+        : '<anonymous>';
+    const validateNestedFunction = (nestedFn) => {
+        var _a, _b, _c, _d;
+        if (nestedFn.node === fn.node ||
+            programContext.alreadyCompiled.has(nestedFn.node)) {
+            return;
+        }
+        if (nestedFn.scope.getProgramParent() !== nestedFn.scope.parent) {
+            const nestedFnType = getReactFunctionType(nestedFn, pass);
+            const nestedFnNameExpr = getFunctionName$1(nestedFn);
+            const nestedName = nestedFnNameExpr !== null && nestedFnNameExpr.isIdentifier()
+                ? nestedFnNameExpr.node.name
+                : '<anonymous>';
+            if (nestedFnType === 'Component' || nestedFnType === 'Hook') {
+                CompilerError.throwDiagnostic({
+                    category: ErrorCategory.Factories,
+                    severity: ErrorSeverity.InvalidReact,
+                    reason: `Components and hooks cannot be created dynamically`,
+                    description: `The function \`${nestedName}\` appears to be a React ${nestedFnType.toLowerCase()}, but it's defined inside \`${parentName}\`. Components and Hooks should always be declared at module scope`,
+                    details: [
+                        {
+                            kind: 'error',
+                            message: 'this function dynamically created a component/hook',
+                            loc: (_b = (_a = parentNameExpr === null || parentNameExpr === void 0 ? void 0 : parentNameExpr.node.loc) !== null && _a !== void 0 ? _a : fn.node.loc) !== null && _b !== void 0 ? _b : null,
+                        },
+                        {
+                            kind: 'error',
+                            message: 'the component is created here',
+                            loc: (_d = (_c = nestedFnNameExpr === null || nestedFnNameExpr === void 0 ? void 0 : nestedFnNameExpr.node.loc) !== null && _c !== void 0 ? _c : nestedFn.node.loc) !== null && _d !== void 0 ? _d : null,
+                        },
+                    ],
+                });
+            }
+        }
+        nestedFn.skip();
+    };
+    fn.traverse({
+        FunctionDeclaration: validateNestedFunction,
+        FunctionExpression: validateNestedFunction,
+        ArrowFunctionExpression: validateNestedFunction,
+    });
+}
 function getReactFunctionType(fn, pass) {
     var _a, _b;
     const hookPattern = pass.opts.environment.hookPattern;
@@ -50986,9 +51050,6 @@ function getReactFunctionType(fn, pass) {
             return componentSyntaxType;
         }
         case 'all': {
-            if (fn.scope.getProgramParent() !== fn.scope.parent) {
-                return null;
-            }
             return (_b = getComponentOrHookLike(fn, hookPattern)) !== null && _b !== void 0 ? _b : 'Other';
         }
         default: {
