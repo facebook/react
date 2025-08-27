@@ -15,15 +15,15 @@
 }
 
 .TreeWrapper {
+  border-top: 1px solid var(--color-border);
   flex: 1 1 var(--horizontal-resize-tree-percentage);
   display: flex;
   flex-direction: row;
-  overflow: auto;
-  border-top: 1px solid var(--color-border);
+  height: 100%;
 }
 
 .InspectedElementWrapper {
-  flex: 1 1 calc(100% - var(--horizontal-resize-tree-percentage));
+  flex: 1 1 35%;
   overflow-x: hidden;
   overflow-y: auto;
 }
@@ -52,8 +52,6 @@
   display: none;
 }
 
-
-
 @container devtools (width < 600px) {
   .SuspenseTab {
     flex-direction: column;
@@ -61,7 +59,8 @@
 
   .TreeWrapper {
     border-top: 1px solid var(--color-border);
-    flex: 1 0 var(--vertical-resize-tree-percentage);
+    flex: 1 1 var(--vertical-resize-tree-percentage);
+    overflow: hidden;
   }
 
   .InspectedElementWrapper {
@@ -79,6 +78,7 @@
   .TreeView footer {
     display: flex;
     justify-content: end;
+    border-top: 1px solid var(--color-border);
   }
 
   .ToggleInspectedElement[data-orientation="horizontal"] {
@@ -89,21 +89,23 @@
 .TreeList {
   flex: 0 0 var(--horizontal-resize-tree-list-percentage);
   border-right: 1px solid var(--color-border);
-  padding: 0.25rem
+  padding: 0.25rem;
+  overflow: auto;
 }
 
 .TreeView {
   flex: 1 1 35%;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  overflow: auto;
 }
-
-
 
 .Rects {
   border-top: 1px solid var(--color-border);
   padding: 0.25rem;
   flex-grow: 1;
+  overflow: auto;
 }
 
 .TimelineWrapper {
