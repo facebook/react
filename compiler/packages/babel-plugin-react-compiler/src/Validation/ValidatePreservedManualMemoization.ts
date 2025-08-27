@@ -29,7 +29,10 @@ import {
   SourceLocation,
 } from '../HIR';
 import {printIdentifier, printManualMemoDependency} from '../HIR/PrintHIR';
-import {eachInstructionValueOperand} from '../HIR/visitors';
+import {
+  eachInstructionValueLValue,
+  eachInstructionValueOperand,
+} from '../HIR/visitors';
 import {collectMaybeMemoDependencies} from '../Inference/DropManualMemoization';
 import {
   ReactiveFunctionVisitor,
@@ -358,26 +361,26 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         return null;
       }
       default: {
-        const dep = collectMaybeMemoDependencies(
-          value,
-          this.temporaries,
-          false,
-        );
-        if (value.kind === 'StoreLocal' || value.kind === 'StoreContext') {
-          const storeTarget = value.lvalue.place;
-          state.manualMemoState?.decls.add(
-            storeTarget.identifier.declarationId,
-          );
-          if (storeTarget.identifier.name?.kind === 'named' && dep == null) {
-            const dep: ManualMemoDependency = {
-              root: {
-                kind: 'NamedLocal',
-                value: storeTarget,
-              },
-              path: [],
-            };
-            this.temporaries.set(storeTarget.identifier.id, dep);
-            return dep;
+        let dep = collectMaybeMemoDependencies(value, this.temporaries, false);
+        if (
+          value.kind === 'StoreLocal' ||
+          value.kind === 'StoreContext' ||
+          value.kind === 'Destructure'
+        ) {
+          for (const storeTarget of eachInstructionValueLValue(value)) {
+            state.manualMemoState?.decls.add(
+              storeTarget.identifier.declarationId,
+            );
+            if (storeTarget.identifier.name?.kind === 'named') {
+              dep = {
+                root: {
+                  kind: 'NamedLocal',
+                  value: storeTarget,
+                },
+                path: [],
+              };
+              this.temporaries.set(storeTarget.identifier.id, dep);
+            }
           }
         }
         return dep;
