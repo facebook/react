@@ -3275,7 +3275,7 @@ if (enableFragmentRefsScrollIntoView) {
         getFragmentParentHostFiber(this._fragmentFiber);
       if (targetFiber === null) {
         if (__DEV__) {
-          console.error(
+          console.warn(
             'You are attempting to scroll a FragmentInstance that has no ' +
               'children, siblings, or parent. No scroll was performed.',
           );
@@ -3292,11 +3292,15 @@ if (enableFragmentRefsScrollIntoView) {
   };
 }
 
-function isInstanceScrollable(inst: Instance): 0 | 1 | 2 {
+const CONTAINER_STD = 0;
+const CONTAINER_FIXED = 1;
+const CONTAINER_SCROLL = 2;
+type ScrollableContainerType = 0 | 1 | 2;
+function isInstanceScrollable(inst: Instance): ScrollableContainerType {
   const style = getComputedStyle(inst);
 
   if (style.position === 'fixed') {
-    return 1;
+    return CONTAINER_FIXED;
   }
 
   if (
@@ -3307,10 +3311,10 @@ function isInstanceScrollable(inst: Instance): 0 | 1 | 2 {
     style.overflowX === 'auto' ||
     style.overflowX === 'scroll'
   ) {
-    return 2;
+    return CONTAINER_SCROLL;
   }
 
-  return 0;
+  return CONTAINER_STD;
 }
 
 function searchDOMUntilCommonAncestor<T>(
@@ -3405,10 +3409,6 @@ function scrollIntoViewByScrollContainer(
   children: Array<Fiber>,
   alignToTop: boolean,
 ): void {
-  if (children.length === 0) {
-    return;
-  }
-
   // Loop through the children, order dependent on alignToTop
   // Each time we reach a new scroll container, we look back at the last one
   // and scroll the first or last child in that container, depending on alignToTop
@@ -3416,18 +3416,15 @@ function scrollIntoViewByScrollContainer(
   // alignToTop=false means iterate in normal order, scrolling the last child of each container
   let prevScrolledInstance = null;
   let prevContainerIsFixed = false;
-  let currentGroupEnd = alignToTop ? children.length - 1 : 0;
-
   let i = alignToTop ? children.length - 1 : 0;
   // We extend the loop one iteration beyond the actual children to handle the last group
   while (i !== (alignToTop ? -2 : children.length + 1)) {
     const isLastGroup = i < 0 || i >= children.length;
-    // 1 = fixed, 2 = scrollable, 0 = neither
-    let isNewScrollContainer: null | 0 | 1 | 2 = null;
+    let isNewScrollContainer: null | ScrollableContainerType = null;
 
     if (isLastGroup) {
       // We're past the end, treat as new scroll container to complete the last group
-      isNewScrollContainer = 2;
+      isNewScrollContainer = CONTAINER_SCROLL;
     } else {
       const child = children[i];
       const instance = getInstanceFromHostFiber<Instance>(child);
@@ -3438,10 +3435,10 @@ function scrollIntoViewByScrollContainer(
         if (prevInstance.parentNode === instance.parentNode) {
           // If these are DOM siblings, check if either is fixed
           isNewScrollContainer =
-            isInstanceScrollable(prevInstance) === 1 ||
-            isInstanceScrollable(instance) === 1
-              ? 1
-              : 0;
+            isInstanceScrollable(prevInstance) === CONTAINER_FIXED ||
+            isInstanceScrollable(instance) === CONTAINER_FIXED
+              ? CONTAINER_FIXED
+              : CONTAINER_STD;
         } else {
           isNewScrollContainer = searchDOMUntilCommonAncestor(
             instance,
@@ -3456,9 +3453,9 @@ function scrollIntoViewByScrollContainer(
       // We found a new scroll container, so scroll the appropriate child from the previous group
       let childToScrollIndex;
       if (alignToTop) {
-        childToScrollIndex = isLastGroup ? 0 : currentGroupEnd;
+        childToScrollIndex = isLastGroup ? 0 : alignToTop ? i + 1 : i - 1;
       } else {
-        childToScrollIndex = currentGroupEnd;
+        childToScrollIndex = alignToTop ? i + 1 : i - 1;
       }
 
       if (childToScrollIndex >= 0 && childToScrollIndex < children.length) {
@@ -3474,14 +3471,9 @@ function scrollIntoViewByScrollContainer(
         );
         if (didScroll) {
           prevScrolledInstance = instanceToScroll;
-          prevContainerIsFixed = isNewScrollContainer === 1;
+          prevContainerIsFixed = isNewScrollContainer === CONTAINER_FIXED;
         }
       }
-    }
-
-    if (!isLastGroup) {
-      // Start a new group
-      currentGroupEnd = i;
     }
 
     i += alignToTop ? -1 : 1;
