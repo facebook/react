@@ -73,6 +73,7 @@ export const enableDefaultTransitionIndicator: boolean = false;
 export const ownerStackLimit = 1e4;
 
 export const enableFragmentRefs: boolean = false;
+export const enableFragmentRefsScrollIntoView: boolean = false;
 
 // Profiling Only
 export const enableProfilerTimer: boolean = __PROFILE__;
