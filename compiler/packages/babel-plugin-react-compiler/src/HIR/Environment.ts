@@ -650,6 +650,13 @@ export const EnvironmentConfigSchema = z.object({
    *   useMemo(() => { ... }, [...]);
    */
   validateNoVoidUseMemo: z.boolean().default(false),
+
+  /**
+   * Validates that Components/Hooks are always defined at module level. This prevents scope
+   * reference errors that occur when the compiler attempts to optimize the nested component/hook
+   * while its parent function remains uncompiled.
+   */
+  validateNoDynamicallyCreatedComponentsOrHooks: z.boolean().default(false),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
