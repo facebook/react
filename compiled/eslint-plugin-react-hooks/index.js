@@ -21088,7 +21088,7 @@ class HIRBuilder {
         }
     }
     resolveBinding(node) {
-        var _a, _b;
+        var _a, _b, _c;
         if (node.name === 'fbt') {
             CompilerError.throwDiagnostic({
                 severity: ErrorSeverity.Todo,
@@ -21100,6 +21100,21 @@ class HIRBuilder {
                         kind: 'error',
                         message: 'Rename to avoid conflict with fbt plugin',
                         loc: (_a = node.loc) !== null && _a !== void 0 ? _a : GeneratedSource,
+                    },
+                ],
+            });
+        }
+        if (node.name === 'this') {
+            CompilerError.throwDiagnostic({
+                severity: ErrorSeverity.UnsupportedJS,
+                category: ErrorCategory.UnsupportedSyntax,
+                reason: '`this` is not supported syntax',
+                description: 'React Compiler does not support compiling functions that use `this`',
+                details: [
+                    {
+                        kind: 'error',
+                        message: '`this` was used here',
+                        loc: (_b = node.loc) !== null && _b !== void 0 ? _b : GeneratedSource,
                     },
                 ],
             });
@@ -21121,7 +21136,7 @@ class HIRBuilder {
                     },
                     scope: null,
                     type: makeType(),
-                    loc: (_b = node.loc) !== null && _b !== void 0 ? _b : GeneratedSource,
+                    loc: (_c = node.loc) !== null && _c !== void 0 ? _c : GeneratedSource,
                 };
                 __classPrivateFieldGet(this, _HIRBuilder_env, "f").programContext.addNewReference(name);
                 __classPrivateFieldGet(this, _HIRBuilder_bindings, "f").set(name, { node, identifier });
