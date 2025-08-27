@@ -341,10 +341,10 @@ export type FindSourceMapURLCallback = (
 
 export type DebugChannelCallback = (message: string) => void;
 
-export interface DebugChannel {
-  hasReadable: boolean;
-  callback?: DebugChannelCallback;
-}
+export type DebugChannel = {
+  hasReadable: boolean,
+  callback: DebugChannelCallback | null,
+};
 
 type Response = {
   _bundlerConfig: ServerConsumerModuleMap,
@@ -410,7 +410,7 @@ function getWeakResponse(response: Response): WeakResponse {
 }
 
 function closeDebugChannel(debugChannel: DebugChannel): void {
-  if (debugChannel.callback !== undefined) {
+  if (debugChannel.callback) {
     debugChannel.callback('');
   }
 }

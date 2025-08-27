@@ -82,7 +82,7 @@ function createResponseFromOptions(options: void | Options) {
               ? createDebugCallbackFromWritableStream(
                   options.debugChannel.writable,
                 )
-              : undefined,
+              : null,
         }
       : undefined;
 
