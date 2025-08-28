@@ -55,7 +55,7 @@ function SuspenseRects({
 
   const suspense = store.getSuspenseByID(suspenseID);
   if (suspense === null) {
-    console.warn(`<Element> Could not find suspense node id ${suspenseID}`);
+    // getSuspenseByID will have already warned
     return null;
   }
 

@@ -1317,9 +1317,9 @@ export function attach(
     if (componentLogsEntry === undefined) {
       componentLogsEntry = {
         errors: new Map(),
-        errorsCount: 0,
+        errorsCount: 0 as number,
         warnings: new Map(),
-        warningsCount: 0,
+        warningsCount: 0 as number,
       };
       fiberToComponentLogsMap.set(fiber, componentLogsEntry);
     }
@@ -2217,7 +2217,7 @@ export function attach(
     }
     if (typeof instance.getClientRects === 'function') {
       // DOM
-      const result = [];
+      const result: Array<Rect> = [];
       const doc = instance.ownerDocument;
       const win = doc && doc.defaultView;
       const scrollX = win ? win.scrollX : 0;
@@ -2366,6 +2366,7 @@ export function attach(
         !isProductionBuildOfRenderer && StrictModeBits !== 0 ? 1 : 0,
       );
       pushOperation(hasOwnerMetadata ? 1 : 0);
+      pushOperation(supportsTogglingSuspense ? 1 : 0);
 
       if (isProfiling) {
         if (displayNamesByRootID !== null) {
@@ -6705,7 +6706,7 @@ export function attach(
     if (isMostRecentlyInspectedElement(id) && !forceFullData) {
       if (!hasElementUpdatedSinceLastInspected) {
         if (path !== null) {
-          let secondaryCategory = null;
+          let secondaryCategory: 'suspendedBy' | 'hooks' | null = null;
           if (path[0] === 'hooks') {
             secondaryCategory = 'hooks';
           }
@@ -7499,6 +7500,58 @@ export function attach(
     scheduleUpdate(fiber);
   }
 
+  /**
+   * Resets the all other roots of this renderer.
+   * @param rootID The root that contains this milestone
+   * @param suspendedSet List of IDs of SuspenseComponent Fibers
+   */
+  function overrideSuspenseMilestone(
+    rootID: FiberInstance['id'],
+    suspendedSet: Array<FiberInstance['id']>,
+  ) {
+    if (
+      typeof setSuspenseHandler !== 'function' ||
+      typeof scheduleUpdate !== 'function'
+    ) {
+      throw new Error(
+        'Expected overrideSuspenseMilestone() to not get called for earlier React versions.',
+      );
+    }
+
+    // TODO: Allow overriding the timeline for the specified root.
+    forceFallbackForFibers.clear();
+
+    for (let i = 0; i < suspendedSet.length; ++i) {
+      const instance = idToDevToolsInstanceMap.get(suspendedSet[i]);
+      if (instance === undefined) {
+        console.warn(
+          `Could not suspend ID '${suspendedSet[i]}' since the instance can't be found.`,
+        );
+        continue;
+      }
+
+      if (instance.kind === FIBER_INSTANCE) {
+        const fiber = instance.data;
+        forceFallbackForFibers.add(fiber);
+        // We could find a minimal set that covers all the Fibers in this suspended set.
+        // For now we rely on React's batching of updates.
+        scheduleUpdate(fiber);
+      } else {
+        console.warn(`Cannot not suspend ID '${suspendedSet[i]}'.`);
+      }
+    }
+
+    if (forceFallbackForFibers.size > 0) {
+      // First override is added. Switch React to slower path.
+      // TODO: Semantics for suspending a timeline are different. We want a suspended
+      // timeline to act like a first reveal which is relevant for SuspenseList.
+      // Resuspending would not affect rows in SuspenseList
+      setSuspenseHandler(shouldSuspendFiberAccordingToSet);
+    } else {
+      setSuspenseHandler(shouldSuspendFiberAlwaysFalse);
+    }
+  }
+
   // Remember if we're trying to restore the selection after reload.
   // In that case, we'll do some extra checks for matching mounts.
   let trackedPath: Array<PathFrame> | null = null;
@@ -7999,6 +8052,7 @@ export function attach(
     onErrorOrWarning,
     overrideError,
     overrideSuspense,
+    overrideSuspenseMilestone,
     overrideValueAtPath,
     renamePath,
     renderer,
@@ -8007,6 +8061,7 @@ export function attach(
     startProfiling,
     stopProfiling,
     storeAsGlobal,
+    supportsTogglingSuspense,
     updateComponentFilters,
     getEnvironmentNames,
     ...internalMcpFunctions,

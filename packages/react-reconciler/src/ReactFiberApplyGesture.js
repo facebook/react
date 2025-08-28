@@ -488,7 +488,7 @@ function recursivelyInsertNewFiber(
       const viewTransitionState: ViewTransitionState = finishedWork.stateNode;
       // TODO: If this was already cloned by a previous pass we can reuse those clones.
       viewTransitionState.clones = null;
-      let nextPhase;
+      let nextPhase: VisitPhase;
       if (visitPhase === INSERT_EXIT) {
         // This was an Enter of a ViewTransition. We now move onto inserting the inner
         // HostComponents and finding inner pairs.
@@ -637,7 +637,7 @@ function recursivelyInsertClonesFromExistingTree(
         // So we need it to be cleared before we do that.
         // TODO: Use some other temporary state to track this.
         child.flags &= ~Update;
-        let nextPhase;
+        let nextPhase: VisitPhase;
         if (visitPhase === CLONE_EXIT) {
           // This was an Enter of a ViewTransition. We now move onto unhiding the inner
           // HostComponents and finding inner pairs.
@@ -894,7 +894,7 @@ function insertDestinationClonesOfFiber(
         // Only insert clones if this tree is going to be visible. No need to
         // clone invisible content.
         // TODO: If this is visible but detached it should still be cloned.
-        let nextPhase;
+        let nextPhase: VisitPhase;
         if (visitPhase === CLONE_UPDATE && (flags & Visibility) !== NoFlags) {
           // This is the root of an appear. We need to trigger Enter transitions.
           nextPhase = CLONE_EXIT;
@@ -922,7 +922,7 @@ function insertDestinationClonesOfFiber(
       const viewTransitionState: ViewTransitionState = finishedWork.stateNode;
       // TODO: If this was already cloned by a previous pass we can reuse those clones.
       viewTransitionState.clones = null;
-      let nextPhase;
+      let nextPhase: VisitPhase;
       if (visitPhase === CLONE_EXIT) {
         // This was an Enter of a ViewTransition. We now move onto unhiding the inner
         // HostComponents and finding inner pairs.

@@ -341,6 +341,11 @@ export type FindSourceMapURLCallback = (
 
 export type DebugChannelCallback = (message: string) => void;
 
+export type DebugChannel = {
+  hasReadable: boolean,
+  callback: DebugChannelCallback | null,
+};
+
 type Response = {
   _bundlerConfig: ServerConsumerModuleMap,
   _serverReferenceConfig: null | ServerManifest,
@@ -362,7 +367,7 @@ type Response = {
   _debugRootStack?: null | Error, // DEV-only
   _debugRootTask?: null | ConsoleTask, // DEV-only
   _debugFindSourceMapURL?: void | FindSourceMapURLCallback, // DEV-only
-  _debugChannel?: void | DebugChannelCallback, // DEV-only
+  _debugChannel?: void | DebugChannel, // DEV-only
   _blockedConsole?: null | SomeChunk<ConsoleEntry>, // DEV-only
   _replayConsole: boolean, // DEV-only
   _rootEnvironmentName: string, // DEV-only, the requested environment name.
@@ -404,16 +409,16 @@ function getWeakResponse(response: Response): WeakResponse {
   }
 }
 
-function cleanupDebugChannel(debugChannel: DebugChannelCallback): void {
-  // When a Response gets GC:ed because nobody is referring to any of the objects that lazily
-  // loads from the Response anymore, then we can close the debug channel.
-  debugChannel('');
+function closeDebugChannel(debugChannel: DebugChannel): void {
+  if (debugChannel.callback) {
+    debugChannel.callback('');
+  }
 }
 
 // If FinalizationRegistry doesn't exist, we cannot use the debugChannel.
 const debugChannelRegistry =
   __DEV__ && typeof FinalizationRegistry === 'function'
-    ? new FinalizationRegistry(cleanupDebugChannel)
+    ? new FinalizationRegistry(closeDebugChannel)
     : null;
 
 function readChunk<T>(chunk: SomeChunk<T>): T {
@@ -1007,7 +1012,7 @@ export function reportGlobalError(
     if (debugChannel !== undefined) {
       // If we don't have any more ways of reading data, we don't have to send any
       // more neither. So we close the writable side.
-      debugChannel('');
+      closeDebugChannel(debugChannel);
       response._debugChannel = undefined;
     }
   }
@@ -1494,8 +1499,8 @@ function waitForReference<T>(
 ): T {
   if (
     __DEV__ &&
-    // TODO: This should check for the existence of the "readable" side, not the "writable".
-    response._debugChannel === undefined
+    (response._debugChannel === undefined ||
+      !response._debugChannel.hasReadable)
   ) {
     if (
       referencedChunk.status === PENDING &&
@@ -2262,15 +2267,16 @@ function parseModelString(
       case 'Y': {
         if (__DEV__) {
           if (value.length > 2) {
-            const debugChannel = response._debugChannel;
-            if (debugChannel) {
+            const debugChannelCallback =
+              response._debugChannel && response._debugChannel.callback;
+            if (debugChannelCallback) {
               if (value[2] === '@') {
                 // This is a deferred Promise.
                 const ref = value.slice(3); // We assume this doesn't have a path just id.
                 const id = parseInt(ref, 16);
                 if (!response._chunks.has(id)) {
                   // We haven't seen this id before. Query the server to start sending it.
-                  debugChannel('P:' + ref);
+                  debugChannelCallback('P:' + ref);
                 }
                 // Start waiting. This now creates a pending chunk if it doesn't already exist.
                 // This is the actual Promise we're waiting for.
@@ -2280,7 +2286,7 @@ function parseModelString(
               const id = parseInt(ref, 16);
               if (!response._chunks.has(id)) {
                 // We haven't seen this id before. Query the server to start sending it.
-                debugChannel('Q:' + ref);
+                debugChannelCallback('Q:' + ref);
               }
               // Start waiting. This now creates a pending chunk if it doesn't already exist.
               const chunk = getChunk(response, id);
@@ -2358,7 +2364,7 @@ function ResponseInstance(
   findSourceMapURL: void | FindSourceMapURLCallback, // DEV-only
   replayConsole: boolean, // DEV-only
   environmentName: void | string, // DEV-only
-  debugChannel: void | DebugChannelCallback, // DEV-only
+  debugChannel: void | DebugChannel, // DEV-only
 ) {
   const chunks: Map<number, SomeChunk<any>> = new Map();
   this._bundlerConfig = bundlerConfig;
@@ -2420,10 +2426,14 @@ function ResponseInstance(
     this._rootEnvironmentName = rootEnv;
     if (debugChannel) {
       if (debugChannelRegistry === null) {
-        // We can't safely clean things up later, so we immediately close the debug channel.
-        debugChannel('');
+        // We can't safely clean things up later, so we immediately close the
+        // debug channel.
+        closeDebugChannel(debugChannel);
         this._debugChannel = undefined;
       } else {
+        // When a Response gets GC:ed because nobody is referring to any of the
+        // objects that lazily load from the Response anymore, then we can close
+        // the debug channel.
         debugChannelRegistry.register(this, debugChannel);
       }
     }
@@ -2451,7 +2461,7 @@ export function createResponse(
   findSourceMapURL: void | FindSourceMapURLCallback, // DEV-only
   replayConsole: boolean, // DEV-only
   environmentName: void | string, // DEV-only
-  debugChannel: void | DebugChannelCallback, // DEV-only
+  debugChannel: void | DebugChannel, // DEV-only
 ): WeakResponse {
   return getWeakResponse(
     // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
@@ -3545,8 +3555,8 @@ function resolveDebugModel(
   if (
     __DEV__ &&
     ((debugChunk: any): SomeChunk<any>).status === BLOCKED &&
-    // TODO: This should check for the existence of the "readable" side, not the "writable".
-    response._debugChannel === undefined
+    (response._debugChannel === undefined ||
+      !response._debugChannel.hasReadable)
   ) {
     if (json[0] === '"' && json[1] === '$') {
       const path = json.slice(2, json.length - 1).split(':');
