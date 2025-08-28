@@ -323,6 +323,22 @@ export default class HIRBuilder {
         ],
       });
     }
+    if (node.name === 'this') {
+      CompilerError.throwDiagnostic({
+        severity: ErrorSeverity.UnsupportedJS,
+        category: ErrorCategory.UnsupportedSyntax,
+        reason: '`this` is not supported syntax',
+        description:
+          'React Compiler does not support compiling functions that use `this`',
+        details: [
+          {
+            kind: 'error',
+            message: '`this` was used here',
+            loc: node.loc ?? GeneratedSource,
+          },
+        ],
+      });
+    }
     const originalName = node.name;
     let name = originalName;
     let index = 0;

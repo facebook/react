@@ -241,4 +241,101 @@ describe('ReactFlightTurbopackDOMEdge', () => {
       'Switched to client rendering because the server rendering errored:\n\nssr-throw',
     );
   });
+
+  // @gate __DEV__
+  it('can transport debug info through a slow debug channel', async () => {
+    function Thrower() {
+      throw new Error('ssr-throw');
+    }
+
+    const ClientComponentOnTheClient = clientExports(
+      Thrower,
+      123,
+      'path/to/chunk.js',
+    );
+
+    const ClientComponentOnTheServer = clientExports(Thrower);
+
+    function App() {
+      return ReactServer.createElement(
+        ReactServer.Suspense,
+        null,
+        ReactServer.createElement(ClientComponentOnTheClient, null),
+      );
+    }
+
+    let debugReadableStreamController;
+
+    const debugReadableStream = new ReadableStream({
+      start(controller) {
+        debugReadableStreamController = controller;
+      },
+    });
+
+    const rscStream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        ReactServer.createElement(App, null),
+        turbopackMap,
+        {
+          debugChannel: {
+            writable: new WritableStream({
+              write(chunk) {
+                debugReadableStreamController.enqueue(chunk);
+              },
+              close() {
+                debugReadableStreamController.close();
+              },
+            }),
+          },
+        },
+      ),
+    );
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const serverConsumerManifest = {
+      moduleMap: {
+        [turbopackMap[ClientComponentOnTheClient.$$id].id]: {
+          '*': turbopackMap[ClientComponentOnTheServer.$$id],
+        },
+      },
+      moduleLoading: null,
+    };
+
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
+      serverConsumerManifest,
+      debugChannel: {
+        readable:
+          // Create a delayed stream to simulate that the debug stream might
+          // be transported slower than the RSC stream, which must not lead to
+          // missing debug info.
+          createDelayedStream(debugReadableStream),
+      },
+    });
+
+    let ownerStack;
+
+    const ssrStream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(
+        <ClientRoot response={response} />,
+        {
+          onError(err, errorInfo) {
+            ownerStack = React.captureOwnerStack
+              ? React.captureOwnerStack()
+              : null;
+          },
+        },
+      ),
+    );
+
+    const result = await readResult(ssrStream);
+
+    expect(normalizeCodeLocInfo(ownerStack)).toBe('\n    in App (at **)');
+
+    expect(result).toContain(
+      'Switched to client rendering because the server rendering errored:\n\nssr-throw',
+    );
+  });
 });

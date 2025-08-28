@@ -25,4 +25,5 @@ export const enableEagerAlternateStateNodeCleanup = __VARIANT__;
 export const passChildrenWhenCloningPersistedNodes = __VARIANT__;
 export const renameElementSymbol = __VARIANT__;
 export const enableFragmentRefs = __VARIANT__;
+export const enableFragmentRefsScrollIntoView = __VARIANT__;
 export const enableComponentPerformanceTrack = __VARIANT__;

@@ -19,6 +19,7 @@ import InspectedElementErrorBoundary from '../Components/InspectedElementErrorBo
 import InspectedElement from '../Components/InspectedElement';
 import portaledContent from '../portaledContent';
 import styles from './SuspenseTab.css';
+import SuspenseBreadcrumbs from './SuspenseBreadcrumbs';
 import SuspenseRects from './SuspenseRects';
 import SuspenseTimeline from './SuspenseTimeline';
 import SuspenseTreeList from './SuspenseTreeList';
@@ -304,10 +305,15 @@ function SuspenseTab(_: {}) {
           />
         </div>
         <div className={styles.TreeView}>
-          <div className={styles.TimelineWrapper}>
+          <div className={styles.SuspenseTreeViewHeader}>
             <ToggleTreeList dispatch={dispatch} state={state} />
-            <div className={styles.Timeline}>
-              <SuspenseTimeline />
+            <div className={styles.SuspenseTreeViewHeaderMain}>
+              <div className={styles.SuspenseTimeline}>
+                <SuspenseTimeline />
+              </div>
+              <div className={styles.SuspenseBreadcrumbs}>
+                <SuspenseBreadcrumbs />
+              </div>
             </div>
             <ToggleInspectedElement
               dispatch={dispatch}
