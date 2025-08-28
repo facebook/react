@@ -211,7 +211,7 @@ function generateCompilerError(
             compilerDiagnostic.withDetail({
               kind: 'error',
               loc: loc,
-              message: 'this useState shadows a reactive value',
+              message: `this useState shadows ${derivedDep}`,
             });
           }
         }
