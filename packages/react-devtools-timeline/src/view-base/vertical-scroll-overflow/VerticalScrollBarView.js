@@ -117,12 +117,10 @@ export class VerticalScrollBarView extends View {
     const {x, y} = this.frame.origin;
     const {width, height} = this.frame.size;
 
-    // TODO Use real color
-    context.fillStyle = COLORS.REACT_RESIZE_BAR;
+    context.fillStyle = COLORS.SCROLL_TRACK;
     context.fillRect(x, y, width, height);
 
-    // TODO Use real color
-    context.fillStyle = COLORS.SCROLL_CARET;
+    context.fillStyle = COLORS.SCROLL_THUMB;
     context.fillRect(
       this._scrollThumbRect.origin.x,
       this._scrollThumbRect.origin.y,
