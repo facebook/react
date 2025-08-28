@@ -6,151 +6,45 @@
  */
 
 import MonacoEditor, {loader, type Monaco} from '@monaco-editor/react';
-import {
-  parseConfigPragmaForTests,
-  parsePluginOptions,
-} from 'babel-plugin-react-compiler';
+import {parseConfigPragmaAsString} from 'babel-plugin-react-compiler';
 import type {editor} from 'monaco-editor';
 import * as monaco from 'monaco-editor';
 import parserBabel from 'prettier/plugins/babel';
 import * as prettierPluginEstree from 'prettier/plugins/estree';
 import * as prettier from 'prettier/standalone';
-import {useState, useMemo, useEffect} from 'react';
+import {useState, useEffect} from 'react';
 import {Resizable} from 're-resizable';
 import {useStore} from '../StoreContext';
 import {monacoOptions} from './monacoOptions';
 
 loader.config({monaco});
 
-// Calculate default config
-const DEFAULT_CONFIG = parsePluginOptions({});
-
-/**
- * Deep equality check for various types
- */
-function isEqual(a: any, b: any): boolean {
-  if (a === b) return true;
-  if (typeof a !== typeof b) return false;
-  if (typeof a === 'function') {
-    return a.toString() === b.toString();
-  }
-  if (a instanceof Map && b instanceof Map) {
-    if (a.size !== b.size) return false;
-    for (const [key, value] of a) {
-      if (!b.has(key) || !isEqual(value, b.get(key))) return false;
-    }
-    return true;
-  }
-  if (Array.isArray(a) && Array.isArray(b)) {
-    if (a.length !== b.length) return false;
-    return a.every((item, index) => isEqual(item, b[index]));
-  }
-  if (typeof a === 'object') {
-    const keysA = Object.keys(a);
-    const keysB = Object.keys(b);
-    if (keysA.length !== keysB.length) return false;
-    return keysA.every(key => keysB.includes(key) && isEqual(a[key], b[key]));
-  }
-
-  return false;
-}
-
-/**
- * Recursive function to extract overridden values
- */
-function getOverriddenValues(current: any, defaults: any): Record<string, any> {
-  if (isEqual(current, defaults)) return {};
-  if (
-    current &&
-    defaults &&
-    typeof current === 'object' &&
-    typeof defaults === 'object' &&
-    !Array.isArray(current) &&
-    !Array.isArray(defaults)
-  ) {
-    const overrides: Record<string, any> = {};
-
-    for (const key in current) {
-      const nested = getOverriddenValues(current[key], defaults[key]);
-      if (
-        Object.keys(nested).length > 0 ||
-        !isEqual(current[key], defaults[key])
-      ) {
-        overrides[key] = Object.keys(nested).length > 0 ? nested : current[key];
-      }
-    }
-    return overrides;
-  }
-  return current;
-}
-
-/**
- * Format the config object as readable JavaScript, assigned to a const
- */
-function formatConfigAsJavaScript(config: any): string {
-  const formatValue = (value: any, indent: number = 0): string => {
-    const spaces = '  '.repeat(indent);
-
-    if (value === null) {
-      return 'null';
-    } else if (typeof value === 'string') {
-      return `'${value}'`;
-    } else if (typeof value === 'boolean' || typeof value === 'number') {
-      return String(value);
-    } else if (Array.isArray(value)) {
-      if (value.length === 0) {
-        return '[]';
-      }
-      const items = value
-        .map(item => `${spaces}  ${formatValue(item, indent + 1)}`)
-        .join(',\n');
-      return `[\n${items}\n${spaces}]`;
-    } else if (typeof value === 'object' && value !== null) {
-      const keys = Object.keys(value);
-      if (keys.length === 0) {
-        return '{}';
-      }
-      const items = keys
-        .map(key => {
-          const formattedValue = formatValue(value[key], indent + 1);
-          return `${spaces}  ${key}: ${formattedValue}`;
-        })
-        .join(',\n');
-      return `{\n${items}\n${spaces}}`;
-    } else {
-      return String(value);
-    }
-  };
-
-  // Assign the config object to a const
-  return `const overrides = ${formatValue(config)};`;
-}
-
 export default function ConfigEditor(): JSX.Element {
   const [, setMonaco] = useState<Monaco | null>(null);
   const store = useStore();
 
-  // Parse current config from source pragma and show only overridden values
-  const currentConfig = useMemo(() => {
-    try {
-      const pragma = store.source.substring(0, store.source.indexOf('\n'));
-      const parsedConfig = parseConfigPragmaForTests(pragma, {
-        compilationMode: 'infer',
+  // Parse string-based override config from pragma comment and format it
+  const [configJavaScript, setConfigJavaScript] = useState('');
+
+  useEffect(() => {
+    const pragma = store.source.substring(0, store.source.indexOf('\n'));
+    const configString = `(${parseConfigPragmaAsString(pragma)})`;
+
+    prettier
+      .format(configString, {
+        semi: true,
+        parser: 'babel-ts',
+        plugins: [parserBabel, prettierPluginEstree],
+      })
+      .then(formatted => {
+        setConfigJavaScript(formatted);
+      })
+      .catch(error => {
+        console.error('Error formatting config:', error);
+        setConfigJavaScript('({})'); // Return empty object if not valid for now
       });
-
-      // Extract overridden values
-      const overrides = getOverriddenValues(parsedConfig, DEFAULT_CONFIG);
-
-      return overrides;
-    } catch (_) {
-      // If parsing fails, return empty object (no overrides)
-      return {};
-    }
+    console.log('Config:', configString);
   }, [store.source]);
-
-  const configJavaScript = useMemo(() => {
-    return formatConfigAsJavaScript(currentConfig);
-  }, [currentConfig]);
 
   const handleChange: (value: string | undefined) => void = value => {
     if (!value) return;
