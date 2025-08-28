@@ -50,6 +50,7 @@ import {
 import {Scope as BabelScope, NodePath} from '@babel/traverse';
 import {TypeSchema} from './TypeSchema';
 import {FlowTypeEnv} from '../Flood/Types';
+import {defaultModuleTypeProvider} from './DefaultModuleTypeProvider';
 
 export const ReactElementSymbolSchema = z.object({
   elementSymbol: z.union([
@@ -860,10 +861,16 @@ export class Environment {
   #resolveModuleType(moduleName: string, loc: SourceLocation): Global | null {
     let moduleType = this.#moduleTypes.get(moduleName);
     if (moduleType === undefined) {
-      if (this.config.moduleTypeProvider == null) {
+      /*
+       * NOTE: Zod doesn't work when specifying a function as a default, so we have to
+       * fallback to the default value here
+       */
+      const moduleTypeProvider =
+        this.config.moduleTypeProvider ?? defaultModuleTypeProvider;
+      if (moduleTypeProvider == null) {
         return null;
       }
-      const unparsedModuleConfig = this.config.moduleTypeProvider(moduleName);
+      const unparsedModuleConfig = moduleTypeProvider(moduleName);
       if (unparsedModuleConfig != null) {
         const parsedModuleConfig = TypeSchema.safeParse(unparsedModuleConfig);
         if (!parsedModuleConfig.success) {

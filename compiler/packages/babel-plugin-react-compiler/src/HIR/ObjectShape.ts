@@ -332,6 +332,7 @@ export type FunctionSignature = {
   mutableOnlyIfOperandsAreMutable?: boolean;
 
   impure?: boolean;
+  knownIncompatible?: string | null | undefined;
 
   canonicalName?: string;
 
