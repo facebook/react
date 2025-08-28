@@ -22,15 +22,22 @@ yarn add eslint-plugin-react-hooks --dev
 
 #### >= 6.0.0
 
-For users of 6.0 and beyond, simply add the `recommended` config.
+For users of 6.0 and beyond, add the `recommended` config.
 
 ```js
-import * as reactHooks from 'eslint-plugin-react-hooks';
+// eslint.config.js
+import reactHooks from 'eslint-plugin-react-hooks';
+import { defineConfig } from 'eslint/config';
 
-export default [
-  // ...
-  reactHooks.configs.recommended,
-];
+export default defineConfig([
+  {
+    files: ["src/**/*.{js,jsx,ts,tsx}"],
+    plugins: {
+      'react-hooks': reactHooks,
+    },
+    extends: ['react-hooks/recommended'],
+  },
+]);
 ```
 
 #### 5.2.0
@@ -38,12 +45,18 @@ export default [
 For users of 5.2.0 (the first version with flat config support), add the `recommended-latest` config.
 
 ```js
-import * as reactHooks from 'eslint-plugin-react-hooks';
+import reactHooks from 'eslint-plugin-react-hooks';
+import { defineConfig } from 'eslint/config';
 
-export default [
-  // ...
-  reactHooks.configs['recommended-latest'],
-];
+export default defineConfig([
+  {
+    files: ["src/**/*.{js,jsx,ts,tsx}"],
+    plugins: {
+      'react-hooks': reactHooks,
+    },
+    extends: ['react-hooks/recommended-latest'],
+  },
+]);
 ```
 
 ### Legacy Config (.eslintrc)
