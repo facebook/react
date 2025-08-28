@@ -198,9 +198,13 @@ function generateCompilerError(
       error.type !== 'fromState'
     ) {
       compilerDiagnostic = CompilerDiagnostic.create({
-        description: `${error.description} This state value shadows a value passed as a prop. Instead of shadowing the prop with local state, hoist the state to the parent component and update it there.`,
-        category: `Local state shadows parent state.`,
+        description: `The setState within a useEffect is deriving from ${error.description} Instead of shadowing the prop with local state, hoist the state to the parent component and update it there. If you are purposefully initializing state with a prop, and want to update it when a prop changes, do so conditionally in render`,
+        category: `You might not need an effect. Local state shadows parent state.`,
         severity: ErrorSeverity.InvalidReact,
+      }).withDetail({
+        kind: 'error',
+        loc: error.loc,
+        message: `this derives values from props ${error.type === 'fromPropsOrState' ? 'and local state ' : ''}to synchronize state`,
       });
 
       for (const derivedDep of error.derivedDepsNames) {
@@ -214,12 +218,6 @@ function generateCompilerError(
           }
         }
       }
-
-      compilerDiagnostic.withDetail({
-        kind: 'error',
-        loc: error.loc,
-        message: 'this setState synchronizes the state',
-      });
 
       for (const [key, setStateCallArray] of effectSetStates) {
         if (setStateCallArray.length === 0) {
@@ -243,7 +241,7 @@ function generateCompilerError(
     } else {
       compilerDiagnostic = CompilerDiagnostic.create({
         description: `${error.description} Derived values should be computed during render, rather than in effects. Using an effect triggers an additional render which can hurt performance and user experience, potentially briefly showing stale values to the user.`,
-        category: `Derive values in render, not effects.`,
+        category: `You might not need an effect. Derive values in render, not effects.`,
         severity: ErrorSeverity.InvalidReact,
       }).withDetail({
         kind: 'error',
@@ -577,7 +575,7 @@ function validateEffect(
 
     errors.push({
       type: call.derivedDep.typeOfValue,
-      description: `This setState() appears to derive a value from ${errorDescription}`,
+      description: `${errorDescription}`,
       loc: call.loc,
       setStateName:
         call.loc !== GeneratedSource ? call.loc.identifierName : undefined,
