@@ -1,0 +1,53 @@
+name: Bug Report
+description: File a bug report
+title: "[Bug]: "
+labels: ["bug", "needs triage"] 
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: input
+    id: react-version
+    attributes:
+      label: React Version
+      description: What version of React are you using?
+      placeholder: e.g., 18.2.0
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Please provide detailed steps for reproducing the issue. Link to a minimal reproduction is highly encouraged (e.g., CodeSandbox, StackBlitz).
+      placeholder: |
+        1.
+        2.
+        3.
+        ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened? Include error messages, screenshots, etc.
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      placeholder: e.g., macOS, Windows 10
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      placeholder: e.g., Chrome 100, Firefox 99
