@@ -6,7 +6,7 @@
  */
 
 import MonacoEditor, {loader, type Monaco} from '@monaco-editor/react';
-import {parseConfigPragmaAsString} from 'babel-plugin-react-compiler';
+import {parseConfigPragmaAsString} from '../../../../packages/babel-plugin-react-compiler/src/Utils/TestUtils';
 import type {editor} from 'monaco-editor';
 import * as monaco from 'monaco-editor';
 import parserBabel from 'prettier/plugins/babel';

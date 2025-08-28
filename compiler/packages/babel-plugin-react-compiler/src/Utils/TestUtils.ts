@@ -269,22 +269,9 @@ function parseConfigStringAsJS(
       ...parsedConfig.environment,
     };
 
-    // Apply complex defaults for environment flags that are set to true
-    const environmentConfig: Partial<Record<keyof EnvironmentConfig, unknown>> =
-      {};
-    for (const [key, value] of Object.entries(mergedEnvironment)) {
-      if (hasOwnProperty(EnvironmentConfigSchema.shape, key)) {
-        if (value === true && key in testComplexConfigDefaults) {
-          environmentConfig[key] = testComplexConfigDefaults[key];
-        } else {
-          environmentConfig[key] = value;
-        }
-      }
-    }
-
     // Validate environment config
     const validatedEnvironment =
-      EnvironmentConfigSchema.safeParse(environmentConfig);
+      EnvironmentConfigSchema.safeParse(mergedEnvironment);
     if (!validatedEnvironment.success) {
       CompilerError.invariant(false, {
         reason: 'Invalid environment configuration in config pragma',
@@ -308,9 +295,7 @@ function parseConfigStringAsJS(
     }
 
     if (hasOwnProperty(defaultOptions, key)) {
-      if (value === true && key in testComplexPluginOptionDefaults) {
-        options[key] = testComplexPluginOptionDefaults[key];
-      } else if (key === 'target' && value === 'donotuse_meta_internal') {
+      if (key === 'target' && value === 'donotuse_meta_internal') {
         options[key] = {
           kind: value,
           runtimeModule: 'react',
