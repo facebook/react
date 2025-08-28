@@ -26,7 +26,7 @@ import BabelPluginReactCompiler, {
 import clsx from 'clsx';
 import invariant from 'invariant';
 import {useSnackbar} from 'notistack';
-import {useDeferredValue, useMemo, useState} from 'react';
+import {useDeferredValue, useMemo} from 'react';
 import {useMountEffect} from '../../hooks';
 import {defaultStore} from '../../lib/defaultStore';
 import {
