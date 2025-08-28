@@ -55,7 +55,7 @@ import { makeArray, Stringify, useIdentity } from "shared-runtime";
  */
 function Foo(t0) {
   "use memo";
-  const $ = _c(3);
+  const $ = _c(5);
   const { b } = t0;
 
   const fnFactory = () => () => {
@@ -66,18 +66,26 @@ function Foo(t0) {
   useIdentity();
 
   const fn = fnFactory();
-  const arr = makeArray(b);
-  fn(arr);
   let t1;
-  if ($[0] !== arr || $[1] !== myVar) {
-    t1 = <Stringify cb={myVar} value={arr} shouldInvokeFns={true} />;
-    $[0] = arr;
-    $[1] = myVar;
-    $[2] = t1;
+  if ($[0] !== b) {
+    t1 = makeArray(b);
+    $[0] = b;
+    $[1] = t1;
   } else {
-    t1 = $[2];
+    t1 = $[1];
   }
-  return t1;
+  const arr = t1;
+  fn(arr);
+  let t2;
+  if ($[2] !== arr || $[3] !== myVar) {
+    t2 = <Stringify cb={myVar} value={arr} shouldInvokeFns={true} />;
+    $[2] = arr;
+    $[3] = myVar;
+    $[4] = t2;
+  } else {
+    t2 = $[4];
+  }
+  return t2;
 }
 function _temp2() {
   return console.log("b");
