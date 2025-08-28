@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<0cf4d579071cd6361df2fa74ba2aa318>>
+ * @generated SignedSource<<99d6960a9525c443d8865ab7661a6fcc>>
  */
 
 'use strict';
@@ -17638,6 +17638,7 @@ var ErrorSeverity;
     ErrorSeverity["InvalidReact"] = "InvalidReact";
     ErrorSeverity["InvalidConfig"] = "InvalidConfig";
     ErrorSeverity["CannotPreserveMemoization"] = "CannotPreserveMemoization";
+    ErrorSeverity["IncompatibleLibrary"] = "IncompatibleLibrary";
     ErrorSeverity["Todo"] = "Todo";
     ErrorSeverity["Invariant"] = "Invariant";
 })(ErrorSeverity || (ErrorSeverity = {}));
@@ -17904,7 +17905,8 @@ class CompilerError extends Error {
                 case ErrorSeverity.InvalidJS:
                 case ErrorSeverity.InvalidReact:
                 case ErrorSeverity.InvalidConfig:
-                case ErrorSeverity.UnsupportedJS: {
+                case ErrorSeverity.UnsupportedJS:
+                case ErrorSeverity.IncompatibleLibrary: {
                     return true;
                 }
                 case ErrorSeverity.CannotPreserveMemoization:
@@ -17942,8 +17944,9 @@ function printErrorSummary(severity, message) {
             severityCategory = 'Error';
             break;
         }
+        case ErrorSeverity.IncompatibleLibrary:
         case ErrorSeverity.CannotPreserveMemoization: {
-            severityCategory = 'Memoization';
+            severityCategory = 'Compilation Skipped';
             break;
         }
         case ErrorSeverity.Invariant: {
@@ -17968,6 +17971,7 @@ var ErrorCategory;
     ErrorCategory["UseMemo"] = "UseMemo";
     ErrorCategory["Factories"] = "Factories";
     ErrorCategory["PreserveManualMemo"] = "PreserveManualMemo";
+    ErrorCategory["IncompatibleLibrary"] = "IncompatibleLibrary";
     ErrorCategory["Immutability"] = "Immutability";
     ErrorCategory["Globals"] = "Globals";
     ErrorCategory["Refs"] = "Refs";
@@ -18197,6 +18201,14 @@ function getRuleForCategoryImpl(category) {
                 category,
                 name: 'use-memo',
                 description: 'Validates usage of the useMemo() hook against common mistakes. See [`useMemo()` docs](https://react.dev/reference/react/useMemo) for more information.',
+                recommended: true,
+            };
+        }
+        case ErrorCategory.IncompatibleLibrary: {
+            return {
+                category,
+                name: 'incompatible-library',
+                description: 'Validates against usage of libraries which are incompatible with memoization (manual or automatic)',
                 recommended: true,
             };
         }
@@ -30621,7 +30633,7 @@ for (const [name, type_] of TYPED_GLOBALS) {
 DEFAULT_GLOBALS.set('globalThis', addObject(DEFAULT_SHAPES, 'globalThis', TYPED_GLOBALS));
 DEFAULT_GLOBALS.set('global', addObject(DEFAULT_SHAPES, 'global', TYPED_GLOBALS));
 function installTypeConfig(globals, shapes, typeConfig, moduleName, loc) {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e, _f;
     switch (typeConfig.kind) {
         case 'type': {
             switch (typeConfig.name) {
@@ -30655,22 +30667,24 @@ function installTypeConfig(globals, shapes, typeConfig, moduleName, loc) {
                 noAlias: typeConfig.noAlias === true,
                 mutableOnlyIfOperandsAreMutable: typeConfig.mutableOnlyIfOperandsAreMutable === true,
                 aliasing: typeConfig.aliasing,
+                knownIncompatible: (_a = typeConfig.knownIncompatible) !== null && _a !== void 0 ? _a : null,
             });
         }
         case 'hook': {
             return addHook(shapes, {
                 hookKind: 'Custom',
-                positionalParams: (_a = typeConfig.positionalParams) !== null && _a !== void 0 ? _a : [],
-                restParam: (_b = typeConfig.restParam) !== null && _b !== void 0 ? _b : Effect.Freeze,
+                positionalParams: (_b = typeConfig.positionalParams) !== null && _b !== void 0 ? _b : [],
+                restParam: (_c = typeConfig.restParam) !== null && _c !== void 0 ? _c : Effect.Freeze,
                 calleeEffect: Effect.Read,
                 returnType: installTypeConfig(globals, shapes, typeConfig.returnType, moduleName, loc),
-                returnValueKind: (_c = typeConfig.returnValueKind) !== null && _c !== void 0 ? _c : ValueKind.Frozen,
+                returnValueKind: (_d = typeConfig.returnValueKind) !== null && _d !== void 0 ? _d : ValueKind.Frozen,
                 noAlias: typeConfig.noAlias === true,
                 aliasing: typeConfig.aliasing,
+                knownIncompatible: (_e = typeConfig.knownIncompatible) !== null && _e !== void 0 ? _e : null,
             });
         }
         case 'object': {
-            return addObject(shapes, null, Object.entries((_d = typeConfig.properties) !== null && _d !== void 0 ? _d : {}).map(([key, value]) => {
+            return addObject(shapes, null, Object.entries((_f = typeConfig.properties) !== null && _f !== void 0 ? _f : {}).map(([key, value]) => {
                 var _a;
                 const type = installTypeConfig(globals, shapes, value, moduleName, loc);
                 const expectHook = isHookName$2(key);
@@ -30871,6 +30885,7 @@ const FunctionTypeSchema = zod.z.object({
     impure: zod.z.boolean().nullable().optional(),
     canonicalName: zod.z.string().nullable().optional(),
     aliasing: AliasingSignatureSchema.nullable().optional(),
+    knownIncompatible: zod.z.string().nullable().optional(),
 });
 const HookTypeSchema = zod.z.object({
     kind: zod.z.literal('hook'),
@@ -30880,6 +30895,7 @@ const HookTypeSchema = zod.z.object({
     returnValueKind: ValueKindSchema.nullable().optional(),
     noAlias: zod.z.boolean().nullable().optional(),
     aliasing: AliasingSignatureSchema.nullable().optional(),
+    knownIncompatible: zod.z.string().nullable().optional(),
 });
 const BuiltInTypeSchema = zod.z.union([
     zod.z.literal('Any'),
@@ -31381,6 +31397,50 @@ const Resolved = Object.assign(Object.assign({}, Primitives), { nullable(type, p
         };
     } });
 
+function defaultModuleTypeProvider(moduleName) {
+    switch (moduleName) {
+        case 'react-hook-form': {
+            return {
+                kind: 'object',
+                properties: {
+                    useForm: {
+                        kind: 'hook',
+                        returnType: {
+                            kind: 'object',
+                            properties: {
+                                watch: {
+                                    kind: 'function',
+                                    positionalParams: [],
+                                    restParam: Effect.Read,
+                                    calleeEffect: Effect.Read,
+                                    returnType: { kind: 'type', name: 'Any' },
+                                    returnValueKind: ValueKind.Mutable,
+                                    knownIncompatible: `React Hook Form's \`useForm()\` API returns a \`watch()\` function which cannot be memoized safely.`,
+                                },
+                            },
+                        },
+                    },
+                },
+            };
+        }
+        case '@tanstack/react-table': {
+            return {
+                kind: 'object',
+                properties: {
+                    useReactTable: {
+                        kind: 'hook',
+                        positionalParams: [],
+                        restParam: Effect.Read,
+                        returnType: { kind: 'type', name: 'Any' },
+                        knownIncompatible: `TanStack Table's \`useReactTable()\` API returns functions that cannot be memoized safely`,
+                    },
+                },
+            };
+        }
+    }
+    return null;
+}
+
 var _Environment_instances, _Environment_globals, _Environment_shapes, _Environment_moduleTypes, _Environment_nextIdentifer, _Environment_nextBlock, _Environment_nextScope, _Environment_scope, _Environment_outlinedFunctions, _Environment_contextIdentifiers, _Environment_hoistedIdentifiers, _Environment_flowTypeEnvironment, _Environment_resolveModuleType, _Environment_isKnownReactModule, _Environment_getCustomHookType;
 const ReactElementSymbolSchema = zod.z.object({
     elementSymbol: zod.z.union([
@@ -31743,12 +31803,14 @@ class Environment {
     }
 }
 _Environment_globals = new WeakMap(), _Environment_shapes = new WeakMap(), _Environment_moduleTypes = new WeakMap(), _Environment_nextIdentifer = new WeakMap(), _Environment_nextBlock = new WeakMap(), _Environment_nextScope = new WeakMap(), _Environment_scope = new WeakMap(), _Environment_outlinedFunctions = new WeakMap(), _Environment_contextIdentifiers = new WeakMap(), _Environment_hoistedIdentifiers = new WeakMap(), _Environment_flowTypeEnvironment = new WeakMap(), _Environment_instances = new WeakSet(), _Environment_resolveModuleType = function _Environment_resolveModuleType(moduleName, loc) {
+    var _a;
     let moduleType = __classPrivateFieldGet(this, _Environment_moduleTypes, "f").get(moduleName);
     if (moduleType === undefined) {
-        if (this.config.moduleTypeProvider == null) {
+        const moduleTypeProvider = (_a = this.config.moduleTypeProvider) !== null && _a !== void 0 ? _a : defaultModuleTypeProvider;
+        if (moduleTypeProvider == null) {
             return null;
         }
-        const unparsedModuleConfig = this.config.moduleTypeProvider(moduleName);
+        const unparsedModuleConfig = moduleTypeProvider(moduleName);
         if (unparsedModuleConfig != null) {
             const parsedModuleConfig = TypeSchema.safeParse(unparsedModuleConfig);
             if (!parsedModuleConfig.success) {
@@ -40556,6 +40618,25 @@ function computeEffectsForLegacySignature(state, signature, lvalue, receiver, ar
             }),
         });
     }
+    if (signature.knownIncompatible != null && state.env.isInferredMemoEnabled) {
+        const errors = new CompilerError();
+        errors.pushDiagnostic(CompilerDiagnostic.create({
+            category: ErrorCategory.IncompatibleLibrary,
+            severity: ErrorSeverity.IncompatibleLibrary,
+            reason: 'Use of incompatible library',
+            description: [
+                'This API returns functions which cannot be memoized without leading to stale UI. ' +
+                    'To prevent this, by default React Compiler will skip memoizing this component/hook. ' +
+                    'However, you may see issues if values from this API are passed to other components/hooks that are ' +
+                    'memoized.',
+            ].join(''),
+        }).withDetail({
+            kind: 'error',
+            loc: receiver.loc,
+            message: signature.knownIncompatible,
+        }));
+        throw errors;
+    }
     const stores = [];
     const captures = [];
     function visit(place, effect) {
@@ -48033,7 +48114,7 @@ function validateInferredDep(dep, temporaries, declsWithinMemoBlock, validDepsIn
     errorState.pushDiagnostic(CompilerDiagnostic.create({
         category: ErrorCategory.PreserveManualMemo,
         severity: ErrorSeverity.CannotPreserveMemoization,
-        reason: 'Compilation skipped because existing memoization could not be preserved',
+        reason: 'Existing memoization could not be preserved',
         description: [
             'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. ',
             'The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. ',
@@ -48194,7 +48275,7 @@ class Visitor extends ReactiveFunctionVisitor {
                     state.errors.pushDiagnostic(CompilerDiagnostic.create({
                         category: ErrorCategory.PreserveManualMemo,
                         severity: ErrorSeverity.CannotPreserveMemoization,
-                        reason: 'Compilation skipped because existing memoization could not be preserved',
+                        reason: 'Existing memoization could not be preserved',
                         description: [
                             'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. ',
                             'This dependency may be mutated later, which could cause the value to change unexpectedly.',
@@ -48231,7 +48312,7 @@ class Visitor extends ReactiveFunctionVisitor {
                             state.errors.pushDiagnostic(CompilerDiagnostic.create({
                                 category: ErrorCategory.PreserveManualMemo,
                                 severity: ErrorSeverity.CannotPreserveMemoization,
-                                reason: 'Compilation skipped because existing memoization could not be preserved',
+                                reason: 'Existing memoization could not be preserved',
                                 description: [
                                     'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output. ',
                                     '',
