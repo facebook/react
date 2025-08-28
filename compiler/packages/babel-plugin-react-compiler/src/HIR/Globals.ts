@@ -1001,6 +1001,7 @@ export function installTypeConfig(
         mutableOnlyIfOperandsAreMutable:
           typeConfig.mutableOnlyIfOperandsAreMutable === true,
         aliasing: typeConfig.aliasing,
+        knownIncompatible: typeConfig.knownIncompatible ?? null,
       });
     }
     case 'hook': {
@@ -1019,6 +1020,7 @@ export function installTypeConfig(
         returnValueKind: typeConfig.returnValueKind ?? ValueKind.Frozen,
         noAlias: typeConfig.noAlias === true,
         aliasing: typeConfig.aliasing,
+        knownIncompatible: typeConfig.knownIncompatible ?? null,
       });
     }
     case 'object': {
