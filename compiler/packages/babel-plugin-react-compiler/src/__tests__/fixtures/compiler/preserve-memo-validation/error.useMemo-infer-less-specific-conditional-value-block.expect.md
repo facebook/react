@@ -26,7 +26,7 @@ function Component({propA, propB}) {
 ```
 Found 2 errors:
 
-Memoization: Compilation skipped because existing memoization could not be preserved
+Compilation Skipped: Existing memoization could not be preserved
 
 React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `propA`, but the source dependencies were [propA.a, propB.x.y]. Inferred less specific property than source.
 
@@ -54,7 +54,7 @@ error.useMemo-infer-less-specific-conditional-value-block.ts:6:17
   15 | }
   16 |
 
-Memoization: Compilation skipped because existing memoization could not be preserved
+Compilation Skipped: Existing memoization could not be preserved
 
 React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `propB`, but the source dependencies were [propA.a, propB.x.y]. Inferred less specific property than source.
 
