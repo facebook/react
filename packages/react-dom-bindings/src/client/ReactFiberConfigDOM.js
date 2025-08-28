@@ -37,17 +37,6 @@ import {runWithFiberInDEV} from 'react-reconciler/src/ReactCurrentFiber';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
-import {
-  isFiberContainedByFragment,
-  isFiberFollowing,
-  isFiberPreceding,
-  isFragmentContainedByFiber,
-  traverseFragmentInstance,
-  getFragmentParentHostFiber,
-  getInstanceFromHostFiber,
-  traverseFragmentInstanceDeeply,
-  fiberIsPortaledIntoHost,
-} from 'react-reconciler/src/ReactFiberTreeReflection';
 
 export {
   setCurrentUpdatePriority,
@@ -69,6 +58,18 @@ import {
   markNodeAsHoistable,
   isOwnedInstance,
 } from './ReactDOMComponentTree';
+import {
+  traverseFragmentInstance,
+  getFragmentParentHostFiber,
+  getInstanceFromHostFiber,
+  isFiberFollowing,
+  isFiberPreceding,
+  getFragmentInstanceSiblings,
+  traverseFragmentInstanceDeeply,
+  fiberIsPortaledIntoHost,
+  isFiberContainedByFragment,
+  isFragmentContainedByFiber,
+} from 'react-reconciler/src/ReactFiberTreeReflection';
 import {compareDocumentPositionForEmptyFragment} from 'shared/ReactDOMFragmentRefShared';
 
 export {detachDeletedInstance};
@@ -123,6 +124,7 @@ import {
   enableSrcObject,
   enableViewTransition,
   enableHydrationChangeEvent,
+  enableFragmentRefsScrollIntoView,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -2813,6 +2815,7 @@ export type FragmentInstanceType = {
     composed: boolean,
   }): Document | ShadowRoot | FragmentInstanceType,
   compareDocumentPosition(otherNode: Instance): number,
+  scrollIntoView(alignToTop?: boolean): void,
 };
 
 function FragmentInstance(this: FragmentInstanceType, fragmentFiber: Fiber) {
@@ -2898,6 +2901,38 @@ function removeEventListenerFromChild(
   const instance = getInstanceFromHostFiber<Instance>(child);
   instance.removeEventListener(type, listener, optionsOrUseCapture);
   return false;
+}
+function normalizeListenerOptions(
+  opts: ?EventListenerOptionsOrUseCapture,
+): string {
+  if (opts == null) {
+    return '0';
+  }
+
+  if (typeof opts === 'boolean') {
+    return `c=${opts ? '1' : '0'}`;
+  }
+
+  return `c=${opts.capture ? '1' : '0'}&o=${opts.once ? '1' : '0'}&p=${opts.passive ? '1' : '0'}`;
+}
+function indexOfEventListener(
+  eventListeners: Array<StoredEventListener>,
+  type: string,
+  listener: EventListener,
+  optionsOrUseCapture: void | EventListenerOptionsOrUseCapture,
+): number {
+  for (let i = 0; i < eventListeners.length; i++) {
+    const item = eventListeners[i];
+    if (
+      item.type === type &&
+      item.listener === listener &&
+      normalizeListenerOptions(item.optionsOrUseCapture) ===
+        normalizeListenerOptions(optionsOrUseCapture)
+    ) {
+      return i;
+    }
+  }
+  return -1;
 }
 // $FlowFixMe[prop-missing]
 FragmentInstance.prototype.dispatchEvent = function (
@@ -3214,38 +3249,55 @@ function validateDocumentPositionWithFiberTree(
   return false;
 }
 
-function normalizeListenerOptions(
-  opts: ?EventListenerOptionsOrUseCapture,
-): string {
-  if (opts == null) {
-    return '0';
-  }
-
-  if (typeof opts === 'boolean') {
-    return `c=${opts ? '1' : '0'}`;
-  }
-
-  return `c=${opts.capture ? '1' : '0'}&o=${opts.once ? '1' : '0'}&p=${opts.passive ? '1' : '0'}`;
-}
-
-function indexOfEventListener(
-  eventListeners: Array<StoredEventListener>,
-  type: string,
-  listener: EventListener,
-  optionsOrUseCapture: void | EventListenerOptionsOrUseCapture,
-): number {
-  for (let i = 0; i < eventListeners.length; i++) {
-    const item = eventListeners[i];
-    if (
-      item.type === type &&
-      item.listener === listener &&
-      normalizeListenerOptions(item.optionsOrUseCapture) ===
-        normalizeListenerOptions(optionsOrUseCapture)
-    ) {
-      return i;
+if (enableFragmentRefsScrollIntoView) {
+  // $FlowFixMe[prop-missing]
+  FragmentInstance.prototype.experimental_scrollIntoView = function (
+    this: FragmentInstanceType,
+    alignToTop?: boolean,
+  ): void {
+    if (typeof alignToTop === 'object') {
+      throw new Error(
+        'FragmentInstance.experimental_scrollIntoView() does not support ' +
+          'scrollIntoViewOptions. Use the alignToTop boolean instead.',
+      );
     }
-  }
-  return -1;
+    // First, get the children nodes
+    const children: Array<Fiber> = [];
+    traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
+
+    const resolvedAlignToTop = alignToTop !== false;
+
+    // If there are no children, we can use the parent and siblings to determine a position
+    if (children.length === 0) {
+      const hostSiblings = getFragmentInstanceSiblings(this._fragmentFiber);
+      const targetFiber = resolvedAlignToTop
+        ? hostSiblings[1] ||
+          hostSiblings[0] ||
+          getFragmentParentHostFiber(this._fragmentFiber)
+        : hostSiblings[0] || hostSiblings[1];
+
+      if (targetFiber === null) {
+        if (__DEV__) {
+          console.warn(
+            'You are attempting to scroll a FragmentInstance that has no ' +
+              'children, siblings, or parent. No scroll was performed.',
+          );
+        }
+        return;
+      }
+      const target = getInstanceFromHostFiber<Instance>(targetFiber);
+      target.scrollIntoView(alignToTop);
+      return;
+    }
+
+    let i = resolvedAlignToTop ? children.length - 1 : 0;
+    while (i !== (resolvedAlignToTop ? -1 : children.length)) {
+      const child = children[i];
+      const instance = getInstanceFromHostFiber<Instance>(child);
+      instance.scrollIntoView(alignToTop);
+      i += resolvedAlignToTop ? -1 : 1;
+    }
+  };
 }
 
 export function createFragmentInstance(

@@ -152,6 +152,7 @@ export const transitionLaneExpirationMs = 5000;
 export const enableInfiniteRenderLoopDetection: boolean = false;
 
 export const enableFragmentRefs = __EXPERIMENTAL__;
+export const enableFragmentRefsScrollIntoView = __EXPERIMENTAL__;
 
 // -----------------------------------------------------------------------------
 // Ready for next major.

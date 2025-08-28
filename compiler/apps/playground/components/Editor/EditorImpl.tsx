@@ -37,6 +37,7 @@ import {
   type Store,
 } from '../../lib/stores';
 import {useStore, useStoreDispatch} from '../StoreContext';
+import ConfigEditor from './ConfigEditor';
 import Input from './Input';
 import {
   CompilerOutput,
@@ -46,6 +47,7 @@ import {
 } from './Output';
 import {transformFromAstSync} from '@babel/core';
 import {LoggerEvent} from 'babel-plugin-react-compiler/dist/Entrypoint';
+import {useSearchParams} from 'next/navigation';
 
 function parseInput(
   input: string,
@@ -291,7 +293,13 @@ export default function Editor(): JSX.Element {
     [deferredStore.source],
   );
 
+  // TODO: Remove this once the config editor is more stable
+  const searchParams = useSearchParams();
+  const search = searchParams.get('showConfig');
+  const shouldShowConfig = search === 'true';
+
   useMountEffect(() => {
+    // Initialize store
     let mountStore: Store;
     try {
       mountStore = initStoreFromUrlOrLocalStorage();
@@ -328,6 +336,7 @@ export default function Editor(): JSX.Element {
   return (
     <>
       <div className="relative flex basis top-14">
+        {shouldShowConfig && <ConfigEditor />}
         <div className={clsx('relative sm:basis-1/4')}>
           <Input language={language} errors={errors} />
         </div>

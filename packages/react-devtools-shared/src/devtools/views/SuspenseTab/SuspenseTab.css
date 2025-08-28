@@ -108,14 +108,22 @@
   overflow: auto;
 }
 
-.TimelineWrapper {
+.SuspenseTreeViewHeader {
   padding: 0.25rem;
-  display: flex;
-  flex-direction: row;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: flex-start;
 }
 
-.Timeline {
-  flex-grow: 1;
-  align-self: anchor-center;
+.SuspenseTreeViewHeaderMain {
+  display: grid;
+  grid-template-rows: auto auto;
+}
+
+.SuspenseBreadcrumbs {
+  /**
+   * TODO: Switch to single item view on overflow like OwnerStack does.
+   * OwnerStack has more constraints that make it easier so it won't be a 1:1 port.
+   */
+  overflow-x: auto;
 }
