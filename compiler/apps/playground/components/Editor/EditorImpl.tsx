@@ -47,6 +47,7 @@ import {
 } from './Output';
 import {transformFromAstSync} from '@babel/core';
 import {LoggerEvent} from 'babel-plugin-react-compiler/dist/Entrypoint';
+import {useSearchParams} from 'next/navigation';
 
 function parseInput(
   input: string,
@@ -293,14 +294,11 @@ export default function Editor(): JSX.Element {
   );
 
   // TODO: Remove this once the config editor is more stable
-  const [shouldShowConfig, setShouldShowConfig] = useState(false);
+  const searchParams = useSearchParams();
+  const search = searchParams.get('showConfig');
+  const shouldShowConfig = search === 'true';
 
   useMountEffect(() => {
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      setShouldShowConfig(urlParams.get('showConfig') === 'true');
-    }
-
     // Initialize store
     let mountStore: Store;
     try {

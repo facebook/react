@@ -182,7 +182,6 @@ export function parseConfigPragmaForTests(
     environment?: PartialEnvironmentConfig;
   },
 ): PluginOptions {
-
   const overridePragma = parseConfigPragmaAsString(pragma);
   if (overridePragma !== '') {
     return parseConfigStringAsJS(overridePragma, defaults);
@@ -224,10 +223,8 @@ export function parseConfigPragmaForTests(
   return parsePluginOptions(options);
 }
 
-export function parseConfigPragmaAsString(
-  pragma: string,
-): string {
-    // Check if it's in JS override format
+export function parseConfigPragmaAsString(pragma: string): string {
+  // Check if it's in JS override format
   for (const {key, value: val} of splitPragma(pragma)) {
     if (key === 'OVERRIDE' && val != null) {
       return val;
@@ -256,7 +253,7 @@ function parseConfigStringAsJS(
     });
   }
 
-  console.log("OVERRIDE:", parsedConfig);
+  console.log('OVERRIDE:', parsedConfig);
 
   const options: Record<keyof PluginOptions, unknown> = {
     ...defaultOptions,

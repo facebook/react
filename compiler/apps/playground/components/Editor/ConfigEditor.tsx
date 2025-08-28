@@ -42,6 +42,7 @@ export default function ConfigEditor(): JSX.Element {
       .catch(error => {
         console.error('Error formatting config:', error);
         setConfigJavaScript('({})'); // Return empty object if not valid for now
+        //TODO: Add validation and error handling for config
       });
     console.log('Config:', configString);
   }, [store.source]);
