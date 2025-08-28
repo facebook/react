@@ -4763,7 +4763,7 @@ const tests = {
       ],
     },
     {
-      code: `
+      code: normalizeIndent`
         function MyComponent() {
           const myRef = useRef();
           useLayoutEffect_SAFE_FOR_SSR(() => {
@@ -4777,10 +4777,14 @@ const tests = {
       // No changes
       output: null,
       errors: [
-        `The ref value 'myRef.current' will likely have changed by the time ` +
-          `this effect cleanup function runs. If this ref points to a node ` +
-          `rendered by React, copy 'myRef.current' to a variable inside the effect, ` +
-          `and use that variable in the cleanup function.`,
+        {
+          message:
+            `The ref value 'myRef.current' will likely have changed by the time ` +
+            `this effect cleanup function runs. If this ref points to a node ` +
+            `rendered by React, copy 'myRef.current' to a variable inside the effect, ` +
+            `and use that variable in the cleanup function.`,
+          suggestions: undefined,
+        },
       ],
       options: [{additionalHooks: 'useLayoutEffect_SAFE_FOR_SSR'}],
     },
