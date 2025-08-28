@@ -187,8 +187,6 @@ function generateCompilerError(
   const throwableErrors = new CompilerError();
   for (const error of errors) {
     let compilerDiagnostic: CompilerDiagnostic | undefined = undefined;
-    console.log('ERROR: ', error);
-    console.log('ERROR: ', shadowingUseState);
 
     /*
      * If we use a setState from an invalid useEffect elsewhere then we probably have to
