@@ -53,7 +53,7 @@ describe('ReactDOMInput', () => {
     return copy.checked === node.checked;
   }
 
-  function getTrackedAndCurrentInputValue(elem: HTMLElement): [mixed, mixed] {
+  function getTrackedAndCurrentInputValue(elem) {
     const tracker = elem._valueTracker;
     if (!tracker) {
       throw new Error('No input tracker');
@@ -2483,6 +2483,7 @@ describe('ReactDOMInput', () => {
           value="0"
           onChange={() => {}}
           type="range"
+          aria-label="slider"
           min="0"
           max="100"
           step="1"
@@ -2494,6 +2495,7 @@ describe('ReactDOMInput', () => {
       'set attribute min',
       'set attribute max',
       'set attribute step',
+      'set attribute aria-label',
       'set property type',
       'set property value',
     ]);
