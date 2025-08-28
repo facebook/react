@@ -50,6 +50,7 @@ import {
 import {Scope as BabelScope, NodePath} from '@babel/traverse';
 import {TypeSchema} from './TypeSchema';
 import {FlowTypeEnv} from '../Flood/Types';
+import {defaultModuleTypeProvider} from './DefaultModuleTypeProvider';
 
 export const ReactElementSymbolSchema = z.object({
   elementSymbol: z.union([
@@ -158,7 +159,9 @@ export const EnvironmentConfigSchema = z.object({
    * A function that, given the name of a module, can optionally return a description
    * of that module's type signature.
    */
-  moduleTypeProvider: z.nullable(z.function().args(z.string())).default(null),
+  moduleTypeProvider: z
+    .nullable(z.function().args(z.string()))
+    .default(defaultModuleTypeProvider),
 
   /**
    * A list of functions which the application compiles as macros, where
