@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<cbd481fd29e7dea6900e8c0fbb8d06fa>>
+ * @generated SignedSource<<0cf4d579071cd6361df2fa74ba2aa318>>
  */
 
 'use strict';
@@ -19504,6 +19504,7 @@ function getFunctionName$2(instrValue, defaultValue) {
     }
 }
 function printAliasingEffect(effect) {
+    var _a;
     switch (effect.kind) {
         case 'Assign': {
             return `Assign ${printPlaceForAliasEffect(effect.into)} = ${printPlaceForAliasEffect(effect.from)}`;
@@ -19562,7 +19563,7 @@ function printAliasingEffect(effect) {
         case 'MutateConditionally':
         case 'MutateTransitive':
         case 'MutateTransitiveConditionally': {
-            return `${effect.kind} ${printPlaceForAliasEffect(effect.value)}`;
+            return `${effect.kind} ${printPlaceForAliasEffect(effect.value)}${effect.kind === 'Mutate' && ((_a = effect.reason) === null || _a === void 0 ? void 0 : _a.kind) === 'AssignCurrentProperty' ? ' (assign `.current`)' : ''}`;
         }
         case 'MutateFrozen': {
             return `MutateFrozen ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.reason)}`;
@@ -42093,7 +42094,7 @@ class RewriteBlockIds extends ReactiveFunctionVisitor {
 }
 
 function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
-    var _a, _b, _c, _d, _e, _f;
+    var _a, _b, _c, _d, _e, _f, _g;
     const functionEffects = [];
     const state = new AliasingState();
     const pendingPhis = new Map();
@@ -42160,6 +42161,7 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
                         kind: effect.kind === 'MutateTransitive'
                             ? MutationKind.Definite
                             : MutationKind.Conditional,
+                        reason: null,
                         place: effect.value,
                     });
                 }
@@ -42172,6 +42174,7 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
                         kind: effect.kind === 'Mutate'
                             ? MutationKind.Definite
                             : MutationKind.Conditional,
+                        reason: effect.kind === 'Mutate' ? ((_a = effect.reason) !== null && _a !== void 0 ? _a : null) : null,
                         place: effect.value,
                     });
                 }
@@ -42213,7 +42216,7 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
         }
     }
     for (const mutation of mutations) {
-        state.mutate(mutation.index, mutation.place.identifier, makeInstructionId(mutation.id + 1), mutation.transitive, mutation.kind, mutation.place.loc, errors);
+        state.mutate(mutation.index, mutation.place.identifier, makeInstructionId(mutation.id + 1), mutation.transitive, mutation.kind, mutation.place.loc, mutation.reason, errors);
     }
     for (const render of renders) {
         state.render(render.index, render.place.identifier, errors);
@@ -42238,6 +42241,7 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
                 functionEffects.push({
                     kind: 'Mutate',
                     value: Object.assign(Object.assign({}, place), { loc: node.local.loc }),
+                    reason: node.mutationReason,
                 });
             }
         }
@@ -42265,7 +42269,7 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
         for (const phi of block.phis) {
             phi.place.effect = Effect.Store;
             const isPhiMutatedAfterCreation = phi.place.identifier.mutableRange.end >
-                ((_b = (_a = block.instructions.at(0)) === null || _a === void 0 ? void 0 : _a.id) !== null && _b !== void 0 ? _b : block.terminal.id);
+                ((_c = (_b = block.instructions.at(0)) === null || _b === void 0 ? void 0 : _b.id) !== null && _c !== void 0 ? _c : block.terminal.id);
             for (const operand of phi.operands.values()) {
                 operand.effect = isPhiMutatedAfterCreation
                     ? Effect.Capture
@@ -42273,7 +42277,7 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
             }
             if (isPhiMutatedAfterCreation &&
                 phi.place.identifier.mutableRange.start === 0) {
-                const firstInstructionIdOfBlock = (_d = (_c = block.instructions.at(0)) === null || _c === void 0 ? void 0 : _c.id) !== null && _d !== void 0 ? _d : block.terminal.id;
+                const firstInstructionIdOfBlock = (_e = (_d = block.instructions.at(0)) === null || _d === void 0 ? void 0 : _d.id) !== null && _e !== void 0 ? _e : block.terminal.id;
                 phi.place.identifier.mutableRange.start = makeInstructionId(firstInstructionIdOfBlock - 1);
             }
         }
@@ -42351,7 +42355,7 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
                 }
             }
             for (const lvalue of eachInstructionLValue(instr)) {
-                const effect = (_e = operandEffects.get(lvalue.identifier.id)) !== null && _e !== void 0 ? _e : Effect.ConditionallyMutate;
+                const effect = (_f = operandEffects.get(lvalue.identifier.id)) !== null && _f !== void 0 ? _f : Effect.ConditionallyMutate;
                 lvalue.effect = effect;
             }
             for (const operand of eachInstructionValueOperand(instr.value)) {
@@ -42359,7 +42363,7 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
                     operand.identifier.mutableRange.start === 0) {
                     operand.identifier.mutableRange.start = instr.id;
                 }
-                const effect = (_f = operandEffects.get(operand.identifier.id)) !== null && _f !== void 0 ? _f : Effect.Read;
+                const effect = (_g = operandEffects.get(operand.identifier.id)) !== null && _g !== void 0 ? _g : Effect.Read;
                 operand.effect = effect;
             }
             if (instr.value.kind === 'StoreContext' &&
@@ -42397,7 +42401,7 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
     }
     for (const into of tracked) {
         const mutationIndex = index++;
-        state.mutate(mutationIndex, into.identifier, null, true, MutationKind.Conditional, into.loc, ignoredErrors);
+        state.mutate(mutationIndex, into.identifier, null, true, MutationKind.Conditional, into.loc, null, ignoredErrors);
         for (const from of tracked) {
             if (from.identifier.id === into.identifier.id ||
                 from.identifier.id === fn.returns.identifier.id) {
@@ -42465,6 +42469,7 @@ class AliasingState {
             transitive: null,
             local: null,
             lastMutated: 0,
+            mutationReason: null,
             value,
         });
     }
@@ -42549,7 +42554,8 @@ class AliasingState {
             }
         }
     }
-    mutate(index, start, end, transitive, startKind, loc, errors) {
+    mutate(index, start, end, transitive, startKind, loc, reason, errors) {
+        var _a;
         const seen = new Map();
         const queue = [{ place: start, transitive, direction: 'backwards', kind: startKind }];
         while (queue.length !== 0) {
@@ -42563,6 +42569,7 @@ class AliasingState {
             if (node == null) {
                 continue;
             }
+            (_a = node.mutationReason) !== null && _a !== void 0 ? _a : (node.mutationReason = reason);
             node.lastMutated = Math.max(node.lastMutated, index);
             if (end != null) {
                 node.id.mutableRange.end = makeInstructionId(Math.max(node.id.mutableRange.end, end));
