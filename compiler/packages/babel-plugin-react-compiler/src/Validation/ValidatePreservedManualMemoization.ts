@@ -284,8 +284,7 @@ function validateInferredDep(
     CompilerDiagnostic.create({
       category: ErrorCategory.PreserveManualMemo,
       severity: ErrorSeverity.CannotPreserveMemoization,
-      reason:
-        'Compilation skipped because existing memoization could not be preserved',
+      reason: 'Existing memoization could not be preserved',
       description: [
         'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. ',
         'The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. ',
@@ -539,8 +538,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
             CompilerDiagnostic.create({
               category: ErrorCategory.PreserveManualMemo,
               severity: ErrorSeverity.CannotPreserveMemoization,
-              reason:
-                'Compilation skipped because existing memoization could not be preserved',
+              reason: 'Existing memoization could not be preserved',
               description: [
                 'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. ',
                 'This dependency may be mutated later, which could cause the value to change unexpectedly.',
@@ -588,8 +586,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
                 CompilerDiagnostic.create({
                   category: ErrorCategory.PreserveManualMemo,
                   severity: ErrorSeverity.CannotPreserveMemoization,
-                  reason:
-                    'Compilation skipped because existing memoization could not be preserved',
+                  reason: 'Existing memoization could not be preserved',
                   description: [
                     'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output. ',
                     DEBUG

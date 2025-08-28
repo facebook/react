@@ -27,7 +27,7 @@ export const FIXTURE_ENTRYPOINT = {
 ```
 Found 2 errors:
 
-Memoization: Compilation skipped because existing memoization could not be preserved
+Compilation Skipped: Existing memoization could not be preserved
 
 React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This dependency may be mutated later, which could cause the value to change unexpectedly.
 
@@ -40,7 +40,7 @@ error.validate-object-values-mutation.ts:6:55
   8 |     value.updated = true;
   9 |   });
 
-Memoization: Compilation skipped because existing memoization could not be preserved
+Compilation Skipped: Existing memoization could not be preserved
 
 React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.
 
