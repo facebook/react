@@ -630,6 +630,16 @@ export function renderWithHooks<Props, SecondArg>(
   return children;
 }
 
+function isRecursiveComponent(currentFiber) {
+  while (currentFiber.return) {
+    if (currentFiber.return.type === currentFiber.type) {
+      return true;
+    }
+    currentFiber = currentFiber.return;
+  }
+  return false;
+}
+
 function finishRenderingHooks<Props, SecondArg>(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -675,6 +685,7 @@ function finishRenderingHooks<Props, SecondArg>(
     // render. If this fires, it suggests that we incorrectly reset the static
     // flags in some other part of the codebase. This has happened before, for
     // example, in the SuspenseList implementation.
+
     if (
       current !== null &&
       (current.flags & StaticMaskEffect) !==
@@ -684,7 +695,8 @@ function finishRenderingHooks<Props, SecondArg>(
       // need to mark fibers that commit in an incomplete state, somehow. For
       // now I'll disable the warning that most of the bugs that would trigger
       // it are either exclusive to concurrent mode or exist in both.
-      (disableLegacyMode || (current.mode & ConcurrentMode) !== NoMode)
+      (disableLegacyMode || (current.mode & ConcurrentMode) !== NoMode) &&
+      !isRecursiveComponent(workInProgress)
     ) {
       console.error(
         'Internal React error: Expected static flag was missing. Please ' +
