@@ -591,8 +591,14 @@ function applyEffect(
         };
         context.effectInstructionValueCache.set(effect, value);
       }
+
+      const outputKind =
+        fromValue.kind === ValueKind.ShallowMutable
+          ? ValueKind.Frozen
+          : fromValue.kind;
+
       state.initialize(value, {
-        kind: fromValue.kind,
+        kind: outputKind,
         reason: new Set(fromValue.reason),
       });
       state.define(effect.into, value);
@@ -607,10 +613,11 @@ function applyEffect(
           });
           break;
         }
+        case ValueKind.ShallowMutable:
         case ValueKind.Frozen: {
           effects.push({
             kind: 'Create',
-            value: fromValue.kind,
+            value: outputKind,
             into: effect.into,
             reason: [...fromValue.reason][0] ?? ValueReason.Other,
           });
@@ -741,6 +748,7 @@ function applyEffect(
           isMutableReferenceType = false;
           break;
         }
+        case ValueKind.ShallowMutable:
         case ValueKind.Frozen: {
           isMutableReferenceType = false;
           applyEffect(
@@ -781,6 +789,7 @@ function applyEffect(
       const fromValue = state.kind(effect.from);
       const fromKind = fromValue.kind;
       switch (fromKind) {
+        case ValueKind.ShallowMutable:
         case ValueKind.Frozen: {
           applyEffect(
             context,
@@ -1267,6 +1276,7 @@ class InferenceState {
     switch (value.kind) {
       case ValueKind.Context:
       case ValueKind.Mutable:
+      case ValueKind.ShallowMutable:
       case ValueKind.MaybeFrozen: {
         const values = this.values(place);
         for (const instrValue of values) {
@@ -1340,6 +1350,7 @@ class InferenceState {
             // technically an error, but it's not React specific
             return 'none';
           }
+          case ValueKind.ShallowMutable:
           case ValueKind.Frozen: {
             return 'mutate-frozen';
           }
@@ -1911,6 +1922,13 @@ function computeSignatureForInstruction(
       break;
     }
     case 'Destructure': {
+      let isFromProps = false;
+      if (context.fn.fnType === 'Component' && context.fn.params.length > 0) {
+        const props = context.fn.params[0];
+        const propsPlace = props.kind === 'Identifier' ? props : props.place;
+        isFromProps = propsPlace.identifier.id === value.value.identifier.id;
+      }
+
       for (const patternItem of eachPatternItem(value.lvalue.pattern)) {
         const place =
           patternItem.kind === 'Identifier' ? patternItem : patternItem.place;
@@ -1928,12 +1946,14 @@ function computeSignatureForInstruction(
             into: place,
           });
         } else {
+          const isPropsSpread =
+            isFromProps && value.lvalue.pattern.kind === 'ObjectPattern';
           // Spread creates a new object/array that captures from the RValue
           effects.push({
             kind: 'Create',
             into: place,
             reason: ValueReason.Other,
-            value: ValueKind.Mutable,
+            value: isPropsSpread ? ValueKind.ShallowMutable : ValueKind.Mutable,
           });
           effects.push({
             kind: 'Capture',
@@ -2349,6 +2369,7 @@ function areArgumentsImmutableAndNonMutating(
     const kind = state.kind(place).kind;
     switch (kind) {
       case ValueKind.Primitive:
+      case ValueKind.ShallowMutable:
       case ValueKind.Frozen: {
         /*
          * Only immutable values, or frozen lambdas are allowed.
