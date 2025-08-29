@@ -7969,6 +7969,26 @@ const testsTypescript = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {
+            const { whatever } = props;
+            whatever();
+          }, [props.whatever]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {
+            const { whatever: foo, something } = props;
+            console.log(foo, something);
+          }, [props.whatever, props.something]);
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -8391,6 +8411,36 @@ const testsTypescript = {
           message:
             'React Hook useEffect always requires dependencies. Please add a dependency array or an explicit `undefined`',
           suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {
+            const { whatever: foo, something } = props;
+            console.log(foo, something);
+          }, [props.something]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'props.whatever'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [props.something, props.whatever]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  useEffect(() => {
+                    const { whatever: foo, something } = props;
+                    console.log(foo, something);
+                  }, [props.something, props.whatever]);
+                }
+              `,
+            },
+          ],
         },
       ],
     },
