@@ -196,6 +196,29 @@ export function makeSharedRuntimeTypeProvider({
               ],
             },
           },
+          PrimitiveBox: {
+            kind: 'object',
+            properties: {
+              get: {
+                kind: 'function',
+                positionalParams: [],
+                restParam: null,
+                calleeEffect: EffectEnum.Read,
+                returnType: {kind: 'type', name: 'Primitive'},
+                returnValueKind: ValueKindEnum.Primitive,
+                aliasing: {
+                  receiver: '@receiver',
+                  params: ['@value'],
+                  rest: null,
+                  returns: '@return',
+                  temporaries: [],
+                  effects: [
+                    {kind: 'CreateFrom', from: '@value', into: '@return'},
+                  ],
+                },
+              },
+            },
+          },
         },
       };
     } else if (moduleName === 'ReactCompilerKnownIncompatibleTest') {
