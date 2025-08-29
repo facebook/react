@@ -1836,4 +1836,323 @@ describe('FragmentRefs', () => {
       });
     });
   });
+
+  describe('scrollIntoView', () => {
+    function expectLast(arr, test) {
+      expect(arr[arr.length - 1]).toBe(test);
+    }
+    // @gate enableFragmentRefs && enableFragmentRefsScrollIntoView
+    it('does not yet support options', async () => {
+      const fragmentRef = React.createRef();
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<Fragment ref={fragmentRef} />);
+      });
+
+      expect(() => {
+        fragmentRef.current.experimental_scrollIntoView({block: 'start'});
+      }).toThrowError(
+        'FragmentInstance.experimental_scrollIntoView() does not support ' +
+          'scrollIntoViewOptions. Use the alignToTop boolean instead.',
+      );
+    });
+
+    describe('with children', () => {
+      // @gate enableFragmentRefs && enableFragmentRefsScrollIntoView
+      it('settles scroll on the first child by default, or if alignToTop=true', async () => {
+        const fragmentRef = React.createRef();
+        const childARef = React.createRef();
+        const childBRef = React.createRef();
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => {
+          root.render(
+            <React.Fragment ref={fragmentRef}>
+              <div ref={childARef} id="a">
+                A
+              </div>
+              <div ref={childBRef} id="b">
+                B
+              </div>
+            </React.Fragment>,
+          );
+        });
+
+        let logs = [];
+        childARef.current.scrollIntoView = jest.fn().mockImplementation(() => {
+          logs.push('childA');
+        });
+        childBRef.current.scrollIntoView = jest.fn().mockImplementation(() => {
+          logs.push('childB');
+        });
+
+        // Default call
+        fragmentRef.current.experimental_scrollIntoView();
+        expectLast(logs, 'childA');
+        logs = [];
+        // alignToTop=true
+        fragmentRef.current.experimental_scrollIntoView(true);
+        expectLast(logs, 'childA');
+      });
+
+      // @gate enableFragmentRefs && enableFragmentRefsScrollIntoView
+      it('calls scrollIntoView on the last child if alignToTop is false', async () => {
+        const fragmentRef = React.createRef();
+        const childARef = React.createRef();
+        const childBRef = React.createRef();
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => {
+          root.render(
+            <Fragment ref={fragmentRef}>
+              <div ref={childARef}>A</div>
+              <div ref={childBRef}>B</div>
+            </Fragment>,
+          );
+        });
+
+        const logs = [];
+        childARef.current.scrollIntoView = jest.fn().mockImplementation(() => {
+          logs.push('childA');
+        });
+        childBRef.current.scrollIntoView = jest.fn().mockImplementation(() => {
+          logs.push('childB');
+        });
+
+        fragmentRef.current.experimental_scrollIntoView(false);
+        expectLast(logs, 'childB');
+      });
+
+      // @gate enableFragmentRefs && enableFragmentRefsScrollIntoView
+      it('handles portaled elements -- same scroll container', async () => {
+        const fragmentRef = React.createRef();
+        const childARef = React.createRef();
+        const childBRef = React.createRef();
+        const root = ReactDOMClient.createRoot(container);
+
+        function Test() {
+          return (
+            <Fragment ref={fragmentRef}>
+              {createPortal(
+                <div ref={childARef} id="child-a">
+                  A
+                </div>,
+                document.body,
+              )}
+
+              <div ref={childBRef} id="child-b">
+                B
+              </div>
+            </Fragment>
+          );
+        }
+
+        await act(() => {
+          root.render(<Test />);
+        });
+
+        const logs = [];
+        childARef.current.scrollIntoView = jest.fn().mockImplementation(() => {
+          logs.push('childA');
+        });
+        childBRef.current.scrollIntoView = jest.fn().mockImplementation(() => {
+          logs.push('childB');
+        });
+
+        // Default call
+        fragmentRef.current.experimental_scrollIntoView();
+        expectLast(logs, 'childA');
+      });
+
+      // @gate enableFragmentRefs && enableFragmentRefsScrollIntoView
+      it('handles portaled elements -- different scroll container', async () => {
+        const fragmentRef = React.createRef();
+        const headerChildRef = React.createRef();
+        const childARef = React.createRef();
+        const childBRef = React.createRef();
+        const childCRef = React.createRef();
+        const scrollContainerRef = React.createRef();
+        const scrollContainerNestedRef = React.createRef();
+        const root = ReactDOMClient.createRoot(container);
+
+        function Test({mountFragment}) {
+          return (
+            <>
+              <div id="header" style={{position: 'fixed'}}>
+                <div id="parent-a" />
+              </div>
+              <div id="parent-b" />
+              <div
+                id="scroll-container"
+                ref={scrollContainerRef}
+                style={{overflow: 'scroll'}}>
+                <div id="parent-c" />
+                <div
+                  id="scroll-container-nested"
+                  ref={scrollContainerNestedRef}
+                  style={{overflow: 'scroll'}}>
+                  <div id="parent-d" />
+                </div>
+              </div>
+              {mountFragment && (
+                <Fragment ref={fragmentRef}>
+                  {createPortal(
+                    <div ref={headerChildRef} id="header-content">
+                      Header
+                    </div>,
+                    document.querySelector('#parent-a'),
+                  )}
+                  {createPortal(
+                    <div ref={childARef} id="child-a">
+                      A
+                    </div>,
+                    document.querySelector('#parent-b'),
+                  )}
+                  {createPortal(
+                    <div ref={childBRef} id="child-b">
+                      B
+                    </div>,
+                    document.querySelector('#parent-b'),
+                  )}
+                  {createPortal(
+                    <div ref={childCRef} id="child-c">
+                      C
+                    </div>,
+                    document.querySelector('#parent-c'),
+                  )}
+                </Fragment>
+              )}
+            </>
+          );
+        }
+
+        await act(() => {
+          root.render(<Test mountFragment={false} />);
+        });
+        // Now that the portal locations exist, mount the fragment
+        await act(() => {
+          root.render(<Test mountFragment={true} />);
+        });
+
+        let logs = [];
+        headerChildRef.current.scrollIntoView = jest.fn(() => {
+          logs.push('header');
+        });
+        childARef.current.scrollIntoView = jest.fn(() => {
+          logs.push('A');
+        });
+        childBRef.current.scrollIntoView = jest.fn(() => {
+          logs.push('B');
+        });
+        childCRef.current.scrollIntoView = jest.fn(() => {
+          logs.push('C');
+        });
+
+        // Default call
+        fragmentRef.current.experimental_scrollIntoView();
+        expectLast(logs, 'header');
+
+        childARef.current.scrollIntoView.mockClear();
+        childBRef.current.scrollIntoView.mockClear();
+        childCRef.current.scrollIntoView.mockClear();
+
+        logs = [];
+
+        // // alignToTop=false
+        fragmentRef.current.experimental_scrollIntoView(false);
+        expectLast(logs, 'C');
+      });
+    });
+
+    describe('without children', () => {
+      // @gate enableFragmentRefs && enableFragmentRefsScrollIntoView
+      it('calls scrollIntoView on the next sibling by default, or if alignToTop=true', async () => {
+        const fragmentRef = React.createRef();
+        const siblingARef = React.createRef();
+        const siblingBRef = React.createRef();
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => {
+          root.render(
+            <div>
+              <Wrapper>
+                <div ref={siblingARef} />
+              </Wrapper>
+              <Fragment ref={fragmentRef} />
+              <div ref={siblingBRef} />
+            </div>,
+          );
+        });
+
+        siblingARef.current.scrollIntoView = jest.fn();
+        siblingBRef.current.scrollIntoView = jest.fn();
+
+        // Default call
+        fragmentRef.current.experimental_scrollIntoView();
+        expect(siblingARef.current.scrollIntoView).toHaveBeenCalledTimes(0);
+        expect(siblingBRef.current.scrollIntoView).toHaveBeenCalledTimes(1);
+
+        siblingBRef.current.scrollIntoView.mockClear();
+
+        // alignToTop=true
+        fragmentRef.current.experimental_scrollIntoView(true);
+        expect(siblingARef.current.scrollIntoView).toHaveBeenCalledTimes(0);
+        expect(siblingBRef.current.scrollIntoView).toHaveBeenCalledTimes(1);
+      });
+
+      // @gate enableFragmentRefs && enableFragmentRefsScrollIntoView
+      it('calls scrollIntoView on the prev sibling if alignToTop is false', async () => {
+        const fragmentRef = React.createRef();
+        const siblingARef = React.createRef();
+        const siblingBRef = React.createRef();
+        const root = ReactDOMClient.createRoot(container);
+        function C() {
+          return (
+            <Wrapper>
+              <div id="C" ref={siblingARef} />
+            </Wrapper>
+          );
+        }
+        function Test() {
+          return (
+            <div id="A">
+              <div id="B" />
+              <C />
+              <Fragment ref={fragmentRef} />
+              <div id="D" ref={siblingBRef} />
+              <div id="E" />
+            </div>
+          );
+        }
+        await act(() => {
+          root.render(<Test />);
+        });
+
+        siblingARef.current.scrollIntoView = jest.fn();
+        siblingBRef.current.scrollIntoView = jest.fn();
+
+        // alignToTop=false
+        fragmentRef.current.experimental_scrollIntoView(false);
+        expect(siblingARef.current.scrollIntoView).toHaveBeenCalledTimes(1);
+        expect(siblingBRef.current.scrollIntoView).toHaveBeenCalledTimes(0);
+      });
+
+      // @gate enableFragmentRefs && enableFragmentRefsScrollIntoView
+      it('calls scrollIntoView on the parent if there are no siblings', async () => {
+        const fragmentRef = React.createRef();
+        const parentRef = React.createRef();
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => {
+          root.render(
+            <div ref={parentRef}>
+              <Wrapper>
+                <Fragment ref={fragmentRef} />
+              </Wrapper>
+            </div>,
+          );
+        });
+
+        parentRef.current.scrollIntoView = jest.fn();
+        fragmentRef.current.experimental_scrollIntoView();
+        expect(parentRef.current.scrollIntoView).toHaveBeenCalledTimes(1);
+      });
+    });
+  });
 });

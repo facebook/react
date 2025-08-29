@@ -12,9 +12,11 @@ export {
   CompilerDiagnostic,
   CompilerSuggestionOperation,
   ErrorSeverity,
+  LintRules,
   type CompilerErrorDetailOptions,
   type CompilerDiagnosticOptions,
   type CompilerDiagnosticDetail,
+  type LintRule,
 } from './CompilerError';
 export {
   compileFn as compile,
@@ -46,7 +48,10 @@ export {
   printReactiveFunction,
   printReactiveFunctionWithOutlined,
 } from './ReactiveScopes';
-export {parseConfigPragmaForTests} from './Utils/TestUtils';
+export {
+  parseConfigPragmaForTests,
+  parseConfigPragmaAsString,
+} from './Utils/TestUtils';
 declare global {
   let __DEV__: boolean | null | undefined;
 }

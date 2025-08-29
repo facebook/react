@@ -880,7 +880,8 @@ export function printType(type: Type): string {
   if (type.kind === 'Object' && type.shapeId != null) {
     return `:T${type.kind}<${type.shapeId}>`;
   } else if (type.kind === 'Function' && type.shapeId != null) {
-    return `:T${type.kind}<${type.shapeId}>`;
+    const returnType = printType(type.return);
+    return `:T${type.kind}<${type.shapeId}>()${returnType !== '' ? `:  ${returnType}` : ''}`;
   } else {
     return `:T${type.kind}`;
   }
@@ -983,16 +984,16 @@ export function printAliasingEffect(effect: AliasingEffect): string {
     case 'MutateConditionally':
     case 'MutateTransitive':
     case 'MutateTransitiveConditionally': {
-      return `${effect.kind} ${printPlaceForAliasEffect(effect.value)}`;
+      return `${effect.kind} ${printPlaceForAliasEffect(effect.value)}${effect.kind === 'Mutate' && effect.reason?.kind === 'AssignCurrentProperty' ? ' (assign `.current`)' : ''}`;
     }
     case 'MutateFrozen': {
-      return `MutateFrozen ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.category)}`;
+      return `MutateFrozen ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.reason)}`;
     }
     case 'MutateGlobal': {
-      return `MutateGlobal ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.category)}`;
+      return `MutateGlobal ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.reason)}`;
     }
     case 'Impure': {
-      return `Impure ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.category)}`;
+      return `Impure ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.reason)}`;
     }
     case 'Render': {
       return `Render ${printPlaceForAliasEffect(effect.place)}`;

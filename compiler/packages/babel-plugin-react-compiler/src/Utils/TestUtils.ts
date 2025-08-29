@@ -182,6 +182,11 @@ export function parseConfigPragmaForTests(
     environment?: PartialEnvironmentConfig;
   },
 ): PluginOptions {
+  const overridePragma = parseConfigPragmaAsString(pragma);
+  if (overridePragma !== '') {
+    return parseConfigStringAsJS(overridePragma, defaults);
+  }
+
   const environment = parseConfigPragmaEnvironmentForTest(
     pragma,
     defaults.environment ?? {},
@@ -215,5 +220,106 @@ export function parseConfigPragmaForTests(
       }
     }
   }
+  return parsePluginOptions(options);
+}
+
+export function parseConfigPragmaAsString(pragma: string): string {
+  // Check if it's in JS override format
+  for (const {key, value: val} of splitPragma(pragma)) {
+    if (key === 'OVERRIDE' && val != null) {
+      return val;
+    }
+  }
+  return '';
+}
+
+function parseConfigStringAsJS(
+  configString: string,
+  defaults: {
+    compilationMode: CompilationMode;
+    environment?: PartialEnvironmentConfig;
+  },
+): PluginOptions {
+  let parsedConfig: any;
+  try {
+    // Parse the JavaScript object literal
+    parsedConfig = new Function(`return ${configString}`)();
+  } catch (error) {
+    CompilerError.invariant(false, {
+      reason: 'Failed to parse config pragma as JavaScript object',
+      description: `Could not parse: ${configString}. Error: ${error}`,
+      loc: null,
+      suggestions: null,
+    });
+  }
+
+  console.log('OVERRIDE:', parsedConfig);
+
+  const options: Record<keyof PluginOptions, unknown> = {
+    ...defaultOptions,
+    panicThreshold: 'all_errors',
+    compilationMode: defaults.compilationMode,
+    environment: defaults.environment ?? defaultOptions.environment,
+  };
+
+  // Apply parsed config, merging environment if it exists
+  if (parsedConfig.environment) {
+    const mergedEnvironment = {
+      ...(options.environment as Record<string, unknown>),
+      ...parsedConfig.environment,
+    };
+
+    // Apply complex defaults for environment flags that are set to true
+    const environmentConfig: Partial<Record<keyof EnvironmentConfig, unknown>> =
+      {};
+    for (const [key, value] of Object.entries(mergedEnvironment)) {
+      if (hasOwnProperty(EnvironmentConfigSchema.shape, key)) {
+        if (value === true && key in testComplexConfigDefaults) {
+          environmentConfig[key] = testComplexConfigDefaults[key];
+        } else {
+          environmentConfig[key] = value;
+        }
+      }
+    }
+
+    // Validate environment config
+    const validatedEnvironment =
+      EnvironmentConfigSchema.safeParse(environmentConfig);
+    if (!validatedEnvironment.success) {
+      CompilerError.invariant(false, {
+        reason: 'Invalid environment configuration in config pragma',
+        description: `${fromZodError(validatedEnvironment.error)}`,
+        loc: null,
+        suggestions: null,
+      });
+    }
+
+    if (validatedEnvironment.data.enableResetCacheOnSourceFileChanges == null) {
+      validatedEnvironment.data.enableResetCacheOnSourceFileChanges = false;
+    }
+
+    options.environment = validatedEnvironment.data;
+  }
+
+  // Apply other config options
+  for (const [key, value] of Object.entries(parsedConfig)) {
+    if (key === 'environment') {
+      continue;
+    }
+
+    if (hasOwnProperty(defaultOptions, key)) {
+      if (value === true && key in testComplexPluginOptionDefaults) {
+        options[key] = testComplexPluginOptionDefaults[key];
+      } else if (key === 'target' && value === 'donotuse_meta_internal') {
+        options[key] = {
+          kind: value,
+          runtimeModule: 'react',
+        };
+      } else {
+        options[key] = value;
+      }
+    }
+  }
+
   return parsePluginOptions(options);
 }

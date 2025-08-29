@@ -14,6 +14,7 @@ import {StoreContext} from '../context';
 import {ProfilerContext} from 'react-devtools-shared/src/devtools/views/Profiler/ProfilerContext';
 
 import styles from './SettingsShared.css';
+import typeof {SyntheticEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
 
 export default function ProfilerSettings(_: {}): React.Node {
   const {
@@ -45,7 +46,7 @@ export default function ProfilerSettings(_: {}): React.Node {
     [store],
   );
   const updateMinCommitDuration = useCallback(
-    (event: SyntheticEvent<HTMLInputElement>) => {
+    (event: SyntheticEvent) => {
       const newValue = parseFloat(event.currentTarget.value);
       setMinCommitDuration(
         Number.isNaN(newValue) || newValue <= 0 ? 0 : newValue,
@@ -54,7 +55,7 @@ export default function ProfilerSettings(_: {}): React.Node {
     [setMinCommitDuration],
   );
   const updateIsCommitFilterEnabled = useCallback(
-    (event: SyntheticEvent<HTMLInputElement>) => {
+    (event: SyntheticEvent) => {
       const checked = event.currentTarget.checked;
       setIsCommitFilterEnabled(checked);
       if (checked) {

@@ -21,7 +21,7 @@ function useHook(x) {
 ```
 Found 1 error:
 
-Memoization: Compilation skipped because existing memoization could not be preserved
+Compilation Skipped: Existing memoization could not be preserved
 
 React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `aliasedX`, but the source dependencies were [x, aliasedProp]. Inferred different dependency than source.
 

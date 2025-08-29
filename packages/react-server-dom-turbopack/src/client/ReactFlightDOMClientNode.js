@@ -10,8 +10,9 @@
 import type {Thenable, ReactCustomFormAction} from 'shared/ReactTypes.js';
 
 import type {
-  Response,
+  DebugChannel,
   FindSourceMapURLCallback,
+  Response,
 } from 'react-client/src/ReactFlightClient';
 
 import type {
@@ -66,7 +67,7 @@ export type Options = {
 function startReadingFromStream(
   response: Response,
   stream: Readable,
-  isSecondaryStream: boolean,
+  onEnd: () => void,
 ): void {
   const streamState = createStreamState();
 
@@ -82,13 +83,7 @@ function startReadingFromStream(
     reportGlobalError(response, error);
   });
 
-  stream.on('end', () => {
-    // If we're the secondary stream, then we don't close the response until the
-    // debug channel closes.
-    if (!isSecondaryStream) {
-      close(response);
-    }
-  });
+  stream.on('end', onEnd);
 }
 
 function createFromNodeStream<T>(
@@ -96,6 +91,14 @@ function createFromNodeStream<T>(
   serverConsumerManifest: ServerConsumerManifest,
   options?: Options,
 ): Thenable<T> {
+  const debugChannel: void | DebugChannel =
+    __DEV__ && options && options.debugChannel !== undefined
+      ? {
+          hasReadable: options.debugChannel.readable !== undefined,
+          callback: null,
+        }
+      : undefined;
+
   const response: Response = createResponse(
     serverConsumerManifest.moduleMap,
     serverConsumerManifest.serverModuleMap,
@@ -111,13 +114,20 @@ function createFromNodeStream<T>(
     __DEV__ && options && options.environmentName
       ? options.environmentName
       : undefined,
+    debugChannel,
   );
 
   if (__DEV__ && options && options.debugChannel) {
-    startReadingFromStream(response, options.debugChannel, false);
-    startReadingFromStream(response, stream, true);
+    let streamEndedCount = 0;
+    const handleEnd = () => {
+      if (++streamEndedCount === 2) {
+        close(response);
+      }
+    };
+    startReadingFromStream(response, options.debugChannel, handleEnd);
+    startReadingFromStream(response, stream, handleEnd);
   } else {
-    startReadingFromStream(response, stream, false);
+    startReadingFromStream(response, stream, close.bind(null, response));
   }
 
   return getRoot(response);

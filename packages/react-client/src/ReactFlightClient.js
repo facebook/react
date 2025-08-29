@@ -341,6 +341,11 @@ export type FindSourceMapURLCallback = (
 
 export type DebugChannelCallback = (message: string) => void;
 
+export type DebugChannel = {
+  hasReadable: boolean,
+  callback: DebugChannelCallback | null,
+};
+
 type Response = {
   _bundlerConfig: ServerConsumerModuleMap,
   _serverReferenceConfig: null | ServerManifest,
@@ -362,7 +367,7 @@ type Response = {
   _debugRootStack?: null | Error, // DEV-only
   _debugRootTask?: null | ConsoleTask, // DEV-only
   _debugFindSourceMapURL?: void | FindSourceMapURLCallback, // DEV-only
-  _debugChannel?: void | DebugChannelCallback, // DEV-only
+  _debugChannel?: void | DebugChannel, // DEV-only
   _blockedConsole?: null | SomeChunk<ConsoleEntry>, // DEV-only
   _replayConsole: boolean, // DEV-only
   _rootEnvironmentName: string, // DEV-only, the requested environment name.
@@ -404,16 +409,16 @@ function getWeakResponse(response: Response): WeakResponse {
   }
 }
 
-function cleanupDebugChannel(debugChannel: DebugChannelCallback): void {
-  // When a Response gets GC:ed because nobody is referring to any of the objects that lazily
-  // loads from the Response anymore, then we can close the debug channel.
-  debugChannel('');
+function closeDebugChannel(debugChannel: DebugChannel): void {
+  if (debugChannel.callback) {
+    debugChannel.callback('');
+  }
 }
 
 // If FinalizationRegistry doesn't exist, we cannot use the debugChannel.
 const debugChannelRegistry =
   __DEV__ && typeof FinalizationRegistry === 'function'
-    ? new FinalizationRegistry(cleanupDebugChannel)
+    ? new FinalizationRegistry(closeDebugChannel)
     : null;
 
 function readChunk<T>(chunk: SomeChunk<T>): T {
@@ -496,13 +501,14 @@ function createErrorChunk<T>(
 function wakeChunk<T>(
   listeners: Array<InitializationReference | (T => mixed)>,
   value: T,
+  chunk: SomeChunk<T>,
 ): void {
   for (let i = 0; i < listeners.length; i++) {
     const listener = listeners[i];
     if (typeof listener === 'function') {
       listener(value);
     } else {
-      fulfillReference(listener, value);
+      fulfillReference(listener, value, chunk);
     }
   }
 }
@@ -555,7 +561,7 @@ function wakeChunkIfInitialized<T>(
 ): void {
   switch (chunk.status) {
     case INITIALIZED:
-      wakeChunk(resolveListeners, chunk.value);
+      wakeChunk(resolveListeners, chunk.value, chunk);
       break;
     case BLOCKED:
       // It is possible that we're blocked on our own chunk if it's a cycle.
@@ -569,7 +575,7 @@ function wakeChunkIfInitialized<T>(
           if (cyclicHandler !== null) {
             // This reference points back to this chunk. We can resolve the cycle by
             // using the value from that handler.
-            fulfillReference(reference, cyclicHandler.value);
+            fulfillReference(reference, cyclicHandler.value, chunk);
             resolveListeners.splice(i, 1);
             i--;
             if (rejectListeners !== null) {
@@ -637,7 +643,7 @@ function triggerErrorOnChunk<T>(
       cyclicChunk.status = BLOCKED;
       cyclicChunk.value = null;
       cyclicChunk.reason = null;
-      if (enableProfilerTimer && enableComponentPerformanceTrack) {
+      if ((enableProfilerTimer && enableComponentPerformanceTrack) || __DEV__) {
         initializingChunk = cyclicChunk;
       }
       try {
@@ -919,7 +925,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
   cyclicChunk.value = null;
   cyclicChunk.reason = null;
 
-  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+  if ((enableProfilerTimer && enableComponentPerformanceTrack) || __DEV__) {
     initializingChunk = cyclicChunk;
   }
 
@@ -938,7 +944,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
     if (resolveListeners !== null) {
       cyclicChunk.value = null;
       cyclicChunk.reason = null;
-      wakeChunk(resolveListeners, value);
+      wakeChunk(resolveListeners, value, cyclicChunk);
     }
     if (initializingHandler !== null) {
       if (initializingHandler.errored) {
@@ -961,7 +967,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
     erroredChunk.reason = error;
   } finally {
     initializingHandler = prevHandler;
-    if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if ((enableProfilerTimer && enableComponentPerformanceTrack) || __DEV__) {
       initializingChunk = prevChunk;
     }
   }
@@ -1006,7 +1012,7 @@ export function reportGlobalError(
     if (debugChannel !== undefined) {
       // If we don't have any more ways of reading data, we don't have to send any
       // more neither. So we close the writable side.
-      debugChannel('');
+      closeDebugChannel(debugChannel);
       response._debugChannel = undefined;
     }
   }
@@ -1298,6 +1304,7 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
 function fulfillReference(
   reference: InitializationReference,
   value: any,
+  fulfilledChunk: SomeChunk<any>,
 ): void {
   const {response, handler, parentObject, key, map, path} = reference;
 
@@ -1376,6 +1383,8 @@ function fulfillReference(
   const mappedValue = map(response, value, parentObject, key);
   parentObject[key] = mappedValue;
 
+  transferReferencedDebugInfo(handler.chunk, fulfilledChunk, mappedValue);
+
   // If this is the root object for a model reference, where `handler.value`
   // is a stale `null`, the resolved value can be used directly.
   if (key === '' && handler.value === null) {
@@ -1422,7 +1431,7 @@ function fulfillReference(
     initializedChunk.value = handler.value;
     initializedChunk.reason = handler.reason; // Used by streaming chunks
     if (resolveListeners !== null) {
-      wakeChunk(resolveListeners, handler.value);
+      wakeChunk(resolveListeners, handler.value, initializedChunk);
     }
   }
 }
@@ -1490,8 +1499,8 @@ function waitForReference<T>(
 ): T {
   if (
     __DEV__ &&
-    // TODO: This should check for the existence of the "readable" side, not the "writable".
-    response._debugChannel === undefined
+    (response._debugChannel === undefined ||
+      !response._debugChannel.hasReadable)
   ) {
     if (
       referencedChunk.status === PENDING &&
@@ -1669,7 +1678,7 @@ function loadServerReference<A: Iterable<any>, T>(
       initializedChunk.status = INITIALIZED;
       initializedChunk.value = handler.value;
       if (resolveListeners !== null) {
-        wakeChunk(resolveListeners, handler.value);
+        wakeChunk(resolveListeners, handler.value, initializedChunk);
       }
     }
   }
@@ -1726,6 +1735,49 @@ function loadServerReference<A: Iterable<any>, T>(
 
   // Return a place holder value for now.
   return (null: any);
+}
+
+function transferReferencedDebugInfo(
+  parentChunk: null | SomeChunk<any>,
+  referencedChunk: SomeChunk<any>,
+  referencedValue: mixed,
+): void {
+  if (__DEV__ && referencedChunk._debugInfo) {
+    const referencedDebugInfo = referencedChunk._debugInfo;
+    // If we have a direct reference to an object that was rendered by a synchronous
+    // server component, it might have some debug info about how it was rendered.
+    // We forward this to the underlying object. This might be a React Element or
+    // an Array fragment.
+    // If this was a string / number return value we lose the debug info. We choose
+    // that tradeoff to allow sync server components to return plain values and not
+    // use them as React Nodes necessarily. We could otherwise wrap them in a Lazy.
+    if (
+      typeof referencedValue === 'object' &&
+      referencedValue !== null &&
+      (isArray(referencedValue) ||
+        typeof referencedValue[ASYNC_ITERATOR] === 'function' ||
+        referencedValue.$$typeof === REACT_ELEMENT_TYPE) &&
+      !referencedValue._debugInfo
+    ) {
+      // We should maybe use a unique symbol for arrays but this is a React owned array.
+      // $FlowFixMe[prop-missing]: This should be added to elements.
+      Object.defineProperty((referencedValue: any), '_debugInfo', {
+        configurable: false,
+        enumerable: false,
+        writable: true,
+        value: referencedDebugInfo,
+      });
+    }
+    // We also add it to the initializing chunk since the resolution of that promise is
+    // also blocked by these. By adding it to both we can track it even if the array/element
+    // is extracted, or if the root is rendered as is.
+    if (parentChunk !== null) {
+      const parentDebugInfo =
+        parentChunk._debugInfo || (parentChunk._debugInfo = []);
+      // $FlowFixMe[method-unbinding]
+      parentDebugInfo.push.apply(parentDebugInfo, referencedDebugInfo);
+    }
+  }
 }
 
 function getOutlinedModel<T>(
@@ -1825,32 +1877,7 @@ function getOutlinedModel<T>(
         value = value[path[i]];
       }
       const chunkValue = map(response, value, parentObject, key);
-      if (__DEV__ && chunk._debugInfo) {
-        // If we have a direct reference to an object that was rendered by a synchronous
-        // server component, it might have some debug info about how it was rendered.
-        // We forward this to the underlying object. This might be a React Element or
-        // an Array fragment.
-        // If this was a string / number return value we lose the debug info. We choose
-        // that tradeoff to allow sync server components to return plain values and not
-        // use them as React Nodes necessarily. We could otherwise wrap them in a Lazy.
-        if (
-          typeof chunkValue === 'object' &&
-          chunkValue !== null &&
-          (isArray(chunkValue) ||
-            typeof chunkValue[ASYNC_ITERATOR] === 'function' ||
-            chunkValue.$$typeof === REACT_ELEMENT_TYPE) &&
-          !chunkValue._debugInfo
-        ) {
-          // We should maybe use a unique symbol for arrays but this is a React owned array.
-          // $FlowFixMe[prop-missing]: This should be added to elements.
-          Object.defineProperty((chunkValue: any), '_debugInfo', {
-            configurable: false,
-            enumerable: false,
-            writable: true,
-            value: chunk._debugInfo,
-          });
-        }
-      }
+      transferReferencedDebugInfo(initializingChunk, chunk, chunkValue);
       return chunkValue;
     case PENDING:
     case BLOCKED:
@@ -2240,15 +2267,16 @@ function parseModelString(
       case 'Y': {
         if (__DEV__) {
           if (value.length > 2) {
-            const debugChannel = response._debugChannel;
-            if (debugChannel) {
+            const debugChannelCallback =
+              response._debugChannel && response._debugChannel.callback;
+            if (debugChannelCallback) {
               if (value[2] === '@') {
                 // This is a deferred Promise.
                 const ref = value.slice(3); // We assume this doesn't have a path just id.
                 const id = parseInt(ref, 16);
                 if (!response._chunks.has(id)) {
                   // We haven't seen this id before. Query the server to start sending it.
-                  debugChannel('P:' + ref);
+                  debugChannelCallback('P:' + ref);
                 }
                 // Start waiting. This now creates a pending chunk if it doesn't already exist.
                 // This is the actual Promise we're waiting for.
@@ -2258,7 +2286,7 @@ function parseModelString(
               const id = parseInt(ref, 16);
               if (!response._chunks.has(id)) {
                 // We haven't seen this id before. Query the server to start sending it.
-                debugChannel('Q:' + ref);
+                debugChannelCallback('Q:' + ref);
               }
               // Start waiting. This now creates a pending chunk if it doesn't already exist.
               const chunk = getChunk(response, id);
@@ -2336,7 +2364,7 @@ function ResponseInstance(
   findSourceMapURL: void | FindSourceMapURLCallback, // DEV-only
   replayConsole: boolean, // DEV-only
   environmentName: void | string, // DEV-only
-  debugChannel: void | DebugChannelCallback, // DEV-only
+  debugChannel: void | DebugChannel, // DEV-only
 ) {
   const chunks: Map<number, SomeChunk<any>> = new Map();
   this._bundlerConfig = bundlerConfig;
@@ -2398,10 +2426,14 @@ function ResponseInstance(
     this._rootEnvironmentName = rootEnv;
     if (debugChannel) {
       if (debugChannelRegistry === null) {
-        // We can't safely clean things up later, so we immediately close the debug channel.
-        debugChannel('');
+        // We can't safely clean things up later, so we immediately close the
+        // debug channel.
+        closeDebugChannel(debugChannel);
         this._debugChannel = undefined;
       } else {
+        // When a Response gets GC:ed because nobody is referring to any of the
+        // objects that lazily load from the Response anymore, then we can close
+        // the debug channel.
         debugChannelRegistry.register(this, debugChannel);
       }
     }
@@ -2429,7 +2461,7 @@ export function createResponse(
   findSourceMapURL: void | FindSourceMapURLCallback, // DEV-only
   replayConsole: boolean, // DEV-only
   environmentName: void | string, // DEV-only
-  debugChannel: void | DebugChannelCallback, // DEV-only
+  debugChannel: void | DebugChannel, // DEV-only
 ): WeakResponse {
   return getWeakResponse(
     // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
@@ -2621,7 +2653,7 @@ function resolveStream<T: ReadableStream | $AsyncIterable<any, any, void>>(
       cyclicChunk.status = BLOCKED;
       cyclicChunk.value = null;
       cyclicChunk.reason = null;
-      if (enableProfilerTimer && enableComponentPerformanceTrack) {
+      if ((enableProfilerTimer && enableComponentPerformanceTrack) || __DEV__) {
         initializingChunk = cyclicChunk;
       }
       try {
@@ -2650,7 +2682,7 @@ function resolveStream<T: ReadableStream | $AsyncIterable<any, any, void>>(
   resolvedChunk.value = stream;
   resolvedChunk.reason = controller;
   if (resolveListeners !== null) {
-    wakeChunk(resolveListeners, chunk.value);
+    wakeChunk(resolveListeners, chunk.value, chunk);
   }
 }
 
@@ -3523,8 +3555,8 @@ function resolveDebugModel(
   if (
     __DEV__ &&
     ((debugChunk: any): SomeChunk<any>).status === BLOCKED &&
-    // TODO: This should check for the existence of the "readable" side, not the "writable".
-    response._debugChannel === undefined
+    (response._debugChannel === undefined ||
+      !response._debugChannel.hasReadable)
   ) {
     if (json[0] === '"' && json[1] === '$') {
       const path = json.slice(2, json.length - 1).split(':');

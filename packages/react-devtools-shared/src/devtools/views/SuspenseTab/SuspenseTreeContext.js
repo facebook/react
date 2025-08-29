@@ -81,7 +81,7 @@ function SuspenseTreeContextController({children}: Props): React.Node {
 
   useEffect(() => {
     const handleSuspenseTreeMutated = () => {
-      transitionDispatch({
+      dispatch({
         type: 'HANDLE_SUSPENSE_TREE_MUTATION',
       });
     };
@@ -91,7 +91,7 @@ function SuspenseTreeContextController({children}: Props): React.Node {
       // At the moment, we can treat this as a mutation.
       // We don't know which Elements were newly added/removed, but that should be okay in this case.
       // It would only impact the search state, which is unlikely to exist yet at this point.
-      transitionDispatch({
+      dispatch({
         type: 'HANDLE_SUSPENSE_TREE_MUTATION',
       });
     }

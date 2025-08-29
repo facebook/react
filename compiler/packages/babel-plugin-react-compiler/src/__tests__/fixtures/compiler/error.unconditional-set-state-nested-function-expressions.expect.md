@@ -38,7 +38,7 @@ error.unconditional-set-state-nested-function-expressions.ts:16:2
   14 |     bar();
   15 |   };
 > 16 |   baz();
-     |   ^^^ Found setState() within useMemo()
+     |   ^^^ Found setState() in render
   17 |
   18 |   return [x];
   19 | }

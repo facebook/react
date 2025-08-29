@@ -431,7 +431,7 @@ export const warnsIfNotActing = false;
 
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
-export const noTimeout = -1;
+export const noTimeout: -1 = -1;
 
 // -------------------
 //     Persistence
@@ -651,7 +651,8 @@ FragmentInstance.prototype.unobserveUsing = function (
   this: FragmentInstanceType,
   observer: IntersectionObserver,
 ): void {
-  if (this._observers === null || !this._observers.has(observer)) {
+  const observers = this._observers;
+  if (observers === null || !observers.has(observer)) {
     if (__DEV__) {
       console.error(
         'You are calling unobserveUsing() with an observer that is not being observed with this fragment ' +
@@ -659,7 +660,7 @@ FragmentInstance.prototype.unobserveUsing = function (
       );
     }
   } else {
-    this._observers.delete(observer);
+    observers.delete(observer);
     traverseFragmentInstance(this._fragmentFiber, unobserveChild, observer);
   }
 };

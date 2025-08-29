@@ -407,7 +407,7 @@ export function listenToNativeEventForNonManagedEventTarget(
   isCapturePhaseListener: boolean,
   target: EventTarget,
 ): void {
-  let eventSystemFlags = IS_EVENT_HANDLE_NON_MANAGED_NODE;
+  let eventSystemFlags: number = IS_EVENT_HANDLE_NON_MANAGED_NODE;
   const listenerSet = getEventListenerSet(target);
   const listenerSetKey = getListenerSetKey(
     domEventName,

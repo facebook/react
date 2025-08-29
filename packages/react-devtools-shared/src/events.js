@@ -12,7 +12,7 @@ export default class EventEmitter<Events: Object> {
 
   addListener<Event: $Keys<Events>>(
     event: Event,
-    listener: (...$ElementType<Events, Event>) => any,
+    listener: (...Events[Event]) => any,
   ): void {
     const listeners = this.listenersMap.get(event);
     if (listeners === undefined) {
@@ -25,10 +25,7 @@ export default class EventEmitter<Events: Object> {
     }
   }
 
-  emit<Event: $Keys<Events>>(
-    event: Event,
-    ...args: $ElementType<Events, Event>
-  ): void {
+  emit<Event: $Keys<Events>>(event: Event, ...args: Events[Event]): void {
     const listeners = this.listenersMap.get(event);
     if (listeners !== undefined) {
       if (listeners.length === 1) {

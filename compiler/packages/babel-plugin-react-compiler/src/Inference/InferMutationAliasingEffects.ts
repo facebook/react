@@ -27,6 +27,7 @@ import {
   InstructionKind,
   InstructionValue,
   isArrayType,
+  isJsxType,
   isMapType,
   isPrimitiveType,
   isRefOrRefValue,
@@ -69,6 +70,7 @@ import {
   hashEffect,
   MutationReason,
 } from './AliasingEffects';
+import {ErrorCategory} from '../CompilerError';
 
 const DEBUG = false;
 
@@ -452,8 +454,9 @@ function applySignature(
                 ? `\`${effect.value.identifier.name.value}\``
                 : 'value';
             const diagnostic = CompilerDiagnostic.create({
+              category: ErrorCategory.Immutability,
               severity: ErrorSeverity.InvalidReact,
-              category: 'This value cannot be modified',
+              reason: 'This value cannot be modified',
               description: `${reason}.`,
             }).withDetail({
               kind: 'error',
@@ -1036,8 +1039,9 @@ function applyEffect(
             effect.value.identifier.declarationId,
           );
           const diagnostic = CompilerDiagnostic.create({
+            category: ErrorCategory.Immutability,
             severity: ErrorSeverity.InvalidReact,
-            category: 'Cannot access variable before it is declared',
+            reason: 'Cannot access variable before it is declared',
             description: `${variable ?? 'This variable'} is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.`,
           });
           if (hoistedAccess != null && hoistedAccess.loc != effect.value.loc) {
@@ -1075,8 +1079,9 @@ function applyEffect(
               ? `\`${effect.value.identifier.name.value}\``
               : 'value';
           const diagnostic = CompilerDiagnostic.create({
+            category: ErrorCategory.Immutability,
             severity: ErrorSeverity.InvalidReact,
-            category: 'This value cannot be modified',
+            reason: 'This value cannot be modified',
             description: `${reason}.`,
           }).withDetail({
             kind: 'error',
@@ -1867,6 +1872,23 @@ function computeSignatureForInstruction(
             });
           }
         }
+        for (const prop of value.props) {
+          if (
+            prop.kind === 'JsxAttribute' &&
+            prop.place.identifier.type.kind === 'Function' &&
+            (isJsxType(prop.place.identifier.type.return) ||
+              (prop.place.identifier.type.return.kind === 'Phi' &&
+                prop.place.identifier.type.return.operands.some(operand =>
+                  isJsxType(operand),
+                )))
+          ) {
+            // Any props which return jsx are assumed to be called during render
+            effects.push({
+              kind: 'Render',
+              place: prop.place,
+            });
+          }
+        }
       }
       break;
     }
@@ -2033,8 +2055,9 @@ function computeSignatureForInstruction(
         kind: 'MutateGlobal',
         place: value.value,
         error: CompilerDiagnostic.create({
+          category: ErrorCategory.Globals,
           severity: ErrorSeverity.InvalidReact,
-          category:
+          reason:
             'Cannot reassign variables declared outside of the component/hook',
           description: `Variable ${variable} is declared outside of the component/hook. Reassigning this value during render is a form of side effect, which can cause unpredictable behavior depending on when the component happens to re-render. If this variable is used in rendering, use useState instead. Otherwise, consider updating it in an effect. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render)`,
         }).withDetail({
@@ -2132,8 +2155,9 @@ function computeEffectsForLegacySignature(
       kind: 'Impure',
       place: receiver,
       error: CompilerDiagnostic.create({
+        category: ErrorCategory.Purity,
         severity: ErrorSeverity.InvalidReact,
-        category: 'Cannot call impure function during render',
+        reason: 'Cannot call impure function during render',
         description:
           (signature.canonicalName != null
             ? `\`${signature.canonicalName}\` is an impure function. `
@@ -2145,6 +2169,27 @@ function computeEffectsForLegacySignature(
         message: 'Cannot call impure function',
       }),
     });
+  }
+  if (signature.knownIncompatible != null && state.env.isInferredMemoEnabled) {
+    const errors = new CompilerError();
+    errors.pushDiagnostic(
+      CompilerDiagnostic.create({
+        category: ErrorCategory.IncompatibleLibrary,
+        severity: ErrorSeverity.IncompatibleLibrary,
+        reason: 'Use of incompatible library',
+        description: [
+          'This API returns functions which cannot be memoized without leading to stale UI. ' +
+            'To prevent this, by default React Compiler will skip memoizing this component/hook. ' +
+            'However, you may see issues if values from this API are passed to other components/hooks that are ' +
+            'memoized.',
+        ].join(''),
+      }).withDetail({
+        kind: 'error',
+        loc: receiver.loc,
+        message: signature.knownIncompatible,
+      }),
+    );
+    throw errors;
   }
   const stores: Array<Place> = [];
   const captures: Array<Place> = [];
