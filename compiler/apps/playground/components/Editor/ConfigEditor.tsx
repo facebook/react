@@ -42,7 +42,7 @@ export default function ConfigEditor(): JSX.Element {
           config: value,
         },
       });
-    } catch (error) {
+    } catch (_) {
       dispatchStore({
         type: 'updateFile',
         payload: {

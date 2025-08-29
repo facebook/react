@@ -255,11 +255,16 @@ function parseConfigStringAsJS(
 
   console.log('OVERRIDE:', parsedConfig);
 
+  const environment = parseConfigPragmaEnvironmentForTest(
+    '',
+    defaults.environment ?? {},
+  );
+
   const options: Record<keyof PluginOptions, unknown> = {
     ...defaultOptions,
     panicThreshold: 'all_errors',
     compilationMode: defaults.compilationMode,
-    environment: defaults.environment ?? defaultOptions.environment,
+    environment,
   };
 
   // Apply parsed config, merging environment if it exists
@@ -279,10 +284,6 @@ function parseConfigStringAsJS(
         loc: null,
         suggestions: null,
       });
-    }
-
-    if (validatedEnvironment.data.enableResetCacheOnSourceFileChanges == null) {
-      validatedEnvironment.data.enableResetCacheOnSourceFileChanges = false;
     }
 
     options.environment = validatedEnvironment.data;

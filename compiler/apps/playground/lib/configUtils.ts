@@ -33,7 +33,7 @@ export async function parseAndFormatConfig(source: string): Promise<string> {
   }
 }
 
-function extractCurlyBracesContent(input) {
+function extractCurlyBracesContent(input: string): string {
   const startIndex = input.indexOf('{');
   const endIndex = input.lastIndexOf('}');
   if (startIndex === -1 || endIndex === -1 || endIndex <= startIndex) {
@@ -42,7 +42,7 @@ function extractCurlyBracesContent(input) {
   return input.slice(startIndex, endIndex + 1);
 }
 
-function cleanContent(content) {
+function cleanContent(content: string): string {
   return content
     .replace(/[\r\n]+/g, ' ')
     .replace(/\s+/g, ' ')
