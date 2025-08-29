@@ -17,6 +17,7 @@ import {useStore, useStoreDispatch} from '../StoreContext';
 import {monacoOptions} from './monacoOptions';
 // @ts-expect-error TODO: Make TS recognize .d.ts files, in addition to loading them with webpack.
 import React$Types from '../../node_modules/@types/react/index.d.ts';
+import {parseAndFormatConfig} from '../../lib/configUtils.ts';
 
 loader.config({monaco});
 
@@ -79,13 +80,17 @@ export default function Input({errors, language}: Props): JSX.Element {
     });
   }, [monaco, language]);
 
-  const handleChange: (value: string | undefined) => void = value => {
+  const handleChange: (value: string | undefined) => void = async value => {
     if (!value) return;
+
+    // Parse and format the config
+    const config = await parseAndFormatConfig(value);
 
     dispatchStore({
       type: 'updateFile',
       payload: {
         source: value,
+        config,
       },
     });
   };

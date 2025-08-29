@@ -17,6 +17,7 @@ import {defaultStore} from '../defaultStore';
  */
 export interface Store {
   source: string;
+  config?: string;
 }
 export function encodeStore(store: Store): string {
   return compressToEncodedURIComponent(JSON.stringify(store));
@@ -65,5 +66,14 @@ export function initStoreFromUrlOrLocalStorage(): Store {
   const raw = decodeStore(encodedSource);
 
   invariant(isValidStore(raw), 'Invalid Store');
+
+  // Add config property if missing for backwards compatibility
+  if (!('config' in raw)) {
+    return {
+      ...raw,
+      config: '',
+    };
+  }
+
   return raw;
 }

@@ -15,8 +15,10 @@ export default function MyApp() {
 
 export const defaultStore: Store = {
   source: index,
+  config: '',
 };
 
 export const emptyStore: Store = {
   source: '',
+  config: '',
 };
