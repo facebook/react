@@ -77,6 +77,11 @@ function collectStackTracePrivate(
       }
       if (name === '<anonymous>') {
         name = '';
+      } else if (
+        // $FlowFixMe[prop-missing]
+        callSite.isAsync()
+      ) {
+        name = 'async ' + name;
       }
       let filename = callSite.getScriptNameOrSourceURL() || '<anonymous>';
       if (filename === '<anonymous>') {
