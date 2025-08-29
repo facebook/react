@@ -2891,9 +2891,11 @@ describe('ReactDOMInput', () => {
         root.render(<input value={Symbol('foobar')} onChange={() => {}} />);
       });
       assertConsoleErrorDev([
-        'Invalid value for prop `value` on <input> tag. ' +
-          'Either remove it from the element, or pass a string or number value to keep it in the DOM. ' +
-          'For details, see https://react.dev/link/attribute-behavior \n' +
+        'Received a Symbol as a `value` prop on <input> tag. ' +
+          'Symbols cannot be rendered as text and will be ignored. ' +
+          'If you need to display this value, convert it to a string first with String() or .toString().' +
+          '\n\nFor example: value={String(mySymbol)} or value={mySymbol.toString()}. ' +
+          'For details, see https://react.dev/link/attribute-behavior\n' +
           '    in input (at **)',
       ]);
       const node = container.firstChild;
@@ -2914,9 +2916,11 @@ describe('ReactDOMInput', () => {
         root.render(<input value={Symbol('foobar')} onChange={() => {}} />);
       });
       assertConsoleErrorDev([
-        'Invalid value for prop `value` on <input> tag. ' +
-          'Either remove it from the element, or pass a string or number value to keep it in the DOM. ' +
-          'For details, see https://react.dev/link/attribute-behavior \n' +
+        'Received a Symbol as a `value` prop on <input> tag. ' +
+          'Symbols cannot be rendered as text and will be ignored. ' +
+          'If you need to display this value, convert it to a string first with String() or .toString().' +
+          '\n\nFor example: value={String(mySymbol)} or value={mySymbol.toString()}. ' +
+          'For details, see https://react.dev/link/attribute-behavior\n' +
           '    in input (at **)',
       ]);
       const node = container.firstChild;
@@ -2965,9 +2969,11 @@ describe('ReactDOMInput', () => {
         root.render(<input value={() => {}} onChange={() => {}} />);
       });
       assertConsoleErrorDev([
-        'Invalid value for prop `value` on <input> tag. ' +
-          'Either remove it from the element, or pass a string or number value to keep it in the DOM. ' +
-          'For details, see https://react.dev/link/attribute-behavior \n' +
+        'Received a function as a `value` prop on <input> tag. ' +
+          'Functions cannot be rendered as text and will be ignored. ' +
+          'If you meant to render the function result, call it first: value={myFunction()}. ' +
+          'If you meant to pass a function reference, this is not supported for value props. ' +
+          'For details, see https://react.dev/link/attribute-behavior\n' +
           '    in input (at **)',
       ]);
       const node = container.firstChild;
@@ -2988,9 +2994,11 @@ describe('ReactDOMInput', () => {
         root.render(<input value={() => {}} onChange={() => {}} />);
       });
       assertConsoleErrorDev([
-        'Invalid value for prop `value` on <input> tag. ' +
-          'Either remove it from the element, or pass a string or number value to keep it in the DOM. ' +
-          'For details, see https://react.dev/link/attribute-behavior \n' +
+        'Received a function as a `value` prop on <input> tag. ' +
+          'Functions cannot be rendered as text and will be ignored. ' +
+          'If you meant to render the function result, call it first: value={myFunction()}. ' +
+          'If you meant to pass a function reference, this is not supported for value props. ' +
+          'For details, see https://react.dev/link/attribute-behavior\n' +
           '    in input (at **)',
       ]);
       const node = container.firstChild;
