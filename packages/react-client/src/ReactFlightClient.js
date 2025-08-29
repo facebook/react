@@ -1010,10 +1010,15 @@ export function reportGlobalError(
   if (__DEV__) {
     const debugChannel = response._debugChannel;
     if (debugChannel !== undefined) {
-      // If we don't have any more ways of reading data, we don't have to send any
-      // more neither. So we close the writable side.
+      // If we don't have any more ways of reading data, we don't have to send
+      // any more neither. So we close the writable side.
       closeDebugChannel(debugChannel);
       response._debugChannel = undefined;
+      // Make sure the debug channel is not closed a second time when the
+      // Response gets GC:ed.
+      if (debugChannelRegistry !== null) {
+        debugChannelRegistry.unregister(response);
+      }
     }
   }
 }
