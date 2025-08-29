@@ -411,7 +411,9 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<
     this.state = state;
     this.options = {
       memoizeJsxElements: !this.env.config.enableForest,
-      forceMemoizePrimitives: this.env.config.enableForest,
+      forceMemoizePrimitives:
+        this.env.config.enableForest ||
+        this.env.config.enablePreserveExistingMemoizationGuarantees,
     };
   }
 
@@ -534,9 +536,23 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<
       case 'JSXText':
       case 'BinaryExpression':
       case 'UnaryExpression': {
-        const level = options.forceMemoizePrimitives
-          ? MemoizationLevel.Memoized
-          : MemoizationLevel.Never;
+        if (options.forceMemoizePrimitives) {
+          /**
+           * Because these instructions produce primitives we usually don't consider
+           * them as escape points: they are known to copy, not return references.
+           * However if we're forcing memoization of primitives then we mark these
+           * instructions as needing memoization and walk their rvalues to ensure
+           * any scopes transitively reachable from the rvalues are considered for
+           * memoization. Note: we may still prune primitive-producing scopes if
+           * they don't ultimately escape at all.
+           */
+          const level = MemoizationLevel.Conditional;
+          return {
+            lvalues: lvalue !== null ? [{place: lvalue, level}] : [],
+            rvalues: [...eachReactiveValueOperand(value)],
+          };
+        }
+        const level = MemoizationLevel.Never;
         return {
           // All of these instructions return a primitive value and never need to be memoized
           lvalues: lvalue !== null ? [{place: lvalue, level}] : [],
@@ -685,9 +701,7 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<
       }
       case 'ComputedLoad':
       case 'PropertyLoad': {
-        const level = options.forceMemoizePrimitives
-          ? MemoizationLevel.Memoized
-          : MemoizationLevel.Conditional;
+        const level = MemoizationLevel.Conditional;
         return {
           // Indirection for the inner value, memoized if the value is
           lvalues: lvalue !== null ? [{place: lvalue, level}] : [],
