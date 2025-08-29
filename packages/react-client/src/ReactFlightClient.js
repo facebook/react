@@ -2439,7 +2439,7 @@ function ResponseInstance(
         // When a Response gets GC:ed because nobody is referring to any of the
         // objects that lazily load from the Response anymore, then we can close
         // the debug channel.
-        debugChannelRegistry.register(this, debugChannel);
+        debugChannelRegistry.register(this, debugChannel, this);
       }
     }
   }
