@@ -37,6 +37,14 @@ export enum ErrorSeverity {
    */
   CannotPreserveMemoization = 'CannotPreserveMemoization',
   /**
+   * An API that is known to be incompatible with the compiler. Generally as a result of
+   * the library using "interior mutability", ie having a value whose referential identity
+   * stays the same but which provides access to values that can change. For example a
+   * function that doesn't change but returns different results, or an object that doesn't
+   * change identity but whose properties change.
+   */
+  IncompatibleLibrary = 'IncompatibleLibrary',
+  /**
    * Unhandled syntax that we don't support yet.
    */
   Todo = 'Todo',
@@ -458,7 +466,8 @@ export class CompilerError extends Error {
         case ErrorSeverity.InvalidJS:
         case ErrorSeverity.InvalidReact:
         case ErrorSeverity.InvalidConfig:
-        case ErrorSeverity.UnsupportedJS: {
+        case ErrorSeverity.UnsupportedJS:
+        case ErrorSeverity.IncompatibleLibrary: {
           return true;
         }
         case ErrorSeverity.CannotPreserveMemoization:
@@ -506,8 +515,9 @@ function printErrorSummary(severity: ErrorSeverity, message: string): string {
       severityCategory = 'Error';
       break;
     }
+    case ErrorSeverity.IncompatibleLibrary:
     case ErrorSeverity.CannotPreserveMemoization: {
-      severityCategory = 'Memoization';
+      severityCategory = 'Compilation Skipped';
       break;
     }
     case ErrorSeverity.Invariant: {
@@ -546,6 +556,9 @@ export enum ErrorCategory {
 
   // Checks that manual memoization is preserved
   PreserveManualMemo = 'PreserveManualMemo',
+
+  // Checks for known incompatible libraries
+  IncompatibleLibrary = 'IncompatibleLibrary',
 
   // Checking for no mutations of props, hook arguments, hook return values
   Immutability = 'Immutability',
@@ -867,6 +880,15 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
         name: 'use-memo',
         description:
           'Validates usage of the useMemo() hook against common mistakes. See [`useMemo()` docs](https://react.dev/reference/react/useMemo) for more information.',
+        recommended: true,
+      };
+    }
+    case ErrorCategory.IncompatibleLibrary: {
+      return {
+        category,
+        name: 'incompatible-library',
+        description:
+          'Validates against usage of libraries which are incompatible with memoization (manual or automatic)',
         recommended: true,
       };
     }

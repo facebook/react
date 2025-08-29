@@ -984,7 +984,7 @@ export function printAliasingEffect(effect: AliasingEffect): string {
     case 'MutateConditionally':
     case 'MutateTransitive':
     case 'MutateTransitiveConditionally': {
-      return `${effect.kind} ${printPlaceForAliasEffect(effect.value)}`;
+      return `${effect.kind} ${printPlaceForAliasEffect(effect.value)}${effect.kind === 'Mutate' && effect.reason?.kind === 'AssignCurrentProperty' ? ' (assign `.current`)' : ''}`;
     }
     case 'MutateFrozen': {
       return `MutateFrozen ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.reason)}`;

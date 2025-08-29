@@ -82,6 +82,7 @@ export const enableHydrationChangeEvent: boolean = false;
 export const enableDefaultTransitionIndicator: boolean = false;
 
 export const enableFragmentRefs: boolean = false;
+export const enableFragmentRefsScrollIntoView: boolean = false;
 export const ownerStackLimit = 1e4;
 
 // Flow magic to verify the exports of this file match the original version.
