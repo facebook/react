@@ -189,6 +189,7 @@ function makeManualMemoizationMarkers(
   depsList: Array<ManualMemoDependency> | null,
   memoDecl: Place,
   manualMemoId: number,
+  memoType: 'useCallback' | 'useMemo',
 ): [TInstruction<StartMemoize>, TInstruction<FinishMemoize>] {
   return [
     {
@@ -202,6 +203,7 @@ function makeManualMemoizationMarkers(
          * as dependencies
          */
         deps: depsList,
+        memoType,
         loc: fnExpr.loc,
       },
       effects: null,
@@ -214,6 +216,7 @@ function makeManualMemoizationMarkers(
         kind: 'FinishMemoize',
         manualMemoId,
         decl: {...memoDecl},
+        memoType,
         loc: fnExpr.loc,
       },
       effects: null,
@@ -534,6 +537,7 @@ export function dropManualMemoization(
               depsList,
               memoDecl,
               nextManualMemoId++,
+              manualMemo.kind,
             );
 
             /**
