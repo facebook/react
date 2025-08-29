@@ -38,7 +38,7 @@ import {
 } from '../../lib/stores';
 import {useStore, useStoreDispatch} from '../StoreContext';
 import ConfigEditor from './ConfigEditor';
-import {default as Input, parseAndFormatConfig} from './Input';
+import Input from './Input';
 import {
   CompilerOutput,
   CompilerTransformOutput,
@@ -48,6 +48,7 @@ import {
 import {transformFromAstSync} from '@babel/core';
 import {LoggerEvent} from 'babel-plugin-react-compiler/dist/Entrypoint';
 import {useSearchParams} from 'next/navigation';
+import {parseAndFormatConfig} from '../../lib/configUtils';
 
 function parseInput(
   input: string,

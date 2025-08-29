@@ -10,20 +10,47 @@ import type {editor} from 'monaco-editor';
 import * as monaco from 'monaco-editor';
 import {useState} from 'react';
 import {Resizable} from 're-resizable';
-import {useStore} from '../StoreContext';
+import {useStore, useStoreDispatch} from '../StoreContext';
 import {monacoOptions} from './monacoOptions';
+import {
+  generateOverridePragmaFromConfig,
+  updateSourceWithOverridePragma,
+} from '../../lib/configUtils';
 
 loader.config({monaco});
 
 export default function ConfigEditor(): JSX.Element {
   const [, setMonaco] = useState<Monaco | null>(null);
   const store = useStore();
+  const dispatchStore = useStoreDispatch();
 
-  const handleChange: (value: string | undefined) => void = value => {
-    if (!value) return;
+  const handleChange: (value: string | undefined) => void = async value => {
+    if (value === undefined) return;
 
-    // TODO: Implement sync logic to update pragma comments in the source
-    console.log('Config changed:', value);
+    try {
+      const newPragma = await generateOverridePragmaFromConfig(value);
+      const updatedSource = updateSourceWithOverridePragma(
+        store.source,
+        newPragma,
+      );
+
+      // Update the store with both the new config and updated source
+      dispatchStore({
+        type: 'updateFile',
+        payload: {
+          source: updatedSource,
+          config: value,
+        },
+      });
+    } catch (error) {
+      dispatchStore({
+        type: 'updateFile',
+        payload: {
+          source: store.source,
+          config: value,
+        },
+      });
+    }
   };
 
   const handleMount: (
@@ -58,7 +85,6 @@ export default function ConfigEditor(): JSX.Element {
           onChange={handleChange}
           options={{
             ...monacoOptions,
-            readOnly: true,
             lineNumbers: 'off',
             folding: false,
             renderLineHighlight: 'none',
