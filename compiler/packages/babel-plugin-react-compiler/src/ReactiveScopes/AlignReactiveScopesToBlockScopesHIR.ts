@@ -6,8 +6,10 @@
  */
 
 import {CompilerError} from '..';
+import {printFunction} from '../HIR';
 import {
   BlockId,
+  GotoVariant,
   HIRFunction,
   InstructionId,
   MutableRange,
@@ -16,6 +18,7 @@ import {
   getPlaceScope,
   makeInstructionId,
 } from '../HIR/HIR';
+import {printTerminal} from '../HIR/PrintHIR';
 import {
   eachInstructionLValue,
   eachInstructionValueOperand,
@@ -174,6 +177,23 @@ export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
       });
       if (node != null) {
         valueBlockNodes.set(fallthrough, node);
+      }
+    } else if (terminal.kind === 'goto') {
+      const start = activeBlockFallthroughRanges.find(
+        range => range.fallthrough === terminal.block,
+      );
+      if (start != null && start !== activeBlockFallthroughRanges.at(-1)) {
+        const fallthroughBlock = fn.body.blocks.get(start.fallthrough)!;
+        const firstId =
+          fallthroughBlock.instructions[0]?.id ?? fallthroughBlock.terminal.id;
+        for (const scope of activeScopes) {
+          scope.range.start = makeInstructionId(
+            Math.min(start.range.start, scope.range.start),
+          );
+          scope.range.end = makeInstructionId(
+            Math.max(firstId, scope.range.end),
+          );
+        }
       }
     }
 

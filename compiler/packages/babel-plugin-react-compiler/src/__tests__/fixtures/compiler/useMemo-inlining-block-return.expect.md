@@ -24,22 +24,21 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function component(a, b) {
-  const $ = _c(2);
+  const $ = _c(3);
   let t0;
-  bb0: {
-    if (a) {
-      let t1;
-      if ($[0] !== b) {
-        t1 = { b };
-        $[0] = b;
-        $[1] = t1;
-      } else {
-        t1 = $[1];
+  if ($[0] !== a || $[1] !== b) {
+    bb0: {
+      if (a) {
+        t0 = { b };
+        break bb0;
       }
-      t0 = t1;
-      break bb0;
+      t0 = undefined;
     }
-    t0 = undefined;
+    $[0] = a;
+    $[1] = b;
+    $[2] = t0;
+  } else {
+    t0 = $[2];
   }
   const x = t0;
   return x;
