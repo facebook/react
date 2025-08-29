@@ -6,13 +6,9 @@
  */
 
 import MonacoEditor, {loader, type Monaco} from '@monaco-editor/react';
-import {parseConfigPragmaAsString} from '../../../../packages/babel-plugin-react-compiler/src/Utils/TestUtils';
 import type {editor} from 'monaco-editor';
 import * as monaco from 'monaco-editor';
-import parserBabel from 'prettier/plugins/babel';
-import * as prettierPluginEstree from 'prettier/plugins/estree';
-import * as prettier from 'prettier/standalone';
-import {useState, useEffect} from 'react';
+import {useState} from 'react';
 import {Resizable} from 're-resizable';
 import {useStore} from '../StoreContext';
 import {monacoOptions} from './monacoOptions';
@@ -22,30 +18,6 @@ loader.config({monaco});
 export default function ConfigEditor(): JSX.Element {
   const [, setMonaco] = useState<Monaco | null>(null);
   const store = useStore();
-
-  // Parse string-based override config from pragma comment and format it
-  const [configJavaScript, setConfigJavaScript] = useState('');
-
-  useEffect(() => {
-    const pragma = store.source.substring(0, store.source.indexOf('\n'));
-    const configString = `(${parseConfigPragmaAsString(pragma)})`;
-
-    prettier
-      .format(configString, {
-        semi: true,
-        parser: 'babel-ts',
-        plugins: [parserBabel, prettierPluginEstree],
-      })
-      .then(formatted => {
-        setConfigJavaScript(formatted);
-      })
-      .catch(error => {
-        console.error('Error formatting config:', error);
-        setConfigJavaScript('({})'); // Return empty object if not valid for now
-        //TODO: Add validation and error handling for config
-      });
-    console.log('Config:', configString);
-  }, [store.source]);
 
   const handleChange: (value: string | undefined) => void = value => {
     if (!value) return;
@@ -81,7 +53,7 @@ export default function ConfigEditor(): JSX.Element {
         <MonacoEditor
           path={'config.js'}
           language={'javascript'}
-          value={configJavaScript}
+          value={store.config}
           onMount={handleMount}
           onChange={handleChange}
           options={{

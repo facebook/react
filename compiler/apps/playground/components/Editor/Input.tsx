@@ -7,9 +7,13 @@
 
 import MonacoEditor, {loader, type Monaco} from '@monaco-editor/react';
 import {CompilerErrorDetail} from 'babel-plugin-react-compiler';
+import {parseConfigPragmaAsString} from '../../../../packages/babel-plugin-react-compiler/src/Utils/TestUtils';
 import invariant from 'invariant';
 import type {editor} from 'monaco-editor';
 import * as monaco from 'monaco-editor';
+import parserBabel from 'prettier/plugins/babel';
+import prettierPluginEstree from 'prettier/plugins/estree';
+import * as prettier from 'prettier/standalone';
 import {Resizable} from 're-resizable';
 import {useEffect, useState} from 'react';
 import {renderReactCompilerMarkers} from '../../lib/reactCompilerMonacoDiagnostics';
@@ -24,6 +28,27 @@ type Props = {
   errors: Array<CompilerErrorDetail>;
   language: 'flow' | 'typescript';
 };
+
+// Parse config from pragma and format it with prettier
+export async function parseAndFormatConfig(source: string): Promise<string> {
+  const pragma = source.substring(0, source.indexOf('\n'));
+  let configString = parseConfigPragmaAsString(pragma);
+  if (configString !== '') {
+    configString = `(${configString})`;
+  }
+
+  try {
+    const formatted = await prettier.format(configString, {
+      semi: true,
+      parser: 'babel-ts',
+      plugins: [parserBabel, prettierPluginEstree],
+    });
+    return formatted;
+  } catch (error) {
+    console.error('Error formatting config:', error);
+    return ''; // Return empty string if not valid for now
+  }
+}
 
 export default function Input({errors, language}: Props): JSX.Element {
   const [monaco, setMonaco] = useState<Monaco | null>(null);
@@ -79,13 +104,17 @@ export default function Input({errors, language}: Props): JSX.Element {
     });
   }, [monaco, language]);
 
-  const handleChange: (value: string | undefined) => void = value => {
+  const handleChange: (value: string | undefined) => void = async value => {
     if (!value) return;
+
+    // Parse and format the config
+    const config = await parseAndFormatConfig(value);
 
     dispatchStore({
       type: 'updateFile',
       payload: {
         source: value,
+        config,
       },
     });
   };

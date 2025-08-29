@@ -38,7 +38,7 @@ import {
 } from '../../lib/stores';
 import {useStore, useStoreDispatch} from '../StoreContext';
 import ConfigEditor from './ConfigEditor';
-import Input from './Input';
+import {default as Input, parseAndFormatConfig} from './Input';
 import {
   CompilerOutput,
   CompilerTransformOutput,
@@ -315,9 +315,17 @@ export default function Editor(): JSX.Element {
       });
       mountStore = defaultStore;
     }
-    dispatchStore({
-      type: 'setStore',
-      payload: {store: mountStore},
+
+    parseAndFormatConfig(mountStore.source).then(config => {
+      dispatchStore({
+        type: 'setStore',
+        payload: {
+          store: {
+            ...mountStore,
+            config,
+          },
+        },
+      });
     });
   });
 
