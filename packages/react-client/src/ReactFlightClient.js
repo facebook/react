@@ -1074,7 +1074,14 @@ function getTaskName(type: mixed): string {
   }
 }
 
-function initializeElement(response: Response, element: any): void {
+function initializeElement(
+  response: Response,
+  element: any,
+  lazyType: null | LazyComponent<
+    React$Element<any>,
+    SomeChunk<React$Element<any>>,
+  >,
+): void {
   if (!__DEV__) {
     return;
   }
@@ -1141,6 +1148,18 @@ function initializeElement(response: Response, element: any): void {
   if (owner !== null) {
     initializeFakeStack(response, owner);
   }
+
+  // In case the JSX runtime has validated the lazy type as a static child, we
+  // need to transfer this information to the element.
+  if (
+    lazyType &&
+    lazyType._store &&
+    lazyType._store.validated &&
+    !element._store.validated
+  ) {
+    element._store.validated = lazyType._store.validated;
+  }
+
   // TODO: We should be freezing the element but currently, we might write into
   // _debugInfo later. We could move it into _store which remains mutable.
   Object.freeze(element.props);
@@ -1230,7 +1249,7 @@ function createElement(
         handler.reason,
       );
       if (__DEV__) {
-        initializeElement(response, element);
+        initializeElement(response, element, null);
         // Conceptually the error happened inside this Element but right before
         // it was rendered. We don't have a client side component to render but
         // we can add some DebugInfo to explain that this was conceptually a
@@ -1258,16 +1277,17 @@ function createElement(
         createBlockedChunk(response);
       handler.value = element;
       handler.chunk = blockedChunk;
+      const lazyType = createLazyChunkWrapper(blockedChunk);
       if (__DEV__) {
-        /// After we have initialized any blocked references, initialize stack etc.
-        const init = initializeElement.bind(null, response, element);
+        // After we have initialized any blocked references, initialize stack etc.
+        const init = initializeElement.bind(null, response, element, lazyType);
         blockedChunk.then(init, init);
       }
-      return createLazyChunkWrapper(blockedChunk);
+      return lazyType;
     }
   }
   if (__DEV__) {
-    initializeElement(response, element);
+    initializeElement(response, element, null);
   }
 
   return element;
@@ -1279,6 +1299,7 @@ function createLazyChunkWrapper<T>(
   const lazyType: LazyComponent<T, SomeChunk<T>> = {
     $$typeof: REACT_LAZY_TYPE,
     _payload: chunk,
+    _store: {validated: 0},
     _init: readChunk,
   };
   if (__DEV__) {
