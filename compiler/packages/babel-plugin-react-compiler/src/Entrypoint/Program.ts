@@ -29,6 +29,7 @@ import {compileFn} from './Pipeline';
 import {
   filterSuppressionsThatAffectFunction,
   findProgramSuppressions,
+  SingleLineSuppressionRange,
   suppressionsToCompilerError,
 } from './Suppression';
 import {GeneratedSource} from '../HIR';
@@ -695,7 +696,13 @@ function tryCompileFunction(
     programContext.suppressions,
     fn,
   );
-  if (suppressionsInFunction.length > 0) {
+  const singleLineSuppressions = suppressionsInFunction.filter(
+    s => s.kind === 'single-line',
+  ) as Array<SingleLineSuppressionRange>;
+  const multiLineSuppressions = suppressionsInFunction.filter(
+    s => s.kind === 'multi-line',
+  );
+  if (multiLineSuppressions.length > 0) {
     return {
       kind: 'error',
       error: suppressionsToCompilerError(suppressionsInFunction),
@@ -714,6 +721,7 @@ function tryCompileFunction(
         programContext.opts.logger,
         programContext.filename,
         programContext.code,
+        singleLineSuppressions,
       ),
     };
   } catch (err) {
@@ -752,6 +760,7 @@ function retryCompileFunction(
       programContext.opts.logger,
       programContext.filename,
       programContext.code,
+      [], // ignore suppressions in the retry pipeline
     );
 
     if (!retryResult.hasFireRewrite && !retryResult.hasInferredEffect) {

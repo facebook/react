@@ -35,6 +35,7 @@ import type {
 } from './HIR';
 import {GotoVariant, InstructionKind} from './HIR';
 import {AliasingEffect, AliasingSignature} from '../Inference/AliasingEffects';
+import invariant from 'invariant';
 
 export type Options = {
   indent: number;
