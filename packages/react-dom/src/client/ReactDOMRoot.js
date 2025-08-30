@@ -375,3 +375,4 @@ function warnIfReactDOMContainerInDEV(container: any) {
     }
   }
 }
+// CheckWise stress test
