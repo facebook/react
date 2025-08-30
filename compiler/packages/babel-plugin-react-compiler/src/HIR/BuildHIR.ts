@@ -51,6 +51,11 @@ import {
 } from './HIR';
 import HIRBuilder, {Bindings, createTemporaryPlace} from './HIRBuilder';
 import {BuiltInArrayId} from './ObjectShape';
+import {
+  filterSuppressionsThatAffectNode,
+  SingleLineSuppressionRange,
+  suppressionsToCompilerError,
+} from '../Entrypoint';
 
 /*
  * *******************************************************************************************
@@ -236,6 +241,42 @@ export function lower(
     },
     null,
   );
+
+  if (bindings == null) {
+    /**
+     * Any single-line suppressions which didn't get captured by a call expression
+     * are thrown as errors from the outermost function being compiled. This is to
+     * allow suppressions within function expressions that are passed to useEffect,
+     * eg
+     *
+     * ```
+     * useEffect(() => {
+     *   console.log(foo);
+     *   // eslint-disable-next-line react-hooks/exhaustive-deps
+     * }, []);
+     * ```
+     *
+     * Where we can't throw an error when exiting the function expression, but rather
+     * want that suppression to bubble up to the useEffect() call node.
+     *
+     * Whereas the following should error since it's at the top-level
+     *
+     * ```
+     * function Component() {
+     *   const f = () => {
+     *     // eslint-disable-next-line react-hooks/exhaustive-deps
+     *   };
+     * }
+     * ```
+     */
+    const suppressions = filterSuppressionsThatAffectNode(
+      env.suppressions,
+      func,
+    );
+    if (suppressions.length !== 0) {
+      throw suppressionsToCompilerError(suppressions);
+    }
+  }
 
   return Ok({
     id,
@@ -1766,21 +1807,27 @@ function lowerExpression(
         const memberExpr = lowerMemberExpression(builder, calleePath);
         const propertyPlace = lowerValueToTemporary(builder, memberExpr.value);
         const args = lowerArguments(builder, expr.get('arguments'));
+        const suppressions = consumeSuppressionOnNode(builder, expr);
+
         return {
           kind: 'MethodCall',
           receiver: memberExpr.object,
           property: {...propertyPlace},
           args,
           loc: exprLoc,
+          suppressions,
         };
       } else {
         const callee = lowerExpressionToTemporary(builder, calleePath);
         const args = lowerArguments(builder, expr.get('arguments'));
+        const suppressions = consumeSuppressionOnNode(builder, expr);
+
         return {
           kind: 'CallExpression',
           callee,
           args,
           loc: exprLoc,
+          suppressions,
         };
       }
     }
@@ -2956,6 +3003,7 @@ function lowerOptionalCallExpression(
   builder.enterReserved(consequent, () => {
     const args = lowerArguments(builder, expr.get('arguments'));
     const temp = buildTemporaryPlace(builder, loc);
+    const suppressions = consumeSuppressionOnNode(builder, expr);
     if (callee.kind === 'CallExpression') {
       builder.push({
         id: makeInstructionId(0),
@@ -2965,6 +3013,7 @@ function lowerOptionalCallExpression(
           callee: {...callee.callee},
           args,
           loc,
+          suppressions,
         },
         effects: null,
         loc,
@@ -2979,6 +3028,7 @@ function lowerOptionalCallExpression(
           property: {...callee.property},
           args,
           loc,
+          suppressions,
         },
         effects: null,
         loc,
@@ -4476,4 +4526,24 @@ export function lowerType(node: t.FlowType | t.TSType): Type {
       return makeType();
     }
   }
+}
+
+/**
+ * Extracts the (single-line) suppression comments from the environment that are scoped
+ * to within the given `node`, removing them from the environment's suppressions list.
+ *
+ * By calling this function depth-first, we can associate suppressions with the innermost
+ * call expression that they effect. Unconsumed suppressions are thrown at the parent
+ * function boundary.
+ */
+function consumeSuppressionOnNode(
+  builder: HIRBuilder,
+  node: NodePath,
+): Array<SingleLineSuppressionRange> {
+  const env = builder.environment;
+  const suppressions = filterSuppressionsThatAffectNode(env.suppressions, node);
+  env.suppressions = env.suppressions.filter(
+    s => suppressions.indexOf(s) === -1,
+  );
+  return suppressions;
 }

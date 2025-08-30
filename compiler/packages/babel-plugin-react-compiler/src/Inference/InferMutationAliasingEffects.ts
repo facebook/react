@@ -2089,7 +2089,7 @@ function computeSignatureForInstruction(
           effects.push({
             kind: 'Freeze',
             value: operand,
-            reason: ValueReason.Other,
+            reason: ValueReason.HookCaptured,
           });
         }
       }

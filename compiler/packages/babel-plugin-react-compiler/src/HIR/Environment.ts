@@ -9,7 +9,11 @@ import * as t from '@babel/types';
 import {ZodError, z} from 'zod';
 import {fromZodError} from 'zod-validation-error';
 import {CompilerError} from '../CompilerError';
-import {Logger, ProgramContext} from '../Entrypoint';
+import {
+  Logger,
+  ProgramContext,
+  SingleLineSuppressionRange,
+} from '../Entrypoint';
 import {Err, Ok, Result} from '../Utils/Result';
 import {
   DEFAULT_GLOBALS,
@@ -702,6 +706,7 @@ export class Environment {
   hasFireRewrite: boolean;
   hasInferredEffect: boolean;
   inferredEffectLocations: Set<SourceLocation> = new Set();
+  suppressions: Array<SingleLineSuppressionRange>;
 
   #contextIdentifiers: Set<t.Identifier>;
   #hoistedIdentifiers: Set<t.Identifier>;
@@ -720,6 +725,7 @@ export class Environment {
     filename: string | null,
     code: string | null,
     programContext: ProgramContext,
+    suppressions: Array<SingleLineSuppressionRange>,
   ) {
     this.#scope = scope;
     this.fnType = fnType;
@@ -733,6 +739,7 @@ export class Environment {
     this.#globals = new Map(DEFAULT_GLOBALS);
     this.hasFireRewrite = false;
     this.hasInferredEffect = false;
+    this.suppressions = suppressions;
 
     if (
       config.disableMemoizationForDebugging &&

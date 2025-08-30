@@ -8,7 +8,7 @@
 import {NodePath} from '@babel/traverse';
 import * as t from '@babel/types';
 import prettyFormat from 'pretty-format';
-import {Logger, ProgramContext} from '.';
+import {Logger, ProgramContext, SingleLineSuppressionRange} from '.';
 import {
   HIRFunction,
   ReactiveFunction,
@@ -121,6 +121,7 @@ function run(
   logger: Logger | null,
   filename: string | null,
   code: string | null,
+  suppressions: Array<SingleLineSuppressionRange>,
 ): CodegenFunction {
   const contextIdentifiers = findContextIdentifiers(func);
   const env = new Environment(
@@ -134,6 +135,7 @@ function run(
     filename,
     code,
     programContext,
+    suppressions,
   );
   env.logger?.debugLogIRs?.({
     kind: 'debug',
@@ -567,6 +569,7 @@ export function compileFn(
   logger: Logger | null,
   filename: string | null,
   code: string | null,
+  singleLineSuppressions: Array<SingleLineSuppressionRange>,
 ): CodegenFunction {
   return run(
     func,
@@ -577,5 +580,6 @@ export function compileFn(
     logger,
     filename,
     code,
+    singleLineSuppressions,
   );
 }

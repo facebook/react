@@ -255,6 +255,7 @@ function getManualMemoizationReplacement(
        */
       args: [],
       loc,
+      suppressions: [],
     };
   } else {
     /*
