@@ -51,6 +51,10 @@ import {
 } from './HIR';
 import HIRBuilder, {Bindings, createTemporaryPlace} from './HIRBuilder';
 import {BuiltInArrayId} from './ObjectShape';
+import {
+  filterSuppressionsThatAffectFunction,
+  suppressionsToCompilerError,
+} from '../Entrypoint';
 
 /*
  * *******************************************************************************************
@@ -236,6 +240,14 @@ export function lower(
     },
     null,
   );
+
+  const suppressions = filterSuppressionsThatAffectFunction(
+    env.suppressions,
+    func,
+  );
+  if (suppressions.length !== 0) {
+    throw suppressionsToCompilerError(suppressions);
+  }
 
   return Ok({
     id,
@@ -1766,21 +1778,41 @@ function lowerExpression(
         const memberExpr = lowerMemberExpression(builder, calleePath);
         const propertyPlace = lowerValueToTemporary(builder, memberExpr.value);
         const args = lowerArguments(builder, expr.get('arguments'));
+        const env = builder.environment;
+        const suppressions = filterSuppressionsThatAffectFunction(
+          env.suppressions,
+          expr as any,
+        );
+        env.suppressions = env.suppressions.filter(
+          s => suppressions.indexOf(s) === -1,
+        );
+
         return {
           kind: 'MethodCall',
           receiver: memberExpr.object,
           property: {...propertyPlace},
           args,
           loc: exprLoc,
+          suppressions,
         };
       } else {
         const callee = lowerExpressionToTemporary(builder, calleePath);
         const args = lowerArguments(builder, expr.get('arguments'));
+        const env = builder.environment;
+        const suppressions = filterSuppressionsThatAffectFunction(
+          env.suppressions,
+          expr as any,
+        );
+        env.suppressions = env.suppressions.filter(
+          s => suppressions.indexOf(s) === -1,
+        );
+
         return {
           kind: 'CallExpression',
           callee,
           args,
           loc: exprLoc,
+          suppressions,
         };
       }
     }
@@ -2956,6 +2988,14 @@ function lowerOptionalCallExpression(
   builder.enterReserved(consequent, () => {
     const args = lowerArguments(builder, expr.get('arguments'));
     const temp = buildTemporaryPlace(builder, loc);
+    const env = builder.environment;
+    const suppressions = filterSuppressionsThatAffectFunction(
+      env.suppressions,
+      expr as any,
+    );
+    env.suppressions = env.suppressions.filter(
+      s => suppressions.indexOf(s) === -1,
+    );
     if (callee.kind === 'CallExpression') {
       builder.push({
         id: makeInstructionId(0),
@@ -2965,6 +3005,7 @@ function lowerOptionalCallExpression(
           callee: {...callee.callee},
           args,
           loc,
+          suppressions,
         },
         effects: null,
         loc,
@@ -2979,6 +3020,7 @@ function lowerOptionalCallExpression(
           property: {...callee.property},
           args,
           loc,
+          suppressions,
         },
         effects: null,
         loc,

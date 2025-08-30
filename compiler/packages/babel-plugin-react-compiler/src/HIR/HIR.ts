@@ -15,6 +15,7 @@ import {Type, makeType} from './Types';
 import {z} from 'zod';
 import type {AliasingEffect} from '../Inference/AliasingEffects';
 import {isReservedWord} from '../Utils/Keyword';
+import {SingleLineSuppressionRange} from '../Entrypoint';
 
 /*
  * *******************************************************************************************
@@ -843,6 +844,7 @@ export type MethodCall = {
   property: Place;
   args: Array<Place | SpreadPattern>;
   loc: SourceLocation;
+  suppressions?: Array<SingleLineSuppressionRange>;
 };
 
 export type CallExpression = {
@@ -851,6 +853,7 @@ export type CallExpression = {
   args: Array<Place | SpreadPattern>;
   loc: SourceLocation;
   typeArguments?: Array<t.FlowType>;
+  suppressions?: Array<SingleLineSuppressionRange>;
 };
 
 export type NewExpression = {
