@@ -1,0 +1,68 @@
+# CheckWise Test Configuration for React Repository
+checklists:
+  # React Components Testing
+  - when: ["packages/react/**/*.js", "packages/react-dom/**/*.js"]
+    require:
+      - " **REACT CORE**: Component logic thoroughly reviewed"
+      - " **REACT CORE**: Breaking changes documented"
+      - " **REACT CORE**: Performance implications considered"
+      - " **REACT CORE**: Backward compatibility verified"
+    priority: 0
+    
+  # Development Experience
+  - when: ["packages/react-devtools*/**/*"]
+    require:
+      - " **DEVTOOLS**: DevTools integration tested"
+      - " **DEVTOOLS**: Cross-browser compatibility checked"
+    priority: 1
+    
+  # Build System
+  - when: ["scripts/**/*", "packages/*/scripts/**/*"]
+    require:
+      - " **BUILD**: Build scripts tested on CI"
+      - " **BUILD**: Cross-platform compatibility verified"
+      - " **BUILD**: Performance impact analyzed"
+    priority: 2
+    
+  # Testing Infrastructure
+  - when: ["packages/**/src/**/__tests__/**/*", "**/*.test.js"]
+    require:
+      - " **TESTS**: New tests cover edge cases"
+      - " **TESTS**: Existing tests still pass"
+      - " **TESTS**: Test descriptions are clear"
+    priority: 1
+    
+  # Documentation
+  - when: ["README.md", "CHANGELOG.md", "packages/*/README.md"]
+    require:
+      - " **DOCS**: Documentation accuracy verified"
+      - " **DOCS**: Examples tested and working"
+      - " **DOCS**: API changes documented"
+    priority: 2
+    
+  # Configuration Files
+  - when: ["package.json", "packages/*/package.json", "*.config.js"]
+    require:
+      - " **CONFIG**: Dependencies impact analyzed"
+      - " **CONFIG**: Version bumps coordinated"
+      - " **CONFIG**: Security implications reviewed"
+    priority: 0
+
+options:
+  comment_header: " CheckWise Alpha Test - React Repository"
+  template: |
+    ## {{comment_header}}
+    
+    **Analysis**: This PR affects **{{ruleCount}}** critical area(s) in React codebase
+    
+    {{items}}
+    
+    ---
+    
+    ### 📊 CheckWise Performance Metrics
+    - **Files analyzed**: {{fileCount}}
+    - **Rules matched**: {{ruleCount}}
+    - **Execution time**: ~{{executionTime}}ms
+    
+    > 🧪 This is an alpha test of CheckWise Action. 
+    > Report issues: [@inciarmors](https://github.com/inciarmors) | [CheckWise Repository](https://github.com/inciarmors/checkwise)

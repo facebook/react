@@ -264,3 +264,4 @@ test.describe('Components', () => {
     await waitForComponentSearchResultsCount('1 | 3');
   });
 });
+// CheckWise test modification
