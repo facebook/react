@@ -1,0 +1,28 @@
+name: CheckWise Testing
+on:
+  pull_request:
+    types: [opened, synchronize, edited]
+    branches: [main, checkwise-testing]
+
+jobs:
+  checkwise-test:
+    name: Test CheckWise Action
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.head.ref == 'checkwise-test' || contains(github.event.pull_request.title, '[CheckWise]')
+    permissions:
+      contents: read
+      pull-requests: write
+      statuses: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: 🧪 Test CheckWise Action
+        uses: inciarmors/checkwise@main
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          config-path: .github/checkwise-test.yml
+        env:
+          ACTIONS_STEP_DEBUG: true
