@@ -32,12 +32,9 @@ function injectProxy({target}: {target: any}) {
   }
 }
 
-if (__IS_FIREFOX__) {
-  // Firefox does not implement `pagereveal' yet: https://developer.mozilla.org/en-US/docs/Web/API/Window/pagereveal_event#browser_compatibility
-  window.addEventListener('pageshow', injectProxy);
-} else {
-  window.addEventListener('pagereveal', injectProxy);
-}
+window.addEventListener('pagereveal', injectProxy);
+// For backwards compat with browsers not implementing `pagereveal` which is a fairly new event.
+window.addEventListener('pageshow', injectProxy);
 
 window.addEventListener('pagehide', function ({target}) {
   if (target !== window.document) {
