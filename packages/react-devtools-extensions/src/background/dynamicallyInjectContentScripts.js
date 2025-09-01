@@ -6,7 +6,7 @@ const contentScriptsToInject = [
     js: ['build/proxy.js'],
     matches: ['<all_urls>'],
     persistAcrossSessions: true,
-    runAt: 'document_end',
+    runAt: 'document_start',
     world: chrome.scripting.ExecutionWorld.ISOLATED,
   },
   {
@@ -14,7 +14,7 @@ const contentScriptsToInject = [
     js: ['build/fileFetcher.js'],
     matches: ['<all_urls>'],
     persistAcrossSessions: true,
-    runAt: 'document_end',
+    runAt: 'document_start',
     world: chrome.scripting.ExecutionWorld.ISOLATED,
   },
   {

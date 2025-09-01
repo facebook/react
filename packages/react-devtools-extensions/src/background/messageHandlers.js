@@ -1,5 +1,6 @@
 /* global chrome */
 
+import {__DEBUG__} from 'react-devtools-shared/src/constants';
 import setExtensionIconAndPopup from './setExtensionIconAndPopup';
 import {executeScriptInMainWorld} from './executeScript';
 
@@ -25,6 +26,7 @@ export function handleBackendManagerMessage(message, sender) {
       payload.versions.forEach(version => {
         if (EXTENSION_CONTAINED_VERSIONS.includes(version)) {
           executeScriptInMainWorld({
+            injectImmediately: true,
             target: {tabId: sender.tab.id},
             files: [`/build/react_devtools_backend_${version}.js`],
           });
@@ -79,9 +81,19 @@ export function handleDevToolsPageMessage(message) {
       }
 
       executeScriptInMainWorld({
+        injectImmediately: true,
         target: {tabId},
         files: ['/build/backendManager.js'],
-      });
+      }).then(
+        () => {
+          if (__DEBUG__) {
+            console.log('Successfully injected backend manager');
+          }
+        },
+        reason => {
+          console.error('Failed to inject backend manager:', reason);
+        },
+      );
 
       break;
     }

@@ -2,7 +2,7 @@
 
 'use strict';
 
-window.addEventListener('pageshow', function ({target}) {
+window.addEventListener('pagereveal', function ({target}) {
   // Firefox's behaviour for injecting this content script can be unpredictable
   // While navigating the history, some content scripts might not be re-injected and still be alive
   if (!window.__REACT_DEVTOOLS_PROXY_INJECTED__) {
