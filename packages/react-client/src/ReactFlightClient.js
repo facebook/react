@@ -1172,7 +1172,7 @@ function createElement(
   props: mixed,
   owner: ?ReactComponentInfo, // DEV-only
   stack: ?ReactStackTrace, // DEV-only
-  validated: number, // DEV-only
+  validated: 0 | 1 | 2, // DEV-only
 ):
   | React$Element<any>
   | LazyComponent<React$Element<any>, SomeChunk<React$Element<any>>> {
@@ -1268,7 +1268,7 @@ function createElement(
         }
         erroredChunk._debugInfo = [erroredComponent];
       }
-      return createLazyChunkWrapper(erroredChunk);
+      return createLazyChunkWrapper(erroredChunk, validated);
     }
     if (handler.deps > 0) {
       // We have blocked references inside this Element but we can turn this into
@@ -1277,7 +1277,7 @@ function createElement(
         createBlockedChunk(response);
       handler.value = element;
       handler.chunk = blockedChunk;
-      const lazyType = createLazyChunkWrapper(blockedChunk);
+      const lazyType = createLazyChunkWrapper(blockedChunk, validated);
       if (__DEV__) {
         // After we have initialized any blocked references, initialize stack etc.
         const init = initializeElement.bind(null, response, element, lazyType);
@@ -1295,11 +1295,11 @@ function createElement(
 
 function createLazyChunkWrapper<T>(
   chunk: SomeChunk<T>,
+  validated: 0 | 1 | 2, // DEV-only
 ): LazyComponent<T, SomeChunk<T>> {
   const lazyType: LazyComponent<T, SomeChunk<T>> = {
     $$typeof: REACT_LAZY_TYPE,
     _payload: chunk,
-    _store: {validated: 0},
     _init: readChunk,
   };
   if (__DEV__) {
@@ -1307,6 +1307,8 @@ function createLazyChunkWrapper<T>(
     const chunkDebugInfo: ReactDebugInfo =
       chunk._debugInfo || (chunk._debugInfo = ([]: ReactDebugInfo));
     lazyType._debugInfo = chunkDebugInfo;
+    // Initialize a store for key validation by the JSX runtime.
+    lazyType._store = {validated: validated};
   }
   return lazyType;
 }
@@ -2111,7 +2113,7 @@ function parseModelString(
         }
         // We create a React.lazy wrapper around any lazy values.
         // When passed into React, we'll know how to suspend on this.
-        return createLazyChunkWrapper(chunk);
+        return createLazyChunkWrapper(chunk, 0);
       }
       case '@': {
         // Promise
