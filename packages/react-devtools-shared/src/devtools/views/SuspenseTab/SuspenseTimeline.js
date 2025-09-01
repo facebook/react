@@ -126,25 +126,27 @@ function SuspenseTimelineInput({rootID}: {rootID: Element['id'] | void}) {
   }
 
   function handleChange(event: SyntheticEvent) {
-    const pendingValue = +event.currentTarget.value;
-    for (let i = 0; i < timeline.length; i++) {
-      const forceFallback = i > pendingValue;
-      const suspense = timeline[i];
-      const elementID = suspense.id;
-      const rendererID = store.getRendererIDForElement(elementID);
-      if (rendererID === null) {
-        // TODO: Handle disconnected elements.
-        console.warn(
-          `No renderer ID found for element ${elementID} in suspense timeline.`,
-        );
-      } else {
-        bridge.send('overrideSuspense', {
-          id: elementID,
-          rendererID,
-          forceFallback,
-        });
-      }
+    if (rootID === undefined) {
+      return;
     }
+    const rendererID = store.getRendererIDForElement(rootID);
+    if (rendererID === null) {
+      console.error(
+        `No renderer ID found for root element ${rootID} in suspense timeline.`,
+      );
+      return;
+    }
+
+    const pendingValue = +event.currentTarget.value;
+    const suspendedSet = timeline
+      .slice(pendingValue + 1)
+      .map(suspense => suspense.id);
+
+    bridge.send('overrideSuspenseMilestone', {
+      rendererID,
+      rootID,
+      suspendedSet,
+    });
 
     const suspense = timeline[pendingValue];
     const elementID = suspense.id;

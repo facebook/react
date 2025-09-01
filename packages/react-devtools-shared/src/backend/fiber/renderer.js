@@ -7519,6 +7519,9 @@ export function attach(
     }
 
     // TODO: Allow overriding the timeline for the specified root.
+    forceFallbackForFibers.forEach(fiber => {
+      scheduleUpdate(fiber);
+    });
     forceFallbackForFibers.clear();
 
     for (let i = 0; i < suspendedSet.length; ++i) {
