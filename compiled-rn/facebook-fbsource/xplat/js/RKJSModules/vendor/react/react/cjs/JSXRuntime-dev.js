@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e8e44043f328d54723187fa1f177dbe4>>
+ * @generated SignedSource<<d0f2c9ca3e61b50f8aae86f28d70394a>>
  */
 
 "use strict";
@@ -267,11 +267,23 @@ __DEV__ &&
       );
     }
     function validateChildKeys(node) {
-      "object" === typeof node &&
-        null !== node &&
-        node.$$typeof === REACT_ELEMENT_TYPE &&
-        node._store &&
-        (node._store.validated = 1);
+      isValidElement(node)
+        ? node._store && (node._store.validated = 1)
+        : "object" === typeof node &&
+          null !== node &&
+          node.$$typeof === REACT_LAZY_TYPE &&
+          ("fulfilled" === node._payload.status
+            ? isValidElement(node._payload.value) &&
+              node._payload.value._store &&
+              (node._payload.value._store.validated = 1)
+            : node._store && (node._store.validated = 1));
+    }
+    function isValidElement(object) {
+      return (
+        "object" === typeof object &&
+        null !== object &&
+        object.$$typeof === REACT_ELEMENT_TYPE
+      );
     }
     var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags"),
       React = require("react");
