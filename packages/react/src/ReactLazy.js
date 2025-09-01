@@ -59,8 +59,9 @@ export type LazyComponent<T, P> = {
   $$typeof: symbol | number,
   _payload: P,
   _init: (payload: P) => T,
-  _debugInfo?: null | ReactDebugInfo,
+
   // __DEV__
+  _debugInfo?: null | ReactDebugInfo,
   _store?: {validated: 0 | 1 | 2, ...}, // 0: not validated, 1: validated, 2: force fail
 };
 
