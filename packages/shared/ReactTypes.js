@@ -142,6 +142,10 @@ export type StartTransitionOptions = {
   name?: string,
 };
 
+export type UseOptions = {
+  allowClientFallback?: boolean,
+};
+
 export type Usable<T> = Thenable<T> | ReactContext<T>;
 
 export type ReactCustomFormAction = {

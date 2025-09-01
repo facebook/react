@@ -11,6 +11,7 @@ import type {
   ReactContext,
   StartTransitionOptions,
   Usable,
+  UseOptions,
   Thenable,
   RejectedThenable,
   Awaited,
@@ -1147,12 +1148,33 @@ function useThenable<T>(thenable: Thenable<T>): T {
   return result;
 }
 
-function use<T>(usable: Usable<T>): T {
+function use<T>(usable: Usable<T>, options?: UseOptions): T {
   if (usable !== null && typeof usable === 'object') {
     // $FlowFixMe[method-unbinding]
     if (typeof usable.then === 'function') {
       // This is a thenable.
       const thenable: Thenable<T> = (usable: any);
+
+      // Check if client fallback is disabled
+      if (options && options.allowClientFallback === false) {
+        // Check if we're in a client environment and this thenable
+        // represents a server action that failed to execute on server
+        // For now, we implement a basic check - in a full implementation,
+        // this would involve deeper integration with server action metadata
+        if (typeof window !== 'undefined') {
+          // We're on the client side
+          // In the future, this could check thenable metadata to determine
+          // if it's a server action that should not fall back to client
+          const isServerAction = (thenable: any)._serverAction === true;
+          if (isServerAction) {
+            throw new Error(
+              'Server action execution failed and client fallback is disabled. ' +
+                'This action can only be executed on the server.',
+            );
+          }
+        }
+      }
+
       return useThenable(thenable);
     } else if (usable.$$typeof === REACT_CONTEXT_TYPE) {
       const context: ReactContext<T> = (usable: any);
@@ -4673,9 +4695,9 @@ if (__DEV__) {
       warnInvalidContextAccess();
       return readContext(context);
     },
-    use<T>(usable: Usable<T>): T {
+    use<T>(usable: Usable<T>, options?: UseOptions): T {
       warnInvalidHookAccess();
-      return use(usable);
+      return use(usable, options);
     },
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
@@ -4865,9 +4887,9 @@ if (__DEV__) {
       warnInvalidContextAccess();
       return readContext(context);
     },
-    use<T>(usable: Usable<T>): T {
+    use<T>(usable: Usable<T>, options?: UseOptions): T {
       warnInvalidHookAccess();
-      return use(usable);
+      return use(usable, options);
     },
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
@@ -5057,9 +5079,9 @@ if (__DEV__) {
       warnInvalidContextAccess();
       return readContext(context);
     },
-    use<T>(usable: Usable<T>): T {
+    use<T>(usable: Usable<T>, options?: UseOptions): T {
       warnInvalidHookAccess();
-      return use(usable);
+      return use(usable, options);
     },
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
