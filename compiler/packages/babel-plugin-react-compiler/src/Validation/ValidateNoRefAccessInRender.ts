@@ -371,7 +371,12 @@ function validateNoRefAccessInRenderImpl(
             let lookupType: null | RefAccessType = null;
             if (objType?.kind === 'Structure') {
               lookupType = objType.value;
-            } else if (objType?.kind === 'Ref') {
+            } else if (
+              objType?.kind === 'Ref' &&
+              instr.value.kind === 'PropertyLoad' &&
+              instr.value.property === 'current'
+            ) {
+              // Only treat property access as RefValue if it's accessing the 'current' property of a ref
               lookupType = {
                 kind: 'RefValue',
                 loc: instr.loc,
