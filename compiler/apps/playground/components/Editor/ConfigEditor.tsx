@@ -29,33 +29,38 @@ export default function ConfigEditor(): React.ReactElement {
     setIsExpanded(prev => !prev);
   }, []);
 
-  const handleChange: (value: string | undefined) => void = async value => {
-    if (value === undefined) return;
-
+  const handleApplyConfig = async () => {
     try {
-      const newPragma = await generateOverridePragmaFromConfig(value);
+      const config = store.config || '';
+      const newPragma = await generateOverridePragmaFromConfig(config);
       const updatedSource = updateSourceWithOverridePragma(
         store.source,
         newPragma,
       );
 
-      // Update the store with both the new config and updated source
       dispatchStore({
         type: 'updateFile',
         payload: {
           source: updatedSource,
-          config: value,
+          config: config,
         },
       });
-    } catch (_) {
-      dispatchStore({
-        type: 'updateFile',
-        payload: {
-          source: store.source,
-          config: value,
-        },
-      });
+    } catch (error) {
+      console.error('Failed to apply config:', error);
     }
+  };
+
+  const handleChange: (value: string | undefined) => void = value => {
+    if (value === undefined) return;
+
+    // Only update the config
+    dispatchStore({
+      type: 'updateFile',
+      payload: {
+        source: store.source,
+        config: value,
+      },
+    });
   };
 
   const handleMount: (
@@ -72,54 +77,59 @@ export default function ConfigEditor(): React.ReactElement {
   };
 
   return (
-    <div className="flex flex-row">
+    <div className="flex flex-row relative">
       {isExpanded ? (
-        <Resizable
-          className="border-r"
-          minWidth={300}
-          maxWidth={600}
-          defaultSize={{width: 350, height: 'auto'}}
-          enable={{right: true}}>
-          <h2
-            title="Minimize config editor"
-            aria-label="Minimize config editor"
-            onClick={toggleExpanded}
-            className="p-4 duration-150 ease-in border-b cursor-pointer border-grey-200 font-light text-secondary hover:text-link">
-            - Config Overrides
-          </h2>
-          <div className="h-[calc(100vh_-_3.5rem_-_4rem)]">
-            <MonacoEditor
-              path={'config.js'}
-              language={'javascript'}
-              value={store.config}
-              onMount={handleMount}
-              onChange={handleChange}
-              options={{
-                ...monacoOptions,
-                lineNumbers: 'off',
-                folding: false,
-                renderLineHighlight: 'none',
-                scrollBeyondLastLine: false,
-                hideCursorInOverviewRuler: true,
-                overviewRulerBorder: false,
-                overviewRulerLanes: 0,
-                fontSize: 12,
-              }}
-            />
-          </div>
-        </Resizable>
+        <>
+          <Resizable
+            className="border-r"
+            minWidth={300}
+            maxWidth={600}
+            defaultSize={{width: 350, height: 'auto'}}
+            enable={{right: true}}>
+            <h2
+              title="Minimize config editor"
+              aria-label="Minimize config editor"
+              onClick={toggleExpanded}
+              className="p-4 duration-150 ease-in border-b cursor-pointer border-grey-200 font-light text-secondary hover:text-link">
+              ⚙️ Config Overrides
+            </h2>
+            <div className="h-[calc(100vh_-_3.5rem_-_4rem)]">
+              <MonacoEditor
+                path={'config.js'}
+                language={'javascript'}
+                value={store.config}
+                onMount={handleMount}
+                onChange={handleChange}
+                options={{
+                  ...monacoOptions,
+                  lineNumbers: 'off',
+                  folding: false,
+                  renderLineHighlight: 'none',
+                  scrollBeyondLastLine: false,
+                  hideCursorInOverviewRuler: true,
+                  overviewRulerBorder: false,
+                  overviewRulerLanes: 0,
+                  fontSize: 12,
+                }}
+              />
+            </div>
+          </Resizable>
+          <button
+            onClick={handleApplyConfig}
+            title="Apply config overrides to input"
+            aria-label="Apply config overrides to input"
+            className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1/2 z-10 w-8 h-8 bg-blue-500 hover:bg-blue-600 text-white rounded-full border-2 border-white shadow-lg flex items-center justify-center text-sm font-medium transition-colors duration-150">
+            →
+          </button>
+        </>
       ) : (
-        <div className="relative items-center h-full px-1 py-6 align-middle border-r border-grey-200">
+        <div className="relative flex flex-col items-center h-full px-2 py-4 border-r border-grey-200">
           <button
             title="Expand config editor"
             aria-label="Expand config editor"
-            style={{
-              transform: 'rotate(90deg) translate(-50%)',
-              whiteSpace: 'nowrap',
-            }}
             onClick={toggleExpanded}
-            className="flex-grow-0 w-5 transition-colors duration-150 ease-in font-light text-secondary hover:text-link">
-            Config Overrides
+            className="text-lg transition-colors duration-150 ease-in text-secondary hover:text-link">
+            ⚙️
           </button>
         </div>
       )}
