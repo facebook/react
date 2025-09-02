@@ -6,52 +6,51 @@
  */
 
 import MonacoEditor, {loader, type Monaco} from '@monaco-editor/react';
-import {parseConfigPragmaAsString} from 'babel-plugin-react-compiler';
 import type {editor} from 'monaco-editor';
 import * as monaco from 'monaco-editor';
-import parserBabel from 'prettier/plugins/babel';
-import * as prettierPluginEstree from 'prettier/plugins/estree';
-import * as prettier from 'prettier/standalone';
-import {useState, useEffect} from 'react';
+import {useState} from 'react';
 import {Resizable} from 're-resizable';
-import {useStore} from '../StoreContext';
+import {useStore, useStoreDispatch} from '../StoreContext';
 import {monacoOptions} from './monacoOptions';
+import {
+  generateOverridePragmaFromConfig,
+  updateSourceWithOverridePragma,
+} from '../../lib/configUtils';
 
 loader.config({monaco});
 
 export default function ConfigEditor(): JSX.Element {
   const [, setMonaco] = useState<Monaco | null>(null);
   const store = useStore();
+  const dispatchStore = useStoreDispatch();
 
-  // Parse string-based override config from pragma comment and format it
-  const [configJavaScript, setConfigJavaScript] = useState('');
+  const handleChange: (value: string | undefined) => void = async value => {
+    if (value === undefined) return;
 
-  useEffect(() => {
-    const pragma = store.source.substring(0, store.source.indexOf('\n'));
-    const configString = `(${parseConfigPragmaAsString(pragma)})`;
+    try {
+      const newPragma = await generateOverridePragmaFromConfig(value);
+      const updatedSource = updateSourceWithOverridePragma(
+        store.source,
+        newPragma,
+      );
 
-    prettier
-      .format(configString, {
-        semi: true,
-        parser: 'babel-ts',
-        plugins: [parserBabel, prettierPluginEstree],
-      })
-      .then(formatted => {
-        setConfigJavaScript(formatted);
-      })
-      .catch(error => {
-        console.error('Error formatting config:', error);
-        setConfigJavaScript('({})'); // Return empty object if not valid for now
-        //TODO: Add validation and error handling for config
+      // Update the store with both the new config and updated source
+      dispatchStore({
+        type: 'updateFile',
+        payload: {
+          source: updatedSource,
+          config: value,
+        },
       });
-    console.log('Config:', configString);
-  }, [store.source]);
-
-  const handleChange: (value: string | undefined) => void = value => {
-    if (!value) return;
-
-    // TODO: Implement sync logic to update pragma comments in the source
-    console.log('Config changed:', value);
+    } catch (_) {
+      dispatchStore({
+        type: 'updateFile',
+        payload: {
+          source: store.source,
+          config: value,
+        },
+      });
+    }
   };
 
   const handleMount: (
@@ -81,12 +80,11 @@ export default function ConfigEditor(): JSX.Element {
         <MonacoEditor
           path={'config.js'}
           language={'javascript'}
-          value={configJavaScript}
+          value={store.config}
           onMount={handleMount}
           onChange={handleChange}
           options={{
             ...monacoOptions,
-            readOnly: true,
             lineNumbers: 'off',
             folding: false,
             renderLineHighlight: 'none',
