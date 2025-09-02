@@ -2,7 +2,7 @@
   width: 100%;
   display: flex;
   flex-direction: row;
-  padding: 0 0.25rem;
+  padding: 0.25rem;
 }
 
 .SuspenseTimelineInput {
@@ -21,20 +21,6 @@
   max-width: 3rem;
 }
 
-.SuspenseTimelineMarkers {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
+.SuspenseTimelineProgressIndicator {
+  align-self: center;
 }
-
-.SuspenseTimelineMarkers > * {
-  flex: 1 1 0;
-  overflow: visible;
-  visibility: hidden;
-  width: 0
-}
-
-.SuspenseTimelineActiveMarker {
-  visibility: visible;
-}
-
