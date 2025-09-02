@@ -8,7 +8,7 @@
 import MonacoEditor, {loader, type Monaco} from '@monaco-editor/react';
 import type {editor} from 'monaco-editor';
 import * as monaco from 'monaco-editor';
-import {useState} from 'react';
+import React, {useState, useCallback} from 'react';
 import {Resizable} from 're-resizable';
 import {useStore, useStoreDispatch} from '../StoreContext';
 import {monacoOptions} from './monacoOptions';
@@ -19,10 +19,15 @@ import {
 
 loader.config({monaco});
 
-export default function ConfigEditor(): JSX.Element {
+export default function ConfigEditor(): React.ReactElement {
   const [, setMonaco] = useState<Monaco | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
   const store = useStore();
   const dispatchStore = useStoreDispatch();
+
+  const toggleExpanded = useCallback(() => {
+    setIsExpanded(prev => !prev);
+  }, []);
 
   const handleChange: (value: string | undefined) => void = async value => {
     if (value === undefined) return;
@@ -67,35 +72,57 @@ export default function ConfigEditor(): JSX.Element {
   };
 
   return (
-    <div className="relative flex flex-col flex-none border-r border-gray-200">
-      <h2 className="p-4 duration-150 ease-in border-b cursor-default border-grey-200 font-light text-secondary">
-        Config Overrides
-      </h2>
-      <Resizable
-        minWidth={300}
-        maxWidth={600}
-        defaultSize={{width: 350, height: 'auto'}}
-        enable={{right: true}}
-        className="!h-[calc(100vh_-_3.5rem_-_4rem)]">
-        <MonacoEditor
-          path={'config.js'}
-          language={'javascript'}
-          value={store.config}
-          onMount={handleMount}
-          onChange={handleChange}
-          options={{
-            ...monacoOptions,
-            lineNumbers: 'off',
-            folding: false,
-            renderLineHighlight: 'none',
-            scrollBeyondLastLine: false,
-            hideCursorInOverviewRuler: true,
-            overviewRulerBorder: false,
-            overviewRulerLanes: 0,
-            fontSize: 12,
-          }}
-        />
-      </Resizable>
+    <div className="flex flex-row">
+      {isExpanded ? (
+        <Resizable
+          className="border-r"
+          minWidth={300}
+          maxWidth={600}
+          defaultSize={{width: 350, height: 'auto'}}
+          enable={{right: true}}>
+          <h2
+            title="Minimize config editor"
+            aria-label="Minimize config editor"
+            onClick={toggleExpanded}
+            className="p-4 duration-150 ease-in border-b cursor-pointer border-grey-200 font-light text-secondary hover:text-link">
+            - Config Overrides
+          </h2>
+          <div className="h-[calc(100vh_-_3.5rem_-_4rem)]">
+            <MonacoEditor
+              path={'config.js'}
+              language={'javascript'}
+              value={store.config}
+              onMount={handleMount}
+              onChange={handleChange}
+              options={{
+                ...monacoOptions,
+                lineNumbers: 'off',
+                folding: false,
+                renderLineHighlight: 'none',
+                scrollBeyondLastLine: false,
+                hideCursorInOverviewRuler: true,
+                overviewRulerBorder: false,
+                overviewRulerLanes: 0,
+                fontSize: 12,
+              }}
+            />
+          </div>
+        </Resizable>
+      ) : (
+        <div className="relative items-center h-full px-1 py-6 align-middle border-r border-grey-200">
+          <button
+            title="Expand config editor"
+            aria-label="Expand config editor"
+            style={{
+              transform: 'rotate(90deg) translate(-50%)',
+              whiteSpace: 'nowrap',
+            }}
+            onClick={toggleExpanded}
+            className="flex-grow-0 w-5 transition-colors duration-150 ease-in font-light text-secondary hover:text-link">
+            Config Overrides
+          </button>
+        </div>
+      )}
     </div>
   );
 }
