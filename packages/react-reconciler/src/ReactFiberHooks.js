@@ -2967,8 +2967,14 @@ function mountDeferredValue<T>(value: T, initialValue?: T): T {
 function updateDeferredValue<T>(value: T, initialValue?: T): T {
   const hook = updateWorkInProgressHook();
   const resolvedCurrentHook: Hook = (currentHook: any);
-  const prevValue: T = resolvedCurrentHook.memoizedState;
-  return updateDeferredValueImpl(hook, prevValue, value, initialValue);
+  const prevState: DeferredValueState<T> = resolvedCurrentHook.memoizedState;
+  return updateDeferredValueImpl(
+    hook,
+    prevState.value,
+    prevState.isInitial,
+    value,
+    initialValue,
+  );
 }
 
 function rerenderDeferredValue<T>(value: T, initialValue?: T): T {
@@ -2978,8 +2984,14 @@ function rerenderDeferredValue<T>(value: T, initialValue?: T): T {
     return mountDeferredValueImpl(hook, value, initialValue);
   } else {
     // This is a rerender during an update.
-    const prevValue: T = currentHook.memoizedState;
-    return updateDeferredValueImpl(hook, prevValue, value, initialValue);
+    const prevState: DeferredValueState<T> = currentHook.memoizedState;
+    return updateDeferredValueImpl(
+      hook,
+      prevState.value,
+      prevState.isInitial,
+      value,
+      initialValue,
+    );
   }
 }
 
@@ -2988,13 +3000,14 @@ function mountDeferredValueImpl<T>(hook: Hook, value: T, initialValue?: T): T {
     // When `initialValue` is provided, we defer the initial render even if the
     // current render is not synchronous.
     initialValue !== undefined &&
-    // However, to avoid waterfalls, we do not defer if this render
-    // was itself spawned by an earlier useDeferredValue. Check if DeferredLane
-    // is part of the render lanes.
+    !is(value, initialValue) &&
+    // However, if the current render is itself a deferred render, then we don't
+    // defer again. To avoid waterfalls, this applies regardless of whether it
+    // was the same hook instance that spawned the current render, or an earlier
+    // hook. Check if DeferredLane is part of the render lanes.
     !includesSomeLane(renderLanes, DeferredLane)
   ) {
     // Render with the initial value
-    hook.memoizedState = initialValue;
 
     // Schedule a deferred render to switch to the final value.
     const deferredLane = requestDeferredLane();
@@ -3004,22 +3017,61 @@ function mountDeferredValueImpl<T>(hook: Hook, value: T, initialValue?: T): T {
     );
     markSkippedUpdateLanes(deferredLane);
 
+    const nextState: DeferredValueState<T> = {
+      value: initialValue,
+      isInitial: true,
+    };
+    hook.memoizedState = nextState;
     return initialValue;
   } else {
-    hook.memoizedState = value;
+    const nextState: DeferredValueState<T> = {
+      value,
+      isInitial: false,
+    };
+    hook.memoizedState = nextState;
     return value;
   }
 }
 
+type DeferredValueState<T> = {
+  value: T,
+  isInitial: boolean,
+};
+
 function updateDeferredValueImpl<T>(
   hook: Hook,
   prevValue: T,
+  prevIsInitial: boolean,
   value: T,
   initialValue?: T,
 ): T {
+  // Unlike `useState`, the `initialValue` option to `useDeferredValue` is
+  // reactive — if the hook re-renders with a different initial value before
+  // the final value commits, React should update to the new initial value.
+  if (prevIsInitial && initialValue !== undefined) {
+    // Currently showing the initial value. Switch to the "mount" path.
+    if (is(value, prevValue)) {
+      // Fast path. The incoming value is referentially identical to the
+      // currently rendered value, so we can bail out quickly.
+      const nextState: DeferredValueState<T> = {
+        value,
+        isInitial: false,
+      };
+      hook.memoizedState = nextState;
+      return value;
+    }
+    const resultValue = mountDeferredValueImpl(hook, value, initialValue);
+    // Unlike during an actual mount, we need to mark this as an update if
+    // the value changed.
+    if (!is(resultValue, prevValue)) {
+      markWorkInProgressReceivedUpdate();
+    }
+    return resultValue;
+  }
+
   if (is(value, prevValue)) {
-    // The incoming value is referentially identical to the currently rendered
-    // value, so we can bail out quickly.
+    // Fast path. The incoming value is referentially identical to the currently
+    // rendered value, so we can bail out quickly.
     return value;
   } else {
     // Received a new value that's different from the current value.
@@ -3061,7 +3113,11 @@ function updateDeferredValueImpl<T>(
 
       // Mark this as an update to prevent the fiber from bailing out.
       markWorkInProgressReceivedUpdate();
-      hook.memoizedState = value;
+      const nextState: DeferredValueState<T> = {
+        value,
+        isInitial: false,
+      };
+      hook.memoizedState = nextState;
       return value;
     }
   }
