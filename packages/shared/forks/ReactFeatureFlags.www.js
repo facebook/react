@@ -109,7 +109,7 @@ export const enableSuspenseyImages: boolean = false;
 export const enableFizzBlockingRender: boolean = true;
 export const enableSrcObject: boolean = false;
 export const enableHydrationChangeEvent: boolean = false;
-export const enableDefaultTransitionIndicator: boolean = false;
+export const enableDefaultTransitionIndicator: boolean = true;
 
 export const ownerStackLimit = 1e4;
 

@@ -34,26 +34,30 @@
     "invariant": "^2.2.4",
     "lz-string": "^1.5.0",
     "monaco-editor": "^0.52.0",
-    "next": "^15.2.0-canary.64",
+    "next": "15.5.2",
     "notistack": "^3.0.0-alpha.7",
     "prettier": "^3.3.3",
     "pretty-format": "^29.3.1",
     "re-resizable": "^6.9.16",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "19.1.1",
+    "react-dom": "19.1.1"
   },
   "devDependencies": {
     "@types/node": "18.11.9",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
+    "@types/react": "19.1.12",
+    "@types/react-dom": "19.1.9",
     "autoprefixer": "^10.4.13",
     "clsx": "^1.2.1",
     "concurrently": "^7.4.0",
     "eslint": "^8.28.0",
-    "eslint-config-next": "^15.0.1",
+    "eslint-config-next": "15.5.2",
     "monaco-editor-webpack-plugin": "^7.1.0",
     "postcss": "^8.4.31",
     "tailwindcss": "^3.2.4",
     "wait-on": "^7.2.0"
+  },
+  "resolutions": {
+    "@types/react": "19.1.12",
+    "@types/react-dom": "19.1.9"
   }
 }

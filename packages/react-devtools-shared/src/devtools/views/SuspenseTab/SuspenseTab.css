@@ -16,14 +16,15 @@
 
 .TreeWrapper {
   border-top: 1px solid var(--color-border);
-  flex: 1 1 var(--horizontal-resize-tree-percentage);
+  flex: 1 1 65%;
   display: flex;
   flex-direction: row;
   height: 100%;
+  overflow: auto;
 }
 
 .InspectedElementWrapper {
-  flex: 1 1 35%;
+  flex: 0 0 calc(100% - var(--horizontal-resize-tree-percentage));
   overflow-x: hidden;
   overflow-y: auto;
 }
@@ -59,12 +60,12 @@
 
   .TreeWrapper {
     border-top: 1px solid var(--color-border);
-    flex: 1 1 var(--vertical-resize-tree-percentage);
+    flex: 1 1 50%;
     overflow: hidden;
   }
 
   .InspectedElementWrapper {
-    flex: 1 1 50%;
+    flex: 0 0 calc(100% - var(--vertical-resize-tree-percentage));
   }
 
   .TreeWrapper + .ResizeBarWrapper .ResizeBar {

@@ -228,9 +228,20 @@ export function logComponentRender(
               ? 'tertiary-dark'
               : 'primary-dark'
             : 'error';
-    const debugTask = fiber._debugTask;
-    if (__DEV__ && debugTask) {
+
+    if (!__DEV__) {
+      console.timeStamp(
+        name,
+        startTime,
+        endTime,
+        COMPONENTS_TRACK,
+        undefined,
+        color,
+      );
+    } else {
       const props = fiber.memoizedProps;
+      const debugTask = fiber._debugTask;
+
       if (
         props !== null &&
         alternate !== null &&
@@ -268,38 +279,45 @@ export function logComponentRender(
           reusableComponentDevToolDetails.properties = properties;
           reusableComponentOptions.start = startTime;
           reusableComponentOptions.end = endTime;
+
+          if (debugTask != null) {
+            debugTask.run(
+              // $FlowFixMe[method-unbinding]
+              performance.measure.bind(
+                performance,
+                '\u200b' + name,
+                reusableComponentOptions,
+              ),
+            );
+          } else {
+            performance.measure('\u200b' + name, reusableComponentOptions);
+          }
+        }
+      } else {
+        if (debugTask != null) {
           debugTask.run(
             // $FlowFixMe[method-unbinding]
-            performance.measure.bind(
-              performance,
-              '\u200b' + name,
-              reusableComponentOptions,
+            console.timeStamp.bind(
+              console,
+              name,
+              startTime,
+              endTime,
+              COMPONENTS_TRACK,
+              undefined,
+              color,
             ),
           );
-          return;
+        } else {
+          console.timeStamp(
+            name,
+            startTime,
+            endTime,
+            COMPONENTS_TRACK,
+            undefined,
+            color,
+          );
         }
       }
-      debugTask.run(
-        // $FlowFixMe[method-unbinding]
-        console.timeStamp.bind(
-          console,
-          name,
-          startTime,
-          endTime,
-          COMPONENTS_TRACK,
-          undefined,
-          color,
-        ),
-      );
-    } else {
-      console.timeStamp(
-        name,
-        startTime,
-        endTime,
-        COMPONENTS_TRACK,
-        undefined,
-        color,
-      );
     }
   }
 }

@@ -48,10 +48,7 @@ export {
   printReactiveFunction,
   printReactiveFunctionWithOutlined,
 } from './ReactiveScopes';
-export {
-  parseConfigPragmaForTests,
-  parseConfigPragmaAsString,
-} from './Utils/TestUtils';
+export {parseConfigPragmaForTests} from './Utils/TestUtils';
 declare global {
   let __DEV__: boolean | null | undefined;
 }
