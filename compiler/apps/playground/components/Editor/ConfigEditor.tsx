@@ -10,6 +10,7 @@ import type {editor} from 'monaco-editor';
 import * as monaco from 'monaco-editor';
 import React, {useState, useCallback} from 'react';
 import {Resizable} from 're-resizable';
+import {useSnackbar} from 'notistack';
 import {useStore, useStoreDispatch} from '../StoreContext';
 import {monacoOptions} from './monacoOptions';
 import {
@@ -24,6 +25,7 @@ export default function ConfigEditor(): React.ReactElement {
   const [isExpanded, setIsExpanded] = useState(false);
   const store = useStore();
   const dispatchStore = useStoreDispatch();
+  const {enqueueSnackbar} = useSnackbar();
 
   const toggleExpanded = useCallback(() => {
     setIsExpanded(prev => !prev);
@@ -32,6 +34,16 @@ export default function ConfigEditor(): React.ReactElement {
   const handleApplyConfig = async () => {
     try {
       const config = store.config || '';
+
+      if (!config.trim()) {
+        enqueueSnackbar(
+          'Config is empty. Please add configuration options first.',
+          {
+            variant: 'warning',
+          },
+        );
+        return;
+      }
       const newPragma = await generateOverridePragmaFromConfig(config);
       const updatedSource = updateSourceWithOverridePragma(
         store.source,
@@ -45,8 +57,19 @@ export default function ConfigEditor(): React.ReactElement {
           config: config,
         },
       });
+
+      enqueueSnackbar('Config overrides applied successfully!', {
+        variant: 'success',
+      });
     } catch (error) {
       console.error('Failed to apply config:', error);
+
+      if (error instanceof Error) {
+        const errorMessage = 'Unexpected formatting: failed to apply config.';
+        enqueueSnackbar(errorMessage, {
+          variant: 'error',
+        });
+      }
     }
   };
 
@@ -91,7 +114,7 @@ export default function ConfigEditor(): React.ReactElement {
               aria-label="Minimize config editor"
               onClick={toggleExpanded}
               className="p-4 duration-150 ease-in border-b cursor-pointer border-grey-200 font-light text-secondary hover:text-link">
-              ⚙️ Config Overrides
+              - Config Overrides
             </h2>
             <div className="h-[calc(100vh_-_3.5rem_-_4rem)]">
               <MonacoEditor
@@ -123,13 +146,17 @@ export default function ConfigEditor(): React.ReactElement {
           </button>
         </>
       ) : (
-        <div className="relative flex flex-col items-center h-full px-2 py-4 border-r border-grey-200">
+        <div className="relative items-center h-full px-1 py-6 align-middle border-r border-grey-200">
           <button
             title="Expand config editor"
             aria-label="Expand config editor"
+            style={{
+              transform: 'rotate(90deg) translate(-50%)',
+              whiteSpace: 'nowrap',
+            }}
             onClick={toggleExpanded}
-            className="text-lg transition-colors duration-150 ease-in text-secondary hover:text-link">
-            ⚙️
+            className="flex-grow-0 w-5 transition-colors duration-150 ease-in font-light text-secondary hover:text-link">
+            Config Overrides
           </button>
         </div>
       )}
