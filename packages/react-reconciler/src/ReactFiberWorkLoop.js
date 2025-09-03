@@ -192,7 +192,7 @@ import {
   OffscreenLane,
   SyncUpdateLanes,
   UpdateLanes,
-  claimNextTransitionLane,
+  claimNextTransitionDeferredLane,
   checkIfRootIsPrerendering,
   includesOnlyViewTransitionEligibleLanes,
   isGestureRender,
@@ -827,7 +827,7 @@ export function requestDeferredLane(): Lane {
       workInProgressDeferredLane = OffscreenLane;
     } else {
       // Everything else is spawned as a transition.
-      workInProgressDeferredLane = claimNextTransitionLane();
+      workInProgressDeferredLane = claimNextTransitionDeferredLane();
     }
   }
 
