@@ -591,8 +591,14 @@ function applyEffect(
         };
         context.effectInstructionValueCache.set(effect, value);
       }
+
+      const outputKind =
+        fromValue.kind === ValueKind.ShallowMutable
+          ? ValueKind.Frozen
+          : fromValue.kind;
+
       state.initialize(value, {
-        kind: fromValue.kind,
+        kind: outputKind,
         reason: new Set(fromValue.reason),
       });
       state.define(effect.into, value);
@@ -607,10 +613,11 @@ function applyEffect(
           });
           break;
         }
+        case ValueKind.ShallowMutable:
         case ValueKind.Frozen: {
           effects.push({
             kind: 'Create',
-            value: fromValue.kind,
+            value: outputKind,
             into: effect.into,
             reason: [...fromValue.reason][0] ?? ValueReason.Other,
           });
@@ -720,11 +727,14 @@ function applyEffect(
        * copy-on-write semantics, then we can prune the effect
        */
       const intoKind = state.kind(effect.into).kind;
+      const fromKind = state.kind(effect.from).kind;
+
       let isMutableDesination: boolean;
       switch (intoKind) {
         case ValueKind.Context:
         case ValueKind.Mutable:
-        case ValueKind.MaybeFrozen: {
+        case ValueKind.MaybeFrozen:
+        case ValueKind.ShallowMutable: {
           isMutableDesination = true;
           break;
         }
@@ -733,7 +743,6 @@ function applyEffect(
           break;
         }
       }
-      const fromKind = state.kind(effect.from).kind;
       let isMutableReferenceType: boolean;
       switch (fromKind) {
         case ValueKind.Global:
@@ -741,6 +750,7 @@ function applyEffect(
           isMutableReferenceType = false;
           break;
         }
+        case ValueKind.ShallowMutable:
         case ValueKind.Frozen: {
           isMutableReferenceType = false;
           applyEffect(
@@ -781,6 +791,7 @@ function applyEffect(
       const fromValue = state.kind(effect.from);
       const fromKind = fromValue.kind;
       switch (fromKind) {
+        case ValueKind.ShallowMutable:
         case ValueKind.Frozen: {
           applyEffect(
             context,
@@ -1267,6 +1278,7 @@ class InferenceState {
     switch (value.kind) {
       case ValueKind.Context:
       case ValueKind.Mutable:
+      case ValueKind.ShallowMutable:
       case ValueKind.MaybeFrozen: {
         const values = this.values(place);
         for (const instrValue of values) {
@@ -1315,13 +1327,30 @@ class InferenceState {
     if (isRefOrRefValue(place.identifier)) {
       return 'mutate-ref';
     }
-    const kind = this.kind(place).kind;
+    const abstractValue = this.kind(place);
+    const kind = abstractValue.kind;
+
+    // Downgrade ShallowMutable to Mutable when mutated
+    if (kind === ValueKind.ShallowMutable) {
+      const values = this.values(place);
+      for (const value of values) {
+        const valueInfo = this.#values.get(value);
+        if (valueInfo && valueInfo.kind === ValueKind.ShallowMutable) {
+          this.#values.set(value, {
+            kind: ValueKind.Mutable,
+            reason: valueInfo.reason,
+          });
+        }
+      }
+    }
+
     switch (variant) {
       case 'MutateConditionally':
       case 'MutateTransitiveConditionally': {
         switch (kind) {
           case ValueKind.Mutable:
-          case ValueKind.Context: {
+          case ValueKind.Context:
+          case ValueKind.ShallowMutable: {
             return 'mutate';
           }
           default: {
@@ -1333,7 +1362,8 @@ class InferenceState {
       case 'MutateTransitive': {
         switch (kind) {
           case ValueKind.Mutable:
-          case ValueKind.Context: {
+          case ValueKind.Context:
+          case ValueKind.ShallowMutable: {
             return 'mutate';
           }
           case ValueKind.Primitive: {
