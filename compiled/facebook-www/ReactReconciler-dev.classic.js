@@ -1407,64 +1407,65 @@ __DEV__ &&
                   ? "tertiary-dark"
                   : "primary-dark"
                 : "error";
-        if ((selfTime = fiber._debugTask)) {
-          var props = fiber.memoizedProps;
-          if (
-            null !== props &&
-            null !== alternate &&
-            alternate.memoizedProps !== props &&
-            ((child = [resuableChangedPropsEntry]),
+        var props = fiber.memoizedProps;
+        selfTime = fiber._debugTask;
+        null !== props &&
+        null !== alternate &&
+        alternate.memoizedProps !== props
+          ? ((child = [resuableChangedPropsEntry]),
             (props = addObjectDiffToProperties(
               alternate.memoizedProps,
               props,
               child,
               0
             )),
-            1 < child.length)
-          ) {
-            props &&
-            !alreadyWarnedForDeepEquality &&
-            0 === (alternate.lanes & committedLanes) &&
-            100 < fiber.actualDuration
-              ? ((alreadyWarnedForDeepEquality = !0),
-                (child[0] = reusableDeeplyEqualPropsEntry),
-                (reusableComponentDevToolDetails.color = "warning"),
-                (reusableComponentDevToolDetails.tooltipText =
-                  "This component received deeply equal props. It might benefit from useMemo or the React Compiler in its owner."))
-              : ((reusableComponentDevToolDetails.color = wasHydrated),
-                (reusableComponentDevToolDetails.tooltipText = name));
-            reusableComponentDevToolDetails.properties = child;
-            reusableComponentOptions.start = startTime;
-            reusableComponentOptions.end = endTime;
-            selfTime.run(
-              performance.measure.bind(
-                performance,
-                "\u200b" + name,
-                reusableComponentOptions
+            1 < child.length &&
+              (props &&
+              !alreadyWarnedForDeepEquality &&
+              0 === (alternate.lanes & committedLanes) &&
+              100 < fiber.actualDuration
+                ? ((alreadyWarnedForDeepEquality = !0),
+                  (child[0] = reusableDeeplyEqualPropsEntry),
+                  (reusableComponentDevToolDetails.color = "warning"),
+                  (reusableComponentDevToolDetails.tooltipText =
+                    "This component received deeply equal props. It might benefit from useMemo or the React Compiler in its owner."))
+                : ((reusableComponentDevToolDetails.color = wasHydrated),
+                  (reusableComponentDevToolDetails.tooltipText = name)),
+              (reusableComponentDevToolDetails.properties = child),
+              (reusableComponentOptions.start = startTime),
+              (reusableComponentOptions.end = endTime),
+              null != selfTime
+                ? selfTime.run(
+                    performance.measure.bind(
+                      performance,
+                      "\u200b" + name,
+                      reusableComponentOptions
+                    )
+                  )
+                : performance.measure(
+                    "\u200b" + name,
+                    reusableComponentOptions
+                  )))
+          : null != selfTime
+            ? selfTime.run(
+                console.timeStamp.bind(
+                  console,
+                  name,
+                  startTime,
+                  endTime,
+                  "Components \u269b",
+                  void 0,
+                  wasHydrated
+                )
               )
-            );
-            return;
-          }
-          selfTime.run(
-            console.timeStamp.bind(
-              console,
-              name,
-              startTime,
-              endTime,
-              "Components \u269b",
-              void 0,
-              wasHydrated
-            )
-          );
-        } else
-          console.timeStamp(
-            name,
-            startTime,
-            endTime,
-            "Components \u269b",
-            void 0,
-            wasHydrated
-          );
+            : console.timeStamp(
+                name,
+                startTime,
+                endTime,
+                "Components \u269b",
+                void 0,
+                wasHydrated
+              );
       }
     }
     function logComponentErrored(fiber, startTime, endTime, errors) {
@@ -22454,7 +22455,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-bb6f0c8d-20250901"
+        reconcilerVersion: "19.2.0-www-classic-2805f0ed-20250903"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

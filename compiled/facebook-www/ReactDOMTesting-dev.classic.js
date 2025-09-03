@@ -4036,64 +4036,65 @@ __DEV__ &&
                   ? "tertiary-dark"
                   : "primary-dark"
                 : "error";
-        if ((selfTime = fiber._debugTask)) {
-          var props = fiber.memoizedProps;
-          if (
-            null !== props &&
-            null !== alternate &&
-            alternate.memoizedProps !== props &&
-            ((child = [resuableChangedPropsEntry]),
+        var props = fiber.memoizedProps;
+        selfTime = fiber._debugTask;
+        null !== props &&
+        null !== alternate &&
+        alternate.memoizedProps !== props
+          ? ((child = [resuableChangedPropsEntry]),
             (props = addObjectDiffToProperties(
               alternate.memoizedProps,
               props,
               child,
               0
             )),
-            1 < child.length)
-          ) {
-            props &&
-            !alreadyWarnedForDeepEquality &&
-            0 === (alternate.lanes & committedLanes) &&
-            100 < fiber.actualDuration
-              ? ((alreadyWarnedForDeepEquality = !0),
-                (child[0] = reusableDeeplyEqualPropsEntry),
-                (reusableComponentDevToolDetails.color = "warning"),
-                (reusableComponentDevToolDetails.tooltipText =
-                  "This component received deeply equal props. It might benefit from useMemo or the React Compiler in its owner."))
-              : ((reusableComponentDevToolDetails.color = wasHydrated),
-                (reusableComponentDevToolDetails.tooltipText = name));
-            reusableComponentDevToolDetails.properties = child;
-            reusableComponentOptions.start = startTime;
-            reusableComponentOptions.end = endTime;
-            selfTime.run(
-              performance.measure.bind(
-                performance,
-                "\u200b" + name,
-                reusableComponentOptions
+            1 < child.length &&
+              (props &&
+              !alreadyWarnedForDeepEquality &&
+              0 === (alternate.lanes & committedLanes) &&
+              100 < fiber.actualDuration
+                ? ((alreadyWarnedForDeepEquality = !0),
+                  (child[0] = reusableDeeplyEqualPropsEntry),
+                  (reusableComponentDevToolDetails.color = "warning"),
+                  (reusableComponentDevToolDetails.tooltipText =
+                    "This component received deeply equal props. It might benefit from useMemo or the React Compiler in its owner."))
+                : ((reusableComponentDevToolDetails.color = wasHydrated),
+                  (reusableComponentDevToolDetails.tooltipText = name)),
+              (reusableComponentDevToolDetails.properties = child),
+              (reusableComponentOptions.start = startTime),
+              (reusableComponentOptions.end = endTime),
+              null != selfTime
+                ? selfTime.run(
+                    performance.measure.bind(
+                      performance,
+                      "\u200b" + name,
+                      reusableComponentOptions
+                    )
+                  )
+                : performance.measure(
+                    "\u200b" + name,
+                    reusableComponentOptions
+                  )))
+          : null != selfTime
+            ? selfTime.run(
+                console.timeStamp.bind(
+                  console,
+                  name,
+                  startTime,
+                  endTime,
+                  "Components \u269b",
+                  void 0,
+                  wasHydrated
+                )
               )
-            );
-            return;
-          }
-          selfTime.run(
-            console.timeStamp.bind(
-              console,
-              name,
-              startTime,
-              endTime,
-              "Components \u269b",
-              void 0,
-              wasHydrated
-            )
-          );
-        } else
-          console.timeStamp(
-            name,
-            startTime,
-            endTime,
-            "Components \u269b",
-            void 0,
-            wasHydrated
-          );
+            : console.timeStamp(
+                name,
+                startTime,
+                endTime,
+                "Components \u269b",
+                void 0,
+                wasHydrated
+              );
       }
     }
     function logComponentErrored(fiber, startTime, endTime, errors) {
@@ -32517,11 +32518,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-www-classic-bb6f0c8d-20250901" !== isomorphicReactPackageVersion)
+      if ("19.2.0-www-classic-2805f0ed-20250903" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-www-classic-bb6f0c8d-20250901\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-www-classic-2805f0ed-20250903\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -32564,10 +32565,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-www-classic-bb6f0c8d-20250901",
+          version: "19.2.0-www-classic-2805f0ed-20250903",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-www-classic-bb6f0c8d-20250901"
+          reconcilerVersion: "19.2.0-www-classic-2805f0ed-20250903"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -33334,5 +33335,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-www-classic-bb6f0c8d-20250901";
+    exports.version = "19.2.0-www-classic-2805f0ed-20250903";
   })();
