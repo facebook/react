@@ -7,7 +7,7 @@
  * @noformat
  * @nolint
  * @flow strict
- * @generated SignedSource<<deb7924d11c790f99448a1c2f0edddb9>>
+ * @generated SignedSource<<c0e57723772ea5f1aa8c3c897ac3c216>>
  */
 
 import type {
@@ -135,6 +135,7 @@ export type RenderRootOptions = {
     error: mixed,
     errorInfo: {+componentStack?: ?string},
   ) => void,
+  onDefaultTransitionIndicator?: () => void | (() => void),
 };
 
 /**
