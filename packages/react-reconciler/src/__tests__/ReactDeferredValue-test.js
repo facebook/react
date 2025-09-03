@@ -34,7 +34,7 @@ describe('ReactDeferredValue', () => {
     useMemo = React.useMemo;
     useState = React.useState;
     Suspense = React.Suspense;
-    Activity = React.unstable_Activity;
+    Activity = React.Activity;
 
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;

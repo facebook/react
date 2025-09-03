@@ -199,7 +199,7 @@ describe('Store component filters', () => {
   });
 
   it('should filter Activity', async () => {
-    const Activity = React.unstable_Activity;
+    const Activity = React.Activity || React.unstable_Activity;
 
     if (Activity != null) {
       await actAsync(async () =>
