@@ -269,11 +269,12 @@ module.exports = function ($$$config) {
       case 32768:
       case 65536:
       case 131072:
+        return lanes & 261888;
       case 262144:
       case 524288:
       case 1048576:
       case 2097152:
-        return lanes & 4194048;
+        return lanes & 3932160;
       case 4194304:
       case 8388608:
       case 16777216:
@@ -384,12 +385,6 @@ module.exports = function ($$$config) {
         return -1;
     }
   }
-  function claimNextTransitionLane() {
-    var lane = nextTransitionLane;
-    nextTransitionLane <<= 1;
-    0 === (nextTransitionLane & 4194048) && (nextTransitionLane = 256);
-    return lane;
-  }
   function claimNextRetryLane() {
     var lane = nextRetryLane;
     nextRetryLane <<= 1;
@@ -457,7 +452,7 @@ module.exports = function ($$$config) {
     root.entanglements[spawnedLaneIndex] =
       root.entanglements[spawnedLaneIndex] |
       1073741824 |
-      (entangledLanes & 4194090);
+      (entangledLanes & 261930);
   }
   function markRootEntangled(root, entangledLanes) {
     var rootEntangledLanes = (root.entangledLanes |= entangledLanes);
@@ -1468,8 +1463,12 @@ module.exports = function ($$$config) {
   function requestTransitionLane() {
     if (0 === currentEventTransitionLane) {
       var actionScopeLane = currentEntangledLane;
-      currentEventTransitionLane =
-        0 !== actionScopeLane ? actionScopeLane : claimNextTransitionLane();
+      0 === actionScopeLane &&
+        ((actionScopeLane = nextTransitionUpdateLane),
+        (nextTransitionUpdateLane <<= 1),
+        0 === (nextTransitionUpdateLane & 261888) &&
+          (nextTransitionUpdateLane = 256));
+      currentEventTransitionLane = actionScopeLane;
     }
     return currentEventTransitionLane;
   }
@@ -3679,7 +3678,11 @@ module.exports = function ($$$config) {
     return prevState;
   }
   function mountDeferredValueImpl(hook, value, initialValue) {
-    if (void 0 === initialValue || 0 !== (renderLanes & 1073741824))
+    if (
+      void 0 === initialValue ||
+      (0 !== (renderLanes & 1073741824) &&
+        0 === (workInProgressRootRenderLanes & 261930))
+    )
       return (hook.memoizedState = value);
     hook.memoizedState = initialValue;
     hook = requestDeferredLane();
@@ -3695,7 +3698,11 @@ module.exports = function ($$$config) {
         objectIs(hook, prevValue) || (didReceiveUpdate = !0),
         hook
       );
-    if (0 === (renderLanes & 42) || 0 !== (renderLanes & 1073741824))
+    if (
+      0 === (renderLanes & 42) ||
+      (0 !== (renderLanes & 1073741824) &&
+        0 === (workInProgressRootRenderLanes & 261930))
+    )
       return (didReceiveUpdate = !0), (hook.memoizedState = value);
     hook = requestDeferredLane();
     currentlyRenderingFiber.lanes |= hook;
@@ -10838,13 +10845,16 @@ module.exports = function ($$$config) {
         : resolveUpdatePriority();
   }
   function requestDeferredLane() {
-    0 === workInProgressDeferredLane &&
-      (workInProgressDeferredLane =
-        0 === (workInProgressRootRenderLanes & 536870912) || isHydrating
-          ? claimNextTransitionLane()
-          : 536870912);
-    var suspenseHandler = suspenseHandlerStackCursor.current;
-    null !== suspenseHandler && (suspenseHandler.flags |= 32);
+    if (0 === workInProgressDeferredLane)
+      if (0 === (workInProgressRootRenderLanes & 536870912) || isHydrating) {
+        var lane = nextTransitionDeferredLane;
+        nextTransitionDeferredLane <<= 1;
+        0 === (nextTransitionDeferredLane & 3932160) &&
+          (nextTransitionDeferredLane = 262144);
+        workInProgressDeferredLane = lane;
+      } else workInProgressDeferredLane = 536870912;
+    lane = suspenseHandlerStackCursor.current;
+    null !== lane && (lane.flags |= 32);
     return workInProgressDeferredLane;
   }
   function scheduleViewTransitionEvent(fiber, callback) {
@@ -11927,7 +11937,7 @@ module.exports = function ($$$config) {
       passiveSubtreeMask = root.pendingLanes;
       (enableInfiniteRenderLoopDetection &&
         (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)) ||
-      (0 !== (lanes & 4194090) && 0 !== (passiveSubtreeMask & 42))
+      (0 !== (lanes & 261930) && 0 !== (passiveSubtreeMask & 42))
         ? root === rootWithNestedUpdates
           ? nestedUpdateCount++
           : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root))
@@ -12856,7 +12866,8 @@ module.exports = function ($$$config) {
     clz32 = Math.clz32 ? Math.clz32 : clz32Fallback,
     log$1 = Math.log,
     LN2 = Math.LN2,
-    nextTransitionLane = 256,
+    nextTransitionUpdateLane = 256,
+    nextTransitionDeferredLane = 262144,
     nextRetryLane = 4194304,
     scheduleCallback$3 = Scheduler.unstable_scheduleCallback,
     cancelCallback$1 = Scheduler.unstable_cancelCallback,
@@ -13869,7 +13880,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-modern-3168e08f-20250903"
+      reconcilerVersion: "19.2.0-www-modern-3302d1f7-20250903"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
