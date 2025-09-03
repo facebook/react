@@ -80,3 +80,5 @@ React is [MIT licensed](./LICENSE).
 This file has been edited by Deniz Lucas.
 
 Further, you can call me Lucky-Luke.
+
+Updated for Dev branch.
