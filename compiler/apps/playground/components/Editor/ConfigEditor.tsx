@@ -14,6 +14,7 @@ import {useSnackbar} from 'notistack';
 import {useStore, useStoreDispatch} from '../StoreContext';
 import {monacoOptions} from './monacoOptions';
 import {
+  ConfigError,
   generateOverridePragmaFromConfig,
   updateSourceWithOverridePragma,
 } from '../../lib/configUtils';
@@ -64,9 +65,12 @@ export default function ConfigEditor(): React.ReactElement {
     } catch (error) {
       console.error('Failed to apply config:', error);
 
-      if (error instanceof Error) {
-        const errorMessage = 'Unexpected formatting: failed to apply config.';
-        enqueueSnackbar(errorMessage, {
+      if (error instanceof ConfigError && error.message.trim()) {
+        enqueueSnackbar(error.message, {
+          variant: 'error',
+        });
+      } else {
+        enqueueSnackbar('Unexpected error: failed to apply config.', {
           variant: 'error',
         });
       }
