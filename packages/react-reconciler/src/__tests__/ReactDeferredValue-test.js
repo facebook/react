@@ -608,6 +608,24 @@ describe('ReactDeferredValue', () => {
     },
   );
 
+  it("can update initial value in place if final value hasn't committed yet", async () => {
+    function App({text}) {
+      return <AsyncText text={useDeferredValue(text, `Preview ${text}...`)} />;
+    }
+
+    const root = ReactNoop.createRoot();
+
+    resolveText('Preview A...');
+    await act(() => root.render(<App text="A" />));
+    assertLog(['Preview A...', 'Suspend! [A]']);
+    expect(root).toMatchRenderedOutput('Preview A...');
+
+    resolveText('Preview B...');
+    await act(() => root.render(<App text="B" />));
+    assertLog(['Preview B...', 'Suspend! [B]']);
+    expect(root).toMatchRenderedOutput('Preview B...');
+  });
+
   it('avoids a useDeferredValue waterfall when separated by a Suspense boundary', async () => {
     // Same as the previous test but with a Suspense boundary separating the
     // two useDeferredValue hooks.
