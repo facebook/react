@@ -66,14 +66,14 @@ function validateConfigAsPluginOptions(configString: string): void {
   let parsedConfig: unknown;
   try {
     parsedConfig = new Function(`return (${configString})`)();
-  } catch (parseError) {
+  } catch (_) {
     throw new ConfigError('Config has invalid syntax.');
   }
 
   // Validate against PluginOptions schema
   try {
     parsePluginOptions(parsedConfig);
-  } catch (validationError) {
+  } catch (_) {
     throw new ConfigError('Config does not match the expected schema.');
   }
 }

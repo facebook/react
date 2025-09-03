@@ -32,7 +32,7 @@ export default function ConfigEditor(): React.ReactElement {
     setIsExpanded(prev => !prev);
   }, []);
 
-  const handleApplyConfig = async () => {
+  const handleApplyConfig: () => Promise<void> = async () => {
     try {
       const config = store.config || '';
 
