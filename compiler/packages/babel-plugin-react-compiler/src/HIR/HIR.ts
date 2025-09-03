@@ -1445,6 +1445,7 @@ export enum ValueKind {
   Primitive = 'primitive',
   Global = 'global',
   Mutable = 'mutable',
+  ShallowMutable = 'shallowmutable',
   Context = 'context',
 }
 
@@ -1454,6 +1455,7 @@ export const ValueKindSchema = z.enum([
   ValueKind.Primitive,
   ValueKind.Global,
   ValueKind.Mutable,
+  ValueKind.ShallowMutable,
   ValueKind.Context,
 ]);
 
