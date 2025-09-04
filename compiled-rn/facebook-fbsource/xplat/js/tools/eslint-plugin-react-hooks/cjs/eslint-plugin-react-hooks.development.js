@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<92021fc3beead9e56f852b5daa23438d>>
+ * @generated SignedSource<<f60050ed6936d3ae8462c48b060132fd>>
  */
 
 'use strict';
@@ -45882,7 +45882,7 @@ function alignMethodCallScopes(fn) {
 }
 
 function alignReactiveScopesToBlockScopesHIR(fn) {
-    var _a, _b, _c, _d, _e;
+    var _a, _b, _c, _d, _e, _f, _g;
     const activeBlockFallthroughRanges = [];
     const activeScopes = new Set();
     const seen = new Set();
@@ -45952,6 +45952,20 @@ function alignReactiveScopesToBlockScopesHIR(fn) {
             });
             if (node != null) {
                 valueBlockNodes.set(fallthrough, node);
+            }
+        }
+        else if (terminal.kind === 'goto') {
+            const start = activeBlockFallthroughRanges.find(range => range.fallthrough === terminal.block);
+            if (start != null && start !== activeBlockFallthroughRanges.at(-1)) {
+                const fallthroughBlock = fn.body.blocks.get(start.fallthrough);
+                const firstId = (_g = (_f = fallthroughBlock.instructions[0]) === null || _f === void 0 ? void 0 : _f.id) !== null && _g !== void 0 ? _g : fallthroughBlock.terminal.id;
+                for (const scope of activeScopes) {
+                    if (scope.range.end <= terminal.id) {
+                        continue;
+                    }
+                    scope.range.start = makeInstructionId(Math.min(start.range.start, scope.range.start));
+                    scope.range.end = makeInstructionId(Math.max(firstId, scope.range.end));
+                }
             }
         }
         mapTerminalSuccessors(terminal, successor => {

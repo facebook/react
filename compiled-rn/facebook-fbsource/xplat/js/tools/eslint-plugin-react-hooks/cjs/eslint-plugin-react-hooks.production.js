@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<99d6960a9525c443d8865ab7661a6fcc>>
+ * @generated SignedSource<<35e4d9cfd8648bf600caf5bafab7d488>>
  */
 
 'use strict';
@@ -45661,7 +45661,7 @@ function alignMethodCallScopes(fn) {
 }
 
 function alignReactiveScopesToBlockScopesHIR(fn) {
-    var _a, _b, _c, _d, _e;
+    var _a, _b, _c, _d, _e, _f, _g;
     const activeBlockFallthroughRanges = [];
     const activeScopes = new Set();
     const seen = new Set();
@@ -45731,6 +45731,20 @@ function alignReactiveScopesToBlockScopesHIR(fn) {
             });
             if (node != null) {
                 valueBlockNodes.set(fallthrough, node);
+            }
+        }
+        else if (terminal.kind === 'goto') {
+            const start = activeBlockFallthroughRanges.find(range => range.fallthrough === terminal.block);
+            if (start != null && start !== activeBlockFallthroughRanges.at(-1)) {
+                const fallthroughBlock = fn.body.blocks.get(start.fallthrough);
+                const firstId = (_g = (_f = fallthroughBlock.instructions[0]) === null || _f === void 0 ? void 0 : _f.id) !== null && _g !== void 0 ? _g : fallthroughBlock.terminal.id;
+                for (const scope of activeScopes) {
+                    if (scope.range.end <= terminal.id) {
+                        continue;
+                    }
+                    scope.range.start = makeInstructionId(Math.min(start.range.start, scope.range.start));
+                    scope.range.end = makeInstructionId(Math.max(firstId, scope.range.end));
+                }
             }
         }
         mapTerminalSuccessors(terminal, successor => {
