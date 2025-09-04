@@ -19,7 +19,7 @@ import {
   updateSourceWithOverridePragma,
 } from '../../lib/configUtils';
 
-// @ts-ignore - webpack asset/source loader handles .d.ts files as strings
+// @ts-expect-error - webpack asset/source loader handles .d.ts files as strings
 import compilerTypeDefs from 'babel-plugin-react-compiler/dist/index.d.ts';
 
 loader.config({monaco});
@@ -94,7 +94,7 @@ export default function ConfigEditor(): React.ReactElement {
   ) => void = (_, monaco) => {
     // Add the babel-plugin-react-compiler type definitions to Monaco
     monaco.languages.typescript.typescriptDefaults.addExtraLib(
-      // @ts-ignore
+      //@ts-expect-error - compilerTypeDefs is a string
       compilerTypeDefs,
       'file:///node_modules/babel-plugin-react-compiler/dist/index.d.ts',
     );
