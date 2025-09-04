@@ -45,10 +45,9 @@ function getSuspendableDocumentOrderSuspense(
       if (current === undefined) {
         continue;
       }
-      // Don't include the root. It's currently not supported to suspend the shell.
-      if (current !== suspense) {
-        suspenseTreeList.push(current);
-      }
+      // Include the root even if we won't suspend it.
+      // You should be able to see what suspended the shell.
+      suspenseTreeList.push(current);
       // Add children in reverse order to maintain document order
       for (let j = current.children.length - 1; j >= 0; j--) {
         const childSuspense = store.getSuspenseByID(current.children[j]);
@@ -139,7 +138,7 @@ function SuspenseTimelineInput({rootID}: {rootID: Element['id'] | void}) {
 
     const pendingValue = +event.currentTarget.value;
     const suspendedSet = timeline
-      .slice(pendingValue + 1)
+      .slice(pendingValue)
       .map(suspense => suspense.id);
 
     bridge.send('overrideSuspenseMilestone', {
