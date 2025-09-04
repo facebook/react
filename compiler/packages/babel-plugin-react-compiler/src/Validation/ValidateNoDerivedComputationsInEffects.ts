@@ -5,14 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {effect} from 'zod';
 import {CompilerError, Effect, ErrorSeverity, SourceLocation} from '..';
 import {ErrorCategory} from '../CompilerError';
 import {
   ArrayExpression,
   BasicBlock,
   BlockId,
-  Identifier,
   FunctionExpression,
   HIRFunction,
   IdentifierId,
@@ -21,15 +19,12 @@ import {
   isSetStateType,
   isUseEffectHookType,
   isUseStateType,
-  IdentifierName,
   GeneratedSource,
 } from '../HIR';
-import {printInstruction} from '../HIR/PrintHIR';
 import {
   eachInstructionOperand,
   eachTerminalOperand,
   eachInstructionLValue,
-  eachPatternOperand,
 } from '../HIR/visitors';
 import {isMutable} from '../ReactiveScopes/InferReactiveScopeVariables';
 import {assertExhaustive} from '../Utils/utils';
@@ -47,12 +42,10 @@ type SetStateName = string | undefined | null;
 
 type DerivationMetadata = {
   typeOfValue: TypeOfValue;
-  // TODO: Rename to place
-  identifierPlace: Place;
-  sources: Place[];
+  place: Place;
+  sources: Array<Place>;
 };
 
-// TODO: This needs refining
 type ErrorMetadata = {
   errorType: TypeOfValue;
   invalidDepInfo: string | undefined;
@@ -72,20 +65,22 @@ function joinValue(
 
 function updateDerivationMetadata(
   target: Place,
-  sources: DerivationMetadata[],
+  sources: Array<DerivationMetadata>,
   typeOfValue: TypeOfValue,
   derivedTuple: Map<IdentifierId, DerivationMetadata>,
 ): void {
   let newValue: DerivationMetadata = {
-    identifierPlace: target,
+    place: target,
     sources: [],
     typeOfValue: typeOfValue,
   };
 
   for (const source of sources) {
-    // If the identifier of the source is a promoted identifier, then
-    // we should set the target as the source.
-    if (source.identifierPlace.identifier.name?.kind === 'promoted') {
+    /*
+     * If the identifier of the source is a promoted identifier, then
+     *  we should set the target as the source.
+     */
+    if (source.place.identifier.name?.kind === 'promoted') {
       newValue.sources.push(target);
     } else {
       newValue.sources.push(...source.sources);
@@ -97,10 +92,8 @@ function updateDerivationMetadata(
 function parseInstr(
   instr: Instruction,
   derivedTuple: Map<IdentifierId, DerivationMetadata>,
-  setStateCalls: Map<SetStateName, Place[]>,
-) {
-  // console.log(printInstruction(instr));
-  // console.log(instr);
+  setStateCalls: Map<SetStateName, Array<Place>>,
+): void {
   let typeOfValue: TypeOfValue = 'ignored';
 
   // TODO: Not sure if this will catch every time we create a new useState
@@ -112,7 +105,7 @@ function parseInstr(
     const value = instr.value.lvalue.pattern.items[0];
     if (value.kind === 'Identifier') {
       derivedTuple.set(value.identifier.id, {
-        identifierPlace: value,
+        place: value,
         sources: [value],
         typeOfValue: 'fromState',
       });
@@ -137,7 +130,7 @@ function parseInstr(
     }
   }
 
-  let sources: DerivationMetadata[] = [];
+  let sources: Array<DerivationMetadata> = [];
   for (const operand of eachInstructionOperand(instr)) {
     const opSource = derivedTuple.get(operand.identifier.id);
     if (opSource === undefined) {
@@ -197,23 +190,23 @@ function parseInstr(
 function parseBlockPhi(
   block: BasicBlock,
   derivedTuple: Map<IdentifierId, DerivationMetadata>,
-) {
+): void {
   for (const phi of block.phis) {
     for (const operand of phi.operands.values()) {
       const source = derivedTuple.get(operand.identifier.id);
       if (source !== undefined && source.typeOfValue === 'fromProps') {
         if (
-          source.identifierPlace.identifier.name === null ||
-          source.identifierPlace.identifier.name?.kind === 'promoted'
+          source.place.identifier.name === null ||
+          source.place.identifier.name?.kind === 'promoted'
         ) {
           derivedTuple.set(phi.place.identifier.id, {
-            identifierPlace: phi.place,
+            place: phi.place,
             sources: [phi.place],
             typeOfValue: 'fromProps',
           });
         } else {
           derivedTuple.set(phi.place.identifier.id, {
-            identifierPlace: phi.place,
+            place: phi.place,
             sources: source.sources,
             typeOfValue: 'fromProps',
           });
@@ -252,16 +245,16 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
   const locals: Map<IdentifierId, IdentifierId> = new Map();
   const derivedTuple: Map<IdentifierId, DerivationMetadata> = new Map();
 
-  const effectSetStates: Map<SetStateName, Place[]> = new Map();
-  const setStateCalls: Map<SetStateName, Place[]> = new Map();
+  const effectSetStates: Map<SetStateName, Array<Place>> = new Map();
+  const setStateCalls: Map<SetStateName, Array<Place>> = new Map();
 
-  const errors: ErrorMetadata[] = [];
+  const errors: Array<ErrorMetadata> = [];
 
   if (fn.fnType === 'Hook') {
     for (const param of fn.params) {
       if (param.kind === 'Identifier') {
         derivedTuple.set(param.identifier.id, {
-          identifierPlace: param,
+          place: param,
           sources: [param],
           typeOfValue: 'fromProps',
         });
@@ -271,7 +264,7 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
     const props = fn.params[0];
     if (props != null && props.kind === 'Identifier') {
       derivedTuple.set(props.identifier.id, {
-        identifierPlace: props,
+        place: props,
         sources: [props],
         typeOfValue: 'fromProps',
       });
@@ -348,7 +341,6 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
   const throwableErrors = new CompilerError();
   for (const error of errors) {
     let reason;
-    let description = '';
     // TODO: Not sure if this is robust enough.
     /*
      * If we use a setState from an invalid useEffect elsewhere then we probably have to
@@ -383,8 +375,8 @@ function validateEffect(
   effectFunction: HIRFunction,
   effectDeps: Array<IdentifierId>,
   derivedTuple: Map<IdentifierId, DerivationMetadata>,
-  effectSetStates: Map<SetStateName, Place[]>,
-  errors: ErrorMetadata[],
+  effectSetStates: Map<SetStateName, Array<Place>>,
+  errors: Array<ErrorMetadata>,
 ): void {
   /*
    * TODO: This makes it so we only capture single line useEffects.
@@ -553,6 +545,12 @@ function validateEffect(
       sourceNames = sourceNames.slice(0, -2);
       invalidDepInfo = sourceNames
         ? `Invalid deps from local state: ${sourceNames}`
+        : '';
+    } else {
+      sourceNames += `[${placeNames}], `;
+      sourceNames = sourceNames.slice(0, -2);
+      invalidDepInfo = sourceNames
+        ? `Invalid deps from both props and local state: ${sourceNames}`
         : '';
     }
 
