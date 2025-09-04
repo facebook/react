@@ -1010,10 +1010,15 @@ export function reportGlobalError(
   if (__DEV__) {
     const debugChannel = response._debugChannel;
     if (debugChannel !== undefined) {
-      // If we don't have any more ways of reading data, we don't have to send any
-      // more neither. So we close the writable side.
+      // If we don't have any more ways of reading data, we don't have to send
+      // any more neither. So we close the writable side.
       closeDebugChannel(debugChannel);
       response._debugChannel = undefined;
+      // Make sure the debug channel is not closed a second time when the
+      // Response gets GC:ed.
+      if (debugChannelRegistry !== null) {
+        debugChannelRegistry.unregister(response);
+      }
     }
   }
 }
@@ -1069,7 +1074,14 @@ function getTaskName(type: mixed): string {
   }
 }
 
-function initializeElement(response: Response, element: any): void {
+function initializeElement(
+  response: Response,
+  element: any,
+  lazyType: null | LazyComponent<
+    React$Element<any>,
+    SomeChunk<React$Element<any>>,
+  >,
+): void {
   if (!__DEV__) {
     return;
   }
@@ -1136,6 +1148,18 @@ function initializeElement(response: Response, element: any): void {
   if (owner !== null) {
     initializeFakeStack(response, owner);
   }
+
+  // In case the JSX runtime has validated the lazy type as a static child, we
+  // need to transfer this information to the element.
+  if (
+    lazyType &&
+    lazyType._store &&
+    lazyType._store.validated &&
+    !element._store.validated
+  ) {
+    element._store.validated = lazyType._store.validated;
+  }
+
   // TODO: We should be freezing the element but currently, we might write into
   // _debugInfo later. We could move it into _store which remains mutable.
   Object.freeze(element.props);
@@ -1148,7 +1172,7 @@ function createElement(
   props: mixed,
   owner: ?ReactComponentInfo, // DEV-only
   stack: ?ReactStackTrace, // DEV-only
-  validated: number, // DEV-only
+  validated: 0 | 1 | 2, // DEV-only
 ):
   | React$Element<any>
   | LazyComponent<React$Element<any>, SomeChunk<React$Element<any>>> {
@@ -1225,7 +1249,7 @@ function createElement(
         handler.reason,
       );
       if (__DEV__) {
-        initializeElement(response, element);
+        initializeElement(response, element, null);
         // Conceptually the error happened inside this Element but right before
         // it was rendered. We don't have a client side component to render but
         // we can add some DebugInfo to explain that this was conceptually a
@@ -1244,7 +1268,7 @@ function createElement(
         }
         erroredChunk._debugInfo = [erroredComponent];
       }
-      return createLazyChunkWrapper(erroredChunk);
+      return createLazyChunkWrapper(erroredChunk, validated);
     }
     if (handler.deps > 0) {
       // We have blocked references inside this Element but we can turn this into
@@ -1253,16 +1277,17 @@ function createElement(
         createBlockedChunk(response);
       handler.value = element;
       handler.chunk = blockedChunk;
+      const lazyType = createLazyChunkWrapper(blockedChunk, validated);
       if (__DEV__) {
-        /// After we have initialized any blocked references, initialize stack etc.
-        const init = initializeElement.bind(null, response, element);
+        // After we have initialized any blocked references, initialize stack etc.
+        const init = initializeElement.bind(null, response, element, lazyType);
         blockedChunk.then(init, init);
       }
-      return createLazyChunkWrapper(blockedChunk);
+      return lazyType;
     }
   }
   if (__DEV__) {
-    initializeElement(response, element);
+    initializeElement(response, element, null);
   }
 
   return element;
@@ -1270,6 +1295,7 @@ function createElement(
 
 function createLazyChunkWrapper<T>(
   chunk: SomeChunk<T>,
+  validated: 0 | 1 | 2, // DEV-only
 ): LazyComponent<T, SomeChunk<T>> {
   const lazyType: LazyComponent<T, SomeChunk<T>> = {
     $$typeof: REACT_LAZY_TYPE,
@@ -1281,6 +1307,8 @@ function createLazyChunkWrapper<T>(
     const chunkDebugInfo: ReactDebugInfo =
       chunk._debugInfo || (chunk._debugInfo = ([]: ReactDebugInfo));
     lazyType._debugInfo = chunkDebugInfo;
+    // Initialize a store for key validation by the JSX runtime.
+    lazyType._store = {validated: validated};
   }
   return lazyType;
 }
@@ -2085,7 +2113,7 @@ function parseModelString(
         }
         // We create a React.lazy wrapper around any lazy values.
         // When passed into React, we'll know how to suspend on this.
-        return createLazyChunkWrapper(chunk);
+        return createLazyChunkWrapper(chunk, 0);
       }
       case '@': {
         // Promise
@@ -2434,7 +2462,7 @@ function ResponseInstance(
         // When a Response gets GC:ed because nobody is referring to any of the
         // objects that lazily load from the Response anymore, then we can close
         // the debug channel.
-        debugChannelRegistry.register(this, debugChannel);
+        debugChannelRegistry.register(this, debugChannel, this);
       }
     }
   }

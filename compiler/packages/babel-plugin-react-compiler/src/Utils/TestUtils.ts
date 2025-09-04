@@ -258,6 +258,11 @@ function parseConfigStringAsJS(
     defaults.environment ?? {},
   );
 
+  const environment = parseConfigPragmaEnvironmentForTest(
+    '',
+    defaults.environment ?? {},
+  );
+
   const options: Record<keyof PluginOptions, unknown> = {
     ...defaultOptions,
     panicThreshold: 'all_errors',

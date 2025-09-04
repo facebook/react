@@ -11,14 +11,7 @@ import type {Element, SuspenseNode} from '../../../frontend/types';
 import type Store from '../../store';
 
 import * as React from 'react';
-import {
-  useContext,
-  useId,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import {useContext, useLayoutEffect, useMemo, useRef, useState} from 'react';
 import {BridgeContext, StoreContext} from '../context';
 import {TreeDispatcherContext} from '../Components/TreeContext';
 import {useHighlightHostInstance} from '../hooks';
@@ -52,10 +45,9 @@ function getSuspendableDocumentOrderSuspense(
       if (current === undefined) {
         continue;
       }
-      // Don't include the root. It's currently not supported to suspend the shell.
-      if (current !== suspense) {
-        suspenseTreeList.push(current);
-      }
+      // Include the root even if we won't suspend it.
+      // You should be able to see what suspended the shell.
+      suspenseTreeList.push(current);
       // Add children in reverse order to maintain document order
       for (let j = current.children.length - 1; j >= 0; j--) {
         const childSuspense = store.getSuspenseByID(current.children[j]);
@@ -112,30 +104,6 @@ function SuspenseTimelineInput({rootID}: {rootID: Element['id'] | void}) {
     setValue(max);
   }
 
-  const markersID = useId();
-  const markers: React.Node[] = useMemo(() => {
-    return timeline.map((suspense, index) => {
-      const takesUpSpace =
-        suspense.rects !== null &&
-        suspense.rects.some(rect => {
-          return rect.width > 0 && rect.height > 0;
-        });
-
-      return takesUpSpace ? (
-        <option
-          key={suspense.id}
-          className={
-            index === value ? styles.SuspenseTimelineActiveMarker : undefined
-          }
-          value={index}>
-          #{index + 1}
-        </option>
-      ) : (
-        <option key={suspense.id} />
-      );
-    });
-  }, [timeline, value]);
-
   if (rootID === undefined) {
     return <div className={styles.SuspenseTimelineInput}>Root not found.</div>;
   }
@@ -157,25 +125,27 @@ function SuspenseTimelineInput({rootID}: {rootID: Element['id'] | void}) {
   }
 
   function handleChange(event: SyntheticEvent) {
-    const pendingValue = +event.currentTarget.value;
-    for (let i = 0; i < timeline.length; i++) {
-      const forceFallback = i > pendingValue;
-      const suspense = timeline[i];
-      const elementID = suspense.id;
-      const rendererID = store.getRendererIDForElement(elementID);
-      if (rendererID === null) {
-        // TODO: Handle disconnected elements.
-        console.warn(
-          `No renderer ID found for element ${elementID} in suspense timeline.`,
-        );
-      } else {
-        bridge.send('overrideSuspense', {
-          id: elementID,
-          rendererID,
-          forceFallback,
-        });
-      }
+    if (rootID === undefined) {
+      return;
     }
+    const rendererID = store.getRendererIDForElement(rootID);
+    if (rendererID === null) {
+      console.error(
+        `No renderer ID found for root element ${rootID} in suspense timeline.`,
+      );
+      return;
+    }
+
+    const pendingValue = +event.currentTarget.value;
+    const suspendedSet = timeline
+      .slice(pendingValue)
+      .map(suspense => suspense.id);
+
+    bridge.send('overrideSuspenseMilestone', {
+      rendererID,
+      rootID,
+      suspendedSet,
+    });
 
     const suspense = timeline[pendingValue];
     const elementID = suspense.id;
@@ -219,25 +189,26 @@ function SuspenseTimelineInput({rootID}: {rootID: Element['id'] | void}) {
   }
 
   return (
-    <div className={styles.SuspenseTimelineInput}>
-      <input
-        className={styles.SuspenseTimelineSlider}
-        type="range"
-        min={min}
-        max={max}
-        list={markersID}
-        value={value}
-        onBlur={handleBlur}
-        onChange={handleChange}
-        onFocus={handleFocus}
-        onPointerMove={handlePointerMove}
-        onPointerUp={clearHighlightHostInstance}
-        ref={inputRef}
-      />
-      <datalist id={markersID} className={styles.SuspenseTimelineMarkers}>
-        {markers}
-      </datalist>
-    </div>
+    <>
+      <div>
+        {value}/{max}
+      </div>
+      <div className={styles.SuspenseTimelineInput}>
+        <input
+          className={styles.SuspenseTimelineSlider}
+          type="range"
+          min={min}
+          max={max}
+          value={value}
+          onBlur={handleBlur}
+          onChange={handleChange}
+          onFocus={handleFocus}
+          onPointerMove={handlePointerMove}
+          onPointerUp={clearHighlightHostInstance}
+          ref={inputRef}
+        />
+      </div>
+    </>
   );
 }
 

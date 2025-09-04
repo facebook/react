@@ -17,7 +17,6 @@ export class ConfigError extends Error {
     this.name = 'ConfigError';
   }
 }
-
 /**
  * Parse config from pragma and format it with prettier
  */

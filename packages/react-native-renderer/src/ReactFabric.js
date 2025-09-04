@@ -46,7 +46,10 @@ import {
   createPublicRootInstance,
   type PublicRootInstance,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
-import {disableLegacyMode} from 'shared/ReactFeatureFlags';
+import {
+  disableLegacyMode,
+  enableDefaultTransitionIndicator,
+} from 'shared/ReactFeatureFlags';
 
 if (typeof ReactFiberErrorDialog.showErrorDialog !== 'function') {
   throw new Error(
@@ -132,6 +135,12 @@ function render(
     if (options && options.onRecoverableError !== undefined) {
       onRecoverableError = options.onRecoverableError;
     }
+    let onDefaultTransitionIndicator = nativeOnDefaultTransitionIndicator;
+    if (enableDefaultTransitionIndicator) {
+      if (options && options.onDefaultTransitionIndicator !== undefined) {
+        onDefaultTransitionIndicator = options.onDefaultTransitionIndicator;
+      }
+    }
 
     const publicRootInstance = createPublicRootInstance(containerTag);
     const rootInstance = {
@@ -151,7 +160,7 @@ function render(
       onUncaughtError,
       onCaughtError,
       onRecoverableError,
-      nativeOnDefaultTransitionIndicator,
+      onDefaultTransitionIndicator,
       null,
     );
 

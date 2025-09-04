@@ -10,5 +10,5 @@
 import * as React from 'react';
 
 export default function SuspenseTreeList(_: {}): React$Node {
-  return <div>Activity slices</div>;
+  return <div>Activity slices not implemented yet</div>;
 }

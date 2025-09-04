@@ -31,7 +31,7 @@ import {
   getNextLanes,
   includesSyncLane,
   markStarvedLanesAsExpired,
-  claimNextTransitionLane,
+  claimNextTransitionUpdateLane,
   getNextLanesToFlushSync,
   checkIfRootIsPrerendering,
   isGestureRender,
@@ -716,7 +716,7 @@ export function requestTransitionLane(
         : // We may or may not be inside an async action scope. If we are, this
           // is the first update in that scope. Either way, we need to get a
           // fresh transition lane.
-          claimNextTransitionLane();
+          claimNextTransitionUpdateLane();
   }
   return currentEventTransitionLane;
 }
