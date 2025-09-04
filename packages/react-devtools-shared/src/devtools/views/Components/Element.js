@@ -80,8 +80,8 @@ export default function Element({data, index, style}: Props): React.Node {
   };
 
   // $FlowFixMe[missing-local-annot]
-  const handleClick = ({metaKey}) => {
-    if (id !== null) {
+  const handleClick = ({metaKey, button}) => {
+    if (id !== null && button === 0) {
       logEvent({
         event_name: 'select-element',
         metadata: {source: 'click-element'},

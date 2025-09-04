@@ -74,13 +74,7 @@ function getDebugChannel(req) {
   return activeDebugChannels.get(requestId);
 }
 
-async function renderApp(
-  res,
-  returnValue,
-  formState,
-  noCache,
-  promiseForDebugChannel
-) {
+async function renderApp(res, returnValue, formState, noCache, debugChannel) {
   const {renderToPipeableStream} = await import(
     'react-server-dom-webpack/server'
   );
@@ -132,7 +126,7 @@ async function renderApp(
   // For client-invoked server actions we refresh the tree and return a return value.
   const payload = {root, returnValue, formState};
   const {pipe} = renderToPipeableStream(payload, moduleMap, {
-    debugChannel: await promiseForDebugChannel,
+    debugChannel,
     filterStackFrame,
   });
   pipe(res);
@@ -385,23 +379,20 @@ app.on('error', function (error) {
 if (process.env.NODE_ENV === 'development') {
   // Open a websocket server for Debug information
   const WebSocket = require('ws');
-  const webSocketServer = new WebSocket.Server({noServer: true});
 
-  httpServer.on('upgrade', (request, socket, head) => {
-    const DEBUG_CHANNEL_PATH = '/debug-channel?';
-    if (request.url.startsWith(DEBUG_CHANNEL_PATH)) {
-      const requestId = request.url.slice(DEBUG_CHANNEL_PATH.length);
-      const promiseForWs = new Promise(resolve => {
-        webSocketServer.handleUpgrade(request, socket, head, ws => {
-          ws.on('close', () => {
-            activeDebugChannels.delete(requestId);
-          });
-          resolve(ws);
-        });
-      });
-      activeDebugChannels.set(requestId, promiseForWs);
-    } else {
-      socket.destroy();
-    }
+  const webSocketServer = new WebSocket.Server({
+    server: httpServer,
+    path: '/debug-channel',
+  });
+
+  webSocketServer.on('connection', (ws, req) => {
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const requestId = url.searchParams.get('id');
+
+    activeDebugChannels.set(requestId, ws);
+
+    ws.on('close', (code, reason) => {
+      activeDebugChannels.delete(requestId);
+    });
   });
 }

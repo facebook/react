@@ -804,6 +804,14 @@ function validateChildKeys(node) {
       if (node._store) {
         node._store.validated = 1;
       }
+    } else if (isLazyType(node)) {
+      if (node._payload.status === 'fulfilled') {
+        if (isValidElement(node._payload.value) && node._payload.value._store) {
+          node._payload.value._store.validated = 1;
+        }
+      } else if (node._store) {
+        node._store.validated = 1;
+      }
     }
   }
 }
@@ -820,5 +828,13 @@ export function isValidElement(object) {
     typeof object === 'object' &&
     object !== null &&
     object.$$typeof === REACT_ELEMENT_TYPE
+  );
+}
+
+export function isLazyType(object) {
+  return (
+    typeof object === 'object' &&
+    object !== null &&
+    object.$$typeof === REACT_LAZY_TYPE
   );
 }
