@@ -25,11 +25,23 @@ import {GeneratedSource} from '../HIR';
  * The enable comment can be missing in the case where only a disable block is present, ie the rest
  * of the file has potential React violations.
  */
-export type SuppressionRange = {
-  disableComment: t.Comment;
-  enableComment: t.Comment | null;
-  source: SuppressionSource;
-};
+export type SuppressionRange =
+  | {
+      kind: 'single-line';
+      source: SuppressionSource;
+      comment: t.Comment;
+    }
+  | {
+      kind: 'multi-line';
+      source: SuppressionSource;
+      disableComment: t.Comment;
+      enableComment: t.Comment | null;
+    };
+
+export type SingleLineSuppressionRange = Extract<
+  SuppressionRange,
+  {kind: 'single-line'}
+>;
 
 type SuppressionSource = 'Eslint' | 'Flow';
 
@@ -38,15 +50,23 @@ type SuppressionSource = 'Eslint' | 'Flow';
  *   1. The suppression is within the function's body; or
  *   2. The suppression wraps the function
  */
-export function filterSuppressionsThatAffectFunction(
-  suppressionRanges: Array<SuppressionRange>,
-  fn: NodePath<t.Function>,
-): Array<SuppressionRange> {
-  const suppressionsInScope: Array<SuppressionRange> = [];
-  const fnNode = fn.node;
+export function filterSuppressionsThatAffectNode<T extends SuppressionRange>(
+  suppressionRanges: Array<T>,
+  node: NodePath,
+): Array<T> {
+  const suppressionsInScope: Array<T> = [];
+  const fnNode = node.node;
   for (const suppressionRange of suppressionRanges) {
+    const enableComment =
+      suppressionRange.kind === 'single-line'
+        ? suppressionRange.comment
+        : suppressionRange.enableComment;
+    const disableComment =
+      suppressionRange.kind === 'single-line'
+        ? suppressionRange.comment
+        : suppressionRange.disableComment;
     if (
-      suppressionRange.disableComment.start == null ||
+      disableComment.start == null ||
       fnNode.start == null ||
       fnNode.end == null
     ) {
@@ -54,22 +74,20 @@ export function filterSuppressionsThatAffectFunction(
     }
     // The suppression is within the function
     if (
-      suppressionRange.disableComment.start > fnNode.start &&
+      disableComment.start > fnNode.start &&
       // If there is no matching enable, the rest of the file has potential violations
-      (suppressionRange.enableComment === null ||
-        (suppressionRange.enableComment.end != null &&
-          suppressionRange.enableComment.end < fnNode.end))
+      (enableComment === null ||
+        (enableComment.end != null && enableComment.end < fnNode.end))
     ) {
       suppressionsInScope.push(suppressionRange);
     }
 
     // The suppression wraps the function
     if (
-      suppressionRange.disableComment.start < fnNode.start &&
+      disableComment.start < fnNode.start &&
       // If there is no matching enable, the rest of the file has potential violations
-      (suppressionRange.enableComment === null ||
-        (suppressionRange.enableComment.end != null &&
-          suppressionRange.enableComment.end > fnNode.end))
+      (enableComment === null ||
+        (enableComment.end != null && enableComment.end > fnNode.end))
     ) {
       suppressionsInScope.push(suppressionRange);
     }
@@ -83,9 +101,7 @@ export function findProgramSuppressions(
   flowSuppressions: boolean,
 ): Array<SuppressionRange> {
   const suppressionRanges: Array<SuppressionRange> = [];
-  let disableComment: t.Comment | null = null;
-  let enableComment: t.Comment | null = null;
-  let source: SuppressionSource | null = null;
+  let suppression: SuppressionRange | null = null;
 
   const rulePattern = `(${ruleNames.join('|')})`;
   const disableNextLinePattern = new RegExp(
@@ -107,42 +123,49 @@ export function findProgramSuppressions(
        * If we're already within a CommentBlock, we should not restart the range prematurely for a
        * CommentLine within the block.
        */
-      disableComment == null &&
+      suppression == null &&
       disableNextLinePattern.test(comment.value)
     ) {
-      disableComment = comment;
-      enableComment = comment;
-      source = 'Eslint';
+      suppression = {
+        kind: 'single-line',
+        comment,
+        source: 'Eslint',
+      };
     }
 
     if (
       flowSuppressions &&
-      disableComment == null &&
+      suppression == null &&
       flowSuppressionPattern.test(comment.value)
     ) {
-      disableComment = comment;
-      enableComment = comment;
-      source = 'Flow';
+      suppression = {
+        kind: 'single-line',
+        comment,
+        source: 'Flow',
+      };
     }
 
     if (disablePattern.test(comment.value)) {
-      disableComment = comment;
-      source = 'Eslint';
+      suppression = {
+        kind: 'multi-line',
+        disableComment: comment,
+        enableComment: null,
+        source: 'Eslint',
+      };
     }
 
-    if (enablePattern.test(comment.value) && source === 'Eslint') {
-      enableComment = comment;
+    if (
+      enablePattern.test(comment.value) &&
+      suppression != null &&
+      suppression.kind === 'multi-line' &&
+      suppression.source === 'Eslint'
+    ) {
+      suppression.enableComment = comment;
     }
 
-    if (disableComment != null && source != null) {
-      suppressionRanges.push({
-        disableComment: disableComment,
-        enableComment: enableComment,
-        source,
-      });
-      disableComment = null;
-      enableComment = null;
-      source = null;
+    if (suppression != null) {
+      suppressionRanges.push(suppression);
+      suppression = null;
     }
   }
   return suppressionRanges;
@@ -157,10 +180,11 @@ export function suppressionsToCompilerError(
   });
   const error = new CompilerError();
   for (const suppressionRange of suppressionRanges) {
-    if (
-      suppressionRange.disableComment.start == null ||
-      suppressionRange.disableComment.end == null
-    ) {
+    const disableComment =
+      suppressionRange.kind === 'single-line'
+        ? suppressionRange.comment
+        : suppressionRange.disableComment;
+    if (disableComment.start == null || disableComment.end == null) {
       continue;
     }
     let reason, suggestion;
@@ -185,22 +209,19 @@ export function suppressionsToCompilerError(
     error.pushDiagnostic(
       CompilerDiagnostic.create({
         reason: reason,
-        description: `React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior. Found suppression \`${suppressionRange.disableComment.value.trim()}\``,
+        description: `React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior. Found suppression \`${disableComment.value.trim()}\``,
         severity: ErrorSeverity.InvalidReact,
         category: ErrorCategory.Suppression,
         suggestions: [
           {
             description: suggestion,
-            range: [
-              suppressionRange.disableComment.start,
-              suppressionRange.disableComment.end,
-            ],
+            range: [disableComment.start, disableComment.end],
             op: CompilerSuggestionOperation.Remove,
           },
         ],
       }).withDetail({
         kind: 'error',
-        loc: suppressionRange.disableComment.loc ?? null,
+        loc: disableComment.loc ?? null,
         message: 'Found React rule suppression',
       }),
     );
