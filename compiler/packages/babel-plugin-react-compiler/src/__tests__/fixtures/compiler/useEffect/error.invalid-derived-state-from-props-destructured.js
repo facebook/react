@@ -1,12 +1,12 @@
 // @validateNoDerivedComputationsInEffects
 import {useEffect, useState} from 'react';
 
-function Component({firstName, lastName}) {
-  const [fullName, setFullName] = useState('');
+function Component({props}) {
+  const [fullName, setFullName] = useState(props.firstName + ' ' + props.lastName);
 
   useEffect(() => {
-    setFullName(firstName + ' ' + lastName);
-  }, [firstName, lastName]);
+    setFullName(props.firstName + ' ' + props.lastName);
+  }, [props.firstName, props.lastName]);
 
   return <div>{fullName}</div>;
 }
