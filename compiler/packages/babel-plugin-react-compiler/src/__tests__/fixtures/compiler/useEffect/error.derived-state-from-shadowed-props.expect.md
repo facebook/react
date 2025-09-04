@@ -36,6 +36,24 @@ Error: Local state shadows parent state.
 
 This setState() appears to derive a value from props [props, number]. This state value shadows a value passed as a prop. Instead of shadowing the prop with local state, hoist the state to the parent component and update it there.
 
+error.derived-state-from-shadowed-props.ts:7:42
+   5 |   const nothing = 0;
+   6 |   const missDirection = number;
+>  7 |   const [displayValue, setDisplayValue] = useState(props.prefix + missDirection + nothing);
+     |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ this useState shadows props
+   8 |
+   9 |   useEffect(() => {
+  10 |     setDisplayValue(props.prefix + missDirection + nothing);
+
+error.derived-state-from-shadowed-props.ts:7:42
+   5 |   const nothing = 0;
+   6 |   const missDirection = number;
+>  7 |   const [displayValue, setDisplayValue] = useState(props.prefix + missDirection + nothing);
+     |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ this useState shadows number
+   8 |
+   9 |   useEffect(() => {
+  10 |     setDisplayValue(props.prefix + missDirection + nothing);
+
 error.derived-state-from-shadowed-props.ts:10:4
    8 |
    9 |   useEffect(() => {
