@@ -577,6 +577,7 @@ module.exports = {
     $AsyncIterator: 'readonly',
     Iterator: 'readonly',
     AsyncIterator: 'readonly',
+    IntervalID: 'readonly',
     IteratorResult: 'readonly',
     JSONValue: 'readonly',
     JSResourceReference: 'readonly',

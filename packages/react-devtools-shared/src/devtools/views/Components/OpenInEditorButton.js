@@ -23,7 +23,7 @@ type Props = {
   symbolicatedSourcePromise: Promise<SourceMappedLocation | null>,
 };
 
-function OpenInEditorButton({
+function OpenSymbolicatedSourceInEditorButton({
   editorURL,
   source,
   symbolicatedSourcePromise,
@@ -42,6 +42,19 @@ function OpenInEditorButton({
       title="Open in editor">
       <ButtonIcon type="editor" />
     </Button>
+  );
+}
+
+function OpenInEditorButton(props: Props): React.Node {
+  return (
+    <React.Suspense
+      fallback={
+        <Button disabled={true} title="retrieving original source…">
+          <ButtonIcon type="editor" />
+        </Button>
+      }>
+      <OpenSymbolicatedSourceInEditorButton {...props} />
+    </React.Suspense>
   );
 }
 
