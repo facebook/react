@@ -575,7 +575,9 @@ export enum ErrorCategory {
   // Checks for no setState in effect bodies
   EffectSetState = 'EffectSetState',
 
-  EffectDerivationsOfState = 'EffectDerivationsOfState',
+  EffectDerivationDeriveInRender = 'EffectDerivationDeriveInRender',
+
+  EffectDerivationShadowingParentState = 'EffectDerivationShadowingParentState',
 
   // Validates against try/catch in place of error boundaries
   ErrorBoundaries = 'ErrorBoundaries',
@@ -692,12 +694,21 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
         recommended: false,
       };
     }
-    case ErrorCategory.EffectDerivationsOfState: {
+    case ErrorCategory.EffectDerivationDeriveInRender: {
       return {
         category,
         name: 'no-deriving-state-in-effects',
         description:
-          'Validates against deriving values from state in an effect',
+          'Validates if a useEffect is deriving state from props and/or local state that could be calculated in render.',
+        recommended: false,
+      };
+    }
+    case ErrorCategory.EffectDerivationShadowingParentState: {
+      return {
+        category,
+        name: 'no-deriving-state-in-effects',
+        description:
+          'Validates if a useEffect is deriving state from parent state and if the component is updating the shadowed state locally.',
         recommended: false,
       };
     }
