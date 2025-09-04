@@ -5,13 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, ErrorSeverity, SourceLocation} from '..';
+import {TypeOf} from 'zod';
+import {CompilerError, Effect, ErrorSeverity, SourceLocation} from '..';
 import {
   ArrayExpression,
   BlockId,
   FunctionExpression,
   HIRFunction,
   IdentifierId,
+  InstructionValue,
   Place,
   isSetStateType,
   isUseEffectHookType,
@@ -19,13 +21,74 @@ import {
 import {printInstruction, printPlace} from '../HIR/PrintHIR';
 import {
   eachInstructionValueOperand,
+  eachInstructionOperand,
   eachTerminalOperand,
+  eachInstructionLValue,
 } from '../HIR/visitors';
+import {isMutable} from '../ReactiveScopes/InferReactiveScopeVariables';
+import {assertExhaustive} from '../Utils/utils';
 
 type SetStateCall = {
   loc: SourceLocation;
-  propsSource: Place | null; // null means state-derived, non-null means props-derived
+  propsSources: Place[] | undefined; // undefined means state-derived, defined means props-derived
 };
+type TypeOfValue = 'ignored' | 'fromProps' | 'fromState' | 'fromPropsOrState';
+
+type DerivationMetadata = {
+  identifierPlace: Place;
+  sources: Place[];
+  typeOfValue: TypeOfValue;
+};
+
+function joinValue(
+  lvalueType: TypeOfValue,
+  valueType: TypeOfValue,
+): TypeOfValue {
+  if (lvalueType === 'ignored') return valueType;
+  if (valueType === 'ignored') return lvalueType;
+  if (lvalueType === valueType) return lvalueType;
+  return 'fromPropsOrState';
+}
+
+function propagateDerivation(
+  dest: Place,
+  source: Place | undefined,
+  derivedFromProps: Map<IdentifierId, Place>,
+) {
+  if (source === undefined) {
+    return;
+  }
+
+  if (source.identifier.name?.kind === 'promoted') {
+    derivedFromProps.set(dest.identifier.id, dest);
+  } else {
+    derivedFromProps.set(dest.identifier.id, source);
+  }
+}
+
+function updateDerivationMetadata(
+  target: Place,
+  sources: DerivationMetadata[],
+  typeOfValue: TypeOfValue,
+  derivedTuple: Map<IdentifierId, DerivationMetadata>,
+): void {
+  let newValue: DerivationMetadata = {
+    identifierPlace: target,
+    sources: [],
+    typeOfValue: typeOfValue,
+  };
+
+  for (const source of sources) {
+    // If the identifier of the source is a promoted identifier, then
+    // we should set the source as the first named identifier.
+    if (source.identifierPlace.identifier.name?.kind === 'promoted') {
+      newValue.sources.push(target);
+    } else {
+      newValue.sources.push(...source.sources);
+    }
+  }
+  derivedTuple.set(target.identifier.id, newValue);
+}
 
 /**
  * Validates that useEffect is not used for derived computations which could/should
@@ -54,96 +117,138 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
   const candidateDependencies: Map<IdentifierId, ArrayExpression> = new Map();
   const functions: Map<IdentifierId, FunctionExpression> = new Map();
   const locals: Map<IdentifierId, IdentifierId> = new Map();
-  const derivedFromProps: Map<IdentifierId, Place> = new Map();
+
+  // MY take on this
+  const valueToType: Map<IdentifierId, TypeOfValue> = new Map();
+  const valueToSourceProps: Map<IdentifierId, Set<Place>> = new Map();
+  const valueToSourceStates: Map<IdentifierId, Set<Place>> = new Map();
+  const valueToSources: Map<IdentifierId, Set<Place>> = new Map();
+
+  // Sources are still probably not correct
+  const derivedTuple: Map<IdentifierId, DerivationMetadata> = new Map();
 
   const errors = new CompilerError();
 
   if (fn.fnType === 'Hook') {
     for (const param of fn.params) {
       if (param.kind === 'Identifier') {
-        derivedFromProps.set(param.identifier.id, param);
+        derivedTuple.set(param.identifier.id, {
+          identifierPlace: param,
+          sources: [param],
+          typeOfValue: 'fromProps',
+        });
       }
     }
   } else if (fn.fnType === 'Component') {
     const props = fn.params[0];
     if (props != null && props.kind === 'Identifier') {
-      derivedFromProps.set(props.identifier.id, props);
+      derivedTuple.set(props.identifier.id, {
+        identifierPlace: props,
+        sources: [props],
+        typeOfValue: 'fromProps',
+      });
     }
   }
 
   for (const block of fn.body.blocks.values()) {
+    for (const phi of block.phis) {
+      for (const operand of phi.operands.values()) {
+        const source = derivedTuple.get(operand.identifier.id);
+        if (source !== undefined && source.typeOfValue === 'fromProps') {
+          if (
+            source.identifierPlace.identifier.name === null ||
+            source.identifierPlace.identifier.name?.kind === 'promoted'
+          ) {
+            derivedTuple.set(phi.place.identifier.id, {
+              identifierPlace: phi.place,
+              sources: [phi.place],
+              typeOfValue: 'fromProps',
+            });
+          } else {
+            derivedTuple.set(phi.place.identifier.id, {
+              identifierPlace: phi.place,
+              sources: source.sources,
+              typeOfValue: 'fromProps',
+            });
+          }
+        }
+      }
+    }
+
     for (const instr of block.instructions) {
       const {lvalue, value} = instr;
 
-      // Track props derivation through instruction effects
-      if (instr.effects != null) {
-        for (const effect of instr.effects) {
-          switch (effect.kind) {
-            case 'Assign':
-            case 'Alias':
-            case 'MaybeAlias':
-            case 'Capture': {
-              const source = derivedFromProps.get(effect.from.identifier.id);
-              if (source != null) {
-                derivedFromProps.set(effect.into.identifier.id, source);
+      // This needs to be repeated "recursively" on FunctionExpressions
+      // HERE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+      // DERIVATION LOGIC-----------------------------------------------------
+      console.log('instr', printInstruction(instr));
+      console.log('instr', instr);
+      // console.log('instr lValue', instr.lvalue);
+
+      let typeOfValue: TypeOfValue = 'ignored';
+
+      // TODO: Add handling for state derived props
+      let sources: DerivationMetadata[] = [];
+      for (const operand of eachInstructionValueOperand(value)) {
+        const opSource = derivedTuple.get(operand.identifier.id);
+        if (opSource === undefined) {
+          continue;
+        }
+
+        typeOfValue = joinValue(typeOfValue, opSource.typeOfValue);
+        sources.push(opSource);
+      }
+
+      // TODO: Add handling for state derived props
+      if (typeOfValue !== 'ignored') {
+        for (const lvalue of eachInstructionLValue(instr)) {
+          updateDerivationMetadata(lvalue, sources, typeOfValue, derivedTuple);
+        }
+
+        for (const operand of eachInstructionValueOperand(value)) {
+          switch (operand.effect) {
+            case Effect.Capture:
+            case Effect.Store:
+            case Effect.ConditionallyMutate:
+            case Effect.ConditionallyMutateIterator:
+            case Effect.Mutate: {
+              if (isMutable(instr, operand)) {
+                updateDerivationMetadata(
+                  operand,
+                  sources,
+                  typeOfValue,
+                  derivedTuple,
+                );
               }
               break;
             }
-          }
-        }
-      }
-
-      /**
-       * TODO: figure out why property access off of props does not create an Assign or Alias/Maybe
-       * Alias
-       *
-       * import {useEffect, useState} from 'react'
-       *
-       *        function Component(props) {
-       *          const [displayValue, setDisplayValue] = useState('');
-       *
-       *          useEffect(() => {
-       *            const computed = props.prefix + props.value + props.suffix;
-       *                             ^^^^^^^^^^^^   ^^^^^^^^^^^   ^^^^^^^^^^^^
-       *                             we want to track that these are from props
-       *            setDisplayValue(computed);
-       *          }, [props.prefix, props.value, props.suffix]);
-       *
-       *          return <div>{displayValue}</div>;
-       *        }
-       */
-      if (value.kind === 'FunctionExpression') {
-        for (const [, block] of value.loweredFunc.func.body.blocks) {
-          for (const instr of block.instructions) {
-            if (instr.effects != null) {
-              console.group(printInstruction(instr));
-              for (const effect of instr.effects) {
-                console.log(effect);
-                switch (effect.kind) {
-                  case 'Assign':
-                  case 'Alias':
-                  case 'MaybeAlias':
-                  case 'Capture': {
-                    const source = derivedFromProps.get(
-                      effect.from.identifier.id,
-                    );
-                    if (source != null) {
-                      derivedFromProps.set(effect.into.identifier.id, source);
-                    }
-                    break;
-                  }
-                }
-              }
+            case Effect.Freeze:
+            case Effect.Read: {
+              // no-op
+              break;
             }
-            console.groupEnd();
+            case Effect.Unknown: {
+              CompilerError.invariant(false, {
+                reason: 'Unexpected unknown effect',
+                description: null,
+                loc: operand.loc,
+                suggestions: null,
+              });
+            }
+            default: {
+              assertExhaustive(
+                operand.effect,
+                `Unexpected effect kind \`${operand.effect}\``,
+              );
+            }
           }
         }
       }
+      console.log('derivedTuple', derivedTuple);
+      // HERE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-      for (const [, place] of derivedFromProps) {
-        console.log(printPlace(place));
-      }
-
+      // console.log('derivedTuple', derivedTuple);
+      // DERIVATION LOGIC-----------------------------------------------------
       if (value.kind === 'LoadLocal') {
         locals.set(lvalue.identifier.id, value.place.identifier.id);
       } else if (value.kind === 'ArrayExpression') {
@@ -156,6 +261,8 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
       ) {
         const callee =
           value.kind === 'CallExpression' ? value.callee : value.property;
+
+        // This is a useEffect hook
         if (
           isUseEffectHookType(callee.identifier) &&
           value.args.length === 2 &&
@@ -180,7 +287,7 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
             validateEffect(
               effectFunction.loweredFunc.func,
               dependencies,
-              derivedFromProps,
+              derivedTuple,
               errors,
             );
           }
@@ -196,7 +303,7 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
 function validateEffect(
   effectFunction: HIRFunction,
   effectDeps: Array<IdentifierId>,
-  derivedFromProps: Map<IdentifierId, Place>,
+  derivedTuple: Map<IdentifierId, DerivationMetadata>,
   errors: CompilerError,
 ): void {
   for (const operand of effectFunction.context) {
@@ -204,7 +311,7 @@ function validateEffect(
       continue;
     } else if (effectDeps.find(dep => dep === operand.identifier.id) != null) {
       continue;
-    } else if (derivedFromProps.has(operand.identifier.id)) {
+    } else if (derivedTuple.has(operand.identifier.id)) {
       continue;
     } else {
       // Captured something other than the effect dep or setState
@@ -212,29 +319,36 @@ function validateEffect(
       return;
     }
   }
+
+  // This might be wrong gotta double check
+  let hasInvalidDep = false;
   for (const dep of effectDeps) {
-    console.log({dep});
+    const depMetadata = derivedTuple.get(dep);
     if (
-      effectFunction.context.find(operand => operand.identifier.id === dep) ==
+      effectFunction.context.find(operand => operand.identifier.id === dep) !=
         null ||
-      derivedFromProps.has(dep) === false
+      (depMetadata !== undefined && depMetadata.typeOfValue !== 'ignored')
     ) {
-      console.log('early return 2');
-      // effect dep wasn't actually used in the function
-      return;
+      hasInvalidDep = true;
     }
   }
 
+  if (!hasInvalidDep) {
+    console.log('early return 2');
+    // effect dep wasn't actually used in the function
+    return;
+  }
+
   const seenBlocks: Set<BlockId> = new Set();
+  // This variable is suspicious maybe we don't need it?
   const values: Map<IdentifierId, Array<IdentifierId>> = new Map();
-  const effectDerivedFromProps: Map<IdentifierId, Place> = new Map();
+  const effectInvalidlyDerived: Map<IdentifierId, Place[]> = new Map();
 
   for (const dep of effectDeps) {
-    console.log({dep});
     values.set(dep, [dep]);
-    const propsSource = derivedFromProps.get(dep);
-    if (propsSource != null) {
-      effectDerivedFromProps.set(dep, propsSource);
+    const depMetadata = derivedTuple.get(dep);
+    if (depMetadata !== undefined) {
+      effectInvalidlyDerived.set(dep, depMetadata.sources);
     }
   }
 
@@ -246,9 +360,11 @@ function validateEffect(
         return;
       }
     }
+
+    // TODO: This might need editing
     for (const phi of block.phis) {
       const aggregateDeps: Set<IdentifierId> = new Set();
-      let propsSource: Place | null = null;
+      let propsSources: Place[] | null = null;
 
       for (const operand of phi.operands.values()) {
         const deps = values.get(operand.identifier.id);
@@ -257,19 +373,20 @@ function validateEffect(
             aggregateDeps.add(dep);
           }
         }
-        const source = effectDerivedFromProps.get(operand.identifier.id);
-        if (source != null) {
-          propsSource = source;
+        const sources = effectInvalidlyDerived.get(operand.identifier.id);
+        if (sources != null) {
+          propsSources = sources;
         }
       }
 
       if (aggregateDeps.size !== 0) {
         values.set(phi.place.identifier.id, Array.from(aggregateDeps));
       }
-      if (propsSource != null) {
-        effectDerivedFromProps.set(phi.place.identifier.id, propsSource);
+      if (propsSources != null) {
+        effectInvalidlyDerived.set(phi.place.identifier.id, propsSources);
       }
     }
+
     for (const instr of block.instructions) {
       switch (instr.value.kind) {
         case 'Primitive':
@@ -291,7 +408,7 @@ function validateEffect(
         case 'CallExpression':
         case 'MethodCall': {
           const aggregateDeps: Set<IdentifierId> = new Set();
-          for (const operand of eachInstructionValueOperand(instr.value)) {
+          for (const operand of eachInstructionOperand(instr)) {
             const deps = values.get(operand.identifier.id);
             if (deps != null) {
               for (const dep of deps) {
@@ -310,60 +427,56 @@ function validateEffect(
             instr.value.args[0].kind === 'Identifier'
           ) {
             const deps = values.get(instr.value.args[0].identifier.id);
+            console.log('deps', deps);
             if (deps != null && new Set(deps).size === effectDeps.length) {
-              const propsSource = effectDerivedFromProps.get(
+              // console.log('setState arg', instr.value.args[0].identifier.id);
+              // console.log('effectInvalidlyDerived', effectInvalidlyDerived);
+              // console.log('derivedTuple', derivedTuple);
+              const propSources = derivedTuple.get(
                 instr.value.args[0].identifier.id,
               );
 
-              setStateCalls.push({
-                loc: instr.value.callee.loc,
-                propsSource: propsSource ?? null,
-              });
+              console.log('Final reference', propSources);
+              if (propSources !== undefined) {
+                setStateCalls.push({
+                  loc: instr.value.callee.loc,
+                  propsSources: propSources.sources,
+                });
+              } else {
+                setStateCalls.push({
+                  loc: instr.value.callee.loc,
+                  propsSources: undefined,
+                });
+              }
             } else {
               // doesn't depend on all deps
+              console.log('early return 3');
               return;
             }
           }
           break;
         }
         default: {
+          console.log('early return 4');
           return;
-        }
-      }
-
-      // Track props derivation through instruction effects
-      if (instr.effects != null) {
-        for (const effect of instr.effects) {
-          switch (effect.kind) {
-            case 'Assign':
-            case 'Alias':
-            case 'MaybeAlias':
-            case 'Capture': {
-              const source = effectDerivedFromProps.get(
-                effect.from.identifier.id,
-              );
-              if (source != null) {
-                effectDerivedFromProps.set(effect.into.identifier.id, source);
-              }
-              break;
-            }
-          }
         }
       }
     }
     for (const operand of eachTerminalOperand(block.terminal)) {
       if (values.has(operand.identifier.id)) {
-        //
         return;
       }
     }
     seenBlocks.add(block.id);
   }
 
+  console.log('setStateCalls', setStateCalls);
   for (const call of setStateCalls) {
-    if (call.propsSource != null) {
-      const propName = call.propsSource.identifier.name?.value;
-      const propInfo = propName != null ? ` (from prop '${propName}')` : '';
+    if (call.propsSources != null) {
+      const propNames = call.propsSources
+        .map(place => place.identifier.name?.value)
+        .join(', ');
+      const propInfo = propNames != null ? ` (from props '${propNames}')` : '';
 
       errors.push({
         reason: `Consider lifting state up to the parent component to make this a controlled component. (https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes)`,
