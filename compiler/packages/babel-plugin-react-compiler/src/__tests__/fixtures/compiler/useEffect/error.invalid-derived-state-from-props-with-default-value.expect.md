@@ -26,9 +26,9 @@ export default function InProductLobbyGeminiCard(
 ```
 Found 1 error:
 
-Error: Derive values in render, not effects.
+Error: You might not need an effect. Derive values in render, not effects.
 
-This setState() appears to derive a value from props [input]. Derived values should be computed during render, rather than in effects. Using an effect triggers an additional render which can hurt performance and user experience, potentially briefly showing stale values to the user.
+Props [input]. Derived values should be computed during render, rather than in effects. Using an effect triggers an additional render which can hurt performance and user experience, potentially briefly showing stale values to the user.
 
 error.invalid-derived-state-from-props-with-default-value.ts:9:4
    7 |
