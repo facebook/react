@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<35e4d9cfd8648bf600caf5bafab7d488>>
+ * @generated SignedSource<<cb3b475a5862ccaa8a70298ee66271df>>
  */
 
 'use strict';
@@ -40554,7 +40554,7 @@ function computeSignatureForInstruction(context, env, instr) {
                     effects.push({
                         kind: 'Freeze',
                         value: operand,
-                        reason: ValueReason.Other,
+                        reason: ValueReason.HookCaptured,
                     });
                 }
             }
@@ -41288,7 +41288,8 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor {
         this.state = state;
         this.options = {
             memoizeJsxElements: !this.env.config.enableForest,
-            forceMemoizePrimitives: this.env.config.enableForest,
+            forceMemoizePrimitives: this.env.config.enableForest ||
+                this.env.config.enablePreserveExistingMemoizationGuarantees,
         };
     }
     computeMemoizationInputs(value, lvalue) {
@@ -41376,9 +41377,14 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor {
             case 'JSXText':
             case 'BinaryExpression':
             case 'UnaryExpression': {
-                const level = options.forceMemoizePrimitives
-                    ? MemoizationLevel.Memoized
-                    : MemoizationLevel.Never;
+                if (options.forceMemoizePrimitives) {
+                    const level = MemoizationLevel.Conditional;
+                    return {
+                        lvalues: lvalue !== null ? [{ place: lvalue, level }] : [],
+                        rvalues: [...eachReactiveValueOperand(value)],
+                    };
+                }
+                const level = MemoizationLevel.Never;
                 return {
                     lvalues: lvalue !== null ? [{ place: lvalue, level }] : [],
                     rvalues: [],
@@ -41509,9 +41515,7 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor {
             }
             case 'ComputedLoad':
             case 'PropertyLoad': {
-                const level = options.forceMemoizePrimitives
-                    ? MemoizationLevel.Memoized
-                    : MemoizationLevel.Conditional;
+                const level = MemoizationLevel.Conditional;
                 return {
                     lvalues: lvalue !== null ? [{ place: lvalue, level }] : [],
                     rvalues: [value.object],
