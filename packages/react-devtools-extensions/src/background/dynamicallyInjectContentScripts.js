@@ -14,7 +14,7 @@ const contentScriptsToInject = [
     js: ['build/fileFetcher.js'],
     matches: ['<all_urls>'],
     persistAcrossSessions: true,
-    runAt: 'document_start',
+    runAt: 'document_end',
     world: chrome.scripting.ExecutionWorld.ISOLATED,
   },
   {
