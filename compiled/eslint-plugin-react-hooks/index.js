@@ -40774,7 +40774,7 @@ function computeSignatureForInstruction(context, env, instr) {
                     effects.push({
                         kind: 'Freeze',
                         value: operand,
-                        reason: ValueReason.Other,
+                        reason: ValueReason.HookCaptured,
                     });
                 }
             }
@@ -41598,7 +41598,7 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor {
             case 'BinaryExpression':
             case 'UnaryExpression': {
                 if (options.forceMemoizePrimitives) {
-                    const level = MemoizationLevel.Memoized;
+                    const level = MemoizationLevel.Conditional;
                     return {
                         lvalues: lvalue !== null ? [{ place: lvalue, level }] : [],
                         rvalues: [...eachReactiveValueOperand(value)],
@@ -41735,9 +41735,7 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor {
             }
             case 'ComputedLoad':
             case 'PropertyLoad': {
-                const level = options.forceMemoizePrimitives
-                    ? MemoizationLevel.Memoized
-                    : MemoizationLevel.Conditional;
+                const level = MemoizationLevel.Conditional;
                 return {
                     lvalues: lvalue !== null ? [{ place: lvalue, level }] : [],
                     rvalues: [value.object],
