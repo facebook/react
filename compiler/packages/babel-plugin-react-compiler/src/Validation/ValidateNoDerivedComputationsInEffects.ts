@@ -41,7 +41,7 @@ type TypeOfValue = 'ignored' | 'fromProps' | 'fromState' | 'fromPropsOrState';
 type DerivationMetadata = {
   typeOfValue: TypeOfValue;
   place: Place;
-  sources: Set<Place>;
+  sources: Array<Place>;
 };
 
 type ErrorMetadata = {
@@ -49,6 +49,7 @@ type ErrorMetadata = {
   description: string | undefined;
   loc: SourceLocation;
   setStateName: string | undefined | null;
+  derivedDepsNames: Array<string>;
 };
 
 /**
@@ -79,6 +80,7 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
   const functions: Map<IdentifierId, FunctionExpression> = new Map();
   const locals: Map<IdentifierId, IdentifierId> = new Map();
   const derivationCache: Map<IdentifierId, DerivationMetadata> = new Map();
+  const shadowingUseState: Map<string, Array<SourceLocation>> = new Map();
 
   const effectSetStates: Map<
     string | undefined | null,
@@ -93,7 +95,7 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
       if (param.kind === 'Identifier') {
         derivationCache.set(param.identifier.id, {
           place: param,
-          sources: new Set([param]),
+          sources: [param],
           typeOfValue: 'fromProps',
         });
       }
@@ -103,7 +105,7 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
     if (props != null && props.kind === 'Identifier') {
       derivationCache.set(props.identifier.id, {
         place: props,
-        sources: new Set([props]),
+        sources: [props],
         typeOfValue: 'fromProps',
       });
     }
@@ -115,7 +117,7 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
     for (const instr of block.instructions) {
       const {lvalue, value} = instr;
 
-      parseInstr(instr, derivationCache, setStateCalls);
+      parseInstr(instr, derivationCache, setStateCalls, shadowingUseState);
 
       if (value.kind === 'LoadLocal') {
         locals.set(lvalue.identifier.id, value.place.identifier.id);
@@ -167,6 +169,7 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
   const compilerError = generateCompilerError(
     setStateCalls,
     effectSetStates,
+    shadowingUseState,
     errors,
   );
 
@@ -178,21 +181,12 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
 function generateCompilerError(
   setStateCalls: Map<string | undefined | null, Array<Place>>,
   effectSetStates: Map<string | undefined | null, Array<Place>>,
+  shadowingUseState: Map<string, Array<SourceLocation>>,
   errors: Array<ErrorMetadata>,
 ): CompilerError {
   const throwableErrors = new CompilerError();
   for (const error of errors) {
     let compilerDiagnostic: CompilerDiagnostic | undefined = undefined;
-    let detailMessage = '';
-    switch (error.type) {
-      case 'fromProps':
-        detailMessage = 'This state value shadows a value passed as a prop.';
-        break;
-      case 'fromPropsOrState':
-        detailMessage =
-          'This state value shadows a value passed as a prop or a value from state.';
-        break;
-    }
 
     /*
      * If we use a setState from an invalid useEffect elsewhere then we probably have to
@@ -204,14 +198,26 @@ function generateCompilerError(
       error.type !== 'fromState'
     ) {
       compilerDiagnostic = CompilerDiagnostic.create({
-        description: `${error.description} This state value shadows a value passed as a prop. Instead of shadowing the prop with local state, hoist the state to the parent component and update it there.`,
-        category: `Local state shadows parent state.`,
+        description: `The setState within a useEffect is deriving from ${error.description}. Instead of shadowing the prop with local state, hoist the state to the parent component and update it there. If you are purposefully initializing state with a prop, and want to update it when a prop changes, do so conditionally in render`,
+        category: `You might not need an effect. Local state shadows parent state.`,
         severity: ErrorSeverity.InvalidReact,
       }).withDetail({
         kind: 'error',
         loc: error.loc,
-        message: 'this setState synchronizes the state',
+        message: `this derives values from props ${error.type === 'fromPropsOrState' ? 'and local state ' : ''}to synchronize state`,
       });
+
+      for (const derivedDep of error.derivedDepsNames) {
+        if (shadowingUseState.has(derivedDep)) {
+          for (const loc of shadowingUseState.get(derivedDep)!) {
+            compilerDiagnostic.withDetail({
+              kind: 'error',
+              loc: loc,
+              message: `this useState shadows ${derivedDep}`,
+            });
+          }
+        }
+      }
 
       for (const [key, setStateCallArray] of effectSetStates) {
         if (setStateCallArray.length === 0) {
@@ -234,8 +240,8 @@ function generateCompilerError(
       }
     } else {
       compilerDiagnostic = CompilerDiagnostic.create({
-        description: `${error.description} Derived values should be computed during render, rather than in effects. Using an effect triggers an additional render which can hurt performance and user experience, potentially briefly showing stale values to the user.`,
-        category: `Derive values in render, not effects.`,
+        description: `${error.description ? error.description.charAt(0).toUpperCase() + error.description.slice(1) : ''}. Derived values should be computed during render, rather than in effects. Using an effect triggers an additional render which can hurt performance and user experience, potentially briefly showing stale values to the user.`,
+        category: `You might not need an effect. Derive values in render, not effects.`,
         severity: ErrorSeverity.InvalidReact,
       }).withDetail({
         kind: 'error',
@@ -270,7 +276,7 @@ function updateDerivationMetadata(
 ): void {
   let newValue: DerivationMetadata = {
     place: target,
-    sources: new Set(),
+    sources: [],
     typeOfValue: typeOfValue ?? 'ignored',
   };
 
@@ -285,9 +291,9 @@ function updateDerivationMetadata(
           place.identifier.name === null ||
           place.identifier.name?.kind === 'promoted'
         ) {
-          newValue.sources.add(target);
+          newValue.sources.push(target);
         } else {
-          newValue.sources.add(place);
+          newValue.sources.push(place);
         }
       }
     }
@@ -300,38 +306,19 @@ function parseInstr(
   instr: Instruction,
   derivationCache: Map<IdentifierId, DerivationMetadata>,
   setStateCalls: Map<string | undefined | null, Array<Place>>,
+  shadowingUseState: Map<string, Array<SourceLocation>>,
 ): void {
   // Recursively parse function expressions
+  let typeOfValue: TypeOfValue = 'ignored';
+
+  let sources: Array<DerivationMetadata> = [];
   if (instr.value.kind === 'FunctionExpression') {
     for (const [, block] of instr.value.loweredFunc.func.body.blocks) {
       for (const instr of block.instructions) {
-        parseInstr(instr, derivationCache, setStateCalls);
+        parseInstr(instr, derivationCache, setStateCalls, shadowingUseState);
       }
     }
-  }
-
-  let typeOfValue: TypeOfValue = 'ignored';
-
-  // Catch any useState hook calls
-  let sources: Array<DerivationMetadata> = [];
-  if (
-    instr.value.kind === 'Destructure' &&
-    instr.value.lvalue.pattern.kind === 'ArrayPattern' &&
-    isUseStateType(instr.value.value.identifier)
-  ) {
-    typeOfValue = 'fromState';
-
-    const stateValueSource = instr.value.lvalue.pattern.items[0];
-    if (stateValueSource.kind === 'Identifier') {
-      sources.push({
-        place: stateValueSource,
-        typeOfValue: typeOfValue,
-        sources: new Set([stateValueSource]),
-      });
-    }
-  }
-
-  if (
+  } else if (
     instr.value.kind === 'CallExpression' &&
     isSetStateType(instr.value.callee.identifier) &&
     instr.value.args.length === 1 &&
@@ -347,6 +334,21 @@ function parseInstr(
         instr.value.callee,
       ]);
     }
+  } else if (
+    (instr.value.kind === 'CallExpression' ||
+      instr.value.kind === 'MethodCall') &&
+    isUseStateType(instr.lvalue.identifier)
+  ) {
+    const stateValueSource = instr.value.args[0];
+    if (stateValueSource.kind === 'Identifier') {
+      sources.push({
+        place: stateValueSource,
+        typeOfValue: typeOfValue,
+        sources: [stateValueSource],
+      });
+    }
+
+    typeOfValue = joinValue(typeOfValue, 'fromState');
   }
 
   for (const operand of eachInstructionOperand(instr)) {
@@ -357,6 +359,27 @@ function parseInstr(
 
     typeOfValue = joinValue(typeOfValue, opSource.typeOfValue);
     sources.push(opSource);
+
+    if (
+      (instr.value.kind === 'CallExpression' ||
+        instr.value.kind === 'MethodCall') &&
+      opSource.typeOfValue === 'fromProps' &&
+      isUseStateType(instr.lvalue.identifier)
+    ) {
+      opSource.sources.forEach(source => {
+        if (source.identifier.name !== null) {
+          if (shadowingUseState.has(source.identifier.name.value)) {
+            shadowingUseState
+              .get(source.identifier.name.value)
+              ?.push(instr.lvalue.loc);
+          } else {
+            shadowingUseState.set(source.identifier.name.value, [
+              instr.lvalue.loc,
+            ]);
+          }
+        }
+      });
+    }
   }
 
   if (typeOfValue !== 'ignored') {
@@ -410,16 +433,26 @@ function parseBlockPhi(
   derivationCache: Map<IdentifierId, DerivationMetadata>,
 ): void {
   for (const phi of block.phis) {
+    let typeOfValue: TypeOfValue = 'ignored';
+    let sources: Array<DerivationMetadata> = [];
     for (const operand of phi.operands.values()) {
-      const phiSource = derivationCache.get(operand.identifier.id);
-      if (phiSource !== undefined) {
-        updateDerivationMetadata(
-          phi.place,
-          [phiSource],
-          phiSource?.typeOfValue,
-          derivationCache,
-        );
+      const opSource = derivationCache.get(operand.identifier.id);
+
+      if (opSource === undefined) {
+        continue;
       }
+
+      typeOfValue = joinValue(typeOfValue, opSource?.typeOfValue ?? 'ignored');
+      sources.push(opSource);
+    }
+
+    if (typeOfValue !== 'ignored') {
+      updateDerivationMetadata(
+        phi.place,
+        sources,
+        typeOfValue,
+        derivationCache,
+      );
     }
   }
 }
@@ -523,7 +556,7 @@ function validateEffect(
   }
 
   for (const call of derivedSetStateCall) {
-    const placeNames = Array.from(call.derivedDep.sources)
+    const derivedDepsStr = Array.from(call.derivedDep.sources)
       .map(place => {
         return place.identifier.name?.value;
       })
@@ -533,19 +566,24 @@ function validateEffect(
     let errorDescription = '';
 
     if (call.derivedDep.typeOfValue === 'fromProps') {
-      errorDescription = `props [${placeNames}].`;
+      errorDescription = `props [${derivedDepsStr}]`;
     } else if (call.derivedDep.typeOfValue === 'fromState') {
-      errorDescription = `local state [${placeNames}].`;
+      errorDescription = `local state [${derivedDepsStr}]`;
     } else {
-      errorDescription = `both props and local state [${placeNames}].`;
+      errorDescription = `both props and local state [${derivedDepsStr}]`;
     }
 
     errors.push({
       type: call.derivedDep.typeOfValue,
-      description: `This setState() appears to derive a value from ${errorDescription}`,
+      description: `${errorDescription}`,
       loc: call.loc,
       setStateName:
         call.loc !== GeneratedSource ? call.loc.identifierName : undefined,
+      derivedDepsNames: Array.from(call.derivedDep.sources)
+        .map(place => {
+          return place.identifier.name?.value ?? '';
+        })
+        .filter(Boolean),
     });
   }
 }

@@ -32,18 +32,36 @@ function Component({props, number}) {
 ```
 Found 1 error:
 
-Error: Local state shadows parent state.
+Error: You might not need an effect. Local state shadows parent state.
 
-This setState() appears to derive a value from props [props, number]. This state value shadows a value passed as a prop. Instead of shadowing the prop with local state, hoist the state to the parent component and update it there.
+The setState within a useEffect is deriving from props [props, number]. Instead of shadowing the prop with local state, hoist the state to the parent component and update it there. If you are purposefully initializing state with a prop, and want to update it when a prop changes, do so conditionally in render
 
 error.derived-state-from-shadowed-props.ts:10:4
    8 |
    9 |   useEffect(() => {
 > 10 |     setDisplayValue(props.prefix + missDirection + nothing);
-     |     ^^^^^^^^^^^^^^^ this setState synchronizes the state
+     |     ^^^^^^^^^^^^^^^ this derives values from props to synchronize state
   11 |   }, [props.prefix, missDirection, nothing]);
   12 |
   13 |   return (
+
+error.derived-state-from-shadowed-props.ts:7:42
+   5 |   const nothing = 0;
+   6 |   const missDirection = number;
+>  7 |   const [displayValue, setDisplayValue] = useState(props.prefix + missDirection + nothing);
+     |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ this useState shadows props
+   8 |
+   9 |   useEffect(() => {
+  10 |     setDisplayValue(props.prefix + missDirection + nothing);
+
+error.derived-state-from-shadowed-props.ts:7:42
+   5 |   const nothing = 0;
+   6 |   const missDirection = number;
+>  7 |   const [displayValue, setDisplayValue] = useState(props.prefix + missDirection + nothing);
+     |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ this useState shadows number
+   8 |
+   9 |   useEffect(() => {
+  10 |     setDisplayValue(props.prefix + missDirection + nothing);
 
 error.derived-state-from-shadowed-props.ts:16:8
   14 |     <div
