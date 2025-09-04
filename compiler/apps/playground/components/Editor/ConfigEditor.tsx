@@ -17,6 +17,9 @@ import {
   updateSourceWithOverridePragma,
 } from '../../lib/configUtils';
 
+// @ts-ignore - webpack asset/source loader handles .d.ts files as strings
+import compilerTypeDefs from 'babel-plugin-react-compiler/dist/index.d.ts';
+
 loader.config({monaco});
 
 export default function ConfigEditor(): JSX.Element {
@@ -57,6 +60,41 @@ export default function ConfigEditor(): JSX.Element {
     _: editor.IStandaloneCodeEditor,
     monaco: Monaco,
   ) => void = (_, monaco) => {
+    // Add the babel-plugin-react-compiler type definitions to Monaco
+    monaco.languages.typescript.javascriptDefaults.addExtraLib(
+      // @ts-ignore
+      compilerTypeDefs,
+      'file:///node_modules/babel-plugin-react-compiler/dist/index.d.ts',
+    );
+    monaco.languages.typescript.typescriptDefaults.addExtraLib(
+      // @ts-ignore
+      compilerTypeDefs,
+      'file:///node_modules/babel-plugin-react-compiler/dist/index.d.ts',
+    );
+    monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+      target: monaco.languages.typescript.ScriptTarget.Latest,
+      allowNonTsExtensions: true,
+      moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+      module: monaco.languages.typescript.ModuleKind.ESNext,
+      noEmit: true,
+      allowJs: true,
+      checkJs: true,
+      strict: false,
+      esModuleInterop: true,
+      allowSyntheticDefaultImports: true,
+      jsx: monaco.languages.typescript.JsxEmit.React,
+    });
+    monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+      target: monaco.languages.typescript.ScriptTarget.Latest,
+      allowNonTsExtensions: true,
+      moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+      module: monaco.languages.typescript.ModuleKind.ESNext,
+      noEmit: true,
+      strict: false,
+      esModuleInterop: true,
+      allowSyntheticDefaultImports: true,
+      jsx: monaco.languages.typescript.JsxEmit.React,
+    });
     setMonaco(monaco);
 
     const uri = monaco.Uri.parse(`file:///config.js`);
@@ -78,8 +116,8 @@ export default function ConfigEditor(): JSX.Element {
         enable={{right: true}}
         className="!h-[calc(100vh_-_3.5rem_-_4rem)]">
         <MonacoEditor
-          path={'config.js'}
-          language={'javascript'}
+          path={'config.ts'}
+          language={'typescript'}
           value={store.config}
           onMount={handleMount}
           onChange={handleChange}
