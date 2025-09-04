@@ -103,6 +103,7 @@ import {validateNoFreezingKnownMutableFunctions} from '../Validation/ValidateNoF
 import {inferMutationAliasingEffects} from '../Inference/InferMutationAliasingEffects';
 import {inferMutationAliasingRanges} from '../Inference/InferMutationAliasingRanges';
 import {validateNoDerivedComputationsInEffects} from '../Validation/ValidateNoDerivedComputationsInEffects';
+import {validateExhaustiveDependencies} from '../Validation/ValidateExhaustiveDependencies';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -293,6 +294,8 @@ function runWithEnvironment(
 
   inferReactivePlaces(hir);
   log({kind: 'hir', name: 'InferReactivePlaces', value: hir});
+
+  validateExhaustiveDependencies(hir).unwrap();
 
   rewriteInstructionKindsBasedOnReassignment(hir);
   log({
