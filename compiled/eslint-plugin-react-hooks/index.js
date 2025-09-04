@@ -41508,7 +41508,8 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor {
         this.state = state;
         this.options = {
             memoizeJsxElements: !this.env.config.enableForest,
-            forceMemoizePrimitives: this.env.config.enableForest,
+            forceMemoizePrimitives: this.env.config.enableForest ||
+                this.env.config.enablePreserveExistingMemoizationGuarantees,
         };
     }
     computeMemoizationInputs(value, lvalue) {
@@ -41596,9 +41597,14 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor {
             case 'JSXText':
             case 'BinaryExpression':
             case 'UnaryExpression': {
-                const level = options.forceMemoizePrimitives
-                    ? MemoizationLevel.Memoized
-                    : MemoizationLevel.Never;
+                if (options.forceMemoizePrimitives) {
+                    const level = MemoizationLevel.Memoized;
+                    return {
+                        lvalues: lvalue !== null ? [{ place: lvalue, level }] : [],
+                        rvalues: [...eachReactiveValueOperand(value)],
+                    };
+                }
+                const level = MemoizationLevel.Never;
                 return {
                     lvalues: lvalue !== null ? [{ place: lvalue, level }] : [],
                     rvalues: [],
