@@ -253,8 +253,6 @@ function parseConfigStringAsJS(
     });
   }
 
-  console.log('OVERRIDE:', parsedConfig);
-
   const environment = parseConfigPragmaEnvironmentForTest(
     '',
     defaults.environment ?? {},

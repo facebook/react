@@ -19,10 +19,12 @@ import {
   updateSourceWithOverridePragma,
 } from '../../lib/configUtils';
 
+// @ts-ignore - webpack asset/source loader handles .d.ts files as strings
+import compilerTypeDefs from 'babel-plugin-react-compiler/dist/index.d.ts';
+
 loader.config({monaco});
 
 export default function ConfigEditor(): React.ReactElement {
-  const [, setMonaco] = useState<Monaco | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const store = useStore();
   const dispatchStore = useStoreDispatch();
@@ -58,10 +60,6 @@ export default function ConfigEditor(): React.ReactElement {
           config: config,
         },
       });
-
-      enqueueSnackbar('Config overrides applied successfully!', {
-        variant: 'success',
-      });
     } catch (error) {
       console.error('Failed to apply config:', error);
 
@@ -94,9 +92,25 @@ export default function ConfigEditor(): React.ReactElement {
     _: editor.IStandaloneCodeEditor,
     monaco: Monaco,
   ) => void = (_, monaco) => {
-    setMonaco(monaco);
+    // Add the babel-plugin-react-compiler type definitions to Monaco
+    monaco.languages.typescript.typescriptDefaults.addExtraLib(
+      // @ts-ignore
+      compilerTypeDefs,
+      'file:///node_modules/babel-plugin-react-compiler/dist/index.d.ts',
+    );
+    monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+      target: monaco.languages.typescript.ScriptTarget.Latest,
+      allowNonTsExtensions: true,
+      moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+      module: monaco.languages.typescript.ModuleKind.ESNext,
+      noEmit: true,
+      strict: false,
+      esModuleInterop: true,
+      allowSyntheticDefaultImports: true,
+      jsx: monaco.languages.typescript.JsxEmit.React,
+    });
 
-    const uri = monaco.Uri.parse(`file:///config.js`);
+    const uri = monaco.Uri.parse(`file:///config.ts`);
     const model = monaco.editor.getModel(uri);
     if (model) {
       model.updateOptions({tabSize: 2});
@@ -122,8 +136,8 @@ export default function ConfigEditor(): React.ReactElement {
             </h2>
             <div className="h-[calc(100vh_-_3.5rem_-_4rem)]">
               <MonacoEditor
-                path={'config.js'}
-                language={'javascript'}
+                path={'config.ts'}
+                language={'typescript'}
                 value={store.config}
                 onMount={handleMount}
                 onChange={handleChange}

@@ -317,16 +317,11 @@ export default function Editor(): JSX.Element {
       mountStore = defaultStore;
     }
 
-    parseAndFormatConfig(mountStore.source).then(config => {
-      dispatchStore({
-        type: 'setStore',
-        payload: {
-          store: {
-            ...mountStore,
-            config,
-          },
-        },
-      });
+    dispatchStore({
+      type: 'setStore',
+      payload: {
+        store: mountStore,
+      },
     });
   });
 

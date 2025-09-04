@@ -25,7 +25,10 @@ export async function parseAndFormatConfig(source: string): Promise<string> {
   const pragma = source.substring(0, source.indexOf('\n'));
   let configString = parseConfigPragmaAsString(pragma);
   if (configString !== '') {
-    configString = `(${configString})`;
+    configString = `\
+    import type { PluginOptions } from 'babel-plugin-react-compiler/dist';
+
+    (${configString} satisfies Partial<PluginOptions>)`;
   }
 
   try {
@@ -42,7 +45,7 @@ export async function parseAndFormatConfig(source: string): Promise<string> {
 }
 
 function extractCurlyBracesContent(input: string): string {
-  const startIndex = input.indexOf('{');
+  const startIndex = input.indexOf('({') + 1;
   const endIndex = input.lastIndexOf('}');
   if (startIndex === -1 || endIndex === -1 || endIndex <= startIndex) {
     throw new Error('No outer curly braces found in input.');
@@ -87,7 +90,6 @@ export async function generateOverridePragmaFromConfig(
   const content = extractCurlyBracesContent(formattedConfigString);
   const cleanConfig = cleanContent(content);
 
-  // Validate that the config is a valid PluginOptions object
   validateConfigAsPluginOptions(cleanConfig);
 
   // Format the config to ensure it's valid

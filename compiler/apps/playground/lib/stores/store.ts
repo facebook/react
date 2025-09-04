@@ -10,7 +10,7 @@ import {
   compressToEncodedURIComponent,
   decompressFromEncodedURIComponent,
 } from 'lz-string';
-import {defaultStore} from '../defaultStore';
+import {defaultStore, defaultConfig} from '../defaultStore';
 
 /**
  * Global Store for Playground
@@ -68,10 +68,10 @@ export function initStoreFromUrlOrLocalStorage(): Store {
   invariant(isValidStore(raw), 'Invalid Store');
 
   // Add config property if missing for backwards compatibility
-  if (!('config' in raw)) {
+  if (!('config' in raw) || !raw['config']) {
     return {
       ...raw,
-      config: '',
+      config: defaultConfig,
     };
   }
 
