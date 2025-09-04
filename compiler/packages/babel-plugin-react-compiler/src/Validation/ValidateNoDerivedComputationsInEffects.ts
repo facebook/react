@@ -41,6 +41,8 @@ type SetStateCall = {
 };
 type TypeOfValue = 'ignored' | 'fromProps' | 'fromState' | 'fromPropsOrState';
 
+type SetStateName = string | undefined | null;
+
 type DerivationMetadata = {
   typeOfValue: TypeOfValue;
   // TODO: Rename to place
@@ -52,8 +54,9 @@ type DerivationMetadata = {
 type ErrorMetadata = {
   errorType: 'HoistState' | 'CalculateInRender';
   propInfo: string | undefined;
+  localStateInfo: string | undefined;
   loc: SourceLocation;
-  setStateId: IdentifierId;
+  setStateName: SetStateName;
 };
 
 function joinValue(
@@ -93,7 +96,7 @@ function updateDerivationMetadata(
 function parseInstr(
   instr: Instruction,
   derivedTuple: Map<IdentifierId, DerivationMetadata>,
-  setStateCalls: Map<string, Place>,
+  setStateCalls: Map<SetStateName, Place[]>,
 ) {
   // console.log(printInstruction(instr));
   // console.log(instr);
@@ -121,14 +124,17 @@ function parseInstr(
     isSetStateType(instr.value.callee.identifier) &&
     instr.value.args.length === 1 &&
     instr.value.args[0].kind === 'Identifier' &&
-    instr.value.callee.loc !== GeneratedSource &&
-    instr.value.callee.loc.identifierName !== undefined &&
-    instr.value.callee.loc.identifierName !== null
+    instr.value.callee.loc !== GeneratedSource
   ) {
-    setStateCalls.set(
-      instr.value.callee.loc.identifierName,
-      instr.value.callee,
-    );
+    if (setStateCalls.has(instr.value.callee.loc.identifierName)) {
+      setStateCalls
+        .get(instr.value.callee.loc.identifierName)!
+        .push(instr.value.callee);
+    } else {
+      setStateCalls.set(instr.value.callee.loc.identifierName, [
+        instr.value.callee,
+      ]);
+    }
   }
 
   let sources: DerivationMetadata[] = [];
@@ -246,11 +252,8 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
   const locals: Map<IdentifierId, IdentifierId> = new Map();
   const derivedTuple: Map<IdentifierId, DerivationMetadata> = new Map();
 
-  // Investigating
-  const effectSetStates: Map<string, Place> = new Map();
-  const setStateCalls: Map<string, Place> = new Map();
-
-  // let shouldCalculateInRender: boolean = true;
+  const effectSetStates: Map<SetStateName, Place[]> = new Map();
+  const setStateCalls: Map<SetStateName, Place[]> = new Map();
 
   const errors: ErrorMetadata[] = [];
 
@@ -343,13 +346,37 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
     }
   }
 
-  console.log('setStateCalls: ', setStateCalls);
-  console.log('effectSetStates: ', effectSetStates);
   const throwableErrors = new CompilerError();
   for (const error of errors) {
+    let reason;
+    let description = '';
+    // TODO: Not sure if this is robust enough.
+    /*
+     * If we use a setState from an invalid useEffect elsewhere then we probably have to
+     * hoist state up, else we should calculate in render
+     */
+    if (
+      setStateCalls.get(error.setStateName)?.length !=
+      effectSetStates.get(error.setStateName)?.length
+    ) {
+      reason =
+        'Consider lifting state up to the parent component to make this a controlled component. (https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes)';
+    } else {
+      reason =
+        'You may not need this effect. Values derived from state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)';
+    }
+
+    if (error.propInfo !== undefined) {
+      description += error.propInfo;
+    }
+
+    if (error.localStateInfo !== undefined) {
+      description += error.localStateInfo;
+    }
+
     throwableErrors.push({
-      reason: `You may not need an effect. Values derived from state should be calculated in render, not in an effect. `,
-      description: `You are using a value derived from props${error.propInfo} to update local state in an effect.`,
+      reason: reason,
+      description: description,
       severity: ErrorSeverity.InvalidReact,
       loc: error.loc,
     });
@@ -364,7 +391,7 @@ function validateEffect(
   effectFunction: HIRFunction,
   effectDeps: Array<IdentifierId>,
   derivedTuple: Map<IdentifierId, DerivationMetadata>,
-  effectSetStates: Map<string, Place>,
+  effectSetStates: Map<SetStateName, Place[]>,
   errors: ErrorMetadata[],
 ): void {
   /*
@@ -438,10 +465,15 @@ function validateEffect(
         instr.value.callee.loc.identifierName !== undefined &&
         instr.value.callee.loc.identifierName !== null
       ) {
-        effectSetStates.set(
-          instr.value.callee.loc.identifierName,
-          instr.value.callee,
-        );
+        if (effectSetStates.has(instr.value.callee.loc.identifierName)) {
+          effectSetStates
+            .get(instr.value.callee.loc.identifierName)!
+            .push(instr.value.callee);
+        } else {
+          effectSetStates.set(instr.value.callee.loc.identifierName, [
+            instr.value.callee,
+          ]);
+        }
       }
       switch (instr.value.kind) {
         case 'Primitive':
@@ -518,12 +550,6 @@ function validateEffect(
     seenBlocks.add(block.id);
   }
 
-  // need to track if the setState call has been used elsewhere
-  // if it is then the solution should be to lift the state up to the parent component
-  // if not the solution should be to calculate the value in rende
-  //
-  // If the same setState is used both inside and outside the effect
-
   for (const call of setStateCallsInEffect) {
     if (call.invalidDeps != null) {
       let propNames = '';
@@ -539,15 +565,19 @@ function validateEffect(
       errors.push({
         errorType: 'HoistState',
         propInfo: propInfo,
+        localStateInfo: undefined,
         loc: call.loc,
-        setStateId: call.setStateId,
+        setStateName:
+          call.loc !== GeneratedSource ? call.loc.identifierName : undefined,
       });
     } else {
       errors.push({
         errorType: 'CalculateInRender',
         propInfo: undefined,
+        localStateInfo: undefined,
         loc: call.loc,
-        setStateId: call.setStateId,
+        setStateName:
+          call.loc !== GeneratedSource ? call.loc.identifierName : undefined,
       });
     }
   }
