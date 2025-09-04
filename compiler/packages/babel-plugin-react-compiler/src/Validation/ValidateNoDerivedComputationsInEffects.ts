@@ -33,11 +33,13 @@ import {
 import {isMutable} from '../ReactiveScopes/InferReactiveScopeVariables';
 import {assertExhaustive} from '../Utils/utils';
 
+// TODO: Maybe I can consolidate some types
 type SetStateCall = {
   loc: SourceLocation;
-  invalidDeps: Map<Identifier, Place[]> | undefined;
+  invalidDeps: DerivationMetadata;
   setStateId: IdentifierId;
 };
+
 type TypeOfValue = 'ignored' | 'fromProps' | 'fromState' | 'fromPropsOrState';
 
 type SetStateName = string | undefined | null;
@@ -51,9 +53,8 @@ type DerivationMetadata = {
 
 // TODO: This needs refining
 type ErrorMetadata = {
-  errorType: 'HoistState' | 'CalculateInRender';
-  propInfo: string | undefined;
-  localStateInfo: string | undefined;
+  errorType: TypeOfValue;
+  invalidDepInfo: string | undefined;
   loc: SourceLocation;
   setStateName: SetStateName;
 };
@@ -101,7 +102,7 @@ function parseInstr(
   // console.log(instr);
   let typeOfValue: TypeOfValue = 'ignored';
 
-  // If the instruction is destructuring a useState hook call
+  // TODO: Not sure if this will catch every time we create a new useState
   if (
     instr.value.kind === 'Destructure' &&
     instr.value.lvalue.pattern.kind === 'ArrayPattern' &&
@@ -117,7 +118,6 @@ function parseInstr(
     }
   }
 
-  // If the instruction is calling a setState
   if (
     instr.value.kind === 'CallExpression' &&
     isSetStateType(instr.value.callee.identifier) &&
@@ -297,7 +297,6 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
         }
       }
 
-      // Maybe this should run for every instruction being parsed
       if (value.kind === 'LoadLocal') {
         locals.set(lvalue.identifier.id, value.place.identifier.id);
       } else if (value.kind === 'ArrayExpression') {
@@ -356,7 +355,8 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
      */
     if (
       setStateCalls.get(error.setStateName)?.length !=
-      effectSetStates.get(error.setStateName)?.length
+        effectSetStates.get(error.setStateName)?.length &&
+      error.errorType !== 'fromState'
     ) {
       reason =
         'Consider lifting state up to the parent component to make this a controlled component. (https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes)';
@@ -365,17 +365,9 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
         'You may not need this effect. Values derived from state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)';
     }
 
-    if (error.propInfo !== undefined) {
-      description += error.propInfo;
-    }
-
-    if (error.localStateInfo !== undefined) {
-      description += error.localStateInfo;
-    }
-
     throwableErrors.push({
       reason: reason,
-      description: description,
+      description: `You are using invalid dependencies: \n\n${error.invalidDepInfo}`,
       severity: ErrorSeverity.InvalidReact,
       loc: error.loc,
     });
@@ -410,7 +402,7 @@ function validateEffect(
     }
   }
 
-  // This might be wrong gotta double check
+  // TODO: This might be wrong gotta double check
   let hasInvalidDep = false;
   for (const dep of effectDeps) {
     const depMetadata = derivedTuple.get(dep);
@@ -512,23 +504,15 @@ function validateEffect(
             instr.value.args.length === 1 &&
             instr.value.args[0].kind === 'Identifier'
           ) {
-            const propSources = derivedTuple.get(
+            const invalidDeps = derivedTuple.get(
               instr.value.args[0].identifier.id,
             );
 
-            if (propSources !== undefined) {
+            if (invalidDeps !== undefined) {
               setStateCallsInEffect.push({
                 loc: instr.value.callee.loc,
                 setStateId: instr.value.callee.identifier.id,
-                invalidDeps: new Map([
-                  [instr.value.args[0].identifier, propSources.sources],
-                ]),
-              });
-            } else {
-              setStateCallsInEffect.push({
-                loc: instr.value.callee.loc,
-                setStateId: instr.value.callee.identifier.id,
-                invalidDeps: undefined,
+                invalidDeps: invalidDeps,
               });
             }
           }
@@ -550,34 +534,33 @@ function validateEffect(
   }
 
   for (const call of setStateCallsInEffect) {
-    if (call.invalidDeps != null) {
-      let propNames = '';
-      for (const [, places] of call.invalidDeps.entries()) {
-        const placeNames = places
-          .map(place => place.identifier.name?.value)
-          .join(', ');
-        propNames += `[${placeNames}], `;
-      }
-      propNames = propNames.slice(0, -2);
-      const propInfo = propNames ? ` (from props '${propNames}')` : '';
+    const placeNames = call.invalidDeps.sources
+      .map(place => place.identifier.name?.value)
+      .join(', ');
 
-      errors.push({
-        errorType: 'HoistState',
-        propInfo: propInfo,
-        localStateInfo: undefined,
-        loc: call.loc,
-        setStateName:
-          call.loc !== GeneratedSource ? call.loc.identifierName : undefined,
-      });
-    } else {
-      errors.push({
-        errorType: 'CalculateInRender',
-        propInfo: undefined,
-        localStateInfo: undefined,
-        loc: call.loc,
-        setStateName:
-          call.loc !== GeneratedSource ? call.loc.identifierName : undefined,
-      });
+    let sourceNames = '';
+    let invalidDepInfo = '';
+    console.log(call.invalidDeps);
+    if (call.invalidDeps.typeOfValue === 'fromProps') {
+      sourceNames += `[${placeNames}], `;
+      sourceNames = sourceNames.slice(0, -2);
+      invalidDepInfo = sourceNames
+        ? `Invalid deps from props ${sourceNames}`
+        : '';
+    } else if (call.invalidDeps.typeOfValue === 'fromState') {
+      sourceNames += `[${placeNames}], `;
+      sourceNames = sourceNames.slice(0, -2);
+      invalidDepInfo = sourceNames
+        ? `Invalid deps from local state: ${sourceNames}`
+        : '';
     }
+
+    errors.push({
+      errorType: call.invalidDeps.typeOfValue,
+      invalidDepInfo: invalidDepInfo,
+      loc: call.loc,
+      setStateName:
+        call.loc !== GeneratedSource ? call.loc.identifierName : undefined,
+    });
   }
 }
