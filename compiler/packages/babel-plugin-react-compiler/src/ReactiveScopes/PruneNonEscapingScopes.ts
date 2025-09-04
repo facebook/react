@@ -546,7 +546,7 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<
            * memoization. Note: we may still prune primitive-producing scopes if
            * they don't ultimately escape at all.
            */
-          const level = MemoizationLevel.Memoized;
+          const level = MemoizationLevel.Conditional;
           return {
             lvalues: lvalue !== null ? [{place: lvalue, level}] : [],
             rvalues: [...eachReactiveValueOperand(value)],
@@ -701,9 +701,7 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<
       }
       case 'ComputedLoad':
       case 'PropertyLoad': {
-        const level = options.forceMemoizePrimitives
-          ? MemoizationLevel.Memoized
-          : MemoizationLevel.Conditional;
+        const level = MemoizationLevel.Conditional;
         return {
           // Indirection for the inner value, memoized if the value is
           lvalues: lvalue !== null ? [{place: lvalue, level}] : [],
