@@ -145,7 +145,14 @@ class Visitor extends ReactiveFunctionTransform<VisitorState> {
           if (maybeHoistedFn != null) {
             CompilerError.invariant(maybeHoistedFn.kind === 'func', {
               reason: '[PruneHoistedContexts] Unexpected hoisted function',
-              loc: instruction.loc,
+              description: null,
+              details: [
+                {
+                  kind: 'error',
+                  loc: instruction.loc,
+                  message: null,
+                },
+              ],
             });
             maybeHoistedFn.definition = instruction.value.lvalue.place;
             /**

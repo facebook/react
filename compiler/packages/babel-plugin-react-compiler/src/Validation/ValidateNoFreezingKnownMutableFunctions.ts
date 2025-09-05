@@ -69,12 +69,12 @@ export function validateNoFreezingKnownMutableFunctions(
             reason: 'Cannot modify local variables after render completes',
             description: `This argument is a function which may reassign or mutate ${variable} after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.`,
           })
-            .withDetail({
+            .withDetails({
               kind: 'error',
               loc: operand.loc,
               message: `This function may (indirectly) reassign or modify ${variable} after render`,
             })
-            .withDetail({
+            .withDetails({
               kind: 'error',
               loc: effect.value.loc,
               message: `This modifies ${variable}`,

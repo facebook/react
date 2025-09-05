@@ -37,7 +37,7 @@ export enum ErrorSeverity {
 export type CompilerDiagnosticOptions = {
   category: ErrorCategory;
   reason: string;
-  description: string;
+  description: string | null;
   details: Array<CompilerDiagnosticDetail>;
   suggestions?: Array<CompilerSuggestion> | null | undefined;
 };
@@ -49,7 +49,7 @@ export type CompilerDiagnosticDetail =
   | {
       kind: 'error';
       loc: SourceLocation | null;
-      message: string;
+      message: string | null;
     }
   | {
       kind: 'hint';
@@ -126,8 +126,8 @@ export class CompilerDiagnostic {
     return this.options.category;
   }
 
-  withDetail(detail: CompilerDiagnosticDetail): CompilerDiagnostic {
-    this.options.details.push(detail);
+  withDetails(...details: Array<CompilerDiagnosticDetail>): CompilerDiagnostic {
+    this.options.details.push(...details);
     return this;
   }
 
@@ -155,9 +155,9 @@ export class CompilerDiagnostic {
           }
           let codeFrame: string;
           try {
-            codeFrame = printCodeFrame(source, loc, detail.message);
+            codeFrame = printCodeFrame(source, loc, detail.message ?? '');
           } catch (e) {
-            codeFrame = detail.message;
+            codeFrame = detail.message ?? '';
           }
           buffer.push('\n\n');
           if (loc.filename != null) {
@@ -284,15 +284,16 @@ export class CompilerError extends Error {
 
   static invariant(
     condition: unknown,
-    options: Omit<CompilerErrorDetailOptions, 'category'>,
+    options: Omit<CompilerDiagnosticOptions, 'category'>,
   ): asserts condition {
     if (!condition) {
       const errors = new CompilerError();
-      errors.pushErrorDetail(
-        new CompilerErrorDetail({
-          ...options,
+      errors.pushDiagnostic(
+        CompilerDiagnostic.create({
+          reason: options.reason,
+          description: options.description,
           category: ErrorCategory.Invariant,
-        }),
+        }).withDetails(...options.details),
       );
       throw errors;
     }

@@ -61,7 +61,13 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
     CompilerError.invariant(predecessor !== undefined, {
       reason: `Expected predecessor ${predecessorId} to exist`,
       description: null,
-      loc: null,
+      details: [
+        {
+          kind: 'error',
+          loc: null,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
     if (predecessor.terminal.kind !== 'goto' || predecessor.kind !== 'block') {
@@ -77,7 +83,13 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
       CompilerError.invariant(phi.operands.size === 1, {
         reason: `Found a block with a single predecessor but where a phi has multiple (${phi.operands.size}) operands`,
         description: null,
-        loc: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
       const operand = Array.from(phi.operands.values())[0]!;

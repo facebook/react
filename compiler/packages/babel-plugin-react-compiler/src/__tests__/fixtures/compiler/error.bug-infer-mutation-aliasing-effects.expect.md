@@ -31,13 +31,13 @@ Found 1 error:
 
 Invariant: [InferMutationAliasingEffects] Expected value kind to be initialized
 
-<unknown> thunk$14.
+<unknown> thunk$14
 
 error.bug-infer-mutation-aliasing-effects.ts:10:22
    8 |     function thunk(action) {
    9 |       if (typeof action === 'function') {
 > 10 |         return action(thunk, () => stateRef.current, extraArg);
-     |                       ^^^^^ [InferMutationAliasingEffects] Expected value kind to be initialized
+     |                       ^^^^^ this is uninitialized
   11 |       } else {
   12 |         dispatch(action);
   13 |         return undefined;

@@ -311,7 +311,13 @@ function insertNewOutlinedFunctionNode(
       CompilerError.invariant(insertedFuncDecl.isFunctionDeclaration(), {
         reason: 'Expected inserted function declaration',
         description: `Got: ${insertedFuncDecl}`,
-        loc: insertedFuncDecl.node?.loc ?? null,
+        details: [
+          {
+            kind: 'error',
+            loc: insertedFuncDecl.node?.loc ?? null,
+            message: null,
+          },
+        ],
       });
       return insertedFuncDecl;
     }
@@ -420,7 +426,14 @@ export function compileProgram(
       for (const outlined of compiled.outlined) {
         CompilerError.invariant(outlined.fn.outlined.length === 0, {
           reason: 'Unexpected nested outlined functions',
-          loc: outlined.fn.loc,
+          description: null,
+          details: [
+            {
+              kind: 'error',
+              loc: outlined.fn.loc,
+              message: null,
+            },
+          ],
         });
         const fn = insertNewOutlinedFunctionNode(
           program,
@@ -1408,7 +1421,13 @@ export function getReactCompilerRuntimeModule(
       {
         reason: 'Expected target to already be validated',
         description: null,
-        loc: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
         suggestions: null,
       },
     );

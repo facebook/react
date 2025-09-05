@@ -83,7 +83,14 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
             const dependencies: Array<IdentifierId> = deps.elements.map(dep => {
               CompilerError.invariant(dep.kind === 'Identifier', {
                 reason: `Dependency is checked as a place above`,
-                loc: value.loc,
+                description: null,
+                details: [
+                  {
+                    kind: 'error',
+                    loc: value.loc,
+                    message: 'this is checked as a place above',
+                  },
+                ],
               });
               return locals.get(dep.identifier.id) ?? dep.identifier.id;
             });
