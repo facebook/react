@@ -1368,7 +1368,7 @@ describe('TreeListContext', () => {
                ▾ <Child>
                  ▾ <Suspense>
                      <Grandchild>
-        [shell]
+        [suspense-root]  rects={null}
           <Suspense name="Parent>?" rects={null}>
             <Suspense name="Child>?" rects={null}>
       `);
@@ -1410,7 +1410,7 @@ describe('TreeListContext', () => {
                ▾ <Child>
                  ▾ <Suspense>
                      <Grandchild>
-        [shell]
+        [suspense-root]  rects={null}
           <Suspense name="Parent>?" rects={null}>
             <Suspense name="Child>?" rects={null}>
       `);
@@ -2369,7 +2369,7 @@ describe('TreeListContext', () => {
         expect(state).toMatchInlineSnapshot(`
           [root]
                <Suspense>
-          [shell]
+          [suspense-root]  rects={null}
             <Suspense name="Unknown" rects={null}>
         `);
 
@@ -2378,7 +2378,7 @@ describe('TreeListContext', () => {
         expect(state).toMatchInlineSnapshot(`
           [root]
                <Suspense>
-          [shell]
+          [suspense-root]  rects={null}
             <Suspense name="Unknown" rects={null}>
         `);
       });
@@ -2404,7 +2404,7 @@ describe('TreeListContext', () => {
         expect(state).toMatchInlineSnapshot(`
           [root]
                <Suspense>
-          [shell]
+          [suspense-root]  rects={null}
             <Suspense name="Unknown" rects={null}>
         `);
 
@@ -2426,7 +2426,7 @@ describe('TreeListContext', () => {
              ▾ <Suspense>
                  <Child> ⚠
                  <Child>
-          [shell]
+          [suspense-root]  rects={null}
             <Suspense name="Unknown" rects={null}>
         `);
       });
@@ -2456,7 +2456,7 @@ describe('TreeListContext', () => {
              ▾ <Suspense>
                ▾ <Fallback>
                    <Child> ✕
-          [shell]
+          [suspense-root]  rects={null}
             <Suspense name="Unknown" rects={null}>
         `);
 
@@ -2475,7 +2475,7 @@ describe('TreeListContext', () => {
           [root]
              ▾ <Suspense>
                  <Child>
-          [shell]
+          [suspense-root]  rects={null}
             <Suspense name="Unknown" rects={null}>
         `);
       });
