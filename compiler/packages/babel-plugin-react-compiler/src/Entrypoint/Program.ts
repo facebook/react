@@ -11,7 +11,6 @@ import {
   CompilerError,
   CompilerErrorDetail,
   ErrorCategory,
-  ErrorSeverity,
 } from '../CompilerError';
 import {ExternalFunction, ReactFunctionType} from '../HIR/Environment';
 import {CodegenFunction} from '../ReactiveScopes';
@@ -105,7 +104,6 @@ function findDirectivesDynamicGating(
         errors.push({
           reason: `Dynamic gating directive is not a valid JavaScript identifier`,
           description: `Found '${directive.value.value}'`,
-          severity: ErrorSeverity.InvalidReact,
           category: ErrorCategory.Gating,
           loc: directive.loc ?? null,
           suggestions: null,
@@ -122,7 +120,6 @@ function findDirectivesDynamicGating(
       description: `Expected a single directive but found [${result
         .map(r => r.directive.value.value)
         .join(', ')}]`,
-      severity: ErrorSeverity.InvalidReact,
       category: ErrorCategory.Gating,
       loc: result[0].directive.loc ?? null,
       suggestions: null,
@@ -141,15 +138,13 @@ function findDirectivesDynamicGating(
   }
 }
 
-function isCriticalError(err: unknown): boolean {
-  return !(err instanceof CompilerError) || err.isCritical();
+function isError(err: unknown): boolean {
+  return !(err instanceof CompilerError) || err.isError();
 }
 
 function isConfigError(err: unknown): boolean {
   if (err instanceof CompilerError) {
-    return err.details.some(
-      detail => detail.severity === ErrorSeverity.InvalidConfig,
-    );
+    return err.details.some(detail => detail.category === ErrorCategory.Config);
   }
   return false;
 }
@@ -214,8 +209,7 @@ function handleError(
   logError(err, context, fnLoc);
   if (
     context.opts.panicThreshold === 'all_errors' ||
-    (context.opts.panicThreshold === 'critical_errors' &&
-      isCriticalError(err)) ||
+    (context.opts.panicThreshold === 'critical_errors' && isError(err)) ||
     isConfigError(err) // Always throws regardless of panic threshold
   ) {
     throw err;
@@ -458,7 +452,6 @@ export function compileProgram(
         new CompilerErrorDetail({
           reason:
             'Unexpected compiled functions when module scope opt-out is present',
-          severity: ErrorSeverity.Invariant,
           category: ErrorCategory.Invariant,
           loc: null,
         }),
@@ -827,7 +820,6 @@ function shouldSkipCompilation(
           reason: `Expected a filename but found none.`,
           description:
             "When the 'sources' config options is specified, the React compiler will only compile files with a name",
-          severity: ErrorSeverity.InvalidConfig,
           category: ErrorCategory.Config,
           loc: null,
         }),
@@ -890,7 +882,6 @@ function validateNoDynamicallyCreatedComponentsOrHooks(
       if (nestedFnType === 'Component' || nestedFnType === 'Hook') {
         CompilerError.throwDiagnostic({
           category: ErrorCategory.Factories,
-          severity: ErrorSeverity.InvalidReact,
           reason: `Components and hooks cannot be created dynamically`,
           description: `The function \`${nestedName}\` appears to be a React ${nestedFnType.toLowerCase()}, but it's defined inside \`${parentName}\`. Components and Hooks should always be declared at module scope`,
           details: [

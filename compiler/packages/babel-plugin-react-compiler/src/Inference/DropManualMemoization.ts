@@ -5,12 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
-  CompilerDiagnostic,
-  CompilerError,
-  ErrorSeverity,
-  SourceLocation,
-} from '..';
+import {CompilerDiagnostic, CompilerError, SourceLocation} from '..';
 import {ErrorCategory} from '../CompilerError';
 import {
   CallExpression,
@@ -302,7 +297,6 @@ function extractManualMemoizationArgs(
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
         category: ErrorCategory.UseMemo,
-        severity: ErrorSeverity.InvalidReact,
         reason: `Expected a callback function to be passed to ${kind}`,
         description: `Expected a callback function to be passed to ${kind}`,
         suggestions: null,
@@ -318,7 +312,6 @@ function extractManualMemoizationArgs(
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
         category: ErrorCategory.UseMemo,
-        severity: ErrorSeverity.InvalidReact,
         reason: `Unexpected spread argument to ${kind}`,
         description: `Unexpected spread argument to ${kind}`,
         suggestions: null,
@@ -339,7 +332,6 @@ function extractManualMemoizationArgs(
       errors.pushDiagnostic(
         CompilerDiagnostic.create({
           category: ErrorCategory.UseMemo,
-          severity: ErrorSeverity.InvalidReact,
           reason: `Expected the dependency list for ${kind} to be an array literal`,
           description: `Expected the dependency list for ${kind} to be an array literal`,
           suggestions: null,
@@ -358,7 +350,6 @@ function extractManualMemoizationArgs(
         errors.pushDiagnostic(
           CompilerDiagnostic.create({
             category: ErrorCategory.UseMemo,
-            severity: ErrorSeverity.InvalidReact,
             reason: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
             description: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
             suggestions: null,
@@ -463,7 +454,6 @@ export function dropManualMemoization(
               if (!hasNonVoidReturn(funcToCheck.loweredFunc.func)) {
                 errors.pushDiagnostic(
                   CompilerDiagnostic.create({
-                    severity: ErrorSeverity.InvalidReact,
                     category: ErrorCategory.UseMemo,
                     reason: 'useMemo() callbacks must return a value',
                     description: `This ${
@@ -505,7 +495,6 @@ export function dropManualMemoization(
               errors.pushDiagnostic(
                 CompilerDiagnostic.create({
                   category: ErrorCategory.UseMemo,
-                  severity: ErrorSeverity.InvalidReact,
                   reason: `Expected the first argument to be an inline function expression`,
                   description: `Expected the first argument to be an inline function expression`,
                   suggestions: [],

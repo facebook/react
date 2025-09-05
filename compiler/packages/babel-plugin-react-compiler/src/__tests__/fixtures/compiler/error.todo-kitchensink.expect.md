@@ -92,7 +92,7 @@ error.todo-kitchensink.ts:3:2
   5 |   class Bar {
   6 |     #secretSauce = 42;
 
-Error: Inline `class` declarations are not supported
+Compilation Skipped: Inline `class` declarations are not supported
 
 Move class declarations outside of components/hooks.
 

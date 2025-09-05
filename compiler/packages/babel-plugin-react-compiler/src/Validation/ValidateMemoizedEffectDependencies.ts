@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, ErrorSeverity} from '..';
+import {CompilerError} from '..';
 import {ErrorCategory} from '../CompilerError';
 import {
   Identifier,
@@ -113,7 +113,6 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
           reason:
             'React Compiler has skipped optimizing this component because the effect dependencies could not be memoized. Unmemoized effect dependencies can trigger an infinite loop or other unexpected behavior',
           description: null,
-          severity: ErrorSeverity.CannotPreserveMemoization,
           loc: typeof instruction.loc !== 'symbol' ? instruction.loc : null,
           suggestions: null,
         });

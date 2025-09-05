@@ -74,4 +74,4 @@ const tests: CompilerTestCases = {
 const eslintTester = new ESLintTesterV8({
   parser: require.resolve('@typescript-eslint/parser-v5'),
 });
-eslintTester.run('react-compiler', allRules['immutability'], tests);
+eslintTester.run('react-compiler', allRules['immutability'].rule, tests);

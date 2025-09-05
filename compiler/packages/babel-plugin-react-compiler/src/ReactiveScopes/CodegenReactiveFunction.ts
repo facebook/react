@@ -13,7 +13,7 @@ import {
   pruneUnusedLabels,
   renameVariables,
 } from '.';
-import {CompilerError, ErrorCategory, ErrorSeverity} from '../CompilerError';
+import {CompilerError, ErrorCategory} from '../CompilerError';
 import {Environment, ExternalFunction} from '../HIR';
 import {
   ArrayPattern,
@@ -2184,7 +2184,6 @@ function codegenInstructionValue(
               reason: `(CodegenReactiveFunction::codegenInstructionValue) Cannot declare variables in a value block, tried to declare '${
                 (declarator.id as t.Identifier).name
               }'`,
-              severity: ErrorSeverity.Todo,
               category: ErrorCategory.Todo,
               loc: declarator.loc ?? null,
               suggestions: null,
@@ -2193,7 +2192,6 @@ function codegenInstructionValue(
           } else {
             cx.errors.push({
               reason: `(CodegenReactiveFunction::codegenInstructionValue) Handle conversion of ${stmt.type} to expression`,
-              severity: ErrorSeverity.Todo,
               category: ErrorCategory.Todo,
               loc: stmt.loc ?? null,
               suggestions: null,

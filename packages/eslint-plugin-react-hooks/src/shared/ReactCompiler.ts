@@ -13,8 +13,9 @@ import {
   CompilerSuggestionOperation,
   LintRules,
   type LintRule,
+  ErrorSeverity,
 } from 'babel-plugin-react-compiler';
-import type {Rule} from 'eslint';
+import {type Linter, type Rule} from 'eslint';
 import runReactCompiler, {RunCacheEntry} from './RunReactCompiler';
 
 function assertExhaustive(_: never, errorMsg: string): never {
@@ -191,26 +192,54 @@ export const NoUnusedDirectivesRule: Rule.RuleModule = {
   },
 };
 
-type RulesObject = {[name: string]: Rule.RuleModule};
+type RulesConfig = {
+  [name: string]: {rule: Rule.RuleModule; severity: ErrorSeverity};
+};
 
-export const allRules: RulesObject = LintRules.reduce(
+export const allRules: RulesConfig = LintRules.reduce(
   (acc, rule) => {
-    acc[rule.name] = makeRule(rule);
+    acc[rule.name] = {rule: makeRule(rule), severity: rule.severity};
     return acc;
   },
   {
-    'no-unused-directives': NoUnusedDirectivesRule,
-  } as RulesObject,
+    'no-unused-directives': {
+      rule: NoUnusedDirectivesRule,
+      severity: ErrorSeverity.Error,
+    },
+  } as RulesConfig,
 );
 
-export const recommendedRules: RulesObject = LintRules.filter(
+export const recommendedRules: RulesConfig = LintRules.filter(
   rule => rule.recommended,
 ).reduce(
   (acc, rule) => {
-    acc[rule.name] = makeRule(rule);
+    acc[rule.name] = {rule: makeRule(rule), severity: rule.severity};
     return acc;
   },
   {
-    'no-unused-directives': NoUnusedDirectivesRule,
-  } as RulesObject,
+    'no-unused-directives': {
+      rule: NoUnusedDirectivesRule,
+      severity: ErrorSeverity.Error,
+    },
+  } as RulesConfig,
 );
+
+export function mapErrorSeverityToESlint(
+  severity: ErrorSeverity,
+): Linter.StringSeverity {
+  switch (severity) {
+    case ErrorSeverity.Error: {
+      return 'error';
+    }
+    case ErrorSeverity.Warning: {
+      return 'warn';
+    }
+    case ErrorSeverity.Hint:
+    case ErrorSeverity.Off: {
+      return 'off';
+    }
+    default: {
+      assertExhaustive(severity, `Unhandled severity: ${severity}`);
+    }
+  }
+}
