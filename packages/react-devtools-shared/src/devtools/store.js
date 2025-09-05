@@ -24,6 +24,7 @@ import {
   SUSPENSE_TREE_OPERATION_REMOVE,
   SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
   SUSPENSE_TREE_OPERATION_RESIZE,
+  SUSPENSE_TREE_OPERATION_SUSPENDERS,
 } from '../constants';
 import {ElementTypeRoot} from '../frontend/types';
 import {
@@ -879,8 +880,13 @@ export default class Store extends EventEmitter<{
     return null;
   }
 
+  /**
+   * @param rootID
+   * @param uniqueSuspendersOnly Filters out boundaries without unique suspenders
+   */
   getSuspendableDocumentOrderSuspense(
     rootID: Element['id'] | void,
+    uniqueSuspendersOnly: boolean,
   ): $ReadOnlyArray<SuspenseNode['id']> {
     if (rootID === undefined) {
       return [];
@@ -892,7 +898,7 @@ export default class Store extends EventEmitter<{
     if (!this.supportsTogglingSuspense(root.id)) {
       return [];
     }
-    const suspenseTreeList: SuspenseNode['id'][] = [];
+    const list: SuspenseNode['id'][] = [];
     const suspense = this.getSuspenseByID(root.id);
     if (suspense !== null) {
       const stack = [suspense];
@@ -901,9 +907,11 @@ export default class Store extends EventEmitter<{
         if (current === undefined) {
           continue;
         }
-        // Include the root even if we won't suspend it.
+        // Include the root even if we won't show it suspended (because that's just blank).
         // You should be able to see what suspended the shell.
-        suspenseTreeList.push(current.id);
+        if (!uniqueSuspendersOnly || current.hasUniqueSuspenders) {
+          list.push(current.id);
+        }
         // Add children in reverse order to maintain document order
         for (let j = current.children.length - 1; j >= 0; j--) {
           const childSuspense = this.getSuspenseByID(current.children[j]);
@@ -914,7 +922,7 @@ export default class Store extends EventEmitter<{
       }
     }
 
-    return suspenseTreeList;
+    return list;
   }
 
   getRendererIDForElement(id: number): number | null {
@@ -1580,6 +1588,7 @@ export default class Store extends EventEmitter<{
             children: [],
             name,
             rects,
+            hasUniqueSuspenders: false,
           });
 
           hasSuspenseTreeChanged = true;
@@ -1743,6 +1752,42 @@ export default class Store extends EventEmitter<{
                       .join(',')
               }`,
             );
+          }
+
+          hasSuspenseTreeChanged = true;
+
+          break;
+        }
+        case SUSPENSE_TREE_OPERATION_SUSPENDERS: {
+          const changeLength = operations[i + 1];
+          i += 2;
+
+          for (let changeIndex = 0; changeIndex < changeLength; changeIndex++) {
+            const id = operations[i];
+            const hasUniqueSuspenders = operations[i + 1] === 1;
+            const suspense = this._idToSuspense.get(id);
+
+            if (suspense === undefined) {
+              this._throwAndEmitError(
+                Error(
+                  `Cannot update suspenders of suspense node "${id}" because no matching node was found in the Store.`,
+                ),
+              );
+
+              break;
+            }
+
+            i += 2;
+
+            if (__DEBUG__) {
+              const previousHasUniqueSuspenders = suspense.hasUniqueSuspenders;
+              debug(
+                'Suspender changes',
+                `Suspense node ${id} unique suspenders set to ${String(hasUniqueSuspenders)} (was ${String(previousHasUniqueSuspenders)})`,
+              );
+            }
+
+            suspense.hasUniqueSuspenders = hasUniqueSuspenders;
           }
 
           hasSuspenseTreeChanged = true;
