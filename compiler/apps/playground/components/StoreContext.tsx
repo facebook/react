@@ -56,7 +56,7 @@ type ReducerAction =
       type: 'updateFile';
       payload: {
         source: string;
-        config?: string;
+        config: string;
       };
     }
   | {
@@ -74,7 +74,7 @@ function storeReducer(store: Store, action: ReducerAction): Store {
       const newStore = {
         ...store,
         source,
-        config: config ?? '',
+        config,
       };
       return newStore;
     }

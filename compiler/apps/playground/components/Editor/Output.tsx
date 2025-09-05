@@ -229,11 +229,9 @@ function Output({store, compilerOutput}: Props): JSX.Element {
   }
 
   useEffect(() => {
-    tabify(store.source, compilerOutput, store.showInternals ?? false).then(
-      tabs => {
-        setTabs(tabs);
-      },
-    );
+    tabify(store.source, compilerOutput, store.showInternals).then(tabs => {
+      setTabs(tabs);
+    });
   }, [store.source, compilerOutput, store.showInternals]);
 
   const changedPasses: Set<string> = new Set(['Output', 'HIR']); // Initial and final passes should always be bold

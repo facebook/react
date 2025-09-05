@@ -138,7 +138,7 @@ export default function ConfigEditor(): React.ReactElement {
               <MonacoEditor
                 path={'config.ts'}
                 language={'typescript'}
-                value={store.config ?? ''}
+                value={store.config}
                 onMount={handleMount}
                 onChange={handleChange}
                 options={{
