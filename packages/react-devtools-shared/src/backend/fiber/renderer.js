@@ -88,6 +88,7 @@ import {
   SUSPENSE_TREE_OPERATION_REMOVE,
   SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
   SUSPENSE_TREE_OPERATION_RESIZE,
+  SUSPENSE_TREE_OPERATION_SUSPENDERS,
   UNKNOWN_SUSPENDERS_NONE,
   UNKNOWN_SUSPENDERS_REASON_PRODUCTION,
   UNKNOWN_SUSPENDERS_REASON_OLD_VERSION,
@@ -2016,6 +2017,7 @@ export function attach(
   const pendingOperations: OperationsArray = [];
   const pendingRealUnmountedIDs: Array<FiberInstance['id']> = [];
   const pendingRealUnmountedSuspenseIDs: Array<FiberInstance['id']> = [];
+  const pendingSuspenderChanges: Set<FiberInstance['id']> = new Set();
   let pendingOperationsQueue: Array<OperationsArray> | null = [];
   const pendingStringTable: Map<string, StringTableEntry> = new Map();
   let pendingStringTableLength: number = 0;
@@ -2047,6 +2049,7 @@ export function attach(
       pendingOperations.length === 0 &&
       pendingRealUnmountedIDs.length === 0 &&
       pendingRealUnmountedSuspenseIDs.length === 0 &&
+      pendingSuspenderChanges.size === 0 &&
       pendingUnmountedRootID === null
     );
   }
@@ -2113,6 +2116,7 @@ export function attach(
       pendingRealUnmountedIDs.length +
       (pendingUnmountedRootID === null ? 0 : 1);
     const numUnmountSuspenseIDs = pendingRealUnmountedSuspenseIDs.length;
+    const numSuspenderChanges = pendingSuspenderChanges.size;
 
     const operations = new Array<number>(
       // Identify which renderer this update is coming from.
@@ -2128,7 +2132,10 @@ export function attach(
         // [TREE_OPERATION_REMOVE, removedIDLength, ...ids]
         (numUnmountIDs > 0 ? 2 + numUnmountIDs : 0) +
         // Regular operations
-        pendingOperations.length,
+        pendingOperations.length +
+        // All suspender changes are batched in a single message.
+        // [SUSPENSE_TREE_OPERATION_SUSPENDERS, suspenderChangesLength, ...[id, hasUniqueSuspenders]]
+        (numSuspenderChanges > 0 ? 2 + numSuspenderChanges * 2 : 0),
     );
 
     // Identify which renderer this update is coming from.
@@ -2191,11 +2198,30 @@ export function attach(
         i++;
       }
     }
-    // Fill in the rest of the operations.
+
+    // Fill in pending operations.
     for (let j = 0; j < pendingOperations.length; j++) {
       operations[i + j] = pendingOperations[j];
     }
     i += pendingOperations.length;
+
+    // Suspender changes might affect newly mounted nodes that we already recorded
+    // in pending operations.
+    if (numSuspenderChanges > 0) {
+      operations[i++] = SUSPENSE_TREE_OPERATION_SUSPENDERS;
+      operations[i++] = numSuspenderChanges;
+      pendingSuspenderChanges.forEach(fiberIdWithChanges => {
+        const suspense = idToSuspenseNodeMap.get(fiberIdWithChanges);
+        if (suspense === undefined) {
+          // Probably forgot to cleanup pendingSuspenderChanges when this node was removed.
+          throw new Error(
+            `Could not send suspender changes for "${fiberIdWithChanges}" since the Fiber no longer exists.`,
+          );
+        }
+        operations[i++] = fiberIdWithChanges;
+        operations[i++] = suspense.hasUniqueSuspenders ? 1 : 0;
+      });
+    }
 
     // Let the frontend know about tree operations.
     flushOrQueueOperations(operations);
@@ -2204,6 +2230,7 @@ export function attach(
     pendingOperations.length = 0;
     pendingRealUnmountedIDs.length = 0;
     pendingRealUnmountedSuspenseIDs.length = 0;
+    pendingSuspenderChanges.clear();
     pendingUnmountedRootID = null;
     pendingStringTable.clear();
     pendingStringTableLength = 0;
@@ -2688,6 +2715,19 @@ export function attach(
     }
   }
 
+  function recordSuspenseSuspenders(suspenseNode: SuspenseNode): void {
+    if (__DEBUG__) {
+      console.log('recordSuspenseSuspenders()', suspenseNode);
+    }
+    const fiberInstance = suspenseNode.instance;
+    if (fiberInstance.kind !== FIBER_INSTANCE) {
+      // TODO: Suspender updates of filtered Suspense nodes are currently dropped.
+      return;
+    }
+
+    pendingSuspenderChanges.add(fiberInstance.id);
+  }
+
   function recordSuspenseUnmount(suspenseInstance: SuspenseNode): void {
     if (__DEBUG__) {
       console.log(
@@ -2709,6 +2749,7 @@ export function attach(
     // and later arrange them in the correct order.
     pendingRealUnmountedSuspenseIDs.push(id);
 
+    pendingSuspenderChanges.delete(id);
     idToSuspenseNodeMap.delete(id);
   }
 
@@ -2779,6 +2820,7 @@ export function attach(
       ) {
         // This didn't exist in the parent before, so let's mark this boundary as having a unique suspender.
         parentSuspenseNode.hasUniqueSuspenders = true;
+        recordSuspenseSuspenders(parentSuspenseNode);
       }
     }
     // We have observed at least one known reason this might have been suspended.
@@ -2820,6 +2862,9 @@ export function attach(
         // We have found a child boundary that depended on the unblocked I/O.
         // It can now be marked as having unique suspenders. We can skip its children
         // since they'll still be blocked by this one.
+        if (!node.hasUniqueSuspenders) {
+          recordSuspenseSuspenders(node);
+        }
         node.hasUniqueSuspenders = true;
         node.hasUnknownSuspenders = false;
       } else if (node.firstChild !== null) {
@@ -3522,6 +3567,9 @@ export function attach(
       // Unfortunately if we don't have any DEV time debug info or debug thenables then
       // we have no meta data to show. However, we still mark this Suspense boundary as
       // participating in the loading sequence since apparently it can suspend.
+      if (!suspenseNode.hasUniqueSuspenders) {
+        recordSuspenseSuspenders(suspenseNode);
+      }
       suspenseNode.hasUniqueSuspenders = true;
       // We have not seen any reason yet for why this suspense node might have been
       // suspended but it clearly has been at some point. If we later discover a reason
