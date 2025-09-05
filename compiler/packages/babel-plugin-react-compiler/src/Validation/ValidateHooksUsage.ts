@@ -129,7 +129,6 @@ export function validateHooksUsage(
           description: null,
           reason,
           loc: place.loc,
-          severity: ErrorSeverity.InvalidReact,
           suggestions: null,
         }),
       );
@@ -147,7 +146,6 @@ export function validateHooksUsage(
           reason:
             'Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values',
           loc: place.loc,
-          severity: ErrorSeverity.InvalidReact,
           suggestions: null,
         }),
       );
@@ -165,7 +163,6 @@ export function validateHooksUsage(
           reason:
             'Hooks must be the same function on every render, but this value may change over time to a different function. See https://react.dev/reference/rules/react-calls-components-and-hooks#dont-dynamically-use-hooks',
           loc: place.loc,
-          severity: ErrorSeverity.InvalidReact,
           suggestions: null,
         }),
       );
@@ -453,7 +450,6 @@ function visitFunctionExpression(errors: CompilerError, fn: HIRFunction): void {
             errors.pushErrorDetail(
               new CompilerErrorDetail({
                 category: ErrorCategory.Hooks,
-                severity: ErrorSeverity.InvalidReact,
                 reason:
                   'Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)',
                 loc: callee.loc,

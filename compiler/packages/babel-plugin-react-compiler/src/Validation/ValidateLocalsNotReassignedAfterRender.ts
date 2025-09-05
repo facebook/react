@@ -38,7 +38,6 @@ export function validateLocalsNotReassignedAfterRender(fn: HIRFunction): void {
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
         category: ErrorCategory.Immutability,
-        severity: ErrorSeverity.InvalidReact,
         reason: 'Cannot reassign variable after render completes',
         description: `Reassigning ${variable} after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.`,
       }).withDetail({
@@ -94,7 +93,6 @@ function getContextReassignment(
               errors.pushDiagnostic(
                 CompilerDiagnostic.create({
                   category: ErrorCategory.Immutability,
-                  severity: ErrorSeverity.InvalidReact,
                   reason: 'Cannot reassign variable in async function',
                   description:
                     'Reassigning a variable in an async function can cause inconsistent behavior on subsequent renders. Consider using state instead',

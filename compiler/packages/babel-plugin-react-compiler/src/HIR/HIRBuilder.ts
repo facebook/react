@@ -309,8 +309,7 @@ export default class HIRBuilder {
   resolveBinding(node: t.Identifier): Identifier {
     if (node.name === 'fbt') {
       CompilerError.throwDiagnostic({
-        severity: ErrorSeverity.Todo,
-        category: ErrorCategory.FBT,
+        category: ErrorCategory.Todo,
         reason: 'Support local variables named `fbt`',
         description:
           'Local variables named `fbt` may conflict with the fbt plugin and are not yet supported',
@@ -325,7 +324,6 @@ export default class HIRBuilder {
     }
     if (node.name === 'this') {
       CompilerError.throwDiagnostic({
-        severity: ErrorSeverity.UnsupportedJS,
         category: ErrorCategory.UnsupportedSyntax,
         reason: '`this` is not supported syntax',
         description:

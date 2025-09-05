@@ -44,7 +44,6 @@ export function validateNoImpureFunctionsInRender(
                   ? `\`${signature.canonicalName}\` is an impure function. `
                   : '') +
                 'Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent)',
-              severity: ErrorSeverity.InvalidReact,
               suggestions: null,
             }).withDetail({
               kind: 'error',

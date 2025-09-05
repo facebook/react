@@ -20,19 +20,15 @@ import {
 } from '../CompilerError';
 
 function throwInvalidReact(
-  options: Omit<CompilerDiagnosticOptions, 'severity'>,
+  options: CompilerDiagnosticOptions,
   {logger, filename}: TraversalState,
 ): never {
-  const detail: CompilerDiagnosticOptions = {
-    severity: ErrorSeverity.InvalidReact,
-    ...options,
-  };
   logger?.logEvent(filename, {
     kind: 'CompileError',
     fnLoc: null,
-    detail: new CompilerDiagnostic(detail),
+    detail: new CompilerDiagnostic(options),
   });
-  CompilerError.throwDiagnostic(detail);
+  CompilerError.throwDiagnostic(options);
 }
 
 function isAutodepsSigil(

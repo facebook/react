@@ -82,7 +82,6 @@ export function validateNoCapitalizedCalls(
           if (propertyName != null) {
             errors.push({
               category: ErrorCategory.CapitalizedCalls,
-              severity: ErrorSeverity.InvalidReact,
               reason,
               description: `${propertyName} may be a component.`,
               loc: value.loc,

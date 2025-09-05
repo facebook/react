@@ -186,7 +186,6 @@ export function suppressionsToCompilerError(
       CompilerDiagnostic.create({
         reason: reason,
         description: `React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior. Found suppression \`${suppressionRange.disableComment.value.trim()}\``,
-        severity: ErrorSeverity.InvalidReact,
         category: ErrorCategory.Suppression,
         suggestions: [
           {

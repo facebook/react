@@ -455,7 +455,6 @@ function applySignature(
                 : 'value';
             const diagnostic = CompilerDiagnostic.create({
               category: ErrorCategory.Immutability,
-              severity: ErrorSeverity.InvalidReact,
               reason: 'This value cannot be modified',
               description: `${reason}.`,
             }).withDetail({
@@ -1040,7 +1039,6 @@ function applyEffect(
           );
           const diagnostic = CompilerDiagnostic.create({
             category: ErrorCategory.Immutability,
-            severity: ErrorSeverity.InvalidReact,
             reason: 'Cannot access variable before it is declared',
             description: `${variable ?? 'This variable'} is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.`,
           });
@@ -1080,7 +1078,6 @@ function applyEffect(
               : 'value';
           const diagnostic = CompilerDiagnostic.create({
             category: ErrorCategory.Immutability,
-            severity: ErrorSeverity.InvalidReact,
             reason: 'This value cannot be modified',
             description: `${reason}.`,
           }).withDetail({
@@ -2056,7 +2053,6 @@ function computeSignatureForInstruction(
         place: value.value,
         error: CompilerDiagnostic.create({
           category: ErrorCategory.Globals,
-          severity: ErrorSeverity.InvalidReact,
           reason:
             'Cannot reassign variables declared outside of the component/hook',
           description: `Variable ${variable} is declared outside of the component/hook. Reassigning this value during render is a form of side effect, which can cause unpredictable behavior depending on when the component happens to re-render. If this variable is used in rendering, use useState instead. Otherwise, consider updating it in an effect. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render)`,
@@ -2156,7 +2152,6 @@ function computeEffectsForLegacySignature(
       place: receiver,
       error: CompilerDiagnostic.create({
         category: ErrorCategory.Purity,
-        severity: ErrorSeverity.InvalidReact,
         reason: 'Cannot call impure function during render',
         description:
           (signature.canonicalName != null
@@ -2175,7 +2170,6 @@ function computeEffectsForLegacySignature(
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
         category: ErrorCategory.IncompatibleLibrary,
-        severity: ErrorSeverity.IncompatibleLibrary,
         reason: 'Use of incompatible library',
         description: [
           'This API returns functions which cannot be memoized without leading to stale UI. ' +
