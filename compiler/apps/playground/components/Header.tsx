@@ -32,7 +32,15 @@ export default function Header(): JSX.Element {
        * such as "Bad URL" will be closed by the outputs calling `closeSnackbar`.
        */
       closeSnackbar();
-      dispatchStore({type: 'setStore', payload: {store: defaultStore}});
+      dispatchStore({
+        type: 'setStore',
+        payload: {
+          store: {
+            ...defaultStore,
+            showInternals: store.showInternals,
+          },
+        },
+      });
     }
   };
 

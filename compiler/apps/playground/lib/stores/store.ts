@@ -32,6 +32,10 @@ export function decodeStore(hash: string): any {
  */
 export function saveStore(store: Store): void {
   const hash = encodeStore(store);
+  localStorage.setItem(
+    'playgroundShowInternals',
+    store.showInternals.toString(),
+  );
   localStorage.setItem('playgroundStore', hash);
   history.replaceState({}, '', `#${hash}`);
 }
@@ -58,13 +62,22 @@ export function initStoreFromUrlOrLocalStorage(): Store {
   const encodedSourceFromLocal = localStorage.getItem('playgroundStore');
   const encodedSource = encodedSourceFromUrl || encodedSourceFromLocal;
 
+  // Prioritize local storage for showInternals field
+  const showInternals =
+    localStorage.getItem('playgroundShowInternals') === 'true';
+
   /**
    * No data in the URL and no data in the localStorage to fallback to.
    * Initialize with the default store.
    */
-  if (!encodedSource) return defaultStore;
+  if (!encodedSource) {
+    return {
+      ...defaultStore,
+      showInternals,
+    };
+  }
 
-  const raw: any = decodeStore(encodedSource);
+  const raw = decodeStore(encodedSource);
 
   invariant(isValidStore(raw), 'Invalid Store');
 
@@ -72,6 +85,6 @@ export function initStoreFromUrlOrLocalStorage(): Store {
   return {
     source: raw.source,
     config: 'config' in raw ? raw.config : defaultConfig,
-    showInternals: 'showInternals' in raw ? raw.showInternals : false,
+    showInternals,
   };
 }
