@@ -64,12 +64,16 @@ type Props = {
 async function tabify(
   source: string,
   compilerOutput: CompilerOutput,
+  showInternals: boolean,
 ): Promise<Map<string, ReactNode>> {
   const tabs = new Map<string, React.ReactNode>();
   const reorderedTabs = new Map<string, React.ReactNode>();
   const concattedResults = new Map<string, string>();
   // Concat all top level function declaration results into a single tab for each pass
   for (const [passName, results] of compilerOutput.results) {
+    if (!showInternals && (passName === 'Output' || passName === 'SourceMap')) {
+      continue;
+    }
     for (const result of results) {
       switch (result.kind) {
         case 'hir': {
@@ -225,9 +229,11 @@ function Output({store, compilerOutput}: Props): JSX.Element {
   }
 
   useEffect(() => {
-    tabify(store.source, compilerOutput).then(tabs => {
-      setTabs(tabs);
-    });
+    tabify(store.source, compilerOutput, store.showInternals ?? false).then(
+      tabs => {
+        setTabs(tabs);
+      },
+    );
   }, [store.source, compilerOutput]);
 
   const changedPasses: Set<string> = new Set(['Output', 'HIR']); // Initial and final passes should always be bold
@@ -245,26 +251,19 @@ function Output({store, compilerOutput}: Props): JSX.Element {
     }
   }
 
-  const filteredTabs = useMemo(() => {
-    if (store.showInternals) {
-      return tabs;
-    }
-    const allowedTabs = ['Output', 'SourceMap'];
-    return new Map(
-      allowedTabs
-        .map(tabName => [tabName, tabs.get(tabName)])
-        .filter(([, tab]) => tab !== undefined) as Array<
-        [string, React.ReactNode]
-      >,
-    );
-  }, [tabs, store.showInternals]);
-
-  const adjustedTabsOpen = useMemo(() => {
-    if (store.showInternals) {
-      return tabsOpen;
-    }
-    return new Set(Array.from(tabsOpen).filter(tab => filteredTabs.has(tab)));
-  }, [tabsOpen, filteredTabs, store.showInternals]);
+  const allowedTabs = ['Output', 'SourceMap']; // Always show output and source map
+  const filteredTabs = store.showInternals
+    ? tabs
+    : new Map(
+        allowedTabs
+          .map(tabName => [tabName, tabs.get(tabName)])
+          .filter(([, tab]) => tab !== undefined) as Array<
+          [string, React.ReactNode]
+        >,
+      );
+  const adjustedTabsOpen = new Set(
+    Array.from(tabsOpen).filter(tab => filteredTabs.has(tab)),
+  );
 
   return (
     <>
