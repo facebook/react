@@ -15,10 +15,7 @@ import {useContext, useLayoutEffect, useMemo, useRef, useState} from 'react';
 import {BridgeContext} from '../context';
 import {TreeDispatcherContext} from '../Components/TreeContext';
 import {useHighlightHostInstance} from '../hooks';
-import {
-  SuspenseTreeStateContext,
-  useSuspenseStore,
-} from './SuspenseTreeContext';
+import {useSuspenseStore} from './SuspenseTreeContext';
 import styles from './SuspenseTimeline.css';
 import typeof {
   SyntheticEvent,
@@ -218,9 +215,9 @@ function SuspenseTimelineInput({rootID}: {rootID: Element['id'] | void}) {
 
 export default function SuspenseTimeline(): React$Node {
   const store = useSuspenseStore();
-  const {shells} = useContext(SuspenseTreeStateContext);
 
-  const defaultSelectedRootID = shells.find(rootID => {
+  const roots = store.roots;
+  const defaultSelectedRootID = roots.find(rootID => {
     const suspense = store.getSuspenseByID(rootID);
     return (
       store.supportsTogglingSuspense(rootID) &&
@@ -243,13 +240,13 @@ export default function SuspenseTimeline(): React$Node {
   return (
     <div className={styles.SuspenseTimelineContainer}>
       <SuspenseTimelineInput key={selectedRootID} rootID={selectedRootID} />
-      {shells.length > 0 && (
+      {roots.length > 0 && (
         <select
           aria-label="Select Suspense Root"
           className={styles.SuspenseTimelineRootSwitcher}
           onChange={handleChange}
           value={selectedRootID}>
-          {shells.map(rootID => {
+          {roots.map(rootID => {
             // TODO: Use name
             const name = '#' + rootID;
             // TODO: Highlight host on hover
