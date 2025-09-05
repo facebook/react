@@ -78,6 +78,9 @@ export type CompilerSuggestion =
       description: string;
     };
 
+/**
+ * @deprecated use {@link CompilerDiagnosticOptions} instead
+ */
 export type CompilerErrorDetailOptions = {
   category: ErrorCategory;
   reason: string;
@@ -196,9 +199,11 @@ export class CompilerDiagnostic {
   }
 }
 
-/*
+/**
  * Each bailout or invariant in HIR lowering creates an {@link CompilerErrorDetail}, which is then
  * aggregated into a single {@link CompilerError} later.
+ *
+ * @deprecated use {@link CompilerDiagnostic} instead
  */
 export class CompilerErrorDetail {
   options: CompilerErrorDetailOptions;
@@ -268,13 +273,18 @@ export class CompilerErrorDetail {
   }
 }
 
+/**
+ * An aggregate of {@link CompilerDiagnostic}. This allows us to aggregate all issues found by the
+ * compiler into a single error before we throw. Where possible, prefer to push diagnostics into
+ * the error aggregate instead of throwing immediately.
+ */
 export class CompilerError extends Error {
   details: Array<CompilerErrorDetail | CompilerDiagnostic> = [];
   printedMessage: string | null = null;
 
   static invariant(
     condition: unknown,
-    options: Omit<CompilerErrorDetailOptions, 'severity' | 'category'>,
+    options: Omit<CompilerErrorDetailOptions, 'category'>,
   ): asserts condition {
     if (!condition) {
       const errors = new CompilerError();
@@ -295,7 +305,7 @@ export class CompilerError extends Error {
   }
 
   static throwTodo(
-    options: Omit<CompilerErrorDetailOptions, 'severity' | 'category'>,
+    options: Omit<CompilerErrorDetailOptions, 'category'>,
   ): never {
     const errors = new CompilerError();
     errors.pushErrorDetail(
@@ -308,7 +318,7 @@ export class CompilerError extends Error {
   }
 
   static throwInvalidJS(
-    options: Omit<CompilerErrorDetailOptions, 'severity' | 'category'>,
+    options: Omit<CompilerErrorDetailOptions, 'category'>,
   ): never {
     const errors = new CompilerError();
     errors.pushErrorDetail(
@@ -320,16 +330,14 @@ export class CompilerError extends Error {
     throw errors;
   }
 
-  static throwInvalidReact(
-    options: Omit<CompilerErrorDetailOptions, 'severity'>,
-  ): never {
+  static throwInvalidReact(options: CompilerErrorDetailOptions): never {
     const errors = new CompilerError();
     errors.pushErrorDetail(new CompilerErrorDetail(options));
     throw errors;
   }
 
   static throwInvalidConfig(
-    options: Omit<CompilerErrorDetailOptions, 'severity' | 'category'>,
+    options: Omit<CompilerErrorDetailOptions, 'category'>,
   ): never {
     const errors = new CompilerError();
     errors.pushErrorDetail(
@@ -397,6 +405,9 @@ export class CompilerError extends Error {
     this.details.push(diagnostic);
   }
 
+  /**
+   * @deprecated use {@link pushDiagnostic} instead
+   */
   push(options: CompilerErrorDetailOptions): CompilerErrorDetail {
     const detail = new CompilerErrorDetail({
       category: options.category,
@@ -408,6 +419,9 @@ export class CompilerError extends Error {
     return this.pushErrorDetail(detail);
   }
 
+  /**
+   * @deprecated use {@link pushDiagnostic} instead
+   */
   pushErrorDetail(detail: CompilerErrorDetail): CompilerErrorDetail {
     this.details.push(detail);
     return detail;
