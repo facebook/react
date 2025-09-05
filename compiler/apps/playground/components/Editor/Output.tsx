@@ -71,7 +71,7 @@ async function tabify(
   const concattedResults = new Map<string, string>();
   // Concat all top level function declaration results into a single tab for each pass
   for (const [passName, results] of compilerOutput.results) {
-    if (!showInternals && (passName === 'Output' || passName === 'SourceMap')) {
+    if (!showInternals && passName !== 'Output' && passName !== 'SourceMap') {
       continue;
     }
     for (const result of results) {
@@ -234,7 +234,7 @@ function Output({store, compilerOutput}: Props): JSX.Element {
         setTabs(tabs);
       },
     );
-  }, [store.source, compilerOutput]);
+  }, [store.source, compilerOutput, store.showInternals]);
 
   const changedPasses: Set<string> = new Set(['Output', 'HIR']); // Initial and final passes should always be bold
   let lastResult: string = '';
@@ -251,27 +251,13 @@ function Output({store, compilerOutput}: Props): JSX.Element {
     }
   }
 
-  const allowedTabs = ['Output', 'SourceMap']; // Always show output and source map
-  const filteredTabs = store.showInternals
-    ? tabs
-    : new Map(
-        allowedTabs
-          .map(tabName => [tabName, tabs.get(tabName)])
-          .filter(([, tab]) => tab !== undefined) as Array<
-          [string, React.ReactNode]
-        >,
-      );
-  const adjustedTabsOpen = new Set(
-    Array.from(tabsOpen).filter(tab => filteredTabs.has(tab)),
-  );
-
   return (
     <>
       <TabbedWindow
         defaultTab={store.showInternals ? 'HIR' : 'Output'}
         setTabsOpen={setTabsOpen}
-        tabsOpen={adjustedTabsOpen}
-        tabs={filteredTabs}
+        tabsOpen={tabsOpen}
+        tabs={tabs}
         changedPasses={changedPasses}
       />
     </>
