@@ -12,10 +12,13 @@ import type Store from '../../store';
 
 import * as React from 'react';
 import {useContext, useLayoutEffect, useMemo, useRef, useState} from 'react';
-import {BridgeContext, StoreContext} from '../context';
+import {BridgeContext} from '../context';
 import {TreeDispatcherContext} from '../Components/TreeContext';
 import {useHighlightHostInstance} from '../hooks';
-import {SuspenseTreeStateContext} from './SuspenseTreeContext';
+import {
+  SuspenseTreeStateContext,
+  useSuspenseStore,
+} from './SuspenseTreeContext';
 import styles from './SuspenseTimeline.css';
 import typeof {
   SyntheticEvent,
@@ -63,7 +66,7 @@ function getSuspendableDocumentOrderSuspense(
 
 function SuspenseTimelineInput({rootID}: {rootID: Element['id'] | void}) {
   const bridge = useContext(BridgeContext);
-  const store = useContext(StoreContext);
+  const store = useSuspenseStore();
   const dispatch = useContext(TreeDispatcherContext);
   const {highlightHostInstance, clearHighlightHostInstance} =
     useHighlightHostInstance();
@@ -161,6 +164,7 @@ function SuspenseTimelineInput({rootID}: {rootID: Element['id'] | void}) {
   function handleFocus() {
     const suspense = timeline[value];
 
+    dispatch({type: 'SELECT_ELEMENT_BY_ID', payload: suspense.id});
     highlightHostInstance(suspense.id);
   }
 
@@ -213,7 +217,7 @@ function SuspenseTimelineInput({rootID}: {rootID: Element['id'] | void}) {
 }
 
 export default function SuspenseTimeline(): React$Node {
-  const store = useContext(StoreContext);
+  const store = useSuspenseStore();
   const {shells} = useContext(SuspenseTreeStateContext);
 
   const defaultSelectedRootID = shells.find(rootID => {
@@ -243,16 +247,14 @@ export default function SuspenseTimeline(): React$Node {
         <select
           aria-label="Select Suspense Root"
           className={styles.SuspenseTimelineRootSwitcher}
-          onChange={handleChange}>
+          onChange={handleChange}
+          value={selectedRootID}>
           {shells.map(rootID => {
             // TODO: Use name
             const name = '#' + rootID;
             // TODO: Highlight host on hover
             return (
-              <option
-                key={rootID}
-                selected={rootID === selectedRootID}
-                value={rootID}>
+              <option key={rootID} value={rootID}>
                 {name}
               </option>
             );

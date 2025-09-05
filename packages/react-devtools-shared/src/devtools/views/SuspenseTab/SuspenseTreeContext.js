@@ -7,6 +7,8 @@
  * @flow
  */
 import type {ReactContext} from 'shared/ReactTypes';
+import type {SuspenseNode} from '../../../frontend/types';
+import type Store from '../../store';
 
 import * as React from 'react';
 import {
@@ -17,7 +19,6 @@ import {
   useMemo,
   useReducer,
 } from 'react';
-import type {SuspenseNode} from '../../../frontend/types';
 import {StoreContext} from '../context';
 
 export type SuspenseTreeState = {
@@ -110,8 +111,18 @@ function SuspenseTreeContextController({children}: Props): React.Node {
   );
 }
 
+function useSuspenseStore(): Store {
+  const store = useContext(StoreContext);
+  // We're currently storing everything Suspense related in the same Store as
+  // Components. However, most reads are currently stateless. This ensures
+  // the latest state is always read from the Store.
+  useContext(SuspenseTreeStateContext);
+  return store;
+}
+
 export {
   SuspenseTreeDispatcherContext,
   SuspenseTreeStateContext,
   SuspenseTreeContextController,
+  useSuspenseStore,
 };

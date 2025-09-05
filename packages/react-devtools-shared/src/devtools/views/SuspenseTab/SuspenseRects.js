@@ -19,10 +19,12 @@ import {
   TreeDispatcherContext,
   TreeStateContext,
 } from '../Components/TreeContext';
-import {StoreContext} from '../context';
 import {useHighlightHostInstance} from '../hooks';
 import styles from './SuspenseRects.css';
-import {SuspenseTreeStateContext} from './SuspenseTreeContext';
+import {
+  SuspenseTreeStateContext,
+  useSuspenseStore,
+} from './SuspenseTreeContext';
 import typeof {
   SyntheticMouseEvent,
   SyntheticPointerEvent,
@@ -46,7 +48,7 @@ function SuspenseRects({
   suspenseID: SuspenseNode['id'],
 }): React$Node {
   const dispatch = useContext(TreeDispatcherContext);
-  const store = useContext(StoreContext);
+  const store = useSuspenseStore();
 
   const {inspectedElementID} = useContext(TreeStateContext);
 
@@ -158,7 +160,7 @@ function SuspenseRectsShell({
 }: {
   shellID: SuspenseNode['id'],
 }): React$Node {
-  const store = useContext(StoreContext);
+  const store = useSuspenseStore();
   const shell = store.getSuspenseByID(shellID);
   if (shell === null) {
     console.warn(`<Element> Could not find suspense node id ${shellID}`);
@@ -175,7 +177,7 @@ function SuspenseRectsShell({
 }
 
 function SuspenseRectsContainer(): React$Node {
-  const store = useContext(StoreContext);
+  const store = useSuspenseStore();
   // TODO: This relies on a full re-render of all children when the Suspense tree changes.
   const {shells} = useContext(SuspenseTreeStateContext);
 
