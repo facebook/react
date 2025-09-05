@@ -58,6 +58,9 @@ type ReducerAction =
         source: string;
         config?: string;
       };
+    }
+  | {
+      type: 'toggleInternals';
     };
 
 function storeReducer(store: Store, action: ReducerAction): Store {
@@ -71,7 +74,14 @@ function storeReducer(store: Store, action: ReducerAction): Store {
       const newStore = {
         ...store,
         source,
-        config,
+        config: config ?? '',
+      };
+      return newStore;
+    }
+    case 'toggleInternals': {
+      const newStore = {
+        ...store,
+        showInternals: !store.showInternals,
       };
       return newStore;
     }

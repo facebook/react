@@ -18,6 +18,7 @@ import {defaultStore, defaultConfig} from '../defaultStore';
 export interface Store {
   source: string;
   config?: string;
+  showInternals?: boolean;
 }
 export function encodeStore(store: Store): string {
   return compressToEncodedURIComponent(JSON.stringify(store));
@@ -67,12 +68,12 @@ export function initStoreFromUrlOrLocalStorage(): Store {
 
   invariant(isValidStore(raw), 'Invalid Store');
 
-  // Add config property if missing for backwards compatibility
+  // Add config/showInternals property if missing for backwards compatibility
   if (!('config' in raw) || !raw['config']) {
-    return {
-      ...raw,
-      config: defaultConfig,
-    };
+    raw.config = defaultConfig;
+  }
+  if (!('showInternals' in raw)) {
+    raw.showInternals = false;
   }
 
   return raw;

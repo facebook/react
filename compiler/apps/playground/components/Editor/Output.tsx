@@ -19,7 +19,7 @@ import {
 import parserBabel from 'prettier/plugins/babel';
 import * as prettierPluginEstree from 'prettier/plugins/estree';
 import * as prettier from 'prettier/standalone';
-import {memo, ReactNode, useEffect, useState} from 'react';
+import {memo, ReactNode, useEffect, useMemo, useState} from 'react';
 import {type Store} from '../../lib/stores';
 import TabbedWindow from '../TabbedWindow';
 import {monacoOptions} from './monacoOptions';
@@ -245,13 +245,34 @@ function Output({store, compilerOutput}: Props): JSX.Element {
     }
   }
 
+  const filteredTabs = useMemo(() => {
+    if (store.showInternals) {
+      return tabs;
+    }
+    const allowedTabs = ['Output', 'SourceMap'];
+    return new Map(
+      allowedTabs
+        .map(tabName => [tabName, tabs.get(tabName)])
+        .filter(([, tab]) => tab !== undefined) as Array<
+        [string, React.ReactNode]
+      >,
+    );
+  }, [tabs, store.showInternals]);
+
+  const adjustedTabsOpen = useMemo(() => {
+    if (store.showInternals) {
+      return tabsOpen;
+    }
+    return new Set(Array.from(tabsOpen).filter(tab => filteredTabs.has(tab)));
+  }, [tabsOpen, filteredTabs, store.showInternals]);
+
   return (
     <>
       <TabbedWindow
-        defaultTab="HIR"
+        defaultTab={store.showInternals ? 'HIR' : 'Output'}
         setTabsOpen={setTabsOpen}
-        tabsOpen={tabsOpen}
-        tabs={tabs}
+        tabsOpen={adjustedTabsOpen}
+        tabs={filteredTabs}
         changedPasses={changedPasses}
       />
     </>
