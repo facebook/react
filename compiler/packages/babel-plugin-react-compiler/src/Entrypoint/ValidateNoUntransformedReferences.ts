@@ -96,7 +96,7 @@ function assertValidEffectImportReference(
             reason:
               'Cannot infer dependencies of this effect. This will break your build!',
             description:
-              'To resolve, either pass a dependency array or fix reported compiler bailout diagnostics.' +
+              'To resolve, either pass a dependency array or fix reported compiler bailout diagnostics' +
               (maybeErrorDiagnostic ? ` ${maybeErrorDiagnostic}` : ''),
             details: [
               {
@@ -128,9 +128,7 @@ function assertValidFireImportReference(
         reason: '[Fire] Untransformed reference to compiler-required feature.',
         description:
           'Either remove this `fire` call or ensure it is successfully transformed by the compiler' +
-          maybeErrorDiagnostic
-            ? ` ${maybeErrorDiagnostic}`
-            : '',
+          (maybeErrorDiagnostic != null ? ` ${maybeErrorDiagnostic}` : ''),
         details: [
           {
             kind: 'error',

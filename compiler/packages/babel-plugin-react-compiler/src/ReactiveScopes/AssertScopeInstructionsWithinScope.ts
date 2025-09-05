@@ -83,7 +83,7 @@ class CheckInstructionsAgainstScopesVisitor extends ReactiveFunctionVisitor<
       CompilerError.invariant(false, {
         reason:
           'Encountered an instruction that should be part of a scope, but where that scope has already completed',
-        description: `Instruction [${id}] is part of scope @${scope.id}, but that scope has already completed.`,
+        description: `Instruction [${id}] is part of scope @${scope.id}, but that scope has already completed`,
         details: [
           {
             kind: 'error',
