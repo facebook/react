@@ -2,7 +2,9 @@
 import {useEffect, useState} from 'react';
 
 function Component({props}) {
-  const [fullName, setFullName] = useState(props.firstName + ' ' + props.lastName);
+  const [fullName, setFullName] = useState(
+    props.firstName + ' ' + props.lastName
+  );
 
   useEffect(() => {
     setFullName(props.firstName + ' ' + props.lastName);
