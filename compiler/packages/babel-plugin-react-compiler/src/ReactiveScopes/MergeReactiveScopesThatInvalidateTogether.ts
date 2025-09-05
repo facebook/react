@@ -159,11 +159,17 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
     const merged: Array<MergedScope> = [];
     function reset(): void {
       CompilerError.invariant(current !== null, {
-        loc: null,
         reason:
           'MergeConsecutiveScopes: expected current scope to be non-null if reset()',
-        suggestions: null,
         description: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
+        suggestions: null,
       });
       if (current.to > current.from + 1) {
         merged.push(current);
@@ -375,10 +381,16 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
       }
       const mergedScope = block[entry.from]!;
       CompilerError.invariant(mergedScope.kind === 'scope', {
-        loc: null,
         reason:
           'MergeConsecutiveScopes: Expected scope starting index to be a scope',
         description: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
       nextInstructions.push(mergedScope);

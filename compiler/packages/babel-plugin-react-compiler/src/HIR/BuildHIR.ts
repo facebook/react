@@ -110,7 +110,7 @@ export function lower(
             category: ErrorCategory.Invariant,
             reason: 'Could not find binding',
             description: `[BuildHIR] Could not find binding for param \`${param.node.name}\`.`,
-          }).withDetail({
+          }).withDetails({
             kind: 'error',
             loc: param.node.loc ?? null,
             message: 'Could not find binding',
@@ -174,7 +174,7 @@ export function lower(
           category: ErrorCategory.Todo,
           reason: `Handle ${param.node.type} parameters`,
           description: `[BuildHIR] Add support for ${param.node.type} parameters.`,
-        }).withDetail({
+        }).withDetails({
           kind: 'error',
           loc: param.node.loc ?? null,
           message: 'Unsupported parameter type',
@@ -205,7 +205,7 @@ export function lower(
         category: ErrorCategory.Syntax,
         reason: `Unexpected function body kind`,
         description: `Expected function body to be an expression or a block statement, got \`${body.type}\`.`,
-      }).withDetail({
+      }).withDetails({
         kind: 'error',
         loc: body.node.loc ?? null,
         message: 'Expected a block statement or expression',
@@ -439,7 +439,13 @@ function lowerStatement(
             reason: 'Expected to find binding for hoisted identifier',
             description: `Could not find a binding for ${id.node.name}`,
             suggestions: null,
-            loc: id.node.loc ?? GeneratedSource,
+            details: [
+              {
+                kind: 'error',
+                loc: id.node.loc ?? GeneratedSource,
+                message: null,
+              },
+            ],
           });
           if (builder.environment.isHoistedIdentifier(binding.identifier)) {
             // Already hoisted
@@ -481,7 +487,14 @@ function lowerStatement(
           CompilerError.invariant(identifier.kind === 'Identifier', {
             reason:
               'Expected hoisted binding to be a local identifier, not a global',
-            loc: id.node.loc ?? GeneratedSource,
+            description: null,
+            details: [
+              {
+                kind: 'error',
+                loc: id.node.loc ?? GeneratedSource,
+                message: null,
+              },
+            ],
           });
           const place: Place = {
             effect: Effect.Unknown,
@@ -1014,7 +1027,13 @@ function lowerStatement(
       CompilerError.invariant(stmt.get('id').type === 'Identifier', {
         reason: 'function declarations must have a name',
         description: null,
-        loc: stmt.node.loc ?? null,
+        details: [
+          {
+            kind: 'error',
+            loc: stmt.node.loc ?? null,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
       const id = stmt.get('id') as NodePath<t.Identifier>;
@@ -1114,7 +1133,13 @@ function lowerStatement(
         CompilerError.invariant(declarations.length === 1, {
           reason: `Expected only one declaration in the init of a ForOfStatement, got ${declarations.length}`,
           description: null,
-          loc: left.node.loc ?? null,
+          details: [
+            {
+              kind: 'error',
+              loc: left.node.loc ?? null,
+              message: null,
+            },
+          ],
           suggestions: null,
         });
         const id = declarations[0].get('id');
@@ -1129,8 +1154,15 @@ function lowerStatement(
         test = lowerValueToTemporary(builder, assign);
       } else {
         CompilerError.invariant(left.isLVal(), {
-          loc: leftLoc,
           reason: 'Expected ForOf init to be a variable declaration or lval',
+          description: null,
+          details: [
+            {
+              kind: 'error',
+              loc: leftLoc,
+              message: null,
+            },
+          ],
         });
         const assign = lowerAssignment(
           builder,
@@ -1207,7 +1239,13 @@ function lowerStatement(
         CompilerError.invariant(declarations.length === 1, {
           reason: `Expected only one declaration in the init of a ForInStatement, got ${declarations.length}`,
           description: null,
-          loc: left.node.loc ?? null,
+          details: [
+            {
+              kind: 'error',
+              loc: left.node.loc ?? null,
+              message: null,
+            },
+          ],
           suggestions: null,
         });
         const id = declarations[0].get('id');
@@ -1222,8 +1260,15 @@ function lowerStatement(
         test = lowerValueToTemporary(builder, assign);
       } else {
         CompilerError.invariant(left.isLVal(), {
-          loc: leftLoc,
           reason: 'Expected ForIn init to be a variable declaration or lval',
+          description: null,
+          details: [
+            {
+              kind: 'error',
+              loc: leftLoc,
+              message: null,
+            },
+          ],
         });
         const assign = lowerAssignment(
           builder,
@@ -2202,7 +2247,13 @@ function lowerExpression(
           CompilerError.invariant(namePath.isJSXNamespacedName(), {
             reason: 'Refinement',
             description: null,
-            loc: namePath.node.loc ?? null,
+            details: [
+              {
+                kind: 'error',
+                loc: namePath.node.loc ?? null,
+                message: null,
+              },
+            ],
             suggestions: null,
           });
           const namespace = namePath.node.namespace.name;
@@ -2256,8 +2307,14 @@ function lowerExpression(
           // This is already checked in builder.resolveIdentifier
           CompilerError.invariant(tagIdentifier.kind !== 'Identifier', {
             reason: `<${tagName}> tags should be module-level imports`,
-            loc: openingIdentifier.node.loc ?? GeneratedSource,
             description: null,
+            details: [
+              {
+                kind: 'error',
+                loc: openingIdentifier.node.loc ?? GeneratedSource,
+                message: null,
+              },
+            ],
             suggestions: null,
           });
         }
@@ -2361,7 +2418,13 @@ function lowerExpression(
         reason:
           "there should be only one quasi as we don't support interpolations yet",
         description: null,
-        loc: expr.node.loc ?? null,
+        details: [
+          {
+            kind: 'error',
+            loc: expr.node.loc ?? null,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
       const value = expr.get('quasi').get('quasis').at(0)!.node.value;
@@ -2759,7 +2822,13 @@ function lowerOptionalMemberExpression(
   CompilerError.invariant(object !== null, {
     reason: 'Satisfy type checker',
     description: null,
-    loc: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
 
@@ -3327,7 +3396,13 @@ function lowerJsxMemberExpression(
     CompilerError.invariant(object.isJSXIdentifier(), {
       reason: `TypeScript refinement fail: expected 'JsxIdentifier', got \`${object.node.type}\``,
       description: null,
-      loc: object.node.loc ?? null,
+      details: [
+        {
+          kind: 'error',
+          loc: object.node.loc ?? null,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
 
@@ -3369,7 +3444,13 @@ function lowerJsxElement(
       CompilerError.invariant(expression.isExpression(), {
         reason: `(BuildHIR::lowerJsxElement) Expected Expression but found ${expression.type}!`,
         description: null,
-        loc: expression.node.loc ?? null,
+        details: [
+          {
+            kind: 'error',
+            loc: expression.node.loc ?? null,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
       return lowerExpressionToTemporary(builder, expression);
@@ -3770,7 +3851,13 @@ function lowerAssignment(
       CompilerError.invariant(kind === InstructionKind.Reassign, {
         reason: 'MemberExpression may only appear in an assignment expression',
         description: null,
-        loc: lvaluePath.node.loc ?? null,
+        details: [
+          {
+            kind: 'error',
+            loc: lvaluePath.node.loc ?? null,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
       const lvalue = lvaluePath as NodePath<t.MemberExpression>;
