@@ -39,7 +39,7 @@ export function validateLocalsNotReassignedAfterRender(fn: HIRFunction): void {
       CompilerDiagnostic.create({
         category: ErrorCategory.Immutability,
         reason: 'Cannot reassign variable after render completes',
-        description: `Reassigning ${variable} after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.`,
+        description: `Reassigning ${variable} after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead`,
       }).withDetails({
         kind: 'error',
         loc: reassignment.loc,

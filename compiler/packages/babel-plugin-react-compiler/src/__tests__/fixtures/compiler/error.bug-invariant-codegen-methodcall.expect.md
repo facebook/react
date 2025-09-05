@@ -18,8 +18,6 @@ Found 1 error:
 
 Invariant: [Codegen] Internal error: MethodCall::property must be an unpromoted + unmemoized MemberExpression
 
-
-
 error.bug-invariant-codegen-methodcall.ts:3:17
   1 | const YearsAndMonthsSince = () => {
   2 |   const diff = foo();

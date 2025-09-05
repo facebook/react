@@ -31,7 +31,7 @@ Found 1 error:
 
 Invariant: [InferMutationAliasingEffects] Expected value kind to be initialized
 
-<unknown> thunk$14
+<unknown> thunk$14.
 
 error.bug-infer-mutation-aliasing-effects.ts:10:22
    8 |     function thunk(action) {

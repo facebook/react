@@ -109,7 +109,7 @@ export function lower(
           CompilerDiagnostic.create({
             category: ErrorCategory.Invariant,
             reason: 'Could not find binding',
-            description: `[BuildHIR] Could not find binding for param \`${param.node.name}\`.`,
+            description: `[BuildHIR] Could not find binding for param \`${param.node.name}\``,
           }).withDetails({
             kind: 'error',
             loc: param.node.loc ?? null,
@@ -173,7 +173,7 @@ export function lower(
         CompilerDiagnostic.create({
           category: ErrorCategory.Todo,
           reason: `Handle ${param.node.type} parameters`,
-          description: `[BuildHIR] Add support for ${param.node.type} parameters.`,
+          description: `[BuildHIR] Add support for ${param.node.type} parameters`,
         }).withDetails({
           kind: 'error',
           loc: param.node.loc ?? null,
@@ -204,7 +204,7 @@ export function lower(
       CompilerDiagnostic.create({
         category: ErrorCategory.Syntax,
         reason: `Unexpected function body kind`,
-        description: `Expected function body to be an expression or a block statement, got \`${body.type}\`.`,
+        description: `Expected function body to be an expression or a block statement, got \`${body.type}\``,
       }).withDetails({
         kind: 'error',
         loc: body.node.loc ?? null,
