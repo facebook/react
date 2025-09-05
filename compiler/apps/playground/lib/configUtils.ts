@@ -8,8 +8,15 @@
 import parserBabel from 'prettier/plugins/babel';
 import prettierPluginEstree from 'prettier/plugins/estree';
 import * as prettier from 'prettier/standalone';
+import {parsePluginOptions} from 'babel-plugin-react-compiler';
 import {parseConfigPragmaAsString} from '../../../packages/babel-plugin-react-compiler/src/Utils/TestUtils';
 
+export class ConfigError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ConfigError';
+  }
+}
 /**
  * Parse config from pragma and format it with prettier
  */
@@ -17,7 +24,10 @@ export async function parseAndFormatConfig(source: string): Promise<string> {
   const pragma = source.substring(0, source.indexOf('\n'));
   let configString = parseConfigPragmaAsString(pragma);
   if (configString !== '') {
-    configString = `(${configString})`;
+    configString = `\
+    import type { PluginOptions } from 'babel-plugin-react-compiler/dist';
+
+    (${configString} satisfies Partial<PluginOptions>)`;
   }
 
   try {
@@ -34,10 +44,10 @@ export async function parseAndFormatConfig(source: string): Promise<string> {
 }
 
 function extractCurlyBracesContent(input: string): string {
-  const startIndex = input.indexOf('{');
+  const startIndex = input.indexOf('({') + 1;
   const endIndex = input.lastIndexOf('}');
   if (startIndex === -1 || endIndex === -1 || endIndex <= startIndex) {
-    throw new Error('No outer curly braces found in input');
+    throw new Error('No outer curly braces found in input.');
   }
   return input.slice(startIndex, endIndex + 1);
 }
@@ -50,6 +60,27 @@ function cleanContent(content: string): string {
 }
 
 /**
+ * Validate that a config string can be parsed as a valid PluginOptions object
+ * Throws an error if validation fails.
+ */
+function validateConfigAsPluginOptions(configString: string): void {
+  // Validate that config can be parse as JS obj
+  let parsedConfig: unknown;
+  try {
+    parsedConfig = new Function(`return (${configString})`)();
+  } catch (_) {
+    throw new ConfigError('Config has invalid syntax.');
+  }
+
+  // Validate against PluginOptions schema
+  try {
+    parsePluginOptions(parsedConfig);
+  } catch (_) {
+    throw new ConfigError('Config does not match the expected schema.');
+  }
+}
+
+/**
  * Generate a the override pragma comment from a formatted config object string
  */
 export async function generateOverridePragmaFromConfig(
@@ -57,6 +88,8 @@ export async function generateOverridePragmaFromConfig(
 ): Promise<string> {
   const content = extractCurlyBracesContent(formattedConfigString);
   const cleanConfig = cleanContent(content);
+
+  validateConfigAsPluginOptions(cleanConfig);
 
   // Format the config to ensure it's valid
   await prettier.format(`(${cleanConfig})`, {
