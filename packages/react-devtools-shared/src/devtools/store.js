@@ -24,6 +24,7 @@ import {
   SUSPENSE_TREE_OPERATION_REMOVE,
   SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
   SUSPENSE_TREE_OPERATION_RESIZE,
+  SUSPENSE_TREE_OPERATION_SUSPENDERS,
 } from '../constants';
 import {ElementTypeRoot} from '../frontend/types';
 import {
@@ -1508,6 +1509,7 @@ export default class Store extends EventEmitter<{
             children: [],
             name,
             rects,
+            hasUniqueSuspenders: false,
           });
 
           hasSuspenseTreeChanged = true;
@@ -1670,6 +1672,42 @@ export default class Store extends EventEmitter<{
                       .join(',')
               }`,
             );
+          }
+
+          hasSuspenseTreeChanged = true;
+
+          break;
+        }
+        case SUSPENSE_TREE_OPERATION_SUSPENDERS: {
+          const changeLength = operations[i + 1];
+          i += 2;
+
+          for (let changeIndex = 0; changeIndex < changeLength; changeIndex++) {
+            const id = operations[i];
+            const hasUniqueSuspenders = operations[i + 1] === 1;
+            const suspense = this._idToSuspense.get(id);
+
+            if (suspense === undefined) {
+              this._throwAndEmitError(
+                Error(
+                  `Cannot update suspenders of suspense node "${id}" because no matching node was found in the Store.`,
+                ),
+              );
+
+              break;
+            }
+
+            i += 2;
+
+            if (__DEBUG__) {
+              const previousHasUniqueSuspenders = suspense.hasUniqueSuspenders;
+              debug(
+                'Suspender changes',
+                `Suspense node ${id} unique suspenders set to ${String(hasUniqueSuspenders)} (was ${String(previousHasUniqueSuspenders)})`,
+              );
+            }
+
+            suspense.hasUniqueSuspenders = hasUniqueSuspenders;
           }
 
           hasSuspenseTreeChanged = true;
