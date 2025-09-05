@@ -492,7 +492,7 @@ describe('Store', () => {
               <Component key="Outside">
             ▾ <Suspense>
                 <Loading>
-        [suspense-root]  rects={null}
+        [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:10,height:1}]}
           <Suspense name="Wrapper>?" rects={null}>
       `);
 
@@ -948,7 +948,7 @@ describe('Store', () => {
               ▾ <Suspense name="three">
                   <Component key="Suspense 3 Content">
                 <Component key="Unrelated at End">
-        [suspense-root]  rects={null}
+        [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}]}
           <Suspense name="parent" rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}]}>
             <Suspense name="one" rects={[{x:1,y:2,width:5,height:1}]}>
             <Suspense name="two" rects={[{x:1,y:2,width:5,height:1}]}>
@@ -1053,7 +1053,7 @@ describe('Store', () => {
                 <Component key="A">
               ▾ <Suspense>
                   <Loading>
-        [suspense-root]  rects={null}
+        [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:10,height:1}]}
           <Suspense name="Wrapper>?" rects={null}>
       `);
 
@@ -1406,7 +1406,7 @@ describe('Store', () => {
       expect(store).toMatchInlineSnapshot(`
         [root]
           ▸ <Wrapper>
-        [suspense-root]  rects={null}
+        [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:10,height:1}]}
           <Suspense name="Wrapper>?" rects={null}>
       `);
 
@@ -1423,7 +1423,7 @@ describe('Store', () => {
               <Component key="Outside">
             ▾ <Suspense>
                 <Loading>
-        [suspense-root]  rects={null}
+        [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:10,height:1}]}
           <Suspense name="Wrapper>?" rects={null}>
       `);
 
@@ -3081,8 +3081,8 @@ describe('Store', () => {
     `);
   });
 
-  it.failing('should handle an empty root', async () => {
+  it('should handle an empty root', async () => {
     await actAsync(() => render(null));
-    expect(store).toMatchInlineSnapshot();
+    expect(store).toMatchInlineSnapshot(`[root]`);
   });
 });
