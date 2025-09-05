@@ -1633,6 +1633,19 @@ export function areEqualPaths(a: DependencyPath, b: DependencyPath): boolean {
     )
   );
 }
+export function isSubPath(
+  subpath: DependencyPath,
+  path: DependencyPath,
+): boolean {
+  return (
+    subpath.length <= path.length &&
+    subpath.every(
+      (item, ix) =>
+        item.property === path[ix].property &&
+        item.optional === path[ix].optional,
+    )
+  );
+}
 
 export function getPlaceScope(
   id: InstructionId,
