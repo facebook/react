@@ -9,7 +9,7 @@ import {NodePath} from '@babel/core';
 import * as t from '@babel/types';
 import {Scope as BabelScope} from '@babel/traverse';
 
-import {CompilerError, ErrorCategory, ErrorSeverity} from '../CompilerError';
+import {CompilerError, ErrorCategory} from '../CompilerError';
 import {
   EnvironmentConfig,
   GeneratedSource,
@@ -39,7 +39,6 @@ export function validateRestrictedImports(
       if (restrictedImports.has(importDeclPath.node.source.value)) {
         error.push({
           category: ErrorCategory.Todo,
-          severity: ErrorSeverity.Todo,
           reason: 'Bailing out due to blocklisted import',
           description: `Import from module ${importDeclPath.node.source.value}`,
           loc: importDeclPath.node.loc ?? null,
@@ -207,7 +206,6 @@ export class ProgramContext {
     const error = new CompilerError();
     error.push({
       category: ErrorCategory.Todo,
-      severity: ErrorSeverity.Todo,
       reason: 'Encountered conflicting global in generated program',
       description: `Conflict from local binding ${name}`,
       loc: scope.getBinding(name)?.path.node.loc ?? null,
