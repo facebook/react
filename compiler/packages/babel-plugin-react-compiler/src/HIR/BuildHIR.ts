@@ -3566,6 +3566,8 @@ function lowerFunctionToValue(
   let name: string | null = null;
   if (expr.isFunctionExpression()) {
     name = expr.get('id')?.node?.name ?? null;
+  } else if (expr.isFunctionDeclaration()) {
+    name = expr.get('id')?.node?.name ?? null;
   }
   const loweredFunc = lowerFunction(builder, expr);
   if (!loweredFunc) {

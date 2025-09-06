@@ -15,6 +15,7 @@ import {Type, makeType} from './Types';
 import {z} from 'zod';
 import type {AliasingEffect} from '../Inference/AliasingEffects';
 import {isReservedWord} from '../Utils/Keyword';
+import {Err, Ok, Result} from '../Utils/Result';
 
 /*
  * *******************************************************************************************
@@ -1296,6 +1297,15 @@ export function forkTemporaryIdentifier(
     mutableRange: {start: makeInstructionId(0), end: makeInstructionId(0)},
     id,
   };
+}
+
+export function validateIdentifierName(
+  name: string,
+): Result<ValidIdentifierName, null> {
+  if (isReservedWord(name) || !t.isValidIdentifier(name)) {
+    return Err(null);
+  }
+  return Ok(makeIdentifierName(name).value);
 }
 
 /**
