@@ -47,6 +47,7 @@ function Component(props) {
       if (props.cond) {
         y.push(props.a);
       }
+
       if (props.cond2) {
         t0 = y;
         break bb0;

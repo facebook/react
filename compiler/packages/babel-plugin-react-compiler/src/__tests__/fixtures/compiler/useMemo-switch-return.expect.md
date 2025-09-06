@@ -50,7 +50,6 @@ function Component(props) {
         y = props.y;
       }
     }
-
     t0 = y;
   }
   const x = t0;
