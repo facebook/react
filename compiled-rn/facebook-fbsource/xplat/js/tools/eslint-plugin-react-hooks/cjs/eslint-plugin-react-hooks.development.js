@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<affd6c2b69a51a6c721b1716a24eccce>>
+ * @generated SignedSource<<bf1bc62e3d57db58f48bc92c51235849>>
  */
 
 'use strict';
@@ -17694,11 +17694,10 @@ class CompilerDiagnostic {
     }
     printErrorMessage(source, options) {
         var _a, _b;
-        const buffer = [
-            printErrorSummary(this.category, this.reason),
-            '\n\n',
-            this.description,
-        ];
+        const buffer = [printErrorSummary(this.category, this.reason)];
+        if (this.description != null) {
+            buffer.push('\n\n', `${this.description}.`);
+        }
         for (const detail of this.options.details) {
             switch (detail.kind) {
                 case 'error': {
@@ -22940,7 +22939,7 @@ function lower(func, env, bindings = null, capturedRefs = new Map()) {
                 builder.errors.pushDiagnostic(CompilerDiagnostic.create({
                     category: ErrorCategory.Invariant,
                     reason: 'Could not find binding',
-                    description: `[BuildHIR] Could not find binding for param \`${param.node.name}\`.`,
+                    description: `[BuildHIR] Could not find binding for param \`${param.node.name}\``,
                 }).withDetails({
                     kind: 'error',
                     loc: (_a = param.node.loc) !== null && _a !== void 0 ? _a : null,
@@ -22989,7 +22988,7 @@ function lower(func, env, bindings = null, capturedRefs = new Map()) {
             builder.errors.pushDiagnostic(CompilerDiagnostic.create({
                 category: ErrorCategory.Todo,
                 reason: `Handle ${param.node.type} parameters`,
-                description: `[BuildHIR] Add support for ${param.node.type} parameters.`,
+                description: `[BuildHIR] Add support for ${param.node.type} parameters`,
             }).withDetails({
                 kind: 'error',
                 loc: (_j = param.node.loc) !== null && _j !== void 0 ? _j : null,
@@ -23019,7 +23018,7 @@ function lower(func, env, bindings = null, capturedRefs = new Map()) {
         builder.errors.pushDiagnostic(CompilerDiagnostic.create({
             category: ErrorCategory.Syntax,
             reason: `Unexpected function body kind`,
-            description: `Expected function body to be an expression or a block statement, got \`${body.type}\`.`,
+            description: `Expected function body to be an expression or a block statement, got \`${body.type}\``,
         }).withDetails({
             kind: 'error',
             loc: (_a = body.node.loc) !== null && _a !== void 0 ? _a : null,
@@ -35739,7 +35738,7 @@ class CheckInstructionsAgainstScopesVisitor extends ReactiveFunctionVisitor {
             !this.activeScopes.has(scope.id)) {
             CompilerError.invariant(false, {
                 reason: 'Encountered an instruction that should be part of a scope, but where that scope has already completed',
-                description: `Instruction [${id}] is part of scope @${scope.id}, but that scope has already completed.`,
+                description: `Instruction [${id}] is part of scope @${scope.id}, but that scope has already completed`,
                 details: [
                     {
                         kind: 'error',
@@ -40614,7 +40613,7 @@ function applySignature(context, state, signature, instruction) {
                         const diagnostic = CompilerDiagnostic.create({
                             category: ErrorCategory.Immutability,
                             reason: 'This value cannot be modified',
-                            description: `${reason}.`,
+                            description: reason,
                         }).withDetails({
                             kind: 'error',
                             loc: effect.value.loc,
@@ -41046,7 +41045,7 @@ function applyEffect(context, state, _effect, initialized, effects) {
                     const diagnostic = CompilerDiagnostic.create({
                         category: ErrorCategory.Immutability,
                         reason: 'Cannot access variable before it is declared',
-                        description: `${variable !== null && variable !== void 0 ? variable : 'This variable'} is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.`,
+                        description: `${variable !== null && variable !== void 0 ? variable : 'This variable'} is accessed before it is declared, which prevents the earlier access from updating when this value changes over time`,
                     });
                     if (hoistedAccess != null && hoistedAccess.loc != effect.value.loc) {
                         diagnostic.withDetails({
@@ -41078,7 +41077,7 @@ function applyEffect(context, state, _effect, initialized, effects) {
                     const diagnostic = CompilerDiagnostic.create({
                         category: ErrorCategory.Immutability,
                         reason: 'This value cannot be modified',
-                        description: `${reason}.`,
+                        description: reason,
                     }).withDetails({
                         kind: 'error',
                         loc: effect.value.loc,
@@ -41957,7 +41956,7 @@ function computeEffectsForLegacySignature(state, signature, lvalue, receiver, ar
                 'This API returns functions which cannot be memoized without leading to stale UI. ' +
                     'To prevent this, by default React Compiler will skip memoizing this component/hook. ' +
                     'However, you may see issues if values from this API are passed to other components/hooks that are ' +
-                    'memoized.',
+                    'memoized',
             ].join(''),
         }).withDetails({
             kind: 'error',
@@ -44478,7 +44477,7 @@ function dropManualMemoization(func) {
                                     reason: 'useMemo() callbacks must return a value',
                                     description: `This ${manualMemo.loadInstr.value.kind === 'PropertyLoad'
                                         ? 'React.useMemo'
-                                        : 'useMemo'} callback doesn't return a value. useMemo is for computing and caching values, not for arbitrary side effects.`,
+                                        : 'useMemo'} callback doesn't return a value. useMemo is for computing and caching values, not for arbitrary side effects`,
                                     suggestions: null,
                                 }).withDetails({
                                     kind: 'error',
@@ -48875,7 +48874,7 @@ function validateNoCapitalizedCalls(fn) {
                         CompilerError.throwInvalidReact({
                             category: ErrorCategory.CapitalizedCalls,
                             reason,
-                            description: `${calleeName} may be a component.`,
+                            description: `${calleeName} may be a component`,
                             loc: value.loc,
                             suggestions: null,
                         });
@@ -48896,7 +48895,7 @@ function validateNoCapitalizedCalls(fn) {
                         errors.push({
                             category: ErrorCategory.CapitalizedCalls,
                             reason,
-                            description: `${propertyName} may be a component.`,
+                            description: `${propertyName} may be a component`,
                             loc: value.loc,
                             suggestions: null,
                         });
@@ -49807,7 +49806,7 @@ function validateInferredDep(dep, temporaries, declsWithinMemoBlock, validDepsIn
                     .map(dep => printManualMemoDependency(dep, true))
                     .join(', ')}]. ${errorDiagnostic
                     ? getCompareDependencyResultDescription(errorDiagnostic)
-                    : 'Inferred dependency not present in source'}.`
+                    : 'Inferred dependency not present in source'}`
                 : '',
         ]
             .join('')
@@ -49967,7 +49966,7 @@ class Visitor extends ReactiveFunctionVisitor {
                         reason: 'Existing memoization could not be preserved',
                         description: [
                             'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. ',
-                            'This dependency may be mutated later, which could cause the value to change unexpectedly.',
+                            'This dependency may be mutated later, which could cause the value to change unexpectedly',
                         ].join(''),
                     }).withDetails({
                         kind: 'error',
@@ -50008,7 +50007,7 @@ class Visitor extends ReactiveFunctionVisitor {
                                 category: ErrorCategory.PreserveManualMemo,
                                 reason: 'Existing memoization could not be preserved',
                                 description: [
-                                    'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output. ',
+                                    'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output',
                                     '',
                                 ]
                                     .join('')
@@ -50083,7 +50082,7 @@ function validateUseMemo(fn) {
                         errors.pushDiagnostic(CompilerDiagnostic.create({
                             category: ErrorCategory.UseMemo,
                             reason: 'useMemo() callbacks may not accept parameters',
-                            description: 'useMemo() callbacks are called by React to cache calculations across re-renders. They should not take parameters. Instead, directly reference the props, state, or local variables needed for the computation.',
+                            description: 'useMemo() callbacks are called by React to cache calculations across re-renders. They should not take parameters. Instead, directly reference the props, state, or local variables needed for the computation',
                             suggestions: null,
                         }).withDetails({
                             kind: 'error',
@@ -50095,7 +50094,7 @@ function validateUseMemo(fn) {
                         errors.pushDiagnostic(CompilerDiagnostic.create({
                             category: ErrorCategory.UseMemo,
                             reason: 'useMemo() callbacks may not be async or generator functions',
-                            description: 'useMemo() callbacks are called once and must synchronously return a value.',
+                            description: 'useMemo() callbacks are called once and must synchronously return a value',
                             suggestions: null,
                         }).withDetails({
                             kind: 'error',
@@ -50123,7 +50122,7 @@ function validateLocalsNotReassignedAfterRender(fn) {
         errors.pushDiagnostic(CompilerDiagnostic.create({
             category: ErrorCategory.Immutability,
             reason: 'Cannot reassign variable after render completes',
-            description: `Reassigning ${variable} after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.`,
+            description: `Reassigning ${variable} after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead`,
         }).withDetails({
             kind: 'error',
             loc: reassignment.loc,
@@ -51541,7 +51540,7 @@ function validateStaticComponents(fn) {
                             error.pushDiagnostic(CompilerDiagnostic.create({
                                 category: ErrorCategory.StaticComponents,
                                 reason: 'Cannot create components during render',
-                                description: `Components created during render will reset their state each time they are created. Declare components outside of render. `,
+                                description: `Components created during render will reset their state each time they are created. Declare components outside of render`,
                             })
                                 .withDetails({
                                 kind: 'error',
@@ -51578,7 +51577,7 @@ function validateNoFreezingKnownMutableFunctions(fn) {
                 errors.pushDiagnostic(CompilerDiagnostic.create({
                     category: ErrorCategory.Immutability,
                     reason: 'Cannot modify local variables after render completes',
-                    description: `This argument is a function which may reassign or mutate ${variable} after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.`,
+                    description: `This argument is a function which may reassign or mutate ${variable} after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead`,
                 })
                     .withDetails({
                     kind: 'error',
@@ -53312,7 +53311,7 @@ function addImportsToProgram(path, programContext) {
         for (const [specifierName, loweredImport] of importsMap) {
             CompilerError.invariant(path.scope.getBinding(loweredImport.name) == null, {
                 reason: 'Encountered conflicting import specifiers in generated program',
-                description: `Conflict from import ${loweredImport.module}:(${loweredImport.imported} as ${loweredImport.name}).`,
+                description: `Conflict from import ${loweredImport.module}:(${loweredImport.imported} as ${loweredImport.name})`,
                 details: [
                     {
                         kind: 'error',
@@ -53580,7 +53579,7 @@ function assertValidEffectImportReference(autodepsIndex, paths, context) {
                 throwInvalidReact({
                     category: ErrorCategory.AutomaticEffectDependencies,
                     reason: 'Cannot infer dependencies of this effect. This will break your build!',
-                    description: 'To resolve, either pass a dependency array or fix reported compiler bailout diagnostics.' +
+                    description: 'To resolve, either pass a dependency array or fix reported compiler bailout diagnostics' +
                         (maybeErrorDiagnostic ? ` ${maybeErrorDiagnostic}` : ''),
                     details: [
                         {
@@ -53602,9 +53601,7 @@ function assertValidFireImportReference(paths, context) {
             category: ErrorCategory.Fire,
             reason: '[Fire] Untransformed reference to compiler-required feature.',
             description: 'Either remove this `fire` call or ensure it is successfully transformed by the compiler' +
-                maybeErrorDiagnostic
-                ? ` ${maybeErrorDiagnostic}`
-                : '',
+                (maybeErrorDiagnostic != null ? ` ${maybeErrorDiagnostic}` : ''),
             details: [
                 {
                     kind: 'error',
