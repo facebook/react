@@ -79,7 +79,7 @@ export function validateUseMemo(fn: HIRFunction): Result<void, CompilerError> {
                 description:
                   'useMemo() callbacks are called by React to cache calculations across re-renders. They should not take parameters. Instead, directly reference the props, state, or local variables needed for the computation.',
                 suggestions: null,
-              }).withDetail({
+              }).withDetails({
                 kind: 'error',
                 loc,
                 message: 'Callbacks with parameters are not supported',
@@ -96,7 +96,7 @@ export function validateUseMemo(fn: HIRFunction): Result<void, CompilerError> {
                 description:
                   'useMemo() callbacks are called once and must synchronously return a value.',
                 suggestions: null,
-              }).withDetail({
+              }).withDetails({
                 kind: 'error',
                 loc: body.loc,
                 message: 'Async and generator functions are not supported',

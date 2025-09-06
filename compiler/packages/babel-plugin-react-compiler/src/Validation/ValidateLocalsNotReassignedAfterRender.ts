@@ -40,7 +40,7 @@ export function validateLocalsNotReassignedAfterRender(fn: HIRFunction): void {
         category: ErrorCategory.Immutability,
         reason: 'Cannot reassign variable after render completes',
         description: `Reassigning ${variable} after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.`,
-      }).withDetail({
+      }).withDetails({
         kind: 'error',
         loc: reassignment.loc,
         message: `Cannot reassign ${variable} after render completes`,
@@ -96,7 +96,7 @@ function getContextReassignment(
                   reason: 'Cannot reassign variable in async function',
                   description:
                     'Reassigning a variable in an async function can cause inconsistent behavior on subsequent renders. Consider using state instead',
-                }).withDetail({
+                }).withDetails({
                   kind: 'error',
                   loc: reassignment.loc,
                   message: `Cannot reassign ${variable}`,
@@ -191,7 +191,14 @@ function getContextReassignment(
           for (const operand of operands) {
             CompilerError.invariant(operand.effect !== Effect.Unknown, {
               reason: `Expected effects to be inferred prior to ValidateLocalsNotReassignedAfterRender`,
-              loc: operand.loc,
+              description: null,
+              details: [
+                {
+                  kind: 'error',
+                  loc: operand.loc,
+                  message: '',
+                },
+              ],
             });
             const reassignment = reassigningFunctions.get(
               operand.identifier.id,

@@ -264,7 +264,13 @@ class State {
       CompilerError.invariant(identifierNode !== undefined, {
         reason: 'Expected identifier to be initialized',
         description: `[${id}] operand=${printPlace(place)} for identifier declaration ${identifier}`,
-        loc: place.loc,
+        details: [
+          {
+            kind: 'error',
+            loc: place.loc,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
       identifierNode.scopes.add(scope.id);
@@ -286,7 +292,13 @@ function computeMemoizedIdentifiers(state: State): Set<DeclarationId> {
     CompilerError.invariant(node !== undefined, {
       reason: `Expected a node for all identifiers, none found for \`${id}\``,
       description: null,
-      loc: null,
+      details: [
+        {
+          kind: 'error',
+          loc: null,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
     if (node.seen) {
@@ -328,7 +340,13 @@ function computeMemoizedIdentifiers(state: State): Set<DeclarationId> {
     CompilerError.invariant(node !== undefined, {
       reason: 'Expected a node for all scopes',
       description: null,
-      loc: null,
+      details: [
+        {
+          kind: 'error',
+          loc: null,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
     if (node.seen) {
@@ -977,7 +995,13 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<
       CompilerError.invariant(identifierNode !== undefined, {
         reason: 'Expected identifier to be initialized',
         description: null,
-        loc: stmt.terminal.loc,
+        details: [
+          {
+            kind: 'error',
+            loc: stmt.terminal.loc,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
       for (const scope of scopes) {
@@ -1002,7 +1026,13 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<
       CompilerError.invariant(identifierNode !== undefined, {
         reason: 'Expected identifier to be initialized',
         description: null,
-        loc: reassignment.loc,
+        details: [
+          {
+            kind: 'error',
+            loc: reassignment.loc,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
       for (const scope of scopes) {

@@ -102,7 +102,14 @@ function validateNoSetStateInRenderImpl(
         case 'StartMemoize': {
           CompilerError.invariant(activeManualMemoId === null, {
             reason: 'Unexpected nested StartMemoize instructions',
-            loc: instr.value.loc,
+            description: null,
+            details: [
+              {
+                kind: 'error',
+                loc: instr.value.loc,
+                message: null,
+              },
+            ],
           });
           activeManualMemoId = instr.value.manualMemoId;
           break;
@@ -113,7 +120,14 @@ function validateNoSetStateInRenderImpl(
             {
               reason:
                 'Expected FinishMemoize to align with previous StartMemoize instruction',
-              loc: instr.value.loc,
+              description: null,
+              details: [
+                {
+                  kind: 'error',
+                  loc: instr.value.loc,
+                  message: null,
+                },
+              ],
             },
           );
           activeManualMemoId = null;
@@ -134,7 +148,7 @@ function validateNoSetStateInRenderImpl(
                   description:
                     'Each time the memo callback is evaluated it will change state. This can cause a memoization dependency to change, running the memo function again and causing an infinite loop. Instead of setting state in useMemo(), prefer deriving the value during render. (https://react.dev/reference/react/useState)',
                   suggestions: null,
-                }).withDetail({
+                }).withDetails({
                   kind: 'error',
                   loc: callee.loc,
                   message: 'Found setState() within useMemo()',
@@ -149,7 +163,7 @@ function validateNoSetStateInRenderImpl(
                   description:
                     'Calling setState during render will trigger another render, and can lead to infinite loops. (https://react.dev/reference/react/useState)',
                   suggestions: null,
-                }).withDetail({
+                }).withDetails({
                   kind: 'error',
                   loc: callee.loc,
                   message: 'Found setState() in render',

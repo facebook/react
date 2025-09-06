@@ -119,7 +119,13 @@ function parseAliasingSignatureConfig(
     CompilerError.invariant(!lifetimes.has(temp), {
       reason: `Invalid type configuration for module`,
       description: `Expected aliasing signature to have unique names for receiver, params, rest, returns, and temporaries in module '${moduleName}'`,
-      loc,
+      details: [
+        {
+          kind: 'error',
+          loc,
+          message: null,
+        },
+      ],
     });
     const place = signatureArgument(lifetimes.size);
     lifetimes.set(temp, place);
@@ -130,7 +136,13 @@ function parseAliasingSignatureConfig(
     CompilerError.invariant(place != null, {
       reason: `Invalid type configuration for module`,
       description: `Expected aliasing signature effects to reference known names from receiver/params/rest/returns/temporaries, but '${temp}' is not a known name in '${moduleName}'`,
-      loc,
+      details: [
+        {
+          kind: 'error',
+          loc,
+          message: null,
+        },
+      ],
     });
     return place;
   }
@@ -265,7 +277,13 @@ function addShape(
   CompilerError.invariant(!registry.has(id), {
     reason: `[ObjectShape] Could not add shape to registry: name ${id} already exists.`,
     description: null,
-    loc: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   registry.set(id, shape);
