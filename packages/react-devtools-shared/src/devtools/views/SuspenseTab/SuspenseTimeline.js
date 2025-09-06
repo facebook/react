@@ -12,19 +12,26 @@ import type Store from '../../store';
 
 import * as React from 'react';
 import {useContext, useLayoutEffect, useMemo, useRef, useState} from 'react';
-import {BridgeContext, StoreContext} from '../context';
+import {BridgeContext} from '../context';
 import {TreeDispatcherContext} from '../Components/TreeContext';
+import Tooltip from '../Components/reach-ui/tooltip';
 import {useHighlightHostInstance} from '../hooks';
-import {SuspenseTreeStateContext} from './SuspenseTreeContext';
+import {useSuspenseStore} from './SuspenseTreeContext';
 import styles from './SuspenseTimeline.css';
 import typeof {
   SyntheticEvent,
   SyntheticPointerEvent,
 } from 'react-dom-bindings/src/events/SyntheticEvent';
 
+/**
+ * @param store
+ * @param rootID
+ * @param uniqueSuspendersOnly Filters out boundaries without unqiue suspenders
+ */
 function getSuspendableDocumentOrderSuspense(
   store: Store,
   rootID: Element['id'] | void,
+  uniqueSuspendersOnly: boolean,
 ): Array<SuspenseNode> {
   if (rootID === undefined) {
     return [];
@@ -36,7 +43,7 @@ function getSuspendableDocumentOrderSuspense(
   if (!store.supportsTogglingSuspense(root.id)) {
     return [];
   }
-  const suspenseTreeList: SuspenseNode[] = [];
+  const list: SuspenseNode[] = [];
   const suspense = store.getSuspenseByID(root.id);
   if (suspense !== null) {
     const stack = [suspense];
@@ -45,9 +52,11 @@ function getSuspendableDocumentOrderSuspense(
       if (current === undefined) {
         continue;
       }
-      // Include the root even if we won't suspend it.
+      // Include the root even if we won't show it suspended (because that's just blank).
       // You should be able to see what suspended the shell.
-      suspenseTreeList.push(current);
+      if (!uniqueSuspendersOnly || current.hasUniqueSuspenders) {
+        list.push(current);
+      }
       // Add children in reverse order to maintain document order
       for (let j = current.children.length - 1; j >= 0; j--) {
         const childSuspense = store.getSuspenseByID(current.children[j]);
@@ -58,19 +67,28 @@ function getSuspendableDocumentOrderSuspense(
     }
   }
 
-  return suspenseTreeList;
+  return list;
 }
 
 function SuspenseTimelineInput({rootID}: {rootID: Element['id'] | void}) {
   const bridge = useContext(BridgeContext);
-  const store = useContext(StoreContext);
+  const store = useSuspenseStore();
   const dispatch = useContext(TreeDispatcherContext);
   const {highlightHostInstance, clearHighlightHostInstance} =
     useHighlightHostInstance();
+  const [uniqueSuspendersOnly, setUniqueSuspendersOnly] = useState(true);
+  function handleToggleUniqueSuspenders(event: SyntheticEvent) {
+    // TODO: Currently loses timeline position because position is timeline-index-based not suspense-id-based.
+    setUniqueSuspendersOnly((event.currentTarget as HTMLInputElement).checked);
+  }
 
   const timeline = useMemo(() => {
-    return getSuspendableDocumentOrderSuspense(store, rootID);
-  }, [store, rootID]);
+    return getSuspendableDocumentOrderSuspense(
+      store,
+      rootID,
+      uniqueSuspendersOnly,
+    );
+  }, [store, rootID, uniqueSuspendersOnly]);
 
   const inputRef = useRef<HTMLElement | null>(null);
   const inputBBox = useRef<ClientRect | null>(null);
@@ -161,6 +179,7 @@ function SuspenseTimelineInput({rootID}: {rootID: Element['id'] | void}) {
   function handleFocus() {
     const suspense = timeline[value];
 
+    dispatch({type: 'SELECT_ELEMENT_BY_ID', payload: suspense.id});
     highlightHostInstance(suspense.id);
   }
 
@@ -190,9 +209,7 @@ function SuspenseTimelineInput({rootID}: {rootID: Element['id'] | void}) {
 
   return (
     <>
-      <div>
-        {value}/{max}
-      </div>
+      {value}/{max}
       <div className={styles.SuspenseTimelineInput}>
         <input
           className={styles.SuspenseTimelineSlider}
@@ -208,15 +225,22 @@ function SuspenseTimelineInput({rootID}: {rootID: Element['id'] | void}) {
           ref={inputRef}
         />
       </div>
+      <Tooltip label="Only include boundaries with unique suspenders">
+        <input
+          checked={uniqueSuspendersOnly}
+          type="checkbox"
+          onChange={handleToggleUniqueSuspenders}
+        />
+      </Tooltip>
     </>
   );
 }
 
 export default function SuspenseTimeline(): React$Node {
-  const store = useContext(StoreContext);
-  const {shells} = useContext(SuspenseTreeStateContext);
+  const store = useSuspenseStore();
 
-  const defaultSelectedRootID = shells.find(rootID => {
+  const roots = store.roots;
+  const defaultSelectedRootID = roots.find(rootID => {
     const suspense = store.getSuspenseByID(rootID);
     return (
       store.supportsTogglingSuspense(rootID) &&
@@ -239,20 +263,18 @@ export default function SuspenseTimeline(): React$Node {
   return (
     <div className={styles.SuspenseTimelineContainer}>
       <SuspenseTimelineInput key={selectedRootID} rootID={selectedRootID} />
-      {shells.length > 0 && (
+      {roots.length > 0 && (
         <select
           aria-label="Select Suspense Root"
           className={styles.SuspenseTimelineRootSwitcher}
-          onChange={handleChange}>
-          {shells.map(rootID => {
+          onChange={handleChange}
+          value={selectedRootID}>
+          {roots.map(rootID => {
             // TODO: Use name
             const name = '#' + rootID;
             // TODO: Highlight host on hover
             return (
-              <option
-                key={rootID}
-                selected={rootID === selectedRootID}
-                value={rootID}>
+              <option key={rootID} value={rootID}>
                 {name}
               </option>
             );

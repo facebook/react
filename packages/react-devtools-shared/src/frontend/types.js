@@ -199,6 +199,7 @@ export type SuspenseNode = {
   children: Array<SuspenseNode['id']>,
   name: string | null,
   rects: null | Array<Rect>,
+  hasUniqueSuspenders: boolean,
 };
 
 // Serialized version of ReactIOInfo

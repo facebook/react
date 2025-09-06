@@ -20,6 +20,7 @@ import {
   SUSPENSE_TREE_OPERATION_REMOVE,
   SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
   SUSPENSE_TREE_OPERATION_RESIZE,
+  SUSPENSE_TREE_OPERATION_SUSPENDERS,
 } from 'react-devtools-shared/src/constants';
 import {
   parseElementDisplayNameFromBackend,
@@ -449,6 +450,18 @@ function updateTree(
 
         i += 3 + (numRects === -1 ? 0 : numRects * 4);
 
+        break;
+      }
+
+      case SUSPENSE_TREE_OPERATION_SUSPENDERS: {
+        const changesLength = ((operations[i + 1]: any): number);
+
+        if (__DEBUG__) {
+          const changes = operations.slice(i + 2, i + 2 + changesLength * 2);
+          debug('Suspender changes', `[${changes.join(',')}]`);
+        }
+
+        i += 2 + changesLength * 2;
         break;
       }
 

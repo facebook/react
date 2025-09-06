@@ -52,7 +52,7 @@ type Props = {
   type: IconType,
 };
 
-const materialIconsViewBox = '0 -960 960 960';
+const panelIcons = '0 -960 960 820';
 export default function ButtonIcon({className = '', type}: Props): React.Node {
   let pathData = null;
   let viewBox = '0 0 24 24';
@@ -131,27 +131,27 @@ export default function ButtonIcon({className = '', type}: Props): React.Node {
       break;
     case 'panel-left-close':
       pathData = PATH_MATERIAL_PANEL_LEFT_CLOSE;
-      viewBox = materialIconsViewBox;
+      viewBox = panelIcons;
       break;
     case 'panel-left-open':
       pathData = PATH_MATERIAL_PANEL_LEFT_OPEN;
-      viewBox = materialIconsViewBox;
+      viewBox = panelIcons;
       break;
     case 'panel-right-close':
       pathData = PATH_MATERIAL_PANEL_RIGHT_CLOSE;
-      viewBox = materialIconsViewBox;
+      viewBox = panelIcons;
       break;
     case 'panel-right-open':
       pathData = PATH_MATERIAL_PANEL_RIGHT_OPEN;
-      viewBox = materialIconsViewBox;
+      viewBox = panelIcons;
       break;
     case 'panel-bottom-open':
       pathData = PATH_MATERIAL_PANEL_BOTTOM_OPEN;
-      viewBox = materialIconsViewBox;
+      viewBox = panelIcons;
       break;
     case 'panel-bottom-close':
       pathData = PATH_MATERIAL_PANEL_BOTTOM_CLOSE;
-      viewBox = materialIconsViewBox;
+      viewBox = panelIcons;
       break;
     case 'suspend':
       pathData = PATH_SUSPEND;

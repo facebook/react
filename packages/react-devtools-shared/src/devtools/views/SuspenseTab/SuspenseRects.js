@@ -19,10 +19,9 @@ import {
   TreeDispatcherContext,
   TreeStateContext,
 } from '../Components/TreeContext';
-import {StoreContext} from '../context';
 import {useHighlightHostInstance} from '../hooks';
 import styles from './SuspenseRects.css';
-import {SuspenseTreeStateContext} from './SuspenseTreeContext';
+import {useSuspenseStore} from './SuspenseTreeContext';
 import typeof {
   SyntheticMouseEvent,
   SyntheticPointerEvent,
@@ -46,7 +45,7 @@ function SuspenseRects({
   suspenseID: SuspenseNode['id'],
 }): React$Node {
   const dispatch = useContext(TreeDispatcherContext);
-  const store = useContext(StoreContext);
+  const store = useSuspenseStore();
 
   const {inspectedElementID} = useContext(TreeStateContext);
 
@@ -109,9 +108,9 @@ function SuspenseRects({
 
 function getDocumentBoundingRect(
   store: Store,
-  shells: $ReadOnlyArray<SuspenseNode['id']>,
+  roots: $ReadOnlyArray<SuspenseNode['id']>,
 ): Rect {
-  if (shells.length === 0) {
+  if (roots.length === 0) {
     return {x: 0, y: 0, width: 0, height: 0};
   }
 
@@ -120,14 +119,14 @@ function getDocumentBoundingRect(
   let maxX = Number.NEGATIVE_INFINITY;
   let maxY = Number.NEGATIVE_INFINITY;
 
-  for (let i = 0; i < shells.length; i++) {
-    const shellID = shells[i];
-    const shell = store.getSuspenseByID(shellID);
-    if (shell === null) {
+  for (let i = 0; i < roots.length; i++) {
+    const rootID = roots[i];
+    const root = store.getSuspenseByID(rootID);
+    if (root === null) {
       continue;
     }
 
-    const rects = shell.rects;
+    const rects = root.rects;
     if (rects === null) {
       continue;
     }
@@ -154,20 +153,20 @@ function getDocumentBoundingRect(
 }
 
 function SuspenseRectsShell({
-  shellID,
+  rootID,
 }: {
-  shellID: SuspenseNode['id'],
+  rootID: SuspenseNode['id'],
 }): React$Node {
-  const store = useContext(StoreContext);
-  const shell = store.getSuspenseByID(shellID);
-  if (shell === null) {
-    console.warn(`<Element> Could not find suspense node id ${shellID}`);
+  const store = useSuspenseStore();
+  const root = store.getSuspenseByID(rootID);
+  if (root === null) {
+    console.warn(`<Element> Could not find suspense node id ${rootID}`);
     return null;
   }
 
   return (
     <g>
-      {shell.children.map(childID => {
+      {root.children.map(childID => {
         return <SuspenseRects key={childID} suspenseID={childID} />;
       })}
     </g>
@@ -175,11 +174,11 @@ function SuspenseRectsShell({
 }
 
 function SuspenseRectsContainer(): React$Node {
-  const store = useContext(StoreContext);
+  const store = useSuspenseStore();
   // TODO: This relies on a full re-render of all children when the Suspense tree changes.
-  const {shells} = useContext(SuspenseTreeStateContext);
+  const roots = store.roots;
 
-  const boundingRect = getDocumentBoundingRect(store, shells);
+  const boundingRect = getDocumentBoundingRect(store, roots);
 
   const width = '100%';
   const boundingRectWidth = boundingRect.width;
@@ -193,8 +192,8 @@ function SuspenseRectsContainer(): React$Node {
       <svg
         style={{width, height}}
         viewBox={`${boundingRect.x} ${boundingRect.y} ${boundingRect.width} ${boundingRect.height}`}>
-        {shells.map(shellID => {
-          return <SuspenseRectsShell key={shellID} shellID={shellID} />;
+        {roots.map(rootID => {
+          return <SuspenseRectsShell key={rootID} rootID={rootID} />;
         })}
       </svg>
     </div>
