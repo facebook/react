@@ -7,6 +7,7 @@
  * @flow
  */
 import type {ReactContext} from 'shared/ReactTypes';
+import type Store from '../../store';
 
 import * as React from 'react';
 import {
@@ -17,17 +18,12 @@ import {
   useMemo,
   useReducer,
 } from 'react';
-import type {SuspenseNode} from '../../../frontend/types';
 import {StoreContext} from '../context';
 
-export type SuspenseTreeState = {
-  shells: $ReadOnlyArray<SuspenseNode['id']>,
-};
+export type SuspenseTreeState = {};
 
-type ACTION_HANDLE_SUSPENSE_TREE_MUTATION = {
-  type: 'HANDLE_SUSPENSE_TREE_MUTATION',
-};
-export type SuspenseTreeAction = ACTION_HANDLE_SUSPENSE_TREE_MUTATION;
+// unused for now
+export type SuspenseTreeAction = {type: 'unused'};
 export type SuspenseTreeDispatch = (action: SuspenseTreeAction) => void;
 
 const SuspenseTreeStateContext: ReactContext<SuspenseTreeState> =
@@ -42,11 +38,39 @@ type Props = {
   children: React$Node,
 };
 
-function SuspenseTreeContextController({children}: Props): React.Node {
+/**
+ * The Store is mutable. This Hook ensures renders read the latest Suspense related
+ * data.
+ */
+function useSuspenseStore(): Store {
   const store = useContext(StoreContext);
-
+  const [, storeUpdated] = useReducer<number, number, void>(
+    (x: number) => (x + 1) % Number.MAX_SAFE_INTEGER,
+    0,
+  );
   const initialRevision = useMemo(() => store.revisionSuspense, [store]);
+  // We're currently storing everything Suspense related in the same Store as
+  // Components. However, most reads are currently stateless. This ensures
+  // the latest state is always read from the Store.
+  useEffect(() => {
+    const handleSuspenseTreeMutated = () => {
+      storeUpdated();
+    };
 
+    // Since this is a passive effect, the tree may have been mutated before our initial subscription.
+    if (store.revisionSuspense !== initialRevision) {
+      // At the moment, we can treat this as a mutation.
+      handleSuspenseTreeMutated();
+    }
+
+    store.addListener('suspenseTreeMutated', handleSuspenseTreeMutated);
+    return () =>
+      store.removeListener('suspenseTreeMutated', handleSuspenseTreeMutated);
+  }, [initialRevision, store]);
+  return store;
+}
+
+function SuspenseTreeContextController({children}: Props): React.Node {
   // This reducer is created inline because it needs access to the Store.
   // The store is mutable, but the Store itself is global and lives for the lifetime of the DevTools,
   // so it's okay for the reducer to have an empty dependencies array.
@@ -58,8 +82,6 @@ function SuspenseTreeContextController({children}: Props): React.Node {
       ): SuspenseTreeState => {
         const {type} = action;
         switch (type) {
-          case 'HANDLE_SUSPENSE_TREE_MUTATION':
-            return {...state, shells: store.roots};
           default:
             throw new Error(`Unrecognized action "${type}"`);
         }
@@ -67,9 +89,7 @@ function SuspenseTreeContextController({children}: Props): React.Node {
     [],
   );
 
-  const initialState: SuspenseTreeState = {
-    shells: store.roots,
-  };
+  const initialState: SuspenseTreeState = {};
   const [state, dispatch] = useReducer(reducer, initialState);
   const transitionDispatch = useMemo(
     () => (action: SuspenseTreeAction) =>
@@ -78,28 +98,6 @@ function SuspenseTreeContextController({children}: Props): React.Node {
       }),
     [dispatch],
   );
-
-  useEffect(() => {
-    const handleSuspenseTreeMutated = () => {
-      dispatch({
-        type: 'HANDLE_SUSPENSE_TREE_MUTATION',
-      });
-    };
-
-    // Since this is a passive effect, the tree may have been mutated before our initial subscription.
-    if (store.revisionSuspense !== initialRevision) {
-      // At the moment, we can treat this as a mutation.
-      // We don't know which Elements were newly added/removed, but that should be okay in this case.
-      // It would only impact the search state, which is unlikely to exist yet at this point.
-      dispatch({
-        type: 'HANDLE_SUSPENSE_TREE_MUTATION',
-      });
-    }
-
-    store.addListener('suspenseTreeMutated', handleSuspenseTreeMutated);
-    return () =>
-      store.removeListener('suspenseTreeMutated', handleSuspenseTreeMutated);
-  }, [dispatch, initialRevision, store]);
 
   return (
     <SuspenseTreeStateContext.Provider value={state}>
@@ -114,4 +112,5 @@ export {
   SuspenseTreeDispatcherContext,
   SuspenseTreeStateContext,
   SuspenseTreeContextController,
+  useSuspenseStore,
 };
