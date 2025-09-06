@@ -67,7 +67,7 @@ export function validateNoFreezingKnownMutableFunctions(
           CompilerDiagnostic.create({
             category: ErrorCategory.Immutability,
             reason: 'Cannot modify local variables after render completes',
-            description: `This argument is a function which may reassign or mutate ${variable} after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.`,
+            description: `This argument is a function which may reassign or mutate ${variable} after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead`,
           })
             .withDetails({
               kind: 'error',

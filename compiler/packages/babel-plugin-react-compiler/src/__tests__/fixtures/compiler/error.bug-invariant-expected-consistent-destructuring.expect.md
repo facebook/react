@@ -29,7 +29,7 @@ Found 1 error:
 
 Invariant: Expected consistent kind for destructuring
 
-Other places were `Reassign` but 'mutate? #t8$46[7:9]{reactive}' is const
+Other places were `Reassign` but 'mutate? #t8$46[7:9]{reactive}' is const.
 
 error.bug-invariant-expected-consistent-destructuring.ts:9:9
    7 |

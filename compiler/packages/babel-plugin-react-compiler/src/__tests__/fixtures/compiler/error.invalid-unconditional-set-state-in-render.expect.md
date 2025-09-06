@@ -23,7 +23,7 @@ Found 2 errors:
 
 Error: Calling setState during render may trigger an infinite loop
 
-Calling setState during render will trigger another render, and can lead to infinite loops. (https://react.dev/reference/react/useState)
+Calling setState during render will trigger another render, and can lead to infinite loops. (https://react.dev/reference/react/useState).
 
 error.invalid-unconditional-set-state-in-render.ts:6:2
   4 |   const aliased = setX;
@@ -36,7 +36,7 @@ error.invalid-unconditional-set-state-in-render.ts:6:2
 
 Error: Calling setState during render may trigger an infinite loop
 
-Calling setState during render will trigger another render, and can lead to infinite loops. (https://react.dev/reference/react/useState)
+Calling setState during render will trigger another render, and can lead to infinite loops. (https://react.dev/reference/react/useState).
 
 error.invalid-unconditional-set-state-in-render.ts:7:2
    5 |
