@@ -698,7 +698,7 @@ class Context {
   }
 
   hasErrors(): boolean {
-    return this.#errors.hasErrors();
+    return this.#errors.hasAnyErrors();
   }
 
   throwIfErrorsFound(): void {

@@ -213,7 +213,7 @@ export function lower(
     );
   }
 
-  if (builder.errors.hasErrors()) {
+  if (builder.errors.hasAnyErrors()) {
     return Err(builder.errors);
   }
 
@@ -2667,7 +2667,7 @@ function lowerExpression(
          * lowerIdentifierForAssignment should have already reported an error if it returned null,
          * we check here just in case
          */
-        if (!builder.errors.hasErrors()) {
+        if (!builder.errors.hasAnyErrors()) {
           builder.errors.push({
             reason: `(BuildHIR::lowerExpression) Found an invalid UpdateExpression without a previously reported error`,
             category: ErrorCategory.Invariant,
