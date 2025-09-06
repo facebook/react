@@ -50,7 +50,6 @@ function useFoo(arr1, arr2) {
   if ($[2] !== arr2 || $[3] !== x) {
     let y;
     t1 = () => ({ y });
-
     (y = x.concat(arr2)), y;
     $[2] = arr2;
     $[3] = x;

@@ -52,6 +52,7 @@ function Example() {
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = function updateStyles() {
       const foo = fooRef.current;
+
       if (barRef.current == null || foo == null) {
         return;
       }

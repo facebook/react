@@ -982,7 +982,8 @@ function codegenTerminal(
       if (terminal.targetKind === 'implicit') {
         return null;
       }
-      return t.breakStatement(
+      return createBreakStatement(
+        terminal.loc,
         terminal.targetKind === 'labeled'
           ? t.identifier(codegenLabel(terminal.target))
           : null,
@@ -992,14 +993,16 @@ function codegenTerminal(
       if (terminal.targetKind === 'implicit') {
         return null;
       }
-      return t.continueStatement(
+      return createContinueStatement(
+        terminal.loc,
         terminal.targetKind === 'labeled'
           ? t.identifier(codegenLabel(terminal.target))
           : null,
       );
     }
     case 'for': {
-      return t.forStatement(
+      return createForStatement(
+        terminal.loc,
         codegenForInit(cx, terminal.init),
         codegenInstructionValueToExpression(cx, terminal.test),
         terminal.update !== null
@@ -1108,7 +1111,8 @@ function codegenTerminal(
             `Unhandled lvalue kind: ${iterableItem.value.lvalue.kind}`,
           );
       }
-      return t.forInStatement(
+      return createForInStatement(
+        terminal.loc,
         /*
          * Special handling here since we only want the VariableDeclarators without any inits
          * This needs to be updated when we handle non-trivial ForOf inits
@@ -1225,7 +1229,8 @@ function codegenTerminal(
             `Unhandled lvalue kind: ${iterableItem.value.lvalue.kind}`,
           );
       }
-      return t.forOfStatement(
+      return createForOfStatement(
+        terminal.loc,
         /*
          * Special handling here since we only want the VariableDeclarators without any inits
          * This needs to be updated when we handle non-trivial ForOf inits
@@ -1247,7 +1252,7 @@ function codegenTerminal(
           alternate = block;
         }
       }
-      return t.ifStatement(test, consequent, alternate);
+      return createIfStatement(terminal.loc, test, consequent, alternate);
     }
     case 'return': {
       const value = codegenPlaceToExpression(cx, terminal.value);
@@ -1258,7 +1263,8 @@ function codegenTerminal(
       return t.returnStatement(value);
     }
     case 'switch': {
-      return t.switchStatement(
+      return createSwitchStatement(
+        terminal.loc,
         codegenPlaceToExpression(cx, terminal.test),
         terminal.cases.map(case_ => {
           const test =
@@ -1271,15 +1277,26 @@ function codegenTerminal(
       );
     }
     case 'throw': {
-      return t.throwStatement(codegenPlaceToExpression(cx, terminal.value));
+      return createThrowStatement(
+        terminal.loc,
+        codegenPlaceToExpression(cx, terminal.value),
+      );
     }
     case 'do-while': {
       const test = codegenInstructionValueToExpression(cx, terminal.test);
-      return t.doWhileStatement(test, codegenBlock(cx, terminal.loop));
+      return createDoWhileStatement(
+        terminal.loc,
+        test,
+        codegenBlock(cx, terminal.loop),
+      );
     }
     case 'while': {
       const test = codegenInstructionValueToExpression(cx, terminal.test);
-      return t.whileStatement(test, codegenBlock(cx, terminal.loop));
+      return createWhileStatement(
+        terminal.loc,
+        test,
+        codegenBlock(cx, terminal.loop),
+      );
     }
     case 'label': {
       return codegenBlock(cx, terminal.block);
@@ -1290,7 +1307,8 @@ function codegenTerminal(
         catchParam = convertIdentifier(terminal.handlerBinding.identifier);
         cx.temp.set(terminal.handlerBinding.identifier.declarationId, null);
       }
-      return t.tryStatement(
+      return createTryStatement(
+        terminal.loc,
         codegenBlock(cx, terminal.block),
         t.catchClause(catchParam, codegenBlock(cx, terminal.handler)),
       );
@@ -1695,7 +1713,13 @@ const createExpressionStatement = withLoc(t.expressionStatement);
 const _createLabelledStatement = withLoc(t.labeledStatement);
 const createVariableDeclaration = withLoc(t.variableDeclaration);
 const createFunctionDeclaration = withLoc(t.functionDeclaration);
-const _createWhileStatement = withLoc(t.whileStatement);
+const createWhileStatement = withLoc(t.whileStatement);
+const createDoWhileStatement = withLoc(t.doWhileStatement);
+const createSwitchStatement = withLoc(t.switchStatement);
+const createIfStatement = withLoc(t.ifStatement);
+const createForStatement = withLoc(t.forStatement);
+const createForOfStatement = withLoc(t.forOfStatement);
+const createForInStatement = withLoc(t.forInStatement);
 const createTaggedTemplateExpression = withLoc(t.taggedTemplateExpression);
 const createLogicalExpression = withLoc(t.logicalExpression);
 const createSequenceExpression = withLoc(t.sequenceExpression);
@@ -1710,6 +1734,10 @@ const createJsxText = withLoc(t.jsxText);
 const createJsxClosingElement = withLoc(t.jsxClosingElement);
 const createJsxOpeningElement = withLoc(t.jsxOpeningElement);
 const createStringLiteral = withLoc(t.stringLiteral);
+const createThrowStatement = withLoc(t.throwStatement);
+const createTryStatement = withLoc(t.tryStatement);
+const createBreakStatement = withLoc(t.breakStatement);
+const createContinueStatement = withLoc(t.continueStatement);
 
 function createHookGuard(
   guard: ExternalFunction,
@@ -2523,6 +2551,9 @@ function codegenInstructionValue(
         `Unexpected instruction value kind \`${(instrValue as any).kind}\``,
       );
     }
+  }
+  if (instrValue.loc != null && instrValue.loc != GeneratedSource) {
+    value.loc = instrValue.loc;
   }
   return value;
 }
