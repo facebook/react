@@ -36,7 +36,7 @@ Found 1 error:
 
 Error: Cannot infer dependencies of this effect. This will break your build!
 
-To resolve, either pass a dependency array or fix reported compiler bailout diagnostics. Todo: (BuildHIR::lowerStatement) Handle TryStatement without a catch clause (13:6)
+To resolve, either pass a dependency array or fix reported compiler bailout diagnostics Todo: (BuildHIR::lowerStatement) Handle TryStatement without a catch clause (13:6).
 
 error.todo-syntax.ts:11:2
    9 | function Component({prop1}) {

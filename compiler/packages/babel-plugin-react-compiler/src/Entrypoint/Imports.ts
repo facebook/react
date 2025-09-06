@@ -256,7 +256,7 @@ export function addImportsToProgram(
         {
           reason:
             'Encountered conflicting import specifiers in generated program',
-          description: `Conflict from import ${loweredImport.module}:(${loweredImport.imported} as ${loweredImport.name}).`,
+          description: `Conflict from import ${loweredImport.module}:(${loweredImport.imported} as ${loweredImport.name})`,
           details: [
             {
               kind: 'error',

@@ -67,7 +67,7 @@ export function validateStaticComponents(
                 CompilerDiagnostic.create({
                   category: ErrorCategory.StaticComponents,
                   reason: 'Cannot create components during render',
-                  description: `Components created during render will reset their state each time they are created. Declare components outside of render. `,
+                  description: `Components created during render will reset their state each time they are created. Declare components outside of render`,
                 })
                   .withDetails({
                     kind: 'error',
