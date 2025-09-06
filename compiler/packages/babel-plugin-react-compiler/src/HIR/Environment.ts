@@ -261,6 +261,8 @@ export const EnvironmentConfigSchema = z.object({
 
   enableFire: z.boolean().default(false),
 
+  enableNameAnonymousFunctions: z.boolean().default(false),
+
   /**
    * Enables inference and auto-insertion of effect dependencies. Takes in an array of
    * configurable module and import pairs to allow for user-land experimentation. For example,
