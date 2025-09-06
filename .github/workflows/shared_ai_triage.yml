@@ -1,0 +1,47 @@
+name: (Shared) AI Triage
+
+on:
+  # for testing only
+  push:
+    branches: [naturally-unintelligent]
+  # issues:
+  #   types: [opened]
+  workflow_dispatch:
+    inputs:
+      issue_id:
+        required: true
+        type: string
+        default: ''
+
+permissions: {}
+
+env:
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
+  # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#cache-segment-restore-timeout
+  SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
+
+jobs:
+  triage_issue:
+    runs-on: ubuntu-latest
+    permissions:
+      # We use actions/ai-inference
+      models: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Run AI Inference with Prompt YML
+        id: inference
+        uses: actions/ai-inference@a1c11829223a786afe3b5663db904a3aa1eac3a2
+        with:
+          model: meta/Llama-4-Scout-17B-16E-Instruct
+          system-prompt-file: '.github/workflows/prompts/ai_triage_system_prompt_slim.txt'
+          enable-github-mcp: true
+          github-mcp-token: ${{ secrets.MCP_PAT }}
+          prompt: |
+            Fetch all available labels in the facebook/react repo.
+            Then analyze the following GitHub issue and apply appropriate labels:
+            Issue Number: ${{ inputs.issue_id || '34378' }}
+      - name: Use Response File
+        run: |
+          echo "Response saved to: ${{ steps.inference.outputs.response-file }}"
+          cat "${{ steps.inference.outputs.response-file }}"
