@@ -25,7 +25,7 @@ describe('ReactSiblingPrerendering', () => {
     waitForAll = require('internal-test-utils').waitForAll;
     startTransition = React.startTransition;
     Suspense = React.Suspense;
-    Activity = React.unstable_Activity;
+    Activity = React.Activity;
 
     textCache = new Map();
   });

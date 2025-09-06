@@ -44,7 +44,7 @@ export {
   cacheSignal,
   startTransition,
   unstable_LegacyHidden,
-  unstable_Activity,
+  Activity,
   unstable_Scope,
   unstable_SuspenseList,
   unstable_TracingMarker,

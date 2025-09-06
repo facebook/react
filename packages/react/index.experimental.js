@@ -29,7 +29,9 @@ export {
   cache,
   cacheSignal,
   startTransition,
-  unstable_Activity,
+  Activity,
+  // TODO: Remove this from experimental after awhile.
+  // Activity as unstable_Activity,
   unstable_postpone,
   unstable_getCacheForType,
   unstable_SuspenseList,

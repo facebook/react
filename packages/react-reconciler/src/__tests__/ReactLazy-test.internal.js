@@ -968,7 +968,7 @@ describe('ReactLazy', () => {
 
   // @gate enableActivity
   it('throws with a useful error when wrapping Activity with lazy()', async () => {
-    const BadLazy = lazy(() => fakeImport(React.unstable_Activity));
+    const BadLazy = lazy(() => fakeImport(React.Activity));
 
     const root = ReactTestRenderer.create(
       <Suspense fallback={<Text text="Loading..." />}>
@@ -981,7 +981,7 @@ describe('ReactLazy', () => {
 
     await waitForAll(['Loading...']);
 
-    await resolveFakeImport(React.unstable_Activity);
+    await resolveFakeImport(React.Activity);
     root.update(
       <Suspense fallback={<Text text="Loading..." />}>
         <BadLazy />

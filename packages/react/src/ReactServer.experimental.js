@@ -82,5 +82,7 @@ export {
   // Experimental
   REACT_SUSPENSE_LIST_TYPE as unstable_SuspenseList,
   REACT_VIEW_TRANSITION_TYPE as unstable_ViewTransition,
+  // TODO: Remove this from experimental after awhile.
   REACT_ACTIVITY_TYPE as unstable_Activity,
+  REACT_ACTIVITY_TYPE as Activity,
 };

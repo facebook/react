@@ -100,7 +100,7 @@ describe('ReactDOMServerPartialHydrationActivity', () => {
     act = require('internal-test-utils').act;
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
-    Activity = React.unstable_Activity;
+    Activity = React.Activity;
     Suspense = React.Suspense;
     useSyncExternalStore = React.useSyncExternalStore;
 

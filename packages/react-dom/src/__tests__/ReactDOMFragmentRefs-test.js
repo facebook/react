@@ -31,7 +31,7 @@ describe('FragmentRefs', () => {
     jest.resetModules();
     React = require('react');
     Fragment = React.Fragment;
-    Activity = React.unstable_Activity;
+    Activity = React.Activity;
     ReactDOMClient = require('react-dom/client');
     ReactDOM = require('react-dom');
     createPortal = ReactDOM.createPortal;

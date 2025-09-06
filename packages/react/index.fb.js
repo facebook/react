@@ -32,7 +32,9 @@ export {
   startTransition,
   StrictMode,
   Suspense,
-  unstable_Activity,
+  Activity,
+  // TODO: Remove this after updated in fb.
+  Activity as unstable_Activity,
   unstable_getCacheForType,
   unstable_LegacyHidden,
   unstable_Scope,

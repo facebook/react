@@ -139,7 +139,7 @@ describe('ReactDOMServerSelectiveHydrationActivity', () => {
     ReactDOMServer = require('react-dom/server');
     act = require('internal-test-utils').act;
     Scheduler = require('scheduler');
-    Activity = React.unstable_Activity;
+    Activity = React.Activity;
 
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;

@@ -29,7 +29,9 @@ export {
   cache,
   cacheSignal,
   startTransition,
-  unstable_Activity,
+  Activity,
+  // TODO: Remove this from experimental after awhile.
+  // Activity as unstable_Activity,
   unstable_postpone,
   unstable_getCacheForType,
   unstable_SuspenseList,
@@ -62,6 +64,7 @@ export {
 
 import {useOptimistic} from './src/ReactClient';
 
+// todo: unstable_Activity
 export function experimental_useOptimistic<S, A>(
   passthrough: S,
   reducer: ?(S, A) => S,
