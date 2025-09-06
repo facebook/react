@@ -372,7 +372,7 @@ function codegenReactiveFunction(
     }
   }
 
-  if (cx.errors.hasErrors()) {
+  if (cx.errors.hasAnyErrors()) {
     return Err(cx.errors);
   }
 

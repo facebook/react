@@ -111,7 +111,7 @@ function findDirectivesDynamicGating(
       }
     }
   }
-  if (errors.hasErrors()) {
+  if (errors.hasAnyErrors()) {
     return Err(errors);
   } else if (result.length > 1) {
     const error = new CompilerError();
@@ -139,7 +139,7 @@ function findDirectivesDynamicGating(
 }
 
 function isError(err: unknown): boolean {
-  return !(err instanceof CompilerError) || err.isError();
+  return !(err instanceof CompilerError) || err.hasErrors();
 }
 
 function isConfigError(err: unknown): boolean {

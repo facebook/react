@@ -46,7 +46,7 @@ export function validateRestrictedImports(
       }
     },
   });
-  if (error.hasErrors()) {
+  if (error.hasAnyErrors()) {
     return error;
   } else {
     return null;
