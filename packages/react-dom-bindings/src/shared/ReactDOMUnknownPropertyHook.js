@@ -271,8 +271,38 @@ function validateProperty(tagName, name, value, eventRegistry) {
         }
       }
       case 'function':
+        if (name === 'value' || name === 'defaultValue') {
+          console.error(
+            'Received a function as a `%s` prop on <%s> tag. ' +
+              'Functions cannot be rendered as text and will be ignored. ' +
+              'If you meant to render the function result, call it first: %s={myFunction()}. ' +
+              'If you meant to pass a function reference, this is not supported for value props. ' +
+              'For details, see https://react.dev/link/attribute-behavior',
+            name,
+            tagName,
+            name,
+          );
+          warnedProperties[name] = true;
+          return true;
+        }
+        warnedProperties[name] = true;
+        return false;
       case 'symbol':
-        // Warn when a known attribute is a bad type
+        if (name === 'value' || name === 'defaultValue') {
+          console.error(
+            'Received a Symbol as a `%s` prop on <%s> tag. ' +
+              'Symbols cannot be rendered as text and will be ignored. ' +
+              'If you need to display this value, convert it to a string first with String() or .toString().' +
+              '\n\nFor example: %s={String(mySymbol)} or %s={mySymbol.toString()}. ' +
+              'For details, see https://react.dev/link/attribute-behavior',
+            name,
+            tagName,
+            name,
+            name,
+          );
+          warnedProperties[name] = true;
+          return true;
+        }
         warnedProperties[name] = true;
         return false;
       case 'string': {
