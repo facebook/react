@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, ErrorSeverity, SourceLocation} from '..';
+import {CompilerError, SourceLocation} from '..';
 import {ErrorCategory} from '../CompilerError';
 import {
   ArrayExpression,
@@ -224,7 +224,6 @@ function validateEffect(
       reason:
         'Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)',
       description: null,
-      severity: ErrorSeverity.InvalidReact,
       loc,
       suggestions: null,
     });

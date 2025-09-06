@@ -14,7 +14,7 @@ import {allRules} from '../src/rules/ReactCompilerRule';
 
 testRule(
   'no ambiguous JSX rule',
-  allRules[getRuleForCategory(ErrorCategory.ErrorBoundaries).name],
+  allRules[getRuleForCategory(ErrorCategory.ErrorBoundaries).name].rule,
   {
     valid: [],
     invalid: [

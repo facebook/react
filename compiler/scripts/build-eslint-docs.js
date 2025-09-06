@@ -19,12 +19,14 @@ const combinedRules = [
 ];
 
 const printed = combinedRules
-  .filter(rule => rule.recommended)
-  .map(rule => {
+  .filter(
+    ruleConfig => ruleConfig.rule.recommended && ruleConfig.severity !== 'Off'
+  )
+  .map(ruleConfig => {
     return `
-## \`react-hooks/${rule.name}\`
+## \`react-hooks/${ruleConfig.rule.name}\`
 
-${rule.description}
+${ruleConfig.rule.description}
     `.trim();
   })
   .join('\n\n');

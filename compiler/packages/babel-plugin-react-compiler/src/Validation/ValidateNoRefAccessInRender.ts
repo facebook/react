@@ -9,7 +9,6 @@ import {
   CompilerDiagnostic,
   CompilerError,
   ErrorCategory,
-  ErrorSeverity,
 } from '../CompilerError';
 import {
   BlockId,
@@ -470,7 +469,6 @@ function validateNoRefAccessInRenderImpl(
                 errors.pushDiagnostic(
                   CompilerDiagnostic.create({
                     category: ErrorCategory.Refs,
-                    severity: ErrorSeverity.InvalidReact,
                     reason: 'Cannot access refs during render',
                     description: ERROR_DESCRIPTION,
                   }).withDetail({
@@ -734,7 +732,6 @@ function guardCheck(errors: CompilerError, operand: Place, env: Env): void {
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
         category: ErrorCategory.Refs,
-        severity: ErrorSeverity.InvalidReact,
         reason: 'Cannot access refs during render',
         description: ERROR_DESCRIPTION,
       }).withDetail({
@@ -759,7 +756,6 @@ function validateNoRefValueAccess(
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
         category: ErrorCategory.Refs,
-        severity: ErrorSeverity.InvalidReact,
         reason: 'Cannot access refs during render',
         description: ERROR_DESCRIPTION,
       }).withDetail({
@@ -786,7 +782,6 @@ function validateNoRefPassedToFunction(
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
         category: ErrorCategory.Refs,
-        severity: ErrorSeverity.InvalidReact,
         reason: 'Cannot access refs during render',
         description: ERROR_DESCRIPTION,
       }).withDetail({
@@ -809,7 +804,6 @@ function validateNoRefUpdate(
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
         category: ErrorCategory.Refs,
-        severity: ErrorSeverity.InvalidReact,
         reason: 'Cannot access refs during render',
         description: ERROR_DESCRIPTION,
       }).withDetail({
@@ -831,7 +825,6 @@ function validateNoDirectRefValueAccess(
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
         category: ErrorCategory.Refs,
-        severity: ErrorSeverity.InvalidReact,
         reason: 'Cannot access refs during render',
         description: ERROR_DESCRIPTION,
       }).withDetail({
