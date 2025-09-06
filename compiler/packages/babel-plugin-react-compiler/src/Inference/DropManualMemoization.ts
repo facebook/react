@@ -300,7 +300,7 @@ function extractManualMemoizationArgs(
         reason: `Expected a callback function to be passed to ${kind}`,
         description: `Expected a callback function to be passed to ${kind}`,
         suggestions: null,
-      }).withDetail({
+      }).withDetails({
         kind: 'error',
         loc: instr.value.loc,
         message: `Expected a callback function to be passed to ${kind}`,
@@ -315,7 +315,7 @@ function extractManualMemoizationArgs(
         reason: `Unexpected spread argument to ${kind}`,
         description: `Unexpected spread argument to ${kind}`,
         suggestions: null,
-      }).withDetail({
+      }).withDetails({
         kind: 'error',
         loc: instr.value.loc,
         message: `Unexpected spread argument to ${kind}`,
@@ -335,7 +335,7 @@ function extractManualMemoizationArgs(
           reason: `Expected the dependency list for ${kind} to be an array literal`,
           description: `Expected the dependency list for ${kind} to be an array literal`,
           suggestions: null,
-        }).withDetail({
+        }).withDetails({
           kind: 'error',
           loc: depsListPlace.loc,
           message: `Expected the dependency list for ${kind} to be an array literal`,
@@ -353,7 +353,7 @@ function extractManualMemoizationArgs(
             reason: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
             description: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
             suggestions: null,
-          }).withDetail({
+          }).withDetails({
             kind: 'error',
             loc: dep.loc,
             message: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
@@ -462,7 +462,7 @@ export function dropManualMemoization(
                         : 'useMemo'
                     } callback doesn't return a value. useMemo is for computing and caching values, not for arbitrary side effects.`,
                     suggestions: null,
-                  }).withDetail({
+                  }).withDetails({
                     kind: 'error',
                     loc: instr.value.loc,
                     message: 'useMemo() callbacks must return a value',
@@ -498,7 +498,7 @@ export function dropManualMemoization(
                   reason: `Expected the first argument to be an inline function expression`,
                   description: `Expected the first argument to be an inline function expression`,
                   suggestions: [],
-                }).withDetail({
+                }).withDetails({
                   kind: 'error',
                   loc: fnPlace.loc,
                   message: `Expected the first argument to be an inline function expression`,
@@ -613,7 +613,14 @@ function findOptionalPlaces(fn: HIRFunction): Set<IdentifierId> {
           default: {
             CompilerError.invariant(false, {
               reason: `Unexpected terminal in optional`,
-              loc: terminal.loc,
+              description: null,
+              details: [
+                {
+                  kind: 'error',
+                  loc: terminal.loc,
+                  message: `Unexpected ${terminal.kind} in optional`,
+                },
+              ],
             });
           }
         }

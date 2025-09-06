@@ -616,7 +616,13 @@ class Unifier {
       CompilerError.invariant(type.operands.length > 0, {
         reason: 'there should be at least one operand',
         description: null,
-        loc: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
 

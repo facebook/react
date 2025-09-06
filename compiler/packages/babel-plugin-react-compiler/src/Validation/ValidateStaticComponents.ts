@@ -69,12 +69,12 @@ export function validateStaticComponents(
                   reason: 'Cannot create components during render',
                   description: `Components created during render will reset their state each time they are created. Declare components outside of render. `,
                 })
-                  .withDetail({
+                  .withDetails({
                     kind: 'error',
                     loc: value.tag.loc,
                     message: 'This component is created during render',
                   })
-                  .withDetail({
+                  .withDetails({
                     kind: 'error',
                     loc: location,
                     message: 'The component is created during render here',

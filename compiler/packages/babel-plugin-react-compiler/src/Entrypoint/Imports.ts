@@ -257,7 +257,13 @@ export function addImportsToProgram(
           reason:
             'Encountered conflicting import specifiers in generated program',
           description: `Conflict from import ${loweredImport.module}:(${loweredImport.imported} as ${loweredImport.name}).`,
-          loc: GeneratedSource,
+          details: [
+            {
+              kind: 'error',
+              loc: GeneratedSource,
+              message: null,
+            },
+          ],
           suggestions: null,
         },
       );
@@ -268,7 +274,13 @@ export function addImportsToProgram(
           reason:
             'Found inconsistent import specifier. This is an internal bug.',
           description: `Expected import ${moduleName}:${specifierName} but found ${loweredImport.module}:${loweredImport.imported}`,
-          loc: GeneratedSource,
+          details: [
+            {
+              kind: 'error',
+              loc: GeneratedSource,
+              message: null,
+            },
+          ],
         },
       );
     }

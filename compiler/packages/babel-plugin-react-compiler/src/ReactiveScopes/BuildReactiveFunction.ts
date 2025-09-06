@@ -70,7 +70,13 @@ class Driver {
     CompilerError.invariant(!this.cx.emitted.has(block.id), {
       reason: `Cannot emit the same block twice: bb${block.id}`,
       description: null,
-      loc: null,
+      details: [
+        {
+          kind: 'error',
+          loc: null,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
     this.cx.emitted.add(block.id);
@@ -130,7 +136,14 @@ class Driver {
         if (this.cx.isScheduled(terminal.consequent)) {
           CompilerError.invariant(false, {
             reason: `Unexpected 'if' where the consequent is already scheduled`,
-            loc: terminal.loc,
+            description: null,
+            details: [
+              {
+                kind: 'error',
+                loc: terminal.loc,
+                message: null,
+              },
+            ],
           });
         } else {
           consequent = this.traverseBlock(
@@ -143,7 +156,14 @@ class Driver {
           if (this.cx.isScheduled(alternateId)) {
             CompilerError.invariant(false, {
               reason: `Unexpected 'if' where the alternate is already scheduled`,
-              loc: terminal.loc,
+              description: null,
+              details: [
+                {
+                  kind: 'error',
+                  loc: terminal.loc,
+                  message: null,
+                },
+              ],
             });
           } else {
             alternate = this.traverseBlock(this.cx.ir.blocks.get(alternateId)!);
@@ -196,7 +216,14 @@ class Driver {
           if (this.cx.isScheduled(case_.block)) {
             CompilerError.invariant(case_.block === terminal.fallthrough, {
               reason: `Unexpected 'switch' where a case is already scheduled and block is not the fallthrough`,
-              loc: terminal.loc,
+              description: null,
+              details: [
+                {
+                  kind: 'error',
+                  loc: terminal.loc,
+                  message: null,
+                },
+              ],
             });
             return;
           } else {
@@ -255,7 +282,14 @@ class Driver {
         } else {
           CompilerError.invariant(false, {
             reason: `Unexpected 'do-while' where the loop is already scheduled`,
-            loc: terminal.loc,
+            description: null,
+            details: [
+              {
+                kind: 'error',
+                loc: terminal.loc,
+                message: null,
+              },
+            ],
           });
         }
 
@@ -316,7 +350,14 @@ class Driver {
         } else {
           CompilerError.invariant(false, {
             reason: `Unexpected 'while' where the loop is already scheduled`,
-            loc: terminal.loc,
+            description: null,
+            details: [
+              {
+                kind: 'error',
+                loc: terminal.loc,
+                message: null,
+              },
+            ],
           });
         }
 
@@ -402,7 +443,14 @@ class Driver {
         } else {
           CompilerError.invariant(false, {
             reason: `Unexpected 'for' where the loop is already scheduled`,
-            loc: terminal.loc,
+            description: null,
+            details: [
+              {
+                kind: 'error',
+                loc: terminal.loc,
+                message: null,
+              },
+            ],
           });
         }
 
@@ -500,7 +548,14 @@ class Driver {
         } else {
           CompilerError.invariant(false, {
             reason: `Unexpected 'for-of' where the loop is already scheduled`,
-            loc: terminal.loc,
+            description: null,
+            details: [
+              {
+                kind: 'error',
+                loc: terminal.loc,
+                message: null,
+              },
+            ],
           });
         }
 
@@ -572,7 +627,14 @@ class Driver {
         } else {
           CompilerError.invariant(false, {
             reason: `Unexpected 'for-in' where the loop is already scheduled`,
-            loc: terminal.loc,
+            description: null,
+            details: [
+              {
+                kind: 'error',
+                loc: terminal.loc,
+                message: null,
+              },
+            ],
           });
         }
 
@@ -615,7 +677,14 @@ class Driver {
         if (this.cx.isScheduled(terminal.alternate)) {
           CompilerError.invariant(false, {
             reason: `Unexpected 'branch' where the alternate is already scheduled`,
-            loc: terminal.loc,
+            description: null,
+            details: [
+              {
+                kind: 'error',
+                loc: terminal.loc,
+                message: null,
+              },
+            ],
           });
         } else {
           alternate = this.traverseBlock(
@@ -653,7 +722,14 @@ class Driver {
         if (this.cx.isScheduled(terminal.block)) {
           CompilerError.invariant(false, {
             reason: `Unexpected 'label' where the block is already scheduled`,
-            loc: terminal.loc,
+            description: null,
+            details: [
+              {
+                kind: 'error',
+                loc: terminal.loc,
+                message: null,
+              },
+            ],
           });
         } else {
           block = this.traverseBlock(this.cx.ir.blocks.get(terminal.block)!);
@@ -811,7 +887,14 @@ class Driver {
         if (this.cx.isScheduled(terminal.block)) {
           CompilerError.invariant(false, {
             reason: `Unexpected 'scope' where the block is already scheduled`,
-            loc: terminal.loc,
+            description: null,
+            details: [
+              {
+                kind: 'error',
+                loc: terminal.loc,
+                message: null,
+              },
+            ],
           });
         } else {
           block = this.traverseBlock(this.cx.ir.blocks.get(terminal.block)!);
@@ -837,7 +920,13 @@ class Driver {
         CompilerError.invariant(false, {
           reason: 'Unexpected unsupported terminal',
           description: null,
-          loc: terminal.loc,
+          details: [
+            {
+              kind: 'error',
+              loc: terminal.loc,
+              message: null,
+            },
+          ],
           suggestions: null,
         });
       }
@@ -874,7 +963,13 @@ class Driver {
             reason:
               'Expected branch block to end in an instruction that sets the test value',
             description: null,
-            loc: instr.lvalue.loc,
+            details: [
+              {
+                kind: 'error',
+                loc: instr.lvalue.loc,
+                message: null,
+              },
+            ],
             suggestions: null,
           },
         );
@@ -906,7 +1001,13 @@ class Driver {
         CompilerError.invariant(false, {
           reason: 'Expected goto value block to have at least one instruction',
           description: null,
-          loc: null,
+          details: [
+            {
+              kind: 'error',
+              loc: null,
+              message: null,
+            },
+          ],
           suggestions: null,
         });
       } else if (defaultBlock.instructions.length === 1) {
@@ -1191,14 +1292,27 @@ class Driver {
       CompilerError.invariant(false, {
         reason: 'Expected a break target',
         description: null,
-        loc: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
     }
     if (this.cx.scopeFallthroughs.has(target.block)) {
       CompilerError.invariant(target.type === 'implicit', {
         reason: 'Expected reactive scope to implicitly break to fallthrough',
-        loc,
+        description: null,
+        details: [
+          {
+            kind: 'error',
+            loc,
+            message: null,
+          },
+        ],
       });
       return null;
     }
@@ -1224,7 +1338,13 @@ class Driver {
     CompilerError.invariant(target !== null, {
       reason: `Expected continue target to be scheduled for bb${block}`,
       description: null,
-      loc: null,
+      details: [
+        {
+          kind: 'error',
+          loc: null,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
 
@@ -1299,7 +1419,13 @@ class Context {
     CompilerError.invariant(!this.#scheduled.has(block), {
       reason: `Break block is already scheduled: bb${block}`,
       description: null,
-      loc: null,
+      details: [
+        {
+          kind: 'error',
+          loc: null,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
     this.#scheduled.add(block);
@@ -1318,7 +1444,13 @@ class Context {
     CompilerError.invariant(!this.#scheduled.has(continueBlock), {
       reason: `Continue block is already scheduled: bb${continueBlock}`,
       description: null,
-      loc: null,
+      details: [
+        {
+          kind: 'error',
+          loc: null,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
     this.#scheduled.add(continueBlock);
@@ -1346,7 +1478,13 @@ class Context {
     CompilerError.invariant(last !== undefined && last.id === scheduleId, {
       reason: 'Can only unschedule the last target',
       description: null,
-      loc: null,
+      details: [
+        {
+          kind: 'error',
+          loc: null,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
     if (last.type !== 'loop' || last.ownsBlock !== null) {
@@ -1421,7 +1559,13 @@ class Context {
     CompilerError.invariant(false, {
       reason: 'Expected a break target',
       description: null,
-      loc: null,
+      details: [
+        {
+          kind: 'error',
+          loc: null,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
   }
