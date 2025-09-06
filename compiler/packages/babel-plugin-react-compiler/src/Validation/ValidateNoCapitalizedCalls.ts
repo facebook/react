@@ -59,7 +59,7 @@ export function validateNoCapitalizedCalls(
             CompilerError.throwInvalidReact({
               category: ErrorCategory.CapitalizedCalls,
               reason,
-              description: `${calleeName} may be a component.`,
+              description: `${calleeName} may be a component`,
               loc: value.loc,
               suggestions: null,
             });
@@ -83,7 +83,7 @@ export function validateNoCapitalizedCalls(
             errors.push({
               category: ErrorCategory.CapitalizedCalls,
               reason,
-              description: `${propertyName} may be a component.`,
+              description: `${propertyName} may be a component`,
               loc: value.loc,
               suggestions: null,
             });

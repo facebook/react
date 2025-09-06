@@ -304,7 +304,7 @@ function validateInferredDep(
               errorDiagnostic
                 ? getCompareDependencyResultDescription(errorDiagnostic)
                 : 'Inferred dependency not present in source'
-            }.`
+            }`
           : '',
       ]
         .join('')
@@ -551,7 +551,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
               reason: 'Existing memoization could not be preserved',
               description: [
                 'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. ',
-                'This dependency may be mutated later, which could cause the value to change unexpectedly.',
+                'This dependency may be mutated later, which could cause the value to change unexpectedly',
               ].join(''),
             }).withDetails({
               kind: 'error',
@@ -603,7 +603,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
                   category: ErrorCategory.PreserveManualMemo,
                   reason: 'Existing memoization could not be preserved',
                   description: [
-                    'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output. ',
+                    'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output',
                     DEBUG
                       ? `${printIdentifier(identifier)} was not memoized.`
                       : '',
