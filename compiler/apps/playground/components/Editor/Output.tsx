@@ -64,12 +64,16 @@ type Props = {
 async function tabify(
   source: string,
   compilerOutput: CompilerOutput,
+  showInternals: boolean,
 ): Promise<Map<string, ReactNode>> {
   const tabs = new Map<string, React.ReactNode>();
   const reorderedTabs = new Map<string, React.ReactNode>();
   const concattedResults = new Map<string, string>();
   // Concat all top level function declaration results into a single tab for each pass
   for (const [passName, results] of compilerOutput.results) {
+    if (!showInternals && passName !== 'Output' && passName !== 'SourceMap') {
+      continue;
+    }
     for (const result of results) {
       switch (result.kind) {
         case 'hir': {
@@ -225,10 +229,10 @@ function Output({store, compilerOutput}: Props): JSX.Element {
   }
 
   useEffect(() => {
-    tabify(store.source, compilerOutput).then(tabs => {
+    tabify(store.source, compilerOutput, store.showInternals).then(tabs => {
       setTabs(tabs);
     });
-  }, [store.source, compilerOutput]);
+  }, [store.source, compilerOutput, store.showInternals]);
 
   const changedPasses: Set<string> = new Set(['Output', 'HIR']); // Initial and final passes should always be bold
   let lastResult: string = '';
@@ -248,7 +252,7 @@ function Output({store, compilerOutput}: Props): JSX.Element {
   return (
     <>
       <TabbedWindow
-        defaultTab="HIR"
+        defaultTab={store.showInternals ? 'HIR' : 'Output'}
         setTabsOpen={setTabsOpen}
         tabsOpen={tabsOpen}
         tabs={tabs}

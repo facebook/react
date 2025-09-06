@@ -38,9 +38,11 @@ import type { PluginOptions } from 'babel-plugin-react-compiler/dist';
 export const defaultStore: Store = {
   source: index,
   config: defaultConfig,
+  showInternals: false,
 };
 
 export const emptyStore: Store = {
   source: '',
   config: '',
+  showInternals: false,
 };
