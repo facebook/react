@@ -568,7 +568,7 @@ export function inferMutationAliasingRanges(
     }
   }
 
-  if (errors.hasErrors() && !isFunctionExpression) {
+  if (errors.hasAnyErrors() && !isFunctionExpression) {
     return Err(errors);
   }
   return Ok(functionEffects);
