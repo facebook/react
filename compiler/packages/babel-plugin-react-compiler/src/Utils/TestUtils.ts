@@ -164,7 +164,13 @@ function parseConfigPragmaEnvironmentForTest(
   CompilerError.invariant(false, {
     reason: 'Internal error, could not parse config from pragma string',
     description: `${fromZodError(config.error)}`,
-    loc: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
 }
@@ -248,7 +254,13 @@ function parseConfigStringAsJS(
     CompilerError.invariant(false, {
       reason: 'Failed to parse config pragma as JavaScript object',
       description: `Could not parse: ${configString}. Error: ${error}`,
-      loc: null,
+      details: [
+        {
+          kind: 'error',
+          loc: null,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
   }
@@ -279,7 +291,13 @@ function parseConfigStringAsJS(
       CompilerError.invariant(false, {
         reason: 'Invalid environment configuration in config pragma',
         description: `${fromZodError(validatedEnvironment.error)}`,
-        loc: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
     }

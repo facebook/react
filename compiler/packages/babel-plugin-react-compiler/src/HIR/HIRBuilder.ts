@@ -507,7 +507,13 @@ export default class HIRBuilder {
       {
         reason: 'Mismatched label',
         description: null,
-        loc: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
         suggestions: null,
       },
     );
@@ -530,7 +536,13 @@ export default class HIRBuilder {
       {
         reason: 'Mismatched label',
         description: null,
-        loc: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
         suggestions: null,
       },
     );
@@ -566,7 +578,13 @@ export default class HIRBuilder {
       {
         reason: 'Mismatched loops',
         description: null,
-        loc: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
         suggestions: null,
       },
     );
@@ -591,7 +609,13 @@ export default class HIRBuilder {
     CompilerError.invariant(false, {
       reason: 'Expected a loop or switch to be in scope',
       description: null,
-      loc: null,
+      details: [
+        {
+          kind: 'error',
+          loc: null,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
   }
@@ -612,7 +636,13 @@ export default class HIRBuilder {
         CompilerError.invariant(false, {
           reason: 'Continue may only refer to a labeled loop',
           description: null,
-          loc: null,
+          details: [
+            {
+              kind: 'error',
+              loc: null,
+              message: null,
+            },
+          ],
           suggestions: null,
         });
       }
@@ -620,7 +650,13 @@ export default class HIRBuilder {
     CompilerError.invariant(false, {
       reason: 'Expected a loop to be in scope',
       description: null,
-      loc: null,
+      details: [
+        {
+          kind: 'error',
+          loc: null,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
   }
@@ -643,7 +679,13 @@ function _shrink(func: HIR): void {
     CompilerError.invariant(block != null, {
       reason: `expected block ${blockId} to exist`,
       description: null,
-      loc: null,
+      details: [
+        {
+          kind: 'error',
+          loc: null,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
     target = getTargetIfIndirection(block);
@@ -775,7 +817,13 @@ function getReversePostorderedBlocks(func: HIR): HIR['blocks'] {
     CompilerError.invariant(block != null, {
       reason: '[HIRBuilder] Unexpected null block',
       description: `expected block ${blockId} to exist`,
-      loc: GeneratedSource,
+      details: [
+        {
+          kind: 'error',
+          loc: GeneratedSource,
+          message: null,
+        },
+      ],
     });
     const successors = [...eachTerminalSuccessor(block.terminal)].reverse();
     const fallthrough = terminalFallthrough(block.terminal);
@@ -831,7 +879,13 @@ export function markInstructionIds(func: HIR): void {
       CompilerError.invariant(!visited.has(instr), {
         reason: `${printInstruction(instr)} already visited!`,
         description: null,
-        loc: instr.loc,
+        details: [
+          {
+            kind: 'error',
+            loc: instr.loc,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
       visited.add(instr);
@@ -854,7 +908,13 @@ export function markPredecessors(func: HIR): void {
     CompilerError.invariant(block != null, {
       reason: 'unexpected missing block',
       description: `block ${blockId}`,
-      loc: GeneratedSource,
+      details: [
+        {
+          kind: 'error',
+          loc: GeneratedSource,
+          message: null,
+        },
+      ],
     });
     if (prevBlock) {
       block.preds.add(prevBlock.id);

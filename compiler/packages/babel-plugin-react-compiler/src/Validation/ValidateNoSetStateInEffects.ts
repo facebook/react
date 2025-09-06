@@ -107,7 +107,7 @@ export function validateNoSetStateInEffects(
                       'Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. ' +
                       '(https://react.dev/learn/you-might-not-need-an-effect)',
                     suggestions: null,
-                  }).withDetail({
+                  }).withDetails({
                     kind: 'error',
                     loc: setState.loc,
                     message:

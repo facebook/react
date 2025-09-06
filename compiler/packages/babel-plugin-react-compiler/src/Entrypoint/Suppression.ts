@@ -152,7 +152,14 @@ export function suppressionsToCompilerError(
 ): CompilerError {
   CompilerError.invariant(suppressionRanges.length !== 0, {
     reason: `Expected at least suppression comment source range`,
-    loc: GeneratedSource,
+    description: null,
+    details: [
+      {
+        kind: 'error',
+        loc: GeneratedSource,
+        message: null,
+      },
+    ],
   });
   const error = new CompilerError();
   for (const suppressionRange of suppressionRanges) {
@@ -196,7 +203,7 @@ export function suppressionsToCompilerError(
             op: CompilerSuggestionOperation.Remove,
           },
         ],
-      }).withDetail({
+      }).withDetails({
         kind: 'error',
         loc: suppressionRange.disableComment.loc ?? null,
         message: 'Found React rule suppression',
