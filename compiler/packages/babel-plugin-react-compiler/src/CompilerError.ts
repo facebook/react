@@ -279,6 +279,7 @@ export class CompilerErrorDetail {
  */
 export class CompilerError extends Error {
   details: Array<CompilerErrorDetail | CompilerDiagnostic> = [];
+  disabledDetails: Array<CompilerErrorDetail | CompilerDiagnostic> = [];
   printedMessage: string | null = null;
 
   static invariant(
@@ -359,6 +360,7 @@ export class CompilerError extends Error {
     super(...args);
     this.name = 'ReactCompilerError';
     this.details = [];
+    this.disabledDetails = [];
   }
 
   override get message(): string {
@@ -399,10 +401,15 @@ export class CompilerError extends Error {
 
   merge(other: CompilerError): void {
     this.details.push(...other.details);
+    this.disabledDetails.push(...other.disabledDetails);
   }
 
   pushDiagnostic(diagnostic: CompilerDiagnostic): void {
-    this.details.push(diagnostic);
+    if (diagnostic.severity === ErrorSeverity.Off) {
+      this.disabledDetails.push(diagnostic);
+    } else {
+      this.details.push(diagnostic);
+    }
   }
 
   /**
@@ -423,43 +430,40 @@ export class CompilerError extends Error {
    * @deprecated use {@link pushDiagnostic} instead
    */
   pushErrorDetail(detail: CompilerErrorDetail): CompilerErrorDetail {
-    this.details.push(detail);
+    if (detail.severity === ErrorSeverity.Off) {
+      this.disabledDetails.push(detail);
+    } else {
+      this.details.push(detail);
+    }
     return detail;
   }
 
-  hasErrors(): boolean {
+  hasAnyErrors(): boolean {
     return this.details.length > 0;
   }
 
   asResult(): Result<void, CompilerError> {
-    return this.hasErrors() ? Err(this) : Ok(undefined);
+    return this.hasAnyErrors() ? Err(this) : Ok(undefined);
   }
 
   /**
    * Returns true if any of the error details are of severity Error.
    */
-  isError(): boolean {
-    let res = false;
+  hasErrors(): boolean {
     for (const detail of this.details) {
-      if (detail.severity === ErrorSeverity.Off) {
-        return false;
-      }
       if (detail.severity === ErrorSeverity.Error) {
-        res = true;
+        return true;
       }
     }
-    return res;
+    return false;
   }
 
   /**
    * Returns true if there are no Errors and there is at least one Warning.
    */
-  isWarning(): boolean {
+  hasWarning(): boolean {
     let res = false;
     for (const detail of this.details) {
-      if (detail.severity === ErrorSeverity.Off) {
-        return false;
-      }
       if (detail.severity === ErrorSeverity.Error) {
         return false;
       }
@@ -470,12 +474,9 @@ export class CompilerError extends Error {
     return res;
   }
 
-  isHint(): boolean {
+  hasHints(): boolean {
     let res = false;
     for (const detail of this.details) {
-      if (detail.severity === ErrorSeverity.Off) {
-        return false;
-      }
       if (detail.severity === ErrorSeverity.Error) {
         return false;
       }

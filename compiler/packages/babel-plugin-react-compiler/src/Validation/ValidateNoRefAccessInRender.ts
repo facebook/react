@@ -735,7 +735,7 @@ function validateNoRefAccessInRenderImpl(
       }
     }
 
-    if (errors.hasErrors()) {
+    if (errors.hasAnyErrors()) {
       return Err(errors);
     }
   }

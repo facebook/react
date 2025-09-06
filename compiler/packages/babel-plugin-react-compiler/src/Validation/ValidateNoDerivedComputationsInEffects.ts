@@ -104,7 +104,7 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
       }
     }
   }
-  if (errors.hasErrors()) {
+  if (errors.hasAnyErrors()) {
     throw errors;
   }
 }
