@@ -24,7 +24,7 @@ Found 1 error:
 
 Invariant: Expected temporaries to be promoted to named identifiers in an earlier pass
 
-identifier 15 is unnamed
+identifier 15 is unnamed.
 ```
           
       

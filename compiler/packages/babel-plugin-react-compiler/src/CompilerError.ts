@@ -141,11 +141,10 @@ export class CompilerDiagnostic {
   }
 
   printErrorMessage(source: string, options: PrintErrorMessageOptions): string {
-    const buffer = [
-      printErrorSummary(this.category, this.reason),
-      '\n\n',
-      this.description,
-    ];
+    const buffer = [printErrorSummary(this.category, this.reason)];
+    if (this.description != null) {
+      buffer.push('\n\n', `${this.description}.`);
+    }
     for (const detail of this.options.details) {
       switch (detail.kind) {
         case 'error': {

@@ -77,7 +77,7 @@ export function validateUseMemo(fn: HIRFunction): Result<void, CompilerError> {
                 category: ErrorCategory.UseMemo,
                 reason: 'useMemo() callbacks may not accept parameters',
                 description:
-                  'useMemo() callbacks are called by React to cache calculations across re-renders. They should not take parameters. Instead, directly reference the props, state, or local variables needed for the computation.',
+                  'useMemo() callbacks are called by React to cache calculations across re-renders. They should not take parameters. Instead, directly reference the props, state, or local variables needed for the computation',
                 suggestions: null,
               }).withDetails({
                 kind: 'error',
@@ -94,7 +94,7 @@ export function validateUseMemo(fn: HIRFunction): Result<void, CompilerError> {
                 reason:
                   'useMemo() callbacks may not be async or generator functions',
                 description:
-                  'useMemo() callbacks are called once and must synchronously return a value.',
+                  'useMemo() callbacks are called once and must synchronously return a value',
                 suggestions: null,
               }).withDetails({
                 kind: 'error',

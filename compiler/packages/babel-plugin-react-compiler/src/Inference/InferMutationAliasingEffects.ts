@@ -473,7 +473,7 @@ function applySignature(
             const diagnostic = CompilerDiagnostic.create({
               category: ErrorCategory.Immutability,
               reason: 'This value cannot be modified',
-              description: `${reason}.`,
+              description: reason,
             }).withDetails({
               kind: 'error',
               loc: effect.value.loc,
@@ -1094,7 +1094,7 @@ function applyEffect(
           const diagnostic = CompilerDiagnostic.create({
             category: ErrorCategory.Immutability,
             reason: 'Cannot access variable before it is declared',
-            description: `${variable ?? 'This variable'} is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.`,
+            description: `${variable ?? 'This variable'} is accessed before it is declared, which prevents the earlier access from updating when this value changes over time`,
           });
           if (hoistedAccess != null && hoistedAccess.loc != effect.value.loc) {
             diagnostic.withDetails({
@@ -1133,7 +1133,7 @@ function applyEffect(
           const diagnostic = CompilerDiagnostic.create({
             category: ErrorCategory.Immutability,
             reason: 'This value cannot be modified',
-            description: `${reason}.`,
+            description: reason,
           }).withDetails({
             kind: 'error',
             loc: effect.value.loc,
@@ -2269,7 +2269,7 @@ function computeEffectsForLegacySignature(
           'This API returns functions which cannot be memoized without leading to stale UI. ' +
             'To prevent this, by default React Compiler will skip memoizing this component/hook. ' +
             'However, you may see issues if values from this API are passed to other components/hooks that are ' +
-            'memoized.',
+            'memoized',
         ].join(''),
       }).withDetails({
         kind: 'error',
