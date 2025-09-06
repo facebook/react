@@ -3700,28 +3700,32 @@ export function attach(
         // just use the Fiber anyway.
         // Fallbacks get attributed to the parent so we only measure if we're
         // showing primary content.
-        if (OffscreenComponent === -1) {
-          const isTimedOut = fiber.memoizedState !== null;
-          if (!isTimedOut) {
-            newSuspenseNode.rects = measureInstance(newInstance);
-          }
-        } else {
-          const hydrated = isFiberHydrated(fiber);
-          if (hydrated) {
-            const contentFiber = fiber.child;
-            if (contentFiber === null) {
-              throw new Error(
-                'There should always be an Offscreen Fiber child in a hydrated Suspense boundary.',
-              );
+        if (fiber.tag === SuspenseComponent) {
+          if (OffscreenComponent === -1) {
+            const isTimedOut = fiber.memoizedState !== null;
+            if (!isTimedOut) {
+              newSuspenseNode.rects = measureInstance(newInstance);
             }
           } else {
-            // This Suspense Fiber is still dehydrated. It won't have any children
-            // until hydration.
+            const hydrated = isFiberHydrated(fiber);
+            if (hydrated) {
+              const contentFiber = fiber.child;
+              if (contentFiber === null) {
+                throw new Error(
+                  'There should always be an Offscreen Fiber child in a hydrated Suspense boundary.',
+                );
+              }
+            } else {
+              // This Suspense Fiber is still dehydrated. It won't have any children
+              // until hydration.
+            }
+            const isTimedOut = fiber.memoizedState !== null;
+            if (!isTimedOut) {
+              newSuspenseNode.rects = measureInstance(newInstance);
+            }
           }
-          const isTimedOut = fiber.memoizedState !== null;
-          if (!isTimedOut) {
-            newSuspenseNode.rects = measureInstance(newInstance);
-          }
+        } else {
+          newSuspenseNode.rects = measureInstance(newInstance);
         }
         recordSuspenseMount(newSuspenseNode, reconcilingParentSuspenseNode);
       }
