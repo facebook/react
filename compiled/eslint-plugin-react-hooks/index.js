@@ -17853,9 +17853,11 @@ class CompilerError extends Error {
     constructor(...args) {
         super(...args);
         this.details = [];
+        this.disabledDetails = [];
         this.printedMessage = null;
         this.name = 'ReactCompilerError';
         this.details = [];
+        this.disabledDetails = [];
     }
     get message() {
         var _a;
@@ -17886,9 +17888,15 @@ class CompilerError extends Error {
     }
     merge(other) {
         this.details.push(...other.details);
+        this.disabledDetails.push(...other.disabledDetails);
     }
     pushDiagnostic(diagnostic) {
-        this.details.push(diagnostic);
+        if (diagnostic.severity === ErrorSeverity.Off) {
+            this.disabledDetails.push(diagnostic);
+        }
+        else {
+            this.details.push(diagnostic);
+        }
     }
     push(options) {
         var _a;
@@ -17902,33 +17910,31 @@ class CompilerError extends Error {
         return this.pushErrorDetail(detail);
     }
     pushErrorDetail(detail) {
-        this.details.push(detail);
+        if (detail.severity === ErrorSeverity.Off) {
+            this.disabledDetails.push(detail);
+        }
+        else {
+            this.details.push(detail);
+        }
         return detail;
     }
-    hasErrors() {
+    hasAnyErrors() {
         return this.details.length > 0;
     }
     asResult() {
-        return this.hasErrors() ? Err(this) : Ok(undefined);
+        return this.hasAnyErrors() ? Err(this) : Ok(undefined);
     }
-    isError() {
-        let res = false;
+    hasErrors() {
         for (const detail of this.details) {
-            if (detail.severity === ErrorSeverity.Off) {
-                return false;
-            }
             if (detail.severity === ErrorSeverity.Error) {
-                res = true;
+                return true;
             }
         }
-        return res;
+        return false;
     }
-    isWarning() {
+    hasWarning() {
         let res = false;
         for (const detail of this.details) {
-            if (detail.severity === ErrorSeverity.Off) {
-                return false;
-            }
             if (detail.severity === ErrorSeverity.Error) {
                 return false;
             }
@@ -17938,12 +17944,9 @@ class CompilerError extends Error {
         }
         return res;
     }
-    isHint() {
+    hasHints() {
         let res = false;
         for (const detail of this.details) {
-            if (detail.severity === ErrorSeverity.Off) {
-                return false;
-            }
             if (detail.severity === ErrorSeverity.Error) {
                 return false;
             }
@@ -23024,7 +23027,7 @@ function lower(func, env, bindings = null, capturedRefs = new Map()) {
             message: 'Expected a block statement or expression',
         }));
     }
-    if (builder.errors.hasErrors()) {
+    if (builder.errors.hasAnyErrors()) {
         return Err(builder.errors);
     }
     builder.terminate({
@@ -25132,7 +25135,7 @@ function lowerExpression(builder, exprPath) {
             }
             const lvalue = lowerIdentifierForAssignment(builder, (_19 = argument.node.loc) !== null && _19 !== void 0 ? _19 : GeneratedSource, InstructionKind.Reassign, argument);
             if (lvalue === null) {
-                if (!builder.errors.hasErrors()) {
+                if (!builder.errors.hasAnyErrors()) {
                     builder.errors.push({
                         reason: `(BuildHIR::lowerExpression) Found an invalid UpdateExpression without a previously reported error`,
                         category: ErrorCategory.Invariant,
@@ -37376,7 +37379,7 @@ function codegenReactiveFunction(cx, fn) {
             statements.pop();
         }
     }
-    if (cx.errors.hasErrors()) {
+    if (cx.errors.hasAnyErrors()) {
         return Err(cx.errors);
     }
     const countMemoBlockVisitor = new CountMemoBlockVisitor(fn.env);
@@ -37750,7 +37753,7 @@ function codegenTerminal(cx, terminal) {
             if (terminal.targetKind === 'implicit') {
                 return null;
             }
-            return libExports$1.breakStatement(terminal.targetKind === 'labeled'
+            return createBreakStatement(terminal.loc, terminal.targetKind === 'labeled'
                 ? libExports$1.identifier(codegenLabel(terminal.target))
                 : null);
         }
@@ -37758,12 +37761,12 @@ function codegenTerminal(cx, terminal) {
             if (terminal.targetKind === 'implicit') {
                 return null;
             }
-            return libExports$1.continueStatement(terminal.targetKind === 'labeled'
+            return createContinueStatement(terminal.loc, terminal.targetKind === 'labeled'
                 ? libExports$1.identifier(codegenLabel(terminal.target))
                 : null);
         }
         case 'for': {
-            return libExports$1.forStatement(codegenForInit(cx, terminal.init), codegenInstructionValueToExpression(cx, terminal.test), terminal.update !== null
+            return createForStatement(terminal.loc, codegenForInit(cx, terminal.init), codegenInstructionValueToExpression(cx, terminal.test), terminal.update !== null
                 ? codegenInstructionValueToExpression(cx, terminal.update)
                 : null, codegenBlock(cx, terminal.loop));
         }
@@ -37863,7 +37866,7 @@ function codegenTerminal(cx, terminal) {
                 default:
                     assertExhaustive$1(iterableItem.value.lvalue.kind, `Unhandled lvalue kind: ${iterableItem.value.lvalue.kind}`);
             }
-            return libExports$1.forInStatement(createVariableDeclaration(iterableItem.value.loc, varDeclKind, [
+            return createForInStatement(terminal.loc, createVariableDeclaration(iterableItem.value.loc, varDeclKind, [
                 libExports$1.variableDeclarator(lval, null),
             ]), codegenInstructionValueToExpression(cx, iterableCollection.value), codegenBlock(cx, terminal.loop));
         }
@@ -37965,7 +37968,7 @@ function codegenTerminal(cx, terminal) {
                 default:
                     assertExhaustive$1(iterableItem.value.lvalue.kind, `Unhandled lvalue kind: ${iterableItem.value.lvalue.kind}`);
             }
-            return libExports$1.forOfStatement(createVariableDeclaration(iterableItem.value.loc, varDeclKind, [
+            return createForOfStatement(terminal.loc, createVariableDeclaration(iterableItem.value.loc, varDeclKind, [
                 libExports$1.variableDeclarator(lval, null),
             ]), codegenInstructionValueToExpression(cx, iterableCollection), codegenBlock(cx, terminal.loop));
         }
@@ -37979,7 +37982,7 @@ function codegenTerminal(cx, terminal) {
                     alternate = block;
                 }
             }
-            return libExports$1.ifStatement(test, consequent, alternate);
+            return createIfStatement(terminal.loc, test, consequent, alternate);
         }
         case 'return': {
             const value = codegenPlaceToExpression(cx, terminal.value);
@@ -37989,7 +37992,7 @@ function codegenTerminal(cx, terminal) {
             return libExports$1.returnStatement(value);
         }
         case 'switch': {
-            return libExports$1.switchStatement(codegenPlaceToExpression(cx, terminal.test), terminal.cases.map(case_ => {
+            return createSwitchStatement(terminal.loc, codegenPlaceToExpression(cx, terminal.test), terminal.cases.map(case_ => {
                 const test = case_.test !== null
                     ? codegenPlaceToExpression(cx, case_.test)
                     : null;
@@ -37998,15 +38001,15 @@ function codegenTerminal(cx, terminal) {
             }));
         }
         case 'throw': {
-            return libExports$1.throwStatement(codegenPlaceToExpression(cx, terminal.value));
+            return createThrowStatement(terminal.loc, codegenPlaceToExpression(cx, terminal.value));
         }
         case 'do-while': {
             const test = codegenInstructionValueToExpression(cx, terminal.test);
-            return libExports$1.doWhileStatement(test, codegenBlock(cx, terminal.loop));
+            return createDoWhileStatement(terminal.loc, test, codegenBlock(cx, terminal.loop));
         }
         case 'while': {
             const test = codegenInstructionValueToExpression(cx, terminal.test);
-            return libExports$1.whileStatement(test, codegenBlock(cx, terminal.loop));
+            return createWhileStatement(terminal.loc, test, codegenBlock(cx, terminal.loop));
         }
         case 'label': {
             return codegenBlock(cx, terminal.block);
@@ -38017,7 +38020,7 @@ function codegenTerminal(cx, terminal) {
                 catchParam = convertIdentifier(terminal.handlerBinding.identifier);
                 cx.temp.set(terminal.handlerBinding.identifier.declarationId, null);
             }
-            return libExports$1.tryStatement(codegenBlock(cx, terminal.block), libExports$1.catchClause(catchParam, codegenBlock(cx, terminal.handler)));
+            return createTryStatement(terminal.loc, codegenBlock(cx, terminal.block), libExports$1.catchClause(catchParam, codegenBlock(cx, terminal.handler)));
         }
         default: {
             assertExhaustive$1(terminal, `Unexpected terminal kind \`${terminal.kind}\``);
@@ -38369,6 +38372,13 @@ const createBinaryExpression = withLoc(libExports$1.binaryExpression);
 const createExpressionStatement = withLoc(libExports$1.expressionStatement);
 const createVariableDeclaration = withLoc(libExports$1.variableDeclaration);
 const createFunctionDeclaration = withLoc(libExports$1.functionDeclaration);
+const createWhileStatement = withLoc(libExports$1.whileStatement);
+const createDoWhileStatement = withLoc(libExports$1.doWhileStatement);
+const createSwitchStatement = withLoc(libExports$1.switchStatement);
+const createIfStatement = withLoc(libExports$1.ifStatement);
+const createForStatement = withLoc(libExports$1.forStatement);
+const createForOfStatement = withLoc(libExports$1.forOfStatement);
+const createForInStatement = withLoc(libExports$1.forInStatement);
 const createTaggedTemplateExpression = withLoc(libExports$1.taggedTemplateExpression);
 const createLogicalExpression = withLoc(libExports$1.logicalExpression);
 const createSequenceExpression = withLoc(libExports$1.sequenceExpression);
@@ -38383,6 +38393,10 @@ const createJsxText = withLoc(libExports$1.jsxText);
 const createJsxClosingElement = withLoc(libExports$1.jsxClosingElement);
 const createJsxOpeningElement = withLoc(libExports$1.jsxOpeningElement);
 const createStringLiteral = withLoc(libExports$1.stringLiteral);
+const createThrowStatement = withLoc(libExports$1.throwStatement);
+const createTryStatement = withLoc(libExports$1.tryStatement);
+const createBreakStatement = withLoc(libExports$1.breakStatement);
+const createContinueStatement = withLoc(libExports$1.continueStatement);
 function createHookGuard(guard, context, stmts, before, after) {
     const guardFnName = context.addImportSpecifier(guard).name;
     function createHookGuardImpl(kind) {
@@ -38929,6 +38943,9 @@ function codegenInstructionValue(cx, instrValue) {
         default: {
             assertExhaustive$1(instrValue, `Unexpected instruction value kind \`${instrValue.kind}\``);
         }
+    }
+    if (instrValue.loc != null && instrValue.loc != GeneratedSource) {
+        value.loc = instrValue.loc;
     }
     return value;
 }
@@ -43911,7 +43928,7 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
             }
         }
     }
-    if (errors.hasErrors() && !isFunctionExpression) {
+    if (errors.hasAnyErrors() && !isFunctionExpression) {
         return Err(errors);
     }
     return Ok(functionEffects);
@@ -49453,7 +49470,7 @@ function validateNoRefAccessInRenderImpl(fn, env) {
                 }
             }
         }
-        if (errors.hasErrors()) {
+        if (errors.hasAnyErrors()) {
             return Err(errors);
         }
     }
@@ -51433,7 +51450,7 @@ class Context {
         return __classPrivateFieldGet(this, _Context_arrayExpressions, "f").get(id);
     }
     hasErrors() {
-        return __classPrivateFieldGet(this, _Context_errors, "f").hasErrors();
+        return __classPrivateFieldGet(this, _Context_errors, "f").hasAnyErrors();
     }
     throwIfErrorsFound() {
         if (this.hasErrors())
@@ -51707,7 +51724,7 @@ function validateNoDerivedComputationsInEffects(fn) {
             }
         }
     }
-    if (errors.hasErrors()) {
+    if (errors.hasAnyErrors()) {
         throw errors;
     }
 }
@@ -52337,7 +52354,7 @@ function findDirectivesDynamicGating(directives, opts) {
             }
         }
     }
-    if (errors.hasErrors()) {
+    if (errors.hasAnyErrors()) {
         return Err(errors);
     }
     else if (result.length > 1) {
@@ -52367,7 +52384,7 @@ function findDirectivesDynamicGating(directives, opts) {
     }
 }
 function isError(err) {
-    return !(err instanceof CompilerError) || err.isError();
+    return !(err instanceof CompilerError) || err.hasErrors();
 }
 function isConfigError(err) {
     if (err instanceof CompilerError) {
@@ -53189,7 +53206,7 @@ function validateRestrictedImports(path, { validateBlocklistedImports }) {
             }
         },
     });
-    if (error.hasErrors()) {
+    if (error.hasAnyErrors()) {
         return error;
     }
     else {
