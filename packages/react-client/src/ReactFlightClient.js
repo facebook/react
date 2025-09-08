@@ -2543,6 +2543,7 @@ export type StreamState = {
   _rowLength: number, // remaining bytes in the row. 0 indicates that we're looking for a newline.
   _buffer: Array<Uint8Array>, // chunks received so far as part of this row
   _debugInfo: ReactIOInfo, // DEV-only
+  _debugTargetChunkSize: number, // DEV-only
 };
 
 export function createStreamState(
@@ -2555,7 +2556,7 @@ export function createStreamState(
     _rowTag: 0,
     _rowLength: 0,
     _buffer: [],
-  }: Omit<StreamState, '_debugInfo'>): any);
+  }: Omit<StreamState, '_debugInfo' | '_debugTargetChunkSize'>): any);
   if (__DEV__ && enableAsyncDebugInfo) {
     const response = unwrapWeakResponse(weakResponse);
     // Create an entry for the I/O to load the stream itself.
@@ -2572,6 +2573,7 @@ export function createStreamState(
       debugStack: response._debugRootStack,
       debugTask: response._debugRootTask,
     };
+    streamState._debugTargetChunkSize = MIN_CHUNK_SIZE;
   }
   return streamState;
 }
@@ -2592,26 +2594,28 @@ function incrementChunkDebugInfo(
 ): void {
   if (__DEV__ && enableAsyncDebugInfo) {
     const debugInfo: ReactIOInfo = streamState._debugInfo;
-    const byteSize: number = (debugInfo.byteSize: any);
-    if (byteSize + chunkLength > MIN_CHUNK_SIZE) {
+    const endTime = performance.now();
+    const newByteLength = ((debugInfo.byteSize: any): number) + chunkLength;
+    if (newByteLength > streamState._debugTargetChunkSize) {
       // This new chunk would overshoot the chunk size so therefore we treat it as its own new chunk
       // by cloning the old one.
       streamState._debugInfo = {
         name: debugInfo.name,
         start: debugInfo.start,
-        end: performance.now(),
-        byteSize: chunkLength,
+        end: endTime,
+        byteSize: newByteLength,
         value: debugInfo.value,
         owner: debugInfo.owner,
         debugStack: debugInfo.debugStack,
         debugTask: debugInfo.debugTask,
       };
+      streamState._debugTargetChunkSize = newByteLength + MIN_CHUNK_SIZE;
     } else {
       // Otherwise we reuse the old chunk but update the end time and byteSize to the latest.
       // $FlowFixMe[cannot-write]
-      debugInfo.end = performance.now();
+      debugInfo.end = endTime;
       // $FlowFixMe[cannot-write]
-      debugInfo.byteSize = byteSize + chunkLength;
+      debugInfo.byteSize = newByteLength;
     }
   }
 }
