@@ -2528,20 +2528,20 @@ export type StreamState = {
   _rowTag: number, // 0 indicates that we're currently parsing the row ID
   _rowLength: number, // remaining bytes in the row. 0 indicates that we're looking for a newline.
   _buffer: Array<Uint8Array>, // chunks received so far as part of this row
-  _debugInfo?: void | ReactIOInfo, // DEV-only
+  _debugInfo: ReactIOInfo, // DEV-only
 };
 
 export function createStreamState(
   weakResponse: WeakResponse, // DEV-only
   streamDebugValue: mixed, // DEV-only
 ): StreamState {
-  const streamState: StreamState = {
+  const streamState: StreamState = (({
     _rowState: 0,
     _rowID: 0,
     _rowTag: 0,
     _rowLength: 0,
     _buffer: [],
-  };
+  }: Omit<StreamState, '_debugInfo'>): any);
   if (__DEV__ && enableAsyncDebugInfo) {
     const response = unwrapWeakResponse(weakResponse);
     // Create an entry for the I/O to load the stream itself.
@@ -2560,6 +2560,44 @@ export function createStreamState(
     };
   }
   return streamState;
+}
+
+// Depending on set up the chunks of a TLS connection can vary in size. However in practice it's often
+// at 64kb or even multiples of 64kb. It can also be smaller but in practice it also happens that 64kb
+// is around what you can download on fast 4G connection in 300ms which is what we throttle reveals at
+// anyway. The net effect is that in practice, you won't really reveal anything in smaller units than
+// 64kb if they're revealing at maximum speed in production. Therefore we group smaller chunks into
+// these larger chunks since in production that's more realistic.
+const MIN_CHUNK_SIZE = 65536;
+
+function incrementChunkDebugInfo(
+  streamState: StreamState,
+  chunkLength: number,
+): void {
+  if (__DEV__ && enableAsyncDebugInfo) {
+    const debugInfo: ReactIOInfo = streamState._debugInfo;
+    const byteSize: number = (debugInfo.byteSize: any);
+    if (byteSize + chunkLength > MIN_CHUNK_SIZE) {
+      // This new chunk would overshoot the chunk size so therefore we treat it as its own new chunk
+      // by cloning the old one.
+      streamState._debugInfo = {
+        name: debugInfo.name,
+        start: debugInfo.start,
+        end: performance.now(),
+        byteSize: chunkLength,
+        value: debugInfo.value,
+        owner: debugInfo.owner,
+        debugStack: debugInfo.debugStack,
+        debugTask: debugInfo.debugTask,
+      };
+    } else {
+      // Otherwise we reuse the old chunk but update the end time and byteSize to the latest.
+      // $FlowFixMe[cannot-write]
+      debugInfo.end = performance.now();
+      // $FlowFixMe[cannot-write]
+      debugInfo.byteSize = byteSize + chunkLength;
+    }
+  }
 }
 
 function resolveDebugHalt(response: Response, id: number): void {
@@ -4405,6 +4443,7 @@ export function processBinaryChunk(
   let rowLength = streamState._rowLength;
   const buffer = streamState._buffer;
   const chunkLength = chunk.length;
+  incrementChunkDebugInfo(streamState, chunkLength);
   while (i < chunkLength) {
     let lastIdx = -1;
     switch (rowState) {
@@ -4539,6 +4578,7 @@ export function processStringChunk(
   let rowLength = streamState._rowLength;
   const buffer = streamState._buffer;
   const chunkLength = chunk.length;
+  incrementChunkDebugInfo(streamState, chunkLength);
   while (i < chunkLength) {
     let lastIdx = -1;
     switch (rowState) {
