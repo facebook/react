@@ -85,7 +85,11 @@ function getDebugInfo(obj) {
   if (debugInfo) {
     const copy = [];
     for (let i = 0; i < debugInfo.length; i++) {
-      copy.push(normalizeComponentInfo(debugInfo[i]));
+      if (debugInfo[i].awaited && debugInfo[i].awaited.name === 'RSC stream') {
+        // Ignore RSC stream I/O info.
+      } else {
+        copy.push(normalizeComponentInfo(debugInfo[i]));
+      }
     }
     return copy;
   }

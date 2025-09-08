@@ -1249,6 +1249,21 @@ describe('ReactFlightDOMEdge', () => {
           owner: greetInfo,
         }),
         {time: 14},
+        expect.objectContaining({
+          awaited: expect.objectContaining({
+            name: 'RSC stream',
+          }),
+        }),
+        expect.objectContaining({
+          awaited: expect.objectContaining({
+            name: 'RSC stream',
+          }),
+        }),
+        expect.objectContaining({
+          awaited: expect.objectContaining({
+            name: 'RSC stream',
+          }),
+        }),
       ]);
       // The owner that created the span was the outer server component.
       // We expect the debug info to be referentially equal to the owner.
