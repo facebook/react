@@ -13,7 +13,7 @@ import {allRules} from '../src/rules/ReactCompilerRule';
 
 testRule(
   'no-capitalized-calls',
-  allRules[getRuleForCategory(ErrorCategory.CapitalizedCalls).name],
+  allRules[getRuleForCategory(ErrorCategory.CapitalizedCalls).name].rule,
   {
     valid: [],
     invalid: [

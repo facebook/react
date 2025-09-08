@@ -67,7 +67,6 @@ function Component(props) {
     const key = {};
     const tmp = (mutate(key), key);
     const context = { [tmp]: identity([props.value]) };
-
     mutate(key);
     t0 = [context, key];
     $[0] = props.value;

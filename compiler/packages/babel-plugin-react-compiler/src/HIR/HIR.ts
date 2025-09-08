@@ -1314,8 +1314,14 @@ export function makeIdentifierName(name: string): ValidatedIdentifier {
   } else {
     CompilerError.invariant(t.isValidIdentifier(name), {
       reason: `Expected a valid identifier name`,
-      loc: GeneratedSource,
       description: `\`${name}\` is not a valid JavaScript identifier`,
+      details: [
+        {
+          kind: 'error',
+          loc: GeneratedSource,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
   }
@@ -1334,8 +1340,14 @@ export function makeIdentifierName(name: string): ValidatedIdentifier {
 export function promoteTemporary(identifier: Identifier): void {
   CompilerError.invariant(identifier.name === null, {
     reason: `Expected a temporary (unnamed) identifier`,
-    loc: GeneratedSource,
     description: `Identifier already has a name, \`${identifier.name}\``,
+    details: [
+      {
+        kind: 'error',
+        loc: GeneratedSource,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   identifier.name = {
@@ -1358,8 +1370,14 @@ export function isPromotedTemporary(name: string): boolean {
 export function promoteTemporaryJsxTag(identifier: Identifier): void {
   CompilerError.invariant(identifier.name === null, {
     reason: `Expected a temporary (unnamed) identifier`,
-    loc: GeneratedSource,
     description: `Identifier already has a name, \`${identifier.name}\``,
+    details: [
+      {
+        kind: 'error',
+        loc: GeneratedSource,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   identifier.name = {
@@ -1527,7 +1545,13 @@ export function isMutableEffect(
       CompilerError.invariant(false, {
         reason: 'Unexpected unknown effect',
         description: null,
-        loc: location,
+        details: [
+          {
+            kind: 'error',
+            loc: location,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
     }
@@ -1660,7 +1684,13 @@ export function makeBlockId(id: number): BlockId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
     reason: 'Expected block id to be a non-negative integer',
     description: null,
-    loc: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   return id as BlockId;
@@ -1677,7 +1707,13 @@ export function makeScopeId(id: number): ScopeId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
     reason: 'Expected block id to be a non-negative integer',
     description: null,
-    loc: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   return id as ScopeId;
@@ -1694,7 +1730,13 @@ export function makeIdentifierId(id: number): IdentifierId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
     reason: 'Expected identifier id to be a non-negative integer',
     description: null,
-    loc: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   return id as IdentifierId;
@@ -1711,7 +1753,13 @@ export function makeDeclarationId(id: number): DeclarationId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
     reason: 'Expected declaration id to be a non-negative integer',
     description: null,
-    loc: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   return id as DeclarationId;
@@ -1728,7 +1776,13 @@ export function makeInstructionId(id: number): InstructionId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
     reason: 'Expected instruction id to be a non-negative integer',
     description: null,
-    loc: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   return id as InstructionId;

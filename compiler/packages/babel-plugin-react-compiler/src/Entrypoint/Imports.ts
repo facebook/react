@@ -9,7 +9,7 @@ import {NodePath} from '@babel/core';
 import * as t from '@babel/types';
 import {Scope as BabelScope} from '@babel/traverse';
 
-import {CompilerError, ErrorCategory, ErrorSeverity} from '../CompilerError';
+import {CompilerError, ErrorCategory} from '../CompilerError';
 import {
   EnvironmentConfig,
   GeneratedSource,
@@ -39,7 +39,6 @@ export function validateRestrictedImports(
       if (restrictedImports.has(importDeclPath.node.source.value)) {
         error.push({
           category: ErrorCategory.Todo,
-          severity: ErrorSeverity.Todo,
           reason: 'Bailing out due to blocklisted import',
           description: `Import from module ${importDeclPath.node.source.value}`,
           loc: importDeclPath.node.loc ?? null,
@@ -47,7 +46,7 @@ export function validateRestrictedImports(
       }
     },
   });
-  if (error.hasErrors()) {
+  if (error.hasAnyErrors()) {
     return error;
   } else {
     return null;
@@ -207,7 +206,6 @@ export class ProgramContext {
     const error = new CompilerError();
     error.push({
       category: ErrorCategory.Todo,
-      severity: ErrorSeverity.Todo,
       reason: 'Encountered conflicting global in generated program',
       description: `Conflict from local binding ${name}`,
       loc: scope.getBinding(name)?.path.node.loc ?? null,
@@ -258,8 +256,14 @@ export function addImportsToProgram(
         {
           reason:
             'Encountered conflicting import specifiers in generated program',
-          description: `Conflict from import ${loweredImport.module}:(${loweredImport.imported} as ${loweredImport.name}).`,
-          loc: GeneratedSource,
+          description: `Conflict from import ${loweredImport.module}:(${loweredImport.imported} as ${loweredImport.name})`,
+          details: [
+            {
+              kind: 'error',
+              loc: GeneratedSource,
+              message: null,
+            },
+          ],
           suggestions: null,
         },
       );
@@ -270,7 +274,13 @@ export function addImportsToProgram(
           reason:
             'Found inconsistent import specifier. This is an internal bug.',
           description: `Expected import ${moduleName}:${specifierName} but found ${loweredImport.module}:${loweredImport.imported}`,
-          loc: GeneratedSource,
+          details: [
+            {
+              kind: 'error',
+              loc: GeneratedSource,
+              message: null,
+            },
+          ],
         },
       );
     }

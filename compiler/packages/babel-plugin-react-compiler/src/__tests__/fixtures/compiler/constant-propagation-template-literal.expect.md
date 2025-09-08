@@ -79,7 +79,6 @@ function foo() {
         value={[
           true,
           true,
-
           "a\nb",
           "\n",
           "a1b",

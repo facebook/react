@@ -12,7 +12,6 @@ import {
   CompilerError,
   CompilerSuggestionOperation,
   ErrorCategory,
-  ErrorSeverity,
 } from '../CompilerError';
 import {assertExhaustive} from '../Utils/utils';
 import {GeneratedSource} from '../HIR';
@@ -153,7 +152,14 @@ export function suppressionsToCompilerError(
 ): CompilerError {
   CompilerError.invariant(suppressionRanges.length !== 0, {
     reason: `Expected at least suppression comment source range`,
-    loc: GeneratedSource,
+    description: null,
+    details: [
+      {
+        kind: 'error',
+        loc: GeneratedSource,
+        message: null,
+      },
+    ],
   });
   const error = new CompilerError();
   for (const suppressionRange of suppressionRanges) {
@@ -186,7 +192,6 @@ export function suppressionsToCompilerError(
       CompilerDiagnostic.create({
         reason: reason,
         description: `React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior. Found suppression \`${suppressionRange.disableComment.value.trim()}\``,
-        severity: ErrorSeverity.InvalidReact,
         category: ErrorCategory.Suppression,
         suggestions: [
           {
@@ -198,7 +203,7 @@ export function suppressionsToCompilerError(
             op: CompilerSuggestionOperation.Remove,
           },
         ],
-      }).withDetail({
+      }).withDetails({
         kind: 'error',
         loc: suppressionRange.disableComment.loc ?? null,
         message: 'Found React rule suppression',

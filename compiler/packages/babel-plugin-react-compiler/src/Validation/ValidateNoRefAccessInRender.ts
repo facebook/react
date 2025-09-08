@@ -9,7 +9,6 @@ import {
   CompilerDiagnostic,
   CompilerError,
   ErrorCategory,
-  ErrorSeverity,
 } from '../CompilerError';
 import {
   BlockId,
@@ -58,8 +57,14 @@ function makeRefId(id: number): RefId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
     reason: 'Expected identifier id to be a non-negative integer',
     description: null,
-    loc: null,
     suggestions: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
   });
   return id as RefId;
 }
@@ -192,19 +197,40 @@ function tyEqual(a: RefAccessType, b: RefAccessType): boolean {
     case 'Guard':
       CompilerError.invariant(b.kind === 'Guard', {
         reason: 'Expected ref value',
-        loc: null,
+        description: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
       });
       return a.refId === b.refId;
     case 'RefValue':
       CompilerError.invariant(b.kind === 'RefValue', {
         reason: 'Expected ref value',
-        loc: null,
+        description: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
       });
       return a.loc == b.loc;
     case 'Structure': {
       CompilerError.invariant(b.kind === 'Structure', {
         reason: 'Expected structure',
-        loc: null,
+        description: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
       });
       const fnTypesEqual =
         (a.fn === null && b.fn === null) ||
@@ -243,7 +269,14 @@ function joinRefAccessTypes(...types: Array<RefAccessType>): RefAccessType {
         a.kind === 'Structure' && b.kind === 'Structure',
         {
           reason: 'Expected structure',
-          loc: null,
+          description: null,
+          details: [
+            {
+              kind: 'error',
+              loc: null,
+              message: null,
+            },
+          ],
         },
       );
       const fn =
@@ -470,10 +503,9 @@ function validateNoRefAccessInRenderImpl(
                 errors.pushDiagnostic(
                   CompilerDiagnostic.create({
                     category: ErrorCategory.Refs,
-                    severity: ErrorSeverity.InvalidReact,
                     reason: 'Cannot access refs during render',
                     description: ERROR_DESCRIPTION,
-                  }).withDetail({
+                  }).withDetails({
                     kind: 'error',
                     loc: callee.loc,
                     message: `This function accesses a ref value`,
@@ -703,14 +735,21 @@ function validateNoRefAccessInRenderImpl(
       }
     }
 
-    if (errors.hasErrors()) {
+    if (errors.hasAnyErrors()) {
       return Err(errors);
     }
   }
 
   CompilerError.invariant(!env.hasChanged(), {
     reason: 'Ref type environment did not converge',
-    loc: null,
+    description: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
   });
 
   return Ok(
@@ -734,10 +773,9 @@ function guardCheck(errors: CompilerError, operand: Place, env: Env): void {
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
         category: ErrorCategory.Refs,
-        severity: ErrorSeverity.InvalidReact,
         reason: 'Cannot access refs during render',
         description: ERROR_DESCRIPTION,
-      }).withDetail({
+      }).withDetails({
         kind: 'error',
         loc: operand.loc,
         message: `Cannot access ref value during render`,
@@ -759,10 +797,9 @@ function validateNoRefValueAccess(
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
         category: ErrorCategory.Refs,
-        severity: ErrorSeverity.InvalidReact,
         reason: 'Cannot access refs during render',
         description: ERROR_DESCRIPTION,
-      }).withDetail({
+      }).withDetails({
         kind: 'error',
         loc: (type.kind === 'RefValue' && type.loc) || operand.loc,
         message: `Cannot access ref value during render`,
@@ -786,10 +823,9 @@ function validateNoRefPassedToFunction(
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
         category: ErrorCategory.Refs,
-        severity: ErrorSeverity.InvalidReact,
         reason: 'Cannot access refs during render',
         description: ERROR_DESCRIPTION,
-      }).withDetail({
+      }).withDetails({
         kind: 'error',
         loc: (type.kind === 'RefValue' && type.loc) || loc,
         message: `Passing a ref to a function may read its value during render`,
@@ -809,10 +845,9 @@ function validateNoRefUpdate(
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
         category: ErrorCategory.Refs,
-        severity: ErrorSeverity.InvalidReact,
         reason: 'Cannot access refs during render',
         description: ERROR_DESCRIPTION,
-      }).withDetail({
+      }).withDetails({
         kind: 'error',
         loc: (type.kind === 'RefValue' && type.loc) || loc,
         message: `Cannot update ref during render`,
@@ -831,10 +866,9 @@ function validateNoDirectRefValueAccess(
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
         category: ErrorCategory.Refs,
-        severity: ErrorSeverity.InvalidReact,
         reason: 'Cannot access refs during render',
         description: ERROR_DESCRIPTION,
-      }).withDetail({
+      }).withDetails({
         kind: 'error',
         loc: type.loc ?? operand.loc,
         message: `Cannot access ref value during render`,

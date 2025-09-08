@@ -61,10 +61,10 @@ export const TestRecommendedRules: Rule.RuleModule = {
     schema: [{type: 'object', additionalProperties: true}],
   },
   create(context) {
-    for (const rule of Object.values(
+    for (const ruleConfig of Object.values(
       configs.recommended.plugins['react-compiler'].rules,
     )) {
-      const listener = rule.create(context);
+      const listener = ruleConfig.rule.create(context);
       if (Object.entries(listener).length !== 0) {
         throw new Error('TODO: handle rules that return listeners to eslint');
       }

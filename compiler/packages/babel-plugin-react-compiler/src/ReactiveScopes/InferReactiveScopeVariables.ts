@@ -162,7 +162,13 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
       });
       CompilerError.invariant(false, {
         reason: `Invalid mutable range for scope`,
-        loc: GeneratedSource,
+        details: [
+          {
+            kind: 'error',
+            loc: GeneratedSource,
+            message: null,
+          },
+        ],
         description: `Scope @${scope.id} has range [${scope.range.start}:${
           scope.range.end
         }] but the valid range is [1:${maxInstruction + 1}]`,

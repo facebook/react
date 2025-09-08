@@ -72,7 +72,6 @@ function Component(props) {
   let t2;
   if ($[3] !== t0) {
     const linkProps = { url: t0 };
-
     const x = {};
     let t3;
     let t4;

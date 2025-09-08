@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, ErrorSeverity, SourceLocation} from '..';
+import {CompilerError, SourceLocation} from '..';
 import {ErrorCategory} from '../CompilerError';
 import {
   ArrayExpression,
@@ -83,7 +83,14 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
             const dependencies: Array<IdentifierId> = deps.elements.map(dep => {
               CompilerError.invariant(dep.kind === 'Identifier', {
                 reason: `Dependency is checked as a place above`,
-                loc: value.loc,
+                description: null,
+                details: [
+                  {
+                    kind: 'error',
+                    loc: value.loc,
+                    message: 'this is checked as a place above',
+                  },
+                ],
               });
               return locals.get(dep.identifier.id) ?? dep.identifier.id;
             });
@@ -97,7 +104,7 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
       }
     }
   }
-  if (errors.hasErrors()) {
+  if (errors.hasAnyErrors()) {
     throw errors;
   }
 }
@@ -224,7 +231,6 @@ function validateEffect(
       reason:
         'Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)',
       description: null,
-      severity: ErrorSeverity.InvalidReact,
       loc,
       suggestions: null,
     });

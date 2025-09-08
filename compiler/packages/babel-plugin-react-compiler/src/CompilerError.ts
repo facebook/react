@@ -14,52 +14,30 @@ import invariant from 'invariant';
 
 export enum ErrorSeverity {
   /**
-   * Invalid JS syntax, or valid syntax that is semantically invalid which may indicate some
-   * misunderstanding on the user’s part.
+   * An actionable error that the developer can fix. For example, product code errors should be
+   * reported as such.
    */
-  InvalidJS = 'InvalidJS',
+  Error = 'Error',
   /**
-   * JS syntax that is not supported and which we do not plan to support. Developers should
-   * rewrite to use supported forms.
+   * An error that the developer may not necessarily be able to fix. For example, syntax not
+   * supported by the compiler does not indicate any fault in the product code.
    */
-  UnsupportedJS = 'UnsupportedJS',
+  Warning = 'Warning',
   /**
-   * Code that breaks the rules of React.
+   * Not an error. These will not be surfaced in ESLint, but may be surfaced in other ways
+   * (eg Forgive) where informational hints can be shown.
    */
-  InvalidReact = 'InvalidReact',
+  Hint = 'Hint',
   /**
-   * Incorrect configuration of the compiler.
+   * These errors will not be reported anywhere. Useful for work in progress validations.
    */
-  InvalidConfig = 'InvalidConfig',
-  /**
-   * Code that can reasonably occur and that doesn't break any rules, but is unsafe to preserve
-   * memoization.
-   */
-  CannotPreserveMemoization = 'CannotPreserveMemoization',
-  /**
-   * An API that is known to be incompatible with the compiler. Generally as a result of
-   * the library using "interior mutability", ie having a value whose referential identity
-   * stays the same but which provides access to values that can change. For example a
-   * function that doesn't change but returns different results, or an object that doesn't
-   * change identity but whose properties change.
-   */
-  IncompatibleLibrary = 'IncompatibleLibrary',
-  /**
-   * Unhandled syntax that we don't support yet.
-   */
-  Todo = 'Todo',
-  /**
-   * An unexpected internal error in the compiler that indicates critical issues that can panic
-   * the compiler.
-   */
-  Invariant = 'Invariant',
+  Off = 'Off',
 }
 
 export type CompilerDiagnosticOptions = {
   category: ErrorCategory;
-  severity: ErrorSeverity;
   reason: string;
-  description: string;
+  description: string | null;
   details: Array<CompilerDiagnosticDetail>;
   suggestions?: Array<CompilerSuggestion> | null | undefined;
 };
@@ -71,7 +49,7 @@ export type CompilerDiagnosticDetail =
   | {
       kind: 'error';
       loc: SourceLocation | null;
-      message: string;
+      message: string | null;
     }
   | {
       kind: 'hint';
@@ -100,9 +78,11 @@ export type CompilerSuggestion =
       description: string;
     };
 
+/**
+ * @deprecated use {@link CompilerDiagnosticOptions} instead
+ */
 export type CompilerErrorDetailOptions = {
   category: ErrorCategory;
-  severity: ErrorSeverity;
   reason: string;
   description?: string | null | undefined;
   loc: SourceLocation | null;
@@ -136,8 +116,8 @@ export class CompilerDiagnostic {
   get description(): CompilerDiagnosticOptions['description'] {
     return this.options.description;
   }
-  get severity(): CompilerDiagnosticOptions['severity'] {
-    return this.options.severity;
+  get severity(): ErrorSeverity {
+    return getRuleForCategory(this.category).severity;
   }
   get suggestions(): CompilerDiagnosticOptions['suggestions'] {
     return this.options.suggestions;
@@ -146,8 +126,8 @@ export class CompilerDiagnostic {
     return this.options.category;
   }
 
-  withDetail(detail: CompilerDiagnosticDetail): CompilerDiagnostic {
-    this.options.details.push(detail);
+  withDetails(...details: Array<CompilerDiagnosticDetail>): CompilerDiagnostic {
+    this.options.details.push(...details);
     return this;
   }
 
@@ -161,11 +141,10 @@ export class CompilerDiagnostic {
   }
 
   printErrorMessage(source: string, options: PrintErrorMessageOptions): string {
-    const buffer = [
-      printErrorSummary(this.severity, this.reason),
-      '\n\n',
-      this.description,
-    ];
+    const buffer = [printErrorSummary(this.category, this.reason)];
+    if (this.description != null) {
+      buffer.push('\n\n', `${this.description}.`);
+    }
     for (const detail of this.options.details) {
       switch (detail.kind) {
         case 'error': {
@@ -175,9 +154,9 @@ export class CompilerDiagnostic {
           }
           let codeFrame: string;
           try {
-            codeFrame = printCodeFrame(source, loc, detail.message);
+            codeFrame = printCodeFrame(source, loc, detail.message ?? '');
           } catch (e) {
-            codeFrame = detail.message;
+            codeFrame = detail.message ?? '';
           }
           buffer.push('\n\n');
           if (loc.filename != null) {
@@ -207,7 +186,7 @@ export class CompilerDiagnostic {
   }
 
   toString(): string {
-    const buffer = [printErrorSummary(this.severity, this.reason)];
+    const buffer = [printErrorSummary(this.category, this.reason)];
     if (this.description != null) {
       buffer.push(`. ${this.description}.`);
     }
@@ -219,9 +198,11 @@ export class CompilerDiagnostic {
   }
 }
 
-/*
+/**
  * Each bailout or invariant in HIR lowering creates an {@link CompilerErrorDetail}, which is then
  * aggregated into a single {@link CompilerError} later.
+ *
+ * @deprecated use {@link CompilerDiagnostic} instead
  */
 export class CompilerErrorDetail {
   options: CompilerErrorDetailOptions;
@@ -236,8 +217,8 @@ export class CompilerErrorDetail {
   get description(): CompilerErrorDetailOptions['description'] {
     return this.options.description;
   }
-  get severity(): CompilerErrorDetailOptions['severity'] {
-    return this.options.severity;
+  get severity(): ErrorSeverity {
+    return getRuleForCategory(this.category).severity;
   }
   get loc(): CompilerErrorDetailOptions['loc'] {
     return this.options.loc;
@@ -254,7 +235,7 @@ export class CompilerErrorDetail {
   }
 
   printErrorMessage(source: string, options: PrintErrorMessageOptions): string {
-    const buffer = [printErrorSummary(this.severity, this.reason)];
+    const buffer = [printErrorSummary(this.category, this.reason)];
     if (this.description != null) {
       buffer.push(`\n\n${this.description}.`);
     }
@@ -279,7 +260,7 @@ export class CompilerErrorDetail {
   }
 
   toString(): string {
-    const buffer = [printErrorSummary(this.severity, this.reason)];
+    const buffer = [printErrorSummary(this.category, this.reason)];
     if (this.description != null) {
       buffer.push(`. ${this.description}.`);
     }
@@ -291,22 +272,28 @@ export class CompilerErrorDetail {
   }
 }
 
+/**
+ * An aggregate of {@link CompilerDiagnostic}. This allows us to aggregate all issues found by the
+ * compiler into a single error before we throw. Where possible, prefer to push diagnostics into
+ * the error aggregate instead of throwing immediately.
+ */
 export class CompilerError extends Error {
   details: Array<CompilerErrorDetail | CompilerDiagnostic> = [];
+  disabledDetails: Array<CompilerErrorDetail | CompilerDiagnostic> = [];
   printedMessage: string | null = null;
 
   static invariant(
     condition: unknown,
-    options: Omit<CompilerErrorDetailOptions, 'severity' | 'category'>,
+    options: Omit<CompilerDiagnosticOptions, 'category'>,
   ): asserts condition {
     if (!condition) {
       const errors = new CompilerError();
-      errors.pushErrorDetail(
-        new CompilerErrorDetail({
-          ...options,
+      errors.pushDiagnostic(
+        CompilerDiagnostic.create({
+          reason: options.reason,
+          description: options.description,
           category: ErrorCategory.Invariant,
-          severity: ErrorSeverity.Invariant,
-        }),
+        }).withDetails(...options.details),
       );
       throw errors;
     }
@@ -319,13 +306,12 @@ export class CompilerError extends Error {
   }
 
   static throwTodo(
-    options: Omit<CompilerErrorDetailOptions, 'severity' | 'category'>,
+    options: Omit<CompilerErrorDetailOptions, 'category'>,
   ): never {
     const errors = new CompilerError();
     errors.pushErrorDetail(
       new CompilerErrorDetail({
         ...options,
-        severity: ErrorSeverity.Todo,
         category: ErrorCategory.Todo,
       }),
     );
@@ -333,40 +319,31 @@ export class CompilerError extends Error {
   }
 
   static throwInvalidJS(
-    options: Omit<CompilerErrorDetailOptions, 'severity' | 'category'>,
+    options: Omit<CompilerErrorDetailOptions, 'category'>,
   ): never {
     const errors = new CompilerError();
     errors.pushErrorDetail(
       new CompilerErrorDetail({
         ...options,
-        severity: ErrorSeverity.InvalidJS,
         category: ErrorCategory.Syntax,
       }),
     );
     throw errors;
   }
 
-  static throwInvalidReact(
-    options: Omit<CompilerErrorDetailOptions, 'severity'>,
-  ): never {
+  static throwInvalidReact(options: CompilerErrorDetailOptions): never {
     const errors = new CompilerError();
-    errors.pushErrorDetail(
-      new CompilerErrorDetail({
-        ...options,
-        severity: ErrorSeverity.InvalidReact,
-      }),
-    );
+    errors.pushErrorDetail(new CompilerErrorDetail(options));
     throw errors;
   }
 
   static throwInvalidConfig(
-    options: Omit<CompilerErrorDetailOptions, 'severity' | 'category'>,
+    options: Omit<CompilerErrorDetailOptions, 'category'>,
   ): never {
     const errors = new CompilerError();
     errors.pushErrorDetail(
       new CompilerErrorDetail({
         ...options,
-        severity: ErrorSeverity.InvalidConfig,
         category: ErrorCategory.Config,
       }),
     );
@@ -383,6 +360,7 @@ export class CompilerError extends Error {
     super(...args);
     this.name = 'ReactCompilerError';
     this.details = [];
+    this.disabledDetails = [];
   }
 
   override get message(): string {
@@ -423,62 +401,93 @@ export class CompilerError extends Error {
 
   merge(other: CompilerError): void {
     this.details.push(...other.details);
+    this.disabledDetails.push(...other.disabledDetails);
   }
 
   pushDiagnostic(diagnostic: CompilerDiagnostic): void {
-    this.details.push(diagnostic);
+    if (diagnostic.severity === ErrorSeverity.Off) {
+      this.disabledDetails.push(diagnostic);
+    } else {
+      this.details.push(diagnostic);
+    }
   }
 
+  /**
+   * @deprecated use {@link pushDiagnostic} instead
+   */
   push(options: CompilerErrorDetailOptions): CompilerErrorDetail {
     const detail = new CompilerErrorDetail({
       category: options.category,
       reason: options.reason,
       description: options.description ?? null,
-      severity: options.severity,
       suggestions: options.suggestions,
       loc: typeof options.loc === 'symbol' ? null : options.loc,
     });
     return this.pushErrorDetail(detail);
   }
 
+  /**
+   * @deprecated use {@link pushDiagnostic} instead
+   */
   pushErrorDetail(detail: CompilerErrorDetail): CompilerErrorDetail {
-    this.details.push(detail);
+    if (detail.severity === ErrorSeverity.Off) {
+      this.disabledDetails.push(detail);
+    } else {
+      this.details.push(detail);
+    }
     return detail;
   }
 
-  hasErrors(): boolean {
+  hasAnyErrors(): boolean {
     return this.details.length > 0;
   }
 
   asResult(): Result<void, CompilerError> {
-    return this.hasErrors() ? Err(this) : Ok(undefined);
+    return this.hasAnyErrors() ? Err(this) : Ok(undefined);
   }
 
-  /*
-   * An error is critical if it means the compiler has entered into a broken state and cannot
-   * continue safely. Other expected errors such as Todos mean that we can skip over that component
-   * but otherwise continue compiling the rest of the app.
+  /**
+   * Returns true if any of the error details are of severity Error.
    */
-  isCritical(): boolean {
-    return this.details.some(detail => {
-      switch (detail.severity) {
-        case ErrorSeverity.Invariant:
-        case ErrorSeverity.InvalidJS:
-        case ErrorSeverity.InvalidReact:
-        case ErrorSeverity.InvalidConfig:
-        case ErrorSeverity.UnsupportedJS:
-        case ErrorSeverity.IncompatibleLibrary: {
-          return true;
-        }
-        case ErrorSeverity.CannotPreserveMemoization:
-        case ErrorSeverity.Todo: {
-          return false;
-        }
-        default: {
-          assertExhaustive(detail.severity, 'Unhandled error severity');
-        }
+  hasErrors(): boolean {
+    for (const detail of this.details) {
+      if (detail.severity === ErrorSeverity.Error) {
+        return true;
       }
-    });
+    }
+    return false;
+  }
+
+  /**
+   * Returns true if there are no Errors and there is at least one Warning.
+   */
+  hasWarning(): boolean {
+    let res = false;
+    for (const detail of this.details) {
+      if (detail.severity === ErrorSeverity.Error) {
+        return false;
+      }
+      if (detail.severity === ErrorSeverity.Warning) {
+        res = true;
+      }
+    }
+    return res;
+  }
+
+  hasHints(): boolean {
+    let res = false;
+    for (const detail of this.details) {
+      if (detail.severity === ErrorSeverity.Error) {
+        return false;
+      }
+      if (detail.severity === ErrorSeverity.Warning) {
+        return false;
+      }
+      if (detail.severity === ErrorSeverity.Hint) {
+        res = true;
+      }
+    }
+    return res;
   }
 }
 
@@ -505,121 +514,167 @@ function printCodeFrame(
   );
 }
 
-function printErrorSummary(severity: ErrorSeverity, message: string): string {
-  let severityCategory: string;
-  switch (severity) {
-    case ErrorSeverity.InvalidConfig:
-    case ErrorSeverity.InvalidJS:
-    case ErrorSeverity.InvalidReact:
-    case ErrorSeverity.UnsupportedJS: {
-      severityCategory = 'Error';
+function printErrorSummary(category: ErrorCategory, message: string): string {
+  let heading: string;
+  switch (category) {
+    case ErrorCategory.AutomaticEffectDependencies:
+    case ErrorCategory.CapitalizedCalls:
+    case ErrorCategory.Config:
+    case ErrorCategory.EffectDerivationsOfState:
+    case ErrorCategory.EffectSetState:
+    case ErrorCategory.ErrorBoundaries:
+    case ErrorCategory.Factories:
+    case ErrorCategory.FBT:
+    case ErrorCategory.Fire:
+    case ErrorCategory.Gating:
+    case ErrorCategory.Globals:
+    case ErrorCategory.Hooks:
+    case ErrorCategory.Immutability:
+    case ErrorCategory.Purity:
+    case ErrorCategory.Refs:
+    case ErrorCategory.RenderSetState:
+    case ErrorCategory.StaticComponents:
+    case ErrorCategory.Suppression:
+    case ErrorCategory.Syntax:
+    case ErrorCategory.UseMemo: {
+      heading = 'Error';
       break;
     }
-    case ErrorSeverity.IncompatibleLibrary:
-    case ErrorSeverity.CannotPreserveMemoization: {
-      severityCategory = 'Compilation Skipped';
+    case ErrorCategory.EffectDependencies:
+    case ErrorCategory.IncompatibleLibrary:
+    case ErrorCategory.PreserveManualMemo:
+    case ErrorCategory.UnsupportedSyntax: {
+      heading = 'Compilation Skipped';
       break;
     }
-    case ErrorSeverity.Invariant: {
-      severityCategory = 'Invariant';
+    case ErrorCategory.Invariant: {
+      heading = 'Invariant';
       break;
     }
-    case ErrorSeverity.Todo: {
-      severityCategory = 'Todo';
+    case ErrorCategory.Todo: {
+      heading = 'Todo';
       break;
     }
     default: {
-      assertExhaustive(severity, `Unexpected severity '${severity}'`);
+      assertExhaustive(category, `Unhandled category '${category}'`);
     }
   }
-  return `${severityCategory}: ${message}`;
+  return `${heading}: ${message}`;
 }
 
 /**
  * See getRuleForCategory() for how these map to ESLint rules
  */
 export enum ErrorCategory {
-  // Checking for valid hooks usage (non conditional, non-first class, non reactive, etc)
+  /**
+   * Checking for valid hooks usage (non conditional, non-first class, non reactive, etc)
+   */
   Hooks = 'Hooks',
-
-  // Checking for no capitalized calls (not definitively an error, hence separating)
+  /**
+   * Checking for no capitalized calls (not definitively an error, hence separating)
+   */
   CapitalizedCalls = 'CapitalizedCalls',
-
-  // Checking for static components
+  /**
+   * Checking for static components
+   */
   StaticComponents = 'StaticComponents',
-
-  // Checking for valid usage of manual memoization
+  /**
+   * Checking for valid usage of manual memoization
+   */
   UseMemo = 'UseMemo',
-
-  // Checking for higher order functions acting as factories for components/hooks
+  /**
+   * Checking for higher order functions acting as factories for components/hooks
+   */
   Factories = 'Factories',
-
-  // Checks that manual memoization is preserved
+  /**
+   * Checks that manual memoization is preserved
+   */
   PreserveManualMemo = 'PreserveManualMemo',
-
-  // Checks for known incompatible libraries
+  /**
+   * Checks for known incompatible libraries
+   */
   IncompatibleLibrary = 'IncompatibleLibrary',
-
-  // Checking for no mutations of props, hook arguments, hook return values
+  /**
+   * Checking for no mutations of props, hook arguments, hook return values
+   */
   Immutability = 'Immutability',
-
-  // Checking for assignments to globals
+  /**
+   * Checking for assignments to globals
+   */
   Globals = 'Globals',
-
-  // Checking for valid usage of refs, ie no access during render
+  /**
+   * Checking for valid usage of refs, ie no access during render
+   */
   Refs = 'Refs',
-
-  // Checks for memoized effect deps
+  /**
+   * Checks for memoized effect deps
+   */
   EffectDependencies = 'EffectDependencies',
-
-  // Checks for no setState in effect bodies
+  /**
+   * Checks for no setState in effect bodies
+   */
   EffectSetState = 'EffectSetState',
-
   EffectDerivationsOfState = 'EffectDerivationsOfState',
-
-  // Validates against try/catch in place of error boundaries
+  /**
+   * Validates against try/catch in place of error boundaries
+   */
   ErrorBoundaries = 'ErrorBoundaries',
-
-  // Checking for pure functions
+  /**
+   * Checking for pure functions
+   */
   Purity = 'Purity',
-
-  // Validates against setState in render
+  /**
+   * Validates against setState in render
+   */
   RenderSetState = 'RenderSetState',
-
-  // Internal invariants
+  /**
+   * Internal invariants
+   */
   Invariant = 'Invariant',
-
-  // Todos
+  /**
+   * Todos
+   */
   Todo = 'Todo',
-
-  // Syntax errors
+  /**
+   * Syntax errors
+   */
   Syntax = 'Syntax',
-
-  // Checks for use of unsupported syntax
+  /**
+   * Checks for use of unsupported syntax
+   */
   UnsupportedSyntax = 'UnsupportedSyntax',
-
-  // Config errors
+  /**
+   * Config errors
+   */
   Config = 'Config',
-
-  // Gating error
+  /**
+   * Gating error
+   */
   Gating = 'Gating',
-
-  // Suppressions
+  /**
+   * Suppressions
+   */
   Suppression = 'Suppression',
-
-  // Issues with auto deps
+  /**
+   * Issues with auto deps
+   */
   AutomaticEffectDependencies = 'AutomaticEffectDependencies',
-
-  // Issues with `fire`
+  /**
+   * Issues with `fire`
+   */
   Fire = 'Fire',
-
-  // fbt-specific issues
+  /**
+   * fbt-specific issues
+   */
   FBT = 'FBT',
 }
 
 export type LintRule = {
   // Stores the category the rule corresponds to, used to filter errors when reporting
   category: ErrorCategory;
+
+  // Stores the severity of the error, which is used to map to lint levels such as error/warning.
+  severity: ErrorSeverity;
 
   /**
    * The "name" of the rule as it will be used by developers to enable/disable, eg
@@ -661,6 +716,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
     case ErrorCategory.AutomaticEffectDependencies: {
       return {
         category,
+        severity: ErrorSeverity.Error,
         name: 'automatic-effect-dependencies',
         description:
           'Verifies that automatic effect dependencies are compiled if opted-in',
@@ -670,6 +726,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
     case ErrorCategory.CapitalizedCalls: {
       return {
         category,
+        severity: ErrorSeverity.Error,
         name: 'capitalized-calls',
         description:
           'Validates against calling capitalized functions/methods instead of using JSX',
@@ -679,6 +736,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
     case ErrorCategory.Config: {
       return {
         category,
+        severity: ErrorSeverity.Error,
         name: 'config',
         description: 'Validates the compiler configuration options',
         recommended: true,
@@ -687,6 +745,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
     case ErrorCategory.EffectDependencies: {
       return {
         category,
+        severity: ErrorSeverity.Error,
         name: 'memoized-effect-dependencies',
         description: 'Validates that effect dependencies are memoized',
         recommended: false,
@@ -695,6 +754,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
     case ErrorCategory.EffectDerivationsOfState: {
       return {
         category,
+        severity: ErrorSeverity.Error,
         name: 'no-deriving-state-in-effects',
         description:
           'Validates against deriving values from state in an effect',
@@ -704,6 +764,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
     case ErrorCategory.EffectSetState: {
       return {
         category,
+        severity: ErrorSeverity.Error,
         name: 'set-state-in-effect',
         description:
           'Validates against calling setState synchronously in an effect, which can lead to re-renders that degrade performance',
@@ -713,6 +774,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
     case ErrorCategory.ErrorBoundaries: {
       return {
         category,
+        severity: ErrorSeverity.Error,
         name: 'error-boundaries',
         description:
           'Validates usage of error boundaries instead of try/catch for errors in child components',
@@ -722,6 +784,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
     case ErrorCategory.Factories: {
       return {
         category,
+        severity: ErrorSeverity.Error,
         name: 'component-hook-factories',
         description:
           'Validates against higher order functions defining nested components or hooks. ' +
@@ -732,6 +795,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
     case ErrorCategory.FBT: {
       return {
         category,
+        severity: ErrorSeverity.Error,
         name: 'fbt',
         description: 'Validates usage of fbt',
         recommended: false,
@@ -740,6 +804,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
     case ErrorCategory.Fire: {
       return {
         category,
+        severity: ErrorSeverity.Error,
         name: 'fire',
         description: 'Validates usage of `fire`',
         recommended: false,
@@ -748,6 +813,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
     case ErrorCategory.Gating: {
       return {
         category,
+        severity: ErrorSeverity.Error,
         name: 'gating',
         description:
           'Validates configuration of [gating mode](https://react.dev/reference/react-compiler/gating)',
@@ -757,6 +823,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
     case ErrorCategory.Globals: {
       return {
         category,
+        severity: ErrorSeverity.Error,
         name: 'globals',
         description:
           'Validates against assignment/mutation of globals during render, part of ensuring that ' +
@@ -767,6 +834,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
     case ErrorCategory.Hooks: {
       return {
         category,
+        severity: ErrorSeverity.Error,
         name: 'hooks',
         description: 'Validates the rules of hooks',
         /**
@@ -780,6 +848,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
     case ErrorCategory.Immutability: {
       return {
         category,
+        severity: ErrorSeverity.Error,
         name: 'immutability',
         description:
           'Validates against mutating props, state, and other values that [are immutable](https://react.dev/reference/rules/components-and-hooks-must-be-pure#props-and-state-are-immutable)',
@@ -789,6 +858,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
     case ErrorCategory.Invariant: {
       return {
         category,
+        severity: ErrorSeverity.Error,
         name: 'invariant',
         description: 'Internal invariants',
         recommended: false,
@@ -797,6 +867,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
     case ErrorCategory.PreserveManualMemo: {
       return {
         category,
+        severity: ErrorSeverity.Error,
         name: 'preserve-manual-memoization',
         description:
           'Validates that existing manual memoized is preserved by the compiler. ' +
@@ -808,6 +879,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
     case ErrorCategory.Purity: {
       return {
         category,
+        severity: ErrorSeverity.Error,
         name: 'purity',
         description:
           'Validates that [components/hooks are pure](https://react.dev/reference/rules/components-and-hooks-must-be-pure) by checking that they do not call known-impure functions',
@@ -817,6 +889,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
     case ErrorCategory.Refs: {
       return {
         category,
+        severity: ErrorSeverity.Error,
         name: 'refs',
         description:
           'Validates correct usage of refs, not reading/writing during render. See the "pitfalls" section in [`useRef()` usage](https://react.dev/reference/react/useRef#usage)',
@@ -826,6 +899,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
     case ErrorCategory.RenderSetState: {
       return {
         category,
+        severity: ErrorSeverity.Error,
         name: 'set-state-in-render',
         description:
           'Validates against setting state during render, which can trigger additional renders and potential infinite render loops',
@@ -835,6 +909,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
     case ErrorCategory.StaticComponents: {
       return {
         category,
+        severity: ErrorSeverity.Error,
         name: 'static-components',
         description:
           'Validates that components are static, not recreated every render. Components that are recreated dynamically can reset state and trigger excessive re-rendering',
@@ -844,6 +919,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
     case ErrorCategory.Suppression: {
       return {
         category,
+        severity: ErrorSeverity.Error,
         name: 'rule-suppression',
         description: 'Validates against suppression of other rules',
         recommended: false,
@@ -852,6 +928,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
     case ErrorCategory.Syntax: {
       return {
         category,
+        severity: ErrorSeverity.Error,
         name: 'syntax',
         description: 'Validates against invalid syntax',
         recommended: false,
@@ -860,6 +937,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
     case ErrorCategory.Todo: {
       return {
         category,
+        severity: ErrorSeverity.Hint,
         name: 'todo',
         description: 'Unimplemented features',
         recommended: false,
@@ -868,6 +946,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
     case ErrorCategory.UnsupportedSyntax: {
       return {
         category,
+        severity: ErrorSeverity.Warning,
         name: 'unsupported-syntax',
         description:
           'Validates against syntax that we do not plan to support in React Compiler',
@@ -877,6 +956,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
     case ErrorCategory.UseMemo: {
       return {
         category,
+        severity: ErrorSeverity.Error,
         name: 'use-memo',
         description:
           'Validates usage of the useMemo() hook against common mistakes. See [`useMemo()` docs](https://react.dev/reference/react/useMemo) for more information.',
@@ -886,6 +966,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
     case ErrorCategory.IncompatibleLibrary: {
       return {
         category,
+        severity: ErrorSeverity.Warning,
         name: 'incompatible-library',
         description:
           'Validates against usage of libraries which are incompatible with memoization (manual or automatic)',
