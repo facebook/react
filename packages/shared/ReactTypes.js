@@ -108,6 +108,7 @@ interface ThenableImpl<T> {
     onFulfill: (value: T) => mixed,
     onReject: (error: mixed) => mixed,
   ): void | Wakeable;
+  displayName?: string;
 }
 interface UntrackedThenable<T> extends ThenableImpl<T> {
   status?: void;
@@ -188,6 +189,7 @@ export type ReactCallSite = [
   number, // column number
   number, // enclosing line number
   number, // enclosing column number
+  boolean, // async resume
 ];
 
 export type ReactStackTrace = Array<ReactCallSite>;
@@ -209,6 +211,7 @@ export type ReactComponentInfo = {
   // Stashed Data for the Specific Execution Environment. Not part of the transport protocol
   +debugStack?: null | Error,
   +debugTask?: null | ConsoleTask,
+  debugLocation?: null | Error,
 };
 
 export type ReactEnvironmentInfo = {
@@ -234,6 +237,8 @@ export type ReactIOInfo = {
   +name: string, // the name of the async function being called (e.g. "fetch")
   +start: number, // the start time
   +end: number, // the end time (this might be different from the time the await was unblocked)
+  +byteSize?: number, // the byte size of this resource across the network. (should only be included if affecting the client.)
+  +value?: null | Promise<mixed>, // the Promise that was awaited if any, may be rejected
   +env?: string, // the environment where this I/O was spawned.
   +owner?: null | ReactComponentInfo,
   +stack?: null | ReactStackTrace,
@@ -256,9 +261,13 @@ export type ReactTimeInfo = {
   +time: number, // performance.now
 };
 
-export type ReactDebugInfo = Array<
-  ReactComponentInfo | ReactEnvironmentInfo | ReactAsyncInfo | ReactTimeInfo,
->;
+export type ReactDebugInfoEntry =
+  | ReactComponentInfo
+  | ReactEnvironmentInfo
+  | ReactAsyncInfo
+  | ReactTimeInfo;
+
+export type ReactDebugInfo = Array<ReactDebugInfoEntry>;
 
 // Intrinsic ViewTransitionInstance. This type varies by Environment whether a particular
 // renderer supports it.
@@ -291,6 +300,7 @@ export type ViewTransitionProps = {
 export type ActivityProps = {
   mode?: 'hidden' | 'visible' | null | void,
   children?: ReactNodeList,
+  name?: string,
 };
 
 export type SuspenseProps = {

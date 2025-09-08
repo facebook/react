@@ -17,6 +17,17 @@ on:
         description: 'Whether to notify the team on Discord when the release fails. Useful if this workflow is called from an automation.'
         required: false
         type: boolean
+      only_packages:
+        description: Packages to publish (space separated)
+        type: string
+      skip_packages:
+        description: Packages to NOT publish (space separated)
+        type: string
+      dry:
+        required: true
+        description: Dry run instead of publish?
+        type: boolean
+        default: true
     secrets:
       DISCORD_WEBHOOK_URL:
         description: 'Discord webhook URL to notify on failure. Only required if enableFailureNotification is true.'
@@ -61,15 +72,41 @@ jobs:
         if: steps.node_modules.outputs.cache-hit != 'true'
       - run: yarn --cwd scripts/release install --frozen-lockfile
         if: steps.node_modules.outputs.cache-hit != 'true'
+      - run: cp ./scripts/release/ci-npmrc ~/.npmrc
       - run: |
           GH_TOKEN=${{ secrets.GH_TOKEN }} scripts/release/prepare-release-from-ci.js --skipTests -r ${{ inputs.release_channel }} --commit=${{ inputs.commit_sha }}
-          cp ./scripts/release/ci-npmrc ~/.npmrc
-          scripts/release/publish.js --ci --tags ${{ inputs.dist_tag }}
+      - name: Check prepared files
+        run: ls -R build/node_modules
+      - if: '${{ inputs.only_packages }}'
+        name: 'Publish ${{ inputs.only_packages }}'
+        run: |
+          scripts/release/publish.js \
+            --ci \
+            --skipTests \
+            --tags=${{ inputs.dist_tag }} \
+            --onlyPackages=${{ inputs.only_packages }} ${{ (inputs.dry && '') || '\'}}
+            ${{ inputs.dry && '--dry' || '' }}
+      - if: '${{ inputs.skip_packages }}'
+        name: 'Publish all packages EXCEPT ${{ inputs.skip_packages }}'
+        run: |
+          scripts/release/publish.js \
+            --ci \
+            --skipTests \
+            --tags=${{ inputs.dist_tag }} \
+            --skipPackages=${{ inputs.skip_packages }} ${{ (inputs.dry && '') || '\'}}
+            ${{ inputs.dry && '--dry' || '' }}
+      - if: '${{ !(inputs.skip_packages && inputs.only_packages) }}'
+        name: 'Publish all packages'
+        run: |
+          scripts/release/publish.js \
+            --ci \
+            --tags=${{ inputs.dist_tag }} ${{ (inputs.dry && '') || '\'}}
+            ${{ inputs.dry && '--dry' || '' }}
       - name: Notify Discord on failure
         if: failure() && inputs.enableFailureNotification == true
         uses: tsickert/discord-webhook@86dc739f3f165f16dadc5666051c367efa1692f4
         with:
           webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
           embed-author-name: "GitHub Actions"
-          embed-title: 'Publish of $${{ inputs.release_channel }} release failed'
+          embed-title: '[Runtime] Publish of ${{ inputs.release_channel }}@${{ inputs.dist_tag}} release failed'
           embed-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}

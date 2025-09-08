@@ -10,17 +10,21 @@
 import type {Thenable} from 'shared/ReactTypes.js';
 
 import type {
-  Response as FlightResponse,
+  DebugChannel,
+  DebugChannelCallback,
   FindSourceMapURLCallback,
+  Response as FlightResponse,
 } from 'react-client/src/ReactFlightClient';
 
 import type {ReactServerValue} from 'react-client/src/ReactFlightReplyClient';
 
 import {
   createResponse,
+  createStreamState,
   getRoot,
   reportGlobalError,
   processBinaryChunk,
+  processStringChunk,
   close,
   injectIntoDevTools,
 } from 'react-client/src/ReactFlightClient';
@@ -43,13 +47,45 @@ type CallServerCallback = <A, T>(string, args: A) => Promise<T>;
 export type Options = {
   moduleBaseURL?: string,
   callServer?: CallServerCallback,
+  debugChannel?: {writable?: WritableStream, readable?: ReadableStream, ...},
   temporaryReferences?: TemporaryReferenceSet,
   findSourceMapURL?: FindSourceMapURLCallback,
   replayConsoleLogs?: boolean,
   environmentName?: string,
 };
 
+function createDebugCallbackFromWritableStream(
+  debugWritable: WritableStream,
+): DebugChannelCallback {
+  const textEncoder = new TextEncoder();
+  const writer = debugWritable.getWriter();
+  return message => {
+    if (message === '') {
+      writer.close();
+    } else {
+      // Note: It's important that this function doesn't close over the Response object or it can't be GC:ed.
+      // Therefore, we can't report errors from this write back to the Response object.
+      if (__DEV__) {
+        writer.write(textEncoder.encode(message + '\n')).catch(console.error);
+      }
+    }
+  };
+}
+
 function createResponseFromOptions(options: void | Options) {
+  const debugChannel: void | DebugChannel =
+    __DEV__ && options && options.debugChannel !== undefined
+      ? {
+          hasReadable: options.debugChannel.readable !== undefined,
+          callback:
+            options.debugChannel.writable !== undefined
+              ? createDebugCallbackFromWritableStream(
+                  options.debugChannel.writable,
+                )
+              : null,
+        }
+      : undefined;
+
   return createResponse(
     options && options.moduleBaseURL ? options.moduleBaseURL : '',
     null,
@@ -67,13 +103,54 @@ function createResponseFromOptions(options: void | Options) {
     __DEV__ && options && options.environmentName
       ? options.environmentName
       : undefined,
+    debugChannel,
   );
+}
+
+function startReadingFromUniversalStream(
+  response: FlightResponse,
+  stream: ReadableStream,
+  onDone: () => void,
+): void {
+  // This is the same as startReadingFromStream except this allows WebSocketStreams which
+  // return ArrayBuffer and string chunks instead of Uint8Array chunks. We could potentially
+  // always allow streams with variable chunk types.
+  const streamState = createStreamState();
+  const reader = stream.getReader();
+  function progress({
+    done,
+    value,
+  }: {
+    done: boolean,
+    value: any,
+    ...
+  }): void | Promise<void> {
+    if (done) {
+      return onDone();
+    }
+    if (value instanceof ArrayBuffer) {
+      // WebSockets can produce ArrayBuffer values in ReadableStreams.
+      processBinaryChunk(response, streamState, new Uint8Array(value));
+    } else if (typeof value === 'string') {
+      // WebSockets can produce string values in ReadableStreams.
+      processStringChunk(response, streamState, value);
+    } else {
+      processBinaryChunk(response, streamState, value);
+    }
+    return reader.read().then(progress).catch(error);
+  }
+  function error(e: any) {
+    reportGlobalError(response, e);
+  }
+  reader.read().then(progress).catch(error);
 }
 
 function startReadingFromStream(
   response: FlightResponse,
   stream: ReadableStream,
+  onDone: () => void,
 ): void {
+  const streamState = createStreamState();
   const reader = stream.getReader();
   function progress({
     done,
@@ -84,11 +161,10 @@ function startReadingFromStream(
     ...
   }): void | Promise<void> {
     if (done) {
-      close(response);
-      return;
+      return onDone();
     }
     const buffer: Uint8Array = (value: any);
-    processBinaryChunk(response, buffer);
+    processBinaryChunk(response, streamState, buffer);
     return reader.read().then(progress).catch(error);
   }
   function error(e: any) {
@@ -96,13 +172,32 @@ function startReadingFromStream(
   }
   reader.read().then(progress).catch(error);
 }
-
 function createFromReadableStream<T>(
   stream: ReadableStream,
   options?: Options,
 ): Thenable<T> {
   const response: FlightResponse = createResponseFromOptions(options);
-  startReadingFromStream(response, stream);
+  if (
+    __DEV__ &&
+    options &&
+    options.debugChannel &&
+    options.debugChannel.readable
+  ) {
+    let streamDoneCount = 0;
+    const handleDone = () => {
+      if (++streamDoneCount === 2) {
+        close(response);
+      }
+    };
+    startReadingFromUniversalStream(
+      response,
+      options.debugChannel.readable,
+      handleDone,
+    );
+    startReadingFromStream(response, stream, handleDone);
+  } else {
+    startReadingFromStream(response, stream, close.bind(null, response));
+  }
   return getRoot(response);
 }
 
@@ -113,7 +208,31 @@ function createFromFetch<T>(
   const response: FlightResponse = createResponseFromOptions(options);
   promiseForResponse.then(
     function (r) {
-      startReadingFromStream(response, (r.body: any));
+      if (
+        __DEV__ &&
+        options &&
+        options.debugChannel &&
+        options.debugChannel.readable
+      ) {
+        let streamDoneCount = 0;
+        const handleDone = () => {
+          if (++streamDoneCount === 2) {
+            close(response);
+          }
+        };
+        startReadingFromUniversalStream(
+          response,
+          options.debugChannel.readable,
+          handleDone,
+        );
+        startReadingFromStream(response, (r.body: any), handleDone);
+      } else {
+        startReadingFromStream(
+          response,
+          (r.body: any),
+          close.bind(null, response),
+        );
+      }
     },
     function (e) {
       reportGlobalError(response, e);

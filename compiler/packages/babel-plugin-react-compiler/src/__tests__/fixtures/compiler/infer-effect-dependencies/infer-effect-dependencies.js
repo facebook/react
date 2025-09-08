@@ -1,5 +1,5 @@
 // @inferEffectDependencies
-import {useEffect, useRef} from 'react';
+import {useEffect, useRef, AUTODEPS} from 'react';
 import useEffectWrapper from 'useEffectWrapper';
 
 const moduleNonReactive = 0;
@@ -20,7 +20,7 @@ function Component({foo, bar}) {
     console.log(ref.current);
     console.log(localNonPrimitiveReactive);
     console.log(localNonPrimitiveNonreactive);
-  });
+  }, AUTODEPS);
 
   // Optional chains and property accesses
   // TODO: we may be able to save bytes by omitting property accesses if the
@@ -28,9 +28,9 @@ function Component({foo, bar}) {
   useEffect(() => {
     console.log(bar?.baz);
     console.log(bar.qux);
-  });
+  }, AUTODEPS);
 
   useEffectWrapper(() => {
     console.log(foo);
-  });
+  }, AUTODEPS);
 }

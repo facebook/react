@@ -34,7 +34,16 @@ export function revealCompletedBoundaries(batch) {
   for (let i = 0; i < batch.length; i += 2) {
     const suspenseIdNode = batch[i];
     const contentNode = batch[i + 1];
-
+    if (contentNode.parentNode === null) {
+      // If the client has failed hydration we may have already deleted the streaming
+      // segments. The server may also have emitted a complete instruction but cancelled
+      // the segment. Regardless we can ignore this case.
+    } else {
+      // We can detach the content now.
+      // Completions of boundaries within this contentNode will now find the boundary
+      // in its designated place.
+      contentNode.parentNode.removeChild(contentNode);
+    }
     // Clear all the existing children. This is complicated because
     // there can be embedded Suspense boundaries in the fallback.
     // This is similar to clearSuspenseBoundary in ReactFiberConfigDOM.
@@ -85,7 +94,7 @@ export function revealCompletedBoundaries(batch) {
 
     suspenseNode.data = SUSPENSE_START_DATA;
     if (suspenseNode['_reactRetry']) {
-      suspenseNode['_reactRetry']();
+      requestAnimationFrame(suspenseNode['_reactRetry']);
     }
   }
   batch.length = 0;
@@ -385,13 +394,16 @@ export function completeBoundary(suspenseBoundaryID, contentID) {
     // the segment. Regardless we can ignore this case.
     return;
   }
-  // We'll detach the content node so that regardless of what happens next we don't leave in the tree.
-  // This might also help by not causing recalcing each time we move a child from here to the target.
-  contentNodeOuter.parentNode.removeChild(contentNodeOuter);
 
   // Find the fallback's first element.
   const suspenseIdNodeOuter = document.getElementById(suspenseBoundaryID);
   if (!suspenseIdNodeOuter) {
+    // We'll never reveal this boundary so we can remove its content immediately.
+    // Otherwise we'll leave it in until we reveal it.
+    // This is important in case this specific boundary contains other boundaries
+    // that may get completed before we reveal this one.
+    contentNodeOuter.parentNode.removeChild(contentNodeOuter);
+
     // The user must have already navigated away from this tree.
     // E.g. because the parent was hydrated. That's fine there's nothing to do
     // but we have to make sure that we already deleted the container node.
@@ -408,21 +420,24 @@ export function completeBoundary(suspenseBoundaryID, contentID) {
   if (window['$RB'].length === 2) {
     // This is the first time we've pushed to the batch. We need to schedule a callback
     // to flush the batch. This is delayed by the throttle heuristic.
-    const globalMostRecentFallbackTime =
-      typeof window['$RT'] !== 'number' ? 0 : window['$RT'];
-    const currentTime = performance.now();
-    const msUntilTimeout =
-      // If the throttle would make us miss the target metric, then shorten the throttle.
-      // performance.now()'s zero value is assumed to be the start time of the metric.
-      currentTime < TARGET_VANITY_METRIC &&
-      currentTime > TARGET_VANITY_METRIC - FALLBACK_THROTTLE_MS
-        ? TARGET_VANITY_METRIC - currentTime
-        : // Otherwise it's throttled starting from last commit time.
-          globalMostRecentFallbackTime + FALLBACK_THROTTLE_MS - currentTime;
-    // We always schedule the flush in a timer even if it's very low or negative to allow
-    // for multiple completeBoundary calls that are already queued to have a chance to
-    // make the batch.
-    setTimeout(window['$RV'].bind(null, window['$RB']), msUntilTimeout);
+    if (typeof window['$RT'] !== 'number') {
+      // If we haven't had our rAF callback yet, schedule everything for the first paint.
+      requestAnimationFrame(window['$RV'].bind(null, window['$RB']));
+    } else {
+      const currentTime = performance.now();
+      const msUntilTimeout =
+        // If the throttle would make us miss the target metric, then shorten the throttle.
+        // performance.now()'s zero value is assumed to be the start time of the metric.
+        currentTime < TARGET_VANITY_METRIC &&
+        currentTime > TARGET_VANITY_METRIC - FALLBACK_THROTTLE_MS
+          ? TARGET_VANITY_METRIC - currentTime
+          : // Otherwise it's throttled starting from last commit time.
+            window['$RT'] + FALLBACK_THROTTLE_MS - currentTime;
+      // We always schedule the flush in a timer even if it's very low or negative to allow
+      // for multiple completeBoundary calls that are already queued to have a chance to
+      // make the batch.
+      setTimeout(window['$RV'].bind(null, window['$RB']), msUntilTimeout);
+    }
   }
 }
 

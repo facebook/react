@@ -5,12 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
-  CompilerError,
-  CompilerErrorDetailOptions,
-  ErrorSeverity,
-  SourceLocation,
-} from '..';
+import {CompilerError, CompilerErrorDetailOptions, SourceLocation} from '..';
 import {
   ArrayExpression,
   CallExpression,
@@ -42,6 +37,7 @@ import {
 import {eachInstructionOperand} from '../HIR/visitors';
 import {printSourceLocationLine} from '../HIR/PrintHIR';
 import {USE_FIRE_FUNCTION_NAME} from '../HIR/Environment';
+import {ErrorCategory} from '../CompilerError';
 
 /*
  * TODO(jmbrown):
@@ -132,7 +128,7 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
                 context.pushError({
                   loc: value.loc,
                   description: null,
-                  severity: ErrorSeverity.Invariant,
+                  category: ErrorCategory.Invariant,
                   reason: '[InsertFire] No LoadGlobal found for useEffect call',
                   suggestions: null,
                 });
@@ -178,7 +174,7 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
                 loc: value.args[1].loc,
                 description:
                   'You must use an array literal for an effect dependency array when that effect uses `fire()`',
-                severity: ErrorSeverity.Invariant,
+                category: ErrorCategory.Fire,
                 reason: CANNOT_COMPILE_FIRE,
                 suggestions: null,
               });
@@ -188,7 +184,7 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
               loc: value.args[1].place.loc,
               description:
                 'You must use an array literal for an effect dependency array when that effect uses `fire()`',
-              severity: ErrorSeverity.Invariant,
+              category: ErrorCategory.Fire,
               reason: CANNOT_COMPILE_FIRE,
               suggestions: null,
             });
@@ -222,7 +218,7 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
               context.pushError({
                 loc: value.loc,
                 description: null,
-                severity: ErrorSeverity.Invariant,
+                category: ErrorCategory.Invariant,
                 reason:
                   '[InsertFire] No loadLocal found for fire call argument',
                 suggestions: null,
@@ -245,7 +241,7 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
               loc: value.loc,
               description:
                 '`fire()` can only receive a function call such as `fire(fn(a,b)). Method calls and other expressions are not allowed',
-              severity: ErrorSeverity.InvalidReact,
+              category: ErrorCategory.Fire,
               reason: CANNOT_COMPILE_FIRE,
               suggestions: null,
             });
@@ -263,7 +259,7 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
           context.pushError({
             loc: value.loc,
             description,
-            severity: ErrorSeverity.InvalidReact,
+            category: ErrorCategory.Fire,
             reason: CANNOT_COMPILE_FIRE,
             suggestions: null,
           });
@@ -394,7 +390,7 @@ function ensureNoRemainingCalleeCaptures(
         description: `All uses of ${calleeName} must be either used with a fire() call in \
 this effect or not used with a fire() call at all. ${calleeName} was used with fire() on line \
 ${printSourceLocationLine(calleeInfo.fireLoc)} in this effect`,
-        severity: ErrorSeverity.InvalidReact,
+        category: ErrorCategory.Fire,
         reason: CANNOT_COMPILE_FIRE,
         suggestions: null,
       });
@@ -411,7 +407,7 @@ function ensureNoMoreFireUses(fn: HIRFunction, context: Context): void {
       context.pushError({
         loc: place.identifier.loc,
         description: 'Cannot use `fire` outside of a useEffect function',
-        severity: ErrorSeverity.Invariant,
+        category: ErrorCategory.Fire,
         reason: CANNOT_COMPILE_FIRE,
         suggestions: null,
       });
@@ -436,6 +432,7 @@ function makeLoadUseFireInstruction(
     value: instrValue,
     lvalue: {...useFirePlace},
     loc: GeneratedSource,
+    effects: null,
   };
 }
 
@@ -460,6 +457,7 @@ function makeLoadFireCalleeInstruction(
     },
     lvalue: {...loadedFireCallee},
     loc: GeneratedSource,
+    effects: null,
   };
 }
 
@@ -483,6 +481,7 @@ function makeCallUseFireInstruction(
     value: useFireCall,
     lvalue: {...useFireCallResultPlace},
     loc: GeneratedSource,
+    effects: null,
   };
 }
 
@@ -511,6 +510,7 @@ function makeStoreUseFireInstruction(
     },
     lvalue: fireFunctionBindingLValuePlace,
     loc: GeneratedSource,
+    effects: null,
   };
 }
 
@@ -698,7 +698,7 @@ class Context {
   }
 
   hasErrors(): boolean {
-    return this.#errors.hasErrors();
+    return this.#errors.hasAnyErrors();
   }
 
   throwIfErrorsFound(): void {

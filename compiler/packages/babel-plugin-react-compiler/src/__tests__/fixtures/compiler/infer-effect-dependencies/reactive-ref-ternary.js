@@ -1,5 +1,5 @@
 // @inferEffectDependencies
-import {useRef, useEffect} from 'react';
+import {useRef, useEffect, AUTODEPS} from 'react';
 import {print, mutate} from 'shared-runtime';
 
 function Component({cond}) {
@@ -10,6 +10,6 @@ function Component({cond}) {
   useEffect(() => {
     mutate(derived.current);
     print(derived.current);
-  });
+  }, AUTODEPS);
   return arr;
 }

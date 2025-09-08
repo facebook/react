@@ -156,7 +156,8 @@ function normalizeCodeLocInfo(str) {
   //  at Component (/path/filename.js:123:45)
   // React format:
   //    in Component (at filename.js:123)
-  return str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function (m, name) {
+  return str.replace(/\n +(?:at|in) ([^(\[\n]+)[^\n]*/g, function (m, name) {
+    name = name.trim();
     if (name.endsWith('.render')) {
       // Class components will have the `render` method as part of their stack trace.
       // We strip that out in our normalization to make it look more like component stacks.
@@ -354,7 +355,7 @@ export function createLogAssertion(
         let argIndex = 0;
         // console.* could have been called with a non-string e.g. `console.error(new Error())`
         // eslint-disable-next-line react-internal/safe-string-coercion
-        String(format).replace(/%s|%c/g, () => argIndex++);
+        String(format).replace(/%s|%c|%o/g, () => argIndex++);
         if (argIndex !== args.length) {
           if (format.includes('%c%s')) {
             // We intentionally use mismatching formatting when printing badging because we don't know
@@ -381,8 +382,9 @@ export function createLogAssertion(
 
         // Main logic to check if log is expected, with the component stack.
         if (
-          normalizedMessage === expectedMessage ||
-          normalizedMessage.includes(expectedMessage)
+          typeof expectedMessage === 'string' &&
+          (normalizedMessage === expectedMessage ||
+            normalizedMessage.includes(expectedMessage))
         ) {
           if (isLikelyAComponentStack(normalizedMessage)) {
             if (expectedWithoutStack === true) {

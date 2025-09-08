@@ -48,6 +48,11 @@ const createTask =
       console.createTask
     : (name: string) => null;
 
+export const REGULAR_UPDATE: UpdateType = 0;
+export const SPAWNED_UPDATE: UpdateType = 1;
+export const PINGED_UPDATE: UpdateType = 2;
+export opaque type UpdateType = 0 | 1 | 2;
+
 export let renderStartTime: number = -0;
 export let commitStartTime: number = -0;
 export let commitEndTime: number = -0;
@@ -62,15 +67,16 @@ export let componentEffectErrors: null | Array<CapturedValue<mixed>> = null;
 export let blockingClampTime: number = -0;
 export let blockingUpdateTime: number = -1.1; // First sync setState scheduled.
 export let blockingUpdateTask: null | ConsoleTask = null; // First sync setState's stack trace.
+export let blockingUpdateType: UpdateType = 0;
 export let blockingEventTime: number = -1.1; // Event timeStamp of the first setState.
 export let blockingEventType: null | string = null; // Event type of the first setState.
 export let blockingEventIsRepeat: boolean = false;
-export let blockingSpawnedUpdate: boolean = false;
 export let blockingSuspendedTime: number = -1.1;
 // TODO: This should really be one per Transition lane.
 export let transitionClampTime: number = -0;
 export let transitionStartTime: number = -1.1; // First startTransition call before setState.
 export let transitionUpdateTime: number = -1.1; // First transition setState scheduled.
+export let transitionUpdateType: UpdateType = 0;
 export let transitionUpdateTask: null | ConsoleTask = null; // First transition setState's stack trace.
 export let transitionEventTime: number = -1.1; // Event timeStamp of the first transition.
 export let transitionEventType: null | string = null; // Event type of the first transition.
@@ -97,7 +103,7 @@ export function startUpdateTimerByLane(lane: Lane, method: string): void {
       blockingUpdateTime = now();
       blockingUpdateTask = createTask(method);
       if (isAlreadyRendering()) {
-        blockingSpawnedUpdate = true;
+        blockingUpdateType = SPAWNED_UPDATE;
       }
       const newEventTime = resolveEventTimeStamp();
       const newEventType = resolveEventType();
@@ -110,7 +116,7 @@ export function startUpdateTimerByLane(lane: Lane, method: string): void {
         // If this is a second update in the same event, we treat it as a spawned update.
         // This might be a microtask spawned from useEffect, multiple flushSync or
         // a setState in a microtask spawned after the first setState. Regardless it's bad.
-        blockingSpawnedUpdate = true;
+        blockingUpdateType = SPAWNED_UPDATE;
       }
       blockingEventTime = newEventTime;
       blockingEventType = newEventType;
@@ -135,6 +141,54 @@ export function startUpdateTimerByLane(lane: Lane, method: string): void {
   }
 }
 
+export function startHostActionTimer(fiber: Fiber): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  // This schedules an update on both the blocking lane for the pending state and on the
+  // transition lane for the action update. Using the debug task from the host fiber.
+  if (blockingUpdateTime < 0) {
+    blockingUpdateTime = now();
+    blockingUpdateTask =
+      __DEV__ && fiber._debugTask != null ? fiber._debugTask : null;
+    if (isAlreadyRendering()) {
+      blockingUpdateType = SPAWNED_UPDATE;
+    }
+    const newEventTime = resolveEventTimeStamp();
+    const newEventType = resolveEventType();
+    if (
+      newEventTime !== blockingEventTime ||
+      newEventType !== blockingEventType
+    ) {
+      blockingEventIsRepeat = false;
+    } else if (newEventType !== null) {
+      // If this is a second update in the same event, we treat it as a spawned update.
+      // This might be a microtask spawned from useEffect, multiple flushSync or
+      // a setState in a microtask spawned after the first setState. Regardless it's bad.
+      blockingUpdateType = SPAWNED_UPDATE;
+    }
+    blockingEventTime = newEventTime;
+    blockingEventType = newEventType;
+  }
+  if (transitionUpdateTime < 0) {
+    transitionUpdateTime = now();
+    transitionUpdateTask =
+      __DEV__ && fiber._debugTask != null ? fiber._debugTask : null;
+    if (transitionStartTime < 0) {
+      const newEventTime = resolveEventTimeStamp();
+      const newEventType = resolveEventType();
+      if (
+        newEventTime !== transitionEventTime ||
+        newEventType !== transitionEventType
+      ) {
+        transitionEventIsRepeat = false;
+      }
+      transitionEventTime = newEventTime;
+      transitionEventType = newEventType;
+    }
+  }
+}
+
 export function startPingTimerByLanes(lanes: Lanes): void {
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
     return;
@@ -145,10 +199,14 @@ export function startPingTimerByLanes(lanes: Lanes): void {
   if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
     if (blockingUpdateTime < 0) {
       blockingClampTime = blockingUpdateTime = now();
+      blockingUpdateTask = createTask('Promise Resolved');
+      blockingUpdateType = PINGED_UPDATE;
     }
   } else if (includesTransitionLane(lanes)) {
     if (transitionUpdateTime < 0) {
       transitionClampTime = transitionUpdateTime = now();
+      transitionUpdateTask = createTask('Promise Resolved');
+      transitionUpdateType = PINGED_UPDATE;
     }
   }
 }
@@ -166,10 +224,9 @@ export function trackSuspendedTime(lanes: Lanes, renderEndTime: number) {
 
 export function clearBlockingTimers(): void {
   blockingUpdateTime = -1.1;
-  blockingUpdateTask = null;
+  blockingUpdateType = 0;
   blockingSuspendedTime = -1.1;
   blockingEventIsRepeat = true;
-  blockingSpawnedUpdate = false;
 }
 
 export function startAsyncTransitionTimer(): void {
@@ -196,20 +253,6 @@ export function hasScheduledTransitionWork(): boolean {
   return transitionUpdateTime > -1;
 }
 
-// We use this marker to indicate that we have scheduled a render to be performed
-// but it's not an explicit state update.
-const ACTION_STATE_MARKER = -0.5;
-
-export function startActionStateUpdate(): void {
-  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
-    return;
-  }
-  if (transitionUpdateTime < 0) {
-    transitionUpdateTime = ACTION_STATE_MARKER;
-    transitionUpdateTask = null;
-  }
-}
-
 export function clearAsyncTransitionTimer(): void {
   transitionStartTime = -1.1;
 }
@@ -217,7 +260,7 @@ export function clearAsyncTransitionTimer(): void {
 export function clearTransitionTimers(): void {
   transitionStartTime = -1.1;
   transitionUpdateTime = -1.1;
-  transitionUpdateTask = null;
+  transitionUpdateType = 0;
   transitionSuspendedTime = -1.1;
   transitionEventIsRepeat = true;
 }

@@ -5,9 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, ErrorSeverity} from '..';
+import {CompilerDiagnostic, CompilerError} from '..';
+import {ErrorCategory} from '../CompilerError';
 import {HIRFunction} from '../HIR';
-import {getFunctionCallSignature} from '../Inference/InferReferenceEffects';
+import {getFunctionCallSignature} from '../Inference/InferMutationAliasingEffects';
 import {Result} from '../Utils/Result';
 
 /**
@@ -34,17 +35,22 @@ export function validateNoImpureFunctionsInRender(
           callee.identifier.type,
         );
         if (signature != null && signature.impure === true) {
-          errors.push({
-            reason:
-              'Calling an impure function can produce unstable results. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent)',
-            description:
-              signature.canonicalName != null
-                ? `\`${signature.canonicalName}\` is an impure function whose results may change on every call`
-                : null,
-            severity: ErrorSeverity.InvalidReact,
-            loc: callee.loc,
-            suggestions: null,
-          });
+          errors.pushDiagnostic(
+            CompilerDiagnostic.create({
+              category: ErrorCategory.Purity,
+              reason: 'Cannot call impure function during render',
+              description:
+                (signature.canonicalName != null
+                  ? `\`${signature.canonicalName}\` is an impure function. `
+                  : '') +
+                'Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent)',
+              suggestions: null,
+            }).withDetails({
+              kind: 'error',
+              loc: callee.loc,
+              message: 'Cannot call impure function',
+            }),
+          );
         }
       }
     }

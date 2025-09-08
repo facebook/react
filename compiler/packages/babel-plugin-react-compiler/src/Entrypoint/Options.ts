@@ -7,7 +7,12 @@
 
 import * as t from '@babel/types';
 import {z} from 'zod';
-import {CompilerError, CompilerErrorDetailOptions} from '../CompilerError';
+import {
+  CompilerDiagnostic,
+  CompilerError,
+  CompilerErrorDetail,
+  CompilerErrorDetailOptions,
+} from '../CompilerError';
 import {
   EnvironmentConfig,
   ExternalFunction,
@@ -130,7 +135,12 @@ export type PluginOptions = {
    */
   eslintSuppressionRules: Array<string> | null | undefined;
 
+  /**
+   * Whether to report "suppression" errors for Flow suppressions. If false, suppression errors
+   * are only emitted for ESLint suppressions
+   */
   flowSuppressions: boolean;
+
   /*
    * Ignore 'use no forget' annotations. Helpful during testing but should not be used in production.
    */
@@ -224,7 +234,7 @@ export type LoggerEvent =
 export type CompileErrorEvent = {
   kind: 'CompileError';
   fnLoc: t.SourceLocation | null;
-  detail: CompilerErrorDetailOptions;
+  detail: CompilerErrorDetail | CompilerDiagnostic;
 };
 export type CompileDiagnosticEvent = {
   kind: 'CompileDiagnostic';

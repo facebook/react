@@ -17,11 +17,7 @@ import {
   useState,
   use,
 } from 'react';
-import {
-  LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
-  LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET,
-} from '../../../constants';
-import {useLocalStorage, useSubscription} from '../hooks';
+import {useSubscription} from '../hooks';
 import {StoreContext} from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
@@ -45,7 +41,6 @@ import {
   ElementTypeActivity,
   ElementTypeViewTransition,
 } from 'react-devtools-shared/src/frontend/types';
-import {getDefaultOpenInEditorURL} from 'react-devtools-shared/src/utils';
 
 import styles from './SettingsShared.css';
 
@@ -59,8 +54,6 @@ import type {
   EnvironmentNameComponentFilter,
 } from 'react-devtools-shared/src/frontend/types';
 import {isInternalFacebookBuild} from 'react-devtools-feature-flags';
-
-const vscodeFilepath = 'vscode://file/{path}:{line}';
 
 export default function ComponentsSettings({
   environmentNames,
@@ -96,15 +89,6 @@ export default function ComponentsSettings({
       setParseHookNames(currentTarget.checked);
     },
     [setParseHookNames],
-  );
-
-  const [openInEditorURLPreset, setOpenInEditorURLPreset] = useLocalStorage<
-    'vscode' | 'custom',
-  >(LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET, 'custom');
-
-  const [openInEditorURL, setOpenInEditorURL] = useLocalStorage<string>(
-    LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
-    getDefaultOpenInEditorURL(),
   );
 
   const [componentFilters, setComponentFilters] = useState<
@@ -340,55 +324,31 @@ export default function ComponentsSettings({
   );
 
   return (
-    <div className={styles.Settings}>
-      <label className={styles.Setting}>
-        <input
-          type="checkbox"
-          checked={!collapseNodesByDefault}
-          onChange={updateCollapseNodesByDefault}
-        />{' '}
-        Expand component tree by default
-      </label>
-
-      <label className={styles.Setting}>
-        <input
-          type="checkbox"
-          checked={parseHookNames}
-          onChange={updateParseHookNames}
-        />{' '}
-        Always parse hook names from source{' '}
-        <span className={styles.Warning}>(may be slow)</span>
-      </label>
-
-      <label className={styles.OpenInURLSetting}>
-        Open in Editor URL:{' '}
-        <select
-          className={styles.Select}
-          value={openInEditorURLPreset}
-          onChange={({currentTarget}) => {
-            const selectedValue = currentTarget.value;
-            setOpenInEditorURLPreset(selectedValue);
-            if (selectedValue === 'vscode') {
-              setOpenInEditorURL(vscodeFilepath);
-            } else if (selectedValue === 'custom') {
-              setOpenInEditorURL('');
-            }
-          }}>
-          <option value="vscode">VS Code</option>
-          <option value="custom">Custom</option>
-        </select>
-        {openInEditorURLPreset === 'custom' && (
+    <div className={styles.SettingList}>
+      <div className={styles.SettingWrapper}>
+        <label className={styles.SettingRow}>
           <input
-            className={styles.Input}
-            type="text"
-            placeholder={process.env.EDITOR_URL ? process.env.EDITOR_URL : ''}
-            value={openInEditorURL}
-            onChange={event => {
-              setOpenInEditorURL(event.target.value);
-            }}
+            type="checkbox"
+            checked={!collapseNodesByDefault}
+            onChange={updateCollapseNodesByDefault}
+            className={styles.SettingRowCheckbox}
           />
-        )}
-      </label>
+          Expand component tree by default
+        </label>
+      </div>
+
+      <div className={styles.SettingWrapper}>
+        <label className={styles.SettingRow}>
+          <input
+            type="checkbox"
+            checked={parseHookNames}
+            onChange={updateParseHookNames}
+            className={styles.SettingRowCheckbox}
+          />
+          Always parse hook names from source&nbsp;
+          <span className={styles.Warning}>(may be slow)</span>
+        </label>
+      </div>
 
       <div className={styles.Header}>Hide components where...</div>
 
@@ -432,7 +392,6 @@ export default function ComponentsSettings({
               </td>
               <td className={styles.TableCell}>
                 <select
-                  className={styles.Select}
                   value={componentFilter.type}
                   onChange={({currentTarget}) =>
                     changeFilterType(
@@ -467,7 +426,6 @@ export default function ComponentsSettings({
               <td className={styles.TableCell}>
                 {componentFilter.type === ComponentFilterElementType && (
                   <select
-                    className={styles.Select}
                     value={componentFilter.value}
                     onChange={({currentTarget}) =>
                       updateFilterValueElementType(
@@ -515,7 +473,6 @@ export default function ComponentsSettings({
                 )}
                 {componentFilter.type === ComponentFilterEnvironmentName && (
                   <select
-                    className={styles.Select}
                     value={componentFilter.value}
                     onChange={({currentTarget}) =>
                       updateFilterValueEnvironmentName(

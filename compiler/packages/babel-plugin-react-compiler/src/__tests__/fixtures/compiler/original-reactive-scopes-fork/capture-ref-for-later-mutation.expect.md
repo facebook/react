@@ -48,9 +48,7 @@ function useKeyCommand() {
     };
 
     const moveLeft = { handler: handleKey("left") };
-
     const moveRight = { handler: handleKey("right") };
-
     t0 = [moveLeft, moveRight];
     $[0] = t0;
   } else {

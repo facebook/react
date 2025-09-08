@@ -7,7 +7,7 @@
 
 import {Binding, NodePath} from '@babel/traverse';
 import * as t from '@babel/types';
-import {CompilerError} from '../CompilerError';
+import {CompilerError, ErrorCategory} from '../CompilerError';
 import {Environment} from './Environment';
 import {
   BasicBlock,
@@ -106,7 +106,7 @@ export default class HIRBuilder {
   #current: WipBlock;
   #entry: BlockId;
   #scopes: Array<Scope> = [];
-  #context: Array<t.Identifier>;
+  #context: Map<t.Identifier, SourceLocation>;
   #bindings: Bindings;
   #env: Environment;
   #exceptionHandlerStack: Array<BlockId> = [];
@@ -121,7 +121,7 @@ export default class HIRBuilder {
     return this.#env.nextIdentifierId;
   }
 
-  get context(): Array<t.Identifier> {
+  get context(): Map<t.Identifier, SourceLocation> {
     return this.#context;
   }
 
@@ -137,13 +137,13 @@ export default class HIRBuilder {
     env: Environment,
     options?: {
       bindings?: Bindings | null;
-      context?: Array<t.Identifier>;
+      context?: Map<t.Identifier, SourceLocation>;
       entryBlockKind?: BlockKind;
     },
   ) {
     this.#env = env;
     this.#bindings = options?.bindings ?? new Map();
-    this.#context = options?.context ?? [];
+    this.#context = options?.context ?? new Map();
     this.#entry = makeBlockId(env.nextBlockId);
     this.#current = newBlock(this.#entry, options?.entryBlockKind ?? 'block');
   }
@@ -165,6 +165,7 @@ export default class HIRBuilder {
           handler: exceptionHandler,
           id: makeInstructionId(0),
           loc: instruction.loc,
+          effects: null,
         },
         continuationBlock,
       );
@@ -307,9 +308,33 @@ export default class HIRBuilder {
 
   resolveBinding(node: t.Identifier): Identifier {
     if (node.name === 'fbt') {
-      CompilerError.throwTodo({
-        reason: 'Support local variables named "fbt"',
-        loc: node.loc ?? null,
+      CompilerError.throwDiagnostic({
+        category: ErrorCategory.Todo,
+        reason: 'Support local variables named `fbt`',
+        description:
+          'Local variables named `fbt` may conflict with the fbt plugin and are not yet supported',
+        details: [
+          {
+            kind: 'error',
+            message: 'Rename to avoid conflict with fbt plugin',
+            loc: node.loc ?? GeneratedSource,
+          },
+        ],
+      });
+    }
+    if (node.name === 'this') {
+      CompilerError.throwDiagnostic({
+        category: ErrorCategory.UnsupportedSyntax,
+        reason: '`this` is not supported syntax',
+        description:
+          'React Compiler does not support compiling functions that use `this`',
+        details: [
+          {
+            kind: 'error',
+            message: '`this` was used here',
+            loc: node.loc ?? GeneratedSource,
+          },
+        ],
       });
     }
     const originalName = node.name;
@@ -482,7 +507,13 @@ export default class HIRBuilder {
       {
         reason: 'Mismatched label',
         description: null,
-        loc: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
         suggestions: null,
       },
     );
@@ -505,7 +536,13 @@ export default class HIRBuilder {
       {
         reason: 'Mismatched label',
         description: null,
-        loc: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
         suggestions: null,
       },
     );
@@ -541,7 +578,13 @@ export default class HIRBuilder {
       {
         reason: 'Mismatched loops',
         description: null,
-        loc: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
         suggestions: null,
       },
     );
@@ -566,7 +609,13 @@ export default class HIRBuilder {
     CompilerError.invariant(false, {
       reason: 'Expected a loop or switch to be in scope',
       description: null,
-      loc: null,
+      details: [
+        {
+          kind: 'error',
+          loc: null,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
   }
@@ -587,7 +636,13 @@ export default class HIRBuilder {
         CompilerError.invariant(false, {
           reason: 'Continue may only refer to a labeled loop',
           description: null,
-          loc: null,
+          details: [
+            {
+              kind: 'error',
+              loc: null,
+              message: null,
+            },
+          ],
           suggestions: null,
         });
       }
@@ -595,7 +650,13 @@ export default class HIRBuilder {
     CompilerError.invariant(false, {
       reason: 'Expected a loop to be in scope',
       description: null,
-      loc: null,
+      details: [
+        {
+          kind: 'error',
+          loc: null,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
   }
@@ -618,7 +679,13 @@ function _shrink(func: HIR): void {
     CompilerError.invariant(block != null, {
       reason: `expected block ${blockId} to exist`,
       description: null,
-      loc: null,
+      details: [
+        {
+          kind: 'error',
+          loc: null,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
     target = getTargetIfIndirection(block);
@@ -750,7 +817,13 @@ function getReversePostorderedBlocks(func: HIR): HIR['blocks'] {
     CompilerError.invariant(block != null, {
       reason: '[HIRBuilder] Unexpected null block',
       description: `expected block ${blockId} to exist`,
-      loc: GeneratedSource,
+      details: [
+        {
+          kind: 'error',
+          loc: GeneratedSource,
+          message: null,
+        },
+      ],
     });
     const successors = [...eachTerminalSuccessor(block.terminal)].reverse();
     const fallthrough = terminalFallthrough(block.terminal);
@@ -806,7 +879,13 @@ export function markInstructionIds(func: HIR): void {
       CompilerError.invariant(!visited.has(instr), {
         reason: `${printInstruction(instr)} already visited!`,
         description: null,
-        loc: instr.loc,
+        details: [
+          {
+            kind: 'error',
+            loc: instr.loc,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
       visited.add(instr);
@@ -829,7 +908,13 @@ export function markPredecessors(func: HIR): void {
     CompilerError.invariant(block != null, {
       reason: 'unexpected missing block',
       description: `block ${blockId}`,
-      loc: GeneratedSource,
+      details: [
+        {
+          kind: 'error',
+          loc: GeneratedSource,
+          message: null,
+        },
+      ],
     });
     if (prevBlock) {
       block.preds.add(prevBlock.id);

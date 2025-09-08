@@ -522,7 +522,11 @@ describe('StoreStress (Legacy Mode)', () => {
     ];
 
     const Never = () => {
-      throw new Promise(() => {});
+      if (React.use) {
+        React.use(new Promise(() => {}));
+      } else {
+        throw new Promise(() => {});
+      }
     };
 
     const Root = ({children}) => {
@@ -1144,7 +1148,11 @@ describe('StoreStress (Legacy Mode)', () => {
     ];
 
     const Never = () => {
-      throw new Promise(() => {});
+      if (React.use) {
+        React.use(new Promise(() => {}));
+      } else {
+        throw new Promise(() => {});
+      }
     };
 
     const MaybeSuspend = ({children, suspend}) => {

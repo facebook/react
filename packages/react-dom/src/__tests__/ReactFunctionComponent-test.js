@@ -205,27 +205,6 @@ describe('ReactFunctionComponent', () => {
     ]);
   });
 
-  // @gate !disableDefaultPropsExceptForClasses
-  it('should support default props', async () => {
-    function Child(props) {
-      return <div>{props.test}</div>;
-    }
-    Child.defaultProps = {test: 2};
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-
-    await act(() => {
-      root.render(<Child />);
-    });
-    expect(container.textContent).toBe('2');
-    assertConsoleErrorDev([
-      'Child: Support for defaultProps will be removed from function components in a future major release. ' +
-        'Use JavaScript default parameters instead.\n' +
-        '    in Child (at **)',
-    ]);
-  });
-
   // @gate !disableLegacyContext && !disableLegacyContextForFunctionComponents
   it('should receive context', async () => {
     class Parent extends React.Component {

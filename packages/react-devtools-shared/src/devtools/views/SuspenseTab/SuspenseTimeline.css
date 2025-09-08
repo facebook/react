@@ -1,0 +1,26 @@
+.SuspenseTimelineContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  padding: 0.25rem;
+}
+
+.SuspenseTimelineInput {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  /* 
+   * `overflow: auto` will add scrollbars but the input will not actually grow beyond visible content.
+   * `overflow: hidden` will constrain the input to its visible content.
+   */
+  overflow: hidden;
+}
+
+.SuspenseTimelineRootSwitcher {
+  height: fit-content;
+  max-width: 3rem;
+}
+
+.SuspenseTimelineProgressIndicator {
+  align-self: center;
+}

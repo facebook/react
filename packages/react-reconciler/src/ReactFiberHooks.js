@@ -55,7 +55,6 @@ import {
   ConcurrentMode,
   StrictEffectsMode,
   StrictLegacyMode,
-  NoStrictPassiveEffectsMode,
 } from './ReactTypeOfMode';
 import {
   NoLane,
@@ -74,6 +73,7 @@ import {
   includesSomeLane,
   isGestureRender,
   GestureLane,
+  UpdateLanes,
 } from './ReactFiberLane';
 import {
   ContinuousEventPriority,
@@ -123,7 +123,10 @@ import {
   markStateUpdateScheduled,
   setIsStrictModeForDevtools,
 } from './ReactFiberDevToolsHook';
-import {startUpdateTimerByLane} from './ReactProfilerTimer';
+import {
+  startUpdateTimerByLane,
+  startHostActionTimer,
+} from './ReactProfilerTimer';
 import {createCache} from './ReactFiberCacheComponent';
 import {
   createUpdate as createLegacyQueueUpdate,
@@ -1206,7 +1209,7 @@ function useMemoCache(size: number): Array<mixed> {
               ? currentMemoCache.data
               : // Clone the memo cache before each render (copy-on-write)
                 currentMemoCache.data.map(array => array.slice()),
-            index: 0,
+            index: 0 as number,
           };
         }
       }
@@ -1216,7 +1219,7 @@ function useMemoCache(size: number): Array<mixed> {
   if (memoCache == null) {
     memoCache = {
       data: [],
-      index: 0,
+      index: 0 as number,
     };
   }
   if (updateQueue === null) {
@@ -2672,8 +2675,7 @@ function mountEffect(
 ): void {
   if (
     __DEV__ &&
-    (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode &&
-    (currentlyRenderingFiber.mode & NoStrictPassiveEffectsMode) === NoMode
+    (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
   ) {
     mountEffectImpl(
       MountPassiveDevEffect | PassiveEffect | PassiveStaticEffect,
@@ -2982,6 +2984,20 @@ function rerenderDeferredValue<T>(value: T, initialValue?: T): T {
   }
 }
 
+function isRenderingDeferredWork(): boolean {
+  if (!includesSomeLane(renderLanes, DeferredLane)) {
+    // None of the render lanes are deferred lanes.
+    return false;
+  }
+  // At least one of the render lanes are deferred lanes. However, if the
+  // current render is also batched together with an update, then we can't
+  // say that the render is wholly the result of deferred work. We can check
+  // this by checking if the root render lanes contain any "update" lanes, i.e.
+  // lanes that are only assigned to updates, like setState.
+  const rootRenderLanes = getWorkInProgressRootRenderLanes();
+  return !includesSomeLane(rootRenderLanes, UpdateLanes);
+}
+
 function mountDeferredValueImpl<T>(hook: Hook, value: T, initialValue?: T): T {
   if (
     // When `initialValue` is provided, we defer the initial render even if the
@@ -2990,7 +3006,7 @@ function mountDeferredValueImpl<T>(hook: Hook, value: T, initialValue?: T): T {
     // However, to avoid waterfalls, we do not defer if this render
     // was itself spawned by an earlier useDeferredValue. Check if DeferredLane
     // is part of the render lanes.
-    !includesSomeLane(renderLanes, DeferredLane)
+    !isRenderingDeferredWork()
   ) {
     // Render with the initial value
     hook.memoizedState = initialValue;
@@ -3037,8 +3053,7 @@ function updateDeferredValueImpl<T>(
     }
 
     const shouldDeferValue =
-      !includesOnlyNonUrgentLanes(renderLanes) &&
-      !includesSomeLane(renderLanes, DeferredLane);
+      !includesOnlyNonUrgentLanes(renderLanes) && !isRenderingDeferredWork();
     if (shouldDeferValue) {
       // This is an urgent update. Since the value has changed, keep using the
       // previous value and spawn a deferred render to update it later.
@@ -3240,6 +3255,8 @@ export function startHostTransition<F>(
     Thenable<TransitionStatus> | TransitionStatus,
     BasicStateAction<Thenable<TransitionStatus> | TransitionStatus>,
   > = stateHook.queue;
+
+  startHostActionTimer(formFiber);
 
   startTransition(
     formFiber,

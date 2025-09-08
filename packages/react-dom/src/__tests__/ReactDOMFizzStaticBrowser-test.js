@@ -40,6 +40,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     // We need the mocked version of setTimeout inside the document.
     window.setTimeout = setTimeout;
+    window.requestAnimationFrame = setTimeout;
 
     patchMessageChannel();
     serverAct = require('internal-test-utils').serverAct;
@@ -1623,7 +1624,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     expect(result).toBe(
       '<!DOCTYPE html><html><head><link rel="expect" href="#_R_" blocking="render"/></head>' +
-        '<body>hello<!--$?--><template id="B:1"></template><!--/$--><script id="_R_">requestAnimationFrame(function(){$RT=performance.now()});</script>',
+        '<body>hello<!--$?--><template id="B:0"></template><!--/$--><script id="_R_">requestAnimationFrame(function(){$RT=performance.now()});</script>',
     );
 
     await 1;
@@ -1648,8 +1649,8 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     expect(slice).toBe(
       '<!DOCTYPE html><html><head><link rel="expect" href="#_R_" blocking="render"/></head>' +
-        '<body>hello<!--$?--><template id="B:1"></template><!--/$--><script id="_R_">requestAnimationFrame(function(){$RT=performance.now()});</script>' +
-        '<div hidden id="S:1">world<!-- --></div><script>$RX',
+        '<body>hello<!--$?--><template id="B:0"></template><!--/$--><script id="_R_">requestAnimationFrame(function(){$RT=performance.now()});</script>' +
+        '<div hidden id="S:0">world<!-- --></div><script>$RX',
     );
   });
 

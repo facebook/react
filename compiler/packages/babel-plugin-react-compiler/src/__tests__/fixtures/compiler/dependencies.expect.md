@@ -46,6 +46,7 @@ function foo(x, y, z) {
   } else {
     items2 = $[2];
   }
+
   if (y) {
     items.push(x);
   }

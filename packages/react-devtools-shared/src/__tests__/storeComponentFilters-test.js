@@ -156,6 +156,9 @@ describe('Store component filters', () => {
             <div>
         ▾ <Suspense>
             <div>
+      [shell]
+        <Suspense name="Unknown" rects={[]}>
+        <Suspense name="Unknown" rects={[]}>
     `);
 
     await actAsync(
@@ -171,6 +174,9 @@ describe('Store component filters', () => {
             <div>
         ▾ <Suspense>
             <div>
+      [shell]
+        <Suspense name="Unknown" rects={[]}>
+        <Suspense name="Unknown" rects={[]}>
     `);
 
     await actAsync(
@@ -186,6 +192,9 @@ describe('Store component filters', () => {
             <div>
         ▾ <Suspense>
             <div>
+      [shell]
+        <Suspense name="Unknown" rects={[]}>
+        <Suspense name="Unknown" rects={[]}>
     `);
   });
 
@@ -207,12 +216,11 @@ describe('Store component filters', () => {
       );
 
       expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <Activity>
-            <div>
-        ▾ <Activity>
-            <div>
-    `);
+        [root]
+          ▾ <Activity>
+              <div>
+            <Activity>
+      `);
 
       await actAsync(
         async () =>
@@ -222,10 +230,9 @@ describe('Store component filters', () => {
       );
 
       expect(store).toMatchInlineSnapshot(`
-      [root]
-          <div>
-          <div>
-    `);
+        [root]
+            <div>
+      `);
 
       await actAsync(
         async () =>
@@ -235,12 +242,11 @@ describe('Store component filters', () => {
       );
 
       expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <Activity>
-            <div>
-        ▾ <Activity>
-            <div>
-    `);
+        [root]
+          ▾ <Activity>
+              <div>
+            <Activity>
+      `);
     }
   });
 
@@ -262,12 +268,12 @@ describe('Store component filters', () => {
       );
 
       expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <ViewTransition>
-            <div>
-        ▾ <ViewTransition>
-            <div>
-    `);
+              [root]
+                ▾ <ViewTransition>
+                    <div>
+                ▾ <ViewTransition>
+                    <div>
+          `);
 
       await actAsync(
         async () =>
@@ -277,12 +283,12 @@ describe('Store component filters', () => {
       );
 
       expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <ViewTransition>
-            <div>
-        ▾ <ViewTransition>
-            <div>
-    `);
+              [root]
+                ▾ <ViewTransition>
+                    <div>
+                ▾ <ViewTransition>
+                    <div>
+          `);
 
       await actAsync(
         async () =>
@@ -292,12 +298,12 @@ describe('Store component filters', () => {
       );
 
       expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <ViewTransition>
-            <div>
-        ▾ <ViewTransition>
-            <div>
-    `);
+              [root]
+                ▾ <ViewTransition>
+                    <div>
+                ▾ <ViewTransition>
+                    <div>
+          `);
     }
   });
 
@@ -509,7 +515,11 @@ describe('Store component filters', () => {
 
     const Component = ({shouldSuspend}) => {
       if (shouldSuspend) {
-        throw promise;
+        if (React.use) {
+          React.use(promise);
+        } else {
+          throw promise;
+        }
       }
       return null;
     };

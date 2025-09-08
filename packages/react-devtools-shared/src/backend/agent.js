@@ -130,6 +130,12 @@ type OverrideSuspenseParams = {
   forceFallback: boolean,
 };
 
+type OverrideSuspenseMilestoneParams = {
+  rendererID: number,
+  rootID: number,
+  suspendedSet: Array<number>,
+};
+
 type PersistedSelection = {
   rendererID: number,
   path: Array<PathFrame>,
@@ -198,6 +204,10 @@ export default class Agent extends EventEmitter<{
     bridge.addListener('logElementToConsole', this.logElementToConsole);
     bridge.addListener('overrideError', this.overrideError);
     bridge.addListener('overrideSuspense', this.overrideSuspense);
+    bridge.addListener(
+      'overrideSuspenseMilestone',
+      this.overrideSuspenseMilestone,
+    );
     bridge.addListener('overrideValueAtPath', this.overrideValueAtPath);
     bridge.addListener('reloadAndProfile', this.reloadAndProfile);
     bridge.addListener('renamePath', this.renamePath);
@@ -556,6 +566,21 @@ export default class Agent extends EventEmitter<{
     }
   };
 
+  overrideSuspenseMilestone: OverrideSuspenseMilestoneParams => void = ({
+    rendererID,
+    rootID,
+    suspendedSet,
+  }) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(
+        `Invalid renderer id "${rendererID}" to override suspense milestone`,
+      );
+    } else {
+      renderer.overrideSuspenseMilestone(rootID, suspendedSet);
+    }
+  };
+
   overrideValueAtPath: OverrideValueAtPathParams => void = ({
     hookID,
     id,
@@ -709,6 +734,16 @@ export default class Agent extends EventEmitter<{
     this._rendererInterfaces[rendererID] = rendererInterface;
 
     rendererInterface.setTraceUpdatesEnabled(this._traceUpdatesEnabled);
+
+    const renderer = rendererInterface.renderer;
+    if (renderer !== null) {
+      const devRenderer = renderer.bundleType === 1;
+      const enableSuspenseTab =
+        devRenderer && renderer.version.includes('-experimental-');
+      if (enableSuspenseTab) {
+        this._bridge.send('enableSuspenseTab');
+      }
+    }
 
     // When the renderer is attached, we need to tell it whether
     // we remember the previous selection that we'd like to restore.

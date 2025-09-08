@@ -21,10 +21,15 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
+Found 1 error:
+
+Todo: (BuildHIR::lowerAssignment) Handle computed properties in ObjectPattern
+
+todo.error.object-pattern-computed-key.ts:5:9
   3 | const SCALE = 2;
   4 | function Component(props) {
 > 5 |   const {[props.name]: value} = props;
-    |          ^^^^^^^^^^^^^^^^^^^ Todo: (BuildHIR::lowerAssignment) Handle computed properties in ObjectPattern (5:5)
+    |          ^^^^^^^^^^^^^^^^^^^ (BuildHIR::lowerAssignment) Handle computed properties in ObjectPattern
   6 |   return value;
   7 | }
   8 |

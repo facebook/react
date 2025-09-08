@@ -28,22 +28,32 @@ export type Config = {
 export function createBridge(wall: Wall): Bridge;
 export function createStore(bridge: Bridge, config?: Config): Store;
 
-export type Source = {
-  sourceURL: string,
-  line: number,
-  column: number,
-};
+export type ReactFunctionLocation = [
+  string, // function name
+  string, // file name TODO: model nested eval locations as nested arrays
+  number, // enclosing line number
+  number, // enclosing column number
+];
+export type ReactCallSite = [
+  string, // function name
+  string, // file name TODO: model nested eval locations as nested arrays
+  number, // line number
+  number, // column number
+  number, // enclosing line number
+  number, // enclosing column number
+  boolean, // async resume
+];
 export type ViewElementSource = (
-  source: Source,
-  symbolicatedSource: Source | null,
+  source: ReactFunctionLocation | ReactCallSite,
+  symbolicatedSource: ReactFunctionLocation | ReactCallSite | null,
 ) => void;
 export type ViewAttributeSource = (
   id: number,
   path: Array<string | number>,
 ) => void;
 export type CanViewElementSource = (
-  source: Source,
-  symbolicatedSource: Source | null,
+  source: ReactFunctionLocation | ReactCallSite,
+  symbolicatedSource: ReactFunctionLocation | ReactCallSite | null,
 ) => boolean;
 
 export type InitializationOptions = {

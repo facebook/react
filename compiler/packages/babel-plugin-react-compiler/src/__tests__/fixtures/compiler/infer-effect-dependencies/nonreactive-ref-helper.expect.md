@@ -3,7 +3,7 @@
 
 ```javascript
 // @inferEffectDependencies
-import {useEffect} from 'react';
+import {useEffect, AUTODEPS} from 'react';
 import {print} from 'shared-runtime';
 
 /**
@@ -19,7 +19,7 @@ function RefsInEffects() {
   useEffect(() => {
     print(ref.current);
     print(wrapped.foo.current);
-  });
+  }, AUTODEPS);
 }
 
 function useRefHelper() {
@@ -36,7 +36,7 @@ function useDeeperRefHelper() {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @inferEffectDependencies
-import { useEffect } from "react";
+import { useEffect, AUTODEPS } from "react";
 import { print } from "shared-runtime";
 
 /**
@@ -51,12 +51,12 @@ function RefsInEffects() {
   const ref = useRefHelper();
   const wrapped = useDeeperRefHelper();
   let t0;
-  if ($[0] !== ref.current || $[1] !== wrapped.foo.current) {
+  if ($[0] !== ref || $[1] !== wrapped.foo.current) {
     t0 = () => {
       print(ref.current);
       print(wrapped.foo.current);
     };
-    $[0] = ref.current;
+    $[0] = ref;
     $[1] = wrapped.foo.current;
     $[2] = t0;
   } else {

@@ -56,7 +56,11 @@ type ReducerAction =
       type: 'updateFile';
       payload: {
         source: string;
+        config: string;
       };
+    }
+  | {
+      type: 'toggleInternals';
     };
 
 function storeReducer(store: Store, action: ReducerAction): Store {
@@ -66,10 +70,18 @@ function storeReducer(store: Store, action: ReducerAction): Store {
       return newStore;
     }
     case 'updateFile': {
-      const {source} = action.payload;
+      const {source, config} = action.payload;
       const newStore = {
         ...store,
         source,
+        config,
+      };
+      return newStore;
+    }
+    case 'toggleInternals': {
+      const newStore = {
+        ...store,
+        showInternals: !store.showInternals,
       };
       return newStore;
     }

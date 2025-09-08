@@ -12,16 +12,16 @@ import type {SchedulingEvent} from 'react-devtools-timeline/src/types';
 import * as React from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
-import ViewElementSourceContext from '../Components/ViewElementSourceContext';
 import {useContext} from 'react';
 import {TimelineContext} from 'react-devtools-timeline/src/TimelineContext';
 import {
   formatTimestamp,
   getSchedulingEventLabel,
 } from 'react-devtools-timeline/src/utils/formatting';
-import {stackToComponentSources} from 'react-devtools-shared/src/devtools/utils';
+import {stackToComponentLocations} from 'react-devtools-shared/src/devtools/utils';
 import {copy} from 'clipboard-js';
 import {withPermissionsCheck} from 'react-devtools-shared/src/frontend/utils/withPermissionsCheck';
+import useOpenResource from '../useOpenResource';
 
 import styles from './SidebarEventInfo.css';
 
@@ -32,9 +32,6 @@ type SchedulingEventProps = {
 };
 
 function SchedulingEventInfo({eventInfo}: SchedulingEventProps) {
-  const {canViewElementSourceFunction, viewElementSourceFunction} = useContext(
-    ViewElementSourceContext,
-  );
   const {componentName, timestamp} = eventInfo;
   const componentStack = eventInfo.componentStack || null;
 
@@ -63,9 +60,9 @@ function SchedulingEventInfo({eventInfo}: SchedulingEventProps) {
                 </Button>
               </div>
               <ul className={styles.List}>
-                {stackToComponentSources(componentStack).map(
-                  ([displayName, stack], index) => {
-                    if (stack == null) {
+                {stackToComponentLocations(componentStack).map(
+                  ([displayName, location], index) => {
+                    if (location == null) {
                       return (
                         <li key={index}>
                           <Button
@@ -79,17 +76,10 @@ function SchedulingEventInfo({eventInfo}: SchedulingEventProps) {
 
                     // TODO: We should support symbolication here as well, but
                     // symbolicating the whole stack can be expensive
-                    const [sourceURL, line, column] = stack;
-                    const source = {sourceURL, line, column};
-                    const canViewSource =
-                      canViewElementSourceFunction == null ||
-                      canViewElementSourceFunction(source, null);
-
-                    const viewSource =
-                      !canViewSource || viewElementSourceFunction == null
-                        ? () => null
-                        : () => viewElementSourceFunction(source, null);
-
+                    const [canViewSource, viewSource] = useOpenResource(
+                      location,
+                      null,
+                    );
                     return (
                       <li key={index}>
                         <Button

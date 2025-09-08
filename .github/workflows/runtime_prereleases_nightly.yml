@@ -22,6 +22,7 @@ jobs:
       release_channel: stable
       dist_tag: canary,next
       enableFailureNotification: true
+      dry: false
     secrets:
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -43,6 +44,7 @@ jobs:
       release_channel: experimental
       dist_tag: experimental
       enableFailureNotification: true
+      dry: false
     secrets:
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

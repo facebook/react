@@ -12,7 +12,8 @@
 const ESLintTesterV7 = require('eslint-v7').RuleTester;
 const ESLintTesterV9 = require('eslint-v9').RuleTester;
 const ReactHooksESLintPlugin = require('eslint-plugin-react-hooks');
-const ReactHooksESLintRule = ReactHooksESLintPlugin.rules['exhaustive-deps'];
+const ReactHooksESLintRule =
+  ReactHooksESLintPlugin.default.rules['exhaustive-deps'];
 
 /**
  * A string template tag that removes padding from the left side of multi-line strings
@@ -7735,6 +7736,9 @@ if (__EXPERIMENTAL__) {
           useEffect(() => {
             onStuff();
           }, []);
+          React.useEffect(() => {
+            onStuff();
+          }, []);
         }
       `,
     },
@@ -7749,6 +7753,9 @@ if (__EXPERIMENTAL__) {
             showNotification(theme);
           });
           useEffect(() => {
+            onStuff();
+          }, [onStuff]);
+          React.useEffect(() => {
             onStuff();
           }, [onStuff]);
         }
@@ -7767,6 +7774,32 @@ if (__EXPERIMENTAL__) {
                     showNotification(theme);
                   });
                   useEffect(() => {
+                    onStuff();
+                  }, []);
+                  React.useEffect(() => {
+                    onStuff();
+                  }, [onStuff]);
+                }
+              `,
+            },
+          ],
+        },
+        {
+          message:
+            'Functions returned from `useEffectEvent` must not be included in the dependency array. ' +
+            'Remove `onStuff` from the list.',
+          suggestions: [
+            {
+              desc: 'Remove the dependency `onStuff`',
+              output: normalizeIndent`
+                function MyComponent({ theme }) {
+                  const onStuff = useEffectEvent(() => {
+                    showNotification(theme);
+                  });
+                  useEffect(() => {
+                    onStuff();
+                  }, [onStuff]);
+                  React.useEffect(() => {
                     onStuff();
                   }, []);
                 }

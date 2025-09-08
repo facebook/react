@@ -14,6 +14,7 @@ export {
   __COMPILER_RUNTIME,
   act,
   cache,
+  cacheSignal,
   Children,
   cloneElement,
   Component,

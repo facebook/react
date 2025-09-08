@@ -12,7 +12,8 @@
 const ESLintTesterV7 = require('eslint-v7').RuleTester;
 const ESLintTesterV9 = require('eslint-v9').RuleTester;
 const ReactHooksESLintPlugin = require('eslint-plugin-react-hooks');
-const ReactHooksESLintRule = ReactHooksESLintPlugin.rules['rules-of-hooks'];
+const ReactHooksESLintRule =
+  ReactHooksESLintPlugin.default.rules['rules-of-hooks'];
 
 /**
  * A string template tag that removes padding from the left side of multi-line strings
@@ -1324,6 +1325,34 @@ const allTests = {
       `,
       errors: [asyncComponentHookError('use')],
     },
+    {
+      code: normalizeIndent`
+        function App({p1, p2}) {
+          try {
+            use(p1);
+          } catch (error) {
+            console.error(error);
+          }
+          use(p2);
+          return <div>App</div>;
+        }
+      `,
+      errors: [tryCatchUseError('use')],
+    },
+    {
+      code: normalizeIndent`
+        function App({p1, p2}) {
+          try {
+            doSomething();
+          } catch {
+            use(p1);
+          }
+          use(p2);
+          return <div>App</div>;
+        }
+      `,
+      errors: [tryCatchUseError('use')],
+    },
   ],
 };
 
@@ -1340,33 +1369,9 @@ if (__EXPERIMENTAL__) {
           useEffect(() => {
             onClick();
           });
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
-        // Valid because functions created with useEffectEvent can be called in closures.
-        function MyComponent({ theme }) {
-          const onClick = useEffectEvent(() => {
-            showNotification(theme);
+          React.useEffect(() => {
+            onClick();
           });
-          return <Child onClick={() => onClick()}></Child>;
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
-        // Valid because functions created with useEffectEvent can be called in closures.
-        function MyComponent({ theme }) {
-          const onClick = useEffectEvent(() => {
-            showNotification(theme);
-          });
-          const onClick2 = () => { onClick() };
-          const onClick3 = useCallback(() => onClick(), []);
-          return <>
-            <Child onClick={onClick2}></Child>
-            <Child onClick={onClick3}></Child>
-          </>;
         }
       `,
     },
@@ -1380,36 +1385,19 @@ if (__EXPERIMENTAL__) {
           });
           const onClick2 = useEffectEvent(() => {
             debounce(onClick);
+            debounce(() => onClick());
+            debounce(() => { onClick() });
+            deboucne(() => debounce(onClick));
           });
           useEffect(() => {
-            let id = setInterval(onClick, 100);
+            let id = setInterval(() => onClick(), 100);
             return () => clearInterval(onClick);
           }, []);
-          return <Child onClick={() => onClick2()} />
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
-        const MyComponent = ({theme}) => {
-          const onClick = useEffectEvent(() => {
-            showNotification(theme);
-          });
-          return <Child onClick={() => onClick()}></Child>;
-        };
-      `,
-    },
-    {
-      code: normalizeIndent`
-        function MyComponent({ theme }) {
-          const notificationService = useNotifications();
-          const showNotification = useEffectEvent((text) => {
-            notificationService.notify(theme, text);
-          });
-          const onClick = useEffectEvent((text) => {
-            showNotification(text);
-          });
-          return <Child onClick={(text) => onClick(text)} />
+          React.useEffect(() => {
+            let id = setInterval(() => onClick(), 100);
+            return () => clearInterval(onClick);
+          }, []);
+          return null;
         }
       `,
     },
@@ -1421,6 +1409,23 @@ if (__EXPERIMENTAL__) {
           });
           const onClick = useEffectEvent(() => {
             showNotification(theme);
+          });
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent({ theme }) {
+          // Can receive arguments
+          const onEvent = useEffectEvent((text) => {
+            console.log(text);
+          });
+
+          useEffect(() => {
+            onEvent('Hello world');
+          });
+          React.useEffect(() => {
+            onEvent('Hello world');
           });
         }
       `,
@@ -1437,7 +1442,7 @@ if (__EXPERIMENTAL__) {
           return <Child onClick={onClick}></Child>;
         }
       `,
-      errors: [useEffectEventError('onClick')],
+      errors: [useEffectEventError('onClick', false)],
     },
     {
       code: normalizeIndent`
@@ -1456,8 +1461,23 @@ if (__EXPERIMENTAL__) {
           });
           return <Child onClick={() => onClick()} />
         }
+
+        // The useEffectEvent function shares an identifier name with the above
+        function MyLastComponent({theme}) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme)
+          });
+          useEffect(() => {
+            onClick(); // No error here, errors on all other uses
+            onClick;
+          })
+          return <Child />
+        }
       `,
-      errors: [{...useEffectEventError('onClick'), line: 7}],
+      errors: [
+        {...useEffectEventError('onClick', false), line: 7},
+        {...useEffectEventError('onClick', true), line: 15},
+      ],
     },
     {
       code: normalizeIndent`
@@ -1468,7 +1488,7 @@ if (__EXPERIMENTAL__) {
           return <Child onClick={onClick}></Child>;
         }
       `,
-      errors: [useEffectEventError('onClick')],
+      errors: [useEffectEventError('onClick', false)],
     },
     {
       code: normalizeIndent`
@@ -1481,7 +1501,7 @@ if (__EXPERIMENTAL__) {
           return <Bar onClick={foo} />
         }
       `,
-      errors: [{...useEffectEventError('onClick'), line: 7}],
+      errors: [{...useEffectEventError('onClick', false), line: 7}],
     },
     {
       code: normalizeIndent`
@@ -1497,7 +1517,27 @@ if (__EXPERIMENTAL__) {
           return <Child onClick={onClick} />
         }
       `,
-      errors: [useEffectEventError('onClick')],
+      errors: [useEffectEventError('onClick', false)],
+    },
+    {
+      code: normalizeIndent`
+        // Invalid because functions created with useEffectEvent cannot be called in arbitrary closures.
+        function MyComponent({ theme }) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          const onClick2 = () => { onClick() };
+          const onClick3 = useCallback(() => onClick(), []);
+          return <>
+            <Child onClick={onClick2}></Child>
+            <Child onClick={onClick3}></Child>
+          </>;
+        }
+      `,
+      errors: [
+        useEffectEventError('onClick', true),
+        useEffectEventError('onClick', true),
+      ],
     },
   ];
 }
@@ -1559,17 +1599,23 @@ function classError(hook) {
   };
 }
 
-function useEffectEventError(fn) {
+function useEffectEventError(fn, called) {
   return {
     message:
       `\`${fn}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-      'the same component. They cannot be assigned to variables or passed down.',
+      `the same component.${called ? '' : ' They cannot be assigned to variables or passed down.'}`,
   };
 }
 
 function asyncComponentHookError(fn) {
   return {
     message: `React Hook "${fn}" cannot be called in an async function.`,
+  };
+}
+
+function tryCatchUseError(fn) {
+  return {
+    message: `React Hook "${fn}" cannot be called in a try/catch block.`,
   };
 }
 

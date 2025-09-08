@@ -18,10 +18,15 @@ function Component(props) {
 ## Error
 
 ```
+Found 1 error:
+
+Todo: Support value blocks (conditional, logical, optional chaining, etc) within a try/catch statement
+
+error.todo-logical-expression-within-try-catch.ts:4:13
   2 |   let result;
   3 |   try {
 > 4 |     result = props.cond && props.foo;
-    |              ^^^^^ Todo: Support value blocks (conditional, logical, optional chaining, etc) within a try/catch statement (4:4)
+    |              ^^^^^ Support value blocks (conditional, logical, optional chaining, etc) within a try/catch statement
   5 |   } catch (e) {
   6 |     console.log(e);
   7 |   }

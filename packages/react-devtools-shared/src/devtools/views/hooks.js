@@ -13,6 +13,7 @@ import {
   useLayoutEffect,
   useReducer,
   useState,
+  useSyncExternalStore,
   useContext,
 } from 'react';
 import {
@@ -162,14 +163,24 @@ export function useLocalStorage<T>(
     }
   }, [initialValue, key]);
 
-  const [storedValue, setStoredValue] = useState<any>(getValueFromLocalStorage);
+  const storedValue = useSyncExternalStore(
+    useCallback(
+      function subscribe(callback) {
+        window.addEventListener(key, callback);
+        return function unsubscribe() {
+          window.removeEventListener(key, callback);
+        };
+      },
+      [key],
+    ),
+    getValueFromLocalStorage,
+  );
 
   const setValue = useCallback(
     (value: $FlowFixMe) => {
       try {
         const valueToStore =
           value instanceof Function ? (value: any)(storedValue) : value;
-        setStoredValue(valueToStore);
         localStorageSetItem(key, JSON.stringify(valueToStore));
 
         // Notify listeners that this setting has changed.
@@ -197,7 +208,6 @@ export function useLocalStorage<T>(
     };
 
     window.addEventListener('storage', onStorage);
-
     return () => {
       window.removeEventListener('storage', onStorage);
     };
@@ -345,8 +355,12 @@ export function useHighlightHostInstance(): {
       const element = store.getElementByID(id);
       const rendererID = store.getRendererIDForElement(id);
       if (element !== null && rendererID !== null) {
+        let displayName = element.displayName;
+        if (displayName !== null && element.nameProp !== null) {
+          displayName += ` name="${element.nameProp}"`;
+        }
         bridge.send('highlightHostInstance', {
-          displayName: element.displayName,
+          displayName,
           hideAfterTimeout: false,
           id,
           openBuiltinElementsPanel: false,

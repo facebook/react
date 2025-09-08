@@ -3,7 +3,7 @@
 
 ```javascript
 // @inferEffectDependencies
-import {useEffect, useRef} from 'react';
+import {useEffect, useRef, AUTODEPS} from 'react';
 function useCustomRef() {
   const ref = useRef();
   return ref;
@@ -12,7 +12,7 @@ function NonReactiveWrapper() {
   const ref = useCustomRef();
   useEffect(() => {
     print(ref);
-  });
+  }, AUTODEPS);
 }
 
 ```
@@ -21,7 +21,7 @@ function NonReactiveWrapper() {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @inferEffectDependencies
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, AUTODEPS } from "react";
 function useCustomRef() {
   const ref = useRef();
   return ref;

@@ -140,7 +140,7 @@ export function trackHydrated(
     return false;
   }
 
-  let valueField;
+  let valueField: 'checked' | 'value';
   let expectedValue;
   if (isCheckable(node)) {
     valueField = 'checked';
@@ -150,8 +150,11 @@ export function trackHydrated(
     valueField = 'value';
     expectedValue = initialValue;
   }
-  // eslint-disable-next-line react-internal/safe-string-coercion
-  const currentValue = '' + (node[valueField]: any);
+  const currentValue =
+    // eslint-disable-next-line react-internal/safe-string-coercion
+    '' +
+    (// $FlowFixMe[prop-missing]
+    node[valueField]: any);
   node._valueTracker = trackValueOnNode(node, valueField, expectedValue);
   return currentValue !== expectedValue;
 }
