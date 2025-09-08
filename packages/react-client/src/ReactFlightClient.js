@@ -366,6 +366,7 @@ type Response = {
   _debugRootOwner?: null | ReactComponentInfo, // DEV-only
   _debugRootStack?: null | Error, // DEV-only
   _debugRootTask?: null | ConsoleTask, // DEV-only
+  _debugStartTime: number, // DEV-only
   _debugFindSourceMapURL?: void | FindSourceMapURLCallback, // DEV-only
   _debugChannel?: void | DebugChannel, // DEV-only
   _blockedConsole?: null | SomeChunk<ConsoleEntry>, // DEV-only
@@ -2452,6 +2453,13 @@ function ResponseInstance(
         '"use ' + rootEnv.toLowerCase() + '"',
       );
     }
+    if (enableAsyncDebugInfo) {
+      // Track the start of the fetch to the best of our knowledge.
+      // Note: createFromFetch allows this to be marked at the start of the fetch
+      // where as if you use createFromReadableStream from the body of the fetch
+      // then the start time is when the headers resolved.
+      this._debugStartTime = performance.now();
+    }
     this._debugFindSourceMapURL = findSourceMapURL;
     this._debugChannel = debugChannel;
     this._blockedConsole = null;
@@ -2520,16 +2528,38 @@ export type StreamState = {
   _rowTag: number, // 0 indicates that we're currently parsing the row ID
   _rowLength: number, // remaining bytes in the row. 0 indicates that we're looking for a newline.
   _buffer: Array<Uint8Array>, // chunks received so far as part of this row
+  _debugInfo?: void | ReactIOInfo, // DEV-only
 };
 
-export function createStreamState(): StreamState {
-  return {
+export function createStreamState(
+  weakResponse: WeakResponse, // DEV-only
+  streamDebugValue: mixed, // DEV-only
+): StreamState {
+  const streamState: StreamState = {
     _rowState: 0,
     _rowID: 0,
     _rowTag: 0,
     _rowLength: 0,
     _buffer: [],
   };
+  if (__DEV__ && enableAsyncDebugInfo) {
+    const response = unwrapWeakResponse(weakResponse);
+    // Create an entry for the I/O to load the stream itself.
+    const debugValuePromise = Promise.resolve(streamDebugValue);
+    (debugValuePromise: any).status = 'fulfilled';
+    (debugValuePromise: any).value = streamDebugValue;
+    streamState._debugInfo = {
+      name: 'RSC stream',
+      start: response._debugStartTime,
+      end: response._debugStartTime, // will be updated once we finish a chunk
+      byteSize: 0, // will be updated as we resolve a data chunk
+      value: debugValuePromise,
+      owner: response._debugRootOwner,
+      debugStack: response._debugRootStack,
+      debugTask: response._debugRootTask,
+    };
+  }
+  return streamState;
 }
 
 function resolveDebugHalt(response: Response, id: number): void {
