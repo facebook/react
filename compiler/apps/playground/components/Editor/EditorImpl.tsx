@@ -13,6 +13,7 @@ import BabelPluginReactCompiler, {
   CompilerErrorDetail,
   CompilerDiagnostic,
   Effect,
+  ErrorCategory,
   parseConfigPragmaForTests,
   ValueKind,
   type Hook,
@@ -47,7 +48,6 @@ import {
 import {transformFromAstSync} from '@babel/core';
 import {LoggerEvent} from 'babel-plugin-react-compiler/dist/Entrypoint';
 import {useSearchParams} from 'next/navigation';
-import {ErrorCategory} from 'babel-plugin-react-compiler/dist/CompilerError';
 
 function parseInput(
   input: string,
