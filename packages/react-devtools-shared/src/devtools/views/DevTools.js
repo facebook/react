@@ -13,7 +13,14 @@ import '@reach/menu-button/styles.css';
 import '@reach/tooltip/styles.css';
 
 import * as React from 'react';
-import {useCallback, useEffect, useLayoutEffect, useMemo, useRef} from 'react';
+import {
+  StrictMode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from 'react';
 import Store from '../store';
 import {
   BridgeContext,
@@ -55,6 +62,38 @@ import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {BrowserTheme} from 'react-devtools-shared/src/frontend/types';
 import type {ReactFunctionLocation, ReactCallSite} from 'shared/ReactTypes';
 import type {SourceSelection} from './Editor/EditorPane';
+
+const MaybeActivity: any =
+  React.Activity ||
+  (React as any).unstable_Activity ||
+  function AlwaysVisibleActivity({
+    children,
+  }: {
+    children: React.Node,
+    mode: string,
+  }) {
+    return children;
+  };
+
+function TabContent({
+  children,
+  activeTab,
+  name,
+}: {
+  children: React.Node,
+  activeTab: string,
+  name: string,
+}) {
+  const hidden = activeTab !== name;
+  const mode = hidden ? 'hidden' : 'visible';
+  return (
+    <MaybeActivity mode={mode} name={name + '-tab'}>
+      <div className={styles.TabContent} hidden={hidden}>
+        {children}
+      </div>
+    </MaybeActivity>
+  );
+}
 
 export type TabID = 'components' | 'profiler' | 'suspense';
 
@@ -289,6 +328,7 @@ export default function DevTools({
   useLayoutEffect(() => {
     return () => {
       try {
+        // TODO: <DevTools> can't be put int <Activity> without being able to resume listening
         // Shut the Bridge down synchronously (during unmount).
         bridge.shutdown();
       } catch (error) {
@@ -302,98 +342,102 @@ export default function DevTools({
   }, []);
 
   return (
-    <BridgeContext.Provider value={bridge}>
-      <StoreContext.Provider value={store}>
-        <OptionsContext.Provider value={options}>
-          <ContextMenuContext.Provider value={contextMenu}>
-            <ModalDialogContextController>
-              <SettingsContextController
-                browserTheme={browserTheme}
-                componentsPortalContainer={componentsPortalContainer}
-                profilerPortalContainer={profilerPortalContainer}>
-                <ViewElementSourceContext.Provider value={viewElementSource}>
-                  <HookNamesModuleLoaderContext.Provider
-                    value={hookNamesModuleLoaderFunction || null}>
-                    <FetchFileWithCachingContext.Provider
-                      value={fetchFileWithCaching || null}>
-                      <TreeContextController>
-                        <ProfilerContextController>
-                          <TimelineContextController>
-                            <InspectedElementContextController>
-                              <SuspenseTreeContextController>
-                                <ThemeProvider>
-                                  <div
-                                    className={styles.DevTools}
-                                    ref={devToolsRef}
-                                    data-react-devtools-portal-root={true}>
-                                    {showTabBar && (
-                                      <div className={styles.TabBar}>
-                                        <ReactLogo />
-                                        <span
-                                          className={styles.DevToolsVersion}>
-                                          {process.env.DEVTOOLS_VERSION}
-                                        </span>
-                                        <div className={styles.Spacer} />
-                                        <TabBar
-                                          currentTab={tab}
-                                          id="DevTools"
-                                          selectTab={selectTab}
-                                          tabs={tabs}
-                                          type="navigation"
+    <StrictMode>
+      <BridgeContext.Provider value={bridge}>
+        <StoreContext.Provider value={store}>
+          <OptionsContext.Provider value={options}>
+            <ContextMenuContext.Provider value={contextMenu}>
+              <ModalDialogContextController>
+                <SettingsContextController
+                  browserTheme={browserTheme}
+                  componentsPortalContainer={componentsPortalContainer}
+                  profilerPortalContainer={profilerPortalContainer}>
+                  <ViewElementSourceContext.Provider value={viewElementSource}>
+                    <HookNamesModuleLoaderContext.Provider
+                      value={hookNamesModuleLoaderFunction || null}>
+                      <FetchFileWithCachingContext.Provider
+                        value={fetchFileWithCaching || null}>
+                        <TreeContextController>
+                          <ProfilerContextController>
+                            <TimelineContextController>
+                              <InspectedElementContextController>
+                                <SuspenseTreeContextController>
+                                  <ThemeProvider>
+                                    <div
+                                      className={styles.DevTools}
+                                      ref={devToolsRef}
+                                      data-react-devtools-portal-root={true}>
+                                      {showTabBar && (
+                                        <div className={styles.TabBar}>
+                                          <ReactLogo />
+                                          <span
+                                            className={styles.DevToolsVersion}>
+                                            {process.env.DEVTOOLS_VERSION}
+                                          </span>
+                                          <div className={styles.Spacer} />
+                                          <TabBar
+                                            currentTab={tab}
+                                            id="DevTools"
+                                            selectTab={selectTab}
+                                            tabs={tabs}
+                                            type="navigation"
+                                          />
+                                        </div>
+                                      )}
+                                      <TabContent
+                                        name="components"
+                                        activeTab={tab}>
+                                        <Components
+                                          portalContainer={
+                                            componentsPortalContainer
+                                          }
                                         />
-                                      </div>
-                                    )}
-                                    <div
-                                      className={styles.TabContent}
-                                      hidden={tab !== 'components'}>
-                                      <Components
-                                        portalContainer={
-                                          componentsPortalContainer
-                                        }
-                                      />
+                                      </TabContent>
+                                      <TabContent
+                                        name="profiler"
+                                        activeTab={tab}>
+                                        <Profiler
+                                          portalContainer={
+                                            profilerPortalContainer
+                                          }
+                                        />
+                                      </TabContent>
+                                      <TabContent
+                                        name="suspense"
+                                        activeTab={tab}>
+                                        <SuspenseTab
+                                          portalContainer={
+                                            suspensePortalContainer
+                                          }
+                                        />
+                                      </TabContent>
                                     </div>
-                                    <div
-                                      className={styles.TabContent}
-                                      hidden={tab !== 'profiler'}>
-                                      <Profiler
-                                        portalContainer={
-                                          profilerPortalContainer
-                                        }
+                                    {editorPortalContainer ? (
+                                      <EditorPane
+                                        selectedSource={currentSelectedSource}
+                                        portalContainer={editorPortalContainer}
                                       />
-                                    </div>
-                                    <div
-                                      className={styles.TabContent}
-                                      hidden={tab !== 'suspense'}>
-                                      <SuspenseTab
-                                        portalContainer={
-                                          suspensePortalContainer
-                                        }
-                                      />
-                                    </div>
-                                  </div>
-                                  {editorPortalContainer ? (
-                                    <EditorPane
-                                      selectedSource={currentSelectedSource}
-                                      portalContainer={editorPortalContainer}
-                                    />
-                                  ) : null}
-                                </ThemeProvider>
-                              </SuspenseTreeContextController>
-                            </InspectedElementContextController>
-                          </TimelineContextController>
-                        </ProfilerContextController>
-                      </TreeContextController>
-                    </FetchFileWithCachingContext.Provider>
-                  </HookNamesModuleLoaderContext.Provider>
-                </ViewElementSourceContext.Provider>
-              </SettingsContextController>
-              <UnsupportedBridgeProtocolDialog />
-              {warnIfLegacyBackendDetected && <WarnIfLegacyBackendDetected />}
-              {warnIfUnsupportedVersionDetected && <UnsupportedVersionDialog />}
-            </ModalDialogContextController>
-          </ContextMenuContext.Provider>
-        </OptionsContext.Provider>
-      </StoreContext.Provider>
-    </BridgeContext.Provider>
+                                    ) : null}
+                                  </ThemeProvider>
+                                </SuspenseTreeContextController>
+                              </InspectedElementContextController>
+                            </TimelineContextController>
+                          </ProfilerContextController>
+                        </TreeContextController>
+                      </FetchFileWithCachingContext.Provider>
+                    </HookNamesModuleLoaderContext.Provider>
+                  </ViewElementSourceContext.Provider>
+                </SettingsContextController>
+                <UnsupportedBridgeProtocolDialog />
+                {warnIfLegacyBackendDetected && <WarnIfLegacyBackendDetected />}
+                {warnIfUnsupportedVersionDetected && (
+                  <UnsupportedVersionDialog />
+                )}
+              </ModalDialogContextController>
+            </ContextMenuContext.Provider>
+          </OptionsContext.Provider>
+        </StoreContext.Provider>
+      </BridgeContext.Provider>
+    </StrictMode>
   );
 }
