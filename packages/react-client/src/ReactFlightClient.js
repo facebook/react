@@ -2568,6 +2568,8 @@ export function createStreamState(
 // anyway. The net effect is that in practice, you won't really reveal anything in smaller units than
 // 64kb if they're revealing at maximum speed in production. Therefore we group smaller chunks into
 // these larger chunks since in production that's more realistic.
+// TODO: If the stream is compressed, then you could fit much more in a single 300ms so maybe it should
+// actually be larger.
 const MIN_CHUNK_SIZE = 65536;
 
 function incrementChunkDebugInfo(
@@ -2600,6 +2602,17 @@ function incrementChunkDebugInfo(
   }
 }
 
+function resolveChunkDebugInfo(
+  streamState: StreamState,
+  chunk: SomeChunk<any>,
+): void {
+  if (__DEV__ && enableAsyncDebugInfo) {
+    // Push the currently resolving chunk's debug info representing the stream on the Promise
+    // that was waiting on the stream.
+    chunk._debugInfo.push({awaited: streamState._debugInfo});
+  }
+}
+
 function resolveDebugHalt(response: Response, id: number): void {
   const chunks = response._chunks;
   let chunk = chunks.get(id);
@@ -2621,17 +2634,33 @@ function resolveModel(
   response: Response,
   id: number,
   model: UninitializedModel,
+  streamState: StreamState,
 ): void {
   const chunks = response._chunks;
   const chunk = chunks.get(id);
   if (!chunk) {
-    chunks.set(id, createResolvedModelChunk(response, model));
+    const newChunk: ResolvedModelChunk<any> = createResolvedModelChunk(
+      response,
+      model,
+    );
+    if (__DEV__) {
+      resolveChunkDebugInfo(streamState, newChunk);
+    }
+    chunks.set(id, newChunk);
   } else {
+    if (__DEV__) {
+      resolveChunkDebugInfo(streamState, chunk);
+    }
     resolveModelChunk(response, chunk, model);
   }
 }
 
-function resolveText(response: Response, id: number, text: string): void {
+function resolveText(
+  response: Response,
+  id: number,
+  text: string,
+  streamState: StreamState,
+): void {
   const chunks = response._chunks;
   const chunk = chunks.get(id);
   if (chunk && chunk.status !== PENDING) {
@@ -2645,13 +2674,18 @@ function resolveText(response: Response, id: number, text: string): void {
   if (chunk) {
     releasePendingChunk(response, chunk);
   }
-  chunks.set(id, createInitializedTextChunk(response, text));
+  const newChunk = createInitializedTextChunk(response, text);
+  if (__DEV__) {
+    resolveChunkDebugInfo(streamState, newChunk);
+  }
+  chunks.set(id, newChunk);
 }
 
 function resolveBuffer(
   response: Response,
   id: number,
   buffer: $ArrayBufferView | ArrayBuffer,
+  streamState: StreamState,
 ): void {
   const chunks = response._chunks;
   const chunk = chunks.get(id);
@@ -2666,13 +2700,18 @@ function resolveBuffer(
   if (chunk) {
     releasePendingChunk(response, chunk);
   }
-  chunks.set(id, createInitializedBufferChunk(response, buffer));
+  const newChunk = createInitializedBufferChunk(response, buffer);
+  if (__DEV__) {
+    resolveChunkDebugInfo(streamState, newChunk);
+  }
+  chunks.set(id, newChunk);
 }
 
 function resolveModule(
   response: Response,
   id: number,
   model: UninitializedModel,
+  streamState: StreamState,
 ): void {
   const chunks = response._chunks;
   const chunk = chunks.get(id);
@@ -2709,14 +2748,24 @@ function resolveModule(
       blockedChunk = (chunk: any);
       blockedChunk.status = BLOCKED;
     }
+    if (__DEV__) {
+      resolveChunkDebugInfo(streamState, blockedChunk);
+    }
     promise.then(
       () => resolveModuleChunk(response, blockedChunk, clientReference),
       error => triggerErrorOnChunk(response, blockedChunk, error),
     );
   } else {
     if (!chunk) {
-      chunks.set(id, createResolvedModuleChunk(response, clientReference));
+      const newChunk = createResolvedModuleChunk(response, clientReference);
+      if (__DEV__) {
+        resolveChunkDebugInfo(streamState, newChunk);
+      }
+      chunks.set(id, newChunk);
     } else {
+      if (__DEV__) {
+        resolveChunkDebugInfo(streamState, chunk);
+      }
       // This can't actually happen because we don't have any forward
       // references to modules.
       resolveModuleChunk(response, chunk, clientReference);
@@ -2729,12 +2778,20 @@ function resolveStream<T: ReadableStream | $AsyncIterable<any, any, void>>(
   id: number,
   stream: T,
   controller: FlightStreamController,
+  streamState: StreamState,
 ): void {
   const chunks = response._chunks;
   const chunk = chunks.get(id);
   if (!chunk) {
-    chunks.set(id, createInitializedStreamChunk(response, stream, controller));
+    const newChunk = createInitializedStreamChunk(response, stream, controller);
+    if (__DEV__) {
+      resolveChunkDebugInfo(streamState, newChunk);
+    }
+    chunks.set(id, newChunk);
     return;
+  }
+  if (__DEV__) {
+    resolveChunkDebugInfo(streamState, chunk);
   }
   if (chunk.status !== PENDING) {
     // We already resolved. We didn't expect to see this.
@@ -2791,6 +2848,7 @@ function startReadableStream<T>(
   response: Response,
   id: number,
   type: void | 'bytes',
+  streamState: StreamState,
 ): void {
   let controller: ReadableStreamController = (null: any);
   const stream = new ReadableStream({
@@ -2871,7 +2929,7 @@ function startReadableStream<T>(
       }
     },
   };
-  resolveStream(response, id, stream, flightController);
+  resolveStream(response, id, stream, flightController, streamState);
 }
 
 function asyncIterator(this: $AsyncIterator<any, any, void>) {
@@ -2897,6 +2955,7 @@ function startAsyncIterable<T>(
   response: Response,
   id: number,
   iterator: boolean,
+  streamState: StreamState,
 ): void {
   const buffer: Array<SomeChunk<IteratorResult<T, T>>> = [];
   let closed = false;
@@ -3014,6 +3073,7 @@ function startAsyncIterable<T>(
     id,
     iterator ? iterable[ASYNC_ITERATOR]() : iterable,
     flightController,
+    streamState,
   );
 }
 
@@ -3093,7 +3153,11 @@ function resolveErrorDev(
   return error;
 }
 
-function resolvePostponeProd(response: Response, id: number): void {
+function resolvePostponeProd(
+  response: Response,
+  id: number,
+  streamState: StreamState,
+): void {
   if (__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
     // eslint-disable-next-line react-internal/prod-error-codes
@@ -3111,8 +3175,18 @@ function resolvePostponeProd(response: Response, id: number): void {
   const chunks = response._chunks;
   const chunk = chunks.get(id);
   if (!chunk) {
-    chunks.set(id, createErrorChunk(response, postponeInstance));
+    const newChunk: ErroredChunk<any> = createErrorChunk(
+      response,
+      postponeInstance,
+    );
+    if (__DEV__) {
+      resolveChunkDebugInfo(streamState, newChunk);
+    }
+    chunks.set(id, newChunk);
   } else {
+    if (__DEV__) {
+      resolveChunkDebugInfo(streamState, chunk);
+    }
     triggerErrorOnChunk(response, chunk, postponeInstance);
   }
 }
@@ -3123,6 +3197,7 @@ function resolvePostponeDev(
   reason: string,
   stack: ReactStackTrace,
   env: string,
+  streamState: StreamState,
 ): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
@@ -3150,8 +3225,18 @@ function resolvePostponeDev(
   const chunks = response._chunks;
   const chunk = chunks.get(id);
   if (!chunk) {
-    chunks.set(id, createErrorChunk(response, postponeInstance));
+    const newChunk: ErroredChunk<any> = createErrorChunk(
+      response,
+      postponeInstance,
+    );
+    if (__DEV__) {
+      resolveChunkDebugInfo(streamState, newChunk);
+    }
+    chunks.set(id, newChunk);
   } else {
+    if (__DEV__) {
+      resolveChunkDebugInfo(streamState, chunk);
+    }
     triggerErrorOnChunk(response, chunk, postponeInstance);
   }
 }
@@ -3160,6 +3245,7 @@ function resolveErrorModel(
   response: Response,
   id: number,
   row: UninitializedModel,
+  streamState: StreamState,
 ): void {
   const chunks = response._chunks;
   const chunk = chunks.get(id);
@@ -3173,8 +3259,18 @@ function resolveErrorModel(
   (error: any).digest = errorInfo.digest;
   const errorWithDigest: ErrorWithDigest = (error: any);
   if (!chunk) {
-    chunks.set(id, createErrorChunk(response, errorWithDigest));
+    const newChunk: ErroredChunk<any> = createErrorChunk(
+      response,
+      errorWithDigest,
+    );
+    if (__DEV__) {
+      resolveChunkDebugInfo(streamState, newChunk);
+    }
+    chunks.set(id, newChunk);
   } else {
+    if (__DEV__) {
+      resolveChunkDebugInfo(streamState, chunk);
+    }
     triggerErrorOnChunk(response, chunk, errorWithDigest);
   }
 }
@@ -3909,6 +4005,7 @@ function resolveTypedArray(
   lastChunk: Uint8Array,
   constructor: any,
   bytesPerElement: number,
+  streamState: StreamState,
 ): void {
   // If the view fits into one original buffer, we just reuse that buffer instead of
   // copying it out to a separate copy. This means that it's not always possible to
@@ -3928,7 +4025,7 @@ function resolveTypedArray(
     chunk.byteOffset,
     chunk.byteLength / bytesPerElement,
   );
-  resolveBuffer(response, id, view);
+  resolveBuffer(response, id, view, streamState);
 }
 
 function logComponentInfo(
@@ -4245,6 +4342,7 @@ function flushInitialRenderPerformance(response: Response): void {
 
 function processFullBinaryRow(
   response: Response,
+  streamState: StreamState,
   id: number,
   tag: number,
   buffer: Array<Uint8Array>,
@@ -4253,47 +4351,125 @@ function processFullBinaryRow(
   switch (tag) {
     case 65 /* "A" */:
       // We must always clone to extract it into a separate buffer instead of just a view.
-      resolveBuffer(response, id, mergeBuffer(buffer, chunk).buffer);
+      resolveBuffer(
+        response,
+        id,
+        mergeBuffer(buffer, chunk).buffer,
+        streamState,
+      );
       return;
     case 79 /* "O" */:
-      resolveTypedArray(response, id, buffer, chunk, Int8Array, 1);
+      resolveTypedArray(response, id, buffer, chunk, Int8Array, 1, streamState);
       return;
     case 111 /* "o" */:
       resolveBuffer(
         response,
         id,
         buffer.length === 0 ? chunk : mergeBuffer(buffer, chunk),
+        streamState,
       );
       return;
     case 85 /* "U" */:
-      resolveTypedArray(response, id, buffer, chunk, Uint8ClampedArray, 1);
+      resolveTypedArray(
+        response,
+        id,
+        buffer,
+        chunk,
+        Uint8ClampedArray,
+        1,
+        streamState,
+      );
       return;
     case 83 /* "S" */:
-      resolveTypedArray(response, id, buffer, chunk, Int16Array, 2);
+      resolveTypedArray(
+        response,
+        id,
+        buffer,
+        chunk,
+        Int16Array,
+        2,
+        streamState,
+      );
       return;
     case 115 /* "s" */:
-      resolveTypedArray(response, id, buffer, chunk, Uint16Array, 2);
+      resolveTypedArray(
+        response,
+        id,
+        buffer,
+        chunk,
+        Uint16Array,
+        2,
+        streamState,
+      );
       return;
     case 76 /* "L" */:
-      resolveTypedArray(response, id, buffer, chunk, Int32Array, 4);
+      resolveTypedArray(
+        response,
+        id,
+        buffer,
+        chunk,
+        Int32Array,
+        4,
+        streamState,
+      );
       return;
     case 108 /* "l" */:
-      resolveTypedArray(response, id, buffer, chunk, Uint32Array, 4);
+      resolveTypedArray(
+        response,
+        id,
+        buffer,
+        chunk,
+        Uint32Array,
+        4,
+        streamState,
+      );
       return;
     case 71 /* "G" */:
-      resolveTypedArray(response, id, buffer, chunk, Float32Array, 4);
+      resolveTypedArray(
+        response,
+        id,
+        buffer,
+        chunk,
+        Float32Array,
+        4,
+        streamState,
+      );
       return;
     case 103 /* "g" */:
-      resolveTypedArray(response, id, buffer, chunk, Float64Array, 8);
+      resolveTypedArray(
+        response,
+        id,
+        buffer,
+        chunk,
+        Float64Array,
+        8,
+        streamState,
+      );
       return;
     case 77 /* "M" */:
-      resolveTypedArray(response, id, buffer, chunk, BigInt64Array, 8);
+      resolveTypedArray(
+        response,
+        id,
+        buffer,
+        chunk,
+        BigInt64Array,
+        8,
+        streamState,
+      );
       return;
     case 109 /* "m" */:
-      resolveTypedArray(response, id, buffer, chunk, BigUint64Array, 8);
+      resolveTypedArray(
+        response,
+        id,
+        buffer,
+        chunk,
+        BigUint64Array,
+        8,
+        streamState,
+      );
       return;
     case 86 /* "V" */:
-      resolveTypedArray(response, id, buffer, chunk, DataView, 1);
+      resolveTypedArray(response, id, buffer, chunk, DataView, 1, streamState);
       return;
   }
 
@@ -4303,18 +4479,19 @@ function processFullBinaryRow(
     row += readPartialStringChunk(stringDecoder, buffer[i]);
   }
   row += readFinalStringChunk(stringDecoder, chunk);
-  processFullStringRow(response, id, tag, row);
+  processFullStringRow(response, streamState, id, tag, row);
 }
 
 function processFullStringRow(
   response: Response,
+  streamState: StreamState,
   id: number,
   tag: number,
   row: string,
 ): void {
   switch (tag) {
     case 73 /* "I" */: {
-      resolveModule(response, id, row);
+      resolveModule(response, id, row, streamState);
       return;
     }
     case 72 /* "H" */: {
@@ -4323,11 +4500,11 @@ function processFullStringRow(
       return;
     }
     case 69 /* "E" */: {
-      resolveErrorModel(response, id, row);
+      resolveErrorModel(response, id, row, streamState);
       return;
     }
     case 84 /* "T" */: {
-      resolveText(response, id, row);
+      resolveText(response, id, row, streamState);
       return;
     }
     case 78 /* "N" */: {
@@ -4372,22 +4549,22 @@ function processFullStringRow(
       );
     }
     case 82 /* "R" */: {
-      startReadableStream(response, id, undefined);
+      startReadableStream(response, id, undefined, streamState);
       return;
     }
     // Fallthrough
     case 114 /* "r" */: {
-      startReadableStream(response, id, 'bytes');
+      startReadableStream(response, id, 'bytes', streamState);
       return;
     }
     // Fallthrough
     case 88 /* "X" */: {
-      startAsyncIterable(response, id, false);
+      startAsyncIterable(response, id, false, streamState);
       return;
     }
     // Fallthrough
     case 120 /* "x" */: {
-      startAsyncIterable(response, id, true);
+      startAsyncIterable(response, id, true, streamState);
       return;
     }
     // Fallthrough
@@ -4406,9 +4583,10 @@ function processFullStringRow(
             postponeInfo.reason,
             postponeInfo.stack,
             postponeInfo.env,
+            streamState,
           );
         } else {
-          resolvePostponeProd(response, id);
+          resolvePostponeProd(response, id, streamState);
         }
         return;
       }
@@ -4420,7 +4598,7 @@ function processFullStringRow(
         return;
       }
       // We assume anything else is JSON.
-      resolveModel(response, id, row);
+      resolveModel(response, id, row, streamState);
       return;
     }
   }
@@ -4523,7 +4701,14 @@ export function processBinaryChunk(
       // We found the last chunk of the row
       const length = lastIdx - i;
       const lastChunk = new Uint8Array(chunk.buffer, offset, length);
-      processFullBinaryRow(response, rowID, rowTag, buffer, lastChunk);
+      processFullBinaryRow(
+        response,
+        streamState,
+        rowID,
+        rowTag,
+        buffer,
+        lastChunk,
+      );
       // Reset state machine for a new row
       i = lastIdx;
       if (rowState === ROW_CHUNK_BY_NEWLINE) {
@@ -4677,7 +4862,7 @@ export function processStringChunk(
         );
       }
       const lastChunk = chunk.slice(i, lastIdx);
-      processFullStringRow(response, rowID, rowTag, lastChunk);
+      processFullStringRow(response, streamState, rowID, rowTag, lastChunk);
       // Reset state machine for a new row
       i = lastIdx;
       if (rowState === ROW_CHUNK_BY_NEWLINE) {
