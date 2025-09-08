@@ -169,7 +169,7 @@ type PendingChunk<T> = {
   reason: null | Array<InitializationReference | (mixed => mixed)>,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugChunk: null | SomeChunk<ReactDebugInfoEntry>, // DEV-only
-  _debugInfo: null | ReactDebugInfo, // DEV-only
+  _debugInfo: ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type BlockedChunk<T> = {
@@ -178,7 +178,7 @@ type BlockedChunk<T> = {
   reason: null | Array<InitializationReference | (mixed => mixed)>,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugChunk: null, // DEV-only
-  _debugInfo: null | ReactDebugInfo, // DEV-only
+  _debugInfo: ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type ResolvedModelChunk<T> = {
@@ -187,7 +187,7 @@ type ResolvedModelChunk<T> = {
   reason: Response,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugChunk: null | SomeChunk<ReactDebugInfoEntry>, // DEV-only
-  _debugInfo: null | ReactDebugInfo, // DEV-only
+  _debugInfo: ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type ResolvedModuleChunk<T> = {
@@ -196,7 +196,7 @@ type ResolvedModuleChunk<T> = {
   reason: null,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugChunk: null, // DEV-only
-  _debugInfo: null | ReactDebugInfo, // DEV-only
+  _debugInfo: ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type InitializedChunk<T> = {
@@ -205,7 +205,7 @@ type InitializedChunk<T> = {
   reason: null | FlightStreamController,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugChunk: null, // DEV-only
-  _debugInfo: null | ReactDebugInfo, // DEV-only
+  _debugInfo: ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type InitializedStreamChunk<
@@ -216,7 +216,7 @@ type InitializedStreamChunk<
   reason: FlightStreamController,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugChunk: null, // DEV-only
-  _debugInfo: null | ReactDebugInfo, // DEV-only
+  _debugInfo: ReactDebugInfo, // DEV-only
   then(resolve: (ReadableStream) => mixed, reject?: (mixed) => mixed): void,
 };
 type ErroredChunk<T> = {
@@ -225,7 +225,7 @@ type ErroredChunk<T> = {
   reason: mixed,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugChunk: null, // DEV-only
-  _debugInfo: null | ReactDebugInfo, // DEV-only
+  _debugInfo: ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type HaltedChunk<T> = {
@@ -234,7 +234,7 @@ type HaltedChunk<T> = {
   reason: null,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugChunk: null, // DEV-only
-  _debugInfo: null | ReactDebugInfo, // DEV-only
+  _debugInfo: ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type SomeChunk<T> =
@@ -256,7 +256,7 @@ function ReactPromise(status: any, value: any, reason: any) {
   }
   if (__DEV__) {
     this._debugChunk = null;
-    this._debugInfo = null;
+    this._debugInfo = [];
   }
 }
 // We subclass Promise.prototype so that we get other methods like .catch
@@ -798,12 +798,10 @@ function resolveModuleChunk<T>(
   resolvedChunk.value = value;
   if (__DEV__) {
     const debugInfo = getModuleDebugInfo(value);
-    if (debugInfo !== null && resolvedChunk._debugInfo != null) {
+    if (debugInfo !== null) {
       // Add to the live set if it was already initialized.
       // $FlowFixMe[method-unbinding]
       resolvedChunk._debugInfo.push.apply(resolvedChunk._debugInfo, debugInfo);
-    } else {
-      resolvedChunk._debugInfo = debugInfo;
     }
   }
   if (resolveListeners !== null) {
@@ -842,7 +840,7 @@ function initializeDebugChunk(
 ): void {
   const debugChunk = chunk._debugChunk;
   if (debugChunk !== null) {
-    const debugInfo = chunk._debugInfo || (chunk._debugInfo = []);
+    const debugInfo = chunk._debugInfo;
     try {
       if (debugChunk.status === RESOLVED_MODEL) {
         // Find the index of this debug info by walking the linked list.
@@ -1303,10 +1301,8 @@ function createLazyChunkWrapper<T>(
     _init: readChunk,
   };
   if (__DEV__) {
-    // Ensure we have a live array to track future debug info.
-    const chunkDebugInfo: ReactDebugInfo =
-      chunk._debugInfo || (chunk._debugInfo = ([]: ReactDebugInfo));
-    lazyType._debugInfo = chunkDebugInfo;
+    // Forward the live array
+    lazyType._debugInfo = chunk._debugInfo;
     // Initialize a store for key validation by the JSX runtime.
     lazyType._store = {validated: validated};
   }
@@ -1508,9 +1504,7 @@ function rejectReference(
         // $FlowFixMe[cannot-write]
         erroredComponent.debugTask = element._debugTask;
       }
-      const chunkDebugInfo: ReactDebugInfo =
-        chunk._debugInfo || (chunk._debugInfo = []);
-      chunkDebugInfo.push(erroredComponent);
+      chunk._debugInfo.push(erroredComponent);
     }
   }
 
@@ -1750,9 +1744,7 @@ function loadServerReference<A: Iterable<any>, T>(
           // $FlowFixMe[cannot-write]
           erroredComponent.debugTask = element._debugTask;
         }
-        const chunkDebugInfo: ReactDebugInfo =
-          chunk._debugInfo || (chunk._debugInfo = []);
-        chunkDebugInfo.push(erroredComponent);
+        chunk._debugInfo.push(erroredComponent);
       }
     }
 
@@ -1770,7 +1762,7 @@ function transferReferencedDebugInfo(
   referencedChunk: SomeChunk<any>,
   referencedValue: mixed,
 ): void {
-  if (__DEV__ && referencedChunk._debugInfo) {
+  if (__DEV__) {
     const referencedDebugInfo = referencedChunk._debugInfo;
     // If we have a direct reference to an object that was rendered by a synchronous
     // server component, it might have some debug info about how it was rendered.
@@ -1784,24 +1776,29 @@ function transferReferencedDebugInfo(
       referencedValue !== null &&
       (isArray(referencedValue) ||
         typeof referencedValue[ASYNC_ITERATOR] === 'function' ||
-        referencedValue.$$typeof === REACT_ELEMENT_TYPE) &&
-      !referencedValue._debugInfo
+        referencedValue.$$typeof === REACT_ELEMENT_TYPE)
     ) {
       // We should maybe use a unique symbol for arrays but this is a React owned array.
       // $FlowFixMe[prop-missing]: This should be added to elements.
-      Object.defineProperty((referencedValue: any), '_debugInfo', {
-        configurable: false,
-        enumerable: false,
-        writable: true,
-        value: referencedDebugInfo,
-      });
+      const existingDebugInfo: ?ReactDebugInfo =
+        (referencedValue._debugInfo: any);
+      if (existingDebugInfo == null) {
+        Object.defineProperty((referencedValue: any), '_debugInfo', {
+          configurable: false,
+          enumerable: false,
+          writable: true,
+          value: referencedDebugInfo.slice(0), // Clone so that pushing later isn't going into the original
+        });
+      } else {
+        // $FlowFixMe[method-unbinding]
+        existingDebugInfo.push.apply(existingDebugInfo, referencedDebugInfo);
+      }
     }
     // We also add it to the initializing chunk since the resolution of that promise is
     // also blocked by these. By adding it to both we can track it even if the array/element
     // is extracted, or if the root is rendered as is.
     if (parentChunk !== null) {
-      const parentDebugInfo =
-        parentChunk._debugInfo || (parentChunk._debugInfo = []);
+      const parentDebugInfo = parentChunk._debugInfo;
       // $FlowFixMe[method-unbinding]
       parentDebugInfo.push.apply(parentDebugInfo, referencedDebugInfo);
     }
