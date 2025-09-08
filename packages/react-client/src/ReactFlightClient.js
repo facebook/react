@@ -1408,8 +1408,6 @@ function fulfillReference(
   const mappedValue = map(response, value, parentObject, key);
   parentObject[key] = mappedValue;
 
-  transferReferencedDebugInfo(handler.chunk, fulfilledChunk, mappedValue);
-
   // If this is the root object for a model reference, where `handler.value`
   // is a stale `null`, the resolved value can be used directly.
   if (key === '' && handler.value === null) {
@@ -1428,19 +1426,27 @@ function fulfillReference(
     const element: any = handler.value;
     switch (key) {
       case '3':
+        transferReferencedDebugInfo(handler.chunk, fulfilledChunk, mappedValue);
         element.props = mappedValue;
         break;
       case '4':
+        // This path doesn't call transferReferencedDebugInfo because this reference is to a debug chunk.
         if (__DEV__) {
           element._owner = mappedValue;
         }
         break;
       case '5':
+        // This path doesn't call transferReferencedDebugInfo because this reference is to a debug chunk.
         if (__DEV__) {
           element._debugStack = mappedValue;
         }
         break;
+      default:
+        transferReferencedDebugInfo(handler.chunk, fulfilledChunk, mappedValue);
+        break;
     }
+  } else {
+    transferReferencedDebugInfo(handler.chunk, fulfilledChunk, mappedValue);
   }
 
   handler.deps--;
@@ -1911,7 +1917,15 @@ function getOutlinedModel<T>(
         value = value[path[i]];
       }
       const chunkValue = map(response, value, parentObject, key);
-      transferReferencedDebugInfo(initializingChunk, chunk, chunkValue);
+      if (
+        parentObject[0] === REACT_ELEMENT_TYPE &&
+        (key === '4' || key === '5')
+      ) {
+        // If we're resolving the "owner" or "stack" slot of an Element array, we don't call
+        // transferReferencedDebugInfo because this reference is to a debug chunk.
+      } else {
+        transferReferencedDebugInfo(initializingChunk, chunk, chunkValue);
+      }
       return chunkValue;
     case PENDING:
     case BLOCKED:
