@@ -43,6 +43,7 @@ import {
   ValidIdentifierName,
   getHookKind,
   makeIdentifierName,
+  validateIdentifierName,
 } from '../HIR/HIR';
 import {printIdentifier, printInstruction, printPlace} from '../HIR/PrintHIR';
 import {eachPatternOperand} from '../HIR/visitors';
@@ -2326,6 +2327,11 @@ function codegenInstructionValue(
         ),
         reactiveFunction,
       ).unwrap();
+
+      const validatedName =
+        instrValue.name != null
+          ? validateIdentifierName(instrValue.name)
+          : Err(null);
       if (instrValue.type === 'ArrowFunctionExpression') {
         let body: t.BlockStatement | t.Expression = fn.body;
         if (body.body.length === 1 && loweredFunc.directives.length == 0) {
@@ -2337,12 +2343,26 @@ function codegenInstructionValue(
         value = t.arrowFunctionExpression(fn.params, body, fn.async);
       } else {
         value = t.functionExpression(
-          fn.id ??
-            (instrValue.name != null ? t.identifier(instrValue.name) : null),
+          validatedName
+            .map<t.Identifier | null>(name => t.identifier(name))
+            .unwrapOr(null),
           fn.params,
           fn.body,
           fn.generator,
           fn.async,
+        );
+      }
+      if (
+        cx.env.config.enableNameAnonymousFunctions &&
+        validatedName.isErr() &&
+        instrValue.name != null
+      ) {
+        const name = instrValue.name;
+        value = t.memberExpression(
+          t.objectExpression([t.objectProperty(t.stringLiteral(name), value)]),
+          t.stringLiteral(name),
+          true,
+          false,
         );
       }
       break;
