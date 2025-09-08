@@ -17,12 +17,13 @@ import {defaultStore, defaultConfig} from '../defaultStore';
  */
 export interface Store {
   source: string;
-  config?: string;
+  config: string;
+  showInternals: boolean;
 }
 export function encodeStore(store: Store): string {
   return compressToEncodedURIComponent(JSON.stringify(store));
 }
-export function decodeStore(hash: string): Store {
+export function decodeStore(hash: string): any {
   return JSON.parse(decompressFromEncodedURIComponent(hash));
 }
 
@@ -63,17 +64,14 @@ export function initStoreFromUrlOrLocalStorage(): Store {
    */
   if (!encodedSource) return defaultStore;
 
-  const raw = decodeStore(encodedSource);
+  const raw: any = decodeStore(encodedSource);
 
   invariant(isValidStore(raw), 'Invalid Store');
 
-  // Add config property if missing for backwards compatibility
-  if (!('config' in raw) || !raw['config']) {
-    return {
-      ...raw,
-      config: defaultConfig,
-    };
-  }
-
-  return raw;
+  // Make sure all properties are populated
+  return {
+    source: raw.source,
+    config: 'config' in raw ? raw.config : defaultConfig,
+    showInternals: 'showInternals' in raw ? raw.showInternals : false,
+  };
 }
