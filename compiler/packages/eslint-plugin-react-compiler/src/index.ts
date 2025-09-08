@@ -20,7 +20,9 @@ const configs = {
   recommended: {
     plugins: {
       'react-compiler': {
-        rules: allRules,
+        rules: Object.fromEntries(
+          Object.entries(allRules).map(([name, {rule}]) => [name, rule]),
+        ),
       },
     },
     rules: Object.fromEntries(
