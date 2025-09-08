@@ -228,7 +228,7 @@ describe('commit tree', () => {
         [root]
           ▾ <App>
               <Suspense>
-        [shell]
+        [suspense-root]  rects={null}
           <Suspense name="App>?" rects={null}>
       `);
       utils.act(() => modernRender(<App renderChildren={true} />));
@@ -237,7 +237,7 @@ describe('commit tree', () => {
           ▾ <App>
             ▾ <Suspense>
                 <LazyInnerComponent>
-        [shell]
+        [suspense-root]  rects={null}
           <Suspense name="App>?" rects={null}>
       `);
       utils.act(() => modernRender(<App renderChildren={false} />));
@@ -303,7 +303,7 @@ describe('commit tree', () => {
         [root]
           ▾ <App>
               <Suspense>
-        [shell]
+        [suspense-root]  rects={null}
           <Suspense name="App>?" rects={null}>
       `);
       utils.act(() => modernRender(<App renderChildren={false} />));

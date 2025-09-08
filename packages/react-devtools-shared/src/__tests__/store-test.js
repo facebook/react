@@ -133,7 +133,7 @@ describe('Store', () => {
           <Suspense>
         ▾ <Parent>
             <Child>
-      [shell]
+      [suspense-root]  rects={null}
         <Suspense name="Unknown" rects={null}>
     `);
   });
@@ -492,7 +492,7 @@ describe('Store', () => {
               <Component key="Outside">
             ▾ <Suspense>
                 <Loading>
-        [shell]
+        [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:10,height:1}]}
           <Suspense name="Wrapper>?" rects={null}>
       `);
 
@@ -505,7 +505,7 @@ describe('Store', () => {
               <Component key="Outside">
             ▾ <Suspense>
                 <Component key="Inside">
-        [shell]
+        [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}]}
           <Suspense name="Wrapper>?" rects={[{x:1,y:2,width:5,height:1}]}>
       `);
     });
@@ -584,7 +584,7 @@ describe('Store', () => {
               ▾ <Suspense name="three">
                   <Loading key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
-        [shell]
+        [suspense-root]  rects={[{x:1,y:2,width:10,height:1}]}
           <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}]}>
             <Suspense name="one" rects={null}>
             <Suspense name="two" rects={null}>
@@ -612,7 +612,7 @@ describe('Store', () => {
               ▾ <Suspense name="three">
                   <Loading key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
-        [shell]
+        [suspense-root]  rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}
           <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
             <Suspense name="one" rects={null}>
             <Suspense name="two" rects={null}>
@@ -640,7 +640,7 @@ describe('Store', () => {
               ▾ <Suspense name="three">
                   <Loading key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
-        [shell]
+        [suspense-root]  rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}
           <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
             <Suspense name="one" rects={null}>
             <Suspense name="two" rects={null}>
@@ -668,7 +668,7 @@ describe('Store', () => {
               ▾ <Suspense name="three">
                   <Loading key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
-        [shell]
+        [suspense-root]  rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}
           <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
             <Suspense name="one" rects={null}>
             <Suspense name="two" rects={null}>
@@ -689,7 +689,7 @@ describe('Store', () => {
               <Component key="Outside">
             ▾ <Suspense name="parent">
                 <Loading key="Parent Fallback">
-        [shell]
+        [suspense-root]  rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}
           <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
             <Suspense name="one" rects={null}>
             <Suspense name="two" rects={null}>
@@ -717,7 +717,7 @@ describe('Store', () => {
               ▾ <Suspense name="three">
                   <Loading key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
-        [shell]
+        [suspense-root]  rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}
           <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
             <Suspense name="one" rects={null}>
             <Suspense name="two" rects={null}>
@@ -745,7 +745,7 @@ describe('Store', () => {
               ▾ <Suspense name="three">
                   <Loading key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
-        [shell]
+        [suspense-root]  rects={[{x:1,y:2,width:10,height:1}]}
           <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}]}>
             <Suspense name="one" rects={null}>
             <Suspense name="two" rects={null}>
@@ -773,7 +773,7 @@ describe('Store', () => {
               ▾ <Suspense name="three">
                   <Loading key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
-        [shell]
+        [suspense-root]  rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}
           <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
             <Suspense name="one" rects={null}>
             <Suspense name="two" rects={null}>
@@ -792,7 +792,7 @@ describe('Store', () => {
               <Component key="Outside">
             ▾ <Suspense name="parent">
                 <Loading key="Parent Fallback">
-        [shell]
+        [suspense-root]  rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}
           <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
             <Suspense name="one" rects={null}>
             <Suspense name="two" rects={null}>
@@ -813,7 +813,7 @@ describe('Store', () => {
               <Component key="Outside">
             ▾ <Suspense name="parent">
                 <Loading key="Parent Fallback">
-        [shell]
+        [suspense-root]  rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}
           <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
             <Suspense name="one" rects={null}>
             <Suspense name="two" rects={null}>
@@ -839,7 +839,7 @@ describe('Store', () => {
               ▾ <Suspense name="three">
                   <Loading key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
-        [shell]
+        [suspense-root]  rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}
           <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
             <Suspense name="one" rects={null}>
             <Suspense name="two" rects={null}>
@@ -865,7 +865,7 @@ describe('Store', () => {
               ▾ <Suspense name="three">
                   <Loading key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
-        [shell]
+        [suspense-root]  rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}
           <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
             <Suspense name="one" rects={null}>
             <Suspense name="two" rects={null}>
@@ -893,7 +893,7 @@ describe('Store', () => {
               ▾ <Suspense name="three">
                   <Loading key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
-        [shell]
+        [suspense-root]  rects={[{x:1,y:2,width:10,height:1}]}
           <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}]}>
             <Suspense name="one" rects={null}>
             <Suspense name="two" rects={null}>
@@ -948,7 +948,7 @@ describe('Store', () => {
               ▾ <Suspense name="three">
                   <Component key="Suspense 3 Content">
                 <Component key="Unrelated at End">
-        [shell]
+        [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}]}
           <Suspense name="parent" rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}]}>
             <Suspense name="one" rects={[{x:1,y:2,width:5,height:1}]}>
             <Suspense name="two" rects={[{x:1,y:2,width:5,height:1}]}>
@@ -981,7 +981,7 @@ describe('Store', () => {
               ▾ <Suspense name="three">
                   <Component key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
-        [shell]
+        [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}]}
           <Suspense name="parent" rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}]}>
             <Suspense name="one" rects={[{x:1,y:2,width:5,height:1}]}>
             <Suspense name="two" rects={[{x:1,y:2,width:5,height:1}]}>
@@ -1009,7 +1009,7 @@ describe('Store', () => {
               ▾ <Suspense name="three">
                   <Component key="Suspense 3 Content">
                 <Component key="Unrelated at End">
-        [shell]
+        [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}]}
           <Suspense name="parent" rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}]}>
             <Suspense name="one" rects={[{x:1,y:2,width:5,height:1}]}>
             <Suspense name="two" rects={[{x:1,y:2,width:5,height:1}]}>
@@ -1053,7 +1053,7 @@ describe('Store', () => {
                 <Component key="A">
               ▾ <Suspense>
                   <Loading>
-        [shell]
+        [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:10,height:1}]}
           <Suspense name="Wrapper>?" rects={null}>
       `);
 
@@ -1068,7 +1068,7 @@ describe('Store', () => {
               ▾ <Suspense>
                   <Component key="B">
                 <Component key="C">
-        [shell]
+        [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}]}
           <Suspense name="Wrapper>?" rects={[{x:1,y:2,width:5,height:1}]}>
       `);
     });
@@ -1406,7 +1406,7 @@ describe('Store', () => {
       expect(store).toMatchInlineSnapshot(`
         [root]
           ▸ <Wrapper>
-        [shell]
+        [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:10,height:1}]}
           <Suspense name="Wrapper>?" rects={null}>
       `);
 
@@ -1423,7 +1423,7 @@ describe('Store', () => {
               <Component key="Outside">
             ▾ <Suspense>
                 <Loading>
-        [shell]
+        [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:10,height:1}]}
           <Suspense name="Wrapper>?" rects={null}>
       `);
 
@@ -1436,7 +1436,7 @@ describe('Store', () => {
               <Component key="Outside">
             ▾ <Suspense>
                 <Component key="Inside">
-        [shell]
+        [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}]}
           <Suspense name="Wrapper>?" rects={[{x:1,y:2,width:5,height:1}]}>
       `);
     });
@@ -1662,7 +1662,7 @@ describe('Store', () => {
       expect(store).toMatchInlineSnapshot(`
         [root]
           ▸ <SuspenseTree>
-        [shell]
+        [suspense-root]  rects={null}
           <Suspense name="SuspenseTree>?" rects={null}>
       `);
 
@@ -1677,7 +1677,7 @@ describe('Store', () => {
           ▾ <SuspenseTree>
             ▾ <Suspense>
               ▸ <Parent>
-        [shell]
+        [suspense-root]  rects={null}
           <Suspense name="SuspenseTree>?" rects={null}>
       `);
 
@@ -1696,7 +1696,7 @@ describe('Store', () => {
           ▾ <SuspenseTree>
             ▾ <Suspense>
                 <Fallback>
-        [shell]
+        [suspense-root]  rects={null}
           <Suspense name="SuspenseTree>?" rects={null}>
       `);
 
@@ -1712,7 +1712,7 @@ describe('Store', () => {
           ▾ <SuspenseTree>
             ▾ <Suspense>
               ▸ <Parent>
-        [shell]
+        [suspense-root]  rects={null}
           <Suspense name="SuspenseTree>?" rects={null}>
       `);
     });
@@ -2017,7 +2017,7 @@ describe('Store', () => {
         [root]
           ▾ <App>
               <Suspense>
-        [shell]
+        [suspense-root]  rects={null}
           <Suspense name="App>?" rects={null}>
       `);
 
@@ -2031,7 +2031,7 @@ describe('Store', () => {
           ▾ <App>
             ▾ <Suspense>
                 <LazyInnerComponent>
-        [shell]
+        [suspense-root]  rects={null}
           <Suspense name="App>?" rects={null}>
       `);
 
@@ -2522,7 +2522,7 @@ describe('Store', () => {
           ▾ <App>
             ▾ <Suspense>
                 <ChildA>
-        [shell]
+        [suspense-root]  rects={null}
           <Suspense name="App>?" rects={null}>
       `);
 
@@ -2533,7 +2533,7 @@ describe('Store', () => {
           ▾ <App>
             ▾ <Suspense>
                 <ChildB>
-        [shell]
+        [suspense-root]  rects={null}
           <Suspense name="App>?" rects={null}>
       `);
     });
@@ -2860,7 +2860,7 @@ describe('Store', () => {
         ▾ <Suspense name="content">
           ▾ <Suspense name="fallback">
               <Component key="fallback-fallback">
-      [shell]
+      [suspense-root]  rects={[{x:1,y:2,width:19,height:1}]}
         <Suspense name="content" rects={null}>
         <Suspense name="fallback" rects={null}>
     `);
@@ -2874,7 +2874,7 @@ describe('Store', () => {
         ▾ <Suspense name="content">
           ▾ <Suspense name="fallback">
               <Component key="fallback-content">
-      [shell]
+      [suspense-root]  rects={[{x:1,y:2,width:10,height:1}]}
         <Suspense name="content" rects={null}>
         <Suspense name="fallback" rects={[{x:1,y:2,width:10,height:1}]}>
     `);
@@ -2887,7 +2887,7 @@ describe('Store', () => {
       [root]
         ▾ <Suspense name="content">
             <Component key="content">
-      [shell]
+      [suspense-root]  rects={[{x:1,y:2,width:4,height:1}]}
         <Suspense name="content" rects={[{x:1,y:2,width:4,height:1}]}>
     `);
   });
@@ -2990,7 +2990,7 @@ describe('Store', () => {
             ▾ <Suspense name="main">
               ▾ <Suspense name="main-fallback">
                   <Component key="main-fallback-fallback">
-      [shell]
+      [suspense-root]  rects={[{x:1,y:2,width:19,height:1}, {x:1,y:2,width:19,height:1}]}
         <Suspense name="head" rects={null}>
         <Suspense name="head-fallback" rects={null}>
         <Suspense name="main" rects={null}>
@@ -3013,7 +3013,7 @@ describe('Store', () => {
           ▾ <WithSuspenseInFallback>
             ▾ <Suspense name="main">
                 <Component key="main-content">
-      [shell]
+      [suspense-root]  rects={[{x:1,y:2,width:4,height:1}, {x:1,y:2,width:4,height:1}]}
         <Suspense name="head" rects={[{x:1,y:2,width:4,height:1}]}>
         <Suspense name="main" rects={[{x:1,y:2,width:4,height:1}]}>
     `);
@@ -3043,7 +3043,7 @@ describe('Store', () => {
           ▾ <WithSuspenseInFallback>
             ▾ <Suspense name="main">
                 <Component key="main-content">
-      [shell]
+      [suspense-root]  rects={[{x:1,y:2,width:4,height:1}, {x:1,y:2,width:10,height:1}, {x:1,y:2,width:4,height:1}]}
         <Suspense name="head" rects={[{x:1,y:2,width:4,height:1}]}>
         <Suspense name="head-fallback" rects={[{x:1,y:2,width:10,height:1}]}>
         <Suspense name="main" rects={[{x:1,y:2,width:4,height:1}]}>
@@ -3074,10 +3074,15 @@ describe('Store', () => {
           ▾ <WithSuspenseInFallback>
             ▾ <Suspense name="main">
                 <Component key="main-content">
-      [shell]
+      [suspense-root]  rects={[{x:1,y:2,width:4,height:1}, {x:1,y:2,width:10,height:1}, {x:1,y:2,width:19,height:1}, {x:1,y:2,width:4,height:1}]}
         <Suspense name="head" rects={[{x:1,y:2,width:4,height:1}]}>
         <Suspense name="head-fallback" rects={[{x:1,y:2,width:10,height:1}]}>
         <Suspense name="main" rects={[{x:1,y:2,width:4,height:1}]}>
     `);
+  });
+
+  it('should handle an empty root', async () => {
+    await actAsync(() => render(null));
+    expect(store).toMatchInlineSnapshot(`[root]`);
   });
 });
