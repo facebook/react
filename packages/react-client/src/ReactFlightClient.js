@@ -1780,14 +1780,14 @@ function transferReferencedDebugInfo(
     ) {
       // We should maybe use a unique symbol for arrays but this is a React owned array.
       // $FlowFixMe[prop-missing]: This should be added to elements.
-      const existingDebugInfo: void | ReactDebugInfo =
+      const existingDebugInfo: ?ReactDebugInfo =
         (referencedValue._debugInfo: any);
-      if (!existingDebugInfo) {
+      if (existingDebugInfo == null) {
         Object.defineProperty((referencedValue: any), '_debugInfo', {
           configurable: false,
           enumerable: false,
           writable: true,
-          value: referencedDebugInfo,
+          value: referencedDebugInfo.slice(0), // Clone so that pushing later isn't going into the original
         });
       } else {
         // $FlowFixMe[method-unbinding]
