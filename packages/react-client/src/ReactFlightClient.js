@@ -2595,10 +2595,16 @@ function incrementChunkDebugInfo(
   if (__DEV__ && enableAsyncDebugInfo) {
     const debugInfo: ReactIOInfo = streamState._debugInfo;
     const endTime = performance.now();
+    const previousEndTime = debugInfo.end;
     const newByteLength = ((debugInfo.byteSize: any): number) + chunkLength;
-    if (newByteLength > streamState._debugTargetChunkSize) {
+    if (
+      newByteLength > streamState._debugTargetChunkSize ||
+      endTime > previousEndTime + 10
+    ) {
       // This new chunk would overshoot the chunk size so therefore we treat it as its own new chunk
-      // by cloning the old one.
+      // by cloning the old one. Similarly, if some time has passed we assume that it was actually
+      // due to the server being unable to flush chunks faster e.g. due to I/O so it would be a
+      // new chunk in production even if the buffer hasn't been reached.
       streamState._debugInfo = {
         name: debugInfo.name,
         start: debugInfo.start,
