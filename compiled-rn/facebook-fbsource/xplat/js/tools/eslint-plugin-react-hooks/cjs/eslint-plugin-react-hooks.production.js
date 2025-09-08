@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<61554c2a06a05867de0d233dbbee4421>>
+ * @generated SignedSource<<6fbbfa4285eac925cc05ad72d2866f14>>
  */
 
 'use strict';
@@ -51986,16 +51986,22 @@ function findProgramSuppressions(programComments, ruleNames, flowSuppressions) {
     let disableComment = null;
     let enableComment = null;
     let source = null;
-    const rulePattern = `(${ruleNames.join('|')})`;
-    const disableNextLinePattern = new RegExp(`eslint-disable-next-line ${rulePattern}`);
-    const disablePattern = new RegExp(`eslint-disable ${rulePattern}`);
-    const enablePattern = new RegExp(`eslint-enable ${rulePattern}`);
+    let disableNextLinePattern = null;
+    let disablePattern = null;
+    let enablePattern = null;
+    if (ruleNames.length !== 0) {
+        const rulePattern = `(${ruleNames.join('|')})`;
+        disableNextLinePattern = new RegExp(`eslint-disable-next-line ${rulePattern}`);
+        disablePattern = new RegExp(`eslint-disable ${rulePattern}`);
+        enablePattern = new RegExp(`eslint-enable ${rulePattern}`);
+    }
     const flowSuppressionPattern = new RegExp('\\$(FlowFixMe\\w*|FlowExpectedError|FlowIssue)\\[react\\-rule');
     for (const comment of programComments) {
         if (comment.start == null || comment.end == null) {
             continue;
         }
         if (disableComment == null &&
+            disableNextLinePattern != null &&
             disableNextLinePattern.test(comment.value)) {
             disableComment = comment;
             enableComment = comment;
@@ -52008,11 +52014,13 @@ function findProgramSuppressions(programComments, ruleNames, flowSuppressions) {
             enableComment = comment;
             source = 'Flow';
         }
-        if (disablePattern.test(comment.value)) {
+        if (disablePattern != null && disablePattern.test(comment.value)) {
             disableComment = comment;
             source = 'Eslint';
         }
-        if (enablePattern.test(comment.value) && source === 'Eslint') {
+        if (enablePattern != null &&
+            enablePattern.test(comment.value) &&
+            source === 'Eslint') {
             enableComment = comment;
         }
         if (disableComment != null && source != null) {
