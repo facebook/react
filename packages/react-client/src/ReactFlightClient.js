@@ -1776,17 +1776,23 @@ function transferReferencedDebugInfo(
       referencedValue !== null &&
       (isArray(referencedValue) ||
         typeof referencedValue[ASYNC_ITERATOR] === 'function' ||
-        referencedValue.$$typeof === REACT_ELEMENT_TYPE) &&
-      !referencedValue._debugInfo
+        referencedValue.$$typeof === REACT_ELEMENT_TYPE)
     ) {
       // We should maybe use a unique symbol for arrays but this is a React owned array.
       // $FlowFixMe[prop-missing]: This should be added to elements.
-      Object.defineProperty((referencedValue: any), '_debugInfo', {
-        configurable: false,
-        enumerable: false,
-        writable: true,
-        value: referencedDebugInfo,
-      });
+      const existingDebugInfo: void | ReactDebugInfo =
+        (referencedValue._debugInfo: any);
+      if (!existingDebugInfo) {
+        Object.defineProperty((referencedValue: any), '_debugInfo', {
+          configurable: false,
+          enumerable: false,
+          writable: true,
+          value: referencedDebugInfo,
+        });
+      } else {
+        // $FlowFixMe[method-unbinding]
+        existingDebugInfo.push.apply(existingDebugInfo, referencedDebugInfo);
+      }
     }
     // We also add it to the initializing chunk since the resolution of that promise is
     // also blocked by these. By adding it to both we can track it even if the array/element
