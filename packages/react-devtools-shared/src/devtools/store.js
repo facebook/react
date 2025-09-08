@@ -111,7 +111,7 @@ export default class Store extends EventEmitter<{
   roots: [],
   rootSupportsBasicProfiling: [],
   rootSupportsTimelineProfiling: [],
-  suspenseTreeMutated: [],
+  suspenseTreeMutated: [[Map<SuspenseNode['id'], SuspenseNode['id']>]],
   supportsNativeStyleEditor: [],
   supportsReloadAndProfile: [],
   unsupportedBridgeProtocolDetected: [],
@@ -847,6 +847,76 @@ export default class Store extends EventEmitter<{
     return list;
   }
 
+  getSuspenseLineage(
+    suspenseID: SuspenseNode['id'],
+  ): $ReadOnlyArray<SuspenseNode['id']> {
+    const lineage: Array<SuspenseNode['id']> = [];
+    let next: null | SuspenseNode = this.getSuspenseByID(suspenseID);
+    while (next !== null) {
+      if (next.parentID === 0) {
+        next = null;
+      } else {
+        lineage.unshift(next.id);
+        next = this.getSuspenseByID(next.parentID);
+      }
+    }
+
+    return lineage;
+  }
+
+  /**
+   * Like {@link getRootIDForElement} but should be used for traversing Suspense since it works with disconnected nodes.
+   */
+  getSuspenseRootIDForSuspense(id: SuspenseNode['id']): number | null {
+    let current = this._idToSuspense.get(id);
+    while (current !== undefined) {
+      if (current.parentID === 0) {
+        return current.id;
+      } else {
+        current = this._idToSuspense.get(current.parentID);
+      }
+    }
+    return null;
+  }
+
+  getSuspendableDocumentOrderSuspense(
+    rootID: Element['id'] | void,
+  ): $ReadOnlyArray<SuspenseNode['id']> {
+    if (rootID === undefined) {
+      return [];
+    }
+    const root = this.getElementByID(rootID);
+    if (root === null) {
+      return [];
+    }
+    if (!this.supportsTogglingSuspense(root.id)) {
+      return [];
+    }
+    const suspenseTreeList: SuspenseNode['id'][] = [];
+    const suspense = this.getSuspenseByID(root.id);
+    if (suspense !== null) {
+      const stack = [suspense];
+      while (stack.length > 0) {
+        const current = stack.pop();
+        if (current === undefined) {
+          continue;
+        }
+        // Include the root even if we won't suspend it.
+        // You should be able to see what suspended the shell.
+        suspenseTreeList.push(current.id);
+        // Add children in reverse order to maintain document order
+        for (let j = current.children.length - 1; j >= 0; j--) {
+          const childSuspense = this.getSuspenseByID(current.children[j]);
+          if (childSuspense !== null) {
+            stack.push(childSuspense);
+          }
+        }
+      }
+    }
+
+    return suspenseTreeList;
+  }
+
   getRendererIDForElement(id: number): number | null {
     let current = this._idToElement.get(id);
     while (current !== undefined) {
@@ -1030,6 +1100,8 @@ export default class Store extends EventEmitter<{
     const addedElementIDs: Array<number> = [];
     // This is a mapping of removed ID -> parent ID:
     const removedElementIDs: Map<number, number> = new Map();
+    const removedSuspenseIDs: Map<SuspenseNode['id'], SuspenseNode['id']> =
+      new Map();
     // We'll use the parent ID to adjust selection if it gets deleted.
 
     let i = 2;
@@ -1541,6 +1613,7 @@ export default class Store extends EventEmitter<{
             }
 
             this._idToSuspense.delete(id);
+            removedSuspenseIDs.set(id, parentID);
 
             let parentSuspense: ?SuspenseNode = null;
             if (parentID === 0) {
@@ -1748,7 +1821,7 @@ export default class Store extends EventEmitter<{
     }
 
     if (hasSuspenseTreeChanged) {
-      this.emit('suspenseTreeMutated');
+      this.emit('suspenseTreeMutated', [removedSuspenseIDs]);
     }
 
     if (__DEBUG__) {
