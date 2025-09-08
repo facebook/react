@@ -116,7 +116,7 @@ function startReadingFromStream(
   stream: ReadableStream,
   onDone: () => void,
 ): void {
-  const streamState = createStreamState();
+  const streamState = createStreamState(response, stream);
   const reader = stream.getReader();
   function progress({
     done,
