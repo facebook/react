@@ -5778,6 +5778,31 @@ export function attach(
     return result;
   }
 
+  function getSuspendedByOfInstance(
+    devtoolsInstance: DevToolsInstance,
+    hooks: null | HooksTree,
+  ): Array<SerializedAsyncInfo> {
+    const suspendedBy = devtoolsInstance.suspendedBy;
+    if (suspendedBy === null) {
+      return [];
+    }
+
+    const foundIOEntries: Set<ReactIOInfo> = new Set();
+    const result: Array<SerializedAsyncInfo> = [];
+    for (let i = 0; i < suspendedBy.length; i++) {
+      const asyncInfo = suspendedBy[i];
+      const ioInfo = asyncInfo.awaited;
+      if (foundIOEntries.has(ioInfo)) {
+        // We have already added this I/O entry to the result. We can dedupe it.
+        // This can happen when an instance depends on the same data in mutliple places.
+        continue;
+      }
+      foundIOEntries.add(ioInfo);
+      result.push(serializeAsyncInfo(asyncInfo, devtoolsInstance, hooks));
+    }
+    return result;
+  }
+
   const FALLBACK_THROTTLE_MS: number = 300;
 
   function getSuspendedByRange(
@@ -6297,11 +6322,7 @@ export function attach(
           // In this case, this becomes associated with the Client/Host Component where as normally
           // you'd expect these to be associated with the Server Component that awaited the data.
           // TODO: Prepend other suspense sources like css, images and use().
-          fiberInstance.suspendedBy === null
-          ? []
-          : fiberInstance.suspendedBy.map(info =>
-              serializeAsyncInfo(info, fiberInstance, hooks),
-            );
+          getSuspendedByOfInstance(fiberInstance, hooks);
     const suspendedByRange = getSuspendedByRange(
       getNearestSuspenseNode(fiberInstance),
     );
@@ -6446,7 +6467,7 @@ export function attach(
 
     const isSuspended = null;
     // Things that Suspended this Server Component (use(), awaits and direct child promises)
-    const suspendedBy = virtualInstance.suspendedBy;
+    const suspendedBy = getSuspendedByOfInstance(virtualInstance, null);
     const suspendedByRange = getSuspendedByRange(
       getNearestSuspenseNode(virtualInstance),
     );
@@ -6497,12 +6518,7 @@ export function attach(
           ? []
           : Array.from(componentLogsEntry.warnings.entries()),
 
-      suspendedBy:
-        suspendedBy === null
-          ? []
-          : suspendedBy.map(info =>
-              serializeAsyncInfo(info, virtualInstance, null),
-            ),
+      suspendedBy: suspendedBy,
       suspendedByRange: suspendedByRange,
       unknownSuspenders: UNKNOWN_SUSPENDERS_NONE,
 
