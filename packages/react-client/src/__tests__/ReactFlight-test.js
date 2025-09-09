@@ -2957,6 +2957,12 @@ describe('ReactFlight', () => {
                   transport: expect.arrayContaining([]),
                 },
               },
+              {
+                time: 16,
+              },
+              {
+                time: 16,
+              },
               {time: 17},
             ]
           : undefined,
@@ -2975,6 +2981,12 @@ describe('ReactFlight', () => {
                 props: {
                   children: {},
                 },
+              },
+              {
+                time: 19,
+              },
+              {
+                time: 19,
               },
               {time: 19},
             ]
@@ -3822,6 +3834,7 @@ describe('ReactFlight', () => {
     expect(ReactNoop).toMatchRenderedOutput(<div>not using props</div>);
   });
 
+  // @gate !__DEV__ || enableComponentPerformanceTrack
   it('produces correct parent stacks', async () => {
     function Container() {
       return ReactServer.createElement('div', null);
@@ -3849,71 +3862,76 @@ describe('ReactFlight', () => {
       expect(root.type).toBe('main');
       if (__DEV__) {
         const div = root.props.children;
-        expect(getDebugInfo(div)).toMatchInlineSnapshot(`
-          [
-            {
-              "time": 14,
+        expect(getDebugInfo(div)).toEqual([
+          {
+            time: 14,
+          },
+          {
+            env: 'Server',
+            key: null,
+            name: 'ContainerParent',
+            owner: {
+              env: 'Server',
+              key: null,
+              name: 'App',
+              props: {},
+              stack: '    in Object.<anonymous> (at **)',
             },
-            {
-              "env": "Server",
-              "key": null,
-              "name": "ContainerParent",
-              "owner": {
-                "env": "Server",
-                "key": null,
-                "name": "App",
-                "props": {},
-                "stack": "    in Object.<anonymous> (at **)",
+            props: {},
+            stack: '    in App (at **)',
+          },
+          {
+            time: 15,
+          },
+          {
+            env: 'Server',
+            key: null,
+            name: 'Container',
+            owner: {
+              env: 'Server',
+              key: null,
+              name: 'ContainerParent',
+              owner: {
+                env: 'Server',
+                key: null,
+                name: 'App',
+                props: {},
+                stack: '    in Object.<anonymous> (at **)',
               },
-              "props": {},
-              "stack": "    in App (at **)",
+              props: {},
+              stack: '    in App (at **)',
             },
-            {
-              "time": 15,
-            },
-            {
-              "env": "Server",
-              "key": null,
-              "name": "Container",
-              "owner": {
-                "env": "Server",
-                "key": null,
-                "name": "ContainerParent",
-                "owner": {
-                  "env": "Server",
-                  "key": null,
-                  "name": "App",
-                  "props": {},
-                  "stack": "    in Object.<anonymous> (at **)",
-                },
-                "props": {},
-                "stack": "    in App (at **)",
-              },
-              "props": {},
-              "stack": "    in ContainerParent (at **)",
-            },
-            {
-              "time": 16,
-            },
-          ]
-        `);
-        expect(getDebugInfo(root)).toMatchInlineSnapshot(`
-          [
-            {
-              "time": 12,
-            },
-            {
-              "env": "Server",
-              "key": null,
-              "name": "App",
-              "props": {},
-              "stack": "    in Object.<anonymous> (at **)",
-            },
-            {
-              "time": 13,
-            },
-          ]
-        `);
+            props: {},
+            stack: '    in ContainerParent (at **)',
+          },
+          {
+            time: 16,
+          },
+        ]);
+        expect(getDebugInfo(root)).toEqual([
+          {
+            time: 12,
+          },
+          {
+            env: 'Server',
+            key: null,
+            name: 'App',
+            props: {},
+            stack: '    in Object.<anonymous> (at **)',
+          },
+          {
+            time: 13,
+          },
+          {
+            time: 14,
+          },
+          {
+            time: 15,
+          },
+          {
+            time: 16,
+          },
+        ]);
       } else {
         expect(root._debugInfo).toBe(undefined);
         expect(root._owner).toBe(undefined);
