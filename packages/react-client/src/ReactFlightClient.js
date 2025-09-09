@@ -3219,14 +3219,8 @@ function resolvePostponeProd(
       response,
       postponeInstance,
     );
-    if (__DEV__) {
-      resolveChunkDebugInfo(streamState, newChunk);
-    }
     chunks.set(id, newChunk);
   } else {
-    if (__DEV__) {
-      resolveChunkDebugInfo(streamState, chunk);
-    }
     triggerErrorOnChunk(response, chunk, postponeInstance);
   }
 }
