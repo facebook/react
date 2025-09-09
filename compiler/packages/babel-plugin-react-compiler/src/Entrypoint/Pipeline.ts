@@ -325,6 +325,15 @@ function runWithEnvironment(
     outlineJSX(hir);
   }
 
+  if (env.config.enableNameAnonymousFunctions) {
+    nameAnonymousFunctions(hir);
+    log({
+      kind: 'hir',
+      name: 'NameAnonymousFunctions',
+      value: hir,
+    });
+  }
+
   if (env.config.enableFunctionOutlining) {
     outlineFunctions(hir, fbtOperands);
     log({kind: 'hir', name: 'OutlineFunctions', value: hir});
@@ -411,15 +420,6 @@ function runWithEnvironment(
     log({
       kind: 'hir',
       name: 'inlineJsxTransform',
-      value: hir,
-    });
-  }
-
-  if (env.config.enableNameAnonymousFunctions) {
-    nameAnonymousFunctions(hir);
-    log({
-      kind: 'hir',
-      name: 'NameAnonymougFunctions',
       value: hir,
     });
   }
