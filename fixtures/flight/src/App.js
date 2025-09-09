@@ -235,9 +235,11 @@ export default async function App({prerender, noCache}) {
           <Foo>{dedupedChild}</Foo>
           <Bar>{Promise.resolve([dedupedChild])}</Bar>
           <Navigate />
-          <React.Suspense fallback={null}>
-            <LargeContent />
-          </React.Suspense>
+          {prerender ? null : ( // TODO: prerender is broken for large content for some reason.
+            <React.Suspense fallback={null}>
+              <LargeContent />
+            </React.Suspense>
+          )}
         </Container>
       </body>
     </html>

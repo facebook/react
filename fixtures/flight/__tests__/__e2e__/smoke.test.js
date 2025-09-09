@@ -21,10 +21,9 @@ test('smoke test', async ({page}) => {
   await expect(consoleErrors).toEqual([]);
   await expect(pageErrors).toEqual([]);
 
-  // TODO: prerender streaming is broken for large content. Re-enable once fixed.
-  // await page.goto('/prerender');
-  // await expect(page.getByTestId('prerendered')).toBeAttached();
+  await page.goto('/prerender');
+  await expect(page.getByTestId('prerendered')).toBeAttached();
 
-  // await expect(consoleErrors).toEqual([]);
-  // await expect(pageErrors).toEqual([]);
+  await expect(consoleErrors).toEqual([]);
+  await expect(pageErrors).toEqual([]);
 });
