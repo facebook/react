@@ -5829,6 +5829,7 @@ export function attach(
     }
 
     const foundIOEntries: Set<ReactIOInfo> = new Set();
+    const streamEntries: Map<Promise<mixed>, ReactAsyncInfo> = new Map();
     const result: Array<SerializedAsyncInfo> = [];
     for (let i = 0; i < suspendedBy.length; i++) {
       const asyncInfo = suspendedBy[i];
@@ -5839,8 +5840,33 @@ export function attach(
         continue;
       }
       foundIOEntries.add(ioInfo);
-      result.push(serializeAsyncInfo(asyncInfo, devtoolsInstance, hooks));
+      if (ioInfo.name === 'RSC stream' && ioInfo.value != null) {
+        const streamPromise = ioInfo.value;
+        // Special case RSC stream entries to pick the last entry keyed by the stream.
+        const existingEntry = streamEntries.get(streamPromise);
+        if (existingEntry === undefined) {
+          streamEntries.set(streamPromise, asyncInfo);
+        } else {
+          const existingIO = existingEntry.awaited;
+          if (
+            ioInfo !== existingIO &&
+            ((ioInfo.byteSize !== undefined &&
+              existingIO.byteSize !== undefined &&
+              ioInfo.byteSize > existingIO.byteSize) ||
+              ioInfo.end > existingIO.end)
+          ) {
+            // The new entry is later in the stream that the old entry. Replace it.
+            streamEntries.set(streamPromise, asyncInfo);
+          }
+        }
+      } else {
+        result.push(serializeAsyncInfo(asyncInfo, devtoolsInstance, hooks));
+      }
     }
+    // Add any deduped stream entries.
+    streamEntries.forEach(asyncInfo => {
+      result.push(serializeAsyncInfo(asyncInfo, devtoolsInstance, hooks));
+    });
     return result;
   }
 
