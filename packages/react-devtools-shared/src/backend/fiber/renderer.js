@@ -5721,6 +5721,7 @@ export function attach(
 
   function getSuspendedByOfSuspenseNode(
     suspenseNode: SuspenseNode,
+    filterByChildInstance: null | DevToolsInstance, // only include suspended by instances in this subtree
   ): Array<SerializedAsyncInfo> {
     // Collect all ReactAsyncInfo that was suspending this SuspenseNode but
     // isn't also in any parent set.
@@ -5756,8 +5757,30 @@ export function attach(
       if (set.size === 0) {
         return;
       }
-      const firstInstance: DevToolsInstance = (set.values().next().value: any);
-      if (firstInstance.suspendedBy !== null) {
+      let firstInstance: null | DevToolsInstance = null;
+      if (filterByChildInstance === null) {
+        firstInstance = (set.values().next().value: any);
+      } else {
+        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+        for (const childInstance of set.values()) {
+          if (firstInstance === null) {
+            firstInstance = childInstance;
+          }
+          if (
+            childInstance !== filterByChildInstance &&
+            !isChildOf(
+              filterByChildInstance,
+              childInstance,
+              suspenseNode.instance,
+            )
+          ) {
+            // Something suspended on this outside the filtered instance. That means that
+            // it is not unique to just this filtered instance so we skip including it.
+            return;
+          }
+        }
+      }
+      if (firstInstance !== null && firstInstance.suspendedBy !== null) {
         const asyncInfo = getAwaitInSuspendedByFromIO(
           firstInstance.suspendedBy,
           ioInfo,
@@ -5868,6 +5891,23 @@ export function attach(
       result.push(serializeAsyncInfo(asyncInfo, devtoolsInstance, hooks));
     });
     return result;
+  }
+
+  function getSuspendedByOfInstanceSubtree(
+    devtoolsInstance: DevToolsInstance,
+  ): Array<SerializedAsyncInfo> {
+    // Get everything suspending below this instance down to the next Suspense node.
+    // First find the parent Suspense boundary which will have accumulated everything
+    let suspenseParentInstance = devtoolsInstance;
+    while (suspenseParentInstance.suspenseNode === null) {
+      if (suspenseParentInstance.parent === null) {
+        // We don't expect to hit this. We should always find the root.
+        return [];
+      }
+      suspenseParentInstance = suspenseParentInstance.parent;
+    }
+    const suspenseNode: SuspenseNode = suspenseParentInstance.suspenseNode;
+    return getSuspendedByOfSuspenseNode(suspenseNode, devtoolsInstance);
   }
 
   const FALLBACK_THROTTLE_MS: number = 300;
@@ -6383,13 +6423,17 @@ export function attach(
       fiberInstance.suspenseNode !== null
         ? // If this is a Suspense boundary, then we include everything in the subtree that might suspend
           // this boundary down to the next Suspense boundary.
-          getSuspendedByOfSuspenseNode(fiberInstance.suspenseNode)
-        : // This set is an edge case where if you pass a promise to a Client Component into a children
-          // position without a Server Component as the direct parent. E.g. <div>{promise}</div>
-          // In this case, this becomes associated with the Client/Host Component where as normally
-          // you'd expect these to be associated with the Server Component that awaited the data.
-          // TODO: Prepend other suspense sources like css, images and use().
-          getSuspendedByOfInstance(fiberInstance, hooks);
+          getSuspendedByOfSuspenseNode(fiberInstance.suspenseNode, null)
+        : tag === ActivityComponent
+          ? // For Activity components we show everything that suspends the subtree down to the next boundary
+            // so that you can see what suspends a Transition at that level.
+            getSuspendedByOfInstanceSubtree(fiberInstance)
+          : // This set is an edge case where if you pass a promise to a Client Component into a children
+            // position without a Server Component as the direct parent. E.g. <div>{promise}</div>
+            // In this case, this becomes associated with the Client/Host Component where as normally
+            // you'd expect these to be associated with the Server Component that awaited the data.
+            // TODO: Prepend other suspense sources like css, images and use().
+            getSuspendedByOfInstance(fiberInstance, hooks);
     const suspendedByRange = getSuspendedByRange(
       getNearestSuspenseNode(fiberInstance),
     );
