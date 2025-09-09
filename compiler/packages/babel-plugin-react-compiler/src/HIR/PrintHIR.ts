@@ -43,7 +43,9 @@ export type Options = {
 export function printFunctionWithOutlined(fn: HIRFunction): string {
   const output = [printFunction(fn)];
   for (const outlined of fn.env.getOutlinedFunctions()) {
-    output.push(`\nfunction ${outlined.fn.id}:\n${printHIR(outlined.fn.body)}`);
+    output.push(
+      `\nfunction ${outlined.fn.id} ${outlined.fn.nameHint ?? ''}:\n${printHIR(outlined.fn.body)}`,
+    );
   }
   return output.join('\n');
 }
@@ -55,6 +57,9 @@ export function printFunction(fn: HIRFunction): string {
     definition += fn.id;
   } else {
     definition += '<<anonymous>>';
+  }
+  if (fn.nameHint != null) {
+    definition += ` ${fn.nameHint}`;
   }
   if (fn.params.length !== 0) {
     definition +=
@@ -558,7 +563,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
         instrValue.loweredFunc.func.aliasingEffects
           ?.map(printAliasingEffect)
           ?.join(', ') ?? '';
-      value = `${kind} ${name} @context[${context}] @aliasingEffects=[${aliasingEffects}]\n${fn}`;
+      value = `${kind} ${name} ${instrValue.kind === 'FunctionExpression' ? (instrValue.nameHint ?? '') : ''} @context[${context}] @aliasingEffects=[${aliasingEffects}]\n${fn}`;
       break;
     }
     case 'TaggedTemplateExpression': {

@@ -47,6 +47,7 @@ import {
   makePropertyLiteral,
   makeType,
   promoteTemporary,
+  validateIdentifierName,
 } from './HIR';
 import HIRBuilder, {Bindings, createTemporaryPlace} from './HIRBuilder';
 import {BuiltInArrayId} from './ObjectShape';
@@ -213,6 +214,16 @@ export function lower(
     );
   }
 
+  let validatedId: HIRFunction['id'] = null;
+  if (id != null) {
+    const idResult = validateIdentifierName(id);
+    if (idResult.isErr()) {
+      builder.errors.merge(idResult.unwrapErr());
+    } else {
+      validatedId = idResult.unwrap().value;
+    }
+  }
+
   if (builder.errors.hasAnyErrors()) {
     return Err(builder.errors);
   }
@@ -234,7 +245,8 @@ export function lower(
   );
 
   return Ok({
-    id,
+    id: validatedId,
+    nameHint: null,
     params,
     fnType: bindings == null ? env.fnType : 'Other',
     returnTypeAnnotation: null, // TODO: extract the actual return type node if present
@@ -3563,19 +3575,14 @@ function lowerFunctionToValue(
 ): InstructionValue {
   const exprNode = expr.node;
   const exprLoc = exprNode.loc ?? GeneratedSource;
-  let name: string | null = null;
-  if (expr.isFunctionExpression()) {
-    name = expr.get('id')?.node?.name ?? null;
-  } else if (expr.isFunctionDeclaration()) {
-    name = expr.get('id')?.node?.name ?? null;
-  }
   const loweredFunc = lowerFunction(builder, expr);
   if (!loweredFunc) {
     return {kind: 'UnsupportedNode', node: exprNode, loc: exprLoc};
   }
   return {
     kind: 'FunctionExpression',
-    name,
+    name: loweredFunc.func.id,
+    nameHint: null,
     type: expr.node.type,
     loc: exprLoc,
     loweredFunc,
