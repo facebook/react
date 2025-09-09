@@ -43,7 +43,6 @@ import {
   ValidIdentifierName,
   getHookKind,
   makeIdentifierName,
-  validateIdentifierName,
 } from '../HIR/HIR';
 import {printIdentifier, printInstruction, printPlace} from '../HIR/PrintHIR';
 import {eachPatternOperand} from '../HIR/visitors';
@@ -62,6 +61,7 @@ export const EARLY_RETURN_SENTINEL = 'react.early_return_sentinel';
 export type CodegenFunction = {
   type: 'CodegenFunction';
   id: t.Identifier | null;
+  nameHint: string | null;
   params: t.FunctionDeclaration['params'];
   body: t.BlockStatement;
   generator: boolean;
@@ -384,6 +384,7 @@ function codegenReactiveFunction(
     type: 'CodegenFunction',
     loc: fn.loc,
     id: fn.id !== null ? t.identifier(fn.id) : null,
+    nameHint: fn.nameHint,
     params,
     body,
     generator: fn.generator,
@@ -2328,10 +2329,6 @@ function codegenInstructionValue(
         reactiveFunction,
       ).unwrap();
 
-      const validatedName =
-        instrValue.name != null
-          ? validateIdentifierName(instrValue.name)
-          : Err(null);
       if (instrValue.type === 'ArrowFunctionExpression') {
         let body: t.BlockStatement | t.Expression = fn.body;
         if (body.body.length === 1 && loweredFunc.directives.length == 0) {
@@ -2343,9 +2340,7 @@ function codegenInstructionValue(
         value = t.arrowFunctionExpression(fn.params, body, fn.async);
       } else {
         value = t.functionExpression(
-          validatedName
-            .map<t.Identifier | null>(name => t.identifier(name))
-            .unwrapOr(null),
+          instrValue.name != null ? t.identifier(instrValue.name) : null,
           fn.params,
           fn.body,
           fn.generator,
@@ -2354,10 +2349,10 @@ function codegenInstructionValue(
       }
       if (
         cx.env.config.enableNameAnonymousFunctions &&
-        validatedName.isErr() &&
-        instrValue.name != null
+        instrValue.name == null &&
+        instrValue.nameHint != null
       ) {
-        const name = instrValue.name;
+        const name = instrValue.nameHint;
         value = t.memberExpression(
           t.objectExpression([t.objectProperty(t.stringLiteral(name), value)]),
           t.stringLiteral(name),

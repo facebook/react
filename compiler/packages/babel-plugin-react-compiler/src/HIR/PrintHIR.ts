@@ -56,6 +56,9 @@ export function printFunction(fn: HIRFunction): string {
   } else {
     definition += '<<anonymous>>';
   }
+  if (fn.nameHint != null) {
+    definition += ` ${fn.nameHint}`;
+  }
   if (fn.params.length !== 0) {
     definition +=
       '(' +
