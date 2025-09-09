@@ -1794,13 +1794,21 @@ function transferReferencedDebugInfo(
         existingDebugInfo.push.apply(existingDebugInfo, referencedDebugInfo);
       }
     }
-    // We also add it to the initializing chunk since the resolution of that promise is
-    // also blocked by these. By adding it to both we can track it even if the array/element
+    // We also add the debug info to the initializing chunk since the resolution of that promise is
+    // also blocked by the referenced debug info. By adding it to both we can track it even if the array/element
     // is extracted, or if the root is rendered as is.
     if (parentChunk !== null) {
       const parentDebugInfo = parentChunk._debugInfo;
-      // $FlowFixMe[method-unbinding]
-      parentDebugInfo.push.apply(parentDebugInfo, referencedDebugInfo);
+      for (let i = 0; i < referencedDebugInfo.length; ++i) {
+        const debugInfoEntry = referencedDebugInfo[i];
+        if (debugInfoEntry.name != null) {
+          (debugInfoEntry: ReactComponentInfo);
+          // We're not transferring Component info since we use Component info
+          // in Debug info to fill in gaps between Fibers for the parent stack.
+        } else {
+          parentDebugInfo.push(debugInfoEntry);
+        }
+      }
     }
   }
 }

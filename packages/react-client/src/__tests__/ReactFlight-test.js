@@ -2961,13 +2961,6 @@ describe('ReactFlight', () => {
                 time: 16,
               },
               {
-                env: 'third-party',
-                key: null,
-                name: 'ThirdPartyAsyncIterableComponent',
-                props: {},
-                stack: '    in Object.<anonymous> (at **)',
-              },
-              {
                 time: 16,
               },
               {time: 17},
@@ -2994,13 +2987,6 @@ describe('ReactFlight', () => {
               },
               {
                 time: 19,
-              },
-              {
-                env: 'third-party',
-                key: null,
-                name: 'ThirdPartyAsyncIterableComponent',
-                props: {},
-                stack: '    in Object.<anonymous> (at **)',
               },
               {time: 19},
             ]
@@ -3846,5 +3832,116 @@ describe('ReactFlight', () => {
     });
 
     expect(ReactNoop).toMatchRenderedOutput(<div>not using props</div>);
+  });
+
+  // @gate !__DEV__ || enableComponentPerformanceTrack
+  it('produces correct parent stacks', async () => {
+    function Container() {
+      return ReactServer.createElement('div', null);
+    }
+    function ContainerParent() {
+      return ReactServer.createElement(Container, null);
+    }
+    function App() {
+      return ReactServer.createElement(
+        'main',
+        null,
+        ReactServer.createElement(ContainerParent, null),
+      );
+    }
+
+    const transport = ReactNoopFlightServer.render({
+      root: ReactServer.createElement(App, null),
+    });
+
+    await act(async () => {
+      const {root} = await ReactNoopFlightClient.read(transport);
+
+      ReactNoop.render(root);
+
+      expect(root.type).toBe('main');
+      if (__DEV__) {
+        const div = root.props.children;
+        expect(getDebugInfo(div)).toEqual([
+          {
+            time: 14,
+          },
+          {
+            env: 'Server',
+            key: null,
+            name: 'ContainerParent',
+            owner: {
+              env: 'Server',
+              key: null,
+              name: 'App',
+              props: {},
+              stack: '    in Object.<anonymous> (at **)',
+            },
+            props: {},
+            stack: '    in App (at **)',
+          },
+          {
+            time: 15,
+          },
+          {
+            env: 'Server',
+            key: null,
+            name: 'Container',
+            owner: {
+              env: 'Server',
+              key: null,
+              name: 'ContainerParent',
+              owner: {
+                env: 'Server',
+                key: null,
+                name: 'App',
+                props: {},
+                stack: '    in Object.<anonymous> (at **)',
+              },
+              props: {},
+              stack: '    in App (at **)',
+            },
+            props: {},
+            stack: '    in ContainerParent (at **)',
+          },
+          {
+            time: 16,
+          },
+        ]);
+        expect(getDebugInfo(root)).toEqual([
+          {
+            time: 12,
+          },
+          {
+            env: 'Server',
+            key: null,
+            name: 'App',
+            props: {},
+            stack: '    in Object.<anonymous> (at **)',
+          },
+          {
+            time: 13,
+          },
+          {
+            time: 14,
+          },
+          {
+            time: 15,
+          },
+          {
+            time: 16,
+          },
+        ]);
+      } else {
+        expect(root._debugInfo).toBe(undefined);
+        expect(root._owner).toBe(undefined);
+      }
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <main>
+        <div />
+      </main>,
+    );
   });
 });
