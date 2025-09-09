@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<bb70fb86f6bdd2a20d4ce404371949d1>>
+ * @generated SignedSource<<86801b386ac250b9135b01fcdf6eceba>>
  */
 
 'use strict';
@@ -18616,38 +18616,40 @@ function forkTemporaryIdentifier(id, source) {
     return Object.assign(Object.assign({}, source), { mutableRange: { start: makeInstructionId(0), end: makeInstructionId(0) }, id });
 }
 function validateIdentifierName(name) {
-    if (isReservedWord(name) || !libExports$1.isValidIdentifier(name)) {
-        return Err(null);
-    }
-    return Ok(makeIdentifierName(name).value);
-}
-function makeIdentifierName(name) {
     if (isReservedWord(name)) {
-        CompilerError.throwInvalidJS({
+        const error = new CompilerError();
+        error.pushDiagnostic(CompilerDiagnostic.create({
+            category: ErrorCategory.Syntax,
             reason: 'Expected a non-reserved identifier name',
-            loc: GeneratedSource,
             description: `\`${name}\` is a reserved word in JavaScript and cannot be used as an identifier name`,
             suggestions: null,
-        });
+        }).withDetails({
+            kind: 'error',
+            loc: GeneratedSource,
+            message: 'reserved word',
+        }));
+        return Err(error);
     }
-    else {
-        CompilerError.invariant(libExports$1.isValidIdentifier(name), {
+    else if (!libExports$1.isValidIdentifier(name)) {
+        const error = new CompilerError();
+        error.pushDiagnostic(CompilerDiagnostic.create({
+            category: ErrorCategory.Syntax,
             reason: `Expected a valid identifier name`,
             description: `\`${name}\` is not a valid JavaScript identifier`,
-            details: [
-                {
-                    kind: 'error',
-                    loc: GeneratedSource,
-                    message: null,
-                },
-            ],
             suggestions: null,
-        });
+        }).withDetails({
+            kind: 'error',
+            loc: GeneratedSource,
+            message: 'reserved word',
+        }));
     }
-    return {
+    return Ok({
         kind: 'named',
         value: name,
-    };
+    });
+}
+function makeIdentifierName(name) {
+    return validateIdentifierName(name).unwrap();
 }
 function promoteTemporary(identifier) {
     CompilerError.invariant(identifier.name === null, {
@@ -19031,6 +19033,9 @@ function printFunction(fn) {
     }
     else {
         definition += '<<anonymous>>';
+    }
+    if (fn.nameHint != null) {
+        definition += ` ${fn.nameHint}`;
     }
     if (fn.params.length !== 0) {
         definition +=
@@ -23034,6 +23039,16 @@ function lower(func, env, bindings = null, capturedRefs = new Map()) {
             message: 'Expected a block statement or expression',
         }));
     }
+    let validatedId = null;
+    if (id != null) {
+        const idResult = validateIdentifierName(id);
+        if (idResult.isErr()) {
+            builder.errors.merge(idResult.unwrapErr());
+        }
+        else {
+            validatedId = idResult.unwrap().value;
+        }
+    }
     if (builder.errors.hasAnyErrors()) {
         return Err(builder.errors);
     }
@@ -23050,7 +23065,8 @@ function lower(func, env, bindings = null, capturedRefs = new Map()) {
         effects: null,
     }, null);
     return Ok({
-        id,
+        id: validatedId,
+        nameHint: null,
         params,
         fnType: bindings == null ? env.fnType : 'Other',
         returnTypeAnnotation: null,
@@ -25849,23 +25865,17 @@ function trimJsxText(original) {
     }
 }
 function lowerFunctionToValue(builder, expr) {
-    var _a, _b, _c, _d, _e, _f, _g;
+    var _a;
     const exprNode = expr.node;
     const exprLoc = (_a = exprNode.loc) !== null && _a !== void 0 ? _a : GeneratedSource;
-    let name = null;
-    if (expr.isFunctionExpression()) {
-        name = (_d = (_c = (_b = expr.get('id')) === null || _b === void 0 ? void 0 : _b.node) === null || _c === void 0 ? void 0 : _c.name) !== null && _d !== void 0 ? _d : null;
-    }
-    else if (expr.isFunctionDeclaration()) {
-        name = (_g = (_f = (_e = expr.get('id')) === null || _e === void 0 ? void 0 : _e.node) === null || _f === void 0 ? void 0 : _f.name) !== null && _g !== void 0 ? _g : null;
-    }
     const loweredFunc = lowerFunction(builder, expr);
     if (!loweredFunc) {
         return { kind: 'UnsupportedNode', node: exprNode, loc: exprLoc };
     }
     return {
         kind: 'FunctionExpression',
-        name,
+        name: loweredFunc.func.id,
+        nameHint: null,
         type: expr.node.type,
         loc: exprLoc,
         loweredFunc,
@@ -35803,6 +35813,7 @@ function buildReactiveFunction(fn) {
     return {
         loc: fn.loc,
         id: fn.id,
+        nameHint: fn.nameHint,
         params: fn.params,
         generator: fn.generator,
         async: fn.async,
@@ -37399,6 +37410,7 @@ function codegenReactiveFunction(cx, fn) {
         type: 'CodegenFunction',
         loc: fn.loc,
         id: fn.id !== null ? libExports$1.identifier(fn.id) : null,
+        nameHint: fn.nameHint,
         params,
         body,
         generator: fn.generator,
@@ -38786,9 +38798,6 @@ function codegenInstructionValue(cx, instrValue) {
             pruneUnusedLValues(reactiveFunction);
             pruneHoistedContexts(reactiveFunction);
             const fn = codegenReactiveFunction(new Context$2(cx.env, (_g = reactiveFunction.id) !== null && _g !== void 0 ? _g : '[[ anonymous ]]', cx.uniqueIdentifiers, cx.fbtOperands, cx.temp), reactiveFunction).unwrap();
-            const validatedName = instrValue.name != null
-                ? validateIdentifierName(instrValue.name)
-                : Err(null);
             if (instrValue.type === 'ArrowFunctionExpression') {
                 let body = fn.body;
                 if (body.body.length === 1 && loweredFunc.directives.length == 0) {
@@ -38800,14 +38809,12 @@ function codegenInstructionValue(cx, instrValue) {
                 value = libExports$1.arrowFunctionExpression(fn.params, body, fn.async);
             }
             else {
-                value = libExports$1.functionExpression(validatedName
-                    .map(name => libExports$1.identifier(name))
-                    .unwrapOr(null), fn.params, fn.body, fn.generator, fn.async);
+                value = libExports$1.functionExpression(instrValue.name != null ? libExports$1.identifier(instrValue.name) : null, fn.params, fn.body, fn.generator, fn.async);
             }
             if (cx.env.config.enableNameAnonymousFunctions &&
-                validatedName.isErr() &&
-                instrValue.name != null) {
-                const name = instrValue.name;
+                instrValue.name == null &&
+                instrValue.nameHint != null) {
+                const name = instrValue.nameHint;
                 value = libExports$1.memberExpression(libExports$1.objectExpression([libExports$1.objectProperty(libExports$1.stringLiteral(name), value)]), libExports$1.stringLiteral(name), true, false);
             }
             break;
@@ -50302,6 +50309,7 @@ function getContextReassignment(fn, contextVariables, isFunctionExpression, isAs
 }
 
 function outlineFunctions(fn, fbtOperands) {
+    var _a;
     for (const [, block] of fn.body.blocks) {
         for (const instr of block.instructions) {
             const { value, lvalue } = instr;
@@ -50314,7 +50322,7 @@ function outlineFunctions(fn, fbtOperands) {
                 value.loweredFunc.func.id === null &&
                 !fbtOperands.has(lvalue.identifier.id)) {
                 const loweredFunc = value.loweredFunc.func;
-                const id = fn.env.generateGloballyUniqueIdentifierName(loweredFunc.id);
+                const id = fn.env.generateGloballyUniqueIdentifierName((_a = loweredFunc.id) !== null && _a !== void 0 ? _a : loweredFunc.nameHint);
                 loweredFunc.id = id.value;
                 fn.env.outlineFunction(loweredFunc, null);
                 instr.value = {
@@ -50495,6 +50503,7 @@ function emitSelectorFn(env, keys) {
     const fn = {
         loc: GeneratedSource,
         id: null,
+        nameHint: null,
         fnType: 'Other',
         env,
         params: [obj],
@@ -50519,6 +50528,7 @@ function emitSelectorFn(env, keys) {
         value: {
             kind: 'FunctionExpression',
             name: null,
+            nameHint: null,
             loweredFunc: {
                 func: fn,
             },
@@ -50927,6 +50937,7 @@ function emitOutlinedFn(env, jsx, oldProps, globals) {
     const fn = {
         loc: GeneratedSource,
         id: null,
+        nameHint: null,
         fnType: 'Other',
         env,
         params: [propsObj],
@@ -51870,7 +51881,8 @@ function nameAnonymousFunctions(fn) {
         var _a, _b;
         if (node.generatedName != null) {
             const name = `${prefix}${node.generatedName}]`;
-            node.fn.name = name;
+            node.fn.nameHint = name;
+            node.fn.loweredFunc.func.nameHint = name;
         }
         const nextPrefix = `${prefix}${(_b = (_a = node.generatedName) !== null && _a !== void 0 ? _a : node.fn.name) !== null && _b !== void 0 ? _b : '<anonymous>'} > `;
         for (const inner of node.inner) {
@@ -52130,6 +52142,14 @@ function runWithEnvironment(func, env) {
     if (env.config.enableJsxOutlining) {
         outlineJSX(hir);
     }
+    if (env.config.enableNameAnonymousFunctions) {
+        nameAnonymousFunctions(hir);
+        log({
+            kind: 'hir',
+            name: 'NameAnonymousFunctions',
+            value: hir,
+        });
+    }
     if (env.config.enableFunctionOutlining) {
         outlineFunctions(hir, fbtOperands);
         log({ kind: 'hir', name: 'OutlineFunctions', value: hir });
@@ -52205,14 +52225,6 @@ function runWithEnvironment(func, env) {
         log({
             kind: 'hir',
             name: 'inlineJsxTransform',
-            value: hir,
-        });
-    }
-    if (env.config.enableNameAnonymousFunctions) {
-        nameAnonymousFunctions(hir);
-        log({
-            kind: 'hir',
-            name: 'NameAnonymougFunctions',
             value: hir,
         });
     }
