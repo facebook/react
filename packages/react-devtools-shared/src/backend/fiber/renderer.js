@@ -734,8 +734,14 @@ export function getInternalReactConstants(version: string): {
         );
       case HostRoot:
         const fiberRoot = fiber.stateNode;
-        if (fiberRoot != null && fiberRoot._debugRootType !== null) {
-          return fiberRoot._debugRootType;
+        if (fiberRoot != null) {
+          // Old versions without displayName
+          if (typeof fiberRoot._debugRootType === 'string') {
+            return fiberRoot._debugRootType;
+          }
+          if (typeof fiberRoot.displayName === 'string') {
+            return fiberRoot.displayName;
+          }
         }
         return null;
       case HostComponent:
@@ -6232,8 +6238,14 @@ export function attach(
       }
     }
     const fiberRoot = current.stateNode;
-    if (fiberRoot != null && fiberRoot._debugRootType !== null) {
-      rootType = fiberRoot._debugRootType;
+    if (fiberRoot != null) {
+      // Old versions without displayName
+      if (typeof fiberRoot._debugRootType === 'string') {
+        rootType = fiberRoot._debugRootType;
+      }
+      if (typeof fiberRoot.displayName === 'string') {
+        rootType = fiberRoot.displayName;
+      }
     }
 
     const isTimedOutSuspense =
@@ -6432,8 +6444,14 @@ export function attach(
         }
       }
       const fiberRoot = current.stateNode;
-      if (fiberRoot != null && fiberRoot._debugRootType !== null) {
-        rootType = fiberRoot._debugRootType;
+      if (fiberRoot != null) {
+        // Old versions without displayName
+        if (typeof fiberRoot._debugRootType === 'string') {
+          rootType = fiberRoot._debugRootType;
+        }
+        if (typeof fiberRoot.displayName === 'string') {
+          rootType = fiberRoot.displayName;
+        }
       }
     }
 

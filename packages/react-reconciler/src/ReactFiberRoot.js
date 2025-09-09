@@ -138,7 +138,7 @@ function FiberRootNode(
     }
   }
 
-  this._debugRootType = displayName;
+  this.displayName = displayName;
 }
 
 export function createFiberRoot(
