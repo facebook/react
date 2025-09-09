@@ -232,9 +232,14 @@ function compile(
     // Parse config overrides from config editor
     let configOverrideOptions: any = {};
     const configMatch = configOverrides.match(/^\s*import.*?\n\n\((.*)\)/s);
-    if (configMatch && configMatch[1]) {
-      const configString = configMatch[1].replace(/satisfies.*$/, '').trim();
-      configOverrideOptions = new Function(`return (${configString})`)();
+    // TODO: initialize store with URL params, not empty store
+    if (configOverrides.trim()) {
+      if (configMatch && configMatch[1]) {
+        const configString = configMatch[1].replace(/satisfies.*$/, '').trim();
+        configOverrideOptions = new Function(`return (${configString})`)();
+      } else {
+        throw new Error('Invalid config overrides');
+      }
     }
 
     const opts: PluginOptions = parsePluginOptions({
@@ -305,11 +310,6 @@ export default function Editor(): JSX.Element {
     [deferredStore.source, deferredStore.config],
   );
 
-  // TODO: Remove this once the config editor is more stable
-  const searchParams = useSearchParams();
-  const search = searchParams.get('showConfig');
-  const shouldShowConfig = search === 'true';
-
   useMountEffect(() => {
     // Initialize store
     let mountStore: Store;
@@ -351,7 +351,7 @@ export default function Editor(): JSX.Element {
   return (
     <>
       <div className="relative flex basis top-14">
-        {shouldShowConfig && <ConfigEditor />}
+        <ConfigEditor />
         <div className={clsx('relative sm:basis-1/4')}>
           <Input language={language} errors={errors} />
         </div>
