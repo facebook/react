@@ -1,7 +1,7 @@
 // @validateNoDerivedComputationsInEffects
 import {useEffect, useState} from 'react';
 
-function Component({user: {firstName, lastName}}) {
+function Component({firstName, lastName}) {
   const [fullName, setFullName] = useState('');
 
   useEffect(() => {
@@ -13,5 +13,5 @@ function Component({user: {firstName, lastName}}) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{user: {firstName: 'John', lastName: 'Doe'}}],
+  params: [{firstName: 'John', lastName: 'Doe'}],
 };
