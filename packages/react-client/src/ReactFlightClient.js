@@ -823,6 +823,7 @@ type InitializationReference = {
     key: string,
   ) => any,
   path: Array<string>,
+  isDebug?: boolean, // DEV-only
 };
 type InitializationHandler = {
   parent: null | InitializationHandler,
@@ -873,6 +874,7 @@ function initializeDebugChunk(
               response,
               initializeDebugInfo,
               [''], // path
+              true,
             );
             break;
           }
@@ -895,6 +897,7 @@ function initializeDebugChunk(
               response,
               initializeDebugInfo,
               [''], // path
+              true,
             );
             break;
           }
@@ -1445,7 +1448,7 @@ function fulfillReference(
         transferReferencedDebugInfo(handler.chunk, fulfilledChunk, mappedValue);
         break;
     }
-  } else {
+  } else if (__DEV__ && !reference.isDebug) {
     transferReferencedDebugInfo(handler.chunk, fulfilledChunk, mappedValue);
   }
 
@@ -1525,6 +1528,7 @@ function waitForReference<T>(
   response: Response,
   map: (response: Response, model: any, parentObject: Object, key: string) => T,
   path: Array<string>,
+  isAwaitingDebugInfo: boolean, // DEV-only
 ): T {
   if (
     __DEV__ &&
@@ -1569,6 +1573,9 @@ function waitForReference<T>(
     map,
     path,
   };
+  if (__DEV__) {
+    reference.isDebug = isAwaitingDebugInfo;
+  }
 
   // Add "listener".
   if (referencedChunk.value === null) {
@@ -1872,6 +1879,7 @@ function getOutlinedModel<T>(
                 response,
                 map,
                 path.slice(i - 1),
+                false,
               );
             }
             case HALTED: {
@@ -1929,7 +1937,15 @@ function getOutlinedModel<T>(
       return chunkValue;
     case PENDING:
     case BLOCKED:
-      return waitForReference(chunk, parentObject, key, response, map, path);
+      return waitForReference(
+        chunk,
+        parentObject,
+        key,
+        response,
+        map,
+        path,
+        false,
+      );
     case HALTED: {
       // Add a dependency that will never resolve.
       // TODO: Mark downstreams as halted too.
