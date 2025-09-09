@@ -18,7 +18,6 @@ import {
   IdentifierId,
   InstructionValue,
   ManualMemoDependency,
-  Place,
   PrunedReactiveScopeBlock,
   ReactiveFunction,
   ReactiveInstruction,
