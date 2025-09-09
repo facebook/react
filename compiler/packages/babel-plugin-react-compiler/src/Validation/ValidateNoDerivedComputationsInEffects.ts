@@ -25,6 +25,7 @@ import {
   isSetStateType,
   isUseEffectHookType,
   isUseStateType,
+  isUseRefType,
   GeneratedSource,
 } from '../HIR';
 import {eachInstructionOperand, eachInstructionLValue} from '../HIR/visitors';
@@ -501,6 +502,11 @@ function validateEffect(
     parseBlockPhi(block, derivationCache);
 
     for (const instr of block.instructions) {
+      // Early return if any instruction is deriving a value from a ref
+      if (isUseRefType(instr.lvalue.identifier)) {
+        return;
+      }
+
       if (
         instr.value.kind === 'CallExpression' &&
         isSetStateType(instr.value.callee.identifier) &&
