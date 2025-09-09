@@ -7,7 +7,11 @@
 
 import {BindingKind} from '@babel/traverse';
 import * as t from '@babel/types';
-import {CompilerError} from '../CompilerError';
+import {
+  CompilerDiagnostic,
+  CompilerError,
+  ErrorCategory,
+} from '../CompilerError';
 import {assertExhaustive} from '../Utils/utils';
 import {Environment, ReactFunctionType} from './Environment';
 import type {HookKind} from './ObjectShape';
@@ -54,7 +58,8 @@ export type SourceLocation = t.SourceLocation | typeof GeneratedSource;
  */
 export type ReactiveFunction = {
   loc: SourceLocation;
-  id: string | null;
+  id: ValidIdentifierName | null;
+  nameHint: string | null;
   params: Array<Place | SpreadPattern>;
   generator: boolean;
   async: boolean;
@@ -276,7 +281,8 @@ export type ReactiveTryTerminal = {
 // A function lowered to HIR form, ie where its body is lowered to an HIR control-flow graph
 export type HIRFunction = {
   loc: SourceLocation;
-  id: string | null;
+  id: ValidIdentifierName | null;
+  nameHint: string | null;
   fnType: ReactFunctionType;
   env: Environment;
   params: Array<Place | SpreadPattern>;
@@ -1124,7 +1130,8 @@ export type JsxAttribute =
 
 export type FunctionExpression = {
   kind: 'FunctionExpression';
-  name: string | null;
+  name: ValidIdentifierName | null;
+  nameHint: string | null;
   loweredFunc: LoweredFunction;
   type:
     | 'ArrowFunctionExpression'
@@ -1301,11 +1308,41 @@ export function forkTemporaryIdentifier(
 
 export function validateIdentifierName(
   name: string,
-): Result<ValidIdentifierName, null> {
-  if (isReservedWord(name) || !t.isValidIdentifier(name)) {
-    return Err(null);
+): Result<ValidatedIdentifier, CompilerError> {
+  if (isReservedWord(name)) {
+    const error = new CompilerError();
+    error.pushDiagnostic(
+      CompilerDiagnostic.create({
+        category: ErrorCategory.Syntax,
+        reason: 'Expected a non-reserved identifier name',
+        description: `\`${name}\` is a reserved word in JavaScript and cannot be used as an identifier name`,
+        suggestions: null,
+      }).withDetails({
+        kind: 'error',
+        loc: GeneratedSource,
+        message: 'reserved word',
+      }),
+    );
+    return Err(error);
+  } else if (!t.isValidIdentifier(name)) {
+    const error = new CompilerError();
+    error.pushDiagnostic(
+      CompilerDiagnostic.create({
+        category: ErrorCategory.Syntax,
+        reason: `Expected a valid identifier name`,
+        description: `\`${name}\` is not a valid JavaScript identifier`,
+        suggestions: null,
+      }).withDetails({
+        kind: 'error',
+        loc: GeneratedSource,
+        message: 'reserved word',
+      }),
+    );
   }
-  return Ok(makeIdentifierName(name).value);
+  return Ok({
+    kind: 'named',
+    value: name as ValidIdentifierName,
+  });
 }
 
 /**
@@ -1314,31 +1351,7 @@ export function validateIdentifierName(
  * original source code.
  */
 export function makeIdentifierName(name: string): ValidatedIdentifier {
-  if (isReservedWord(name)) {
-    CompilerError.throwInvalidJS({
-      reason: 'Expected a non-reserved identifier name',
-      loc: GeneratedSource,
-      description: `\`${name}\` is a reserved word in JavaScript and cannot be used as an identifier name`,
-      suggestions: null,
-    });
-  } else {
-    CompilerError.invariant(t.isValidIdentifier(name), {
-      reason: `Expected a valid identifier name`,
-      description: `\`${name}\` is not a valid JavaScript identifier`,
-      details: [
-        {
-          kind: 'error',
-          loc: GeneratedSource,
-          message: null,
-        },
-      ],
-      suggestions: null,
-    });
-  }
-  return {
-    kind: 'named',
-    value: name as ValidIdentifierName,
-  };
+  return validateIdentifierName(name).unwrap();
 }
 
 /**

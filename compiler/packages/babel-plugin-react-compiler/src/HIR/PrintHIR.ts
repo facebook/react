@@ -56,6 +56,9 @@ export function printFunction(fn: HIRFunction): string {
   } else {
     definition += '<<anonymous>>';
   }
+  if (fn.nameHint != null) {
+    definition += ` ${fn.nameHint}`;
+  }
   if (fn.params.length !== 0) {
     definition +=
       '(' +
@@ -558,7 +561,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
         instrValue.loweredFunc.func.aliasingEffects
           ?.map(printAliasingEffect)
           ?.join(', ') ?? '';
-      value = `${kind} ${name} @context[${context}] @aliasingEffects=[${aliasingEffects}]\n${fn}`;
+      value = `${kind} ${name} ${instrValue.kind === 'FunctionExpression' ? (instrValue.nameHint ?? '') : ''} @context[${context}] @aliasingEffects=[${aliasingEffects}]\n${fn}`;
       break;
     }
     case 'TaggedTemplateExpression': {

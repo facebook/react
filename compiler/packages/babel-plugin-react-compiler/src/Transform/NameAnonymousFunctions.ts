@@ -26,7 +26,8 @@ export function nameAnonymousFunctions(fn: HIRFunction): void {
        * nesting depth.
        */
       const name = `${prefix}${node.generatedName}]`;
-      node.fn.name = name;
+      node.fn.nameHint = name;
+      node.fn.loweredFunc.func.nameHint = name;
     }
     /**
      * Whether or not we generated a name for the function at this node,

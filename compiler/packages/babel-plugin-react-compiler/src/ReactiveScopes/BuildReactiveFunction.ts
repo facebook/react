@@ -44,6 +44,7 @@ export function buildReactiveFunction(fn: HIRFunction): ReactiveFunction {
   return {
     loc: fn.loc,
     id: fn.id,
+    nameHint: fn.nameHint,
     params: fn.params,
     generator: fn.generator,
     async: fn.async,
