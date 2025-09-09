@@ -16,6 +16,30 @@ import {
   DOCUMENT_FRAGMENT_NODE,
 } from './HTMLNodeType';
 
+export function getDefaultDisplayNameDEV(
+  node: Element | Document | DocumentFragment,
+): string {
+  if (!__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'getDefaultDisplayNameDEV should never be called in production mode. This is a bug in React.',
+    );
+  }
+
+  if (node.nodeType === DOCUMENT_NODE) {
+    return 'document';
+  }
+  if (node.nodeType === ELEMENT_NODE) {
+    const element = ((node: any): Element);
+    if (element.id !== '') {
+      return '#' + element.id;
+    }
+  }
+
+  return '';
+}
+
 export function isValidContainer(node: any): boolean {
   return !!(
     node &&

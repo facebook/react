@@ -2381,6 +2381,19 @@ describe('InspectedElement', () => {
     );
   });
 
+  it('should display the inferred root type for unnamed ReactDOMClient.createRoot', async () => {
+    const Example = () => <div />;
+
+    await utils.actAsync(() => {
+      const container = document.createElement('div');
+      container.id = 'react-root';
+      ReactDOMClient.createRoot(container).render(<Example />);
+    }, false);
+
+    const inspectedElement = await inspectElementAtIndex(0);
+    expect(inspectedElement.rootType).toEqual('createRoot(#react-root)');
+  });
+
   it('should gracefully surface backend errors on the frontend rather than timing out', async () => {
     jest.spyOn(console, 'error').mockImplementation(() => {});
 

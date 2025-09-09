@@ -13,7 +13,10 @@ import type {
   TransitionTracingCallbacks,
 } from 'react-reconciler/src/ReactInternalTypes';
 
-import {isValidContainer} from 'react-dom-bindings/src/client/ReactDOMContainer';
+import {
+  isValidContainer,
+  getDefaultDisplayNameDEV,
+} from 'react-dom-bindings/src/client/ReactDOMContainer';
 import {queueExplicitHydrationTarget} from 'react-dom-bindings/src/events/ReactDOMEventReplaying';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import {
@@ -217,6 +220,9 @@ export function createRoot(
     }
     if (options.displayName !== undefined) {
       displayName = options.displayName;
+    } else if (__DEV__) {
+      // Guess some useful default
+      displayName = getDefaultDisplayNameDEV(container);
     }
     if (options.identifierPrefix !== undefined) {
       identifierPrefix = options.identifierPrefix;
@@ -238,6 +244,9 @@ export function createRoot(
     if (options.unstable_transitionCallbacks !== undefined) {
       transitionCallbacks = options.unstable_transitionCallbacks;
     }
+  } else if (__DEV__) {
+    // Guess some useful default
+    displayName = getDefaultDisplayNameDEV(container);
   }
 
   const root = createContainer(
