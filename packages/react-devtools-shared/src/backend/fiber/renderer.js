@@ -5733,6 +5733,15 @@ export function attach(
     // to a specific instance will have those appear in order of when that instance was discovered.
     let hooksCacheKey: null | DevToolsInstance = null;
     let hooksCache: null | HooksTree = null;
+    // Collect the stream entries with the highest byte offset and end time.
+    const streamEntries: Map<
+      Promise<mixed>,
+      {
+        asyncInfo: ReactAsyncInfo,
+        instance: DevToolsInstance,
+        hooks: null | HooksTree,
+      },
+    > = new Map();
     suspenseNode.suspendedBy.forEach((set, ioInfo) => {
       let parentNode = suspenseNode.parent;
       while (parentNode !== null) {
@@ -5771,9 +5780,41 @@ export function attach(
               }
             }
           }
-          result.push(serializeAsyncInfo(asyncInfo, firstInstance, hooks));
+          const newIO = asyncInfo.awaited;
+          if (newIO.name === 'RSC stream' && newIO.value != null) {
+            const streamPromise = newIO.value;
+            // Special case RSC stream entries to pick the last entry keyed by the stream.
+            const existingEntry = streamEntries.get(streamPromise);
+            if (existingEntry === undefined) {
+              streamEntries.set(streamPromise, {
+                asyncInfo,
+                instance: firstInstance,
+                hooks,
+              });
+            } else {
+              const existingIO = existingEntry.asyncInfo.awaited;
+              if (
+                newIO !== existingIO &&
+                ((newIO.byteSize !== undefined &&
+                  existingIO.byteSize !== undefined &&
+                  newIO.byteSize > existingIO.byteSize) ||
+                  newIO.end > existingIO.end)
+              ) {
+                // The new entry is later in the stream that the old entry. Replace it.
+                existingEntry.asyncInfo = asyncInfo;
+                existingEntry.instance = firstInstance;
+                existingEntry.hooks = hooks;
+              }
+            }
+          } else {
+            result.push(serializeAsyncInfo(asyncInfo, firstInstance, hooks));
+          }
         }
       }
+    });
+    // Add any deduped stream entries.
+    streamEntries.forEach(({asyncInfo, instance, hooks}) => {
+      result.push(serializeAsyncInfo(asyncInfo, instance, hooks));
     });
     return result;
   }
