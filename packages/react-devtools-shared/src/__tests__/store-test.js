@@ -493,7 +493,7 @@ describe('Store', () => {
             ▾ <Suspense>
                 <Loading>
         [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:10,height:1}]}
-          <Suspense name="Wrapper>?" rects={null}>
+          <Suspense name="Wrapper" rects={null}>
       `);
 
       await act(() => {
@@ -506,7 +506,7 @@ describe('Store', () => {
             ▾ <Suspense>
                 <Component key="Inside">
         [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}]}
-          <Suspense name="Wrapper>?" rects={[{x:1,y:2,width:5,height:1}]}>
+          <Suspense name="Wrapper" rects={[{x:1,y:2,width:5,height:1}]}>
       `);
     });
 
@@ -1054,7 +1054,7 @@ describe('Store', () => {
               ▾ <Suspense>
                   <Loading>
         [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:10,height:1}]}
-          <Suspense name="Wrapper>?" rects={null}>
+          <Suspense name="Wrapper" rects={null}>
       `);
 
       await act(() => {
@@ -1069,7 +1069,7 @@ describe('Store', () => {
                   <Component key="B">
                 <Component key="C">
         [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}]}
-          <Suspense name="Wrapper>?" rects={[{x:1,y:2,width:5,height:1}]}>
+          <Suspense name="Wrapper" rects={[{x:1,y:2,width:5,height:1}]}>
       `);
     });
 
@@ -1407,7 +1407,7 @@ describe('Store', () => {
         [root]
           ▸ <Wrapper>
         [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:10,height:1}]}
-          <Suspense name="Wrapper>?" rects={null}>
+          <Suspense name="Wrapper" rects={null}>
       `);
 
       // This test isn't meaningful unless we expand the suspended tree
@@ -1424,7 +1424,7 @@ describe('Store', () => {
             ▾ <Suspense>
                 <Loading>
         [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:10,height:1}]}
-          <Suspense name="Wrapper>?" rects={null}>
+          <Suspense name="Wrapper" rects={null}>
       `);
 
       await act(() => {
@@ -1437,7 +1437,7 @@ describe('Store', () => {
             ▾ <Suspense>
                 <Component key="Inside">
         [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}]}
-          <Suspense name="Wrapper>?" rects={[{x:1,y:2,width:5,height:1}]}>
+          <Suspense name="Wrapper" rects={[{x:1,y:2,width:5,height:1}]}>
       `);
     });
 
@@ -1663,7 +1663,7 @@ describe('Store', () => {
         [root]
           ▸ <SuspenseTree>
         [suspense-root]  rects={null}
-          <Suspense name="SuspenseTree>?" rects={null}>
+          <Suspense name="SuspenseTree" rects={null}>
       `);
 
       await act(() =>
@@ -1678,7 +1678,7 @@ describe('Store', () => {
             ▾ <Suspense>
               ▸ <Parent>
         [suspense-root]  rects={null}
-          <Suspense name="SuspenseTree>?" rects={null}>
+          <Suspense name="SuspenseTree" rects={null}>
       `);
 
       const rendererID = getRendererID();
@@ -1697,7 +1697,7 @@ describe('Store', () => {
             ▾ <Suspense>
                 <Fallback>
         [suspense-root]  rects={null}
-          <Suspense name="SuspenseTree>?" rects={null}>
+          <Suspense name="SuspenseTree" rects={null}>
       `);
 
       await act(() =>
@@ -1713,7 +1713,7 @@ describe('Store', () => {
             ▾ <Suspense>
               ▸ <Parent>
         [suspense-root]  rects={null}
-          <Suspense name="SuspenseTree>?" rects={null}>
+          <Suspense name="SuspenseTree" rects={null}>
       `);
     });
   });
@@ -2018,7 +2018,7 @@ describe('Store', () => {
           ▾ <App>
               <Suspense>
         [suspense-root]  rects={null}
-          <Suspense name="App>?" rects={null}>
+          <Suspense name="App" rects={null}>
       `);
 
       await Promise.resolve();
@@ -2032,7 +2032,7 @@ describe('Store', () => {
             ▾ <Suspense>
                 <LazyInnerComponent>
         [suspense-root]  rects={null}
-          <Suspense name="App>?" rects={null}>
+          <Suspense name="App" rects={null}>
       `);
 
       // Render again to unmount it
@@ -2523,7 +2523,7 @@ describe('Store', () => {
             ▾ <Suspense>
                 <ChildA>
         [suspense-root]  rects={null}
-          <Suspense name="App>?" rects={null}>
+          <Suspense name="App" rects={null}>
       `);
 
       await actAsync(() => render(<App renderA={false} />));
@@ -2534,7 +2534,7 @@ describe('Store', () => {
             ▾ <Suspense>
                 <ChildB>
         [suspense-root]  rects={null}
-          <Suspense name="App>?" rects={null}>
+          <Suspense name="App" rects={null}>
       `);
     });
   });

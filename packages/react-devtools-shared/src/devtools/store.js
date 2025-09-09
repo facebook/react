@@ -1950,14 +1950,13 @@ export default class Store extends EventEmitter<{
     throw error;
   }
 
-  _guessSuspenseName(element: Element): string | null {
-    // TODO: Use key
+  _guessSuspenseName(element: Element): string {
     const owner = this._idToElement.get(element.ownerID);
-    if (owner !== undefined) {
-      // TODO: This is clowny
-      return `${owner.displayName || 'Unknown'}>?`;
+    let name = 'Unknown';
+    if (owner !== undefined && owner.displayName !== null) {
+      name = owner.displayName;
     }
 
-    return null;
+    return name;
   }
 }
