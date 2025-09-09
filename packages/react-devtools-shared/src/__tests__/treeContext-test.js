@@ -1369,8 +1369,8 @@ describe('TreeListContext', () => {
                  ▾ <Suspense>
                      <Grandchild>
         [suspense-root]  rects={null}
-          <Suspense name="Parent>?" rects={null}>
-            <Suspense name="Child>?" rects={null}>
+          <Suspense name="Parent" rects={null}>
+            <Suspense name="Child" rects={null}>
       `);
 
       const outerSuspenseID = ((store.getElementIDAtIndex(1): any): number);
@@ -1411,8 +1411,8 @@ describe('TreeListContext', () => {
                  ▾ <Suspense>
                      <Grandchild>
         [suspense-root]  rects={null}
-          <Suspense name="Parent>?" rects={null}>
-            <Suspense name="Child>?" rects={null}>
+          <Suspense name="Parent" rects={null}>
+            <Suspense name="Child" rects={null}>
       `);
     });
   });
