@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<66030ddb5d3cb21b345936dc0ae8900b>>
+ * @generated SignedSource<<bb70fb86f6bdd2a20d4ce404371949d1>>
  */
 
 'use strict';
@@ -49870,41 +49870,43 @@ class Visitor extends ReactiveFunctionVisitor {
                 for (const instr of value.instructions) {
                     this.visitInstruction(instr, state);
                 }
-                const result = this.recordDepsInValue(value.value, state);
-                return result;
+                this.recordDepsInValue(value.value, state);
+                break;
             }
             case 'OptionalExpression': {
-                return this.recordDepsInValue(value.value, state);
+                this.recordDepsInValue(value.value, state);
+                break;
             }
             case 'ConditionalExpression': {
                 this.recordDepsInValue(value.test, state);
                 this.recordDepsInValue(value.consequent, state);
                 this.recordDepsInValue(value.alternate, state);
-                return null;
+                break;
             }
             case 'LogicalExpression': {
                 this.recordDepsInValue(value.left, state);
                 this.recordDepsInValue(value.right, state);
-                return null;
+                break;
             }
             default: {
-                const dep = collectMaybeMemoDependencies(value, this.temporaries, false);
-                if (value.kind === 'StoreLocal' || value.kind === 'StoreContext') {
-                    const storeTarget = value.lvalue.place;
-                    (_a = state.manualMemoState) === null || _a === void 0 ? void 0 : _a.decls.add(storeTarget.identifier.declarationId);
-                    if (((_b = storeTarget.identifier.name) === null || _b === void 0 ? void 0 : _b.kind) === 'named' && dep == null) {
-                        const dep = {
-                            root: {
-                                kind: 'NamedLocal',
-                                value: storeTarget,
-                            },
-                            path: [],
-                        };
-                        this.temporaries.set(storeTarget.identifier.id, dep);
-                        return dep;
+                collectMaybeMemoDependencies(value, this.temporaries, false);
+                if (value.kind === 'StoreLocal' ||
+                    value.kind === 'StoreContext' ||
+                    value.kind === 'Destructure') {
+                    for (const storeTarget of eachInstructionValueLValue(value)) {
+                        (_a = state.manualMemoState) === null || _a === void 0 ? void 0 : _a.decls.add(storeTarget.identifier.declarationId);
+                        if (((_b = storeTarget.identifier.name) === null || _b === void 0 ? void 0 : _b.kind) === 'named') {
+                            this.temporaries.set(storeTarget.identifier.id, {
+                                root: {
+                                    kind: 'NamedLocal',
+                                    value: storeTarget,
+                                },
+                                path: [],
+                            });
+                        }
                     }
                 }
-                return dep;
+                break;
             }
         }
     }
@@ -49920,20 +49922,15 @@ class Visitor extends ReactiveFunctionVisitor {
         if (lvalue !== null && isNamedLocal && state.manualMemoState != null) {
             state.manualMemoState.decls.add(lvalue.identifier.declarationId);
         }
-        const maybeDep = this.recordDepsInValue(value, state);
-        if (lvalId != null) {
-            if (maybeDep != null) {
-                temporaries.set(lvalId, maybeDep);
-            }
-            else if (isNamedLocal) {
-                temporaries.set(lvalId, {
-                    root: {
-                        kind: 'NamedLocal',
-                        value: Object.assign({}, instr.lvalue),
-                    },
-                    path: [],
-                });
-            }
+        this.recordDepsInValue(value, state);
+        if (lvalue != null) {
+            temporaries.set(lvalue.identifier.id, {
+                root: {
+                    kind: 'NamedLocal',
+                    value: Object.assign({}, lvalue),
+                },
+                path: [],
+            });
         }
     }
     visitScope(scopeBlock, state) {
