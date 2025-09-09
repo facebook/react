@@ -1,15 +1,11 @@
 // @validateNoDerivedComputationsInEffects
 
-export default function InProductLobbyGeminiCard(
-  input = 'empty',
-) {
+export default function InProductLobbyGeminiCard(input = 'empty') {
   const [currInput, setCurrInput] = useState(input);
 
   useEffect(() => {
-    setCurrInput(input)
+    setCurrInput(input);
   }, [input]);
 
-  return (
-    <div>{currInput}</div>
-  )
+  return <div>{currInput}</div>;
 }
