@@ -1239,17 +1239,24 @@ describe('ReactFlightDOMEdge', () => {
         name: 'Greeting',
         env: 'Server',
       });
-      expect(lazyWrapper._debugInfo).toEqual([
-        {time: 12},
-        greetInfo,
-        {time: 13},
-        expect.objectContaining({
-          name: 'Container',
-          env: 'Server',
-          owner: greetInfo,
-        }),
-        {time: 14},
-      ]);
+      if (gate(flags => flags.enableAsyncDebugInfo)) {
+        expect(lazyWrapper._debugInfo).toEqual([
+          {time: 12},
+          greetInfo,
+          {time: 13},
+          expect.objectContaining({
+            name: 'Container',
+            env: 'Server',
+            owner: greetInfo,
+          }),
+          {time: 14},
+          expect.objectContaining({
+            awaited: expect.objectContaining({
+              name: 'RSC stream',
+            }),
+          }),
+        ]);
+      }
       // The owner that created the span was the outer server component.
       // We expect the debug info to be referentially equal to the owner.
       expect(greeting._owner).toBe(lazyWrapper._debugInfo[1]);

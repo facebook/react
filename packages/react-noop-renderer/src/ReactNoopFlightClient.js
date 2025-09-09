@@ -77,7 +77,7 @@ function read<T>(source: Source, options: ReadOptions): Thenable<T> {
       ? options.debugChannel.onMessage
       : undefined,
   );
-  const streamState = createStreamState();
+  const streamState = createStreamState(response, source);
   for (let i = 0; i < source.length; i++) {
     processBinaryChunk(response, streamState, source[i], 0);
   }

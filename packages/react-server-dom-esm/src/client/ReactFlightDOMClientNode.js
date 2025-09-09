@@ -66,7 +66,7 @@ function startReadingFromStream(
   stream: Readable,
   onEnd: () => void,
 ): void {
-  const streamState = createStreamState();
+  const streamState = createStreamState(response, stream);
 
   stream.on('data', chunk => {
     if (typeof chunk === 'string') {
