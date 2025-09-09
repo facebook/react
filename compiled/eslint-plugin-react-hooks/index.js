@@ -18614,6 +18614,12 @@ function makeTemporaryIdentifier(id, loc) {
 function forkTemporaryIdentifier(id, source) {
     return Object.assign(Object.assign({}, source), { mutableRange: { start: makeInstructionId(0), end: makeInstructionId(0) }, id });
 }
+function validateIdentifierName(name) {
+    if (isReservedWord(name) || !libExports$1.isValidIdentifier(name)) {
+        return Err(null);
+    }
+    return Ok(makeIdentifierName(name).value);
+}
 function makeIdentifierName(name) {
     if (isReservedWord(name)) {
         CompilerError.throwInvalidJS({
@@ -25842,12 +25848,15 @@ function trimJsxText(original) {
     }
 }
 function lowerFunctionToValue(builder, expr) {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e, _f, _g;
     const exprNode = expr.node;
     const exprLoc = (_a = exprNode.loc) !== null && _a !== void 0 ? _a : GeneratedSource;
     let name = null;
     if (expr.isFunctionExpression()) {
         name = (_d = (_c = (_b = expr.get('id')) === null || _b === void 0 ? void 0 : _b.node) === null || _c === void 0 ? void 0 : _c.name) !== null && _d !== void 0 ? _d : null;
+    }
+    else if (expr.isFunctionDeclaration()) {
+        name = (_g = (_f = (_e = expr.get('id')) === null || _e === void 0 ? void 0 : _e.node) === null || _f === void 0 ? void 0 : _f.name) !== null && _g !== void 0 ? _g : null;
     }
     const loweredFunc = lowerFunction(builder, expr);
     if (!loweredFunc) {
@@ -32084,6 +32093,7 @@ const EnvironmentConfigSchema = zod.z.object({
     flowTypeProvider: zod.z.nullable(zod.z.function().args(zod.z.string())).default(null),
     enableOptionalDependencies: zod.z.boolean().default(true),
     enableFire: zod.z.boolean().default(false),
+    enableNameAnonymousFunctions: zod.z.boolean().default(false),
     inferEffectDependencies: zod.z
         .nullable(zod.z.array(zod.z.object({
         function: ExternalFunctionSchema,
@@ -38457,7 +38467,7 @@ function codegenInstructionValueToExpression(cx, instrValue) {
     return convertValueToExpression(value);
 }
 function codegenInstructionValue(cx, instrValue) {
-    var _a, _b, _c, _d, _e, _f, _g, _h;
+    var _a, _b, _c, _d, _e, _f, _g;
     let value;
     switch (instrValue.kind) {
         case 'ArrayExpression': {
@@ -38775,6 +38785,9 @@ function codegenInstructionValue(cx, instrValue) {
             pruneUnusedLValues(reactiveFunction);
             pruneHoistedContexts(reactiveFunction);
             const fn = codegenReactiveFunction(new Context$2(cx.env, (_g = reactiveFunction.id) !== null && _g !== void 0 ? _g : '[[ anonymous ]]', cx.uniqueIdentifiers, cx.fbtOperands, cx.temp), reactiveFunction).unwrap();
+            const validatedName = instrValue.name != null
+                ? validateIdentifierName(instrValue.name)
+                : Err(null);
             if (instrValue.type === 'ArrowFunctionExpression') {
                 let body = fn.body;
                 if (body.body.length === 1 && loweredFunc.directives.length == 0) {
@@ -38786,7 +38799,15 @@ function codegenInstructionValue(cx, instrValue) {
                 value = libExports$1.arrowFunctionExpression(fn.params, body, fn.async);
             }
             else {
-                value = libExports$1.functionExpression((_h = fn.id) !== null && _h !== void 0 ? _h : (instrValue.name != null ? libExports$1.identifier(instrValue.name) : null), fn.params, fn.body, fn.generator, fn.async);
+                value = libExports$1.functionExpression(validatedName
+                    .map(name => libExports$1.identifier(name))
+                    .unwrapOr(null), fn.params, fn.body, fn.generator, fn.async);
+            }
+            if (cx.env.config.enableNameAnonymousFunctions &&
+                validatedName.isErr() &&
+                instrValue.name != null) {
+                const name = instrValue.name;
+                value = libExports$1.memberExpression(libExports$1.objectExpression([libExports$1.objectProperty(libExports$1.stringLiteral(name), value)]), libExports$1.stringLiteral(name), true, false);
             }
             break;
         }
@@ -51841,6 +51862,136 @@ function validateEffect(effectFunction, effectDeps, errors) {
     }
 }
 
+function nameAnonymousFunctions(fn) {
+    if (fn.id == null) {
+        return;
+    }
+    const parentName = fn.id;
+    const functions = nameAnonymousFunctionsImpl(fn);
+    function visit(node, prefix) {
+        var _a, _b;
+        if (node.generatedName != null) {
+            const name = `${prefix}${node.generatedName}]`;
+            node.fn.name = name;
+        }
+        const nextPrefix = `${prefix}${(_b = (_a = node.generatedName) !== null && _a !== void 0 ? _a : node.fn.name) !== null && _b !== void 0 ? _b : '<anonymous>'} > `;
+        for (const inner of node.inner) {
+            visit(inner, nextPrefix);
+        }
+    }
+    for (const node of functions) {
+        visit(node, `${parentName}[`);
+    }
+}
+function nameAnonymousFunctionsImpl(fn) {
+    var _a, _b;
+    const functions = new Map();
+    const names = new Map();
+    const nodes = [];
+    for (const block of fn.body.blocks.values()) {
+        for (const instr of block.instructions) {
+            const { lvalue, value } = instr;
+            switch (value.kind) {
+                case 'LoadGlobal': {
+                    names.set(lvalue.identifier.id, value.binding.name);
+                    break;
+                }
+                case 'LoadContext':
+                case 'LoadLocal': {
+                    const name = value.place.identifier.name;
+                    if (name != null && name.kind === 'named') {
+                        names.set(lvalue.identifier.id, name.value);
+                    }
+                    break;
+                }
+                case 'PropertyLoad': {
+                    const objectName = names.get(value.object.identifier.id);
+                    if (objectName != null) {
+                        names.set(lvalue.identifier.id, `${objectName}.${String(value.property)}`);
+                    }
+                    break;
+                }
+                case 'FunctionExpression': {
+                    const inner = nameAnonymousFunctionsImpl(value.loweredFunc.func);
+                    const node = {
+                        fn: value,
+                        generatedName: null,
+                        inner,
+                    };
+                    nodes.push(node);
+                    if (value.name == null) {
+                        functions.set(lvalue.identifier.id, node);
+                    }
+                    break;
+                }
+                case 'StoreContext':
+                case 'StoreLocal': {
+                    const node = functions.get(value.value.identifier.id);
+                    const variableName = value.lvalue.place.identifier.name;
+                    if (node != null &&
+                        variableName != null &&
+                        variableName.kind === 'named') {
+                        node.generatedName = variableName.value;
+                        functions.delete(value.value.identifier.id);
+                    }
+                    break;
+                }
+                case 'CallExpression':
+                case 'MethodCall': {
+                    const callee = value.kind === 'MethodCall' ? value.property : value.callee;
+                    const hookKind = getHookKind(fn.env, callee.identifier);
+                    let calleeName = null;
+                    if (hookKind != null && hookKind !== 'Custom') {
+                        calleeName = hookKind;
+                    }
+                    else {
+                        calleeName = (_a = names.get(callee.identifier.id)) !== null && _a !== void 0 ? _a : '(anonymous)';
+                    }
+                    let fnArgCount = 0;
+                    for (const arg of value.args) {
+                        if (arg.kind === 'Identifier' && functions.has(arg.identifier.id)) {
+                            fnArgCount++;
+                        }
+                    }
+                    for (let i = 0; i < value.args.length; i++) {
+                        const arg = value.args[i];
+                        if (arg.kind === 'Spread') {
+                            continue;
+                        }
+                        const node = functions.get(arg.identifier.id);
+                        if (node != null) {
+                            const generatedName = fnArgCount > 1 ? `${calleeName}(arg${i})` : `${calleeName}()`;
+                            node.generatedName = generatedName;
+                            functions.delete(arg.identifier.id);
+                        }
+                    }
+                    break;
+                }
+                case 'JsxExpression': {
+                    for (const attr of value.props) {
+                        if (attr.kind === 'JsxSpreadAttribute') {
+                            continue;
+                        }
+                        const node = functions.get(attr.place.identifier.id);
+                        if (node != null) {
+                            const elementName = value.tag.kind === 'BuiltinTag'
+                                ? value.tag.name
+                                : ((_b = names.get(value.tag.identifier.id)) !== null && _b !== void 0 ? _b : null);
+                            const propName = elementName == null
+                                ? attr.name
+                                : `<${elementName}>.${attr.name}`;
+                            node.generatedName = `${propName}`;
+                            functions.delete(attr.place.identifier.id);
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+    }
+    return nodes;
+}
+
 function run(func, config, fnType, mode, programContext, logger, filename, code) {
     var _a, _b;
     const contextIdentifiers = findContextIdentifiers(func);
@@ -52056,6 +52207,14 @@ function runWithEnvironment(func, env) {
         log({
             kind: 'hir',
             name: 'inlineJsxTransform',
+            value: hir,
+        });
+    }
+    if (env.config.enableNameAnonymousFunctions) {
+        nameAnonymousFunctions(hir);
+        log({
+            kind: 'hir',
+            name: 'NameAnonymougFunctions',
             value: hir,
         });
     }
