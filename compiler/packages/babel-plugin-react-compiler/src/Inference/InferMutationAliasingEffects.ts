@@ -748,10 +748,14 @@ function applyEffect(
     case 'Alias':
     case 'Capture': {
       CompilerError.invariant(
-        effect.kind === 'Capture' || initialized.has(effect.into.identifier.id),
+        effect.kind === 'Capture' ||
+          effect.kind === 'MaybeAlias' ||
+          initialized.has(effect.into.identifier.id),
         {
-          reason: `Expected destination value to already be initialized within this instruction for Alias effect`,
-          description: `Destination ${printPlace(effect.into)} is not initialized in this instruction`,
+          reason: `Expected destination to already be initialized within this instruction`,
+          description:
+            `Destination ${printPlace(effect.into)} is not initialized in this ` +
+            `instruction for effect ${printAliasingEffect(effect)}`,
           details: [
             {
               kind: 'error',
@@ -767,49 +771,67 @@ function applyEffect(
        * copy-on-write semantics, then we can prune the effect
        */
       const intoKind = state.kind(effect.into).kind;
-      let isMutableDesination: boolean;
+      let destinationType: 'context' | 'mutable' | null = null;
       switch (intoKind) {
-        case ValueKind.Context:
-        case ValueKind.Mutable:
-        case ValueKind.MaybeFrozen: {
-          isMutableDesination = true;
+        case ValueKind.Context: {
+          destinationType = 'context';
           break;
         }
-        default: {
-          isMutableDesination = false;
+        case ValueKind.Mutable:
+        case ValueKind.MaybeFrozen: {
+          destinationType = 'mutable';
           break;
         }
       }
       const fromKind = state.kind(effect.from).kind;
-      let isMutableReferenceType: boolean;
+      let sourceType: 'context' | 'mutable' | 'frozen' | null = null;
       switch (fromKind) {
+        case ValueKind.Context: {
+          sourceType = 'context';
+          break;
+        }
         case ValueKind.Global:
         case ValueKind.Primitive: {
-          isMutableReferenceType = false;
           break;
         }
         case ValueKind.Frozen: {
-          isMutableReferenceType = false;
-          applyEffect(
-            context,
-            state,
-            {
-              kind: 'ImmutableCapture',
-              from: effect.from,
-              into: effect.into,
-            },
-            initialized,
-            effects,
-          );
+          sourceType = 'frozen';
           break;
         }
         default: {
-          isMutableReferenceType = true;
+          sourceType = 'mutable';
           break;
         }
       }
-      if (isMutableDesination && isMutableReferenceType) {
+
+      if (sourceType === 'frozen') {
+        applyEffect(
+          context,
+          state,
+          {
+            kind: 'ImmutableCapture',
+            from: effect.from,
+            into: effect.into,
+          },
+          initialized,
+          effects,
+        );
+      } else if (
+        (sourceType === 'mutable' && destinationType === 'mutable') ||
+        effect.kind === 'MaybeAlias'
+      ) {
         effects.push(effect);
+      } else if (
+        (sourceType === 'context' && destinationType != null) ||
+        (sourceType === 'mutable' && destinationType === 'context')
+      ) {
+        applyEffect(
+          context,
+          state,
+          {kind: 'MaybeAlias', from: effect.from, into: effect.into},
+          initialized,
+          effects,
+        );
       }
       break;
     }
