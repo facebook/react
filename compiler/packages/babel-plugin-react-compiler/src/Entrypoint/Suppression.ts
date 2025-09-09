@@ -86,12 +86,18 @@ export function findProgramSuppressions(
   let enableComment: t.Comment | null = null;
   let source: SuppressionSource | null = null;
 
-  const rulePattern = `(${ruleNames.join('|')})`;
-  const disableNextLinePattern = new RegExp(
-    `eslint-disable-next-line ${rulePattern}`,
-  );
-  const disablePattern = new RegExp(`eslint-disable ${rulePattern}`);
-  const enablePattern = new RegExp(`eslint-enable ${rulePattern}`);
+  let disableNextLinePattern: RegExp | null = null;
+  let disablePattern: RegExp | null = null;
+  let enablePattern: RegExp | null = null;
+  if (ruleNames.length !== 0) {
+    const rulePattern = `(${ruleNames.join('|')})`;
+    disableNextLinePattern = new RegExp(
+      `eslint-disable-next-line ${rulePattern}`,
+    );
+    disablePattern = new RegExp(`eslint-disable ${rulePattern}`);
+    enablePattern = new RegExp(`eslint-enable ${rulePattern}`);
+  }
+
   const flowSuppressionPattern = new RegExp(
     '\\$(FlowFixMe\\w*|FlowExpectedError|FlowIssue)\\[react\\-rule',
   );
@@ -107,6 +113,7 @@ export function findProgramSuppressions(
        * CommentLine within the block.
        */
       disableComment == null &&
+      disableNextLinePattern != null &&
       disableNextLinePattern.test(comment.value)
     ) {
       disableComment = comment;
@@ -124,12 +131,16 @@ export function findProgramSuppressions(
       source = 'Flow';
     }
 
-    if (disablePattern.test(comment.value)) {
+    if (disablePattern != null && disablePattern.test(comment.value)) {
       disableComment = comment;
       source = 'Eslint';
     }
 
-    if (enablePattern.test(comment.value) && source === 'Eslint') {
+    if (
+      enablePattern != null &&
+      enablePattern.test(comment.value) &&
+      source === 'Eslint'
+    ) {
       enableComment = comment;
     }
 

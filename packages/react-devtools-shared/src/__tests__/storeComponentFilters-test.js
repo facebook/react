@@ -156,7 +156,7 @@ describe('Store component filters', () => {
             <div>
         ▾ <Suspense>
             <div>
-      [shell]
+      [suspense-root]  rects={[]}
         <Suspense name="Unknown" rects={[]}>
         <Suspense name="Unknown" rects={[]}>
     `);
@@ -174,7 +174,7 @@ describe('Store component filters', () => {
             <div>
         ▾ <Suspense>
             <div>
-      [shell]
+      [suspense-root]  rects={[]}
         <Suspense name="Unknown" rects={[]}>
         <Suspense name="Unknown" rects={[]}>
     `);
@@ -192,7 +192,7 @@ describe('Store component filters', () => {
             <div>
         ▾ <Suspense>
             <div>
-      [shell]
+      [suspense-root]  rects={[]}
         <Suspense name="Unknown" rects={[]}>
         <Suspense name="Unknown" rects={[]}>
     `);

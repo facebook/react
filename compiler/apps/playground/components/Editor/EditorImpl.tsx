@@ -13,7 +13,7 @@ import BabelPluginReactCompiler, {
   CompilerErrorDetail,
   CompilerDiagnostic,
   Effect,
-  ErrorSeverity,
+  ErrorCategory,
   parseConfigPragmaForTests,
   ValueKind,
   type Hook,
@@ -258,7 +258,7 @@ function compile(
       console.error(err);
       error.details.push(
         new CompilerErrorDetail({
-          severity: ErrorSeverity.Invariant,
+          category: ErrorCategory.Invariant,
           reason: `Unexpected failure when transforming input! ${err}`,
           loc: null,
           suggestions: null,

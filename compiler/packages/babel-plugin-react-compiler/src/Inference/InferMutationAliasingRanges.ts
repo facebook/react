@@ -779,7 +779,13 @@ class AliasingState {
         if (edge.index >= index) {
           break;
         }
-        queue.push({place: edge.node, transitive, direction: 'forwards', kind});
+        queue.push({
+          place: edge.node,
+          transitive,
+          direction: 'forwards',
+          // Traversing a maybeAlias edge always downgrades to conditional mutation
+          kind: edge.kind === 'maybeAlias' ? MutationKind.Conditional : kind,
+        });
       }
       for (const [alias, when] of node.createdFrom) {
         if (when >= index) {
@@ -807,7 +813,12 @@ class AliasingState {
           if (when >= index) {
             continue;
           }
-          queue.push({place: alias, transitive, direction: 'backwards', kind});
+          queue.push({
+            place: alias,
+            transitive,
+            direction: 'backwards',
+            kind,
+          });
         }
         /**
          * MaybeAlias indicates potential data flow from unknown function calls,
