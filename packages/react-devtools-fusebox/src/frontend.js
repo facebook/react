@@ -24,6 +24,7 @@ import type {
   ViewAttributeSource,
   ViewElementSource,
 } from 'react-devtools-shared/src/devtools/views/DevTools';
+import type {FetchFileWithCaching} from 'react-devtools-shared/src/devtools/views/Components/FetchFileWithCachingContext';
 import type {Config} from 'react-devtools-shared/src/devtools/store';
 
 export function createBridge(wall?: Wall): FrontendBridge {
@@ -50,6 +51,7 @@ type InitializationOptions = {
   viewAttributeSourceFunction?: ViewAttributeSource,
   viewElementSourceFunction?: ViewElementSource,
   canViewElementSourceFunction?: CanViewElementSource,
+  fetchFileWithCaching?: FetchFileWithCaching,
 };
 
 function initializeTab(
@@ -64,6 +66,7 @@ function initializeTab(
     viewAttributeSourceFunction,
     viewElementSourceFunction,
     canViewElementSourceFunction,
+    fetchFileWithCaching,
   } = options;
   const root = createRoot(contentWindow);
 
@@ -79,6 +82,7 @@ function initializeTab(
       viewAttributeSourceFunction={viewAttributeSourceFunction}
       viewElementSourceFunction={viewElementSourceFunction}
       canViewElementSourceFunction={canViewElementSourceFunction}
+      fetchFileWithCaching={fetchFileWithCaching}
     />,
   );
 }
