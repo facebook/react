@@ -17,6 +17,8 @@ import {
   isUseEffectHookType,
   isUseInsertionEffectHookType,
   isUseLayoutEffectHookType,
+  isUseRefType,
+  isRefValueType,
   Place,
 } from '../HIR';
 import {eachInstructionValueOperand} from '../HIR/visitors';
@@ -130,6 +132,7 @@ function getSetStateCall(
   fn: HIRFunction,
   setStateFunctions: Map<IdentifierId, Place>,
 ): Place | null {
+  const refDerivedValues: Set<IdentifierId> = new Set();
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
       switch (instr.value.kind) {
@@ -139,6 +142,9 @@ function getSetStateCall(
               instr.lvalue.identifier.id,
               instr.value.place,
             );
+          }
+          if (refDerivedValues.has(instr.value.place.identifier.id)) {
+            refDerivedValues.add(instr.lvalue.identifier.id);
           }
           break;
         }
@@ -153,6 +159,37 @@ function getSetStateCall(
               instr.value.value,
             );
           }
+          if (refDerivedValues.has(instr.value.value.identifier.id)) {
+            refDerivedValues.add(instr.value.lvalue.place.identifier.id);
+            refDerivedValues.add(instr.lvalue.identifier.id);
+          }
+          break;
+        }
+        case 'PropertyLoad': {
+          if (
+            instr.value.property === 'current' &&
+            (isUseRefType(instr.value.object.identifier) ||
+              isRefValueType(instr.value.object.identifier))
+          ) {
+            refDerivedValues.add(instr.lvalue.identifier.id);
+          } else if (refDerivedValues.has(instr.value.object.identifier.id)) {
+            refDerivedValues.add(instr.lvalue.identifier.id);
+          }
+          break;
+        }
+        case 'Destructure': {
+          if (refDerivedValues.has(instr.value.value.identifier.id)) {
+            for (const place of eachInstructionValueOperand(instr.value)) {
+              refDerivedValues.add(place.identifier.id);
+            }
+            refDerivedValues.add(instr.lvalue.identifier.id);
+          }
+          break;
+        }
+        case 'MethodCall': {
+          if (refDerivedValues.has(instr.value.receiver.identifier.id)) {
+            refDerivedValues.add(instr.lvalue.identifier.id);
+          }
           break;
         }
         case 'CallExpression': {
@@ -161,6 +198,18 @@ function getSetStateCall(
             isSetStateType(callee.identifier) ||
             setStateFunctions.has(callee.identifier.id)
           ) {
+            const arg = instr.value.args.at(0);
+            if (
+              arg !== undefined &&
+              arg.kind === 'Identifier' &&
+              refDerivedValues.has(arg.identifier.id)
+            ) {
+              /**
+               * The one special case where we allow setStates in effects is in the very specific
+               * scenario where the value being set is derived from a ref.
+               */
+              return null;
+            }
             /*
              * TODO: once we support multiple locations per error, we should link to the
              * original Place in the case that setStateFunction.has(callee)
