@@ -63,7 +63,7 @@ async function downloadRegressionBuild() {
         .join(' ')}\n`
     )
   );
-  await exec(`rm -r ${removePackagesStr}`);
+  await exec(`rm -rf ${removePackagesStr}`);
 
   // Move all packages that we downloaded to the original build folder
   // We need to separately move the scheduler package because it might
@@ -80,6 +80,7 @@ async function downloadRegressionBuild() {
         .join(' ')} to ${chalk.underline.blue(buildPath)}\n`
     )
   );
+  fs.mkdirSync(buildPath, {recursive: true});
   await exec(`mv ${movePackageString} ${buildPath}`);
 
   const reactVersion = semver.coerce(version).version;
@@ -100,7 +101,7 @@ async function downloadRegressionBuild() {
     );
   } else {
     console.log(chalk.white(`Downloading scheduler\n`));
-    await exec(`rm -r ${join(buildPath, 'scheduler')}`);
+    await exec(`rm -rf ${join(buildPath, 'scheduler')}`);
     await exec(
       `mv ${join(
         regressionBuildPath,
