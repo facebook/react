@@ -44,13 +44,25 @@ We have several examples [on the website](https://react.dev/). Here is the first
 
 ```jsx
 import { createRoot } from 'react-dom/client';
-
+import { useState } from 'react';
+import { createRoot } from 'react-dom/client';
 function HelloMessage({ name }) {
   return <div>Hello {name}</div>;
 }
-
 const root = createRoot(document.getElementById('container'));
 root.render(<HelloMessage name="Taylor" />);
+
+function Counter() {
+  const [count, setCount] = useState(0);
+  return (
+    <button onClick={() => setCount(count + 1)}>
+      You clicked {count} times
+    </button>
+  );
+}
+
+const root = createRoot(document.getElementById('container'));
+root.render(<Counter />);
 ```
 
 This example will render "Hello Taylor" into a container on the page.
