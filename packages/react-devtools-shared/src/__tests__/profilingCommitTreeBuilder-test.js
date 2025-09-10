@@ -188,6 +188,8 @@ describe('commit tree', () => {
         [root]
           ▾ <App>
               <Suspense>
+        [suspense-root]  rects={null}
+          <Suspense name="App" rects={null}>
       `);
       utils.act(() => legacyRender(<App renderChildren={true} />));
       expect(store).toMatchInlineSnapshot(`
@@ -195,6 +197,8 @@ describe('commit tree', () => {
           ▾ <App>
             ▾ <Suspense>
                 <LazyInnerComponent>
+        [suspense-root]  rects={null}
+          <Suspense name="App" rects={null}>
       `);
       utils.act(() => legacyRender(<App renderChildren={false} />));
       expect(store).toMatchInlineSnapshot(`
@@ -272,6 +276,8 @@ describe('commit tree', () => {
         [root]
           ▾ <App>
               <Suspense>
+        [suspense-root]  rects={null}
+          <Suspense name="App" rects={null}>
       `);
       utils.act(() => legacyRender(<App renderChildren={false} />));
       expect(store).toMatchInlineSnapshot(`
