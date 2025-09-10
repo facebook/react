@@ -660,6 +660,13 @@ export const EnvironmentConfigSchema = z.object({
    * while its parent function remains uncompiled.
    */
   validateNoDynamicallyCreatedComponentsOrHooks: z.boolean().default(false),
+
+  /**
+   * When enabled, allows setState calls in effects when the value being set is
+   * derived from a ref. This is useful for patterns where initial layout measurements
+   * from refs need to be stored in state during mount.
+   */
+  enableAllowSetStateFromRefsInEffects: z.boolean().default(true),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
