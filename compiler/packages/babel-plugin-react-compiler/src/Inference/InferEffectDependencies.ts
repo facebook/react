@@ -438,7 +438,14 @@ function rewriteSplices(
         {
           reason:
             '[InferEffectDependencies] Internal invariant broken: expected block instructions to be sorted',
-          loc: originalInstrs[cursor].loc,
+          description: null,
+          details: [
+            {
+              kind: 'error',
+              loc: originalInstrs[cursor].loc,
+              message: null,
+            },
+          ],
         },
       );
       currBlock.instructions.push(originalInstrs[cursor]);
@@ -447,7 +454,14 @@ function rewriteSplices(
     CompilerError.invariant(originalInstrs[cursor].id === rewrite.location, {
       reason:
         '[InferEffectDependencies] Internal invariant broken: splice location not found',
-      loc: originalInstrs[cursor].loc,
+      description: null,
+      details: [
+        {
+          kind: 'error',
+          loc: originalInstrs[cursor].loc,
+          message: null,
+        },
+      ],
     });
 
     if (rewrite.kind === 'instr') {
@@ -467,7 +481,14 @@ function rewriteSplices(
           {
             reason:
               '[InferEffectDependencies] Internal invariant broken: expected entry block to have a fallthrough',
-            loc: entryBlock.terminal.loc,
+            description: null,
+            details: [
+              {
+                kind: 'error',
+                loc: entryBlock.terminal.loc,
+                message: null,
+              },
+            ],
           },
         );
         const originalTerminal = currBlock.terminal;
@@ -566,7 +587,14 @@ function inferMinimalDependencies(
   CompilerError.invariant(hoistableToFnEntry != null, {
     reason:
       '[InferEffectDependencies] Internal invariant broken: missing entry block',
-    loc: fnInstr.loc,
+    description: null,
+    details: [
+      {
+        kind: 'error',
+        loc: fnInstr.loc,
+        message: null,
+      },
+    ],
   });
 
   const dependencies = inferDependencies(
@@ -622,7 +650,14 @@ function inferDependencies(
   CompilerError.invariant(resultUnfiltered != null, {
     reason:
       '[InferEffectDependencies] Internal invariant broken: missing scope dependencies',
-    loc: fn.loc,
+    description: null,
+    details: [
+      {
+        kind: 'error',
+        loc: fn.loc,
+        message: null,
+      },
+    ],
   });
 
   const fnContext = new Set(fn.context.map(dep => dep.identifier.id));

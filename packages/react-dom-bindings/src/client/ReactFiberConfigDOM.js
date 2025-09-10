@@ -2046,23 +2046,16 @@ function customizeViewTransitionError(
           error.message ===
             'Skipping view transition because document visibility state has become hidden.' ||
           error.message ===
-            'Skipping view transition because viewport size changed.'
+            'Skipping view transition because viewport size changed.' ||
+          // Chrome uses a generic error message instead of specific reasons. It will log a
+          // more specific reason in the console but the user might not look there.
+          // Some of these errors are important to surface like duplicate name errors but
+          // it's too noisy for unactionable cases like the document was hidden. Therefore,
+          // we hide all of them and hopefully it surfaces in another browser.
+          error.message === 'Transition was aborted because of invalid state'
         ) {
           // Skip logging this. This is not considered an error.
           return null;
-        }
-        if (__DEV__) {
-          if (
-            error.message === 'Transition was aborted because of invalid state'
-          ) {
-            // Chrome doesn't include the reason in the message but logs it in the console..
-            // Redirect the user to look there.
-            // eslint-disable-next-line react-internal/prod-error-codes
-            return new Error(
-              'A ViewTransition could not start. See the console for more details.',
-              {cause: error},
-            );
-          }
         }
         break;
       }

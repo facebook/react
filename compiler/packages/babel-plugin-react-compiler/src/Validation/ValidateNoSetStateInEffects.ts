@@ -9,7 +9,6 @@ import {
   CompilerDiagnostic,
   CompilerError,
   ErrorCategory,
-  ErrorSeverity,
 } from '../CompilerError';
 import {
   HIRFunction,
@@ -107,9 +106,8 @@ export function validateNoSetStateInEffects(
                       '* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\n' +
                       'Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. ' +
                       '(https://react.dev/learn/you-might-not-need-an-effect)',
-                    severity: ErrorSeverity.InvalidReact,
                     suggestions: null,
-                  }).withDetail({
+                  }).withDetails({
                     kind: 'error',
                     loc: setState.loc,
                     message:

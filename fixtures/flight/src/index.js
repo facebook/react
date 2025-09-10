@@ -14,18 +14,52 @@ function findSourceMapURL(fileName) {
   );
 }
 
+async function createWebSocketStream(url) {
+  const ws = new WebSocket(url);
+  ws.binaryType = 'arraybuffer';
+
+  await new Promise((resolve, reject) => {
+    ws.addEventListener('open', resolve, {once: true});
+    ws.addEventListener('error', reject, {once: true});
+  });
+
+  const writable = new WritableStream({
+    write(chunk) {
+      ws.send(chunk);
+    },
+    close() {
+      ws.close();
+    },
+    abort(reason) {
+      ws.close(1000, reason && String(reason));
+    },
+  });
+
+  const readable = new ReadableStream({
+    start(controller) {
+      ws.addEventListener('message', event => {
+        controller.enqueue(event.data);
+      });
+      ws.addEventListener('close', () => {
+        controller.close();
+      });
+      ws.addEventListener('error', err => {
+        controller.error(err);
+      });
+    },
+  });
+
+  return {readable, writable};
+}
+
 let updateRoot;
 async function callServer(id, args) {
   let response;
-  if (
-    process.env.NODE_ENV === 'development' &&
-    typeof WebSocketStream === 'function'
-  ) {
+  if (process.env.NODE_ENV === 'development') {
     const requestId = crypto.randomUUID();
-    const wss = new WebSocketStream(
-      'ws://localhost:3001/debug-channel?' + requestId
+    const debugChannel = await createWebSocketStream(
+      `ws://localhost:3001/debug-channel?id=${requestId}`
     );
-    const debugChannel = await wss.opened;
     response = createFromFetch(
       fetch('/', {
         method: 'POST',
@@ -74,15 +108,11 @@ function Shell({data}) {
 
 async function hydrateApp() {
   let response;
-  if (
-    process.env.NODE_ENV === 'development' &&
-    typeof WebSocketStream === 'function'
-  ) {
+  if (process.env.NODE_ENV === 'development') {
     const requestId = crypto.randomUUID();
-    const wss = new WebSocketStream(
-      'ws://localhost:3001/debug-channel?' + requestId
+    const debugChannel = await createWebSocketStream(
+      `ws://localhost:3001/debug-channel?id=${requestId}`
     );
-    const debugChannel = await wss.opened;
     response = createFromFetch(
       fetch('/', {
         headers: {

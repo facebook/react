@@ -5,12 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
-  CompilerDiagnostic,
-  CompilerError,
-  ErrorSeverity,
-  SourceLocation,
-} from '..';
+import {CompilerDiagnostic, CompilerError, SourceLocation} from '..';
 import {ErrorCategory} from '../CompilerError';
 import {
   CallExpression,
@@ -302,11 +297,10 @@ function extractManualMemoizationArgs(
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
         category: ErrorCategory.UseMemo,
-        severity: ErrorSeverity.InvalidReact,
         reason: `Expected a callback function to be passed to ${kind}`,
         description: `Expected a callback function to be passed to ${kind}`,
         suggestions: null,
-      }).withDetail({
+      }).withDetails({
         kind: 'error',
         loc: instr.value.loc,
         message: `Expected a callback function to be passed to ${kind}`,
@@ -318,11 +312,10 @@ function extractManualMemoizationArgs(
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
         category: ErrorCategory.UseMemo,
-        severity: ErrorSeverity.InvalidReact,
         reason: `Unexpected spread argument to ${kind}`,
         description: `Unexpected spread argument to ${kind}`,
         suggestions: null,
-      }).withDetail({
+      }).withDetails({
         kind: 'error',
         loc: instr.value.loc,
         message: `Unexpected spread argument to ${kind}`,
@@ -339,11 +332,10 @@ function extractManualMemoizationArgs(
       errors.pushDiagnostic(
         CompilerDiagnostic.create({
           category: ErrorCategory.UseMemo,
-          severity: ErrorSeverity.InvalidReact,
           reason: `Expected the dependency list for ${kind} to be an array literal`,
           description: `Expected the dependency list for ${kind} to be an array literal`,
           suggestions: null,
-        }).withDetail({
+        }).withDetails({
           kind: 'error',
           loc: depsListPlace.loc,
           message: `Expected the dependency list for ${kind} to be an array literal`,
@@ -358,11 +350,10 @@ function extractManualMemoizationArgs(
         errors.pushDiagnostic(
           CompilerDiagnostic.create({
             category: ErrorCategory.UseMemo,
-            severity: ErrorSeverity.InvalidReact,
             reason: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
             description: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
             suggestions: null,
-          }).withDetail({
+          }).withDetails({
             kind: 'error',
             loc: dep.loc,
             message: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
@@ -463,16 +454,15 @@ export function dropManualMemoization(
               if (!hasNonVoidReturn(funcToCheck.loweredFunc.func)) {
                 errors.pushDiagnostic(
                   CompilerDiagnostic.create({
-                    severity: ErrorSeverity.InvalidReact,
                     category: ErrorCategory.UseMemo,
                     reason: 'useMemo() callbacks must return a value',
                     description: `This ${
                       manualMemo.loadInstr.value.kind === 'PropertyLoad'
                         ? 'React.useMemo'
                         : 'useMemo'
-                    } callback doesn't return a value. useMemo is for computing and caching values, not for arbitrary side effects.`,
+                    } callback doesn't return a value. useMemo is for computing and caching values, not for arbitrary side effects`,
                     suggestions: null,
-                  }).withDetail({
+                  }).withDetails({
                     kind: 'error',
                     loc: instr.value.loc,
                     message: 'useMemo() callbacks must return a value',
@@ -505,11 +495,10 @@ export function dropManualMemoization(
               errors.pushDiagnostic(
                 CompilerDiagnostic.create({
                   category: ErrorCategory.UseMemo,
-                  severity: ErrorSeverity.InvalidReact,
                   reason: `Expected the first argument to be an inline function expression`,
                   description: `Expected the first argument to be an inline function expression`,
                   suggestions: [],
-                }).withDetail({
+                }).withDetails({
                   kind: 'error',
                   loc: fnPlace.loc,
                   message: `Expected the first argument to be an inline function expression`,
@@ -624,7 +613,14 @@ function findOptionalPlaces(fn: HIRFunction): Set<IdentifierId> {
           default: {
             CompilerError.invariant(false, {
               reason: `Unexpected terminal in optional`,
-              loc: terminal.loc,
+              description: null,
+              details: [
+                {
+                  kind: 'error',
+                  loc: terminal.loc,
+                  message: `Unexpected ${terminal.kind} in optional`,
+                },
+              ],
             });
           }
         }

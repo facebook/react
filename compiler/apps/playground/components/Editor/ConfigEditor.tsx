@@ -6,61 +6,111 @@
  */
 
 import MonacoEditor, {loader, type Monaco} from '@monaco-editor/react';
-import {parseConfigPragmaAsString} from 'babel-plugin-react-compiler';
 import type {editor} from 'monaco-editor';
 import * as monaco from 'monaco-editor';
-import parserBabel from 'prettier/plugins/babel';
-import * as prettierPluginEstree from 'prettier/plugins/estree';
-import * as prettier from 'prettier/standalone';
-import {useState, useEffect} from 'react';
+import React, {useState, useCallback} from 'react';
 import {Resizable} from 're-resizable';
-import {useStore} from '../StoreContext';
+import {useSnackbar} from 'notistack';
+import {useStore, useStoreDispatch} from '../StoreContext';
 import {monacoOptions} from './monacoOptions';
+import {
+  ConfigError,
+  generateOverridePragmaFromConfig,
+  updateSourceWithOverridePragma,
+} from '../../lib/configUtils';
+
+// @ts-expect-error - webpack asset/source loader handles .d.ts files as strings
+import compilerTypeDefs from 'babel-plugin-react-compiler/dist/index.d.ts';
 
 loader.config({monaco});
 
-export default function ConfigEditor(): JSX.Element {
-  const [, setMonaco] = useState<Monaco | null>(null);
+export default function ConfigEditor(): React.ReactElement {
+  const [isExpanded, setIsExpanded] = useState(false);
   const store = useStore();
+  const dispatchStore = useStoreDispatch();
+  const {enqueueSnackbar} = useSnackbar();
 
-  // Parse string-based override config from pragma comment and format it
-  const [configJavaScript, setConfigJavaScript] = useState('');
+  const toggleExpanded = useCallback(() => {
+    setIsExpanded(prev => !prev);
+  }, []);
 
-  useEffect(() => {
-    const pragma = store.source.substring(0, store.source.indexOf('\n'));
-    const configString = `(${parseConfigPragmaAsString(pragma)})`;
+  const handleApplyConfig: () => Promise<void> = async () => {
+    try {
+      const config = store.config || '';
 
-    prettier
-      .format(configString, {
-        semi: true,
-        parser: 'babel-ts',
-        plugins: [parserBabel, prettierPluginEstree],
-      })
-      .then(formatted => {
-        setConfigJavaScript(formatted);
-      })
-      .catch(error => {
-        console.error('Error formatting config:', error);
-        setConfigJavaScript('({})'); // Return empty object if not valid for now
-        //TODO: Add validation and error handling for config
+      if (!config.trim()) {
+        enqueueSnackbar(
+          'Config is empty. Please add configuration options first.',
+          {
+            variant: 'warning',
+          },
+        );
+        return;
+      }
+      const newPragma = await generateOverridePragmaFromConfig(config);
+      const updatedSource = updateSourceWithOverridePragma(
+        store.source,
+        newPragma,
+      );
+
+      dispatchStore({
+        type: 'updateFile',
+        payload: {
+          source: updatedSource,
+          config: config,
+        },
       });
-    console.log('Config:', configString);
-  }, [store.source]);
+    } catch (error) {
+      console.error('Failed to apply config:', error);
+
+      if (error instanceof ConfigError && error.message.trim()) {
+        enqueueSnackbar(error.message, {
+          variant: 'error',
+        });
+      } else {
+        enqueueSnackbar('Unexpected error: failed to apply config.', {
+          variant: 'error',
+        });
+      }
+    }
+  };
 
   const handleChange: (value: string | undefined) => void = value => {
-    if (!value) return;
+    if (value === undefined) return;
 
-    // TODO: Implement sync logic to update pragma comments in the source
-    console.log('Config changed:', value);
+    // Only update the config
+    dispatchStore({
+      type: 'updateFile',
+      payload: {
+        source: store.source,
+        config: value,
+      },
+    });
   };
 
   const handleMount: (
     _: editor.IStandaloneCodeEditor,
     monaco: Monaco,
   ) => void = (_, monaco) => {
-    setMonaco(monaco);
+    // Add the babel-plugin-react-compiler type definitions to Monaco
+    monaco.languages.typescript.typescriptDefaults.addExtraLib(
+      //@ts-expect-error - compilerTypeDefs is a string
+      compilerTypeDefs,
+      'file:///node_modules/babel-plugin-react-compiler/dist/index.d.ts',
+    );
+    monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+      target: monaco.languages.typescript.ScriptTarget.Latest,
+      allowNonTsExtensions: true,
+      moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+      module: monaco.languages.typescript.ModuleKind.ESNext,
+      noEmit: true,
+      strict: false,
+      esModuleInterop: true,
+      allowSyntheticDefaultImports: true,
+      jsx: monaco.languages.typescript.JsxEmit.React,
+    });
 
-    const uri = monaco.Uri.parse(`file:///config.js`);
+    const uri = monaco.Uri.parse(`file:///config.ts`);
     const model = monaco.editor.getModel(uri);
     if (model) {
       model.updateOptions({tabSize: 2});
@@ -68,36 +118,66 @@ export default function ConfigEditor(): JSX.Element {
   };
 
   return (
-    <div className="relative flex flex-col flex-none border-r border-gray-200">
-      <h2 className="p-4 duration-150 ease-in border-b cursor-default border-grey-200 font-light text-secondary">
-        Config Overrides
-      </h2>
-      <Resizable
-        minWidth={300}
-        maxWidth={600}
-        defaultSize={{width: 350, height: 'auto'}}
-        enable={{right: true}}
-        className="!h-[calc(100vh_-_3.5rem_-_4rem)]">
-        <MonacoEditor
-          path={'config.js'}
-          language={'javascript'}
-          value={configJavaScript}
-          onMount={handleMount}
-          onChange={handleChange}
-          options={{
-            ...monacoOptions,
-            readOnly: true,
-            lineNumbers: 'off',
-            folding: false,
-            renderLineHighlight: 'none',
-            scrollBeyondLastLine: false,
-            hideCursorInOverviewRuler: true,
-            overviewRulerBorder: false,
-            overviewRulerLanes: 0,
-            fontSize: 12,
-          }}
-        />
-      </Resizable>
+    <div className="flex flex-row relative">
+      {isExpanded ? (
+        <>
+          <Resizable
+            className="border-r"
+            minWidth={300}
+            maxWidth={600}
+            defaultSize={{width: 350, height: 'auto'}}
+            enable={{right: true}}>
+            <h2
+              title="Minimize config editor"
+              aria-label="Minimize config editor"
+              onClick={toggleExpanded}
+              className="p-4 duration-150 ease-in border-b cursor-pointer border-grey-200 font-light text-secondary hover:text-link">
+              - Config Overrides
+            </h2>
+            <div className="h-[calc(100vh_-_3.5rem_-_4rem)]">
+              <MonacoEditor
+                path={'config.ts'}
+                language={'typescript'}
+                value={store.config}
+                onMount={handleMount}
+                onChange={handleChange}
+                options={{
+                  ...monacoOptions,
+                  lineNumbers: 'off',
+                  folding: false,
+                  renderLineHighlight: 'none',
+                  scrollBeyondLastLine: false,
+                  hideCursorInOverviewRuler: true,
+                  overviewRulerBorder: false,
+                  overviewRulerLanes: 0,
+                  fontSize: 12,
+                }}
+              />
+            </div>
+          </Resizable>
+          <button
+            onClick={handleApplyConfig}
+            title="Apply config overrides to input"
+            aria-label="Apply config overrides to input"
+            className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1/2 z-10 w-8 h-8 bg-blue-500 hover:bg-blue-600 text-white rounded-full border-2 border-white shadow-lg flex items-center justify-center text-sm font-medium transition-colors duration-150">
+            →
+          </button>
+        </>
+      ) : (
+        <div className="relative items-center h-full px-1 py-6 align-middle border-r border-grey-200">
+          <button
+            title="Expand config editor"
+            aria-label="Expand config editor"
+            style={{
+              transform: 'rotate(90deg) translate(-50%)',
+              whiteSpace: 'nowrap',
+            }}
+            onClick={toggleExpanded}
+            className="flex-grow-0 w-5 transition-colors duration-150 ease-in font-light text-secondary hover:text-link">
+            Config Overrides
+          </button>
+        </div>
+      )}
     </div>
   );
 }

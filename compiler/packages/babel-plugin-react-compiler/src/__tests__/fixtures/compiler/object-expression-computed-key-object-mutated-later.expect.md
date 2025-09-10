@@ -32,7 +32,6 @@ function Component(props) {
   if ($[0] !== props.value) {
     const key = {};
     context = { [key]: identity([props.value]) };
-
     mutate(key);
     $[0] = props.value;
     $[1] = context;

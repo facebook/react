@@ -14,7 +14,7 @@ import {allRules} from '../src/rules/ReactCompilerRule';
 
 testRule(
   'no ref access in render rule',
-  allRules[getRuleForCategory(ErrorCategory.Refs).name],
+  allRules[getRuleForCategory(ErrorCategory.Refs).name].rule,
   {
     valid: [],
     invalid: [

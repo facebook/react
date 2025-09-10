@@ -81,7 +81,18 @@ export function experimental_renderToHTML(
   options?: MarkupOptions,
 ): Promise<string> {
   return new Promise((resolve, reject) => {
-    const streamState = createFlightStreamState();
+    const flightResponse = createFlightResponse(
+      null,
+      null,
+      null,
+      noServerCallOrFormAction,
+      noServerCallOrFormAction,
+      undefined,
+      undefined,
+      undefined,
+      false,
+    );
+    const streamState = createFlightStreamState(flightResponse, null);
     const flightDestination = {
       push(chunk: string | null): boolean {
         if (chunk !== null) {
@@ -172,17 +183,6 @@ export function experimental_renderToHTML(
       undefined,
       undefined,
       'Markup',
-      undefined,
-      false,
-    );
-    const flightResponse = createFlightResponse(
-      null,
-      null,
-      null,
-      noServerCallOrFormAction,
-      noServerCallOrFormAction,
-      undefined,
-      undefined,
       undefined,
       false,
     );

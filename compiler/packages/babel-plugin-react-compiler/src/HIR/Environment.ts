@@ -261,6 +261,8 @@ export const EnvironmentConfigSchema = z.object({
 
   enableFire: z.boolean().default(false),
 
+  enableNameAnonymousFunctions: z.boolean().default(false),
+
   /**
    * Enables inference and auto-insertion of effect dependencies. Takes in an array of
    * configurable module and import pairs to allow for user-land experimentation. For example,
@@ -750,7 +752,13 @@ export class Environment {
       CompilerError.invariant(!this.#globals.has(hookName), {
         reason: `[Globals] Found existing definition in global registry for custom hook ${hookName}`,
         description: null,
-        loc: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
       this.#globals.set(
@@ -783,7 +791,14 @@ export class Environment {
       CompilerError.invariant(code != null, {
         reason:
           'Expected Environment to be initialized with source code when a Flow type provider is specified',
-        loc: null,
+        description: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
       });
       this.#flowTypeEnvironment.init(this, code);
     } else {
@@ -794,7 +809,14 @@ export class Environment {
   get typeContext(): FlowTypeEnv {
     CompilerError.invariant(this.#flowTypeEnvironment != null, {
       reason: 'Flow type environment not initialized',
-      loc: null,
+      description: null,
+      details: [
+        {
+          kind: 'error',
+          loc: null,
+          message: null,
+        },
+      ],
     });
     return this.#flowTypeEnvironment;
   }
@@ -1044,7 +1066,13 @@ export class Environment {
       CompilerError.invariant(shape !== undefined, {
         reason: `[HIR] Forget internal error: cannot resolve shape ${shapeId}`,
         description: null,
-        loc: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
       return shape.properties.get('*') ?? null;
@@ -1069,7 +1097,13 @@ export class Environment {
       CompilerError.invariant(shape !== undefined, {
         reason: `[HIR] Forget internal error: cannot resolve shape ${shapeId}`,
         description: null,
-        loc: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
       if (typeof property === 'string') {
@@ -1094,7 +1128,13 @@ export class Environment {
       CompilerError.invariant(shape !== undefined, {
         reason: `[HIR] Forget internal error: cannot resolve shape ${shapeId}`,
         description: null,
-        loc: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
       return shape.functionType;

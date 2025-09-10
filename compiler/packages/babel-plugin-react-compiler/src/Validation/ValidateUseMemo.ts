@@ -9,7 +9,6 @@ import {
   CompilerDiagnostic,
   CompilerError,
   ErrorCategory,
-  ErrorSeverity,
 } from '../CompilerError';
 import {FunctionExpression, HIRFunction, IdentifierId} from '../HIR';
 import {Result} from '../Utils/Result';
@@ -76,12 +75,11 @@ export function validateUseMemo(fn: HIRFunction): Result<void, CompilerError> {
             errors.pushDiagnostic(
               CompilerDiagnostic.create({
                 category: ErrorCategory.UseMemo,
-                severity: ErrorSeverity.InvalidReact,
                 reason: 'useMemo() callbacks may not accept parameters',
                 description:
-                  'useMemo() callbacks are called by React to cache calculations across re-renders. They should not take parameters. Instead, directly reference the props, state, or local variables needed for the computation.',
+                  'useMemo() callbacks are called by React to cache calculations across re-renders. They should not take parameters. Instead, directly reference the props, state, or local variables needed for the computation',
                 suggestions: null,
-              }).withDetail({
+              }).withDetails({
                 kind: 'error',
                 loc,
                 message: 'Callbacks with parameters are not supported',
@@ -93,13 +91,12 @@ export function validateUseMemo(fn: HIRFunction): Result<void, CompilerError> {
             errors.pushDiagnostic(
               CompilerDiagnostic.create({
                 category: ErrorCategory.UseMemo,
-                severity: ErrorSeverity.InvalidReact,
                 reason:
                   'useMemo() callbacks may not be async or generator functions',
                 description:
-                  'useMemo() callbacks are called once and must synchronously return a value.',
+                  'useMemo() callbacks are called once and must synchronously return a value',
                 suggestions: null,
-              }).withDetail({
+              }).withDetails({
                 kind: 'error',
                 loc: body.loc,
                 message: 'Async and generator functions are not supported',

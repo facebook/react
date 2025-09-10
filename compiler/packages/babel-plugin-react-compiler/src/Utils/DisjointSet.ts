@@ -21,7 +21,13 @@ export default class DisjointSet<T> {
     CompilerError.invariant(first != null, {
       reason: 'Expected set to be non-empty',
       description: null,
-      loc: null,
+      details: [
+        {
+          kind: 'error',
+          loc: null,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
     /*

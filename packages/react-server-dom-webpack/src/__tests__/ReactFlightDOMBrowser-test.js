@@ -2846,4 +2846,64 @@ describe('ReactFlightDOMBrowser', () => {
 
     expect(container.innerHTML).toBe('<p>Hi</p>');
   });
+
+  it('should not have missing key warnings when a static child is blocked on debug info', async () => {
+    const ClientComponent = clientExports(function ClientComponent({element}) {
+      return (
+        <div>
+          <span>Hi</span>
+          {element}
+        </div>
+      );
+    });
+
+    let debugReadableStreamController;
+
+    const debugReadableStream = new ReadableStream({
+      start(controller) {
+        debugReadableStreamController = controller;
+      },
+    });
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        <ClientComponent element={<span>Sebbie</span>} />,
+        webpackMap,
+        {
+          debugChannel: {
+            writable: new WritableStream({
+              write(chunk) {
+                debugReadableStreamController.enqueue(chunk);
+              },
+              close() {
+                debugReadableStreamController.close();
+              },
+            }),
+          },
+        },
+      ),
+    );
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream, {
+      debugChannel: {readable: createDelayedStream(debugReadableStream)},
+    });
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<ClientRoot response={response} />);
+    });
+
+    // Wait for the debug info to be processed.
+    await act(() => {});
+
+    expect(container.innerHTML).toBe(
+      '<div><span>Hi</span><span>Sebbie</span></div>',
+    );
+  });
 });

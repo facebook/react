@@ -164,7 +164,13 @@ function parseConfigPragmaEnvironmentForTest(
   CompilerError.invariant(false, {
     reason: 'Internal error, could not parse config from pragma string',
     description: `${fromZodError(config.error)}`,
-    loc: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
 }
@@ -248,18 +254,27 @@ function parseConfigStringAsJS(
     CompilerError.invariant(false, {
       reason: 'Failed to parse config pragma as JavaScript object',
       description: `Could not parse: ${configString}. Error: ${error}`,
-      loc: null,
+      details: [
+        {
+          kind: 'error',
+          loc: null,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
   }
 
-  console.log('OVERRIDE:', parsedConfig);
+  const environment = parseConfigPragmaEnvironmentForTest(
+    '',
+    defaults.environment ?? {},
+  );
 
   const options: Record<keyof PluginOptions, unknown> = {
     ...defaultOptions,
     panicThreshold: 'all_errors',
     compilationMode: defaults.compilationMode,
-    environment: defaults.environment ?? defaultOptions.environment,
+    environment,
   };
 
   // Apply parsed config, merging environment if it exists
@@ -269,33 +284,22 @@ function parseConfigStringAsJS(
       ...parsedConfig.environment,
     };
 
-    // Apply complex defaults for environment flags that are set to true
-    const environmentConfig: Partial<Record<keyof EnvironmentConfig, unknown>> =
-      {};
-    for (const [key, value] of Object.entries(mergedEnvironment)) {
-      if (hasOwnProperty(EnvironmentConfigSchema.shape, key)) {
-        if (value === true && key in testComplexConfigDefaults) {
-          environmentConfig[key] = testComplexConfigDefaults[key];
-        } else {
-          environmentConfig[key] = value;
-        }
-      }
-    }
-
     // Validate environment config
     const validatedEnvironment =
-      EnvironmentConfigSchema.safeParse(environmentConfig);
+      EnvironmentConfigSchema.safeParse(mergedEnvironment);
     if (!validatedEnvironment.success) {
       CompilerError.invariant(false, {
         reason: 'Invalid environment configuration in config pragma',
         description: `${fromZodError(validatedEnvironment.error)}`,
-        loc: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
-    }
-
-    if (validatedEnvironment.data.enableResetCacheOnSourceFileChanges == null) {
-      validatedEnvironment.data.enableResetCacheOnSourceFileChanges = false;
     }
 
     options.environment = validatedEnvironment.data;
@@ -308,9 +312,7 @@ function parseConfigStringAsJS(
     }
 
     if (hasOwnProperty(defaultOptions, key)) {
-      if (value === true && key in testComplexPluginOptionDefaults) {
-        options[key] = testComplexPluginOptionDefaults[key];
-      } else if (key === 'target' && value === 'donotuse_meta_internal') {
+      if (key === 'target' && value === 'donotuse_meta_internal') {
         options[key] = {
           kind: value,
           runtimeModule: 'react',

@@ -3700,28 +3700,32 @@ export function attach(
         // just use the Fiber anyway.
         // Fallbacks get attributed to the parent so we only measure if we're
         // showing primary content.
-        if (OffscreenComponent === -1) {
-          const isTimedOut = fiber.memoizedState !== null;
-          if (!isTimedOut) {
-            newSuspenseNode.rects = measureInstance(newInstance);
-          }
-        } else {
-          const hydrated = isFiberHydrated(fiber);
-          if (hydrated) {
-            const contentFiber = fiber.child;
-            if (contentFiber === null) {
-              throw new Error(
-                'There should always be an Offscreen Fiber child in a hydrated Suspense boundary.',
-              );
+        if (fiber.tag === SuspenseComponent) {
+          if (OffscreenComponent === -1) {
+            const isTimedOut = fiber.memoizedState !== null;
+            if (!isTimedOut) {
+              newSuspenseNode.rects = measureInstance(newInstance);
             }
           } else {
-            // This Suspense Fiber is still dehydrated. It won't have any children
-            // until hydration.
+            const hydrated = isFiberHydrated(fiber);
+            if (hydrated) {
+              const contentFiber = fiber.child;
+              if (contentFiber === null) {
+                throw new Error(
+                  'There should always be an Offscreen Fiber child in a hydrated Suspense boundary.',
+                );
+              }
+            } else {
+              // This Suspense Fiber is still dehydrated. It won't have any children
+              // until hydration.
+            }
+            const isTimedOut = fiber.memoizedState !== null;
+            if (!isTimedOut) {
+              newSuspenseNode.rects = measureInstance(newInstance);
+            }
           }
-          const isTimedOut = fiber.memoizedState !== null;
-          if (!isTimedOut) {
-            newSuspenseNode.rects = measureInstance(newInstance);
-          }
+        } else {
+          newSuspenseNode.rects = measureInstance(newInstance);
         }
         recordSuspenseMount(newSuspenseNode, reconcilingParentSuspenseNode);
       }
@@ -5717,6 +5721,7 @@ export function attach(
 
   function getSuspendedByOfSuspenseNode(
     suspenseNode: SuspenseNode,
+    filterByChildInstance: null | DevToolsInstance, // only include suspended by instances in this subtree
   ): Array<SerializedAsyncInfo> {
     // Collect all ReactAsyncInfo that was suspending this SuspenseNode but
     // isn't also in any parent set.
@@ -5729,6 +5734,15 @@ export function attach(
     // to a specific instance will have those appear in order of when that instance was discovered.
     let hooksCacheKey: null | DevToolsInstance = null;
     let hooksCache: null | HooksTree = null;
+    // Collect the stream entries with the highest byte offset and end time.
+    const streamEntries: Map<
+      Promise<mixed>,
+      {
+        asyncInfo: ReactAsyncInfo,
+        instance: DevToolsInstance,
+        hooks: null | HooksTree,
+      },
+    > = new Map();
     suspenseNode.suspendedBy.forEach((set, ioInfo) => {
       let parentNode = suspenseNode.parent;
       while (parentNode !== null) {
@@ -5743,8 +5757,30 @@ export function attach(
       if (set.size === 0) {
         return;
       }
-      const firstInstance: DevToolsInstance = (set.values().next().value: any);
-      if (firstInstance.suspendedBy !== null) {
+      let firstInstance: null | DevToolsInstance = null;
+      if (filterByChildInstance === null) {
+        firstInstance = (set.values().next().value: any);
+      } else {
+        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+        for (const childInstance of set.values()) {
+          if (firstInstance === null) {
+            firstInstance = childInstance;
+          }
+          if (
+            childInstance !== filterByChildInstance &&
+            !isChildOf(
+              filterByChildInstance,
+              childInstance,
+              suspenseNode.instance,
+            )
+          ) {
+            // Something suspended on this outside the filtered instance. That means that
+            // it is not unique to just this filtered instance so we skip including it.
+            return;
+          }
+        }
+      }
+      if (firstInstance !== null && firstInstance.suspendedBy !== null) {
         const asyncInfo = getAwaitInSuspendedByFromIO(
           firstInstance.suspendedBy,
           ioInfo,
@@ -5767,11 +5803,111 @@ export function attach(
               }
             }
           }
-          result.push(serializeAsyncInfo(asyncInfo, firstInstance, hooks));
+          const newIO = asyncInfo.awaited;
+          if (newIO.name === 'RSC stream' && newIO.value != null) {
+            const streamPromise = newIO.value;
+            // Special case RSC stream entries to pick the last entry keyed by the stream.
+            const existingEntry = streamEntries.get(streamPromise);
+            if (existingEntry === undefined) {
+              streamEntries.set(streamPromise, {
+                asyncInfo,
+                instance: firstInstance,
+                hooks,
+              });
+            } else {
+              const existingIO = existingEntry.asyncInfo.awaited;
+              if (
+                newIO !== existingIO &&
+                ((newIO.byteSize !== undefined &&
+                  existingIO.byteSize !== undefined &&
+                  newIO.byteSize > existingIO.byteSize) ||
+                  newIO.end > existingIO.end)
+              ) {
+                // The new entry is later in the stream that the old entry. Replace it.
+                existingEntry.asyncInfo = asyncInfo;
+                existingEntry.instance = firstInstance;
+                existingEntry.hooks = hooks;
+              }
+            }
+          } else {
+            result.push(serializeAsyncInfo(asyncInfo, firstInstance, hooks));
+          }
         }
       }
     });
+    // Add any deduped stream entries.
+    streamEntries.forEach(({asyncInfo, instance, hooks}) => {
+      result.push(serializeAsyncInfo(asyncInfo, instance, hooks));
+    });
     return result;
+  }
+
+  function getSuspendedByOfInstance(
+    devtoolsInstance: DevToolsInstance,
+    hooks: null | HooksTree,
+  ): Array<SerializedAsyncInfo> {
+    const suspendedBy = devtoolsInstance.suspendedBy;
+    if (suspendedBy === null) {
+      return [];
+    }
+
+    const foundIOEntries: Set<ReactIOInfo> = new Set();
+    const streamEntries: Map<Promise<mixed>, ReactAsyncInfo> = new Map();
+    const result: Array<SerializedAsyncInfo> = [];
+    for (let i = 0; i < suspendedBy.length; i++) {
+      const asyncInfo = suspendedBy[i];
+      const ioInfo = asyncInfo.awaited;
+      if (foundIOEntries.has(ioInfo)) {
+        // We have already added this I/O entry to the result. We can dedupe it.
+        // This can happen when an instance depends on the same data in mutliple places.
+        continue;
+      }
+      foundIOEntries.add(ioInfo);
+      if (ioInfo.name === 'RSC stream' && ioInfo.value != null) {
+        const streamPromise = ioInfo.value;
+        // Special case RSC stream entries to pick the last entry keyed by the stream.
+        const existingEntry = streamEntries.get(streamPromise);
+        if (existingEntry === undefined) {
+          streamEntries.set(streamPromise, asyncInfo);
+        } else {
+          const existingIO = existingEntry.awaited;
+          if (
+            ioInfo !== existingIO &&
+            ((ioInfo.byteSize !== undefined &&
+              existingIO.byteSize !== undefined &&
+              ioInfo.byteSize > existingIO.byteSize) ||
+              ioInfo.end > existingIO.end)
+          ) {
+            // The new entry is later in the stream that the old entry. Replace it.
+            streamEntries.set(streamPromise, asyncInfo);
+          }
+        }
+      } else {
+        result.push(serializeAsyncInfo(asyncInfo, devtoolsInstance, hooks));
+      }
+    }
+    // Add any deduped stream entries.
+    streamEntries.forEach(asyncInfo => {
+      result.push(serializeAsyncInfo(asyncInfo, devtoolsInstance, hooks));
+    });
+    return result;
+  }
+
+  function getSuspendedByOfInstanceSubtree(
+    devtoolsInstance: DevToolsInstance,
+  ): Array<SerializedAsyncInfo> {
+    // Get everything suspending below this instance down to the next Suspense node.
+    // First find the parent Suspense boundary which will have accumulated everything
+    let suspenseParentInstance = devtoolsInstance;
+    while (suspenseParentInstance.suspenseNode === null) {
+      if (suspenseParentInstance.parent === null) {
+        // We don't expect to hit this. We should always find the root.
+        return [];
+      }
+      suspenseParentInstance = suspenseParentInstance.parent;
+    }
+    const suspenseNode: SuspenseNode = suspenseParentInstance.suspenseNode;
+    return getSuspendedByOfSuspenseNode(suspenseNode, devtoolsInstance);
   }
 
   const FALLBACK_THROTTLE_MS: number = 300;
@@ -6287,17 +6423,17 @@ export function attach(
       fiberInstance.suspenseNode !== null
         ? // If this is a Suspense boundary, then we include everything in the subtree that might suspend
           // this boundary down to the next Suspense boundary.
-          getSuspendedByOfSuspenseNode(fiberInstance.suspenseNode)
-        : // This set is an edge case where if you pass a promise to a Client Component into a children
-          // position without a Server Component as the direct parent. E.g. <div>{promise}</div>
-          // In this case, this becomes associated with the Client/Host Component where as normally
-          // you'd expect these to be associated with the Server Component that awaited the data.
-          // TODO: Prepend other suspense sources like css, images and use().
-          fiberInstance.suspendedBy === null
-          ? []
-          : fiberInstance.suspendedBy.map(info =>
-              serializeAsyncInfo(info, fiberInstance, hooks),
-            );
+          getSuspendedByOfSuspenseNode(fiberInstance.suspenseNode, null)
+        : tag === ActivityComponent
+          ? // For Activity components we show everything that suspends the subtree down to the next boundary
+            // so that you can see what suspends a Transition at that level.
+            getSuspendedByOfInstanceSubtree(fiberInstance)
+          : // This set is an edge case where if you pass a promise to a Client Component into a children
+            // position without a Server Component as the direct parent. E.g. <div>{promise}</div>
+            // In this case, this becomes associated with the Client/Host Component where as normally
+            // you'd expect these to be associated with the Server Component that awaited the data.
+            // TODO: Prepend other suspense sources like css, images and use().
+            getSuspendedByOfInstance(fiberInstance, hooks);
     const suspendedByRange = getSuspendedByRange(
       getNearestSuspenseNode(fiberInstance),
     );
@@ -6442,7 +6578,7 @@ export function attach(
 
     const isSuspended = null;
     // Things that Suspended this Server Component (use(), awaits and direct child promises)
-    const suspendedBy = virtualInstance.suspendedBy;
+    const suspendedBy = getSuspendedByOfInstance(virtualInstance, null);
     const suspendedByRange = getSuspendedByRange(
       getNearestSuspenseNode(virtualInstance),
     );
@@ -6493,12 +6629,7 @@ export function attach(
           ? []
           : Array.from(componentLogsEntry.warnings.entries()),
 
-      suspendedBy:
-        suspendedBy === null
-          ? []
-          : suspendedBy.map(info =>
-              serializeAsyncInfo(info, virtualInstance, null),
-            ),
+      suspendedBy: suspendedBy,
       suspendedByRange: suspendedByRange,
       unknownSuspenders: UNKNOWN_SUSPENDERS_NONE,
 
@@ -7519,6 +7650,9 @@ export function attach(
     }
 
     // TODO: Allow overriding the timeline for the specified root.
+    forceFallbackForFibers.forEach(fiber => {
+      scheduleUpdate(fiber);
+    });
     forceFallbackForFibers.clear();
 
     for (let i = 0; i < suspendedSet.length; ++i) {

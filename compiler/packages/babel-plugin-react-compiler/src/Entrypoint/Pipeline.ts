@@ -103,6 +103,7 @@ import {validateNoFreezingKnownMutableFunctions} from '../Validation/ValidateNoF
 import {inferMutationAliasingEffects} from '../Inference/InferMutationAliasingEffects';
 import {inferMutationAliasingRanges} from '../Inference/InferMutationAliasingRanges';
 import {validateNoDerivedComputationsInEffects} from '../Validation/ValidateNoDerivedComputationsInEffects';
+import {nameAnonymousFunctions} from '../Transform/NameAnonymousFunctions';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -322,6 +323,15 @@ function runWithEnvironment(
 
   if (env.config.enableJsxOutlining) {
     outlineJSX(hir);
+  }
+
+  if (env.config.enableNameAnonymousFunctions) {
+    nameAnonymousFunctions(hir);
+    log({
+      kind: 'hir',
+      name: 'NameAnonymousFunctions',
+      value: hir,
+    });
   }
 
   if (env.config.enableFunctionOutlining) {

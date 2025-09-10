@@ -13,7 +13,7 @@ import BabelPluginReactCompiler, {
   CompilerErrorDetail,
   CompilerDiagnostic,
   Effect,
-  ErrorSeverity,
+  ErrorCategory,
   parseConfigPragmaForTests,
   ValueKind,
   type Hook,
@@ -258,7 +258,7 @@ function compile(
       console.error(err);
       error.details.push(
         new CompilerErrorDetail({
-          severity: ErrorSeverity.Invariant,
+          category: ErrorCategory.Invariant,
           reason: `Unexpected failure when transforming input! ${err}`,
           loc: null,
           suggestions: null,
@@ -315,9 +315,12 @@ export default function Editor(): JSX.Element {
       });
       mountStore = defaultStore;
     }
+
     dispatchStore({
       type: 'setStore',
-      payload: {store: mountStore},
+      payload: {
+        store: mountStore,
+      },
     });
   });
 
