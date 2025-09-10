@@ -267,6 +267,8 @@ import {
   blockingUpdateTime,
   blockingUpdateTask,
   blockingUpdateType,
+  blockingUpdateMethodName,
+  blockingUpdateComponentName,
   blockingEventTime,
   blockingEventType,
   blockingEventIsRepeat,
@@ -276,6 +278,8 @@ import {
   transitionUpdateTime,
   transitionUpdateTask,
   transitionUpdateType,
+  transitionUpdateMethodName,
+  transitionUpdateComponentName,
   transitionEventTime,
   transitionEventType,
   transitionEventIsRepeat,
@@ -1940,6 +1944,8 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
         renderStartTime,
         lanes,
         blockingUpdateTask,
+        blockingUpdateMethodName,
+        blockingUpdateComponentName,
       );
       clearBlockingTimers();
     }
@@ -1980,6 +1986,8 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
         transitionUpdateType === PINGED_UPDATE,
         renderStartTime,
         transitionUpdateTask,
+        transitionUpdateMethodName,
+        transitionUpdateComponentName,
       );
       clearTransitionTimers();
     }
