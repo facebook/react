@@ -9,7 +9,12 @@ const semver = require('semver');
 const yargs = require('yargs');
 const fs = require('fs');
 
-const INSTALL_PACKAGES = ['react-dom', 'react', 'react-test-renderer'];
+const INSTALL_PACKAGES = [
+  'react-dom',
+  'react',
+  'react-is',
+  'react-test-renderer',
+];
 const REGRESSION_FOLDER = 'build-regression';
 
 const ROOT_PATH = join(__dirname, '..', '..');
@@ -135,8 +140,6 @@ async function main() {
       return;
     }
     await downloadRegressionBuild();
-  } catch (e) {
-    console.log(chalk.red(e));
   } finally {
     // We shouldn't remove the regression-build folder unless we're using
     // it to replace the build folder
