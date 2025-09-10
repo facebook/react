@@ -5733,6 +5733,15 @@ export function attach(
     // to a specific instance will have those appear in order of when that instance was discovered.
     let hooksCacheKey: null | DevToolsInstance = null;
     let hooksCache: null | HooksTree = null;
+    // Collect the stream entries with the highest byte offset and end time.
+    const streamEntries: Map<
+      Promise<mixed>,
+      {
+        asyncInfo: ReactAsyncInfo,
+        instance: DevToolsInstance,
+        hooks: null | HooksTree,
+      },
+    > = new Map();
     suspenseNode.suspendedBy.forEach((set, ioInfo) => {
       let parentNode = suspenseNode.parent;
       while (parentNode !== null) {
@@ -5771,9 +5780,92 @@ export function attach(
               }
             }
           }
-          result.push(serializeAsyncInfo(asyncInfo, firstInstance, hooks));
+          const newIO = asyncInfo.awaited;
+          if (newIO.name === 'RSC stream' && newIO.value != null) {
+            const streamPromise = newIO.value;
+            // Special case RSC stream entries to pick the last entry keyed by the stream.
+            const existingEntry = streamEntries.get(streamPromise);
+            if (existingEntry === undefined) {
+              streamEntries.set(streamPromise, {
+                asyncInfo,
+                instance: firstInstance,
+                hooks,
+              });
+            } else {
+              const existingIO = existingEntry.asyncInfo.awaited;
+              if (
+                newIO !== existingIO &&
+                ((newIO.byteSize !== undefined &&
+                  existingIO.byteSize !== undefined &&
+                  newIO.byteSize > existingIO.byteSize) ||
+                  newIO.end > existingIO.end)
+              ) {
+                // The new entry is later in the stream that the old entry. Replace it.
+                existingEntry.asyncInfo = asyncInfo;
+                existingEntry.instance = firstInstance;
+                existingEntry.hooks = hooks;
+              }
+            }
+          } else {
+            result.push(serializeAsyncInfo(asyncInfo, firstInstance, hooks));
+          }
         }
       }
+    });
+    // Add any deduped stream entries.
+    streamEntries.forEach(({asyncInfo, instance, hooks}) => {
+      result.push(serializeAsyncInfo(asyncInfo, instance, hooks));
+    });
+    return result;
+  }
+
+  function getSuspendedByOfInstance(
+    devtoolsInstance: DevToolsInstance,
+    hooks: null | HooksTree,
+  ): Array<SerializedAsyncInfo> {
+    const suspendedBy = devtoolsInstance.suspendedBy;
+    if (suspendedBy === null) {
+      return [];
+    }
+
+    const foundIOEntries: Set<ReactIOInfo> = new Set();
+    const streamEntries: Map<Promise<mixed>, ReactAsyncInfo> = new Map();
+    const result: Array<SerializedAsyncInfo> = [];
+    for (let i = 0; i < suspendedBy.length; i++) {
+      const asyncInfo = suspendedBy[i];
+      const ioInfo = asyncInfo.awaited;
+      if (foundIOEntries.has(ioInfo)) {
+        // We have already added this I/O entry to the result. We can dedupe it.
+        // This can happen when an instance depends on the same data in mutliple places.
+        continue;
+      }
+      foundIOEntries.add(ioInfo);
+      if (ioInfo.name === 'RSC stream' && ioInfo.value != null) {
+        const streamPromise = ioInfo.value;
+        // Special case RSC stream entries to pick the last entry keyed by the stream.
+        const existingEntry = streamEntries.get(streamPromise);
+        if (existingEntry === undefined) {
+          streamEntries.set(streamPromise, asyncInfo);
+        } else {
+          const existingIO = existingEntry.awaited;
+          if (
+            ioInfo !== existingIO &&
+            ((ioInfo.byteSize !== undefined &&
+              existingIO.byteSize !== undefined &&
+              ioInfo.byteSize > existingIO.byteSize) ||
+              ioInfo.end > existingIO.end)
+          ) {
+            // The new entry is later in the stream that the old entry. Replace it.
+            streamEntries.set(streamPromise, asyncInfo);
+          }
+        }
+      } else {
+        result.push(serializeAsyncInfo(asyncInfo, devtoolsInstance, hooks));
+      }
+    }
+    // Add any deduped stream entries.
+    streamEntries.forEach(asyncInfo => {
+      result.push(serializeAsyncInfo(asyncInfo, devtoolsInstance, hooks));
     });
     return result;
   }
@@ -6297,11 +6389,7 @@ export function attach(
           // In this case, this becomes associated with the Client/Host Component where as normally
           // you'd expect these to be associated with the Server Component that awaited the data.
           // TODO: Prepend other suspense sources like css, images and use().
-          fiberInstance.suspendedBy === null
-          ? []
-          : fiberInstance.suspendedBy.map(info =>
-              serializeAsyncInfo(info, fiberInstance, hooks),
-            );
+          getSuspendedByOfInstance(fiberInstance, hooks);
     const suspendedByRange = getSuspendedByRange(
       getNearestSuspenseNode(fiberInstance),
     );
@@ -6446,7 +6534,7 @@ export function attach(
 
     const isSuspended = null;
     // Things that Suspended this Server Component (use(), awaits and direct child promises)
-    const suspendedBy = virtualInstance.suspendedBy;
+    const suspendedBy = getSuspendedByOfInstance(virtualInstance, null);
     const suspendedByRange = getSuspendedByRange(
       getNearestSuspenseNode(virtualInstance),
     );
@@ -6497,12 +6585,7 @@ export function attach(
           ? []
           : Array.from(componentLogsEntry.warnings.entries()),
 
-      suspendedBy:
-        suspendedBy === null
-          ? []
-          : suspendedBy.map(info =>
-              serializeAsyncInfo(info, virtualInstance, null),
-            ),
+      suspendedBy: suspendedBy,
       suspendedByRange: suspendedByRange,
       unknownSuspenders: UNKNOWN_SUSPENDERS_NONE,
 
