@@ -1941,12 +1941,14 @@ function createChildReconciler(
       throwFiber.return = returnFiber;
       if (__DEV__) {
         const debugInfo = (throwFiber._debugInfo = currentDebugInfo);
-        // Conceptually the error's owner/task should ideally be captured when the
-        // Error constructor is called but neither console.createTask does this,
-        // nor do we override them to capture our `owner`. So instead, we use the
-        // nearest parent as the owner/task of the error. This is usually the same
-        // thing when it's thrown from the same async component but not if you await
-        // a promise started from a different component/task.
+        // Conceptually the error's owner should ideally be captured when the
+        // Error constructor is called but we don't override them to capture our
+        // `owner`. So instead, we use the nearest parent as the owner/task of the
+        // error. This is usually the same thing when it's thrown from the same
+        // async component but not if you await a promise started from a different
+        // component/task.
+        // In newer Chrome, Error constructor does capture the Task which is what
+        // is logged by reportError. In that case this debugTask isn't used.
         throwFiber._debugOwner = returnFiber._debugOwner;
         throwFiber._debugTask = returnFiber._debugTask;
         if (debugInfo != null) {
