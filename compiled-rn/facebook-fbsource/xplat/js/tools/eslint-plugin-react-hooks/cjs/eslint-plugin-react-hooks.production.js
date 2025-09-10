@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<6130aa4e0aebb8a78493e1f22dcb25e1>>
+ * @generated SignedSource<<13bad903e707a5f4d4917a9299c77270>>
  */
 
 'use strict';
@@ -49228,10 +49228,44 @@ function validateNoRefAccessInRenderImpl(fn, env) {
                     case 'StartMemoize':
                     case 'FinishMemoize':
                         break;
+                    case 'LoadGlobal': {
+                        if (instr.value.binding.name === 'undefined') {
+                            env.set(instr.lvalue.identifier.id, { kind: 'Nullable' });
+                        }
+                        break;
+                    }
                     case 'Primitive': {
                         if (instr.value.value == null) {
                             env.set(instr.lvalue.identifier.id, { kind: 'Nullable' });
                         }
+                        break;
+                    }
+                    case 'UnaryExpression': {
+                        if (instr.value.operator === '!') {
+                            const value = env.get(instr.value.value.identifier.id);
+                            const refId = (value === null || value === void 0 ? void 0 : value.kind) === 'RefValue' && value.refId != null
+                                ? value.refId
+                                : null;
+                            if (refId !== null) {
+                                env.set(instr.lvalue.identifier.id, { kind: 'Guard', refId });
+                                errors.pushDiagnostic(CompilerDiagnostic.create({
+                                    category: ErrorCategory.Refs,
+                                    reason: 'Cannot access refs during render',
+                                    description: ERROR_DESCRIPTION,
+                                })
+                                    .withDetails({
+                                    kind: 'error',
+                                    loc: instr.value.value.loc,
+                                    message: `Cannot access ref value during render`,
+                                })
+                                    .withDetails({
+                                    kind: 'hint',
+                                    message: 'To initialize a ref only once, check that the ref is null with the pattern `if (ref.current == null) { ref.current = ... }`',
+                                }));
+                                break;
+                            }
+                        }
+                        validateNoRefValueAccess(errors, env, instr.value.value);
                         break;
                     }
                     case 'BinaryExpression': {
