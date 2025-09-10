@@ -25,11 +25,12 @@ import AccordianWindow from '../AccordianWindow';
 import TabbedWindow from '../TabbedWindow';
 import {monacoOptions} from './monacoOptions';
 import {BabelFileResult} from '@babel/core';
-import {BASIC_OUTPUT_TAB_NAMES} from '../constants';
 
 const MemoizedOutput = memo(Output);
 
 export default MemoizedOutput;
+
+export const BASIC_OUTPUT_TAB_NAMES = ['Output', 'SourceMap'];
 
 export type PrintedCompilerPipelineValue =
   | {

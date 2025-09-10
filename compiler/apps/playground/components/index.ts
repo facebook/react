@@ -8,4 +8,3 @@
 export {default as Editor} from './Editor';
 export {default as Header} from './Header';
 export {StoreProvider} from './StoreContext';
-export {BASIC_OUTPUT_TAB_NAMES} from './constants';

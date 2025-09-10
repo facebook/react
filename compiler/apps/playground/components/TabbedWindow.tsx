@@ -24,8 +24,8 @@ export default function TabbedWindow({
     );
   }
   return (
-    <div className="flex-1 max-w-full">
-      <div className="flex p-2">
+    <div className="flex flex-col h-full max-w-full">
+      <div className="flex p-2 flex-shrink-0">
         {Array.from(tabs.keys()).map(tab => {
           const isActive = activeTab === tab;
           return (
@@ -34,16 +34,17 @@ export default function TabbedWindow({
               onClick={() => onTabChange(tab)}
               className={clsx(
                 'active:scale-95 transition-transform text-center outline-none py-1.5 px-1.5 xs:px-3 sm:px-4 rounded-full capitalize whitespace-nowrap text-sm',
-                !isActive && 'hover:bg-primary/5 hover:dark:bg-primary-dark/5',
-                isActive &&
-                  'bg-highlight dark:bg-highlight-dark text-link dark:text-link-dark',
+                !isActive && 'hover:bg-primary/5',
+                isActive && 'bg-highlight text-link',
               )}>
               {tab}
             </button>
           );
         })}
       </div>
-      <div>{tabs.get(activeTab)}</div>
+      <div className="flex-1 overflow-hidden w-full h-full">
+        {tabs.get(activeTab)}
+      </div>
     </div>
   );
 }

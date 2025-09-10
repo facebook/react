@@ -14,6 +14,7 @@ import {Resizable} from 're-resizable';
 import {useEffect, useState} from 'react';
 import {renderReactCompilerMarkers} from '../../lib/reactCompilerMonacoDiagnostics';
 import {useStore, useStoreDispatch} from '../StoreContext';
+import TabbedWindow from '../TabbedWindow';
 import {monacoOptions} from './monacoOptions';
 // @ts-expect-error TODO: Make TS recognize .d.ts files, in addition to loading them with webpack.
 import React$Types from '../../node_modules/@types/react/index.d.ts';
@@ -151,6 +152,19 @@ export default function Input({errors, language}: Props): JSX.Element {
     />
   );
 
+  const tabs = new Map([['Input', editorContent]]);
+  const [activeTab, setActiveTab] = useState('Input');
+
+  const tabbedContent = (
+    <div className="flex flex-col h-full">
+      <TabbedWindow
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
+    </div>
+  );
+
   return (
     <div className="relative flex flex-col flex-none border-r border-gray-200">
       {store.showInternals ? (
@@ -162,10 +176,10 @@ export default function Input({errors, language}: Props): JSX.Element {
            * will grow the editor to fit within parent element
            */
           className="!h-[calc(100vh_-_3.5rem)]">
-          {editorContent}
+          {tabbedContent}
         </Resizable>
       ) : (
-        <div className="!h-[calc(100vh_-_3.5rem)]">{editorContent}</div>
+        <div className="!h-[calc(100vh_-_3.5rem)]">{tabbedContent}</div>
       )}
     </div>
   );
