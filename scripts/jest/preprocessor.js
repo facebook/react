@@ -91,7 +91,10 @@ module.exports = {
         ]);
       } else {
         plugins.push(
-          require.resolve('@babel/plugin-transform-react-jsx'),
+          [
+            require.resolve('@babel/plugin-transform-react-jsx'),
+            {runtime: 'classic'},
+          ],
           require.resolve('@babel/plugin-transform-react-jsx-source')
         );
       }
