@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5574295a2fffcbdd7216f804329aefa3>>
+ * @generated SignedSource<<b2691631226587bd56f7870750015714>>
  */
 
 "use strict";
@@ -404,5 +404,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-native-fb-acada303-20250909";
+    exports.version = "19.2.0-native-fb-835b0090-20250910";
   })();
