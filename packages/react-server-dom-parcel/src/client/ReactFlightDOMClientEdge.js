@@ -115,8 +115,9 @@ function startReadingFromStream(
   response: FlightResponse,
   stream: ReadableStream,
   onDone: () => void,
+  debugValue: mixed,
 ): void {
-  const streamState = createStreamState();
+  const streamState = createStreamState(response, debugValue);
   const reader = stream.getReader();
   function progress({
     done,
@@ -158,9 +159,14 @@ export function createFromReadableStream<T>(
       }
     };
     startReadingFromStream(response, options.debugChannel.readable, handleDone);
-    startReadingFromStream(response, stream, handleDone);
+    startReadingFromStream(response, stream, handleDone, stream);
   } else {
-    startReadingFromStream(response, stream, close.bind(null, response));
+    startReadingFromStream(
+      response,
+      stream,
+      close.bind(null, response),
+      stream,
+    );
   }
 
   return getRoot(response);
@@ -190,12 +196,13 @@ export function createFromFetch<T>(
           options.debugChannel.readable,
           handleDone,
         );
-        startReadingFromStream(response, (r.body: any), handleDone);
+        startReadingFromStream(response, (r.body: any), handleDone, r);
       } else {
         startReadingFromStream(
           response,
           (r.body: any),
           close.bind(null, response),
+          r,
         );
       }
     },

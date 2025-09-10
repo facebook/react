@@ -21,6 +21,8 @@ import {Note} from './cjs/Note.js';
 
 import {GenerateImage} from './GenerateImage.js';
 
+import LargeContent from './LargeContent.js';
+
 import {like, greet, increment} from './actions.js';
 
 import {getServerState} from './ServerState.js';
@@ -233,6 +235,11 @@ export default async function App({prerender, noCache}) {
           <Foo>{dedupedChild}</Foo>
           <Bar>{Promise.resolve([dedupedChild])}</Bar>
           <Navigate />
+          {prerender ? null : ( // TODO: prerender is broken for large content for some reason.
+            <React.Suspense fallback={null}>
+              <LargeContent />
+            </React.Suspense>
+          )}
         </Container>
       </body>
     </html>

@@ -34,4 +34,8 @@ const configs = {
   },
 };
 
-export {configs, allRules as rules, meta};
+const rules = Object.fromEntries(
+  Object.entries(allRules).map(([name, {rule}]) => [name, rule]),
+);
+
+export {configs, rules, meta};
