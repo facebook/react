@@ -21,9 +21,12 @@ import * as prettierPluginEstree from 'prettier/plugins/estree';
 import * as prettier from 'prettier/standalone';
 import {memo, ReactNode, useEffect, useState} from 'react';
 import {type Store} from '../../lib/stores';
+import AccordianWindow from '../AccordianWindow';
 import TabbedWindow from '../TabbedWindow';
 import {monacoOptions} from './monacoOptions';
 import {BabelFileResult} from '@babel/core';
+import {BASIC_OUTPUT_TAB_NAMES} from '../constants';
+
 const MemoizedOutput = memo(Output);
 
 export default MemoizedOutput;
@@ -71,7 +74,7 @@ async function tabify(
   const concattedResults = new Map<string, string>();
   // Concat all top level function declaration results into a single tab for each pass
   for (const [passName, results] of compilerOutput.results) {
-    if (!showInternals && passName !== 'Output' && passName !== 'SourceMap') {
+    if (!showInternals && !BASIC_OUTPUT_TAB_NAMES.includes(passName)) {
       continue;
     }
     for (const result of results) {
@@ -215,6 +218,7 @@ function Output({store, compilerOutput}: Props): JSX.Element {
   const [tabs, setTabs] = useState<Map<string, React.ReactNode>>(
     () => new Map(),
   );
+  const [activeTab, setActiveTab] = useState<string>('Output');
 
   /*
    * Update the active tab back to the output or errors tab when the compilation state
@@ -226,6 +230,7 @@ function Output({store, compilerOutput}: Props): JSX.Element {
   if (compilerOutput.kind !== previousOutputKind) {
     setPreviousOutputKind(compilerOutput.kind);
     setTabsOpen(new Set(['Output']));
+    setActiveTab('Output');
   }
 
   useEffect(() => {
@@ -249,9 +254,19 @@ function Output({store, compilerOutput}: Props): JSX.Element {
     }
   }
 
+  if (!store.showInternals) {
+    return (
+      <TabbedWindow
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
+    );
+  }
+
   return (
     <>
-      <TabbedWindow
+      <AccordianWindow
         defaultTab={store.showInternals ? 'HIR' : 'Output'}
         setTabsOpen={setTabsOpen}
         tabsOpen={tabsOpen}

@@ -5,7 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export {default as Editor} from './Editor';
-export {default as Header} from './Header';
-export {StoreProvider} from './StoreContext';
-export {BASIC_OUTPUT_TAB_NAMES} from './constants';
+export const BASIC_OUTPUT_TAB_NAMES = ['Output', 'SourceMap'];

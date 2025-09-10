@@ -95,7 +95,6 @@ export default function ConfigEditor(): React.ReactElement {
                 lineNumbers: 'off',
                 folding: false,
                 renderLineHighlight: 'none',
-                scrollBeyondLastLine: false,
                 hideCursorInOverviewRuler: true,
                 overviewRulerBorder: false,
                 overviewRulerLanes: 0,

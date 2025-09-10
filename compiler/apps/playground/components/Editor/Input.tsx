@@ -135,30 +135,38 @@ export default function Input({errors, language}: Props): JSX.Element {
     });
   };
 
+  const editorContent = (
+    <MonacoEditor
+      path={'index.js'}
+      /**
+       * .js and .jsx files are specified to be TS so that Monaco can actually
+       * check their syntax using its TS language service. They are still JS files
+       * due to their extensions, so TS language features don't work.
+       */
+      language={'javascript'}
+      value={store.source}
+      onMount={handleMount}
+      onChange={handleChange}
+      options={monacoOptions}
+    />
+  );
+
   return (
     <div className="relative flex flex-col flex-none border-r border-gray-200">
-      <Resizable
-        minWidth={650}
-        enable={{right: true}}
-        /**
-         * Restrict MonacoEditor's height, since the config autoLayout:true
-         * will grow the editor to fit within parent element
-         */
-        className="!h-[calc(100vh_-_3.5rem)]">
-        <MonacoEditor
-          path={'index.js'}
+      {store.showInternals ? (
+        <Resizable
+          minWidth={650}
+          enable={{right: true}}
           /**
-           * .js and .jsx files are specified to be TS so that Monaco can actually
-           * check their syntax using its TS language service. They are still JS files
-           * due to their extensions, so TS language features don't work.
+           * Restrict MonacoEditor's height, since the config autoLayout:true
+           * will grow the editor to fit within parent element
            */
-          language={'javascript'}
-          value={store.source}
-          onMount={handleMount}
-          onChange={handleChange}
-          options={monacoOptions}
-        />
-      </Resizable>
+          className="!h-[calc(100vh_-_3.5rem)]">
+          {editorContent}
+        </Resizable>
+      ) : (
+        <div className="!h-[calc(100vh_-_3.5rem)]">{editorContent}</div>
+      )}
     </div>
   );
 }

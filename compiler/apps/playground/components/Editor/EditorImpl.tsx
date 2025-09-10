@@ -27,7 +27,7 @@ import BabelPluginReactCompiler, {
 import clsx from 'clsx';
 import invariant from 'invariant';
 import {useSnackbar} from 'notistack';
-import {useDeferredValue, useMemo} from 'react';
+import {useDeferredValue, useMemo, useState, useCallback} from 'react';
 import {useMountEffect} from '../../hooks';
 import {defaultStore} from '../../lib/defaultStore';
 import {
@@ -350,13 +350,17 @@ export default function Editor(): JSX.Element {
   }
   return (
     <>
-      <div className="relative flex basis top-14">
-        <ConfigEditor />
-        <div className={clsx('relative sm:basis-1/4')}>
-          <Input language={language} errors={errors} />
+      <div className="relative flex top-14 h-full">
+        <div className="flex-shrink-0">
+          <ConfigEditor />
         </div>
-        <div className={clsx('flex sm:flex flex-wrap')}>
-          <Output store={deferredStore} compilerOutput={mergedOutput} />
+        <div className="flex flex-1 min-w-0">
+          <div className="flex-1 min-w-0">
+            <Input language={language} errors={errors} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <Output store={deferredStore} compilerOutput={mergedOutput} />
+          </div>
         </div>
       </div>
     </>
