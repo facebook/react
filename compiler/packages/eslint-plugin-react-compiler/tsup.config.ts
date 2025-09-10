@@ -12,7 +12,6 @@ export default defineConfig({
   outDir: './dist',
   external: [
     '@babel/core',
-    '@babel/plugin-proposal-private-methods',
     'hermes-parser',
     'zod',
     'zod-validation-error',
