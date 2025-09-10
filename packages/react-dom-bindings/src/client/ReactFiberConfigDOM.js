@@ -1369,14 +1369,23 @@ function warnForBlockInsideInline(instance: HTMLElement) {
         node.nodeType === ELEMENT_NODE &&
         getComputedStyle((node: any)).display === 'block'
       ) {
-        console.error(
-          "You're about to start a <ViewTransition> around a display: inline " +
-            'element <%s>, which itself has a display: block element <%s> inside it. ' +
-            'This might trigger a bug in Safari which causes the View Transition to ' +
-            'be skipped with a duplicate name error.\n' +
-            'https://bugs.webkit.org/show_bug.cgi?id=290923',
-          instance.tagName.toLocaleLowerCase(),
-          (node: any).tagName.toLocaleLowerCase(),
+        const fiber =
+          getInstanceFromNode(node) || getInstanceFromNode(instance);
+        runWithFiberInDEV(
+          fiber,
+          (parentTag: string, childTag: string) => {
+            console.error(
+              "You're about to start a <ViewTransition> around a display: inline " +
+                'element <%s>, which itself has a display: block element <%s> inside it. ' +
+                'This might trigger a bug in Safari which causes the View Transition to ' +
+                'be skipped with a duplicate name error.\n' +
+                'https://bugs.webkit.org/show_bug.cgi?id=290923',
+              parentTag.toLocaleLowerCase(),
+              childTag.toLocaleLowerCase(),
+            );
+          },
+          instance.tagName,
+          (node: any).tagName,
         );
         break;
       }
