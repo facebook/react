@@ -221,11 +221,7 @@ function getDocumentBoundingRect(
   };
 }
 
-function SuspenseRectsShell({
-  rootID,
-}: {
-  rootID: SuspenseNode['id'],
-}): React$Node {
+function SuspenseRectsRoot({rootID}: {rootID: SuspenseNode['id']}): React$Node {
   const store = useContext(StoreContext);
   const root = store.getSuspenseByID(rootID);
   if (root === null) {
@@ -254,14 +250,16 @@ function SuspenseRectsContainer(): React$Node {
   const width = '100%';
   const aspectRatio = `1 / ${heightScale}`;
 
+  function handleClick() {}
+
   return (
-    <div className={styles.SuspenseRectsContainer}>
+    <div className={styles.SuspenseRectsContainer} onClick={handleClick}>
       <ViewBox.Provider value={boundingBox}>
         <div
           className={styles.SuspenseRectsViewBox}
           style={{aspectRatio, width}}>
           {roots.map(rootID => {
-            return <SuspenseRectsShell key={rootID} rootID={rootID} />;
+            return <SuspenseRectsRoot key={rootID} rootID={rootID} />;
           })}
         </div>
       </ViewBox.Provider>

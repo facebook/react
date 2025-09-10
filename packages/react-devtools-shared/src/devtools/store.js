@@ -854,10 +854,11 @@ export default class Store extends EventEmitter<{
     const lineage: Array<SuspenseNode['id']> = [];
     let next: null | SuspenseNode = this.getSuspenseByID(suspenseID);
     while (next !== null) {
+      // Include Root to be able to see what suspended the Shell.
+      lineage.unshift(next.id);
       if (next.parentID === 0) {
         next = null;
       } else {
-        lineage.unshift(next.id);
         next = this.getSuspenseByID(next.parentID);
       }
     }
@@ -1205,7 +1206,7 @@ export default class Store extends EventEmitter<{
             this._idToElement.set(id, {
               children: [],
               depth: -1,
-              displayName: null,
+              displayName: 'React Root',
               hocDisplayNames: null,
               id,
               isCollapsed: false, // Never collapse roots; it would hide the entire tree.
@@ -1539,7 +1540,12 @@ export default class Store extends EventEmitter<{
             if (name === null) {
               // The boundary isn't explicitly named.
               // Pick a sensible default.
-              name = this._guessSuspenseName(element);
+              if (parentID === 0) {
+                // For Roots we use their display name.
+                name = element.displayName;
+              } else {
+                name = this._guessSuspenseName(element);
+              }
             }
           }
 
