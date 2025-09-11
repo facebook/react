@@ -2384,6 +2384,11 @@ function visitAsyncNode(
               // Promise that was ultimately awaited by the user space await.
               serializeIONode(request, ioNode, awaited.promise);
 
+              // Ensure the owner is already outlined.
+              if (node.owner != null) {
+                outlineComponentInfo(request, node.owner);
+              }
+
               // We log the environment at the time when the last promise pigned ping which may
               // be later than what the environment was when we actually started awaiting.
               const env = (0, request.environmentName)();
@@ -5133,6 +5138,10 @@ function forwardDebugInfo(
         } else {
           // Outline the IO info in case the same I/O is awaited in more than one place.
           outlineIOInfo(request, ioInfo);
+          // Ensure the owner is already outlined.
+          if (info.owner != null) {
+            outlineComponentInfo(request, info.owner);
+          }
           // We can't serialize the ConsoleTask/Error objects so we need to omit them before serializing.
           let debugStack;
           if (info.stack == null && info.debugStack != null) {
