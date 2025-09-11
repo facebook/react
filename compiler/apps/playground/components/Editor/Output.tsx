@@ -266,15 +266,13 @@ function Output({store, compilerOutput}: Props): JSX.Element {
   }
 
   return (
-    <>
-      <AccordianWindow
-        defaultTab={store.showInternals ? 'HIR' : 'Output'}
-        setTabsOpen={setTabsOpen}
-        tabsOpen={tabsOpen}
-        tabs={tabs}
-        changedPasses={changedPasses}
-      />
-    </>
+    <AccordianWindow
+      defaultTab={store.showInternals ? 'HIR' : 'Output'}
+      setTabsOpen={setTabsOpen}
+      tabsOpen={tabsOpen}
+      tabs={tabs}
+      changedPasses={changedPasses}
+    />
   );
 }
 

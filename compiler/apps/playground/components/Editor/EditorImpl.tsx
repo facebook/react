@@ -354,11 +354,11 @@ export default function Editor(): JSX.Element {
         <div className="flex-shrink-0">
           <ConfigEditor />
         </div>
-        <div className="flex flex-1 min-w-0">
-          <div className="flex-1 min-w-0">
+        <div className="flex flex-1 min-w-0 overflow-x-auto">
+          <div className="flex-1 min-w-[450px] sm:min-w-0">
             <Input language={language} errors={errors} />
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-[450px] sm:min-w-0">
             <Output store={deferredStore} compilerOutput={mergedOutput} />
           </div>
         </div>

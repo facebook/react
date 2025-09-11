@@ -29,5 +29,4 @@ export const monacoOptions: Partial<EditorProps['options']> = {
   automaticLayout: true,
   wordWrap: 'on',
   wrappingIndent: 'same',
-  scrollBeyondLastLine: false,
 };

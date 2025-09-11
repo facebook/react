@@ -6,7 +6,10 @@
  */
 
 import MonacoEditor, {loader, type Monaco} from '@monaco-editor/react';
-import {CompilerErrorDetail} from 'babel-plugin-react-compiler';
+import {
+  CompilerErrorDetail,
+  CompilerDiagnostic,
+} from 'babel-plugin-react-compiler';
 import invariant from 'invariant';
 import type {editor} from 'monaco-editor';
 import * as monaco from 'monaco-editor';
@@ -22,7 +25,7 @@ import React$Types from '../../node_modules/@types/react/index.d.ts';
 loader.config({monaco});
 
 type Props = {
-  errors: Array<CompilerErrorDetail>;
+  errors: Array<CompilerErrorDetail | CompilerDiagnostic>;
   language: 'flow' | 'typescript';
 };
 
@@ -169,7 +172,7 @@ export default function Input({errors, language}: Props): JSX.Element {
     <div className="relative flex flex-col flex-none border-r border-gray-200">
       {store.showInternals ? (
         <Resizable
-          minWidth={650}
+          minWidth={550}
           enable={{right: true}}
           /**
            * Restrict MonacoEditor's height, since the config autoLayout:true

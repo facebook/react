@@ -89,14 +89,14 @@ function ExpandedEditor({
       defaultSize={{width: 350, height: 'auto'}}
       enable={{right: true, bottom: false}}
       style={{position: 'relative', height: 'calc(100vh - 3.5rem)'}}>
-      <div className="bg-highlight p-2">
+      <div className="bg-gray-700 p-2">
         <div className="pb-2">
-          <h2 className="inline-block bg-highlight text-link text-center outline-none py-1.5 px-1.5 xs:px-3 sm:px-4 rounded-full capitalize whitespace-nowrap text-sm">
+          <h2 className="inline-block text-secondary-dark text-center outline-none py-1.5 px-1.5 xs:px-3 sm:px-4 rounded-full capitalize whitespace-nowrap text-sm">
             Config Overrides
           </h2>
         </div>
         <div
-          className="absolute w-8 h-16 bg-highlight hover:bg-primary/5 active:scale-95 transition-transform rounded-r-full flex items-center justify-center z-10 cursor-pointer"
+          className="absolute w-10 h-16 bg-gray-700 hover:translate-x-2 transition-transform rounded-r-full flex items-center justify-center z-[5] cursor-pointer"
           title="Minimize config editor"
           onClick={() => onToggle(false)}
           style={{
@@ -106,7 +106,10 @@ function ExpandedEditor({
             borderTopLeftRadius: 0,
             borderBottomLeftRadius: 0,
           }}>
-          <IconChevron displayDirection="left" className="text-link" />
+          <IconChevron
+            displayDirection="left"
+            className="text-secondary-dark"
+          />
         </div>
         <div className="h-[calc(100vh_-_3.5rem_-_3.5rem)] rounded-lg overflow-hidden">
           <MonacoEditor
@@ -124,6 +127,7 @@ function ExpandedEditor({
               overviewRulerBorder: false,
               overviewRulerLanes: 0,
               fontSize: 12,
+              scrollBeyondLastLine: false,
             }}
           />
         </div>
@@ -142,17 +146,17 @@ function CollapsedEditor({
       className="w-4"
       style={{height: 'calc(100vh - 3.5rem)', position: 'relative'}}>
       <div
-        className="absolute w-8 h-16 bg-highlight hover:bg-primary/5 active:scale-95 transition-transform rounded-r-full flex items-center justify-center z-10 cursor-pointer"
+        className="absolute w-10 h-16 bg-gray-700 hover:translate-x-2 transition-transform rounded-r-full flex items-center justify-center z-[5] cursor-pointer"
         title="Expand config editor"
         onClick={() => onToggle(true)}
         style={{
           top: '50%',
           marginTop: '-32px',
-          left: '0px',
+          left: '-8px',
           borderTopLeftRadius: 0,
           borderBottomLeftRadius: 0,
         }}>
-        <IconChevron displayDirection="right" className="text-link" />
+        <IconChevron displayDirection="right" className="text-secondary-dark" />
       </div>
     </div>
   );
