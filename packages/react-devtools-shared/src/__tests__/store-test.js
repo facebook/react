@@ -2489,7 +2489,7 @@ describe('Store', () => {
       withErrorsOrWarningsIgnored(['test-only:'], async () => {
         await act(() => render(<React.Fragment />));
       });
-      expect(store).toMatchInlineSnapshot(`[root]`);
+      expect(store).toMatchInlineSnapshot(``);
       expect(store.componentWithErrorCount).toBe(0);
       expect(store.componentWithWarningCount).toBe(0);
     });
@@ -3083,6 +3083,9 @@ describe('Store', () => {
 
   it('should handle an empty root', async () => {
     await actAsync(() => render(null));
+    expect(store).toMatchInlineSnapshot(``);
+
+    await actAsync(() => render(<span />));
     expect(store).toMatchInlineSnapshot(`[root]`);
   });
 });
