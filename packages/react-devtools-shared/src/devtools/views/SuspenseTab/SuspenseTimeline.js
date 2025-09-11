@@ -11,6 +11,7 @@ import * as React from 'react';
 import {useContext, useLayoutEffect, useRef} from 'react';
 import {BridgeContext, StoreContext} from '../context';
 import {TreeDispatcherContext} from '../Components/TreeContext';
+import Tooltip from '../Components/reach-ui/tooltip';
 import {useHighlightHostInstance} from '../hooks';
 import {
   SuspenseTreeDispatcherContext,
@@ -34,7 +35,25 @@ function SuspenseTimelineInput() {
     selectedRootID: rootID,
     timeline,
     timelineIndex,
+    uniqueSuspendersOnly,
   } = useContext(SuspenseTreeStateContext);
+
+  function handleToggleUniqueSuspenders(event: SyntheticEvent) {
+    const nextUniqueSuspendersOnly = (event.currentTarget as HTMLInputElement)
+      .checked;
+    const nextTimeline =
+      rootID === null
+        ? []
+        : // TODO: Handle different timeline modes (e.g. random order)
+          store.getSuspendableDocumentOrderSuspense(
+            rootID,
+            nextUniqueSuspendersOnly,
+          );
+    suspenseTreeDispatch({
+      type: 'SET_SUSPENSE_TIMELINE',
+      payload: [nextTimeline, null, nextUniqueSuspendersOnly],
+    });
+  }
 
   const inputRef = useRef<HTMLElement | null>(null);
   const inputBBox = useRef<ClientRect | null>(null);
@@ -155,9 +174,7 @@ function SuspenseTimelineInput() {
 
   return (
     <>
-      <div>
-        {timelineIndex}/{max}
-      </div>
+      {timelineIndex}/{max}
       <div className={styles.SuspenseTimelineInput}>
         <input
           className={styles.SuspenseTimelineSlider}
@@ -173,23 +190,35 @@ function SuspenseTimelineInput() {
           ref={inputRef}
         />
       </div>
+      <Tooltip label="Only include boundaries with unique suspenders">
+        <input
+          checked={uniqueSuspendersOnly}
+          type="checkbox"
+          onChange={handleToggleUniqueSuspenders}
+        />
+      </Tooltip>
     </>
   );
 }
 
 export default function SuspenseTimeline(): React$Node {
   const store = useContext(StoreContext);
-  const {roots, selectedRootID} = useContext(SuspenseTreeStateContext);
+  const {roots, selectedRootID, uniqueSuspendersOnly} = useContext(
+    SuspenseTreeStateContext,
+  );
   const treeDispatch = useContext(TreeDispatcherContext);
   const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
 
   function handleChange(event: SyntheticEvent) {
     const newRootID = +event.currentTarget.value;
     // TODO: scrollIntoView both suspense rects and host instance.
-    const nextTimeline = store.getSuspendableDocumentOrderSuspense(newRootID);
+    const nextTimeline = store.getSuspendableDocumentOrderSuspense(
+      newRootID,
+      uniqueSuspendersOnly,
+    );
     suspenseTreeDispatch({
       type: 'SET_SUSPENSE_TIMELINE',
-      payload: [nextTimeline, newRootID],
+      payload: [nextTimeline, newRootID, uniqueSuspendersOnly],
     });
     if (nextTimeline.length > 0) {
       const milestone = nextTimeline[nextTimeline.length - 1];

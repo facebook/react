@@ -31,6 +31,7 @@ export type SuspenseTreeState = {
   selectedSuspenseID: SuspenseNode['id'] | null,
   timeline: $ReadOnlyArray<SuspenseNode['id']>,
   timelineIndex: number | -1,
+  uniqueSuspendersOnly: boolean,
 };
 
 type ACTION_SUSPENSE_TREE_MUTATION = {
@@ -51,6 +52,8 @@ type ACTION_SET_SUSPENSE_TIMELINE = {
     $ReadOnlyArray<SuspenseNode['id']>,
     // The next Suspense ID to select in the timeline
     SuspenseNode['id'] | null,
+    // Whether this timeline includes only unique suspenders
+    boolean,
   ],
 };
 type ACTION_SUSPENSE_SET_TIMELINE_INDEX = {
@@ -92,6 +95,7 @@ function getDefaultRootID(store: Store): Element['id'] | null {
 
 function getInitialState(store: Store): SuspenseTreeState {
   let initialState: SuspenseTreeState;
+  const uniqueSuspendersOnly = true;
   const selectedRootID = getDefaultRootID(store);
   // TODO: Default to nearest from inspected
   if (selectedRootID === null) {
@@ -102,9 +106,13 @@ function getInitialState(store: Store): SuspenseTreeState {
       selectedRootID,
       timeline: [],
       timelineIndex: -1,
+      uniqueSuspendersOnly,
     };
   } else {
-    const timeline = store.getSuspendableDocumentOrderSuspense(selectedRootID);
+    const timeline = store.getSuspendableDocumentOrderSuspense(
+      selectedRootID,
+      uniqueSuspendersOnly,
+    );
     const timelineIndex = timeline.length - 1;
     const selectedSuspenseID =
       timelineIndex === -1 ? null : timeline[timelineIndex];
@@ -119,6 +127,7 @@ function getInitialState(store: Store): SuspenseTreeState {
       selectedRootID,
       timeline,
       timelineIndex,
+      uniqueSuspendersOnly,
     };
   }
 
@@ -182,7 +191,10 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               nextRootID === null
                 ? []
                 : // TODO: Handle different timeline modes (e.g. random order)
-                  store.getSuspendableDocumentOrderSuspense(nextRootID);
+                  store.getSuspendableDocumentOrderSuspense(
+                    nextRootID,
+                    state.uniqueSuspendersOnly,
+                  );
 
             let nextTimelineIndex =
               selectedTimelineID === null || nextTimeline.length === 0
@@ -242,6 +254,7 @@ function SuspenseTreeContextController({children}: Props): React.Node {
             const previousTimeline = state.timeline;
             const nextTimeline = action.payload[0];
             const nextRootID: SuspenseNode['id'] | null = action.payload[1];
+            const nextUniqueSuspendersOnly = action.payload[2];
             let nextLineage = state.lineage;
             let nextMilestoneIndex: number | -1 = -1;
             let nextSelectedSuspenseID = state.selectedSuspenseID;
@@ -255,8 +268,10 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               const previousMilestoneID =
                 previousTimeline[previousMilestoneIndex];
               nextMilestoneIndex = nextTimeline.indexOf(previousMilestoneID);
-              if (nextMilestoneIndex === -1) {
+              if (nextMilestoneIndex === -1 && nextTimeline.length > 0) {
                 nextMilestoneIndex = nextTimeline.length - 1;
+                nextSelectedSuspenseID = nextTimeline[nextMilestoneIndex];
+                nextLineage = store.getSuspenseLineage(nextSelectedSuspenseID);
               }
             } else if (nextRootID !== null) {
               nextMilestoneIndex = nextTimeline.length - 1;
@@ -272,6 +287,7 @@ function SuspenseTreeContextController({children}: Props): React.Node {
                 nextRootID === null ? state.selectedRootID : nextRootID,
               timeline: nextTimeline,
               timelineIndex: nextMilestoneIndex,
+              uniqueSuspendersOnly: nextUniqueSuspendersOnly,
             };
           }
           case 'SUSPENSE_SET_TIMELINE_INDEX': {
