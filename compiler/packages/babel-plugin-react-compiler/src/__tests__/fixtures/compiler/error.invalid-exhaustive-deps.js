@@ -22,6 +22,6 @@ function Component({x, y, z}) {
   }, [x]);
   const f = useMemo(() => {
     return [];
-  }, [x, y.z, z?.y?.a]);
+  }, [x, y.z, z?.y?.a, UNUSED_GLOBAL]);
   return <Stringify results={[a, b, c, d, e, f]} />;
 }
