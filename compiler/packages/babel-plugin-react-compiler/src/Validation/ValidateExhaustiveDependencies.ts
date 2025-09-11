@@ -22,7 +22,10 @@ import {
   Identifier,
   IdentifierId,
   InstructionKind,
+  isSetStateType,
+  isStableType,
   isSubPath,
+  isUseRefType,
   LoadGlobal,
   ManualMemoDependency,
   Place,
@@ -46,9 +49,10 @@ const DEBUG = false;
  * or less times.
  *
  * TODOs:
- * - Better handling of cases where we infer multiple dependencies related to a single
- *   variable. Eg if the user has dep `x` and we inferred `x.y, x.z`, the user's dep
- *   is sufficient.
+ * - Handle cases of mixed optional and non-optional versions of the same path,
+ *   eg referecing both x.y.z and x.y?.z in the same memo block. we should collapse
+ *   this into a single canonical dep that we look for in the manual deps. see the
+ *   existing exhaustive deps rule for implementation.
  * - Handle cases where the user deps were not simple identifiers + property chains.
  *   We try to detect this in ValidateUseMemo but we miss some cases. The problem
  *   is that invalid forms can be value blocks or function calls that don't get
@@ -108,7 +112,7 @@ export function validateExhaustiveDependencies(
     );
     visitCandidateDependency(value.decl, temporaries, dependencies, locals);
     const inferred: Array<InferredDependency> = Array.from(dependencies);
-    // Sort dependencies by name, and path, with shorter/non-optional paths first
+    // Sort dependencies by name and path, with shorter/non-optional paths first
     inferred.sort((a, b) => {
       if (a.kind === 'Global' && b.kind == 'Global') {
         return a.binding.name.localeCompare(b.binding.name);
@@ -205,6 +209,31 @@ export function validateExhaustiveDependencies(
         reason: 'Unexpected function dependency',
         loc: value.loc,
       });
+      /**
+       * Dependencies technically only need to include reactive values. However,
+       * reactivity inference for general values is subtle since it involves all
+       * of our complex control and data flow analysis. To keep results more
+       * stable and predictable to developers, we intentionally stay closer to
+       * the rules of the classic exhaustive-deps rule. Values should be included
+       * as depdencies if either of the following is true:
+       * - They're reactive
+       * - They're non-reactive and not a known-stable value type.
+       *
+       * Thus `const ref: Ref = cond ? ref1 : ref2` has to be a dependency
+       * (assuming `cond` is reactive) since it's reactive despite being a ref.
+       *
+       * Similarly, `const x = [1,2,3]` has to be a dependency since even
+       * though it's non reactive, it's not a known stable type.
+       *
+       * TODO: consider reimplementing a simpler form of reactivity inference.
+       * Ideally we'd consider `const ref: Ref = cond ? ref1 : ref2` as a required
+       * dependency even if our data/control flow tells us that `cond` is non-reactive.
+       * It's simpler for developers to reason about based on a more structural/AST
+       * driven approach.
+       */
+      const isRequiredDependency =
+        reactive.has(inferredDependency.identifier.id) ||
+        !isStableType(inferredDependency.identifier);
       let hasMatchingManualDependency = false;
       for (const manualDependency of manualDependencies) {
         if (
@@ -216,19 +245,18 @@ export function validateExhaustiveDependencies(
         ) {
           hasMatchingManualDependency = true;
           matched.add(manualDependency);
+          if (!isRequiredDependency) {
+            extra.push(manualDependency);
+          }
         }
       }
-      if (!hasMatchingManualDependency) {
+      if (isRequiredDependency && !hasMatchingManualDependency) {
         missing.push(inferredDependency);
       }
     }
 
     for (const dep of startMemo.deps ?? []) {
-      if (
-        matched.has(dep) ||
-        (dep.root.kind === 'NamedLocal' &&
-          !reactive.has(dep.root.value.identifier.id))
-      ) {
+      if (matched.has(dep)) {
         continue;
       }
       extra.push(dep);
@@ -247,19 +275,23 @@ export function validateExhaustiveDependencies(
         ];
       }
       if (missing.length !== 0) {
-        // Error
         const diagnostic = CompilerDiagnostic.create({
           category: ErrorCategory.PreserveManualMemo,
           reason: 'Found non-exhaustive dependencies',
           description:
             'Missing dependencies can cause a value not to update when those inputs change, ' +
-            'resulting in stale UI. This memoization cannot be safely rewritten by the compiler.',
+            'resulting in stale UI',
           suggestions,
         });
         for (const dep of missing) {
+          let refHint = '';
+          if (isUseRefType(dep.identifier)) {
+            refHint =
+              '. Refs generally do not need to be added as dependencies, but this value may change over time to point to different ref instances';
+          }
           diagnostic.withDetails({
             kind: 'error',
-            message: `Missing dependency \`${printInferredDependency(dep)}\``,
+            message: `Missing dependency \`${printInferredDependency(dep)}\`${refHint}`,
             loc: dep.loc,
           });
         }
@@ -270,13 +302,12 @@ export function validateExhaustiveDependencies(
           reason: 'Found unnecessary memoization dependencies',
           description:
             'Unnecessary dependencies can cause a value to update more often than necessary, ' +
-            'which can cause effects to run more than expected. This memoization cannot be safely ' +
-            'rewritten by the compiler',
+            'which can cause effects to run more than expected',
         });
         diagnostic.withDetails({
           kind: 'error',
           message: `Unnecessary dependencies ${extra.map(dep => `\`${printManualMemoDependency(dep)}\``).join(', ')}`,
-          loc: value.loc,
+          loc: startMemo.depsLoc ?? value.loc,
         });
         error.pushDiagnostic(diagnostic);
       }
@@ -287,10 +318,15 @@ export function validateExhaustiveDependencies(
     startMemo = null;
   }
 
-  collectDependencies(fn, temporaries, {
-    onStartMemoize,
-    onFinishMemoize,
-  });
+  collectDependencies(
+    fn,
+    temporaries,
+    {
+      onStartMemoize,
+      onFinishMemoize,
+    },
+    false, // isFunctionExpression
+  );
   return error.asResult();
 }
 
@@ -383,12 +419,20 @@ function collectDependencies(
       locals: Set<IdentifierId>,
     ) => void;
   } | null,
+  isFunctionExpression: boolean,
 ): Extract<Temporary, {kind: 'Function'}> {
   const optionals = findOptionalPlaces(fn);
   if (DEBUG) {
     console.log(prettyFormat(optionals));
   }
   const locals: Set<IdentifierId> = new Set();
+  if (isFunctionExpression) {
+    for (const param of fn.params) {
+      const place = param.kind === 'Identifier' ? param : param.place;
+      locals.add(place.identifier.id);
+    }
+  }
+
   const dependencies: Set<InferredDependency> = new Set();
   function visit(place: Place): void {
     visitCandidateDependency(place, temporaries, dependencies, locals);
@@ -553,6 +597,7 @@ function collectDependencies(
             value.loweredFunc.func,
             temporaries,
             null,
+            true, // isFunctionExpression
           );
           temporaries.set(lvalue.identifier.id, functionDeps);
           addDependency(functionDeps, dependencies, locals);
