@@ -55,6 +55,7 @@ export default defineConfig({
     // contextOptions: {
     //   ignoreHTTPSErrors: true,
     // },
+    viewport: {width: 1280, height: 1024},
   },
 
   projects: [
