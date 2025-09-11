@@ -22,6 +22,7 @@ import BabelPluginReactCompiler, {
   parsePluginOptions,
   printReactiveFunctionWithOutlined,
   printFunctionWithOutlined,
+  type LoggerEvent,
 } from 'babel-plugin-react-compiler';
 import clsx from 'clsx';
 import invariant from 'invariant';
@@ -46,7 +47,6 @@ import {
   PrintedCompilerPipelineValue,
 } from './Output';
 import {transformFromAstSync} from '@babel/core';
-import {LoggerEvent} from 'babel-plugin-react-compiler/dist/Entrypoint';
 import {useSearchParams} from 'next/navigation';
 
 function parseInput(
@@ -147,6 +147,7 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
 function compile(
   source: string,
   mode: 'compiler' | 'linter',
+  configOverrides: string,
 ): [CompilerOutput, 'flow' | 'typescript'] {
   const results = new Map<string, Array<PrintedCompilerPipelineValue>>();
   const error = new CompilerError();
@@ -207,7 +208,7 @@ function compile(
         }
       }
     };
-    const parsedOptions = parseConfigPragmaForTests(pragma, {
+    const parsedPragmaOptions = parseConfigPragmaForTests(pragma, {
       compilationMode: 'infer',
       environment:
         mode === 'linter'
@@ -227,10 +228,26 @@ function compile(
               /* use defaults for compiler mode */
             },
     });
+
+    // Parse config overrides from config editor
+    let configOverrideOptions: any = {};
+    const configMatch = configOverrides.match(/^\s*import.*?\n\n\((.*)\)/s);
+    // TODO: initialize store with URL params, not empty store
+    if (configOverrides.trim()) {
+      if (configMatch && configMatch[1]) {
+        const configString = configMatch[1].replace(/satisfies.*$/, '').trim();
+        configOverrideOptions = new Function(`return (${configString})`)();
+      } else {
+        throw new Error('Invalid config overrides');
+      }
+    }
+
     const opts: PluginOptions = parsePluginOptions({
-      ...parsedOptions,
+      ...parsedPragmaOptions,
+      ...configOverrideOptions,
       environment: {
-        ...parsedOptions.environment,
+        ...parsedPragmaOptions.environment,
+        ...configOverrideOptions.environment,
         customHooks: new Map([...COMMON_HOOKS]),
       },
       logger: {
@@ -285,18 +302,13 @@ export default function Editor(): JSX.Element {
   const dispatchStore = useStoreDispatch();
   const {enqueueSnackbar} = useSnackbar();
   const [compilerOutput, language] = useMemo(
-    () => compile(deferredStore.source, 'compiler'),
-    [deferredStore.source],
+    () => compile(deferredStore.source, 'compiler', deferredStore.config),
+    [deferredStore.source, deferredStore.config],
   );
   const [linterOutput] = useMemo(
-    () => compile(deferredStore.source, 'linter'),
-    [deferredStore.source],
+    () => compile(deferredStore.source, 'linter', deferredStore.config),
+    [deferredStore.source, deferredStore.config],
   );
-
-  // TODO: Remove this once the config editor is more stable
-  const searchParams = useSearchParams();
-  const search = searchParams.get('showConfig');
-  const shouldShowConfig = search === 'true';
 
   useMountEffect(() => {
     // Initialize store
@@ -339,7 +351,7 @@ export default function Editor(): JSX.Element {
   return (
     <>
       <div className="relative flex basis top-14">
-        {shouldShowConfig && <ConfigEditor />}
+        <ConfigEditor />
         <div className={clsx('relative sm:basis-1/4')}>
           <Input language={language} errors={errors} />
         </div>

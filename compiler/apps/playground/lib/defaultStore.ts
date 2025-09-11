@@ -17,22 +17,9 @@ export const defaultConfig = `\
 import type { PluginOptions } from 'babel-plugin-react-compiler/dist';
 
 ({
-  compilationMode: 'infer',
-  panicThreshold: 'none',
-  environment: {},
-  logger: null,
-  gating: null,
-  noEmit: false,
-  dynamicGating: null,
-  eslintSuppressionRules: null,
-  flowSuppressions: true,
-  ignoreUseNoForget: false,
-  sources: filename => {
-    return filename.indexOf('node_modules') === -1;
-  },
-  enableReanimatedCheck: true,
-  customOptOutDirectives: null,
-  target: '19',
+  environment: {
+    enableResetCacheOnSourceFileChanges: false
+  }
 } satisfies Partial<PluginOptions>);`;
 
 export const defaultStore: Store = {
