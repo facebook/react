@@ -5366,13 +5366,13 @@ export function attach(
       };
     }
 
-    const isMounted = nextFiber.child !== null;
-    const wasMounted = prevFiber !== null && prevFiber.child !== null;
-    if (!wasMounted && isMounted) {
+    const nextIsMounted = nextFiber.child !== null;
+    const prevWasMounted = prevFiber !== null && prevFiber.child !== null;
+    if (!prevWasMounted && nextIsMounted) {
       // Mount a new root.
       setRootPseudoKey(currentRoot.id, nextFiber);
       mountFiberRecursively(nextFiber, false);
-    } else if (wasMounted && isMounted) {
+    } else if (prevWasMounted && nextIsMounted) {
       if (prevFiber === null) {
         throw new Error(
           'Expected previous fiber when updating an existing root',
@@ -5380,7 +5380,7 @@ export function attach(
       }
       // Update an existing root.
       updateFiberRecursively(rootInstance, nextFiber, prevFiber, false);
-    } else if (wasMounted && !isMounted) {
+    } else if (prevWasMounted && !nextIsMounted) {
       // Unmount an existing root.
       unmountInstanceRecursively(rootInstance);
       removeRootPseudoKey(currentRoot.id);
