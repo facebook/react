@@ -24,10 +24,9 @@ import BabelPluginReactCompiler, {
   printFunctionWithOutlined,
   type LoggerEvent,
 } from 'babel-plugin-react-compiler';
-import clsx from 'clsx';
 import invariant from 'invariant';
 import {useSnackbar} from 'notistack';
-import {useDeferredValue, useMemo, useState, useCallback} from 'react';
+import {useDeferredValue, useMemo} from 'react';
 import {useMountEffect} from '../../hooks';
 import {defaultStore} from '../../lib/defaultStore';
 import {
@@ -47,7 +46,6 @@ import {
   PrintedCompilerPipelineValue,
 } from './Output';
 import {transformFromAstSync} from '@babel/core';
-import {useSearchParams} from 'next/navigation';
 
 function parseInput(
   input: string,
@@ -272,7 +270,6 @@ function compile(
        * Handle unexpected failures by logging (to get a stack trace)
        * and reporting
        */
-      console.error(err);
       error.details.push(
         new CompilerErrorDetail({
           category: ErrorCategory.Invariant,
@@ -350,15 +347,15 @@ export default function Editor(): JSX.Element {
   }
   return (
     <>
-      <div className="relative flex top-14 h-full">
+      <div className="relative flex top-14">
         <div className="flex-shrink-0">
           <ConfigEditor />
         </div>
-        <div className="flex flex-1 min-w-0 overflow-x-auto">
-          <div className="flex-1 min-w-[450px] sm:min-w-0">
+        <div className="flex flex-1 min-w-0">
+          <div className="flex-1 min-w-[550px] sm:min-w-0">
             <Input language={language} errors={errors} />
           </div>
-          <div className="flex-1 min-w-[450px] sm:min-w-0">
+          <div className="flex-1 min-w-[550px] sm:min-w-0">
             <Output store={deferredStore} compilerOutput={mergedOutput} />
           </div>
         </div>

@@ -27,7 +27,7 @@ export default function AccordianWindow(props: {
     );
   }
   return (
-    <div className="flex flex-row">
+    <div className="flex flex-row h-full">
       {Array.from(props.tabs.keys()).map(name => {
         return (
           <AccordianWindowItem
