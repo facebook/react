@@ -5375,7 +5375,7 @@ export function attach(
     } else if (prevWasMounted && nextIsMounted) {
       if (prevFiber === null) {
         throw new Error(
-          'Expected previous fiber when updating an existing root',
+          'Expected a previous Fiber when updating an existing root.',
         );
       }
       // Update an existing root.
