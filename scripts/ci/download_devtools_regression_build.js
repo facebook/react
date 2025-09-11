@@ -25,7 +25,7 @@ async function downloadRegressionBuild() {
   const reactVersion = semver.coerce(version).version;
   const installPackages = ['react-dom', 'react', 'react-test-renderer'];
   if (semver.gte(reactVersion, '16.3.0')) {
-    installPackages.push('16.3.0');
+    installPackages.push('react-is');
   }
 
   console.log(chalk.bold.white(`Downloading React v${version}\n`));
