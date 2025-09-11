@@ -67,7 +67,7 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   beforeEach(resetAllUnexpectedConsoleCalls);
   afterEach(assertConsoleLogsCleared);
 
-  const devtoolsHookTarget = window;
+  const devtoolsHookTarget = globalThis;
   beforeEach(() => {
     const Agent = require('react-devtools-shared/src/backend/agent').default;
     const {initBackend} = require('react-devtools-shared/src/backend');
