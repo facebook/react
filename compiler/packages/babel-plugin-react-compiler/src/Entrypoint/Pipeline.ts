@@ -276,7 +276,7 @@ function runWithEnvironment(
     }
 
     if (env.config.validateNoSetStateInEffects) {
-      env.logErrors(validateNoSetStateInEffects(hir));
+      env.logErrors(validateNoSetStateInEffects(hir, env));
     }
 
     if (env.config.validateNoJSXInTryStatements) {
@@ -323,6 +323,15 @@ function runWithEnvironment(
 
   if (env.config.enableJsxOutlining) {
     outlineJSX(hir);
+  }
+
+  if (env.config.enableNameAnonymousFunctions) {
+    nameAnonymousFunctions(hir);
+    log({
+      kind: 'hir',
+      name: 'NameAnonymousFunctions',
+      value: hir,
+    });
   }
 
   if (env.config.enableFunctionOutlining) {
@@ -411,15 +420,6 @@ function runWithEnvironment(
     log({
       kind: 'hir',
       name: 'inlineJsxTransform',
-      value: hir,
-    });
-  }
-
-  if (env.config.enableNameAnonymousFunctions) {
-    nameAnonymousFunctions(hir);
-    log({
-      kind: 'hir',
-      name: 'NameAnonymougFunctions',
       value: hir,
     });
   }

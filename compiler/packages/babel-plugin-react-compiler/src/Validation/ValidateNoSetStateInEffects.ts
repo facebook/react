@@ -11,16 +11,23 @@ import {
   ErrorCategory,
 } from '../CompilerError';
 import {
+  Environment,
   HIRFunction,
   IdentifierId,
   isSetStateType,
   isUseEffectHookType,
   isUseInsertionEffectHookType,
   isUseLayoutEffectHookType,
+  isUseRefType,
+  isRefValueType,
   Place,
 } from '../HIR';
-import {eachInstructionValueOperand} from '../HIR/visitors';
+import {
+  eachInstructionLValue,
+  eachInstructionValueOperand,
+} from '../HIR/visitors';
 import {Result} from '../Utils/Result';
+import {Iterable_some} from '../Utils/utils';
 
 /**
  * Validates against calling setState in the body of an effect (useEffect and friends),
@@ -32,6 +39,7 @@ import {Result} from '../Utils/Result';
  */
 export function validateNoSetStateInEffects(
   fn: HIRFunction,
+  env: Environment,
 ): Result<void, CompilerError> {
   const setStateFunctions: Map<IdentifierId, Place> = new Map();
   const errors = new CompilerError();
@@ -72,6 +80,7 @@ export function validateNoSetStateInEffects(
             const callee = getSetStateCall(
               instr.value.loweredFunc.func,
               setStateFunctions,
+              env,
             );
             if (callee !== null) {
               setStateFunctions.set(instr.lvalue.identifier.id, callee);
@@ -129,9 +138,42 @@ export function validateNoSetStateInEffects(
 function getSetStateCall(
   fn: HIRFunction,
   setStateFunctions: Map<IdentifierId, Place>,
+  env: Environment,
 ): Place | null {
+  const refDerivedValues: Set<IdentifierId> = new Set();
+
+  const isDerivedFromRef = (place: Place): boolean => {
+    return (
+      refDerivedValues.has(place.identifier.id) ||
+      isUseRefType(place.identifier) ||
+      isRefValueType(place.identifier)
+    );
+  };
+
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
+      if (env.config.enableAllowSetStateFromRefsInEffects) {
+        const hasRefOperand = Iterable_some(
+          eachInstructionValueOperand(instr.value),
+          isDerivedFromRef,
+        );
+
+        if (hasRefOperand) {
+          for (const lvalue of eachInstructionLValue(instr)) {
+            refDerivedValues.add(lvalue.identifier.id);
+          }
+        }
+
+        if (
+          instr.value.kind === 'PropertyLoad' &&
+          instr.value.property === 'current' &&
+          (isUseRefType(instr.value.object.identifier) ||
+            isRefValueType(instr.value.object.identifier))
+        ) {
+          refDerivedValues.add(instr.lvalue.identifier.id);
+        }
+      }
+
       switch (instr.value.kind) {
         case 'LoadLocal': {
           if (setStateFunctions.has(instr.value.place.identifier.id)) {
@@ -161,6 +203,21 @@ function getSetStateCall(
             isSetStateType(callee.identifier) ||
             setStateFunctions.has(callee.identifier.id)
           ) {
+            if (env.config.enableAllowSetStateFromRefsInEffects) {
+              const arg = instr.value.args.at(0);
+              if (
+                arg !== undefined &&
+                arg.kind === 'Identifier' &&
+                refDerivedValues.has(arg.identifier.id)
+              ) {
+                /**
+                 * The one special case where we allow setStates in effects is in the very specific
+                 * scenario where the value being set is derived from a ref. For example this may
+                 * be needed when initial layout measurements from refs need to be stored in state.
+                 */
+                return null;
+              }
+            }
             /*
              * TODO: once we support multiple locations per error, we should link to the
              * original Place in the case that setStateFunction.has(callee)

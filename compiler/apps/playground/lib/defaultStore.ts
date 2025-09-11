@@ -17,7 +17,6 @@ export const defaultConfig = `\
 import type { PluginOptions } from 'babel-plugin-react-compiler/dist';
 
 ({
-  panicThreshold: 'all_errors',
   environment: {
     enableResetCacheOnSourceFileChanges: false
   }

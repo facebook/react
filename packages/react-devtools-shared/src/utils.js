@@ -44,6 +44,7 @@ import {
   SUSPENSE_TREE_OPERATION_REMOVE,
   SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
   SUSPENSE_TREE_OPERATION_RESIZE,
+  SUSPENSE_TREE_OPERATION_SUSPENDERS,
 } from './constants';
 import {
   ComponentFilterElementType,
@@ -421,6 +422,16 @@ export function printOperationsArray(operations: Array<number>) {
           }
           logs.push(line + ']');
         }
+
+        break;
+      }
+      case SUSPENSE_TREE_OPERATION_SUSPENDERS: {
+        const changeLength = operations[i + 1];
+        i += 2;
+        const changes = operations.slice(i, i + changeLength * 2);
+        i += changeLength;
+
+        logs.push(`Suspense node suspender changes ${changes.join(',')}`);
 
         break;
       }
