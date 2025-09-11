@@ -1,5 +1,10 @@
 'use strict';
 
+const moduleNameMapper = {};
+
+moduleNameMapper['react-devtools-feature-flags'] =
+  '<rootDir>/packages/react-devtools-shared/src/config/DevToolsFeatureFlags.default';
+
 module.exports = {
   globalSetup: require.resolve('./setupGlobal.js'),
   modulePathIgnorePatterns: [
@@ -26,6 +31,7 @@ module.exports = {
   // Only include files directly in __tests__, not in nested folders.
   testRegex: '/__tests__/[^/]*(\\.js|\\.coffee|[^d]\\.ts)$',
   moduleFileExtensions: ['js', 'json', 'node', 'coffee', 'ts'],
+  moduleNameMapper,
   rootDir: process.cwd(),
   roots: ['<rootDir>/packages', '<rootDir>/scripts'],
   collectCoverageFrom: ['packages/**/*.js'],

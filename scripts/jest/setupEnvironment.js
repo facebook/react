@@ -8,6 +8,11 @@ global.__DEV__ = NODE_ENV === 'development';
 global.__EXTENSION__ = false;
 global.__TEST__ = NODE_ENV === 'test';
 global.__PROFILE__ = NODE_ENV === 'development';
+global.__IS_FIREFOX__ = false;
+global.__IS_CHROME__ = false;
+global.__IS_EDGE__ = false;
+global.__IS_NATIVE__ = false;
+global.__IS_INTERNAL_MCP_BUILD__ = false;
 
 const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL;
 

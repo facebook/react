@@ -67,6 +67,72 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   beforeEach(resetAllUnexpectedConsoleCalls);
   afterEach(assertConsoleLogsCleared);
 
+  const devtoolsHookTarget = window;
+  beforeEach(() => {
+    const Agent = require('react-devtools-shared/src/backend/agent').default;
+    const {initBackend} = require('react-devtools-shared/src/backend');
+    const Bridge = require('react-devtools-shared/src/bridge').default;
+    const Store = require('react-devtools-shared/src/devtools/store').default;
+    const {installHook} = require('react-devtools-shared/src/hook');
+    const {
+      getDefaultComponentFilters,
+      setSavedComponentFilters,
+    } = require('react-devtools-shared/src/utils');
+
+    // Initialize filters to a known good state.
+    setSavedComponentFilters(getDefaultComponentFilters());
+    devtoolsHookTarget.__REACT_DEVTOOLS_COMPONENT_FILTERS__ =
+      getDefaultComponentFilters();
+
+    // Also initialize inline warnings so that we can test them.
+    devtoolsHookTarget.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ =
+      true;
+
+    installHook(devtoolsHookTarget, {
+      appendComponentStack: false,
+      breakOnConsoleErrors: false,
+      showInlineWarningsAndErrors: true,
+      hideConsoleLogsInStrictMode: false,
+    });
+
+    const bridgeListeners = [];
+    const bridge = new Bridge({
+      listen(callback) {
+        bridgeListeners.push(callback);
+        return () => {
+          const index = bridgeListeners.indexOf(callback);
+          if (index >= 0) {
+            bridgeListeners.splice(index, 1);
+          }
+        };
+      },
+      send(event: string, payload: any, transferable: Array<any>) {
+        bridgeListeners.forEach(callback =>
+          callback({event, payload, transferable})
+        );
+      },
+    });
+
+    const store = new Store(bridge, {
+      supportsTimeline: true,
+    });
+
+    const agent = new Agent(bridge);
+    const hook = devtoolsHookTarget.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+    initBackend(hook, agent, devtoolsHookTarget);
+
+    devtoolsHookTarget.agent = agent;
+    devtoolsHookTarget.bridge = bridge;
+    devtoolsHookTarget.store = store;
+  });
+
+  afterEach(() => {
+    delete devtoolsHookTarget.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+    delete devtoolsHookTarget.store;
+    delete devtoolsHookTarget.agent;
+    delete devtoolsHookTarget.bridge;
+  });
+
   // TODO: enable this check so we don't forget to reset spyOnX mocks.
   // afterEach(() => {
   //   if (
