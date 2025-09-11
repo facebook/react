@@ -4310,7 +4310,9 @@ export function attach(
         virtualLevel + 1,
       );
       if ((updateFlags & ShouldResetChildren) !== NoUpdate) {
-        recordResetChildren(virtualInstance);
+        if (!isInDisconnectedSubtree) {
+          recordResetChildren(virtualInstance);
+        }
         updateFlags &= ~ShouldResetChildren;
       }
       removePreviousSuspendedBy(
@@ -4405,10 +4407,8 @@ export function attach(
                     traceNearestHostComponentUpdate,
                     virtualLevel,
                   );
-                  updateFlags |= ShouldResetSuspenseChildren;
-                  if (!isInDisconnectedSubtree) {
-                    updateFlags |= ShouldResetChildren;
-                  }
+                  updateFlags |=
+                    ShouldResetChildren | ShouldResetSuspenseChildren;
                 } else {
                   updateFlags |= updateVirtualInstanceRecursively(
                     previousVirtualInstance,
@@ -4461,10 +4461,7 @@ export function attach(
                 insertChild(newVirtualInstance);
                 previousVirtualInstance = newVirtualInstance;
                 previousVirtualInstanceWasMount = true;
-                updateFlags |= ShouldResetSuspenseChildren;
-                if (!isInDisconnectedSubtree) {
-                  updateFlags |= ShouldResetChildren;
-                }
+                updateFlags |= ShouldResetChildren;
               }
               // Existing children might be reparented into this new virtual instance.
               // TODO: This will cause the front end to error which needs to be fixed.
@@ -4491,10 +4488,7 @@ export function attach(
               traceNearestHostComponentUpdate,
               virtualLevel,
             );
-            updateFlags |= ShouldResetSuspenseChildren;
-            if (!isInDisconnectedSubtree) {
-              updateFlags |= ShouldResetChildren;
-            }
+            updateFlags |= ShouldResetChildren | ShouldResetSuspenseChildren;
           } else {
             updateFlags |= updateVirtualInstanceRecursively(
               previousVirtualInstance,
@@ -4546,10 +4540,7 @@ export function attach(
           // They are always different referentially, but if the instances line up
           // conceptually we'll want to know that.
           if (prevChild !== prevChildAtSameIndex) {
-            updateFlags |= ShouldResetSuspenseChildren;
-            if (!isInDisconnectedSubtree) {
-              updateFlags |= ShouldResetChildren;
-            }
+            updateFlags |= ShouldResetChildren | ShouldResetSuspenseChildren;
           }
 
           moveChild(fiberInstance, previousSiblingOfExistingInstance);
@@ -4566,10 +4557,7 @@ export function attach(
         } else if (prevChild !== null && shouldFilterFiber(nextChild)) {
           // The filtered instance could've reordered.
           if (prevChild !== prevChildAtSameIndex) {
-            updateFlags |= ShouldResetSuspenseChildren;
-            if (!isInDisconnectedSubtree) {
-              updateFlags |= ShouldResetChildren;
-            }
+            updateFlags |= ShouldResetChildren | ShouldResetSuspenseChildren;
           }
 
           // If this Fiber should be filtered, we need to still update its children.
@@ -4593,10 +4581,7 @@ export function attach(
 
           mountFiberRecursively(nextChild, traceNearestHostComponentUpdate);
           // Need to mark the parent set to remount the new instance.
-          updateFlags |= ShouldResetSuspenseChildren;
-          if (!isInDisconnectedSubtree) {
-            updateFlags |= ShouldResetChildren;
-          }
+          updateFlags |= ShouldResetChildren | ShouldResetSuspenseChildren;
         }
       }
       // Try the next child.
@@ -4619,10 +4604,7 @@ export function attach(
           traceNearestHostComponentUpdate,
           virtualLevel,
         );
-        updateFlags |= ShouldResetSuspenseChildren;
-        if (!isInDisconnectedSubtree) {
-          updateFlags |= ShouldResetChildren;
-        }
+        updateFlags |= ShouldResetChildren | ShouldResetSuspenseChildren;
       } else {
         updateFlags |= updateVirtualInstanceRecursively(
           previousVirtualInstance,
@@ -4636,10 +4618,7 @@ export function attach(
     }
     // If we have no more children, but used to, they don't line up.
     if (prevChildAtSameIndex !== null) {
-      updateFlags |= ShouldResetSuspenseChildren;
-      if (!isInDisconnectedSubtree) {
-        updateFlags |= ShouldResetChildren;
-      }
+      updateFlags |= ShouldResetChildren | ShouldResetSuspenseChildren;
     }
     return updateFlags;
   }
@@ -4651,9 +4630,7 @@ export function attach(
     traceNearestHostComponentUpdate: boolean,
   ): UpdateFlags {
     if (nextFirstChild === null) {
-      return prevFirstChild !== null && !isInDisconnectedSubtree
-        ? ShouldResetChildren
-        : NoUpdate;
+      return prevFirstChild !== null ? ShouldResetChildren : NoUpdate;
     }
     return updateVirtualChildrenRecursively(
       nextFirstChild,
@@ -4879,10 +4856,7 @@ export function attach(
             traceNearestHostComponentUpdate,
           );
 
-          updateFlags |= ShouldResetSuspenseChildren;
-          if (!isInDisconnectedSubtree) {
-            updateFlags |= ShouldResetChildren;
-          }
+          updateFlags |= ShouldResetChildren | ShouldResetSuspenseChildren;
         }
 
         const childrenUpdateFlags =
@@ -4905,10 +4879,7 @@ export function attach(
             nextPrimaryChildSet,
             traceNearestHostComponentUpdate,
           );
-          updateFlags |= ShouldResetSuspenseChildren;
-          if (!isInDisconnectedSubtree) {
-            updateFlags |= ShouldResetChildren;
-          }
+          updateFlags |= ShouldResetChildren | ShouldResetSuspenseChildren;
         }
       } else if (!prevDidTimeout && nextDidTimeOut) {
         // Primary -> Fallback:
@@ -4925,10 +4896,7 @@ export function attach(
             nextFallbackChildSet,
             traceNearestHostComponentUpdate,
           );
-          updateFlags |= ShouldResetSuspenseChildren;
-          if (!isInDisconnectedSubtree) {
-            updateFlags |= ShouldResetChildren;
-          }
+          updateFlags |= ShouldResetChildren | ShouldResetSuspenseChildren;
         }
       } else if (nextIsHidden) {
         if (!prevWasHidden) {
@@ -4973,10 +4941,7 @@ export function attach(
         if (fiberInstance !== null && !isInDisconnectedSubtree) {
           reconnectChildrenRecursively(fiberInstance);
           // Children may have reordered while they were hidden.
-          updateFlags |= ShouldResetSuspenseChildren;
-          if (!isInDisconnectedSubtree) {
-            updateFlags |= ShouldResetChildren;
-          }
+          updateFlags |= ShouldResetChildren | ShouldResetSuspenseChildren;
         }
       } else if (
         nextFiber.tag === SuspenseComponent &&
@@ -5134,7 +5099,9 @@ export function attach(
         // We need to crawl the subtree for closest non-filtered Fibers
         // so that we can display them in a flat children set.
         if (fiberInstance !== null && fiberInstance.kind === FIBER_INSTANCE) {
-          recordResetChildren(fiberInstance);
+          if (!nextIsHidden && !isInDisconnectedSubtree) {
+            recordResetChildren(fiberInstance);
+          }
 
           // We've handled the child order change for this Fiber.
           // Since it's included, there's no need to invalidate parent child order.
