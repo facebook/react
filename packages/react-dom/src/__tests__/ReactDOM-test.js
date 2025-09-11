@@ -959,5 +959,15 @@ describe('ReactDOM', () => {
     expect(document.documentElement.outerHTML).toBe(
       '<html lang="en"><head><meta itemprop="" content="primary" style=""></head><body><div style="">goodbye!</div></body></html>',
     );
+
+    expect(window.store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <Suspense>
+              <Comp>
+              <Message>
+      [suspense-root]  rects={[]}
+        <Suspense name="App" rects={[]}>
+    `);
   });
 });
