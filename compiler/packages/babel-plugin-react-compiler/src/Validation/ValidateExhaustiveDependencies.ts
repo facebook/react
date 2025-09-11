@@ -65,8 +65,6 @@ const DEBUG = false;
 export function validateExhaustiveDependencies(
   fn: HIRFunction,
 ): Result<void, CompilerError> {
-  const reactive = collectReactiveIdentifiersHIR(fn);
-
   const temporaries: Map<IdentifierId, Temporary> = new Map();
   for (const param of fn.params) {
     const place = param.kind === 'Identifier' ? param : param.place;
@@ -224,11 +222,7 @@ export function validateExhaustiveDependencies(
     }
 
     for (const dep of startMemo.deps ?? []) {
-      if (
-        matched.has(dep) ||
-        (dep.root.kind === 'NamedLocal' &&
-          !reactive.has(dep.root.value.identifier.id))
-      ) {
+      if (matched.has(dep)) {
         continue;
       }
       extra.push(dep);
@@ -253,7 +247,7 @@ export function validateExhaustiveDependencies(
           reason: 'Found non-exhaustive dependencies',
           description:
             'Missing dependencies can cause a value not to update when those inputs change, ' +
-            'resulting in stale UI. This memoization cannot be safely rewritten by the compiler.',
+            'resulting in stale UI',
           suggestions,
         });
         for (const dep of missing) {
@@ -270,8 +264,7 @@ export function validateExhaustiveDependencies(
           reason: 'Found unnecessary memoization dependencies',
           description:
             'Unnecessary dependencies can cause a value to update more often than necessary, ' +
-            'which can cause effects to run more than expected. This memoization cannot be safely ' +
-            'rewritten by the compiler',
+            'which can cause effects to run more than expected',
         });
         diagnostic.withDetails({
           kind: 'error',
@@ -664,30 +657,6 @@ type Temporary =
     }
   | {kind: 'Function'; dependencies: Set<Temporary>};
 type InferredDependency = Extract<Temporary, {kind: 'Local' | 'Global'}>;
-
-function collectReactiveIdentifiersHIR(fn: HIRFunction): Set<IdentifierId> {
-  const reactive = new Set<IdentifierId>();
-  for (const block of fn.body.blocks.values()) {
-    for (const instr of block.instructions) {
-      for (const lvalue of eachInstructionLValue(instr)) {
-        if (lvalue.reactive) {
-          reactive.add(lvalue.identifier.id);
-        }
-      }
-      for (const operand of eachInstructionValueOperand(instr.value)) {
-        if (operand.reactive) {
-          reactive.add(operand.identifier.id);
-        }
-      }
-    }
-    for (const operand of eachTerminalOperand(block.terminal)) {
-      if (operand.reactive) {
-        reactive.add(operand.identifier.id);
-      }
-    }
-  }
-  return reactive;
-}
 
 export function findOptionalPlaces(
   fn: HIRFunction,
