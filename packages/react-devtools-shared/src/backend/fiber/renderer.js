@@ -4310,7 +4310,9 @@ export function attach(
         virtualLevel + 1,
       );
       if ((updateFlags & ShouldResetChildren) !== NoUpdate) {
-        recordResetChildren(virtualInstance);
+        if (!isInDisconnectedSubtree) {
+          recordResetChildren(virtualInstance);
+        }
         updateFlags &= ~ShouldResetChildren;
       }
       removePreviousSuspendedBy(
@@ -5097,7 +5099,9 @@ export function attach(
         // We need to crawl the subtree for closest non-filtered Fibers
         // so that we can display them in a flat children set.
         if (fiberInstance !== null && fiberInstance.kind === FIBER_INSTANCE) {
-          recordResetChildren(fiberInstance);
+          if (!nextIsHidden && !isInDisconnectedSubtree) {
+            recordResetChildren(fiberInstance);
+          }
 
           // We've handled the child order change for this Fiber.
           // Since it's included, there's no need to invalidate parent child order.
