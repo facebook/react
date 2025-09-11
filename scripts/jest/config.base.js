@@ -39,7 +39,12 @@ module.exports = {
     enableGlobally: true,
     legacyFakeTimers: true,
   },
-  snapshotSerializers: [require.resolve('jest-snapshot-serializer-raw')],
+  snapshotSerializers: [
+    require.resolve(
+      '../../packages/react-devtools-shared/src/__tests__/__serializers__/storeSerializer.js'
+    ),
+    require.resolve('jest-snapshot-serializer-raw'),
+  ],
 
   testEnvironment: '<rootDir>/scripts/jest/ReactJSDOMEnvironment',
 
