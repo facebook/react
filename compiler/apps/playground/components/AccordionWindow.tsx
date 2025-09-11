@@ -10,7 +10,7 @@ import React, {useCallback} from 'react';
 
 type TabsRecord = Map<string, React.ReactNode>;
 
-export default function AccordianWindow(props: {
+export default function AccordionWindow(props: {
   defaultTab: string | null;
   tabs: TabsRecord;
   tabsOpen: Set<string>;
@@ -30,7 +30,7 @@ export default function AccordianWindow(props: {
     <div className="flex flex-row h-full">
       {Array.from(props.tabs.keys()).map(name => {
         return (
-          <AccordianWindowItem
+          <AccordionWindowItem
             name={name}
             key={name}
             tabs={props.tabs}
@@ -44,7 +44,7 @@ export default function AccordianWindow(props: {
   );
 }
 
-function AccordianWindowItem({
+function AccordionWindowItem({
   name,
   tabs,
   tabsOpen,

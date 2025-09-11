@@ -21,7 +21,7 @@ import * as prettierPluginEstree from 'prettier/plugins/estree';
 import * as prettier from 'prettier/standalone';
 import {memo, ReactNode, useEffect, useState} from 'react';
 import {type Store} from '../../lib/stores';
-import AccordianWindow from '../AccordianWindow';
+import AccordionWindow from '../AccordionWindow';
 import TabbedWindow from '../TabbedWindow';
 import {monacoOptions} from './monacoOptions';
 import {BabelFileResult} from '@babel/core';
@@ -266,7 +266,7 @@ function Output({store, compilerOutput}: Props): JSX.Element {
   }
 
   return (
-    <AccordianWindow
+    <AccordionWindow
       defaultTab={store.showInternals ? 'HIR' : 'Output'}
       setTabsOpen={setTabsOpen}
       tabsOpen={tabsOpen}
