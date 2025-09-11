@@ -12,68 +12,52 @@ import typeof {SyntheticMouseEvent} from 'react-dom-bindings/src/events/Syntheti
 
 import * as React from 'react';
 import {useContext} from 'react';
-import {
-  TreeDispatcherContext,
-  TreeStateContext,
-} from '../Components/TreeContext';
+import {TreeDispatcherContext} from '../Components/TreeContext';
+import {StoreContext} from '../context';
 import {useHighlightHostInstance} from '../hooks';
 import styles from './SuspenseBreadcrumbs.css';
-import {useSuspenseStore} from './SuspenseTreeContext';
+import {
+  SuspenseTreeStateContext,
+  SuspenseTreeDispatcherContext,
+} from './SuspenseTreeContext';
 
 export default function SuspenseBreadcrumbs(): React$Node {
-  const store = useSuspenseStore();
-  const dispatch = useContext(TreeDispatcherContext);
-  const {inspectedElementID} = useContext(TreeStateContext);
+  const store = useContext(StoreContext);
+  const treeDispatch = useContext(TreeDispatcherContext);
+  const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
+  const {selectedSuspenseID, lineage} = useContext(SuspenseTreeStateContext);
 
   const {highlightHostInstance, clearHighlightHostInstance} =
     useHighlightHostInstance();
 
-  // TODO: Use the nearest Suspense boundary
-  const inspectedSuspenseID = inspectedElementID;
-  if (inspectedSuspenseID === null) {
-    return null;
-  }
-
-  const suspense = store.getSuspenseByID(inspectedSuspenseID);
-  if (suspense === null) {
-    return null;
-  }
-
-  const lineage: SuspenseNode[] = [];
-  let next: null | SuspenseNode = suspense;
-  while (next !== null) {
-    if (next.parentID === 0) {
-      next = null;
-    } else {
-      lineage.unshift(next);
-      next = store.getSuspenseByID(next.parentID);
-    }
-  }
-
-  function handleClick(node: SuspenseNode, event: SyntheticMouseEvent) {
+  function handleClick(id: SuspenseNode['id'], event: SyntheticMouseEvent) {
     event.preventDefault();
-    dispatch({type: 'SELECT_ELEMENT_BY_ID', payload: node.id});
+    treeDispatch({type: 'SELECT_ELEMENT_BY_ID', payload: id});
+    suspenseTreeDispatch({type: 'SELECT_SUSPENSE_BY_ID', payload: id});
   }
 
   return (
     <ol className={styles.SuspenseBreadcrumbsList}>
-      {lineage.map((node, index) => {
-        return (
-          <li
-            key={node.id}
-            className={styles.SuspenseBreadcrumbsListItem}
-            aria-current={index === lineage.length - 1}
-            onPointerEnter={highlightHostInstance.bind(null, node.id)}
-            onPointerLeave={clearHighlightHostInstance}>
-            <button
-              className={styles.SuspenseBreadcrumbsButton}
-              onClick={handleClick.bind(null, node)}
-              type="button">
-              {node.name}
-            </button>
-          </li>
-        );
-      })}
+      {lineage !== null &&
+        lineage.map((id, index) => {
+          const node = store.getSuspenseByID(id);
+
+          return (
+            <li
+              key={id}
+              className={styles.SuspenseBreadcrumbsListItem}
+              aria-current={selectedSuspenseID === id}
+              onPointerEnter={highlightHostInstance.bind(null, id)}
+              onPointerLeave={clearHighlightHostInstance}>
+              <button
+                className={styles.SuspenseBreadcrumbsButton}
+                onClick={handleClick.bind(null, id)}
+                type="button">
+                {node === null ? 'Unknown' : node.name}
+              </button>
+            </li>
+          );
+        })}
     </ol>
   );
 }
