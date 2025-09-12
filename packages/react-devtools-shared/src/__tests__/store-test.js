@@ -3081,6 +3081,109 @@ describe('Store', () => {
     `);
   });
 
+  // @reactVersion >= 19.0
+  it('can reconcile Suspense inside an Offscreen', async () => {
+    let resolveHeadFallback;
+    let resolveHeadContent;
+    let resolveMainFallback;
+    let resolveMainContent;
+
+    function Component({children, promise}) {
+      if (promise) {
+        React.use(promise);
+      }
+      return <div>{children}</div>;
+    }
+
+    function WithSuspenseInFallback({fallbackPromise, contentPromise, name}) {
+      return (
+        <React.Suspense
+          name={name}
+          fallback={
+            <React.Suspense
+              name={`${name}-fallback`}
+              fallback={
+                <Component key={`${name}-fallback-fallback`}>
+                  Loading fallback...
+                </Component>
+              }>
+              <Component
+                key={`${name}-fallback-content`}
+                promise={fallbackPromise}>
+                Loading...
+              </Component>
+            </React.Suspense>
+          }>
+          <Component key={`${name}-content`} promise={contentPromise}>
+            done
+          </Component>
+        </React.Suspense>
+      );
+    }
+
+    function App({
+      headFallbackPromise,
+      headContentPromise,
+      mainContentPromise,
+      mainFallbackPromise,
+      tailContentPromise,
+      tailFallbackPromise,
+    }) {
+      return (
+        <React.unstable_Activity mode="hidden">
+          <WithSuspenseInFallback
+            fallbackPromise={headFallbackPromise}
+            contentPromise={headContentPromise}
+            name="head"
+          />
+          <WithSuspenseInFallback
+            fallbackPromise={mainFallbackPromise}
+            contentPromise={mainContentPromise}
+            name="main"
+          />
+        </React.unstable_Activity>
+      );
+    }
+
+    const initialHeadContentPromise = new Promise(resolve => {
+      resolveHeadContent = resolve;
+    });
+    const initialHeadFallbackPromise = new Promise(resolve => {
+      resolveHeadFallback = resolve;
+    });
+    const initialMainContentPromise = new Promise(resolve => {
+      resolveMainContent = resolve;
+    });
+    const initialMainFallbackPromise = new Promise(resolve => {
+      resolveMainFallback = resolve;
+    });
+    await actAsync(() =>
+      render(
+        <App
+          headFallbackPromise={initialHeadFallbackPromise}
+          headContentPromise={initialHeadContentPromise}
+          mainContentPromise={initialMainContentPromise}
+          mainFallbackPromise={initialMainFallbackPromise}
+        />,
+      ),
+    );
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+            <Activity>
+      [suspense-root]  rects={[{x:1,y:2,width:19,height:1}, {x:1,y:2,width:19,height:1}]}
+        <Suspense name="head" rects={null}>
+        <Suspense name="head-fallback" rects={null}>
+        <Suspense name="main" rects={null}>
+        <Suspense name="main-fallback" rects={null}>
+    `);
+
+    await actAsync(() => render(null));
+
+    expect(store).toMatchInlineSnapshot(``);
+  });
+
   it('should handle an empty root', async () => {
     await actAsync(() => render(null));
     expect(store).toMatchInlineSnapshot(``);
