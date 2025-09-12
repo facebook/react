@@ -180,7 +180,7 @@ function parseOptions(
       const configString = configMatch[1].replace(/satisfies.*$/, '').trim();
       configOverrideOptions = new Function(`return (${configString})`)();
     } else {
-      throw new Error('Invalid config overrides');
+      throw new Error('Invalid override format');
     }
   }
 
@@ -220,83 +220,94 @@ function compile(
     language = 'typescript';
   }
   let transformOutput;
+    
   let baseOpts: PluginOptions | null = null;
-
   try {
     baseOpts = parseOptions(source, mode, configOverrides);
-    const logIR = (result: CompilerPipelineValue): void => {
-      switch (result.kind) {
-        case 'ast': {
-          break;
-        }
-        case 'hir': {
-          upsert({
-            kind: 'hir',
-            fnName: result.value.id,
-            name: result.name,
-            value: printFunctionWithOutlined(result.value),
-          });
-          break;
-        }
-        case 'reactive': {
-          upsert({
-            kind: 'reactive',
-            fnName: result.value.id,
-            name: result.name,
-            value: printReactiveFunctionWithOutlined(result.value),
-          });
-          break;
-        }
-        case 'debug': {
-          upsert({
-            kind: 'debug',
-            fnName: null,
-            name: result.name,
-            value: result.value,
-          });
-          break;
-        }
-        default: {
-          const _: never = result;
-          throw new Error(`Unhandled result ${result}`);
-        }
-      }
-    };
-
-    // Add logger options to the parsed options
-    const opts = {
-      ...baseOpts,
-      logger: {
-        debugLogIRs: logIR,
-        logEvent: (_filename: string | null, event: LoggerEvent) => {
-          if (event.kind === 'CompileError') {
-            otherErrors.push(event.detail);
-          }
-        },
-      },
-    };
-
-    transformOutput = invokeCompiler(source, language, opts);
   } catch (err) {
-    /**
-     * error might be an invariant violation or other runtime error
-     * (i.e. object shape that is not CompilerError)
-     */
-    if (err instanceof CompilerError && err.details.length > 0) {
-      error.merge(err);
-    } else {
+    error.details.push(
+      new CompilerErrorDetail({
+        category: ErrorCategory.Config,
+        reason: `Unexpected failure when transforming configs! \n${err}`,
+        loc: null,
+        suggestions: null,
+      }),
+    );
+  }
+  if (baseOpts) {
+    try {
+      const logIR = (result: CompilerPipelineValue): void => {
+        switch (result.kind) {
+          case 'ast': {
+            break;
+          }
+          case 'hir': {
+            upsert({
+              kind: 'hir',
+              fnName: result.value.id,
+              name: result.name,
+              value: printFunctionWithOutlined(result.value),
+            });
+            break;
+          }
+          case 'reactive': {
+            upsert({
+              kind: 'reactive',
+              fnName: result.value.id,
+              name: result.name,
+              value: printReactiveFunctionWithOutlined(result.value),
+            });
+            break;
+          }
+          case 'debug': {
+            upsert({
+              kind: 'debug',
+              fnName: null,
+              name: result.name,
+              value: result.value,
+            });
+            break;
+          }
+          default: {
+            const _: never = result;
+            throw new Error(`Unhandled result ${result}`);
+          }
+        }
+      };
+      // Add logger options to the parsed options
+      const opts = {
+        ...baseOpts,
+        logger: {
+          debugLogIRs: logIR,
+          logEvent: (_filename: string | null, event: LoggerEvent) => {
+            if (event.kind === 'CompileError') {
+              otherErrors.push(event.detail);
+            }
+          },
+        },
+      };
+      transformOutput = invokeCompiler(source, language, opts);
+    } catch (err) {
       /**
-       * Handle unexpected failures by logging (to get a stack trace)
-       * and reporting
+       * error might be an invariant violation or other runtime error
+       * (i.e. object shape that is not CompilerError)
        */
-      error.details.push(
-        new CompilerErrorDetail({
-          category: ErrorCategory.Invariant,
-          reason: `Unexpected failure when transforming input! ${err}`,
-          loc: null,
-          suggestions: null,
-        }),
-      );
+      if (err instanceof CompilerError && err.details.length > 0) {
+        error.merge(err);
+      } else {
+        /**
+         * Handle unexpected failures by logging (to get a stack trace)
+         * and reporting
+         */
+        error.details.push(
+          new CompilerErrorDetail({
+            category: ErrorCategory.Invariant,
+            reason: `Unexpected failure when transforming input! \n${err}`,
+            loc: null,
+            suggestions: null,
+          }),
+        );
+      }
     }
   }
   // Only include logger errors if there weren't other errors
