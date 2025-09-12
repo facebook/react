@@ -1840,7 +1840,7 @@ module.exports = function ($$$config) {
     element = element.props.ref;
     workInProgress.ref = void 0 !== element ? element : null;
   }
-  function throwOnInvalidObjectType(returnFiber, newChild) {
+  function throwOnInvalidObjectTypeImpl(returnFiber, newChild) {
     if (newChild.$$typeof === REACT_LEGACY_ELEMENT_TYPE)
       throw Error(formatProdErrorMessage(525));
     returnFiber = Object.prototype.toString.call(newChild);
@@ -2054,7 +2054,7 @@ module.exports = function ($$$config) {
             readContextDuringReconciliation(returnFiber, newChild),
             lanes
           );
-        throwOnInvalidObjectType(returnFiber, newChild);
+        throwOnInvalidObjectTypeImpl(returnFiber, newChild);
       }
       return null;
     }
@@ -2102,7 +2102,7 @@ module.exports = function ($$$config) {
             readContextDuringReconciliation(returnFiber, newChild),
             lanes
           );
-        throwOnInvalidObjectType(returnFiber, newChild);
+        throwOnInvalidObjectTypeImpl(returnFiber, newChild);
       }
       return null;
     }
@@ -2173,7 +2173,7 @@ module.exports = function ($$$config) {
             readContextDuringReconciliation(returnFiber, newChild),
             lanes
           );
-        throwOnInvalidObjectType(returnFiber, newChild);
+        throwOnInvalidObjectTypeImpl(returnFiber, newChild);
       }
       return null;
     }
@@ -2515,7 +2515,7 @@ module.exports = function ($$$config) {
             readContextDuringReconciliation(returnFiber, newChild),
             lanes
           );
-        throwOnInvalidObjectType(returnFiber, newChild);
+        throwOnInvalidObjectTypeImpl(returnFiber, newChild);
       }
       return ("string" === typeof newChild && "" !== newChild) ||
         "number" === typeof newChild ||
@@ -14163,7 +14163,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-classic-0e10ee90-20250912"
+      reconcilerVersion: "19.2.0-www-classic-20e54317-20250912"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

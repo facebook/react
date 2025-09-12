@@ -2721,7 +2721,7 @@ function coerceRef(workInProgress, element) {
   element = element.props.ref;
   workInProgress.ref = void 0 !== element ? element : null;
 }
-function throwOnInvalidObjectType(returnFiber, newChild) {
+function throwOnInvalidObjectTypeImpl(returnFiber, newChild) {
   if (newChild.$$typeof === REACT_LEGACY_ELEMENT_TYPE)
     throw Error(formatProdErrorMessage(525));
   returnFiber = Object.prototype.toString.call(newChild);
@@ -2934,7 +2934,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return null;
   }
@@ -2982,7 +2982,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return null;
   }
@@ -3053,7 +3053,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return null;
   }
@@ -3381,7 +3381,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return ("string" === typeof newChild && "" !== newChild) ||
       "number" === typeof newChild ||
@@ -14888,20 +14888,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1824 = 0;
-  i$jscomp$inline_1824 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1824++
+  var i$jscomp$inline_1836 = 0;
+  i$jscomp$inline_1836 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1836++
 ) {
-  var eventName$jscomp$inline_1825 =
-      simpleEventPluginEvents[i$jscomp$inline_1824],
-    domEventName$jscomp$inline_1826 =
-      eventName$jscomp$inline_1825.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1827 =
-      eventName$jscomp$inline_1825[0].toUpperCase() +
-      eventName$jscomp$inline_1825.slice(1);
+  var eventName$jscomp$inline_1837 =
+      simpleEventPluginEvents[i$jscomp$inline_1836],
+    domEventName$jscomp$inline_1838 =
+      eventName$jscomp$inline_1837.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1839 =
+      eventName$jscomp$inline_1837[0].toUpperCase() +
+      eventName$jscomp$inline_1837.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1826,
-    "on" + capitalizedEvent$jscomp$inline_1827
+    domEventName$jscomp$inline_1838,
+    "on" + capitalizedEvent$jscomp$inline_1839
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -19509,16 +19509,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_2104 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2116 = React.version;
 if (
-  "19.2.0-www-modern-0e10ee90-20250912" !==
-  isomorphicReactPackageVersion$jscomp$inline_2104
+  "19.2.0-www-modern-20e54317-20250912" !==
+  isomorphicReactPackageVersion$jscomp$inline_2116
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2104,
-      "19.2.0-www-modern-0e10ee90-20250912"
+      isomorphicReactPackageVersion$jscomp$inline_2116,
+      "19.2.0-www-modern-20e54317-20250912"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -19534,24 +19534,24 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2728 = {
+var internals$jscomp$inline_2740 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-0e10ee90-20250912",
+  version: "19.2.0-www-modern-20e54317-20250912",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-0e10ee90-20250912"
+  reconcilerVersion: "19.2.0-www-modern-20e54317-20250912"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2729 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2741 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2729.isDisabled &&
-    hook$jscomp$inline_2729.supportsFiber
+    !hook$jscomp$inline_2741.isDisabled &&
+    hook$jscomp$inline_2741.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2729.inject(
-        internals$jscomp$inline_2728
+      (rendererID = hook$jscomp$inline_2741.inject(
+        internals$jscomp$inline_2740
       )),
-        (injectedHook = hook$jscomp$inline_2729);
+        (injectedHook = hook$jscomp$inline_2741);
     } catch (err) {}
 }
 function defaultOnDefaultTransitionIndicator() {
@@ -19968,4 +19968,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-modern-0e10ee90-20250912";
+exports.version = "19.2.0-www-modern-20e54317-20250912";
