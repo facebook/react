@@ -142,11 +142,66 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
   ],
 ];
 
+function parseOptions(
+  source: string,
+  mode: 'compiler' | 'linter',
+  configOverrides: string,
+): PluginOptions {
+  // Extract the first line to quickly check for custom test directives
+  const pragma = source.substring(0, source.indexOf('\n'));
+
+  const parsedPragmaOptions = parseConfigPragmaForTests(pragma, {
+    compilationMode: 'infer',
+    environment:
+      mode === 'linter'
+        ? {
+            // enabled in compiler
+            validateRefAccessDuringRender: false,
+            // enabled in linter
+            validateNoSetStateInRender: true,
+            validateNoSetStateInEffects: true,
+            validateNoJSXInTryStatements: true,
+            validateNoImpureFunctionsInRender: true,
+            validateStaticComponents: true,
+            validateNoFreezingKnownMutableFunctions: true,
+            validateNoVoidUseMemo: true,
+          }
+        : {
+            /* use defaults for compiler mode */
+          },
+  });
+
+  // Parse config overrides from config editor
+  let configOverrideOptions: any = {};
+  const configMatch = configOverrides.match(/^\s*import.*?\n\n\((.*)\)/s);
+  // TODO: initialize store with URL params, not empty store
+  if (configOverrides.trim()) {
+    if (configMatch && configMatch[1]) {
+      const configString = configMatch[1].replace(/satisfies.*$/, '').trim();
+      configOverrideOptions = new Function(`return (${configString})`)();
+    } else {
+      throw new Error('Invalid config overrides');
+    }
+  }
+
+  const opts: PluginOptions = parsePluginOptions({
+    ...parsedPragmaOptions,
+    ...configOverrideOptions,
+    environment: {
+      ...parsedPragmaOptions.environment,
+      ...configOverrideOptions.environment,
+      customHooks: new Map([...COMMON_HOOKS]),
+    },
+  });
+
+  return opts;
+}
+
 function compile(
   source: string,
   mode: 'compiler' | 'linter',
   configOverrides: string,
-): [CompilerOutput, 'flow' | 'typescript'] {
+): [CompilerOutput, 'flow' | 'typescript', PluginOptions | null] {
   const results = new Map<string, Array<PrintedCompilerPipelineValue>>();
   const error = new CompilerError();
   const otherErrors: Array<CompilerErrorDetail | CompilerDiagnostic> = [];
@@ -165,9 +220,10 @@ function compile(
     language = 'typescript';
   }
   let transformOutput;
+  let baseOpts: PluginOptions | null = null;
+
   try {
-    // Extract the first line to quickly check for custom test directives
-    const pragma = source.substring(0, source.indexOf('\n'));
+    baseOpts = parseOptions(source, mode, configOverrides);
     const logIR = (result: CompilerPipelineValue): void => {
       switch (result.kind) {
         case 'ast': {
@@ -206,48 +262,10 @@ function compile(
         }
       }
     };
-    const parsedPragmaOptions = parseConfigPragmaForTests(pragma, {
-      compilationMode: 'infer',
-      environment:
-        mode === 'linter'
-          ? {
-              // enabled in compiler
-              validateRefAccessDuringRender: false,
-              // enabled in linter
-              validateNoSetStateInRender: true,
-              validateNoSetStateInEffects: true,
-              validateNoJSXInTryStatements: true,
-              validateNoImpureFunctionsInRender: true,
-              validateStaticComponents: true,
-              validateNoFreezingKnownMutableFunctions: true,
-              validateNoVoidUseMemo: true,
-            }
-          : {
-              /* use defaults for compiler mode */
-            },
-    });
 
-    // Parse config overrides from config editor
-    let configOverrideOptions: any = {};
-    const configMatch = configOverrides.match(/^\s*import.*?\n\n\((.*)\)/s);
-    // TODO: initialize store with URL params, not empty store
-    if (configOverrides.trim()) {
-      if (configMatch && configMatch[1]) {
-        const configString = configMatch[1].replace(/satisfies.*$/, '').trim();
-        configOverrideOptions = new Function(`return (${configString})`)();
-      } else {
-        throw new Error('Invalid config overrides');
-      }
-    }
-
-    const opts: PluginOptions = parsePluginOptions({
-      ...parsedPragmaOptions,
-      ...configOverrideOptions,
-      environment: {
-        ...parsedPragmaOptions.environment,
-        ...configOverrideOptions.environment,
-        customHooks: new Map([...COMMON_HOOKS]),
-      },
+    // Add logger options to the parsed options
+    const opts = {
+      ...baseOpts,
       logger: {
         debugLogIRs: logIR,
         logEvent: (_filename: string | null, event: LoggerEvent) => {
@@ -256,7 +274,8 @@ function compile(
           }
         },
       },
-    });
+    };
+
     transformOutput = invokeCompiler(source, language, opts);
   } catch (err) {
     /**
@@ -285,11 +304,12 @@ function compile(
     otherErrors.forEach(e => error.details.push(e));
   }
   if (error.hasErrors()) {
-    return [{kind: 'err', results, error}, language];
+    return [{kind: 'err', results, error}, language, baseOpts];
   }
   return [
     {kind: 'ok', results, transformOutput, errors: error.details},
     language,
+    baseOpts,
   ];
 }
 
@@ -298,7 +318,7 @@ export default function Editor(): JSX.Element {
   const deferredStore = useDeferredValue(store);
   const dispatchStore = useStoreDispatch();
   const {enqueueSnackbar} = useSnackbar();
-  const [compilerOutput, language] = useMemo(
+  const [compilerOutput, language, appliedOptions] = useMemo(
     () => compile(deferredStore.source, 'compiler', deferredStore.config),
     [deferredStore.source, deferredStore.config],
   );
@@ -349,7 +369,7 @@ export default function Editor(): JSX.Element {
     <>
       <div className="relative flex top-14">
         <div className="flex-shrink-0">
-          <ConfigEditor />
+          <ConfigEditor appliedOptions={appliedOptions} />
         </div>
         <div className="flex flex-1 min-w-0">
           <div className="flex-1 min-w-[550px] sm:min-w-0">

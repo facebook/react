@@ -6,6 +6,7 @@
  */
 
 import MonacoEditor, {loader, type Monaco} from '@monaco-editor/react';
+import {PluginOptions} from 'babel-plugin-react-compiler';
 import type {editor} from 'monaco-editor';
 import * as monaco from 'monaco-editor';
 import React, {useState} from 'react';
@@ -13,19 +14,27 @@ import {Resizable} from 're-resizable';
 import {useStore, useStoreDispatch} from '../StoreContext';
 import {monacoOptions} from './monacoOptions';
 import {IconChevron} from '../Icons/IconChevron';
+import prettyFormat from 'pretty-format';
 
 // @ts-expect-error - webpack asset/source loader handles .d.ts files as strings
 import compilerTypeDefs from 'babel-plugin-react-compiler/dist/index.d.ts';
 
 loader.config({monaco});
 
-export default function ConfigEditor(): React.ReactElement {
+export default function ConfigEditor({
+  appliedOptions,
+}: {
+  appliedOptions: PluginOptions | null;
+}): React.ReactElement {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <div className="flex flex-row relative">
       {isExpanded ? (
-        <ExpandedEditor onToggle={setIsExpanded} />
+        <ExpandedEditor
+          onToggle={setIsExpanded}
+          appliedOptions={appliedOptions}
+        />
       ) : (
         <CollapsedEditor onToggle={setIsExpanded} />
       )}
@@ -35,8 +44,10 @@ export default function ConfigEditor(): React.ReactElement {
 
 function ExpandedEditor({
   onToggle,
+  appliedOptions,
 }: {
   onToggle: (expanded: boolean) => void;
+  appliedOptions: PluginOptions | null;
 }): React.ReactElement {
   const store = useStore();
   const dispatchStore = useStoreDispatch();
@@ -81,6 +92,25 @@ function ExpandedEditor({
     }
   };
 
+  const formattedAppliedOptions = appliedOptions
+    ? prettyFormat(appliedOptions, {
+        printFunctionName: false,
+        callToJSON: false,
+        plugins: [
+          {
+            test: (value: any) => value instanceof Map,
+            serialize: (map: Map<any, any>) => {
+              const obj: Record<string, any> = {};
+              for (const [key, value] of map) {
+                obj[String(key)] = value;
+              }
+              return `Map(${prettyFormat(obj)})`;
+            },
+          },
+        ],
+      })
+    : 'No options available';
+
   return (
     <Resizable
       className="border-r"
@@ -89,12 +119,7 @@ function ExpandedEditor({
       defaultSize={{width: 350, height: 'auto'}}
       enable={{right: true, bottom: false}}
       style={{position: 'relative', height: 'calc(100vh - 3.5rem)'}}>
-      <div className="bg-gray-700 p-2">
-        <div className="pb-2">
-          <h2 className="inline-block text-secondary-dark text-center outline-none py-1.5 px-1.5 xs:px-3 sm:px-4 rounded-full capitalize whitespace-nowrap text-sm">
-            Config Overrides
-          </h2>
-        </div>
+      <div className="bg-gray-700 p-2 h-full flex flex-col">
         <div
           className="absolute w-10 h-16 bg-gray-700 hover:translate-x-2 transition-transform rounded-r-full flex items-center justify-center z-[5] cursor-pointer"
           title="Minimize config editor"
@@ -111,25 +136,62 @@ function ExpandedEditor({
             className="text-secondary-dark"
           />
         </div>
-        <div className="h-[calc(100vh_-_3.5rem_-_3.5rem)] rounded-lg overflow-hidden">
-          <MonacoEditor
-            path={'config.ts'}
-            language={'typescript'}
-            value={store.config}
-            onMount={handleMount}
-            onChange={handleChange}
-            options={{
-              ...monacoOptions,
-              lineNumbers: 'off',
-              folding: false,
-              renderLineHighlight: 'none',
-              hideCursorInOverviewRuler: true,
-              overviewRulerBorder: false,
-              overviewRulerLanes: 0,
-              fontSize: 12,
-              scrollBeyondLastLine: false,
-            }}
-          />
+
+        {/* Config Overrides Panel */}
+        <div className="flex-1 mb-2">
+          <div className="pb-2">
+            <h2 className="inline-block text-secondary-dark text-center outline-none py-1.5 px-1.5 xs:px-3 sm:px-4 rounded-full capitalize whitespace-nowrap text-sm">
+              Config Overrides
+            </h2>
+          </div>
+          <div className="h-[calc(50vh_-_6rem)] rounded-lg overflow-hidden">
+            <MonacoEditor
+              path={'config.ts'}
+              language={'typescript'}
+              value={store.config}
+              onMount={handleMount}
+              onChange={handleChange}
+              options={{
+                ...monacoOptions,
+                lineNumbers: 'off',
+                folding: false,
+                renderLineHighlight: 'none',
+                hideCursorInOverviewRuler: true,
+                overviewRulerBorder: false,
+                overviewRulerLanes: 0,
+                fontSize: 12,
+                scrollBeyondLastLine: false,
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Applied Configs Panel */}
+        <div className="flex-1">
+          <div className="pb-2">
+            <h2 className="inline-block text-secondary-dark text-center outline-none py-1.5 px-1.5 xs:px-3 sm:px-4 rounded-full capitalize whitespace-nowrap text-sm">
+              Applied Configs
+            </h2>
+          </div>
+          <div className="h-[calc(50vh_-_6rem)] rounded-lg overflow-hidden">
+            <MonacoEditor
+              path={'applied-config.js'}
+              language={'javascript'}
+              value={formattedAppliedOptions}
+              options={{
+                ...monacoOptions,
+                lineNumbers: 'off',
+                folding: false,
+                renderLineHighlight: 'none',
+                hideCursorInOverviewRuler: true,
+                overviewRulerBorder: false,
+                overviewRulerLanes: 0,
+                fontSize: 12,
+                scrollBeyondLastLine: false,
+                readOnly: true,
+              }}
+            />
+          </div>
         </div>
       </div>
     </Resizable>
