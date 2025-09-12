@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c83f742d7cf2f0ca7d1b88fda0d31924>>
+ * @generated SignedSource<<0b88d054e3d8c0307e5d51c95bca657f>>
  */
 
 "use strict";
@@ -19719,10 +19719,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-0c813c52-20250912",
+        version: "19.2.0-native-fb-0e10ee90-20250912",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-0c813c52-20250912"
+        reconcilerVersion: "19.2.0-native-fb-0e10ee90-20250912"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
@@ -19881,8 +19881,7 @@ __DEV__ &&
           null
         );
         root.hydrationCallbacks = null;
-        concurrentRoot = 1 === concurrentRoot ? 1 : 0;
-        isDevToolsPresent && (concurrentRoot |= 2);
+        concurrentRoot = (1 === concurrentRoot ? 1 : 0) | 2;
         concurrentRoot = createFiber(3, null, null, concurrentRoot);
         root.current = concurrentRoot;
         concurrentRoot.stateNode = root;

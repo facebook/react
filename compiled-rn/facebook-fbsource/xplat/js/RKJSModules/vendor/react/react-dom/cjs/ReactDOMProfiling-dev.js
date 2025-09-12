@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<daf38277b70822f6e2163ecb91d88901>>
+ * @generated SignedSource<<2dd64b4ca9628136adb9a233e6829ab0>>
  */
 
 /*
@@ -24769,7 +24769,7 @@ __DEV__ &&
         ? ((tag = ConcurrentMode),
           !0 === isStrictMode && (tag |= StrictLegacyMode | StrictEffectsMode))
         : (tag = NoMode);
-      isDevToolsPresent && (tag |= ProfileMode);
+      tag |= ProfileMode;
       isStrictMode = createFiber(3, null, null, tag);
       containerInfo.current = isStrictMode;
       isStrictMode.stateNode = containerInfo;
@@ -29650,11 +29650,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-native-fb-0c813c52-20250912" !== isomorphicReactPackageVersion)
+      if ("19.2.0-native-fb-0e10ee90-20250912" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-native-fb-0c813c52-20250912\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-native-fb-0e10ee90-20250912\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -29691,10 +29691,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-native-fb-0c813c52-20250912",
+          version: "19.2.0-native-fb-0e10ee90-20250912",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-native-fb-0c813c52-20250912"
+          reconcilerVersion: "19.2.0-native-fb-0e10ee90-20250912"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -30159,7 +30159,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-native-fb-0c813c52-20250912";
+    exports.version = "19.2.0-native-fb-0e10ee90-20250912";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
