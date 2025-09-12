@@ -19635,9 +19635,7 @@ __DEV__ &&
           );
           _this$props.hydrationCallbacks = null;
           enableTransitionTracing && (_this$props.transitionCallbacks = null);
-          var uninitializedFiber = 1;
-          isDevToolsPresent && (uninitializedFiber |= 2);
-          uninitializedFiber = createFiber(3, null, null, uninitializedFiber);
+          var uninitializedFiber = createFiber(3, null, null, 3);
           _this$props.current = uninitializedFiber;
           uninitializedFiber.stateNode = _this$props;
           var initialCache = createCache();
@@ -19722,10 +19720,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-classic-0c813c52-20250912",
+        version: "19.2.0-www-classic-0e10ee90-20250912",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-0c813c52-20250912"
+        reconcilerVersion: "19.2.0-www-classic-0e10ee90-20250912"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -19759,7 +19757,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.2.0-www-classic-0c813c52-20250912";
+    exports.version = "19.2.0-www-classic-0e10ee90-20250912";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

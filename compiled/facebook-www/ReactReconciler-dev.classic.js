@@ -19659,8 +19659,7 @@ __DEV__ &&
         (containerInfo.transitionCallbacks = transitionCallbacks);
       hydrationCallbacks = 1;
       !0 === isStrictMode && (hydrationCallbacks |= 24);
-      isDevToolsPresent && (hydrationCallbacks |= 2);
-      isStrictMode = createFiber(3, null, null, hydrationCallbacks);
+      isStrictMode = createFiber(3, null, null, hydrationCallbacks | 2);
       containerInfo.current = isStrictMode;
       isStrictMode.stateNode = containerInfo;
       hydrationCallbacks = createCache();
@@ -22586,7 +22585,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-0c813c52-20250912"
+        reconcilerVersion: "19.2.0-www-classic-0e10ee90-20250912"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
