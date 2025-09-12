@@ -30,7 +30,7 @@ export {
   cacheSignal,
   startTransition,
   Activity,
-  unstable_Activity as Activity,
+  Activity as unstable_Activity,
   unstable_postpone,
   unstable_getCacheForType,
   unstable_SuspenseList,
