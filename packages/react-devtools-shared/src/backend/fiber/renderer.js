@@ -3085,16 +3085,7 @@ export function attach(
     reconcilingParentSuspenseNode = stashedSuspenseParent;
     previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
     remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
-    const fallbackInstance = remainingReconcilingChildren;
-    if (fallbackInstance !== null) {
-      unmountInstanceRecursively(fallbackInstance);
-
-      if (remainingReconcilingChildren !== null) {
-        throw new Error(
-          'There should be no instances left to unmount after a Suspense fallback was unmounted.',
-        );
-      }
-    }
+    unmountRemainingChildren();
   }
 
   function isChildOf(
