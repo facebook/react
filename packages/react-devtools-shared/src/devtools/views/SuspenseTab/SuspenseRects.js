@@ -118,17 +118,7 @@ function SuspenseRects({
 
   return (
     <>
-      <ScaledRect
-        rect={boundingBox}
-        className={styles.SuspenseRectsBoundary}
-        data-highlighted={selected}
-        onClick={handleClick}
-        onPointerOver={handlePointerOver}
-        onPointerLeave={handlePointerLeave}
-        // Reach-UI tooltip will go out of bounds of parent scroll container.
-        // Native title will change position for each Client Rect.
-        // changing position is better than going oob.
-        title={suspense.name}>
+      <ScaledRect rect={boundingBox} className={styles.SuspenseRectsBoundary}>
         <ViewBox.Provider value={boundingBox}>
           {suspense.rects !== null &&
             suspense.rects.map((rect, index) => {
@@ -137,12 +127,22 @@ function SuspenseRects({
                   key={index}
                   className={styles.SuspenseRectsRect}
                   rect={rect}
+                  data-highlighted={selected}
+                  onClick={handleClick}
+                  onPointerOver={handlePointerOver}
+                  onPointerLeave={handlePointerLeave}
+                  // Reach-UI tooltip will go out of bounds of parent scroll container.
+                  title={suspense.name}
                 />
               );
             })}
-          {suspense.children.map(childID => {
-            return <SuspenseRects key={childID} suspenseID={childID} />;
-          })}
+          <ScaledRect
+            className={styles.SuspenseRectsBoundaryChildren}
+            rect={boundingBox}>
+            {suspense.children.map(childID => {
+              return <SuspenseRects key={childID} suspenseID={childID} />;
+            })}
+          </ScaledRect>
         </ViewBox.Provider>
       </ScaledRect>
     </>
