@@ -9,7 +9,7 @@
 
 /* global Bun */
 
-import type { Writable } from 'stream';
+import type {Writable} from 'stream';
 
 type BunReadableStreamController = ReadableStreamController & {
   end(): mixed,
@@ -102,12 +102,16 @@ export function closeWithError(destination: Destination, error: mixed): void {
   if (typeof destination.error === 'function') {
     // $FlowFixMe[incompatible-call]: This is an Error object or the destination accepts other types.
     destination.error(error);
-    // $FlowFixMe[incompatible-use]
-    // $FlowFixMe[method-unbinding]
-  } else if (typeof destination.destroy === 'function') {
+  }
+  // $FlowFixMe[incompatible-use]
+  // $FlowFixMe[method-unbinding]
+  else if (typeof destination.destroy === 'function') {
     // $FlowFixMe[incompatible-call]: This is an Error object or the destination accepts other types.
     destination.destroy(error);
-  } else {
+  }
+  // $FlowFixMe[incompatible-use]
+  // $FlowFixMe[method-unbinding]
+  else if (typeof destination.close === 'function') {
     // Earlier implementations doesn't support this method. In that environment you're
     // supposed to throw from a promise returned but we don't return a promise in our
     // approach. We could fork this implementation but this is environment is an edge
