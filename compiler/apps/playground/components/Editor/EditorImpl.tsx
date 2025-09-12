@@ -220,7 +220,7 @@ function compile(
     language = 'typescript';
   }
   let transformOutput;
-    
+
   let baseOpts: PluginOptions | null = null;
   try {
     baseOpts = parseOptions(source, mode, configOverrides);
@@ -279,7 +279,7 @@ function compile(
         ...baseOpts,
         logger: {
           debugLogIRs: logIR,
-          logEvent: (_filename: string | null, event: LoggerEvent) => {
+          logEvent: (_filename: string | null, event: LoggerEvent): void => {
             if (event.kind === 'CompileError') {
               otherErrors.push(event.detail);
             }

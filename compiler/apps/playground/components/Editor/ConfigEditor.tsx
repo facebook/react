@@ -95,21 +95,9 @@ function ExpandedEditor({
   const formattedAppliedOptions = appliedOptions
     ? prettyFormat(appliedOptions, {
         printFunctionName: false,
-        callToJSON: false,
-        plugins: [
-          {
-            test: (value: any) => value instanceof Map,
-            serialize: (map: Map<any, any>) => {
-              const obj: Record<string, any> = {};
-              for (const [key, value] of map) {
-                obj[String(key)] = value;
-              }
-              return `Map(${prettyFormat(obj)})`;
-            },
-          },
-        ],
+        printBasicPrototype: false,
       })
-    : 'No options available';
+    : 'Invalid configs';
 
   return (
     <Resizable
@@ -137,10 +125,9 @@ function ExpandedEditor({
           />
         </div>
 
-        {/* Config Overrides Panel */}
         <div className="flex-1 mb-2">
           <div className="pb-2">
-            <h2 className="inline-block text-secondary-dark text-center outline-none py-1.5 px-1.5 xs:px-3 sm:px-4 rounded-full capitalize whitespace-nowrap text-sm">
+            <h2 className="inline-block text-secondary-dark py-1.5 px-1.5 xs:px-3 sm:px-4 text-sm">
               Config Overrides
             </h2>
           </div>
@@ -154,22 +141,20 @@ function ExpandedEditor({
               options={{
                 ...monacoOptions,
                 lineNumbers: 'off',
-                folding: false,
                 renderLineHighlight: 'none',
-                hideCursorInOverviewRuler: true,
                 overviewRulerBorder: false,
                 overviewRulerLanes: 0,
                 fontSize: 12,
                 scrollBeyondLastLine: false,
+                glyphMargin: false,
               }}
             />
           </div>
         </div>
 
-        {/* Applied Configs Panel */}
         <div className="flex-1">
           <div className="pb-2">
-            <h2 className="inline-block text-secondary-dark text-center outline-none py-1.5 px-1.5 xs:px-3 sm:px-4 rounded-full capitalize whitespace-nowrap text-sm">
+            <h2 className="inline-block text-secondary-dark py-1.5 px-1.5 xs:px-3 sm:px-4 text-sm">
               Applied Configs
             </h2>
           </div>
@@ -181,14 +166,13 @@ function ExpandedEditor({
               options={{
                 ...monacoOptions,
                 lineNumbers: 'off',
-                folding: false,
                 renderLineHighlight: 'none',
-                hideCursorInOverviewRuler: true,
                 overviewRulerBorder: false,
                 overviewRulerLanes: 0,
                 fontSize: 12,
                 scrollBeyondLastLine: false,
                 readOnly: true,
+                glyphMargin: false,
               }}
             />
           </div>
