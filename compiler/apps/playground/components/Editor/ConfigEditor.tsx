@@ -28,17 +28,10 @@ export default function ConfigEditor({
 }): React.ReactElement {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  return (
-    <div className="flex flex-row relative">
-      {isExpanded ? (
-        <ExpandedEditor
-          onToggle={setIsExpanded}
-          appliedOptions={appliedOptions}
-        />
-      ) : (
-        <CollapsedEditor onToggle={setIsExpanded} />
-      )}
-    </div>
+  return isExpanded ? (
+    <ExpandedEditor onToggle={setIsExpanded} appliedOptions={appliedOptions} />
+  ) : (
+    <CollapsedEditor onToggle={setIsExpanded} />
   );
 }
 
@@ -101,13 +94,12 @@ function ExpandedEditor({
 
   return (
     <Resizable
-      className="border-r"
       minWidth={300}
       maxWidth={600}
-      defaultSize={{width: 350, height: 'auto'}}
+      defaultSize={{width: 350}}
       enable={{right: true, bottom: false}}
-      style={{position: 'relative', height: 'calc(100vh - 3.5rem)'}}>
-      <div className="bg-gray-700 p-2 h-full flex flex-col">
+      style={{position: 'relative'}}>
+      <div className="bg-gray-700 p-2 h-full flex flex-col !h-[calc(100vh_-_3.5rem)]">
         <div
           className="absolute w-10 h-16 bg-gray-700 hover:translate-x-2 transition-transform rounded-r-full flex items-center justify-center z-[5] cursor-pointer"
           title="Minimize config editor"
@@ -125,13 +117,13 @@ function ExpandedEditor({
           />
         </div>
 
-        <div className="flex-1 mb-2">
+        <div className="flex-1 flex flex-col mb-2">
           <div className="pb-2">
             <h2 className="inline-block text-secondary-dark py-1.5 px-1.5 xs:px-3 sm:px-4 text-sm">
               Config Overrides
             </h2>
           </div>
-          <div className="h-[calc(50vh_-_6rem)] rounded-lg overflow-hidden">
+          <div className="flex-1 rounded-lg overflow-hidden">
             <MonacoEditor
               path={'config.ts'}
               language={'typescript'}
@@ -152,13 +144,13 @@ function ExpandedEditor({
           </div>
         </div>
 
-        <div className="flex-1">
+        <div className="flex-1 flex flex-col">
           <div className="pb-2">
             <h2 className="inline-block text-secondary-dark py-1.5 px-1.5 xs:px-3 sm:px-4 text-sm">
               Applied Configs
             </h2>
           </div>
-          <div className="h-[calc(50vh_-_6rem)] rounded-lg overflow-hidden">
+          <div className="flex-1 rounded-lg overflow-hidden">
             <MonacoEditor
               path={'applied-config.js'}
               language={'javascript'}
@@ -189,8 +181,8 @@ function CollapsedEditor({
 }): React.ReactElement {
   return (
     <div
-      className="w-4"
-      style={{height: 'calc(100vh - 3.5rem)', position: 'relative'}}>
+      className="w-4 !h-[calc(100vh_-_3.5rem)]"
+      style={{position: 'relative'}}>
       <div
         className="absolute w-10 h-16 bg-gray-700 hover:translate-x-2 transition-transform rounded-r-full flex items-center justify-center z-[5] cursor-pointer"
         title="Expand config editor"
