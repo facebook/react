@@ -40,5 +40,9 @@ export default function formatLocationForDisplay(
     }
   }
 
+  if (line === 0) {
+    return nameOnly;
+  }
+
   return `${nameOnly}:${line}`;
 }

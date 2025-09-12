@@ -125,6 +125,7 @@ describe(`onRender`, () => {
     expect(callback).toHaveBeenCalledTimes(1);
   });
 
+  // @gate !__DEV__
   it('does not record times for components outside of Profiler tree', async () => {
     // Mock the Scheduler module so we can track how many times the current
     // time is read

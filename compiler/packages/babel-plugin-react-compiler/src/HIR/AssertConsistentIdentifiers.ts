@@ -38,7 +38,13 @@ export function assertConsistentIdentifiers(fn: HIRFunction): void {
       CompilerError.invariant(instr.lvalue.identifier.name === null, {
         reason: `Expected all lvalues to be temporaries`,
         description: `Found named lvalue \`${instr.lvalue.identifier.name}\``,
-        loc: instr.lvalue.loc,
+        details: [
+          {
+            kind: 'error',
+            loc: instr.lvalue.loc,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
       CompilerError.invariant(!assignments.has(instr.lvalue.identifier.id), {
@@ -46,7 +52,13 @@ export function assertConsistentIdentifiers(fn: HIRFunction): void {
         description: `Found duplicate assignment of '${printPlace(
           instr.lvalue,
         )}'`,
-        loc: instr.lvalue.loc,
+        details: [
+          {
+            kind: 'error',
+            loc: instr.lvalue.loc,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
       assignments.add(instr.lvalue.identifier.id);
@@ -77,7 +89,13 @@ function validate(
     CompilerError.invariant(identifier === previous, {
       reason: `Duplicate identifier object`,
       description: `Found duplicate identifier object for id ${identifier.id}`,
-      loc: loc ?? GeneratedSource,
+      details: [
+        {
+          kind: 'error',
+          loc: loc ?? GeneratedSource,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
   }

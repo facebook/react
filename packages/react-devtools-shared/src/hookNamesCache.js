@@ -103,7 +103,7 @@ export function loadHookNames(
 
     let timeoutID: $FlowFixMe | null;
     let didTimeout = false;
-    let status = 'unknown';
+    let status: 'success' | 'error' | 'timeout' | 'unknown' = 'unknown';
     let resolvedHookNames: HookNames | null = null;
 
     const wake = () => {

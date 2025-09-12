@@ -13,10 +13,23 @@ export default function MyApp() {
 }
 `;
 
+export const defaultConfig = `\
+import type { PluginOptions } from 'babel-plugin-react-compiler/dist';
+
+({
+  environment: {
+    enableResetCacheOnSourceFileChanges: false
+  }
+} satisfies Partial<PluginOptions>);`;
+
 export const defaultStore: Store = {
   source: index,
+  config: defaultConfig,
+  showInternals: false,
 };
 
 export const emptyStore: Store = {
   source: '',
+  config: '',
+  showInternals: false,
 };

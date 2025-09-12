@@ -33,6 +33,7 @@ import {
   enableComponentPerformanceTrack,
 } from 'shared/ReactFeatureFlags';
 
+import getComponentNameFromFiber from './getComponentNameFromFiber';
 import {isAlreadyRendering} from './ReactFiberWorkLoop';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
@@ -68,6 +69,8 @@ export let blockingClampTime: number = -0;
 export let blockingUpdateTime: number = -1.1; // First sync setState scheduled.
 export let blockingUpdateTask: null | ConsoleTask = null; // First sync setState's stack trace.
 export let blockingUpdateType: UpdateType = 0;
+export let blockingUpdateMethodName: null | string = null; // The name of the method that caused first sync update.
+export let blockingUpdateComponentName: null | string = null; // The name of the component where first sync update happened.
 export let blockingEventTime: number = -1.1; // Event timeStamp of the first setState.
 export let blockingEventType: null | string = null; // Event type of the first setState.
 export let blockingEventIsRepeat: boolean = false;
@@ -78,6 +81,8 @@ export let transitionStartTime: number = -1.1; // First startTransition call bef
 export let transitionUpdateTime: number = -1.1; // First transition setState scheduled.
 export let transitionUpdateType: UpdateType = 0;
 export let transitionUpdateTask: null | ConsoleTask = null; // First transition setState's stack trace.
+export let transitionUpdateMethodName: null | string = null; // The name of the method that caused first transition update.
+export let transitionUpdateComponentName: null | string = null; // The name of the component where first transition update happened.
 export let transitionEventTime: number = -1.1; // Event timeStamp of the first transition.
 export let transitionEventType: null | string = null; // Event type of the first transition.
 export let transitionEventIsRepeat: boolean = false;
@@ -94,7 +99,11 @@ export function startYieldTimer(reason: SuspendedReason) {
   yieldReason = reason;
 }
 
-export function startUpdateTimerByLane(lane: Lane, method: string): void {
+export function startUpdateTimerByLane(
+  lane: Lane,
+  method: string,
+  fiber: Fiber | null,
+): void {
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
     return;
   }
@@ -102,6 +111,10 @@ export function startUpdateTimerByLane(lane: Lane, method: string): void {
     if (blockingUpdateTime < 0) {
       blockingUpdateTime = now();
       blockingUpdateTask = createTask(method);
+      blockingUpdateMethodName = method;
+      if (__DEV__ && fiber != null) {
+        blockingUpdateComponentName = getComponentNameFromFiber(fiber);
+      }
       if (isAlreadyRendering()) {
         blockingUpdateType = SPAWNED_UPDATE;
       }
@@ -125,6 +138,10 @@ export function startUpdateTimerByLane(lane: Lane, method: string): void {
     if (transitionUpdateTime < 0) {
       transitionUpdateTime = now();
       transitionUpdateTask = createTask(method);
+      transitionUpdateMethodName = method;
+      if (__DEV__ && fiber != null) {
+        transitionUpdateComponentName = getComponentNameFromFiber(fiber);
+      }
       if (transitionStartTime < 0) {
         const newEventTime = resolveEventTimeStamp();
         const newEventType = resolveEventType();
@@ -225,6 +242,8 @@ export function trackSuspendedTime(lanes: Lanes, renderEndTime: number) {
 export function clearBlockingTimers(): void {
   blockingUpdateTime = -1.1;
   blockingUpdateType = 0;
+  blockingUpdateMethodName = null;
+  blockingUpdateComponentName = null;
   blockingSuspendedTime = -1.1;
   blockingEventIsRepeat = true;
 }

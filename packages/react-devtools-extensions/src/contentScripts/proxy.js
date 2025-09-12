@@ -1,8 +1,16 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
 /* global chrome */
 
 'use strict';
 
-window.addEventListener('pageshow', function ({target}) {
+function injectProxy({target}: {target: any}) {
   // Firefox's behaviour for injecting this content script can be unpredictable
   // While navigating the history, some content scripts might not be re-injected and still be alive
   if (!window.__REACT_DEVTOOLS_PROXY_INJECTED__) {
@@ -14,7 +22,7 @@ window.addEventListener('pageshow', function ({target}) {
     // The backend waits to install the global hook until notified by the content script.
     // In the event of a page reload, the content script might be loaded before the backend manager is injected.
     // Because of this we need to poll the backend manager until it has been initialized.
-    const intervalID = setInterval(() => {
+    const intervalID: IntervalID = setInterval(() => {
       if (backendInitialized) {
         clearInterval(intervalID);
       } else {
@@ -22,7 +30,11 @@ window.addEventListener('pageshow', function ({target}) {
       }
     }, 500);
   }
-});
+}
+
+window.addEventListener('pagereveal', injectProxy);
+// For backwards compat with browsers not implementing `pagereveal` which is a fairly new event.
+window.addEventListener('pageshow', injectProxy);
 
 window.addEventListener('pagehide', function ({target}) {
   if (target !== window.document) {
@@ -45,7 +57,7 @@ function sayHelloToBackendManager() {
   );
 }
 
-function handleMessageFromDevtools(message) {
+function handleMessageFromDevtools(message: any) {
   window.postMessage(
     {
       source: 'react-devtools-content-script',
@@ -55,7 +67,7 @@ function handleMessageFromDevtools(message) {
   );
 }
 
-function handleMessageFromPage(event) {
+function handleMessageFromPage(event: any) {
   if (event.source !== window || !event.data) {
     return;
   }
@@ -65,6 +77,7 @@ function handleMessageFromPage(event) {
     case 'react-devtools-bridge': {
       backendInitialized = true;
 
+      // $FlowFixMe[incompatible-use]
       port.postMessage(event.data.payload);
       break;
     }
@@ -99,6 +112,8 @@ function connectPort() {
 
   window.addEventListener('message', handleMessageFromPage);
 
+  // $FlowFixMe[incompatible-use]
   port.onMessage.addListener(handleMessageFromDevtools);
+  // $FlowFixMe[incompatible-use]
   port.onDisconnect.addListener(handleDisconnect);
 }

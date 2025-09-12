@@ -323,7 +323,13 @@ function writeTerminal(writer: Writer, terminal: ReactiveTerminal): void {
             CompilerError.invariant(block != null, {
               reason: 'Expected case to have a block',
               description: null,
-              loc: case_.test?.loc ?? null,
+              details: [
+                {
+                  kind: 'error',
+                  loc: case_.test?.loc ?? null,
+                  message: null,
+                },
+              ],
               suggestions: null,
             });
             writeReactiveInstructions(writer, block);

@@ -179,7 +179,7 @@ const reusableComponentDevToolDetails = {
   track: COMPONENTS_TRACK,
 };
 
-const reusableComponentOptions = {
+const reusableComponentOptions: PerformanceMeasureOptions = {
   start: -0,
   end: -0,
   detail: {
@@ -228,9 +228,20 @@ export function logComponentRender(
               ? 'tertiary-dark'
               : 'primary-dark'
             : 'error';
-    const debugTask = fiber._debugTask;
-    if (__DEV__ && debugTask) {
+
+    if (!__DEV__) {
+      console.timeStamp(
+        name,
+        startTime,
+        endTime,
+        COMPONENTS_TRACK,
+        undefined,
+        color,
+      );
+    } else {
       const props = fiber.memoizedProps;
+      const debugTask = fiber._debugTask;
+
       if (
         props !== null &&
         alternate !== null &&
@@ -268,38 +279,45 @@ export function logComponentRender(
           reusableComponentDevToolDetails.properties = properties;
           reusableComponentOptions.start = startTime;
           reusableComponentOptions.end = endTime;
+
+          if (debugTask != null) {
+            debugTask.run(
+              // $FlowFixMe[method-unbinding]
+              performance.measure.bind(
+                performance,
+                '\u200b' + name,
+                reusableComponentOptions,
+              ),
+            );
+          } else {
+            performance.measure('\u200b' + name, reusableComponentOptions);
+          }
+        }
+      } else {
+        if (debugTask != null) {
           debugTask.run(
             // $FlowFixMe[method-unbinding]
-            performance.measure.bind(
-              performance,
-              '\u200b' + name,
-              reusableComponentOptions,
+            console.timeStamp.bind(
+              console,
+              name,
+              startTime,
+              endTime,
+              COMPONENTS_TRACK,
+              undefined,
+              color,
             ),
           );
-          return;
+        } else {
+          console.timeStamp(
+            name,
+            startTime,
+            endTime,
+            COMPONENTS_TRACK,
+            undefined,
+            color,
+          );
         }
       }
-      debugTask.run(
-        // $FlowFixMe[method-unbinding]
-        console.timeStamp.bind(
-          console,
-          name,
-          startTime,
-          endTime,
-          COMPONENTS_TRACK,
-          undefined,
-          color,
-        ),
-      );
-    } else {
-      console.timeStamp(
-        name,
-        startTime,
-        endTime,
-        COMPONENTS_TRACK,
-        undefined,
-        color,
-      );
     }
   }
 }
@@ -351,7 +369,7 @@ export function logComponentErrored(
         // error boundary itself.
         debugTask = fiber._debugTask;
       }
-      const options = {
+      const options: PerformanceMeasureOptions = {
         start: startTime,
         end: endTime,
         detail: {
@@ -613,6 +631,8 @@ export function logBlockingStart(
   renderStartTime: number,
   lanes: Lanes,
   debugTask: null | ConsoleTask, // DEV-only
+  updateMethodName: null | string,
+  updateComponentName: null | string,
 ): void {
   if (supportsUserTiming) {
     currentTrack = 'Blocking';
@@ -654,34 +674,46 @@ export function logBlockingStart(
         : includesOnlyHydrationOrOffscreenLanes(lanes)
           ? 'tertiary-light'
           : 'primary-light';
-      if (__DEV__ && debugTask) {
-        debugTask.run(
-          // $FlowFixMe[method-unbinding]
-          console.timeStamp.bind(
-            console,
-            isPingedUpdate
-              ? 'Promise Resolved'
-              : isSpawnedUpdate
-                ? 'Cascading Update'
-                : renderStartTime - updateTime > 5
-                  ? 'Update Blocked'
-                  : 'Update',
-            updateTime,
-            renderStartTime,
-            currentTrack,
-            LANES_TRACK_GROUP,
-            color,
-          ),
-        );
+      const label = isPingedUpdate
+        ? 'Promise Resolved'
+        : isSpawnedUpdate
+          ? 'Cascading Update'
+          : renderStartTime - updateTime > 5
+            ? 'Update Blocked'
+            : 'Update';
+
+      if (__DEV__) {
+        const properties = [];
+        if (updateComponentName != null) {
+          properties.push(['Component name', updateComponentName]);
+        }
+        if (updateMethodName != null) {
+          properties.push(['Method name', updateMethodName]);
+        }
+        const measureOptions = {
+          start: updateTime,
+          end: renderStartTime,
+          detail: {
+            devtools: {
+              properties,
+              track: currentTrack,
+              trackGroup: LANES_TRACK_GROUP,
+              color,
+            },
+          },
+        };
+
+        if (debugTask) {
+          debugTask.run(
+            // $FlowFixMe[method-unbinding]
+            performance.measure.bind(performance, label, measureOptions),
+          );
+        } else {
+          performance.measure(label, measureOptions);
+        }
       } else {
         console.timeStamp(
-          isPingedUpdate
-            ? 'Promise Resolved'
-            : isSpawnedUpdate
-              ? 'Cascading Update'
-              : renderStartTime - updateTime > 5
-                ? 'Update Blocked'
-                : 'Update',
+          label,
           updateTime,
           renderStartTime,
           currentTrack,
@@ -702,6 +734,8 @@ export function logTransitionStart(
   isPingedUpdate: boolean,
   renderStartTime: number,
   debugTask: null | ConsoleTask, // DEV-only
+  updateMethodName: null | string,
+  updateComponentName: null | string,
 ): void {
   if (supportsUserTiming) {
     currentTrack = 'Transition';
@@ -712,7 +746,6 @@ export function logTransitionStart(
       const color = eventIsRepeat ? 'secondary-light' : 'warning';
       if (__DEV__ && debugTask) {
         debugTask.run(
-          // $FlowFixMe[method-unbinding]
           console.timeStamp.bind(
             console,
             eventIsRepeat ? '' : 'Event: ' + eventType,
@@ -764,30 +797,43 @@ export function logTransitionStart(
     }
     if (updateTime > 0 && renderStartTime > updateTime) {
       // Log the time from when we called setState until we started rendering.
-      if (__DEV__ && debugTask) {
-        debugTask.run(
-          // $FlowFixMe[method-unbinding]
-          console.timeStamp.bind(
-            console,
-            isPingedUpdate
-              ? 'Promise Resolved'
-              : renderStartTime - updateTime > 5
-                ? 'Update Blocked'
-                : 'Update',
-            updateTime,
-            renderStartTime,
-            currentTrack,
-            LANES_TRACK_GROUP,
-            'primary-light',
-          ),
-        );
+      const label = isPingedUpdate
+        ? 'Promise Resolved'
+        : renderStartTime - updateTime > 5
+          ? 'Update Blocked'
+          : 'Update';
+      if (__DEV__) {
+        const properties = [];
+        if (updateComponentName != null) {
+          properties.push(['Component name', updateComponentName]);
+        }
+        if (updateMethodName != null) {
+          properties.push(['Method name', updateMethodName]);
+        }
+        const measureOptions = {
+          start: updateTime,
+          end: renderStartTime,
+          detail: {
+            devtools: {
+              properties,
+              track: currentTrack,
+              trackGroup: LANES_TRACK_GROUP,
+              color: 'primary-light',
+            },
+          },
+        };
+
+        if (debugTask) {
+          debugTask.run(
+            // $FlowFixMe[method-unbinding]
+            performance.measure.bind(performance, label, measureOptions),
+          );
+        } else {
+          performance.measure(label, measureOptions);
+        }
       } else {
         console.timeStamp(
-          isPingedUpdate
-            ? 'Promise Resolved'
-            : renderStartTime - updateTime > 5
-              ? 'Update Blocked'
-              : 'Update',
+          label,
           updateTime,
           renderStartTime,
           currentTrack,
@@ -993,7 +1039,7 @@ export function logRecoveredRenderPhase(
               String(error);
         properties.push(['Recoverable Error', message]);
       }
-      const options = {
+      const options: PerformanceMeasureOptions = {
         start: startTime,
         end: endTime,
         detail: {
@@ -1200,7 +1246,7 @@ export function logCommitErrored(
               String(error);
         properties.push(['Error', message]);
       }
-      const options = {
+      const options: PerformanceMeasureOptions = {
         start: startTime,
         end: endTime,
         detail: {

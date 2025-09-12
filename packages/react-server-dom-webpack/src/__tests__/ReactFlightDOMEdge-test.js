@@ -13,6 +13,8 @@
 // Polyfills for test environment
 global.ReadableStream =
   require('web-streams-polyfill/ponyfill/es6').ReadableStream;
+global.WritableStream =
+  require('web-streams-polyfill/ponyfill/es6').WritableStream;
 global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
 global.Blob = require('buffer').Blob;
@@ -231,10 +233,10 @@ describe('ReactFlightDOMEdge', () => {
   }
 
   async function createBufferedUnclosingStream(
-    prelude: ReadableStream<Uint8Array>,
+    stream: ReadableStream<Uint8Array>,
   ): ReadableStream<Uint8Array> {
     const chunks: Array<Uint8Array> = [];
-    const reader = prelude.getReader();
+    const reader = stream.getReader();
     while (true) {
       const {done, value} = await reader.read();
       if (done) {
@@ -249,6 +251,26 @@ describe('ReactFlightDOMEdge', () => {
       async pull(controller) {
         if (i < chunks.length) {
           controller.enqueue(chunks[i++]);
+        }
+      },
+    });
+  }
+
+  function createDelayedStream(
+    stream: ReadableStream<Uint8Array>,
+  ): ReadableStream<Uint8Array> {
+    return new ReadableStream({
+      async start(controller) {
+        const reader = stream.getReader();
+        while (true) {
+          const {done, value} = await reader.read();
+          if (done) {
+            controller.close();
+          } else {
+            // Artificially delay between enqueuing chunks.
+            await new Promise(resolve => setTimeout(resolve));
+            controller.enqueue(value);
+          }
         }
       },
     });
@@ -1217,17 +1239,24 @@ describe('ReactFlightDOMEdge', () => {
         name: 'Greeting',
         env: 'Server',
       });
-      expect(lazyWrapper._debugInfo).toEqual([
-        {time: 12},
-        greetInfo,
-        {time: 13},
-        expect.objectContaining({
-          name: 'Container',
-          env: 'Server',
-          owner: greetInfo,
-        }),
-        {time: 14},
-      ]);
+      if (gate(flags => flags.enableAsyncDebugInfo)) {
+        expect(lazyWrapper._debugInfo).toEqual([
+          {time: 12},
+          greetInfo,
+          {time: 13},
+          expect.objectContaining({
+            name: 'Container',
+            env: 'Server',
+            owner: greetInfo,
+          }),
+          {time: 14},
+          expect.objectContaining({
+            awaited: expect.objectContaining({
+              name: 'RSC stream',
+            }),
+          }),
+        ]);
+      }
       // The owner that created the span was the outer server component.
       // We expect the debug info to be referentially equal to the owner.
       expect(greeting._owner).toBe(lazyWrapper._debugInfo[1]);
@@ -1967,5 +1996,203 @@ describe('ReactFlightDOMEdge', () => {
     );
     const result = await readResult(ssrStream);
     expect(result).toEqual('<div></div>');
+  });
+
+  // @gate __DEV__
+  it('can transport debug info through a separate debug channel', async () => {
+    function Thrower() {
+      throw new Error('ssr-throw');
+    }
+
+    const ClientComponentOnTheClient = clientExports(
+      Thrower,
+      123,
+      'path/to/chunk.js',
+    );
+
+    const ClientComponentOnTheServer = clientExports(Thrower);
+
+    function App() {
+      return ReactServer.createElement(
+        ReactServer.Suspense,
+        null,
+        ReactServer.createElement(ClientComponentOnTheClient, null),
+      );
+    }
+
+    let debugReadableStreamController;
+
+    const debugReadableStream = new ReadableStream({
+      start(controller) {
+        debugReadableStreamController = controller;
+      },
+    });
+
+    const rscStream = await serverAct(() =>
+      passThrough(
+        ReactServerDOMServer.renderToReadableStream(
+          ReactServer.createElement(App, null),
+          webpackMap,
+          {
+            debugChannel: {
+              writable: new WritableStream({
+                write(chunk) {
+                  debugReadableStreamController.enqueue(chunk);
+                },
+                close() {
+                  debugReadableStreamController.close();
+                },
+              }),
+            },
+          },
+        ),
+      ),
+    );
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const serverConsumerManifest = {
+      moduleMap: {
+        [webpackMap[ClientComponentOnTheClient.$$id].id]: {
+          '*': webpackMap[ClientComponentOnTheServer.$$id],
+        },
+      },
+      moduleLoading: webpackModuleLoading,
+    };
+
+    const response = ReactServerDOMClient.createFromReadableStream(
+      // Create a delayed stream to simulate that the RSC stream might be
+      // transported slower than the debug channel, which must not lead to a
+      // `Connection closed` error in the Flight client.
+      createDelayedStream(rscStream),
+      {
+        serverConsumerManifest,
+        debugChannel: {readable: debugReadableStream},
+      },
+    );
+
+    let ownerStack;
+
+    const ssrStream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(
+        <ClientRoot response={response} />,
+        {
+          onError(err, errorInfo) {
+            ownerStack = React.captureOwnerStack
+              ? React.captureOwnerStack()
+              : null;
+          },
+        },
+      ),
+    );
+
+    const result = await readResult(ssrStream);
+
+    expect(normalizeCodeLocInfo(ownerStack)).toBe('\n    in App (at **)');
+
+    expect(result).toContain(
+      'Switched to client rendering because the server rendering errored:\n\nssr-throw',
+    );
+  });
+
+  // @gate __DEV__
+  it('can transport debug info through a slow debug channel', async () => {
+    function Thrower() {
+      throw new Error('ssr-throw');
+    }
+
+    const ClientComponentOnTheClient = clientExports(
+      Thrower,
+      123,
+      'path/to/chunk.js',
+    );
+
+    const ClientComponentOnTheServer = clientExports(Thrower);
+
+    function App() {
+      return ReactServer.createElement(
+        ReactServer.Suspense,
+        null,
+        ReactServer.createElement(ClientComponentOnTheClient, null),
+      );
+    }
+
+    let debugReadableStreamController;
+
+    const debugReadableStream = new ReadableStream({
+      start(controller) {
+        debugReadableStreamController = controller;
+      },
+    });
+
+    const rscStream = await serverAct(() =>
+      passThrough(
+        ReactServerDOMServer.renderToReadableStream(
+          ReactServer.createElement(App, null),
+          webpackMap,
+          {
+            debugChannel: {
+              writable: new WritableStream({
+                write(chunk) {
+                  debugReadableStreamController.enqueue(chunk);
+                },
+                close() {
+                  debugReadableStreamController.close();
+                },
+              }),
+            },
+          },
+        ),
+      ),
+    );
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const serverConsumerManifest = {
+      moduleMap: {
+        [webpackMap[ClientComponentOnTheClient.$$id].id]: {
+          '*': webpackMap[ClientComponentOnTheServer.$$id],
+        },
+      },
+      moduleLoading: webpackModuleLoading,
+    };
+
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
+      serverConsumerManifest,
+      debugChannel: {
+        readable:
+          // Create a delayed stream to simulate that the debug stream might be
+          // transported slower than the RSC stream, which must not lead to
+          // missing debug info.
+          createDelayedStream(debugReadableStream),
+      },
+    });
+
+    let ownerStack;
+
+    const ssrStream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(
+        <ClientRoot response={response} />,
+        {
+          onError(err, errorInfo) {
+            ownerStack = React.captureOwnerStack
+              ? React.captureOwnerStack()
+              : null;
+          },
+        },
+      ),
+    );
+
+    const result = await readResult(ssrStream);
+
+    expect(normalizeCodeLocInfo(ownerStack)).toBe('\n    in App (at **)');
+
+    expect(result).toContain(
+      'Switched to client rendering because the server rendering errored:\n\nssr-throw',
+    );
   });
 });

@@ -221,6 +221,7 @@ function backendToFrontendSerializedAsyncInfo(
       description: ioInfo.description,
       start: ioInfo.start,
       end: ioInfo.end,
+      byteSize: ioInfo.byteSize,
       value: ioInfo.value,
       env: ioInfo.env,
       owner:
@@ -251,6 +252,7 @@ export function convertInspectedElementBackendToFrontend(
     canToggleError,
     isErrored,
     canToggleSuspense,
+    isSuspended,
     hasLegacyContext,
     id,
     type,
@@ -270,6 +272,8 @@ export function convertInspectedElementBackendToFrontend(
     errors,
     warnings,
     suspendedBy,
+    suspendedByRange,
+    unknownSuspenders,
     nativeTag,
   } = inspectedElementBackend;
 
@@ -286,6 +290,7 @@ export function convertInspectedElementBackendToFrontend(
     canToggleError,
     isErrored,
     canToggleSuspense,
+    isSuspended,
     hasLegacyContext,
     id,
     key,
@@ -313,6 +318,8 @@ export function convertInspectedElementBackendToFrontend(
       hydratedSuspendedBy == null // backwards compat
         ? []
         : hydratedSuspendedBy.map(backendToFrontendSerializedAsyncInfo),
+    suspendedByRange,
+    unknownSuspenders,
     nativeTag,
   };
 

@@ -15,15 +15,16 @@
 }
 
 .TreeWrapper {
-  flex: 1 1 var(--horizontal-resize-tree-percentage);
+  border-top: 1px solid var(--color-border);
+  flex: 1 1 65%;
   display: flex;
   flex-direction: row;
+  height: 100%;
   overflow: auto;
-  border-top: 1px solid var(--color-border);
 }
 
 .InspectedElementWrapper {
-  flex: 1 1 calc(100% - var(--horizontal-resize-tree-percentage));
+  flex: 0 0 calc(100% - var(--horizontal-resize-tree-percentage));
   overflow-x: hidden;
   overflow-y: auto;
 }
@@ -52,8 +53,6 @@
   display: none;
 }
 
-
-
 @container devtools (width < 600px) {
   .SuspenseTab {
     flex-direction: column;
@@ -61,11 +60,12 @@
 
   .TreeWrapper {
     border-top: 1px solid var(--color-border);
-    flex: 1 0 var(--vertical-resize-tree-percentage);
+    flex: 1 1 50%;
+    overflow: hidden;
   }
 
   .InspectedElementWrapper {
-    flex: 1 1 50%;
+    flex: 0 0 calc(100% - var(--vertical-resize-tree-percentage));
   }
 
   .TreeWrapper + .ResizeBarWrapper .ResizeBar {
@@ -79,6 +79,7 @@
   .TreeView footer {
     display: flex;
     justify-content: end;
+    border-top: 1px solid var(--color-border);
   }
 
   .ToggleInspectedElement[data-orientation="horizontal"] {
@@ -89,29 +90,41 @@
 .TreeList {
   flex: 0 0 var(--horizontal-resize-tree-list-percentage);
   border-right: 1px solid var(--color-border);
-  padding: 0.25rem
+  padding: 0.25rem;
+  overflow: auto;
 }
 
 .TreeView {
   flex: 1 1 35%;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  overflow: auto;
 }
-
-
 
 .Rects {
   border-top: 1px solid var(--color-border);
   padding: 0.25rem;
   flex-grow: 1;
+  overflow: auto;
 }
 
-.TimelineWrapper {
+.SuspenseTreeViewHeader {
   padding: 0.25rem;
-  display: flex;
-  flex-direction: row;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: flex-start;
 }
 
-.Timeline {
-  flex-grow: 1;
+.SuspenseTreeViewHeaderMain {
+  display: grid;
+  grid-template-rows: auto auto;
+}
+
+.SuspenseBreadcrumbs {
+  /**
+   * TODO: Switch to single item view on overflow like OwnerStack does.
+   * OwnerStack has more constraints that make it easier so it won't be a 1:1 port.
+   */
+  overflow-x: auto;
 }

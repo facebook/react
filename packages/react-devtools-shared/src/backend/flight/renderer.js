@@ -118,9 +118,9 @@ export function attach(
     if (componentLogsEntry === undefined) {
       componentLogsEntry = {
         errors: new Map(),
-        errorsCount: 0,
+        errorsCount: 0 as number,
         warnings: new Map(),
-        warningsCount: 0,
+        warningsCount: 0 as number,
       };
       componentInfoToComponentLogsMap.set(componentInfo, componentLogsEntry);
     }
@@ -139,6 +139,8 @@ export function attach(
 
     // The changes will be flushed later when we commit this tree to Fiber.
   }
+
+  const supportsTogglingSuspense = false;
 
   return {
     cleanup() {},
@@ -202,6 +204,7 @@ export function attach(
     onErrorOrWarning,
     overrideError() {},
     overrideSuspense() {},
+    overrideSuspenseMilestone() {},
     overrideValueAtPath() {},
     renamePath() {},
     renderer,
@@ -210,6 +213,7 @@ export function attach(
     startProfiling() {},
     stopProfiling() {},
     storeAsGlobal() {},
+    supportsTogglingSuspense,
     updateComponentFilters() {},
     getEnvironmentNames() {
       return [];

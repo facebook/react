@@ -24,6 +24,7 @@ import type {Element as ElementType} from 'react-devtools-shared/src/frontend/ty
 import styles from './Element.css';
 import Icon from '../Icon';
 import {useChangeOwnerAction} from './OwnersListContext';
+import Tooltip from './reach-ui/tooltip';
 
 type Props = {
   data: ItemData,
@@ -80,8 +81,8 @@ export default function Element({data, index, style}: Props): React.Node {
   };
 
   // $FlowFixMe[missing-local-annot]
-  const handleClick = ({metaKey}) => {
-    if (id !== null) {
+  const handleClick = ({metaKey, button}) => {
+    if (id !== null && button === 0) {
       logEvent({
         event_name: 'select-element',
         metadata: {source: 'click-element'},
@@ -231,15 +232,16 @@ export default function Element({data, index, style}: Props): React.Node {
           />
         )}
         {showStrictModeBadge && (
-          <Icon
-            className={
-              isSelected && treeFocused
-                ? styles.StrictModeContrast
-                : styles.StrictMode
-            }
-            title="This component is not running in StrictMode."
-            type="strict-mode-non-compliant"
-          />
+          <Tooltip label="This component is not running in StrictMode.">
+            <Icon
+              className={
+                isSelected && treeFocused
+                  ? styles.StrictModeContrast
+                  : styles.StrictMode
+              }
+              type="strict-mode-non-compliant"
+            />
+          </Tooltip>
         )}
       </div>
     </div>

@@ -156,7 +156,7 @@ describe('Store component filters', () => {
             <div>
         ▾ <Suspense>
             <div>
-      [shell]
+      [suspense-root]  rects={[]}
         <Suspense name="Unknown" rects={[]}>
         <Suspense name="Unknown" rects={[]}>
     `);
@@ -174,7 +174,7 @@ describe('Store component filters', () => {
             <div>
         ▾ <Suspense>
             <div>
-      [shell]
+      [suspense-root]  rects={[]}
         <Suspense name="Unknown" rects={[]}>
         <Suspense name="Unknown" rects={[]}>
     `);
@@ -192,14 +192,14 @@ describe('Store component filters', () => {
             <div>
         ▾ <Suspense>
             <div>
-      [shell]
+      [suspense-root]  rects={[]}
         <Suspense name="Unknown" rects={[]}>
         <Suspense name="Unknown" rects={[]}>
     `);
   });
 
   it('should filter Activity', async () => {
-    const Activity = React.unstable_Activity;
+    const Activity = React.Activity || React.unstable_Activity;
 
     if (Activity != null) {
       await actAsync(async () =>

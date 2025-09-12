@@ -20,12 +20,12 @@ import * as Scheduler from 'scheduler';
 const AbortControllerLocal: typeof AbortController =
   typeof AbortController !== 'undefined'
     ? AbortController
-    : // $FlowFixMe[missing-this-annot]
-      // $FlowFixMe[prop-missing]
+    : // $FlowFixMe[incompatible-type]
+      // $FlowFixMe[missing-this-annot]
       function AbortControllerShim() {
         const listeners = [];
         const signal = (this.signal = {
-          aborted: false,
+          aborted: false as boolean,
           addEventListener: (type, listener) => {
             listeners.push(listener);
           },

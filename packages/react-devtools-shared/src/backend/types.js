@@ -34,6 +34,7 @@ import type {TimelineDataExport} from 'react-devtools-timeline/src/types';
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 import type {ReactFunctionLocation, ReactStackTrace} from 'shared/ReactTypes';
 import type Agent from './agent';
+import type {UnknownSuspendersReason} from '../constants';
 
 type BundleType =
   | 0 // PROD
@@ -238,6 +239,7 @@ export type SerializedIOInfo = {
   description: string,
   start: number,
   end: number,
+  byteSize: null | number,
   value: null | Promise<mixed>,
   env: null | string,
   owner: null | SerializedElement,
@@ -285,6 +287,8 @@ export type InspectedElement = {
 
   // Is this Suspense, and can its value be overridden now?
   canToggleSuspense: boolean,
+  // If this Element is suspended. Currently only set on Suspense boundaries.
+  isSuspended: boolean | null,
 
   // Does the component have legacy context attached to it.
   hasLegacyContext: boolean,
@@ -300,6 +304,8 @@ export type InspectedElement = {
 
   // Things that suspended this Instances
   suspendedBy: Object, // DehydratedData or Array<SerializedAsyncInfo>
+  suspendedByRange: null | [number, number],
+  unknownSuspenders: UnknownSuspendersReason,
 
   // List of owners
   owners: Array<SerializedElement> | null,
@@ -431,6 +437,10 @@ export type RendererInterface = {
   onErrorOrWarning?: OnErrorOrWarning,
   overrideError: (id: number, forceError: boolean) => void,
   overrideSuspense: (id: number, forceFallback: boolean) => void,
+  overrideSuspenseMilestone: (
+    rootID: number,
+    suspendedSet: Array<number>,
+  ) => void,
   overrideValueAtPath: (
     type: Type,
     id: number,
@@ -463,6 +473,7 @@ export type RendererInterface = {
     path: Array<string | number>,
     count: number,
   ) => void,
+  supportsTogglingSuspense: boolean,
   updateComponentFilters: (componentFilters: Array<ComponentFilter>) => void,
   getEnvironmentNames: () => Array<string>,
 

@@ -20,12 +20,20 @@ import {withPermissionsCheck} from 'react-devtools-shared/src/frontend/utils/wit
 import StackTraceView from './StackTraceView';
 import OwnerView from './OwnerView';
 import {meta} from '../../../hydration';
+import useInferredName from '../useInferredName';
 
 import type {
   InspectedElement,
   SerializedAsyncInfo,
 } from 'react-devtools-shared/src/frontend/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
+
+import {
+  UNKNOWN_SUSPENDERS_NONE,
+  UNKNOWN_SUSPENDERS_REASON_PRODUCTION,
+  UNKNOWN_SUSPENDERS_REASON_OLD_VERSION,
+  UNKNOWN_SUSPENDERS_REASON_THROWN_PROMISE,
+} from '../../../constants';
 
 type RowProps = {
   bridge: FrontendBridge,
@@ -69,6 +77,19 @@ function getShortDescription(name: string, description: string): string {
   return '';
 }
 
+function formatBytes(bytes: number) {
+  if (bytes < 1_000) {
+    return bytes + ' bytes';
+  }
+  if (bytes < 1_000_000) {
+    return (bytes / 1_000).toFixed(1) + ' kB';
+  }
+  if (bytes < 1_000_000_000) {
+    return (bytes / 1_000_000).toFixed(1) + ' mB';
+  }
+  return (bytes / 1_000_000_000).toFixed(1) + ' gB';
+}
+
 function SuspendedByRow({
   bridge,
   element,
@@ -81,21 +102,7 @@ function SuspendedByRow({
 }: RowProps) {
   const [isOpen, setIsOpen] = useState(false);
   const ioInfo = asyncInfo.awaited;
-  let name = ioInfo.name;
-  if (name === '' || name === 'Promise') {
-    // If all we have is a generic name, we can try to infer a better name from
-    // the stack. We only do this if the stack has more than one frame since
-    // otherwise it's likely to just be the name of the component which isn't better.
-    const bestStack = ioInfo.stack || asyncInfo.stack;
-    if (bestStack !== null && bestStack.length > 1) {
-      // TODO: Ideally we'd get the name from the last ignore listed frame before the
-      // first visible frame since this is the same algorithm as the Flight server uses.
-      // Ideally, we'd also get the name from the source mapped entry instead of the
-      // original entry. However, that would require suspending the immediate display
-      // of these rows to first do source mapping before we can show the name.
-      name = bestStack[0][0];
-    }
-  }
+  const name = useInferredName(asyncInfo);
   const description = ioInfo.description;
   const longName = description === '' ? name : name + ' (' + description + ')';
   const shortDescription = getShortDescription(name, description);
@@ -138,7 +145,13 @@ function SuspendedByRow({
       <Button
         className={styles.CollapsableHeader}
         onClick={() => setIsOpen(prevIsOpen => !prevIsOpen)}
-        title={longName + ' — ' + (end - start).toFixed(2) + ' ms'}>
+        title={
+          longName +
+          ' — ' +
+          (end - start).toFixed(2) +
+          ' ms' +
+          (ioInfo.byteSize != null ? ' — ' + formatBytes(ioInfo.byteSize) : '')
+        }>
         <ButtonIcon
           className={styles.CollapsableHeaderIcon}
           type={isOpen ? 'expanded' : 'collapsed'}
@@ -292,10 +305,13 @@ export default function InspectedElementSuspendedBy({
   inspectedElement,
   store,
 }: Props): React.Node {
-  const {suspendedBy} = inspectedElement;
+  const {suspendedBy, suspendedByRange} = inspectedElement;
 
   // Skip the section if nothing suspended this component.
-  if (suspendedBy == null || suspendedBy.length === 0) {
+  if (
+    (suspendedBy == null || suspendedBy.length === 0) &&
+    inspectedElement.unknownSuspenders === UNKNOWN_SUSPENDERS_NONE
+  ) {
     return null;
   }
 
@@ -306,6 +322,11 @@ export default function InspectedElementSuspendedBy({
 
   let minTime = Infinity;
   let maxTime = -Infinity;
+  if (suspendedByRange !== null) {
+    // The range of the whole suspense boundary.
+    minTime = suspendedByRange[0];
+    maxTime = suspendedByRange[1];
+  }
   for (let i = 0; i < suspendedBy.length; i++) {
     const asyncInfo: SerializedAsyncInfo = suspendedBy[i];
     if (asyncInfo.awaited.start < minTime) {
@@ -322,8 +343,40 @@ export default function InspectedElementSuspendedBy({
     minTime = maxTime - 25;
   }
 
-  const sortedSuspendedBy = suspendedBy.slice(0);
+  const sortedSuspendedBy = suspendedBy === null ? [] : suspendedBy.slice(0);
   sortedSuspendedBy.sort(compareTime);
+
+  let unknownSuspenders = null;
+  switch (inspectedElement.unknownSuspenders) {
+    case UNKNOWN_SUSPENDERS_REASON_PRODUCTION:
+      unknownSuspenders = (
+        <div className={styles.InfoRow}>
+          Something suspended but we don't know the exact reason in production
+          builds of React. Test this in development mode to see exactly what
+          might suspend.
+        </div>
+      );
+      break;
+    case UNKNOWN_SUSPENDERS_REASON_OLD_VERSION:
+      unknownSuspenders = (
+        <div className={styles.InfoRow}>
+          Something suspended but we don't track all the necessary information
+          in older versions of React. Upgrade to the latest version of React to
+          see exactly what might suspend.
+        </div>
+      );
+      break;
+    case UNKNOWN_SUSPENDERS_REASON_THROWN_PROMISE:
+      unknownSuspenders = (
+        <div className={styles.InfoRow}>
+          Something threw a Promise to suspend this boundary. It's likely an
+          outdated version of a library that doesn't yet fully take advantage of
+          use(). Upgrade your data fetching library to see exactly what might
+          suspend.
+        </div>
+      );
+      break;
+  }
 
   return (
     <div>
@@ -346,6 +399,7 @@ export default function InspectedElementSuspendedBy({
           maxTime={maxTime}
         />
       ))}
+      {unknownSuspenders}
     </div>
   );
 }

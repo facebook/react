@@ -8,27 +8,27 @@
 import {NodePath} from '@babel/core';
 import * as t from '@babel/types';
 
-import {CompilerError, EnvironmentConfig, ErrorSeverity, Logger} from '..';
+import {CompilerError, EnvironmentConfig, Logger} from '..';
 import {getOrInsertWith} from '../Utils/utils';
 import {Environment, GeneratedSource} from '../HIR';
 import {DEFAULT_EXPORT} from '../HIR/Environment';
 import {CompileProgramMetadata} from './Program';
-import {CompilerDiagnostic, CompilerDiagnosticOptions} from '../CompilerError';
+import {
+  CompilerDiagnostic,
+  CompilerDiagnosticOptions,
+  ErrorCategory,
+} from '../CompilerError';
 
 function throwInvalidReact(
-  options: Omit<CompilerDiagnosticOptions, 'severity'>,
+  options: CompilerDiagnosticOptions,
   {logger, filename}: TraversalState,
 ): never {
-  const detail: CompilerDiagnosticOptions = {
-    severity: ErrorSeverity.InvalidReact,
-    ...options,
-  };
   logger?.logEvent(filename, {
     kind: 'CompileError',
     fnLoc: null,
-    detail: new CompilerDiagnostic(detail),
+    detail: new CompilerDiagnostic(options),
   });
-  CompilerError.throwDiagnostic(detail);
+  CompilerError.throwDiagnostic(options);
 }
 
 function isAutodepsSigil(
@@ -92,10 +92,11 @@ function assertValidEffectImportReference(
          */
         throwInvalidReact(
           {
-            category:
+            category: ErrorCategory.AutomaticEffectDependencies,
+            reason:
               'Cannot infer dependencies of this effect. This will break your build!',
             description:
-              'To resolve, either pass a dependency array or fix reported compiler bailout diagnostics.' +
+              'To resolve, either pass a dependency array or fix reported compiler bailout diagnostics' +
               (maybeErrorDiagnostic ? ` ${maybeErrorDiagnostic}` : ''),
             details: [
               {
@@ -123,13 +124,11 @@ function assertValidFireImportReference(
     );
     throwInvalidReact(
       {
-        category:
-          '[Fire] Untransformed reference to compiler-required feature.',
+        category: ErrorCategory.Fire,
+        reason: '[Fire] Untransformed reference to compiler-required feature.',
         description:
           'Either remove this `fire` call or ensure it is successfully transformed by the compiler' +
-          maybeErrorDiagnostic
-            ? ` ${maybeErrorDiagnostic}`
-            : '',
+          (maybeErrorDiagnostic != null ? ` ${maybeErrorDiagnostic}` : ''),
         details: [
           {
             kind: 'error',
@@ -216,7 +215,14 @@ function validateImportSpecifier(
   const binding = local.scope.getBinding(local.node.name);
   CompilerError.invariant(binding != null, {
     reason: 'Expected binding to be found for import specifier',
-    loc: local.node.loc ?? null,
+    description: null,
+    details: [
+      {
+        kind: 'error',
+        loc: local.node.loc ?? null,
+        message: null,
+      },
+    ],
   });
   checkFn(binding.referencePaths, state);
 }
@@ -236,7 +242,14 @@ function validateNamespacedImport(
 
   CompilerError.invariant(binding != null, {
     reason: 'Expected binding to be found for import specifier',
-    loc: local.node.loc ?? null,
+    description: null,
+    details: [
+      {
+        kind: 'error',
+        loc: local.node.loc ?? null,
+        message: null,
+      },
+    ],
   });
   const filteredReferences = new Map<
     CheckInvalidReferenceFn,

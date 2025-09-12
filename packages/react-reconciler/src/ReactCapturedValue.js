@@ -30,7 +30,7 @@ export function createCapturedValueAtFiber<T>(
     if (existing !== undefined) {
       return existing;
     }
-    const captured = {
+    const captured: CapturedValue<T> = {
       value,
       source,
       stack: getStackByFiberInDevAndProd(source),

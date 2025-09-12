@@ -44,6 +44,7 @@ import {
   SUSPENSE_TREE_OPERATION_REMOVE,
   SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
   SUSPENSE_TREE_OPERATION_RESIZE,
+  SUSPENSE_TREE_OPERATION_SUSPENDERS,
 } from './constants';
 import {
   ComponentFilterElementType,
@@ -261,6 +262,7 @@ export function printOperationsArray(operations: Array<number>) {
           i++; // supportsProfiling
           i++; // supportsStrictMode
           i++; // hasOwnerMetadata
+          i++; // supportsTogglingSuspense
         } else {
           const parentID = ((operations[i]: any): number);
           i++;
@@ -300,7 +302,7 @@ export function printOperationsArray(operations: Array<number>) {
       }
       case TREE_OPERATION_SET_SUBTREE_MODE: {
         const id = operations[i + 1];
-        const mode = operations[i + 1];
+        const mode = operations[i + 2];
 
         i += 3;
 
@@ -339,11 +341,11 @@ export function printOperationsArray(operations: Array<number>) {
         const fiberID = operations[i + 1];
         const parentID = operations[i + 2];
         const nameStringID = operations[i + 3];
-        const name = stringTable[nameStringID];
         const numRects = operations[i + 4];
 
         i += 5;
 
+        const name = stringTable[nameStringID];
         let rects: string;
         if (numRects === -1) {
           rects = 'null';
@@ -420,6 +422,16 @@ export function printOperationsArray(operations: Array<number>) {
           }
           logs.push(line + ']');
         }
+
+        break;
+      }
+      case SUSPENSE_TREE_OPERATION_SUSPENDERS: {
+        const changeLength = operations[i + 1];
+        i += 2;
+        const changes = operations.slice(i, i + changeLength * 2);
+        i += changeLength;
+
+        logs.push(`Suspense node suspender changes ${changes.join(',')}`);
 
         break;
       }

@@ -53,10 +53,19 @@ type ReducerAction =
       };
     }
   | {
-      type: 'updateFile';
+      type: 'updateSource';
       payload: {
         source: string;
       };
+    }
+  | {
+      type: 'updateConfig';
+      payload: {
+        config: string;
+      };
+    }
+  | {
+      type: 'toggleInternals';
     };
 
 function storeReducer(store: Store, action: ReducerAction): Store {
@@ -65,11 +74,26 @@ function storeReducer(store: Store, action: ReducerAction): Store {
       const newStore = action.payload.store;
       return newStore;
     }
-    case 'updateFile': {
-      const {source} = action.payload;
+    case 'updateSource': {
+      const source = action.payload.source;
       const newStore = {
         ...store,
         source,
+      };
+      return newStore;
+    }
+    case 'updateConfig': {
+      const config = action.payload.config;
+      const newStore = {
+        ...store,
+        config,
+      };
+      return newStore;
+    }
+    case 'toggleInternals': {
+      const newStore = {
+        ...store,
+        showInternals: !store.showInternals,
       };
       return newStore;
     }

@@ -34,6 +34,7 @@ import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_REORDER_CHILDREN,
+  UNKNOWN_SUSPENDERS_NONE,
 } from '../../constants';
 import {decorateMany, forceUpdate, restoreMany} from './utils';
 
@@ -178,6 +179,8 @@ export function attach(
       return null;
     };
   }
+
+  const supportsTogglingSuspense = false;
 
   function getDisplayNameForElementID(id: number): string | null {
     const internalInstance = idToInternalInstanceMap.get(id);
@@ -407,6 +410,7 @@ export function attach(
       pushOperation(0); // Profiling flag
       pushOperation(0); // StrictMode supported?
       pushOperation(hasOwnerMetadata ? 1 : 0);
+      pushOperation(supportsTogglingSuspense ? 1 : 0);
     } else {
       const type = getElementType(internalInstance);
       const {displayName, key} = getData(internalInstance);
@@ -836,6 +840,7 @@ export function attach(
 
       // Suspense did not exist in legacy versions
       canToggleSuspense: false,
+      isSuspended: null,
 
       source: null,
 
@@ -858,6 +863,8 @@ export function attach(
 
       // Not supported in legacy renderers.
       suspendedBy: [],
+      suspendedByRange: null,
+      unknownSuspenders: UNKNOWN_SUSPENDERS_NONE,
 
       // List of owners
       owners,
@@ -1066,6 +1073,9 @@ export function attach(
   const overrideSuspense = () => {
     throw new Error('overrideSuspense not supported by this renderer');
   };
+  const overrideSuspenseMilestone = () => {
+    throw new Error('overrideSuspenseMilestone not supported by this renderer');
+  };
   const startProfiling = () => {
     // Do not throw, since this would break a multi-root scenario where v15 and v16 were both present.
   };
@@ -1149,6 +1159,7 @@ export function attach(
     logElementToConsole,
     overrideError,
     overrideSuspense,
+    overrideSuspenseMilestone,
     overrideValueAtPath,
     renamePath,
     getElementAttributeByPath,
@@ -1159,6 +1170,7 @@ export function attach(
     startProfiling,
     stopProfiling,
     storeAsGlobal,
+    supportsTogglingSuspense,
     updateComponentFilters,
     getEnvironmentNames,
   };

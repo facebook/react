@@ -39,6 +39,7 @@ function Component(props) {
     for (const x of items) {
       lastItem = x;
     }
+
     if (lastItem != null) {
       lastItem.a = lastItem.a + 1;
     }

@@ -12,7 +12,8 @@
 const ESLintTesterV7 = require('eslint-v7').RuleTester;
 const ESLintTesterV9 = require('eslint-v9').RuleTester;
 const ReactHooksESLintPlugin = require('eslint-plugin-react-hooks');
-const ReactHooksESLintRule = ReactHooksESLintPlugin.rules['rules-of-hooks'];
+const ReactHooksESLintRule =
+  ReactHooksESLintPlugin.default.rules['rules-of-hooks'];
 
 /**
  * A string template tag that removes padding from the left side of multi-line strings
@@ -1368,6 +1369,9 @@ if (__EXPERIMENTAL__) {
           useEffect(() => {
             onClick();
           });
+          React.useEffect(() => {
+            onClick();
+          });
         }
       `,
     },
@@ -1386,6 +1390,10 @@ if (__EXPERIMENTAL__) {
             deboucne(() => debounce(onClick));
           });
           useEffect(() => {
+            let id = setInterval(() => onClick(), 100);
+            return () => clearInterval(onClick);
+          }, []);
+          React.useEffect(() => {
             let id = setInterval(() => onClick(), 100);
             return () => clearInterval(onClick);
           }, []);
@@ -1408,11 +1416,15 @@ if (__EXPERIMENTAL__) {
     {
       code: normalizeIndent`
         function MyComponent({ theme }) {
+          // Can receive arguments
           const onEvent = useEffectEvent((text) => {
             console.log(text);
           });
 
           useEffect(() => {
+            onEvent('Hello world');
+          });
+          React.useEffect(() => {
             onEvent('Hello world');
           });
         }

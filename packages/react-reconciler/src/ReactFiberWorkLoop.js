@@ -192,7 +192,7 @@ import {
   OffscreenLane,
   SyncUpdateLanes,
   UpdateLanes,
-  claimNextTransitionLane,
+  claimNextTransitionDeferredLane,
   checkIfRootIsPrerendering,
   includesOnlyViewTransitionEligibleLanes,
   isGestureRender,
@@ -267,6 +267,8 @@ import {
   blockingUpdateTime,
   blockingUpdateTask,
   blockingUpdateType,
+  blockingUpdateMethodName,
+  blockingUpdateComponentName,
   blockingEventTime,
   blockingEventType,
   blockingEventIsRepeat,
@@ -276,6 +278,8 @@ import {
   transitionUpdateTime,
   transitionUpdateTask,
   transitionUpdateType,
+  transitionUpdateMethodName,
+  transitionUpdateComponentName,
   transitionEventTime,
   transitionEventType,
   transitionEventIsRepeat,
@@ -827,7 +831,7 @@ export function requestDeferredLane(): Lane {
       workInProgressDeferredLane = OffscreenLane;
     } else {
       // Everything else is spawned as a transition.
-      workInProgressDeferredLane = claimNextTransitionLane();
+      workInProgressDeferredLane = claimNextTransitionDeferredLane();
     }
   }
 
@@ -1060,7 +1064,7 @@ export function performWorkOnRoot(
     // even for regular pings.
     checkIfRootIsPrerendering(root, lanes);
 
-  let exitStatus = shouldTimeSlice
+  let exitStatus: RootExitStatus = shouldTimeSlice
     ? renderRootConcurrent(root, lanes)
     : renderRootSync(root, lanes, true);
 
@@ -1212,7 +1216,7 @@ function recoverFromConcurrentError(
   root: FiberRoot,
   originallyAttemptedLanes: Lanes,
   errorRetryLanes: Lanes,
-) {
+): RootExitStatus {
   // If an error occurred during hydration, discard server response and fall
   // back to client side render.
 
@@ -1940,6 +1944,8 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
         renderStartTime,
         lanes,
         blockingUpdateTask,
+        blockingUpdateMethodName,
+        blockingUpdateComponentName,
       );
       clearBlockingTimers();
     }
@@ -1980,6 +1986,8 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
         transitionUpdateType === PINGED_UPDATE,
         renderStartTime,
         transitionUpdateTask,
+        transitionUpdateMethodName,
+        transitionUpdateComponentName,
       );
       clearTransitionTimers();
     }
@@ -2520,7 +2528,7 @@ function workLoopSync() {
   }
 }
 
-function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
+function renderRootConcurrent(root: FiberRoot, lanes: Lanes): RootExitStatus {
   const prevExecutionContext = executionContext;
   executionContext |= RenderContext;
   const prevDispatcher = pushDispatcher(root.containerInfo);

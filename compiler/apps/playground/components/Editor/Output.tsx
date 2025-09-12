@@ -21,12 +21,16 @@ import * as prettierPluginEstree from 'prettier/plugins/estree';
 import * as prettier from 'prettier/standalone';
 import {memo, ReactNode, useEffect, useState} from 'react';
 import {type Store} from '../../lib/stores';
+import AccordionWindow from '../AccordionWindow';
 import TabbedWindow from '../TabbedWindow';
 import {monacoOptions} from './monacoOptions';
 import {BabelFileResult} from '@babel/core';
+
 const MemoizedOutput = memo(Output);
 
 export default MemoizedOutput;
+
+export const BASIC_OUTPUT_TAB_NAMES = ['Output', 'SourceMap'];
 
 export type PrintedCompilerPipelineValue =
   | {
@@ -64,12 +68,16 @@ type Props = {
 async function tabify(
   source: string,
   compilerOutput: CompilerOutput,
+  showInternals: boolean,
 ): Promise<Map<string, ReactNode>> {
   const tabs = new Map<string, React.ReactNode>();
   const reorderedTabs = new Map<string, React.ReactNode>();
   const concattedResults = new Map<string, string>();
   // Concat all top level function declaration results into a single tab for each pass
   for (const [passName, results] of compilerOutput.results) {
+    if (!showInternals && !BASIC_OUTPUT_TAB_NAMES.includes(passName)) {
+      continue;
+    }
     for (const result of results) {
       switch (result.kind) {
         case 'hir': {
@@ -211,6 +219,7 @@ function Output({store, compilerOutput}: Props): JSX.Element {
   const [tabs, setTabs] = useState<Map<string, React.ReactNode>>(
     () => new Map(),
   );
+  const [activeTab, setActiveTab] = useState<string>('Output');
 
   /*
    * Update the active tab back to the output or errors tab when the compilation state
@@ -222,13 +231,14 @@ function Output({store, compilerOutput}: Props): JSX.Element {
   if (compilerOutput.kind !== previousOutputKind) {
     setPreviousOutputKind(compilerOutput.kind);
     setTabsOpen(new Set(['Output']));
+    setActiveTab('Output');
   }
 
   useEffect(() => {
-    tabify(store.source, compilerOutput).then(tabs => {
+    tabify(store.source, compilerOutput, store.showInternals).then(tabs => {
       setTabs(tabs);
     });
-  }, [store.source, compilerOutput]);
+  }, [store.source, compilerOutput, store.showInternals]);
 
   const changedPasses: Set<string> = new Set(['Output', 'HIR']); // Initial and final passes should always be bold
   let lastResult: string = '';
@@ -245,16 +255,24 @@ function Output({store, compilerOutput}: Props): JSX.Element {
     }
   }
 
-  return (
-    <>
+  if (!store.showInternals) {
+    return (
       <TabbedWindow
-        defaultTab="HIR"
-        setTabsOpen={setTabsOpen}
-        tabsOpen={tabsOpen}
         tabs={tabs}
-        changedPasses={changedPasses}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
       />
-    </>
+    );
+  }
+
+  return (
+    <AccordionWindow
+      defaultTab={store.showInternals ? 'HIR' : 'Output'}
+      setTabsOpen={setTabsOpen}
+      tabsOpen={tabsOpen}
+      tabs={tabs}
+      changedPasses={changedPasses}
+    />
   );
 }
 

@@ -616,7 +616,13 @@ class Unifier {
       CompilerError.invariant(type.operands.length > 0, {
         reason: 'there should be at least one operand',
         description: null,
-        loc: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
 
@@ -775,6 +781,15 @@ class Unifier {
 
     if (type.kind === 'Phi') {
       return {kind: 'Phi', operands: type.operands.map(o => this.get(o))};
+    }
+
+    if (type.kind === 'Function') {
+      return {
+        kind: 'Function',
+        isConstructor: type.isConstructor,
+        shapeId: type.shapeId,
+        return: this.get(type.return),
+      };
     }
 
     return type;

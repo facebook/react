@@ -10,7 +10,7 @@ import * as t from '@babel/types';
 import {
   CompilerError,
   CompilerErrorDetail,
-  ErrorSeverity,
+  ErrorCategory,
 } from '../CompilerError';
 import {ExternalFunction, ReactFunctionType} from '../HIR/Environment';
 import {CodegenFunction} from '../ReactiveScopes';
@@ -104,14 +104,14 @@ function findDirectivesDynamicGating(
         errors.push({
           reason: `Dynamic gating directive is not a valid JavaScript identifier`,
           description: `Found '${directive.value.value}'`,
-          severity: ErrorSeverity.InvalidReact,
+          category: ErrorCategory.Gating,
           loc: directive.loc ?? null,
           suggestions: null,
         });
       }
     }
   }
-  if (errors.hasErrors()) {
+  if (errors.hasAnyErrors()) {
     return Err(errors);
   } else if (result.length > 1) {
     const error = new CompilerError();
@@ -120,7 +120,7 @@ function findDirectivesDynamicGating(
       description: `Expected a single directive but found [${result
         .map(r => r.directive.value.value)
         .join(', ')}]`,
-      severity: ErrorSeverity.InvalidReact,
+      category: ErrorCategory.Gating,
       loc: result[0].directive.loc ?? null,
       suggestions: null,
     });
@@ -138,15 +138,13 @@ function findDirectivesDynamicGating(
   }
 }
 
-function isCriticalError(err: unknown): boolean {
-  return !(err instanceof CompilerError) || err.isCritical();
+function isError(err: unknown): boolean {
+  return !(err instanceof CompilerError) || err.hasErrors();
 }
 
 function isConfigError(err: unknown): boolean {
   if (err instanceof CompilerError) {
-    return err.details.some(
-      detail => detail.severity === ErrorSeverity.InvalidConfig,
-    );
+    return err.details.some(detail => detail.category === ErrorCategory.Config);
   }
   return false;
 }
@@ -211,8 +209,7 @@ function handleError(
   logError(err, context, fnLoc);
   if (
     context.opts.panicThreshold === 'all_errors' ||
-    (context.opts.panicThreshold === 'critical_errors' &&
-      isCriticalError(err)) ||
+    (context.opts.panicThreshold === 'critical_errors' && isError(err)) ||
     isConfigError(err) // Always throws regardless of panic threshold
   ) {
     throw err;
@@ -313,7 +310,13 @@ function insertNewOutlinedFunctionNode(
       CompilerError.invariant(insertedFuncDecl.isFunctionDeclaration(), {
         reason: 'Expected inserted function declaration',
         description: `Got: ${insertedFuncDecl}`,
-        loc: insertedFuncDecl.node?.loc ?? null,
+        details: [
+          {
+            kind: 'error',
+            loc: insertedFuncDecl.node?.loc ?? null,
+            message: null,
+          },
+        ],
       });
       return insertedFuncDecl;
     }
@@ -422,7 +425,14 @@ export function compileProgram(
       for (const outlined of compiled.outlined) {
         CompilerError.invariant(outlined.fn.outlined.length === 0, {
           reason: 'Unexpected nested outlined functions',
-          loc: outlined.fn.loc,
+          description: null,
+          details: [
+            {
+              kind: 'error',
+              loc: outlined.fn.loc,
+              message: null,
+            },
+          ],
         });
         const fn = insertNewOutlinedFunctionNode(
           program,
@@ -455,7 +465,7 @@ export function compileProgram(
         new CompilerErrorDetail({
           reason:
             'Unexpected compiled functions when module scope opt-out is present',
-          severity: ErrorSeverity.Invariant,
+          category: ErrorCategory.Invariant,
           loc: null,
         }),
       );
@@ -490,7 +500,20 @@ function findFunctionsToCompile(
 ): Array<CompileSource> {
   const queue: Array<CompileSource> = [];
   const traverseFunction = (fn: BabelFn, pass: CompilerPass): void => {
+    // In 'all' mode, compile only top level functions
+    if (
+      pass.opts.compilationMode === 'all' &&
+      fn.scope.getProgramParent() !== fn.scope.parent
+    ) {
+      return;
+    }
+
     const fnType = getReactFunctionType(fn, pass);
+
+    if (pass.opts.environment.validateNoDynamicallyCreatedComponentsOrHooks) {
+      validateNoDynamicallyCreatedComponentsOrHooks(fn, pass, programContext);
+    }
+
     if (fnType === null || programContext.alreadyCompiled.has(fn.node)) {
       return;
     }
@@ -810,7 +833,7 @@ function shouldSkipCompilation(
           reason: `Expected a filename but found none.`,
           description:
             "When the 'sources' config options is specified, the React compiler will only compile files with a name",
-          severity: ErrorSeverity.InvalidConfig,
+          category: ErrorCategory.Config,
           loc: null,
         }),
       );
@@ -832,6 +855,72 @@ function shouldSkipCompilation(
     return true;
   }
   return false;
+}
+
+/**
+ * Validates that Components/Hooks are always defined at module level. This prevents scope reference
+ * errors that occur when the compiler attempts to optimize the nested component/hook while its
+ * parent function remains uncompiled.
+ */
+function validateNoDynamicallyCreatedComponentsOrHooks(
+  fn: BabelFn,
+  pass: CompilerPass,
+  programContext: ProgramContext,
+): void {
+  const parentNameExpr = getFunctionName(fn);
+  const parentName =
+    parentNameExpr !== null && parentNameExpr.isIdentifier()
+      ? parentNameExpr.node.name
+      : '<anonymous>';
+
+  const validateNestedFunction = (
+    nestedFn: NodePath<
+      t.FunctionDeclaration | t.FunctionExpression | t.ArrowFunctionExpression
+    >,
+  ): void => {
+    if (
+      nestedFn.node === fn.node ||
+      programContext.alreadyCompiled.has(nestedFn.node)
+    ) {
+      return;
+    }
+
+    if (nestedFn.scope.getProgramParent() !== nestedFn.scope.parent) {
+      const nestedFnType = getReactFunctionType(nestedFn as BabelFn, pass);
+      const nestedFnNameExpr = getFunctionName(nestedFn as BabelFn);
+      const nestedName =
+        nestedFnNameExpr !== null && nestedFnNameExpr.isIdentifier()
+          ? nestedFnNameExpr.node.name
+          : '<anonymous>';
+      if (nestedFnType === 'Component' || nestedFnType === 'Hook') {
+        CompilerError.throwDiagnostic({
+          category: ErrorCategory.Factories,
+          reason: `Components and hooks cannot be created dynamically`,
+          description: `The function \`${nestedName}\` appears to be a React ${nestedFnType.toLowerCase()}, but it's defined inside \`${parentName}\`. Components and Hooks should always be declared at module scope`,
+          details: [
+            {
+              kind: 'error',
+              message: 'this function dynamically created a component/hook',
+              loc: parentNameExpr?.node.loc ?? fn.node.loc ?? null,
+            },
+            {
+              kind: 'error',
+              message: 'the component is created here',
+              loc: nestedFnNameExpr?.node.loc ?? nestedFn.node.loc ?? null,
+            },
+          ],
+        });
+      }
+    }
+
+    nestedFn.skip();
+  };
+
+  fn.traverse({
+    FunctionDeclaration: validateNestedFunction,
+    FunctionExpression: validateNestedFunction,
+    ArrowFunctionExpression: validateNestedFunction,
+  });
 }
 
 function getReactFunctionType(
@@ -872,11 +961,6 @@ function getReactFunctionType(
       return componentSyntaxType;
     }
     case 'all': {
-      // Compile only top level functions
-      if (fn.scope.getProgramParent() !== fn.scope.parent) {
-        return null;
-      }
-
       return getComponentOrHookLike(fn, hookPattern) ?? 'Other';
     }
     default: {
@@ -1336,7 +1420,13 @@ export function getReactCompilerRuntimeModule(
       {
         reason: 'Expected target to already be validated',
         description: null,
-        loc: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
         suggestions: null,
       },
     );

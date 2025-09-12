@@ -9,7 +9,6 @@ import {
   CompilerDiagnostic,
   CompilerError,
   Effect,
-  ErrorSeverity,
   SourceLocation,
   ValueKind,
 } from '..';
@@ -19,6 +18,7 @@ import {
   DeclarationId,
   Environment,
   FunctionExpression,
+  GeneratedSource,
   HIRFunction,
   Hole,
   IdentifierId,
@@ -26,6 +26,7 @@ import {
   InstructionKind,
   InstructionValue,
   isArrayType,
+  isJsxType,
   isMapType,
   isPrimitiveType,
   isRefOrRefValue,
@@ -34,6 +35,7 @@ import {
   Phi,
   Place,
   SpreadPattern,
+  Type,
   ValueReason,
 } from '../HIR';
 import {
@@ -43,12 +45,6 @@ import {
   eachTerminalSuccessor,
 } from '../HIR/visitors';
 import {Ok, Result} from '../Utils/Result';
-import {
-  getArgumentEffect,
-  getFunctionCallSignature,
-  isKnownMutableEffect,
-  mergeValueKinds,
-} from './InferReferenceEffects';
 import {
   assertExhaustive,
   getOrInsertDefault,
@@ -62,13 +58,17 @@ import {
   printInstruction,
   printInstructionValue,
   printPlace,
-  printSourceLocation,
 } from '../HIR/PrintHIR';
 import {FunctionSignature} from '../HIR/ObjectShape';
-import {getWriteErrorReason} from './InferFunctionEffects';
 import prettyFormat from 'pretty-format';
 import {createTemporaryPlace} from '../HIR/HIRBuilder';
-import {AliasingEffect, AliasingSignature, hashEffect} from './AliasingEffects';
+import {
+  AliasingEffect,
+  AliasingSignature,
+  hashEffect,
+  MutationReason,
+} from './AliasingEffects';
+import {ErrorCategory} from '../CompilerError';
 
 const DEBUG = false;
 
@@ -134,7 +134,13 @@ export function inferMutationAliasingEffects(
       reason:
         'Expected React component to have not more than two parameters: one for props and for ref',
       description: null,
-      loc: fn.loc,
+      details: [
+        {
+          kind: 'error',
+          loc: fn.loc,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
     const [props, ref] = fn.params;
@@ -201,7 +207,13 @@ export function inferMutationAliasingEffects(
       CompilerError.invariant(false, {
         reason: `[InferMutationAliasingEffects] Potential infinite loop`,
         description: `A value, temporary place, or effect was not cached properly`,
-        loc: fn.loc,
+        details: [
+          {
+            kind: 'error',
+            loc: fn.loc,
+            message: null,
+          },
+        ],
       });
     }
     for (const [blockId, block] of fn.body.blocks) {
@@ -356,7 +368,14 @@ function inferBlock(
       CompilerError.invariant(state.kind(handlerParam) != null, {
         reason:
           'Expected catch binding to be intialized with a DeclareLocal Catch instruction',
-        loc: terminal.loc,
+        description: null,
+        details: [
+          {
+            kind: 'error',
+            loc: terminal.loc,
+            message: null,
+          },
+        ],
       });
       const effects: Array<AliasingEffect> = [];
       for (const instr of block.instructions) {
@@ -445,25 +464,34 @@ function applySignature(
             const reason = getWriteErrorReason({
               kind: value.kind,
               reason: value.reason,
-              context: new Set(),
             });
             const variable =
               effect.value.identifier.name !== null &&
               effect.value.identifier.name.kind === 'named'
                 ? `\`${effect.value.identifier.name.value}\``
                 : 'value';
+            const diagnostic = CompilerDiagnostic.create({
+              category: ErrorCategory.Immutability,
+              reason: 'This value cannot be modified',
+              description: reason,
+            }).withDetails({
+              kind: 'error',
+              loc: effect.value.loc,
+              message: `${variable} cannot be modified`,
+            });
+            if (
+              effect.kind === 'Mutate' &&
+              effect.reason?.kind === 'AssignCurrentProperty'
+            ) {
+              diagnostic.withDetails({
+                kind: 'hint',
+                message: `Hint: If this value is a Ref (value returned by \`useRef()\`), rename the variable to end in "Ref".`,
+              });
+            }
             effects.push({
               kind: 'MutateFrozen',
               place: effect.value,
-              error: CompilerDiagnostic.create({
-                severity: ErrorSeverity.InvalidReact,
-                category: 'This value cannot be modified',
-                description: `${reason}.`,
-              }).withDetail({
-                kind: 'error',
-                loc: effect.value.loc,
-                message: `${variable} cannot be modified`,
-              }),
+              error: diagnostic,
             });
           }
         }
@@ -497,7 +525,14 @@ function applySignature(
   ) {
     CompilerError.invariant(false, {
       reason: `Expected instruction lvalue to be initialized`,
-      loc: instruction.loc,
+      description: null,
+      details: [
+        {
+          kind: 'error',
+          loc: instruction.loc,
+          message: null,
+        },
+      ],
     });
   }
   return effects.length !== 0 ? effects : null;
@@ -526,7 +561,13 @@ function applyEffect(
       CompilerError.invariant(!initialized.has(effect.into.identifier.id), {
         reason: `Cannot re-initialize variable within an instruction`,
         description: `Re-initialized ${printPlace(effect.into)} in ${printAliasingEffect(effect)}`,
-        loc: effect.into.loc,
+        details: [
+          {
+            kind: 'error',
+            loc: effect.into.loc,
+            message: null,
+          },
+        ],
       });
       initialized.add(effect.into.identifier.id);
 
@@ -565,7 +606,13 @@ function applyEffect(
       CompilerError.invariant(!initialized.has(effect.into.identifier.id), {
         reason: `Cannot re-initialize variable within an instruction`,
         description: `Re-initialized ${printPlace(effect.into)} in ${printAliasingEffect(effect)}`,
-        loc: effect.into.loc,
+        details: [
+          {
+            kind: 'error',
+            loc: effect.into.loc,
+            message: null,
+          },
+        ],
       });
       initialized.add(effect.into.identifier.id);
 
@@ -625,7 +672,13 @@ function applyEffect(
       CompilerError.invariant(!initialized.has(effect.into.identifier.id), {
         reason: `Cannot re-initialize variable within an instruction`,
         description: `Re-initialized ${printPlace(effect.into)} in ${printAliasingEffect(effect)}`,
-        loc: effect.into.loc,
+        details: [
+          {
+            kind: 'error',
+            loc: effect.into.loc,
+            message: null,
+          },
+        ],
       });
       initialized.add(effect.into.identifier.id);
 
@@ -695,11 +748,21 @@ function applyEffect(
     case 'Alias':
     case 'Capture': {
       CompilerError.invariant(
-        effect.kind === 'Capture' || initialized.has(effect.into.identifier.id),
+        effect.kind === 'Capture' ||
+          effect.kind === 'MaybeAlias' ||
+          initialized.has(effect.into.identifier.id),
         {
-          reason: `Expected destination value to already be initialized within this instruction for Alias effect`,
-          description: `Destination ${printPlace(effect.into)} is not initialized in this instruction`,
-          loc: effect.into.loc,
+          reason: `Expected destination to already be initialized within this instruction`,
+          description:
+            `Destination ${printPlace(effect.into)} is not initialized in this ` +
+            `instruction for effect ${printAliasingEffect(effect)}`,
+          details: [
+            {
+              kind: 'error',
+              loc: effect.into.loc,
+              message: null,
+            },
+          ],
         },
       );
       /*
@@ -708,49 +771,67 @@ function applyEffect(
        * copy-on-write semantics, then we can prune the effect
        */
       const intoKind = state.kind(effect.into).kind;
-      let isMutableDesination: boolean;
+      let destinationType: 'context' | 'mutable' | null = null;
       switch (intoKind) {
-        case ValueKind.Context:
-        case ValueKind.Mutable:
-        case ValueKind.MaybeFrozen: {
-          isMutableDesination = true;
+        case ValueKind.Context: {
+          destinationType = 'context';
           break;
         }
-        default: {
-          isMutableDesination = false;
+        case ValueKind.Mutable:
+        case ValueKind.MaybeFrozen: {
+          destinationType = 'mutable';
           break;
         }
       }
       const fromKind = state.kind(effect.from).kind;
-      let isMutableReferenceType: boolean;
+      let sourceType: 'context' | 'mutable' | 'frozen' | null = null;
       switch (fromKind) {
+        case ValueKind.Context: {
+          sourceType = 'context';
+          break;
+        }
         case ValueKind.Global:
         case ValueKind.Primitive: {
-          isMutableReferenceType = false;
           break;
         }
         case ValueKind.Frozen: {
-          isMutableReferenceType = false;
-          applyEffect(
-            context,
-            state,
-            {
-              kind: 'ImmutableCapture',
-              from: effect.from,
-              into: effect.into,
-            },
-            initialized,
-            effects,
-          );
+          sourceType = 'frozen';
           break;
         }
         default: {
-          isMutableReferenceType = true;
+          sourceType = 'mutable';
           break;
         }
       }
-      if (isMutableDesination && isMutableReferenceType) {
+
+      if (sourceType === 'frozen') {
+        applyEffect(
+          context,
+          state,
+          {
+            kind: 'ImmutableCapture',
+            from: effect.from,
+            into: effect.into,
+          },
+          initialized,
+          effects,
+        );
+      } else if (
+        (sourceType === 'mutable' && destinationType === 'mutable') ||
+        effect.kind === 'MaybeAlias'
+      ) {
         effects.push(effect);
+      } else if (
+        (sourceType === 'context' && destinationType != null) ||
+        (sourceType === 'mutable' && destinationType === 'context')
+      ) {
+        applyEffect(
+          context,
+          state,
+          {kind: 'MaybeAlias', from: effect.from, into: effect.into},
+          initialized,
+          effects,
+        );
       }
       break;
     }
@@ -758,7 +839,13 @@ function applyEffect(
       CompilerError.invariant(!initialized.has(effect.into.identifier.id), {
         reason: `Cannot re-initialize variable within an instruction`,
         description: `Re-initialized ${printPlace(effect.into)} in ${printAliasingEffect(effect)}`,
-        loc: effect.into.loc,
+        details: [
+          {
+            kind: 'error',
+            loc: effect.into.loc,
+            message: null,
+          },
+        ],
       });
       initialized.add(effect.into.identifier.id);
 
@@ -1027,18 +1114,18 @@ function applyEffect(
             effect.value.identifier.declarationId,
           );
           const diagnostic = CompilerDiagnostic.create({
-            severity: ErrorSeverity.InvalidReact,
-            category: 'Cannot access variable before it is declared',
-            description: `${variable ?? 'This variable'} is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.`,
+            category: ErrorCategory.Immutability,
+            reason: 'Cannot access variable before it is declared',
+            description: `${variable ?? 'This variable'} is accessed before it is declared, which prevents the earlier access from updating when this value changes over time`,
           });
           if (hoistedAccess != null && hoistedAccess.loc != effect.value.loc) {
-            diagnostic.withDetail({
+            diagnostic.withDetails({
               kind: 'error',
               loc: hoistedAccess.loc,
               message: `${variable ?? 'variable'} accessed before it is declared`,
             });
           }
-          diagnostic.withDetail({
+          diagnostic.withDetails({
             kind: 'error',
             loc: effect.value.loc,
             message: `${variable ?? 'variable'} is declared here`,
@@ -1059,13 +1146,30 @@ function applyEffect(
           const reason = getWriteErrorReason({
             kind: value.kind,
             reason: value.reason,
-            context: new Set(),
           });
           const variable =
             effect.value.identifier.name !== null &&
             effect.value.identifier.name.kind === 'named'
               ? `\`${effect.value.identifier.name.value}\``
               : 'value';
+          const diagnostic = CompilerDiagnostic.create({
+            category: ErrorCategory.Immutability,
+            reason: 'This value cannot be modified',
+            description: reason,
+          }).withDetails({
+            kind: 'error',
+            loc: effect.value.loc,
+            message: `${variable} cannot be modified`,
+          });
+          if (
+            effect.kind === 'Mutate' &&
+            effect.reason?.kind === 'AssignCurrentProperty'
+          ) {
+            diagnostic.withDetails({
+              kind: 'hint',
+              message: `Hint: If this value is a Ref (value returned by \`useRef()\`), rename the variable to end in "Ref".`,
+            });
+          }
           applyEffect(
             context,
             state,
@@ -1075,15 +1179,7 @@ function applyEffect(
                   ? 'MutateFrozen'
                   : 'MutateGlobal',
               place: effect.value,
-              error: CompilerDiagnostic.create({
-                severity: ErrorSeverity.InvalidReact,
-                category: 'This value cannot be modified',
-                description: `${reason}.`,
-              }).withDetail({
-                kind: 'error',
-                loc: effect.value.loc,
-                message: `${variable} cannot be modified`,
-              }),
+              error: diagnostic,
             },
             initialized,
             effects,
@@ -1150,7 +1246,13 @@ class InferenceState {
       reason:
         '[InferMutationAliasingEffects] Expected all top-level identifiers to be defined as variables, not values',
       description: null,
-      loc: value.loc,
+      details: [
+        {
+          kind: 'error',
+          loc: value.loc,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
     this.#values.set(value, kind);
@@ -1161,7 +1263,13 @@ class InferenceState {
     CompilerError.invariant(values != null, {
       reason: `[InferMutationAliasingEffects] Expected value kind to be initialized`,
       description: `${printPlace(place)}`,
-      loc: place.loc,
+      details: [
+        {
+          kind: 'error',
+          loc: place.loc,
+          message: 'this is uninitialized',
+        },
+      ],
       suggestions: null,
     });
     return Array.from(values);
@@ -1173,7 +1281,13 @@ class InferenceState {
     CompilerError.invariant(values != null, {
       reason: `[InferMutationAliasingEffects] Expected value kind to be initialized`,
       description: `${printPlace(place)}`,
-      loc: place.loc,
+      details: [
+        {
+          kind: 'error',
+          loc: place.loc,
+          message: 'this is uninitialized',
+        },
+      ],
       suggestions: null,
     });
     let mergedKind: AbstractValue | null = null;
@@ -1185,7 +1299,13 @@ class InferenceState {
     CompilerError.invariant(mergedKind !== null, {
       reason: `[InferMutationAliasingEffects] Expected at least one value`,
       description: `No value found at \`${printPlace(place)}\``,
-      loc: place.loc,
+      details: [
+        {
+          kind: 'error',
+          loc: place.loc,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
     return mergedKind;
@@ -1197,7 +1317,13 @@ class InferenceState {
     CompilerError.invariant(values != null, {
       reason: `[InferMutationAliasingEffects] Expected value for identifier to be initialized`,
       description: `${printIdentifier(value.identifier)}`,
-      loc: value.loc,
+      details: [
+        {
+          kind: 'error',
+          loc: value.loc,
+          message: 'Expected value for identifier to be initialized',
+        },
+      ],
       suggestions: null,
     });
     this.#variables.set(place.identifier.id, new Set(values));
@@ -1208,7 +1334,13 @@ class InferenceState {
     CompilerError.invariant(values != null, {
       reason: `[InferMutationAliasingEffects] Expected value for identifier to be initialized`,
       description: `${printIdentifier(value.identifier)}`,
-      loc: value.loc,
+      details: [
+        {
+          kind: 'error',
+          loc: value.loc,
+          message: 'Expected value for identifier to be initialized',
+        },
+      ],
       suggestions: null,
     });
     const prevValues = this.values(place);
@@ -1221,11 +1353,15 @@ class InferenceState {
   // Defines (initializing or updating) a variable with a specific kind of value.
   define(place: Place, value: InstructionValue): void {
     CompilerError.invariant(this.#values.has(value), {
-      reason: `[InferMutationAliasingEffects] Expected value to be initialized at '${printSourceLocation(
-        value.loc,
-      )}'`,
+      reason: `[InferMutationAliasingEffects] Expected value to be initialized`,
       description: printInstructionValue(value),
-      loc: value.loc,
+      details: [
+        {
+          kind: 'error',
+          loc: value.loc,
+          message: 'Expected value for identifier to be initialized',
+        },
+      ],
       suggestions: null,
     });
     this.#variables.set(place.identifier.id, new Set([value]));
@@ -1680,7 +1816,15 @@ function computeSignatureForInstruction(
     }
     case 'PropertyStore':
     case 'ComputedStore': {
-      effects.push({kind: 'Mutate', value: value.object});
+      const mutationReason: MutationReason | null =
+        value.kind === 'PropertyStore' && value.property === 'current'
+          ? {kind: 'AssignCurrentProperty'}
+          : null;
+      effects.push({
+        kind: 'Mutate',
+        value: value.object,
+        reason: mutationReason,
+      });
       effects.push({
         kind: 'Capture',
         from: value.value,
@@ -1838,6 +1982,23 @@ function computeSignatureForInstruction(
             effects.push({
               kind: 'Render',
               place: child,
+            });
+          }
+        }
+        for (const prop of value.props) {
+          if (
+            prop.kind === 'JsxAttribute' &&
+            prop.place.identifier.type.kind === 'Function' &&
+            (isJsxType(prop.place.identifier.type.return) ||
+              (prop.place.identifier.type.return.kind === 'Phi' &&
+                prop.place.identifier.type.return.operands.some(operand =>
+                  isJsxType(operand),
+                )))
+          ) {
+            // Any props which return jsx are assumed to be called during render
+            effects.push({
+              kind: 'Render',
+              place: prop.place,
             });
           }
         }
@@ -2007,11 +2168,11 @@ function computeSignatureForInstruction(
         kind: 'MutateGlobal',
         place: value.value,
         error: CompilerDiagnostic.create({
-          severity: ErrorSeverity.InvalidReact,
-          category:
+          category: ErrorCategory.Globals,
+          reason:
             'Cannot reassign variables declared outside of the component/hook',
           description: `Variable ${variable} is declared outside of the component/hook. Reassigning this value during render is a form of side effect, which can cause unpredictable behavior depending on when the component happens to re-render. If this variable is used in rendering, use useState instead. Otherwise, consider updating it in an effect. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render)`,
-        }).withDetail({
+        }).withDetails({
           kind: 'error',
           loc: instr.loc,
           message: `${variable} cannot be reassigned`,
@@ -2040,7 +2201,7 @@ function computeSignatureForInstruction(
           effects.push({
             kind: 'Freeze',
             value: operand,
-            reason: ValueReason.Other,
+            reason: ValueReason.HookCaptured,
           });
         }
       }
@@ -2106,19 +2267,39 @@ function computeEffectsForLegacySignature(
       kind: 'Impure',
       place: receiver,
       error: CompilerDiagnostic.create({
-        severity: ErrorSeverity.InvalidReact,
-        category: 'Cannot call impure function during render',
+        category: ErrorCategory.Purity,
+        reason: 'Cannot call impure function during render',
         description:
           (signature.canonicalName != null
             ? `\`${signature.canonicalName}\` is an impure function. `
             : '') +
           'Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent)',
-      }).withDetail({
+      }).withDetails({
         kind: 'error',
         loc,
         message: 'Cannot call impure function',
       }),
     });
+  }
+  if (signature.knownIncompatible != null && state.env.isInferredMemoEnabled) {
+    const errors = new CompilerError();
+    errors.pushDiagnostic(
+      CompilerDiagnostic.create({
+        category: ErrorCategory.IncompatibleLibrary,
+        reason: 'Use of incompatible library',
+        description: [
+          'This API returns functions which cannot be memoized without leading to stale UI. ' +
+            'To prevent this, by default React Compiler will skip memoizing this component/hook. ' +
+            'However, you may see issues if values from this API are passed to other components/hooks that are ' +
+            'memoized',
+        ].join(''),
+      }).withDetails({
+        kind: 'error',
+        loc: receiver.loc,
+        message: signature.knownIncompatible,
+      }),
+    );
+    throw errors;
   }
   const stores: Array<Place> = [];
   const captures: Array<Place> = [];
@@ -2534,3 +2715,208 @@ export type AbstractValue = {
   kind: ValueKind;
   reason: ReadonlySet<ValueReason>;
 };
+
+export function getWriteErrorReason(abstractValue: AbstractValue): string {
+  if (abstractValue.reason.has(ValueReason.Global)) {
+    return 'Modifying a variable defined outside a component or hook is not allowed. Consider using an effect';
+  } else if (abstractValue.reason.has(ValueReason.JsxCaptured)) {
+    return 'Modifying a value used previously in JSX is not allowed. Consider moving the modification before the JSX';
+  } else if (abstractValue.reason.has(ValueReason.Context)) {
+    return `Modifying a value returned from 'useContext()' is not allowed.`;
+  } else if (abstractValue.reason.has(ValueReason.KnownReturnSignature)) {
+    return 'Modifying a value returned from a function whose return value should not be mutated';
+  } else if (abstractValue.reason.has(ValueReason.ReactiveFunctionArgument)) {
+    return 'Modifying component props or hook arguments is not allowed. Consider using a local variable instead';
+  } else if (abstractValue.reason.has(ValueReason.State)) {
+    return "Modifying a value returned from 'useState()', which should not be modified directly. Use the setter function to update instead";
+  } else if (abstractValue.reason.has(ValueReason.ReducerState)) {
+    return "Modifying a value returned from 'useReducer()', which should not be modified directly. Use the dispatch function to update instead";
+  } else if (abstractValue.reason.has(ValueReason.Effect)) {
+    return 'Modifying a value used previously in an effect function or as an effect dependency is not allowed. Consider moving the modification before calling useEffect()';
+  } else if (abstractValue.reason.has(ValueReason.HookCaptured)) {
+    return 'Modifying a value previously passed as an argument to a hook is not allowed. Consider moving the modification before calling the hook';
+  } else if (abstractValue.reason.has(ValueReason.HookReturn)) {
+    return 'Modifying a value returned from a hook is not allowed. Consider moving the modification into the hook where the value is constructed';
+  } else {
+    return 'This modifies a variable that React considers immutable';
+  }
+}
+
+function getArgumentEffect(
+  signatureEffect: Effect | null,
+  arg: Place | SpreadPattern,
+): Effect {
+  if (signatureEffect != null) {
+    if (arg.kind === 'Identifier') {
+      return signatureEffect;
+    } else if (
+      signatureEffect === Effect.Mutate ||
+      signatureEffect === Effect.ConditionallyMutate
+    ) {
+      return signatureEffect;
+    } else {
+      // see call-spread-argument-mutable-iterator test fixture
+      if (signatureEffect === Effect.Freeze) {
+        CompilerError.throwTodo({
+          reason: 'Support spread syntax for hook arguments',
+          loc: arg.place.loc,
+        });
+      }
+      // effects[i] is Effect.Capture | Effect.Read | Effect.Store
+      return Effect.ConditionallyMutateIterator;
+    }
+  } else {
+    return Effect.ConditionallyMutate;
+  }
+}
+
+export function getFunctionCallSignature(
+  env: Environment,
+  type: Type,
+): FunctionSignature | null {
+  if (type.kind !== 'Function') {
+    return null;
+  }
+  return env.getFunctionSignature(type);
+}
+
+export function isKnownMutableEffect(effect: Effect): boolean {
+  switch (effect) {
+    case Effect.Store:
+    case Effect.ConditionallyMutate:
+    case Effect.ConditionallyMutateIterator:
+    case Effect.Mutate: {
+      return true;
+    }
+
+    case Effect.Unknown: {
+      CompilerError.invariant(false, {
+        reason: 'Unexpected unknown effect',
+        description: null,
+        details: [
+          {
+            kind: 'error',
+            loc: GeneratedSource,
+            message: null,
+          },
+        ],
+        suggestions: null,
+      });
+    }
+    case Effect.Read:
+    case Effect.Capture:
+    case Effect.Freeze: {
+      return false;
+    }
+    default: {
+      assertExhaustive(effect, `Unexpected effect \`${effect}\``);
+    }
+  }
+}
+
+/**
+ * Joins two values using the following rules:
+ * == Effect Transitions ==
+ *
+ * Freezing an immutable value has not effect:
+ *                ┌───────────────┐
+ *                │               │
+ *                ▼               │ Freeze
+ * ┌──────────────────────────┐  │
+ * │        Immutable         │──┘
+ * └──────────────────────────┘
+ *
+ * Freezing a mutable or maybe-frozen value makes it frozen. Freezing a frozen
+ * value has no effect:
+ *                                                     ┌───────────────┐
+ * ┌─────────────────────────┐     Freeze             │               │
+ * │       MaybeFrozen       │────┐                   ▼               │ Freeze
+ * └─────────────────────────┘    │     ┌──────────────────────────┐  │
+ *                                 ├────▶│          Frozen          │──┘
+ *                                 │     └──────────────────────────┘
+ * ┌─────────────────────────┐    │
+ * │         Mutable         │────┘
+ * └─────────────────────────┘
+ *
+ * == Join Lattice ==
+ * - immutable | mutable => mutable
+ *     The justification is that immutable and mutable values are different types,
+ *     and functions can introspect them to tell the difference (if the argument
+ *     is null return early, else if its an object mutate it).
+ * - frozen | mutable => maybe-frozen
+ *     Frozen values are indistinguishable from mutable values at runtime, so callers
+ *     cannot dynamically avoid mutation of "frozen" values. If a value could be
+ *     frozen we have to distinguish it from a mutable value. But it also isn't known
+ *     frozen yet, so we distinguish as maybe-frozen.
+ * - immutable | frozen => frozen
+ *     This is subtle and falls out of the above rules. If a value could be any of
+ *     immutable, mutable, or frozen, then at runtime it could either be a primitive
+ *     or a reference type, and callers can't distinguish frozen or not for reference
+ *     types. To ensure that any sequence of joins btw those three states yields the
+ *     correct maybe-frozen, these two have to produce a frozen value.
+ * - <any> | maybe-frozen => maybe-frozen
+ * - immutable | context => context
+ * - mutable | context => context
+ * - frozen | context => maybe-frozen
+ *
+ * ┌──────────────────────────┐
+ * │        Immutable         │───┐
+ * └──────────────────────────┘   │
+ *                                 │    ┌─────────────────────────┐
+ *                                 ├───▶│         Frozen          │──┐
+ * ┌──────────────────────────┐   │    └─────────────────────────┘  │
+ * │          Frozen          │───┤                                 │  ┌─────────────────────────┐
+ * └──────────────────────────┘   │                                 ├─▶│       MaybeFrozen       │
+ *                                 │    ┌─────────────────────────┐  │  └─────────────────────────┘
+ *                                 ├───▶│       MaybeFrozen       │──┘
+ * ┌──────────────────────────┐   │    └─────────────────────────┘
+ * │         Mutable          │───┘
+ * └──────────────────────────┘
+ */
+function mergeValueKinds(a: ValueKind, b: ValueKind): ValueKind {
+  if (a === b) {
+    return a;
+  } else if (a === ValueKind.MaybeFrozen || b === ValueKind.MaybeFrozen) {
+    return ValueKind.MaybeFrozen;
+    // after this a and b differ and neither are MaybeFrozen
+  } else if (a === ValueKind.Mutable || b === ValueKind.Mutable) {
+    if (a === ValueKind.Frozen || b === ValueKind.Frozen) {
+      // frozen | mutable
+      return ValueKind.MaybeFrozen;
+    } else if (a === ValueKind.Context || b === ValueKind.Context) {
+      // context | mutable
+      return ValueKind.Context;
+    } else {
+      // mutable | immutable
+      return ValueKind.Mutable;
+    }
+  } else if (a === ValueKind.Context || b === ValueKind.Context) {
+    if (a === ValueKind.Frozen || b === ValueKind.Frozen) {
+      // frozen | context
+      return ValueKind.MaybeFrozen;
+    } else {
+      // context | immutable
+      return ValueKind.Context;
+    }
+  } else if (a === ValueKind.Frozen || b === ValueKind.Frozen) {
+    return ValueKind.Frozen;
+  } else if (a === ValueKind.Global || b === ValueKind.Global) {
+    return ValueKind.Global;
+  } else {
+    CompilerError.invariant(
+      a === ValueKind.Primitive && b == ValueKind.Primitive,
+      {
+        reason: `Unexpected value kind in mergeValues()`,
+        description: `Found kinds ${a} and ${b}`,
+        details: [
+          {
+            kind: 'error',
+            loc: GeneratedSource,
+            message: null,
+          },
+        ],
+      },
+    );
+    return ValueKind.Primitive;
+  }
+}

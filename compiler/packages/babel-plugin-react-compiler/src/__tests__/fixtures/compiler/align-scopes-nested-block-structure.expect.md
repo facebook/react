@@ -129,6 +129,7 @@ function useFoo(t0) {
         t1 = null;
         break bb0;
       }
+
       if (cond2) {
         mutate(s);
       }

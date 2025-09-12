@@ -408,7 +408,7 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
 
         emitConsoleChunk(request, methodName, owner, env, stack, args);
       }
-      // $FlowFixMe[prop-missing]
+      // $FlowFixMe[incompatible-call]
       return originalMethod.apply(this, arguments);
     };
     if (originalName) {
@@ -476,7 +476,7 @@ type ReactJSONValue =
 // Serializable values
 export type ReactClientValue =
   // Server Elements and Lazy Components are unwrapped on the Server
-  | React$Element<React$ComponentType<any>>
+  | React$Element<component(...props: any)>
   | LazyComponent<ReactClientValue, any>
   // References are passed by their value
   | ClientReference<any>
@@ -864,7 +864,7 @@ function serializeDebugThenable(
       const x = thenable.reason;
       // We don't log these errors since they didn't actually throw into Flight.
       const digest = '';
-      emitErrorChunk(request, id, digest, x, true);
+      emitErrorChunk(request, id, digest, x, true, null);
       return ref;
     }
   }
@@ -916,7 +916,7 @@ function serializeDebugThenable(
       }
       // We don't log these errors since they didn't actually throw into Flight.
       const digest = '';
-      emitErrorChunk(request, id, digest, reason, true);
+      emitErrorChunk(request, id, digest, reason, true, null);
       enqueueFlush(request);
     },
   );
@@ -964,7 +964,7 @@ function emitRequestedDebugThenable(
       }
       // We don't log these errors since they didn't actually throw into Flight.
       const digest = '';
-      emitErrorChunk(request, id, digest, reason, true);
+      emitErrorChunk(request, id, digest, reason, true, null);
       enqueueFlush(request);
     },
   );
@@ -2384,6 +2384,11 @@ function visitAsyncNode(
               // Promise that was ultimately awaited by the user space await.
               serializeIONode(request, ioNode, awaited.promise);
 
+              // Ensure the owner is already outlined.
+              if (node.owner != null) {
+                outlineComponentInfo(request, node.owner);
+              }
+
               // We log the environment at the time when the last promise pigned ping which may
               // be later than what the environment was when we actually started awaiting.
               const env = (0, request.environmentName)();
@@ -2759,7 +2764,7 @@ function serializeClientReference(
     request.pendingChunks++;
     const errorId = request.nextChunkId++;
     const digest = logRecoverableError(request, x, null);
-    emitErrorChunk(request, errorId, digest, x, false);
+    emitErrorChunk(request, errorId, digest, x, false, null);
     return serializeByValueID(errorId);
   }
 }
@@ -2808,7 +2813,7 @@ function serializeDebugClientReference(
     request.pendingDebugChunks++;
     const errorId = request.nextChunkId++;
     const digest = logRecoverableError(request, x, null);
-    emitErrorChunk(request, errorId, digest, x, true);
+    emitErrorChunk(request, errorId, digest, x, true, null);
     return serializeByValueID(errorId);
   }
 }
@@ -3049,7 +3054,7 @@ function serializeDebugBlob(request: Request, blob: Blob): string {
   }
   function error(reason: mixed) {
     const digest = '';
-    emitErrorChunk(request, id, digest, reason, true);
+    emitErrorChunk(request, id, digest, reason, true, null);
     enqueueFlush(request);
     // $FlowFixMe should be able to pass mixed
     reader.cancel(reason).then(noop, noop);
@@ -3249,7 +3254,14 @@ function renderModel(
       emitPostponeChunk(request, errorId, postponeInstance);
     } else {
       const digest = logRecoverableError(request, x, task);
-      emitErrorChunk(request, errorId, digest, x, false);
+      emitErrorChunk(
+        request,
+        errorId,
+        digest,
+        x,
+        false,
+        __DEV__ ? task.debugOwner : null,
+      );
     }
     if (wasReactNode) {
       // We'll replace this element with a lazy reference that throws on the client
@@ -3354,6 +3366,27 @@ function renderModelDestructive(
           task.debugOwner = element._owner;
           task.debugStack = element._debugStack;
           task.debugTask = element._debugTask;
+          if (
+            element._owner === undefined ||
+            element._debugStack === undefined ||
+            element._debugTask === undefined
+          ) {
+            let key = '';
+            if (element.key !== null) {
+              key = ' key="' + element.key + '"';
+            }
+
+            console.error(
+              'Attempted to render <%s%s> without development properties. ' +
+                'This is not supported. It can happen if:' +
+                '\n- The element is created with a production version of React but rendered in development.' +
+                '\n- The element was cloned with a custom function instead of `React.cloneElement`.\n' +
+                'The props of this element may help locate this element: %o',
+              element.type,
+              key,
+              element.props,
+            );
+          }
           // TODO: Pop this. Since we currently don't have a point where we can pop the stack
           // this debug information will be used for errors inside sibling properties that
           // are not elements. Leading to the wrong attribution on the server. We could fix
@@ -4046,7 +4079,8 @@ function emitErrorChunk(
   id: number,
   digest: string,
   error: mixed,
-  debug: boolean,
+  debug: boolean, // DEV-only
+  owner: ?ReactComponentInfo, // DEV-only
 ): void {
   let errorInfo: ReactErrorInfo;
   if (__DEV__) {
@@ -4078,7 +4112,9 @@ function emitErrorChunk(
       message = 'An error occurred but serializing the error message failed.';
       stack = [];
     }
-    errorInfo = {digest, name, message, stack, env};
+    const ownerRef =
+      owner == null ? null : outlineComponentInfo(request, owner);
+    errorInfo = {digest, name, message, stack, env, owner: ownerRef};
   } else {
     errorInfo = {digest};
   }
@@ -4178,7 +4214,7 @@ function emitDebugChunk(
 function outlineComponentInfo(
   request: Request,
   componentInfo: ReactComponentInfo,
-): void {
+): string {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
     // eslint-disable-next-line react-internal/prod-error-codes
@@ -4187,9 +4223,10 @@ function outlineComponentInfo(
     );
   }
 
-  if (request.writtenDebugObjects.has(componentInfo)) {
+  const existingRef = request.writtenDebugObjects.get(componentInfo);
+  if (existingRef !== undefined) {
     // Already written
-    return;
+    return existingRef;
   }
 
   if (componentInfo.owner != null) {
@@ -4244,6 +4281,7 @@ function outlineComponentInfo(
   request.writtenDebugObjects.set(componentInfo, ref);
   // We also store this in the main dedupe set so that it can be referenced by inline React Elements.
   request.writtenObjects.set(componentInfo, ref);
+  return ref;
 }
 
 function emitIOInfoChunk(
@@ -5112,6 +5150,10 @@ function forwardDebugInfo(
         } else {
           // Outline the IO info in case the same I/O is awaited in more than one place.
           outlineIOInfo(request, ioInfo);
+          // Ensure the owner is already outlined.
+          if (info.owner != null) {
+            outlineComponentInfo(request, info.owner);
+          }
           // We can't serialize the ConsoleTask/Error objects so we need to omit them before serializing.
           let debugStack;
           if (info.stack == null && info.debugStack != null) {
@@ -5435,7 +5477,14 @@ function erroredTask(request: Request, task: Task, error: mixed): void {
     emitPostponeChunk(request, task.id, postponeInstance);
   } else {
     const digest = logRecoverableError(request, error, task);
-    emitErrorChunk(request, task.id, digest, error, false);
+    emitErrorChunk(
+      request,
+      task.id,
+      digest,
+      error,
+      false,
+      __DEV__ ? task.debugOwner : null,
+    );
   }
   request.abortableTasks.delete(task);
   callOnAllReadyIfReady(request);
@@ -6010,7 +6059,7 @@ export function abort(request: Request, reason: mixed): void {
         const errorId = request.nextChunkId++;
         request.fatalError = errorId;
         request.pendingChunks++;
-        emitErrorChunk(request, errorId, digest, error, false);
+        emitErrorChunk(request, errorId, digest, error, false, null);
         abortableTasks.forEach(task => abortTask(task, request, errorId));
         scheduleWork(() => finishAbort(request, abortableTasks, errorId));
       }

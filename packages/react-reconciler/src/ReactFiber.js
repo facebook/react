@@ -522,7 +522,7 @@ export function createHostRootFiber(
   tag: RootTag,
   isStrictMode: boolean,
 ): Fiber {
-  let mode;
+  let mode: number;
   if (disableLegacyMode || tag === ConcurrentRoot) {
     mode = ConcurrentMode;
     if (isStrictMode === true) {
@@ -532,10 +532,10 @@ export function createHostRootFiber(
     mode = NoMode;
   }
 
-  if (enableProfilerTimer && isDevToolsPresent) {
-    // Always collect profile timings when DevTools are present.
-    // This enables DevTools to start capturing timing at any point–
-    // Without some nodes in the tree having empty base times.
+  if (__DEV__ || (enableProfilerTimer && isDevToolsPresent)) {
+    // dev: Enable profiling instrumentation by default.
+    // profile: enabled if DevTools is present or subtree is wrapped in <Profiler>.
+    // production: disabled.
     mode |= ProfileMode;
   }
 
@@ -551,7 +551,7 @@ export function createFiberFromTypeAndProps(
   mode: TypeOfMode,
   lanes: Lanes,
 ): Fiber {
-  let fiberTag = FunctionComponent;
+  let fiberTag: WorkTag = FunctionComponent;
   // The resolved type is set if we know what the final type will be. I.e. it's not lazy.
   let resolvedType = type;
   if (typeof type === 'function') {

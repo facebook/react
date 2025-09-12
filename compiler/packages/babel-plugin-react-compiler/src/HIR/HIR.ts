@@ -7,7 +7,11 @@
 
 import {BindingKind} from '@babel/traverse';
 import * as t from '@babel/types';
-import {CompilerError, CompilerErrorDetailOptions} from '../CompilerError';
+import {
+  CompilerDiagnostic,
+  CompilerError,
+  ErrorCategory,
+} from '../CompilerError';
 import {assertExhaustive} from '../Utils/utils';
 import {Environment, ReactFunctionType} from './Environment';
 import type {HookKind} from './ObjectShape';
@@ -15,6 +19,7 @@ import {Type, makeType} from './Types';
 import {z} from 'zod';
 import type {AliasingEffect} from '../Inference/AliasingEffects';
 import {isReservedWord} from '../Utils/Keyword';
+import {Err, Ok, Result} from '../Utils/Result';
 
 /*
  * *******************************************************************************************
@@ -53,7 +58,8 @@ export type SourceLocation = t.SourceLocation | typeof GeneratedSource;
  */
 export type ReactiveFunction = {
   loc: SourceLocation;
-  id: string | null;
+  id: ValidIdentifierName | null;
+  nameHint: string | null;
   params: Array<Place | SpreadPattern>;
   generator: boolean;
   async: boolean;
@@ -275,36 +281,20 @@ export type ReactiveTryTerminal = {
 // A function lowered to HIR form, ie where its body is lowered to an HIR control-flow graph
 export type HIRFunction = {
   loc: SourceLocation;
-  id: string | null;
+  id: ValidIdentifierName | null;
+  nameHint: string | null;
   fnType: ReactFunctionType;
   env: Environment;
   params: Array<Place | SpreadPattern>;
   returnTypeAnnotation: t.FlowType | t.TSType | null;
   returns: Place;
   context: Array<Place>;
-  effects: Array<FunctionEffect> | null;
   body: HIR;
   generator: boolean;
   async: boolean;
   directives: Array<string>;
-  aliasingEffects?: Array<AliasingEffect> | null;
+  aliasingEffects: Array<AliasingEffect> | null;
 };
-
-export type FunctionEffect =
-  | {
-      kind: 'GlobalMutation';
-      error: CompilerErrorDetailOptions;
-    }
-  | {
-      kind: 'ReactMutation';
-      error: CompilerErrorDetailOptions;
-    }
-  | {
-      kind: 'ContextMutation';
-      places: ReadonlySet<Place>;
-      effect: Effect;
-      loc: SourceLocation;
-    };
 
 /*
  * Each reactive scope may have its own control-flow, so the instructions form
@@ -1140,7 +1130,8 @@ export type JsxAttribute =
 
 export type FunctionExpression = {
   kind: 'FunctionExpression';
-  name: string | null;
+  name: ValidIdentifierName | null;
+  nameHint: string | null;
   loweredFunc: LoweredFunction;
   type:
     | 'ArrowFunctionExpression'
@@ -1315,31 +1306,52 @@ export function forkTemporaryIdentifier(
   };
 }
 
+export function validateIdentifierName(
+  name: string,
+): Result<ValidatedIdentifier, CompilerError> {
+  if (isReservedWord(name)) {
+    const error = new CompilerError();
+    error.pushDiagnostic(
+      CompilerDiagnostic.create({
+        category: ErrorCategory.Syntax,
+        reason: 'Expected a non-reserved identifier name',
+        description: `\`${name}\` is a reserved word in JavaScript and cannot be used as an identifier name`,
+        suggestions: null,
+      }).withDetails({
+        kind: 'error',
+        loc: GeneratedSource,
+        message: 'reserved word',
+      }),
+    );
+    return Err(error);
+  } else if (!t.isValidIdentifier(name)) {
+    const error = new CompilerError();
+    error.pushDiagnostic(
+      CompilerDiagnostic.create({
+        category: ErrorCategory.Syntax,
+        reason: `Expected a valid identifier name`,
+        description: `\`${name}\` is not a valid JavaScript identifier`,
+        suggestions: null,
+      }).withDetails({
+        kind: 'error',
+        loc: GeneratedSource,
+        message: 'reserved word',
+      }),
+    );
+  }
+  return Ok({
+    kind: 'named',
+    value: name as ValidIdentifierName,
+  });
+}
+
 /**
  * Creates a valid identifier name. This should *not* be used for synthesizing
  * identifier names: only call this method for identifier names that appear in the
  * original source code.
  */
 export function makeIdentifierName(name: string): ValidatedIdentifier {
-  if (isReservedWord(name)) {
-    CompilerError.throwInvalidJS({
-      reason: 'Expected a non-reserved identifier name',
-      loc: GeneratedSource,
-      description: `\`${name}\` is a reserved word in JavaScript and cannot be used as an identifier name`,
-      suggestions: null,
-    });
-  } else {
-    CompilerError.invariant(t.isValidIdentifier(name), {
-      reason: `Expected a valid identifier name`,
-      loc: GeneratedSource,
-      description: `\`${name}\` is not a valid JavaScript identifier`,
-      suggestions: null,
-    });
-  }
-  return {
-    kind: 'named',
-    value: name as ValidIdentifierName,
-  };
+  return validateIdentifierName(name).unwrap();
 }
 
 /**
@@ -1351,8 +1363,14 @@ export function makeIdentifierName(name: string): ValidatedIdentifier {
 export function promoteTemporary(identifier: Identifier): void {
   CompilerError.invariant(identifier.name === null, {
     reason: `Expected a temporary (unnamed) identifier`,
-    loc: GeneratedSource,
     description: `Identifier already has a name, \`${identifier.name}\``,
+    details: [
+      {
+        kind: 'error',
+        loc: GeneratedSource,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   identifier.name = {
@@ -1375,8 +1393,14 @@ export function isPromotedTemporary(name: string): boolean {
 export function promoteTemporaryJsxTag(identifier: Identifier): void {
   CompilerError.invariant(identifier.name === null, {
     reason: `Expected a temporary (unnamed) identifier`,
-    loc: GeneratedSource,
     description: `Identifier already has a name, \`${identifier.name}\``,
+    details: [
+      {
+        kind: 'error',
+        loc: GeneratedSource,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   identifier.name = {
@@ -1544,7 +1568,13 @@ export function isMutableEffect(
       CompilerError.invariant(false, {
         reason: 'Unexpected unknown effect',
         description: null,
-        loc: location,
+        details: [
+          {
+            kind: 'error',
+            loc: location,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
     }
@@ -1677,7 +1707,13 @@ export function makeBlockId(id: number): BlockId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
     reason: 'Expected block id to be a non-negative integer',
     description: null,
-    loc: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   return id as BlockId;
@@ -1694,7 +1730,13 @@ export function makeScopeId(id: number): ScopeId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
     reason: 'Expected block id to be a non-negative integer',
     description: null,
-    loc: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   return id as ScopeId;
@@ -1711,7 +1753,13 @@ export function makeIdentifierId(id: number): IdentifierId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
     reason: 'Expected identifier id to be a non-negative integer',
     description: null,
-    loc: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   return id as IdentifierId;
@@ -1728,7 +1776,13 @@ export function makeDeclarationId(id: number): DeclarationId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
     reason: 'Expected declaration id to be a non-negative integer',
     description: null,
-    loc: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   return id as DeclarationId;
@@ -1745,7 +1799,13 @@ export function makeInstructionId(id: number): InstructionId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
     reason: 'Expected instruction id to be a non-negative integer',
     description: null,
-    loc: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   return id as InstructionId;
