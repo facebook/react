@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7f570929e91fbb188edd78327d31dfc6>>
+ * @generated SignedSource<<92112b14f3444856202bfe977c4379f5>>
  */
 
 "use strict";
@@ -3544,7 +3544,7 @@ function coerceRef(workInProgress, element) {
   element = element.props.ref;
   workInProgress.ref = void 0 !== element ? element : null;
 }
-function throwOnInvalidObjectType(returnFiber, newChild) {
+function throwOnInvalidObjectTypeImpl(returnFiber, newChild) {
   if (newChild.$$typeof === REACT_LEGACY_ELEMENT_TYPE)
     throw Error(
       'A React Element from an older version of React was rendered. This is not supported. It can happen if:\n- Multiple copies of the "react" package is used.\n- A library pre-bundled an old copy of "react" or "react/jsx-runtime".\n- A compiler tries to "inline" JSX instead of using the runtime.'
@@ -3758,7 +3758,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return null;
   }
@@ -3806,7 +3806,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return null;
   }
@@ -3877,7 +3877,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return null;
   }
@@ -4201,7 +4201,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return ("string" === typeof newChild && "" !== newChild) ||
       "number" === typeof newChild ||
@@ -13311,11 +13311,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.2.0-native-fb-0e10ee90-20250912" !== isomorphicReactPackageVersion)
+if ("19.2.0-native-fb-20e54317-20250912" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.2.0-native-fb-0e10ee90-20250912\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.2.0-native-fb-20e54317-20250912\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -13363,16 +13363,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1562 = {
+  internals$jscomp$inline_1574 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-0e10ee90-20250912",
+    version: "19.2.0-native-fb-20e54317-20250912",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-0e10ee90-20250912"
+    reconcilerVersion: "19.2.0-native-fb-20e54317-20250912"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1562.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1562.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1574.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1574.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$174 = 0;
     31 > index$174;
@@ -13384,20 +13384,20 @@ internals$jscomp$inline_1562.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1562.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1574.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1927 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1939 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1927.isDisabled &&
-    hook$jscomp$inline_1927.supportsFiber
+    !hook$jscomp$inline_1939.isDisabled &&
+    hook$jscomp$inline_1939.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1927.inject(
-        internals$jscomp$inline_1562
+      (rendererID = hook$jscomp$inline_1939.inject(
+        internals$jscomp$inline_1574
       )),
-        (injectedHook = hook$jscomp$inline_1927);
+        (injectedHook = hook$jscomp$inline_1939);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<13ca8783d2b1a29c80bc3bee84e3529d>>
+ * @generated SignedSource<<491356d381b6f580d6a06c341830890e>>
  */
 
 "use strict";
@@ -3140,7 +3140,7 @@ function coerceRef(workInProgress, element) {
   element = element.props.ref;
   workInProgress.ref = void 0 !== element ? element : null;
 }
-function throwOnInvalidObjectType(returnFiber, newChild) {
+function throwOnInvalidObjectTypeImpl(returnFiber, newChild) {
   if (newChild.$$typeof === REACT_LEGACY_ELEMENT_TYPE)
     throw Error(
       'A React Element from an older version of React was rendered. This is not supported. It can happen if:\n- Multiple copies of the "react" package is used.\n- A library pre-bundled an old copy of "react" or "react/jsx-runtime".\n- A compiler tries to "inline" JSX instead of using the runtime.'
@@ -3354,7 +3354,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return null;
   }
@@ -3402,7 +3402,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return null;
   }
@@ -3473,7 +3473,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return null;
   }
@@ -3797,7 +3797,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return ("string" === typeof newChild && "" !== newChild) ||
       "number" === typeof newChild ||
@@ -11370,11 +11370,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.2.0-native-fb-0e10ee90-20250912" !== isomorphicReactPackageVersion)
+if ("19.2.0-native-fb-20e54317-20250912" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.2.0-native-fb-0e10ee90-20250912\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.2.0-native-fb-20e54317-20250912\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11422,26 +11422,26 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1312 = {
+  internals$jscomp$inline_1324 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-0e10ee90-20250912",
+    version: "19.2.0-native-fb-20e54317-20250912",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-0e10ee90-20250912"
+    reconcilerVersion: "19.2.0-native-fb-20e54317-20250912"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1312.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1324.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1675 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1687 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1675.isDisabled &&
-    hook$jscomp$inline_1675.supportsFiber
+    !hook$jscomp$inline_1687.isDisabled &&
+    hook$jscomp$inline_1687.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1675.inject(
-        internals$jscomp$inline_1312
+      (rendererID = hook$jscomp$inline_1687.inject(
+        internals$jscomp$inline_1324
       )),
-        (injectedHook = hook$jscomp$inline_1675);
+        (injectedHook = hook$jscomp$inline_1687);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

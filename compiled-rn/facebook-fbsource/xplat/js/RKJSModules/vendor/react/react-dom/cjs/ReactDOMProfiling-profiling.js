@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<25768ca471e055a348331fbde16aaa0e>>
+ * @generated SignedSource<<397b4849c205493999c8384d7350e2d9>>
  */
 
 /*
@@ -4004,7 +4004,7 @@ function coerceRef(workInProgress, element) {
   element = element.props.ref;
   workInProgress.ref = void 0 !== element ? element : null;
 }
-function throwOnInvalidObjectType(returnFiber, newChild) {
+function throwOnInvalidObjectTypeImpl(returnFiber, newChild) {
   if (newChild.$$typeof === REACT_LEGACY_ELEMENT_TYPE)
     throw Error(formatProdErrorMessage(525));
   returnFiber = Object.prototype.toString.call(newChild);
@@ -4217,7 +4217,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return null;
   }
@@ -4265,7 +4265,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return null;
   }
@@ -4336,7 +4336,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return null;
   }
@@ -4664,7 +4664,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return ("string" === typeof newChild && "" !== newChild) ||
       "number" === typeof newChild ||
@@ -15123,20 +15123,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1907 = 0;
-  i$jscomp$inline_1907 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1907++
+  var i$jscomp$inline_1919 = 0;
+  i$jscomp$inline_1919 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1919++
 ) {
-  var eventName$jscomp$inline_1908 =
-      simpleEventPluginEvents[i$jscomp$inline_1907],
-    domEventName$jscomp$inline_1909 =
-      eventName$jscomp$inline_1908.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1910 =
-      eventName$jscomp$inline_1908[0].toUpperCase() +
-      eventName$jscomp$inline_1908.slice(1);
+  var eventName$jscomp$inline_1920 =
+      simpleEventPluginEvents[i$jscomp$inline_1919],
+    domEventName$jscomp$inline_1921 =
+      eventName$jscomp$inline_1920.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1922 =
+      eventName$jscomp$inline_1920[0].toUpperCase() +
+      eventName$jscomp$inline_1920.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1909,
-    "on" + capitalizedEvent$jscomp$inline_1910
+    domEventName$jscomp$inline_1921,
+    "on" + capitalizedEvent$jscomp$inline_1922
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -19411,16 +19411,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_2315 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2327 = React.version;
 if (
-  "19.2.0-native-fb-0e10ee90-20250912" !==
-  isomorphicReactPackageVersion$jscomp$inline_2315
+  "19.2.0-native-fb-20e54317-20250912" !==
+  isomorphicReactPackageVersion$jscomp$inline_2327
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2315,
-      "19.2.0-native-fb-0e10ee90-20250912"
+      isomorphicReactPackageVersion$jscomp$inline_2327,
+      "19.2.0-native-fb-20e54317-20250912"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -19440,12 +19440,12 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_2322 = {
+var internals$jscomp$inline_2334 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-0e10ee90-20250912",
+  version: "19.2.0-native-fb-20e54317-20250912",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-0e10ee90-20250912",
+  reconcilerVersion: "19.2.0-native-fb-20e54317-20250912",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$324 = 0;
@@ -19463,16 +19463,16 @@ var internals$jscomp$inline_2322 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2891 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2903 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2891.isDisabled &&
-    hook$jscomp$inline_2891.supportsFiber
+    !hook$jscomp$inline_2903.isDisabled &&
+    hook$jscomp$inline_2903.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2891.inject(
-        internals$jscomp$inline_2322
+      (rendererID = hook$jscomp$inline_2903.inject(
+        internals$jscomp$inline_2334
       )),
-        (injectedHook = hook$jscomp$inline_2891);
+        (injectedHook = hook$jscomp$inline_2903);
     } catch (err) {}
 }
 function getCrossOriginStringAs(as, input) {
@@ -19721,7 +19721,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-native-fb-0e10ee90-20250912";
+exports.version = "19.2.0-native-fb-20e54317-20250912";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

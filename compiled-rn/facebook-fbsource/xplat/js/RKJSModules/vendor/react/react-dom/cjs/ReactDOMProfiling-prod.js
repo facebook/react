@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d2607c92ca93d601acb301df467191a2>>
+ * @generated SignedSource<<2d473de87368f7b0e06497130108c252>>
  */
 
 /*
@@ -3546,7 +3546,7 @@ function coerceRef(workInProgress, element) {
   element = element.props.ref;
   workInProgress.ref = void 0 !== element ? element : null;
 }
-function throwOnInvalidObjectType(returnFiber, newChild) {
+function throwOnInvalidObjectTypeImpl(returnFiber, newChild) {
   if (newChild.$$typeof === REACT_LEGACY_ELEMENT_TYPE)
     throw Error(formatProdErrorMessage(525));
   returnFiber = Object.prototype.toString.call(newChild);
@@ -3759,7 +3759,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return null;
   }
@@ -3807,7 +3807,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return null;
   }
@@ -3878,7 +3878,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return null;
   }
@@ -4206,7 +4206,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return ("string" === typeof newChild && "" !== newChild) ||
       "number" === typeof newChild ||
@@ -13127,20 +13127,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1652 = 0;
-  i$jscomp$inline_1652 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1652++
+  var i$jscomp$inline_1664 = 0;
+  i$jscomp$inline_1664 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1664++
 ) {
-  var eventName$jscomp$inline_1653 =
-      simpleEventPluginEvents[i$jscomp$inline_1652],
-    domEventName$jscomp$inline_1654 =
-      eventName$jscomp$inline_1653.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1655 =
-      eventName$jscomp$inline_1653[0].toUpperCase() +
-      eventName$jscomp$inline_1653.slice(1);
+  var eventName$jscomp$inline_1665 =
+      simpleEventPluginEvents[i$jscomp$inline_1664],
+    domEventName$jscomp$inline_1666 =
+      eventName$jscomp$inline_1665.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1667 =
+      eventName$jscomp$inline_1665[0].toUpperCase() +
+      eventName$jscomp$inline_1665.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1654,
-    "on" + capitalizedEvent$jscomp$inline_1655
+    domEventName$jscomp$inline_1666,
+    "on" + capitalizedEvent$jscomp$inline_1667
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17397,16 +17397,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_2058 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2070 = React.version;
 if (
-  "19.2.0-native-fb-0e10ee90-20250912" !==
-  isomorphicReactPackageVersion$jscomp$inline_2058
+  "19.2.0-native-fb-20e54317-20250912" !==
+  isomorphicReactPackageVersion$jscomp$inline_2070
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2058,
-      "19.2.0-native-fb-0e10ee90-20250912"
+      isomorphicReactPackageVersion$jscomp$inline_2070,
+      "19.2.0-native-fb-20e54317-20250912"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17426,24 +17426,24 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_2633 = {
+var internals$jscomp$inline_2645 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-0e10ee90-20250912",
+  version: "19.2.0-native-fb-20e54317-20250912",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-0e10ee90-20250912"
+  reconcilerVersion: "19.2.0-native-fb-20e54317-20250912"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2634 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2646 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2634.isDisabled &&
-    hook$jscomp$inline_2634.supportsFiber
+    !hook$jscomp$inline_2646.isDisabled &&
+    hook$jscomp$inline_2646.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2634.inject(
-        internals$jscomp$inline_2633
+      (rendererID = hook$jscomp$inline_2646.inject(
+        internals$jscomp$inline_2645
       )),
-        (injectedHook = hook$jscomp$inline_2634);
+        (injectedHook = hook$jscomp$inline_2646);
     } catch (err) {}
 }
 function getCrossOriginStringAs(as, input) {
@@ -17691,4 +17691,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-native-fb-0e10ee90-20250912";
+exports.version = "19.2.0-native-fb-20e54317-20250912";

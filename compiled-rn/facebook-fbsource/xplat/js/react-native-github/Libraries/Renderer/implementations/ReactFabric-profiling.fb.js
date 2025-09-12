@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<43c34f6bbfb2d6764d364310f6dc2f46>>
+ * @generated SignedSource<<c7e59fb0c04e026833de492794de171b>>
  */
 
 "use strict";
@@ -3132,7 +3132,7 @@ function coerceRef(workInProgress, element) {
   element = element.props.ref;
   workInProgress.ref = void 0 !== element ? element : null;
 }
-function throwOnInvalidObjectType(returnFiber, newChild) {
+function throwOnInvalidObjectTypeImpl(returnFiber, newChild) {
   if (newChild.$$typeof === REACT_LEGACY_ELEMENT_TYPE)
     throw Error(
       'A React Element from an older version of React was rendered. This is not supported. It can happen if:\n- Multiple copies of the "react" package is used.\n- A library pre-bundled an old copy of "react" or "react/jsx-runtime".\n- A compiler tries to "inline" JSX instead of using the runtime.'
@@ -3346,7 +3346,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return null;
   }
@@ -3394,7 +3394,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return null;
   }
@@ -3465,7 +3465,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return null;
   }
@@ -3789,7 +3789,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return ("string" === typeof newChild && "" !== newChild) ||
       "number" === typeof newChild ||
@@ -13160,16 +13160,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1531 = {
+  internals$jscomp$inline_1543 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-0e10ee90-20250912",
+    version: "19.2.0-native-fb-20e54317-20250912",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-0e10ee90-20250912"
+    reconcilerVersion: "19.2.0-native-fb-20e54317-20250912"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1531.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1531.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1543.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1543.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$167 = 0;
     31 > index$167;
@@ -13181,20 +13181,20 @@ internals$jscomp$inline_1531.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1531.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1543.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1863 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1875 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1863.isDisabled &&
-    hook$jscomp$inline_1863.supportsFiber
+    !hook$jscomp$inline_1875.isDisabled &&
+    hook$jscomp$inline_1875.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1863.inject(
-        internals$jscomp$inline_1531
+      (rendererID = hook$jscomp$inline_1875.inject(
+        internals$jscomp$inline_1543
       )),
-        (injectedHook = hook$jscomp$inline_1863);
+        (injectedHook = hook$jscomp$inline_1875);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

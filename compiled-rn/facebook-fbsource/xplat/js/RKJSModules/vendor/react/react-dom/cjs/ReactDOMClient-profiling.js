@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e142f17bed97b55f534b85be94960b75>>
+ * @generated SignedSource<<183f5a0009de2f57be75f8fb3a61d601>>
  */
 
 /*
@@ -4000,7 +4000,7 @@ function coerceRef(workInProgress, element) {
   element = element.props.ref;
   workInProgress.ref = void 0 !== element ? element : null;
 }
-function throwOnInvalidObjectType(returnFiber, newChild) {
+function throwOnInvalidObjectTypeImpl(returnFiber, newChild) {
   if (newChild.$$typeof === REACT_LEGACY_ELEMENT_TYPE)
     throw Error(formatProdErrorMessage(525));
   returnFiber = Object.prototype.toString.call(newChild);
@@ -4213,7 +4213,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return null;
   }
@@ -4261,7 +4261,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return null;
   }
@@ -4332,7 +4332,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return null;
   }
@@ -4660,7 +4660,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           readContextDuringReconciliation(returnFiber, newChild),
           lanes
         );
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectTypeImpl(returnFiber, newChild);
     }
     return ("string" === typeof newChild && "" !== newChild) ||
       "number" === typeof newChild ||
@@ -15119,20 +15119,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1906 = 0;
-  i$jscomp$inline_1906 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1906++
+  var i$jscomp$inline_1918 = 0;
+  i$jscomp$inline_1918 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1918++
 ) {
-  var eventName$jscomp$inline_1907 =
-      simpleEventPluginEvents[i$jscomp$inline_1906],
-    domEventName$jscomp$inline_1908 =
-      eventName$jscomp$inline_1907.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1909 =
-      eventName$jscomp$inline_1907[0].toUpperCase() +
-      eventName$jscomp$inline_1907.slice(1);
+  var eventName$jscomp$inline_1919 =
+      simpleEventPluginEvents[i$jscomp$inline_1918],
+    domEventName$jscomp$inline_1920 =
+      eventName$jscomp$inline_1919.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1921 =
+      eventName$jscomp$inline_1919[0].toUpperCase() +
+      eventName$jscomp$inline_1919.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1908,
-    "on" + capitalizedEvent$jscomp$inline_1909
+    domEventName$jscomp$inline_1920,
+    "on" + capitalizedEvent$jscomp$inline_1921
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -19396,16 +19396,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_2314 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2326 = React.version;
 if (
-  "19.2.0-native-fb-0e10ee90-20250912" !==
-  isomorphicReactPackageVersion$jscomp$inline_2314
+  "19.2.0-native-fb-20e54317-20250912" !==
+  isomorphicReactPackageVersion$jscomp$inline_2326
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2314,
-      "19.2.0-native-fb-0e10ee90-20250912"
+      isomorphicReactPackageVersion$jscomp$inline_2326,
+      "19.2.0-native-fb-20e54317-20250912"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -19425,12 +19425,12 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_2321 = {
+var internals$jscomp$inline_2333 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-0e10ee90-20250912",
+  version: "19.2.0-native-fb-20e54317-20250912",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-0e10ee90-20250912",
+  reconcilerVersion: "19.2.0-native-fb-20e54317-20250912",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$324 = 0;
@@ -19448,16 +19448,16 @@ var internals$jscomp$inline_2321 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2888 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2900 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2888.isDisabled &&
-    hook$jscomp$inline_2888.supportsFiber
+    !hook$jscomp$inline_2900.isDisabled &&
+    hook$jscomp$inline_2900.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2888.inject(
-        internals$jscomp$inline_2321
+      (rendererID = hook$jscomp$inline_2900.inject(
+        internals$jscomp$inline_2333
       )),
-        (injectedHook = hook$jscomp$inline_2888);
+        (injectedHook = hook$jscomp$inline_2900);
     } catch (err) {}
 }
 exports.createRoot = function (container, options) {
@@ -19553,4 +19553,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.2.0-native-fb-0e10ee90-20250912";
+exports.version = "19.2.0-native-fb-20e54317-20250912";
