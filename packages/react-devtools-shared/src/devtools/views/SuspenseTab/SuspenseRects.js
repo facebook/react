@@ -117,25 +117,25 @@ function SuspenseRects({
   const boundingBox = getBoundingBox(suspense.rects);
 
   return (
-    <>
-      <ScaledRect rect={boundingBox} className={styles.SuspenseRectsBoundary}>
-        <ViewBox.Provider value={boundingBox}>
-          {suspense.rects !== null &&
-            suspense.rects.map((rect, index) => {
-              return (
-                <ScaledRect
-                  key={index}
-                  className={styles.SuspenseRectsRect}
-                  rect={rect}
-                  data-highlighted={selected}
-                  onClick={handleClick}
-                  onPointerOver={handlePointerOver}
-                  onPointerLeave={handlePointerLeave}
-                  // Reach-UI tooltip will go out of bounds of parent scroll container.
-                  title={suspense.name}
-                />
-              );
-            })}
+    <ScaledRect rect={boundingBox} className={styles.SuspenseRectsBoundary}>
+      <ViewBox.Provider value={boundingBox}>
+        {suspense.rects !== null &&
+          suspense.rects.map((rect, index) => {
+            return (
+              <ScaledRect
+                key={index}
+                className={styles.SuspenseRectsRect}
+                rect={rect}
+                data-highlighted={selected}
+                onClick={handleClick}
+                onPointerOver={handlePointerOver}
+                onPointerLeave={handlePointerLeave}
+                // Reach-UI tooltip will go out of bounds of parent scroll container.
+                title={suspense.name}
+              />
+            );
+          })}
+        {suspense.children.length > 0 && (
           <ScaledRect
             className={styles.SuspenseRectsBoundaryChildren}
             rect={boundingBox}>
@@ -143,9 +143,9 @@ function SuspenseRects({
               return <SuspenseRects key={childID} suspenseID={childID} />;
             })}
           </ScaledRect>
-        </ViewBox.Provider>
-      </ScaledRect>
-    </>
+        )}
+      </ViewBox.Provider>
+    </ScaledRect>
   );
 }
 
