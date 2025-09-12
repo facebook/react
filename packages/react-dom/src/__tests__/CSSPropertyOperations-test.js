@@ -13,6 +13,8 @@ const React = require('react');
 const ReactDOMClient = require('react-dom/client');
 const ReactDOMServer = require('react-dom/server');
 const act = require('internal-test-utils').act;
+const assertConsoleErrorDev =
+  require('internal-test-utils').assertConsoleErrorDev;
 
 describe('CSSPropertyOperations', () => {
   it('should automatically append `px` to relevant styles', () => {
@@ -103,15 +105,14 @@ describe('CSSPropertyOperations', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await expect(async () => {
-      await act(() => {
-        root.render(<Comp />);
-      });
-    }).toErrorDev(
+    await act(() => {
+      root.render(<Comp />);
+    });
+    assertConsoleErrorDev([
       'Unsupported style property background-color. Did you mean backgroundColor?' +
         '\n    in div (at **)' +
         '\n    in Comp (at **)',
-    );
+    ]);
   });
 
   it('should warn when updating hyphenated style names', async () => {
@@ -132,11 +133,10 @@ describe('CSSPropertyOperations', () => {
     await act(() => {
       root.render(<Comp />);
     });
-    await expect(async () => {
-      await act(() => {
-        root.render(<Comp style={styles} />);
-      });
-    }).toErrorDev([
+    await act(() => {
+      root.render(<Comp style={styles} />);
+    });
+    assertConsoleErrorDev([
       'Unsupported style property -ms-transform. Did you mean msTransform?' +
         '\n    in div (at **)' +
         '\n    in Comp (at **)',
@@ -165,11 +165,10 @@ describe('CSSPropertyOperations', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await expect(async () => {
-      await act(() => {
-        root.render(<Comp />);
-      });
-    }).toErrorDev([
+    await act(() => {
+      root.render(<Comp />);
+    });
+    assertConsoleErrorDev([
       // msTransform is correct already and shouldn't warn
       'Unsupported vendor-prefixed style property oTransform. ' +
         'Did you mean OTransform?' +
@@ -202,11 +201,10 @@ describe('CSSPropertyOperations', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await expect(async () => {
-      await act(() => {
-        root.render(<Comp />);
-      });
-    }).toErrorDev([
+    await act(() => {
+      root.render(<Comp />);
+    });
+    assertConsoleErrorDev([
       "Style property values shouldn't contain a semicolon. " +
         'Try "backgroundColor: blue" instead.' +
         '\n    in div (at **)' +
@@ -229,15 +227,14 @@ describe('CSSPropertyOperations', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await expect(async () => {
-      await act(() => {
-        root.render(<Comp />);
-      });
-    }).toErrorDev(
+    await act(() => {
+      root.render(<Comp />);
+    });
+    assertConsoleErrorDev([
       '`NaN` is an invalid value for the `fontSize` css style property.' +
         '\n    in div (at **)' +
         '\n    in Comp (at **)',
-    );
+    ]);
   });
 
   it('should not warn when setting CSS custom properties', async () => {
@@ -265,15 +262,14 @@ describe('CSSPropertyOperations', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await expect(async () => {
-      await act(() => {
-        root.render(<Comp />);
-      });
-    }).toErrorDev(
+    await act(() => {
+      root.render(<Comp />);
+    });
+    assertConsoleErrorDev([
       '`Infinity` is an invalid value for the `fontSize` css style property.' +
         '\n    in div (at **)' +
         '\n    in Comp (at **)',
-    );
+    ]);
   });
 
   it('should not add units to CSS custom properties', async () => {

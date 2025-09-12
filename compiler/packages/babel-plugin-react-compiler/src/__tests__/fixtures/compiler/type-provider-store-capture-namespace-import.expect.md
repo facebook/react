@@ -51,28 +51,23 @@ export function Component(t0) {
   const $ = _c(27);
   const { a, b } = t0;
   let t1;
-  let t2;
   if ($[0] !== a) {
-    t2 = { a };
+    t1 = { a };
     $[0] = a;
-    $[1] = t2;
+    $[1] = t1;
   } else {
-    t2 = $[1];
+    t1 = $[1];
   }
-  t1 = t2;
   const item1 = t1;
-  let t3;
-  let t4;
+  let t2;
   if ($[2] !== b) {
-    t4 = { b };
+    t2 = { b };
     $[2] = b;
-    $[3] = t4;
+    $[3] = t2;
   } else {
-    t4 = $[3];
+    t2 = $[3];
   }
-  t3 = t4;
-  const item2 = t3;
-  let t5;
+  const item2 = t2;
   let items;
   if ($[4] !== item1 || $[5] !== item2) {
     items = [];
@@ -84,79 +79,76 @@ export function Component(t0) {
   } else {
     items = $[6];
   }
-  t5 = items;
-  const items_0 = t5;
-  let t6;
+  const items_0 = items;
+  let t3;
   if ($[7] !== a) {
-    t6 = [a];
+    t3 = [a];
     $[7] = a;
-    $[8] = t6;
+    $[8] = t3;
   } else {
-    t6 = $[8];
+    t3 = $[8];
   }
-  const t7 = items_0[0];
-  let t8;
-  if ($[9] !== t6 || $[10] !== t7) {
-    t8 = <SharedRuntime.ValidateMemoization inputs={t6} output={t7} />;
-    $[9] = t6;
-    $[10] = t7;
-    $[11] = t8;
+  let t4;
+  if ($[9] !== items_0[0] || $[10] !== t3) {
+    t4 = <SharedRuntime.ValidateMemoization inputs={t3} output={items_0[0]} />;
+    $[9] = items_0[0];
+    $[10] = t3;
+    $[11] = t4;
   } else {
-    t8 = $[11];
+    t4 = $[11];
   }
-  let t9;
+  let t5;
   if ($[12] !== b) {
-    t9 = [b];
+    t5 = [b];
     $[12] = b;
-    $[13] = t9;
+    $[13] = t5;
   } else {
-    t9 = $[13];
+    t5 = $[13];
   }
-  const t10 = items_0[1];
-  let t11;
-  if ($[14] !== t10 || $[15] !== t9) {
-    t11 = <SharedRuntime.ValidateMemoization inputs={t9} output={t10} />;
-    $[14] = t10;
-    $[15] = t9;
-    $[16] = t11;
+  let t6;
+  if ($[14] !== items_0[1] || $[15] !== t5) {
+    t6 = <SharedRuntime.ValidateMemoization inputs={t5} output={items_0[1]} />;
+    $[14] = items_0[1];
+    $[15] = t5;
+    $[16] = t6;
   } else {
-    t11 = $[16];
+    t6 = $[16];
   }
-  let t12;
+  let t7;
   if ($[17] !== a || $[18] !== b) {
-    t12 = [a, b];
+    t7 = [a, b];
     $[17] = a;
     $[18] = b;
-    $[19] = t12;
+    $[19] = t7;
   } else {
-    t12 = $[19];
+    t7 = $[19];
   }
-  let t13;
-  if ($[20] !== items_0 || $[21] !== t12) {
-    t13 = <SharedRuntime.ValidateMemoization inputs={t12} output={items_0} />;
+  let t8;
+  if ($[20] !== items_0 || $[21] !== t7) {
+    t8 = <SharedRuntime.ValidateMemoization inputs={t7} output={items_0} />;
     $[20] = items_0;
-    $[21] = t12;
-    $[22] = t13;
+    $[21] = t7;
+    $[22] = t8;
   } else {
-    t13 = $[22];
+    t8 = $[22];
   }
-  let t14;
-  if ($[23] !== t11 || $[24] !== t13 || $[25] !== t8) {
-    t14 = (
+  let t9;
+  if ($[23] !== t4 || $[24] !== t6 || $[25] !== t8) {
+    t9 = (
       <>
+        {t4}
+        {t6}
         {t8}
-        {t11}
-        {t13}
       </>
     );
-    $[23] = t11;
-    $[24] = t13;
+    $[23] = t4;
+    $[24] = t6;
     $[25] = t8;
-    $[26] = t14;
+    $[26] = t9;
   } else {
-    t14 = $[26];
+    t9 = $[26];
   }
-  return t14;
+  return t9;
 }
 
 export const FIXTURE_ENTRYPOINT = {

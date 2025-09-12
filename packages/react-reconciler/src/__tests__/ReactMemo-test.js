@@ -19,6 +19,7 @@ let Scheduler;
 let act;
 let waitForAll;
 let assertLog;
+let assertConsoleErrorDev;
 
 describe('memo', () => {
   beforeEach(() => {
@@ -33,6 +34,7 @@ describe('memo', () => {
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
     assertLog = InternalTestUtils.assertLog;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
   });
 
   function Text(props) {
@@ -371,115 +373,26 @@ describe('memo', () => {
         expect(ReactNoop).toMatchRenderedOutput(<span prop="1!" />);
       });
 
-      // @gate !disableDefaultPropsExceptForClasses
-      it('supports defaultProps defined on the memo() return value', async () => {
-        function Counter({a, b, c, d, e}) {
-          return <Text text={a + b + c + d + e} />;
-        }
-        Counter.defaultProps = {
-          a: 1,
-        };
-        // Note! We intentionally use React.memo() rather than the injected memo().
-        // This tests a synchronous chain of React.memo() without lazy() in the middle.
-        Counter = React.memo(Counter);
-        Counter.defaultProps = {
-          b: 2,
-        };
-        Counter = React.memo(Counter);
-        Counter = React.memo(Counter); // Layer without defaultProps
-        Counter.defaultProps = {
-          c: 3,
-        };
-        Counter = React.memo(Counter);
-        Counter.defaultProps = {
-          d: 4,
-        };
-        // The final layer uses memo() from test fixture (which might be lazy).
-        Counter = memo(Counter);
-
-        await expect(async () => {
-          await act(() => {
-            ReactNoop.render(
-              <Suspense fallback={<Text text="Loading..." />}>
-                <Counter e={5} />
-              </Suspense>,
-            );
-          });
-          assertLog(['Loading...', 15]);
-        }).toErrorDev([
-          'Counter: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
-        ]);
-        expect(ReactNoop).toMatchRenderedOutput(<span prop={15} />);
-
-        // Should bail out because props have not changed
-        ReactNoop.render(
-          <Suspense>
-            <Counter e={5} />
-          </Suspense>,
-        );
-        await waitForAll([]);
-        expect(ReactNoop).toMatchRenderedOutput(<span prop={15} />);
-
-        // Should update because count prop changed
-        ReactNoop.render(
-          <Suspense>
-            <Counter e={10} />
-          </Suspense>,
-        );
-        await waitForAll([20]);
-        expect(ReactNoop).toMatchRenderedOutput(<span prop={20} />);
-      });
-
       it('warns if the first argument is undefined', () => {
-        expect(() => memo()).toErrorDev(
-          'memo: The first argument must be a component. Instead ' +
-            'received: undefined',
+        memo();
+        assertConsoleErrorDev(
+          [
+            'memo: The first argument must be a component. Instead ' +
+              'received: undefined',
+          ],
           {withoutStack: true},
         );
       });
 
       it('warns if the first argument is null', () => {
-        expect(() => memo(null)).toErrorDev(
-          'memo: The first argument must be a component. Instead ' +
-            'received: null',
+        memo(null);
+        assertConsoleErrorDev(
+          [
+            'memo: The first argument must be a component. Instead ' +
+              'received: null',
+          ],
           {withoutStack: true},
         );
-      });
-
-      // @gate !disableDefaultPropsExceptForClasses
-      it('handles nested defaultProps declarations', async () => {
-        function Inner(props) {
-          return props.inner + props.middle + props.outer;
-        }
-        Inner.defaultProps = {inner: 1};
-        const Middle = React.memo(Inner);
-        Middle.defaultProps = {middle: 10};
-        const Outer = React.memo(Middle);
-        Outer.defaultProps = {outer: 100};
-
-        const root = ReactNoop.createRoot();
-        await expect(async () => {
-          await act(() => {
-            root.render(
-              <div>
-                <Outer />
-              </div>,
-            );
-          });
-        }).toErrorDev([
-          'Support for defaultProps will be removed from memo component',
-        ]);
-        expect(root).toMatchRenderedOutput(<div>111</div>);
-
-        await act(async () => {
-          root.render(
-            <div>
-              <Outer inner="2" middle="3" outer="4" />
-            </div>,
-          );
-          await waitForAll([]);
-        });
-        expect(root).toMatchRenderedOutput(<div>234</div>);
       });
 
       it('does not drop lower priority state updates when bailing out at higher pri (simple)', async () => {
@@ -559,14 +472,13 @@ describe('memo', () => {
           <MemoComponent />
         </p>,
       );
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev(
+      await waitForAll([]);
+      assertConsoleErrorDev([
         'Each child in a list should have a unique "key" prop. ' +
           'See https://react.dev/link/warning-keys for more information.\n' +
           '    in span (at **)\n' +
-          '    in ',
-      );
+          '    in **/ReactMemo-test.js:**:** (at **)',
+      ]);
     });
 
     it('should use the inner function name for the stack', async () => {
@@ -578,16 +490,14 @@ describe('memo', () => {
           <MemoComponent />
         </p>,
       );
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev(
+      await waitForAll([]);
+      assertConsoleErrorDev([
         'Each child in a list should have a unique "key" prop.' +
           '\n\nCheck the top-level render call using <Inner>. It was passed a child from Inner. ' +
           'See https://react.dev/link/warning-keys for more information.\n' +
           '    in span (at **)\n' +
-          '    in Inner (at **)' +
-          (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
-      );
+          '    in Inner (at **)',
+      ]);
     });
 
     it('should use the inner name in the stack', async () => {
@@ -601,16 +511,14 @@ describe('memo', () => {
           <MemoComponent />
         </p>,
       );
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev(
+      await waitForAll([]);
+      assertConsoleErrorDev([
         'Each child in a list should have a unique "key" prop.' +
           '\n\nCheck the top-level render call using <Inner>. It was passed a child from Inner. ' +
           'See https://react.dev/link/warning-keys for more information.\n' +
           '    in span (at **)\n' +
-          '    in Inner (at **)' +
-          (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
-      );
+          '    in Inner (at **)',
+      ]);
     });
 
     it('can use the outer displayName in the stack', async () => {
@@ -623,16 +531,14 @@ describe('memo', () => {
           <MemoComponent />
         </p>,
       );
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev(
+      await waitForAll([]);
+      assertConsoleErrorDev([
         'Each child in a list should have a unique "key" prop.' +
           '\n\nCheck the top-level render call using <Outer>. It was passed a child from Outer. ' +
           'See https://react.dev/link/warning-keys for more information.\n' +
           '    in span (at **)\n' +
-          '    in Outer (at **)' +
-          (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
-      );
+          '    in Outer (at **)',
+      ]);
     });
 
     it('should prefer the inner to the outer displayName in the stack', async () => {
@@ -647,16 +553,14 @@ describe('memo', () => {
           <MemoComponent />
         </p>,
       );
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev(
+      await waitForAll([]);
+      assertConsoleErrorDev([
         'Each child in a list should have a unique "key" prop.' +
           '\n\nCheck the top-level render call using <Inner>. It was passed a child from Inner. ' +
           'See https://react.dev/link/warning-keys for more information.\n' +
           '    in span (at **)\n' +
-          '    in Inner (at **)' +
-          (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
-      );
+          '    in Inner (at **)',
+      ]);
     });
   }
 });

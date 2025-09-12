@@ -10,6 +10,7 @@
 export {
   renderToReadableStream,
   decodeReply,
+  decodeReplyFromAsyncIterable,
   decodeAction,
   decodeFormState,
   registerServerReference,

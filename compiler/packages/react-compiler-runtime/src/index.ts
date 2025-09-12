@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use no memo';
-
 import * as React from 'react';
 
 const {useRef, useEffect, isValidElement} = React;

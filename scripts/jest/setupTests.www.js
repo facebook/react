@@ -17,6 +17,9 @@ jest.mock('shared/ReactFeatureFlags', () => {
   // we remove the flag.
   actual.disableClientCache = __VARIANT__;
 
+  // Some value that doesn't impact existing tests
+  actual.ownerStackLimit = __VARIANT__ ? 500 : 1e4;
+
   return actual;
 });
 
@@ -34,9 +37,9 @@ jest.mock('scheduler/src/SchedulerFeatureFlags', () => {
     schedulerSrcPath + '/src/forks/SchedulerFeatureFlags.www'
   );
 
-  // These flags are not a dynamic on www, but we still want to run
-  // tests in both versions.
-  actual.enableSchedulerDebugging = __VARIANT__;
+  // Add flags here that are not a dynamic on www,
+  // but we still want to run tests in both versions.
+  // <this list is empty>
 
   return actual;
 });

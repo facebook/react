@@ -14,6 +14,11 @@ on:
       version_name:
         required: true
         type: string
+      tag_version:
+        required: false
+        type: string
+
+permissions: {}
 
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
@@ -27,5 +32,6 @@ jobs:
       release_channel: ${{ inputs.release_channel }}
       dist_tag: ${{ inputs.dist_tag }}
       version_name: ${{ inputs.version_name }}
+      tag_version: ${{ inputs.tag_version }}
     secrets:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -58,7 +58,7 @@ export default function formatConsoleArguments(
       }
       case 's': {
         const [arg] = args.splice(argumentsPointer, 1);
-        template += arg.toString();
+        template += String(arg);
 
         break;
       }

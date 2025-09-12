@@ -12,6 +12,7 @@
 let React;
 let ReactTestRenderer;
 let act;
+let assertConsoleWarnDev;
 let useState;
 let useTransition;
 
@@ -22,7 +23,7 @@ describe('ReactStartTransition', () => {
     jest.resetModules();
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
-    act = require('internal-test-utils').act;
+    ({act, assertConsoleWarnDev} = require('internal-test-utils'));
     useState = React.useState;
     useTransition = React.useTransition;
   });
@@ -53,15 +54,14 @@ describe('ReactStartTransition', () => {
       });
     });
 
-    await expect(async () => {
-      await act(() => {
-        React.startTransition(() => {
-          subs.forEach(setState => {
-            setState(state => state + 1);
-          });
+    await act(() => {
+      React.startTransition(() => {
+        subs.forEach(setState => {
+          setState(state => state + 1);
         });
       });
-    }).toWarnDev(
+    });
+    assertConsoleWarnDev(
       [
         'Detected a large number of updates inside startTransition. ' +
           'If this is due to a subscription please re-write it to use React provided hooks. ' +
@@ -70,15 +70,14 @@ describe('ReactStartTransition', () => {
       {withoutStack: true},
     );
 
-    await expect(async () => {
-      await act(() => {
-        triggerHookTransition(() => {
-          subs.forEach(setState => {
-            setState(state => state + 1);
-          });
+    await act(() => {
+      triggerHookTransition(() => {
+        subs.forEach(setState => {
+          setState(state => state + 1);
         });
       });
-    }).toWarnDev(
+    });
+    assertConsoleWarnDev(
       [
         'Detected a large number of updates inside startTransition. ' +
           'If this is due to a subscription please re-write it to use React provided hooks. ' +

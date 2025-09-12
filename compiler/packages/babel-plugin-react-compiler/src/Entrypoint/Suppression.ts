@@ -8,10 +8,10 @@
 import {NodePath} from '@babel/core';
 import * as t from '@babel/types';
 import {
+  CompilerDiagnostic,
   CompilerError,
-  CompilerErrorDetail,
   CompilerSuggestionOperation,
-  ErrorSeverity,
+  ErrorCategory,
 } from '../CompilerError';
 import {assertExhaustive} from '../Utils/utils';
 import {GeneratedSource} from '../HIR';
@@ -86,12 +86,18 @@ export function findProgramSuppressions(
   let enableComment: t.Comment | null = null;
   let source: SuppressionSource | null = null;
 
-  const rulePattern = `(${ruleNames.join('|')})`;
-  const disableNextLinePattern = new RegExp(
-    `eslint-disable-next-line ${rulePattern}`,
-  );
-  const disablePattern = new RegExp(`eslint-disable ${rulePattern}`);
-  const enablePattern = new RegExp(`eslint-enable ${rulePattern}`);
+  let disableNextLinePattern: RegExp | null = null;
+  let disablePattern: RegExp | null = null;
+  let enablePattern: RegExp | null = null;
+  if (ruleNames.length !== 0) {
+    const rulePattern = `(${ruleNames.join('|')})`;
+    disableNextLinePattern = new RegExp(
+      `eslint-disable-next-line ${rulePattern}`,
+    );
+    disablePattern = new RegExp(`eslint-disable ${rulePattern}`);
+    enablePattern = new RegExp(`eslint-enable ${rulePattern}`);
+  }
+
   const flowSuppressionPattern = new RegExp(
     '\\$(FlowFixMe\\w*|FlowExpectedError|FlowIssue)\\[react\\-rule',
   );
@@ -107,6 +113,7 @@ export function findProgramSuppressions(
        * CommentLine within the block.
        */
       disableComment == null &&
+      disableNextLinePattern != null &&
       disableNextLinePattern.test(comment.value)
     ) {
       disableComment = comment;
@@ -124,12 +131,16 @@ export function findProgramSuppressions(
       source = 'Flow';
     }
 
-    if (disablePattern.test(comment.value)) {
+    if (disablePattern != null && disablePattern.test(comment.value)) {
       disableComment = comment;
       source = 'Eslint';
     }
 
-    if (enablePattern.test(comment.value) && source === 'Eslint') {
+    if (
+      enablePattern != null &&
+      enablePattern.test(comment.value) &&
+      source === 'Eslint'
+    ) {
       enableComment = comment;
     }
 
@@ -152,7 +163,14 @@ export function suppressionsToCompilerError(
 ): CompilerError {
   CompilerError.invariant(suppressionRanges.length !== 0, {
     reason: `Expected at least suppression comment source range`,
-    loc: GeneratedSource,
+    description: null,
+    details: [
+      {
+        kind: 'error',
+        loc: GeneratedSource,
+        message: null,
+      },
+    ],
   });
   const error = new CompilerError();
   for (const suppressionRange of suppressionRanges) {
@@ -181,12 +199,11 @@ export function suppressionsToCompilerError(
           'Unhandled suppression source',
         );
     }
-    error.pushErrorDetail(
-      new CompilerErrorDetail({
-        reason: `${reason}. React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior`,
-        description: suppressionRange.disableComment.value.trim(),
-        severity: ErrorSeverity.InvalidReact,
-        loc: suppressionRange.disableComment.loc ?? null,
+    error.pushDiagnostic(
+      CompilerDiagnostic.create({
+        reason: reason,
+        description: `React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior. Found suppression \`${suppressionRange.disableComment.value.trim()}\``,
+        category: ErrorCategory.Suppression,
         suggestions: [
           {
             description: suggestion,
@@ -197,6 +214,10 @@ export function suppressionsToCompilerError(
             op: CompilerSuggestionOperation.Remove,
           },
         ],
+      }).withDetails({
+        kind: 'error',
+        loc: suppressionRange.disableComment.loc ?? null,
+        message: 'Found React rule suppression',
       }),
     );
   }

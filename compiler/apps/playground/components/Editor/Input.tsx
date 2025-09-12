@@ -6,7 +6,7 @@
  */
 
 import MonacoEditor, {loader, type Monaco} from '@monaco-editor/react';
-import {CompilerErrorDetail} from 'babel-plugin-react-compiler/src';
+import {CompilerErrorDetail} from 'babel-plugin-react-compiler';
 import invariant from 'invariant';
 import type {editor} from 'monaco-editor';
 import * as monaco from 'monaco-editor';
@@ -36,13 +36,18 @@ export default function Input({errors, language}: Props): JSX.Element {
     const uri = monaco.Uri.parse(`file:///index.js`);
     const model = monaco.editor.getModel(uri);
     invariant(model, 'Model must exist for the selected input file.');
-    renderReactCompilerMarkers({monaco, model, details: errors});
+    renderReactCompilerMarkers({
+      monaco,
+      model,
+      details: errors,
+      source: store.source,
+    });
     /**
      * N.B. that `tabSize` is a model property, not an editor property.
      * So, the tab size has to be set per model.
      */
     model.updateOptions({tabSize: 2});
-  }, [monaco, errors]);
+  }, [monaco, errors, store.source]);
 
   useEffect(() => {
     /**
@@ -74,11 +79,11 @@ export default function Input({errors, language}: Props): JSX.Element {
     });
   }, [monaco, language]);
 
-  const handleChange: (value: string | undefined) => void = value => {
+  const handleChange: (value: string | undefined) => void = async value => {
     if (!value) return;
 
     dispatchStore({
-      type: 'updateFile',
+      type: 'updateSource',
       payload: {
         source: value,
       },
@@ -89,6 +94,9 @@ export default function Input({errors, language}: Props): JSX.Element {
     _: editor.IStandaloneCodeEditor,
     monaco: Monaco,
   ) => void = (_, monaco) => {
+    if (typeof window !== 'undefined') {
+      window['__MONACO_LOADED__'] = true;
+    }
     setMonaco(monaco);
 
     const tscOptions = {

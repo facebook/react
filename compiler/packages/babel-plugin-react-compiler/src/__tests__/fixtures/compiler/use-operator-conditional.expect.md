@@ -79,45 +79,39 @@ function Component(props) {
 
 function Inner(props) {
   const $ = _c(7);
-  let input;
-  input = null;
+  let input = null;
   if (props.cond) {
     input = use(FooContext);
   }
 
   input;
-  input;
   let t0;
-  const t1 = input;
-  let t2;
-  if ($[0] !== t1) {
-    t2 = [t1];
-    $[0] = t1;
-    $[1] = t2;
+  if ($[0] !== input) {
+    t0 = [input];
+    $[0] = input;
+    $[1] = t0;
   } else {
-    t2 = $[1];
+    t0 = $[1];
   }
-  t0 = t2;
   const output = t0;
-  const t3 = input;
-  let t4;
-  if ($[2] !== t3) {
-    t4 = [t3];
-    $[2] = t3;
-    $[3] = t4;
+  let t1;
+  if ($[2] !== input) {
+    t1 = [input];
+    $[2] = input;
+    $[3] = t1;
   } else {
-    t4 = $[3];
+    t1 = $[3];
   }
-  let t5;
-  if ($[4] !== output || $[5] !== t4) {
-    t5 = <ValidateMemoization inputs={t4} output={output} />;
+  let t2;
+  if ($[4] !== output || $[5] !== t1) {
+    t2 = <ValidateMemoization inputs={t1} output={output} />;
     $[4] = output;
-    $[5] = t4;
-    $[6] = t5;
+    $[5] = t1;
+    $[6] = t2;
   } else {
-    t5 = $[6];
+    t2 = $[6];
   }
-  return t5;
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {

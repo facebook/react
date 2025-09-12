@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @compilationMode(infer)
+// @compilationMode:"infer"
 function Component() {
   'use memo';
   const f = () => {
@@ -28,10 +28,17 @@ function Component() {
 ## Error
 
 ```
+Found 1 error:
+
+Error: Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
+
+Cannot call hook within a function expression.
+
+error.invalid-hook-in-nested-function-expression-object-expression.ts:10:21
    8 |           const y = {
    9 |             inner() {
 > 10 |               return useFoo();
-     |                      ^^^^^^ InvalidReact: Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning). Cannot call Custom within a function component (10:10)
+     |                      ^^^^^^ Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)
   11 |             },
   12 |           };
   13 |           return y;

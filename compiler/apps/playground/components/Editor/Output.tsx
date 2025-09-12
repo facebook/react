@@ -5,15 +5,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import generate from '@babel/generator';
-import * as t from '@babel/types';
 import {
   CodeIcon,
   DocumentAddIcon,
   InformationCircleIcon,
 } from '@heroicons/react/outline';
 import MonacoEditor, {DiffEditor} from '@monaco-editor/react';
-import {type CompilerError} from 'babel-plugin-react-compiler/src';
+import {
+  CompilerErrorDetail,
+  CompilerDiagnostic,
+  type CompilerError,
+} from 'babel-plugin-react-compiler';
 import parserBabel from 'prettier/plugins/babel';
 import * as prettierPluginEstree from 'prettier/plugins/estree';
 import * as prettier from 'prettier/standalone';
@@ -21,17 +23,12 @@ import {memo, ReactNode, useEffect, useState} from 'react';
 import {type Store} from '../../lib/stores';
 import TabbedWindow from '../TabbedWindow';
 import {monacoOptions} from './monacoOptions';
+import {BabelFileResult} from '@babel/core';
 const MemoizedOutput = memo(Output);
 
 export default MemoizedOutput;
 
 export type PrintedCompilerPipelineValue =
-  | {
-      kind: 'ast';
-      name: string;
-      fnName: string | null;
-      value: t.FunctionDeclaration;
-    }
   | {
       kind: 'hir';
       name: string;
@@ -41,8 +38,18 @@ export type PrintedCompilerPipelineValue =
   | {kind: 'reactive'; name: string; fnName: string | null; value: string}
   | {kind: 'debug'; name: string; fnName: string | null; value: string};
 
+export type CompilerTransformOutput = {
+  code: string;
+  sourceMaps: BabelFileResult['map'];
+  language: 'flow' | 'typescript';
+};
 export type CompilerOutput =
-  | {kind: 'ok'; results: Map<string, Array<PrintedCompilerPipelineValue>>}
+  | {
+      kind: 'ok';
+      transformOutput: CompilerTransformOutput;
+      results: Map<string, Array<PrintedCompilerPipelineValue>>;
+      errors: Array<CompilerErrorDetail | CompilerDiagnostic>;
+    }
   | {
       kind: 'err';
       results: Map<string, Array<PrintedCompilerPipelineValue>>;
@@ -57,13 +64,16 @@ type Props = {
 async function tabify(
   source: string,
   compilerOutput: CompilerOutput,
+  showInternals: boolean,
 ): Promise<Map<string, ReactNode>> {
   const tabs = new Map<string, React.ReactNode>();
   const reorderedTabs = new Map<string, React.ReactNode>();
   const concattedResults = new Map<string, string>();
-  let topLevelFnDecls: Array<t.FunctionDeclaration> = [];
   // Concat all top level function declaration results into a single tab for each pass
   for (const [passName, results] of compilerOutput.results) {
+    if (!showInternals && passName !== 'Output' && passName !== 'SourceMap') {
+      continue;
+    }
     for (const result of results) {
       switch (result.kind) {
         case 'hir': {
@@ -87,9 +97,6 @@ async function tabify(
           }
           break;
         }
-        case 'ast':
-          topLevelFnDecls.push(result.value);
-          break;
         case 'debug': {
           concattedResults.set(passName, result.value);
           break;
@@ -114,17 +121,47 @@ async function tabify(
     lastPassOutput = text;
   }
   // Ensure that JS and the JS source map come first
-  if (topLevelFnDecls.length > 0) {
-    /**
-     * Make a synthetic Program so we can have a single AST with all the top level
-     * FunctionDeclarations
-     */
-    const ast = t.program(topLevelFnDecls);
-    const {code, sourceMapUrl} = await codegen(ast, source);
+  if (compilerOutput.kind === 'ok') {
+    const {transformOutput} = compilerOutput;
+    const sourceMapUrl = getSourceMapUrl(
+      transformOutput.code,
+      JSON.stringify(transformOutput.sourceMaps),
+    );
+    const code = await prettier.format(transformOutput.code, {
+      semi: true,
+      parser: transformOutput.language === 'flow' ? 'babel-flow' : 'babel-ts',
+      plugins: [parserBabel, prettierPluginEstree],
+    });
+
+    let output: string;
+    let language: string;
+    if (compilerOutput.errors.length === 0) {
+      output = code;
+      language = 'javascript';
+    } else {
+      language = 'markdown';
+      output = `
+# Summary
+
+React Compiler compiled this function successfully, but there are lint errors that indicate potential issues with the original code.
+
+## ${compilerOutput.errors.length} Lint Errors
+
+${compilerOutput.errors.map(e => e.printErrorMessage(source, {eslint: false})).join('\n\n')}
+
+## Output
+
+\`\`\`js
+${code}
+\`\`\`
+`.trim();
+    }
+
     reorderedTabs.set(
-      'JS',
+      'Output',
       <TextTabContent
-        output={code}
+        output={output}
+        language={language}
         diff={null}
         showInfoPanel={false}></TextTabContent>,
     );
@@ -140,32 +177,23 @@ async function tabify(
         </>,
       );
     }
+  } else if (compilerOutput.kind === 'err') {
+    const errors = compilerOutput.error.printErrorMessage(source, {
+      eslint: false,
+    });
+    reorderedTabs.set(
+      'Output',
+      <TextTabContent
+        output={errors}
+        language="markdown"
+        diff={null}
+        showInfoPanel={false}></TextTabContent>,
+    );
   }
   tabs.forEach((tab, name) => {
     reorderedTabs.set(name, tab);
   });
   return reorderedTabs;
-}
-
-async function codegen(
-  ast: t.Program,
-  source: string,
-): Promise<{code: any; sourceMapUrl: string | null}> {
-  const generated = generate(
-    ast,
-    {sourceMaps: true, sourceFileName: 'input.js'},
-    source,
-  );
-  const sourceMapUrl = getSourceMapUrl(
-    generated.code,
-    JSON.stringify(generated.map),
-  );
-  const codegenOutput = await prettier.format(generated.code, {
-    semi: true,
-    parser: 'babel',
-    plugins: [parserBabel, prettierPluginEstree],
-  });
-  return {code: codegenOutput, sourceMapUrl};
 }
 
 function utf16ToUTF8(s: string): string {
@@ -181,17 +209,32 @@ function getSourceMapUrl(code: string, map: string): string | null {
 }
 
 function Output({store, compilerOutput}: Props): JSX.Element {
-  const [tabsOpen, setTabsOpen] = useState<Set<string>>(() => new Set(['JS']));
+  const [tabsOpen, setTabsOpen] = useState<Set<string>>(
+    () => new Set(['Output']),
+  );
   const [tabs, setTabs] = useState<Map<string, React.ReactNode>>(
     () => new Map(),
   );
+
+  /*
+   * Update the active tab back to the output or errors tab when the compilation state
+   * changes between success/failure.
+   */
+  const [previousOutputKind, setPreviousOutputKind] = useState(
+    compilerOutput.kind,
+  );
+  if (compilerOutput.kind !== previousOutputKind) {
+    setPreviousOutputKind(compilerOutput.kind);
+    setTabsOpen(new Set(['Output']));
+  }
+
   useEffect(() => {
-    tabify(store.source, compilerOutput).then(tabs => {
+    tabify(store.source, compilerOutput, store.showInternals).then(tabs => {
       setTabs(tabs);
     });
-  }, [store.source, compilerOutput]);
+  }, [store.source, compilerOutput, store.showInternals]);
 
-  const changedPasses: Set<string> = new Set(['JS', 'HIR']); // Initial and final passes should always be bold
+  const changedPasses: Set<string> = new Set(['Output', 'HIR']); // Initial and final passes should always be bold
   let lastResult: string = '';
   for (const [passName, results] of compilerOutput.results) {
     for (const result of results) {
@@ -209,26 +252,12 @@ function Output({store, compilerOutput}: Props): JSX.Element {
   return (
     <>
       <TabbedWindow
-        defaultTab="HIR"
+        defaultTab={store.showInternals ? 'HIR' : 'Output'}
         setTabsOpen={setTabsOpen}
         tabsOpen={tabsOpen}
         tabs={tabs}
         changedPasses={changedPasses}
       />
-      {compilerOutput.kind === 'err' ? (
-        <div
-          className="flex flex-wrap absolute bottom-0 bg-white grow border-y border-grey-200 transition-all ease-in"
-          style={{width: 'calc(100vw - 650px)'}}>
-          <div className="w-full p-4 basis-full border-b">
-            <h2>COMPILER ERRORS</h2>
-          </div>
-          <pre
-            className="p-4 basis-full text-red-600 overflow-y-scroll whitespace-pre-wrap"
-            style={{width: 'calc(100vw - 650px)', height: '150px'}}>
-            <code>{compilerOutput.error.toString()}</code>
-          </pre>
-        </div>
-      ) : null}
     </>
   );
 }
@@ -237,10 +266,12 @@ function TextTabContent({
   output,
   diff,
   showInfoPanel,
+  language,
 }: {
   output: string;
   diff: string | null;
   showInfoPanel: boolean;
+  language: string;
 }): JSX.Element {
   const [diffMode, setDiffMode] = useState(false);
   return (
@@ -291,7 +322,7 @@ function TextTabContent({
         />
       ) : (
         <MonacoEditor
-          defaultLanguage="javascript"
+          language={language ?? 'javascript'}
           value={output}
           options={{
             ...monacoOptions,

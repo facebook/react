@@ -202,9 +202,8 @@ describe('Activity Suspense', () => {
     });
     assertLog([
       'Suspend! [hello]',
-      ...(gate(flags => flags.enableSiblingPrerendering)
-        ? ['Suspend! [hello]']
-        : []),
+      // pre-warming
+      'Suspend! [hello]',
     ]);
     expect(root).toMatchRenderedOutput('Loading');
 
@@ -265,7 +264,8 @@ describe('Activity Suspense', () => {
     assertLog([
       'Open',
       'Suspend! [Async]',
-      ...(gate(flags => flags.enableSiblingPrerendering) ? ['Loading...'] : []),
+      // pre-warming
+      'Loading...',
     ]);
     // It should suspend with delay to prevent the already-visible Suspense
     // boundary from switching to a fallback
@@ -276,7 +276,9 @@ describe('Activity Suspense', () => {
       await resolveText('Async');
     });
     assertLog([
-      ...(gate(flags => flags.enableSiblingPrerendering) ? ['Open'] : []),
+      // pre-warming
+      'Open',
+      // end pre-warming
       'Async',
     ]);
     expect(root).toMatchRenderedOutput(
@@ -333,7 +335,8 @@ describe('Activity Suspense', () => {
     assertLog([
       'Open',
       'Suspend! [Async]',
-      ...(gate(flags => flags.enableSiblingPrerendering) ? ['Loading...'] : []),
+      // pre-warming
+      'Loading...',
     ]);
     // It should suspend with delay to prevent the already-visible Suspense
     // boundary from switching to a fallback

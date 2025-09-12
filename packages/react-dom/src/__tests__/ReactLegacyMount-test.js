@@ -15,6 +15,7 @@ let React;
 let ReactDOM;
 let ReactDOMClient;
 let waitForAll;
+let assertConsoleErrorDev;
 
 describe('ReactMount', () => {
   beforeEach(() => {
@@ -26,6 +27,7 @@ describe('ReactMount', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
   });
 
   describe('unmountComponentAtNode', () => {
@@ -63,14 +65,15 @@ describe('ReactMount', () => {
       }
     }
 
-    expect(() => {
-      const container = document.createElement('div');
-      ReactDOM.render(Component, container);
-    }).toErrorDev(
-      'Functions are not valid as a React child. ' +
-        'This may happen if you return Component instead of <Component /> from render. ' +
-        'Or maybe you meant to call this function rather than return it.\n' +
-        '  root.render(Component)',
+    const container = document.createElement('div');
+    ReactDOM.render(Component, container);
+    assertConsoleErrorDev(
+      [
+        'Functions are not valid as a React child. ' +
+          'This may happen if you return Component instead of <Component /> from render. ' +
+          'Or maybe you meant to call this function rather than return it.\n' +
+          '  root.render(Component)',
+      ],
       {withoutStack: true},
     );
   });
@@ -168,11 +171,14 @@ describe('ReactMount', () => {
     // Test that blasting away children throws a warning
     const rootNode = container.firstChild;
 
-    expect(() => ReactDOM.render(<span />, rootNode)).toErrorDev(
-      'Replacing React-rendered children with a new ' +
-        'root component. If you intended to update the children of this node, ' +
-        'you should instead have the existing children update their state and ' +
-        'render the new components instead of calling ReactDOM.render.',
+    ReactDOM.render(<span />, rootNode);
+    assertConsoleErrorDev(
+      [
+        'Replacing React-rendered children with a new ' +
+          'root component. If you intended to update the children of this node, ' +
+          'you should instead have the existing children update their state and ' +
+          'render the new components instead of calling ReactDOM.render.',
+      ],
       {withoutStack: true},
     );
   });
@@ -197,9 +203,12 @@ describe('ReactMount', () => {
     // Make sure ReactDOM and ReactDOMOther are different copies
     expect(ReactDOM).not.toEqual(ReactDOMOther);
 
-    expect(() => ReactDOMOther.unmountComponentAtNode(container)).toErrorDev(
-      "unmountComponentAtNode(): The node you're attempting to unmount " +
-        'was rendered by another copy of React.',
+    ReactDOMOther.unmountComponentAtNode(container);
+    assertConsoleErrorDev(
+      [
+        "unmountComponentAtNode(): The node you're attempting to unmount " +
+          'was rendered by another copy of React.',
+      ],
       {withoutStack: true},
     );
 
@@ -351,16 +360,18 @@ describe('ReactMount', () => {
     root.render(<div>Hi</div>);
     await waitForAll([]);
     expect(container.textContent).toEqual('Hi');
-    expect(() => {
-      ReactDOM.render(<div>Bye</div>, container);
-    }).toErrorDev(
+    ReactDOM.render(<div>Bye</div>, container);
+    assertConsoleErrorDev(
       [
         // We care about this warning:
         'You are calling ReactDOM.render() on a container that was previously ' +
           'passed to ReactDOMClient.createRoot(). This is not supported. ' +
           'Did you mean to call root.render(element)?',
         // This is more of a symptom but restructuring the code to avoid it isn't worth it:
-        'Replacing React-rendered children with a new root component.',
+        'Replacing React-rendered children with a new root component. ' +
+          'If you intended to update the children of this node, ' +
+          'you should instead have the existing children update their state ' +
+          'and render the new components instead of calling ReactDOM.render.',
       ],
       {withoutStack: true},
     );
@@ -376,16 +387,16 @@ describe('ReactMount', () => {
     root.render(<div>Hi</div>);
     await waitForAll([]);
     expect(container.textContent).toEqual('Hi');
-    let unmounted = false;
-    expect(() => {
-      unmounted = ReactDOM.unmountComponentAtNode(container);
-    }).toErrorDev(
+    const unmounted = ReactDOM.unmountComponentAtNode(container);
+    assertConsoleErrorDev(
       [
         // We care about this warning:
         'You are calling ReactDOM.unmountComponentAtNode() on a container that was previously ' +
           'passed to ReactDOMClient.createRoot(). This is not supported. Did you mean to call root.unmount()?',
         // This is more of a symptom but restructuring the code to avoid it isn't worth it:
-        "The node you're attempting to unmount was rendered by React and is not a top-level container.",
+        'unmountComponentAtNode(): ' +
+          "The node you're attempting to unmount was rendered by React and is not a top-level container. " +
+          'Instead, have the parent component update its state and rerender in order to remove this component.',
       ],
       {withoutStack: true},
     );
@@ -407,14 +418,16 @@ describe('ReactMount', () => {
     root.render(<div>Hi</div>);
     await waitForAll([]);
     expect(container.textContent).toEqual('Hi');
-    let unmounted = false;
-    expect(() => {
-      unmounted = ReactDOM.unmountComponentAtNode(container);
-    }).toErrorDev(
+    const unmounted = ReactDOM.unmountComponentAtNode(container);
+    assertConsoleErrorDev(
       [
-        'Did you mean to call root.unmount()?',
+        'You are calling ReactDOM.unmountComponentAtNode() on a container ' +
+          'that was previously passed to ReactDOMClient.createRoot(). ' +
+          'This is not supported. Did you mean to call root.unmount()?',
         // This is more of a symptom but restructuring the code to avoid it isn't worth it:
-        "The node you're attempting to unmount was rendered by React and is not a top-level container.",
+        'unmountComponentAtNode(): ' +
+          "The node you're attempting to unmount was rendered by React and is not a top-level container. " +
+          'Instead, have the parent component update its state and rerender in order to remove this component.',
       ],
       {withoutStack: true},
     );
@@ -430,11 +443,12 @@ describe('ReactMount', () => {
   it('warns when passing legacy container to createRoot()', () => {
     const container = document.createElement('div');
     ReactDOM.render(<div>Hi</div>, container);
-    expect(() => {
-      ReactDOMClient.createRoot(container);
-    }).toErrorDev(
-      'You are calling ReactDOMClient.createRoot() on a container that was previously ' +
-        'passed to ReactDOM.render(). This is not supported.',
+    ReactDOMClient.createRoot(container);
+    assertConsoleErrorDev(
+      [
+        'You are calling ReactDOMClient.createRoot() on a container that was previously ' +
+          'passed to ReactDOM.render(). This is not supported.',
+      ],
       {withoutStack: true},
     );
   });

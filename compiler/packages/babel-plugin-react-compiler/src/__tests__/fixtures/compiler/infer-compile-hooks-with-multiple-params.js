@@ -1,4 +1,4 @@
-// @compilationMode(infer)
+// @compilationMode:"infer"
 import {useNoAlias} from 'shared-runtime';
 
 // This should be compiled by Forget

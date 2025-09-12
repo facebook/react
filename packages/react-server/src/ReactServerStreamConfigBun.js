@@ -86,6 +86,7 @@ export function byteLengthOfBinaryChunk(chunk: BinaryChunk): number {
 }
 
 export function closeWithError(destination: Destination, error: mixed): void {
+  // $FlowFixMe[method-unbinding]
   if (typeof destination.error === 'function') {
     // $FlowFixMe[incompatible-call]: This is an Error object or the destination accepts other types.
     destination.error(error);
@@ -102,4 +103,12 @@ export function closeWithError(destination: Destination, error: mixed): void {
 
 export function createFastHash(input: string): string | number {
   return Bun.hash(input);
+}
+
+export function readAsDataURL(blob: Blob): Promise<string> {
+  return blob.arrayBuffer().then(arrayBuffer => {
+    const encoded = Buffer.from(arrayBuffer).toString('base64');
+    const mimeType = blob.type || 'application/octet-stream';
+    return 'data:' + mimeType + ';base64,' + encoded;
+  });
 }

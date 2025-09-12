@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 import {CompilerError} from '..';
 import {BlockId, GotoVariant, HIRFunction} from './HIR';
 
@@ -46,7 +53,14 @@ export function pruneUnusedLabelsHIR(fn: HIRFunction): void {
       next.phis.size === 0 && fallthrough.phis.size === 0,
       {
         reason: 'Unexpected phis when merging label blocks',
-        loc: label.terminal.loc,
+        description: null,
+        details: [
+          {
+            kind: 'error',
+            loc: label.terminal.loc,
+            message: null,
+          },
+        ],
       },
     );
 
@@ -57,7 +71,14 @@ export function pruneUnusedLabelsHIR(fn: HIRFunction): void {
         fallthrough.preds.has(nextId),
       {
         reason: 'Unexpected block predecessors when merging label blocks',
-        loc: label.terminal.loc,
+        description: null,
+        details: [
+          {
+            kind: 'error',
+            loc: label.terminal.loc,
+            message: null,
+          },
+        ],
       },
     );
 

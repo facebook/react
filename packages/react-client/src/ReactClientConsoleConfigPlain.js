@@ -7,7 +7,8 @@
  * @flow
  */
 
-const badgeFormat = '[%s] ';
+// Keep in sync with ReactServerConsoleConfig
+const badgeFormat = '[%s]';
 const pad = ' ';
 
 const bind = Function.prototype.bind;
@@ -38,7 +39,7 @@ export function bindToConsole(
     newArgs.splice(
       offset,
       1,
-      badgeFormat + newArgs[offset],
+      badgeFormat + ' ' + newArgs[offset],
       pad + badgeName + pad,
     );
   } else {

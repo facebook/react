@@ -24,12 +24,10 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 function Component(props) {
-  let t0;
   if (props.cond) {
     if (props.cond) {
     }
   }
-  t0 = undefined;
 }
 
 export const FIXTURE_ENTRYPOINT = {

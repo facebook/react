@@ -19,6 +19,7 @@ import {
   Primitive,
   assertConsistentIdentifiers,
   assertTerminalSuccessorsExist,
+  makePropertyLiteral,
   markInstructionIds,
   markPredecessors,
   mergeConsecutiveBlocks,
@@ -190,7 +191,14 @@ function evaluatePhi(phi: Phi, constants: Constants): Constant | null {
       case 'Primitive': {
         CompilerError.invariant(value.kind === 'Primitive', {
           reason: 'value kind expected to be Primitive',
-          loc: null,
+          description: null,
+          details: [
+            {
+              kind: 'error',
+              loc: null,
+              message: null,
+            },
+          ],
           suggestions: null,
         });
 
@@ -203,7 +211,14 @@ function evaluatePhi(phi: Phi, constants: Constants): Constant | null {
       case 'LoadGlobal': {
         CompilerError.invariant(value.kind === 'LoadGlobal', {
           reason: 'value kind expected to be LoadGlobal',
-          loc: null,
+          description: null,
+          details: [
+            {
+              kind: 'error',
+              loc: null,
+              message: null,
+            },
+          ],
           suggestions: null,
         });
 
@@ -238,13 +253,14 @@ function evaluateInstruction(
       if (
         property !== null &&
         property.kind === 'Primitive' &&
-        typeof property.value === 'string' &&
-        isValidIdentifier(property.value)
+        ((typeof property.value === 'string' &&
+          isValidIdentifier(property.value)) ||
+          typeof property.value === 'number')
       ) {
         const nextValue: InstructionValue = {
           kind: 'PropertyLoad',
           loc: value.loc,
-          property: property.value,
+          property: makePropertyLiteral(property.value),
           object: value.object,
         };
         instr.value = nextValue;
@@ -256,13 +272,14 @@ function evaluateInstruction(
       if (
         property !== null &&
         property.kind === 'Primitive' &&
-        typeof property.value === 'string' &&
-        isValidIdentifier(property.value)
+        ((typeof property.value === 'string' &&
+          isValidIdentifier(property.value)) ||
+          typeof property.value === 'number')
       ) {
         const nextValue: InstructionValue = {
           kind: 'PropertyStore',
           loc: value.loc,
-          property: property.value,
+          property: makePropertyLiteral(property.value),
           object: value.object,
           value: value.value,
         };
@@ -317,6 +334,23 @@ function evaluateInstruction(
             const result: Primitive = {
               kind: 'Primitive',
               value: !operand.value,
+              loc: value.loc,
+            };
+            instr.value = result;
+            return result;
+          }
+          return null;
+        }
+        case '-': {
+          const operand = read(constants, value.value);
+          if (
+            operand !== null &&
+            operand.kind === 'Primitive' &&
+            typeof operand.value === 'number'
+          ) {
+            const result: Primitive = {
+              kind: 'Primitive',
+              value: operand.value * -1,
               loc: value.loc,
             };
             instr.value = result;
@@ -488,6 +522,73 @@ function evaluateInstruction(
         }
       }
       return null;
+    }
+    case 'TemplateLiteral': {
+      if (value.subexprs.length === 0) {
+        const result: InstructionValue = {
+          kind: 'Primitive',
+          value: value.quasis.map(q => q.cooked).join(''),
+          loc: value.loc,
+        };
+        instr.value = result;
+        return result;
+      }
+
+      if (value.subexprs.length !== value.quasis.length - 1) {
+        return null;
+      }
+
+      if (value.quasis.some(q => q.cooked === undefined)) {
+        return null;
+      }
+
+      let quasiIndex = 0;
+      let resultString = value.quasis[quasiIndex].cooked as string;
+      ++quasiIndex;
+
+      for (const subExpr of value.subexprs) {
+        const subExprValue = read(constants, subExpr);
+        if (!subExprValue || subExprValue.kind !== 'Primitive') {
+          return null;
+        }
+
+        const expressionValue = subExprValue.value;
+        if (
+          typeof expressionValue !== 'number' &&
+          typeof expressionValue !== 'string' &&
+          typeof expressionValue !== 'boolean' &&
+          !(typeof expressionValue === 'object' && expressionValue === null)
+        ) {
+          // value is not supported (function, object) or invalid (symbol), or something else
+          return null;
+        }
+
+        const suffix = value.quasis[quasiIndex].cooked;
+        ++quasiIndex;
+
+        if (suffix === undefined) {
+          return null;
+        }
+
+        /*
+         * Spec states that concat calls ToString(argument) internally on its parameters
+         * -> we don't have to implement ToString(argument) ourselves and just use the engine implementation
+         * Refs:
+         *  - https://tc39.es/ecma262/2024/#sec-tostring
+         *  - https://tc39.es/ecma262/2024/#sec-string.prototype.concat
+         *  - https://tc39.es/ecma262/2024/#sec-template-literals-runtime-semantics-evaluation
+         */
+        resultString = resultString.concat(expressionValue as string, suffix);
+      }
+
+      const result: InstructionValue = {
+        kind: 'Primitive',
+        value: resultString,
+        loc: value.loc,
+      };
+
+      instr.value = result;
+      return result;
     }
     case 'LoadLocal': {
       const placeValue = read(constants, value.place);

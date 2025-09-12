@@ -161,83 +161,38 @@ describe(`onRender`, () => {
     // Restore original mock
     jest.mock('scheduler', () => jest.requireActual('scheduler/unstable_mock'));
 
-    // TODO: unstable_now is called by more places than just the profiler.
-    // Rewrite this test so it's less fragile.
-    if (gate(flags => flags.enableDeferRootSchedulingToMicrotask)) {
-      if (gate(flags => flags.enableComponentPerformanceTrack)) {
-        assertLog([
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-        ]);
-      } else {
-        assertLog([
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-        ]);
-      }
+    if (gate(flags => flags.enableComponentPerformanceTrack)) {
+      assertLog([
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+      ]);
     } else {
-      if (gate(flags => flags.enableComponentPerformanceTrack)) {
-        assertLog([
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-        ]);
-      } else {
-        assertLog([
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-          'read current time',
-        ]);
-      }
+      assertLog([
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+      ]);
     }
   });
 

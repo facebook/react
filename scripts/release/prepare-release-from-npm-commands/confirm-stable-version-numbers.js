@@ -7,7 +7,7 @@ const semver = require('semver');
 const theme = require('../theme');
 const {confirm} = require('../utils');
 
-const run = async ({skipPackages}, versionsMap) => {
+const run = async ({ci, skipPackages}, versionsMap) => {
   const groupedVersionsMap = new Map();
 
   // Group packages with the same source versions.
@@ -22,44 +22,46 @@ const run = async ({skipPackages}, versionsMap) => {
     }
   });
 
-  // Prompt user to confirm or override each version group.
-  const entries = [...groupedVersionsMap.entries()];
-  for (let i = 0; i < entries.length; i++) {
-    const [bestGuessVersion, packages] = entries[i];
-    const packageNames = packages.map(name => theme.package(name)).join(', ');
+  if (ci !== true) {
+    // Prompt user to confirm or override each version group if not running in CI.
+    const entries = [...groupedVersionsMap.entries()];
+    for (let i = 0; i < entries.length; i++) {
+      const [bestGuessVersion, packages] = entries[i];
+      const packageNames = packages.map(name => theme.package(name)).join(', ');
 
-    let version = bestGuessVersion;
-    if (
-      skipPackages.some(skipPackageName => packages.includes(skipPackageName))
-    ) {
-      await confirm(
-        theme`{spinnerSuccess ✓} Version for ${packageNames} will remain {version ${bestGuessVersion}}`
-      );
-    } else {
-      const defaultVersion = bestGuessVersion
-        ? theme.version(` (default ${bestGuessVersion})`)
-        : '';
-      version =
-        (await prompt(
-          theme`{spinnerSuccess ✓} Version for ${packageNames}${defaultVersion}: `
-        )) || bestGuessVersion;
-      prompt.done();
-    }
+      let version = bestGuessVersion;
+      if (
+        skipPackages.some(skipPackageName => packages.includes(skipPackageName))
+      ) {
+        await confirm(
+          theme`{spinnerSuccess ✓} Version for ${packageNames} will remain {version ${bestGuessVersion}}`
+        );
+      } else {
+        const defaultVersion = bestGuessVersion
+          ? theme.version(` (default ${bestGuessVersion})`)
+          : '';
+        version =
+          (await prompt(
+            theme`{spinnerSuccess ✓} Version for ${packageNames}${defaultVersion}: `
+          )) || bestGuessVersion;
+        prompt.done();
+      }
 
-    // Verify a valid version has been supplied.
-    try {
-      semver(version);
+      // Verify a valid version has been supplied.
+      try {
+        semver(version);
 
-      packages.forEach(packageName => {
-        versionsMap.set(packageName, version);
-      });
-    } catch (error) {
-      console.log(
-        theme`{spinnerError ✘} Version {version ${version}} is invalid.`
-      );
+        packages.forEach(packageName => {
+          versionsMap.set(packageName, version);
+        });
+      } catch (error) {
+        console.log(
+          theme`{spinnerError ✘} Version {version ${version}} is invalid.`
+        );
 
-      // Prompt again
-      i--;
+        // Prompt again
+        i--;
+      }
     }
   }
 };

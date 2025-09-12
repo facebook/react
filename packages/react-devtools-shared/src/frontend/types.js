@@ -18,7 +18,8 @@ import type {
   Dehydrated,
   Unserializable,
 } from 'react-devtools-shared/src/hydration';
-import type {Source} from 'react-devtools-shared/src/shared/types';
+import type {ReactFunctionLocation, ReactStackTrace} from 'shared/ReactTypes';
+import type {UnknownSuspendersReason} from '../constants';
 
 export type BrowserTheme = 'dark' | 'light';
 
@@ -49,6 +50,8 @@ export const ElementTypeSuspense = 12;
 export const ElementTypeSuspenseList = 13;
 export const ElementTypeTracingMarker = 14;
 export const ElementTypeVirtual = 15;
+export const ElementTypeViewTransition = 16;
+export const ElementTypeActivity = 17;
 
 // Different types of elements displayed in the Elements tree.
 // These types may be used to visually distinguish types,
@@ -66,7 +69,9 @@ export type ElementType =
   | 12
   | 13
   | 14
-  | 15;
+  | 15
+  | 16
+  | 17;
 
 // WARNING
 // The values below are referenced by ComponentFilters (which are saved via localStorage).
@@ -153,6 +158,7 @@ export type Element = {
   type: ElementType,
   displayName: string | null,
   key: number | string | null,
+  nameProp: null | string,
 
   hocDisplayNames: null | Array<string>,
 
@@ -180,10 +186,49 @@ export type Element = {
   compiledWithForget: boolean,
 };
 
+export type Rect = {
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+};
+
+export type SuspenseNode = {
+  id: Element['id'],
+  parentID: SuspenseNode['id'] | 0,
+  children: Array<SuspenseNode['id']>,
+  name: string | null,
+  rects: null | Array<Rect>,
+  hasUniqueSuspenders: boolean,
+};
+
+// Serialized version of ReactIOInfo
+export type SerializedIOInfo = {
+  name: string,
+  description: string,
+  start: number,
+  end: number,
+  byteSize: null | number,
+  value: null | Promise<mixed>,
+  env: null | string,
+  owner: null | SerializedElement,
+  stack: null | ReactStackTrace,
+};
+
+// Serialized version of ReactAsyncInfo
+export type SerializedAsyncInfo = {
+  awaited: SerializedIOInfo,
+  env: null | string,
+  owner: null | SerializedElement,
+  stack: null | ReactStackTrace,
+};
+
 export type SerializedElement = {
   displayName: string | null,
   id: number,
   key: number | string | null,
+  env: null | string,
+  stack: null | ReactStackTrace,
   hocDisplayNames: Array<string> | null,
   compiledWithForget: boolean,
   type: ElementType,
@@ -222,9 +267,8 @@ export type InspectedElement = {
 
   // Is this Suspense, and can its value be overridden now?
   canToggleSuspense: boolean,
-
-  // Can view component source location.
-  canViewSource: boolean,
+  // If this Element is suspended. Currently only set on Suspense boundaries.
+  isSuspended: boolean | null,
 
   // Does the component have legacy context attached to it.
   hasLegacyContext: boolean,
@@ -238,11 +282,23 @@ export type InspectedElement = {
   errors: Array<[string, number]>,
   warnings: Array<[string, number]>,
 
+  // Things that suspended this Instances
+  suspendedBy: Object,
+  // Minimum start time to maximum end time + a potential (not actual) throttle, within the nearest boundary.
+  suspendedByRange: null | [number, number],
+  unknownSuspenders: UnknownSuspendersReason,
+
   // List of owners
   owners: Array<SerializedElement> | null,
 
+  // Environment name that this component executed in or null for the client
+  env: string | null,
+
   // Location of component in source code.
-  source: Source | null,
+  source: ReactFunctionLocation | null,
+
+  // The location of the JSX creation.
+  stack: ReactStackTrace | null,
 
   type: ElementType,
 
@@ -255,6 +311,9 @@ export type InspectedElement = {
 
   // UI plugins/visualizations for the inspected element.
   plugins: Plugins,
+
+  // React Native only.
+  nativeTag: number | null,
 };
 
 // TODO: Add profiling type

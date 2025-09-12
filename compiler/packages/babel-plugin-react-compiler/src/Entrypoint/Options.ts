@@ -7,14 +7,21 @@
 
 import * as t from '@babel/types';
 import {z} from 'zod';
-import {CompilerError, CompilerErrorDetailOptions} from '../CompilerError';
+import {
+  CompilerDiagnostic,
+  CompilerError,
+  CompilerErrorDetail,
+  CompilerErrorDetailOptions,
+} from '../CompilerError';
 import {
   EnvironmentConfig,
   ExternalFunction,
   parseEnvironmentConfig,
+  tryParseExternalFunction,
 } from '../HIR/Environment';
 import {hasOwnProperty} from '../Utils/utils';
 import {fromZodError} from 'zod-validation-error';
+import {CompilerPipelineValue} from './Pipeline';
 
 const PanicThresholdOptionsSchema = z.enum([
   /*
@@ -35,6 +42,14 @@ const PanicThresholdOptionsSchema = z.enum([
 ]);
 
 export type PanicThresholdOptions = z.infer<typeof PanicThresholdOptionsSchema>;
+const DynamicGatingOptionsSchema = z.object({
+  source: z.string(),
+});
+export type DynamicGatingOptions = z.infer<typeof DynamicGatingOptionsSchema>;
+const CustomOptOutDirectiveSchema = z
+  .nullable(z.array(z.string()))
+  .default(null);
+type CustomOptOutDirective = z.infer<typeof CustomOptOutDirectiveSchema>;
 
 export type PluginOptions = {
   environment: EnvironmentConfig;
@@ -62,6 +77,28 @@ export type PluginOptions = {
    *   var Foo = isForgetEnabled_Pokes() ? Foo_forget : Foo_uncompiled;
    */
   gating: ExternalFunction | null;
+
+  /**
+   * If specified, this enables dynamic gating which matches `use memo if(...)`
+   * directives.
+   *
+   * Example usage:
+   * ```js
+   * // @dynamicGating:{"source":"myModule"}
+   * export function MyComponent() {
+   *   'use memo if(isEnabled)';
+   *    return <div>...</div>;
+   * }
+   * ```
+   * This will emit:
+   * ```js
+   * import {isEnabled} from 'myModule';
+   * export const MyComponent = isEnabled()
+   *   ? <optimized version>
+   *   : <original version>;
+   * ```
+   */
+  dynamicGating: DynamicGatingOptions | null;
 
   panicThreshold: PanicThresholdOptions;
 
@@ -96,15 +133,25 @@ export type PluginOptions = {
    * provided rules will skip compilation. To disable this feature (never bailout of compilation
    * even if the default ESLint is suppressed), pass an empty array.
    */
-  eslintSuppressionRules?: Array<string> | null | undefined;
+  eslintSuppressionRules: Array<string> | null | undefined;
 
+  /**
+   * Whether to report "suppression" errors for Flow suppressions. If false, suppression errors
+   * are only emitted for ESLint suppressions
+   */
   flowSuppressions: boolean;
+
   /*
    * Ignore 'use no forget' annotations. Helpful during testing but should not be used in production.
    */
   ignoreUseNoForget: boolean;
 
-  sources?: Array<string> | ((filename: string) => boolean) | null;
+  /**
+   * Unstable / do not use
+   */
+  customOptOutDirectives: CustomOptOutDirective;
+
+  sources: Array<string> | ((filename: string) => boolean) | null;
 
   /**
    * The compiler has customized support for react-native-reanimated, intended as a temporary workaround.
@@ -175,40 +222,64 @@ export type CompilationMode = z.infer<typeof CompilationModeSchema>;
  *   babel or other unhandled exceptions).
  */
 export type LoggerEvent =
-  | {
-      kind: 'CompileError';
-      fnLoc: t.SourceLocation | null;
-      detail: CompilerErrorDetailOptions;
-    }
-  | {
-      kind: 'CompileDiagnostic';
-      fnLoc: t.SourceLocation | null;
-      detail: Omit<Omit<CompilerErrorDetailOptions, 'severity'>, 'suggestions'>;
-    }
-  | {
-      kind: 'CompileSkip';
-      fnLoc: t.SourceLocation | null;
-      reason: string;
-      loc: t.SourceLocation | null;
-    }
-  | {
-      kind: 'CompileSuccess';
-      fnLoc: t.SourceLocation | null;
-      fnName: string | null;
-      memoSlots: number;
-      memoBlocks: number;
-      memoValues: number;
-      prunedMemoBlocks: number;
-      prunedMemoValues: number;
-    }
-  | {
-      kind: 'PipelineError';
-      fnLoc: t.SourceLocation | null;
-      data: string;
-    };
+  | CompileSuccessEvent
+  | CompileErrorEvent
+  | CompileDiagnosticEvent
+  | CompileSkipEvent
+  | PipelineErrorEvent
+  | TimingEvent
+  | AutoDepsDecorationsEvent
+  | AutoDepsEligibleEvent;
+
+export type CompileErrorEvent = {
+  kind: 'CompileError';
+  fnLoc: t.SourceLocation | null;
+  detail: CompilerErrorDetail | CompilerDiagnostic;
+};
+export type CompileDiagnosticEvent = {
+  kind: 'CompileDiagnostic';
+  fnLoc: t.SourceLocation | null;
+  detail: Omit<Omit<CompilerErrorDetailOptions, 'severity'>, 'suggestions'>;
+};
+export type CompileSuccessEvent = {
+  kind: 'CompileSuccess';
+  fnLoc: t.SourceLocation | null;
+  fnName: string | null;
+  memoSlots: number;
+  memoBlocks: number;
+  memoValues: number;
+  prunedMemoBlocks: number;
+  prunedMemoValues: number;
+};
+export type CompileSkipEvent = {
+  kind: 'CompileSkip';
+  fnLoc: t.SourceLocation | null;
+  reason: string;
+  loc: t.SourceLocation | null;
+};
+export type PipelineErrorEvent = {
+  kind: 'PipelineError';
+  fnLoc: t.SourceLocation | null;
+  data: string;
+};
+export type TimingEvent = {
+  kind: 'Timing';
+  measurement: PerformanceMeasure;
+};
+export type AutoDepsDecorationsEvent = {
+  kind: 'AutoDepsDecorations';
+  fnLoc: t.SourceLocation;
+  decorations: Array<t.SourceLocation>;
+};
+export type AutoDepsEligibleEvent = {
+  kind: 'AutoDepsEligible';
+  fnLoc: t.SourceLocation;
+  depArrayLoc: t.SourceLocation;
+};
 
 export type Logger = {
   logEvent: (filename: string | null, event: LoggerEvent) => void;
+  debugLogIRs?: (value: CompilerPipelineValue) => void;
 };
 
 export const defaultOptions: PluginOptions = {
@@ -218,6 +289,7 @@ export const defaultOptions: PluginOptions = {
   logger: null,
   gating: null,
   noEmit: false,
+  dynamicGating: null,
   eslintSuppressionRules: null,
   flowSuppressions: true,
   ignoreUseNoForget: false,
@@ -225,6 +297,7 @@ export const defaultOptions: PluginOptions = {
     return filename.indexOf('node_modules') === -1;
   },
   enableReanimatedCheck: true,
+  customOptOutDirectives: null,
   target: '19',
 } as const;
 
@@ -256,6 +329,48 @@ export function parsePluginOptions(obj: unknown): PluginOptions {
         }
         case 'target': {
           parsedOptions[key] = parseTargetConfig(value);
+          break;
+        }
+        case 'gating': {
+          if (value == null) {
+            parsedOptions[key] = null;
+          } else {
+            parsedOptions[key] = tryParseExternalFunction(value);
+          }
+          break;
+        }
+        case 'dynamicGating': {
+          if (value == null) {
+            parsedOptions[key] = null;
+          } else {
+            const result = DynamicGatingOptionsSchema.safeParse(value);
+            if (result.success) {
+              parsedOptions[key] = result.data;
+            } else {
+              CompilerError.throwInvalidConfig({
+                reason:
+                  'Could not parse dynamic gating. Update React Compiler config to fix the error',
+                description: `${fromZodError(result.error)}`,
+                loc: null,
+                suggestions: null,
+              });
+            }
+          }
+          break;
+        }
+        case 'customOptOutDirectives': {
+          const result = CustomOptOutDirectiveSchema.safeParse(value);
+          if (result.success) {
+            parsedOptions[key] = result.data;
+          } else {
+            CompilerError.throwInvalidConfig({
+              reason:
+                'Could not parse custom opt out directives. Update React Compiler config to fix the error',
+              description: `${fromZodError(result.error)}`,
+              loc: null,
+              suggestions: null,
+            });
+          }
           break;
         }
         default: {

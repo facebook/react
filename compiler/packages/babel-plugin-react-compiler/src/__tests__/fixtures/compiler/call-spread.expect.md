@@ -2,10 +2,17 @@
 ## Input
 
 ```javascript
+import {makeArray} from 'shared-runtime';
+
 function Component(props) {
-  const x = foo(...props.a, null, ...props.b);
+  const x = makeArray(...props.a, null, ...props.b);
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{a: [1, 2], b: [2, 3, 4]}],
+};
 
 ```
 
@@ -13,11 +20,13 @@ function Component(props) {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime";
+import { makeArray } from "shared-runtime";
+
 function Component(props) {
   const $ = _c(3);
   let t0;
   if ($[0] !== props.a || $[1] !== props.b) {
-    t0 = foo(...props.a, null, ...props.b);
+    t0 = makeArray(...props.a, null, ...props.b);
     $[0] = props.a;
     $[1] = props.b;
     $[2] = t0;
@@ -28,5 +37,12 @@ function Component(props) {
   return x;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ a: [1, 2], b: [2, 3, 4] }],
+};
+
 ```
       
+### Eval output
+(kind: ok) [1,2,null,2,3,4]

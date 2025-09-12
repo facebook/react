@@ -192,3 +192,13 @@ export function closeWithError(destination: Destination, error: mixed): void {
 }
 
 export {createFastHashJS as createFastHash} from 'react-server/src/createFastHashJS';
+
+export function readAsDataURL(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    // $FlowFixMe[incompatible-call]: We always expect a string result with readAsDataURL.
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}

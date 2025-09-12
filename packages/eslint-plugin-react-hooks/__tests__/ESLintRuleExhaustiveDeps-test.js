@@ -12,7 +12,8 @@
 const ESLintTesterV7 = require('eslint-v7').RuleTester;
 const ESLintTesterV9 = require('eslint-v9').RuleTester;
 const ReactHooksESLintPlugin = require('eslint-plugin-react-hooks');
-const ReactHooksESLintRule = ReactHooksESLintPlugin.rules['exhaustive-deps'];
+const ReactHooksESLintRule =
+  ReactHooksESLintPlugin.default.rules['exhaustive-deps'];
 
 /**
  * A string template tag that removes padding from the left side of multi-line strings
@@ -514,6 +515,22 @@ const tests = {
         }
       `,
       options: [{additionalHooks: 'useCustomEffect'}],
+    },
+    {
+      // behaves like no deps
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useSpecialEffect(() => {
+            console.log(props.foo);
+          }, null);
+        }
+      `,
+      options: [
+        {
+          additionalHooks: 'useSpecialEffect',
+          experimental_autoDependenciesHooks: ['useSpecialEffect'],
+        },
+      ],
     },
     {
       code: normalizeIndent`
@@ -1470,6 +1487,38 @@ const tests = {
     },
   ],
   invalid: [
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useSpecialEffect(() => {
+            console.log(props.foo);
+          }, null);
+        }
+      `,
+      options: [{additionalHooks: 'useSpecialEffect'}],
+      errors: [
+        {
+          message:
+            "React Hook useSpecialEffect was passed a dependency list that is not an array literal. This means we can't statically verify whether you've passed the correct dependencies.",
+        },
+        {
+          message:
+            "React Hook useSpecialEffect has a missing dependency: 'props.foo'. Either include it or remove the dependency array.",
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [props.foo]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  useSpecialEffect(() => {
+                    console.log(props.foo);
+                  }, [props.foo]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
     {
       code: normalizeIndent`
         function MyComponent(props) {
@@ -7687,6 +7736,9 @@ if (__EXPERIMENTAL__) {
           useEffect(() => {
             onStuff();
           }, []);
+          React.useEffect(() => {
+            onStuff();
+          }, []);
         }
       `,
     },
@@ -7701,6 +7753,9 @@ if (__EXPERIMENTAL__) {
             showNotification(theme);
           });
           useEffect(() => {
+            onStuff();
+          }, [onStuff]);
+          React.useEffect(() => {
             onStuff();
           }, [onStuff]);
         }
@@ -7719,6 +7774,32 @@ if (__EXPERIMENTAL__) {
                     showNotification(theme);
                   });
                   useEffect(() => {
+                    onStuff();
+                  }, []);
+                  React.useEffect(() => {
+                    onStuff();
+                  }, [onStuff]);
+                }
+              `,
+            },
+          ],
+        },
+        {
+          message:
+            'Functions returned from `useEffectEvent` must not be included in the dependency array. ' +
+            'Remove `onStuff` from the list.',
+          suggestions: [
+            {
+              desc: 'Remove the dependency `onStuff`',
+              output: normalizeIndent`
+                function MyComponent({ theme }) {
+                  const onStuff = useEffectEvent(() => {
+                    showNotification(theme);
+                  });
+                  useEffect(() => {
+                    onStuff();
+                  }, [onStuff]);
+                  React.useEffect(() => {
                     onStuff();
                   }, []);
                 }
@@ -7746,6 +7827,34 @@ const testsFlow = {
     },
   ],
   invalid: [
+    {
+      code: normalizeIndent`
+        hook useExample(a) {
+          useEffect(() => {
+            console.log(a);
+          }, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'a'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [a]',
+              output: normalizeIndent`
+                hook useExample(a) {
+                  useEffect(() => {
+                    console.log(a);
+                  }, [a]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
     {
       code: normalizeIndent`
       function Foo() {
@@ -7792,6 +7901,24 @@ const testsTypescript = {
           }, [])
         }
       `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const [state, setState] = React.useState<number>(0);
+
+          useSpecialEffect(() => {
+            const someNumber: typeof state = 2;
+            setState(prevState => prevState + someNumber);
+          })
+        }
+      `,
+      options: [
+        {
+          additionalHooks: 'useSpecialEffect',
+          experimental_autoDependenciesHooks: ['useSpecialEffect'],
+        },
+      ],
     },
     {
       code: normalizeIndent`
@@ -8148,6 +8275,48 @@ const testsTypescript = {
         function MyComponent() {
           const [state, setState] = React.useState<number>(0);
 
+          useSpecialEffect(() => {
+            const someNumber: typeof state = 2;
+            setState(prevState => prevState + someNumber + state);
+          }, [])
+        }
+      `,
+      options: [
+        {
+          additionalHooks: 'useSpecialEffect',
+          experimental_autoDependenciesHooks: ['useSpecialEffect'],
+        },
+      ],
+      errors: [
+        {
+          message:
+            "React Hook useSpecialEffect has a missing dependency: 'state'. " +
+            'Either include it or remove the dependency array. ' +
+            `You can also do a functional update 'setState(s => ...)' ` +
+            `if you only need 'state' in the 'setState' call.`,
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [state]',
+              output: normalizeIndent`
+              function MyComponent() {
+                const [state, setState] = React.useState<number>(0);
+
+                useSpecialEffect(() => {
+                  const someNumber: typeof state = 2;
+                  setState(prevState => prevState + someNumber + state);
+                }, [state])
+              }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const [state, setState] = React.useState<number>(0);
+
           useMemo(() => {
             const someNumber: typeof state = 2;
             console.log(someNumber);
@@ -8205,6 +8374,23 @@ const testsTypescript = {
         {
           message:
             'React Hook useCallback received a function whose dependencies are unknown. Pass an inline function instead.',
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.foo);
+          });
+        }
+      `,
+      options: [{requireExplicitEffectDeps: true}],
+      errors: [
+        {
+          message:
+            'React Hook useEffect always requires dependencies. Please add a dependency array or an explicit `undefined`',
+          suggestions: undefined,
         },
       ],
     },
@@ -8300,6 +8486,7 @@ describe('rules-of-hooks/exhaustive-deps', () => {
     ecmaVersion: 6,
     sourceType: 'module',
   };
+
   const languageOptionsV9 = {
     ecmaVersion: 6,
     sourceType: 'module',
@@ -8310,7 +8497,9 @@ describe('rules-of-hooks/exhaustive-deps', () => {
     },
   };
 
-  const testsBabelEslint = {
+  const testsBabelEslint = tests;
+
+  const testsHermesParser = {
     valid: [...testsFlow.valid, ...tests.valid],
     invalid: [...testsFlow.invalid, ...tests.invalid],
   };
@@ -8333,6 +8522,33 @@ describe('rules-of-hooks/exhaustive-deps', () => {
     'eslint: v9, parser: @babel/eslint-parser',
     ReactHooksESLintRule,
     testsBabelEslint
+  );
+
+  new ESLintTesterV7({
+    parser: require.resolve('hermes-eslint'),
+    parserOptions: {
+      sourceType: 'module',
+      enableExperimentalComponentSyntax: true,
+    },
+  }).run(
+    'eslint: v7, parser: hermes-eslint',
+    ReactHooksESLintRule,
+    testsHermesParser
+  );
+
+  new ESLintTesterV9({
+    languageOptions: {
+      ...languageOptionsV9,
+      parser: require('hermes-eslint'),
+      parserOptions: {
+        sourceType: 'module',
+        enableExperimentalComponentSyntax: true,
+      },
+    },
+  }).run(
+    'eslint: v9, parser: hermes-eslint',
+    ReactHooksESLintRule,
+    testsHermesParser
   );
 
   const testsTypescriptEslintParser = {
@@ -8442,7 +8658,7 @@ describe('rules-of-hooks/exhaustive-deps', () => {
       parser: require('@typescript-eslint/parser-v5'),
     },
   }).run(
-    'eslint: v9, parser: @typescript-eslint/parser@^5.0.0-0',
+    'eslint: v9, parser: @typescript-eslint/parser@^5.0.0',
     ReactHooksESLintRule,
     {
       valid: [

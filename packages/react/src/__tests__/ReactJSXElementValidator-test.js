@@ -14,6 +14,7 @@
 let act;
 let React;
 let ReactDOMClient;
+let assertConsoleErrorDev;
 
 describe('ReactJSXElementValidator', () => {
   let Component;
@@ -22,7 +23,7 @@ describe('ReactJSXElementValidator', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    act = require('internal-test-utils').act;
+    ({act, assertConsoleErrorDev} = require('internal-test-utils'));
     React = require('react');
     ReactDOMClient = require('react-dom/client');
 
@@ -41,14 +42,17 @@ describe('ReactJSXElementValidator', () => {
   });
 
   it('warns for keys for arrays of elements in children position', async () => {
-    await expect(async () => {
-      const container = document.createElement('div');
-      const root = ReactDOMClient.createRoot(container);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
 
-      await act(() => {
-        root.render(<Component>{[<Component />, <Component />]}</Component>);
-      });
-    }).toErrorDev('Each child in a list should have a unique "key" prop.');
+    await act(() => {
+      root.render(<Component>{[<Component />, <Component />]}</Component>);
+    });
+    assertConsoleErrorDev([
+      'Each child in a list should have a unique "key" prop.\n\n' +
+        'Check the render method of `Component`. See https://react.dev/link/warning-keys for more information.\n' +
+        '    in Component (at **)',
+    ]);
   });
 
   it('warns for keys for arrays of elements with owner info', async () => {
@@ -64,20 +68,16 @@ describe('ReactJSXElementValidator', () => {
       }
     }
 
-    await expect(async () => {
-      const container = document.createElement('div');
-      const root = ReactDOMClient.createRoot(container);
-      await act(() => {
-        root.render(<ComponentWrapper />);
-      });
-    }).toErrorDev([
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<ComponentWrapper />);
+    });
+    assertConsoleErrorDev([
       'Each child in a list should have a unique "key" prop.' +
-        '\n\nCheck the render method of `' +
-        (gate(flag => flag.enableOwnerStacks)
-          ? 'Component'
-          : 'InnerComponent') +
-        '`. ' +
-        'It was passed a child from ComponentWrapper. ',
+        '\n\nCheck the render method of `Component`. ' +
+        'It was passed a child from ComponentWrapper. See https://react.dev/link/warning-keys for more information.\n' +
+        '    in ComponentWrapper (at **)',
     ]);
   });
 
@@ -94,24 +94,18 @@ describe('ReactJSXElementValidator', () => {
       },
     };
 
-    await expect(async () => {
-      const container = document.createElement('div');
-      const root = ReactDOMClient.createRoot(container);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
 
-      await act(() => {
-        root.render(<Component>{iterable}</Component>);
-      });
-    }).toErrorDev(
-      gate(flag => flag.enableOwnerStacks)
-        ? ['Each child in a list should have a unique "key" prop.']
-        : // Since each pass generates a new element, it doesn't get marked as
-          // validated and it gets rechecked each time.
-          [
-            'Each child in a list should have a unique "key" prop.',
-            'Each child in a list should have a unique "key" prop.',
-            'Each child in a list should have a unique "key" prop.',
-          ],
-    );
+    await act(() => {
+      root.render(<Component>{iterable}</Component>);
+    });
+    assertConsoleErrorDev([
+      'Each child in a list should have a unique "key" prop.\n\n' +
+        'Check the render method of `Component`. It was passed a child from div. ' +
+        'See https://react.dev/link/warning-keys for more information.\n' +
+        '    in Component (at **)',
+    ]);
   });
 
   it('does not warn for arrays of elements with keys', async () => {
@@ -198,21 +192,20 @@ describe('ReactJSXElementValidator', () => {
         return <MyComp />;
       }
     }
-    await expect(async () => {
-      const container = document.createElement('div');
-      const root = ReactDOMClient.createRoot(container);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
 
-      await act(() => {
-        root.render(<ParentComp />);
-      });
-    }).toErrorDev(
+    await act(() => {
+      root.render(<ParentComp />);
+    });
+    assertConsoleErrorDev([
       'Each child in a list should have a unique "key" prop.' +
         '\n\nCheck the render method of `ParentComp`. It was passed a child from MyComp. ' +
         'See https://react.dev/link/warning-keys for more information.\n' +
         '    in div (at **)\n' +
         '    in MyComp (at **)\n' +
         '    in ParentComp (at **)',
-    );
+    ]);
   });
 
   it('warns for fragments with illegal attributes', async () => {
@@ -222,16 +215,20 @@ describe('ReactJSXElementValidator', () => {
       }
     }
 
-    await expect(async () => {
-      const container = document.createElement('div');
-      const root = ReactDOMClient.createRoot(container);
-      await act(() => {
-        root.render(<Foo />);
-      });
-    }).toErrorDev(
-      'Invalid prop `a` supplied to `React.Fragment`. React.Fragment ' +
-        'can only have `key` and `children` props.',
-    );
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Foo />);
+    });
+    assertConsoleErrorDev([
+      gate('enableFragmentRefs')
+        ? 'Invalid prop `a` supplied to `React.Fragment`. React.Fragment ' +
+          'can only have `key`, `ref`, and `children` props.\n' +
+          '    in Foo (at **)'
+        : 'Invalid prop `a` supplied to `React.Fragment`. React.Fragment ' +
+          'can only have `key` and `children` props.\n' +
+          '    in Foo (at **)',
+    ]);
   });
 
   it('warns for fragments with refs', async () => {
@@ -248,13 +245,20 @@ describe('ReactJSXElementValidator', () => {
       }
     }
 
-    await expect(async () => {
-      const container = document.createElement('div');
-      const root = ReactDOMClient.createRoot(container);
-      await act(() => {
-        root.render(<Foo />);
-      });
-    }).toErrorDev('Invalid prop `ref` supplied to `React.Fragment`.');
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Foo />);
+    });
+    assertConsoleErrorDev(
+      gate('enableFragmentRefs')
+        ? []
+        : [
+            'Invalid prop `ref` supplied to `React.Fragment`.' +
+              ' React.Fragment can only have `key` and `children` props.\n' +
+              '    in Foo (at **)',
+          ],
+    );
   });
 
   it('does not warn for fragments of multiple elements without keys', async () => {
@@ -271,19 +275,24 @@ describe('ReactJSXElementValidator', () => {
   });
 
   it('warns for fragments of multiple elements with same key', async () => {
-    await expect(async () => {
-      const container = document.createElement('div');
-      const root = ReactDOMClient.createRoot(container);
-      await act(() => {
-        root.render(
-          <>
-            <span key="a">1</span>
-            <span key="a">2</span>
-            <span key="b">3</span>
-          </>,
-        );
-      });
-    }).toErrorDev('Encountered two children with the same key, `a`.');
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <>
+          <span key="a">1</span>
+          <span key="a">2</span>
+          <span key="b">3</span>
+        </>,
+      );
+    });
+    assertConsoleErrorDev([
+      'Encountered two children with the same key, `a`. ' +
+        'Keys should be unique so that components maintain their identity across updates. ' +
+        'Non-unique keys may cause children to be duplicated and/or omitted — ' +
+        'the behavior is unsupported and could change in a future version.\n' +
+        '    in span (at **)',
+    ]);
   });
 
   it('does not call lazy initializers eagerly', () => {

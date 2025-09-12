@@ -14,6 +14,7 @@ module.exports = {
     Symbol: 'readonly',
     WeakMap: 'readonly',
     WeakSet: 'readonly',
+    WeakRef: 'readonly',
 
     Int8Array: 'readonly',
     Uint8Array: 'readonly',
@@ -33,6 +34,9 @@ module.exports = {
     globalThis: 'readonly',
 
     FinalizationRegistry: 'readonly',
+
+    ScrollTimeline: 'readonly',
+    navigation: 'readonly',
 
     // Vendor specific
     MSApp: 'readonly',
@@ -58,10 +62,11 @@ module.exports = {
 
     // Flight Webpack
     __webpack_chunk_load__: 'readonly',
+    __webpack_get_script_filename__: 'readonly',
     __webpack_require__: 'readonly',
 
     // Flight Turbopack
-    __turbopack_load__: 'readonly',
+    __turbopack_load_by_url__: 'readonly',
     __turbopack_require__: 'readonly',
 
     // Flight Parcel
@@ -83,6 +88,17 @@ module.exports = {
   rules: {
     'no-undef': 'error',
     'no-shadow-restricted-names': 'error',
+    'no-restricted-syntax': [
+      'error',
+      // TODO: Can be removed once we upgrade GCC to a version without `optimizeArgumentsArray` optimization.
+      {
+        selector: 'Identifier[name=/^JSCompiler_OptimizeArgumentsArray_/]',
+        message:
+          'Google Closure Compiler optimized `arguments` access. ' +
+          'This affects function arity. ' +
+          'Create a reference to `arguments` to avoid this optimization',
+      },
+    ],
   },
 
   // These plugins aren't used, but eslint complains if an eslint-ignore comment

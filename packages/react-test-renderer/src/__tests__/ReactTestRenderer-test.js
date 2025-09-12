@@ -14,6 +14,7 @@ let React;
 let ReactCache;
 let ReactTestRenderer;
 let act;
+let assertConsoleErrorDev;
 
 describe('ReactTestRenderer', () => {
   beforeEach(() => {
@@ -27,19 +28,27 @@ describe('ReactTestRenderer', () => {
     ReactTestRenderer = require('react-test-renderer');
     const InternalTestUtils = require('internal-test-utils');
     act = InternalTestUtils.act;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
   });
 
   it('should warn if used to render a ReactDOM portal', async () => {
     const container = document.createElement('div');
     let error;
 
-    await expect(async () => {
-      await act(() => {
-        ReactTestRenderer.create(ReactDOM.createPortal('foo', container));
-      }).catch(e => (error = e));
-    }).toErrorDev('An invalid container has been provided.', {
-      withoutStack: true,
-    });
+    await act(() => {
+      ReactTestRenderer.create(ReactDOM.createPortal('foo', container));
+    }).catch(e => (error = e));
+    assertConsoleErrorDev(
+      [
+        'An invalid container has been provided. ' +
+          'This may indicate that another renderer is being used in addition to the test renderer. ' +
+          '(For example, ReactDOM.createPortal inside of a ReactTestRenderer tree.) ' +
+          'This is not supported.',
+      ],
+      {
+        withoutStack: true,
+      },
+    );
 
     // After the update throws, a subsequent render is scheduled to
     // unmount the whole tree. This update also causes an error, so React

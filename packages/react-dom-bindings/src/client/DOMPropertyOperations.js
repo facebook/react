@@ -11,6 +11,7 @@ import isAttributeNameSafe from '../shared/isAttributeNameSafe';
 import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
+import {trackHostMutation} from 'react-reconciler/src/ReactFiberMutationTracking';
 
 /**
  * Get the value for a attribute on a node. Only used in DEV for SSR validation.
@@ -216,6 +217,8 @@ export function setValueForPropertyOnCustomComponent(
       return;
     }
   }
+
+  trackHostMutation();
 
   if (name in (node: any)) {
     (node: any)[name] = value;

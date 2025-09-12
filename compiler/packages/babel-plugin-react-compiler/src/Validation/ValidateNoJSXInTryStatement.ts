@@ -5,8 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, ErrorSeverity} from '..';
+import {CompilerDiagnostic, CompilerError} from '..';
+import {ErrorCategory} from '../CompilerError';
 import {BlockId, HIRFunction} from '../HIR';
+import {Result} from '../Utils/Result';
 import {retainWhere} from '../Utils/utils';
 
 /**
@@ -19,7 +21,9 @@ import {retainWhere} from '../Utils/utils';
  * created within a try block. JSX is allowed within a catch statement, unless that catch
  * is itself nested inside an outer try.
  */
-export function validateNoJSXInTryStatement(fn: HIRFunction): void {
+export function validateNoJSXInTryStatement(
+  fn: HIRFunction,
+): Result<void, CompilerError> {
   const activeTryBlocks: Array<BlockId> = [];
   const errors = new CompilerError();
   for (const [, block] of fn.body.blocks) {
@@ -31,11 +35,17 @@ export function validateNoJSXInTryStatement(fn: HIRFunction): void {
         switch (value.kind) {
           case 'JsxExpression':
           case 'JsxFragment': {
-            errors.push({
-              severity: ErrorSeverity.InvalidReact,
-              reason: `Unexpected JSX element within a try statement. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary)`,
-              loc: value.loc,
-            });
+            errors.pushDiagnostic(
+              CompilerDiagnostic.create({
+                category: ErrorCategory.ErrorBoundaries,
+                reason: 'Avoid constructing JSX within try/catch',
+                description: `React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary)`,
+              }).withDetails({
+                kind: 'error',
+                loc: value.loc,
+                message: 'Avoid constructing JSX within try/catch',
+              }),
+            );
             break;
           }
         }
@@ -46,7 +56,5 @@ export function validateNoJSXInTryStatement(fn: HIRFunction): void {
       activeTryBlocks.push(block.terminal.handler);
     }
   }
-  if (errors.hasErrors()) {
-    throw errors;
-  }
+  return errors.asResult();
 }

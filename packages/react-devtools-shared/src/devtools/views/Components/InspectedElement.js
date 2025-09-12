@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {SourceMappedLocation} from 'react-devtools-shared/src/symbolicateSource';
+
 import * as React from 'react';
 import {useCallback, useContext, useSyncExternalStore} from 'react';
 import {TreeStateContext} from './TreeContext';
@@ -18,21 +20,22 @@ import Toggle from '../Toggle';
 import {ElementTypeSuspense} from 'react-devtools-shared/src/frontend/types';
 import InspectedElementView from './InspectedElementView';
 import {InspectedElementContext} from './InspectedElementContext';
-import {getOpenInEditorURL} from '../../../utils';
-import {LOCAL_STORAGE_OPEN_IN_EDITOR_URL} from '../../../constants';
+import {getAlwaysOpenInEditor} from '../../../utils';
+import {LOCAL_STORAGE_ALWAYS_OPEN_IN_EDITOR} from '../../../constants';
 import FetchFileWithCachingContext from './FetchFileWithCachingContext';
 import {symbolicateSourceWithCache} from 'react-devtools-shared/src/symbolicateSource';
 import OpenInEditorButton from './OpenInEditorButton';
 import InspectedElementViewSourceButton from './InspectedElementViewSourceButton';
-import Skeleton from './Skeleton';
+import useEditorURL from '../useEditorURL';
 
 import styles from './InspectedElement.css';
-
-import type {Source} from 'react-devtools-shared/src/shared/types';
+import Tooltip from './reach-ui/tooltip';
 
 export type Props = {};
 
 // TODO Make edits and deletes also use transition API!
+
+const noSourcePromise = Promise.resolve(null);
 
 export default function InspectedElementWrapper(_: Props): React.Node {
   const {inspectedElementID} = useContext(TreeStateContext);
@@ -50,22 +53,29 @@ export default function InspectedElementWrapper(_: Props): React.Node {
 
   const fetchFileWithCaching = useContext(FetchFileWithCachingContext);
 
-  const symbolicatedSourcePromise: null | Promise<Source | null> =
+  const source =
+    inspectedElement == null
+      ? null
+      : inspectedElement.source != null
+        ? inspectedElement.source
+        : inspectedElement.stack != null && inspectedElement.stack.length > 0
+          ? inspectedElement.stack[0]
+          : null;
+
+  const symbolicatedSourcePromise: Promise<SourceMappedLocation | null> =
     React.useMemo(() => {
-      if (inspectedElement == null) return null;
-      if (fetchFileWithCaching == null) return Promise.resolve(null);
+      if (fetchFileWithCaching == null) return noSourcePromise;
 
-      const {source} = inspectedElement;
-      if (source == null) return Promise.resolve(null);
+      if (source == null) return noSourcePromise;
 
-      const {sourceURL, line, column} = source;
+      const [, sourceURL, line, column] = source;
       return symbolicateSourceWithCache(
         fetchFileWithCaching,
         sourceURL,
         line,
         column,
       );
-    }, [inspectedElement]);
+    }, [source]);
 
   const element =
     inspectedElementID !== null
@@ -106,7 +116,7 @@ export default function InspectedElementWrapper(_: Props): React.Node {
     element !== null &&
     element.type === ElementTypeSuspense &&
     inspectedElement != null &&
-    inspectedElement.state != null;
+    inspectedElement.isSuspended;
 
   const canToggleError =
     !hideToggleErrorAction &&
@@ -118,17 +128,20 @@ export default function InspectedElementWrapper(_: Props): React.Node {
     inspectedElement != null &&
     inspectedElement.canToggleSuspense;
 
-  const editorURL = useSyncExternalStore(
-    function subscribe(callback) {
-      window.addEventListener(LOCAL_STORAGE_OPEN_IN_EDITOR_URL, callback);
+  const alwaysOpenInEditor = useSyncExternalStore(
+    useCallback(function subscribe(callback) {
+      window.addEventListener(LOCAL_STORAGE_ALWAYS_OPEN_IN_EDITOR, callback);
       return function unsubscribe() {
-        window.removeEventListener(LOCAL_STORAGE_OPEN_IN_EDITOR_URL, callback);
+        window.removeEventListener(
+          LOCAL_STORAGE_ALWAYS_OPEN_IN_EDITOR,
+          callback,
+        );
       };
-    },
-    function getState() {
-      return getOpenInEditorURL();
-    },
+    }, []),
+    getAlwaysOpenInEditor,
   );
+
+  const editorURL = useEditorURL();
 
   const toggleErrored = useCallback(() => {
     if (inspectedElement == null) {
@@ -180,19 +193,22 @@ export default function InspectedElementWrapper(_: Props): React.Node {
   let strictModeBadge = null;
   if (element.isStrictModeNonCompliant) {
     strictModeBadge = (
-      <a
-        className={styles.StrictModeNonCompliant}
-        href="https://react.dev/reference/react/StrictMode"
-        rel="noopener noreferrer"
-        target="_blank"
-        title="This component is not running in StrictMode. Click to learn more.">
-        <Icon type="strict-mode-non-compliant" />
-      </a>
+      <Tooltip label="This component is not running in StrictMode. Click to learn more.">
+        <a
+          className={styles.StrictModeNonCompliant}
+          href="https://react.dev/reference/react/StrictMode"
+          rel="noopener noreferrer"
+          target="_blank">
+          <Icon type="strict-mode-non-compliant" />
+        </a>
+      </Tooltip>
     );
   }
 
   return (
-    <div className={styles.InspectedElement}>
+    <div
+      className={styles.InspectedElement}
+      key={inspectedElementID /* Force reset when selected Element changes */}>
       <div className={styles.TitleRow} data-testname="InspectedElement-Title">
         {strictModeBadge}
 
@@ -217,17 +233,15 @@ export default function InspectedElementWrapper(_: Props): React.Node {
           </div>
         </div>
 
-        {!!editorURL &&
-          inspectedElement != null &&
-          inspectedElement.source != null &&
+        {!alwaysOpenInEditor &&
+          !!editorURL &&
+          source != null &&
           symbolicatedSourcePromise != null && (
-            <React.Suspense fallback={<Skeleton height={16} width={24} />}>
-              <OpenInEditorButton
-                editorURL={editorURL}
-                source={inspectedElement.source}
-                symbolicatedSourcePromise={symbolicatedSourcePromise}
-              />
-            </React.Suspense>
+            <OpenInEditorButton
+              editorURL={editorURL}
+              source={source}
+              symbolicatedSourcePromise={symbolicatedSourcePromise}
+            />
           )}
 
         {canToggleError && (
@@ -271,8 +285,7 @@ export default function InspectedElementWrapper(_: Props): React.Node {
 
         {!hideViewSourceAction && (
           <InspectedElementViewSourceButton
-            canViewSource={inspectedElement?.canViewSource}
-            source={inspectedElement?.source}
+            source={source}
             symbolicatedSourcePromise={symbolicatedSourcePromise}
           />
         )}
@@ -282,11 +295,8 @@ export default function InspectedElementWrapper(_: Props): React.Node {
         <div className={styles.Loading}>Loading...</div>
       )}
 
-      {inspectedElement !== null && symbolicatedSourcePromise != null && (
+      {inspectedElement !== null && (
         <InspectedElementView
-          key={
-            inspectedElementID /* Force reset when selected Element changes */
-          }
           element={element}
           hookNames={hookNames}
           inspectedElement={inspectedElement}

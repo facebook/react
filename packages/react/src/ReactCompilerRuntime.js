@@ -7,8 +7,4 @@
  * @flow
  */
 
-import {useMemoCache} from './ReactHooks';
-
-export default {
-  c: useMemoCache,
-};
+export {useMemoCache as c} from './ReactHooks';

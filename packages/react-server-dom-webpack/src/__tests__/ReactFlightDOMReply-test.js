@@ -23,7 +23,7 @@ let React;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 let ReactServerScheduler;
-let reactServerAct;
+let serverAct;
 
 describe('ReactFlightDOMReply', () => {
   beforeEach(() => {
@@ -31,7 +31,7 @@ describe('ReactFlightDOMReply', () => {
 
     ReactServerScheduler = require('scheduler');
     patchMessageChannel(ReactServerScheduler);
-    reactServerAct = require('internal-test-utils').act;
+    serverAct = require('internal-test-utils').serverAct;
 
     // Simulate the condition resolution
     jest.mock('react', () => require('react/react.react-server'));
@@ -47,17 +47,6 @@ describe('ReactFlightDOMReply', () => {
     __unmockReact();
     ReactServerDOMClient = require('react-server-dom-webpack/client');
   });
-
-  async function serverAct(callback) {
-    let maybePromise;
-    await reactServerAct(() => {
-      maybePromise = callback();
-      if (maybePromise && typeof maybePromise.catch === 'function') {
-        maybePromise.catch(() => {});
-      }
-    });
-    return maybePromise;
-  }
 
   // This method should exist on File but is not implemented in JSDOM
   async function arrayBuffer(file) {
@@ -447,6 +436,50 @@ describe('ReactFlightDOMReply', () => {
     // we returned it by reference.
     expect(response.root).toBe(root);
     expect(response.obj).toBe(obj);
+  });
+
+  it('can return an opaque object through an async function', async () => {
+    function fn() {
+      return 'this is a client function';
+    }
+
+    const args = [fn];
+
+    const temporaryReferences =
+      ReactServerDOMClient.createTemporaryReferenceSet();
+    const body = await ReactServerDOMClient.encodeReply(args, {
+      temporaryReferences,
+    });
+
+    const temporaryReferencesServer =
+      ReactServerDOMServer.createTemporaryReferenceSet();
+    const serverPayload = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+      {temporaryReferences: temporaryReferencesServer},
+    );
+
+    async function action(arg) {
+      return arg;
+    }
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        {
+          result: action.apply(null, serverPayload),
+        },
+        null,
+        {temporaryReferences: temporaryReferencesServer},
+      ),
+    );
+    const response = await ReactServerDOMClient.createFromReadableStream(
+      stream,
+      {
+        temporaryReferences,
+      },
+    );
+
+    expect(await response.result).toBe(fn);
   });
 
   it('should supports streaming ReadableStream with objects', async () => {

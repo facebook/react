@@ -10,25 +10,17 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import assign from 'shared/assign';
 import {
-  getIteratorFn,
   REACT_ELEMENT_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
 import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
-import isValidElementType from 'shared/isValidElementType';
 import isArray from 'shared/isArray';
-import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
-import {
-  disableDefaultPropsExceptForClasses,
-  enableOwnerStacks,
-} from 'shared/ReactFeatureFlags';
-
-const REACT_CLIENT_REFERENCE = Symbol.for('react.client.reference');
+import {ownerStackLimit} from 'shared/ReactFeatureFlags';
 
 const createTask =
   // eslint-disable-next-line react-internal/no-production-logging
-  __DEV__ && enableOwnerStacks && console.createTask
+  __DEV__ && console.createTask
     ? // eslint-disable-next-line react-internal/no-production-logging
       console.createTask
     : () => null;
@@ -65,12 +57,32 @@ function getOwner() {
   return null;
 }
 
+/** @noinline */
+function UnknownOwner() {
+  /** @noinline */
+  return (() => Error('react-stack-top-frame'))();
+}
+const createFakeCallStack = {
+  react_stack_bottom_frame: function (callStackForError) {
+    return callStackForError();
+  },
+};
+
 let specialPropKeyWarningShown;
 let didWarnAboutElementRef;
 let didWarnAboutOldJSXRuntime;
+let unknownOwnerDebugStack;
+let unknownOwnerDebugTask;
 
 if (__DEV__) {
   didWarnAboutElementRef = {};
+
+  // We use this technique to trick minifiers to preserve the function name.
+  unknownOwnerDebugStack = createFakeCallStack.react_stack_bottom_frame.bind(
+    createFakeCallStack,
+    UnknownOwner,
+  )();
+  unknownOwnerDebugTask = createTask(getTaskName(UnknownOwner));
 }
 
 function hasValidRef(config) {
@@ -144,30 +156,9 @@ function elementRefGetterWithDeprecationWarning() {
  * will not work. Instead test $$typeof field against Symbol.for('react.transitional.element') to check
  * if something is a React Element.
  *
- * @param {*} type
- * @param {*} props
- * @param {*} key
- * @param {string|object} ref
- * @param {*} owner
- * @param {*} self A *temporary* helper to detect places where `this` is
- * different from the `owner` when React.createElement is called, so that we
- * can warn. We want to get rid of owner and replace string `ref`s with arrow
- * functions, and as long as `this` and owner are the same, there will be no
- * change in behavior.
- * @param {*} source An annotation object (added by a transpiler or otherwise)
- * indicating filename, line number, and/or other information.
  * @internal
  */
-function ReactElement(
-  type,
-  key,
-  self,
-  source,
-  owner,
-  props,
-  debugStack,
-  debugTask,
-) {
+function ReactElement(type, key, props, owner, debugStack, debugTask) {
   // Ignore whatever was passed as the ref argument and treat `props.ref` as
   // the source of truth. The only thing we use this for is `element.ref`,
   // which will log a deprecation warning on access. In the next release, we
@@ -261,20 +252,18 @@ function ReactElement(
       writable: true,
       value: null,
     });
-    if (enableOwnerStacks) {
-      Object.defineProperty(element, '_debugStack', {
-        configurable: false,
-        enumerable: false,
-        writable: true,
-        value: debugStack,
-      });
-      Object.defineProperty(element, '_debugTask', {
-        configurable: false,
-        enumerable: false,
-        writable: true,
-        value: debugTask,
-      });
-    }
+    Object.defineProperty(element, '_debugStack', {
+      configurable: false,
+      enumerable: false,
+      writable: true,
+      value: debugStack,
+    });
+    Object.defineProperty(element, '_debugTask', {
+      configurable: false,
+      enumerable: false,
+      writable: true,
+      value: debugTask,
+    });
     if (Object.freeze) {
       Object.freeze(element.props);
       Object.freeze(element);
@@ -338,28 +327,7 @@ export function jsxProd(type, config, maybeKey) {
     }
   }
 
-  if (!disableDefaultPropsExceptForClasses) {
-    // Resolve default props
-    if (type && type.defaultProps) {
-      const defaultProps = type.defaultProps;
-      for (const propName in defaultProps) {
-        if (props[propName] === undefined) {
-          props[propName] = defaultProps[propName];
-        }
-      }
-    }
-  }
-
-  return ReactElement(
-    type,
-    key,
-    undefined,
-    undefined,
-    getOwner(),
-    props,
-    undefined,
-    undefined,
-  );
+  return ReactElement(type, key, props, getOwner(), undefined, undefined);
 }
 
 // While `jsxDEV` should never be called when running in production, we do
@@ -378,20 +346,25 @@ export function jsxProdSignatureRunningInDevWithDynamicChildren(
   type,
   config,
   maybeKey,
-  source,
-  self,
 ) {
   if (__DEV__) {
     const isStaticChildren = false;
+    const trackActualOwner =
+      __DEV__ &&
+      ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
     return jsxDEVImpl(
       type,
       config,
       maybeKey,
       isStaticChildren,
-      source,
-      self,
-      __DEV__ && enableOwnerStacks ? Error('react-stack-top-frame') : undefined,
-      __DEV__ && enableOwnerStacks ? createTask(getTaskName(type)) : undefined,
+      __DEV__ &&
+        (trackActualOwner
+          ? Error('react-stack-top-frame')
+          : unknownOwnerDebugStack),
+      __DEV__ &&
+        (trackActualOwner
+          ? createTask(getTaskName(type))
+          : unknownOwnerDebugTask),
     );
   }
 }
@@ -400,20 +373,25 @@ export function jsxProdSignatureRunningInDevWithStaticChildren(
   type,
   config,
   maybeKey,
-  source,
-  self,
 ) {
   if (__DEV__) {
     const isStaticChildren = true;
+    const trackActualOwner =
+      __DEV__ &&
+      ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
     return jsxDEVImpl(
       type,
       config,
       maybeKey,
       isStaticChildren,
-      source,
-      self,
-      __DEV__ && enableOwnerStacks ? Error('react-stack-top-frame') : undefined,
-      __DEV__ && enableOwnerStacks ? createTask(getTaskName(type)) : undefined,
+      __DEV__ &&
+        (trackActualOwner
+          ? Error('react-stack-top-frame')
+          : unknownOwnerDebugStack),
+      __DEV__ &&
+        (trackActualOwner
+          ? createTask(getTaskName(type))
+          : unknownOwnerDebugTask),
     );
   }
 }
@@ -426,16 +404,23 @@ const didWarnAboutKeySpread = {};
  * @param {object} props
  * @param {string} key
  */
-export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
+export function jsxDEV(type, config, maybeKey, isStaticChildren) {
+  const trackActualOwner =
+    __DEV__ &&
+    ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
   return jsxDEVImpl(
     type,
     config,
     maybeKey,
     isStaticChildren,
-    source,
-    self,
-    __DEV__ && enableOwnerStacks ? Error('react-stack-top-frame') : undefined,
-    __DEV__ && enableOwnerStacks ? createTask(getTaskName(type)) : undefined,
+    __DEV__ &&
+      (trackActualOwner
+        ? Error('react-stack-top-frame')
+        : unknownOwnerDebugStack),
+    __DEV__ &&
+      (trackActualOwner
+        ? createTask(getTaskName(type))
+        : unknownOwnerDebugTask),
   );
 }
 
@@ -444,86 +429,41 @@ function jsxDEVImpl(
   config,
   maybeKey,
   isStaticChildren,
-  source,
-  self,
   debugStack,
   debugTask,
 ) {
   if (__DEV__) {
-    if (!enableOwnerStacks && !isValidElementType(type)) {
-      // This is an invalid element type.
-      //
-      // We warn here so that we can get better stack traces but with enableOwnerStacks
-      // enabled we don't need this because we get good stacks if we error in the
-      // renderer anyway. The renderer is the only one that knows what types are valid
-      // for this particular renderer so we let it error there instead.
-      //
-      // We warn in this case but don't throw. We expect the element creation to
-      // succeed and there will likely be errors in render.
-      let info = '';
-      if (
-        type === undefined ||
-        (typeof type === 'object' &&
-          type !== null &&
-          Object.keys(type).length === 0)
-      ) {
-        info +=
-          ' You likely forgot to export your component from the file ' +
-          "it's defined in, or you might have mixed up default and named imports.";
-      }
+    // We don't warn for invalid element type here because with owner stacks,
+    // we error in the renderer. The renderer is the only one that knows what
+    // types are valid for this particular renderer so we let it error there.
 
-      let typeString;
-      if (type === null) {
-        typeString = 'null';
-      } else if (isArray(type)) {
-        typeString = 'array';
-      } else if (type !== undefined && type.$$typeof === REACT_ELEMENT_TYPE) {
-        typeString = `<${getComponentNameFromType(type.type) || 'Unknown'} />`;
-        info =
-          ' Did you accidentally export a JSX literal instead of a component?';
-      } else {
-        typeString = typeof type;
-      }
+    // Skip key warning if the type isn't valid since our key validation logic
+    // doesn't expect a non-string/function type and can throw confusing
+    // errors. We don't want exception behavior to differ between dev and
+    // prod. (Rendering will throw with a helpful message and as soon as the
+    // type is fixed, the key warnings will appear.)
+    // With owner stacks, we no longer need the type here so this comment is
+    // no longer true. Which is why we can run this even for invalid types.
+    const children = config.children;
+    if (children !== undefined) {
+      if (isStaticChildren) {
+        if (isArray(children)) {
+          for (let i = 0; i < children.length; i++) {
+            validateChildKeys(children[i]);
+          }
 
-      console.error(
-        'React.jsx: type is invalid -- expected a string (for ' +
-          'built-in components) or a class/function (for composite ' +
-          'components) but got: %s.%s',
-        typeString,
-        info,
-      );
-    } else {
-      // This is a valid element type.
-
-      // Skip key warning if the type isn't valid since our key validation logic
-      // doesn't expect a non-string/function type and can throw confusing
-      // errors. We don't want exception behavior to differ between dev and
-      // prod. (Rendering will throw with a helpful message and as soon as the
-      // type is fixed, the key warnings will appear.)
-      // When enableOwnerStacks is on, we no longer need the type here so this
-      // comment is no longer true. Which is why we can run this even for invalid
-      // types.
-      const children = config.children;
-      if (children !== undefined) {
-        if (isStaticChildren) {
-          if (isArray(children)) {
-            for (let i = 0; i < children.length; i++) {
-              validateChildKeys(children[i], type);
-            }
-
-            if (Object.freeze) {
-              Object.freeze(children);
-            }
-          } else {
-            console.error(
-              'React.jsx: Static children should always be an array. ' +
-                'You are likely explicitly calling React.jsxs or React.jsxDEV. ' +
-                'Use the Babel transform instead.',
-            );
+          if (Object.freeze) {
+            Object.freeze(children);
           }
         } else {
-          validateChildKeys(children, type);
+          console.error(
+            'React.jsx: Static children should always be an array. ' +
+              'You are likely explicitly calling React.jsxs or React.jsxDEV. ' +
+              'Use the Babel transform instead.',
+          );
         }
+      } else {
+        validateChildKeys(children);
       }
     }
 
@@ -601,18 +541,6 @@ function jsxDEVImpl(
       }
     }
 
-    if (!disableDefaultPropsExceptForClasses) {
-      // Resolve default props
-      if (type && type.defaultProps) {
-        const defaultProps = type.defaultProps;
-        for (const propName in defaultProps) {
-          if (props[propName] === undefined) {
-            props[propName] = defaultProps[propName];
-          }
-        }
-      }
-    }
-
     if (key) {
       const displayName =
         typeof type === 'function'
@@ -621,16 +549,7 @@ function jsxDEVImpl(
       defineKeyPropWarningGetter(props, displayName);
     }
 
-    return ReactElement(
-      type,
-      key,
-      self,
-      source,
-      getOwner(),
-      props,
-      debugStack,
-      debugTask,
-    );
+    return ReactElement(type, key, props, getOwner(), debugStack, debugTask);
   }
 }
 
@@ -640,59 +559,17 @@ function jsxDEVImpl(
  */
 export function createElement(type, config, children) {
   if (__DEV__) {
-    if (!enableOwnerStacks && !isValidElementType(type)) {
-      // This is just an optimistic check that provides a better stack trace before
-      // owner stacks. It's really up to the renderer if it's a valid element type.
-      // When owner stacks are enabled, we instead warn in the renderer and it'll
-      // have the stack trace of the JSX element anyway.
-      //
-      // This is an invalid element type.
-      //
-      // We warn in this case but don't throw. We expect the element creation to
-      // succeed and there will likely be errors in render.
-      let info = '';
-      if (
-        type === undefined ||
-        (typeof type === 'object' &&
-          type !== null &&
-          Object.keys(type).length === 0)
-      ) {
-        info +=
-          ' You likely forgot to export your component from the file ' +
-          "it's defined in, or you might have mixed up default and named imports.";
-      }
+    // We don't warn for invalid element type here because with owner stacks,
+    // we error in the renderer. The renderer is the only one that knows what
+    // types are valid for this particular renderer so we let it error there.
 
-      let typeString;
-      if (type === null) {
-        typeString = 'null';
-      } else if (isArray(type)) {
-        typeString = 'array';
-      } else if (type !== undefined && type.$$typeof === REACT_ELEMENT_TYPE) {
-        typeString = `<${getComponentNameFromType(type.type) || 'Unknown'} />`;
-        info =
-          ' Did you accidentally export a JSX literal instead of a component?';
-      } else {
-        typeString = typeof type;
-      }
-
-      console.error(
-        'React.createElement: type is invalid -- expected a string (for ' +
-          'built-in components) or a class/function (for composite ' +
-          'components) but got: %s.%s',
-        typeString,
-        info,
-      );
-    } else {
-      // This is a valid element type.
-
-      // Skip key warning if the type isn't valid since our key validation logic
-      // doesn't expect a non-string/function type and can throw confusing
-      // errors. We don't want exception behavior to differ between dev and
-      // prod. (Rendering will throw with a helpful message and as soon as the
-      // type is fixed, the key warnings will appear.)
-      for (let i = 2; i < arguments.length; i++) {
-        validateChildKeys(arguments[i], type);
-      }
+    // Skip key warning if the type isn't valid since our key validation logic
+    // doesn't expect a non-string/function type and can throw confusing
+    // errors. We don't want exception behavior to differ between dev and
+    // prod. (Rendering will throw with a helpful message and as soon as the
+    // type is fixed, the key warnings will appear.)
+    for (let i = 2; i < arguments.length; i++) {
+      validateChildKeys(arguments[i]);
     }
 
     // Unlike the jsx() runtime, createElement() doesn't warn about key spread.
@@ -787,16 +664,22 @@ export function createElement(type, config, children) {
       defineKeyPropWarningGetter(props, displayName);
     }
   }
-
+  const trackActualOwner =
+    __DEV__ &&
+    ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
   return ReactElement(
     type,
     key,
-    undefined,
-    undefined,
-    getOwner(),
     props,
-    __DEV__ && enableOwnerStacks ? Error('react-stack-top-frame') : undefined,
-    __DEV__ && enableOwnerStacks ? createTask(getTaskName(type)) : undefined,
+    getOwner(),
+    __DEV__ &&
+      (trackActualOwner
+        ? Error('react-stack-top-frame')
+        : unknownOwnerDebugStack),
+    __DEV__ &&
+      (trackActualOwner
+        ? createTask(getTaskName(type))
+        : unknownOwnerDebugTask),
   );
 }
 
@@ -804,16 +687,16 @@ export function cloneAndReplaceKey(oldElement, newKey) {
   const clonedElement = ReactElement(
     oldElement.type,
     newKey,
-    undefined,
-    undefined,
-    !__DEV__ ? undefined : oldElement._owner,
     oldElement.props,
-    __DEV__ && enableOwnerStacks ? oldElement._debugStack : undefined,
-    __DEV__ && enableOwnerStacks ? oldElement._debugTask : undefined,
+    !__DEV__ ? undefined : oldElement._owner,
+    __DEV__ && oldElement._debugStack,
+    __DEV__ && oldElement._debugTask,
   );
   if (__DEV__) {
     // The cloned element should inherit the original element's key validation.
-    clonedElement._store.validated = oldElement._store.validated;
+    if (oldElement._store) {
+      clonedElement._store.validated = oldElement._store.validated;
+    }
   }
   return clonedElement;
 }
@@ -852,14 +735,6 @@ export function cloneElement(element, config, children) {
     }
 
     // Remaining properties override existing props
-    let defaultProps;
-    if (
-      !disableDefaultPropsExceptForClasses &&
-      element.type &&
-      element.type.defaultProps
-    ) {
-      defaultProps = element.type.defaultProps;
-    }
     for (propName in config) {
       if (
         hasOwnProperty.call(config, propName) &&
@@ -878,16 +753,7 @@ export function cloneElement(element, config, children) {
         // backwards compatibility.
         !(propName === 'ref' && config.ref === undefined)
       ) {
-        if (
-          !disableDefaultPropsExceptForClasses &&
-          config[propName] === undefined &&
-          defaultProps !== undefined
-        ) {
-          // Resolve default props
-          props[propName] = defaultProps[propName];
-        } else {
-          props[propName] = config[propName];
-        }
+        props[propName] = config[propName];
       }
     }
   }
@@ -908,16 +774,14 @@ export function cloneElement(element, config, children) {
   const clonedElement = ReactElement(
     element.type,
     key,
-    undefined,
-    undefined,
-    owner,
     props,
-    __DEV__ && enableOwnerStacks ? element._debugStack : undefined,
-    __DEV__ && enableOwnerStacks ? element._debugTask : undefined,
+    owner,
+    __DEV__ && element._debugStack,
+    __DEV__ && element._debugTask,
   );
 
   for (let i = 2; i < arguments.length; i++) {
-    validateChildKeys(arguments[i], clonedElement.type);
+    validateChildKeys(arguments[i]);
   }
 
   return clonedElement;
@@ -932,52 +796,21 @@ export function cloneElement(element, config, children) {
  * @param {ReactNode} node Statically passed child of any type.
  * @param {*} parentType node's parent's type.
  */
-function validateChildKeys(node, parentType) {
+function validateChildKeys(node) {
   if (__DEV__) {
-    if (enableOwnerStacks) {
-      // When owner stacks is enabled no warnings happens. All we do is
-      // mark elements as being in a valid static child position so they
-      // don't need keys.
-      if (isValidElement(node)) {
-        if (node._store) {
-          node._store.validated = 1;
-        }
-      }
-      return;
-    }
-    if (typeof node !== 'object' || !node) {
-      return;
-    }
-    if (node.$$typeof === REACT_CLIENT_REFERENCE) {
-      // This is a reference to a client component so it's unknown.
-    } else if (isArray(node)) {
-      for (let i = 0; i < node.length; i++) {
-        const child = node[i];
-        if (isValidElement(child)) {
-          validateExplicitKey(child, parentType);
-        }
-      }
-    } else if (isValidElement(node)) {
-      // This element was passed in a valid location.
+    // Mark elements as being in a valid static child position so they
+    // don't need keys.
+    if (isValidElement(node)) {
       if (node._store) {
         node._store.validated = 1;
       }
-    } else {
-      const iteratorFn = getIteratorFn(node);
-      if (typeof iteratorFn === 'function') {
-        // Entry iterators used to provide implicit keys,
-        // but now we print a separate warning for them later.
-        if (iteratorFn !== node.entries) {
-          const iterator = iteratorFn.call(node);
-          if (iterator !== node) {
-            let step;
-            while (!(step = iterator.next()).done) {
-              if (isValidElement(step.value)) {
-                validateExplicitKey(step.value, parentType);
-              }
-            }
-          }
+    } else if (isLazyType(node)) {
+      if (node._payload.status === 'fulfilled') {
+        if (isValidElement(node._payload.value) && node._payload.value._store) {
+          node._payload.value._store.validated = 1;
         }
+      } else if (node._store) {
+        node._store.validated = 1;
       }
     }
   }
@@ -998,91 +831,10 @@ export function isValidElement(object) {
   );
 }
 
-const ownerHasKeyUseWarning = {};
-
-/**
- * Warn if the element doesn't have an explicit key assigned to it.
- * This element is in an array. The array could grow and shrink or be
- * reordered. All children that haven't already been validated are required to
- * have a "key" property assigned to it. Error statuses are cached so a warning
- * will only be shown once.
- *
- * @internal
- * @param {ReactElement} element Element that requires a key.
- * @param {*} parentType element's parent's type.
- */
-function validateExplicitKey(element, parentType) {
-  if (enableOwnerStacks) {
-    // Skip. Will verify in renderer instead.
-    return;
-  }
-  if (__DEV__) {
-    if (!element._store || element._store.validated || element.key != null) {
-      return;
-    }
-    element._store.validated = 1;
-
-    const currentComponentErrorInfo = getCurrentComponentErrorInfo(parentType);
-    if (ownerHasKeyUseWarning[currentComponentErrorInfo]) {
-      return;
-    }
-    ownerHasKeyUseWarning[currentComponentErrorInfo] = true;
-
-    // Usually the current owner is the offender, but if it accepts children as a
-    // property, it may be the creator of the child that's responsible for
-    // assigning it a key.
-    let childOwner = '';
-    if (element && element._owner != null && element._owner !== getOwner()) {
-      let ownerName = null;
-      if (typeof element._owner.tag === 'number') {
-        ownerName = getComponentNameFromType(element._owner.type);
-      } else if (typeof element._owner.name === 'string') {
-        ownerName = element._owner.name;
-      }
-      // Give the component that originally created this child.
-      childOwner = ` It was passed a child from ${ownerName}.`;
-    }
-
-    const prevGetCurrentStack = ReactSharedInternals.getCurrentStack;
-    ReactSharedInternals.getCurrentStack = function () {
-      const owner = element._owner;
-      // Add an extra top frame while an element is being validated
-      let stack = describeUnknownElementTypeFrameInDEV(
-        element.type,
-        owner ? owner.type : null,
-      );
-      // Delegate to the injected renderer-specific implementation
-      if (prevGetCurrentStack) {
-        stack += prevGetCurrentStack() || '';
-      }
-      return stack;
-    };
-    console.error(
-      'Each child in a list should have a unique "key" prop.' +
-        '%s%s See https://react.dev/link/warning-keys for more information.',
-      currentComponentErrorInfo,
-      childOwner,
-    );
-    ReactSharedInternals.getCurrentStack = prevGetCurrentStack;
-  }
-}
-
-function getCurrentComponentErrorInfo(parentType) {
-  if (__DEV__) {
-    let info = '';
-    const owner = getOwner();
-    if (owner) {
-      const name = getComponentNameFromType(owner.type);
-      if (name) {
-        info = '\n\nCheck the render method of `' + name + '`.';
-      }
-    }
-    if (!info) {
-      const parentName = getComponentNameFromType(parentType);
-      if (parentName) {
-        info = `\n\nCheck the top-level render call using <${parentName}>.`;
-      }
-    }
-    return info;
-  }
+export function isLazyType(object) {
+  return (
+    typeof object === 'object' &&
+    object !== null &&
+    object.$$typeof === REACT_LAZY_TYPE
+  );
 }

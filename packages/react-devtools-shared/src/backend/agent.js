@@ -130,6 +130,12 @@ type OverrideSuspenseParams = {
   forceFallback: boolean,
 };
 
+type OverrideSuspenseMilestoneParams = {
+  rendererID: number,
+  rootID: number,
+  suspendedSet: Array<number>,
+};
+
 type PersistedSelection = {
   rendererID: number,
   path: Array<PathFrame>,
@@ -148,7 +154,6 @@ export default class Agent extends EventEmitter<{
   getIfHasUnsupportedRendererVersion: [],
   updateHookSettings: [$ReadOnly<DevToolsHookSettings>],
   getHookSettings: [],
-  showNamesWhenTracing: [boolean],
 }> {
   _bridge: BackendBridge;
   _isProfiling: boolean = false;
@@ -159,7 +164,6 @@ export default class Agent extends EventEmitter<{
   _onReloadAndProfile:
     | ((recordChangeDescriptions: boolean, recordTimeline: boolean) => void)
     | void;
-  _showNamesWhenTracing: boolean = true;
 
   constructor(
     bridge: BackendBridge,
@@ -200,11 +204,14 @@ export default class Agent extends EventEmitter<{
     bridge.addListener('logElementToConsole', this.logElementToConsole);
     bridge.addListener('overrideError', this.overrideError);
     bridge.addListener('overrideSuspense', this.overrideSuspense);
+    bridge.addListener(
+      'overrideSuspenseMilestone',
+      this.overrideSuspenseMilestone,
+    );
     bridge.addListener('overrideValueAtPath', this.overrideValueAtPath);
     bridge.addListener('reloadAndProfile', this.reloadAndProfile);
     bridge.addListener('renamePath', this.renamePath);
     bridge.addListener('setTraceUpdatesEnabled', this.setTraceUpdatesEnabled);
-    bridge.addListener('setShowNamesWhenTracing', this.setShowNamesWhenTracing);
     bridge.addListener('startProfiling', this.startProfiling);
     bridge.addListener('stopProfiling', this.stopProfiling);
     bridge.addListener('storeAsGlobal', this.storeAsGlobal);
@@ -559,6 +566,21 @@ export default class Agent extends EventEmitter<{
     }
   };
 
+  overrideSuspenseMilestone: OverrideSuspenseMilestoneParams => void = ({
+    rendererID,
+    rootID,
+    suspendedSet,
+  }) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(
+        `Invalid renderer id "${rendererID}" to override suspense milestone`,
+      );
+    } else {
+      renderer.overrideSuspenseMilestone(rootID, suspendedSet);
+    }
+  };
+
   overrideValueAtPath: OverrideValueAtPathParams => void = ({
     hookID,
     id,
@@ -713,6 +735,16 @@ export default class Agent extends EventEmitter<{
 
     rendererInterface.setTraceUpdatesEnabled(this._traceUpdatesEnabled);
 
+    const renderer = rendererInterface.renderer;
+    if (renderer !== null) {
+      const devRenderer = renderer.bundleType === 1;
+      const enableSuspenseTab =
+        devRenderer && renderer.version.includes('-experimental-');
+      if (enableSuspenseTab) {
+        this._bridge.send('enableSuspenseTab');
+      }
+    }
+
     // When the renderer is attached, we need to tell it whether
     // we remember the previous selection that we'd like to restore.
     // It'll start tracking mounts for matches to the last selection path.
@@ -727,7 +759,6 @@ export default class Agent extends EventEmitter<{
       this._traceUpdatesEnabled = traceUpdatesEnabled;
 
       setTraceUpdatesEnabled(traceUpdatesEnabled);
-      this.emit('showNamesWhenTracing', this._showNamesWhenTracing);
 
       for (const rendererID in this._rendererInterfaces) {
         const renderer = ((this._rendererInterfaces[
@@ -736,14 +767,6 @@ export default class Agent extends EventEmitter<{
         renderer.setTraceUpdatesEnabled(traceUpdatesEnabled);
       }
     };
-
-  setShowNamesWhenTracing: (show: boolean) => void = show => {
-    if (this._showNamesWhenTracing === show) {
-      return;
-    }
-    this._showNamesWhenTracing = show;
-    this.emit('showNamesWhenTracing', show);
-  };
 
   syncSelectionFromBuiltinElementsPanel: () => void = () => {
     const target = window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0;

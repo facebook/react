@@ -255,6 +255,12 @@ function writeReactiveValue(writer: Writer, value: ReactiveValue): void {
   }
 }
 
+export function printReactiveTerminal(terminal: ReactiveTerminal): string {
+  const writer = new Writer();
+  writeTerminal(writer, terminal);
+  return writer.complete();
+}
+
 function writeTerminal(writer: Writer, terminal: ReactiveTerminal): void {
   switch (terminal.kind) {
     case 'break': {
@@ -317,7 +323,13 @@ function writeTerminal(writer: Writer, terminal: ReactiveTerminal): void {
             CompilerError.invariant(block != null, {
               reason: 'Expected case to have a block',
               description: null,
-              loc: case_.test?.loc ?? null,
+              details: [
+                {
+                  kind: 'error',
+                  loc: case_.test?.loc ?? null,
+                  message: null,
+                },
+              ],
               suggestions: null,
             });
             writeReactiveInstructions(writer, block);
@@ -394,7 +406,10 @@ function writeTerminal(writer: Writer, terminal: ReactiveTerminal): void {
       break;
     }
     default:
-      assertExhaustive(terminal, `Unhandled terminal ${terminal}`);
+      assertExhaustive(
+        terminal,
+        `Unhandled terminal kind \`${(terminal as any).kind}\``,
+      );
   }
 }
 

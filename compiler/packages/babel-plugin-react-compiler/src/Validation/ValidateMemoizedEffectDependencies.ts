@@ -5,7 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, ErrorSeverity} from '..';
+import {CompilerError} from '..';
+import {ErrorCategory} from '../CompilerError';
 import {
   Identifier,
   Instruction,
@@ -22,6 +23,7 @@ import {
   ReactiveFunctionVisitor,
   visitReactiveFunction,
 } from '../ReactiveScopes/visitors';
+import {Result} from '../Utils/Result';
 
 /**
  * Validates that all known effect dependencies are memoized. The algorithm checks two things:
@@ -47,12 +49,12 @@ import {
  * mutate(object); // ... mutable range ends here after this mutation
  * ```
  */
-export function validateMemoizedEffectDependencies(fn: ReactiveFunction): void {
+export function validateMemoizedEffectDependencies(
+  fn: ReactiveFunction,
+): Result<void, CompilerError> {
   const errors = new CompilerError();
   visitReactiveFunction(fn, new Visitor(), errors);
-  if (errors.hasErrors()) {
-    throw errors;
-  }
+  return errors.asResult();
 }
 
 class Visitor extends ReactiveFunctionVisitor<CompilerError> {
@@ -107,10 +109,10 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
           isUnmemoized(deps.identifier, this.scopes))
       ) {
         state.push({
+          category: ErrorCategory.EffectDependencies,
           reason:
             'React Compiler has skipped optimizing this component because the effect dependencies could not be memoized. Unmemoized effect dependencies can trigger an infinite loop or other unexpected behavior',
           description: null,
-          severity: ErrorSeverity.CannotPreserveMemoization,
           loc: typeof instruction.loc !== 'symbol' ? instruction.loc : null,
           suggestions: null,
         });

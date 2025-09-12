@@ -19,6 +19,7 @@ import {
   ElementTypeClass,
   ElementTypeFunction,
 } from 'react-devtools-shared/src/frontend/types';
+import {withPermissionsCheck} from 'react-devtools-shared/src/frontend/utils/withPermissionsCheck';
 
 import type {InspectedElement} from 'react-devtools-shared/src/frontend/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
@@ -41,14 +42,18 @@ export default function InspectedElementContextTree({
 
   const isReadOnly = type !== ElementTypeClass && type !== ElementTypeFunction;
 
-  const entries = context != null ? Object.entries(context) : null;
-  if (entries !== null) {
-    entries.sort(alphaSortEntries);
+  if (context == null) {
+    return null;
   }
 
-  const isEmpty = entries === null || entries.length === 0;
+  const entries = Object.entries(context);
+  entries.sort(alphaSortEntries);
+  const isEmpty = entries.length === 0;
 
-  const handleCopy = () => copy(serializeDataForCopy(((context: any): Object)));
+  const handleCopy = withPermissionsCheck(
+    {permissions: ['clipboardWrite']},
+    () => copy(serializeDataForCopy(context)),
+  );
 
   // We add an object with a "value" key as a wrapper around Context data
   // so that we can use the shared <KeyValue> component to display it.

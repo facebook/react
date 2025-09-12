@@ -17,7 +17,7 @@ import type {
   Update as ClassUpdate,
 } from './ReactFiberClassUpdateQueue';
 import type {Lane, Lanes} from './ReactFiberLane';
-import type {OffscreenInstance} from './ReactFiberActivityComponent';
+import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
 
 import {
   warnAboutUpdateOnNotYetMountedFiberInDEV,
@@ -27,7 +27,7 @@ import {
 import {NoLane, NoLanes, mergeLanes, markHiddenUpdate} from './ReactFiberLane';
 import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
 import {HostRoot, OffscreenComponent} from './ReactWorkTags';
-import {OffscreenVisible} from './ReactFiberActivityComponent';
+import {OffscreenVisible} from './ReactFiberOffscreenComponent';
 
 export type ConcurrentUpdate = {
   next: ConcurrentUpdate,
@@ -189,7 +189,7 @@ function markUpdateLaneFromFiberToRoot(
   sourceFiber: Fiber,
   update: ConcurrentUpdate | null,
   lane: Lane,
-): void {
+): null | FiberRoot {
   // Update the source fiber's lanes
   sourceFiber.lanes = mergeLanes(sourceFiber.lanes, lane);
   let alternate = sourceFiber.alternate;
@@ -238,10 +238,14 @@ function markUpdateLaneFromFiberToRoot(
     parent = parent.return;
   }
 
-  if (isHidden && update !== null && node.tag === HostRoot) {
+  if (node.tag === HostRoot) {
     const root: FiberRoot = node.stateNode;
-    markHiddenUpdate(root, update, lane);
+    if (isHidden && update !== null) {
+      markHiddenUpdate(root, update, lane);
+    }
+    return root;
   }
+  return null;
 }
 
 function getRootForUpdatedFiber(sourceFiber: Fiber): FiberRoot | null {

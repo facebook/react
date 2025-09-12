@@ -189,7 +189,7 @@ export function close(destination: Destination) {
   destination.end();
 }
 
-const textEncoder = new TextEncoder();
+export const textEncoder: TextEncoder = new TextEncoder();
 
 export function stringToChunk(content: string): Chunk {
   return content;
@@ -235,4 +235,12 @@ export function createFastHash(input: string): string | number {
   const hash = createHash('md5');
   hash.update(input);
   return hash.digest('hex');
+}
+
+export function readAsDataURL(blob: Blob): Promise<string> {
+  return blob.arrayBuffer().then(arrayBuffer => {
+    const encoded = Buffer.from(arrayBuffer).toString('base64');
+    const mimeType = blob.type || 'application/octet-stream';
+    return 'data:' + mimeType + ';base64,' + encoded;
+  });
 }

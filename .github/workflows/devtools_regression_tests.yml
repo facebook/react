@@ -9,6 +9,8 @@ on:
         required: false
         type: string
 
+permissions: {}
+
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
   # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#cache-segment-restore-timeout
@@ -18,6 +20,9 @@ jobs:
   download_build:
     name: Download base build
     runs-on: ubuntu-latest
+    permissions:
+      # We use github.token to download the build artifact from a previous runtime_build_and_test.yml run
+      actions: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -29,13 +34,15 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: runtime-release-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
+          path: |
+            **/node_modules
+          key: runtime-release-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
-      - run: yarn install --frozen-lockfile
-        working-directory: scripts/release
+        if: steps.node_modules.outputs.cache-hit != 'true'
+      - run: yarn --cwd scripts/release install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - name: Download react-devtools artifacts for base revision
         run: |
           git fetch origin main
@@ -47,6 +54,7 @@ jobs:
         with:
           name: build
           path: build
+          if-no-files-found: error
 
   build_devtools_and_process_artifacts:
     name: Build DevTools and process artifacts
@@ -63,11 +71,13 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          path: |
+            **/node_modules
+          key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
@@ -83,23 +93,27 @@ jobs:
         with:
           name: react-devtools
           path: build/devtools.tgz
+          if-no-files-found: error
       # Simplifies getting the extension for local testing
       - name: Archive chrome extension
         uses: actions/upload-artifact@v4
         with:
           name: react-devtools-chrome-extension
           path: build/devtools/chrome-extension.zip
+          if-no-files-found: error
       - name: Archive firefox extension
         uses: actions/upload-artifact@v4
         with:
           name: react-devtools-firefox-extension
           path: build/devtools/firefox-extension.zip
+          if-no-files-found: error
 
   run_devtools_tests_for_versions:
     name: Run DevTools tests for versions
     needs: build_devtools_and_process_artifacts
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         version:
           - "16.0"
@@ -108,7 +122,6 @@ jobs:
           - "17.0"
           - "18.0"
           - "18.2" # compiler polyfill
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -120,9 +133,11 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          path: |
+            **/node_modules
+          key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - name: Restore all archived build artifacts
         uses: actions/download-artifact@v4
       - name: Display structure of build
@@ -135,6 +150,7 @@ jobs:
     needs: build_devtools_and_process_artifacts
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         version:
           - "16.0"
@@ -142,7 +158,6 @@ jobs:
           - "16.8" # hooks
           - "17.0"
           - "18.0"
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -154,17 +169,28 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          path: |
+            **/node_modules
+          key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - name: Restore all archived build artifacts
         uses: actions/download-artifact@v4
       - name: Display structure of build
         run: ls -R build
-      - name: Playwright install deps
-        run: |
-          npx playwright install
-          sudo npx playwright install-deps
+      - name: Check Playwright version
+        id: playwright_version
+        run: echo "playwright_version=$(npm ls @playwright/test | grep @playwright | sed 's/.*@//' | head -1)" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright Browsers for version ${{ steps.playwright_version.outputs.playwright_version }}
+        id: cache_playwright_browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-browsers-v6-${{ runner.arch }}-${{ runner.os }}-${{ steps.playwright_version.outputs.playwright_version }}
+      - run: npx playwright install --with-deps
+        if: steps.cache_playwright_browsers.outputs.cache-hit != 'true'
+      - run: npx playwright install-deps
+        if: steps.cache_playwright_browsers.outputs.cache-hit == 'true'
       - run: ./scripts/ci/download_devtools_regression_build.js ${{ matrix.version }}
       - run: ls -R build-regression
       - run: ./scripts/ci/run_devtools_e2e_tests.js ${{ matrix.version }}
@@ -176,3 +202,4 @@ jobs:
         with:
           name: screenshots
           path: ./tmp/screenshots
+          if-no-files-found: warn

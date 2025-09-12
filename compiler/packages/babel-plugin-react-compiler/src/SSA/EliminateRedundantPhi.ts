@@ -13,6 +13,8 @@ import {
   eachTerminalOperand,
 } from '../HIR/visitors';
 
+const DEBUG = false;
+
 /*
  * Pass to eliminate redundant phi nodes:
  * - all operands are the same identifier, ie `x2 = phi(x1, x1, x1)`.
@@ -95,7 +97,13 @@ export function eliminateRedundantPhi(
         CompilerError.invariant(same !== null, {
           reason: 'Expected phis to be non-empty',
           description: null,
-          loc: null,
+          details: [
+            {
+              kind: 'error',
+              loc: null,
+              message: null,
+            },
+          ],
           suggestions: null,
         });
         rewrites.set(phi.place.identifier, same);
@@ -141,6 +149,37 @@ export function eliminateRedundantPhi(
      * have already propagated forwards since we visit in reverse postorder.
      */
   } while (rewrites.size > size && hasBackEdge);
+
+  if (DEBUG) {
+    for (const [, block] of ir.blocks) {
+      for (const phi of block.phis) {
+        CompilerError.invariant(!rewrites.has(phi.place.identifier), {
+          reason: '[EliminateRedundantPhis]: rewrite not complete',
+          description: null,
+          details: [
+            {
+              kind: 'error',
+              loc: phi.place.loc,
+              message: null,
+            },
+          ],
+        });
+        for (const [, operand] of phi.operands) {
+          CompilerError.invariant(!rewrites.has(operand.identifier), {
+            reason: '[EliminateRedundantPhis]: rewrite not complete',
+            description: null,
+            details: [
+              {
+                kind: 'error',
+                loc: phi.place.loc,
+                message: null,
+              },
+            ],
+          });
+        }
+      }
+    }
+  }
 }
 
 function rewritePlace(

@@ -36,7 +36,6 @@ import {
   log,
   unstable_setDisableYieldValue,
 } from './Scheduler';
-import {setSuppressWarning} from 'shared/consoleWithStackDev';
 
 declare const __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
 
@@ -79,7 +78,7 @@ export function injectInternals(internals: Object): boolean {
   } catch (err) {
     // Catch all errors because it is unsafe to throw during initialization.
     if (__DEV__) {
-      console.error('React instrumentation encountered an error: %s.', err);
+      console.error('React instrumentation encountered an error: %o.', err);
     }
   }
   if (hook.checkDCE) {
@@ -102,7 +101,7 @@ export function onScheduleRoot(root: FiberRoot, children: ReactNodeList) {
       } catch (err) {
         if (__DEV__ && !hasLoggedError) {
           hasLoggedError = true;
-          console.error('React instrumentation encountered an error: %s', err);
+          console.error('React instrumentation encountered an error: %o', err);
         }
       }
     }
@@ -145,7 +144,7 @@ export function onCommitRoot(root: FiberRoot, eventPriority: EventPriority) {
       if (__DEV__) {
         if (!hasLoggedError) {
           hasLoggedError = true;
-          console.error('React instrumentation encountered an error: %s', err);
+          console.error('React instrumentation encountered an error: %o', err);
         }
       }
     }
@@ -163,7 +162,7 @@ export function onPostCommitRoot(root: FiberRoot) {
       if (__DEV__) {
         if (!hasLoggedError) {
           hasLoggedError = true;
-          console.error('React instrumentation encountered an error: %s', err);
+          console.error('React instrumentation encountered an error: %o', err);
         }
       }
     }
@@ -178,7 +177,7 @@ export function onCommitUnmount(fiber: Fiber) {
       if (__DEV__) {
         if (!hasLoggedError) {
           hasLoggedError = true;
-          console.error('React instrumentation encountered an error: %s', err);
+          console.error('React instrumentation encountered an error: %o', err);
         }
       }
     }
@@ -191,7 +190,6 @@ export function setIsStrictModeForDevtools(newIsStrictMode: boolean) {
     // in SchedulerMock. To reduce the noise in strict mode tests,
     // suppress warnings and disable scheduler yielding during the double render
     unstable_setDisableYieldValue(newIsStrictMode);
-    setSuppressWarning(newIsStrictMode);
   }
 
   if (injectedHook && typeof injectedHook.setStrictMode === 'function') {
@@ -201,7 +199,7 @@ export function setIsStrictModeForDevtools(newIsStrictMode: boolean) {
       if (__DEV__) {
         if (!hasLoggedError) {
           hasLoggedError = true;
-          console.error('React instrumentation encountered an error: %s', err);
+          console.error('React instrumentation encountered an error: %o', err);
         }
       }
     }

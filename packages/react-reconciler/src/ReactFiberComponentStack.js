@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {enableOwnerStacks} from 'shared/ReactFeatureFlags';
+import {enableViewTransition} from 'shared/ReactFeatureFlags';
 import type {Fiber} from './ReactInternalTypes';
 import type {ReactComponentInfo} from 'shared/ReactTypes';
 
@@ -23,6 +23,8 @@ import {
   SimpleMemoComponent,
   ClassComponent,
   HostText,
+  ViewTransitionComponent,
+  ActivityComponent,
 } from './ReactWorkTags';
 import {
   describeBuiltInComponentFrame,
@@ -32,7 +34,7 @@ import {
 } from 'shared/ReactComponentStackFrame';
 import {formatOwnerStack} from 'shared/ReactOwnerStackFrames';
 
-function describeFiber(fiber: Fiber): string {
+function describeFiber(fiber: Fiber, childFiber: null | Fiber): string {
   switch (fiber.tag) {
     case HostHoistable:
     case HostSingleton:
@@ -42,6 +44,10 @@ function describeFiber(fiber: Fiber): string {
       // TODO: When we support Thenables as component types we should rename this.
       return describeBuiltInComponentFrame('Lazy');
     case SuspenseComponent:
+      if (fiber.child !== childFiber && childFiber !== null) {
+        // If we came from the second Fiber then we're in the Suspense Fallback.
+        return describeBuiltInComponentFrame('Suspense Fallback');
+      }
       return describeBuiltInComponentFrame('Suspense');
     case SuspenseListComponent:
       return describeBuiltInComponentFrame('SuspenseList');
@@ -52,6 +58,13 @@ function describeFiber(fiber: Fiber): string {
       return describeFunctionComponentFrame(fiber.type.render);
     case ClassComponent:
       return describeClassComponentFrame(fiber.type);
+    case ActivityComponent:
+      return describeBuiltInComponentFrame('Activity');
+    case ViewTransitionComponent:
+      if (enableViewTransition) {
+        return describeBuiltInComponentFrame('ViewTransition');
+      }
+    // Fallthrough
     default:
       return '';
   }
@@ -61,8 +74,9 @@ export function getStackByFiberInDevAndProd(workInProgress: Fiber): string {
   try {
     let info = '';
     let node: Fiber = workInProgress;
+    let previous: null | Fiber = null;
     do {
-      info += describeFiber(node);
+      info += describeFiber(node, previous);
       if (__DEV__) {
         // Add any Server Component stack frames in reverse order.
         const debugInfo = node._debugInfo;
@@ -70,11 +84,16 @@ export function getStackByFiberInDevAndProd(workInProgress: Fiber): string {
           for (let i = debugInfo.length - 1; i >= 0; i--) {
             const entry = debugInfo[i];
             if (typeof entry.name === 'string') {
-              info += describeDebugInfoFrame(entry.name, entry.env);
+              info += describeDebugInfoFrame(
+                entry.name,
+                entry.env,
+                entry.debugLocation,
+              );
             }
           }
         }
       }
+      previous = node;
       // $FlowFixMe[incompatible-type] we bail out when we get a null
       node = node.return;
     } while (node);
@@ -92,7 +111,7 @@ function describeFunctionComponentFrameWithoutLineNumber(fn: Function): string {
 }
 
 export function getOwnerStackByFiberInDev(workInProgress: Fiber): string {
-  if (!enableOwnerStacks || !__DEV__) {
+  if (!__DEV__) {
     return '';
   }
   try {
@@ -123,6 +142,15 @@ export function getOwnerStackByFiberInDev(workInProgress: Fiber): string {
       case SuspenseListComponent:
         info += describeBuiltInComponentFrame('SuspenseList');
         break;
+      case ActivityComponent:
+        info += describeBuiltInComponentFrame('Activity');
+        break;
+      case ViewTransitionComponent:
+        if (enableViewTransition) {
+          info += describeBuiltInComponentFrame('ViewTransition');
+          break;
+        }
+      // Fallthrough
       case FunctionComponent:
       case SimpleMemoComponent:
       case ClassComponent:
@@ -149,7 +177,7 @@ export function getOwnerStackByFiberInDev(workInProgress: Fiber): string {
       if (typeof owner.tag === 'number') {
         const fiber: Fiber = (owner: any);
         owner = fiber._debugOwner;
-        let debugStack = fiber._debugStack;
+        const debugStack = fiber._debugStack;
         // If we don't actually print the stack if there is no owner of this JSX element.
         // In a real app it's typically not useful since the root app is always controlled
         // by the framework. These also tend to have noisy stacks because they're not rooted
@@ -157,12 +185,9 @@ export function getOwnerStackByFiberInDev(workInProgress: Fiber): string {
         // if the element was created in module scope. E.g. hoisted. We could add a a single
         // stack frame for context for example but it doesn't say much if that's a wrapper.
         if (owner && debugStack) {
-          if (typeof debugStack !== 'string') {
-            // Stash the formatted stack so that we can avoid redoing the filtering.
-            fiber._debugStack = debugStack = formatOwnerStack(debugStack);
-          }
-          if (debugStack !== '') {
-            info += '\n' + debugStack;
+          const formattedStack = formatOwnerStack(debugStack);
+          if (formattedStack !== '') {
+            info += '\n' + formattedStack;
           }
         }
       } else if (owner.debugStack != null) {

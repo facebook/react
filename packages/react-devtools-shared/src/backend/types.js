@@ -32,8 +32,9 @@ import type {
 import type {InitBackend} from 'react-devtools-shared/src/backend';
 import type {TimelineDataExport} from 'react-devtools-timeline/src/types';
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
-import type {Source} from 'react-devtools-shared/src/shared/types';
+import type {ReactFunctionLocation, ReactStackTrace} from 'shared/ReactTypes';
 import type Agent from './agent';
+import type {UnknownSuspendersReason} from '../constants';
 
 type BundleType =
   | 0 // PROD
@@ -76,6 +77,8 @@ export type WorkTagMap = {
   TracingMarkerComponent: WorkTag,
   YieldComponent: WorkTag,
   Throw: WorkTag,
+  ViewTransitionComponent: WorkTag,
+  ActivityComponent: WorkTag,
 };
 
 export type HostInstance = Object;
@@ -230,10 +233,33 @@ export type PathMatch = {
   isFullMatch: boolean,
 };
 
+// Serialized version of ReactIOInfo
+export type SerializedIOInfo = {
+  name: string,
+  description: string,
+  start: number,
+  end: number,
+  byteSize: null | number,
+  value: null | Promise<mixed>,
+  env: null | string,
+  owner: null | SerializedElement,
+  stack: null | ReactStackTrace,
+};
+
+// Serialized version of ReactAsyncInfo
+export type SerializedAsyncInfo = {
+  awaited: SerializedIOInfo,
+  env: null | string,
+  owner: null | SerializedElement,
+  stack: null | ReactStackTrace,
+};
+
 export type SerializedElement = {
   displayName: string | null,
   id: number,
   key: number | string | null,
+  env: null | string,
+  stack: null | ReactStackTrace,
   type: ElementType,
 };
 
@@ -261,25 +287,36 @@ export type InspectedElement = {
 
   // Is this Suspense, and can its value be overridden now?
   canToggleSuspense: boolean,
-
-  // Can view component source location.
-  canViewSource: boolean,
+  // If this Element is suspended. Currently only set on Suspense boundaries.
+  isSuspended: boolean | null,
 
   // Does the component have legacy context attached to it.
   hasLegacyContext: boolean,
 
   // Inspectable properties.
-  context: Object | null,
-  hooks: Object | null,
-  props: Object | null,
-  state: Object | null,
+  context: Object | null, // DehydratedData or {[string]: mixed}
+  hooks: Object | null, // DehydratedData or {[string]: mixed}
+  props: Object | null, // DehydratedData or {[string]: mixed}
+  state: Object | null, // DehydratedData or {[string]: mixed}
   key: number | string | null,
   errors: Array<[string, number]>,
   warnings: Array<[string, number]>,
 
+  // Things that suspended this Instances
+  suspendedBy: Object, // DehydratedData or Array<SerializedAsyncInfo>
+  suspendedByRange: null | [number, number],
+  unknownSuspenders: UnknownSuspendersReason,
+
   // List of owners
   owners: Array<SerializedElement> | null,
-  source: Source | null,
+
+  // Environment name that this component executed in or null for the client
+  env: string | null,
+
+  source: ReactFunctionLocation | null,
+
+  // The location of the JSX creation.
+  stack: ReactStackTrace | null,
 
   type: ElementType,
 
@@ -292,6 +329,9 @@ export type InspectedElement = {
 
   // UI plugins/visualizations for the inspected element.
   plugins: Plugins,
+
+  // React Native only.
+  nativeTag: number | null,
 };
 
 export const InspectElementErrorType = 'error';
@@ -397,6 +437,10 @@ export type RendererInterface = {
   onErrorOrWarning?: OnErrorOrWarning,
   overrideError: (id: number, forceError: boolean) => void,
   overrideSuspense: (id: number, forceFallback: boolean) => void,
+  overrideSuspenseMilestone: (
+    rootID: number,
+    suspendedSet: Array<number>,
+  ) => void,
   overrideValueAtPath: (
     type: Type,
     id: number,
@@ -429,6 +473,7 @@ export type RendererInterface = {
     path: Array<string | number>,
     count: number,
   ) => void,
+  supportsTogglingSuspense: boolean,
   updateComponentFilters: (componentFilters: Array<ComponentFilter>) => void,
   getEnvironmentNames: () => Array<string>,
 

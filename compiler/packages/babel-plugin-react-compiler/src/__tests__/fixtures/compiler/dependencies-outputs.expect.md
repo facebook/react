@@ -46,6 +46,7 @@ function foo(a, b) {
     if (x.length) {
       y.push(x);
     }
+
     if (b) {
       y.push(b);
     }

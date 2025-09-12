@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @compilationMode(infer)
+// @compilationMode:"infer"
 import {useNoAlias} from 'shared-runtime';
 
 // This should be compiled by Forget
@@ -22,7 +22,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @compilationMode(infer)
+import { c as _c } from "react/compiler-runtime"; // @compilationMode:"infer"
 import { useNoAlias } from "shared-runtime";
 
 // This should be compiled by Forget

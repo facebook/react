@@ -11,6 +11,7 @@ export {
   renderToReadableStream,
   prerender as unstable_prerender,
   decodeReply,
+  decodeReplyFromAsyncIterable,
   decodeAction,
   decodeFormState,
   createClientReference,

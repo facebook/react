@@ -10,6 +10,8 @@
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import type {HostDispatcher} from './shared/ReactDOMTypes';
 
+import noop from 'shared/noop';
+
 // This should line up with NoEventPriority from react-reconciler/src/ReactEventPriorities
 // but we can't depend on the react-reconciler from this isomorphic code.
 export const NoEventPriority: EventPriority = (0: any);
@@ -19,12 +21,8 @@ type ReactDOMInternals = {
   p /* currentUpdatePriority */: EventPriority,
   findDOMNode:
     | null
-    | ((
-        componentOrElement: React$Component<any, any>,
-      ) => null | Element | Text),
+    | ((componentOrElement: component(...props: any)) => null | Element | Text),
 };
-
-function noop() {}
 
 function requestFormReset(element: HTMLFormElement) {
   throw new Error(

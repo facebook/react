@@ -32,7 +32,7 @@ export function resolveTemporaryReference<T>(
   return temporaryReferences.get(temporaryReference);
 }
 
-const proxyHandlers = {
+const proxyHandlers: Proxy$traps<mixed> = {
   get: function (
     target: Function,
     name: string | symbol,
@@ -52,6 +52,9 @@ const proxyHandlers = {
       // reference.
       case 'defaultProps':
         return undefined;
+      // React looks for debugInfo on thenables.
+      case '_debugInfo':
+        return undefined;
       // Avoid this attempting to be serialized.
       case 'toJSON':
         return undefined;
@@ -67,6 +70,13 @@ const proxyHandlers = {
             `Instead, you can export a Client Component wrapper ` +
             `that itself renders a Client Context Provider.`,
         );
+      case 'then':
+        // Allow returning a temporary reference from an async function
+        // Unlike regular Client References, a Promise would never have been serialized as
+        // an opaque Temporary Reference, but instead would have been serialized as a
+        // Promise on the server and so doesn't hit this path. So we can assume this wasn't
+        // a Promise on the client.
+        return undefined;
     }
     throw new Error(
       // eslint-disable-next-line react-internal/safe-string-coercion

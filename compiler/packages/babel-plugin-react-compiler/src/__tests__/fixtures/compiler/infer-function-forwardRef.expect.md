@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @compilationMode(infer)
+// @compilationMode:"infer"
 React.forwardRef(props => {
   return <div />;
 });
@@ -12,7 +12,7 @@ React.forwardRef(props => {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @compilationMode(infer)
+import { c as _c } from "react/compiler-runtime"; // @compilationMode:"infer"
 React.forwardRef((props) => {
   const $ = _c(1);
   let t0;

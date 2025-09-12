@@ -26,8 +26,9 @@ import {use, useId, useCallback, useDebugValue, useMemo} from './ReactHooks';
 import {forwardRef} from './ReactForwardRef';
 import {lazy} from './ReactLazy';
 import {memo} from './ReactMemo';
-import {cache} from './ReactCacheServer';
+import {cache, cacheSignal} from './ReactCacheServer';
 import version from 'shared/ReactVersion';
+import {captureOwnerStack} from './ReactOwnerStack';
 
 const Children = {
   map,
@@ -52,9 +53,11 @@ export {
   lazy,
   memo,
   cache,
+  cacheSignal,
   useId,
   useCallback,
   useDebugValue,
   useMemo,
   version,
+  captureOwnerStack, // DEV-only
 };

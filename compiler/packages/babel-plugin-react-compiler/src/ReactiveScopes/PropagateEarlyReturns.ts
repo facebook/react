@@ -17,6 +17,7 @@ import {
   ReactiveStatement,
   ReactiveTerminalStatement,
   makeInstructionId,
+  makePropertyLiteral,
   promoteTemporary,
 } from '../HIR';
 import {createTemporaryPlace} from '../HIR/HIRBuilder';
@@ -189,7 +190,7 @@ class Transform extends ReactiveFunctionTransform<State> {
               value: {
                 kind: 'PropertyLoad',
                 object: {...symbolTemp},
-                property: 'for',
+                property: makePropertyLiteral('for'),
                 loc,
               },
             },

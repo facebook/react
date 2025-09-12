@@ -6,96 +6,37 @@
  */
 
 import {CompilerError} from '../CompilerError';
-import {
-  Effect,
-  HIRFunction,
-  Identifier,
-  IdentifierName,
-  LoweredFunction,
-  Place,
-  isRefOrRefValue,
-  makeInstructionId,
-} from '../HIR';
+import {Effect, HIRFunction, IdentifierId, makeInstructionId} from '../HIR';
 import {deadCodeElimination} from '../Optimization';
 import {inferReactiveScopeVariables} from '../ReactiveScopes';
 import {rewriteInstructionKindsBasedOnReassignment} from '../SSA';
-import {logHIRFunction} from '../Utils/logger';
-import {inferMutableContextVariables} from './InferMutableContextVariables';
-import {inferMutableRanges} from './InferMutableRanges';
-import inferReferenceEffects from './InferReferenceEffects';
-
-type Dependency = {
-  identifier: Identifier;
-  path: Array<string>;
-};
-
-// Helper class to track indirections such as LoadLocal and PropertyLoad.
-export class IdentifierState {
-  properties: Map<Identifier, Dependency> = new Map();
-
-  resolve(identifier: Identifier): Identifier {
-    const resolved = this.properties.get(identifier);
-    if (resolved !== undefined) {
-      return resolved.identifier;
-    }
-    return identifier;
-  }
-
-  declareProperty(lvalue: Place, object: Place, property: string): void {
-    const objectDependency = this.properties.get(object.identifier);
-    let nextDependency: Dependency;
-    if (objectDependency === undefined) {
-      nextDependency = {identifier: object.identifier, path: [property]};
-    } else {
-      nextDependency = {
-        identifier: objectDependency.identifier,
-        path: [...objectDependency.path, property],
-      };
-    }
-    this.properties.set(lvalue.identifier, nextDependency);
-  }
-
-  declareTemporary(lvalue: Place, value: Place): void {
-    const resolved: Dependency = this.properties.get(value.identifier) ?? {
-      identifier: value.identifier,
-      path: [],
-    };
-    this.properties.set(lvalue.identifier, resolved);
-  }
-}
+import {assertExhaustive} from '../Utils/utils';
+import {inferMutationAliasingEffects} from './InferMutationAliasingEffects';
+import {inferMutationAliasingRanges} from './InferMutationAliasingRanges';
 
 export default function analyseFunctions(func: HIRFunction): void {
-  const state = new IdentifierState();
-
   for (const [_, block] of func.body.blocks) {
     for (const instr of block.instructions) {
       switch (instr.value.kind) {
         case 'ObjectMethod':
         case 'FunctionExpression': {
-          lower(instr.value.loweredFunc.func);
-          infer(instr.value.loweredFunc, state, func.context);
-          break;
-        }
-        case 'PropertyLoad': {
-          state.declareProperty(
-            instr.lvalue,
-            instr.value.object,
-            instr.value.property,
-          );
-          break;
-        }
-        case 'ComputedLoad': {
-          /*
-           * The path is set to an empty string as the path doesn't really
-           * matter for a computed load.
+          lowerWithMutationAliasing(instr.value.loweredFunc.func);
+
+          /**
+           * Reset mutable range for outer inferReferenceEffects
            */
-          state.declareProperty(instr.lvalue, instr.value.object, '');
-          break;
-        }
-        case 'LoadLocal':
-        case 'LoadContext': {
-          if (instr.lvalue.identifier.name === null) {
-            state.declareTemporary(instr.lvalue, instr.value.place);
+          for (const operand of instr.value.loweredFunc.func.context) {
+            /**
+             * NOTE: inferReactiveScopeVariables makes identifiers in the scope
+             * point to the *same* mutableRange instance. Resetting start/end
+             * here is insufficient, because a later mutation of the range
+             * for any one identifier could affect the range for other identifiers.
+             */
+            operand.identifier.mutableRange = {
+              start: makeInstructionId(0),
+              end: makeInstructionId(0),
+            };
+            operand.identifier.scope = null;
           }
           break;
         }
@@ -104,97 +45,90 @@ export default function analyseFunctions(func: HIRFunction): void {
   }
 }
 
-function lower(func: HIRFunction): void {
-  analyseFunctions(func);
-  inferReferenceEffects(func, {isFunctionExpression: true});
-  deadCodeElimination(func);
-  inferMutableRanges(func);
-  rewriteInstructionKindsBasedOnReassignment(func);
-  inferReactiveScopeVariables(func);
-  inferMutableContextVariables(func);
-  logHIRFunction('AnalyseFunction (inner)', func);
-}
+function lowerWithMutationAliasing(fn: HIRFunction): void {
+  /**
+   * Phase 1: similar to lower(), but using the new mutation/aliasing inference
+   */
+  analyseFunctions(fn);
+  inferMutationAliasingEffects(fn, {isFunctionExpression: true});
+  deadCodeElimination(fn);
+  const functionEffects = inferMutationAliasingRanges(fn, {
+    isFunctionExpression: true,
+  }).unwrap();
+  rewriteInstructionKindsBasedOnReassignment(fn);
+  inferReactiveScopeVariables(fn);
+  fn.aliasingEffects = functionEffects;
 
-function infer(
-  loweredFunc: LoweredFunction,
-  state: IdentifierState,
-  context: Array<Place>,
-): void {
-  const mutations = new Map<string, Effect>();
-  for (const operand of loweredFunc.func.context) {
-    if (
-      isMutatedOrReassigned(operand.identifier) &&
-      operand.identifier.name !== null
-    ) {
-      mutations.set(operand.identifier.name.value, operand.effect);
-    }
-  }
-
-  for (const dep of loweredFunc.dependencies) {
-    let name: IdentifierName | null = null;
-
-    if (state.properties.has(dep.identifier)) {
-      const receiver = state.properties.get(dep.identifier)!;
-      name = receiver.identifier.name;
-    } else {
-      name = dep.identifier.name;
-    }
-
-    if (isRefOrRefValue(dep.identifier)) {
-      /*
-       * TODO: this is a hack to ensure we treat functions which reference refs
-       * as having a capture and therefore being considered mutable. this ensures
-       * the function gets a mutable range which accounts for anywhere that it
-       * could be called, and allows us to help ensure it isn't called during
-       * render
-       */
-      dep.effect = Effect.Capture;
-    } else if (name !== null) {
-      const effect = mutations.get(name.value);
-      if (effect !== undefined) {
-        dep.effect = effect === Effect.Unknown ? Effect.Capture : effect;
+  /**
+   * Phase 2: populate the Effect of each context variable to use in inferring
+   * the outer function. For example, InferMutationAliasingEffects uses context variable
+   * effects to decide if the function may be mutable or not.
+   */
+  const capturedOrMutated = new Set<IdentifierId>();
+  for (const effect of functionEffects) {
+    switch (effect.kind) {
+      case 'Assign':
+      case 'Alias':
+      case 'Capture':
+      case 'CreateFrom':
+      case 'MaybeAlias': {
+        capturedOrMutated.add(effect.from.identifier.id);
+        break;
+      }
+      case 'Apply': {
+        CompilerError.invariant(false, {
+          reason: `[AnalyzeFunctions] Expected Apply effects to be replaced with more precise effects`,
+          description: null,
+          details: [
+            {
+              kind: 'error',
+              loc: effect.function.loc,
+              message: null,
+            },
+          ],
+        });
+      }
+      case 'Mutate':
+      case 'MutateConditionally':
+      case 'MutateTransitive':
+      case 'MutateTransitiveConditionally': {
+        capturedOrMutated.add(effect.value.identifier.id);
+        break;
+      }
+      case 'Impure':
+      case 'Render':
+      case 'MutateFrozen':
+      case 'MutateGlobal':
+      case 'CreateFunction':
+      case 'Create':
+      case 'Freeze':
+      case 'ImmutableCapture': {
+        // no-op
+        break;
+      }
+      default: {
+        assertExhaustive(
+          effect,
+          `Unexpected effect kind ${(effect as any).kind}`,
+        );
       }
     }
   }
 
-  /*
-   * This could potentially add duplicate deps to mutatedDeps in the case of
-   * mutating a context ref in the child function and in this parent function.
-   * It might be useful to dedupe this.
-   *
-   * In practice this never really matters because the Component function has no
-   * context refs, so it will never have duplicate deps.
-   */
-  for (const place of context) {
-    CompilerError.invariant(place.identifier.name !== null, {
-      reason: 'context refs should always have a name',
-      description: null,
-      loc: place.loc,
-      suggestions: null,
-    });
-
-    const effect = mutations.get(place.identifier.name.value);
-    if (effect !== undefined) {
-      place.effect = effect === Effect.Unknown ? Effect.Capture : effect;
-      loweredFunc.dependencies.push(place);
+  for (const operand of fn.context) {
+    if (
+      capturedOrMutated.has(operand.identifier.id) ||
+      operand.effect === Effect.Capture
+    ) {
+      operand.effect = Effect.Capture;
+    } else {
+      operand.effect = Effect.Read;
     }
   }
 
-  for (const operand of loweredFunc.func.context) {
-    operand.identifier.mutableRange.start = makeInstructionId(0);
-    operand.identifier.mutableRange.end = makeInstructionId(0);
-    operand.identifier.scope = null;
-  }
-}
-
-function isMutatedOrReassigned(id: Identifier): boolean {
-  /*
-   * This check checks for mutation and reassingnment, so the usual check for
-   * mutation (ie, `mutableRange.end - mutableRange.start > 1`) isn't quite
-   * enough.
-   *
-   * We need to track re-assignments in context refs as we need to reflect the
-   * re-assignment back to the captured refs.
-   */
-  return id.mutableRange.end > id.mutableRange.start;
+  fn.env.logger?.debugLogIRs?.({
+    kind: 'hir',
+    name: 'AnalyseFunction (inner)',
+    value: fn,
+  });
 }

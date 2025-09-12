@@ -195,25 +195,17 @@ const forks = Object.freeze({
     entry,
     dependencies
   ) => {
-    if (
-      bundleType === FB_WWW_DEV ||
-      bundleType === FB_WWW_PROD ||
-      bundleType === FB_WWW_PROFILING
-    ) {
-      return './packages/scheduler/src/forks/SchedulerFeatureFlags.www.js';
-    }
-    return './packages/scheduler/src/SchedulerFeatureFlags.js';
-  },
-
-  './packages/shared/consoleWithStackDev.js': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
-        return './packages/shared/forks/consoleWithStackDev.www.js';
-      case RN_OSS_DEV:
+      case FB_WWW_PROD:
+      case FB_WWW_PROFILING:
+        return './packages/scheduler/src/forks/SchedulerFeatureFlags.www.js';
       case RN_FB_DEV:
-        return './packages/shared/forks/consoleWithStackDev.rn.js';
+      case RN_FB_PROD:
+      case RN_FB_PROFILING:
+        return './packages/scheduler/src/forks/SchedulerFeatureFlags.native-fb.js';
       default:
-        return null;
+        return './packages/scheduler/src/SchedulerFeatureFlags.js';
     }
   },
 

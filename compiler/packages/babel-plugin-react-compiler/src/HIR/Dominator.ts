@@ -89,7 +89,13 @@ export class Dominator<T> {
     CompilerError.invariant(dominator !== undefined, {
       reason: 'Unknown node',
       description: null,
-      loc: null,
+      details: [
+        {
+          kind: 'error',
+          loc: null,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
     return dominator === id ? null : dominator;
@@ -130,7 +136,13 @@ export class PostDominator<T> {
     CompilerError.invariant(dominator !== undefined, {
       reason: 'Unknown node',
       description: null,
-      loc: null,
+      details: [
+        {
+          kind: 'error',
+          loc: null,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
     return dominator === id ? null : dominator;
@@ -175,7 +187,13 @@ function computeImmediateDominators<T>(graph: Graph<T>): Map<T, T> {
       CompilerError.invariant(newIdom !== null, {
         reason: `At least one predecessor must have been visited for block ${id}`,
         description: null,
-        loc: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
 

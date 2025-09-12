@@ -15,6 +15,7 @@ export function formatOwnerStack(error: Error): string {
   Error.prepareStackTrace = undefined;
   let stack = error.stack;
   Error.prepareStackTrace = prevPrepareStackTrace;
+
   if (stack.startsWith('Error: react-stack-top-frame\n')) {
     // V8's default formatting prefixes with the error message which we
     // don't want/need.
@@ -25,7 +26,10 @@ export function formatOwnerStack(error: Error): string {
     // Pop the JSX frame.
     stack = stack.slice(idx + 1);
   }
-  idx = stack.indexOf('react-stack-bottom-frame');
+  idx = stack.indexOf('react_stack_bottom_frame');
+  if (idx === -1) {
+    idx = stack.indexOf('react-stack-bottom-frame');
+  }
   if (idx !== -1) {
     idx = stack.lastIndexOf('\n', idx);
   }

@@ -7,17 +7,26 @@
 
 import {codeFrameColumns} from '@babel/code-frame';
 import type {PluginObj} from '@babel/core';
-import type {parseConfigPragmaForTests as ParseConfigPragma} from 'babel-plugin-react-compiler/src/HIR/Environment';
+import type {parseConfigPragmaForTests as ParseConfigPragma} from 'babel-plugin-react-compiler/src/Utils/TestUtils';
+import type {printFunctionWithOutlined as PrintFunctionWithOutlined} from 'babel-plugin-react-compiler/src/HIR/PrintHIR';
+import type {printReactiveFunctionWithOutlined as PrintReactiveFunctionWithOutlined} from 'babel-plugin-react-compiler/src/ReactiveScopes/PrintReactiveFunction';
 import {TransformResult, transformFixtureInput} from './compiler';
 import {
-  COMPILER_PATH,
-  COMPILER_INDEX_PATH,
-  LOGGER_PATH,
-  PARSE_CONFIG_PRAGMA_PATH,
+  PARSE_CONFIG_PRAGMA_IMPORT,
+  PRINT_HIR_IMPORT,
+  PRINT_REACTIVE_IR_IMPORT,
+  PROJECT_SRC,
 } from './constants';
 import {TestFixture, getBasename, isExpectError} from './fixture-utils';
 import {TestResult, writeOutputToString} from './reporter';
 import {runSprout} from './sprout';
+import type {
+  CompilerPipelineValue,
+  Effect,
+  ValueKind,
+  ValueReason,
+} from 'babel-plugin-react-compiler/src';
+import chalk from 'chalk';
 
 const originalConsoleError = console.error;
 
@@ -56,30 +65,74 @@ async function compile(
   let compileResult: TransformResult | null = null;
   let error: string | null = null;
   try {
+    const importedCompilerPlugin = require(PROJECT_SRC) as Record<
+      string,
+      unknown
+    >;
+
     // NOTE: we intentionally require lazily here so that we can clear the require cache
     // and load fresh versions of the compiler when `compilerVersion` changes.
-    const {default: BabelPluginReactCompiler} = require(COMPILER_PATH) as {
-      default: PluginObj;
-    };
-    const {Effect: EffectEnum, ValueKind: ValueKindEnum} = require(
-      COMPILER_INDEX_PATH,
-    );
-    const {toggleLogging} = require(LOGGER_PATH);
-    const {parseConfigPragmaForTests} = require(PARSE_CONFIG_PRAGMA_PATH) as {
-      parseConfigPragmaForTests: typeof ParseConfigPragma;
-    };
+    const BabelPluginReactCompiler = importedCompilerPlugin[
+      'default'
+    ] as PluginObj;
+    const EffectEnum = importedCompilerPlugin['Effect'] as typeof Effect;
+    const ValueKindEnum = importedCompilerPlugin[
+      'ValueKind'
+    ] as typeof ValueKind;
+    const ValueReasonEnum = importedCompilerPlugin[
+      'ValueReason'
+    ] as typeof ValueReason;
+    const printFunctionWithOutlined = importedCompilerPlugin[
+      PRINT_HIR_IMPORT
+    ] as typeof PrintFunctionWithOutlined;
+    const printReactiveFunctionWithOutlined = importedCompilerPlugin[
+      PRINT_REACTIVE_IR_IMPORT
+    ] as typeof PrintReactiveFunctionWithOutlined;
+    const parseConfigPragmaForTests = importedCompilerPlugin[
+      PARSE_CONFIG_PRAGMA_IMPORT
+    ] as typeof ParseConfigPragma;
+
+    let lastLogged: string | null = null;
+    const debugIRLogger = shouldLog
+      ? (value: CompilerPipelineValue) => {
+          let printed: string;
+          switch (value.kind) {
+            case 'hir':
+              printed = printFunctionWithOutlined(value.value);
+              break;
+            case 'reactive':
+              printed = printReactiveFunctionWithOutlined(value.value);
+              break;
+            case 'debug':
+              printed = value.value;
+              break;
+            case 'ast':
+              // skip printing ast as we already write fixture output JS
+              printed = '(ast)';
+              break;
+          }
+
+          if (printed !== lastLogged) {
+            lastLogged = printed;
+            console.log(`${chalk.green(value.name)}:\n ${printed}\n`);
+          } else {
+            console.log(`${chalk.blue(value.name)}: (no change)\n`);
+          }
+        }
+      : () => {};
 
     // only try logging if we filtered out all but one fixture,
     // since console log order is non-deterministic
-    toggleLogging(shouldLog);
     const result = await transformFixtureInput(
       input,
       fixturePath,
       parseConfigPragmaForTests,
       BabelPluginReactCompiler,
       includeEvaluator,
+      debugIRLogger,
       EffectEnum,
       ValueKindEnum,
+      ValueReasonEnum,
     );
 
     if (result.kind === 'err') {
@@ -92,29 +145,6 @@ async function compile(
       console.error(e.stack);
     }
     error = e.message.replace(/\u001b[^m]*m/g, '');
-    const loc = e.details?.[0]?.loc;
-    if (loc != null) {
-      try {
-        error = codeFrameColumns(
-          input,
-          {
-            start: {
-              line: loc.start.line,
-              column: loc.start.column + 1,
-            },
-            end: {
-              line: loc.end.line,
-              column: loc.end.column + 1,
-            },
-          },
-          {
-            message: e.message,
-          },
-        );
-      } catch {
-        // In case the location data isn't valid, skip printing a code frame.
-      }
-    }
   }
 
   // Promote console errors so they can be recorded in fixture output

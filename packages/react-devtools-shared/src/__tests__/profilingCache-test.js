@@ -682,6 +682,14 @@ describe('ProfilingCache', () => {
   it('should calculate durations correctly for suspended views', async () => {
     let data;
     const getData = () => {
+      if (React.use) {
+        if (!data) {
+          data = new Promise(resolve => {
+            resolve('abc');
+          });
+        }
+        return React.use(data);
+      }
       if (data) {
         return data;
       } else {
@@ -854,6 +862,7 @@ describe('ProfilingCache', () => {
             {
               "compiledWithForget": false,
               "displayName": "render()",
+              "env": null,
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -895,6 +904,7 @@ describe('ProfilingCache', () => {
             {
               "compiledWithForget": false,
               "displayName": "createRoot()",
+              "env": null,
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -935,9 +945,11 @@ describe('ProfilingCache', () => {
             {
               "compiledWithForget": false,
               "displayName": "createRoot()",
+              "env": null,
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
+              "stack": null,
               "type": 11,
             },
           ],

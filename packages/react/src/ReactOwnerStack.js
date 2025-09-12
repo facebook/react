@@ -7,18 +7,17 @@
  * @flow
  */
 
-import {enableOwnerStacks} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 export function captureOwnerStack(): null | string {
-  if (!enableOwnerStacks || !__DEV__) {
-    return null;
+  if (__DEV__) {
+    const getCurrentStack = ReactSharedInternals.getCurrentStack;
+    if (getCurrentStack === null) {
+      return null;
+    }
+    // The current stack will be the owner stack which it is always here.
+    return getCurrentStack();
   }
-  const getCurrentStack = ReactSharedInternals.getCurrentStack;
-  if (getCurrentStack === null) {
-    return null;
-  }
-  // The current stack will be the owner stack if enableOwnerStacks is true
-  // which it is always here. Otherwise it's the parent stack.
-  return getCurrentStack();
+
+  return null;
 }

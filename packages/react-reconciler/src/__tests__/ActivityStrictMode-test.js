@@ -55,29 +55,7 @@ describe('Activity StrictMode', () => {
     ]);
   });
 
-  // @gate __DEV__ && enableActivity && enableDO_NOT_USE_disableStrictPassiveEffect
-  it('does not trigger strict effects when disableStrictPassiveEffect is presented on StrictMode', async () => {
-    await act(() => {
-      ReactNoop.render(
-        <React.StrictMode DO_NOT_USE_disableStrictPassiveEffect={true}>
-          <Activity>
-            <Component label="A" />
-          </Activity>
-        </React.StrictMode>,
-      );
-    });
-
-    expect(log).toEqual([
-      'A: render',
-      'A: render',
-      'A: useLayoutEffect mount',
-      'A: useEffect mount',
-      'A: useLayoutEffect unmount',
-      'A: useLayoutEffect mount',
-    ]);
-  });
-
-  // @gate __DEV__ && enableActivity && useModernStrictMode
+  // @gate __DEV__ && enableActivity
   it('should not trigger strict effects when offscreen is hidden', async () => {
     await act(() => {
       ReactNoop.render(
@@ -240,11 +218,10 @@ describe('Activity StrictMode', () => {
       'Parent mount',
       'Parent unmount',
       'Parent mount',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['Child rendered', 'Child suspended']
-        : []),
-
+      // pre-warming
+      'Child rendered',
+      'Child suspended',
+      // end pre-warming
       '------------------------------',
       'Child rendered',
       'Child rendered',

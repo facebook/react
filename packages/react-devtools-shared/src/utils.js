@@ -19,13 +19,12 @@ import {
   REACT_MEMO_TYPE,
   REACT_PORTAL_TYPE,
   REACT_PROFILER_TYPE,
-  REACT_PROVIDER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_TRACING_MARKER_TYPE,
+  REACT_VIEW_TRANSITION_TYPE,
 } from 'shared/ReactSymbols';
-import {enableRenderableContext} from 'shared/ReactFeatureFlags';
 import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
@@ -36,9 +35,16 @@ import {
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
   LOCAL_STORAGE_COMPONENT_FILTER_PREFERENCES_KEY,
   LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
+  LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET,
+  LOCAL_STORAGE_ALWAYS_OPEN_IN_EDITOR,
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
   SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
   SESSION_STORAGE_RECORD_TIMELINE_KEY,
+  SUSPENSE_TREE_OPERATION_ADD,
+  SUSPENSE_TREE_OPERATION_REMOVE,
+  SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
+  SUSPENSE_TREE_OPERATION_RESIZE,
+  SUSPENSE_TREE_OPERATION_SUSPENDERS,
 } from './constants';
 import {
   ComponentFilterElementType,
@@ -85,6 +91,9 @@ const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
 const encodedStringCache: LRUCache<string, Array<number>> = new LRU({
   max: 1000,
 });
+
+// Previously, the type of `Context.Provider`.
+const LEGACY_REACT_PROVIDER_TYPE: symbol = Symbol.for('react.provider');
 
 export function alphaSortKeys(
   a: string | number | symbol,
@@ -253,6 +262,7 @@ export function printOperationsArray(operations: Array<number>) {
           i++; // supportsProfiling
           i++; // supportsStrictMode
           i++; // hasOwnerMetadata
+          i++; // supportsTogglingSuspense
         } else {
           const parentID = ((operations[i]: any): number);
           i++;
@@ -264,6 +274,7 @@ export function printOperationsArray(operations: Array<number>) {
           i++;
 
           i++; // key
+          i++; // name
 
           logs.push(
             `Add node ${id} (${displayName || 'null'}) as child of ${parentID}`,
@@ -291,7 +302,7 @@ export function printOperationsArray(operations: Array<number>) {
       }
       case TREE_OPERATION_SET_SUBTREE_MODE: {
         const id = operations[i + 1];
-        const mode = operations[i + 1];
+        const mode = operations[i + 2];
 
         i += 3;
 
@@ -314,7 +325,7 @@ export function printOperationsArray(operations: Array<number>) {
         // The profiler UI uses them lazily in order to generate the tree.
         i += 3;
         break;
-      case TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS:
+      case TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS: {
         const id = operations[i + 1];
         const numErrors = operations[i + 2];
         const numWarnings = operations[i + 3];
@@ -325,6 +336,105 @@ export function printOperationsArray(operations: Array<number>) {
           `Node ${id} has ${numErrors} errors and ${numWarnings} warnings`,
         );
         break;
+      }
+      case SUSPENSE_TREE_OPERATION_ADD: {
+        const fiberID = operations[i + 1];
+        const parentID = operations[i + 2];
+        const nameStringID = operations[i + 3];
+        const numRects = operations[i + 4];
+
+        i += 5;
+
+        const name = stringTable[nameStringID];
+        let rects: string;
+        if (numRects === -1) {
+          rects = 'null';
+        } else {
+          rects = '[';
+          for (let rectIndex = 0; rectIndex < numRects; rectIndex++) {
+            const offset = i + rectIndex * 4;
+            const x = operations[offset + 0];
+            const y = operations[offset + 1];
+            const width = operations[offset + 2];
+            const height = operations[offset + 3];
+
+            if (rectIndex > 0) {
+              rects += ', ';
+            }
+            rects += `(${x}, ${y}, ${width}, ${height})`;
+
+            i += 4;
+          }
+          rects += ']';
+        }
+
+        logs.push(
+          `Add suspense node ${fiberID} (${String(name)},rects={${rects}}) under ${parentID}`,
+        );
+        break;
+      }
+      case SUSPENSE_TREE_OPERATION_REMOVE: {
+        const removeLength = ((operations[i + 1]: any): number);
+        i += 2;
+
+        for (let removeIndex = 0; removeIndex < removeLength; removeIndex++) {
+          const id = ((operations[i]: any): number);
+          i += 1;
+
+          logs.push(`Remove suspense node ${id}`);
+        }
+
+        break;
+      }
+      case SUSPENSE_TREE_OPERATION_REORDER_CHILDREN: {
+        const id = ((operations[i + 1]: any): number);
+        const numChildren = ((operations[i + 2]: any): number);
+        i += 3;
+        const children = operations.slice(i, i + numChildren);
+        i += numChildren;
+
+        logs.push(
+          `Re-order suspense node ${id} children ${children.join(',')}`,
+        );
+        break;
+      }
+      case SUSPENSE_TREE_OPERATION_RESIZE: {
+        const id = ((operations[i + 1]: any): number);
+        const numRects = ((operations[i + 2]: any): number);
+        i += 3;
+
+        if (numRects === -1) {
+          logs.push(`Resize suspense node ${id} to null`);
+        } else {
+          let line = `Resize suspense node ${id} to [`;
+          for (let rectIndex = 0; rectIndex < numRects; rectIndex++) {
+            const x = operations[i + 0];
+            const y = operations[i + 1];
+            const width = operations[i + 2];
+            const height = operations[i + 3];
+
+            if (rectIndex > 0) {
+              line += ', ';
+            }
+            line += `(${x}, ${y}, ${width}, ${height})`;
+
+            i += 4;
+          }
+          logs.push(line + ']');
+        }
+
+        break;
+      }
+      case SUSPENSE_TREE_OPERATION_SUSPENDERS: {
+        const changeLength = operations[i + 1];
+        i += 2;
+        const changes = operations.slice(i, i + changeLength * 2);
+        i += changeLength;
+
+        logs.push(`Suspense node suspender changes ${changes.join(',')}`);
+
+        break;
+      }
       default:
         throw Error(`Unsupported Bridge operation "${operation}"`);
     }
@@ -382,20 +492,41 @@ export function filterOutLocationComponentFilters(
   return componentFilters.filter(f => f.type !== ComponentFilterLocation);
 }
 
+const vscodeFilepath = 'vscode://file/{path}:{line}:{column}';
+
+export function getDefaultPreset(): 'custom' | 'vscode' {
+  return typeof process.env.EDITOR_URL === 'string' ? 'custom' : 'vscode';
+}
+
 export function getDefaultOpenInEditorURL(): string {
   return typeof process.env.EDITOR_URL === 'string'
     ? process.env.EDITOR_URL
-    : '';
+    : vscodeFilepath;
 }
 
 export function getOpenInEditorURL(): string {
   try {
+    const rawPreset = localStorageGetItem(
+      LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET,
+    );
+    switch (rawPreset) {
+      case '"vscode"':
+        return vscodeFilepath;
+    }
     const raw = localStorageGetItem(LOCAL_STORAGE_OPEN_IN_EDITOR_URL);
     if (raw != null) {
       return JSON.parse(raw);
     }
   } catch (error) {}
   return getDefaultOpenInEditorURL();
+}
+
+export function getAlwaysOpenInEditor(): boolean {
+  try {
+    const raw = localStorageGetItem(LOCAL_STORAGE_ALWAYS_OPEN_IN_EDITOR);
+    return raw === 'true';
+  } catch (error) {}
+  return false;
 }
 
 type ParseElementDisplayNameFromBackendReturn = {
@@ -553,6 +684,7 @@ export type DataType =
   | 'class_instance'
   | 'data_view'
   | 'date'
+  | 'error'
   | 'function'
   | 'html_all_collection'
   | 'html_element'
@@ -562,14 +694,31 @@ export type DataType =
   | 'nan'
   | 'null'
   | 'number'
+  | 'thenable'
   | 'object'
   | 'react_element'
+  | 'react_lazy'
   | 'regexp'
   | 'string'
   | 'symbol'
   | 'typed_array'
   | 'undefined'
   | 'unknown';
+
+function isError(data: Object): boolean {
+  // If it doesn't event look like an error, it won't be an actual error.
+  if ('name' in data && 'message' in data) {
+    while (data) {
+      // $FlowFixMe[method-unbinding]
+      if (Object.prototype.toString.call(data) === '[object Error]') {
+        return true;
+      }
+      data = Object.getPrototypeOf(data);
+    }
+  }
+
+  return false;
+}
 
 /**
  * Get a enhanced/artificial type string based on the object instance
@@ -602,11 +751,12 @@ export function getDataType(data: Object): DataType {
         return 'number';
       }
     case 'object':
-      if (
-        data.$$typeof === REACT_ELEMENT_TYPE ||
-        data.$$typeof === REACT_LEGACY_ELEMENT_TYPE
-      ) {
-        return 'react_element';
+      switch (data.$$typeof) {
+        case REACT_ELEMENT_TYPE:
+        case REACT_LEGACY_ELEMENT_TYPE:
+          return 'react_element';
+        case REACT_LAZY_TYPE:
+          return 'react_lazy';
       }
       if (isArray(data)) {
         return 'array';
@@ -630,6 +780,10 @@ export function getDataType(data: Object): DataType {
         }
       } else if (data.constructor && data.constructor.name === 'RegExp') {
         return 'regexp';
+      } else if (typeof data.then === 'function') {
+        return 'thenable';
+      } else if (isError(data)) {
+        return 'error';
       } else {
         // $FlowFixMe[method-unbinding]
         const toStringValue = Object.prototype.toString.call(data);
@@ -678,6 +832,7 @@ function typeOfWithLegacyElementSymbol(object: any): mixed {
           case REACT_STRICT_MODE_TYPE:
           case REACT_SUSPENSE_TYPE:
           case REACT_SUSPENSE_LIST_TYPE:
+          case REACT_VIEW_TRANSITION_TYPE:
             return type;
           default:
             const $$typeofType = type && type.$$typeof;
@@ -689,14 +844,7 @@ function typeOfWithLegacyElementSymbol(object: any): mixed {
               case REACT_MEMO_TYPE:
                 return $$typeofType;
               case REACT_CONSUMER_TYPE:
-                if (enableRenderableContext) {
-                  return $$typeofType;
-                }
-              // Fall through
-              case REACT_PROVIDER_TYPE:
-                if (!enableRenderableContext) {
-                  return $$typeofType;
-                }
+                return $$typeofType;
               // Fall through
               default:
                 return $$typeof;
@@ -717,7 +865,7 @@ export function getDisplayNameForReactElement(
   switch (elementType) {
     case REACT_CONSUMER_TYPE:
       return 'ContextConsumer';
-    case REACT_PROVIDER_TYPE:
+    case LEGACY_REACT_PROVIDER_TYPE:
       return 'ContextProvider';
     case REACT_CONTEXT_TYPE:
       return 'Context';
@@ -739,6 +887,8 @@ export function getDisplayNameForReactElement(
       return 'Suspense';
     case REACT_SUSPENSE_LIST_TYPE:
       return 'SuspenseList';
+    case REACT_VIEW_TRANSITION_TYPE:
+      return 'ViewTransition';
     case REACT_TRACING_MARKER_TYPE:
       return 'TracingMarker';
     default:
@@ -822,6 +972,62 @@ export function formatDataForPreview(
       return `<${truncateForDisplay(
         getDisplayNameForReactElement(data) || 'Unknown',
       )} />`;
+    case 'react_lazy':
+      // To avoid actually initialize a lazy to cause a side-effect we make some assumptions
+      // about the structure of the payload even though that's not really part of the contract.
+      // In practice, this is really just coming from React.lazy helper or Flight.
+      const payload = data._payload;
+      if (payload !== null && typeof payload === 'object') {
+        if (payload._status === 0) {
+          // React.lazy constructor pending
+          return `pending lazy()`;
+        }
+        if (payload._status === 1 && payload._result != null) {
+          // React.lazy constructor fulfilled
+          if (showFormattedValue) {
+            const formatted = formatDataForPreview(
+              payload._result.default,
+              false,
+            );
+            return `fulfilled lazy() {${truncateForDisplay(formatted)}}`;
+          } else {
+            return `fulfilled lazy() {…}`;
+          }
+        }
+        if (payload._status === 2) {
+          // React.lazy constructor rejected
+          if (showFormattedValue) {
+            const formatted = formatDataForPreview(payload._result, false);
+            return `rejected lazy() {${truncateForDisplay(formatted)}}`;
+          } else {
+            return `rejected lazy() {…}`;
+          }
+        }
+        if (payload.status === 'pending' || payload.status === 'blocked') {
+          // React Flight pending
+          return `pending lazy()`;
+        }
+        if (payload.status === 'fulfilled') {
+          // React Flight fulfilled
+          if (showFormattedValue) {
+            const formatted = formatDataForPreview(payload.value, false);
+            return `fulfilled lazy() {${truncateForDisplay(formatted)}}`;
+          } else {
+            return `fulfilled lazy() {…}`;
+          }
+        }
+        if (payload.status === 'rejected') {
+          // React Flight rejected
+          if (showFormattedValue) {
+            const formatted = formatDataForPreview(payload.reason, false);
+            return `rejected lazy() {${truncateForDisplay(formatted)}}`;
+          } else {
+            return `rejected lazy() {…}`;
+          }
+        }
+      }
+      // Some form of uninitialized
+      return 'lazy()';
     case 'array_buffer':
       return `ArrayBuffer(${data.byteLength})`;
     case 'data_view':
@@ -911,7 +1117,61 @@ export function formatDataForPreview(
     case 'date':
       return data.toString();
     case 'class_instance':
-      return data.constructor.name;
+      try {
+        let resolvedConstructorName = data.constructor.name;
+        if (typeof resolvedConstructorName === 'string') {
+          return resolvedConstructorName;
+        }
+
+        resolvedConstructorName = Object.getPrototypeOf(data).constructor.name;
+        if (typeof resolvedConstructorName === 'string') {
+          return resolvedConstructorName;
+        }
+
+        try {
+          return truncateForDisplay(String(data));
+        } catch (error) {
+          return 'unserializable';
+        }
+      } catch (error) {
+        return 'unserializable';
+      }
+    case 'thenable':
+      let displayName: string;
+      if (isPlainObject(data)) {
+        displayName = 'Thenable';
+      } else {
+        let resolvedConstructorName = data.constructor.name;
+        if (typeof resolvedConstructorName !== 'string') {
+          resolvedConstructorName =
+            Object.getPrototypeOf(data).constructor.name;
+        }
+        if (typeof resolvedConstructorName === 'string') {
+          displayName = resolvedConstructorName;
+        } else {
+          displayName = 'Thenable';
+        }
+      }
+      switch (data.status) {
+        case 'pending':
+          return `pending ${displayName}`;
+        case 'fulfilled':
+          if (showFormattedValue) {
+            const formatted = formatDataForPreview(data.value, false);
+            return `fulfilled ${displayName} {${truncateForDisplay(formatted)}}`;
+          } else {
+            return `fulfilled ${displayName} {…}`;
+          }
+        case 'rejected':
+          if (showFormattedValue) {
+            const formatted = formatDataForPreview(data.reason, false);
+            return `rejected ${displayName} {${truncateForDisplay(formatted)}}`;
+          } else {
+            return `rejected ${displayName} {…}`;
+          }
+        default:
+          return displayName;
+      }
     case 'object':
       if (showFormattedValue) {
         const keys = Array.from(getAllEnumerableKeys(data)).sort(alphaSortKeys);
@@ -935,13 +1195,15 @@ export function formatDataForPreview(
       } else {
         return '{…}';
       }
+    case 'error':
+      return truncateForDisplay(String(data));
     case 'boolean':
     case 'number':
     case 'infinity':
     case 'nan':
     case 'null':
     case 'undefined':
-      return data;
+      return String(data);
     default:
       try {
         return truncateForDisplay(String(data));
@@ -974,9 +1236,17 @@ export function backendToFrontendSerializedElementMapper(
   };
 }
 
-// Chrome normalizes urls like webpack-internals:// but new URL don't, so cannot use new URL here.
-export function normalizeUrl(url: string): string {
-  return url.replace('/./', '/');
+/**
+ * Should be used when treating url as a Chrome Resource URL.
+ */
+export function normalizeUrlIfValid(url: string): string {
+  try {
+    // TODO: Chrome will use the basepath to create a Resource URL.
+    return new URL(url).toString();
+  } catch {
+    // Giving up if it's not a valid URL without basepath
+    return url;
+  }
 }
 
 export function getIsReloadAndProfileSupported(): boolean {

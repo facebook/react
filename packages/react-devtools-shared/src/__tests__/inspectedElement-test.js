@@ -115,16 +115,15 @@ describe('InspectedElement', () => {
 
   const Contexts = ({
     children,
-    defaultSelectedElementID = null,
-    defaultSelectedElementIndex = null,
+    defaultInspectedElementID = null,
+    defaultInspectedElementIndex = null,
   }) => (
     <BridgeContext.Provider value={bridge}>
       <StoreContext.Provider value={store}>
         <SettingsContextController>
           <TreeContextController
-            defaultSelectedElementID={defaultSelectedElementID}
-            defaultSelectedElementIndex={defaultSelectedElementIndex}
-            defaultInspectedElementID={defaultSelectedElementID}>
+            defaultInspectedElementID={defaultInspectedElementID}
+            defaultInspectedElementIndex={defaultInspectedElementIndex}>
             <InspectedElementContextController>
               {children}
             </InspectedElementContextController>
@@ -167,8 +166,8 @@ describe('InspectedElement', () => {
       testRendererInstance.update(
         <ErrorBoundary>
           <Contexts
-            defaultSelectedElementID={id}
-            defaultSelectedElementIndex={index}>
+            defaultInspectedElementID={id}
+            defaultInspectedElementIndex={index}>
             <React.Suspense fallback={null}>
               <Suspender id={id} index={index} />
             </React.Suspense>
@@ -355,7 +354,7 @@ describe('InspectedElement', () => {
       const {index, shouldHaveLegacyContext} = cases[i];
 
       // HACK: Recreate TestRenderer instance because we rely on default state values
-      // from props like defaultSelectedElementID and it's easier to reset here than
+      // from props like defaultInspectedElementID and it's easier to reset here than
       // to read the TreeDispatcherContext and update the selected ID that way.
       // We're testing the inspected values here, not the context wiring, so that's ok.
       withErrorsOrWarningsIgnored(
@@ -683,6 +682,7 @@ describe('InspectedElement', () => {
           object_with_symbol={objectWithSymbol}
           proxy={proxyInstance}
           react_element={<span />}
+          react_lazy={React.lazy(async () => ({default: 'foo'}))}
           regexp={/abc/giu}
           set={setShallow}
           set_of_sets={setOfSets}
@@ -781,9 +781,18 @@ describe('InspectedElement', () => {
           "preview_short": () => {},
           "preview_long": () => {},
         },
-        "react_element": Dehydrated {
-          "preview_short": <span />,
-          "preview_long": <span />,
+        "react_element": {
+          "key": null,
+          "props": Dehydrated {
+            "preview_short": {…},
+            "preview_long": {},
+          },
+        },
+        "react_lazy": {
+          "_payload": Dehydrated {
+            "preview_short": {…},
+            "preview_long": {_ioInfo: {…}, _result: () => {}, _status: -1},
+          },
         },
         "regexp": Dehydrated {
           "preview_short": /abc/giu,
@@ -814,6 +823,130 @@ describe('InspectedElement', () => {
         },
       }
     `);
+  });
+
+  it('should support Thenables in React 19', async () => {
+    const Example = () => null;
+
+    class SubclassedPromise extends Promise {}
+
+    const plainThenable = {then() {}};
+    const subclassedPromise = new SubclassedPromise(() => {});
+    const unusedPromise = Promise.resolve();
+    const usedFulfilledPromise = Promise.resolve();
+    const usedFulfilledRichPromise = Promise.resolve({
+      some: {
+        deeply: {
+          nested: {
+            object: {
+              string: 'test',
+              fn: () => {},
+            },
+          },
+        },
+      },
+    });
+    const usedPendingPromise = new Promise(resolve => {});
+    const usedRejectedPromise = Promise.reject(
+      new Error('test-error-do-not-surface'),
+    );
+
+    function Use({value}) {
+      React.use(value);
+    }
+
+    await utils.actAsync(() =>
+      render(
+        <>
+          <Example
+            plainThenable={plainThenable}
+            subclassedPromise={subclassedPromise}
+            unusedPromise={unusedPromise}
+            usedFulfilledPromise={usedFulfilledPromise}
+            usedFulfilledRichPromise={usedFulfilledRichPromise}
+            usedPendingPromise={usedPendingPromise}
+            usedRejectedPromise={usedRejectedPromise}
+          />
+          <React.Suspense>
+            <Use value={usedPendingPromise} />
+          </React.Suspense>
+          <React.Suspense>
+            <Use value={usedFulfilledPromise} />
+          </React.Suspense>
+          <React.Suspense>
+            <Use value={usedFulfilledRichPromise} />
+          </React.Suspense>
+          <ErrorBoundary>
+            <React.Suspense>
+              <Use value={usedRejectedPromise} />
+            </React.Suspense>
+          </ErrorBoundary>
+        </>,
+      ),
+    );
+
+    const inspectedElement = await inspectElementAtIndex(0);
+
+    expect(inspectedElement.props).toMatchInlineSnapshot(`
+      {
+        "plainThenable": Dehydrated {
+          "preview_short": Thenable,
+          "preview_long": Thenable,
+        },
+        "subclassedPromise": Dehydrated {
+          "preview_short": SubclassedPromise,
+          "preview_long": SubclassedPromise,
+        },
+        "unusedPromise": Dehydrated {
+          "preview_short": Promise,
+          "preview_long": Promise,
+        },
+        "usedFulfilledPromise": {
+          "value": undefined,
+        },
+        "usedFulfilledRichPromise": {
+          "value": Dehydrated {
+            "preview_short": {…},
+            "preview_long": {some: {…}},
+          },
+        },
+        "usedPendingPromise": Dehydrated {
+          "preview_short": pending Promise,
+          "preview_long": pending Promise,
+        },
+        "usedRejectedPromise": {
+          "reason": Dehydrated {
+            "preview_short": Error: test-error-do-not-surface,
+            "preview_long": Error: test-error-do-not-surface,
+          },
+        },
+      }
+    `);
+  });
+
+  it('should support Promises in React 18', async () => {
+    const Example = () => null;
+
+    const unusedPromise = Promise.resolve();
+
+    await utils.actAsync(() =>
+      render(
+        <>
+          <Example unusedPromise={unusedPromise} />
+        </>,
+      ),
+    );
+
+    const inspectedElement = await inspectElementAtIndex(0);
+
+    expect(inspectedElement.props).toMatchInlineSnapshot(`
+          {
+            "unusedPromise": Dehydrated {
+              "preview_short": Promise,
+              "preview_long": Promise,
+            },
+          }
+      `);
   });
 
   it('should not consume iterables while inspecting', async () => {
@@ -2069,7 +2202,7 @@ describe('InspectedElement', () => {
     }, false);
 
     // HACK: Recreate TestRenderer instance because we rely on default state values
-    // from props like defaultSelectedElementID and it's easier to reset here than
+    // from props like defaultInspectedElementID and it's easier to reset here than
     // to read the TreeDispatcherContext and update the selected ID that way.
     // We're testing the inspected values here, not the context wiring, so that's ok.
     withErrorsOrWarningsIgnored(
@@ -2129,7 +2262,7 @@ describe('InspectedElement', () => {
     }, false);
 
     // HACK: Recreate TestRenderer instance because we rely on default state values
-    // from props like defaultSelectedElementID and it's easier to reset here than
+    // from props like defaultInspectedElementID and it's easier to reset here than
     // to read the TreeDispatcherContext and update the selected ID that way.
     // We're testing the inspected values here, not the context wiring, so that's ok.
     withErrorsOrWarningsIgnored(
@@ -2408,8 +2541,8 @@ describe('InspectedElement', () => {
       await utils.actAsync(() => {
         root = TestRenderer.create(
           <Contexts
-            defaultSelectedElementID={id}
-            defaultSelectedElementIndex={index}>
+            defaultInspectedElementID={id}
+            defaultInspectedElementIndex={index}>
             <React.Suspense fallback={null}>
               <Suspender target={id} />
             </React.Suspense>
@@ -3101,6 +3234,7 @@ describe('InspectedElement', () => {
 
     await utils.actAsync(() => {
       store.componentFilters = [utils.createDisplayNameFilter('Wrapper')];
+      jest.runOnlyPendingTimers();
     }, false);
 
     expect(state).toMatchInlineSnapshot(`
@@ -3120,6 +3254,7 @@ describe('InspectedElement', () => {
 
     await utils.actAsync(() => {
       store.componentFilters = [];
+      jest.runOnlyPendingTimers();
     }, false);
     expect(state).toMatchInlineSnapshot(`
       ✕ 0, ⚠ 2

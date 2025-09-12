@@ -1,4 +1,4 @@
-// @compilationMode(infer)
+// @compilationMode:"infer"
 import {useIdentity, identity} from 'shared-runtime';
 
 function Component(fakeProps: number) {

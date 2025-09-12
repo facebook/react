@@ -46,12 +46,31 @@ describe('ReactDOMFizzStaticNode', () => {
     });
   }
 
+  async function readContentWeb(stream) {
+    const reader = stream.getReader();
+    let content = '';
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) {
+        return content;
+      }
+      content += Buffer.from(value).toString('utf8');
+    }
+  }
+
   // @gate experimental
   it('should call prerenderToNodeStream', async () => {
     const result = await ReactDOMFizzStatic.prerenderToNodeStream(
       <div>hello world</div>,
     );
     const prelude = await readContent(result.prelude);
+    expect(prelude).toMatchInlineSnapshot(`"<div>hello world</div>"`);
+  });
+
+  // @gate experimental
+  it('should suppport web streams', async () => {
+    const result = await ReactDOMFizzStatic.prerender(<div>hello world</div>);
+    const prelude = await readContentWeb(result.prelude);
     expect(prelude).toMatchInlineSnapshot(`"<div>hello world</div>"`);
   });
 
@@ -63,9 +82,15 @@ describe('ReactDOMFizzStaticNode', () => {
       </html>,
     );
     const prelude = await readContent(result.prelude);
-    expect(prelude).toMatchInlineSnapshot(
-      `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
-    );
+    if (gate(flags => flags.enableFizzBlockingRender)) {
+      expect(prelude).toMatchInlineSnapshot(
+        `"<!DOCTYPE html><html><head><link rel="expect" href="#_R_" blocking="render"/></head><body>hello world<template id="_R_"></template></body></html>"`,
+      );
+    } else {
+      expect(prelude).toMatchInlineSnapshot(
+        `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
+      );
+    }
   });
 
   // @gate experimental
@@ -80,7 +105,7 @@ describe('ReactDOMFizzStaticNode', () => {
     );
     const prelude = await readContent(result.prelude);
     expect(prelude).toMatchInlineSnapshot(
-      `"<link rel="preload" as="script" fetchPriority="low" href="init.js"/><link rel="modulepreload" fetchPriority="low" href="init.mjs"/><div>hello world</div><script>INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
+      `"<link rel="preload" as="script" fetchPriority="low" href="init.js"/><link rel="modulepreload" fetchPriority="low" href="init.mjs"/><div>hello world</div><script id="_R_">INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
     );
   });
 

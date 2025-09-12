@@ -34,6 +34,8 @@ const {
   RN_FB_PROD,
   RN_FB_PROFILING,
   BROWSER_SCRIPT,
+  CJS_DTS,
+  ESM_DTS,
 } = Bundles.bundleTypes;
 
 function getPackageName(name) {
@@ -49,6 +51,7 @@ function getBundleOutputPath(bundle, bundleType, filename, packageName) {
       return `build/node_modules/${packageName}/cjs/${filename}`;
     case ESM_DEV:
     case ESM_PROD:
+    case ESM_DTS:
       return `build/node_modules/${packageName}/esm/${filename}`;
     case BUN_DEV:
     case BUN_PROD:
@@ -56,6 +59,7 @@ function getBundleOutputPath(bundle, bundleType, filename, packageName) {
     case NODE_DEV:
     case NODE_PROD:
     case NODE_PROFILING:
+    case CJS_DTS:
       return `build/node_modules/${packageName}/cjs/${filename}`;
     case FB_WWW_DEV:
     case FB_WWW_PROD:

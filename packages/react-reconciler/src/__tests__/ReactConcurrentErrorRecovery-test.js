@@ -399,10 +399,8 @@ describe('ReactConcurrentErrorRecovery', () => {
       });
       assertLog([
         'Suspend! [Async]',
-
-        ...(gate('enableSiblingPrerendering')
-          ? ['Caught an error: Oops!']
-          : []),
+        // pre-warming
+        'Caught an error: Oops!',
       ]);
       // The render suspended without committing the error.
       expect(root).toMatchRenderedOutput(null);
@@ -420,13 +418,7 @@ describe('ReactConcurrentErrorRecovery', () => {
           );
         });
       });
-      assertLog([
-        'Suspend! [Async]',
-
-        ...(gate('enableSiblingPrerendering')
-          ? ['Caught an error: Oops!']
-          : []),
-      ]);
+      assertLog(['Suspend! [Async]', 'Caught an error: Oops!']);
       expect(root).toMatchRenderedOutput(null);
 
       await act(async () => {

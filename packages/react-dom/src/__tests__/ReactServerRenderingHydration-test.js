@@ -17,6 +17,8 @@ let ReactDOMServer;
 let ReactDOMServerBrowser;
 let waitForAll;
 let act;
+let assertConsoleErrorDev;
+let assertConsoleWarnDev;
 
 // These tests rely both on ReactDOMServer and ReactDOM.
 // If a test only needs ReactDOMServer, put it in ReactServerRendering-test instead.
@@ -32,6 +34,8 @@ describe('ReactDOMServerHydration', () => {
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
     act = InternalTestUtils.act;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
+    assertConsoleWarnDev = InternalTestUtils.assertConsoleWarnDev;
   });
 
   it('should have the correct mounting behavior', async () => {
@@ -123,39 +127,24 @@ describe('ReactDOMServerHydration', () => {
       // Now simulate a situation where the app is not idempotent. React should
       // warn but do the right thing.
       element.innerHTML = lastMarkup;
-      const favorSafetyOverHydrationPerf = gate(
-        flags => flags.favorSafetyOverHydrationPerf,
-      );
-      await expect(async () => {
-        root = await act(() => {
-          return ReactDOMClient.hydrateRoot(
-            element,
-            <TestComponent
-              name="y"
-              ref={current => {
-                instance = current;
-              }}
-            />,
-            {
-              onRecoverableError: error => {},
-            },
-          );
-        });
-      }).toErrorDev(
-        favorSafetyOverHydrationPerf
-          ? []
-          : [
-              "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
-            ],
-        {withoutStack: true},
-      );
+      root = await act(() => {
+        return ReactDOMClient.hydrateRoot(
+          element,
+          <TestComponent
+            name="y"
+            ref={current => {
+              instance = current;
+            }}
+          />,
+          {
+            onRecoverableError: error => {},
+          },
+        );
+      });
+
       expect(mountCount).toEqual(4);
       expect(element.innerHTML.length > 0).toBe(true);
-      if (favorSafetyOverHydrationPerf) {
-        expect(element.innerHTML).not.toEqual(lastMarkup);
-      } else {
-        expect(element.innerHTML).toEqual(lastMarkup);
-      }
+      expect(element.innerHTML).not.toEqual(lastMarkup);
 
       // Ensure the events system works after markup mismatch.
       expect(numClicks).toEqual(1);
@@ -221,27 +210,15 @@ describe('ReactDOMServerHydration', () => {
     const onFocusAfterHydration = jest.fn();
     element.firstChild.focus = onFocusBeforeHydration;
 
-    const favorSafetyOverHydrationPerf = gate(
-      flags => flags.favorSafetyOverHydrationPerf,
-    );
-    await expect(async () => {
-      await act(() => {
-        ReactDOMClient.hydrateRoot(
-          element,
-          <button autoFocus={false} onFocus={onFocusAfterHydration}>
-            client
-          </button>,
-          {onRecoverableError: error => {}},
-        );
-      });
-    }).toErrorDev(
-      favorSafetyOverHydrationPerf
-        ? []
-        : [
-            "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
-          ],
-      {withoutStack: true},
-    );
+    await act(() => {
+      ReactDOMClient.hydrateRoot(
+        element,
+        <button autoFocus={false} onFocus={onFocusAfterHydration}>
+          client
+        </button>,
+        {onRecoverableError: error => {}},
+      );
+    });
 
     expect(onFocusBeforeHydration).not.toHaveBeenCalled();
     expect(onFocusAfterHydration).not.toHaveBeenCalled();
@@ -255,19 +232,37 @@ describe('ReactDOMServerHydration', () => {
     expect(element.firstChild.style.textDecoration).toBe('none');
     expect(element.firstChild.style.color).toBe('black');
 
-    await expect(async () => {
-      await act(() => {
-        ReactDOMClient.hydrateRoot(
-          element,
-          <div
-            style={{textDecoration: 'none', color: 'white', height: '10px'}}
-          />,
-        );
-      });
-    }).toErrorDev(
-      "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
-      {withoutStack: true},
-    );
+    await act(() => {
+      ReactDOMClient.hydrateRoot(
+        element,
+        <div
+          style={{textDecoration: 'none', color: 'white', height: '10px'}}
+        />,
+      );
+    });
+    assertConsoleErrorDev([
+      "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. " +
+        "This won't be patched up. This can happen if a SSR-ed Client Component used:\n" +
+        '\n' +
+        "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
+        "- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n" +
+        "- Date formatting in a user's locale which doesn't match the server.\n" +
+        '- External changing data without sending a snapshot of it along with the HTML.\n' +
+        '- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension ' +
+        'installed which messes with the HTML before React loaded.\n' +
+        '\n' +
+        'https://react.dev/link/hydration-mismatch\n' +
+        '\n' +
+        '  <div\n    style={{\n+     textDecoration: "none"\n' +
+        '+     color: "white"\n' +
+        '-     color: "black"\n' +
+        '+     height: "10px"\n' +
+        '-     height: "10px"\n' +
+        '-     text-decoration: "none"\n' +
+        '    }}\n' +
+        '  >\n' +
+        '\n    in div (at **)',
+    ]);
   });
 
   it('should not warn when the style property differs on whitespace or order in IE', async () => {
@@ -303,19 +298,39 @@ describe('ReactDOMServerHydration', () => {
     element.innerHTML =
       '<div style="text-decoration: none; color: black; height: 10px;"></div>';
 
-    await expect(async () => {
-      await act(() => {
-        ReactDOMClient.hydrateRoot(
-          element,
-          <div
-            style={{textDecoration: 'none', color: 'black', height: '10px'}}
-          />,
-        );
-      });
-    }).toErrorDev(
-      "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
-      {withoutStack: true},
-    );
+    await act(() => {
+      ReactDOMClient.hydrateRoot(
+        element,
+        <div
+          style={{textDecoration: 'none', color: 'black', height: '10px'}}
+        />,
+      );
+    });
+    assertConsoleErrorDev([
+      "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. " +
+        "This won't be patched up. This can happen if a SSR-ed Client Component used:\n" +
+        '\n' +
+        "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
+        "- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n" +
+        "- Date formatting in a user's locale which doesn't match the server.\n" +
+        '- External changing data without sending a snapshot of it along with the HTML.\n' +
+        '- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension ' +
+        'installed which messes with the HTML before React loaded.\n' +
+        '\n' +
+        'https://react.dev/link/hydration-mismatch\n' +
+        '\n' +
+        '  <div\n' +
+        '    style={{\n' +
+        '+     textDecoration: "none"\n' +
+        '+     color: "black"\n' +
+        '-     color: "black"\n' +
+        '+     height: "10px"\n' +
+        '-     height: "10px"\n' +
+        '-     text-decoration: "none"\n' +
+        '    }}\n' +
+        '  >\n' +
+        '\n    in div (at **)',
+    ]);
   });
 
   it('should throw rendering portals on the server', () => {
@@ -347,18 +362,38 @@ describe('ReactDOMServerHydration', () => {
     );
 
     const element = document.createElement('div');
-    expect(() => {
-      element.innerHTML = ReactDOMServer.renderToString(markup);
-    }).toWarnDev('componentWillMount has been renamed');
+    element.innerHTML = ReactDOMServer.renderToString(markup);
+    assertConsoleWarnDev([
+      'componentWillMount has been renamed, and is not recommended for use. ' +
+        'See https://react.dev/link/unsafe-component-lifecycles for details.\n' +
+        '\n' +
+        '* Move code from componentWillMount to componentDidMount (preferred in most cases) or the constructor.\n' +
+        '\n' +
+        'Please update the following components: ComponentWithWarning\n' +
+        '    in ComponentWithWarning (at **)',
+    ]);
     expect(element.textContent).toBe('Hi');
 
-    await expect(async () => {
-      await act(() => {
-        ReactDOMClient.hydrateRoot(element, markup);
-      });
-    }).toWarnDev('componentWillMount has been renamed', {
-      withoutStack: true,
+    await act(() => {
+      ReactDOMClient.hydrateRoot(element, markup);
     });
+    assertConsoleWarnDev(
+      [
+        'componentWillMount has been renamed, and is not recommended for use. ' +
+          'See https://react.dev/link/unsafe-component-lifecycles for details.\n' +
+          '\n' +
+          '* Move code with side effects to componentDidMount, and set initial state in the constructor.\n' +
+          '* Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. ' +
+          'In React 18.x, only the UNSAFE_ name will work. ' +
+          'To rename all deprecated lifecycles to their new names, ' +
+          'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n' +
+          '\n' +
+          'Please update the following components: ComponentWithWarning',
+      ],
+      {
+        withoutStack: true,
+      },
+    );
     expect(element.textContent).toBe('Hi');
   });
 
@@ -528,33 +563,17 @@ describe('ReactDOMServerHydration', () => {
     );
     domElement.innerHTML = markup;
 
-    const favorSafetyOverHydrationPerf = gate(
-      flags => flags.favorSafetyOverHydrationPerf,
-    );
-    await expect(async () => {
-      await act(() => {
-        ReactDOMClient.hydrateRoot(
-          domElement,
-          <div dangerouslySetInnerHTML={undefined}>
-            <p>client</p>
-          </div>,
-          {onRecoverableError: error => {}},
-        );
-      });
-    }).toErrorDev(
-      favorSafetyOverHydrationPerf
-        ? []
-        : [
-            "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
-          ],
-      {withoutStack: true},
-    );
+    await act(() => {
+      ReactDOMClient.hydrateRoot(
+        domElement,
+        <div dangerouslySetInnerHTML={undefined}>
+          <p>client</p>
+        </div>,
+        {onRecoverableError: error => {}},
+      );
+    });
 
-    if (favorSafetyOverHydrationPerf) {
-      expect(domElement.innerHTML).not.toEqual(markup);
-    } else {
-      expect(domElement.innerHTML).toEqual(markup);
-    }
+    expect(domElement.innerHTML).not.toEqual(markup);
   });
 
   it('should warn if innerHTML mismatches with dangerouslySetInnerHTML=undefined on the client', async () => {
@@ -593,13 +612,13 @@ describe('ReactDOMServerHydration', () => {
       const jsx = React.createElement('my-custom-element', props);
       const element = document.createElement('div');
       element.innerHTML = ReactDOMServer.renderToString(jsx);
-      await expect(async () => {
-        await act(() => {
-          ReactDOMClient.hydrateRoot(element, jsx);
-        });
-      }).toErrorDev(
-        `Assignment to read-only property will result in a no-op: \`${readOnlyProperty}\``,
-      );
+      await act(() => {
+        ReactDOMClient.hydrateRoot(element, jsx);
+      });
+      assertConsoleErrorDev([
+        `Assignment to read-only property will result in a no-op: \`${readOnlyProperty}\`
+            in my-custom-element (at **)`,
+      ]);
     }
   });
 

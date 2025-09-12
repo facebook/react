@@ -19,6 +19,7 @@ global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
 
 let act;
+let serverAct;
 let use;
 let clientExports;
 let clientExportsESM;
@@ -37,8 +38,6 @@ let ReactDOMStaticServer;
 let Suspense;
 let ErrorBoundary;
 let JSDOM;
-let ReactServerScheduler;
-let reactServerAct;
 let assertConsoleErrorDev;
 
 describe('ReactFlightDOM', () => {
@@ -50,9 +49,8 @@ describe('ReactFlightDOM', () => {
 
     JSDOM = require('jsdom').JSDOM;
 
-    ReactServerScheduler = require('scheduler');
-    patchSetImmediate(ReactServerScheduler);
-    reactServerAct = require('internal-test-utils').act;
+    patchSetImmediate();
+    serverAct = require('internal-test-utils').serverAct;
 
     // Simulate the condition resolution
     jest.mock('react', () => require('react/react.react-server'));
@@ -110,17 +108,6 @@ describe('ReactFlightDOM', () => {
       }
     };
   });
-
-  async function serverAct(callback) {
-    let maybePromise;
-    await reactServerAct(() => {
-      maybePromise = callback();
-      if (maybePromise && typeof maybePromise.catch === 'function') {
-        maybePromise.catch(() => {});
-      }
-    });
-    return maybePromise;
-  }
 
   async function readInto(
     container: Document | HTMLElement,
@@ -193,7 +180,10 @@ describe('ReactFlightDOM', () => {
             node.tagName !== 'TEMPLATE' &&
             node.tagName !== 'template' &&
             !node.hasAttribute('hidden') &&
-            !node.hasAttribute('aria-hidden'))
+            !node.hasAttribute('aria-hidden') &&
+            // Ignore the render blocking expect
+            (node.getAttribute('rel') !== 'expect' ||
+              node.getAttribute('blocking') !== 'render'))
         ) {
           const props = {};
           const attributes = node.attributes;
@@ -1917,11 +1907,29 @@ describe('ReactFlightDOM', () => {
 
     expect(content1).toEqual(
       '<!DOCTYPE html><html><head><link rel="preload" href="before1" as="style"/>' +
-        '<link rel="preload" href="after1" as="style"/></head><body><p>hello world</p></body></html>',
+        '<link rel="preload" href="after1" as="style"/>' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<link rel="expect" href="#_R_" blocking="render"/>'
+          : '') +
+        '</head>' +
+        '<body><p>hello world</p>' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<template id="_R_"></template>'
+          : '') +
+        '</body></html>',
     );
     expect(content2).toEqual(
       '<!DOCTYPE html><html><head><link rel="preload" href="before2" as="style"/>' +
-        '<link rel="preload" href="after2" as="style"/></head><body><p>hello world</p></body></html>',
+        '<link rel="preload" href="after2" as="style"/>' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<link rel="expect" href="#_R_" blocking="render"/>'
+          : '') +
+        '</head>' +
+        '<body><p>hello world</p>' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<template id="_R_"></template>'
+          : '') +
+        '</body></html>',
     );
   });
 
@@ -2868,7 +2876,9 @@ describe('ReactFlightDOM', () => {
       };
     });
 
-    controller.abort('boom');
+    await serverAct(() => {
+      controller.abort('boom');
+    });
     resolveGreeting();
     const {prelude} = await pendingResult;
 
@@ -2902,16 +2912,7 @@ describe('ReactFlightDOM', () => {
       abortFizz('bam');
     });
 
-    if (__DEV__) {
-      expect(errors).toEqual([new Error('Connection closed.')]);
-    } else {
-      // This is likely a bug. In Dev we get a connection closed error
-      // because the debug info creates a chunk that has a pending status
-      // and when the stream finishes we error if any chunks are still pending.
-      // In production there is no debug info so the missing chunk is never instantiated
-      // because nothing triggers model evaluation before the stream completes
-      expect(errors).toEqual(['bam']);
-    }
+    expect(errors).toEqual([new Error('Connection closed.')]);
 
     const container = document.createElement('div');
     await readInto(container, fizzReadable);
@@ -3066,17 +3067,8 @@ describe('ReactFlightDOM', () => {
     });
 
     // one error per boundary
-    if (__DEV__) {
-      const err = new Error('Connection closed.');
-      expect(errors).toEqual([err, err, err]);
-    } else {
-      // This is likely a bug. In Dev we get a connection closed error
-      // because the debug info creates a chunk that has a pending status
-      // and when the stream finishes we error if any chunks are still pending.
-      // In production there is no debug info so the missing chunk is never instantiated
-      // because nothing triggers model evaluation before the stream completes
-      expect(errors).toEqual(['boom', 'boom', 'boom']);
-    }
+    const err = new Error('Connection closed.');
+    expect(errors).toEqual([err, err, err]);
 
     const container = document.createElement('div');
     await readInto(container, fizzReadable);

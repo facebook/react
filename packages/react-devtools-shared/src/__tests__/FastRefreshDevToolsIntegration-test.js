@@ -186,8 +186,83 @@ describe('Fast Refresh', () => {
     expect(getContainer().firstChild).not.toBe(element);
   });
 
+  // @reactVersion < 18.0
   // @reactVersion >= 16.9
-  it('should not break when there are warnings in between patching', () => {
+  it('should not break when there are warnings in between patching (before post commit hook)', () => {
+    withErrorsOrWarningsIgnored(['Expected:'], () => {
+      render(`
+      const {useState} = React;
+
+      export default function Component() {
+        const [state, setState] = useState(1);
+        console.warn("Expected: warning during render");
+        return null;
+      }
+    `);
+    });
+    expect(store).toMatchInlineSnapshot(`
+      ✕ 0, ⚠ 1
+      [root]
+          <Component> ⚠
+    `);
+
+    withErrorsOrWarningsIgnored(['Expected:'], () => {
+      patch(`
+      const {useEffect, useState} = React;
+
+      export default function Component() {
+        const [state, setState] = useState(1);
+        console.warn("Expected: warning during render");
+        return null;
+      }
+    `);
+    });
+    expect(store).toMatchInlineSnapshot(`
+      ✕ 0, ⚠ 2
+      [root]
+          <Component> ⚠
+    `);
+
+    withErrorsOrWarningsIgnored(['Expected:'], () => {
+      patch(`
+      const {useEffect, useState} = React;
+
+      export default function Component() {
+        const [state, setState] = useState(1);
+        useEffect(() => {
+          console.error("Expected: error during effect");
+        });
+        console.warn("Expected: warning during render");
+        return null;
+      }
+    `);
+    });
+    expect(store).toMatchInlineSnapshot(`
+      ✕ 0, ⚠ 1
+      [root]
+          <Component> ⚠
+    `);
+
+    withErrorsOrWarningsIgnored(['Expected:'], () => {
+      patch(`
+      const {useEffect, useState} = React;
+
+      export default function Component() {
+        const [state, setState] = useState(1);
+        console.warn("Expected: warning during render");
+        return null;
+      }
+    `);
+    });
+    expect(store).toMatchInlineSnapshot(`
+      ✕ 0, ⚠ 1
+      [root]
+          <Component> ⚠
+    `);
+  });
+
+  // @reactVersion >= 18.0
+  it('should not break when there are warnings in between patching (with post commit hook)', () => {
     withErrorsOrWarningsIgnored(['Expected:'], () => {
       render(`
       const {useState} = React;

@@ -5,19 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {jsx} from '@babel/plugin-syntax-jsx';
 import babelJest from 'babel-jest';
-import {compile} from 'babel-plugin-react-compiler';
+import {
+  validateEnvironmentConfig,
+  EnvironmentConfig,
+} from 'babel-plugin-react-compiler';
 import {execSync} from 'child_process';
 
 import type {NodePath, Visitor} from '@babel/traverse';
-import type {CallExpression, FunctionDeclaration} from '@babel/types';
-import * as t from '@babel/types';
-import {
-  EnvironmentConfig,
-  validateEnvironmentConfig,
-} from 'babel-plugin-react-compiler';
-import {basename} from 'path';
+import type {CallExpression} from '@babel/types';
+import BabelPluginReactCompiler from 'babel-plugin-react-compiler';
 
 /**
  * -- IMPORTANT --
@@ -28,9 +25,18 @@ import {basename} from 'path';
 const e2eTransformerCacheKey = 1;
 const forgetOptions: EnvironmentConfig = validateEnvironmentConfig({
   enableAssumeHooksFollowRulesOfReact: true,
-  enableFunctionOutlining: false,
 });
 const debugMode = process.env['DEBUG_FORGET_COMPILER'] != null;
+
+const compilerCacheKey = execSync(
+  'yarn --silent --cwd ../.. hash packages/babel-plugin-react-compiler/dist',
+)
+  .toString()
+  .trim();
+
+if (debugMode) {
+  console.log('cachebreaker', compilerCacheKey);
+}
 
 module.exports = (useForget: boolean) => {
   function createTransformer() {
@@ -42,15 +48,14 @@ module.exports = (useForget: boolean) => {
           plugins: [
             useForget
               ? [
-                  ReactForgetFunctionTransform,
+                  BabelPluginReactCompiler,
                   {
+                    environment: forgetOptions,
                     /*
                      * Jest hashes the babel config as a cache breaker.
                      * (see https://github.com/jestjs/jest/blob/v29.6.2/packages/babel-jest/src/index.ts#L84)
                      */
-                    compilerCacheKey: execSync(
-                      'yarn --silent --cwd ../.. hash packages/babel-plugin-react-compiler/dist',
-                    ).toString(),
+                    compilerCacheKey,
                     transformOptionsCacheKey: forgetOptions,
                     e2eTransformerCacheKey,
                   },
@@ -105,103 +110,3 @@ module.exports = (useForget: boolean) => {
     createTransformer,
   };
 };
-
-// Mostly copied from react/scripts/babel/transform-forget.js
-function isReactComponentLike(fn: NodePath<FunctionDeclaration>): boolean {
-  let isReactComponent = false;
-  let hasNoUseForgetDirective = false;
-
-  /*
-   * React components start with an upper case letter,
-   * React hooks start with `use`
-   */
-  if (
-    fn.node.id == null ||
-    (fn.node.id.name[0].toUpperCase() !== fn.node.id.name[0] &&
-      !/^use[A-Z0-9]/.test(fn.node.id.name))
-  ) {
-    return false;
-  }
-
-  fn.traverse({
-    DirectiveLiteral(path) {
-      if (path.node.value === 'use no forget') {
-        hasNoUseForgetDirective = true;
-      }
-    },
-
-    JSX(path) {
-      // Is there is a JSX node created in the current function context?
-      if (path.scope.getFunctionParent()?.path.node === fn.node) {
-        isReactComponent = true;
-      }
-    },
-
-    CallExpression(path) {
-      // Is there hook usage?
-      if (
-        path.node.callee.type === 'Identifier' &&
-        !/^use[A-Z0-9]/.test(path.node.callee.name)
-      ) {
-        isReactComponent = true;
-      }
-    },
-  });
-
-  if (hasNoUseForgetDirective) {
-    return false;
-  }
-
-  return isReactComponent;
-}
-
-function ReactForgetFunctionTransform() {
-  const compiledFns = new Set();
-  const visitor = {
-    FunctionDeclaration(fn: NodePath<FunctionDeclaration>, state: any): void {
-      if (compiledFns.has(fn.node)) {
-        return;
-      }
-
-      if (!isReactComponentLike(fn)) {
-        return;
-      }
-      if (debugMode) {
-        const filename = basename(state.file.opts.filename);
-        if (fn.node.loc && fn.node.id) {
-          console.log(
-            ` Compiling ${filename}:${fn.node.loc.start.line}:${fn.node.loc.start.column}  ${fn.node.id.name}`,
-          );
-        } else {
-          console.log(` Compiling ${filename} ${fn.node.id?.name}`);
-        }
-      }
-
-      const compiled = compile(
-        fn,
-        forgetOptions,
-        'Other',
-        '_c',
-        null,
-        null,
-        null,
-      );
-      compiledFns.add(compiled);
-
-      const fun = t.functionDeclaration(
-        compiled.id,
-        compiled.params,
-        compiled.body,
-        compiled.generator,
-        compiled.async,
-      );
-      fn.replaceWith(fun);
-      fn.skip();
-    },
-  };
-  return {
-    name: 'react-forget-e2e',
-    inherits: jsx,
-    visitor,
-  };
-}

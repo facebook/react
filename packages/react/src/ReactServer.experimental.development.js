@@ -15,7 +15,9 @@ import {
   REACT_PROFILER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
-  REACT_DEBUG_TRACING_MODE_TYPE,
+  REACT_SUSPENSE_LIST_TYPE,
+  REACT_VIEW_TRANSITION_TYPE,
+  REACT_ACTIVITY_TYPE,
 } from 'shared/ReactSymbols';
 import {
   cloneElement,
@@ -29,13 +31,12 @@ import {
   useCallback,
   useDebugValue,
   useMemo,
-  useActionState,
   getCacheForType,
 } from './ReactHooks';
 import {forwardRef} from './ReactForwardRef';
 import {lazy} from './ReactLazy';
 import {memo} from './ReactMemo';
-import {cache} from './ReactCacheServer';
+import {cache, cacheSignal} from './ReactCacheServer';
 import {startTransition} from './ReactStartTransition';
 import {postpone} from './ReactPostpone';
 import {captureOwnerStack} from './ReactOwnerStack';
@@ -70,16 +71,18 @@ export {
   lazy,
   memo,
   cache,
+  cacheSignal,
   startTransition,
-  REACT_DEBUG_TRACING_MODE_TYPE as unstable_DebugTracingMode,
-  REACT_SUSPENSE_TYPE as unstable_SuspenseList,
   getCacheForType as unstable_getCacheForType,
   postpone as unstable_postpone,
   useId,
   useCallback,
   useDebugValue,
   useMemo,
-  useActionState,
   version,
+  // Experimental
+  REACT_SUSPENSE_LIST_TYPE as unstable_SuspenseList,
+  REACT_VIEW_TRANSITION_TYPE as unstable_ViewTransition,
+  REACT_ACTIVITY_TYPE as unstable_Activity,
   captureOwnerStack, // DEV-only
 };

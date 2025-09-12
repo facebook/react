@@ -12,11 +12,20 @@ import type {
   PendingThenable,
   FulfilledThenable,
   RejectedThenable,
+  ReactIOInfo,
 } from 'shared/ReactTypes';
+
+import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
+
+import {callLazyInitInDEV} from './ReactFiberCallUserSpace';
 
 import {getWorkInProgressRoot} from './ReactFiberWorkLoop';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
+
+import {enableAsyncDebugInfo} from 'shared/ReactFeatureFlags';
+
+import noop from 'shared/noop';
 
 opaque type ThenableStateDev = {
   didWarnAboutUncachedPromise: boolean,
@@ -95,8 +104,6 @@ export function isThenableResolved(thenable: Thenable<mixed>): boolean {
   return status === 'fulfilled' || status === 'rejected';
 }
 
-function noop(): void {}
-
 export function trackUsedThenable<T>(
   thenableState: ThenableState,
   thenable: Thenable<T>,
@@ -150,6 +157,33 @@ export function trackUsedThenable<T>(
     }
   }
 
+  if (__DEV__ && enableAsyncDebugInfo && thenable._debugInfo === undefined) {
+    // In DEV mode if the thenable that we observed had no debug info, then we add
+    // an inferred debug info so that we're able to track its potential I/O uniquely.
+    // We don't know the real start time since the I/O could have started much
+    // earlier and this could even be a cached Promise. Could be misleading.
+    const startTime = performance.now();
+    const displayName = thenable.displayName;
+    const ioInfo: ReactIOInfo = {
+      name: typeof displayName === 'string' ? displayName : 'Promise',
+      start: startTime,
+      end: startTime,
+      value: (thenable: any),
+      // We don't know the requesting owner nor stack.
+    };
+    // We can infer the await owner/stack lazily from where this promise ends up
+    // used. It can be used in more than one place so we can't assign it here.
+    thenable._debugInfo = [{awaited: ioInfo}];
+    // Track when we resolved the Promise as the approximate end time.
+    if (thenable.status !== 'fulfilled' && thenable.status !== 'rejected') {
+      const trackEndTime = () => {
+        // $FlowFixMe[cannot-write]
+        ioInfo.end = performance.now();
+      };
+      thenable.then(trackEndTime, trackEndTime);
+    }
+  }
+
   // We use an expando to track the status and result of a thenable so that we
   // can synchronously unwrap the value. Think of this as an extension of the
   // Promise API, or a custom interface that is a superset of Thenable.
@@ -194,8 +228,9 @@ export function trackUsedThenable<T>(
           // this case include forcing a concurrent render, or putting the whole
           // root into offscreen mode.
           throw new Error(
-            'async/await is not yet supported in Client Components, only ' +
-              'Server Components. This error is often caused by accidentally ' +
+            'An unknown Component is an async Client Component. ' +
+              'Only Server Components can be async at the moment. ' +
+              'This error is often caused by accidentally ' +
               "adding `'use client'` to a module that was originally written " +
               'for the server.',
           );
@@ -257,6 +292,27 @@ export function suspendCommit(): void {
   // TODO: Factor the thenable check out of throwException
   suspendedThenable = noopSuspenseyCommitThenable;
   throw SuspenseyCommitException;
+}
+
+export function resolveLazy<T>(lazyType: LazyComponentType<T, any>): T {
+  try {
+    if (__DEV__) {
+      return callLazyInitInDEV(lazyType);
+    }
+    const payload = lazyType._payload;
+    const init = lazyType._init;
+    return init(payload);
+  } catch (x) {
+    if (x !== null && typeof x === 'object' && typeof x.then === 'function') {
+      // This lazy Suspended. Treat this as if we called use() to unwrap it.
+      suspendedThenable = x;
+      if (__DEV__) {
+        needsToResetSuspendedThenableDEV = true;
+      }
+      throw SuspenseException;
+    }
+    throw x;
+  }
 }
 
 // This is used to track the actual thenable that suspended so it can be

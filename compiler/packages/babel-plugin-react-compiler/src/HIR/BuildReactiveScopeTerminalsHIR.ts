@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 import {CompilerError} from '../CompilerError';
 import {getScopes, recursivelyTraverseItems} from './AssertValidBlockNesting';
 import {Environment} from './Environment';
@@ -227,7 +234,14 @@ function pushEndScopeTerminal(
   const fallthroughId = context.fallthroughs.get(scope.id);
   CompilerError.invariant(fallthroughId != null, {
     reason: 'Expected scope to exist',
-    loc: GeneratedSource,
+    description: null,
+    details: [
+      {
+        kind: 'error',
+        loc: GeneratedSource,
+        message: null,
+      },
+    ],
   });
   context.rewrites.push({
     kind: 'EndScope',

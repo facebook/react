@@ -52,6 +52,12 @@ describe('ReactDOMServerIntegrationUserInteraction', () => {
         }
         this.setState({value: event.target.value});
       }
+      componentDidMount() {
+        if (this.props.cascade) {
+          // Trigger a cascading render immediately upon hydration which rerenders the input.
+          this.setState({cascade: true});
+        }
+      }
       render() {
         return (
           <input
@@ -73,6 +79,12 @@ describe('ReactDOMServerIntegrationUserInteraction', () => {
         }
         this.setState({value: event.target.value});
       }
+      componentDidMount() {
+        if (this.props.cascade) {
+          // Trigger a cascading render immediately upon hydration which rerenders the textarea.
+          this.setState({cascade: true});
+        }
+      }
       render() {
         return (
           <textarea
@@ -92,6 +104,12 @@ describe('ReactDOMServerIntegrationUserInteraction', () => {
           this.props.onChange(event);
         }
         this.setState({value: event.target.checked});
+      }
+      componentDidMount() {
+        if (this.props.cascade) {
+          // Trigger a cascading render immediately upon hydration which rerenders the checkbox.
+          this.setState({cascade: true});
+        }
       }
       render() {
         return (
@@ -113,6 +131,12 @@ describe('ReactDOMServerIntegrationUserInteraction', () => {
           this.props.onChange(event);
         }
         this.setState({value: event.target.value});
+      }
+      componentDidMount() {
+        if (this.props.cascade) {
+          // Trigger a cascading render immediately upon hydration which rerenders the select.
+          this.setState({cascade: true});
+        }
       }
       render() {
         return (
@@ -278,10 +302,9 @@ describe('ReactDOMServerIntegrationUserInteraction', () => {
       await testUserInteractionBeforeClientRender(
         <ControlledInput onChange={() => changeCount++} />,
       );
-      // note that there's a strong argument to be made that the DOM revival
-      // algorithm should notice that the user has changed the value and fire
-      // an onChange. however, it does not now, so that's what this tests.
-      expect(changeCount).toBe(0);
+      expect(changeCount).toBe(
+        gate(flags => flags.enableHydrationChangeEvent) ? 1 : 0,
+      );
     });
 
     it('should not blow away user-interaction on successful reconnect to an uncontrolled range input', () =>
@@ -302,7 +325,9 @@ describe('ReactDOMServerIntegrationUserInteraction', () => {
         '0.25',
         '1',
       );
-      expect(changeCount).toBe(0);
+      expect(changeCount).toBe(
+        gate(flags => flags.enableHydrationChangeEvent) ? 1 : 0,
+      );
     });
 
     it('should not blow away user-entered text on successful reconnect to an uncontrolled checkbox', () =>
@@ -321,24 +346,22 @@ describe('ReactDOMServerIntegrationUserInteraction', () => {
         false,
         'checked',
       );
-      expect(changeCount).toBe(0);
+      expect(changeCount).toBe(
+        gate(flags => flags.enableHydrationChangeEvent) ? 1 : 0,
+      );
     });
 
-    // skipping this test because React 15 does the wrong thing. it blows
-    // away the user's typing in the textarea.
-    // eslint-disable-next-line jest/no-disabled-tests
-    it.skip('should not blow away user-entered text on successful reconnect to an uncontrolled textarea', () =>
+    // @gate enableHydrationChangeEvent
+    it('should not blow away user-entered text on successful reconnect to an uncontrolled textarea', () =>
       testUserInteractionBeforeClientRender(<textarea defaultValue="Hello" />));
 
-    // skipping this test because React 15 does the wrong thing. it blows
-    // away the user's typing in the textarea.
-    // eslint-disable-next-line jest/no-disabled-tests
-    it.skip('should not blow away user-entered text on successful reconnect to a controlled textarea', async () => {
+    // @gate enableHydrationChangeEvent
+    it('should not blow away user-entered text on successful reconnect to a controlled textarea', async () => {
       let changeCount = 0;
       await testUserInteractionBeforeClientRender(
         <ControlledTextArea onChange={() => changeCount++} />,
       );
-      expect(changeCount).toBe(0);
+      expect(changeCount).toBe(1);
     });
 
     it('should not blow away user-selected value on successful reconnect to an uncontrolled select', () =>
@@ -358,7 +381,64 @@ describe('ReactDOMServerIntegrationUserInteraction', () => {
       await testUserInteractionBeforeClientRender(
         <ControlledSelect onChange={() => changeCount++} />,
       );
-      expect(changeCount).toBe(0);
+      expect(changeCount).toBe(
+        gate(flags => flags.enableHydrationChangeEvent) ? 1 : 0,
+      );
+    });
+
+    // @gate enableHydrationChangeEvent
+    it('should not blow away user-entered text cascading hydration to a controlled input', async () => {
+      let changeCount = 0;
+      await testUserInteractionBeforeClientRender(
+        <ControlledInput onChange={() => changeCount++} cascade={true} />,
+      );
+      expect(changeCount).toBe(1);
+    });
+
+    // @gate enableHydrationChangeEvent
+    it('should not blow away user-interaction cascading hydration to a controlled range input', async () => {
+      let changeCount = 0;
+      await testUserInteractionBeforeClientRender(
+        <ControlledInput
+          type="range"
+          initialValue="0.25"
+          onChange={() => changeCount++}
+          cascade={true}
+        />,
+        '0.25',
+        '1',
+      );
+      expect(changeCount).toBe(1);
+    });
+
+    // @gate enableHydrationChangeEvent
+    it('should not blow away user-entered text cascading hydration to a controlled checkbox', async () => {
+      let changeCount = 0;
+      await testUserInteractionBeforeClientRender(
+        <ControlledCheckbox onChange={() => changeCount++} cascade={true} />,
+        true,
+        false,
+        'checked',
+      );
+      expect(changeCount).toBe(1);
+    });
+
+    // @gate enableHydrationChangeEvent
+    it('should not blow away user-entered text cascading hydration to a controlled textarea', async () => {
+      let changeCount = 0;
+      await testUserInteractionBeforeClientRender(
+        <ControlledTextArea onChange={() => changeCount++} cascade={true} />,
+      );
+      expect(changeCount).toBe(1);
+    });
+
+    // @gate enableHydrationChangeEvent
+    it('should not blow away user-selected value cascading hydration to an controlled select', async () => {
+      let changeCount = 0;
+      await testUserInteractionBeforeClientRender(
+        <ControlledSelect onChange={() => changeCount++} cascade={true} />,
+      );
+      expect(changeCount).toBe(1);
     });
   });
 });

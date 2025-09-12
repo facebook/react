@@ -22,6 +22,7 @@ export type ClientReference<T> = {
   $$id: string,
   $$name: string,
   $$bundles: Array<string>,
+  $$importMap?: ?{[string]: string},
 };
 
 const CLIENT_REFERENCE_TAG = Symbol.for('react.client.reference');
@@ -39,12 +40,14 @@ export function createClientReference<T>(
   id: string,
   exportName: string,
   bundles: Array<string>,
+  importMap?: ?{[string]: string},
 ): ClientReference<T> {
   return {
     $$typeof: CLIENT_REFERENCE_TAG,
     $$id: id,
     $$name: exportName,
     $$bundles: bundles,
+    $$importMap: importMap,
   };
 }
 
@@ -53,7 +56,7 @@ const FunctionBind = Function.prototype.bind;
 // $FlowFixMe[method-unbinding]
 const ArraySlice = Array.prototype.slice;
 function bind(this: ServerReference<any>): any {
-  // $FlowFixMe[prop-missing]
+  // $FlowFixMe[incompatible-call]
   const newFn = FunctionBind.apply(this, arguments);
   if (this.$$typeof === SERVER_REFERENCE_TAG) {
     if (__DEV__) {
@@ -70,7 +73,7 @@ function bind(this: ServerReference<any>): any {
     const $$bound = {value: this.$$bound ? this.$$bound.concat(args) : args};
     return Object.defineProperties(
       (newFn: any),
-      __DEV__
+      (__DEV__
         ? {
             $$typeof,
             $$id,
@@ -86,7 +89,7 @@ function bind(this: ServerReference<any>): any {
             $$id,
             $$bound,
             bind: {value: bind, configurable: true},
-          },
+          }) as PropertyDescriptorMap,
     );
   }
   return newFn;
@@ -105,7 +108,7 @@ export function registerServerReference<T>(
   const $$bound = {value: null, configurable: true};
   return Object.defineProperties(
     (reference: any),
-    __DEV__
+    (__DEV__
       ? {
           $$typeof,
           $$id,
@@ -121,6 +124,6 @@ export function registerServerReference<T>(
           $$id,
           $$bound,
           bind: {value: bind, configurable: true},
-        },
+        }) as PropertyDescriptorMap,
   );
 }

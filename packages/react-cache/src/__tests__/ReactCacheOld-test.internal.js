@@ -22,6 +22,7 @@ let waitForPaint;
 let assertLog;
 let waitForThrow;
 let act;
+let assertConsoleErrorDev;
 
 describe('ReactCache', () => {
   beforeEach(() => {
@@ -39,6 +40,7 @@ describe('ReactCache', () => {
     assertLog = InternalTestUtils.assertLog;
     waitForThrow = InternalTestUtils.waitForThrow;
     waitForPaint = InternalTestUtils.waitForPaint;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
     act = InternalTestUtils.act;
 
     TextResource = createResource(
@@ -124,8 +126,8 @@ describe('ReactCache', () => {
     await waitForAll([
       'Suspend! [Hi]',
       'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Hi]'] : []),
+      // pre-warming
+      'Suspend! [Hi]',
     ]);
 
     jest.advanceTimersByTime(100);
@@ -148,8 +150,8 @@ describe('ReactCache', () => {
     await waitForAll([
       'Suspend! [Hi]',
       'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Hi]'] : []),
+      // pre-warming
+      'Suspend! [Hi]',
     ]);
 
     textResourceShouldFail = true;
@@ -190,32 +192,36 @@ describe('ReactCache', () => {
     );
 
     if (__DEV__) {
-      await expect(async () => {
-        await waitForAll([
-          'App',
-          'Loading...',
-
-          ...(gate('enableSiblingPrerendering') ? ['App'] : []),
-        ]);
-      }).toErrorDev([
+      await waitForAll([
+        'App',
+        'Loading...',
+        // pre-warming
+        'App',
+      ]);
+      assertConsoleErrorDev([
         'Invalid key type. Expected a string, number, symbol, or ' +
           "boolean, but instead received: [ 'Hi', 100 ]\n\n" +
           'To use non-primitive values as keys, you must pass a hash ' +
-          'function as the second argument to createResource().',
+          'function as the second argument to createResource().\n' +
+          '    in App (at **)',
 
-        ...(gate('enableSiblingPrerendering') ? ['Invalid key type'] : []),
+        // pre-warming
+        'Invalid key type. Expected a string, number, symbol, or ' +
+          "boolean, but instead received: [ 'Hi', 100 ]\n\n" +
+          'To use non-primitive values as keys, you must pass a hash ' +
+          'function as the second argument to createResource().\n' +
+          '    in App (at **)',
       ]);
     } else {
       await waitForAll([
         'App',
         'Loading...',
-
-        ...(gate('enableSiblingPrerendering') ? ['App'] : []),
+        // pre-warming
+        'App',
       ]);
     }
   });
 
-  // @gate enableSiblingPrerendering
   it('evicts least recently used values', async () => {
     ReactCache.unstable_setGlobalCacheLimit(3);
 
@@ -231,15 +237,28 @@ describe('ReactCache', () => {
     await waitForPaint(['Suspend! [1]', 'Loading...']);
     jest.advanceTimersByTime(100);
     assertLog(['Promise resolved [1]']);
-    await waitForAll([1, 'Suspend! [2]']);
+    await waitForAll([
+      1,
+      'Suspend! [2]',
+      ...(gate('alwaysThrottleRetries')
+        ? []
+        : [1, 'Suspend! [2]', 'Suspend! [3]']),
+    ]);
 
     jest.advanceTimersByTime(100);
-    assertLog(['Promise resolved [2]']);
-    await waitForAll([1, 2, 'Suspend! [3]']);
+    assertLog([
+      'Promise resolved [2]',
+      ...(gate('alwaysThrottleRetries') ? [] : ['Promise resolved [3]']),
+    ]);
+    await waitForAll([
+      1,
+      2,
+      ...(gate('alwaysThrottleRetries') ? ['Suspend! [3]'] : [3]),
+    ]);
 
     jest.advanceTimersByTime(100);
-    assertLog(['Promise resolved [3]']);
-    await waitForAll([1, 2, 3]);
+    assertLog(gate('alwaysThrottleRetries') ? ['Promise resolved [3]'] : []);
+    await waitForAll(gate('alwaysThrottleRetries') ? [1, 2, 3] : []);
 
     await act(() => jest.advanceTimersByTime(100));
     expect(root).toMatchRenderedOutput('123');
@@ -369,8 +388,8 @@ describe('ReactCache', () => {
     await waitForAll([
       'Suspend! [Hi]',
       'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Hi]'] : []),
+      // pre-warming
+      'Suspend! [Hi]',
     ]);
 
     resolveThenable('Hi');

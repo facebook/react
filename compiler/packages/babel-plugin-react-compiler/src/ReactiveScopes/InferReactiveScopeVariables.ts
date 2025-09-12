@@ -25,7 +25,6 @@ import {
   eachPatternOperand,
 } from '../HIR/visitors';
 import DisjointSet from '../Utils/DisjointSet';
-import {logHIRFunction} from '../Utils/logger';
 import {assertExhaustive} from '../Utils/utils';
 
 /*
@@ -156,10 +155,20 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
       scope.range.end > maxInstruction + 1
     ) {
       // Make it easier to debug why the error occurred
-      logHIRFunction('InferReactiveScopeVariables (invalid scope)', fn);
+      fn.env.logger?.debugLogIRs?.({
+        kind: 'hir',
+        name: 'InferReactiveScopeVariables (invalid scope)',
+        value: fn,
+      });
       CompilerError.invariant(false, {
         reason: `Invalid mutable range for scope`,
-        loc: GeneratedSource,
+        details: [
+          {
+            kind: 'error',
+            loc: GeneratedSource,
+            message: null,
+          },
+        ],
         description: `Scope @${scope.id} has range [${scope.range.start}:${
           scope.range.end
         }] but the valid range is [1:${maxInstruction + 1}]`,
@@ -175,11 +184,15 @@ function mergeLocation(l: SourceLocation, r: SourceLocation): SourceLocation {
     return l;
   } else {
     return {
+      filename: l.filename,
+      identifierName: l.identifierName,
       start: {
+        index: Math.min(l.start.index, r.start.index),
         line: Math.min(l.start.line, r.start.line),
         column: Math.min(l.start.column, r.start.column),
       },
       end: {
+        index: Math.max(l.end.index, r.end.index),
         line: Math.max(l.end.line, r.end.line),
         column: Math.max(l.end.column, r.end.column),
       },
@@ -199,7 +212,7 @@ export function inRange(
   return id >= range.start && id < range.end;
 }
 
-function mayAllocate(env: Environment, instruction: Instruction): boolean {
+function mayAllocate(_env: Environment, instruction: Instruction): boolean {
   const {value} = instruction;
   switch (value.kind) {
     case 'Destructure': {
@@ -376,6 +389,14 @@ export function findDisjointMutableValues(
              */
             operand.identifier.mutableRange.start > 0
           ) {
+            if (
+              instr.value.kind === 'FunctionExpression' ||
+              instr.value.kind === 'ObjectMethod'
+            ) {
+              if (operand.identifier.type.kind === 'Primitive') {
+                continue;
+              }
+            }
             operands.push(operand.identifier);
           }
         }

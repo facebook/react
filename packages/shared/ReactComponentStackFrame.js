@@ -7,21 +7,13 @@
  * @flow
  */
 
-import type {LazyComponent} from 'react/src/ReactLazy';
-
-import {
-  REACT_SUSPENSE_TYPE,
-  REACT_SUSPENSE_LIST_TYPE,
-  REACT_FORWARD_REF_TYPE,
-  REACT_MEMO_TYPE,
-  REACT_LAZY_TYPE,
-} from 'shared/ReactSymbols';
-
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import DefaultPrepareStackTrace from 'shared/DefaultPrepareStackTrace';
+
+import {formatOwnerStack} from './ReactOwnerStackFrames';
 
 let prefix;
 let suffix;
@@ -48,7 +40,24 @@ export function describeBuiltInComponentFrame(name: string): string {
   return '\n' + prefix + name + suffix;
 }
 
-export function describeDebugInfoFrame(name: string, env: ?string): string {
+export function describeDebugInfoFrame(
+  name: string,
+  env: ?string,
+  location: ?Error,
+): string {
+  if (location != null) {
+    // If we have a location, it's the child's owner stack. Treat the bottom most frame as
+    // the location of this function.
+    const childStack = formatOwnerStack(location);
+    const idx = childStack.lastIndexOf('\n');
+    const lastLine = idx === -1 ? childStack : childStack.slice(idx + 1);
+    if (lastLine.indexOf(name) !== -1) {
+      // For async stacks it's possible we don't have the owner on it. As a precaution only
+      // use this frame if it has the name of the function in it.
+      return '\n' + lastLine;
+    }
+  }
+
   return describeBuiltInComponentFrame(name + (env ? ' [' + env + ']' : ''));
 }
 
@@ -296,50 +305,4 @@ export function describeClassComponentFrame(ctor: Function): string {
 
 export function describeFunctionComponentFrame(fn: Function): string {
   return describeNativeComponentFrame(fn, false);
-}
-
-function shouldConstruct(Component: Function) {
-  const prototype = Component.prototype;
-  return !!(prototype && prototype.isReactComponent);
-}
-
-// TODO: Delete this once the key warning no longer uses it. I.e. when enableOwnerStacks ship.
-export function describeUnknownElementTypeFrameInDEV(type: any): string {
-  if (!__DEV__) {
-    return '';
-  }
-  if (type == null) {
-    return '';
-  }
-  if (typeof type === 'function') {
-    return describeNativeComponentFrame(type, shouldConstruct(type));
-  }
-  if (typeof type === 'string') {
-    return describeBuiltInComponentFrame(type);
-  }
-  switch (type) {
-    case REACT_SUSPENSE_TYPE:
-      return describeBuiltInComponentFrame('Suspense');
-    case REACT_SUSPENSE_LIST_TYPE:
-      return describeBuiltInComponentFrame('SuspenseList');
-  }
-  if (typeof type === 'object') {
-    switch (type.$$typeof) {
-      case REACT_FORWARD_REF_TYPE:
-        return describeFunctionComponentFrame(type.render);
-      case REACT_MEMO_TYPE:
-        // Memo may contain any component type so we recursively resolve it.
-        return describeUnknownElementTypeFrameInDEV(type.type);
-      case REACT_LAZY_TYPE: {
-        const lazyComponent: LazyComponent<any, any> = (type: any);
-        const payload = lazyComponent._payload;
-        const init = lazyComponent._init;
-        try {
-          // Lazy may contain any component type so we recursively resolve it.
-          return describeUnknownElementTypeFrameInDEV(init(payload));
-        } catch (x) {}
-      }
-    }
-  }
-  return '';
 }

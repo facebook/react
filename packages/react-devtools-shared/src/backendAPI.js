@@ -16,6 +16,7 @@ import ElementPollingCancellationError from 'react-devtools-shared/src/errors/El
 import type {
   InspectedElement as InspectedElementBackend,
   InspectedElementPayload,
+  SerializedAsyncInfo as SerializedAsyncInfoBackend,
 } from 'react-devtools-shared/src/backend/types';
 import type {
   BackendEvents,
@@ -24,6 +25,7 @@ import type {
 import type {
   DehydratedData,
   InspectedElement as InspectedElementFrontend,
+  SerializedAsyncInfo as SerializedAsyncInfoFrontend,
 } from 'react-devtools-shared/src/frontend/types';
 import type {InspectedElementPath} from 'react-devtools-shared/src/frontend/types';
 
@@ -209,6 +211,34 @@ export function cloneInspectedElementWithPath(
   return clonedInspectedElement;
 }
 
+function backendToFrontendSerializedAsyncInfo(
+  asyncInfo: SerializedAsyncInfoBackend,
+): SerializedAsyncInfoFrontend {
+  const ioInfo = asyncInfo.awaited;
+  return {
+    awaited: {
+      name: ioInfo.name,
+      description: ioInfo.description,
+      start: ioInfo.start,
+      end: ioInfo.end,
+      byteSize: ioInfo.byteSize,
+      value: ioInfo.value,
+      env: ioInfo.env,
+      owner:
+        ioInfo.owner === null
+          ? null
+          : backendToFrontendSerializedElementMapper(ioInfo.owner),
+      stack: ioInfo.stack,
+    },
+    env: asyncInfo.env,
+    owner:
+      asyncInfo.owner === null
+        ? null
+        : backendToFrontendSerializedElementMapper(asyncInfo.owner),
+    stack: asyncInfo.stack,
+  };
+}
+
 export function convertInspectedElementBackendToFrontend(
   inspectedElementBackend: InspectedElementBackend,
 ): InspectedElementFrontend {
@@ -222,12 +252,14 @@ export function convertInspectedElementBackendToFrontend(
     canToggleError,
     isErrored,
     canToggleSuspense,
-    canViewSource,
+    isSuspended,
     hasLegacyContext,
     id,
     type,
     owners,
+    env,
     source,
+    stack,
     context,
     hooks,
     plugins,
@@ -239,7 +271,14 @@ export function convertInspectedElementBackendToFrontend(
     key,
     errors,
     warnings,
+    suspendedBy,
+    suspendedByRange,
+    unknownSuspenders,
+    nativeTag,
   } = inspectedElementBackend;
+
+  const hydratedSuspendedBy: null | Array<SerializedAsyncInfoBackend> =
+    hydrateHelper(suspendedBy);
 
   const inspectedElement: InspectedElementFrontend = {
     canEditFunctionProps,
@@ -251,7 +290,7 @@ export function convertInspectedElementBackendToFrontend(
     canToggleError,
     isErrored,
     canToggleSuspense,
-    canViewSource,
+    isSuspended,
     hasLegacyContext,
     id,
     key,
@@ -259,20 +298,29 @@ export function convertInspectedElementBackendToFrontend(
     rendererPackageName,
     rendererVersion,
     rootType,
-    // Previous backend implementations (<= 5.0.1) have a different interface for Source, with fileName.
-    // This gates the source features for only compatible backends: >= 5.0.2
-    source: source && source.sourceURL ? source : null,
+    // Previous backend implementations (<= 6.1.5) have a different interface for Source.
+    // This gates the source features for only compatible backends: >= 6.1.6
+    source: Array.isArray(source) ? source : null,
+    stack: stack,
     type,
     owners:
       owners === null
         ? null
         : owners.map(backendToFrontendSerializedElementMapper),
+    env,
     context: hydrateHelper(context),
     hooks: hydrateHelper(hooks),
     props: hydrateHelper(props),
     state: hydrateHelper(state),
     errors,
     warnings,
+    suspendedBy:
+      hydratedSuspendedBy == null // backwards compat
+        ? []
+        : hydratedSuspendedBy.map(backendToFrontendSerializedAsyncInfo),
+    suspendedByRange,
+    unknownSuspenders,
+    nativeTag,
   };
 
   return inspectedElement;

@@ -8,15 +8,16 @@
 import watcher from '@parcel/watcher';
 import path from 'path';
 import ts from 'typescript';
-import {FILTER_FILENAME, FIXTURES_PATH} from './constants';
+import {FILTER_FILENAME, FIXTURES_PATH, PROJECT_ROOT} from './constants';
 import {TestFilter, readTestFilter} from './fixture-utils';
+import {execSync} from 'child_process';
 
 export function watchSrc(
   onStart: () => void,
   onComplete: (isSuccess: boolean) => void,
 ): ts.WatchOfConfigFile<ts.SemanticDiagnosticsBuilderProgram> {
   const configPath = ts.findConfigFile(
-    /*searchPath*/ './',
+    /*searchPath*/ PROJECT_ROOT,
     ts.sys.fileExists,
     'tsconfig.json',
   );
@@ -26,10 +27,7 @@ export function watchSrc(
   const createProgram = ts.createSemanticDiagnosticsBuilderProgram;
   const host = ts.createWatchCompilerHost(
     configPath,
-    ts.convertCompilerOptionsFromJson(
-      {module: 'commonjs', outDir: 'dist', sourceMap: true},
-      '.',
-    ).options,
+    undefined,
     ts.sys,
     createProgram,
     () => {}, // we manually report errors in afterProgramCreate
@@ -41,9 +39,11 @@ export function watchSrc(
     onStart();
     return origCreateProgram(rootNames, options, host, oldProgram);
   };
-  const origPostProgramCreate = host.afterProgramCreate;
   host.afterProgramCreate = program => {
-    origPostProgramCreate!(program);
+    /**
+     * Avoid calling original postProgramCreate because it always emits tsc
+     * compilation output
+     */
 
     // syntactic diagnostics refer to javascript syntax
     const errors = program
@@ -146,7 +146,7 @@ function subscribeFilterFile(
   state: RunnerState,
   onChange: (state: RunnerState) => void,
 ) {
-  watcher.subscribe(process.cwd(), async (err, events) => {
+  watcher.subscribe(PROJECT_ROOT, async (err, events) => {
     if (err) {
       console.error(err);
       process.exit(1);
@@ -172,13 +172,23 @@ function subscribeTsc(
       // Notify the user when compilation starts but don't clear the screen yet
       console.log('\nCompiling...');
     },
-    isSuccess => {
+    isTypecheckSuccess => {
+      let isCompilerBuildValid = false;
+      if (isTypecheckSuccess) {
+        try {
+          execSync('yarn build', {cwd: PROJECT_ROOT});
+          console.log('Built compiler successfully with tsup');
+          isCompilerBuildValid = true;
+        } catch (e) {
+          console.warn('Failed to build compiler with tsup:', e);
+        }
+      }
       // Bump the compiler version after a build finishes
       // and re-run tests
-      if (isSuccess) {
+      if (isCompilerBuildValid) {
         state.compilerVersion++;
       }
-      state.isCompilerBuildValid = isSuccess;
+      state.isCompilerBuildValid = isCompilerBuildValid;
       state.mode.action = RunnerAction.Test;
       onChange(state);
     },

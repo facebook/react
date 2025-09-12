@@ -7,8 +7,9 @@
  * @flow
  */
 
-import type {Node, HostComponent} from './ReactNativeTypes';
+import type {Node} from './ReactNativeTypes';
 import type {ElementRef, ElementType} from 'react';
+import type {PublicInstance} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 // Modules provided by RN:
 import {
@@ -32,7 +33,7 @@ import {
 
 export function findHostInstance_DEPRECATED<TElementType: ElementType>(
   componentOrHandle: ?(ElementRef<TElementType> | number),
-): ?ElementRef<HostComponent<{...}>> {
+): ?PublicInstance {
   if (__DEV__) {
     const owner = currentOwner;
     if (owner !== null && isRendering && owner.stateNode !== null) {
@@ -222,15 +223,10 @@ export function getNodeFromInternalInstanceHandle(
   );
 }
 
-// Should have been PublicInstance from ReactFiberConfigFabric
-type FabricPublicInstance = mixed;
-// Should have been PublicInstance from ReactFiberConfigNative
-type PaperPublicInstance = HostComponent<empty>;
-
 // Remove this once Paper is no longer supported and DOM Node API are enabled by default in RN.
 export function isChildPublicInstance(
-  parentInstance: FabricPublicInstance | PaperPublicInstance,
-  childInstance: FabricPublicInstance | PaperPublicInstance,
+  parentInstance: PublicInstance,
+  childInstance: PublicInstance,
 ): boolean {
   if (__DEV__) {
     // Paper

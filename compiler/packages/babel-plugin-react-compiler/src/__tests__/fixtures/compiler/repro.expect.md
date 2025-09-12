@@ -24,10 +24,9 @@ function Component(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(7);
+  const $ = _c(6);
   const item = props.item;
   let baseVideos;
-  let t0;
   let thumbnails;
   if ($[0] !== item) {
     thumbnails = [];
@@ -41,24 +40,21 @@ function Component(props) {
     });
     $[0] = item;
     $[1] = baseVideos;
-    $[2] = t0;
-    $[3] = thumbnails;
+    $[2] = thumbnails;
   } else {
     baseVideos = $[1];
-    t0 = $[2];
-    thumbnails = $[3];
+    thumbnails = $[2];
   }
-  t0 = undefined;
-  let t1;
-  if ($[4] !== baseVideos || $[5] !== thumbnails) {
-    t1 = <FlatList baseVideos={baseVideos} items={thumbnails} />;
-    $[4] = baseVideos;
-    $[5] = thumbnails;
-    $[6] = t1;
+  let t0;
+  if ($[3] !== baseVideos || $[4] !== thumbnails) {
+    t0 = <FlatList baseVideos={baseVideos} items={thumbnails} />;
+    $[3] = baseVideos;
+    $[4] = thumbnails;
+    $[5] = t0;
   } else {
-    t1 = $[6];
+    t0 = $[5];
   }
-  return t1;
+  return t0;
 }
 
 ```

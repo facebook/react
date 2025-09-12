@@ -63,8 +63,20 @@ export function findContextIdentifiers(
         state: FindContextIdentifierState,
       ): void {
         const left = path.get('left');
-        const currentFn = state.currentFn.at(-1) ?? null;
-        handleAssignment(currentFn, state.identifiers, left);
+        if (left.isLVal()) {
+          const currentFn = state.currentFn.at(-1) ?? null;
+          handleAssignment(currentFn, state.identifiers, left);
+        } else {
+          /**
+           * OptionalMemberExpressions as the left side of an AssignmentExpression are Stage 1 and
+           * not supported by React Compiler yet.
+           */
+          CompilerError.throwTodo({
+            reason: `Unsupported syntax on the left side of an AssignmentExpression`,
+            description: `Expected an LVal, got: ${left.type}`,
+            loc: left.node.loc ?? null,
+          });
+        }
       },
       UpdateExpression(
         path: NodePath<t.UpdateExpression>,
@@ -172,7 +184,13 @@ function handleAssignment(
           CompilerError.invariant(valuePath.isLVal(), {
             reason: `[FindContextIdentifiers] Expected object property value to be an LVal, got: ${valuePath.type}`,
             description: null,
-            loc: valuePath.node.loc ?? GeneratedSource,
+            details: [
+              {
+                kind: 'error',
+                loc: valuePath.node.loc ?? GeneratedSource,
+                message: null,
+              },
+            ],
             suggestions: null,
           });
           handleAssignment(currentFn, identifiers, valuePath);
@@ -180,7 +198,13 @@ function handleAssignment(
           CompilerError.invariant(property.isRestElement(), {
             reason: `[FindContextIdentifiers] Invalid assumptions for babel types.`,
             description: null,
-            loc: property.node.loc ?? GeneratedSource,
+            details: [
+              {
+                kind: 'error',
+                loc: property.node.loc ?? GeneratedSource,
+                message: null,
+              },
+            ],
             suggestions: null,
           });
           handleAssignment(currentFn, identifiers, property);

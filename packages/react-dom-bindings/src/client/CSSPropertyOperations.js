@@ -11,6 +11,7 @@ import hyphenateStyleName from '../shared/hyphenateStyleName';
 import warnValidStyle from '../shared/warnValidStyle';
 import isUnitlessNumber from '../shared/isUnitlessNumber';
 import {checkCSSPropertyStringCoercion} from 'shared/CheckStringCoercion';
+import {trackHostMutation} from 'react-reconciler/src/ReactFiberMutationTracking';
 
 /**
  * Operations for dealing with CSS properties.
@@ -144,12 +145,14 @@ export function setValueForStyles(node, styles, prevStyles) {
         } else {
           style[styleName] = '';
         }
+        trackHostMutation();
       }
     }
     for (const styleName in styles) {
       const value = styles[styleName];
       if (styles.hasOwnProperty(styleName) && prevStyles[styleName] !== value) {
         setValueForStyle(style, styleName, value);
+        trackHostMutation();
       }
     }
   } else {

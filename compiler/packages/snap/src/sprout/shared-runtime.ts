@@ -128,6 +128,14 @@ export function getNull(): null {
   return null;
 }
 
+export function getTrue(): true {
+  return true;
+}
+
+export function getFalse(): false {
+  return false;
+}
+
 export function calculateExpensiveNumber(x: number): number {
   return x;
 }
@@ -259,26 +267,36 @@ export function Throw() {
 
 export function ValidateMemoization({
   inputs,
-  output,
+  output: rawOutput,
+  onlyCheckCompiled = false,
 }: {
   inputs: Array<any>;
   output: any;
+  onlyCheckCompiled?: boolean;
 }): React.ReactElement {
   'use no forget';
+  // Wrap rawOutput as it might be a function, which useState would invoke.
+  const output = {value: rawOutput};
   const [previousInputs, setPreviousInputs] = React.useState(inputs);
   const [previousOutput, setPreviousOutput] = React.useState(output);
   if (
-    inputs.length !== previousInputs.length ||
-    inputs.some((item, i) => item !== previousInputs[i])
+    !onlyCheckCompiled ||
+    (onlyCheckCompiled &&
+      (globalThis as any).__SNAP_EVALUATOR_MODE === 'forget')
   ) {
-    // Some input changed, we expect the output to change
-    setPreviousInputs(inputs);
-    setPreviousOutput(output);
-  } else if (output !== previousOutput) {
-    // Else output should be stable
-    throw new Error('Output identity changed but inputs did not');
+    if (
+      inputs.length !== previousInputs.length ||
+      inputs.some((item, i) => item !== previousInputs[i])
+    ) {
+      // Some input changed, we expect the output to change
+      setPreviousInputs(inputs);
+      setPreviousOutput(output);
+    } else if (output.value !== previousOutput.value) {
+      // Else output should be stable
+      throw new Error('Output identity changed but inputs did not');
+    }
   }
-  return React.createElement(Stringify, {inputs, output});
+  return React.createElement(Stringify, {inputs, output: rawOutput});
 }
 
 export function createHookWrapper<TProps, TRet>(
@@ -377,6 +395,30 @@ export function typedArrayPush<T>(array: Array<T>, item: T): void {
 
 export function typedLog(...values: Array<any>): void {
   console.log(...values);
+}
+
+export function typedIdentity<T>(value: T): T {
+  return value;
+}
+
+export function typedAssign<T>(x: T): T {
+  return x;
+}
+
+export function typedAlias<T>(x: T): T {
+  return x;
+}
+
+export function typedCapture<T>(x: T): Array<T> {
+  return [x];
+}
+
+export function typedCreateFrom<T>(array: Array<T>): T {
+  return array[0];
+}
+
+export function typedMutate(x: any, v: any = null): void {
+  x.property = v;
 }
 
 export default typedLog;

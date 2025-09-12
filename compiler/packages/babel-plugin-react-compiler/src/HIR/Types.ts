@@ -6,6 +6,7 @@
  */
 
 import {CompilerError} from '../CompilerError';
+import {PropertyLiteral} from './HIR';
 
 export type BuiltInType = PrimitiveType | FunctionType | ObjectType;
 
@@ -37,6 +38,7 @@ export type FunctionType = {
   kind: 'Function';
   shapeId: string | null;
   return: Type;
+  isConstructor: boolean;
 };
 
 export type ObjectType = {
@@ -59,7 +61,15 @@ export type PropType = {
   kind: 'Property';
   objectType: Type;
   objectName: string;
-  propertyName: string;
+  propertyName:
+    | {
+        kind: 'literal';
+        value: PropertyLiteral;
+      }
+    | {
+        kind: 'computed';
+        value: Type;
+      };
 };
 
 export type ObjectMethod = {
@@ -77,7 +87,13 @@ export function makeTypeId(id: number): TypeId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
     reason: 'Expected instruction id to be a non-negative integer',
     description: null,
-    loc: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   return id as TypeId;
@@ -102,6 +118,7 @@ export function duplicateType(type: Type): Type {
         kind: 'Function',
         return: duplicateType(type.return),
         shapeId: type.shapeId,
+        isConstructor: type.isConstructor,
       };
     }
     case 'Object': {

@@ -52,7 +52,7 @@ test.describe('Components', () => {
 
   test('Should allow elements to be inspected', async () => {
     // Select the first list item in DevTools.
-    await devToolsUtils.selectElement(page, 'ListItem', 'List\nApp');
+    await devToolsUtils.selectElement(page, 'ListItem', '<List>\n<App>');
 
     // Prop names/values may not be editable based on the React version.
     // If they're not editable, make sure they degrade gracefully
@@ -119,7 +119,7 @@ test.describe('Components', () => {
     runOnlyForReactRange('>=16.8');
 
     // Select the first list item in DevTools.
-    await devToolsUtils.selectElement(page, 'ListItem', 'List\nApp');
+    await devToolsUtils.selectElement(page, 'ListItem', '<List>\n<App>', true);
 
     // Then read the inspected values.
     const sourceText = await page.evaluate(() => {
@@ -127,7 +127,7 @@ test.describe('Components', () => {
       const container = document.getElementById('devtools');
 
       const source = findAllNodes(container, [
-        createTestNameSelector('InspectedElementView-Source'),
+        createTestNameSelector('InspectedElementView-FormattedSourceString'),
       ])[0];
 
       return source.innerText;
@@ -142,7 +142,7 @@ test.describe('Components', () => {
     runOnlyForReactRange('>=16.8');
 
     // Select the first list item in DevTools.
-    await devToolsUtils.selectElement(page, 'ListItem', 'List\nApp');
+    await devToolsUtils.selectElement(page, 'ListItem', '<List>\n<App>');
 
     // Then edit the label prop.
     await page.evaluate(() => {
@@ -177,7 +177,7 @@ test.describe('Components', () => {
     runOnlyForReactRange('>=16.8');
 
     // Select the List component DevTools.
-    await devToolsUtils.selectElement(page, 'List', 'App');
+    await devToolsUtils.selectElement(page, 'List', '<App>');
 
     // Then click to load and parse hook names.
     await devToolsUtils.clickButton(page, 'LoadHookNamesButton');
@@ -212,8 +212,8 @@ test.describe('Components', () => {
   });
 
   test('should allow searching for component by name', async () => {
-    async function getComponentSearchResultsCount() {
-      return await page.evaluate(() => {
+    async function waitForComponentSearchResultsCount(text) {
+      return await page.waitForFunction(expectedElementText => {
         const {createTestNameSelector, findAllNodes} =
           window.REACT_DOM_DEVTOOLS;
         const container = document.getElementById('devtools');
@@ -221,8 +221,10 @@ test.describe('Components', () => {
         const element = findAllNodes(container, [
           createTestNameSelector('ComponentSearchInput-ResultsCount'),
         ])[0];
-        return element.innerText;
-      });
+        return element !== undefined
+          ? element.innerText === expectedElementText
+          : false;
+      }, text);
     }
 
     async function focusComponentSearch() {
@@ -237,36 +239,28 @@ test.describe('Components', () => {
     }
 
     await focusComponentSearch();
-    page.keyboard.insertText('List');
-    let count = await getComponentSearchResultsCount();
-    expect(count).toBe('1 | 4');
+    await page.keyboard.insertText('List');
+    await waitForComponentSearchResultsCount('1 | 4');
 
-    page.keyboard.insertText('Item');
-    count = await getComponentSearchResultsCount();
-    expect(count).toBe('1 | 3');
+    await page.keyboard.insertText('Item');
+    await waitForComponentSearchResultsCount('1 | 3');
 
-    page.keyboard.press('Enter');
-    count = await getComponentSearchResultsCount();
-    expect(count).toBe('2 | 3');
+    await page.keyboard.press('Enter');
+    await waitForComponentSearchResultsCount('2 | 3');
 
-    page.keyboard.press('Enter');
-    count = await getComponentSearchResultsCount();
-    expect(count).toBe('3 | 3');
+    await page.keyboard.press('Enter');
+    await waitForComponentSearchResultsCount('3 | 3');
 
-    page.keyboard.press('Enter');
-    count = await getComponentSearchResultsCount();
-    expect(count).toBe('1 | 3');
+    await page.keyboard.press('Enter');
+    await waitForComponentSearchResultsCount('1 | 3');
 
-    page.keyboard.press('Shift+Enter');
-    count = await getComponentSearchResultsCount();
-    expect(count).toBe('3 | 3');
+    await page.keyboard.press('Shift+Enter');
+    await waitForComponentSearchResultsCount('3 | 3');
 
-    page.keyboard.press('Shift+Enter');
-    count = await getComponentSearchResultsCount();
-    expect(count).toBe('2 | 3');
+    await page.keyboard.press('Shift+Enter');
+    await waitForComponentSearchResultsCount('2 | 3');
 
-    page.keyboard.press('Shift+Enter');
-    count = await getComponentSearchResultsCount();
-    expect(count).toBe('1 | 3');
+    await page.keyboard.press('Shift+Enter');
+    await waitForComponentSearchResultsCount('1 | 3');
   });
 });

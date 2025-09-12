@@ -22,7 +22,7 @@ if (typeof File === 'undefined' || typeof FormData === 'undefined') {
   global.FormData = require('undici').FormData;
 }
 
-// let serverExports;
+let serverExports;
 let webpackServerMap;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
@@ -36,7 +36,7 @@ describe('ReactFlightDOMReplyEdge', () => {
       require('react-server-dom-webpack/server.edge'),
     );
     const WebpackMock = require('./utils/WebpackMock');
-    // serverExports = WebpackMock.serverExports;
+    serverExports = WebpackMock.serverExports;
     webpackServerMap = WebpackMock.webpackServerMap;
     ReactServerDOMServer = require('react-server-dom-webpack/server.edge');
     jest.resetModules();
@@ -244,5 +244,93 @@ describe('ReactFlightDOMReplyEdge', () => {
         Array.from(new Uint8Array(c.buffer, c.byteOffset, c.byteLength)),
       ),
     );
+  });
+
+  it('should abort when parsing an incomplete payload', async () => {
+    const infinitePromise = new Promise(() => {});
+    const controller = new AbortController();
+    const promiseForResult = ReactServerDOMClient.encodeReply(
+      {promise: infinitePromise},
+      {
+        signal: controller.signal,
+      },
+    );
+    controller.abort();
+    const body = await promiseForResult;
+
+    const decoded = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+    );
+
+    let error = null;
+    try {
+      await decoded.promise;
+    } catch (x) {
+      error = x;
+    }
+    expect(error).not.toBe(null);
+    expect(error.message).toBe('Connection closed.');
+  });
+
+  it('can stream the decoding using an async iterable', async () => {
+    let resolve;
+    const promise = new Promise(r => (resolve = r));
+
+    const buffer = new Uint8Array([
+      123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
+    ]);
+
+    const formData = await ReactServerDOMClient.encodeReply({
+      a: Promise.resolve('hello'),
+      b: Promise.resolve(buffer),
+    });
+
+    const iterable = {
+      async *[Symbol.asyncIterator]() {
+        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+        for (const entry of formData) {
+          yield entry;
+          await promise;
+        }
+      },
+    };
+
+    const decoded = await ReactServerDOMServer.decodeReplyFromAsyncIterable(
+      iterable,
+      webpackServerMap,
+    );
+
+    expect(Object.keys(decoded)).toEqual(['a', 'b']);
+
+    await resolve();
+
+    expect(await decoded.a).toBe('hello');
+    expect(Array.from(await decoded.b)).toEqual(Array.from(buffer));
+  });
+
+  it('can pass a registered server reference', async () => {
+    function greet(name) {
+      return 'hi, ' + name;
+    }
+    const ServerModule = serverExports({
+      greet,
+    });
+
+    ReactServerDOMClient.registerServerReference(
+      ServerModule.greet,
+      ServerModule.greet.$$id,
+    );
+
+    const body = await ReactServerDOMClient.encodeReply({
+      method: ServerModule.greet,
+      boundMethod: ServerModule.greet.bind(null, 'there'),
+    });
+    const replyResult = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+    );
+    expect(replyResult.method).toBe(greet);
+    expect(replyResult.boundMethod()).toBe('hi, there');
   });
 });

@@ -57,56 +57,60 @@ export default function DebuggingSettings({
   ]);
 
   return (
-    <div className={styles.Settings}>
-      <div className={styles.Setting}>
-        <label>
+    <div className={styles.SettingList}>
+      <div className={styles.SettingWrapper}>
+        <label className={styles.SettingRow}>
           <input
             type="checkbox"
             checked={appendComponentStack}
             onChange={({currentTarget}) =>
               setAppendComponentStack(currentTarget.checked)
             }
-          />{' '}
-          Append component stacks to console warnings and errors.
+            className={styles.SettingRowCheckbox}
+          />
+          Append component stacks to console warnings and errors
         </label>
       </div>
 
-      <div className={styles.Setting}>
-        <label>
+      <div className={styles.SettingWrapper}>
+        <label className={styles.SettingRow}>
           <input
             type="checkbox"
             checked={showInlineWarningsAndErrors}
             onChange={({currentTarget}) =>
               setShowInlineWarningsAndErrors(currentTarget.checked)
             }
-          />{' '}
-          Show inline warnings and errors.
+            className={styles.SettingRowCheckbox}
+          />
+          Show inline warnings and errors
         </label>
       </div>
 
-      <div className={styles.Setting}>
-        <label>
+      <div className={styles.SettingWrapper}>
+        <label className={styles.SettingRow}>
           <input
             type="checkbox"
             checked={breakOnConsoleErrors}
             onChange={({currentTarget}) =>
               setBreakOnConsoleErrors(currentTarget.checked)
             }
-          />{' '}
+            className={styles.SettingRowCheckbox}
+          />
           Break on warnings
         </label>
       </div>
 
-      <div className={styles.Setting}>
-        <label>
+      <div className={styles.SettingWrapper}>
+        <label className={styles.SettingRow}>
           <input
             type="checkbox"
             checked={hideConsoleLogsInStrictMode}
             onChange={({currentTarget}) =>
               setHideConsoleLogsInStrictMode(currentTarget.checked)
             }
-          />{' '}
-          Hide logs during additional invocations in{' '}
+            className={styles.SettingRowCheckbox}
+          />
+          Hide logs during additional invocations in&nbsp;
           <a
             className={styles.StrictModeLink}
             target="_blank"

@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @compilationMode(infer)
+// @compilationMode:"infer"
 import {useMemo} from 'react';
 import {ValidateMemoization} from 'shared-runtime';
 
@@ -24,41 +24,39 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @compilationMode(infer)
+import { c as _c } from "react/compiler-runtime"; // @compilationMode:"infer"
 import { useMemo } from "react";
 import { ValidateMemoization } from "shared-runtime";
 
 function Component(props) {
   const $ = _c(7);
   let t0;
-  let t1;
   if ($[0] !== props.x) {
-    t1 = props.x();
+    t0 = props.x();
     $[0] = props.x;
-    $[1] = t1;
+    $[1] = t0;
   } else {
-    t1 = $[1];
+    t0 = $[1];
   }
-  t0 = t1;
   const x = t0;
-  let t2;
+  let t1;
   if ($[2] !== props.x) {
-    t2 = [props.x];
+    t1 = [props.x];
     $[2] = props.x;
-    $[3] = t2;
+    $[3] = t1;
   } else {
-    t2 = $[3];
+    t1 = $[3];
   }
-  let t3;
-  if ($[4] !== t2 || $[5] !== x) {
-    t3 = <ValidateMemoization inputs={t2} output={x} />;
-    $[4] = t2;
+  let t2;
+  if ($[4] !== t1 || $[5] !== x) {
+    t2 = <ValidateMemoization inputs={t1} output={x} />;
+    $[4] = t1;
     $[5] = x;
-    $[6] = t3;
+    $[6] = t2;
   } else {
-    t3 = $[6];
+    t2 = $[6];
   }
-  return t3;
+  return t2;
 }
 
 const f = () => ["React"];

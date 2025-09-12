@@ -35,7 +35,7 @@ contextBridge.exposeInMainWorld('api', {
     }
     const host = process.env.HOST || 'localhost';
     const protocol = useHttps ? 'https' : 'http';
-    const port = +process.env.PORT || 8097;
+    const port = +process.env.REACT_DEVTOOLS_PORT || +process.env.PORT || 8097;
     return {options, useHttps, host, protocol, port};
   },
 });

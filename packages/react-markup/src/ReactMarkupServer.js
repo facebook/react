@@ -25,6 +25,7 @@ import {
 
 import {
   createResponse as createFlightResponse,
+  createStreamState as createFlightStreamState,
   getRoot as getFlightRoot,
   processStringChunk as processFlightStringChunk,
   close as closeFlight,
@@ -46,7 +47,7 @@ import {
 type ReactMarkupNodeList =
   // This is the intersection of ReactNodeList and ReactClientValue minus
   // Client/ServerReferences.
-  | React$Element<React$ComponentType<any>>
+  | component(...props: any)
   | LazyComponent<ReactMarkupNodeList, any>
   | React$Element<string>
   | string
@@ -80,10 +81,22 @@ export function experimental_renderToHTML(
   options?: MarkupOptions,
 ): Promise<string> {
   return new Promise((resolve, reject) => {
+    const flightResponse = createFlightResponse(
+      null,
+      null,
+      null,
+      noServerCallOrFormAction,
+      noServerCallOrFormAction,
+      undefined,
+      undefined,
+      undefined,
+      false,
+    );
+    const streamState = createFlightStreamState(flightResponse, null);
     const flightDestination = {
       push(chunk: string | null): boolean {
         if (chunk !== null) {
-          processFlightStringChunk(flightResponse, chunk);
+          processFlightStringChunk(flightResponse, streamState, chunk);
         } else {
           closeFlight(flightResponse);
         }
@@ -170,16 +183,6 @@ export function experimental_renderToHTML(
       undefined,
       undefined,
       'Markup',
-      undefined,
-    );
-    const flightResponse = createFlightResponse(
-      null,
-      null,
-      null,
-      noServerCallOrFormAction,
-      noServerCallOrFormAction,
-      undefined,
-      undefined,
       undefined,
       false,
     );

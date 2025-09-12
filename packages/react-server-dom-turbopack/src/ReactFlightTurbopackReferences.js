@@ -63,7 +63,7 @@ const FunctionBind = Function.prototype.bind;
 // $FlowFixMe[method-unbinding]
 const ArraySlice = Array.prototype.slice;
 function bind(this: ServerReference<any>): any {
-  // $FlowFixMe[prop-missing]
+  // $FlowFixMe[incompatible-call]
   const newFn = FunctionBind.apply(this, arguments);
   if (this.$$typeof === SERVER_REFERENCE_TAG) {
     if (__DEV__) {
@@ -80,7 +80,7 @@ function bind(this: ServerReference<any>): any {
     const $$bound = {value: this.$$bound ? this.$$bound.concat(args) : args};
     return Object.defineProperties(
       (newFn: any),
-      __DEV__
+      (__DEV__
         ? {
             $$typeof,
             $$id,
@@ -96,7 +96,7 @@ function bind(this: ServerReference<any>): any {
             $$id,
             $$bound,
             bind: {value: bind, configurable: true},
-          },
+          }) as PropertyDescriptorMap,
     );
   }
   return newFn;
@@ -115,7 +115,7 @@ export function registerServerReference<T: Function>(
   const $$bound = {value: null, configurable: true};
   return Object.defineProperties(
     (reference: any),
-    __DEV__
+    (__DEV__
       ? {
           $$typeof,
           $$id,
@@ -131,13 +131,13 @@ export function registerServerReference<T: Function>(
           $$id,
           $$bound,
           bind: {value: bind, configurable: true},
-        },
+        }) as PropertyDescriptorMap,
   );
 }
 
 const PROMISE_PROTOTYPE = Promise.prototype;
 
-const deepProxyHandlers = {
+const deepProxyHandlers: Proxy$traps<mixed> = {
   get: function (
     target: Function,
     name: string | symbol,
@@ -160,6 +160,9 @@ const deepProxyHandlers = {
       // We need to special case this because createElement reads it if we pass this
       // reference.
       case 'defaultProps':
+        return undefined;
+      // React looks for debugInfo on thenables.
+      case '_debugInfo':
         return undefined;
       // Avoid this attempting to be serialized.
       case 'toJSON':
@@ -209,6 +212,9 @@ function getReference(target: Function, name: string | symbol): $FlowFixMe {
     // We need to special case this because createElement reads it if we pass this
     // reference.
     case 'defaultProps':
+      return undefined;
+    // React looks for debugInfo on thenables.
+    case '_debugInfo':
       return undefined;
     // Avoid this attempting to be serialized.
     case 'toJSON':

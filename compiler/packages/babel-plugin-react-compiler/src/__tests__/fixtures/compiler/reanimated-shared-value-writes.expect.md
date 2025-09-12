@@ -36,21 +36,22 @@ import { useSharedValue } from "react-native-reanimated";
  * of render
  */
 function SomeComponent() {
-  const $ = _c(3);
+  const $ = _c(2);
   const sharedVal = useSharedValue(0);
-
-  const T0 = Button;
-  const t0 = () => (sharedVal.value = Math.random());
-  let t1;
-  if ($[0] !== T0 || $[1] !== t0) {
-    t1 = <T0 onPress={t0} title="Randomize" />;
-    $[0] = T0;
+  let t0;
+  if ($[0] !== sharedVal) {
+    t0 = (
+      <Button
+        onPress={() => (sharedVal.value = Math.random())}
+        title="Randomize"
+      />
+    );
+    $[0] = sharedVal;
     $[1] = t0;
-    $[2] = t1;
   } else {
-    t1 = $[2];
+    t0 = $[1];
   }
-  return t1;
+  return t0;
 }
 
 ```

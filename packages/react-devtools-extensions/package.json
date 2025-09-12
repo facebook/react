@@ -8,6 +8,7 @@
     "build:chrome": "cross-env NODE_ENV=production node ./chrome/build",
     "build:chrome:fb": "cross-env NODE_ENV=production FEATURE_FLAG_TARGET=extension-fb node ./chrome/build --crx",
     "build:chrome:local": "cross-env NODE_ENV=development node ./chrome/build",
+    "build:chrome:fb:local": "cross-env NODE_ENV=development FEATURE_FLAG_TARGET=extension-fb node ./chrome/build",
     "build:firefox": "cross-env NODE_ENV=production node ./firefox/build",
     "build:firefox:local": "cross-env NODE_ENV=development node ./firefox/build",
     "build:edge": "cross-env NODE_ENV=production node ./edge/build",

@@ -43,6 +43,8 @@ export function describeFiber(
     SimpleMemoComponent,
     ForwardRef,
     ClassComponent,
+    ViewTransitionComponent,
+    ActivityComponent,
   } = workTagMap;
 
   switch (workInProgress.tag) {
@@ -57,6 +59,10 @@ export function describeFiber(
       return describeBuiltInComponentFrame('Suspense');
     case SuspenseListComponent:
       return describeBuiltInComponentFrame('SuspenseList');
+    case ViewTransitionComponent:
+      return describeBuiltInComponentFrame('ViewTransition');
+    case ActivityComponent:
+      return describeBuiltInComponentFrame('Activity');
     case FunctionComponent:
     case IndeterminateComponent:
     case SimpleMemoComponent:
@@ -150,6 +156,8 @@ export function getOwnerStackByFiberInDev(
     HostComponent,
     SuspenseComponent,
     SuspenseListComponent,
+    ViewTransitionComponent,
+    ActivityComponent,
   } = workTagMap;
   try {
     let info = '';
@@ -177,6 +185,12 @@ export function getOwnerStackByFiberInDev(
       case SuspenseListComponent:
         info += describeBuiltInComponentFrame('SuspenseList');
         break;
+      case ViewTransitionComponent:
+        info += describeBuiltInComponentFrame('ViewTransition');
+        break;
+      case ActivityComponent:
+        info += describeBuiltInComponentFrame('Activity');
+        break;
     }
 
     let owner: void | null | Fiber | ReactComponentInfo = workInProgress;
@@ -185,7 +199,7 @@ export function getOwnerStackByFiberInDev(
       if (typeof owner.tag === 'number') {
         const fiber: Fiber = (owner: any);
         owner = fiber._debugOwner;
-        let debugStack = fiber._debugStack;
+        let debugStack: void | null | string | Error = fiber._debugStack;
         // If we don't actually print the stack if there is no owner of this JSX element.
         // In a real app it's typically not useful since the root app is always controlled
         // by the framework. These also tend to have noisy stacks because they're not rooted

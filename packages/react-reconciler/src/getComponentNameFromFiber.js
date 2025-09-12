@@ -13,7 +13,7 @@ import type {Fiber} from './ReactInternalTypes';
 import {
   disableLegacyMode,
   enableLegacyHidden,
-  enableRenderableContext,
+  enableViewTransition,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -45,6 +45,8 @@ import {
   CacheComponent,
   TracingMarkerComponent,
   Throw,
+  ViewTransitionComponent,
+  ActivityComponent,
 } from 'react-reconciler/src/ReactWorkTags';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {REACT_STRICT_MODE_TYPE} from 'shared/ReactSymbols';
@@ -83,24 +85,16 @@ export function getComponentNameFromOwner(
 export default function getComponentNameFromFiber(fiber: Fiber): string | null {
   const {tag, type} = fiber;
   switch (tag) {
+    case ActivityComponent:
+      return 'Activity';
     case CacheComponent:
       return 'Cache';
     case ContextConsumer:
-      if (enableRenderableContext) {
-        const consumer: ReactConsumerType<any> = (type: any);
-        return getContextName(consumer._context) + '.Consumer';
-      } else {
-        const context: ReactContext<any> = (type: any);
-        return getContextName(context) + '.Consumer';
-      }
+      const consumer: ReactConsumerType<any> = (type: any);
+      return getContextName(consumer._context) + '.Consumer';
     case ContextProvider:
-      if (enableRenderableContext) {
-        const context: ReactContext<any> = (type: any);
-        return getContextName(context) + '.Provider';
-      } else {
-        const provider = (type: any);
-        return getContextName(provider._context) + '.Provider';
-      }
+      const context: ReactContext<any> = (type: any);
+      return getContextName(context);
     case DehydratedFragment:
       return 'DehydratedFragment';
     case ForwardRef:
@@ -139,7 +133,12 @@ export default function getComponentNameFromFiber(fiber: Fiber): string | null {
       return 'SuspenseList';
     case TracingMarkerComponent:
       return 'TracingMarker';
+    case ViewTransitionComponent:
+      if (enableViewTransition) {
+        return 'ViewTransition';
+      }
     // The display name for these tags come from the user-provided type:
+    // Fallthrough
     case IncompleteClassComponent:
     case IncompleteFunctionComponent:
       if (disableLegacyMode) {

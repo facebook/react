@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {emptyContextObject} from './ReactFizzContext';
+import {emptyContextObject} from './ReactFizzLegacyContext';
 import {readContext} from './ReactFizzNewContext';
 
 import {disableLegacyContext} from 'shared/ReactFeatureFlags';
@@ -79,7 +79,7 @@ function warnOnUndefinedDerivedState(type: any, partialState: any) {
 }
 
 function warnNoop(
-  publicInstance: React$Component<any, any>,
+  publicInstance: component(...props: any),
   callerName: string,
 ) {
   if (__DEV__) {
@@ -108,9 +108,6 @@ type InternalInstance = {
 };
 
 const classComponentUpdater = {
-  isMounted(inst: any) {
-    return false;
-  },
   // $FlowFixMe[missing-local-annot]
   enqueueSetState(inst: any, payload: any, callback) {
     const internals: InternalInstance = getInstance(inst);

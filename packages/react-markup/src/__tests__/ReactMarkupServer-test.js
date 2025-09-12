@@ -209,7 +209,6 @@ if (!__EXPERIMENTAL__) {
       );
     });
 
-    // @gate enableCache
     it('supports cache', async () => {
       let counter = 0;
       const getCount = React.cache(() => {
@@ -270,9 +269,7 @@ if (!__EXPERIMENTAL__) {
           : '\n    in div (at **)' + '\n    in div (at **)',
       );
       expect(normalizeCodeLocInfo(caughtErrors[0].ownerStack)).toBe(
-        __DEV__ && gate(flags => flags.enableOwnerStacks)
-          ? '\n    in Bar (at **)' + '\n    in Foo (at **)'
-          : null,
+        __DEV__ ? '\n    in Bar (at **)' + '\n    in Foo (at **)' : null,
       );
     });
   });

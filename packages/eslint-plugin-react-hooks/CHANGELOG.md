@@ -1,3 +1,15 @@
+## 5.2.0
+
+- Support flat config ([@michaelfaith](https://github.com/michaelfaith) in [#30774](https://github.com/facebook/react/pull/30774))
+- Convert the plugin to TypeScript and provide package type declarations ([@michaelfaith](https://github.com/michaelfaith) in [#32279](https://github.com/facebook/react/pull/32279), [#32283](https://github.com/facebook/react/pull/32283), [#32240](https://github.com/facebook/react/pull/32240), [#32400](https://github.com/facebook/react/pull/32400) and [@poteto](https://github.com/poteto) in [#32420](https://github.com/facebook/react/pull/32420))
+- Fix false positive error in components with `do`/`while` loops ([@tyxla](https://github.com/tyxla) in [#31720](https://github.com/facebook/react/pull/31720))
+- Detect issues in class properties ([@mjesun](https://github.com/mjesun) & [@ecraig12345](https://github.com/ecraig12345) in [#31823](https://github.com/facebook/react/pull/31823))
+
+## 5.1.0
+
+- Add support for `do`/`while` loops ([@tyxla](https://github.com/tyxla) in [#28714](https://github.com/facebook/react/pull/28714))
+- Fix error when callback argument is an identifier with an `as` expression ([@mskelton](https://github.com/mskelton) in [#31119](https://github.com/facebook/react/pull/31119))
+
 ## 5.0.0
 
 * **New Violations:** Component names now need to start with an uppercase letter instead of a non-lowercase letter. This means `_Button` or `_component` are no longer valid. ([@kassens](https://github.com/kassens)) in [#25162](https://github.com/facebook/react/pull/25162)

@@ -14,6 +14,7 @@ describe('when Trusted Types are available in global object', () => {
   let ReactDOMClient;
   let ReactFeatureFlags;
   let act;
+  let assertConsoleErrorDev;
   let container;
   let ttObject1;
   let ttObject2;
@@ -36,7 +37,7 @@ describe('when Trusted Types are available in global object', () => {
     ReactFeatureFlags.enableTrustedTypesIntegration = true;
     React = require('react');
     ReactDOMClient = require('react-dom/client');
-    act = require('internal-test-utils').act;
+    ({act, assertConsoleErrorDev} = require('internal-test-utils'));
     ttObject1 = {
       toString() {
         return '<b>Hi</b>';
@@ -208,17 +209,16 @@ describe('when Trusted Types are available in global object', () => {
 
   it('should warn once when rendering script tag in jsx on client', async () => {
     const root = ReactDOMClient.createRoot(container);
-    await expect(async () => {
-      await act(() => {
-        root.render(<script>alert("I am not executed")</script>);
-      });
-    }).toErrorDev(
+    await act(() => {
+      root.render(<script>alert("I am not executed")</script>);
+    });
+    assertConsoleErrorDev([
       'Encountered a script tag while rendering React component. ' +
         'Scripts inside React components are never executed when rendering ' +
         'on the client. Consider using template tag instead ' +
         '(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).\n' +
         '    in script (at **)',
-    );
+    ]);
 
     // check that the warning is printed only once
     await act(() => {

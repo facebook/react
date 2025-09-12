@@ -28,12 +28,14 @@ import {
 } from './ReactFiberLane';
 import {
   enableSuspenseCallback,
-  enableCache,
   enableProfilerCommitHooks,
   enableProfilerTimer,
   enableUpdaterTracking,
   enableTransitionTracing,
   disableLegacyMode,
+  enableViewTransition,
+  enableGestureTransition,
+  enableDefaultTransitionIndicator,
 } from 'shared/ReactFeatureFlags';
 import {initializeUpdateQueue} from './ReactFiberClassUpdateQueue';
 import {LegacyRoot, ConcurrentRoot} from './ReactRootTags';
@@ -55,6 +57,7 @@ function FiberRootNode(
   onUncaughtError: any,
   onCaughtError: any,
   onRecoverableError: any,
+  onDefaultTransitionIndicator: any,
   formState: ReactFormState<any, any> | null,
 ) {
   this.tag = disableLegacyMode ? ConcurrentRoot : tag;
@@ -62,7 +65,6 @@ function FiberRootNode(
   this.pendingChildren = null;
   this.current = null;
   this.pingCache = null;
-  this.finishedWork = null;
   this.timeoutHandle = noTimeout;
   this.cancelPendingCommit = null;
   this.context = null;
@@ -77,7 +79,9 @@ function FiberRootNode(
   this.pingedLanes = NoLanes;
   this.warmLanes = NoLanes;
   this.expiredLanes = NoLanes;
-  this.finishedLanes = NoLanes;
+  if (enableDefaultTransitionIndicator) {
+    this.indicatorLanes = NoLanes;
+  }
   this.errorRecoveryDisabledLanes = NoLanes;
   this.shellSuspendCounter = 0;
 
@@ -91,10 +95,13 @@ function FiberRootNode(
   this.onCaughtError = onCaughtError;
   this.onRecoverableError = onRecoverableError;
 
-  if (enableCache) {
-    this.pooledCache = null;
-    this.pooledCacheLanes = NoLanes;
+  if (enableDefaultTransitionIndicator) {
+    this.onDefaultTransitionIndicator = onDefaultTransitionIndicator;
+    this.pendingIndicator = null;
   }
+
+  this.pooledCache = null;
+  this.pooledCacheLanes = NoLanes;
 
   if (enableSuspenseCallback) {
     this.hydrationCallbacks = null;
@@ -102,13 +109,20 @@ function FiberRootNode(
 
   this.formState = formState;
 
+  if (enableViewTransition) {
+    this.transitionTypes = null;
+  }
+
+  if (enableGestureTransition) {
+    this.pendingGestures = null;
+    this.stoppingGestures = null;
+    this.gestureClone = null;
+  }
+
   this.incompleteTransitions = new Map();
   if (enableTransitionTracing) {
     this.transitionCallbacks = null;
-    const transitionLanesMap = (this.transitionLanes = []);
-    for (let i = 0; i < TotalLanes; i++) {
-      transitionLanesMap.push(null);
-    }
+    this.transitionLanes = createLaneMap(null);
   }
 
   if (enableProfilerTimer && enableProfilerCommitHooks) {
@@ -153,6 +167,7 @@ export function createFiberRoot(
   // them through the root constructor. Perhaps we should put them all into a
   // single type, like a DynamicHostConfig that is defined by the renderer.
   identifierPrefix: string,
+  formState: ReactFormState<any, any> | null,
   onUncaughtError: (
     error: mixed,
     errorInfo: {+componentStack?: ?string},
@@ -161,15 +176,15 @@ export function createFiberRoot(
     error: mixed,
     errorInfo: {
       +componentStack?: ?string,
-      +errorBoundary?: ?React$Component<any, any>,
+      +errorBoundary?: ?component(...props: any),
     },
   ) => void,
   onRecoverableError: (
     error: mixed,
     errorInfo: {+componentStack?: ?string},
   ) => void,
+  onDefaultTransitionIndicator: () => void | (() => void),
   transitionCallbacks: null | TransitionTracingCallbacks,
-  formState: ReactFormState<any, any> | null,
 ): FiberRoot {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   const root: FiberRoot = (new FiberRootNode(
@@ -180,6 +195,7 @@ export function createFiberRoot(
     onUncaughtError,
     onCaughtError,
     onRecoverableError,
+    onDefaultTransitionIndicator,
     formState,
   ): any);
   if (enableSuspenseCallback) {
@@ -196,33 +212,24 @@ export function createFiberRoot(
   root.current = uninitializedFiber;
   uninitializedFiber.stateNode = root;
 
-  if (enableCache) {
-    const initialCache = createCache();
-    retainCache(initialCache);
+  const initialCache = createCache();
+  retainCache(initialCache);
 
-    // The pooledCache is a fresh cache instance that is used temporarily
-    // for newly mounted boundaries during a render. In general, the
-    // pooledCache is always cleared from the root at the end of a render:
-    // it is either released when render commits, or moved to an Offscreen
-    // component if rendering suspends. Because the lifetime of the pooled
-    // cache is distinct from the main memoizedState.cache, it must be
-    // retained separately.
-    root.pooledCache = initialCache;
-    retainCache(initialCache);
-    const initialState: RootState = {
-      element: initialChildren,
-      isDehydrated: hydrate,
-      cache: initialCache,
-    };
-    uninitializedFiber.memoizedState = initialState;
-  } else {
-    const initialState: RootState = {
-      element: initialChildren,
-      isDehydrated: hydrate,
-      cache: (null: any), // not enabled yet
-    };
-    uninitializedFiber.memoizedState = initialState;
-  }
+  // The pooledCache is a fresh cache instance that is used temporarily
+  // for newly mounted boundaries during a render. In general, the
+  // pooledCache is always cleared from the root at the end of a render:
+  // it is either released when render commits, or moved to an Offscreen
+  // component if rendering suspends. Because the lifetime of the pooled
+  // cache is distinct from the main memoizedState.cache, it must be
+  // retained separately.
+  root.pooledCache = initialCache;
+  retainCache(initialCache);
+  const initialState: RootState = {
+    element: initialChildren,
+    isDehydrated: hydrate,
+    cache: initialCache,
+  };
+  uninitializedFiber.memoizedState = initialState;
 
   initializeUpdateQueue(uninitializedFiber);
 

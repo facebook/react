@@ -17,6 +17,7 @@ import type {
   Container,
   TextInstance,
   Instance,
+  ActivityInstance,
   SuspenseInstance,
   Props,
   HoistableRoot,
@@ -30,9 +31,10 @@ import {
   HostText,
   HostRoot,
   SuspenseComponent,
+  ActivityComponent,
 } from 'react-reconciler/src/ReactWorkTags';
 
-import {getParentSuspenseInstance} from './ReactFiberConfigDOM';
+import {getParentHydrationBoundary} from './ReactFiberConfigDOM';
 
 import {enableScopeAPI} from 'shared/ReactFeatureFlags';
 
@@ -45,6 +47,7 @@ const internalEventHandlerListenersKey = '__reactListeners$' + randomKey;
 const internalEventHandlesSetKey = '__reactHandles$' + randomKey;
 const internalRootNodeResourcesKey = '__reactResources$' + randomKey;
 const internalHoistableMarker = '__reactMarker$' + randomKey;
+const internalScrollTimer = '__reactScroll$' + randomKey;
 
 export function detachDeletedInstance(node: Instance): void {
   // TODO: This function is only called on host components. I don't think all of
@@ -58,7 +61,12 @@ export function detachDeletedInstance(node: Instance): void {
 
 export function precacheFiberNode(
   hostInst: Fiber,
-  node: Instance | TextInstance | SuspenseInstance | ReactScopeInstance,
+  node:
+    | Instance
+    | TextInstance
+    | SuspenseInstance
+    | ActivityInstance
+    | ReactScopeInstance,
 ): void {
   (node: any)[internalInstanceKey] = hostInst;
 }
@@ -80,15 +88,16 @@ export function isContainerMarkedAsRoot(node: Container): boolean {
 
 // Given a DOM node, return the closest HostComponent or HostText fiber ancestor.
 // If the target node is part of a hydrated or not yet rendered subtree, then
-// this may also return a SuspenseComponent or HostRoot to indicate that.
+// this may also return a SuspenseComponent, ActivityComponent or HostRoot to
+// indicate that.
 // Conceptually the HostRoot fiber is a child of the Container node. So if you
 // pass the Container node as the targetNode, you will not actually get the
 // HostRoot back. To get to the HostRoot, you need to pass a child of it.
-// The same thing applies to Suspense boundaries.
+// The same thing applies to Suspense and Activity boundaries.
 export function getClosestInstanceFromNode(targetNode: Node): null | Fiber {
   let targetInst = (targetNode: any)[internalInstanceKey];
   if (targetInst) {
-    // Don't return HostRoot or SuspenseComponent here.
+    // Don't return HostRoot, SuspenseComponent or ActivityComponent here.
     return targetInst;
   }
   // If the direct event target isn't a React owned DOM node, we need to look
@@ -128,8 +137,8 @@ export function getClosestInstanceFromNode(targetNode: Node): null | Fiber {
       ) {
         // Next we need to figure out if the node that skipped past is
         // nested within a dehydrated boundary and if so, which one.
-        let suspenseInstance = getParentSuspenseInstance(targetNode);
-        while (suspenseInstance !== null) {
+        let hydrationInstance = getParentHydrationBoundary(targetNode);
+        while (hydrationInstance !== null) {
           // We found a suspense instance. That means that we haven't
           // hydrated it yet. Even though we leave the comments in the
           // DOM after hydrating, and there are boundaries in the DOM
@@ -139,15 +148,15 @@ export function getClosestInstanceFromNode(targetNode: Node): null | Fiber {
           // Let's get the fiber associated with the SuspenseComponent
           // as the deepest instance.
           // $FlowFixMe[prop-missing]
-          const targetSuspenseInst = suspenseInstance[internalInstanceKey];
-          if (targetSuspenseInst) {
-            return targetSuspenseInst;
+          const targetFiber = hydrationInstance[internalInstanceKey];
+          if (targetFiber) {
+            return targetFiber;
           }
           // If we don't find a Fiber on the comment, it might be because
           // we haven't gotten to hydrate it yet. There might still be a
           // parent boundary that hasn't above this one so we need to find
           // the outer most that is known.
-          suspenseInstance = getParentSuspenseInstance(suspenseInstance);
+          hydrationInstance = getParentHydrationBoundary(hydrationInstance);
           // If we don't find one, then that should mean that the parent
           // host component also hasn't hydrated yet. We can return it
           // below since it will bail out on the isMounted check later.
@@ -175,6 +184,7 @@ export function getInstanceFromNode(node: Node): Fiber | null {
       tag === HostComponent ||
       tag === HostText ||
       tag === SuspenseComponent ||
+      tag === ActivityComponent ||
       tag === HostHoistable ||
       tag === HostSingleton ||
       tag === HostRoot
@@ -210,15 +220,17 @@ export function getNodeFromInstance(inst: Fiber): Instance | TextInstance {
 }
 
 export function getFiberCurrentPropsFromNode(
-  node: Instance | TextInstance | SuspenseInstance,
+  node:
+    | Container
+    | Instance
+    | TextInstance
+    | SuspenseInstance
+    | ActivityInstance,
 ): Props {
   return (node: any)[internalPropsKey] || null;
 }
 
-export function updateFiberProps(
-  node: Instance | TextInstance | SuspenseInstance,
-  props: Props,
-): void {
+export function updateFiberProps(node: Instance, props: Props): void {
   (node: any)[internalPropsKey] = props;
 }
 
@@ -291,6 +303,18 @@ export function isMarkedHoistable(node: Node): boolean {
 
 export function markNodeAsHoistable(node: Node) {
   (node: any)[internalHoistableMarker] = true;
+}
+
+export function getScrollEndTimer(node: EventTarget): ?TimeoutID {
+  return (node: any)[internalScrollTimer];
+}
+
+export function setScrollEndTimer(node: EventTarget, timer: TimeoutID): void {
+  (node: any)[internalScrollTimer] = timer;
+}
+
+export function clearScrollEndTimer(node: EventTarget): void {
+  (node: any)[internalScrollTimer] = undefined;
 }
 
 export function isOwnedInstance(node: Node): boolean {
