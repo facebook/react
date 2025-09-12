@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d3a8988770703ac33ba3256a3495cfa3>>
+ * @generated SignedSource<<be8833aff08374b75442493426147310>>
  */
 
 /*
@@ -15123,20 +15123,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1901 = 0;
-  i$jscomp$inline_1901 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1901++
+  var i$jscomp$inline_1907 = 0;
+  i$jscomp$inline_1907 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1907++
 ) {
-  var eventName$jscomp$inline_1902 =
-      simpleEventPluginEvents[i$jscomp$inline_1901],
-    domEventName$jscomp$inline_1903 =
-      eventName$jscomp$inline_1902.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1904 =
-      eventName$jscomp$inline_1902[0].toUpperCase() +
-      eventName$jscomp$inline_1902.slice(1);
+  var eventName$jscomp$inline_1908 =
+      simpleEventPluginEvents[i$jscomp$inline_1907],
+    domEventName$jscomp$inline_1909 =
+      eventName$jscomp$inline_1908.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1910 =
+      eventName$jscomp$inline_1908[0].toUpperCase() +
+      eventName$jscomp$inline_1908.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1903,
-    "on" + capitalizedEvent$jscomp$inline_1904
+    domEventName$jscomp$inline_1909,
+    "on" + capitalizedEvent$jscomp$inline_1910
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -19411,16 +19411,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_2309 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2315 = React.version;
 if (
-  "19.2.0-native-fb-bd9e6e0b-20250910" !==
-  isomorphicReactPackageVersion$jscomp$inline_2309
+  "19.2.0-native-fb-0c813c52-20250912" !==
+  isomorphicReactPackageVersion$jscomp$inline_2315
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2309,
-      "19.2.0-native-fb-bd9e6e0b-20250910"
+      isomorphicReactPackageVersion$jscomp$inline_2315,
+      "19.2.0-native-fb-0c813c52-20250912"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -19440,12 +19440,12 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_2316 = {
+var internals$jscomp$inline_2322 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-bd9e6e0b-20250910",
+  version: "19.2.0-native-fb-0c813c52-20250912",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-bd9e6e0b-20250910",
+  reconcilerVersion: "19.2.0-native-fb-0c813c52-20250912",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$324 = 0;
@@ -19463,16 +19463,16 @@ var internals$jscomp$inline_2316 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2885 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2891 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2885.isDisabled &&
-    hook$jscomp$inline_2885.supportsFiber
+    !hook$jscomp$inline_2891.isDisabled &&
+    hook$jscomp$inline_2891.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2885.inject(
-        internals$jscomp$inline_2316
+      (rendererID = hook$jscomp$inline_2891.inject(
+        internals$jscomp$inline_2322
       )),
-        (injectedHook = hook$jscomp$inline_2885);
+        (injectedHook = hook$jscomp$inline_2891);
     } catch (err) {}
 }
 function getCrossOriginStringAs(as, input) {
@@ -19721,7 +19721,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-native-fb-bd9e6e0b-20250910";
+exports.version = "19.2.0-native-fb-0c813c52-20250912";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

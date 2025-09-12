@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bdd3b66027e5863f4ad2df48120711e2>>
+ * @generated SignedSource<<827bc7c5bfe54176c311ca0bd77db6f5>>
  */
 
 /*
@@ -15119,20 +15119,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1900 = 0;
-  i$jscomp$inline_1900 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1900++
+  var i$jscomp$inline_1906 = 0;
+  i$jscomp$inline_1906 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1906++
 ) {
-  var eventName$jscomp$inline_1901 =
-      simpleEventPluginEvents[i$jscomp$inline_1900],
-    domEventName$jscomp$inline_1902 =
-      eventName$jscomp$inline_1901.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1903 =
-      eventName$jscomp$inline_1901[0].toUpperCase() +
-      eventName$jscomp$inline_1901.slice(1);
+  var eventName$jscomp$inline_1907 =
+      simpleEventPluginEvents[i$jscomp$inline_1906],
+    domEventName$jscomp$inline_1908 =
+      eventName$jscomp$inline_1907.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1909 =
+      eventName$jscomp$inline_1907[0].toUpperCase() +
+      eventName$jscomp$inline_1907.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1902,
-    "on" + capitalizedEvent$jscomp$inline_1903
+    domEventName$jscomp$inline_1908,
+    "on" + capitalizedEvent$jscomp$inline_1909
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -19396,16 +19396,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_2308 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2314 = React.version;
 if (
-  "19.2.0-native-fb-bd9e6e0b-20250910" !==
-  isomorphicReactPackageVersion$jscomp$inline_2308
+  "19.2.0-native-fb-0c813c52-20250912" !==
+  isomorphicReactPackageVersion$jscomp$inline_2314
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2308,
-      "19.2.0-native-fb-bd9e6e0b-20250910"
+      isomorphicReactPackageVersion$jscomp$inline_2314,
+      "19.2.0-native-fb-0c813c52-20250912"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -19425,12 +19425,12 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_2315 = {
+var internals$jscomp$inline_2321 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-bd9e6e0b-20250910",
+  version: "19.2.0-native-fb-0c813c52-20250912",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-bd9e6e0b-20250910",
+  reconcilerVersion: "19.2.0-native-fb-0c813c52-20250912",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$324 = 0;
@@ -19448,16 +19448,16 @@ var internals$jscomp$inline_2315 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2882 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2888 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2882.isDisabled &&
-    hook$jscomp$inline_2882.supportsFiber
+    !hook$jscomp$inline_2888.isDisabled &&
+    hook$jscomp$inline_2888.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2882.inject(
-        internals$jscomp$inline_2315
+      (rendererID = hook$jscomp$inline_2888.inject(
+        internals$jscomp$inline_2321
       )),
-        (injectedHook = hook$jscomp$inline_2882);
+        (injectedHook = hook$jscomp$inline_2888);
     } catch (err) {}
 }
 exports.createRoot = function (container, options) {
@@ -19553,4 +19553,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.2.0-native-fb-bd9e6e0b-20250910";
+exports.version = "19.2.0-native-fb-0c813c52-20250912";
