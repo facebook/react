@@ -13,6 +13,7 @@ import type {
   Thenable,
   ReactContext,
   ReactDebugInfo,
+  ReactComponentInfo,
   SuspenseListRevealOrder,
 } from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
@@ -99,6 +100,25 @@ function pushDebugInfo(
     currentDebugInfo = previousDebugInfo.concat(debugInfo);
   }
   return previousDebugInfo;
+}
+
+function getCurrentDebugTask(): null | ConsoleTask {
+  // Get the debug task of the parent Server Component if there is one.
+  if (__DEV__) {
+    const debugInfo = currentDebugInfo;
+    if (debugInfo != null) {
+      for (let i = debugInfo.length - 1; i >= 0; i--) {
+        if (debugInfo[i].name != null) {
+          const componentInfo: ReactComponentInfo = debugInfo[i];
+          const debugTask: ?ConsoleTask = componentInfo.debugTask;
+          if (debugTask != null) {
+            return debugTask;
+          }
+        }
+      }
+    }
+  }
+  return null;
 }
 
 let didWarnAboutMaps;
@@ -274,7 +294,7 @@ function coerceRef(workInProgress: Fiber, element: ReactElement): void {
   workInProgress.ref = refProp !== undefined ? refProp : null;
 }
 
-function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
+function throwOnInvalidObjectTypeImpl(returnFiber: Fiber, newChild: Object) {
   if (newChild.$$typeof === REACT_LEGACY_ELEMENT_TYPE) {
     throw new Error(
       'A React Element from an older version of React was rendered. ' +
@@ -299,7 +319,18 @@ function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
   );
 }
 
-function warnOnFunctionType(returnFiber: Fiber, invalidChild: Function) {
+function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
+  const debugTask = getCurrentDebugTask();
+  if (__DEV__ && debugTask !== null) {
+    debugTask.run(
+      throwOnInvalidObjectTypeImpl.bind(null, returnFiber, newChild),
+    );
+  } else {
+    throwOnInvalidObjectTypeImpl(returnFiber, newChild);
+  }
+}
+
+function warnOnFunctionTypeImpl(returnFiber: Fiber, invalidChild: Function) {
   if (__DEV__) {
     const parentName = getComponentNameFromFiber(returnFiber) || 'Component';
 
@@ -336,7 +367,16 @@ function warnOnFunctionType(returnFiber: Fiber, invalidChild: Function) {
   }
 }
 
-function warnOnSymbolType(returnFiber: Fiber, invalidChild: symbol) {
+function warnOnFunctionType(returnFiber: Fiber, invalidChild: Function) {
+  const debugTask = getCurrentDebugTask();
+  if (__DEV__ && debugTask !== null) {
+    debugTask.run(warnOnFunctionTypeImpl.bind(null, returnFiber, invalidChild));
+  } else {
+    warnOnFunctionTypeImpl(returnFiber, invalidChild);
+  }
+}
+
+function warnOnSymbolTypeImpl(returnFiber: Fiber, invalidChild: symbol) {
   if (__DEV__) {
     const parentName = getComponentNameFromFiber(returnFiber) || 'Component';
 
@@ -361,6 +401,15 @@ function warnOnSymbolType(returnFiber: Fiber, invalidChild: symbol) {
         parentName,
       );
     }
+  }
+}
+
+function warnOnSymbolType(returnFiber: Fiber, invalidChild: symbol) {
+  const debugTask = getCurrentDebugTask();
+  if (__DEV__ && debugTask !== null) {
+    debugTask.run(warnOnSymbolTypeImpl.bind(null, returnFiber, invalidChild));
+  } else {
+    warnOnSymbolTypeImpl(returnFiber, invalidChild);
   }
 }
 
@@ -1941,12 +1990,14 @@ function createChildReconciler(
       throwFiber.return = returnFiber;
       if (__DEV__) {
         const debugInfo = (throwFiber._debugInfo = currentDebugInfo);
-        // Conceptually the error's owner/task should ideally be captured when the
-        // Error constructor is called but neither console.createTask does this,
-        // nor do we override them to capture our `owner`. So instead, we use the
-        // nearest parent as the owner/task of the error. This is usually the same
-        // thing when it's thrown from the same async component but not if you await
-        // a promise started from a different component/task.
+        // Conceptually the error's owner should ideally be captured when the
+        // Error constructor is called but we don't override them to capture our
+        // `owner`. So instead, we use the nearest parent as the owner/task of the
+        // error. This is usually the same thing when it's thrown from the same
+        // async component but not if you await a promise started from a different
+        // component/task.
+        // In newer Chrome, Error constructor does capture the Task which is what
+        // is logged by reportError. In that case this debugTask isn't used.
         throwFiber._debugOwner = returnFiber._debugOwner;
         throwFiber._debugTask = returnFiber._debugTask;
         if (debugInfo != null) {

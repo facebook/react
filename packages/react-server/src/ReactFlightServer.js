@@ -864,7 +864,7 @@ function serializeDebugThenable(
       const x = thenable.reason;
       // We don't log these errors since they didn't actually throw into Flight.
       const digest = '';
-      emitErrorChunk(request, id, digest, x, true);
+      emitErrorChunk(request, id, digest, x, true, null);
       return ref;
     }
   }
@@ -916,7 +916,7 @@ function serializeDebugThenable(
       }
       // We don't log these errors since they didn't actually throw into Flight.
       const digest = '';
-      emitErrorChunk(request, id, digest, reason, true);
+      emitErrorChunk(request, id, digest, reason, true, null);
       enqueueFlush(request);
     },
   );
@@ -964,7 +964,7 @@ function emitRequestedDebugThenable(
       }
       // We don't log these errors since they didn't actually throw into Flight.
       const digest = '';
-      emitErrorChunk(request, id, digest, reason, true);
+      emitErrorChunk(request, id, digest, reason, true, null);
       enqueueFlush(request);
     },
   );
@@ -2764,7 +2764,7 @@ function serializeClientReference(
     request.pendingChunks++;
     const errorId = request.nextChunkId++;
     const digest = logRecoverableError(request, x, null);
-    emitErrorChunk(request, errorId, digest, x, false);
+    emitErrorChunk(request, errorId, digest, x, false, null);
     return serializeByValueID(errorId);
   }
 }
@@ -2813,7 +2813,7 @@ function serializeDebugClientReference(
     request.pendingDebugChunks++;
     const errorId = request.nextChunkId++;
     const digest = logRecoverableError(request, x, null);
-    emitErrorChunk(request, errorId, digest, x, true);
+    emitErrorChunk(request, errorId, digest, x, true, null);
     return serializeByValueID(errorId);
   }
 }
@@ -3054,7 +3054,7 @@ function serializeDebugBlob(request: Request, blob: Blob): string {
   }
   function error(reason: mixed) {
     const digest = '';
-    emitErrorChunk(request, id, digest, reason, true);
+    emitErrorChunk(request, id, digest, reason, true, null);
     enqueueFlush(request);
     // $FlowFixMe should be able to pass mixed
     reader.cancel(reason).then(noop, noop);
@@ -3254,7 +3254,14 @@ function renderModel(
       emitPostponeChunk(request, errorId, postponeInstance);
     } else {
       const digest = logRecoverableError(request, x, task);
-      emitErrorChunk(request, errorId, digest, x, false);
+      emitErrorChunk(
+        request,
+        errorId,
+        digest,
+        x,
+        false,
+        __DEV__ ? task.debugOwner : null,
+      );
     }
     if (wasReactNode) {
       // We'll replace this element with a lazy reference that throws on the client
@@ -4072,7 +4079,8 @@ function emitErrorChunk(
   id: number,
   digest: string,
   error: mixed,
-  debug: boolean,
+  debug: boolean, // DEV-only
+  owner: ?ReactComponentInfo, // DEV-only
 ): void {
   let errorInfo: ReactErrorInfo;
   if (__DEV__) {
@@ -4104,7 +4112,9 @@ function emitErrorChunk(
       message = 'An error occurred but serializing the error message failed.';
       stack = [];
     }
-    errorInfo = {digest, name, message, stack, env};
+    const ownerRef =
+      owner == null ? null : outlineComponentInfo(request, owner);
+    errorInfo = {digest, name, message, stack, env, owner: ownerRef};
   } else {
     errorInfo = {digest};
   }
@@ -4204,7 +4214,7 @@ function emitDebugChunk(
 function outlineComponentInfo(
   request: Request,
   componentInfo: ReactComponentInfo,
-): void {
+): string {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
     // eslint-disable-next-line react-internal/prod-error-codes
@@ -4213,9 +4223,10 @@ function outlineComponentInfo(
     );
   }
 
-  if (request.writtenDebugObjects.has(componentInfo)) {
+  const existingRef = request.writtenDebugObjects.get(componentInfo);
+  if (existingRef !== undefined) {
     // Already written
-    return;
+    return existingRef;
   }
 
   if (componentInfo.owner != null) {
@@ -4270,6 +4281,7 @@ function outlineComponentInfo(
   request.writtenDebugObjects.set(componentInfo, ref);
   // We also store this in the main dedupe set so that it can be referenced by inline React Elements.
   request.writtenObjects.set(componentInfo, ref);
+  return ref;
 }
 
 function emitIOInfoChunk(
@@ -5465,7 +5477,14 @@ function erroredTask(request: Request, task: Task, error: mixed): void {
     emitPostponeChunk(request, task.id, postponeInstance);
   } else {
     const digest = logRecoverableError(request, error, task);
-    emitErrorChunk(request, task.id, digest, error, false);
+    emitErrorChunk(
+      request,
+      task.id,
+      digest,
+      error,
+      false,
+      __DEV__ ? task.debugOwner : null,
+    );
   }
   request.abortableTasks.delete(task);
   callOnAllReadyIfReady(request);
@@ -6040,7 +6059,7 @@ export function abort(request: Request, reason: mixed): void {
         const errorId = request.nextChunkId++;
         request.fatalError = errorId;
         request.pendingChunks++;
-        emitErrorChunk(request, errorId, digest, error, false);
+        emitErrorChunk(request, errorId, digest, error, false, null);
         abortableTasks.forEach(task => abortTask(task, request, errorId));
         scheduleWork(() => finishAbort(request, abortableTasks, errorId));
       }

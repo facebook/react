@@ -3181,11 +3181,27 @@ function resolveErrorDev(
         'An error occurred in the Server Components render but no message was provided',
     ),
   );
-  const rootTask = getRootTask(response, env);
-  if (rootTask != null) {
-    error = rootTask.run(callStack);
+
+  let ownerTask: null | ConsoleTask = null;
+  if (errorInfo.owner != null) {
+    const ownerRef = errorInfo.owner.slice(1);
+    // TODO: This is not resilient to the owner loading later in an Error like a debug channel.
+    // The whole error serialization should probably go through the regular model at least for DEV.
+    const owner = getOutlinedModel(response, ownerRef, {}, '', createModel);
+    if (owner !== null) {
+      ownerTask = initializeFakeTask(response, owner);
+    }
+  }
+
+  if (ownerTask === null) {
+    const rootTask = getRootTask(response, env);
+    if (rootTask != null) {
+      error = rootTask.run(callStack);
+    } else {
+      error = callStack();
+    }
   } else {
-    error = callStack();
+    error = ownerTask.run(callStack);
   }
 
   (error: any).name = name;
