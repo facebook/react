@@ -1,13 +1,11 @@
-name: (Runtime) Discord Notify
+name: (DevTools) Discord Notify
 
 on:
   pull_request_target:
     types: [opened, ready_for_review]
-    paths-ignore:
+    paths:
       - packages/react-devtools**
-      - compiler/**
-      - .github/workflows/compiler_**.yml
-      - .github/workflows/devtools**.yml
+      - .github/workflows/devtools_**.yml
 
 permissions: {}
 
@@ -42,7 +40,7 @@ jobs:
       - name: Discord Webhook Action
         uses: tsickert/discord-webhook@86dc739f3f165f16dadc5666051c367efa1692f4
         with:
-          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          webhook-url: ${{ secrets.DEVTOOLS_DISCORD_WEBHOOK_URL }}
           embed-author-name: ${{ github.event.pull_request.user.login }}
           embed-author-url: ${{ github.event.pull_request.user.html_url }}
           embed-author-icon-url: ${{ github.event.pull_request.user.avatar_url }}
