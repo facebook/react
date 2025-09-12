@@ -3082,7 +3082,7 @@ describe('Store', () => {
 
     await actAsync(() => render(null));
 
-    expect(store).toMatchInlineSnapshot();
+    expect(store).toMatchInlineSnapshot(``);
   });
 
   it('should handle an empty root', async () => {
