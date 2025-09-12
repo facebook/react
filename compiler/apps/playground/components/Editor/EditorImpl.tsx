@@ -24,7 +24,6 @@ import BabelPluginReactCompiler, {
   printFunctionWithOutlined,
   type LoggerEvent,
 } from 'babel-plugin-react-compiler';
-import clsx from 'clsx';
 import invariant from 'invariant';
 import {useSnackbar} from 'notistack';
 import {useDeferredValue, useMemo} from 'react';
@@ -47,7 +46,6 @@ import {
   PrintedCompilerPipelineValue,
 } from './Output';
 import {transformFromAstSync} from '@babel/core';
-import {useSearchParams} from 'next/navigation';
 
 function parseInput(
   input: string,
@@ -144,6 +142,61 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
   ],
 ];
 
+function parseOptions(
+  source: string,
+  mode: 'compiler' | 'linter',
+  configOverrides: string,
+): PluginOptions {
+  // Extract the first line to quickly check for custom test directives
+  const pragma = source.substring(0, source.indexOf('\n'));
+
+  const parsedPragmaOptions = parseConfigPragmaForTests(pragma, {
+    compilationMode: 'infer',
+    environment:
+      mode === 'linter'
+        ? {
+            // enabled in compiler
+            validateRefAccessDuringRender: false,
+            // enabled in linter
+            validateNoSetStateInRender: true,
+            validateNoSetStateInEffects: true,
+            validateNoJSXInTryStatements: true,
+            validateNoImpureFunctionsInRender: true,
+            validateStaticComponents: true,
+            validateNoFreezingKnownMutableFunctions: true,
+            validateNoVoidUseMemo: true,
+          }
+        : {
+            /* use defaults for compiler mode */
+          },
+  });
+
+  // Parse config overrides from config editor
+  let configOverrideOptions: any = {};
+  const configMatch = configOverrides.match(/^\s*import.*?\n\n\((.*)\)/s);
+  // TODO: initialize store with URL params, not empty store
+  if (configOverrides.trim()) {
+    if (configMatch && configMatch[1]) {
+      const configString = configMatch[1].replace(/satisfies.*$/, '').trim();
+      configOverrideOptions = new Function(`return (${configString})`)();
+    } else {
+      throw new Error('Invalid override format');
+    }
+  }
+
+  const opts: PluginOptions = parsePluginOptions({
+    ...parsedPragmaOptions,
+    ...configOverrideOptions,
+    environment: {
+      ...parsedPragmaOptions.environment,
+      ...configOverrideOptions.environment,
+      customHooks: new Map([...COMMON_HOOKS]),
+    },
+  });
+
+  return opts;
+}
+
 function compile(
   source: string,
   mode: 'compiler' | 'linter',
@@ -167,120 +220,94 @@ function compile(
     language = 'typescript';
   }
   let transformOutput;
+
+  let baseOpts: PluginOptions | null = null;
   try {
-    // Extract the first line to quickly check for custom test directives
-    const pragma = source.substring(0, source.indexOf('\n'));
-    const logIR = (result: CompilerPipelineValue): void => {
-      switch (result.kind) {
-        case 'ast': {
-          break;
-        }
-        case 'hir': {
-          upsert({
-            kind: 'hir',
-            fnName: result.value.id,
-            name: result.name,
-            value: printFunctionWithOutlined(result.value),
-          });
-          break;
-        }
-        case 'reactive': {
-          upsert({
-            kind: 'reactive',
-            fnName: result.value.id,
-            name: result.name,
-            value: printReactiveFunctionWithOutlined(result.value),
-          });
-          break;
-        }
-        case 'debug': {
-          upsert({
-            kind: 'debug',
-            fnName: null,
-            name: result.name,
-            value: result.value,
-          });
-          break;
-        }
-        default: {
-          const _: never = result;
-          throw new Error(`Unhandled result ${result}`);
-        }
-      }
-    };
-    const parsedPragmaOptions = parseConfigPragmaForTests(pragma, {
-      compilationMode: 'infer',
-      environment:
-        mode === 'linter'
-          ? {
-              // enabled in compiler
-              validateRefAccessDuringRender: false,
-              // enabled in linter
-              validateNoSetStateInRender: true,
-              validateNoSetStateInEffects: true,
-              validateNoJSXInTryStatements: true,
-              validateNoImpureFunctionsInRender: true,
-              validateStaticComponents: true,
-              validateNoFreezingKnownMutableFunctions: true,
-              validateNoVoidUseMemo: true,
-            }
-          : {
-              /* use defaults for compiler mode */
-            },
-    });
-
-    // Parse config overrides from config editor
-    let configOverrideOptions: any = {};
-    const configMatch = configOverrides.match(/^\s*import.*?\n\n\((.*)\)/s);
-    // TODO: initialize store with URL params, not empty store
-    if (configOverrides.trim()) {
-      if (configMatch && configMatch[1]) {
-        const configString = configMatch[1].replace(/satisfies.*$/, '').trim();
-        configOverrideOptions = new Function(`return (${configString})`)();
-      } else {
-        throw new Error('Invalid config overrides');
-      }
-    }
-
-    const opts: PluginOptions = parsePluginOptions({
-      ...parsedPragmaOptions,
-      ...configOverrideOptions,
-      environment: {
-        ...parsedPragmaOptions.environment,
-        ...configOverrideOptions.environment,
-        customHooks: new Map([...COMMON_HOOKS]),
-      },
-      logger: {
-        debugLogIRs: logIR,
-        logEvent: (_filename: string | null, event: LoggerEvent) => {
-          if (event.kind === 'CompileError') {
-            otherErrors.push(event.detail);
-          }
-        },
-      },
-    });
-    transformOutput = invokeCompiler(source, language, opts);
+    baseOpts = parseOptions(source, mode, configOverrides);
   } catch (err) {
-    /**
-     * error might be an invariant violation or other runtime error
-     * (i.e. object shape that is not CompilerError)
-     */
-    if (err instanceof CompilerError && err.details.length > 0) {
-      error.merge(err);
-    } else {
+    error.details.push(
+      new CompilerErrorDetail({
+        category: ErrorCategory.Config,
+        reason: `Unexpected failure when transforming configs! \n${err}`,
+        loc: null,
+        suggestions: null,
+      }),
+    );
+  }
+  if (baseOpts) {
+    try {
+      const logIR = (result: CompilerPipelineValue): void => {
+        switch (result.kind) {
+          case 'ast': {
+            break;
+          }
+          case 'hir': {
+            upsert({
+              kind: 'hir',
+              fnName: result.value.id,
+              name: result.name,
+              value: printFunctionWithOutlined(result.value),
+            });
+            break;
+          }
+          case 'reactive': {
+            upsert({
+              kind: 'reactive',
+              fnName: result.value.id,
+              name: result.name,
+              value: printReactiveFunctionWithOutlined(result.value),
+            });
+            break;
+          }
+          case 'debug': {
+            upsert({
+              kind: 'debug',
+              fnName: null,
+              name: result.name,
+              value: result.value,
+            });
+            break;
+          }
+          default: {
+            const _: never = result;
+            throw new Error(`Unhandled result ${result}`);
+          }
+        }
+      };
+      // Add logger options to the parsed options
+      const opts = {
+        ...baseOpts,
+        logger: {
+          debugLogIRs: logIR,
+          logEvent: (_filename: string | null, event: LoggerEvent) => {
+            if (event.kind === 'CompileError') {
+              otherErrors.push(event.detail);
+            }
+          },
+        },
+      };
+      transformOutput = invokeCompiler(source, language, opts);
+    } catch (err) {
       /**
-       * Handle unexpected failures by logging (to get a stack trace)
-       * and reporting
+       * error might be an invariant violation or other runtime error
+       * (i.e. object shape that is not CompilerError)
        */
-      console.error(err);
-      error.details.push(
-        new CompilerErrorDetail({
-          category: ErrorCategory.Invariant,
-          reason: `Unexpected failure when transforming input! ${err}`,
-          loc: null,
-          suggestions: null,
-        }),
-      );
+      if (err instanceof CompilerError && err.details.length > 0) {
+        error.merge(err);
+      } else {
+        /**
+         * Handle unexpected failures by logging (to get a stack trace)
+         * and reporting
+         */
+        error.details.push(
+          new CompilerErrorDetail({
+            category: ErrorCategory.Invariant,
+            reason: `Unexpected failure when transforming input! \n${err}`,
+            loc: null,
+            suggestions: null,
+          }),
+        );
+      }
     }
   }
   // Only include logger errors if there weren't other errors
@@ -350,13 +377,17 @@ export default function Editor(): JSX.Element {
   }
   return (
     <>
-      <div className="relative flex basis top-14">
-        <ConfigEditor />
-        <div className={clsx('relative sm:basis-1/4')}>
-          <Input language={language} errors={errors} />
+      <div className="relative flex top-14">
+        <div className="flex-shrink-0">
+          <ConfigEditor />
         </div>
-        <div className={clsx('flex sm:flex flex-wrap')}>
-          <Output store={deferredStore} compilerOutput={mergedOutput} />
+        <div className="flex flex-1 min-w-0">
+          <div className="flex-1 min-w-[550px] sm:min-w-0">
+            <Input language={language} errors={errors} />
+          </div>
+          <div className="flex-1 min-w-[550px] sm:min-w-0">
+            <Output store={deferredStore} compilerOutput={mergedOutput} />
+          </div>
         </div>
       </div>
     </>

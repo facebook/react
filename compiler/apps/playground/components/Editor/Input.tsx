@@ -6,7 +6,10 @@
  */
 
 import MonacoEditor, {loader, type Monaco} from '@monaco-editor/react';
-import {CompilerErrorDetail} from 'babel-plugin-react-compiler';
+import {
+  CompilerErrorDetail,
+  CompilerDiagnostic,
+} from 'babel-plugin-react-compiler';
 import invariant from 'invariant';
 import type {editor} from 'monaco-editor';
 import * as monaco from 'monaco-editor';
@@ -14,6 +17,7 @@ import {Resizable} from 're-resizable';
 import {useEffect, useState} from 'react';
 import {renderReactCompilerMarkers} from '../../lib/reactCompilerMonacoDiagnostics';
 import {useStore, useStoreDispatch} from '../StoreContext';
+import TabbedWindow from '../TabbedWindow';
 import {monacoOptions} from './monacoOptions';
 // @ts-expect-error TODO: Make TS recognize .d.ts files, in addition to loading them with webpack.
 import React$Types from '../../node_modules/@types/react/index.d.ts';
@@ -21,7 +25,7 @@ import React$Types from '../../node_modules/@types/react/index.d.ts';
 loader.config({monaco});
 
 type Props = {
-  errors: Array<CompilerErrorDetail>;
+  errors: Array<CompilerErrorDetail | CompilerDiagnostic>;
   language: 'flow' | 'typescript';
 };
 
@@ -135,30 +139,51 @@ export default function Input({errors, language}: Props): JSX.Element {
     });
   };
 
+  const editorContent = (
+    <MonacoEditor
+      path={'index.js'}
+      /**
+       * .js and .jsx files are specified to be TS so that Monaco can actually
+       * check their syntax using its TS language service. They are still JS files
+       * due to their extensions, so TS language features don't work.
+       */
+      language={'javascript'}
+      value={store.source}
+      onMount={handleMount}
+      onChange={handleChange}
+      options={monacoOptions}
+    />
+  );
+
+  const tabs = new Map([['Input', editorContent]]);
+  const [activeTab, setActiveTab] = useState('Input');
+
+  const tabbedContent = (
+    <div className="flex flex-col h-full">
+      <TabbedWindow
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
+    </div>
+  );
+
   return (
     <div className="relative flex flex-col flex-none border-r border-gray-200">
-      <Resizable
-        minWidth={650}
-        enable={{right: true}}
-        /**
-         * Restrict MonacoEditor's height, since the config autoLayout:true
-         * will grow the editor to fit within parent element
-         */
-        className="!h-[calc(100vh_-_3.5rem)]">
-        <MonacoEditor
-          path={'index.js'}
+      {store.showInternals ? (
+        <Resizable
+          minWidth={550}
+          enable={{right: true}}
           /**
-           * .js and .jsx files are specified to be TS so that Monaco can actually
-           * check their syntax using its TS language service. They are still JS files
-           * due to their extensions, so TS language features don't work.
+           * Restrict MonacoEditor's height, since the config autoLayout:true
+           * will grow the editor to fit within parent element
            */
-          language={'javascript'}
-          value={store.source}
-          onMount={handleMount}
-          onChange={handleChange}
-          options={monacoOptions}
-        />
-      </Resizable>
+          className="!h-[calc(100vh_-_3.5rem)]">
+          {tabbedContent}
+        </Resizable>
+      ) : (
+        <div className="!h-[calc(100vh_-_3.5rem)]">{tabbedContent}</div>
+      )}
     </div>
   );
 }

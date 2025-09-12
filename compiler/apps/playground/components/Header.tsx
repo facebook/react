@@ -72,7 +72,7 @@ export default function Header(): JSX.Element {
                 'before:bg-white before:rounded-full before:transition-transform before:duration-250',
                 'focus-within:shadow-[0_0_1px_#2196F3]',
                 store.showInternals
-                  ? 'bg-blue-500 before:translate-x-3.5'
+                  ? 'bg-link before:translate-x-3.5'
                   : 'bg-gray-300',
               )}></span>
           </label>
