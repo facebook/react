@@ -250,6 +250,8 @@ module.exports = [
       'react-dom/server.bun',
       'react-dom/src/server/react-dom-server.bun',
       'react-dom/src/server/ReactDOMFizzServerBun.js',
+      'react-dom/src/server/ReactDOMFizzServerNode.js',
+      'react-dom/src/server/ReactDOMFizzStaticNode.js',
       'react-dom-bindings',
       'react-dom-bindings/src/server/ReactDOMFlightServerHostDispatcher.js',
       'react-dom-bindings/src/server/ReactFlightServerConfigDOM.js',
