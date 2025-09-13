@@ -1505,10 +1505,18 @@ function commitRootWhenReady(
         suspendOnActiveViewTransition(root.containerInfo);
       }
     }
+    // For timeouts we use the previous fallback commit for retries and
+    // the start time of the transition for transitions. This offset
+    // represents the time already passed.
+    const timeoutOffset = includesOnlyRetries(lanes)
+      ? globalMostRecentFallbackTime - now()
+      : includesOnlyTransitions(lanes)
+        ? globalMostRecentTransitionTime - now()
+        : 0;
     // At the end, ask the renderer if it's ready to commit, or if we should
     // suspend. If it's not ready, it will return a callback to subscribe to
     // a ready event.
-    const schedulePendingCommit = waitForCommitToBeReady();
+    const schedulePendingCommit = waitForCommitToBeReady(timeoutOffset);
     if (schedulePendingCommit !== null) {
       // NOTE: waitForCommitToBeReady returns a subscribe function so that we
       // only allocate a function if the commit isn't ready yet. The other

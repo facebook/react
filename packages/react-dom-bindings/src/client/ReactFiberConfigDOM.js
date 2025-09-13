@@ -6067,7 +6067,9 @@ export function suspendOnActiveViewTransition(rootContainer: Container): void {
   activeViewTransition.finished.then(ping, ping);
 }
 
-export function waitForCommitToBeReady(): null | ((() => void) => () => void) {
+export function waitForCommitToBeReady(
+  timeoutOffset: number,
+): null | ((() => void) => () => void) {
   if (suspendedState === null) {
     throw new Error(
       'Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug.',
@@ -6102,7 +6104,7 @@ export function waitForCommitToBeReady(): null | ((() => void) => () => void) {
           state.unsuspend = null;
           unsuspend();
         }
-      }, 60000); // one minute
+      }, 60000 + timeoutOffset); // one minute
 
       state.unsuspend = commit;
 
