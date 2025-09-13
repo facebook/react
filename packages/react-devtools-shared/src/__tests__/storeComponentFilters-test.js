@@ -134,7 +134,7 @@ describe('Store component filters', () => {
     `);
   });
 
-  // @reactVersion >= 16.0
+  // @reactVersion >= 16.6
   it('should filter Suspense', async () => {
     const Suspense = React.Suspense;
     await actAsync(async () =>

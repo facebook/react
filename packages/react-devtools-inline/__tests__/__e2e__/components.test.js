@@ -93,7 +93,9 @@ test.describe('Components', () => {
 
         const name = isEditable.name
           ? existingNameElements[0].value
-          : existingNameElements[0].innerText;
+          : existingNameElements[0].innerText
+              // remove trailing colon
+              .slice(0, -1);
         const value = isEditable.value
           ? existingValueElements[0].value
           : existingValueElements[0].innerText;
