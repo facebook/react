@@ -17,9 +17,7 @@ export const defaultConfig = `\
 import type { PluginOptions } from 'babel-plugin-react-compiler/dist';
 
 ({
-  environment: {
-    enableResetCacheOnSourceFileChanges: false
-  }
+  //compilationMode: "all"
 } satisfies Partial<PluginOptions>);`;
 
 export const defaultStore: Store = {
