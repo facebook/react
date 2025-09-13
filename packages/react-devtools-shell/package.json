@@ -7,6 +7,9 @@
   },
   "dependencies": {
     "immutable": "^4.0.0-rc.12",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-is": "^19.1.0",
     "react-native-web": "0.0.0-26873b469",
     "semver": "^6.3.0"
   },
