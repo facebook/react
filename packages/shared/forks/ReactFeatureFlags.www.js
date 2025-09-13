@@ -34,6 +34,7 @@ export const {
   enableScrollEndPolyfill,
   enableFragmentRefs,
   enableFragmentRefsScrollIntoView,
+  enableAsyncDebugInfo,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -94,7 +95,6 @@ export const passChildrenWhenCloningPersistedNodes: boolean = false;
 
 export const enablePersistedModeClonedFlag: boolean = false;
 
-export const enableAsyncDebugInfo: boolean = false;
 export const disableClientCache: boolean = true;
 
 export const enableReactTestRendererWarning: boolean = false;
