@@ -817,6 +817,11 @@ export type StartMemoize = {
    * (e.g. useMemo without a second arg)
    */
   deps: Array<ManualMemoDependency> | null;
+  /**
+   * The source location of the dependencies argument. Used for
+   * emitting diagnostics with a suggested replacement
+   */
+  depsLoc: SourceLocation | null;
   loc: SourceLocation;
 };
 export type FinishMemoize = {
@@ -1678,6 +1683,28 @@ export function areEqualPaths(a: DependencyPath, b: DependencyPath): boolean {
       (item, ix) =>
         item.property === b[ix].property && item.optional === b[ix].optional,
     )
+  );
+}
+export function isSubPath(
+  subpath: DependencyPath,
+  path: DependencyPath,
+): boolean {
+  return (
+    subpath.length <= path.length &&
+    subpath.every(
+      (item, ix) =>
+        item.property === path[ix].property &&
+        item.optional === path[ix].optional,
+    )
+  );
+}
+export function isSubPathIgnoringOptionals(
+  subpath: DependencyPath,
+  path: DependencyPath,
+): boolean {
+  return (
+    subpath.length <= path.length &&
+    subpath.every((item, ix) => item.property === path[ix].property)
   );
 }
 
