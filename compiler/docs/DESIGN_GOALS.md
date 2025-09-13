@@ -8,7 +8,7 @@ The idea of React Compiler is to allow developers to use React's familiar declar
 
 * Bound the amount of re-rendering that happens on updates to ensure that apps have predictably fast performance by default.
 * Keep startup time neutral with pre-React Compiler performance. Notably, this means holding code size increases and memoization overhead low enough to not impact startup.
-* Retain React's familiar declarative, component-oriented programming model. Ie, the solution should not fundamentally change how developers think about writing React, and should generally _remove_ concepts (the need to use React.memo(), useMemo(), and useCallback()) rather than introduce new concepts.
+* Retain React's familiar declarative, component-oriented programming model. i.e., the solution should not fundamentally change how developers think about writing React, and should generally _remove_ concepts (the need to use React.memo(), useMemo(), and useCallback()) rather than introduce new concepts.
 * "Just work" on idiomatic React code that follows React's rules (pure render functions, the rules of hooks, etc).
 * Support typical debugging and profiling tools and workflows.
 * Be predictable and understandable enough by React developers — i.e. developers should be able to quickly develop a rough intuition of how React Compiler works.
@@ -19,7 +19,7 @@ The idea of React Compiler is to allow developers to use React's familiar declar
 The following are explicitly *not* goals for React Compiler:
 
 * Provide perfectly optimal re-rendering with zero unnecessary recomputation. This is a non-goal for several reasons:
-  * The runtime overhead of the extra tracking involved can outweight the cost of recomputation in many cases.
+  * The runtime overhead of the extra tracking involved can outweigh the cost of recomputation in many cases.
   * In cases with conditional dependencies it may not be possible to avoid recomputing some/all instructions.
   * The amount of code may regress startup times, which would conflict with our goal of neutral startup performance.
 * Support code that violates React's rules. React's rules exist to help developers build robust, scalable applications and form a contract that allows us to continue improving React without breaking applications. React Compiler depends on these rules to safely transform code, and violations of rules will therefore break React Compiler's optimizations.
