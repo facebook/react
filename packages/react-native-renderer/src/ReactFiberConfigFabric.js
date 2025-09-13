@@ -612,7 +612,7 @@ export function suspendInstance(
 
 export function suspendOnActiveViewTransition(container: Container): void {}
 
-export function waitForCommitToBeReady(): null {
+export function waitForCommitToBeReady(timeoutOffset: number): null {
   return null;
 }
 

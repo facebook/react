@@ -361,9 +361,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     }
   }
 
-  function waitForCommitToBeReady():
-    | ((commit: () => mixed) => () => void)
-    | null {
+  function waitForCommitToBeReady(
+    timeoutOffset: number,
+  ): ((commit: () => mixed) => () => void) | null {
     const subscription = suspenseyCommitSubscription;
     if (subscription !== null) {
       suspenseyCommitSubscription = null;

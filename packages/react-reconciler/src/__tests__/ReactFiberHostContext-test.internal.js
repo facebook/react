@@ -109,7 +109,7 @@ describe('ReactFiberHostContext', () => {
       startSuspendingCommit() {},
       suspendInstance(instance, type, props) {},
       suspendOnActiveViewTransition(container) {},
-      waitForCommitToBeReady() {
+      waitForCommitToBeReady(timeoutOffset: number) {
         return null;
       },
       supportsMutation: true,
