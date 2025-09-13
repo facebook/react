@@ -475,6 +475,11 @@ let didIncludeCommitPhaseUpdate: boolean = false;
 // content as it streams in, to minimize jank.
 // TODO: Think of a better name for this variable?
 let globalMostRecentFallbackTime: number = 0;
+// Track the most recent time we started a new Transition. This lets us apply
+// heuristics like the suspensey image timeout based on how long we've waited
+// already.
+let globalMostRecentTransitionTime: number = 0;
+
 const FALLBACK_THROTTLE_MS: number = 300;
 
 // The absolute time for when we should start giving up on rendering
@@ -2282,6 +2287,10 @@ export function markRenderDerivedCause(fiber: Fiber): void {
       }
     }
   }
+}
+
+export function markTransitionStarted() {
+  globalMostRecentTransitionTime = now();
 }
 
 export function markCommitTimeOfFallback() {
