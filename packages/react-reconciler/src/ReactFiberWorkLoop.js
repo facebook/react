@@ -1490,19 +1490,19 @@ function commitRootWhenReady(
   if (isViewTransitionEligible || maySuspendCommit || isGestureTransition) {
     // Before committing, ask the renderer whether the host tree is ready.
     // If it's not, we'll wait until it notifies us.
-    startSuspendingCommit();
+    const suspendedState = startSuspendingCommit();
     // This will walk the completed fiber tree and attach listeners to all
     // the suspensey resources. The renderer is responsible for accumulating
     // all the load events. This all happens in a single synchronous
     // transaction, so it track state in its own module scope.
     // This will also track any newly added or appearing ViewTransition
     // components for the purposes of forming pairs.
-    accumulateSuspenseyCommit(finishedWork, lanes);
+    accumulateSuspenseyCommit(finishedWork, lanes, suspendedState);
     if (isViewTransitionEligible || isGestureTransition) {
       // If we're stopping gestures we don't have to wait for any pending
       // view transition. We'll stop it when we commit.
       if (!enableGestureTransition || root.stoppingGestures === null) {
-        suspendOnActiveViewTransition(root.containerInfo);
+        suspendOnActiveViewTransition(suspendedState, root.containerInfo);
       }
     }
     // For timeouts we use the previous fallback commit for retries and
@@ -1516,7 +1516,10 @@ function commitRootWhenReady(
     // At the end, ask the renderer if it's ready to commit, or if we should
     // suspend. If it's not ready, it will return a callback to subscribe to
     // a ready event.
-    const schedulePendingCommit = waitForCommitToBeReady(timeoutOffset);
+    const schedulePendingCommit = waitForCommitToBeReady(
+      suspendedState,
+      timeoutOffset,
+    );
     if (schedulePendingCommit !== null) {
       // NOTE: waitForCommitToBeReady returns a subscribe function so that we
       // only allocate a function if the commit isn't ready yet. The other
