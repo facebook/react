@@ -239,3 +239,16 @@ export function useActionState<S, P>(
   const dispatcher = resolveDispatcher();
   return dispatcher.useActionState(action, initialState, permalink);
 }
+
+export function useDebounce<T>(
+  value: T,
+  delay: number,
+  options?: {
+    leading?: boolean,
+    trailing?: boolean,
+    maxWait?: number,
+  },
+): T {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useDebounce(value, delay, options);
+}

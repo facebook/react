@@ -62,7 +62,8 @@ export type HookType =
   | 'useCacheRefresh'
   | 'useOptimistic'
   | 'useFormState'
-  | 'useActionState';
+  | 'useActionState'
+  | 'useDebounce';
 
 export type ContextDependency<T> = {
   context: ReactContext<T>,
@@ -455,6 +456,15 @@ export type Dispatcher = {
     initialState: Awaited<S>,
     permalink?: string,
   ) => [Awaited<S>, (P) => void, boolean],
+  useDebounce: <T>(
+    value: T,
+    delay: number,
+    options?: {
+      leading?: boolean,
+      trailing?: boolean,
+      maxWait?: number,
+    },
+  ) => T,
 };
 
 export type AsyncDispatcher = {

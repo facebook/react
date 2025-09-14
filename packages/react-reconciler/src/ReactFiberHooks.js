@@ -3886,6 +3886,7 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useOptimistic: throwInvalidHookError,
   useMemoCache: throwInvalidHookError,
   useCacheRefresh: throwInvalidHookError,
+  useDebounce: throwInvalidHookError,
 };
 if (enableUseEffectEventHook) {
   (ContextOnlyDispatcher: Dispatcher).useEffectEvent = throwInvalidHookError;
@@ -3916,6 +3917,7 @@ const HooksDispatcherOnMount: Dispatcher = {
   useOptimistic: mountOptimistic,
   useMemoCache,
   useCacheRefresh: mountRefresh,
+  useDebounce: mountDebounce,
 };
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnMount: Dispatcher).useEffectEvent = mountEvent;
@@ -3946,6 +3948,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useOptimistic: updateOptimistic,
   useMemoCache,
   useCacheRefresh: updateRefresh,
+  useDebounce: updateDebounce,
 };
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnUpdate: Dispatcher).useEffectEvent = updateEvent;
@@ -3976,6 +3979,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useOptimistic: rerenderOptimistic,
   useMemoCache,
   useCacheRefresh: updateRefresh,
+  useDebounce: rerenderDebounce,
 };
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnRerender: Dispatcher).useEffectEvent = updateEvent;
@@ -4154,6 +4158,19 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountActionState(action, initialState, permalink);
     },
+    useDebounce<T>(
+      value: T,
+      delay: number,
+      options?: {
+        leading?: boolean,
+        trailing?: boolean,
+        maxWait?: number,
+      },
+    ): T {
+      currentHookNameInDev = 'useDebounce';
+      mountHookTypesDev();
+      return mountDebounce(value, delay, options);
+    },
     useOptimistic<S, A>(
       passthrough: S,
       reducer: ?(S, A) => S,
@@ -4287,6 +4304,19 @@ if (__DEV__) {
       currentHookNameInDev = 'useTransition';
       updateHookTypesDev();
       return mountTransition();
+    },
+    useDebounce<T>(
+      value: T,
+      delay: number,
+      options?: {
+        leading?: boolean,
+        trailing?: boolean,
+        maxWait?: number,
+      },
+    ): T {
+      currentHookNameInDev = 'useDebounce';
+      updateHookTypesDev();
+      return mountDebounce(value, delay, options);
     },
     useSyncExternalStore<T>(
       subscribe: (() => void) => () => void,
@@ -4454,6 +4484,19 @@ if (__DEV__) {
       currentHookNameInDev = 'useTransition';
       updateHookTypesDev();
       return updateTransition();
+    },
+    useDebounce<T>(
+      value: T,
+      delay: number,
+      options?: {
+        leading?: boolean,
+        trailing?: boolean,
+        maxWait?: number,
+      },
+    ): T {
+      currentHookNameInDev = 'useDebounce';
+      updateHookTypesDev();
+      return updateDebounce(value, delay, options);
     },
     useSyncExternalStore<T>(
       subscribe: (() => void) => () => void,
@@ -5190,6 +5233,20 @@ if (__DEV__) {
       updateHookTypesDev();
       return rerenderTransition();
     },
+    useDebounce<T>(
+      value: T,
+      delay: number,
+      options?: {
+        leading?: boolean,
+        trailing?: boolean,
+        maxWait?: number,
+      },
+    ): T {
+      currentHookNameInDev = 'useDebounce';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return rerenderDebounce(value, delay, options);
+    },
     useSyncExternalStore<T>(
       subscribe: (() => void) => () => void,
       getSnapshot: () => T,
@@ -5258,3 +5315,199 @@ if (__DEV__) {
       };
   }
 }
+
+// useDebounce implementation - React lane system based (similar to useDeferredValue)
+function mountDebounce<T>(
+  value: T,
+  delay: number,
+  options?: {
+    leading?: boolean,
+    trailing?: boolean,
+    maxWait?: number,
+  },
+): T {
+  const hook = mountWorkInProgressHook();
+  const { leading = false, trailing = true, maxWait } = options || {};
+  const now = Date.now();
+  
+  const state = {
+    debouncedValue: value,
+    lastCallTime: now,
+    lastInvokeTime: now,
+    delay,
+    leading,
+    trailing,
+    maxWait,
+    pendingValue: value,
+    isPending: false,
+    timeoutId: null,
+  };
+  
+  hook.memoizedState = state;
+  
+  // For leading edge, return value immediately
+  if (leading) {
+    return value;
+  }
+  
+  // For trailing edge with initial delay, schedule a deferred render
+  if (trailing && delay > 0) {
+    // Check if we should defer the initial render
+    const shouldDeferValue = 
+      !includesOnlyNonUrgentLanes(renderLanes) && !isRenderingDeferredWork();
+    
+    if (shouldDeferValue) {
+      // Schedule a deferred render to update the debounced value later
+      const deferredLane = requestDeferredLane();
+      currentlyRenderingFiber.lanes = mergeLanes(
+        currentlyRenderingFiber.lanes,
+        deferredLane,
+      );
+      markSkippedUpdateLanes(deferredLane);
+    }
+  }
+  
+  return value;
+}
+
+function updateDebounce<T>(
+  value: T,
+  delay: number,
+  options?: {
+    leading?: boolean,
+    trailing?: boolean,
+    maxWait?: number,
+  },
+): T {
+  const hook = updateWorkInProgressHook();
+  const prevState = hook.memoizedState;
+  const { leading = false, trailing = true, maxWait } = options || {};
+  
+  const now = Date.now();
+  const timeSinceLastCall = now - prevState.lastCallTime;
+  const timeSinceLastInvoke = now - prevState.lastInvokeTime;
+  
+  let debouncedValue = prevState.debouncedValue;
+  let isPending = prevState.isPending;
+  let pendingValue = prevState.pendingValue;
+  
+  // Check if we should invoke immediately (leading edge)
+  const shouldInvoke = 
+    prevState.lastCallTime === 0 || 
+    timeSinceLastCall >= delay ||
+    (maxWait && timeSinceLastInvoke >= maxWait);
+  
+  if (shouldInvoke) {
+    // Update immediately
+    debouncedValue = value;
+    isPending = false;
+    pendingValue = value;
+  } else if (trailing) {
+    // Mark as pending for trailing edge
+    isPending = true;
+    pendingValue = value;
+    debouncedValue = prevState.debouncedValue; // Keep previous value
+  } else {
+    // No debouncing, update immediately
+    debouncedValue = value;
+    isPending = false;
+    pendingValue = value;
+  }
+  
+  // React lane system integration (similar to useDeferredValue)
+  if (!shouldInvoke && trailing && is(value, prevState.pendingValue) === false) {
+    // Value changed and we need to defer the update
+    const shouldDeferValue = 
+      !includesOnlyNonUrgentLanes(renderLanes) && !isRenderingDeferredWork();
+    
+    if (shouldDeferValue) {
+      // Schedule a deferred render to update the debounced value later
+      const deferredLane = requestDeferredLane();
+      currentlyRenderingFiber.lanes = mergeLanes(
+        currentlyRenderingFiber.lanes,
+        deferredLane,
+      );
+      markSkippedUpdateLanes(deferredLane);
+      
+      // Keep the previous debounced value for now
+      debouncedValue = prevState.debouncedValue;
+      isPending = true;
+      pendingValue = value;
+    } else {
+      // Not an urgent update, can update immediately
+      debouncedValue = value;
+      isPending = false;
+      pendingValue = value;
+      markWorkInProgressReceivedUpdate();
+    }
+  }
+  
+  // Update state without mutation
+  const newState = {
+    ...prevState,
+    lastCallTime: now,
+    lastInvokeTime: shouldInvoke ? now : prevState.lastInvokeTime,
+    debouncedValue,
+    delay,
+    leading,
+    trailing,
+    maxWait,
+    pendingValue,
+    isPending,
+    timeoutId: null,
+  };
+  
+  hook.memoizedState = newState;
+  
+  return debouncedValue;
+}
+
+function rerenderDebounce<T>(
+  value: T,
+  delay: number,
+  options?: {
+    leading?: boolean,
+    trailing?: boolean,
+    maxWait?: number,
+  },
+): T {
+  // During rerender, use the same logic as updateDebounce
+  // but without scheduling new deferred renders
+  const hook = updateWorkInProgressHook();
+  const prevState = hook.memoizedState;
+  const { leading = false, trailing = true, maxWait } = options || {};
+  
+  const now = Date.now();
+  const timeSinceLastCall = now - prevState.lastCallTime;
+  const timeSinceLastInvoke = now - prevState.lastInvokeTime;
+  
+  let debouncedValue = prevState.debouncedValue;
+  
+  // Check if we should invoke immediately (leading edge)
+  const shouldInvoke = 
+    prevState.lastCallTime === 0 || 
+    timeSinceLastCall >= delay ||
+    (maxWait && timeSinceLastInvoke >= maxWait);
+  
+  if (shouldInvoke) {
+    debouncedValue = value;
+  } else {
+    // Keep the previous debounced value during rerender
+    debouncedValue = prevState.debouncedValue;
+  }
+  
+  // Update state for rerender
+  const newState = {
+    ...prevState,
+    lastCallTime: now,
+    lastInvokeTime: shouldInvoke ? now : prevState.lastInvokeTime,
+    debouncedValue,
+    pendingValue: value,
+    isPending: !shouldInvoke && trailing,
+  };
+  
+  hook.memoizedState = newState;
+  
+  return debouncedValue;
+}
+

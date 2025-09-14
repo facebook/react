@@ -57,6 +57,7 @@ import {
   use,
   useOptimistic,
   useActionState,
+  useDebounce,
 } from './ReactHooks';
 import ReactSharedInternals from './ReactSharedInternalsClient';
 import {startTransition, startGestureTransition} from './ReactStartTransition';
@@ -96,6 +97,7 @@ export {
   useMemo,
   useOptimistic,
   useActionState,
+  useDebounce,
   useSyncExternalStore,
   useReducer,
   useRef,

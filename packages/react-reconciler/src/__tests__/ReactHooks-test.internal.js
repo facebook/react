@@ -2100,4 +2100,5 @@ describe('ReactHooks', () => {
     await act(() => setShouldThrow(true));
     expect(root).toMatchRenderedOutput('Error!');
   });
+
 });
