@@ -414,6 +414,7 @@ export function hasInstanceAffectedParent(
 }
 
 export function startViewTransition(
+  suspendedState: null | SuspendedState,
   rootContainer: Container,
   transitionTypes: null | TransitionTypes,
   mutationCallback: () => void,
@@ -434,6 +435,7 @@ export function startViewTransition(
 export type RunningViewTransition = null;
 
 export function startGestureTransition(
+  suspendedState: null | SuspendedState,
   rootContainer: Container,
   timeline: GestureTimeline,
   rangeStart: number,

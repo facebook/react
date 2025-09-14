@@ -2081,6 +2081,7 @@ function forceLayout(ownerDocument: Document) {
 }
 
 export function startViewTransition(
+  suspendedState: null | SuspendedState,
   rootContainer: Container,
   transitionTypes: null | TransitionTypes,
   mutationCallback: () => void,
@@ -2443,6 +2444,7 @@ function animateGesture(
 }
 
 export function startGestureTransition(
+  suspendedState: null | SuspendedState,
   rootContainer: Container,
   timeline: GestureTimeline,
   rangeStart: number,

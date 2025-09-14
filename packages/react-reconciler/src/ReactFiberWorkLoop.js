@@ -26,6 +26,7 @@ import type {
   Resource,
   ViewTransitionInstance,
   RunningViewTransition,
+  SuspendedState,
 } from './ReactFiberConfig';
 import type {RootState} from './ReactFiberRoot';
 import {
@@ -1379,6 +1380,7 @@ function finishConcurrentRender(
       workInProgressRootInterleavedUpdatedLanes,
       workInProgressSuspendedRetryLanes,
       exitStatus,
+      null,
       IMMEDIATE_COMMIT,
       renderStartTime,
       renderEndTime,
@@ -1487,10 +1489,11 @@ function commitRootWhenReady(
     subtreeFlags & ShouldSuspendCommit ||
     (subtreeFlags & BothVisibilityAndMaySuspendCommit) ===
       BothVisibilityAndMaySuspendCommit;
+  let suspendedState: null | SuspendedState = null;
   if (isViewTransitionEligible || maySuspendCommit || isGestureTransition) {
     // Before committing, ask the renderer whether the host tree is ready.
     // If it's not, we'll wait until it notifies us.
-    const suspendedState = startSuspendingCommit();
+    suspendedState = startSuspendingCommit();
     // This will walk the completed fiber tree and attach listeners to all
     // the suspensey resources. The renderer is responsible for accumulating
     // all the load events. This all happens in a single synchronous
@@ -1541,6 +1544,7 @@ function commitRootWhenReady(
           updatedLanes,
           suspendedRetryLanes,
           exitStatus,
+          suspendedState,
           SUSPENDED_COMMIT,
           completedRenderStartTime,
           completedRenderEndTime,
@@ -1564,6 +1568,7 @@ function commitRootWhenReady(
     updatedLanes,
     suspendedRetryLanes,
     exitStatus,
+    suspendedState,
     suspendedCommitReason,
     completedRenderStartTime,
     completedRenderEndTime,
@@ -3287,6 +3292,7 @@ function commitRoot(
   updatedLanes: Lanes,
   suspendedRetryLanes: Lanes,
   exitStatus: RootExitStatus,
+  suspendedState: null | SuspendedState,
   suspendedCommitReason: SuspendedCommitReason, // Profiling-only
   completedRenderStartTime: number, // Profiling-only
   completedRenderEndTime: number, // Profiling-only
@@ -3438,6 +3444,7 @@ function commitRoot(
       root,
       finishedWork,
       recoverableErrors,
+      suspendedState,
       enableProfilerTimer
         ? suspendedCommitReason === IMMEDIATE_COMMIT
           ? completedRenderEndTime
@@ -3576,6 +3583,7 @@ function commitRoot(
   pendingEffectsStatus = PENDING_MUTATION_PHASE;
   if (enableViewTransition && willStartViewTransition) {
     pendingViewTransition = startViewTransition(
+      suspendedState,
       root.containerInfo,
       pendingTransitionTypes,
       flushMutationEffects,
@@ -3990,6 +3998,7 @@ function commitGestureOnRoot(
   root: FiberRoot,
   finishedWork: Fiber,
   recoverableErrors: null | Array<CapturedValue<mixed>>,
+  suspendedState: null | SuspendedState,
   renderEndTime: number, // Profiling-only
 ): void {
   // We assume that the gesture we just rendered was the first one in the queue.
@@ -4020,6 +4029,7 @@ function commitGestureOnRoot(
   pendingEffectsStatus = PENDING_GESTURE_MUTATION_PHASE;
 
   pendingViewTransition = finishedGesture.running = startGestureTransition(
+    suspendedState,
     root.containerInfo,
     finishedGesture.provider,
     finishedGesture.rangeStart,
