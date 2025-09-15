@@ -3081,6 +3081,7 @@ function isReorderableExpression(
         return true;
       }
     }
+    case 'TSInstantiationExpression':
     case 'RegExpLiteral':
     case 'StringLiteral':
     case 'NumericLiteral':
