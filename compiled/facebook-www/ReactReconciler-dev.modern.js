@@ -16965,7 +16965,13 @@ __DEV__ &&
           accumulateSuspenseyCommitOnFiber(finishedWork, lanes),
           isViewTransitionEligible &&
             suspendOnActiveViewTransition(root.containerInfo),
-          (subtreeFlags = waitForCommitToBeReady()),
+          (subtreeFlags =
+            (lanes & 62914560) === lanes
+              ? globalMostRecentFallbackTime - now$1()
+              : (lanes & 4194048) === lanes
+                ? globalMostRecentTransitionTime - now$1()
+                : 0),
+          (subtreeFlags = waitForCommitToBeReady(subtreeFlags)),
           null !== subtreeFlags)
         ) {
           root.cancelPendingCommit = subtreeFlags(
@@ -20093,6 +20099,7 @@ __DEV__ &&
       needsIsomorphicIndicator = !1,
       prevOnStartTransitionFinish = ReactSharedInternals.S;
     ReactSharedInternals.S = function (transition, returnValue) {
+      globalMostRecentTransitionTime = now$1();
       if (
         "object" === typeof returnValue &&
         null !== returnValue &&
@@ -21822,6 +21829,7 @@ __DEV__ &&
       workInProgressRootDidIncludeRecursiveRenderUpdate = !1,
       didIncludeCommitPhaseUpdate = !1,
       globalMostRecentFallbackTime = 0,
+      globalMostRecentTransitionTime = 0,
       FALLBACK_THROTTLE_MS = 300,
       workInProgressRootRenderTargetTime = Infinity,
       RENDER_TIMEOUT_MS = 500,
@@ -22399,7 +22407,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-e12b0bdc-20250915"
+        reconcilerVersion: "19.2.0-www-modern-e3f19180-20250915"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

@@ -11117,7 +11117,13 @@ module.exports = function ($$$config) {
         accumulateSuspenseyCommitOnFiber(finishedWork, lanes),
         isViewTransitionEligible &&
           suspendOnActiveViewTransition(root.containerInfo),
-        (suspendedCommitReason = waitForCommitToBeReady()),
+        (suspendedCommitReason =
+          (lanes & 62914560) === lanes
+            ? globalMostRecentFallbackTime - now()
+            : (lanes & 4194048) === lanes
+              ? globalMostRecentTransitionTime - now()
+              : 0),
+        (suspendedCommitReason = waitForCommitToBeReady(suspendedCommitReason)),
         null !== suspendedCommitReason)
       ) {
         root.cancelPendingCommit = suspendedCommitReason(
@@ -12985,6 +12991,7 @@ module.exports = function ($$$config) {
     needsIsomorphicIndicator = !1,
     prevOnStartTransitionFinish = ReactSharedInternals.S;
   ReactSharedInternals.S = function (transition, returnValue) {
+    globalMostRecentTransitionTime = now();
     "object" === typeof returnValue &&
       null !== returnValue &&
       "function" === typeof returnValue.then &&
@@ -13504,6 +13511,7 @@ module.exports = function ($$$config) {
     workInProgressRootDidIncludeRecursiveRenderUpdate = !1,
     didIncludeCommitPhaseUpdate = !1,
     globalMostRecentFallbackTime = 0,
+    globalMostRecentTransitionTime = 0,
     workInProgressRootRenderTargetTime = Infinity,
     workInProgressTransitions = null,
     currentPendingTransitionCallbacks = null,
@@ -13880,7 +13888,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-modern-e12b0bdc-20250915"
+      reconcilerVersion: "19.2.0-www-modern-e3f19180-20250915"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

@@ -2539,6 +2539,7 @@ function releaseIsomorphicIndicator() {
 }
 var prevOnStartTransitionFinish = ReactSharedInternals.S;
 ReactSharedInternals.S = function (transition, returnValue) {
+  globalMostRecentTransitionTime = now();
   "object" === typeof returnValue &&
     null !== returnValue &&
     "function" === typeof returnValue.then &&
@@ -11977,6 +11978,7 @@ var PossiblyWeakMap = "function" === typeof WeakMap ? WeakMap : Map,
   workInProgressRootDidIncludeRecursiveRenderUpdate = !1,
   didIncludeCommitPhaseUpdate = !1,
   globalMostRecentFallbackTime = 0,
+  globalMostRecentTransitionTime = 0,
   workInProgressRootRenderTargetTime = Infinity,
   workInProgressTransitions = null,
   currentPendingTransitionCallbacks = null,
@@ -12325,7 +12327,13 @@ function commitRootWhenReady(
     suspendedCommitReason & 8192 ||
     16785408 === (suspendedCommitReason & 16785408)
   ) {
-    suspendedState = { stylesheets: null, count: 0, unsuspend: noop$1 };
+    suspendedState = {
+      stylesheets: null,
+      count: 0,
+      imgCount: 0,
+      waitingForImages: !0,
+      unsuspend: noop$1
+    };
     appearingViewTransitions = null;
     accumulateSuspenseyCommitOnFiber(finishedWork, lanes);
     if (isViewTransitionEligible) {
@@ -12345,7 +12353,13 @@ function commitRootWhenReady(
           suspendedCommitReason
         ));
     }
-    suspendedCommitReason = waitForCommitToBeReady();
+    suspendedCommitReason =
+      (lanes & 62914560) === lanes
+        ? globalMostRecentFallbackTime - now()
+        : (lanes & 4194048) === lanes
+          ? globalMostRecentTransitionTime - now()
+          : 0;
+    suspendedCommitReason = waitForCommitToBeReady(suspendedCommitReason);
     if (null !== suspendedCommitReason) {
       root.cancelPendingCommit = suspendedCommitReason(
         commitRoot.bind(
@@ -14888,20 +14902,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1836 = 0;
-  i$jscomp$inline_1836 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1836++
+  var i$jscomp$inline_1837 = 0;
+  i$jscomp$inline_1837 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1837++
 ) {
-  var eventName$jscomp$inline_1837 =
-      simpleEventPluginEvents[i$jscomp$inline_1836],
-    domEventName$jscomp$inline_1838 =
-      eventName$jscomp$inline_1837.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1839 =
-      eventName$jscomp$inline_1837[0].toUpperCase() +
-      eventName$jscomp$inline_1837.slice(1);
+  var eventName$jscomp$inline_1838 =
+      simpleEventPluginEvents[i$jscomp$inline_1837],
+    domEventName$jscomp$inline_1839 =
+      eventName$jscomp$inline_1838.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1840 =
+      eventName$jscomp$inline_1838[0].toUpperCase() +
+      eventName$jscomp$inline_1838.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1838,
-    "on" + capitalizedEvent$jscomp$inline_1839
+    domEventName$jscomp$inline_1839,
+    "on" + capitalizedEvent$jscomp$inline_1840
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -18632,14 +18646,9 @@ function suspendInstance(instance) {
     var state = suspendedState;
     "function" === typeof instance.decode &&
       "function" === typeof setTimeout &&
-      (state.count++,
-      (state = onUnsuspend.bind(state)),
-      Promise.race([
-        instance.decode(),
-        new Promise(function (resolve) {
-          return setTimeout(resolve, 500);
-        })
-      ]).then(state, state));
+      (state.imgCount++,
+      (state = onUnsuspendImg.bind(state)),
+      instance.decode().then(state, state));
   }
 }
 function suspendResource(hoistableRoot, resource, props) {
@@ -18693,40 +18702,61 @@ function suspendResource(hoistableRoot, resource, props) {
       hoistableRoot.addEventListener("error", resource));
   }
 }
-function waitForCommitToBeReady() {
+function waitForCommitToBeReady(timeoutOffset) {
   if (null === suspendedState) throw Error(formatProdErrorMessage(475));
   var state = suspendedState;
   state.stylesheets &&
     0 === state.count &&
     insertSuspendedStylesheets(state, state.stylesheets);
-  return 0 < state.count
+  return 0 < state.count || 0 < state.imgCount
     ? function (commit) {
         var stylesheetTimer = setTimeout(function () {
-          state.stylesheets &&
-            insertSuspendedStylesheets(state, state.stylesheets);
-          if (state.unsuspend) {
-            var unsuspend = state.unsuspend;
-            state.unsuspend = null;
-            unsuspend();
-          }
-        }, 6e4);
+            state.stylesheets &&
+              insertSuspendedStylesheets(state, state.stylesheets);
+            if (state.unsuspend) {
+              var unsuspend = state.unsuspend;
+              state.unsuspend = null;
+              unsuspend();
+            }
+          }, 6e4 + timeoutOffset),
+          imgTimer = setTimeout(function () {
+            state.waitingForImages = !1;
+            if (
+              0 === state.count &&
+              (state.stylesheets &&
+                insertSuspendedStylesheets(state, state.stylesheets),
+              state.unsuspend)
+            ) {
+              var unsuspend = state.unsuspend;
+              state.unsuspend = null;
+              unsuspend();
+            }
+          }, 500 + timeoutOffset);
         state.unsuspend = commit;
         return function () {
           state.unsuspend = null;
           clearTimeout(stylesheetTimer);
+          clearTimeout(imgTimer);
         };
       }
     : null;
 }
-function onUnsuspend() {
-  this.count--;
-  if (0 === this.count)
-    if (this.stylesheets) insertSuspendedStylesheets(this, this.stylesheets);
-    else if (this.unsuspend) {
-      var unsuspend = this.unsuspend;
-      this.unsuspend = null;
+function checkIfFullyUnsuspended(state) {
+  if (0 === state.count && (0 === state.imgCount || !state.waitingForImages))
+    if (state.stylesheets) insertSuspendedStylesheets(state, state.stylesheets);
+    else if (state.unsuspend) {
+      var unsuspend = state.unsuspend;
+      state.unsuspend = null;
       unsuspend();
     }
+}
+function onUnsuspend() {
+  this.count--;
+  checkIfFullyUnsuspended(this);
+}
+function onUnsuspendImg() {
+  this.imgCount--;
+  checkIfFullyUnsuspended(this);
 }
 var precedencesByRoot = null;
 function insertSuspendedStylesheets(state, resources) {
@@ -19509,16 +19539,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_2116 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2117 = React.version;
 if (
-  "19.2.0-www-modern-e12b0bdc-20250915" !==
-  isomorphicReactPackageVersion$jscomp$inline_2116
+  "19.2.0-www-modern-e3f19180-20250915" !==
+  isomorphicReactPackageVersion$jscomp$inline_2117
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2116,
-      "19.2.0-www-modern-e12b0bdc-20250915"
+      isomorphicReactPackageVersion$jscomp$inline_2117,
+      "19.2.0-www-modern-e3f19180-20250915"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -19534,24 +19564,24 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2740 = {
+var internals$jscomp$inline_2741 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-e12b0bdc-20250915",
+  version: "19.2.0-www-modern-e3f19180-20250915",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-e12b0bdc-20250915"
+  reconcilerVersion: "19.2.0-www-modern-e3f19180-20250915"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2741 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2742 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2741.isDisabled &&
-    hook$jscomp$inline_2741.supportsFiber
+    !hook$jscomp$inline_2742.isDisabled &&
+    hook$jscomp$inline_2742.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2741.inject(
-        internals$jscomp$inline_2740
+      (rendererID = hook$jscomp$inline_2742.inject(
+        internals$jscomp$inline_2741
       )),
-        (injectedHook = hook$jscomp$inline_2741);
+        (injectedHook = hook$jscomp$inline_2742);
     } catch (err) {}
 }
 function defaultOnDefaultTransitionIndicator() {
@@ -19968,4 +19998,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-modern-e12b0bdc-20250915";
+exports.version = "19.2.0-www-modern-e3f19180-20250915";

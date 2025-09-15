@@ -13,7 +13,7 @@
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1186() {
+    function JSCompiler_object_inline_createNodeMock_1187() {
       return null;
     }
     function findHook(fiber, id) {
@@ -11532,8 +11532,13 @@ __DEV__ &&
     ) {
       root.timeoutHandle = -1;
       var subtreeFlags = finishedWork.subtreeFlags;
-      (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408)) &&
-        accumulateSuspenseyCommitOnFiber(finishedWork);
+      if (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408))
+        accumulateSuspenseyCommitOnFiber(finishedWork),
+          (lanes & 62914560) === lanes
+            ? globalMostRecentFallbackTime - now$1()
+            : (lanes & 4194048) === lanes
+              ? globalMostRecentTransitionTime - now$1()
+              : 0;
       commitRoot(
         root,
         finishedWork,
@@ -13808,6 +13813,7 @@ __DEV__ &&
       needsIsomorphicIndicator = !1,
       prevOnStartTransitionFinish = ReactSharedInternals.S;
     ReactSharedInternals.S = function (transition, returnValue) {
+      globalMostRecentTransitionTime = now$1();
       "object" === typeof returnValue &&
         null !== returnValue &&
         "function" === typeof returnValue.then &&
@@ -15358,6 +15364,7 @@ __DEV__ &&
       workInProgressRootRecoverableErrors = null,
       workInProgressRootDidIncludeRecursiveRenderUpdate = !1,
       globalMostRecentFallbackTime = 0,
+      globalMostRecentTransitionTime = 0,
       FALLBACK_THROTTLE_MS = 300,
       workInProgressRootRenderTargetTime = Infinity,
       RENDER_TIMEOUT_MS = 500,
@@ -15603,10 +15610,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-modern-e12b0bdc-20250915",
+        version: "19.2.0-www-modern-e3f19180-20250915",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-e12b0bdc-20250915"
+        reconcilerVersion: "19.2.0-www-modern-e3f19180-20250915"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15626,7 +15633,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1186,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1187,
         isConcurrentOnly = !0 !== global.IS_REACT_NATIVE_TEST_ENVIRONMENT,
         isConcurrent = isConcurrentOnly,
         isStrictMode = !1;
@@ -15741,5 +15748,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.2.0-www-modern-e12b0bdc-20250915";
+    exports.version = "19.2.0-www-modern-e3f19180-20250915";
   })();
