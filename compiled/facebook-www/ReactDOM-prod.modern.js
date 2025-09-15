@@ -11670,39 +11670,64 @@ function recursivelyTraverseAtomicPassiveEffects(
     }
 }
 var suspenseyCommitFlag = 8192;
-function recursivelyAccumulateSuspenseyCommit(parentFiber, committedLanes) {
+function recursivelyAccumulateSuspenseyCommit(
+  parentFiber,
+  committedLanes,
+  suspendedState
+) {
   if (parentFiber.subtreeFlags & suspenseyCommitFlag)
     for (parentFiber = parentFiber.child; null !== parentFiber; )
-      accumulateSuspenseyCommitOnFiber(parentFiber, committedLanes),
+      accumulateSuspenseyCommitOnFiber(
+        parentFiber,
+        committedLanes,
+        suspendedState
+      ),
         (parentFiber = parentFiber.sibling);
 }
-function accumulateSuspenseyCommitOnFiber(fiber, committedLanes) {
+function accumulateSuspenseyCommitOnFiber(
+  fiber,
+  committedLanes,
+  suspendedState
+) {
   switch (fiber.tag) {
     case 26:
-      recursivelyAccumulateSuspenseyCommit(fiber, committedLanes);
+      recursivelyAccumulateSuspenseyCommit(
+        fiber,
+        committedLanes,
+        suspendedState
+      );
       fiber.flags & suspenseyCommitFlag &&
         (null !== fiber.memoizedState
           ? suspendResource(
+              suspendedState,
               currentHoistableRoot,
               fiber.memoizedState,
               fiber.memoizedProps
             )
           : ((fiber = fiber.stateNode),
             (committedLanes & 335544128) === committedLanes &&
-              suspendInstance(fiber)));
+              suspendInstance(suspendedState, fiber)));
       break;
     case 5:
-      recursivelyAccumulateSuspenseyCommit(fiber, committedLanes);
+      recursivelyAccumulateSuspenseyCommit(
+        fiber,
+        committedLanes,
+        suspendedState
+      );
       fiber.flags & suspenseyCommitFlag &&
         ((fiber = fiber.stateNode),
         (committedLanes & 335544128) === committedLanes &&
-          suspendInstance(fiber));
+          suspendInstance(suspendedState, fiber));
       break;
     case 3:
     case 4:
       var previousHoistableRoot = currentHoistableRoot;
       currentHoistableRoot = getHoistableRoot(fiber.stateNode.containerInfo);
-      recursivelyAccumulateSuspenseyCommit(fiber, committedLanes);
+      recursivelyAccumulateSuspenseyCommit(
+        fiber,
+        committedLanes,
+        suspendedState
+      );
       currentHoistableRoot = previousHoistableRoot;
       break;
     case 22:
@@ -11712,9 +11737,17 @@ function accumulateSuspenseyCommitOnFiber(fiber, committedLanes) {
         null !== previousHoistableRoot.memoizedState
           ? ((previousHoistableRoot = suspenseyCommitFlag),
             (suspenseyCommitFlag = 16777216),
-            recursivelyAccumulateSuspenseyCommit(fiber, committedLanes),
+            recursivelyAccumulateSuspenseyCommit(
+              fiber,
+              committedLanes,
+              suspendedState
+            ),
             (suspenseyCommitFlag = previousHoistableRoot))
-          : recursivelyAccumulateSuspenseyCommit(fiber, committedLanes));
+          : recursivelyAccumulateSuspenseyCommit(
+              fiber,
+              committedLanes,
+              suspendedState
+            ));
       break;
     case 30:
       if (enableViewTransition) {
@@ -11729,11 +11762,19 @@ function accumulateSuspenseyCommitOnFiber(fiber, committedLanes) {
             (appearingViewTransitions = new Map());
           appearingViewTransitions.set(previousHoistableRoot, state);
         }
-        recursivelyAccumulateSuspenseyCommit(fiber, committedLanes);
+        recursivelyAccumulateSuspenseyCommit(
+          fiber,
+          committedLanes,
+          suspendedState
+        );
         break;
       }
     default:
-      recursivelyAccumulateSuspenseyCommit(fiber, committedLanes);
+      recursivelyAccumulateSuspenseyCommit(
+        fiber,
+        committedLanes,
+        suspendedState
+      );
   }
 }
 function detachAlternateSiblings(parentFiber) {
@@ -12319,50 +12360,55 @@ function commitRootWhenReady(
   completedRenderEndTime
 ) {
   root.timeoutHandle = -1;
-  suspendedCommitReason = finishedWork.subtreeFlags;
-  var isViewTransitionEligible =
-    enableViewTransition && (lanes & 335544064) === lanes;
+  var subtreeFlags = finishedWork.subtreeFlags,
+    isViewTransitionEligible =
+      enableViewTransition && (lanes & 335544064) === lanes;
+  suspendedCommitReason = null;
   if (
     isViewTransitionEligible ||
-    suspendedCommitReason & 8192 ||
-    16785408 === (suspendedCommitReason & 16785408)
-  ) {
-    suspendedState = {
-      stylesheets: null,
-      count: 0,
-      imgCount: 0,
-      imgBytes: 0,
-      waitingForImages: !0,
-      unsuspend: noop$1
-    };
-    appearingViewTransitions = null;
-    accumulateSuspenseyCommitOnFiber(finishedWork, lanes);
-    if (isViewTransitionEligible) {
-      isViewTransitionEligible = root.containerInfo;
-      if (null === suspendedState) throw Error(formatProdErrorMessage(475));
-      suspendedCommitReason = suspendedState;
-      isViewTransitionEligible = (
-        9 === isViewTransitionEligible.nodeType
-          ? isViewTransitionEligible
-          : isViewTransitionEligible.ownerDocument
-      ).__reactViewTransition;
-      null != isViewTransitionEligible &&
-        (suspendedCommitReason.count++,
-        (suspendedCommitReason = onUnsuspend.bind(suspendedCommitReason)),
-        isViewTransitionEligible.finished.then(
-          suspendedCommitReason,
-          suspendedCommitReason
-        ));
-    }
-    suspendedCommitReason =
-      (lanes & 62914560) === lanes
-        ? globalMostRecentFallbackTime - now()
-        : (lanes & 4194048) === lanes
-          ? globalMostRecentTransitionTime - now()
-          : 0;
-    suspendedCommitReason = waitForCommitToBeReady(suspendedCommitReason);
-    if (null !== suspendedCommitReason) {
-      root.cancelPendingCommit = suspendedCommitReason(
+    subtreeFlags & 8192 ||
+    16785408 === (subtreeFlags & 16785408)
+  )
+    if (
+      ((suspendedCommitReason = {
+        stylesheets: null,
+        count: 0,
+        imgCount: 0,
+        imgBytes: 0,
+        waitingForImages: !0,
+        unsuspend: noop$1
+      }),
+      (appearingViewTransitions = null),
+      accumulateSuspenseyCommitOnFiber(
+        finishedWork,
+        lanes,
+        suspendedCommitReason
+      ),
+      isViewTransitionEligible &&
+        ((subtreeFlags = suspendedCommitReason),
+        (isViewTransitionEligible = root.containerInfo),
+        (isViewTransitionEligible = (
+          9 === isViewTransitionEligible.nodeType
+            ? isViewTransitionEligible
+            : isViewTransitionEligible.ownerDocument
+        ).__reactViewTransition),
+        null != isViewTransitionEligible &&
+          (subtreeFlags.count++,
+          (subtreeFlags = onUnsuspend.bind(subtreeFlags)),
+          isViewTransitionEligible.finished.then(subtreeFlags, subtreeFlags))),
+      (subtreeFlags =
+        (lanes & 62914560) === lanes
+          ? globalMostRecentFallbackTime - now()
+          : (lanes & 4194048) === lanes
+            ? globalMostRecentTransitionTime - now()
+            : 0),
+      (subtreeFlags = waitForCommitToBeReady(
+        suspendedCommitReason,
+        subtreeFlags
+      )),
+      null !== subtreeFlags)
+    ) {
+      root.cancelPendingCommit = subtreeFlags(
         commitRoot.bind(
           null,
           root,
@@ -12375,6 +12421,7 @@ function commitRootWhenReady(
           updatedLanes,
           suspendedRetryLanes,
           exitStatus,
+          suspendedCommitReason,
           1,
           completedRenderStartTime,
           completedRenderEndTime
@@ -12383,7 +12430,6 @@ function commitRootWhenReady(
       markRootSuspended(root, lanes, spawnedLane, !didSkipSuspendedSiblings);
       return;
     }
-  }
   commitRoot(
     root,
     finishedWork,
@@ -12393,7 +12439,9 @@ function commitRootWhenReady(
     didIncludeRenderPhaseUpdate,
     spawnedLane,
     updatedLanes,
-    suspendedRetryLanes
+    suspendedRetryLanes,
+    exitStatus,
+    suspendedCommitReason
   );
 }
 function isRenderConsistentWithExternalStores(finishedWork) {
@@ -12941,7 +12989,9 @@ function commitRoot(
   didIncludeRenderPhaseUpdate,
   spawnedLane,
   updatedLanes,
-  suspendedRetryLanes
+  suspendedRetryLanes,
+  exitStatus,
+  suspendedState
 ) {
   root.cancelPendingCommit = null;
   do flushPendingEffects();
@@ -12949,12 +12999,12 @@ function commitRoot(
   if (0 !== (executionContext & 6)) throw Error(formatProdErrorMessage(327));
   if (null !== finishedWork) {
     if (finishedWork === root.current) throw Error(formatProdErrorMessage(177));
-    var remainingLanes = finishedWork.lanes | finishedWork.childLanes;
-    remainingLanes |= concurrentlyUpdatedLanes;
+    exitStatus = finishedWork.lanes | finishedWork.childLanes;
+    exitStatus |= concurrentlyUpdatedLanes;
     markRootFinished(
       root,
       lanes,
-      remainingLanes,
+      exitStatus,
       spawnedLane,
       updatedLanes,
       suspendedRetryLanes
@@ -12966,7 +13016,7 @@ function commitRoot(
     pendingFinishedWork = finishedWork;
     pendingEffectsRoot = root;
     pendingEffectsLanes = lanes;
-    pendingEffectsRemainingLanes = remainingLanes;
+    pendingEffectsRemainingLanes = exitStatus;
     pendingPassiveTransitions = transitions;
     pendingRecoverableErrors = recoverableErrors;
     pendingDidIncludeRenderPhaseUpdate = didIncludeRenderPhaseUpdate;
@@ -13007,6 +13057,7 @@ function commitRoot(
     pendingEffectsStatus = 1;
     enableViewTransition && finishedWork
       ? (pendingViewTransition = startViewTransition(
+          suspendedState,
           root.containerInfo,
           pendingTransitionTypes,
           flushMutationEffects,
@@ -17134,6 +17185,7 @@ function forceLayout(ownerDocument) {
   return ownerDocument.documentElement.clientHeight;
 }
 function startViewTransition(
+  suspendedState,
   rootContainer,
   transitionTypes,
   mutationCallback,
@@ -18700,27 +18752,21 @@ function preloadResource(resource) {
     ? !1
     : !0;
 }
-var suspendedState = null;
-function suspendInstance(instance) {
-  if (enableViewTransition) {
-    if (null === suspendedState) throw Error(formatProdErrorMessage(475));
-    var state = suspendedState;
+function suspendInstance(state, instance) {
+  enableViewTransition &&
     "function" === typeof instance.decode &&
-      "function" === typeof setTimeout &&
-      (state.imgCount++,
-      instance.complete ||
-        (state.imgBytes +=
-          (instance.width || 100) *
-          (instance.height || 100) *
-          ("number" === typeof devicePixelRatio ? devicePixelRatio : 1) *
-          0.25),
-      (state = onUnsuspendImg.bind(state)),
-      instance.decode().then(state, state));
-  }
+    "function" === typeof setTimeout &&
+    (state.imgCount++,
+    instance.complete ||
+      (state.imgBytes +=
+        (instance.width || 100) *
+        (instance.height || 100) *
+        ("number" === typeof devicePixelRatio ? devicePixelRatio : 1) *
+        0.25),
+    (state = onUnsuspendImg.bind(state)),
+    instance.decode().then(state, state));
 }
-function suspendResource(hoistableRoot, resource, props) {
-  if (null === suspendedState) throw Error(formatProdErrorMessage(475));
-  var state = suspendedState;
+function suspendResource(state, hoistableRoot, resource, props) {
   if (
     "stylesheet" === resource.type &&
     ("string" !== typeof props.media ||
@@ -18770,9 +18816,7 @@ function suspendResource(hoistableRoot, resource, props) {
   }
 }
 var estimatedBytesWithinLimit = 0;
-function waitForCommitToBeReady(timeoutOffset) {
-  if (null === suspendedState) throw Error(formatProdErrorMessage(475));
-  var state = suspendedState;
+function waitForCommitToBeReady(state, timeoutOffset) {
   state.stylesheets &&
     0 === state.count &&
     insertSuspendedStylesheets(state, state.stylesheets);
@@ -19616,14 +19660,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2117 = React.version;
 if (
-  "19.2.0-www-modern-ae22247d-20250915" !==
+  "19.2.0-www-modern-5d49b2b7-20250915" !==
   isomorphicReactPackageVersion$jscomp$inline_2117
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2117,
-      "19.2.0-www-modern-ae22247d-20250915"
+      "19.2.0-www-modern-5d49b2b7-20250915"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -19641,10 +19685,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2741 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-ae22247d-20250915",
+  version: "19.2.0-www-modern-5d49b2b7-20250915",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-ae22247d-20250915"
+  reconcilerVersion: "19.2.0-www-modern-5d49b2b7-20250915"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2742 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -20073,4 +20117,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-modern-ae22247d-20250915";
+exports.version = "19.2.0-www-modern-5d49b2b7-20250915";

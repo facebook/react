@@ -14671,6 +14671,7 @@ __DEV__ &&
                 workInProgressRootInterleavedUpdatedLanes,
                 workInProgressSuspendedRetryLanes,
                 startTime,
+                null,
                 IMMEDIATE_COMMIT,
                 renderStartTime,
                 forceSync
@@ -14755,12 +14756,13 @@ __DEV__ &&
     ) {
       root.timeoutHandle = -1;
       didSkipSuspendedSiblings = finishedWork.subtreeFlags;
+      var suspendedState = null;
       if (
         (enableViewTransition && (lanes & 335544064) === lanes) ||
         didSkipSuspendedSiblings & 8192 ||
         16785408 === (didSkipSuspendedSiblings & 16785408)
       )
-        (appearingViewTransitions = null),
+        (appearingViewTransitions = suspendedState = null),
           accumulateSuspenseyCommitOnFiber(finishedWork),
           (lanes & 62914560) === lanes
             ? globalMostRecentFallbackTime - now$1()
@@ -14778,6 +14780,7 @@ __DEV__ &&
         updatedLanes,
         suspendedRetryLanes,
         exitStatus,
+        suspendedState,
         suspendedCommitReason,
         completedRenderStartTime,
         completedRenderEndTime
@@ -15807,6 +15810,7 @@ __DEV__ &&
       updatedLanes,
       suspendedRetryLanes,
       exitStatus,
+      suspendedState,
       suspendedCommitReason,
       completedRenderStartTime,
       completedRenderEndTime
@@ -19532,10 +19536,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-modern-ae22247d-20250915",
+        version: "19.2.0-www-modern-5d49b2b7-20250915",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-ae22247d-20250915"
+        reconcilerVersion: "19.2.0-www-modern-5d49b2b7-20250915"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -19569,7 +19573,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.2.0-www-modern-ae22247d-20250915";
+    exports.version = "19.2.0-www-modern-5d49b2b7-20250915";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

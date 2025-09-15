@@ -16039,19 +16039,36 @@ __DEV__ &&
       resetComponentEffectTimers();
       commitPassiveUnmountOnFiber(finishedWork);
     }
-    function recursivelyAccumulateSuspenseyCommit(parentFiber, committedLanes) {
+    function recursivelyAccumulateSuspenseyCommit(
+      parentFiber,
+      committedLanes,
+      suspendedState
+    ) {
       if (parentFiber.subtreeFlags & suspenseyCommitFlag)
         for (parentFiber = parentFiber.child; null !== parentFiber; )
-          accumulateSuspenseyCommitOnFiber(parentFiber, committedLanes),
+          accumulateSuspenseyCommitOnFiber(
+            parentFiber,
+            committedLanes,
+            suspendedState
+          ),
             (parentFiber = parentFiber.sibling);
     }
-    function accumulateSuspenseyCommitOnFiber(fiber, committedLanes) {
+    function accumulateSuspenseyCommitOnFiber(
+      fiber,
+      committedLanes,
+      suspendedState
+    ) {
       switch (fiber.tag) {
         case 26:
-          recursivelyAccumulateSuspenseyCommit(fiber, committedLanes);
+          recursivelyAccumulateSuspenseyCommit(
+            fiber,
+            committedLanes,
+            suspendedState
+          );
           if (fiber.flags & suspenseyCommitFlag)
             if (null !== fiber.memoizedState)
               suspendResource(
+                suspendedState,
                 currentHoistableRoot,
                 fiber.memoizedState,
                 fiber.memoizedProps
@@ -16062,18 +16079,22 @@ __DEV__ &&
               fiber = fiber.memoizedProps;
               ((committedLanes & 335544128) === committedLanes ||
                 maySuspendCommitInSyncRender(type, fiber)) &&
-                suspendInstance(instance, type, fiber);
+                suspendInstance(suspendedState, instance, type, fiber);
             }
           break;
         case 5:
-          recursivelyAccumulateSuspenseyCommit(fiber, committedLanes);
+          recursivelyAccumulateSuspenseyCommit(
+            fiber,
+            committedLanes,
+            suspendedState
+          );
           fiber.flags & suspenseyCommitFlag &&
             ((instance = fiber.stateNode),
             (type = fiber.type),
             (fiber = fiber.memoizedProps),
             ((committedLanes & 335544128) === committedLanes ||
               maySuspendCommitInSyncRender(type, fiber)) &&
-              suspendInstance(instance, type, fiber));
+              suspendInstance(suspendedState, instance, type, fiber));
           break;
         case 3:
         case 4:
@@ -16082,9 +16103,17 @@ __DEV__ &&
               (currentHoistableRoot = getHoistableRoot(
                 fiber.stateNode.containerInfo
               )),
-              recursivelyAccumulateSuspenseyCommit(fiber, committedLanes),
+              recursivelyAccumulateSuspenseyCommit(
+                fiber,
+                committedLanes,
+                suspendedState
+              ),
               (currentHoistableRoot = instance))
-            : recursivelyAccumulateSuspenseyCommit(fiber, committedLanes);
+            : recursivelyAccumulateSuspenseyCommit(
+                fiber,
+                committedLanes,
+                suspendedState
+              );
           break;
         case 22:
           null === fiber.memoizedState &&
@@ -16092,9 +16121,17 @@ __DEV__ &&
             null !== instance && null !== instance.memoizedState
               ? ((instance = suspenseyCommitFlag),
                 (suspenseyCommitFlag = 16777216),
-                recursivelyAccumulateSuspenseyCommit(fiber, committedLanes),
+                recursivelyAccumulateSuspenseyCommit(
+                  fiber,
+                  committedLanes,
+                  suspendedState
+                ),
                 (suspenseyCommitFlag = instance))
-              : recursivelyAccumulateSuspenseyCommit(fiber, committedLanes));
+              : recursivelyAccumulateSuspenseyCommit(
+                  fiber,
+                  committedLanes,
+                  suspendedState
+                ));
           break;
         case 30:
           if (enableViewTransition) {
@@ -16107,11 +16144,19 @@ __DEV__ &&
                 null === appearingViewTransitions &&
                   (appearingViewTransitions = new Map()),
                 appearingViewTransitions.set(instance, type)));
-            recursivelyAccumulateSuspenseyCommit(fiber, committedLanes);
+            recursivelyAccumulateSuspenseyCommit(
+              fiber,
+              committedLanes,
+              suspendedState
+            );
             break;
           }
         default:
-          recursivelyAccumulateSuspenseyCommit(fiber, committedLanes);
+          recursivelyAccumulateSuspenseyCommit(
+            fiber,
+            committedLanes,
+            suspendedState
+          );
       }
     }
     function detachAlternateSiblings(parentFiber) {
@@ -17050,6 +17095,7 @@ __DEV__ &&
                 workInProgressRootInterleavedUpdatedLanes,
                 workInProgressSuspendedRetryLanes,
                 startTime,
+                null,
                 IMMEDIATE_COMMIT,
                 renderStartTime,
                 forceSync
@@ -17135,25 +17181,26 @@ __DEV__ &&
       root.timeoutHandle = noTimeout;
       var subtreeFlags = finishedWork.subtreeFlags,
         isViewTransitionEligible =
-          enableViewTransition && (lanes & 335544064) === lanes;
+          enableViewTransition && (lanes & 335544064) === lanes,
+        suspendedState = null;
       if (
         isViewTransitionEligible ||
         subtreeFlags & 8192 ||
         16785408 === (subtreeFlags & 16785408)
       )
         if (
-          (startSuspendingCommit(),
+          ((suspendedState = startSuspendingCommit()),
           (appearingViewTransitions = null),
-          accumulateSuspenseyCommitOnFiber(finishedWork, lanes),
+          accumulateSuspenseyCommitOnFiber(finishedWork, lanes, suspendedState),
           isViewTransitionEligible &&
-            suspendOnActiveViewTransition(root.containerInfo),
+            suspendOnActiveViewTransition(suspendedState, root.containerInfo),
           (subtreeFlags =
             (lanes & 62914560) === lanes
               ? globalMostRecentFallbackTime - now$1()
               : (lanes & 4194048) === lanes
                 ? globalMostRecentTransitionTime - now$1()
                 : 0),
-          (subtreeFlags = waitForCommitToBeReady(subtreeFlags)),
+          (subtreeFlags = waitForCommitToBeReady(suspendedState, subtreeFlags)),
           null !== subtreeFlags)
         ) {
           root.cancelPendingCommit = subtreeFlags(
@@ -17169,6 +17216,7 @@ __DEV__ &&
               updatedLanes,
               suspendedRetryLanes,
               exitStatus,
+              suspendedState,
               SUSPENDED_COMMIT,
               completedRenderStartTime,
               completedRenderEndTime
@@ -17193,6 +17241,7 @@ __DEV__ &&
         updatedLanes,
         suspendedRetryLanes,
         exitStatus,
+        suspendedState,
         suspendedCommitReason,
         completedRenderStartTime,
         completedRenderEndTime
@@ -18252,6 +18301,7 @@ __DEV__ &&
       updatedLanes,
       suspendedRetryLanes,
       exitStatus,
+      suspendedState,
       suspendedCommitReason,
       completedRenderStartTime,
       completedRenderEndTime
@@ -18387,6 +18437,7 @@ __DEV__ &&
         pendingEffectsStatus = PENDING_MUTATION_PHASE;
         enableViewTransition && finishedWork
           ? (pendingViewTransition = startViewTransition(
+              suspendedState,
               root.containerInfo,
               pendingTransitionTypes,
               flushMutationEffects,
@@ -22627,7 +22678,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-ae22247d-20250915"
+        reconcilerVersion: "19.2.0-www-classic-5d49b2b7-20250915"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
