@@ -2081,6 +2081,7 @@ function forceLayout(ownerDocument: Document) {
 }
 
 export function startViewTransition(
+  suspendedState: null | SuspendedState,
   rootContainer: Container,
   transitionTypes: null | TransitionTypes,
   mutationCallback: () => void,
@@ -2443,6 +2444,7 @@ function animateGesture(
 }
 
 export function startGestureTransition(
+  suspendedState: null | SuspendedState,
   rootContainer: Container,
   timeline: GestureTimeline,
   rangeStart: number,
@@ -5904,7 +5906,7 @@ export function preloadResource(resource: Resource): boolean {
   return true;
 }
 
-type SuspendedState = {
+export opaque type SuspendedState = {
   stylesheets: null | Map<StylesheetResource, HoistableRoot>,
   count: number, // suspensey css and active view transitions
   imgCount: number, // suspensey images
@@ -5912,10 +5914,9 @@ type SuspendedState = {
   waitingForImages: boolean, // false when we're no longer blocking on images
   unsuspend: null | (() => void),
 };
-let suspendedState: null | SuspendedState = null;
 
-export function startSuspendingCommit(): void {
-  suspendedState = {
+export function startSuspendingCommit(): SuspendedState {
+  return {
     stylesheets: null,
     count: 0,
     imgCount: 0,
@@ -5930,6 +5931,7 @@ export function startSuspendingCommit(): void {
 }
 
 export function suspendInstance(
+  state: SuspendedState,
   instance: Instance,
   type: Type,
   props: Props,
@@ -5937,12 +5939,6 @@ export function suspendInstance(
   if (!enableSuspenseyImages && !enableViewTransition) {
     return;
   }
-  if (suspendedState === null) {
-    throw new Error(
-      'Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug.',
-    );
-  }
-  const state = suspendedState;
   if (
     // $FlowFixMe[prop-missing]
     typeof instance.decode === 'function' &&
@@ -5971,16 +5967,11 @@ export function suspendInstance(
 }
 
 export function suspendResource(
+  state: SuspendedState,
   hoistableRoot: HoistableRoot,
   resource: Resource,
   props: any,
 ): void {
-  if (suspendedState === null) {
-    throw new Error(
-      'Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug.',
-    );
-  }
-  const state = suspendedState;
   if (resource.type === 'stylesheet') {
     if (typeof props.media === 'string') {
       // If we don't currently match media we avoid suspending on this resource
@@ -6060,13 +6051,10 @@ export function suspendResource(
   }
 }
 
-export function suspendOnActiveViewTransition(rootContainer: Container): void {
-  if (suspendedState === null) {
-    throw new Error(
-      'Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug.',
-    );
-  }
-  const state = suspendedState;
+export function suspendOnActiveViewTransition(
+  state: SuspendedState,
+  rootContainer: Container,
+): void {
   const ownerDocument =
     rootContainer.nodeType === DOCUMENT_NODE
       ? rootContainer
@@ -6090,16 +6078,9 @@ const SUSPENSEY_IMAGE_TIME_ESTIMATE = 500;
 let estimatedBytesWithinLimit: number = 0;
 
 export function waitForCommitToBeReady(
+  state: SuspendedState,
   timeoutOffset: number,
 ): null | ((() => void) => () => void) {
-  if (suspendedState === null) {
-    throw new Error(
-      'Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug.',
-    );
-  }
-
-  const state = suspendedState;
-
   if (state.stylesheets && state.count === 0) {
     // We are not currently blocked but we have not inserted all stylesheets.
     // If this insertion happens and loads or errors synchronously then we can

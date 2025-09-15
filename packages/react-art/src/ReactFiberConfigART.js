@@ -609,11 +609,13 @@ export function preloadInstance(type, props) {
   return true;
 }
 
-export function startSuspendingCommit() {}
+export function startSuspendingCommit() {
+  return null;
+}
 
-export function suspendInstance(instance, type, props) {}
+export function suspendInstance(state, instance, type, props) {}
 
-export function suspendOnActiveViewTransition(container) {}
+export function suspendOnActiveViewTransition(state, container) {}
 
 export function waitForCommitToBeReady(timeoutOffset) {
   return null;
