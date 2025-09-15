@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<c7ac8072ccfb6b4c9e376924ad57759e>>
+ * @generated SignedSource<<14ca0c5d17c4104d5971e8c41838507f>>
  */
 
 'use strict';
@@ -32048,6 +32048,20 @@ function defaultModuleTypeProvider(moduleName) {
                         restParam: Effect.Read,
                         returnType: { kind: 'type', name: 'Any' },
                         knownIncompatible: `TanStack Table's \`useReactTable()\` API returns functions that cannot be memoized safely`,
+                    },
+                },
+            };
+        }
+        case '@tanstack/react-virtual': {
+            return {
+                kind: 'object',
+                properties: {
+                    useVirtualizer: {
+                        kind: 'hook',
+                        positionalParams: [],
+                        restParam: Effect.Read,
+                        returnType: { kind: 'type', name: 'Any' },
+                        knownIncompatible: `TanStack Virtual's \`useVirtualizer()\` API returns functions that cannot be memoized safely`,
                     },
                 },
             };

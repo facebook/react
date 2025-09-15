@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<13bad903e707a5f4d4917a9299c77270>>
+ * @generated SignedSource<<0316c801ad0bab884ff0f511a205c1ef>>
  */
 
 'use strict';
@@ -31827,6 +31827,20 @@ function defaultModuleTypeProvider(moduleName) {
                         restParam: Effect.Read,
                         returnType: { kind: 'type', name: 'Any' },
                         knownIncompatible: `TanStack Table's \`useReactTable()\` API returns functions that cannot be memoized safely`,
+                    },
+                },
+            };
+        }
+        case '@tanstack/react-virtual': {
+            return {
+                kind: 'object',
+                properties: {
+                    useVirtualizer: {
+                        kind: 'hook',
+                        positionalParams: [],
+                        restParam: Effect.Read,
+                        returnType: { kind: 'type', name: 'Any' },
+                        knownIncompatible: `TanStack Virtual's \`useVirtualizer()\` API returns functions that cannot be memoized safely`,
                     },
                 },
             };
