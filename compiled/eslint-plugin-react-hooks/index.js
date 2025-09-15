@@ -32051,6 +32051,20 @@ function defaultModuleTypeProvider(moduleName) {
                 },
             };
         }
+        case '@tanstack/react-virtual': {
+            return {
+                kind: 'object',
+                properties: {
+                    useVirtualizer: {
+                        kind: 'hook',
+                        positionalParams: [],
+                        restParam: Effect.Read,
+                        returnType: { kind: 'type', name: 'Any' },
+                        knownIncompatible: `TanStack Virtual's \`useVirtualizer()\` API returns functions that cannot be memoized safely`,
+                    },
+                },
+            };
+        }
     }
     return null;
 }
