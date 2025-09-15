@@ -143,6 +143,7 @@ import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 export {default as rendererVersion} from 'shared/ReactVersion';
 
 import noop from 'shared/noop';
+import estimateBandwidth from './estimateBandwidth';
 
 export const rendererPackageName = 'react-dom';
 export const extraDevToolsConfig = null;
@@ -1369,14 +1370,23 @@ function warnForBlockInsideInline(instance: HTMLElement) {
         node.nodeType === ELEMENT_NODE &&
         getComputedStyle((node: any)).display === 'block'
       ) {
-        console.error(
-          "You're about to start a <ViewTransition> around a display: inline " +
-            'element <%s>, which itself has a display: block element <%s> inside it. ' +
-            'This might trigger a bug in Safari which causes the View Transition to ' +
-            'be skipped with a duplicate name error.\n' +
-            'https://bugs.webkit.org/show_bug.cgi?id=290923',
-          instance.tagName.toLocaleLowerCase(),
-          (node: any).tagName.toLocaleLowerCase(),
+        const fiber =
+          getInstanceFromNode(node) || getInstanceFromNode(instance);
+        runWithFiberInDEV(
+          fiber,
+          (parentTag: string, childTag: string) => {
+            console.error(
+              "You're about to start a <ViewTransition> around a display: inline " +
+                'element <%s>, which itself has a display: block element <%s> inside it. ' +
+                'This might trigger a bug in Safari which causes the View Transition to ' +
+                'be skipped with a duplicate name error.\n' +
+                'https://bugs.webkit.org/show_bug.cgi?id=290923',
+              parentTag.toLocaleLowerCase(),
+              childTag.toLocaleLowerCase(),
+            );
+          },
+          instance.tagName,
+          (node: any).tagName,
         );
         break;
       }
@@ -2071,6 +2081,7 @@ function forceLayout(ownerDocument: Document) {
 }
 
 export function startViewTransition(
+  suspendedState: null | SuspendedState,
   rootContainer: Container,
   transitionTypes: null | TransitionTypes,
   mutationCallback: () => void,
@@ -2433,6 +2444,7 @@ function animateGesture(
 }
 
 export function startGestureTransition(
+  suspendedState: null | SuspendedState,
   rootContainer: Container,
   timeline: GestureTimeline,
   rangeStart: number,
@@ -5894,17 +5906,22 @@ export function preloadResource(resource: Resource): boolean {
   return true;
 }
 
-type SuspendedState = {
+export opaque type SuspendedState = {
   stylesheets: null | Map<StylesheetResource, HoistableRoot>,
-  count: number,
+  count: number, // suspensey css and active view transitions
+  imgCount: number, // suspensey images
+  imgBytes: number, // number of bytes we estimate needing to download
+  waitingForImages: boolean, // false when we're no longer blocking on images
   unsuspend: null | (() => void),
 };
-let suspendedState: null | SuspendedState = null;
 
-export function startSuspendingCommit(): void {
-  suspendedState = {
+export function startSuspendingCommit(): SuspendedState {
+  return {
     stylesheets: null,
     count: 0,
+    imgCount: 0,
+    imgBytes: 0,
+    waitingForImages: true,
     // We use a noop function when we begin suspending because if possible we want the
     // waitfor step to finish synchronously. If it doesn't we'll return a function to
     // provide the actual unsuspend function and that will get completed when the count
@@ -5913,9 +5930,8 @@ export function startSuspendingCommit(): void {
   };
 }
 
-const SUSPENSEY_IMAGE_TIMEOUT = 500;
-
 export function suspendInstance(
+  state: SuspendedState,
   instance: Instance,
   type: Type,
   props: Props,
@@ -5923,12 +5939,6 @@ export function suspendInstance(
   if (!enableSuspenseyImages && !enableViewTransition) {
     return;
   }
-  if (suspendedState === null) {
-    throw new Error(
-      'Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug.',
-    );
-  }
-  const state = suspendedState;
   if (
     // $FlowFixMe[prop-missing]
     typeof instance.decode === 'function' &&
@@ -5937,27 +5947,31 @@ export function suspendInstance(
     // If this browser supports decode() API, we use it to suspend waiting on the image.
     // The loading should have already started at this point, so it should be enough to
     // just call decode() which should also wait for the data to finish loading.
-    state.count++;
-    const ping = onUnsuspend.bind(state);
-    Promise.race([
-      // $FlowFixMe[prop-missing]
-      instance.decode(),
-      new Promise(resolve => setTimeout(resolve, SUSPENSEY_IMAGE_TIMEOUT)),
-    ]).then(ping, ping);
+    state.imgCount++;
+    // Estimate the byte size that we're about to download based on the width/height
+    // specified in the props. This is best practice to know ahead of time but if it's
+    // unspecified we'll fallback to a guess of 100x100 pixels.
+    if (!(instance: any).complete) {
+      const width: number = (instance: any).width || 100;
+      const height: number = (instance: any).height || 100;
+      const pixelRatio: number =
+        typeof devicePixelRatio === 'number' ? devicePixelRatio : 1;
+      const pixelsToDownload = width * height * pixelRatio;
+      const AVERAGE_BYTE_PER_PIXEL = 0.25;
+      state.imgBytes += pixelsToDownload * AVERAGE_BYTE_PER_PIXEL;
+    }
+    const ping = onUnsuspendImg.bind(state);
+    // $FlowFixMe[prop-missing]
+    instance.decode().then(ping, ping);
   }
 }
 
 export function suspendResource(
+  state: SuspendedState,
   hoistableRoot: HoistableRoot,
   resource: Resource,
   props: any,
 ): void {
-  if (suspendedState === null) {
-    throw new Error(
-      'Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug.',
-    );
-  }
-  const state = suspendedState;
   if (resource.type === 'stylesheet') {
     if (typeof props.media === 'string') {
       // If we don't currently match media we avoid suspending on this resource
@@ -6037,13 +6051,10 @@ export function suspendResource(
   }
 }
 
-export function suspendOnActiveViewTransition(rootContainer: Container): void {
-  if (suspendedState === null) {
-    throw new Error(
-      'Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug.',
-    );
-  }
-  const state = suspendedState;
+export function suspendOnActiveViewTransition(
+  state: SuspendedState,
+  rootContainer: Container,
+): void {
   const ownerDocument =
     rootContainer.nodeType === DOCUMENT_NODE
       ? rootContainer
@@ -6058,15 +6069,18 @@ export function suspendOnActiveViewTransition(rootContainer: Container): void {
   activeViewTransition.finished.then(ping, ping);
 }
 
-export function waitForCommitToBeReady(): null | ((() => void) => () => void) {
-  if (suspendedState === null) {
-    throw new Error(
-      'Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug.',
-    );
-  }
+const SUSPENSEY_STYLESHEET_TIMEOUT = 60000;
 
-  const state = suspendedState;
+const SUSPENSEY_IMAGE_TIMEOUT = 800;
 
+const SUSPENSEY_IMAGE_TIME_ESTIMATE = 500;
+
+let estimatedBytesWithinLimit: number = 0;
+
+export function waitForCommitToBeReady(
+  state: SuspendedState,
+  timeoutOffset: number,
+): null | ((() => void) => () => void) {
   if (state.stylesheets && state.count === 0) {
     // We are not currently blocked but we have not inserted all stylesheets.
     // If this insertion happens and loads or errors synchronously then we can
@@ -6076,7 +6090,7 @@ export function waitForCommitToBeReady(): null | ((() => void) => () => void) {
 
   // We need to check the count again because the inserted stylesheets may have led to new
   // tasks to wait on.
-  if (state.count > 0) {
+  if (state.count > 0 || state.imgCount > 0) {
     return commit => {
       // We almost never want to show content before its styles have loaded. But
       // eventually we will give up and allow unstyled content. So this number is
@@ -6093,35 +6107,72 @@ export function waitForCommitToBeReady(): null | ((() => void) => () => void) {
           state.unsuspend = null;
           unsuspend();
         }
-      }, 60000); // one minute
+      }, SUSPENSEY_STYLESHEET_TIMEOUT + timeoutOffset);
+
+      if (state.imgBytes > 0 && estimatedBytesWithinLimit === 0) {
+        // Estimate how many bytes we can download in 500ms.
+        const mbps = estimateBandwidth();
+        estimatedBytesWithinLimit = mbps * 125 * SUSPENSEY_IMAGE_TIME_ESTIMATE;
+      }
+      // If we have more images to download than we expect to fit in the timeout, then
+      // don't wait for images longer than 50ms. The 50ms lets us still do decoding and
+      // hitting caches if it turns out that they're already in the HTTP cache.
+      const imgTimeout =
+        state.imgBytes > estimatedBytesWithinLimit
+          ? 50
+          : SUSPENSEY_IMAGE_TIMEOUT;
+      const imgTimer = setTimeout(() => {
+        // We're no longer blocked on images. If CSS resolves after this we can commit.
+        state.waitingForImages = false;
+        if (state.count === 0) {
+          if (state.stylesheets) {
+            insertSuspendedStylesheets(state, state.stylesheets);
+          }
+          if (state.unsuspend) {
+            const unsuspend = state.unsuspend;
+            state.unsuspend = null;
+            unsuspend();
+          }
+        }
+      }, imgTimeout + timeoutOffset);
 
       state.unsuspend = commit;
 
       return () => {
         state.unsuspend = null;
         clearTimeout(stylesheetTimer);
+        clearTimeout(imgTimer);
       };
     };
   }
   return null;
 }
 
-function onUnsuspend(this: SuspendedState) {
-  this.count--;
-  if (this.count === 0) {
-    if (this.stylesheets) {
+function checkIfFullyUnsuspended(state: SuspendedState) {
+  if (state.count === 0 && (state.imgCount === 0 || !state.waitingForImages)) {
+    if (state.stylesheets) {
       // If we haven't actually inserted the stylesheets yet we need to do so now before starting the commit.
       // The reason we do this after everything else has finished is because we want to have all the stylesheets
       // load synchronously right before mutating. Ideally the new styles will cause a single recalc only on the
       // new tree. When we filled up stylesheets we only inlcuded stylesheets with matching media attributes so we
       // wait for them to load before actually continuing. We expect this to increase the count above zero
-      insertSuspendedStylesheets(this, this.stylesheets);
-    } else if (this.unsuspend) {
-      const unsuspend = this.unsuspend;
-      this.unsuspend = null;
+      insertSuspendedStylesheets(state, state.stylesheets);
+    } else if (state.unsuspend) {
+      const unsuspend = state.unsuspend;
+      state.unsuspend = null;
       unsuspend();
     }
   }
+}
+
+function onUnsuspend(this: SuspendedState) {
+  this.count--;
+  checkIfFullyUnsuspended(this);
+}
+
+function onUnsuspendImg(this: SuspendedState) {
+  this.imgCount--;
+  checkIfFullyUnsuspended(this);
 }
 
 // We use a value that is type distinct from precedence to track which one is last.

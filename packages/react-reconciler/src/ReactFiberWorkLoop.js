@@ -26,6 +26,7 @@ import type {
   Resource,
   ViewTransitionInstance,
   RunningViewTransition,
+  SuspendedState,
 } from './ReactFiberConfig';
 import type {RootState} from './ReactFiberRoot';
 import {
@@ -475,6 +476,11 @@ let didIncludeCommitPhaseUpdate: boolean = false;
 // content as it streams in, to minimize jank.
 // TODO: Think of a better name for this variable?
 let globalMostRecentFallbackTime: number = 0;
+// Track the most recent time we started a new Transition. This lets us apply
+// heuristics like the suspensey image timeout based on how long we've waited
+// already.
+let globalMostRecentTransitionTime: number = 0;
+
 const FALLBACK_THROTTLE_MS: number = 300;
 
 // The absolute time for when we should start giving up on rendering
@@ -1374,6 +1380,7 @@ function finishConcurrentRender(
       workInProgressRootInterleavedUpdatedLanes,
       workInProgressSuspendedRetryLanes,
       exitStatus,
+      null,
       IMMEDIATE_COMMIT,
       renderStartTime,
       renderEndTime,
@@ -1482,28 +1489,40 @@ function commitRootWhenReady(
     subtreeFlags & ShouldSuspendCommit ||
     (subtreeFlags & BothVisibilityAndMaySuspendCommit) ===
       BothVisibilityAndMaySuspendCommit;
+  let suspendedState: null | SuspendedState = null;
   if (isViewTransitionEligible || maySuspendCommit || isGestureTransition) {
     // Before committing, ask the renderer whether the host tree is ready.
     // If it's not, we'll wait until it notifies us.
-    startSuspendingCommit();
+    suspendedState = startSuspendingCommit();
     // This will walk the completed fiber tree and attach listeners to all
     // the suspensey resources. The renderer is responsible for accumulating
     // all the load events. This all happens in a single synchronous
     // transaction, so it track state in its own module scope.
     // This will also track any newly added or appearing ViewTransition
     // components for the purposes of forming pairs.
-    accumulateSuspenseyCommit(finishedWork, lanes);
+    accumulateSuspenseyCommit(finishedWork, lanes, suspendedState);
     if (isViewTransitionEligible || isGestureTransition) {
       // If we're stopping gestures we don't have to wait for any pending
       // view transition. We'll stop it when we commit.
       if (!enableGestureTransition || root.stoppingGestures === null) {
-        suspendOnActiveViewTransition(root.containerInfo);
+        suspendOnActiveViewTransition(suspendedState, root.containerInfo);
       }
     }
+    // For timeouts we use the previous fallback commit for retries and
+    // the start time of the transition for transitions. This offset
+    // represents the time already passed.
+    const timeoutOffset = includesOnlyRetries(lanes)
+      ? globalMostRecentFallbackTime - now()
+      : includesOnlyTransitions(lanes)
+        ? globalMostRecentTransitionTime - now()
+        : 0;
     // At the end, ask the renderer if it's ready to commit, or if we should
     // suspend. If it's not ready, it will return a callback to subscribe to
     // a ready event.
-    const schedulePendingCommit = waitForCommitToBeReady();
+    const schedulePendingCommit = waitForCommitToBeReady(
+      suspendedState,
+      timeoutOffset,
+    );
     if (schedulePendingCommit !== null) {
       // NOTE: waitForCommitToBeReady returns a subscribe function so that we
       // only allocate a function if the commit isn't ready yet. The other
@@ -1525,6 +1544,7 @@ function commitRootWhenReady(
           updatedLanes,
           suspendedRetryLanes,
           exitStatus,
+          suspendedState,
           SUSPENDED_COMMIT,
           completedRenderStartTime,
           completedRenderEndTime,
@@ -1548,6 +1568,7 @@ function commitRootWhenReady(
     updatedLanes,
     suspendedRetryLanes,
     exitStatus,
+    suspendedState,
     suspendedCommitReason,
     completedRenderStartTime,
     completedRenderEndTime,
@@ -2282,6 +2303,10 @@ export function markRenderDerivedCause(fiber: Fiber): void {
       }
     }
   }
+}
+
+export function markTransitionStarted() {
+  globalMostRecentTransitionTime = now();
 }
 
 export function markCommitTimeOfFallback() {
@@ -3267,6 +3292,7 @@ function commitRoot(
   updatedLanes: Lanes,
   suspendedRetryLanes: Lanes,
   exitStatus: RootExitStatus,
+  suspendedState: null | SuspendedState,
   suspendedCommitReason: SuspendedCommitReason, // Profiling-only
   completedRenderStartTime: number, // Profiling-only
   completedRenderEndTime: number, // Profiling-only
@@ -3418,6 +3444,7 @@ function commitRoot(
       root,
       finishedWork,
       recoverableErrors,
+      suspendedState,
       enableProfilerTimer
         ? suspendedCommitReason === IMMEDIATE_COMMIT
           ? completedRenderEndTime
@@ -3556,6 +3583,7 @@ function commitRoot(
   pendingEffectsStatus = PENDING_MUTATION_PHASE;
   if (enableViewTransition && willStartViewTransition) {
     pendingViewTransition = startViewTransition(
+      suspendedState,
       root.containerInfo,
       pendingTransitionTypes,
       flushMutationEffects,
@@ -3970,6 +3998,7 @@ function commitGestureOnRoot(
   root: FiberRoot,
   finishedWork: Fiber,
   recoverableErrors: null | Array<CapturedValue<mixed>>,
+  suspendedState: null | SuspendedState,
   renderEndTime: number, // Profiling-only
 ): void {
   // We assume that the gesture we just rendered was the first one in the queue.
@@ -4000,6 +4029,7 @@ function commitGestureOnRoot(
   pendingEffectsStatus = PENDING_GESTURE_MUTATION_PHASE;
 
   pendingViewTransition = finishedGesture.running = startGestureTransition(
+    suspendedState,
     root.containerInfo,
     finishedGesture.provider,
     finishedGesture.rangeStart,

@@ -3070,6 +3070,24 @@ export function attach(
     }
   }
 
+  function unmountSuspenseChildrenRecursively(
+    contentInstance: DevToolsInstance,
+    stashedSuspenseParent: null | SuspenseNode,
+    stashedSuspensePrevious: null | SuspenseNode,
+    stashedSuspenseRemaining: null | SuspenseNode,
+  ): void {
+    // First unmount only the Offscreen boundary. I.e. the main content.
+    unmountInstanceRecursively(contentInstance);
+
+    // Next, we'll pop back out of the SuspenseNode that we added above and now we'll
+    // unmount the fallback, unmounting anything in the context of the parent SuspenseNode.
+    // Since the fallback conceptually blocks the parent.
+    reconcilingParentSuspenseNode = stashedSuspenseParent;
+    previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
+    remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
+    unmountRemainingChildren();
+  }
+
   function isChildOf(
     parentInstance: DevToolsInstance,
     childInstance: DevToolsInstance,
@@ -4015,6 +4033,7 @@ export function attach(
       debug('unmountInstanceRecursively()', instance, reconcilingParent);
     }
 
+    let shouldPopSuspenseNode = false;
     const stashedParent = reconcilingParent;
     const stashedPrevious = previouslyReconciledSibling;
     const stashedRemaining = remainingReconcilingChildren;
@@ -4035,11 +4054,46 @@ export function attach(
       previouslyReconciledSiblingSuspenseNode = null;
       remainingReconcilingChildrenSuspenseNodes =
         instance.suspenseNode.firstChild;
+
+      shouldPopSuspenseNode = true;
     }
 
     try {
       // Unmount the remaining set.
-      unmountRemainingChildren();
+      if (
+        (instance.kind === FIBER_INSTANCE ||
+          instance.kind === FILTERED_FIBER_INSTANCE) &&
+        instance.data.tag === SuspenseComponent &&
+        OffscreenComponent !== -1
+      ) {
+        const fiber = instance.data;
+        const contentFiberInstance = remainingReconcilingChildren;
+        const hydrated = isFiberHydrated(fiber);
+        if (hydrated) {
+          if (contentFiberInstance === null) {
+            throw new Error(
+              'There should always be an Offscreen Fiber child in a hydrated Suspense boundary.',
+            );
+          }
+
+          unmountSuspenseChildrenRecursively(
+            contentFiberInstance,
+            stashedSuspenseParent,
+            stashedSuspensePrevious,
+            stashedSuspenseRemaining,
+          );
+          // unmountSuspenseChildren already popped
+          shouldPopSuspenseNode = false;
+        } else {
+          if (contentFiberInstance !== null) {
+            throw new Error(
+              'A dehydrated Suspense node should not have a content Fiber.',
+            );
+          }
+        }
+      } else {
+        unmountRemainingChildren();
+      }
       removePreviousSuspendedBy(
         instance,
         previousSuspendedBy,
@@ -4049,7 +4103,7 @@ export function attach(
       reconcilingParent = stashedParent;
       previouslyReconciledSibling = stashedPrevious;
       remainingReconcilingChildren = stashedRemaining;
-      if (instance.suspenseNode !== null) {
+      if (shouldPopSuspenseNode) {
         reconcilingParentSuspenseNode = stashedSuspenseParent;
         previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
         remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;

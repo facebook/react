@@ -134,7 +134,7 @@ describe('Store component filters', () => {
     `);
   });
 
-  // @reactVersion >= 16.0
+  // @reactVersion >= 16.6
   it('should filter Suspense', async () => {
     const Suspense = React.Suspense;
     await actAsync(async () =>
@@ -199,7 +199,7 @@ describe('Store component filters', () => {
   });
 
   it('should filter Activity', async () => {
-    const Activity = React.unstable_Activity;
+    const Activity = React.Activity || React.unstable_Activity;
 
     if (Activity != null) {
       await actAsync(async () =>
