@@ -18989,6 +18989,7 @@ __DEV__ &&
             count: 0,
             imgCount: 0,
             imgBytes: 0,
+            suspenseyImages: [],
             waitingForImages: !0,
             unsuspend: noop$1
           }),
@@ -26062,6 +26063,10 @@ __DEV__ &&
     function forceLayout(ownerDocument) {
       return ownerDocument.documentElement.clientHeight;
     }
+    function waitForImageToLoad(resolve) {
+      this.addEventListener("load", resolve);
+      this.addEventListener("error", resolve);
+    }
     function startViewTransition(
       suspendedState,
       rootContainer,
@@ -26080,34 +26085,69 @@ __DEV__ &&
       try {
         var transition = ownerDocument.startViewTransition({
           update: function () {
-            var ownerWindow = ownerDocument.defaultView;
-            ownerWindow =
-              ownerWindow.navigation && ownerWindow.navigation.transition;
-            var previousFontLoadingStatus = ownerDocument.fonts.status;
+            var ownerWindow = ownerDocument.defaultView,
+              pendingNavigation =
+                ownerWindow.navigation && ownerWindow.navigation.transition,
+              previousFontLoadingStatus = ownerDocument.fonts.status;
             mutationCallback();
-            if (
-              "loaded" === previousFontLoadingStatus &&
+            var blockingPromises = [];
+            "loaded" === previousFontLoadingStatus &&
               (forceLayout(ownerDocument),
-              "loading" === ownerDocument.fonts.status)
-            )
+              "loading" === ownerDocument.fonts.status &&
+                blockingPromises.push(ownerDocument.fonts.ready));
+            if (null !== suspendedState) {
+              previousFontLoadingStatus = suspendedState.suspenseyImages;
+              for (
+                var blockingIndexSnapshot = blockingPromises.length,
+                  imgBytes = 0,
+                  i = 0;
+                i < previousFontLoadingStatus.length;
+                i++
+              ) {
+                var suspenseyImage = previousFontLoadingStatus[i];
+                if (!suspenseyImage.complete) {
+                  var rect = suspenseyImage.getBoundingClientRect();
+                  if (
+                    0 < rect.bottom &&
+                    0 < rect.right &&
+                    rect.top < ownerWindow.innerHeight &&
+                    rect.left < ownerWindow.innerWidth
+                  ) {
+                    imgBytes += estimateImageBytes(suspenseyImage);
+                    if (imgBytes > estimatedBytesWithinLimit) {
+                      blockingPromises.length = blockingIndexSnapshot;
+                      break;
+                    }
+                    suspenseyImage = new Promise(
+                      waitForImageToLoad.bind(suspenseyImage)
+                    );
+                    blockingPromises.push(suspenseyImage);
+                  }
+                }
+              }
+            }
+            if (0 < blockingPromises.length)
               return (
-                (previousFontLoadingStatus = Promise.race([
-                  ownerDocument.fonts.ready,
+                (ownerWindow = Promise.race([
+                  Promise.all(blockingPromises),
                   new Promise(function (resolve) {
-                    return setTimeout(resolve, SUSPENSEY_FONT_TIMEOUT);
+                    return setTimeout(
+                      resolve,
+                      SUSPENSEY_FONT_AND_IMAGE_TIMEOUT
+                    );
                   })
                 ]).then(layoutCallback, layoutCallback)),
-                (ownerWindow
+                (pendingNavigation
                   ? Promise.allSettled([
-                      ownerWindow.finished,
-                      previousFontLoadingStatus
+                      pendingNavigation.finished,
+                      ownerWindow
                     ])
-                  : previousFontLoadingStatus
+                  : ownerWindow
                 ).then(afterMutationCallback, afterMutationCallback)
               );
             layoutCallback();
-            if (ownerWindow)
-              return ownerWindow.finished.then(
+            if (pendingNavigation)
+              return pendingNavigation.finished.then(
                 afterMutationCallback,
                 afterMutationCallback
               );
@@ -27404,17 +27444,21 @@ __DEV__ &&
         ? !1
         : !0;
     }
+    function estimateImageBytes(instance) {
+      return (
+        (instance.width || 100) *
+        (instance.height || 100) *
+        ("number" === typeof devicePixelRatio ? devicePixelRatio : 1) *
+        0.25
+      );
+    }
     function suspendInstance(state, instance) {
       enableViewTransition &&
         "function" === typeof instance.decode &&
-        "function" === typeof setTimeout &&
         (state.imgCount++,
         instance.complete ||
-          (state.imgBytes +=
-            (instance.width || 100) *
-            (instance.height || 100) *
-            ("number" === typeof devicePixelRatio ? devicePixelRatio : 1) *
-            0.25),
+          ((state.imgBytes += estimateImageBytes(instance)),
+          state.suspenseyImages.push(instance)),
         (state = onUnsuspendImg.bind(state)),
         instance.decode().then(state, state));
     }
@@ -31982,7 +32026,7 @@ __DEV__ &&
                   .catch(handleErrorInNextTick);
               }
             : scheduleTimeout,
-      SUSPENSEY_FONT_TIMEOUT = 500;
+      SUSPENSEY_FONT_AND_IMAGE_TIMEOUT = 500;
     ViewTransitionPseudoElement.prototype.animate = function (
       keyframes,
       options
@@ -32618,11 +32662,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-www-modern-5d49b2b7-20250915" !== isomorphicReactPackageVersion)
+      if ("19.2.0-www-modern-348a4e2d-20250915" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-www-modern-5d49b2b7-20250915\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-www-modern-348a4e2d-20250915\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -32665,10 +32709,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-www-modern-5d49b2b7-20250915",
+          version: "19.2.0-www-modern-348a4e2d-20250915",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-www-modern-5d49b2b7-20250915"
+          reconcilerVersion: "19.2.0-www-modern-348a4e2d-20250915"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -33446,5 +33490,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-www-modern-5d49b2b7-20250915";
+    exports.version = "19.2.0-www-modern-348a4e2d-20250915";
   })();

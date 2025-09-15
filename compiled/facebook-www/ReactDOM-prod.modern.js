@@ -12375,6 +12375,7 @@ function commitRootWhenReady(
         count: 0,
         imgCount: 0,
         imgBytes: 0,
+        suspenseyImages: [],
         waitingForImages: !0,
         unsuspend: noop$1
       }),
@@ -17184,6 +17185,10 @@ function measureClonedInstance(instance) {
 function forceLayout(ownerDocument) {
   return ownerDocument.documentElement.clientHeight;
 }
+function waitForImageToLoad(resolve) {
+  this.addEventListener("load", resolve);
+  this.addEventListener("error", resolve);
+}
 function startViewTransition(
   suspendedState,
   rootContainer,
@@ -17200,33 +17205,63 @@ function startViewTransition(
   try {
     var transition = ownerDocument.startViewTransition({
       update: function () {
-        var ownerWindow = ownerDocument.defaultView;
-        ownerWindow =
-          ownerWindow.navigation && ownerWindow.navigation.transition;
-        var previousFontLoadingStatus = ownerDocument.fonts.status;
+        var ownerWindow = ownerDocument.defaultView,
+          pendingNavigation =
+            ownerWindow.navigation && ownerWindow.navigation.transition,
+          previousFontLoadingStatus = ownerDocument.fonts.status;
         mutationCallback();
-        if (
-          "loaded" === previousFontLoadingStatus &&
-          (forceLayout(ownerDocument), "loading" === ownerDocument.fonts.status)
-        )
+        var blockingPromises = [];
+        "loaded" === previousFontLoadingStatus &&
+          (forceLayout(ownerDocument),
+          "loading" === ownerDocument.fonts.status &&
+            blockingPromises.push(ownerDocument.fonts.ready));
+        if (null !== suspendedState) {
+          previousFontLoadingStatus = suspendedState.suspenseyImages;
+          for (
+            var blockingIndexSnapshot = blockingPromises.length,
+              imgBytes = 0,
+              i = 0;
+            i < previousFontLoadingStatus.length;
+            i++
+          ) {
+            var suspenseyImage = previousFontLoadingStatus[i];
+            if (!suspenseyImage.complete) {
+              var rect = suspenseyImage.getBoundingClientRect();
+              if (
+                0 < rect.bottom &&
+                0 < rect.right &&
+                rect.top < ownerWindow.innerHeight &&
+                rect.left < ownerWindow.innerWidth
+              ) {
+                imgBytes += estimateImageBytes(suspenseyImage);
+                if (imgBytes > estimatedBytesWithinLimit) {
+                  blockingPromises.length = blockingIndexSnapshot;
+                  break;
+                }
+                suspenseyImage = new Promise(
+                  waitForImageToLoad.bind(suspenseyImage)
+                );
+                blockingPromises.push(suspenseyImage);
+              }
+            }
+          }
+        }
+        if (0 < blockingPromises.length)
           return (
-            (previousFontLoadingStatus = Promise.race([
-              ownerDocument.fonts.ready,
+            (ownerWindow = Promise.race([
+              Promise.all(blockingPromises),
               new Promise(function (resolve) {
                 return setTimeout(resolve, 500);
               })
             ]).then(layoutCallback, layoutCallback)),
-            (ownerWindow
-              ? Promise.allSettled([
-                  ownerWindow.finished,
-                  previousFontLoadingStatus
-                ])
-              : previousFontLoadingStatus
+            (pendingNavigation
+              ? Promise.allSettled([pendingNavigation.finished, ownerWindow])
+              : ownerWindow
             ).then(afterMutationCallback, afterMutationCallback)
           );
         layoutCallback();
-        if (ownerWindow)
-          return ownerWindow.finished.then(
+        if (pendingNavigation)
+          return pendingNavigation.finished.then(
             afterMutationCallback,
             afterMutationCallback
           );
@@ -18752,17 +18787,21 @@ function preloadResource(resource) {
     ? !1
     : !0;
 }
+function estimateImageBytes(instance) {
+  return (
+    (instance.width || 100) *
+    (instance.height || 100) *
+    ("number" === typeof devicePixelRatio ? devicePixelRatio : 1) *
+    0.25
+  );
+}
 function suspendInstance(state, instance) {
   enableViewTransition &&
     "function" === typeof instance.decode &&
-    "function" === typeof setTimeout &&
     (state.imgCount++,
     instance.complete ||
-      (state.imgBytes +=
-        (instance.width || 100) *
-        (instance.height || 100) *
-        ("number" === typeof devicePixelRatio ? devicePixelRatio : 1) *
-        0.25),
+      ((state.imgBytes += estimateImageBytes(instance)),
+      state.suspenseyImages.push(instance)),
     (state = onUnsuspendImg.bind(state)),
     instance.decode().then(state, state));
 }
@@ -19660,14 +19699,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2117 = React.version;
 if (
-  "19.2.0-www-modern-5d49b2b7-20250915" !==
+  "19.2.0-www-modern-348a4e2d-20250915" !==
   isomorphicReactPackageVersion$jscomp$inline_2117
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2117,
-      "19.2.0-www-modern-5d49b2b7-20250915"
+      "19.2.0-www-modern-348a4e2d-20250915"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -19685,10 +19724,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2741 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-5d49b2b7-20250915",
+  version: "19.2.0-www-modern-348a4e2d-20250915",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-5d49b2b7-20250915"
+  reconcilerVersion: "19.2.0-www-modern-348a4e2d-20250915"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2742 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -20117,4 +20156,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-modern-5d49b2b7-20250915";
+exports.version = "19.2.0-www-modern-348a4e2d-20250915";
