@@ -34,7 +34,7 @@
     "invariant": "^2.2.4",
     "lz-string": "^1.5.0",
     "monaco-editor": "^0.52.0",
-    "next": "15.5.2",
+    "next": "15.6.0-canary.7",
     "notistack": "^3.0.0-alpha.7",
     "prettier": "^3.3.3",
     "pretty-format": "^29.3.1",
@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "@types/node": "18.11.9",
-    "@types/react": "19.1.12",
+    "@types/react": "19.1.13",
     "@types/react-dom": "19.1.9",
     "autoprefixer": "^10.4.13",
     "clsx": "^1.2.1",

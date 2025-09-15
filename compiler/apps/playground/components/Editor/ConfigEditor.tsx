@@ -21,9 +21,6 @@ import compilerTypeDefs from 'babel-plugin-react-compiler/dist/index.d.ts';
 
 loader.config({monaco});
 
-console.log('Acitivty import:', Activity);
-console.log('React import:', React);
-
 export default function ConfigEditor({
   appliedOptions,
 }: {
@@ -33,17 +30,15 @@ export default function ConfigEditor({
 
   return (
     <>
-      {/* <Activity mode={isExpanded ? 'visible' : 'hidden'}>
+      <Activity mode={isExpanded ? 'visible' : 'hidden'}>
         <ExpandedEditor
           onToggle={setIsExpanded}
           appliedOptions={appliedOptions}
         />
       </Activity>
-      ;
       <Activity mode={!isExpanded ? 'visible' : 'hidden'}>
         <CollapsedEditor onToggle={setIsExpanded} />
       </Activity>
-      ; */}
     </>
   );
 }
