@@ -615,7 +615,7 @@ export function suspendInstance(instance, type, props) {}
 
 export function suspendOnActiveViewTransition(container) {}
 
-export function waitForCommitToBeReady() {
+export function waitForCommitToBeReady(timeoutOffset) {
   return null;
 }
 
