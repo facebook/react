@@ -724,34 +724,69 @@ describe('ProfilingCache', () => {
     const rootID = store.roots[0];
     const commitData = store.profilerStore.getDataForRoot(rootID).commitData;
     expect(commitData).toHaveLength(2);
-    expect(commitData[0].fiberActualDurations).toMatchInlineSnapshot(`
-      Map {
-        1 => 15,
-        2 => 15,
-        3 => 5,
-        4 => 2,
-      }
-    `);
-    expect(commitData[0].fiberSelfDurations).toMatchInlineSnapshot(`
-      Map {
-        1 => 0,
-        2 => 10,
-        3 => 3,
-        4 => 2,
-      }
-    `);
-    expect(commitData[1].fiberActualDurations).toMatchInlineSnapshot(`
-      Map {
-        5 => 3,
-        3 => 3,
-      }
-    `);
-    expect(commitData[1].fiberSelfDurations).toMatchInlineSnapshot(`
-      Map {
-        5 => 3,
-        3 => 0,
-      }
-    `);
+
+    const isLegacySuspense = React.version.startsWith('17');
+    if (isLegacySuspense) {
+      expect(commitData[0].fiberActualDurations).toMatchInlineSnapshot(`
+        Map {
+          1 => 15,
+          2 => 15,
+          3 => 5,
+          4 => 3,
+          5 => 2,
+        }
+      `);
+      expect(commitData[0].fiberSelfDurations).toMatchInlineSnapshot(`
+        Map {
+          1 => 0,
+          2 => 10,
+          3 => 3,
+          4 => 3,
+          5 => 2,
+        }
+      `);
+      expect(commitData[1].fiberActualDurations).toMatchInlineSnapshot(`
+        Map {
+          6 => 3,
+          3 => 3,
+        }
+      `);
+      expect(commitData[1].fiberSelfDurations).toMatchInlineSnapshot(`
+        Map {
+          6 => 3,
+          3 => 0,
+        }
+      `);
+    } else {
+      expect(commitData[0].fiberActualDurations).toMatchInlineSnapshot(`
+        Map {
+          1 => 15,
+          2 => 15,
+          3 => 5,
+          4 => 2,
+        }
+      `);
+      expect(commitData[0].fiberSelfDurations).toMatchInlineSnapshot(`
+        Map {
+          1 => 0,
+          2 => 10,
+          3 => 3,
+          4 => 2,
+        }
+      `);
+      expect(commitData[1].fiberActualDurations).toMatchInlineSnapshot(`
+        Map {
+          5 => 3,
+          3 => 3,
+        }
+      `);
+      expect(commitData[1].fiberSelfDurations).toMatchInlineSnapshot(`
+        Map {
+          5 => 3,
+          3 => 0,
+        }
+      `);
+    }
   });
 
   // @reactVersion >= 16.9
@@ -866,6 +901,7 @@ describe('ProfilingCache', () => {
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
+              "stack": null,
               "type": 11,
             },
           ],
@@ -908,6 +944,7 @@ describe('ProfilingCache', () => {
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
+              "stack": null,
               "type": 11,
             },
           ],
