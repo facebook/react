@@ -29,6 +29,7 @@ import InspectedElementViewSourceButton from './InspectedElementViewSourceButton
 import useEditorURL from '../useEditorURL';
 
 import styles from './InspectedElement.css';
+import Tooltip from './reach-ui/tooltip';
 
 export type Props = {};
 
@@ -192,14 +193,15 @@ export default function InspectedElementWrapper(_: Props): React.Node {
   let strictModeBadge = null;
   if (element.isStrictModeNonCompliant) {
     strictModeBadge = (
-      <a
-        className={styles.StrictModeNonCompliant}
-        href="https://react.dev/reference/react/StrictMode"
-        rel="noopener noreferrer"
-        target="_blank"
-        title="This component is not running in StrictMode. Click to learn more.">
-        <Icon type="strict-mode-non-compliant" />
-      </a>
+      <Tooltip label="This component is not running in StrictMode. Click to learn more.">
+        <a
+          className={styles.StrictModeNonCompliant}
+          href="https://react.dev/reference/react/StrictMode"
+          rel="noopener noreferrer"
+          target="_blank">
+          <Icon type="strict-mode-non-compliant" />
+        </a>
+      </Tooltip>
     );
   }
 

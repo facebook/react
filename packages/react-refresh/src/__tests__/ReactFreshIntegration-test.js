@@ -308,7 +308,7 @@ describe('ReactFreshIntegration', () => {
     // @gate __DEV__ && enableActivity
     it('ignores ref for class component in hidden subtree', async () => {
       const code = `
-        import {unstable_Activity as Activity} from 'react';
+        import {Activity} from 'react';
 
         // Avoid creating a new class on Fast Refresh.
         global.A = global.A ?? class A extends React.Component {
@@ -338,7 +338,7 @@ describe('ReactFreshIntegration', () => {
     // @gate __DEV__ && enableActivity
     it('ignores ref for hoistable resource in hidden subtree', async () => {
       const code = `
-        import {unstable_Activity as Activity} from 'react';
+        import {Activity} from 'react';
 
         function hiddenRef() {
           throw new Error('Unexpected hiddenRef() invocation.');
@@ -360,7 +360,7 @@ describe('ReactFreshIntegration', () => {
     // @gate __DEV__ && enableActivity
     it('ignores ref for host component in hidden subtree', async () => {
       const code = `
-        import {unstable_Activity as Activity} from 'react';
+        import {Activity} from 'react';
 
         function hiddenRef() {
           throw new Error('Unexpected hiddenRef() invocation.');
@@ -382,7 +382,7 @@ describe('ReactFreshIntegration', () => {
     // @gate __DEV__ && enableActivity
     it('ignores ref for Activity in hidden subtree', async () => {
       const code = `
-        import {unstable_Activity as Activity} from 'react';
+        import {Activity} from 'react';
 
         function hiddenRef(value) {
           throw new Error('Unexpected hiddenRef() invocation.');
@@ -407,7 +407,7 @@ describe('ReactFreshIntegration', () => {
     it('ignores ref for Scope in hidden subtree', async () => {
       const code = `
         import {
-          unstable_Activity as Activity,
+          Activity,
           unstable_Scope as Scope,
         } from 'react';
 
@@ -433,7 +433,7 @@ describe('ReactFreshIntegration', () => {
     // @gate __DEV__ && enableActivity
     it('ignores ref for functional component in hidden subtree', async () => {
       const code = `
-        import {unstable_Activity as Activity} from 'react';
+        import {Activity} from 'react';
 
         // Avoid creating a new component on Fast Refresh.
         global.A = global.A ?? function A() {
@@ -463,7 +463,7 @@ describe('ReactFreshIntegration', () => {
       const code = `
         import {
           forwardRef,
-          unstable_Activity as Activity,
+          Activity,
         } from 'react';
 
         // Avoid creating a new component on Fast Refresh.
@@ -494,7 +494,7 @@ describe('ReactFreshIntegration', () => {
       const code = `
         import {
           memo,
-          unstable_Activity as Activity,
+          Activity,
         } from 'react';
 
         // Avoid creating a new component on Fast Refresh.
@@ -526,7 +526,7 @@ describe('ReactFreshIntegration', () => {
       const code = `
         import {
           memo,
-          unstable_Activity as Activity,
+          Activity,
         } from 'react';
 
         // Avoid creating a new component on Fast Refresh.

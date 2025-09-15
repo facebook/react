@@ -532,10 +532,10 @@ export function createHostRootFiber(
     mode = NoMode;
   }
 
-  if (enableProfilerTimer && isDevToolsPresent) {
-    // Always collect profile timings when DevTools are present.
-    // This enables DevTools to start capturing timing at any point–
-    // Without some nodes in the tree having empty base times.
+  if (__DEV__ || (enableProfilerTimer && isDevToolsPresent)) {
+    // dev: Enable profiling instrumentation by default.
+    // profile: enabled if DevTools is present or subtree is wrapped in <Profiler>.
+    // production: disabled.
     mode |= ProfileMode;
   }
 

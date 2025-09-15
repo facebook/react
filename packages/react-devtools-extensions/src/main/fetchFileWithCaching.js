@@ -82,7 +82,7 @@ const fetchFromPage = async (url, resolve, reject) => {
   debugLog('[main] fetchFromPage()', url);
 
   function onPortMessage({payload, source}) {
-    if (source === 'react-devtools-background') {
+    if (source === 'react-devtools-background' && payload?.url === url) {
       switch (payload?.type) {
         case 'fetch-file-with-cache-complete':
           chrome.runtime.onMessage.removeListener(onPortMessage);

@@ -28,7 +28,7 @@ describe('ReactFragment', () => {
 
     React = require('react');
     Suspense = React.Suspense;
-    Activity = React.unstable_Activity;
+    Activity = React.Activity;
     ViewTransition = React.unstable_ViewTransition;
     ReactNoop = require('react-noop-renderer');
     const InternalTestUtils = require('internal-test-utils');
