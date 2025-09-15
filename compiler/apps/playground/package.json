@@ -39,8 +39,8 @@
     "prettier": "^3.3.3",
     "pretty-format": "^29.3.1",
     "re-resizable": "^6.9.16",
-    "react": "19.1.1",
-    "react-dom": "19.1.1"
+    "react": "^0.0.0-experimental-67a44bcd-20250915",
+    "react-dom": "^0.0.0-experimental-67a44bcd-20250915"
   },
   "devDependencies": {
     "@types/node": "18.11.9",
