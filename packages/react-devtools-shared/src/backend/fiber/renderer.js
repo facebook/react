@@ -2890,6 +2890,11 @@ export function attach(
     // is no longer in the new set.
     if (previousSuspendedBy !== null && parentSuspenseNode !== null) {
       const nextSuspendedBy = instance.suspendedBy;
+      // A boundary can await the same IO multiple times.
+      // We still want to error if we're trying to remove IO that isn't present on
+      // this boundary. We're tracking the IO we already removed so that we can error
+      // every time a delete fails.
+      const removedIOInfos = new Set<ReactIOInfo>();
       for (let i = 0; i < previousSuspendedBy.length; i++) {
         const asyncInfo = previousSuspendedBy[i];
         if (
@@ -2904,13 +2909,14 @@ export function attach(
           const suspendedBySet = parentSuspenseNode.suspendedBy.get(ioInfo);
           if (
             suspendedBySet === undefined ||
-            !suspendedBySet.delete(instance)
+            (!removedIOInfos.has(ioInfo) && !suspendedBySet.delete(instance))
           ) {
             throw new Error(
               'We are cleaning up async info that was not on the parent Suspense boundary. ' +
                 'This is a bug in React.',
             );
           }
+          removedIOInfos.add(ioInfo);
           if (suspendedBySet.size === 0) {
             parentSuspenseNode.suspendedBy.delete(asyncInfo.awaited);
           }
