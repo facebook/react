@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<25a60b9b74222b292fdb244903bf9c2e>>
+ * @generated SignedSource<<cb2bb284135946042e0a36a5d80f4a38>>
  */
 
 "use strict";
@@ -13987,9 +13987,16 @@ __DEV__ &&
     ) {
       root.timeoutHandle = noTimeout;
       didSkipSuspendedSiblings = finishedWork.subtreeFlags;
-      (didSkipSuspendedSiblings & 8192 ||
-        16785408 === (didSkipSuspendedSiblings & 16785408)) &&
-        accumulateSuspenseyCommitOnFiber(finishedWork);
+      if (
+        didSkipSuspendedSiblings & 8192 ||
+        16785408 === (didSkipSuspendedSiblings & 16785408)
+      )
+        accumulateSuspenseyCommitOnFiber(finishedWork),
+          (lanes & 62914560) === lanes
+            ? globalMostRecentFallbackTime - now$1()
+            : (lanes & 4194048) === lanes
+              ? globalMostRecentTransitionTime - now$1()
+              : 0;
       commitRoot(
         root,
         finishedWork,
@@ -17705,6 +17712,7 @@ __DEV__ &&
       needsIsomorphicIndicator = !1,
       prevOnStartTransitionFinish = ReactSharedInternals.S;
     ReactSharedInternals.S = function (transition, returnValue) {
+      globalMostRecentTransitionTime = now$1();
       if (
         "object" === typeof returnValue &&
         null !== returnValue &&
@@ -19278,6 +19286,7 @@ __DEV__ &&
       workInProgressRootRecoverableErrors = null,
       workInProgressRootDidIncludeRecursiveRenderUpdate = !1,
       globalMostRecentFallbackTime = 0,
+      globalMostRecentTransitionTime = 0,
       FALLBACK_THROTTLE_MS = 300,
       workInProgressRootRenderTargetTime = Infinity,
       RENDER_TIMEOUT_MS = 500,
@@ -19753,10 +19762,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-e12b0bdc-20250915",
+        version: "19.2.0-native-fb-e3f19180-20250915",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-e12b0bdc-20250915"
+        reconcilerVersion: "19.2.0-native-fb-e3f19180-20250915"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

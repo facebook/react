@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<91b251bd865888cc7695d88b0ac221dc>>
+ * @generated SignedSource<<647d4e2e707ef73dbb2293852c14709e>>
  */
 
 "use strict";
@@ -1566,6 +1566,7 @@ function releaseIsomorphicIndicator() {
 }
 var prevOnStartTransitionFinish = ReactSharedInternals.S;
 ReactSharedInternals.S = function (transition, returnValue) {
+  globalMostRecentTransitionTime = now();
   "object" === typeof returnValue &&
     null !== returnValue &&
     "function" === typeof returnValue.then &&
@@ -8254,6 +8255,7 @@ var DefaultAsyncDispatcher = {
   workInProgressRootRecoverableErrors = null,
   workInProgressRootDidIncludeRecursiveRenderUpdate = !1,
   globalMostRecentFallbackTime = 0,
+  globalMostRecentTransitionTime = 0,
   workInProgressRootRenderTargetTime = Infinity,
   workInProgressTransitions = null,
   legacyErrorBoundariesThatAlreadyFailed = null,
@@ -8492,8 +8494,13 @@ function commitRootWhenReady(
 ) {
   root.timeoutHandle = -1;
   var subtreeFlags = finishedWork.subtreeFlags;
-  (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408)) &&
-    accumulateSuspenseyCommitOnFiber(finishedWork);
+  if (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408))
+    accumulateSuspenseyCommitOnFiber(finishedWork),
+      (lanes & 62914560) === lanes
+        ? globalMostRecentFallbackTime - now()
+        : (lanes & 4194048) === lanes
+          ? globalMostRecentTransitionTime - now()
+          : 0;
   commitRoot(
     root,
     finishedWork,
@@ -10043,24 +10050,24 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1481 = {
+var internals$jscomp$inline_1482 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-e12b0bdc-20250915",
+  version: "19.2.0-native-fb-e3f19180-20250915",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-e12b0bdc-20250915"
+  reconcilerVersion: "19.2.0-native-fb-e3f19180-20250915"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1482 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1483 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1482.isDisabled &&
-    hook$jscomp$inline_1482.supportsFiber
+    !hook$jscomp$inline_1483.isDisabled &&
+    hook$jscomp$inline_1483.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1482.inject(
-        internals$jscomp$inline_1481
+      (rendererID = hook$jscomp$inline_1483.inject(
+        internals$jscomp$inline_1482
       )),
-        (injectedHook = hook$jscomp$inline_1482);
+        (injectedHook = hook$jscomp$inline_1483);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -10184,4 +10191,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.2.0-native-fb-e12b0bdc-20250915";
+exports.version = "19.2.0-native-fb-e3f19180-20250915";

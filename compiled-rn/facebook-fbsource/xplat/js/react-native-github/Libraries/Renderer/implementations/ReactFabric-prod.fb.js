@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ebdef3281e9c0077e1699632cf040976>>
+ * @generated SignedSource<<6e1227b5bcd5048a71a24fa69a1a9ee4>>
  */
 
 "use strict";
@@ -2568,6 +2568,7 @@ function releaseIsomorphicIndicator() {
 }
 var prevOnStartTransitionFinish = ReactSharedInternals.S;
 ReactSharedInternals.S = function (transition, returnValue) {
+  globalMostRecentTransitionTime = now();
   "object" === typeof returnValue &&
     null !== returnValue &&
     "function" === typeof returnValue.then &&
@@ -9379,6 +9380,7 @@ var DefaultAsyncDispatcher = {
   workInProgressRootRecoverableErrors = null,
   workInProgressRootDidIncludeRecursiveRenderUpdate = !1,
   globalMostRecentFallbackTime = 0,
+  globalMostRecentTransitionTime = 0,
   workInProgressRootRenderTargetTime = Infinity,
   workInProgressTransitions = null,
   legacyErrorBoundariesThatAlreadyFailed = null,
@@ -9618,8 +9620,13 @@ function commitRootWhenReady(
 ) {
   root.timeoutHandle = -1;
   var subtreeFlags = finishedWork.subtreeFlags;
-  (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408)) &&
-    accumulateSuspenseyCommitOnFiber(finishedWork);
+  if (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408))
+    accumulateSuspenseyCommitOnFiber(finishedWork),
+      (lanes & 62914560) === lanes
+        ? globalMostRecentFallbackTime - now()
+        : (lanes & 4194048) === lanes
+          ? globalMostRecentTransitionTime - now()
+          : 0;
   commitRoot(
     root,
     finishedWork,
@@ -11209,26 +11216,26 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1293 = {
+  internals$jscomp$inline_1294 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-e12b0bdc-20250915",
+    version: "19.2.0-native-fb-e3f19180-20250915",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-e12b0bdc-20250915"
+    reconcilerVersion: "19.2.0-native-fb-e3f19180-20250915"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1293.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1294.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1623 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1624 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1623.isDisabled &&
-    hook$jscomp$inline_1623.supportsFiber
+    !hook$jscomp$inline_1624.isDisabled &&
+    hook$jscomp$inline_1624.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1623.inject(
-        internals$jscomp$inline_1293
+      (rendererID = hook$jscomp$inline_1624.inject(
+        internals$jscomp$inline_1294
       )),
-        (injectedHook = hook$jscomp$inline_1623);
+        (injectedHook = hook$jscomp$inline_1624);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

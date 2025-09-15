@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bb30bb4771f59b0b5f13fba281eddbeb>>
+ * @generated SignedSource<<c0191a58d0fa4817a2695be01255141c>>
  */
 
 "use strict";
@@ -1682,6 +1682,7 @@ function releaseIsomorphicIndicator() {
 }
 var prevOnStartTransitionFinish = ReactSharedInternals.S;
 ReactSharedInternals.S = function (transition, returnValue) {
+  globalMostRecentTransitionTime = now$1();
   "object" === typeof returnValue &&
     null !== returnValue &&
     "function" === typeof returnValue.then &&
@@ -8751,6 +8752,7 @@ var DefaultAsyncDispatcher = {
   workInProgressRootRecoverableErrors = null,
   workInProgressRootDidIncludeRecursiveRenderUpdate = !1,
   globalMostRecentFallbackTime = 0,
+  globalMostRecentTransitionTime = 0,
   workInProgressRootRenderTargetTime = Infinity,
   workInProgressTransitions = null,
   legacyErrorBoundariesThatAlreadyFailed = null,
@@ -8989,8 +8991,13 @@ function commitRootWhenReady(
 ) {
   root.timeoutHandle = -1;
   var subtreeFlags = finishedWork.subtreeFlags;
-  (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408)) &&
-    accumulateSuspenseyCommitOnFiber(finishedWork);
+  if (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408))
+    accumulateSuspenseyCommitOnFiber(finishedWork),
+      (lanes & 62914560) === lanes
+        ? globalMostRecentFallbackTime - now$1()
+        : (lanes & 4194048) === lanes
+          ? globalMostRecentTransitionTime - now$1()
+          : 0;
   commitRoot(
     root,
     finishedWork,
@@ -10664,12 +10671,12 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1272 = {
+var internals$jscomp$inline_1273 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-e12b0bdc-20250915",
+  version: "19.2.0-native-fb-e3f19180-20250915",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-e12b0bdc-20250915",
+  reconcilerVersion: "19.2.0-native-fb-e3f19180-20250915",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$145 = 0;
@@ -10687,16 +10694,16 @@ var internals$jscomp$inline_1272 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1547 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1548 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1547.isDisabled &&
-    hook$jscomp$inline_1547.supportsFiber
+    !hook$jscomp$inline_1548.isDisabled &&
+    hook$jscomp$inline_1548.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1547.inject(
-        internals$jscomp$inline_1272
+      (rendererID = hook$jscomp$inline_1548.inject(
+        internals$jscomp$inline_1273
       )),
-        (injectedHook = hook$jscomp$inline_1547);
+        (injectedHook = hook$jscomp$inline_1548);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -10820,4 +10827,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.2.0-native-fb-e12b0bdc-20250915";
+exports.version = "19.2.0-native-fb-e3f19180-20250915";

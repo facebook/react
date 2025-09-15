@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c881c5440b9578be6bbef278e52c4d25>>
+ * @generated SignedSource<<7ff8d6434508a8cb65cafe0e2c89c5d5>>
  */
 
 "use strict";
@@ -14458,9 +14458,16 @@ __DEV__ &&
     ) {
       root.timeoutHandle = -1;
       didSkipSuspendedSiblings = finishedWork.subtreeFlags;
-      (didSkipSuspendedSiblings & 8192 ||
-        16785408 === (didSkipSuspendedSiblings & 16785408)) &&
-        accumulateSuspenseyCommitOnFiber(finishedWork);
+      if (
+        didSkipSuspendedSiblings & 8192 ||
+        16785408 === (didSkipSuspendedSiblings & 16785408)
+      )
+        accumulateSuspenseyCommitOnFiber(finishedWork),
+          (lanes & 62914560) === lanes
+            ? globalMostRecentFallbackTime - now$1()
+            : (lanes & 4194048) === lanes
+              ? globalMostRecentTransitionTime - now$1()
+              : 0;
       commitRoot(
         root,
         finishedWork,
@@ -18333,6 +18340,7 @@ __DEV__ &&
       needsIsomorphicIndicator = !1,
       prevOnStartTransitionFinish = ReactSharedInternals.S;
     ReactSharedInternals.S = function (transition, returnValue) {
+      globalMostRecentTransitionTime = now$1();
       if (
         "object" === typeof returnValue &&
         null !== returnValue &&
@@ -19909,6 +19917,7 @@ __DEV__ &&
       workInProgressRootRecoverableErrors = null,
       workInProgressRootDidIncludeRecursiveRenderUpdate = !1,
       globalMostRecentFallbackTime = 0,
+      globalMostRecentTransitionTime = 0,
       FALLBACK_THROTTLE_MS = 300,
       workInProgressRootRenderTargetTime = Infinity,
       RENDER_TIMEOUT_MS = 500,
@@ -20033,11 +20042,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.2.0-native-fb-e12b0bdc-20250915" !== isomorphicReactPackageVersion)
+    if ("19.2.0-native-fb-e3f19180-20250915" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.2.0-native-fb-e12b0bdc-20250915\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.2.0-native-fb-e3f19180-20250915\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -20063,10 +20072,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-e12b0bdc-20250915",
+        version: "19.2.0-native-fb-e3f19180-20250915",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-e12b0bdc-20250915"
+        reconcilerVersion: "19.2.0-native-fb-e3f19180-20250915"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

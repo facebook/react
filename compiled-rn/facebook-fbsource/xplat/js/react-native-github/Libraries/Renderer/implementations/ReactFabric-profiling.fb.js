@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<846703aa1ee779c13b74b565e12fec45>>
+ * @generated SignedSource<<ebbe56c90e9422fcc4ea087e9ed30eed>>
  */
 
 "use strict";
@@ -2961,6 +2961,7 @@ function releaseIsomorphicIndicator() {
 }
 var prevOnStartTransitionFinish = ReactSharedInternals.S;
 ReactSharedInternals.S = function (transition, returnValue) {
+  globalMostRecentTransitionTime = now$1();
   if (
     "object" === typeof returnValue &&
     null !== returnValue &&
@@ -10716,6 +10717,7 @@ var DefaultAsyncDispatcher = {
   workInProgressRootRecoverableErrors = null,
   workInProgressRootDidIncludeRecursiveRenderUpdate = !1,
   globalMostRecentFallbackTime = 0,
+  globalMostRecentTransitionTime = 0,
   workInProgressRootRenderTargetTime = Infinity,
   workInProgressTransitions = null,
   legacyErrorBoundariesThatAlreadyFailed = null,
@@ -11056,9 +11058,16 @@ function commitRootWhenReady(
 ) {
   root.timeoutHandle = -1;
   didSkipSuspendedSiblings = finishedWork.subtreeFlags;
-  (didSkipSuspendedSiblings & 8192 ||
-    16785408 === (didSkipSuspendedSiblings & 16785408)) &&
-    accumulateSuspenseyCommitOnFiber(finishedWork);
+  if (
+    didSkipSuspendedSiblings & 8192 ||
+    16785408 === (didSkipSuspendedSiblings & 16785408)
+  )
+    accumulateSuspenseyCommitOnFiber(finishedWork),
+      (lanes & 62914560) === lanes
+        ? globalMostRecentFallbackTime - now$1()
+        : (lanes & 4194048) === lanes
+          ? globalMostRecentTransitionTime - now$1()
+          : 0;
   commitRoot(
     root,
     finishedWork,
@@ -13160,16 +13169,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1543 = {
+  internals$jscomp$inline_1544 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-e12b0bdc-20250915",
+    version: "19.2.0-native-fb-e3f19180-20250915",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-e12b0bdc-20250915"
+    reconcilerVersion: "19.2.0-native-fb-e3f19180-20250915"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1543.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1543.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1544.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1544.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$167 = 0;
     31 > index$167;
@@ -13181,20 +13190,20 @@ internals$jscomp$inline_1543.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1543.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1544.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1875 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1876 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1875.isDisabled &&
-    hook$jscomp$inline_1875.supportsFiber
+    !hook$jscomp$inline_1876.isDisabled &&
+    hook$jscomp$inline_1876.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1875.inject(
-        internals$jscomp$inline_1543
+      (rendererID = hook$jscomp$inline_1876.inject(
+        internals$jscomp$inline_1544
       )),
-        (injectedHook = hook$jscomp$inline_1875);
+        (injectedHook = hook$jscomp$inline_1876);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

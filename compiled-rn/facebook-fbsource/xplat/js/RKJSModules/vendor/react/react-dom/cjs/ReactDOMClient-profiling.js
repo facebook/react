@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<51ede3ec736854d064bbfb5ae7c63b58>>
+ * @generated SignedSource<<b0fa422d6e0ed7510d33a0c8a251f546>>
  */
 
 /*
@@ -3859,6 +3859,7 @@ function releaseIsomorphicIndicator() {
 }
 var prevOnStartTransitionFinish = ReactSharedInternals.S;
 ReactSharedInternals.S = function (transition, returnValue) {
+  globalMostRecentTransitionTime = now$1();
   if (
     "object" === typeof returnValue &&
     null !== returnValue &&
@@ -12836,6 +12837,7 @@ var DefaultAsyncDispatcher = {
   workInProgressRootRecoverableErrors = null,
   workInProgressRootDidIncludeRecursiveRenderUpdate = !1,
   globalMostRecentFallbackTime = 0,
+  globalMostRecentTransitionTime = 0,
   workInProgressRootRenderTargetTime = Infinity,
   workInProgressTransitions = null,
   legacyErrorBoundariesThatAlreadyFailed = null,
@@ -13181,9 +13183,21 @@ function commitRootWhenReady(
   var subtreeFlags = finishedWork.subtreeFlags;
   if (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408))
     if (
-      ((suspendedState = { stylesheets: null, count: 0, unsuspend: noop$1 }),
+      ((suspendedState = {
+        stylesheets: null,
+        count: 0,
+        imgCount: 0,
+        waitingForImages: !0,
+        unsuspend: noop$1
+      }),
       accumulateSuspenseyCommitOnFiber(finishedWork),
-      (subtreeFlags = waitForCommitToBeReady()),
+      (subtreeFlags =
+        (lanes & 62914560) === lanes
+          ? globalMostRecentFallbackTime - now$1()
+          : (lanes & 4194048) === lanes
+            ? globalMostRecentTransitionTime - now$1()
+            : 0),
+      (subtreeFlags = waitForCommitToBeReady(subtreeFlags)),
       null !== subtreeFlags)
     ) {
       root.cancelPendingCommit = subtreeFlags(
@@ -15119,20 +15133,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1918 = 0;
-  i$jscomp$inline_1918 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1918++
+  var i$jscomp$inline_1919 = 0;
+  i$jscomp$inline_1919 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1919++
 ) {
-  var eventName$jscomp$inline_1919 =
-      simpleEventPluginEvents[i$jscomp$inline_1918],
-    domEventName$jscomp$inline_1920 =
-      eventName$jscomp$inline_1919.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1921 =
-      eventName$jscomp$inline_1919[0].toUpperCase() +
-      eventName$jscomp$inline_1919.slice(1);
+  var eventName$jscomp$inline_1920 =
+      simpleEventPluginEvents[i$jscomp$inline_1919],
+    domEventName$jscomp$inline_1921 =
+      eventName$jscomp$inline_1920.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1922 =
+      eventName$jscomp$inline_1920[0].toUpperCase() +
+      eventName$jscomp$inline_1920.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1920,
-    "on" + capitalizedEvent$jscomp$inline_1921
+    domEventName$jscomp$inline_1921,
+    "on" + capitalizedEvent$jscomp$inline_1922
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -18483,34 +18497,48 @@ function suspendResource(hoistableRoot, resource, props) {
       hoistableRoot.addEventListener("error", resource));
   }
 }
-function waitForCommitToBeReady() {
+function waitForCommitToBeReady(timeoutOffset) {
   if (null === suspendedState) throw Error(formatProdErrorMessage(475));
   var state = suspendedState;
   state.stylesheets &&
     0 === state.count &&
     insertSuspendedStylesheets(state, state.stylesheets);
-  return 0 < state.count
+  return 0 < state.count || 0 < state.imgCount
     ? function (commit) {
         var stylesheetTimer = setTimeout(function () {
-          state.stylesheets &&
-            insertSuspendedStylesheets(state, state.stylesheets);
-          if (state.unsuspend) {
-            var unsuspend = state.unsuspend;
-            state.unsuspend = null;
-            unsuspend();
-          }
-        }, 6e4);
+            state.stylesheets &&
+              insertSuspendedStylesheets(state, state.stylesheets);
+            if (state.unsuspend) {
+              var unsuspend = state.unsuspend;
+              state.unsuspend = null;
+              unsuspend();
+            }
+          }, 6e4 + timeoutOffset),
+          imgTimer = setTimeout(function () {
+            state.waitingForImages = !1;
+            if (
+              0 === state.count &&
+              (state.stylesheets &&
+                insertSuspendedStylesheets(state, state.stylesheets),
+              state.unsuspend)
+            ) {
+              var unsuspend = state.unsuspend;
+              state.unsuspend = null;
+              unsuspend();
+            }
+          }, 500 + timeoutOffset);
         state.unsuspend = commit;
         return function () {
           state.unsuspend = null;
           clearTimeout(stylesheetTimer);
+          clearTimeout(imgTimer);
         };
       }
     : null;
 }
 function onUnsuspend() {
   this.count--;
-  if (0 === this.count)
+  if (0 === this.count && (0 === this.imgCount || !this.waitingForImages))
     if (this.stylesheets) insertSuspendedStylesheets(this, this.stylesheets);
     else if (this.unsuspend) {
       var unsuspend = this.unsuspend;
@@ -19396,16 +19424,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_2326 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2330 = React.version;
 if (
-  "19.2.0-native-fb-e12b0bdc-20250915" !==
-  isomorphicReactPackageVersion$jscomp$inline_2326
+  "19.2.0-native-fb-e3f19180-20250915" !==
+  isomorphicReactPackageVersion$jscomp$inline_2330
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2326,
-      "19.2.0-native-fb-e12b0bdc-20250915"
+      isomorphicReactPackageVersion$jscomp$inline_2330,
+      "19.2.0-native-fb-e3f19180-20250915"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -19425,12 +19453,12 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_2333 = {
+var internals$jscomp$inline_2337 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-e12b0bdc-20250915",
+  version: "19.2.0-native-fb-e3f19180-20250915",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-e12b0bdc-20250915",
+  reconcilerVersion: "19.2.0-native-fb-e3f19180-20250915",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$324 = 0;
@@ -19448,16 +19476,16 @@ var internals$jscomp$inline_2333 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2900 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2904 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2900.isDisabled &&
-    hook$jscomp$inline_2900.supportsFiber
+    !hook$jscomp$inline_2904.isDisabled &&
+    hook$jscomp$inline_2904.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2900.inject(
-        internals$jscomp$inline_2333
+      (rendererID = hook$jscomp$inline_2904.inject(
+        internals$jscomp$inline_2337
       )),
-        (injectedHook = hook$jscomp$inline_2900);
+        (injectedHook = hook$jscomp$inline_2904);
     } catch (err) {}
 }
 exports.createRoot = function (container, options) {
@@ -19553,4 +19581,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.2.0-native-fb-e12b0bdc-20250915";
+exports.version = "19.2.0-native-fb-e3f19180-20250915";

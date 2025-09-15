@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b18afad8b103b6101f67b8be11463317>>
+ * @generated SignedSource<<bd4fc00881d1e99536013c485f7d431b>>
  */
 
 "use strict";
@@ -3373,6 +3373,7 @@ function releaseIsomorphicIndicator() {
 }
 var prevOnStartTransitionFinish = ReactSharedInternals.S;
 ReactSharedInternals.S = function (transition, returnValue) {
+  globalMostRecentTransitionTime = now$1();
   if (
     "object" === typeof returnValue &&
     null !== returnValue &&
@@ -11202,6 +11203,7 @@ var DefaultAsyncDispatcher = {
   workInProgressRootRecoverableErrors = null,
   workInProgressRootDidIncludeRecursiveRenderUpdate = !1,
   globalMostRecentFallbackTime = 0,
+  globalMostRecentTransitionTime = 0,
   workInProgressRootRenderTargetTime = Infinity,
   workInProgressTransitions = null,
   legacyErrorBoundariesThatAlreadyFailed = null,
@@ -11541,9 +11543,16 @@ function commitRootWhenReady(
 ) {
   root.timeoutHandle = -1;
   didSkipSuspendedSiblings = finishedWork.subtreeFlags;
-  (didSkipSuspendedSiblings & 8192 ||
-    16785408 === (didSkipSuspendedSiblings & 16785408)) &&
-    accumulateSuspenseyCommitOnFiber(finishedWork);
+  if (
+    didSkipSuspendedSiblings & 8192 ||
+    16785408 === (didSkipSuspendedSiblings & 16785408)
+  )
+    accumulateSuspenseyCommitOnFiber(finishedWork),
+      (lanes & 62914560) === lanes
+        ? globalMostRecentFallbackTime - now$1()
+        : (lanes & 4194048) === lanes
+          ? globalMostRecentTransitionTime - now$1()
+          : 0;
   commitRoot(
     root,
     finishedWork,
@@ -13311,11 +13320,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.2.0-native-fb-e12b0bdc-20250915" !== isomorphicReactPackageVersion)
+if ("19.2.0-native-fb-e3f19180-20250915" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.2.0-native-fb-e12b0bdc-20250915\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.2.0-native-fb-e3f19180-20250915\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -13363,16 +13372,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1574 = {
+  internals$jscomp$inline_1575 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-e12b0bdc-20250915",
+    version: "19.2.0-native-fb-e3f19180-20250915",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-e12b0bdc-20250915"
+    reconcilerVersion: "19.2.0-native-fb-e3f19180-20250915"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1574.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1574.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1575.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1575.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$174 = 0;
     31 > index$174;
@@ -13384,20 +13393,20 @@ internals$jscomp$inline_1574.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1574.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1575.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1939 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1940 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1939.isDisabled &&
-    hook$jscomp$inline_1939.supportsFiber
+    !hook$jscomp$inline_1940.isDisabled &&
+    hook$jscomp$inline_1940.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1939.inject(
-        internals$jscomp$inline_1574
+      (rendererID = hook$jscomp$inline_1940.inject(
+        internals$jscomp$inline_1575
       )),
-        (injectedHook = hook$jscomp$inline_1939);
+        (injectedHook = hook$jscomp$inline_1940);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
