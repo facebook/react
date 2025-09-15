@@ -33,7 +33,7 @@ export default function TabbedWindow({
               key={tab}
               onClick={() => onTabChange(tab)}
               className={clsx(
-                'active:scale-95 transition-transform text-center outline-none py-1.5 px-1.5 xs:px-3 sm:px-4 rounded-full capitalize whitespace-nowrap text-sm',
+                'active:scale-95 transition-transform py-1.5 px-1.5 xs:px-3 sm:px-4 rounded-full text-sm',
                 !isActive && 'hover:bg-primary/5',
                 isActive && 'bg-highlight text-link',
               )}>
