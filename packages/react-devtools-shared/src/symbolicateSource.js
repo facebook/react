@@ -57,7 +57,7 @@ export async function symbolicateSource(
     return null;
   }
 
-  const resourceLines = resource.split(/[\r\n]+/);
+  const resourceLines = resource.split(/[\r\n]/);
   for (let i = resourceLines.length - 1; i >= 0; --i) {
     const resourceLine = resourceLines[i];
 
