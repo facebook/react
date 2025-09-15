@@ -1,11 +1,12 @@
-declare function id<T>(x: T): T;
+function id<T>(x: T): T {
+  return x;
+}
 
-export function test<T = string>(value = id<string>('hi')) {
-  return value;
+export function Component<T = string>({value = id<string>('hi')}: {value?: T}) {
+  return <div>{String(value)}</div>;
 }
 
 export const FIXTURE_ENTRYPOINT = {
-  fn: test,
-  params: [],
-  isComponent: false,
+  fn: Component,
+  params: [{}],
 };

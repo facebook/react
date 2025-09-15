@@ -2,16 +2,17 @@
 ## Input
 
 ```javascript
-declare function id<T>(x: T): T;
+function id<T>(x: T): T {
+  return x;
+}
 
-export function test<T = string>(value = id<string>('hi')) {
-  return value;
+export function Component<T = string>({value = id<string>('hi')}: {value?: T}) {
+  return <div>{String(value)}</div>;
 }
 
 export const FIXTURE_ENTRYPOINT = {
-  fn: test,
-  params: [],
-  isComponent: false,
+  fn: Component,
+  params: [{}],
 };
 
 ```
@@ -20,29 +21,40 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime";
-declare function id<T>(x: T): T;
+function id(x) {
+  return x;
+}
 
-export function test(t0) {
-  const $ = _c(2);
-  let t1;
-  if ($[0] !== t0) {
-    t1 = t0 === undefined ? id("hi") : t0;
-    $[0] = t0;
-    $[1] = t1;
+export function Component(t0) {
+  const $ = _c(4);
+  const { value: t1 } = t0;
+  let t2;
+  if ($[0] !== t1) {
+    t2 = t1 === undefined ? id("hi") : t1;
+    $[0] = t1;
+    $[1] = t2;
   } else {
-    t1 = $[1];
+    t2 = $[1];
   }
-  const value = t1;
-  return value;
+  const value = t2;
+  const t3 = String(value);
+  let t4;
+  if ($[2] !== t3) {
+    t4 = <div>{t3}</div>;
+    $[2] = t3;
+    $[3] = t4;
+  } else {
+    t4 = $[3];
+  }
+  return t4;
 }
 
 export const FIXTURE_ENTRYPOINT = {
-  fn: test,
-  params: [],
-  isComponent: false,
+  fn: Component,
+  params: [{}],
 };
 
 ```
       
 ### Eval output
-(kind: exception) id is not defined
+(kind: ok) <div>hi</div>
