@@ -12586,6 +12586,7 @@ function commitRootWhenReady(
       stylesheets: null,
       count: 0,
       imgCount: 0,
+      imgBytes: 0,
       waitingForImages: !0,
       unsuspend: noop$1
     };
@@ -17050,6 +17051,66 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
         (null == propKey$236 && null == propKey) ||
         setProp(domElement, tag, lastProp, propKey$236, nextProps, propKey);
 }
+function isLikelyStaticResource(initiatorType) {
+  switch (initiatorType) {
+    case "css":
+    case "script":
+    case "font":
+    case "img":
+    case "image":
+    case "input":
+    case "link":
+      return !0;
+    default:
+      return !1;
+  }
+}
+function estimateBandwidth() {
+  if ("function" === typeof performance.getEntriesByType) {
+    for (
+      var count = 0,
+        bits = 0,
+        resourceEntries = performance.getEntriesByType("resource"),
+        i = 0;
+      i < resourceEntries.length;
+      i++
+    ) {
+      var entry = resourceEntries[i],
+        transferSize = entry.transferSize,
+        initiatorType = entry.initiatorType,
+        duration = entry.duration;
+      if (transferSize && duration && isLikelyStaticResource(initiatorType)) {
+        initiatorType = 0;
+        duration = entry.responseEnd;
+        for (i += 1; i < resourceEntries.length; i++) {
+          var overlapEntry = resourceEntries[i],
+            overlapStartTime = overlapEntry.startTime;
+          if (overlapStartTime > duration) break;
+          var overlapTransferSize = overlapEntry.transferSize,
+            overlapInitiatorType = overlapEntry.initiatorType;
+          overlapTransferSize &&
+            isLikelyStaticResource(overlapInitiatorType) &&
+            ((overlapEntry = overlapEntry.responseEnd),
+            (initiatorType +=
+              overlapTransferSize *
+              (overlapEntry < duration
+                ? 1
+                : (duration - overlapStartTime) /
+                  (overlapEntry - overlapStartTime))));
+        }
+        --i;
+        bits += (8 * (transferSize + initiatorType)) / (entry.duration / 1e3);
+        count++;
+        if (10 < count) break;
+      }
+    }
+    if (0 < count) return bits / count / 1e6;
+  }
+  return navigator.connection &&
+    ((count = navigator.connection.downlink), "number" === typeof count)
+    ? count
+    : 5;
+}
 var eventsEnabled = null,
   selectionInformation = null;
 function getOwnerDocumentFromRootContainer(rootContainerElement) {
@@ -18918,6 +18979,12 @@ function suspendInstance(instance) {
     "function" === typeof instance.decode &&
       "function" === typeof setTimeout &&
       (state.imgCount++,
+      instance.complete ||
+        (state.imgBytes +=
+          (instance.width || 100) *
+          (instance.height || 100) *
+          ("number" === typeof devicePixelRatio ? devicePixelRatio : 1) *
+          0.25),
       (state = onUnsuspendImg.bind(state)),
       instance.decode().then(state, state));
   }
@@ -18973,6 +19040,7 @@ function suspendResource(hoistableRoot, resource, props) {
       hoistableRoot.addEventListener("error", resource));
   }
 }
+var estimatedBytesWithinLimit = 0;
 function waitForCommitToBeReady(timeoutOffset) {
   if (null === suspendedState) throw Error(formatProdErrorMessage(475));
   var state = suspendedState;
@@ -18982,15 +19050,19 @@ function waitForCommitToBeReady(timeoutOffset) {
   return 0 < state.count || 0 < state.imgCount
     ? function (commit) {
         var stylesheetTimer = setTimeout(function () {
-            state.stylesheets &&
-              insertSuspendedStylesheets(state, state.stylesheets);
-            if (state.unsuspend) {
-              var unsuspend = state.unsuspend;
-              state.unsuspend = null;
-              unsuspend();
-            }
-          }, 6e4 + timeoutOffset),
-          imgTimer = setTimeout(function () {
+          state.stylesheets &&
+            insertSuspendedStylesheets(state, state.stylesheets);
+          if (state.unsuspend) {
+            var unsuspend = state.unsuspend;
+            state.unsuspend = null;
+            unsuspend();
+          }
+        }, 6e4 + timeoutOffset);
+        0 < state.imgBytes &&
+          0 === estimatedBytesWithinLimit &&
+          (estimatedBytesWithinLimit = 62500 * estimateBandwidth());
+        var imgTimer = setTimeout(
+          function () {
             state.waitingForImages = !1;
             if (
               0 === state.count &&
@@ -19002,7 +19074,10 @@ function waitForCommitToBeReady(timeoutOffset) {
               state.unsuspend = null;
               unsuspend();
             }
-          }, 500 + timeoutOffset);
+          },
+          (state.imgBytes > estimatedBytesWithinLimit ? 50 : 800) +
+            timeoutOffset
+        );
         state.unsuspend = commit;
         return function () {
           state.unsuspend = null;
@@ -19812,14 +19887,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2127 = React.version;
 if (
-  "19.2.0-www-classic-e3f19180-20250915" !==
+  "19.2.0-www-classic-ae22247d-20250915" !==
   isomorphicReactPackageVersion$jscomp$inline_2127
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2127,
-      "19.2.0-www-classic-e3f19180-20250915"
+      "19.2.0-www-classic-ae22247d-20250915"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -19837,10 +19912,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2759 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-e3f19180-20250915",
+  version: "19.2.0-www-classic-ae22247d-20250915",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-e3f19180-20250915"
+  reconcilerVersion: "19.2.0-www-classic-ae22247d-20250915"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2760 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -20269,4 +20344,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-classic-e3f19180-20250915";
+exports.version = "19.2.0-www-classic-ae22247d-20250915";

@@ -18721,6 +18721,7 @@ __DEV__ &&
           stylesheets: null,
           count: 0,
           imgCount: 0,
+          imgBytes: 0,
           waitingForImages: !0,
           unsuspend: noop$1
         };
@@ -25274,6 +25275,71 @@ __DEV__ &&
           );
       }
     }
+    function isLikelyStaticResource(initiatorType) {
+      switch (initiatorType) {
+        case "css":
+        case "script":
+        case "font":
+        case "img":
+        case "image":
+        case "input":
+        case "link":
+          return !0;
+        default:
+          return !1;
+      }
+    }
+    function estimateBandwidth() {
+      if ("function" === typeof performance.getEntriesByType) {
+        for (
+          var count = 0,
+            bits = 0,
+            resourceEntries = performance.getEntriesByType("resource"),
+            i = 0;
+          i < resourceEntries.length;
+          i++
+        ) {
+          var entry = resourceEntries[i],
+            transferSize = entry.transferSize,
+            initiatorType = entry.initiatorType,
+            duration = entry.duration;
+          if (
+            transferSize &&
+            duration &&
+            isLikelyStaticResource(initiatorType)
+          ) {
+            initiatorType = 0;
+            duration = entry.responseEnd;
+            for (i += 1; i < resourceEntries.length; i++) {
+              var overlapEntry = resourceEntries[i],
+                overlapStartTime = overlapEntry.startTime;
+              if (overlapStartTime > duration) break;
+              var overlapTransferSize = overlapEntry.transferSize,
+                overlapInitiatorType = overlapEntry.initiatorType;
+              overlapTransferSize &&
+                isLikelyStaticResource(overlapInitiatorType) &&
+                ((overlapEntry = overlapEntry.responseEnd),
+                (initiatorType +=
+                  overlapTransferSize *
+                  (overlapEntry < duration
+                    ? 1
+                    : (duration - overlapStartTime) /
+                      (overlapEntry - overlapStartTime))));
+            }
+            --i;
+            bits +=
+              (8 * (transferSize + initiatorType)) / (entry.duration / 1e3);
+            count++;
+            if (10 < count) break;
+          }
+        }
+        if (0 < count) return bits / count / 1e6;
+      }
+      return navigator.connection &&
+        ((count = navigator.connection.downlink), "number" === typeof count)
+        ? count
+        : 5;
+    }
     function getOwnerDocumentFromRootContainer(rootContainerElement) {
       return rootContainerElement.nodeType === DOCUMENT_NODE
         ? rootContainerElement
@@ -27026,6 +27092,12 @@ __DEV__ &&
         "function" === typeof instance.decode &&
           "function" === typeof setTimeout &&
           (state.imgCount++,
+          instance.complete ||
+            (state.imgBytes +=
+              (instance.width || 100) *
+              (instance.height || 100) *
+              ("number" === typeof devicePixelRatio ? devicePixelRatio : 1) *
+              0.25),
           (state = onUnsuspendImg.bind(state)),
           instance.decode().then(state, state));
       }
@@ -27096,15 +27168,20 @@ __DEV__ &&
       return 0 < state.count || 0 < state.imgCount
         ? function (commit) {
             var stylesheetTimer = setTimeout(function () {
-                state.stylesheets &&
-                  insertSuspendedStylesheets(state, state.stylesheets);
-                if (state.unsuspend) {
-                  var unsuspend = state.unsuspend;
-                  state.unsuspend = null;
-                  unsuspend();
-                }
-              }, SUSPENSEY_STYLESHEET_TIMEOUT + timeoutOffset),
-              imgTimer = setTimeout(function () {
+              state.stylesheets &&
+                insertSuspendedStylesheets(state, state.stylesheets);
+              if (state.unsuspend) {
+                var unsuspend = state.unsuspend;
+                state.unsuspend = null;
+                unsuspend();
+              }
+            }, SUSPENSEY_STYLESHEET_TIMEOUT + timeoutOffset);
+            0 < state.imgBytes &&
+              0 === estimatedBytesWithinLimit &&
+              (estimatedBytesWithinLimit =
+                125 * estimateBandwidth() * SUSPENSEY_IMAGE_TIME_ESTIMATE);
+            var imgTimer = setTimeout(
+              function () {
                 state.waitingForImages = !1;
                 if (
                   0 === state.count &&
@@ -27116,7 +27193,11 @@ __DEV__ &&
                   state.unsuspend = null;
                   unsuspend();
                 }
-              }, SUSPENSEY_IMAGE_TIMEOUT + timeoutOffset);
+              },
+              (state.imgBytes > estimatedBytesWithinLimit
+                ? 50
+                : SUSPENSEY_IMAGE_TIMEOUT) + timeoutOffset
+            );
             state.unsuspend = commit;
             return function () {
               state.unsuspend = null;
@@ -32146,7 +32227,9 @@ __DEV__ &&
       tagCaches = null,
       suspendedState = null,
       SUSPENSEY_STYLESHEET_TIMEOUT = 6e4,
-      SUSPENSEY_IMAGE_TIMEOUT = 500,
+      SUSPENSEY_IMAGE_TIMEOUT = 800,
+      SUSPENSEY_IMAGE_TIME_ESTIMATE = 500,
+      estimatedBytesWithinLimit = 0,
       LAST_PRECEDENCE = null,
       precedencesByRoot = null,
       NotPendingTransition = NotPending,
@@ -32184,11 +32267,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-www-modern-e3f19180-20250915" !== isomorphicReactPackageVersion)
+      if ("19.2.0-www-modern-ae22247d-20250915" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-www-modern-e3f19180-20250915\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-www-modern-ae22247d-20250915\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -32231,10 +32314,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-www-modern-e3f19180-20250915",
+          version: "19.2.0-www-modern-ae22247d-20250915",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-www-modern-e3f19180-20250915"
+          reconcilerVersion: "19.2.0-www-modern-ae22247d-20250915"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -32846,7 +32929,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-www-modern-e3f19180-20250915";
+    exports.version = "19.2.0-www-modern-ae22247d-20250915";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
