@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d2922f4ca45b97abaa6111df322bf88a>>
+ * @generated SignedSource<<041d6990efe2c9f558dcaea4a2c8d61b>>
  */
 
 "use strict";
@@ -11058,11 +11058,13 @@ function commitRootWhenReady(
 ) {
   root.timeoutHandle = -1;
   didSkipSuspendedSiblings = finishedWork.subtreeFlags;
+  var suspendedState = null;
   if (
     didSkipSuspendedSiblings & 8192 ||
     16785408 === (didSkipSuspendedSiblings & 16785408)
   )
-    accumulateSuspenseyCommitOnFiber(finishedWork),
+    (suspendedState = null),
+      accumulateSuspenseyCommitOnFiber(finishedWork),
       (lanes & 62914560) === lanes
         ? globalMostRecentFallbackTime - now$1()
         : (lanes & 4194048) === lanes
@@ -11079,6 +11081,7 @@ function commitRootWhenReady(
     updatedLanes,
     suspendedRetryLanes,
     exitStatus,
+    suspendedState,
     suspendedCommitReason,
     completedRenderStartTime,
     completedRenderEndTime
@@ -11891,6 +11894,7 @@ function commitRoot(
   updatedLanes,
   suspendedRetryLanes,
   exitStatus,
+  suspendedState,
   suspendedCommitReason,
   completedRenderStartTime,
   completedRenderEndTime
@@ -13169,16 +13173,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1544 = {
+  internals$jscomp$inline_1545 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-ae22247d-20250915",
+    version: "19.2.0-native-fb-348a4e2d-20250915",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-ae22247d-20250915"
+    reconcilerVersion: "19.2.0-native-fb-348a4e2d-20250915"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1544.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1544.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1545.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1545.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$167 = 0;
     31 > index$167;
@@ -13190,20 +13194,20 @@ internals$jscomp$inline_1544.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1544.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1545.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1876 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1877 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1876.isDisabled &&
-    hook$jscomp$inline_1876.supportsFiber
+    !hook$jscomp$inline_1877.isDisabled &&
+    hook$jscomp$inline_1877.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1876.inject(
-        internals$jscomp$inline_1544
+      (rendererID = hook$jscomp$inline_1877.inject(
+        internals$jscomp$inline_1545
       )),
-        (injectedHook = hook$jscomp$inline_1876);
+        (injectedHook = hook$jscomp$inline_1877);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

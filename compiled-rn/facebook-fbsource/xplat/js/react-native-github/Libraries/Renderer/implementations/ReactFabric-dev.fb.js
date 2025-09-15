@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<736d87b1a32c592528681932dbaa3bf1>>
+ * @generated SignedSource<<38d43e8a1cd791565efe28e70d1f2eaa>>
  */
 
 "use strict";
@@ -13903,6 +13903,7 @@ __DEV__ &&
                 workInProgressRootInterleavedUpdatedLanes,
                 workInProgressSuspendedRetryLanes,
                 startTime,
+                null,
                 IMMEDIATE_COMMIT,
                 renderStartTime,
                 forceSync
@@ -13987,11 +13988,13 @@ __DEV__ &&
     ) {
       root.timeoutHandle = noTimeout;
       didSkipSuspendedSiblings = finishedWork.subtreeFlags;
+      var suspendedState = null;
       if (
         didSkipSuspendedSiblings & 8192 ||
         16785408 === (didSkipSuspendedSiblings & 16785408)
       )
-        accumulateSuspenseyCommitOnFiber(finishedWork),
+        (suspendedState = null),
+          accumulateSuspenseyCommitOnFiber(finishedWork),
           (lanes & 62914560) === lanes
             ? globalMostRecentFallbackTime - now$1()
             : (lanes & 4194048) === lanes
@@ -14008,6 +14011,7 @@ __DEV__ &&
         updatedLanes,
         suspendedRetryLanes,
         exitStatus,
+        suspendedState,
         suspendedCommitReason,
         completedRenderStartTime,
         completedRenderEndTime
@@ -15026,6 +15030,7 @@ __DEV__ &&
       updatedLanes,
       suspendedRetryLanes,
       exitStatus,
+      suspendedState,
       suspendedCommitReason,
       completedRenderStartTime,
       completedRenderEndTime
@@ -19762,10 +19767,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-ae22247d-20250915",
+        version: "19.2.0-native-fb-348a4e2d-20250915",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-ae22247d-20250915"
+        reconcilerVersion: "19.2.0-native-fb-348a4e2d-20250915"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

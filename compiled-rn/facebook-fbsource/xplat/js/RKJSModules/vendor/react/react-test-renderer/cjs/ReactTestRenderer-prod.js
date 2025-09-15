@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d0edbcb52bdd25183c3f64bc325ca30f>>
+ * @generated SignedSource<<f3db0a8092b28a760e7d25eb6c39fd79>>
  */
 
 "use strict";
@@ -10050,24 +10050,24 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1482 = {
+var internals$jscomp$inline_1483 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-ae22247d-20250915",
+  version: "19.2.0-native-fb-348a4e2d-20250915",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-ae22247d-20250915"
+  reconcilerVersion: "19.2.0-native-fb-348a4e2d-20250915"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1483 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1484 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1483.isDisabled &&
-    hook$jscomp$inline_1483.supportsFiber
+    !hook$jscomp$inline_1484.isDisabled &&
+    hook$jscomp$inline_1484.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1483.inject(
-        internals$jscomp$inline_1482
+      (rendererID = hook$jscomp$inline_1484.inject(
+        internals$jscomp$inline_1483
       )),
-        (injectedHook = hook$jscomp$inline_1483);
+        (injectedHook = hook$jscomp$inline_1484);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -10191,4 +10191,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.2.0-native-fb-ae22247d-20250915";
+exports.version = "19.2.0-native-fb-348a4e2d-20250915";
