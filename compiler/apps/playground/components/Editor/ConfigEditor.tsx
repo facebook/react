@@ -97,11 +97,10 @@ function ExpandedEditor({
       minWidth={300}
       maxWidth={600}
       defaultSize={{width: 350}}
-      enable={{right: true, bottom: false}}
-      style={{position: 'relative'}}>
-      <div className="bg-gray-700 p-2 h-full flex flex-col !h-[calc(100vh_-_3.5rem)]">
+      enable={{right: true, bottom: false}}>
+      <div className="bg-blue-10 relative h-full flex flex-col !h-[calc(100vh_-_3.5rem)] border border-gray-300">
         <div
-          className="absolute w-10 h-16 bg-gray-700 hover:translate-x-2 transition-transform rounded-r-full flex items-center justify-center z-[5] cursor-pointer"
+          className="absolute w-8 h-16 bg-blue-10 rounded-r-full flex items-center justify-center z-[2] cursor-pointer border border-l-0 border-gray-300"
           title="Minimize config editor"
           onClick={() => onToggle(false)}
           style={{
@@ -111,19 +110,16 @@ function ExpandedEditor({
             borderTopLeftRadius: 0,
             borderBottomLeftRadius: 0,
           }}>
-          <IconChevron
-            displayDirection="left"
-            className="text-secondary-dark"
-          />
+          <IconChevron displayDirection="left" className="text-blue-50" />
         </div>
 
-        <div className="flex-1 flex flex-col mb-2">
+        <div className="flex-1 flex flex-col m-2 mb-2">
           <div className="pb-2">
-            <h2 className="inline-block text-secondary-dark py-1.5 px-1.5 xs:px-3 sm:px-4 text-sm">
+            <h2 className="inline-block text-blue-50 py-1.5 px-1.5 xs:px-3 sm:px-4 text-sm">
               Config Overrides
             </h2>
           </div>
-          <div className="flex-1 rounded-lg overflow-hidden">
+          <div className="flex-1 rounded-lg overflow-hidden border border-gray-300">
             <MonacoEditor
               path={'config.ts'}
               language={'typescript'}
@@ -144,13 +140,13 @@ function ExpandedEditor({
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col m-2">
           <div className="pb-2">
-            <h2 className="inline-block text-secondary-dark py-1.5 px-1.5 xs:px-3 sm:px-4 text-sm">
+            <h2 className="inline-block text-blue-50 py-1.5 px-1.5 xs:px-3 sm:px-4 text-sm">
               Applied Configs
             </h2>
           </div>
-          <div className="flex-1 rounded-lg overflow-hidden">
+          <div className="flex-1 rounded-lg overflow-hidden border border-gray-300">
             <MonacoEditor
               path={'applied-config.js'}
               language={'javascript'}
@@ -184,7 +180,7 @@ function CollapsedEditor({
       className="w-4 !h-[calc(100vh_-_3.5rem)]"
       style={{position: 'relative'}}>
       <div
-        className="absolute w-10 h-16 bg-gray-700 hover:translate-x-2 transition-transform rounded-r-full flex items-center justify-center z-[5] cursor-pointer"
+        className="absolute w-10 h-16 bg-blue-10 hover:translate-x-2 transition-transform rounded-r-full flex items-center justify-center z-[2] cursor-pointer border border-gray-300"
         title="Expand config editor"
         onClick={() => onToggle(true)}
         style={{
@@ -194,7 +190,7 @@ function CollapsedEditor({
           borderTopLeftRadius: 0,
           borderBottomLeftRadius: 0,
         }}>
-        <IconChevron displayDirection="right" className="text-secondary-dark" />
+        <IconChevron displayDirection="right" className="text-blue-50" />
       </div>
     </div>
   );
