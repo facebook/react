@@ -50,7 +50,8 @@ function Component() {
       <p>
         <img
           src="https://react.dev/_next/image?url=%2Fimages%2Fteam%2Fsebmarkbage.jpg&w=3840&q=75"
-          width="300"
+          width="400"
+          height="248"
         />
       </p>
     </ViewTransition>

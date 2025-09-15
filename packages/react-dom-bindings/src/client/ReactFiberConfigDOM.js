@@ -143,6 +143,7 @@ import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 export {default as rendererVersion} from 'shared/ReactVersion';
 
 import noop from 'shared/noop';
+import estimateBandwidth from './estimateBandwidth';
 
 export const rendererPackageName = 'react-dom';
 export const extraDevToolsConfig = null;
@@ -5907,6 +5908,7 @@ type SuspendedState = {
   stylesheets: null | Map<StylesheetResource, HoistableRoot>,
   count: number, // suspensey css and active view transitions
   imgCount: number, // suspensey images
+  imgBytes: number, // number of bytes we estimate needing to download
   waitingForImages: boolean, // false when we're no longer blocking on images
   unsuspend: null | (() => void),
 };
@@ -5917,6 +5919,7 @@ export function startSuspendingCommit(): void {
     stylesheets: null,
     count: 0,
     imgCount: 0,
+    imgBytes: 0,
     waitingForImages: true,
     // We use a noop function when we begin suspending because if possible we want the
     // waitfor step to finish synchronously. If it doesn't we'll return a function to
@@ -5925,10 +5928,6 @@ export function startSuspendingCommit(): void {
     unsuspend: noop,
   };
 }
-
-const SUSPENSEY_STYLESHEET_TIMEOUT = 60000;
-
-const SUSPENSEY_IMAGE_TIMEOUT = 500;
 
 export function suspendInstance(
   instance: Instance,
@@ -5953,6 +5952,18 @@ export function suspendInstance(
     // The loading should have already started at this point, so it should be enough to
     // just call decode() which should also wait for the data to finish loading.
     state.imgCount++;
+    // Estimate the byte size that we're about to download based on the width/height
+    // specified in the props. This is best practice to know ahead of time but if it's
+    // unspecified we'll fallback to a guess of 100x100 pixels.
+    if (!(instance: any).complete) {
+      const width: number = (instance: any).width || 100;
+      const height: number = (instance: any).height || 100;
+      const pixelRatio: number =
+        typeof devicePixelRatio === 'number' ? devicePixelRatio : 1;
+      const pixelsToDownload = width * height * pixelRatio;
+      const AVERAGE_BYTE_PER_PIXEL = 0.25;
+      state.imgBytes += pixelsToDownload * AVERAGE_BYTE_PER_PIXEL;
+    }
     const ping = onUnsuspendImg.bind(state);
     // $FlowFixMe[prop-missing]
     instance.decode().then(ping, ping);
@@ -6070,6 +6081,14 @@ export function suspendOnActiveViewTransition(rootContainer: Container): void {
   activeViewTransition.finished.then(ping, ping);
 }
 
+const SUSPENSEY_STYLESHEET_TIMEOUT = 60000;
+
+const SUSPENSEY_IMAGE_TIMEOUT = 800;
+
+const SUSPENSEY_IMAGE_TIME_ESTIMATE = 500;
+
+let estimatedBytesWithinLimit: number = 0;
+
 export function waitForCommitToBeReady(
   timeoutOffset: number,
 ): null | ((() => void) => () => void) {
@@ -6109,6 +6128,18 @@ export function waitForCommitToBeReady(
         }
       }, SUSPENSEY_STYLESHEET_TIMEOUT + timeoutOffset);
 
+      if (state.imgBytes > 0 && estimatedBytesWithinLimit === 0) {
+        // Estimate how many bytes we can download in 500ms.
+        const mbps = estimateBandwidth();
+        estimatedBytesWithinLimit = mbps * 125 * SUSPENSEY_IMAGE_TIME_ESTIMATE;
+      }
+      // If we have more images to download than we expect to fit in the timeout, then
+      // don't wait for images longer than 50ms. The 50ms lets us still do decoding and
+      // hitting caches if it turns out that they're already in the HTTP cache.
+      const imgTimeout =
+        state.imgBytes > estimatedBytesWithinLimit
+          ? 50
+          : SUSPENSEY_IMAGE_TIMEOUT;
       const imgTimer = setTimeout(() => {
         // We're no longer blocked on images. If CSS resolves after this we can commit.
         state.waitingForImages = false;
@@ -6122,7 +6153,7 @@ export function waitForCommitToBeReady(
             unsuspend();
           }
         }
-      }, SUSPENSEY_IMAGE_TIMEOUT + timeoutOffset);
+      }, imgTimeout + timeoutOffset);
 
       state.unsuspend = commit;
 
