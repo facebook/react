@@ -2010,7 +2010,8 @@ function cancelAllViewTransitionAnimations(scope: Element) {
 // an issue when it's a new load and slow, yet long enough that you have a chance to load
 // it. Otherwise we wait for no reason. The assumption here is that you likely have
 // either cached the font or preloaded it earlier.
-const SUSPENSEY_FONT_TIMEOUT = 500;
+// This timeout is also used for Suspensey Images when they're blocking a View Transition.
+const SUSPENSEY_FONT_AND_IMAGE_TIMEOUT = 500;
 
 function customizeViewTransitionError(
   error: Object,
@@ -2080,6 +2081,13 @@ function forceLayout(ownerDocument: Document) {
   return (ownerDocument.documentElement: any).clientHeight;
 }
 
+function waitForImageToLoad(this: HTMLImageElement, resolve: () => void) {
+  // TODO: Use decode() instead of the load event here once the fix in
+  // https://issues.chromium.org/issues/420748301 has propagated fully.
+  this.addEventListener('load', resolve);
+  this.addEventListener('error', resolve);
+}
+
 export function startViewTransition(
   suspendedState: null | SuspendedState,
   rootContainer: Container,
@@ -2108,6 +2116,7 @@ export function startViewTransition(
         // $FlowFixMe[prop-missing]
         const previousFontLoadingStatus = ownerDocument.fonts.status;
         mutationCallback();
+        const blockingPromises: Array<Promise<any>> = [];
         if (previousFontLoadingStatus === 'loaded') {
           // Force layout calculation to trigger font loading.
           forceLayout(ownerDocument);
@@ -2119,18 +2128,50 @@ export function startViewTransition(
             // This avoids waiting for potentially unrelated fonts that were already loading before.
             // Either in an earlier transition or as part of a sync optimistic state. This doesn't
             // include preloads that happened earlier.
-            const fontsReady = Promise.race([
-              // $FlowFixMe[prop-missing]
-              ownerDocument.fonts.ready,
-              new Promise(resolve =>
-                setTimeout(resolve, SUSPENSEY_FONT_TIMEOUT),
-              ),
-            ]).then(layoutCallback, layoutCallback);
-            const allReady = pendingNavigation
-              ? Promise.allSettled([pendingNavigation.finished, fontsReady])
-              : fontsReady;
-            return allReady.then(afterMutationCallback, afterMutationCallback);
+            blockingPromises.push(ownerDocument.fonts.ready);
           }
+        }
+        if (suspendedState !== null) {
+          // Suspend on any images that still haven't loaded and are in the viewport.
+          const suspenseyImages = suspendedState.suspenseyImages;
+          const blockingIndexSnapshot = blockingPromises.length;
+          let imgBytes = 0;
+          for (let i = 0; i < suspenseyImages.length; i++) {
+            const suspenseyImage = suspenseyImages[i];
+            if (!suspenseyImage.complete) {
+              const rect = suspenseyImage.getBoundingClientRect();
+              const inViewport =
+                rect.bottom > 0 &&
+                rect.right > 0 &&
+                rect.top < ownerWindow.innerHeight &&
+                rect.left < ownerWindow.innerWidth;
+              if (inViewport) {
+                imgBytes += estimateImageBytes(suspenseyImage);
+                if (imgBytes > estimatedBytesWithinLimit) {
+                  // We don't think we'll be able to download all the images within
+                  // the timeout. Give up. Rewind to only block on fonts, if any.
+                  blockingPromises.length = blockingIndexSnapshot;
+                  break;
+                }
+                const loadingImage = new Promise(
+                  waitForImageToLoad.bind(suspenseyImage),
+                );
+                blockingPromises.push(loadingImage);
+              }
+            }
+          }
+        }
+        if (blockingPromises.length > 0) {
+          const blockingReady = Promise.race([
+            Promise.all(blockingPromises),
+            new Promise(resolve =>
+              setTimeout(resolve, SUSPENSEY_FONT_AND_IMAGE_TIMEOUT),
+            ),
+          ]).then(layoutCallback, layoutCallback);
+          const allReady = pendingNavigation
+            ? Promise.allSettled([pendingNavigation.finished, blockingReady])
+            : blockingReady;
+          return allReady.then(afterMutationCallback, afterMutationCallback);
         }
         layoutCallback();
         if (pendingNavigation) {
@@ -5909,8 +5950,9 @@ export function preloadResource(resource: Resource): boolean {
 export opaque type SuspendedState = {
   stylesheets: null | Map<StylesheetResource, HoistableRoot>,
   count: number, // suspensey css and active view transitions
-  imgCount: number, // suspensey images
+  imgCount: number, // suspensey images pending to load
   imgBytes: number, // number of bytes we estimate needing to download
+  suspenseyImages: Array<HTMLImageElement>, // instances of suspensey images (whether loaded or not)
   waitingForImages: boolean, // false when we're no longer blocking on images
   unsuspend: null | (() => void),
 };
@@ -5921,6 +5963,7 @@ export function startSuspendingCommit(): SuspendedState {
     count: 0,
     imgCount: 0,
     imgBytes: 0,
+    suspenseyImages: [],
     waitingForImages: true,
     // We use a noop function when we begin suspending because if possible we want the
     // waitfor step to finish synchronously. If it doesn't we'll return a function to
@@ -5928,6 +5971,16 @@ export function startSuspendingCommit(): SuspendedState {
     // hits zero or it will get cancelled if the root starts new work.
     unsuspend: noop,
   };
+}
+
+function estimateImageBytes(instance: HTMLImageElement): number {
+  const width: number = instance.width || 100;
+  const height: number = instance.height || 100;
+  const pixelRatio: number =
+    typeof devicePixelRatio === 'number' ? devicePixelRatio : 1;
+  const pixelsToDownload = width * height * pixelRatio;
+  const AVERAGE_BYTE_PER_PIXEL = 0.25;
+  return pixelsToDownload * AVERAGE_BYTE_PER_PIXEL;
 }
 
 export function suspendInstance(
@@ -5941,8 +5994,7 @@ export function suspendInstance(
   }
   if (
     // $FlowFixMe[prop-missing]
-    typeof instance.decode === 'function' &&
-    typeof setTimeout === 'function'
+    typeof instance.decode === 'function'
   ) {
     // If this browser supports decode() API, we use it to suspend waiting on the image.
     // The loading should have already started at this point, so it should be enough to
@@ -5952,13 +6004,8 @@ export function suspendInstance(
     // specified in the props. This is best practice to know ahead of time but if it's
     // unspecified we'll fallback to a guess of 100x100 pixels.
     if (!(instance: any).complete) {
-      const width: number = (instance: any).width || 100;
-      const height: number = (instance: any).height || 100;
-      const pixelRatio: number =
-        typeof devicePixelRatio === 'number' ? devicePixelRatio : 1;
-      const pixelsToDownload = width * height * pixelRatio;
-      const AVERAGE_BYTE_PER_PIXEL = 0.25;
-      state.imgBytes += pixelsToDownload * AVERAGE_BYTE_PER_PIXEL;
+      state.imgBytes += estimateImageBytes((instance: any));
+      state.suspenseyImages.push((instance: any));
     }
     const ping = onUnsuspendImg.bind(state);
     // $FlowFixMe[prop-missing]
