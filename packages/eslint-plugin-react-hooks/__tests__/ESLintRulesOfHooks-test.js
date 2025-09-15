@@ -581,6 +581,60 @@ const allTests = {
         };
       `,
     },
+    {
+      code: normalizeIndent`
+        // Valid: useEffectEvent can be called in custom effect hooks configured via rule options
+        function MyComponent({ theme }) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          useCustomEffect(() => {
+            onClick();
+          });
+        }
+      `,
+      options: [{additionalHooks: 'useCustomEffect'}],
+    },
+    {
+      code: normalizeIndent`
+        // Valid: useEffectEvent can be called in custom effect hooks configured via ESLint settings
+        function MyComponent({ theme }) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          useMyEffect(() => {
+            onClick();
+          });
+          useServerEffect(() => {
+            onClick();  
+          });
+        }
+      `,
+      settings: {
+        'react-hooks': {
+          additionalHooks: '(useMyEffect|useServerEffect)',
+        },
+      },
+    },
+    {
+      code: normalizeIndent`
+        // Valid: Rule options take precedence over settings
+        function MyComponent({ theme }) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          useOptionEffect(() => {
+            onClick(); // This should work since rule options take precedence
+          });
+        }
+      `,
+      options: [{additionalHooks: 'useOptionEffect'}],
+      settings: {
+        'react-hooks': {
+          additionalHooks: 'useSettingsEffect',
+        },
+      },
+    },
   ],
   invalid: [
     {
@@ -1352,6 +1406,39 @@ const allTests = {
         }
       `,
       errors: [tryCatchUseError('use')],
+    },
+    {
+      code: normalizeIndent`
+        // Invalid: useEffectEvent should not be callable in regular custom hooks without additional configuration
+        function MyComponent({ theme }) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          useCustomHook(() => {
+            onClick();
+          });
+        }
+      `,
+      errors: [useEffectEventError('onClick', true)],
+    },
+    {
+      code: normalizeIndent`
+        // Invalid: useEffectEvent should not be callable in hooks not matching the settings regex
+        function MyComponent({ theme }) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          useWrongHook(() => {
+            onClick();
+          });
+        }
+      `,
+      settings: {
+        'react-hooks': {
+          additionalHooks: 'useMyEffect',
+        },
+      },
+      errors: [useEffectEventError('onClick', true)],
     },
   ],
 };
