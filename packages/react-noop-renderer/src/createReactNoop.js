@@ -90,6 +90,8 @@ type SuspenseyCommitSubscription = {
   commit: null | (() => void),
 };
 
+export opaque type SuspendedState = SuspenseyCommitSubscription;
+
 export type TransitionStatus = mixed;
 
 export type FormInstance = Instance;
@@ -311,17 +313,17 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     'pending' | 'fulfilled',
   > | null = null;
 
-  // Represents a subscription for all the suspensey things that block a
-  // particular commit. Once they've all loaded, the commit phase can proceed.
-  let suspenseyCommitSubscription: SuspenseyCommitSubscription | null = null;
-
-  function startSuspendingCommit(): void {
-    // This is where we might suspend on things that aren't associated with a
-    // particular node, like document.fonts.ready.
-    suspenseyCommitSubscription = null;
+  function startSuspendingCommit(): SuspendedState {
+    // Represents a subscription for all the suspensey things that block a
+    // particular commit. Once they've all loaded, the commit phase can proceed.
+    return {
+      pendingCount: 0,
+      commit: null,
+    };
   }
 
   function suspendInstance(
+    state: SuspendedState,
     instance: Instance,
     type: string,
     props: Props,
@@ -338,20 +340,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       if (record.status === 'fulfilled') {
         // Already loaded.
       } else if (record.status === 'pending') {
-        if (suspenseyCommitSubscription === null) {
-          suspenseyCommitSubscription = {
-            pendingCount: 1,
-            commit: null,
-          };
-        } else {
-          suspenseyCommitSubscription.pendingCount++;
-        }
+        state.pendingCount++;
         // Stash the subscription on the record. In `resolveSuspenseyThing`,
         // we'll use this fire the commit once all the things have loaded.
         if (record.subscriptions === null) {
           record.subscriptions = [];
         }
-        record.subscriptions.push(suspenseyCommitSubscription);
+        record.subscriptions.push(state);
       }
     } else {
       throw new Error(
@@ -361,16 +356,15 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     }
   }
 
-  function waitForCommitToBeReady():
-    | ((commit: () => mixed) => () => void)
-    | null {
-    const subscription = suspenseyCommitSubscription;
-    if (subscription !== null) {
-      suspenseyCommitSubscription = null;
+  function waitForCommitToBeReady(
+    state: SuspendedState,
+    timeoutOffset: number,
+  ): ((commit: () => mixed) => () => void) | null {
+    if (state.pendingCount > 0) {
       return (commit: () => void) => {
-        subscription.commit = commit;
+        state.commit = commit;
         const cancelCommit = () => {
-          subscription.commit = null;
+          state.commit = null;
         };
         return cancelCommit;
       };
@@ -693,13 +687,16 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     startSuspendingCommit,
     suspendInstance,
 
-    suspendResource(resource: mixed): void {
+    suspendResource(state: SuspendedState, resource: mixed): void {
       throw new Error(
         'Resources are not implemented for React Noop yet. This method should not be called',
       );
     },
 
-    suspendOnActiveViewTransition(container: Container): void {
+    suspendOnActiveViewTransition(
+      state: SuspendedState,
+      container: Container,
+    ): void {
       // Not implemented
     },
 

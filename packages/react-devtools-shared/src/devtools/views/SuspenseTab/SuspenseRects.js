@@ -19,9 +19,13 @@ import {
   TreeDispatcherContext,
   TreeStateContext,
 } from '../Components/TreeContext';
+import {StoreContext} from '../context';
 import {useHighlightHostInstance} from '../hooks';
 import styles from './SuspenseRects.css';
-import {useSuspenseStore} from './SuspenseTreeContext';
+import {
+  SuspenseTreeStateContext,
+  SuspenseTreeDispatcherContext,
+} from './SuspenseTreeContext';
 import typeof {
   SyntheticMouseEvent,
   SyntheticPointerEvent,
@@ -44,8 +48,9 @@ function SuspenseRects({
 }: {
   suspenseID: SuspenseNode['id'],
 }): React$Node {
-  const dispatch = useContext(TreeDispatcherContext);
-  const store = useSuspenseStore();
+  const store = useContext(StoreContext);
+  const treeDispatch = useContext(TreeDispatcherContext);
+  const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
 
   const {inspectedElementID} = useContext(TreeStateContext);
 
@@ -64,7 +69,11 @@ function SuspenseRects({
       return;
     }
     event.preventDefault();
-    dispatch({type: 'SELECT_ELEMENT_BY_ID', payload: suspenseID});
+    treeDispatch({type: 'SELECT_ELEMENT_BY_ID', payload: suspenseID});
+    suspenseTreeDispatch({
+      type: 'SET_SUSPENSE_LINEAGE',
+      payload: suspenseID,
+    });
   }
 
   function handlePointerOver(event: SyntheticPointerEvent) {
@@ -157,7 +166,7 @@ function SuspenseRectsShell({
 }: {
   rootID: SuspenseNode['id'],
 }): React$Node {
-  const store = useSuspenseStore();
+  const store = useContext(StoreContext);
   const root = store.getSuspenseByID(rootID);
   if (root === null) {
     console.warn(`<Element> Could not find suspense node id ${rootID}`);
@@ -174,9 +183,9 @@ function SuspenseRectsShell({
 }
 
 function SuspenseRectsContainer(): React$Node {
-  const store = useSuspenseStore();
+  const store = useContext(StoreContext);
   // TODO: This relies on a full re-render of all children when the Suspense tree changes.
-  const roots = store.roots;
+  const {roots} = useContext(SuspenseTreeStateContext);
 
   const boundingRect = getDocumentBoundingRect(store, roots);
 

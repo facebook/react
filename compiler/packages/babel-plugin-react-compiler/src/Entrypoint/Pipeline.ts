@@ -276,7 +276,7 @@ function runWithEnvironment(
     }
 
     if (env.config.validateNoSetStateInEffects) {
-      env.logErrors(validateNoSetStateInEffects(hir));
+      env.logErrors(validateNoSetStateInEffects(hir, env));
     }
 
     if (env.config.validateNoJSXInTryStatements) {

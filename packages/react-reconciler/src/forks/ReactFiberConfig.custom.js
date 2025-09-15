@@ -41,6 +41,7 @@ export opaque type NoTimeout = mixed;
 export opaque type RendererInspectionConfig = mixed;
 export opaque type TransitionStatus = mixed;
 export opaque type FormInstance = mixed;
+export opaque type SuspendedState = mixed;
 export type RunningViewTransition = mixed;
 export type ViewTransitionInstance = null | {name: string, ...};
 export opaque type InstanceMeasurement = mixed;

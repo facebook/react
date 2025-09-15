@@ -639,10 +639,53 @@ function validateNoRefAccessInRenderImpl(
           case 'StartMemoize':
           case 'FinishMemoize':
             break;
+          case 'LoadGlobal': {
+            if (instr.value.binding.name === 'undefined') {
+              env.set(instr.lvalue.identifier.id, {kind: 'Nullable'});
+            }
+            break;
+          }
           case 'Primitive': {
             if (instr.value.value == null) {
               env.set(instr.lvalue.identifier.id, {kind: 'Nullable'});
             }
+            break;
+          }
+          case 'UnaryExpression': {
+            if (instr.value.operator === '!') {
+              const value = env.get(instr.value.value.identifier.id);
+              const refId =
+                value?.kind === 'RefValue' && value.refId != null
+                  ? value.refId
+                  : null;
+              if (refId !== null) {
+                /*
+                 * Record an error suggesting the `if (ref.current == null)` pattern,
+                 * but also record the lvalue as a guard so that we don't emit a second
+                 * error for the write to the ref
+                 */
+                env.set(instr.lvalue.identifier.id, {kind: 'Guard', refId});
+                errors.pushDiagnostic(
+                  CompilerDiagnostic.create({
+                    category: ErrorCategory.Refs,
+                    reason: 'Cannot access refs during render',
+                    description: ERROR_DESCRIPTION,
+                  })
+                    .withDetails({
+                      kind: 'error',
+                      loc: instr.value.value.loc,
+                      message: `Cannot access ref value during render`,
+                    })
+                    .withDetails({
+                      kind: 'hint',
+                      message:
+                        'To initialize a ref only once, check that the ref is null with the pattern `if (ref.current == null) { ref.current = ... }`',
+                    }),
+                );
+                break;
+              }
+            }
+            validateNoRefValueAccess(errors, env, instr.value.value);
             break;
           }
           case 'BinaryExpression': {
