@@ -675,9 +675,10 @@ const IMMEDIATE_COMMIT = 0;
 const SUSPENDED_COMMIT = 1;
 const THROTTLED_COMMIT = 2;
 
-type DelayedCommitReason = 0 | 1 | 2;
+type DelayedCommitReason = 0 | 1 | 2 | 3;
 const ABORTED_VIEW_TRANSITION_COMMIT = 1;
 const DELAYED_PASSIVE_COMMIT = 2;
+const ANIMATION_STARTED_COMMIT = 3;
 
 const NO_PENDING_EFFECTS = 0;
 const PENDING_MUTATION_PHASE = 1;
@@ -3786,6 +3787,9 @@ function flushSpawnedWork(): void {
         pendingDelayedCommitReason === ABORTED_VIEW_TRANSITION_COMMIT,
         workInProgressUpdateTask, // TODO: Use a ViewTransition Task.
       );
+      if (pendingDelayedCommitReason === IMMEDIATE_COMMIT) {
+        pendingDelayedCommitReason = ANIMATION_STARTED_COMMIT;
+      }
     }
   }
 
