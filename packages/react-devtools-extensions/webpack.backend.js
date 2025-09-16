@@ -2,6 +2,7 @@
 
 const {resolve, isAbsolute, relative} = require('path');
 const Webpack = require('webpack');
+const TerserPlugin = require('terser-webpack-plugin');
 
 const {resolveFeatureFlags} = require('react-devtools-shared/buildUtils');
 const SourceMapIgnoreListPlugin = require('react-devtools-shared/SourceMapIgnoreListPlugin');
@@ -56,16 +57,32 @@ module.exports = {
     },
   },
   optimization: {
-    minimize: false,
+    minimize: !__DEV__,
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          compress: {
+            unused: true,
+            dead_code: true,
+          },
+          mangle: {
+            keep_fnames: true,
+          },
+          format: {
+            comments: false,
+          },
+        },
+        extractComments: false,
+      }),
+    ],
   },
   plugins: [
     new Webpack.ProvidePlugin({
       process: 'process/browser',
     }),
     new Webpack.DefinePlugin({
-      __DEV__: true,
+      __DEV__,
       __PROFILE__: false,
-      __DEV____DEV__: true,
       // By importing `shared/` we may import ReactFeatureFlags
       __EXPERIMENTAL__: true,
       'process.env.DEVTOOLS_PACKAGE': `"react-devtools-extensions"`,
