@@ -83,6 +83,7 @@ import {
   logSuspendedCommitPhase,
   logCommitPhase,
   logPaintYieldPhase,
+  logStartViewTransitionYieldPhase,
   logPassiveCommitPhase,
   logYieldTime,
   logActionYieldTime,
@@ -3764,6 +3765,22 @@ function flushSpawnedWork(): void {
   ) {
     return;
   }
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // If we didn't skip the after mutation phase, when is means we started an animation.
+    const startedAnimation = pendingEffectsStatus === PENDING_SPAWNED_WORK;
+    if (startedAnimation) {
+      const startViewTransitionStartTime = commitEndTime;
+      // Update the new commitEndTime to when we started the animation.
+      recordCommitEndTime();
+      logStartViewTransitionYieldPhase(
+        startViewTransitionStartTime,
+        commitEndTime,
+        pendingDelayedCommitReason === ABORTED_VIEW_TRANSITION_COMMIT,
+        workInProgressUpdateTask, // TODO: Use a ViewTransition Task.
+      );
+    }
+  }
+
   pendingEffectsStatus = NO_PENDING_EFFECTS;
 
   pendingViewTransition = null; // The view transition has now fully started.
