@@ -6,7 +6,8 @@ function id<T>(x: T): T {
   return x;
 }
 
-export function Component<T = string>({value = id<string>('hi')}: {value?: T}) {
+export function Component<T = string>({fn = id<string>}: {fn?: (x: T) => T}) {
+  const value = fn('hi');
   return <div>{String(value)}</div>;
 }
 
@@ -27,11 +28,12 @@ function id(x) {
 
 export function Component(t0) {
   const $ = _c(4);
-  const { value: t1 } = t0;
+  const { fn: t1 } = t0;
+  const fn = t1 === undefined ? id : t1;
   let t2;
-  if ($[0] !== t1) {
-    t2 = t1 === undefined ? id("hi") : t1;
-    $[0] = t1;
+  if ($[0] !== fn) {
+    t2 = fn("hi");
+    $[0] = fn;
     $[1] = t2;
   } else {
     t2 = $[1];
