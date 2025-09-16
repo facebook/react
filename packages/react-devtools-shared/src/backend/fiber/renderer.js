@@ -2902,9 +2902,22 @@ export function attach(
           // Let's remove it from the parent SuspenseNode.
           const ioInfo = asyncInfo.awaited;
           const suspendedBySet = parentSuspenseNode.suspendedBy.get(ioInfo);
+          // A boundary can await the same IO multiple times.
+          // We still want to error if we're trying to remove IO that isn't present on
+          // this boundary so we need to check if we've already removed it.
+          // We're assuming previousSuspendedBy is a small array so this should be faster
+          // than allocating and maintaining a Set.
+          let alreadyRemovedIO = false;
+          for (let j = 0; j < i; j++) {
+            const removedIOInfo = previousSuspendedBy[j].awaited;
+            if (removedIOInfo === ioInfo) {
+              alreadyRemovedIO = true;
+              break;
+            }
+          }
           if (
             suspendedBySet === undefined ||
-            !suspendedBySet.delete(instance)
+            (!alreadyRemovedIO && !suspendedBySet.delete(instance))
           ) {
             throw new Error(
               'We are cleaning up async info that was not on the parent Suspense boundary. ' +
