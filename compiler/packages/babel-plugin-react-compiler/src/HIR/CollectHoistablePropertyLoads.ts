@@ -33,6 +33,7 @@ import {
   ScopeId,
   TInstruction,
 } from './HIR';
+import {printManualMemoDependency} from './PrintHIR';
 
 const DEBUG_PRINT = false;
 
@@ -452,6 +453,25 @@ function collectNonNullsInBlocks(
           );
           for (const entry of innerHoistables.assumedNonNullObjects) {
             assumedNonNullObjects.add(entry);
+          }
+        }
+      } else if (
+        fn.env.config.enablePreserveExistingMemoizationGuarantees &&
+        instr.value.kind === 'StartMemoize' &&
+        instr.value.deps != null
+      ) {
+        for (const dep of instr.value.deps) {
+          if (dep.root.kind === 'NamedLocal') {
+            const depNode = context.registry.getOrCreateProperty({
+              identifier: dep.root.value.identifier,
+              path: dep.path.slice(0, -1),
+              reactive: dep.root.value.reactive,
+            });
+            if (
+              isImmutableAtInstr(depNode.fullPath.identifier, instr.id, context)
+            ) {
+              assumedNonNullObjects.add(depNode);
+            }
           }
         }
       }
