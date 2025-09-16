@@ -675,6 +675,10 @@ const IMMEDIATE_COMMIT = 0;
 const SUSPENDED_COMMIT = 1;
 const THROTTLED_COMMIT = 2;
 
+type DelayedCommitReason = 0 | 1 | 2;
+const ABORTED_VIEW_TRANSITION_COMMIT = 1;
+const DELAYED_PASSIVE_COMMIT = 2;
+
 const NO_PENDING_EFFECTS = 0;
 const PENDING_MUTATION_PHASE = 1;
 const PENDING_LAYOUT_PHASE = 2;
@@ -697,6 +701,7 @@ let pendingViewTransitionEvents: Array<(types: Array<string>) => void> | null =
 let pendingTransitionTypes: null | TransitionTypes = null;
 let pendingDidIncludeRenderPhaseUpdate: boolean = false;
 let pendingSuspendedCommitReason: SuspendedCommitReason = IMMEDIATE_COMMIT; // Profiling-only
+let pendingDelayedCommitReason: DelayedCommitReason = IMMEDIATE_COMMIT; // Profiling-only
 
 // Use these to prevent an infinite loop of nested updates
 const NESTED_UPDATE_LIMIT = 50;
@@ -3437,6 +3442,7 @@ function commitRoot(
   if (enableProfilerTimer) {
     pendingEffectsRenderEndTime = completedRenderEndTime;
     pendingSuspendedCommitReason = suspendedCommitReason;
+    pendingDelayedCommitReason = IMMEDIATE_COMMIT;
   }
 
   if (enableGestureTransition && isGestureRender(lanes)) {
@@ -3496,7 +3502,8 @@ function commitRoot(
           // event when logging events.
           trackSchedulerEvent();
         }
-        flushPassiveEffects(true);
+        pendingDelayedCommitReason = DELAYED_PASSIVE_COMMIT;
+        flushPassiveEffects();
         // This render triggered passive effects: release the root cache pool
         // *after* passive effects fire to avoid freeing a cache pool that may
         // be referenced by a node in the tree (HostRoot, Cache boundary etc)
@@ -4160,7 +4167,12 @@ function releaseRootPooledCache(root: FiberRoot, remainingLanes: Lanes) {
 
 let didWarnAboutInterruptedViewTransitions = false;
 
-export function flushPendingEffects(wasDelayedCommit?: boolean): boolean {
+export function flushPendingEffectsDelayed(): boolean {
+  pendingDelayedCommitReason = DELAYED_PASSIVE_COMMIT;
+  return flushPendingEffects();
+}
+
+export function flushPendingEffects(): boolean {
   // Returns whether passive effects were flushed.
   if (enableViewTransition && pendingViewTransition !== null) {
     // If we forced a flush before the View Transition full started then we skip it.
@@ -4178,6 +4190,7 @@ export function flushPendingEffects(wasDelayedCommit?: boolean): boolean {
       }
     }
     pendingViewTransition = null;
+    pendingDelayedCommitReason = ABORTED_VIEW_TRANSITION_COMMIT;
   }
   flushGestureMutations();
   flushGestureAnimations();
@@ -4185,10 +4198,10 @@ export function flushPendingEffects(wasDelayedCommit?: boolean): boolean {
   flushLayoutEffects();
   // Skip flushAfterMutation if we're forcing this early.
   flushSpawnedWork();
-  return flushPassiveEffects(wasDelayedCommit);
+  return flushPassiveEffects();
 }
 
-function flushPassiveEffects(wasDelayedCommit?: boolean): boolean {
+function flushPassiveEffects(): boolean {
   if (pendingEffectsStatus !== PENDING_PASSIVE_PHASE) {
     return false;
   }
@@ -4213,7 +4226,7 @@ function flushPassiveEffects(wasDelayedCommit?: boolean): boolean {
   try {
     setCurrentUpdatePriority(priority);
     ReactSharedInternals.T = null;
-    return flushPassiveEffectsImpl(wasDelayedCommit);
+    return flushPassiveEffectsImpl();
   } finally {
     setCurrentUpdatePriority(previousPriority);
     ReactSharedInternals.T = prevTransition;
@@ -4225,7 +4238,7 @@ function flushPassiveEffects(wasDelayedCommit?: boolean): boolean {
   }
 }
 
-function flushPassiveEffectsImpl(wasDelayedCommit: void | boolean) {
+function flushPassiveEffectsImpl() {
   // Cache and clear the transitions flag
   const transitions = pendingPassiveTransitions;
   pendingPassiveTransitions = null;
@@ -4268,7 +4281,7 @@ function flushPassiveEffectsImpl(wasDelayedCommit: void | boolean) {
     logPaintYieldPhase(
       commitEndTime,
       passiveEffectStartTime,
-      !!wasDelayedCommit,
+      pendingDelayedCommitReason === DELAYED_PASSIVE_COMMIT,
       workInProgressUpdateTask,
     );
   }
