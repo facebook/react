@@ -9,7 +9,7 @@ import MonacoEditor, {loader, type Monaco} from '@monaco-editor/react';
 import {PluginOptions} from 'babel-plugin-react-compiler';
 import type {editor} from 'monaco-editor';
 import * as monaco from 'monaco-editor';
-import React, {useState, Activity} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import {Resizable} from 're-resizable';
 import {useStore, useStoreDispatch} from '../StoreContext';
 import {monacoOptions} from './monacoOptions';
@@ -30,15 +30,21 @@ export default function ConfigEditor({
 
   return (
     <>
-      <Activity mode={isExpanded ? 'visible' : 'hidden'}>
+      <div
+        style={{
+          display: isExpanded ? 'block' : 'none',
+        }}>
         <ExpandedEditor
           onToggle={setIsExpanded}
           appliedOptions={appliedOptions}
         />
-      </Activity>
-      <Activity mode={!isExpanded ? 'visible' : 'hidden'}>
+      </div>
+      <div
+        style={{
+          display: !isExpanded ? 'block' : 'none',
+        }}>
         <CollapsedEditor onToggle={setIsExpanded} />
-      </Activity>
+      </div>
     </>
   );
 }
@@ -52,16 +58,34 @@ function ExpandedEditor({
 }): React.ReactElement {
   const store = useStore();
   const dispatchStore = useStoreDispatch();
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleChange: (value: string | undefined) => void = value => {
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleChange: (value: string | undefined) => void = (
+    value: string | undefined,
+  ) => {
     if (value === undefined) return;
 
-    dispatchStore({
-      type: 'updateConfig',
-      payload: {
-        config: value,
-      },
-    });
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      dispatchStore({
+        type: 'updateConfig',
+        payload: {
+          config: value,
+        },
+      });
+    }, 500); // 500ms debounce delay
   };
 
   const handleMount: (
