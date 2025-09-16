@@ -1435,6 +1435,41 @@ export function logStartViewTransitionYieldPhase(
   }
 }
 
+export function logAnimatingPhase(
+  startTime: number,
+  endTime: number,
+  debugTask: null | ConsoleTask,
+): void {
+  if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          'Animating',
+          startTime,
+          endTime,
+          currentTrack,
+          LANES_TRACK_GROUP,
+          'secondary',
+        ),
+      );
+    } else {
+      console.timeStamp(
+        'Animating',
+        startTime,
+        endTime,
+        currentTrack,
+        LANES_TRACK_GROUP,
+        'secondary',
+      );
+    }
+  }
+}
+
 export function logPassiveCommitPhase(
   startTime: number,
   endTime: number,

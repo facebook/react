@@ -84,6 +84,7 @@ import {
   logCommitPhase,
   logPaintYieldPhase,
   logStartViewTransitionYieldPhase,
+  logAnimatingPhase,
   logPassiveCommitPhase,
   logYieldTime,
   logActionYieldTime,
@@ -3787,7 +3788,7 @@ function flushSpawnedWork(): void {
         pendingDelayedCommitReason === ABORTED_VIEW_TRANSITION_COMMIT,
         workInProgressUpdateTask, // TODO: Use a ViewTransition Task.
       );
-      if (pendingDelayedCommitReason === IMMEDIATE_COMMIT) {
+      if (pendingDelayedCommitReason !== ABORTED_VIEW_TRANSITION_COMMIT) {
         pendingDelayedCommitReason = ANIMATION_STARTED_COMMIT;
       }
     }
@@ -4283,12 +4284,21 @@ function flushPassiveEffectsImpl() {
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     resetCommitErrors();
     passiveEffectStartTime = now();
-    logPaintYieldPhase(
-      commitEndTime,
-      passiveEffectStartTime,
-      pendingDelayedCommitReason === DELAYED_PASSIVE_COMMIT,
-      workInProgressUpdateTask,
-    );
+    if (pendingDelayedCommitReason === ANIMATION_STARTED_COMMIT) {
+      // The animation was started, so we've been animating since that happened.
+      logAnimatingPhase(
+        commitEndTime,
+        passiveEffectStartTime,
+        workInProgressUpdateTask, // TODO: Use a ViewTransition Task
+      );
+    } else {
+      logPaintYieldPhase(
+        commitEndTime,
+        passiveEffectStartTime,
+        pendingDelayedCommitReason === DELAYED_PASSIVE_COMMIT,
+        workInProgressUpdateTask,
+      );
+    }
   }
 
   if (enableSchedulingProfiler) {
