@@ -649,7 +649,6 @@ function triggerErrorOnChunk<T>(
       }
       try {
         initializeDebugChunk(response, chunk);
-        chunk._debugChunk = null;
         if (initializingHandler !== null) {
           if (initializingHandler.errored) {
             // Ignore error parsing debug info, we'll report the original error instead.
@@ -932,9 +931,9 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
   }
 
   if (__DEV__) {
-    // Lazily initialize any debug info and block the initializing chunk on any unresolved entries.
+    // Initialize any debug info and block the initializing chunk on any
+    // unresolved entries.
     initializeDebugChunk(response, chunk);
-    chunk._debugChunk = null;
   }
 
   try {
@@ -2714,9 +2713,19 @@ function resolveChunkDebugInfo(
   chunk: SomeChunk<any>,
 ): void {
   if (__DEV__ && enableAsyncDebugInfo) {
-    // Push the currently resolving chunk's debug info representing the stream on the Promise
-    // that was waiting on the stream.
-    chunk._debugInfo.push({awaited: streamState._debugInfo});
+    // Push the currently resolving chunk's debug info representing the stream
+    // on the Promise that was waiting on the stream.
+    const ioInfo = streamState._debugInfo;
+    const debugChunk = chunk._debugChunk;
+    if (debugChunk != null) {
+      // If there's a debug chunk, then we wait for it to resolve before adding
+      // the stream info as the last entry.
+      debugChunk.then(() => {
+        chunk._debugInfo.push({awaited: ioInfo});
+      });
+    } else {
+      chunk._debugInfo.push({awaited: ioInfo});
+    }
   }
 }
 
@@ -2923,7 +2932,6 @@ function resolveStream<T: ReadableStream | $AsyncIterable<any, any, void>>(
       }
       try {
         initializeDebugChunk(response, chunk);
-        chunk._debugChunk = null;
         if (initializingHandler !== null) {
           if (initializingHandler.errored) {
             // Ignore error parsing debug info, we'll report the original error instead.
