@@ -3736,6 +3736,22 @@ function flushLayoutEffects(): void {
       ReactSharedInternals.T = prevTransition;
     }
   }
+
+  const completedRenderEndTime = pendingEffectsRenderEndTime;
+  const suspendedCommitReason = pendingSuspendedCommitReason;
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    recordCommitEndTime();
+    logCommitPhase(
+      suspendedCommitReason === IMMEDIATE_COMMIT
+        ? completedRenderEndTime
+        : commitStartTime,
+      commitEndTime,
+      commitErrors,
+      workInProgressUpdateTask,
+    );
+  }
+
   pendingEffectsStatus = PENDING_AFTER_MUTATION_PHASE;
 }
 
@@ -3759,22 +3775,8 @@ function flushSpawnedWork(): void {
   const root = pendingEffectsRoot;
   const finishedWork = pendingFinishedWork;
   const lanes = pendingEffectsLanes;
-  const completedRenderEndTime = pendingEffectsRenderEndTime;
   const recoverableErrors = pendingRecoverableErrors;
   const didIncludeRenderPhaseUpdate = pendingDidIncludeRenderPhaseUpdate;
-  const suspendedCommitReason = pendingSuspendedCommitReason;
-
-  if (enableProfilerTimer && enableComponentPerformanceTrack) {
-    recordCommitEndTime();
-    logCommitPhase(
-      suspendedCommitReason === IMMEDIATE_COMMIT
-        ? completedRenderEndTime
-        : commitStartTime,
-      commitEndTime,
-      commitErrors,
-      workInProgressUpdateTask,
-    );
-  }
 
   const passiveSubtreeMask =
     enableViewTransition && includesOnlyViewTransitionEligibleLanes(lanes)
