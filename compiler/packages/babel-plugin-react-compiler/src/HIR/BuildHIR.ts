@@ -3081,7 +3081,12 @@ function isReorderableExpression(
         return true;
       }
     }
-    case 'TSInstantiationExpression':
+    case 'TSInstantiationExpression': {
+      const innerExpr = (expr as NodePath<t.TSInstantiationExpression>).get(
+        'expression',
+      ) as NodePath<t.Expression>;
+      return isReorderableExpression(builder, innerExpr, allowLocalIdentifiers);
+    }
     case 'RegExpLiteral':
     case 'StringLiteral':
     case 'NumericLiteral':
