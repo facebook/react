@@ -66,6 +66,7 @@ module.exports = {
   mode: __DEV__ ? 'development' : 'production',
   devtool: false,
   entry: {
+    backend: './src/backend.js',
     background: './src/background/index.js',
     backendManager: './src/contentScripts/backendManager.js',
     fileFetcher: './src/contentScripts/fileFetcher.js',
@@ -79,7 +80,14 @@ module.exports = {
   output: {
     path: __dirname + '/build',
     publicPath: '/build/',
-    filename: '[name].js',
+    filename: chunkData => {
+      switch (chunkData.chunk.name) {
+        case 'backend':
+          return 'react_devtools_backend_compact.js';
+        default:
+          return '[name].js';
+      }
+    },
     chunkFilename: '[name].chunk.js',
   },
   node: {
@@ -141,7 +149,7 @@ module.exports = {
     }),
     new Webpack.SourceMapDevToolPlugin({
       filename: '[file].map',
-      include: 'installHook.js',
+      include: ['installHook.js', 'react_devtools_backend_compact.js'],
       noSources: !__DEV__,
       // https://github.com/webpack/webpack/issues/3603#issuecomment-1743147144
       moduleFilenameTemplate(info) {
@@ -163,6 +171,7 @@ module.exports = {
         }
 
         const contentScriptNamesToIgnoreList = [
+          'react_devtools_backend_compact',
           // This is where we override console
           'installHook',
         ];
