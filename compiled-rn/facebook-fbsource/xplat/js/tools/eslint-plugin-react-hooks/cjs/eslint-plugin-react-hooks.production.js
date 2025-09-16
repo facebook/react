@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<0316c801ad0bab884ff0f511a205c1ef>>
+ * @generated SignedSource<<4e94780a3025f6e3cfddffbf0c6d761e>>
  */
 
 'use strict';
@@ -31935,6 +31935,7 @@ const EnvironmentConfigSchema = zod.z.object({
     enableCustomTypeDefinitionForReanimated: zod.z.boolean().default(false),
     hookPattern: zod.z.string().nullable().default(null),
     enableTreatRefLikeIdentifiersAsRefs: zod.z.boolean().default(true),
+    enableTreatSetIdentifiersAsStateSetters: zod.z.boolean().default(false),
     lowerContextAccess: ExternalFunctionSchema.nullable().default(null),
     validateNoVoidUseMemo: zod.z.boolean().default(false),
     validateNoDynamicallyCreatedComponentsOrHooks: zod.z.boolean().default(false),
@@ -47788,9 +47789,16 @@ function* generateInstructionTypes(env, names, instr) {
         }
         case 'CallExpression': {
             const returnType = makeType();
+            let shapeId = null;
+            if (env.config.enableTreatSetIdentifiersAsStateSetters) {
+                const name = getName(names, value.callee.identifier.id);
+                if (name.startsWith('set')) {
+                    shapeId = BuiltInSetStateId;
+                }
+            }
             yield equation(value.callee.identifier.type, {
                 kind: 'Function',
-                shapeId: null,
+                shapeId,
                 return: returnType,
                 isConstructor: false,
             });

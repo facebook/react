@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<14ca0c5d17c4104d5971e8c41838507f>>
+ * @generated SignedSource<<1c24fa08b2dab423d92d058c24b11494>>
  */
 
 'use strict';
@@ -32156,6 +32156,7 @@ const EnvironmentConfigSchema = zod.z.object({
     enableCustomTypeDefinitionForReanimated: zod.z.boolean().default(false),
     hookPattern: zod.z.string().nullable().default(null),
     enableTreatRefLikeIdentifiersAsRefs: zod.z.boolean().default(true),
+    enableTreatSetIdentifiersAsStateSetters: zod.z.boolean().default(false),
     lowerContextAccess: ExternalFunctionSchema.nullable().default(null),
     validateNoVoidUseMemo: zod.z.boolean().default(false),
     validateNoDynamicallyCreatedComponentsOrHooks: zod.z.boolean().default(false),
@@ -48009,9 +48010,16 @@ function* generateInstructionTypes(env, names, instr) {
         }
         case 'CallExpression': {
             const returnType = makeType();
+            let shapeId = null;
+            if (env.config.enableTreatSetIdentifiersAsStateSetters) {
+                const name = getName(names, value.callee.identifier.id);
+                if (name.startsWith('set')) {
+                    shapeId = BuiltInSetStateId;
+                }
+            }
             yield equation(value.callee.identifier.type, {
                 kind: 'Function',
-                shapeId: null,
+                shapeId,
                 return: returnType,
                 isConstructor: false,
             });
