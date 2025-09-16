@@ -1516,7 +1516,7 @@ export function attach(
       currentRoot = rootInstance;
       unmountInstanceRecursively(rootInstance);
       rootToFiberInstanceMap.delete(root);
-      flushPendingEvents(root);
+      flushPendingEvents();
       currentRoot = (null: any);
     });
 
@@ -1541,7 +1541,7 @@ export function attach(
       currentRoot = newRoot;
       setRootPseudoKey(currentRoot.id, root.current);
       mountFiberRecursively(root.current, false);
-      flushPendingEvents(root);
+      flushPendingEvents();
       currentRoot = (null: any);
     });
 
@@ -2099,7 +2099,7 @@ export function attach(
     }
   }
 
-  function flushPendingEvents(root: Object): void {
+  function flushPendingEvents(): void {
     if (shouldBailoutWithPendingOperations()) {
       // If we aren't profiling, we can just bail out here.
       // No use sending an empty update over the bridge.
@@ -5349,7 +5349,7 @@ export function attach(
 
         mountFiberRecursively(root.current, false);
 
-        flushPendingEvents(root);
+        flushPendingEvents();
 
         needsToFlushComponentLogs = false;
         currentRoot = (null: any);
@@ -5452,6 +5452,9 @@ export function attach(
       unmountInstanceRecursively(rootInstance);
       removeRootPseudoKey(currentRoot.id);
       rootToFiberInstanceMap.delete(root);
+    } else if (!prevWasMounted && !nextIsMounted) {
+      // We don't need this root anymore.
+      rootToFiberInstanceMap.delete(root);
     }
 
     if (isProfiling && isProfilingSupported) {
@@ -5475,7 +5478,7 @@ export function attach(
     }
 
     // We're done here.
-    flushPendingEvents(root);
+    flushPendingEvents();
 
     needsToFlushComponentLogs = false;
 
