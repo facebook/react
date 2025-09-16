@@ -5398,7 +5398,7 @@ export function attach(
       rootToFiberInstanceMap.set(root, rootInstance);
       idToDevToolsInstanceMap.set(rootInstance.id, rootInstance);
     } else {
-      prevFiber = rootInstance.data;
+      prevFiber = rootInstance.data.alternate;
     }
     currentRoot = rootInstance;
 
