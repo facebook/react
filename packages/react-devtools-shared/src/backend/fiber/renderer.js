@@ -2890,11 +2890,6 @@ export function attach(
     // is no longer in the new set.
     if (previousSuspendedBy !== null && parentSuspenseNode !== null) {
       const nextSuspendedBy = instance.suspendedBy;
-      // A boundary can await the same IO multiple times.
-      // We still want to error if we're trying to remove IO that isn't present on
-      // this boundary. We're tracking the IO we already removed so that we can error
-      // every time a delete fails.
-      const removedIOInfos = new Set<ReactIOInfo>();
       for (let i = 0; i < previousSuspendedBy.length; i++) {
         const asyncInfo = previousSuspendedBy[i];
         if (
@@ -2907,16 +2902,28 @@ export function attach(
           // Let's remove it from the parent SuspenseNode.
           const ioInfo = asyncInfo.awaited;
           const suspendedBySet = parentSuspenseNode.suspendedBy.get(ioInfo);
+          // A boundary can await the same IO multiple times.
+          // We still want to error if we're trying to remove IO that isn't present on
+          // this boundary so we need to check if we've already removed it.
+          // We're assuming previousSuspendedBy is a small array so this should be faster
+          // than allocating and maintaining a Set.
+          let alreadyRemovedIO = false;
+          for (let j = 0; j < i; j++) {
+            const removedIOInfo = previousSuspendedBy[j].awaited;
+            if (removedIOInfo === ioInfo) {
+              alreadyRemovedIO = true;
+              break;
+            }
+          }
           if (
             suspendedBySet === undefined ||
-            (!removedIOInfos.has(ioInfo) && !suspendedBySet.delete(instance))
+            (!alreadyRemovedIO && !suspendedBySet.delete(instance))
           ) {
             throw new Error(
               'We are cleaning up async info that was not on the parent Suspense boundary. ' +
                 'This is a bug in React.',
             );
           }
-          removedIOInfos.add(ioInfo);
           if (suspendedBySet.size === 0) {
             parentSuspenseNode.suspendedBy.delete(asyncInfo.awaited);
           }
