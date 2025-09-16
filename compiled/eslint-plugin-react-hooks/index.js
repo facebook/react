@@ -32155,6 +32155,7 @@ const EnvironmentConfigSchema = zod.z.object({
     enableCustomTypeDefinitionForReanimated: zod.z.boolean().default(false),
     hookPattern: zod.z.string().nullable().default(null),
     enableTreatRefLikeIdentifiersAsRefs: zod.z.boolean().default(true),
+    enableTreatSetIdentifiersAsStateSetters: zod.z.boolean().default(false),
     lowerContextAccess: ExternalFunctionSchema.nullable().default(null),
     validateNoVoidUseMemo: zod.z.boolean().default(false),
     validateNoDynamicallyCreatedComponentsOrHooks: zod.z.boolean().default(false),
@@ -48008,9 +48009,16 @@ function* generateInstructionTypes(env, names, instr) {
         }
         case 'CallExpression': {
             const returnType = makeType();
+            let shapeId = null;
+            if (env.config.enableTreatSetIdentifiersAsStateSetters) {
+                const name = getName(names, value.callee.identifier.id);
+                if (name.startsWith('set')) {
+                    shapeId = BuiltInSetStateId;
+                }
+            }
             yield equation(value.callee.identifier.type, {
                 kind: 'Function',
-                shapeId: null,
+                shapeId,
                 return: returnType,
                 isConstructor: false,
             });
