@@ -27,6 +27,7 @@ let webpackMap;
 let webpackServerMap;
 let act;
 let serverAct;
+let getDebugInfo;
 let React;
 let ReactDOM;
 let ReactDOMClient;
@@ -48,6 +49,10 @@ describe('ReactFlightDOMBrowser', () => {
     ReactServerScheduler = require('scheduler');
     patchMessageChannel(ReactServerScheduler);
     serverAct = require('internal-test-utils').serverAct;
+    getDebugInfo = require('internal-test-utils').getDebugInfo.bind(null, {
+      ignoreProps: true,
+      useFixedTime: true,
+    });
 
     // Simulate the condition resolution
 
@@ -2905,5 +2910,135 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe(
       '<div><span>Hi</span><span>Sebbie</span></div>',
     );
+  });
+
+  it('should fully resolve debug info when transported through a (slow) debug channel', async () => {
+    function Paragraph({children}) {
+      return ReactServer.createElement('p', null, children);
+    }
+
+    let debugReadableStreamController;
+
+    const debugReadableStream = new ReadableStream({
+      start(controller) {
+        debugReadableStreamController = controller;
+      },
+    });
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        {
+          root: ReactServer.createElement(
+            ReactServer.Fragment,
+            null,
+            ReactServer.createElement(Paragraph, null, 'foo'),
+            ReactServer.createElement(Paragraph, null, 'bar'),
+          ),
+        },
+        webpackMap,
+        {
+          debugChannel: {
+            writable: new WritableStream({
+              write(chunk) {
+                debugReadableStreamController.enqueue(chunk);
+              },
+              close() {
+                debugReadableStreamController.close();
+              },
+            }),
+          },
+        },
+      ),
+    );
+
+    function ClientRoot({response}) {
+      const {root} = use(response);
+      return root;
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream, {
+      // TODO: The test succeeds without a debug channel, but fails with a debug
+      // channel. However, it fails even without a delay, whereas in the flight
+      // fixture, only an artificial delaying of the debug chunks reproduces the
+      // issue that server components are missing from the devtools component
+      // tree.
+      // debugChannel: {readable: createDelayedStream(debugReadableStream)},
+      debugChannel: {readable: debugReadableStream},
+    });
+
+    const container = document.createElement('div');
+    const clientRoot = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      clientRoot.render(<ClientRoot response={response} />);
+    });
+
+    expect(container.innerHTML).toBe('<p>foo</p><p>bar</p>');
+
+    if (
+      __DEV__ &&
+      gate(
+        flags =>
+          flags.enableComponentPerformanceTrack && flags.enableAsyncDebugInfo,
+      )
+    ) {
+      const result = await response;
+      const firstParagraph = result.root[0];
+
+      expect(getDebugInfo(firstParagraph)).toMatchInlineSnapshot(`
+        [
+          {
+            "time": 0,
+          },
+          {
+            "env": "Server",
+            "key": null,
+            "name": "Paragraph",
+            "props": {},
+            "stack": [
+              [
+                "",
+                "/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMBrowser-test.js",
+                2935,
+                27,
+                2929,
+                34,
+              ],
+              [
+                "serverAct",
+                "/packages/internal-test-utils/internalAct.js",
+                270,
+                19,
+                231,
+                1,
+              ],
+              [
+                "Object.<anonymous>",
+                "/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMBrowser-test.js",
+                2929,
+                18,
+                2916,
+                89,
+              ],
+            ],
+          },
+          {
+            "time": 0,
+          },
+          {
+            "awaited": {
+              "byteSize": 0,
+              "end": 0,
+              "name": "RSC stream",
+              "owner": null,
+              "start": 0,
+              "value": {
+                "value": "stream",
+              },
+            },
+          },
+        ]
+      `);
+    }
   });
 });
