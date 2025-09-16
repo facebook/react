@@ -631,6 +631,8 @@ export function logBlockingStart(
   renderStartTime: number,
   lanes: Lanes,
   debugTask: null | ConsoleTask, // DEV-only
+  updateMethodName: null | string,
+  updateComponentName: null | string,
 ): void {
   if (supportsUserTiming) {
     currentTrack = 'Blocking';
@@ -672,34 +674,46 @@ export function logBlockingStart(
         : includesOnlyHydrationOrOffscreenLanes(lanes)
           ? 'tertiary-light'
           : 'primary-light';
-      if (__DEV__ && debugTask) {
-        debugTask.run(
-          // $FlowFixMe[method-unbinding]
-          console.timeStamp.bind(
-            console,
-            isPingedUpdate
-              ? 'Promise Resolved'
-              : isSpawnedUpdate
-                ? 'Cascading Update'
-                : renderStartTime - updateTime > 5
-                  ? 'Update Blocked'
-                  : 'Update',
-            updateTime,
-            renderStartTime,
-            currentTrack,
-            LANES_TRACK_GROUP,
-            color,
-          ),
-        );
+      const label = isPingedUpdate
+        ? 'Promise Resolved'
+        : isSpawnedUpdate
+          ? 'Cascading Update'
+          : renderStartTime - updateTime > 5
+            ? 'Update Blocked'
+            : 'Update';
+
+      if (__DEV__) {
+        const properties = [];
+        if (updateComponentName != null) {
+          properties.push(['Component name', updateComponentName]);
+        }
+        if (updateMethodName != null) {
+          properties.push(['Method name', updateMethodName]);
+        }
+        const measureOptions = {
+          start: updateTime,
+          end: renderStartTime,
+          detail: {
+            devtools: {
+              properties,
+              track: currentTrack,
+              trackGroup: LANES_TRACK_GROUP,
+              color,
+            },
+          },
+        };
+
+        if (debugTask) {
+          debugTask.run(
+            // $FlowFixMe[method-unbinding]
+            performance.measure.bind(performance, label, measureOptions),
+          );
+        } else {
+          performance.measure(label, measureOptions);
+        }
       } else {
         console.timeStamp(
-          isPingedUpdate
-            ? 'Promise Resolved'
-            : isSpawnedUpdate
-              ? 'Cascading Update'
-              : renderStartTime - updateTime > 5
-                ? 'Update Blocked'
-                : 'Update',
+          label,
           updateTime,
           renderStartTime,
           currentTrack,
@@ -720,6 +734,8 @@ export function logTransitionStart(
   isPingedUpdate: boolean,
   renderStartTime: number,
   debugTask: null | ConsoleTask, // DEV-only
+  updateMethodName: null | string,
+  updateComponentName: null | string,
 ): void {
   if (supportsUserTiming) {
     currentTrack = 'Transition';
@@ -781,30 +797,43 @@ export function logTransitionStart(
     }
     if (updateTime > 0 && renderStartTime > updateTime) {
       // Log the time from when we called setState until we started rendering.
-      if (__DEV__ && debugTask) {
-        debugTask.run(
-          // $FlowFixMe[method-unbinding]
-          console.timeStamp.bind(
-            console,
-            isPingedUpdate
-              ? 'Promise Resolved'
-              : renderStartTime - updateTime > 5
-                ? 'Update Blocked'
-                : 'Update',
-            updateTime,
-            renderStartTime,
-            currentTrack,
-            LANES_TRACK_GROUP,
-            'primary-light',
-          ),
-        );
+      const label = isPingedUpdate
+        ? 'Promise Resolved'
+        : renderStartTime - updateTime > 5
+          ? 'Update Blocked'
+          : 'Update';
+      if (__DEV__) {
+        const properties = [];
+        if (updateComponentName != null) {
+          properties.push(['Component name', updateComponentName]);
+        }
+        if (updateMethodName != null) {
+          properties.push(['Method name', updateMethodName]);
+        }
+        const measureOptions = {
+          start: updateTime,
+          end: renderStartTime,
+          detail: {
+            devtools: {
+              properties,
+              track: currentTrack,
+              trackGroup: LANES_TRACK_GROUP,
+              color: 'primary-light',
+            },
+          },
+        };
+
+        if (debugTask) {
+          debugTask.run(
+            // $FlowFixMe[method-unbinding]
+            performance.measure.bind(performance, label, measureOptions),
+          );
+        } else {
+          performance.measure(label, measureOptions);
+        }
       } else {
         console.timeStamp(
-          isPingedUpdate
-            ? 'Promise Resolved'
-            : renderStartTime - updateTime > 5
-              ? 'Update Blocked'
-              : 'Update',
+          label,
           updateTime,
           renderStartTime,
           currentTrack,

@@ -626,6 +626,13 @@ export const EnvironmentConfigSchema = z.object({
    */
   enableTreatRefLikeIdentifiersAsRefs: z.boolean().default(true),
 
+  /**
+   * Treat identifiers as SetState type if both
+   * - they are named with a "set-" prefix
+   * - they are called somewhere
+   */
+  enableTreatSetIdentifiersAsStateSetters: z.boolean().default(false),
+
   /*
    * If specified a value, the compiler lowers any calls to `useContext` to use
    * this value as the callee.
@@ -665,6 +672,13 @@ export const EnvironmentConfigSchema = z.object({
    * while its parent function remains uncompiled.
    */
   validateNoDynamicallyCreatedComponentsOrHooks: z.boolean().default(false),
+
+  /**
+   * When enabled, allows setState calls in effects when the value being set is
+   * derived from a ref. This is useful for patterns where initial layout measurements
+   * from refs need to be stored in state during mount.
+   */
+  enableAllowSetStateFromRefsInEffects: z.boolean().default(true),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;

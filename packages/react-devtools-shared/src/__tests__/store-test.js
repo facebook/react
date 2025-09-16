@@ -24,6 +24,35 @@ describe('Store', () => {
   let store;
   let withErrorsOrWarningsIgnored;
 
+  function readValue(promise) {
+    if (typeof React.use === 'function') {
+      return React.use(promise);
+    }
+
+    // Support for React < 19.0
+    switch (promise.status) {
+      case 'fulfilled':
+        return promise.value;
+      case 'rejected':
+        throw promise.reason;
+      case 'pending':
+        throw promise;
+      default:
+        promise.status = 'pending';
+        promise.then(
+          value => {
+            promise.status = 'fulfilled';
+            promise.value = value;
+          },
+          reason => {
+            promise.status = 'rejected';
+            promise.reason = reason;
+          },
+        );
+        throw promise;
+    }
+  }
+
   beforeAll(() => {
     // JSDDOM doesn't implement getClientRects so we're just faking one for testing purposes
     Element.prototype.getClientRects = function (this: Element) {
@@ -107,11 +136,7 @@ describe('Store', () => {
     let Dynamic = null;
     const Owner = () => {
       Dynamic = <Child />;
-      if (React.use) {
-        React.use(promise);
-      } else {
-        throw promise;
-      }
+      readValue(promise);
     };
     const Parent = () => {
       return Dynamic;
@@ -462,12 +487,9 @@ describe('Store', () => {
     // @reactVersion >= 18.0
     it('should display Suspense nodes properly in various states', async () => {
       const Loading = () => <div>Loading...</div>;
+      const never = new Promise(() => {});
       const SuspendingComponent = () => {
-        if (React.use) {
-          React.use(new Promise(() => {}));
-        } else {
-          throw new Promise(() => {});
-        }
+        readValue(never);
       };
       const Component = () => {
         return <div>Hello</div>;
@@ -514,12 +536,9 @@ describe('Store', () => {
     it('should support nested Suspense nodes', async () => {
       const Component = () => null;
       const Loading = () => <div>Loading...</div>;
+      const never = new Promise(() => {});
       const Never = () => {
-        if (React.use) {
-          React.use(new Promise(() => {}));
-        } else {
-          throw new Promise(() => {});
-        }
+        readValue(never);
       };
 
       const Wrapper = ({
@@ -1019,12 +1038,9 @@ describe('Store', () => {
 
     it('should display a partially rendered SuspenseList', async () => {
       const Loading = () => <div>Loading...</div>;
+      const never = new Promise(() => {});
       const SuspendingComponent = () => {
-        if (React.use) {
-          React.use(new Promise(() => {}));
-        } else {
-          throw new Promise(() => {});
-        }
+        readValue(never);
       };
       const Component = () => {
         return <div>Hello</div>;
@@ -1379,12 +1395,9 @@ describe('Store', () => {
     // @reactVersion >= 18.0
     it('should display Suspense nodes properly in various states', async () => {
       const Loading = () => <div>Loading...</div>;
+      const never = new Promise(() => {});
       const SuspendingComponent = () => {
-        if (React.use) {
-          React.use(new Promise(() => {}));
-        } else {
-          throw new Promise(() => {});
-        }
+        readValue(never);
       };
       const Component = () => {
         return <div>Hello</div>;
@@ -2081,6 +2094,8 @@ describe('Store', () => {
         [root]
           ▾ <App>
               <Suspense>
+        [suspense-root]  rects={null}
+          <Suspense name="App" rects={null}>
       `);
 
       // Render again to unmount it before it finishes loading
@@ -2489,7 +2504,7 @@ describe('Store', () => {
       withErrorsOrWarningsIgnored(['test-only:'], async () => {
         await act(() => render(<React.Fragment />));
       });
-      expect(store).toMatchInlineSnapshot(`[root]`);
+      expect(store).toMatchInlineSnapshot(``);
       expect(store.componentWithErrorCount).toBe(0);
       expect(store.componentWithWarningCount).toBe(0);
     });
@@ -2826,7 +2841,7 @@ describe('Store', () => {
 
     function Component({children, promise}) {
       if (promise) {
-        React.use(promise);
+        readValue(promise);
       }
       return <div>{children}</div>;
     }
@@ -2901,7 +2916,7 @@ describe('Store', () => {
 
     function Component({children, promise}) {
       if (promise) {
-        React.use(promise);
+        readValue(promise);
       }
       return <div>{children}</div>;
     }
@@ -3079,10 +3094,17 @@ describe('Store', () => {
         <Suspense name="head-fallback" rects={[{x:1,y:2,width:10,height:1}]}>
         <Suspense name="main" rects={[{x:1,y:2,width:4,height:1}]}>
     `);
+
+    await actAsync(() => render(null));
+
+    expect(store).toMatchInlineSnapshot(``);
   });
 
   it('should handle an empty root', async () => {
     await actAsync(() => render(null));
+    expect(store).toMatchInlineSnapshot(``);
+
+    await actAsync(() => render(<span />));
     expect(store).toMatchInlineSnapshot(`[root]`);
   });
 });

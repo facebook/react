@@ -346,7 +346,7 @@ export function createHydrationContainer(
   update.callback =
     callback !== undefined && callback !== null ? callback : null;
   enqueueUpdate(current, update, lane);
-  startUpdateTimerByLane(lane, 'hydrateRoot()');
+  startUpdateTimerByLane(lane, 'hydrateRoot()', null);
   scheduleInitialHydrationOnRoot(root, lane);
 
   return root;
@@ -453,7 +453,7 @@ function updateContainerImpl(
 
   const root = enqueueUpdate(rootFiber, update, lane);
   if (root !== null) {
-    startUpdateTimerByLane(lane, 'root.render()');
+    startUpdateTimerByLane(lane, 'root.render()', null);
     scheduleUpdateOnFiber(root, rootFiber, lane);
     entangleTransitions(root, rootFiber, lane);
   }
