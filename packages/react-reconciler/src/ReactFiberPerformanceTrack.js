@@ -1320,6 +1320,7 @@ export function logCommitPhase(
   startTime: number,
   endTime: number,
   errors: null | Array<CapturedValue<mixed>>,
+  abortedViewTransition: boolean,
   debugTask: null | ConsoleTask,
 ): void {
   if (errors !== null) {
@@ -1335,22 +1336,24 @@ export function logCommitPhase(
         // $FlowFixMe[method-unbinding]
         console.timeStamp.bind(
           console,
-          'Commit',
+          abortedViewTransition
+            ? 'Commit Interrupted View Transition'
+            : 'Commit',
           startTime,
           endTime,
           currentTrack,
           LANES_TRACK_GROUP,
-          'secondary-dark',
+          abortedViewTransition ? 'error' : 'secondary-dark',
         ),
       );
     } else {
       console.timeStamp(
-        'Commit',
+        abortedViewTransition ? 'Commit Interrupted View Transition' : 'Commit',
         startTime,
         endTime,
         currentTrack,
         LANES_TRACK_GROUP,
-        'secondary-dark',
+        abortedViewTransition ? 'error' : 'secondary-dark',
       );
     }
   }
@@ -1395,6 +1398,7 @@ export function logPaintYieldPhase(
 export function logStartViewTransitionYieldPhase(
   startTime: number,
   endTime: number,
+  abortedViewTransition: boolean,
   debugTask: null | ConsoleTask,
 ): void {
   if (supportsUserTiming) {
@@ -1406,22 +1410,26 @@ export function logStartViewTransitionYieldPhase(
         // $FlowFixMe[method-unbinding]
         console.timeStamp.bind(
           console,
-          'Starting Animation',
+          abortedViewTransition
+            ? 'Interrupted View Transition'
+            : 'Starting Animation',
           startTime,
           endTime,
           currentTrack,
           LANES_TRACK_GROUP,
-          'secondary-light',
+          abortedViewTransition ? 'error' : 'secondary-light',
         ),
       );
     } else {
       console.timeStamp(
-        'Starting Animation',
+        abortedViewTransition
+          ? 'Interrupted View Transition'
+          : 'Starting Animation',
         startTime,
         endTime,
         currentTrack,
         LANES_TRACK_GROUP,
-        'secondary-light',
+        abortedViewTransition ? ' error' : 'secondary-light',
       );
     }
   }

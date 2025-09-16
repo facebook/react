@@ -3756,6 +3756,7 @@ function flushLayoutEffects(): void {
         : commitStartTime,
       commitEndTime,
       commitErrors,
+      pendingDelayedCommitReason === ABORTED_VIEW_TRANSITION_COMMIT,
       workInProgressUpdateTask,
     );
   }
