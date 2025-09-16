@@ -621,6 +621,13 @@ export const EnvironmentConfigSchema = z.object({
    */
   enableTreatRefLikeIdentifiersAsRefs: z.boolean().default(true),
 
+  /**
+   * Treat identifiers as SetState type if both
+   * - they are named with a "set-" prefix
+   * - they are called somewhere
+   */
+  enableTreatSetIdentifiersAsStateSetters: z.boolean().default(false),
+
   /*
    * If specified a value, the compiler lowers any calls to `useContext` to use
    * this value as the callee.
