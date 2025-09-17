@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d41a1de4d129e91f1b049f99eb84f94a>>
+ * @generated SignedSource<<71f962667fe3c137038062ba1b874aca>>
  */
 
 /*
@@ -12354,7 +12354,7 @@ function commitRoot(
       ? ((root.callbackNode = null),
         (root.callbackPriority = 0),
         scheduleCallback$1(NormalPriority$1, function () {
-          flushPassiveEffects(!0);
+          flushPassiveEffects();
           return null;
         }))
       : ((root.callbackNode = null), (root.callbackPriority = 0));
@@ -12642,11 +12642,11 @@ function releaseRootPooledCache(root, remainingLanes) {
     null != remainingLanes &&
       ((root.pooledCache = null), releaseCache(remainingLanes)));
 }
-function flushPendingEffects(wasDelayedCommit) {
+function flushPendingEffects() {
   flushMutationEffects();
   flushLayoutEffects();
   flushSpawnedWork();
-  return flushPassiveEffects(wasDelayedCommit);
+  return flushPassiveEffects();
 }
 function flushPassiveEffects() {
   if (5 !== pendingEffectsStatus) return !1;
@@ -13016,7 +13016,7 @@ function performWorkOnRootViaSchedulerTask(root, didTimeout) {
   if (0 !== pendingEffectsStatus && 5 !== pendingEffectsStatus)
     return (root.callbackNode = null), (root.callbackPriority = 0), null;
   var originalCallbackNode = root.callbackNode;
-  if (flushPendingEffects(!0) && root.callbackNode !== originalCallbackNode)
+  if (flushPendingEffects() && root.callbackNode !== originalCallbackNode)
     return null;
   var workInProgressRootRenderLanes$jscomp$0 = workInProgressRootRenderLanes;
   workInProgressRootRenderLanes$jscomp$0 = getNextLanes(
@@ -13187,20 +13187,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1664 = 0;
-  i$jscomp$inline_1664 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1664++
+  var i$jscomp$inline_1663 = 0;
+  i$jscomp$inline_1663 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1663++
 ) {
-  var eventName$jscomp$inline_1665 =
-      simpleEventPluginEvents[i$jscomp$inline_1664],
-    domEventName$jscomp$inline_1666 =
-      eventName$jscomp$inline_1665.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1667 =
-      eventName$jscomp$inline_1665[0].toUpperCase() +
-      eventName$jscomp$inline_1665.slice(1);
+  var eventName$jscomp$inline_1664 =
+      simpleEventPluginEvents[i$jscomp$inline_1663],
+    domEventName$jscomp$inline_1665 =
+      eventName$jscomp$inline_1664.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1666 =
+      eventName$jscomp$inline_1664[0].toUpperCase() +
+      eventName$jscomp$inline_1664.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1666,
-    "on" + capitalizedEvent$jscomp$inline_1667
+    domEventName$jscomp$inline_1665,
+    "on" + capitalizedEvent$jscomp$inline_1666
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17523,16 +17523,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_2073 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2072 = React.version;
 if (
-  "19.2.0-native-fb-e3c9656d-20250917" !==
-  isomorphicReactPackageVersion$jscomp$inline_2073
+  "19.2.0-native-fb-84af9085-20250917" !==
+  isomorphicReactPackageVersion$jscomp$inline_2072
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2073,
-      "19.2.0-native-fb-e3c9656d-20250917"
+      isomorphicReactPackageVersion$jscomp$inline_2072,
+      "19.2.0-native-fb-84af9085-20250917"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17552,24 +17552,24 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_2646 = {
+var internals$jscomp$inline_2645 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-e3c9656d-20250917",
+  version: "19.2.0-native-fb-84af9085-20250917",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-e3c9656d-20250917"
+  reconcilerVersion: "19.2.0-native-fb-84af9085-20250917"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2647 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2646 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2647.isDisabled &&
-    hook$jscomp$inline_2647.supportsFiber
+    !hook$jscomp$inline_2646.isDisabled &&
+    hook$jscomp$inline_2646.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2647.inject(
-        internals$jscomp$inline_2646
+      (rendererID = hook$jscomp$inline_2646.inject(
+        internals$jscomp$inline_2645
       )),
-        (injectedHook = hook$jscomp$inline_2647);
+        (injectedHook = hook$jscomp$inline_2646);
     } catch (err) {}
 }
 exports.createRoot = function (container, options) {
@@ -17664,4 +17664,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.2.0-native-fb-e3c9656d-20250917";
+exports.version = "19.2.0-native-fb-84af9085-20250917";

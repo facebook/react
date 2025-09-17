@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c35dd7023f8cf7ebb64c38ac231c1b96>>
+ * @generated SignedSource<<392e23ae168cd5cb923ee3e4030b8030>>
  */
 
 "use strict";
@@ -3897,7 +3897,9 @@ __DEV__ &&
       )
         return (root.callbackNode = null), (root.callbackPriority = 0), null;
       var originalCallbackNode = root.callbackNode;
-      if (flushPendingEffects(!0) && root.callbackNode !== originalCallbackNode)
+      pendingDelayedCommitReason === IMMEDIATE_COMMIT &&
+        (pendingDelayedCommitReason = DELAYED_PASSIVE_COMMIT);
+      if (flushPendingEffects() && root.callbackNode !== originalCallbackNode)
         return null;
       var workInProgressRootRenderLanes$jscomp$0 =
         workInProgressRootRenderLanes;
@@ -15115,6 +15117,7 @@ __DEV__ &&
         pendingRecoverableErrors = recoverableErrors;
         pendingEffectsRenderEndTime = completedRenderEndTime;
         pendingSuspendedCommitReason = suspendedCommitReason;
+        pendingDelayedCommitReason = IMMEDIATE_COMMIT;
         (enableComponentPerformanceTrack &&
           0 !== finishedWork.actualDuration) ||
         0 !== (finishedWork.subtreeFlags & 10256) ||
@@ -15122,7 +15125,9 @@ __DEV__ &&
           ? ((root.callbackNode = null),
             (root.callbackPriority = 0),
             scheduleCallback(NormalPriority$1, function () {
-              flushPassiveEffects(!0);
+              pendingDelayedCommitReason === IMMEDIATE_COMMIT &&
+                (pendingDelayedCommitReason = DELAYED_PASSIVE_COMMIT);
+              flushPassiveEffects();
               return null;
             }))
           : ((root.callbackNode = null), (root.callbackPriority = 0));
@@ -15253,6 +15258,45 @@ __DEV__ &&
               (ReactSharedInternals.T = cleanUpIndicator);
           }
         }
+        root = pendingEffectsRenderEndTime;
+        finishedWork = pendingSuspendedCommitReason;
+        enableComponentPerformanceTrack &&
+          ((commitEndTime = now()),
+          (root = finishedWork === IMMEDIATE_COMMIT ? root : commitStartTime),
+          (finishedWork = commitEndTime),
+          (lanes =
+            pendingDelayedCommitReason === ABORTED_VIEW_TRANSITION_COMMIT),
+          (cleanUpIndicator = workInProgressUpdateTask),
+          null !== commitErrors
+            ? logCommitErrored(
+                root,
+                finishedWork,
+                commitErrors,
+                !1,
+                cleanUpIndicator
+              )
+            : !supportsUserTiming ||
+              finishedWork <= root ||
+              (cleanUpIndicator
+                ? cleanUpIndicator.run(
+                    console.timeStamp.bind(
+                      console,
+                      lanes ? "Commit Interrupted View Transition" : "Commit",
+                      root,
+                      finishedWork,
+                      currentTrack,
+                      "Scheduler \u269b",
+                      lanes ? "error" : "secondary-dark"
+                    )
+                  )
+                : console.timeStamp(
+                    lanes ? "Commit Interrupted View Transition" : "Commit",
+                    root,
+                    finishedWork,
+                    currentTrack,
+                    "Scheduler \u269b",
+                    lanes ? "error" : "secondary-dark"
+                  )));
         pendingEffectsStatus = PENDING_AFTER_MUTATION_PHASE;
       }
     }
@@ -15261,69 +15305,70 @@ __DEV__ &&
         pendingEffectsStatus === PENDING_SPAWNED_WORK ||
         pendingEffectsStatus === PENDING_AFTER_MUTATION_PHASE
       ) {
-        pendingEffectsStatus = NO_PENDING_EFFECTS;
-        requestPaint();
-        var root = pendingEffectsRoot,
-          finishedWork = pendingFinishedWork,
-          lanes = pendingEffectsLanes,
-          completedRenderEndTime = pendingEffectsRenderEndTime,
-          recoverableErrors = pendingRecoverableErrors,
-          suspendedCommitReason = pendingSuspendedCommitReason;
-        if (enableComponentPerformanceTrack) {
+        if (
+          enableComponentPerformanceTrack &&
+          pendingEffectsStatus === PENDING_SPAWNED_WORK
+        ) {
+          var startViewTransitionStartTime = commitEndTime;
           commitEndTime = now();
-          completedRenderEndTime =
-            suspendedCommitReason === IMMEDIATE_COMMIT
-              ? completedRenderEndTime
-              : commitStartTime;
-          suspendedCommitReason = commitEndTime;
-          var debugTask = workInProgressUpdateTask;
-          null !== commitErrors
-            ? logCommitErrored(
-                completedRenderEndTime,
-                suspendedCommitReason,
-                commitErrors,
-                !1,
-                debugTask
-              )
-            : !supportsUserTiming ||
-              suspendedCommitReason <= completedRenderEndTime ||
-              (debugTask
-                ? debugTask.run(
-                    console.timeStamp.bind(
-                      console,
-                      "Commit",
-                      completedRenderEndTime,
-                      suspendedCommitReason,
-                      currentTrack,
-                      "Scheduler \u269b",
-                      "secondary-dark"
-                    )
-                  )
-                : console.timeStamp(
-                    "Commit",
-                    completedRenderEndTime,
-                    suspendedCommitReason,
+          var endTime = commitEndTime,
+            abortedViewTransition =
+              pendingDelayedCommitReason === ABORTED_VIEW_TRANSITION_COMMIT;
+          !supportsUserTiming ||
+            endTime <= startViewTransitionStartTime ||
+            (workInProgressUpdateTask
+              ? workInProgressUpdateTask.run(
+                  console.timeStamp.bind(
+                    console,
+                    abortedViewTransition
+                      ? "Interrupted View Transition"
+                      : "Starting Animation",
+                    startViewTransitionStartTime,
+                    endTime,
                     currentTrack,
                     "Scheduler \u269b",
-                    "secondary-dark"
-                  ));
+                    abortedViewTransition ? "error" : "secondary-light"
+                  )
+                )
+              : console.timeStamp(
+                  abortedViewTransition
+                    ? "Interrupted View Transition"
+                    : "Starting Animation",
+                  startViewTransitionStartTime,
+                  endTime,
+                  currentTrack,
+                  "Scheduler \u269b",
+                  abortedViewTransition ? " error" : "secondary-light"
+                ));
+          pendingDelayedCommitReason !== ABORTED_VIEW_TRANSITION_COMMIT &&
+            (pendingDelayedCommitReason = ANIMATION_STARTED_COMMIT);
         }
-        (completedRenderEndTime =
+        pendingEffectsStatus = NO_PENDING_EFFECTS;
+        requestPaint();
+        startViewTransitionStartTime = pendingEffectsRoot;
+        var finishedWork = pendingFinishedWork;
+        endTime = pendingEffectsLanes;
+        abortedViewTransition = pendingRecoverableErrors;
+        var rootDidHavePassiveEffects =
           (enableComponentPerformanceTrack &&
             0 !== finishedWork.actualDuration) ||
           0 !== (finishedWork.subtreeFlags & 10256) ||
-          0 !== (finishedWork.flags & 10256))
+          0 !== (finishedWork.flags & 10256);
+        rootDidHavePassiveEffects
           ? (pendingEffectsStatus = PENDING_PASSIVE_PHASE)
           : ((pendingEffectsStatus = NO_PENDING_EFFECTS),
             (pendingFinishedWork = pendingEffectsRoot = null),
-            releaseRootPooledCache(root, root.pendingLanes),
+            releaseRootPooledCache(
+              startViewTransitionStartTime,
+              startViewTransitionStartTime.pendingLanes
+            ),
             (nestedPassiveUpdateCount = 0),
             (rootWithPassiveNestedUpdates = null));
-        suspendedCommitReason = root.pendingLanes;
-        0 === suspendedCommitReason &&
-          (legacyErrorBoundariesThatAlreadyFailed = null);
-        completedRenderEndTime || commitDoubleInvokeEffectsInDEV(root, !1);
-        suspendedCommitReason = lanesToEventPriority(lanes);
+        var remainingLanes = startViewTransitionStartTime.pendingLanes;
+        0 === remainingLanes && (legacyErrorBoundariesThatAlreadyFailed = null);
+        rootDidHavePassiveEffects ||
+          commitDoubleInvokeEffectsInDEV(startViewTransitionStartTime, !1);
+        remainingLanes = lanesToEventPriority(endTime);
         finishedWork = finishedWork.stateNode;
         if (
           injectedHook &&
@@ -15331,7 +15376,7 @@ __DEV__ &&
         )
           try {
             var didError = 128 === (finishedWork.current.flags & 128);
-            switch (suspendedCommitReason) {
+            switch (remainingLanes) {
               case DiscreteEventPriority:
                 var schedulerPriority = ImmediatePriority;
                 break;
@@ -15361,20 +15406,22 @@ __DEV__ &&
                 err
               ));
           }
-        isDevToolsPresent && root.memoizedUpdaters.clear();
-        if (null !== recoverableErrors) {
+        isDevToolsPresent &&
+          startViewTransitionStartTime.memoizedUpdaters.clear();
+        if (null !== abortedViewTransition) {
           didError = ReactSharedInternals.T;
           schedulerPriority = currentUpdatePriority;
           currentUpdatePriority = DiscreteEventPriority;
           ReactSharedInternals.T = null;
           try {
-            var onRecoverableError = root.onRecoverableError;
+            var onRecoverableError =
+              startViewTransitionStartTime.onRecoverableError;
             for (
               finishedWork = 0;
-              finishedWork < recoverableErrors.length;
+              finishedWork < abortedViewTransition.length;
               finishedWork++
             ) {
-              var recoverableError = recoverableErrors[finishedWork],
+              var recoverableError = abortedViewTransition[finishedWork],
                 errorInfo = makeErrorInfo(recoverableError.stack);
               runWithFiberInDEV(
                 recoverableError.source,
@@ -15389,18 +15436,19 @@ __DEV__ &&
           }
         }
         0 !== (pendingEffectsLanes & 3) &&
-          0 !== root.tag &&
+          0 !== startViewTransitionStartTime.tag &&
           flushPendingEffects();
-        ensureRootIsScheduled(root);
-        suspendedCommitReason = root.pendingLanes;
-        0 !== (lanes & 261930) && 0 !== (suspendedCommitReason & 42)
+        ensureRootIsScheduled(startViewTransitionStartTime);
+        remainingLanes = startViewTransitionStartTime.pendingLanes;
+        0 !== (endTime & 261930) && 0 !== (remainingLanes & 42)
           ? ((nestedUpdateScheduled = !0),
-            root === rootWithNestedUpdates
+            startViewTransitionStartTime === rootWithNestedUpdates
               ? nestedUpdateCount++
-              : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root)))
+              : ((nestedUpdateCount = 0),
+                (rootWithNestedUpdates = startViewTransitionStartTime)))
           : (nestedUpdateCount = 0);
         enableComponentPerformanceTrack &&
-          (completedRenderEndTime || finalizeRender(lanes, commitEndTime));
+          (rootDidHavePassiveEffects || finalizeRender(endTime, commitEndTime));
         flushSyncWorkAcrossRoots_impl(0, !1);
         markCommitStopped();
       }
@@ -15422,13 +15470,13 @@ __DEV__ &&
         null != remainingLanes &&
           ((root.pooledCache = null), releaseCache(remainingLanes)));
     }
-    function flushPendingEffects(wasDelayedCommit) {
+    function flushPendingEffects() {
       flushMutationEffects();
       flushLayoutEffects();
       flushSpawnedWork();
-      return flushPassiveEffects(wasDelayedCommit);
+      return flushPassiveEffects();
     }
-    function flushPassiveEffects(wasDelayedCommit) {
+    function flushPassiveEffects() {
       if (pendingEffectsStatus !== PENDING_PASSIVE_PHASE) return !1;
       var root = pendingEffectsRoot,
         remainingLanes = pendingEffectsRemainingLanes;
@@ -15456,40 +15504,69 @@ __DEV__ &&
         isFlushingPassiveEffects = !0;
         didScheduleUpdateDuringPassiveEffects = !1;
         var passiveEffectStartTime = 0;
-        if (enableComponentPerformanceTrack) {
-          commitErrors = null;
-          passiveEffectStartTime = now$1();
-          var startTime = commitEndTime,
+        if (enableComponentPerformanceTrack)
+          if (
+            ((commitErrors = null),
+            (passiveEffectStartTime = now$1()),
+            pendingDelayedCommitReason === ANIMATION_STARTED_COMMIT)
+          ) {
+            var startTime = commitEndTime,
+              endTime = passiveEffectStartTime;
+            !supportsUserTiming ||
+              endTime <= startTime ||
+              (workInProgressUpdateTask
+                ? workInProgressUpdateTask.run(
+                    console.timeStamp.bind(
+                      console,
+                      "Animating",
+                      startTime,
+                      endTime,
+                      currentTrack,
+                      "Scheduler \u269b",
+                      "secondary"
+                    )
+                  )
+                : console.timeStamp(
+                    "Animating",
+                    startTime,
+                    endTime,
+                    currentTrack,
+                    "Scheduler \u269b",
+                    "secondary"
+                  ));
+          } else {
+            startTime = commitEndTime;
             endTime = passiveEffectStartTime;
-          wasDelayedCommit = !!wasDelayedCommit;
-          !supportsUserTiming ||
-            endTime <= startTime ||
-            (workInProgressUpdateTask
-              ? workInProgressUpdateTask.run(
-                  console.timeStamp.bind(
-                    console,
-                    wasDelayedCommit ? "Waiting for Paint" : "Waiting",
+            var delayedUntilPaint =
+              pendingDelayedCommitReason === DELAYED_PASSIVE_COMMIT;
+            !supportsUserTiming ||
+              endTime <= startTime ||
+              (workInProgressUpdateTask
+                ? workInProgressUpdateTask.run(
+                    console.timeStamp.bind(
+                      console,
+                      delayedUntilPaint ? "Waiting for Paint" : "Waiting",
+                      startTime,
+                      endTime,
+                      currentTrack,
+                      "Scheduler \u269b",
+                      "secondary-light"
+                    )
+                  )
+                : console.timeStamp(
+                    delayedUntilPaint ? "Waiting for Paint" : "Waiting",
                     startTime,
                     endTime,
                     currentTrack,
                     "Scheduler \u269b",
                     "secondary-light"
-                  )
-                )
-              : console.timeStamp(
-                  wasDelayedCommit ? "Waiting for Paint" : "Waiting",
-                  startTime,
-                  endTime,
-                  currentTrack,
-                  "Scheduler \u269b",
-                  "secondary-light"
-                ));
-        }
+                  ));
+          }
         null !== injectedProfilingHooks &&
           "function" ===
             typeof injectedProfilingHooks.markPassiveEffectsStarted &&
           injectedProfilingHooks.markPassiveEffectsStarted(lanes);
-        wasDelayedCommit = executionContext;
+        startTime = executionContext;
         executionContext |= CommitContext;
         var finishedWork = priority.current;
         resetComponentEffectTimers();
@@ -15509,7 +15586,7 @@ __DEV__ &&
             typeof injectedProfilingHooks.markPassiveEffectsStopped &&
           injectedProfilingHooks.markPassiveEffectsStopped();
         commitDoubleInvokeEffectsInDEV(priority, !0);
-        executionContext = wasDelayedCommit;
+        executionContext = startTime;
         if (enableComponentPerformanceTrack) {
           var passiveEffectsEndTime = now$1();
           finishedWork$jscomp$0 = passiveEffectStartTime;
@@ -19312,6 +19389,9 @@ __DEV__ &&
       IMMEDIATE_COMMIT = 0,
       SUSPENDED_COMMIT = 1,
       THROTTLED_COMMIT = 2,
+      ABORTED_VIEW_TRANSITION_COMMIT = 1,
+      DELAYED_PASSIVE_COMMIT = 2,
+      ANIMATION_STARTED_COMMIT = 3,
       NO_PENDING_EFFECTS = 0,
       PENDING_MUTATION_PHASE = 1,
       PENDING_LAYOUT_PHASE = 2,
@@ -19327,6 +19407,7 @@ __DEV__ &&
       pendingPassiveTransitions = null,
       pendingRecoverableErrors = null,
       pendingSuspendedCommitReason = IMMEDIATE_COMMIT,
+      pendingDelayedCommitReason = IMMEDIATE_COMMIT,
       NESTED_UPDATE_LIMIT = 50,
       nestedUpdateCount = 0,
       rootWithNestedUpdates = null,
@@ -19778,10 +19859,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-e3c9656d-20250917",
+        version: "19.2.0-native-fb-84af9085-20250917",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-e3c9656d-20250917"
+        reconcilerVersion: "19.2.0-native-fb-84af9085-20250917"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
