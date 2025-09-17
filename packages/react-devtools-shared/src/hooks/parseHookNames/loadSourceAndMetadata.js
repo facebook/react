@@ -119,17 +119,7 @@ export async function loadSourceAndMetadata(
 }
 
 function decodeBase64String(encoded: string): Object {
-  if (typeof atob === 'function') {
-    return atob(encoded);
-  } else if (
-    typeof Buffer !== 'undefined' &&
-    Buffer !== null &&
-    typeof Buffer.from === 'function'
-  ) {
-    return Buffer.from(encoded, 'base64');
-  } else {
-    throw Error('Cannot decode base64 string');
-  }
+  return atob(encoded);
 }
 
 function extractAndLoadSourceMapJSON(
