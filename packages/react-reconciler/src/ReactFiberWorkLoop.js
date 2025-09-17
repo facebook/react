@@ -3504,7 +3504,9 @@ function commitRoot(
           // event when logging events.
           trackSchedulerEvent();
         }
-        pendingDelayedCommitReason = DELAYED_PASSIVE_COMMIT;
+        if (pendingDelayedCommitReason === IMMEDIATE_COMMIT) {
+          pendingDelayedCommitReason = DELAYED_PASSIVE_COMMIT;
+        }
         flushPassiveEffects();
         // This render triggered passive effects: release the root cache pool
         // *after* passive effects fire to avoid freeing a cache pool that may
@@ -4174,7 +4176,9 @@ function releaseRootPooledCache(root: FiberRoot, remainingLanes: Lanes) {
 let didWarnAboutInterruptedViewTransitions = false;
 
 export function flushPendingEffectsDelayed(): boolean {
-  pendingDelayedCommitReason = DELAYED_PASSIVE_COMMIT;
+  if (pendingDelayedCommitReason === IMMEDIATE_COMMIT) {
+    pendingDelayedCommitReason = DELAYED_PASSIVE_COMMIT;
+  }
   return flushPendingEffects();
 }
 
