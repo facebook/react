@@ -66,14 +66,6 @@ const build = async (tempPath, manifestPath, envExtension = {}) => {
       stdio: 'inherit',
     },
   );
-  execSync(
-    `${webpackPath} --config webpack.backend.js --output-path ${binPath}`,
-    {
-      cwd: __dirname,
-      env: mergedEnv,
-      stdio: 'inherit',
-    },
-  );
 
   // Make temp dir
   await ensureDir(zipPath);
