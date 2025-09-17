@@ -53,6 +53,12 @@
   display: none;
 }
 
+
+.TogglePanelIcon {
+  width: 16px;
+  height: 16px;
+}
+
 @container devtools (width < 600px) {
   .SuspenseTab {
     flex-direction: column;
@@ -111,14 +117,24 @@
 
 .SuspenseTreeViewHeader {
   padding: 0.25rem;
-  display: grid;
+   display: grid;
   grid-template-columns: auto 1fr auto;
-  align-items: flex-start;
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    "toggle-left timeline toggle-right"
+    ". breadcrumbs breadcrumbs";
 }
 
-.SuspenseTreeViewHeaderMain {
-  display: grid;
-  grid-template-rows: auto auto;
+.ToggleTreeList {
+  grid-area: toggle-left;
+}
+
+.SuspenseTimeline {
+  grid-area: timeline;
+}
+
+.ToggleInspectedElement {
+  grid-area: toggle-right;;
 }
 
 .SuspenseBreadcrumbs {
@@ -127,4 +143,5 @@
    * OwnerStack has more constraints that make it easier so it won't be a 1:1 port.
    */
   overflow-x: auto;
+  grid-area: breadcrumbs;
 }

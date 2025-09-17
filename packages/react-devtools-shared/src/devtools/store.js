@@ -90,6 +90,7 @@ export type Capabilities = {
   supportsBasicProfiling: boolean,
   hasOwnerMetadata: boolean,
   supportsStrictMode: boolean,
+  supportsSuspenseTree: boolean,
   supportsTogglingSuspense: boolean,
   supportsTimeline: boolean,
 };
@@ -493,6 +494,14 @@ export default class Store extends EventEmitter<{
     );
   }
 
+  supportsSuspenseTree(rootID: Element['id']): boolean {
+    const capabilities = this._rootIDToCapabilities.get(rootID);
+    if (capabilities === undefined) {
+      throw new Error(`No capabilities registered for root ${rootID}`);
+    }
+    return capabilities.supportsSuspenseTree;
+  }
+
   supportsTogglingSuspense(rootID: Element['id']): boolean {
     const capabilities = this._rootIDToCapabilities.get(rootID);
     if (capabilities === undefined) {
@@ -854,10 +863,11 @@ export default class Store extends EventEmitter<{
     const lineage: Array<SuspenseNode['id']> = [];
     let next: null | SuspenseNode = this.getSuspenseByID(suspenseID);
     while (next !== null) {
+      // Include Root to be able to see what suspended the Shell.
+      lineage.unshift(next.id);
       if (next.parentID === 0) {
         next = null;
       } else {
-        lineage.unshift(next.id);
         next = this.getSuspenseByID(next.parentID);
       }
     }
@@ -885,38 +895,42 @@ export default class Store extends EventEmitter<{
    * @param uniqueSuspendersOnly Filters out boundaries without unique suspenders
    */
   getSuspendableDocumentOrderSuspense(
-    rootID: Element['id'] | void,
     uniqueSuspendersOnly: boolean,
   ): $ReadOnlyArray<SuspenseNode['id']> {
-    if (rootID === undefined) {
-      return [];
-    }
-    const root = this.getElementByID(rootID);
-    if (root === null) {
-      return [];
-    }
-    if (!this.supportsTogglingSuspense(root.id)) {
-      return [];
-    }
     const list: SuspenseNode['id'][] = [];
-    const suspense = this.getSuspenseByID(root.id);
-    if (suspense !== null) {
-      const stack = [suspense];
-      while (stack.length > 0) {
-        const current = stack.pop();
-        if (current === undefined) {
-          continue;
-        }
-        // Include the root even if we won't show it suspended (because that's just blank).
-        // You should be able to see what suspended the shell.
-        if (!uniqueSuspendersOnly || current.hasUniqueSuspenders) {
-          list.push(current.id);
-        }
-        // Add children in reverse order to maintain document order
-        for (let j = current.children.length - 1; j >= 0; j--) {
-          const childSuspense = this.getSuspenseByID(current.children[j]);
-          if (childSuspense !== null) {
-            stack.push(childSuspense);
+    // Arbitrarily pick the order in which roots were committed as document-order.
+    for (let i = 0; i < this._roots.length; i++) {
+      const rootID = this._roots[i];
+      const root = this.getElementByID(rootID);
+
+      if (root === null) {
+        return [];
+      }
+      if (
+        !this.supportsTogglingSuspense(rootID) ||
+        !this.supportsSuspenseTree(rootID)
+      ) {
+        return [];
+      }
+      const suspense = this.getSuspenseByID(rootID);
+      if (suspense !== null) {
+        const stack = [suspense];
+        while (stack.length > 0) {
+          const current = stack.pop();
+          if (current === undefined) {
+            continue;
+          }
+          // Include the root even if we won't show it suspended (because that's just blank).
+          // You should be able to see what suspended the shell.
+          if (!uniqueSuspendersOnly || current.hasUniqueSuspenders) {
+            list.push(current.id);
+          }
+          // Add children in reverse order to maintain document order
+          for (let j = current.children.length - 1; j >= 0; j--) {
+            const childSuspense = this.getSuspenseByID(current.children[j]);
+            if (childSuspense !== null) {
+              stack.push(childSuspense);
+            }
           }
         }
       }
@@ -1170,6 +1184,7 @@ export default class Store extends EventEmitter<{
             let supportsStrictMode = false;
             let hasOwnerMetadata = false;
             let supportsTogglingSuspense = false;
+            let supportsSuspenseTree = false;
 
             // If we don't know the bridge protocol, guess that we're dealing with the latest.
             // If we do know it, we can take it into consideration when parsing operations.
@@ -1185,6 +1200,9 @@ export default class Store extends EventEmitter<{
 
               supportsTogglingSuspense = operations[i] > 0;
               i++;
+
+              supportsSuspenseTree = operations[i] > 0;
+              i++;
             }
 
             this._roots = this._roots.concat(id);
@@ -1193,6 +1211,7 @@ export default class Store extends EventEmitter<{
               supportsBasicProfiling,
               hasOwnerMetadata,
               supportsStrictMode,
+              supportsSuspenseTree,
               supportsTogglingSuspense,
               supportsTimeline,
             });
@@ -1205,7 +1224,7 @@ export default class Store extends EventEmitter<{
             this._idToElement.set(id, {
               children: [],
               depth: -1,
-              displayName: null,
+              displayName: 'React Root',
               hocDisplayNames: null,
               id,
               isCollapsed: false, // Never collapse roots; it would hide the entire tree.
@@ -1539,7 +1558,12 @@ export default class Store extends EventEmitter<{
             if (name === null) {
               // The boundary isn't explicitly named.
               // Pick a sensible default.
-              name = this._guessSuspenseName(element);
+              if (parentID === 0) {
+                // For Roots we use their display name.
+                name = element.displayName;
+              } else {
+                name = this._guessSuspenseName(element);
+              }
             }
           }
 

@@ -176,7 +176,7 @@ export function printStore(
 
       rootWeight += weight;
 
-      if (includeSuspense) {
+      if (includeSuspense && store.supportsSuspenseTree(rootID)) {
         const root = store.getSuspenseByID(rootID);
         // Roots from legacy renderers don't have a separate Suspense tree
         if (root !== null) {

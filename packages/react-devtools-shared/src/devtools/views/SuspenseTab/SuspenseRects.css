@@ -2,14 +2,40 @@
   padding: .25rem;
 }
 
-.SuspenseRect {
-  fill: transparent;
-  stroke: var(--color-background-selected);
-  stroke-width: 1px;
-  vector-effect: non-scaling-stroke;
-  paint-order: stroke;
+.SuspenseRectsViewBox {
+  position: relative;
 }
 
-[data-highlighted='true'] > .SuspenseRect {
-  fill: var(--color-selected-tree-highlight-active);
+.SuspenseRectsBoundary {
+  pointer-events: all;
+}
+
+.SuspenseRectsBoundaryChildren {
+  pointer-events: none;
+  /**
+   * So that the shadow of Boundaries within is clipped off.
+   * Otherwise it would look like this boundary is further elevated.
+   */
+   overflow: hidden;
+}
+
+.SuspenseRectsRect {
+  box-shadow: var(--elevation-4);
+  pointer-events: all;
+  outline-style: solid;
+  outline-width: 1px;
+}
+
+.SuspenseRectsScaledRect {
+  position: absolute;
+  outline-color: var(--color-background-selected);
+}
+
+/* highlight this boundary */
+.SuspenseRectsBoundary:hover:not(:has(.SuspenseRectsBoundary:hover)) > .SuspenseRectsRect, .SuspenseRectsBoundary[data-highlighted='true'] > .SuspenseRectsRect {
+    background-color: var(--color-background-hover);
+}
+
+.SuspenseRectsRect[data-highlighted='true'] {
+  background-color: var(--color-selected-tree-highlight-active);
 }

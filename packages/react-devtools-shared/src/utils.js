@@ -263,6 +263,7 @@ export function printOperationsArray(operations: Array<number>) {
           i++; // supportsStrictMode
           i++; // hasOwnerMetadata
           i++; // supportsTogglingSuspense
+          i++; // supportsSuspenseTree
         } else {
           const parentID = ((operations[i]: any): number);
           i++;
