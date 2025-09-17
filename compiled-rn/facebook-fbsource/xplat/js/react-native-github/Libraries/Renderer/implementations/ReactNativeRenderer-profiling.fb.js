@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6ea4784852e7ec61aafbeef84d9d9773>>
+ * @generated SignedSource<<2dd59080f2057e11478569374f716dea>>
  */
 
 "use strict";
@@ -11745,25 +11745,27 @@ function prepareFreshStack(root, lanes) {
         isSpawnedUpdate = 1 === blockingUpdateType,
         isPingedUpdate = 2 === blockingUpdateType,
         renderStartTime$jscomp$0 = renderStartTime;
-      if (supportsUserTiming) {
-        currentTrack = "Blocking";
-        var eventEndTime =
-          0 < previousRenderStartTime
-            ? previousRenderStartTime
-            : renderStartTime$jscomp$0;
-        0 < endTime &&
-          null !== eventType &&
-          eventEndTime > endTime &&
+      supportsUserTiming &&
+        ((currentTrack = "Blocking"),
+        0 < previousRenderStartTime
+          ? previousRenderStartTime > renderStartTime$jscomp$0 &&
+            (previousRenderStartTime = renderStartTime$jscomp$0)
+          : (previousRenderStartTime = renderStartTime$jscomp$0),
+        0 < endTime
+          ? endTime > previousRenderStartTime &&
+            (endTime = previousRenderStartTime)
+          : (endTime = previousRenderStartTime),
+        null !== eventType &&
+          previousRenderStartTime > endTime &&
           console.timeStamp(
-            eventIsRepeat ? "" : "Event: " + eventType,
+            eventIsRepeat ? "Consecutive" : "Event: " + eventType,
             endTime,
-            eventEndTime,
+            previousRenderStartTime,
             currentTrack,
             "Scheduler \u269b",
             eventIsRepeat ? "secondary-light" : "warning"
-          );
-        0 < previousRenderStartTime &&
-          renderStartTime$jscomp$0 > previousRenderStartTime &&
+          ),
+        renderStartTime$jscomp$0 > previousRenderStartTime &&
           console.timeStamp(
             isPingedUpdate
               ? "Promise Resolved"
@@ -11781,12 +11783,12 @@ function prepareFreshStack(root, lanes) {
               : (lanes & 738197653) === lanes
                 ? "tertiary-light"
                 : "primary-light"
-          );
-      }
+          ));
       blockingUpdateTime = -1.1;
       blockingUpdateType = 0;
       blockingSuspendedTime = -1.1;
       blockingEventIsRepeat = !0;
+      blockingClampTime = now();
     }
     0 !== (lanes & 4194048) &&
       ((previousRenderStartTime =
@@ -11797,7 +11799,7 @@ function prepareFreshStack(root, lanes) {
         0 <= transitionUpdateTime && transitionUpdateTime < transitionClampTime
           ? transitionClampTime
           : transitionUpdateTime),
-      (isSpawnedUpdate =
+      (eventType =
         0 <= transitionEventTime && transitionEventTime < transitionClampTime
           ? transitionClampTime
           : transitionEventTime),
@@ -11805,57 +11807,55 @@ function prepareFreshStack(root, lanes) {
         (setCurrentTrackFromLanes(lanes),
         logSuspendedWithDelayPhase(
           transitionSuspendedTime,
-          0 <= isSpawnedUpdate
-            ? isSpawnedUpdate
-            : 0 <= endTime
-              ? endTime
-              : renderStartTime,
+          0 <= eventType ? eventType : 0 <= endTime ? endTime : renderStartTime,
           lanes
         )),
-      (isPingedUpdate = transitionEventType),
-      (renderStartTime$jscomp$0 = transitionEventIsRepeat),
-      (eventType = 2 === transitionUpdateType),
-      (eventIsRepeat = renderStartTime),
+      (eventIsRepeat = transitionEventType),
+      (isSpawnedUpdate = transitionEventIsRepeat),
+      (isPingedUpdate = 2 === transitionUpdateType),
+      (renderStartTime$jscomp$0 = renderStartTime),
       supportsUserTiming &&
         ((currentTrack = "Transition"),
-        (eventEndTime =
-          0 < previousRenderStartTime
-            ? previousRenderStartTime
-            : 0 < endTime
-              ? endTime
-              : eventIsRepeat),
-        0 < isSpawnedUpdate &&
-          eventEndTime > isSpawnedUpdate &&
-          null !== isPingedUpdate &&
+        0 < endTime
+          ? endTime > renderStartTime$jscomp$0 &&
+            (endTime = renderStartTime$jscomp$0)
+          : (endTime = renderStartTime$jscomp$0),
+        0 < previousRenderStartTime
+          ? previousRenderStartTime > endTime &&
+            (previousRenderStartTime = endTime)
+          : (previousRenderStartTime = endTime),
+        0 < eventType
+          ? eventType > previousRenderStartTime &&
+            (eventType = previousRenderStartTime)
+          : (eventType = previousRenderStartTime),
+        previousRenderStartTime > eventType &&
+          null !== eventIsRepeat &&
           console.timeStamp(
-            renderStartTime$jscomp$0 ? "" : "Event: " + isPingedUpdate,
-            isSpawnedUpdate,
-            eventEndTime,
+            isSpawnedUpdate ? "Consecutive" : "Event: " + eventIsRepeat,
+            eventType,
+            previousRenderStartTime,
             currentTrack,
             "Scheduler \u269b",
-            renderStartTime$jscomp$0 ? "secondary-light" : "warning"
+            isSpawnedUpdate ? "secondary-light" : "warning"
           ),
-        (isSpawnedUpdate = 0 < endTime ? endTime : eventIsRepeat),
-        0 < previousRenderStartTime &&
-          isSpawnedUpdate > previousRenderStartTime &&
+        endTime > previousRenderStartTime &&
           console.timeStamp(
             "Action",
             previousRenderStartTime,
-            isSpawnedUpdate,
+            endTime,
             currentTrack,
             "Scheduler \u269b",
             "primary-dark"
           ),
-        0 < endTime &&
-          eventIsRepeat > endTime &&
+        renderStartTime$jscomp$0 > endTime &&
           console.timeStamp(
-            eventType
+            isPingedUpdate
               ? "Promise Resolved"
-              : 5 < eventIsRepeat - endTime
+              : 5 < renderStartTime$jscomp$0 - endTime
                 ? "Update Blocked"
                 : "Update",
             endTime,
-            eventIsRepeat,
+            renderStartTime$jscomp$0,
             currentTrack,
             "Scheduler \u269b",
             "primary-light"
@@ -11863,7 +11863,8 @@ function prepareFreshStack(root, lanes) {
       (transitionUpdateTime = transitionStartTime = -1.1),
       (transitionUpdateType = 0),
       (transitionSuspendedTime = -1.1),
-      (transitionEventIsRepeat = !0));
+      (transitionEventIsRepeat = !0),
+      (transitionClampTime = now()));
   }
   previousRenderStartTime = root.timeoutHandle;
   -1 !== previousRenderStartTime &&
@@ -12735,7 +12736,7 @@ function flushPassiveEffects(wasDelayedCommit) {
       !supportsUserTiming ||
         passiveEffectStartTime <= commitEndTime ||
         console.timeStamp(
-          wasDelayedCommit ? "Waiting for Paint" : "",
+          wasDelayedCommit ? "Waiting for Paint" : "Waiting",
           commitEndTime,
           passiveEffectStartTime,
           currentTrack,
@@ -13324,11 +13325,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.2.0-native-fb-78997291-20250916" !== isomorphicReactPackageVersion)
+if ("19.2.0-native-fb-e3c9656d-20250917" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.2.0-native-fb-78997291-20250916\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.2.0-native-fb-e3c9656d-20250917\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -13376,16 +13377,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1576 = {
+  internals$jscomp$inline_1573 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-78997291-20250916",
+    version: "19.2.0-native-fb-e3c9656d-20250917",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-78997291-20250916"
+    reconcilerVersion: "19.2.0-native-fb-e3c9656d-20250917"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1576.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1576.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1573.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1573.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$174 = 0;
     31 > index$174;
@@ -13397,20 +13398,20 @@ internals$jscomp$inline_1576.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1576.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1573.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1941 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1938 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1941.isDisabled &&
-    hook$jscomp$inline_1941.supportsFiber
+    !hook$jscomp$inline_1938.isDisabled &&
+    hook$jscomp$inline_1938.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1941.inject(
-        internals$jscomp$inline_1576
+      (rendererID = hook$jscomp$inline_1938.inject(
+        internals$jscomp$inline_1573
       )),
-        (injectedHook = hook$jscomp$inline_1941);
+        (injectedHook = hook$jscomp$inline_1938);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

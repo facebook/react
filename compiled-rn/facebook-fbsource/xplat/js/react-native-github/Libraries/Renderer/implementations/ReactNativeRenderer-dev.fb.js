@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e470b2437613e71f53645e8ce1c499c1>>
+ * @generated SignedSource<<b65516dd98c8057365c90da5d64f5bb1>>
  */
 
 "use strict";
@@ -14667,11 +14667,11 @@ __DEV__ &&
         workInProgressUpdateTask = null;
         if (0 !== (lanes & 3) || 0 !== (lanes & 124)) {
           workInProgressUpdateTask = blockingUpdateTask;
-          endTime =
+          previousRenderStartTime =
             0 <= blockingUpdateTime && blockingUpdateTime < blockingClampTime
               ? blockingClampTime
               : blockingUpdateTime;
-          var clampedEventTime =
+          endTime =
             0 <= blockingEventTime && blockingEventTime < blockingClampTime
               ? blockingClampTime
               : blockingEventTime;
@@ -14679,57 +14679,60 @@ __DEV__ &&
             (setCurrentTrackFromLanes(lanes),
             logSuspendedWithDelayPhase(
               blockingSuspendedTime,
-              0 <= clampedEventTime
-                ? clampedEventTime
-                : 0 <= endTime
-                  ? endTime
+              0 <= endTime
+                ? endTime
+                : 0 <= previousRenderStartTime
+                  ? previousRenderStartTime
                   : renderStartTime,
               lanes,
               workInProgressUpdateTask
             ));
-          var eventType = blockingEventType,
+          var eventTime = endTime,
+            eventType = blockingEventType,
             eventIsRepeat = blockingEventIsRepeat,
             isSpawnedUpdate = 1 === blockingUpdateType,
             isPingedUpdate = 2 === blockingUpdateType;
           debugTask = renderStartTime;
-          previousRenderStartTime = blockingUpdateTask;
+          endTime = blockingUpdateTask;
           color = blockingUpdateMethodName;
           label = blockingUpdateComponentName;
           if (supportsUserTiming) {
             currentTrack = "Blocking";
-            var eventEndTime = 0 < endTime ? endTime : debugTask;
-            if (
-              0 < clampedEventTime &&
-              null !== eventType &&
-              eventEndTime > clampedEventTime
-            ) {
+            0 < previousRenderStartTime
+              ? previousRenderStartTime > debugTask &&
+                (previousRenderStartTime = debugTask)
+              : (previousRenderStartTime = debugTask);
+            0 < eventTime
+              ? eventTime > previousRenderStartTime &&
+                (eventTime = previousRenderStartTime)
+              : (eventTime = previousRenderStartTime);
+            if (null !== eventType && previousRenderStartTime > eventTime) {
               var color$jscomp$0 = eventIsRepeat
                 ? "secondary-light"
                 : "warning";
-              previousRenderStartTime
-                ? previousRenderStartTime.run(
+              endTime
+                ? endTime.run(
                     console.timeStamp.bind(
                       console,
-                      eventIsRepeat ? "" : "Event: " + eventType,
-                      clampedEventTime,
-                      eventEndTime,
+                      eventIsRepeat ? "Consecutive" : "Event: " + eventType,
+                      eventTime,
+                      previousRenderStartTime,
                       currentTrack,
                       "Scheduler \u269b",
                       color$jscomp$0
                     )
                   )
                 : console.timeStamp(
-                    eventIsRepeat ? "" : "Event: " + eventType,
-                    clampedEventTime,
-                    eventEndTime,
+                    eventIsRepeat ? "Consecutive" : "Event: " + eventType,
+                    eventTime,
+                    previousRenderStartTime,
                     currentTrack,
                     "Scheduler \u269b",
                     color$jscomp$0
                   );
             }
-            0 < endTime &&
-              debugTask > endTime &&
-              ((clampedEventTime = isSpawnedUpdate
+            debugTask > previousRenderStartTime &&
+              ((eventTime = isSpawnedUpdate
                 ? "error"
                 : (lanes & 738197653) === lanes
                   ? "tertiary-light"
@@ -14738,53 +14741,57 @@ __DEV__ &&
                 ? "Promise Resolved"
                 : isSpawnedUpdate
                   ? "Cascading Update"
-                  : 5 < debugTask - endTime
+                  : 5 < debugTask - previousRenderStartTime
                     ? "Update Blocked"
                     : "Update"),
               (isPingedUpdate = []),
               null != label && isPingedUpdate.push(["Component name", label]),
               null != color && isPingedUpdate.push(["Method name", color]),
-              (endTime = {
-                start: endTime,
+              (previousRenderStartTime = {
+                start: previousRenderStartTime,
                 end: debugTask,
                 detail: {
                   devtools: {
                     properties: isPingedUpdate,
                     track: currentTrack,
                     trackGroup: "Scheduler \u269b",
-                    color: clampedEventTime
+                    color: eventTime
                   }
                 }
               }),
-              previousRenderStartTime
-                ? previousRenderStartTime.run(
+              endTime
+                ? endTime.run(
                     performance.measure.bind(
                       performance,
                       isSpawnedUpdate,
-                      endTime
+                      previousRenderStartTime
                     )
                   )
-                : performance.measure(isSpawnedUpdate, endTime));
+                : performance.measure(
+                    isSpawnedUpdate,
+                    previousRenderStartTime
+                  ));
           }
           blockingUpdateTime = -1.1;
           blockingUpdateType = 0;
           blockingUpdateComponentName = blockingUpdateMethodName = null;
           blockingSuspendedTime = -1.1;
           blockingEventIsRepeat = !0;
+          blockingClampTime = now();
         }
         0 !== (lanes & 4194048) &&
           ((workInProgressUpdateTask = transitionUpdateTask),
-          (isSpawnedUpdate =
+          (debugTask =
             0 <= transitionStartTime &&
             transitionStartTime < transitionClampTime
               ? transitionClampTime
               : transitionStartTime),
-          (endTime =
+          (previousRenderStartTime =
             0 <= transitionUpdateTime &&
             transitionUpdateTime < transitionClampTime
               ? transitionClampTime
               : transitionUpdateTime),
-          (clampedEventTime =
+          (endTime =
             0 <= transitionEventTime &&
             transitionEventTime < transitionClampTime
               ? transitionClampTime
@@ -14793,63 +14800,66 @@ __DEV__ &&
             (setCurrentTrackFromLanes(lanes),
             logSuspendedWithDelayPhase(
               transitionSuspendedTime,
-              0 <= clampedEventTime
-                ? clampedEventTime
-                : 0 <= endTime
-                  ? endTime
+              0 <= endTime
+                ? endTime
+                : 0 <= previousRenderStartTime
+                  ? previousRenderStartTime
                   : renderStartTime,
               lanes,
               workInProgressUpdateTask
             )),
-          (eventType = transitionEventType),
-          (eventIsRepeat = transitionEventIsRepeat),
-          (isPingedUpdate = 2 === transitionUpdateType),
-          (debugTask = renderStartTime),
-          (previousRenderStartTime = transitionUpdateTask),
-          (color = transitionUpdateMethodName),
-          (label = transitionUpdateComponentName),
+          (isPingedUpdate = endTime),
+          (eventTime = transitionEventType),
+          (eventType = transitionEventIsRepeat),
+          (eventIsRepeat = 2 === transitionUpdateType),
+          (color = renderStartTime),
+          (endTime = transitionUpdateTask),
+          (label = transitionUpdateMethodName),
+          (isSpawnedUpdate = transitionUpdateComponentName),
           supportsUserTiming &&
             ((currentTrack = "Transition"),
-            (eventEndTime =
-              0 < isSpawnedUpdate
-                ? isSpawnedUpdate
-                : 0 < endTime
-                  ? endTime
-                  : debugTask),
-            0 < clampedEventTime &&
-              eventEndTime > clampedEventTime &&
-              null !== eventType &&
-              ((color$jscomp$0 = eventIsRepeat ? "secondary-light" : "warning"),
-              previousRenderStartTime
-                ? previousRenderStartTime.run(
+            0 < previousRenderStartTime
+              ? previousRenderStartTime > color &&
+                (previousRenderStartTime = color)
+              : (previousRenderStartTime = color),
+            0 < debugTask
+              ? debugTask > previousRenderStartTime &&
+                (debugTask = previousRenderStartTime)
+              : (debugTask = previousRenderStartTime),
+            0 < isPingedUpdate
+              ? isPingedUpdate > debugTask && (isPingedUpdate = debugTask)
+              : (isPingedUpdate = debugTask),
+            debugTask > isPingedUpdate &&
+              null !== eventTime &&
+              ((color$jscomp$0 = eventType ? "secondary-light" : "warning"),
+              endTime
+                ? endTime.run(
                     console.timeStamp.bind(
                       console,
-                      eventIsRepeat ? "" : "Event: " + eventType,
-                      clampedEventTime,
-                      eventEndTime,
+                      eventType ? "Consecutive" : "Event: " + eventTime,
+                      isPingedUpdate,
+                      debugTask,
                       currentTrack,
                       "Scheduler \u269b",
                       color$jscomp$0
                     )
                   )
                 : console.timeStamp(
-                    eventIsRepeat ? "" : "Event: " + eventType,
-                    clampedEventTime,
-                    eventEndTime,
+                    eventType ? "Consecutive" : "Event: " + eventTime,
+                    isPingedUpdate,
+                    debugTask,
                     currentTrack,
                     "Scheduler \u269b",
                     color$jscomp$0
                   )),
-            (clampedEventTime = 0 < endTime ? endTime : debugTask),
-            0 < isSpawnedUpdate &&
-              clampedEventTime > isSpawnedUpdate &&
-              (previousRenderStartTime
-                ? previousRenderStartTime.run(
+            previousRenderStartTime > debugTask &&
+              (endTime
+                ? endTime.run(
                     console.timeStamp.bind(
                       console,
                       "Action",
-                      isSpawnedUpdate,
-                      clampedEventTime,
+                      debugTask,
+                      previousRenderStartTime,
                       currentTrack,
                       "Scheduler \u269b",
                       "primary-dark"
@@ -14857,25 +14867,25 @@ __DEV__ &&
                   )
                 : console.timeStamp(
                     "Action",
-                    isSpawnedUpdate,
-                    clampedEventTime,
+                    debugTask,
+                    previousRenderStartTime,
                     currentTrack,
                     "Scheduler \u269b",
                     "primary-dark"
                   )),
-            0 < endTime &&
-              debugTask > endTime &&
-              ((isSpawnedUpdate = isPingedUpdate
+            color > previousRenderStartTime &&
+              ((debugTask = eventIsRepeat
                 ? "Promise Resolved"
-                : 5 < debugTask - endTime
+                : 5 < color - previousRenderStartTime
                   ? "Update Blocked"
                   : "Update"),
               (isPingedUpdate = []),
-              null != label && isPingedUpdate.push(["Component name", label]),
-              null != color && isPingedUpdate.push(["Method name", color]),
-              (endTime = {
-                start: endTime,
-                end: debugTask,
+              null != isSpawnedUpdate &&
+                isPingedUpdate.push(["Component name", isSpawnedUpdate]),
+              null != label && isPingedUpdate.push(["Method name", label]),
+              (previousRenderStartTime = {
+                start: previousRenderStartTime,
+                end: color,
                 detail: {
                   devtools: {
                     properties: isPingedUpdate,
@@ -14885,19 +14895,20 @@ __DEV__ &&
                   }
                 }
               }),
-              previousRenderStartTime
-                ? previousRenderStartTime.run(
+              endTime
+                ? endTime.run(
                     performance.measure.bind(
                       performance,
-                      isSpawnedUpdate,
-                      endTime
+                      debugTask,
+                      previousRenderStartTime
                     )
                   )
-                : performance.measure(isSpawnedUpdate, endTime))),
+                : performance.measure(debugTask, previousRenderStartTime))),
           (transitionUpdateTime = transitionStartTime = -1.1),
           (transitionUpdateType = 0),
           (transitionSuspendedTime = -1.1),
-          (transitionEventIsRepeat = !0));
+          (transitionEventIsRepeat = !0),
+          (transitionClampTime = now()));
       }
       previousRenderStartTime = root.timeoutHandle;
       -1 !== previousRenderStartTime &&
@@ -15927,7 +15938,7 @@ __DEV__ &&
               ? workInProgressUpdateTask.run(
                   console.timeStamp.bind(
                     console,
-                    wasDelayedCommit ? "Waiting for Paint" : "",
+                    wasDelayedCommit ? "Waiting for Paint" : "Waiting",
                     startTime,
                     endTime,
                     currentTrack,
@@ -15936,7 +15947,7 @@ __DEV__ &&
                   )
                 )
               : console.timeStamp(
-                  wasDelayedCommit ? "Waiting for Paint" : "",
+                  wasDelayedCommit ? "Waiting for Paint" : "Waiting",
                   startTime,
                   endTime,
                   currentTrack,
@@ -20047,11 +20058,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.2.0-native-fb-78997291-20250916" !== isomorphicReactPackageVersion)
+    if ("19.2.0-native-fb-e3c9656d-20250917" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.2.0-native-fb-78997291-20250916\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.2.0-native-fb-e3c9656d-20250917\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -20077,10 +20088,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-78997291-20250916",
+        version: "19.2.0-native-fb-e3c9656d-20250917",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-78997291-20250916"
+        reconcilerVersion: "19.2.0-native-fb-e3c9656d-20250917"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
