@@ -885,38 +885,39 @@ export default class Store extends EventEmitter<{
    * @param uniqueSuspendersOnly Filters out boundaries without unique suspenders
    */
   getSuspendableDocumentOrderSuspense(
-    rootID: Element['id'] | void,
     uniqueSuspendersOnly: boolean,
   ): $ReadOnlyArray<SuspenseNode['id']> {
-    if (rootID === undefined) {
-      return [];
-    }
-    const root = this.getElementByID(rootID);
-    if (root === null) {
-      return [];
-    }
-    if (!this.supportsTogglingSuspense(rootID)) {
-      return [];
-    }
     const list: SuspenseNode['id'][] = [];
-    const suspense = this.getSuspenseByID(rootID);
-    if (suspense !== null) {
-      const stack = [suspense];
-      while (stack.length > 0) {
-        const current = stack.pop();
-        if (current === undefined) {
-          continue;
-        }
-        // Include the root even if we won't show it suspended (because that's just blank).
-        // You should be able to see what suspended the shell.
-        if (!uniqueSuspendersOnly || current.hasUniqueSuspenders) {
-          list.push(current.id);
-        }
-        // Add children in reverse order to maintain document order
-        for (let j = current.children.length - 1; j >= 0; j--) {
-          const childSuspense = this.getSuspenseByID(current.children[j]);
-          if (childSuspense !== null) {
-            stack.push(childSuspense);
+    // Arbitrarily pick the order in which roots were committed as document-order.
+    for (let i = 0; i < this._roots.length; i++) {
+      const rootID = this._roots[i];
+      const root = this.getElementByID(rootID);
+
+      if (root === null) {
+        return [];
+      }
+      if (!this.supportsTogglingSuspense(rootID)) {
+        return [];
+      }
+      const suspense = this.getSuspenseByID(rootID);
+      if (suspense !== null) {
+        const stack = [suspense];
+        while (stack.length > 0) {
+          const current = stack.pop();
+          if (current === undefined) {
+            continue;
+          }
+          // Include the root even if we won't show it suspended (because that's just blank).
+          // You should be able to see what suspended the shell.
+          if (!uniqueSuspendersOnly || current.hasUniqueSuspenders) {
+            list.push(current.id);
+          }
+          // Add children in reverse order to maintain document order
+          for (let j = current.children.length - 1; j >= 0; j--) {
+            const childSuspense = this.getSuspenseByID(current.children[j]);
+            if (childSuspense !== null) {
+              stack.push(childSuspense);
+            }
           }
         }
       }

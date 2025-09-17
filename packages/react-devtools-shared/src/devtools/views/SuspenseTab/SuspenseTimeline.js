@@ -31,24 +31,16 @@ function SuspenseTimelineInput() {
   const {highlightHostInstance, clearHighlightHostInstance} =
     useHighlightHostInstance();
 
-  const {
-    selectedRootID: rootID,
-    timeline,
-    timelineIndex,
-    uniqueSuspendersOnly,
-  } = useContext(SuspenseTreeStateContext);
+  const {timeline, timelineIndex, uniqueSuspendersOnly} = useContext(
+    SuspenseTreeStateContext,
+  );
 
   function handleToggleUniqueSuspenders(event: SyntheticEvent) {
     const nextUniqueSuspendersOnly = (event.currentTarget as HTMLInputElement)
       .checked;
-    const nextTimeline =
-      rootID === null
-        ? []
-        : // TODO: Handle different timeline modes (e.g. random order)
-          store.getSuspendableDocumentOrderSuspense(
-            rootID,
-            nextUniqueSuspendersOnly,
-          );
+    const nextTimeline = store.getSuspendableDocumentOrderSuspense(
+      nextUniqueSuspendersOnly,
+    );
     suspenseTreeDispatch({
       type: 'SET_SUSPENSE_TIMELINE',
       payload: [nextTimeline, null, nextUniqueSuspendersOnly],
@@ -81,24 +73,10 @@ function SuspenseTimelineInput() {
   const min = 0;
   const max = timeline.length > 0 ? timeline.length - 1 : 0;
 
-  if (rootID === null) {
-    return (
-      <div className={styles.SuspenseTimelineInput}>No root selected.</div>
-    );
-  }
-
-  if (!store.supportsTogglingSuspense(rootID)) {
-    return (
-      <div className={styles.SuspenseTimelineInput}>
-        Can't step through Suspense in production apps.
-      </div>
-    );
-  }
-
   if (timeline.length === 0) {
     return (
       <div className={styles.SuspenseTimelineInput}>
-        Root contains no Suspense nodes.
+        Timeline contains no suspendable boundaries.
       </div>
     );
   }
@@ -117,23 +95,10 @@ function SuspenseTimelineInput() {
   }
 
   function handleChange(event: SyntheticEvent) {
-    if (rootID === null) {
-      return;
-    }
-    const rendererID = store.getRendererIDForElement(rootID);
-    if (rendererID === null) {
-      console.error(
-        `No renderer ID found for root element ${rootID} in suspense timeline.`,
-      );
-      return;
-    }
-
     const pendingTimelineIndex = +event.currentTarget.value;
     const suspendedSet = timeline.slice(pendingTimelineIndex);
 
     bridge.send('overrideSuspenseMilestone', {
-      rendererID,
-      rootID,
       suspendedSet,
     });
 
@@ -202,54 +167,9 @@ function SuspenseTimelineInput() {
 }
 
 export default function SuspenseTimeline(): React$Node {
-  const store = useContext(StoreContext);
-  const {roots, selectedRootID, uniqueSuspendersOnly} = useContext(
-    SuspenseTreeStateContext,
-  );
-  const treeDispatch = useContext(TreeDispatcherContext);
-  const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
-
-  function handleChange(event: SyntheticEvent) {
-    const newRootID = +event.currentTarget.value;
-    // TODO: scrollIntoView both suspense rects and host instance.
-    const nextTimeline = store.getSuspendableDocumentOrderSuspense(
-      newRootID,
-      uniqueSuspendersOnly,
-    );
-    suspenseTreeDispatch({
-      type: 'SET_SUSPENSE_TIMELINE',
-      payload: [nextTimeline, newRootID, uniqueSuspendersOnly],
-    });
-    if (nextTimeline.length > 0) {
-      const milestone = nextTimeline[nextTimeline.length - 1];
-      treeDispatch({type: 'SELECT_ELEMENT_BY_ID', payload: milestone});
-    }
-  }
-
   return (
     <div className={styles.SuspenseTimelineContainer}>
-      <SuspenseTimelineInput key={selectedRootID} />
-      {roots.length > 0 && (
-        <select
-          aria-label="Select Suspense Root"
-          className={styles.SuspenseTimelineRootSwitcher}
-          onChange={handleChange}
-          value={selectedRootID === null ? -1 : selectedRootID}>
-          <option disabled={true} value={-1}>
-            ----
-          </option>
-          {roots.map(rootID => {
-            // TODO: Use name
-            const name = '#' + rootID;
-            // TODO: Highlight host on hover
-            return (
-              <option key={rootID} value={rootID}>
-                {name}
-              </option>
-            );
-          })}
-        </select>
-      )}
+      <SuspenseTimelineInput />
     </div>
   );
 }
