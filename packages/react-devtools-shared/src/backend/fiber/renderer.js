@@ -1065,7 +1065,6 @@ export function attach(
     scheduleUpdate,
     getCurrentFiber,
   } = renderer;
-  const supportsSuspenseTree = true;
   const supportsTogglingError =
     typeof setErrorHandler === 'function' &&
     typeof scheduleUpdate === 'function';
@@ -2395,7 +2394,6 @@ export function attach(
       );
       pushOperation(hasOwnerMetadata ? 1 : 0);
       pushOperation(supportsTogglingSuspense ? 1 : 0);
-      pushOperation(supportsSuspenseTree ? 1 : 0);
 
       if (isProfiling) {
         if (displayNamesByRootID !== null) {

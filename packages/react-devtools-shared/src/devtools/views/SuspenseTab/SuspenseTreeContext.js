@@ -82,9 +82,7 @@ type Props = {
 
 function getDefaultRootID(store: Store): Element['id'] | null {
   const designatedRootID = store.roots.find(rootID => {
-    const suspense = store.supportsSuspenseTree(rootID)
-      ? store.getSuspenseByID(rootID)
-      : null;
+    const suspense = store.getSuspenseByID(rootID);
     return (
       store.supportsTogglingSuspense(rootID) &&
       suspense !== null &&
