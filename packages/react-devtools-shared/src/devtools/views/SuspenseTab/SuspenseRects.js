@@ -190,7 +190,9 @@ function getDocumentBoundingRect(
 
   for (let i = 0; i < roots.length; i++) {
     const rootID = roots[i];
-    const root = store.getSuspenseByID(rootID);
+    const root = store.supportsSuspenseTree(rootID)
+      ? store.getSuspenseByID(rootID)
+      : null;
     if (root === null) {
       continue;
     }

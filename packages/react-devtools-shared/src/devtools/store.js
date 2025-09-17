@@ -90,6 +90,7 @@ export type Capabilities = {
   supportsBasicProfiling: boolean,
   hasOwnerMetadata: boolean,
   supportsStrictMode: boolean,
+  supportsSuspenseTree: boolean,
   supportsTogglingSuspense: boolean,
   supportsTimeline: boolean,
 };
@@ -491,6 +492,14 @@ export default class Store extends EventEmitter<{
       this._isReloadAndProfileFrontendSupported &&
       this._isReloadAndProfileBackendSupported
     );
+  }
+
+  supportsSuspenseTree(rootID: Element['id']): boolean {
+    const capabilities = this._rootIDToCapabilities.get(rootID);
+    if (capabilities === undefined) {
+      throw new Error(`No capabilities registered for root ${rootID}`);
+    }
+    return capabilities.supportsSuspenseTree;
   }
 
   supportsTogglingSuspense(rootID: Element['id']): boolean {
@@ -896,11 +905,14 @@ export default class Store extends EventEmitter<{
     if (root === null) {
       return [];
     }
-    if (!this.supportsTogglingSuspense(root.id)) {
+    if (
+      !this.supportsTogglingSuspense(rootID) ||
+      !this.supportsSuspenseTree(rootID)
+    ) {
       return [];
     }
     const list: SuspenseNode['id'][] = [];
-    const suspense = this.getSuspenseByID(root.id);
+    const suspense = this.getSuspenseByID(rootID);
     if (suspense !== null) {
       const stack = [suspense];
       while (stack.length > 0) {
@@ -1171,6 +1183,7 @@ export default class Store extends EventEmitter<{
             let supportsStrictMode = false;
             let hasOwnerMetadata = false;
             let supportsTogglingSuspense = false;
+            let supportsSuspenseTree = false;
 
             // If we don't know the bridge protocol, guess that we're dealing with the latest.
             // If we do know it, we can take it into consideration when parsing operations.
@@ -1186,6 +1199,9 @@ export default class Store extends EventEmitter<{
 
               supportsTogglingSuspense = operations[i] > 0;
               i++;
+
+              supportsSuspenseTree = operations[i] > 0;
+              i++;
             }
 
             this._roots = this._roots.concat(id);
@@ -1194,6 +1210,7 @@ export default class Store extends EventEmitter<{
               supportsBasicProfiling,
               hasOwnerMetadata,
               supportsStrictMode,
+              supportsSuspenseTree,
               supportsTogglingSuspense,
               supportsTimeline,
             });

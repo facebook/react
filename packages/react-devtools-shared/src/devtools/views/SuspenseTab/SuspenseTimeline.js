@@ -243,7 +243,10 @@ export default function SuspenseTimeline(): React$Node {
             const name = '#' + rootID;
             // TODO: Highlight host on hover
             return (
-              <option key={rootID} value={rootID}>
+              <option
+                key={rootID}
+                value={rootID}
+                disabled={!store.supportsSuspenseTree(rootID)}>
                 {name}
               </option>
             );
