@@ -57,6 +57,7 @@ function ToggleTreeList({
 }) {
   return (
     <Button
+      className={styles.ToggleTreeList}
       onClick={() =>
         dispatch({
           type: 'ACTION_SET_TREE_LIST_TOGGLE',
@@ -65,6 +66,7 @@ function ToggleTreeList({
       }
       title={state.treeListHidden ? 'Show Tree List' : 'Hide Tree List'}>
       <ButtonIcon
+        className={styles.TogglePanelIcon}
         type={state.treeListHidden ? 'panel-left-open' : 'panel-left-close'}
       />
     </Button>
@@ -105,7 +107,7 @@ function ToggleInspectedElement({
           ? 'Show Inspected Element'
           : 'Hide Inspected Element'
       }>
-      <ButtonIcon type={iconType} />
+      <ButtonIcon className={styles.TogglePanelIcon} type={iconType} />
     </Button>
   );
 }
@@ -307,13 +309,11 @@ function SuspenseTab(_: {}) {
         <div className={styles.TreeView}>
           <div className={styles.SuspenseTreeViewHeader}>
             <ToggleTreeList dispatch={dispatch} state={state} />
-            <div className={styles.SuspenseTreeViewHeaderMain}>
-              <div className={styles.SuspenseTimeline}>
-                <SuspenseTimeline />
-              </div>
-              <div className={styles.SuspenseBreadcrumbs}>
-                <SuspenseBreadcrumbs />
-              </div>
+            <div className={styles.SuspenseTimeline}>
+              <SuspenseTimeline />
+            </div>
+            <div className={styles.SuspenseBreadcrumbs}>
+              <SuspenseBreadcrumbs />
             </div>
             <ToggleInspectedElement
               dispatch={dispatch}
