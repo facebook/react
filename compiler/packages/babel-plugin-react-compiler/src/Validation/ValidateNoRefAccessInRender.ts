@@ -655,33 +655,15 @@ function validateNoRefAccessInRenderImpl(
             if (instr.value.operator === '!') {
               const value = env.get(instr.value.value.identifier.id);
               const refId =
-                value?.kind === 'RefValue' && value.refId != null
-                  ? value.refId
+                value?.kind === 'RefValue'
+                  ? (value.refId ?? nextRefId())
                   : null;
               if (refId !== null) {
                 /*
-                 * Record an error suggesting the `if (ref.current == null)` pattern,
-                 * but also record the lvalue as a guard so that we don't emit a second
-                 * error for the write to the ref
+                 * Allow !ref.current patterns for ref initialization as they are
+                 * semantically equivalent to ref.current == null checks
                  */
                 env.set(instr.lvalue.identifier.id, {kind: 'Guard', refId});
-                errors.pushDiagnostic(
-                  CompilerDiagnostic.create({
-                    category: ErrorCategory.Refs,
-                    reason: 'Cannot access refs during render',
-                    description: ERROR_DESCRIPTION,
-                  })
-                    .withDetails({
-                      kind: 'error',
-                      loc: instr.value.value.loc,
-                      message: `Cannot access ref value during render`,
-                    })
-                    .withDetails({
-                      kind: 'hint',
-                      message:
-                        'To initialize a ref only once, check that the ref is null with the pattern `if (ref.current == null) { ref.current = ... }`',
-                    }),
-                );
                 break;
               }
             }
@@ -693,18 +675,21 @@ function validateNoRefAccessInRenderImpl(
             const right = env.get(instr.value.right.identifier.id);
             let nullish: boolean = false;
             let refId: RefId | null = null;
-            if (left?.kind === 'RefValue' && left.refId != null) {
-              refId = left.refId;
-            } else if (right?.kind === 'RefValue' && right.refId != null) {
-              refId = right.refId;
+
+            if (left?.kind === 'RefValue') {
+              refId = left.refId ?? nextRefId();
+            } else if (right?.kind === 'RefValue') {
+              refId = right.refId ?? nextRefId();
             }
 
+            // Check for null or undefined values
             if (left?.kind === 'Nullable') {
               nullish = true;
             } else if (right?.kind === 'Nullable') {
               nullish = true;
             }
 
+            // Allow ref comparisons with null/undefined as guards
             if (refId !== null && nullish) {
               env.set(instr.lvalue.identifier.id, {kind: 'Guard', refId});
             } else {
