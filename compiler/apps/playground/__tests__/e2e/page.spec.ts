@@ -136,7 +136,7 @@ test('editor should compile from hash successfully', async ({page}) => {
     path: 'test-results/01-compiles-from-hash.png',
   });
   const text =
-    (await page.locator('.monaco-editor').nth(1).allInnerTexts()) ?? [];
+    (await page.locator('.monaco-editor').nth(3).allInnerTexts()) ?? [];
   const output = await formatPrint(text);
 
   expect(output).not.toEqual('');
@@ -162,7 +162,7 @@ test('reset button works', async ({page}) => {
     path: 'test-results/02-reset-button-works.png',
   });
   const text =
-    (await page.locator('.monaco-editor').nth(1).allInnerTexts()) ?? [];
+    (await page.locator('.monaco-editor').nth(3).allInnerTexts()) ?? [];
   const output = await formatPrint(text);
 
   expect(output).not.toEqual('');
@@ -183,7 +183,7 @@ TEST_CASE_INPUTS.forEach((t, idx) =>
     });
 
     const text =
-      (await page.locator('.monaco-editor').nth(1).allInnerTexts()) ?? [];
+      (await page.locator('.monaco-editor').nth(3).allInnerTexts()) ?? [];
     let output: string;
     if (t.noFormat) {
       output = text.join('');
