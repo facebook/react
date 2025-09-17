@@ -636,11 +636,25 @@ export function logBlockingStart(
 ): void {
   if (supportsUserTiming) {
     currentTrack = 'Blocking';
+    // Clamp start times
+    if (updateTime > 0) {
+      if (updateTime > renderStartTime) {
+        updateTime = renderStartTime;
+      }
+    } else {
+      updateTime = renderStartTime;
+    }
+    if (eventTime > 0) {
+      if (eventTime > updateTime) {
+        eventTime = updateTime;
+      }
+    } else {
+      eventTime = updateTime;
+    }
     // If a blocking update was spawned within render or an effect, that's considered a cascading render.
     // If you have a second blocking update within the same event, that suggests multiple flushSync or
     // setState in a microtask which is also considered a cascade.
-    const eventEndTime = updateTime > 0 ? updateTime : renderStartTime;
-    if (eventTime > 0 && eventType !== null && eventEndTime > eventTime) {
+    if (eventType !== null && updateTime > eventTime) {
       // Log the time from the event timeStamp until we called setState.
       const color = eventIsRepeat ? 'secondary-light' : 'warning';
       if (__DEV__ && debugTask) {
@@ -648,9 +662,9 @@ export function logBlockingStart(
           // $FlowFixMe[method-unbinding]
           console.timeStamp.bind(
             console,
-            eventIsRepeat ? '' : 'Event: ' + eventType,
+            eventIsRepeat ? 'Consecutive' : 'Event: ' + eventType,
             eventTime,
-            eventEndTime,
+            updateTime,
             currentTrack,
             LANES_TRACK_GROUP,
             color,
@@ -658,16 +672,16 @@ export function logBlockingStart(
         );
       } else {
         console.timeStamp(
-          eventIsRepeat ? '' : 'Event: ' + eventType,
+          eventIsRepeat ? 'Consecutive' : 'Event: ' + eventType,
           eventTime,
-          eventEndTime,
+          updateTime,
           currentTrack,
           LANES_TRACK_GROUP,
           color,
         );
       }
     }
-    if (updateTime > 0 && renderStartTime > updateTime) {
+    if (renderStartTime > updateTime) {
       // Log the time from when we called setState until we started rendering.
       const color = isSpawnedUpdate
         ? 'error'
@@ -739,18 +753,39 @@ export function logTransitionStart(
 ): void {
   if (supportsUserTiming) {
     currentTrack = 'Transition';
-    const eventEndTime =
-      startTime > 0 ? startTime : updateTime > 0 ? updateTime : renderStartTime;
-    if (eventTime > 0 && eventEndTime > eventTime && eventType !== null) {
+    // Clamp start times
+    if (updateTime > 0) {
+      if (updateTime > renderStartTime) {
+        updateTime = renderStartTime;
+      }
+    } else {
+      updateTime = renderStartTime;
+    }
+    if (startTime > 0) {
+      if (startTime > updateTime) {
+        startTime = updateTime;
+      }
+    } else {
+      startTime = updateTime;
+    }
+    if (eventTime > 0) {
+      if (eventTime > startTime) {
+        eventTime = startTime;
+      }
+    } else {
+      eventTime = startTime;
+    }
+
+    if (startTime > eventTime && eventType !== null) {
       // Log the time from the event timeStamp until we started a transition.
       const color = eventIsRepeat ? 'secondary-light' : 'warning';
       if (__DEV__ && debugTask) {
         debugTask.run(
           console.timeStamp.bind(
             console,
-            eventIsRepeat ? '' : 'Event: ' + eventType,
+            eventIsRepeat ? 'Consecutive' : 'Event: ' + eventType,
             eventTime,
-            eventEndTime,
+            startTime,
             currentTrack,
             LANES_TRACK_GROUP,
             color,
@@ -758,17 +793,16 @@ export function logTransitionStart(
         );
       } else {
         console.timeStamp(
-          eventIsRepeat ? '' : 'Event: ' + eventType,
+          eventIsRepeat ? 'Consecutive' : 'Event: ' + eventType,
           eventTime,
-          eventEndTime,
+          startTime,
           currentTrack,
           LANES_TRACK_GROUP,
           color,
         );
       }
     }
-    const startEndTime = updateTime > 0 ? updateTime : renderStartTime;
-    if (startTime > 0 && startEndTime > startTime) {
+    if (updateTime > startTime) {
       // Log the time from when we started an async transition until we called setState or started rendering.
       // TODO: Ideally this would use the debugTask of the startTransition call perhaps.
       if (__DEV__ && debugTask) {
@@ -778,7 +812,7 @@ export function logTransitionStart(
             console,
             'Action',
             startTime,
-            startEndTime,
+            updateTime,
             currentTrack,
             LANES_TRACK_GROUP,
             'primary-dark',
@@ -788,14 +822,14 @@ export function logTransitionStart(
         console.timeStamp(
           'Action',
           startTime,
-          startEndTime,
+          updateTime,
           currentTrack,
           LANES_TRACK_GROUP,
           'primary-dark',
         );
       }
     }
-    if (updateTime > 0 && renderStartTime > updateTime) {
+    if (renderStartTime > updateTime) {
       // Log the time from when we called setState until we started rendering.
       const label = isPingedUpdate
         ? 'Promise Resolved'
@@ -1286,6 +1320,7 @@ export function logCommitPhase(
   startTime: number,
   endTime: number,
   errors: null | Array<CapturedValue<mixed>>,
+  abortedViewTransition: boolean,
   debugTask: null | ConsoleTask,
 ): void {
   if (errors !== null) {
@@ -1301,22 +1336,24 @@ export function logCommitPhase(
         // $FlowFixMe[method-unbinding]
         console.timeStamp.bind(
           console,
-          'Commit',
+          abortedViewTransition
+            ? 'Commit Interrupted View Transition'
+            : 'Commit',
           startTime,
           endTime,
           currentTrack,
           LANES_TRACK_GROUP,
-          'secondary-dark',
+          abortedViewTransition ? 'error' : 'secondary-dark',
         ),
       );
     } else {
       console.timeStamp(
-        'Commit',
+        abortedViewTransition ? 'Commit Interrupted View Transition' : 'Commit',
         startTime,
         endTime,
         currentTrack,
         LANES_TRACK_GROUP,
-        'secondary-dark',
+        abortedViewTransition ? 'error' : 'secondary-dark',
       );
     }
   }
@@ -1337,7 +1374,7 @@ export function logPaintYieldPhase(
         // $FlowFixMe[method-unbinding]
         console.timeStamp.bind(
           console,
-          delayedUntilPaint ? 'Waiting for Paint' : '',
+          delayedUntilPaint ? 'Waiting for Paint' : 'Waiting',
           startTime,
           endTime,
           currentTrack,
@@ -1347,12 +1384,87 @@ export function logPaintYieldPhase(
       );
     } else {
       console.timeStamp(
-        delayedUntilPaint ? 'Waiting for Paint' : '',
+        delayedUntilPaint ? 'Waiting for Paint' : 'Waiting',
         startTime,
         endTime,
         currentTrack,
         LANES_TRACK_GROUP,
         'secondary-light',
+      );
+    }
+  }
+}
+
+export function logStartViewTransitionYieldPhase(
+  startTime: number,
+  endTime: number,
+  abortedViewTransition: boolean,
+  debugTask: null | ConsoleTask,
+): void {
+  if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          abortedViewTransition
+            ? 'Interrupted View Transition'
+            : 'Starting Animation',
+          startTime,
+          endTime,
+          currentTrack,
+          LANES_TRACK_GROUP,
+          abortedViewTransition ? 'error' : 'secondary-light',
+        ),
+      );
+    } else {
+      console.timeStamp(
+        abortedViewTransition
+          ? 'Interrupted View Transition'
+          : 'Starting Animation',
+        startTime,
+        endTime,
+        currentTrack,
+        LANES_TRACK_GROUP,
+        abortedViewTransition ? ' error' : 'secondary-light',
+      );
+    }
+  }
+}
+
+export function logAnimatingPhase(
+  startTime: number,
+  endTime: number,
+  debugTask: null | ConsoleTask,
+): void {
+  if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          'Animating',
+          startTime,
+          endTime,
+          currentTrack,
+          LANES_TRACK_GROUP,
+          'secondary',
+        ),
+      );
+    } else {
+      console.timeStamp(
+        'Animating',
+        startTime,
+        endTime,
+        currentTrack,
+        LANES_TRACK_GROUP,
+        'secondary',
       );
     }
   }

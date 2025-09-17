@@ -31,6 +31,7 @@ import {
   BuiltInObjectId,
   BuiltInPropsId,
   BuiltInRefValueId,
+  BuiltInSetStateId,
   BuiltInUseRefId,
 } from '../HIR/ObjectShape';
 import {eachInstructionLValue, eachInstructionOperand} from '../HIR/visitors';
@@ -276,9 +277,16 @@ function* generateInstructionTypes(
        * We should change Hook to a subtype of Function or change unifier logic.
        * (see https://github.com/facebook/react-forget/pull/1427)
        */
+      let shapeId: string | null = null;
+      if (env.config.enableTreatSetIdentifiersAsStateSetters) {
+        const name = getName(names, value.callee.identifier.id);
+        if (name.startsWith('set')) {
+          shapeId = BuiltInSetStateId;
+        }
+      }
       yield equation(value.callee.identifier.type, {
         kind: 'Function',
-        shapeId: null,
+        shapeId,
         return: returnType,
         isConstructor: false,
       });
