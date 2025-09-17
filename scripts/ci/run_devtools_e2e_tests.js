@@ -55,7 +55,11 @@ function buildInlinePackage() {
     logDim(data);
   });
   buildProcess.stderr.on('data', data => {
-    if (`${data}`.includes('Warning')) {
+    if (
+      `${data}`.includes('Warning') ||
+      // E.g. [BABEL] Note: The code generator has deoptimised the styling of * as it exceeds the max of 500KB.
+      `${data}`.includes('[BABEL] Note')
+    ) {
       logDim(data);
     } else {
       logError(`Error:\n${data}`);
