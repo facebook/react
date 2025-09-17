@@ -108,7 +108,8 @@ module.exports = {
           {
             loader: 'workerize-loader',
             options: {
-              inline: false,
+              // Workers would have to be exposed on a public path in order to outline them.
+              inline: true,
               name: '[name]',
             },
           },
