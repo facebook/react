@@ -633,6 +633,22 @@ export function includesTransitionLane(lanes: Lanes): boolean {
   return (lanes & TransitionLanes) !== NoLanes;
 }
 
+export function includesRetryLane(lanes: Lanes): boolean {
+  return (lanes & RetryLanes) !== NoLanes;
+}
+
+export function includesIdleGroupLanes(lanes: Lanes): boolean {
+  return (
+    (lanes &
+      (SelectiveHydrationLane |
+        IdleHydrationLane |
+        IdleLane |
+        OffscreenLane |
+        DeferredLane)) !==
+    NoLanes
+  );
+}
+
 export function includesOnlyHydrationLanes(lanes: Lanes): boolean {
   return (lanes & HydrationLanes) === lanes;
 }

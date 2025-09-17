@@ -179,6 +179,8 @@ import {
   includesOnlyTransitions,
   includesBlockingLane,
   includesTransitionLane,
+  includesRetryLane,
+  includesIdleGroupLanes,
   includesExpiredLane,
   getNextLanes,
   getEntangledLanes,
@@ -292,6 +294,8 @@ import {
   clearTransitionTimers,
   clampBlockingTimers,
   clampTransitionTimers,
+  clampRetryTimers,
+  clampIdleTimers,
   markNestedUpdateScheduled,
   renderStartTime,
   commitStartTime,
@@ -1888,6 +1892,12 @@ function finalizeRender(lanes: Lanes, finalizationTime: number): void {
     }
     if (includesTransitionLane(lanes)) {
       clampTransitionTimers(finalizationTime);
+    }
+    if (includesRetryLane(lanes)) {
+      clampRetryTimers(finalizationTime);
+    }
+    if (includesIdleGroupLanes(lanes)) {
+      clampIdleTimers(finalizationTime);
     }
   }
 }

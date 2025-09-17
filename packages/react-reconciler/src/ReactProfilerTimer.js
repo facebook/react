@@ -88,6 +88,9 @@ export let transitionEventType: null | string = null; // Event type of the first
 export let transitionEventIsRepeat: boolean = false;
 export let transitionSuspendedTime: number = -1.1;
 
+export let retryClampTime: number = -0;
+export let idleClampTime: number = -0;
+
 export let yieldReason: SuspendedReason = (0: any);
 export let yieldStartTime: number = -1.1; // The time when we yielded to the event loop
 
@@ -304,6 +307,20 @@ export function clampTransitionTimers(finalTime: number): void {
   // those update times to create overlapping tracks in the performance timeline so we clamp
   // them to the end of the commit phase.
   transitionClampTime = finalTime;
+}
+
+export function clampRetryTimers(finalTime: number): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  retryClampTime = finalTime;
+}
+
+export function clampIdleTimers(finalTime: number): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  idleClampTime = finalTime;
 }
 
 export function pushNestedEffectDurations(): number {
