@@ -2,7 +2,7 @@ import * as React from 'react';
 import {renderToReadableStream} from 'react-server-dom-webpack/server';
 import {createFromReadableStream} from 'react-server-dom-webpack/client';
 
-export default async function App({prerender, noCache}) {
+export default function App({prerender, noCache}) {
   return (
     <html lang="en">
       <head>
