@@ -61,8 +61,8 @@ function ExpandedEditor({
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
+  useEffect((): (() => void) => {
+    return (): void => {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
