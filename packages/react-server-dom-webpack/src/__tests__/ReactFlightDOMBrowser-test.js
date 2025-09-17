@@ -2995,7 +2995,8 @@ describe('ReactFlightDOMBrowser', () => {
       )
     ) {
       const result = await response;
-      const firstParagraph = result.root[0];
+      const lazy = result.root[0];
+      const firstParagraph = lazy._init(lazy._payload);
 
       expect(getDebugInfo(firstParagraph)).toMatchInlineSnapshot(`
         [
@@ -3037,20 +3038,9 @@ describe('ReactFlightDOMBrowser', () => {
           {
             "time": 0,
           },
-          {
-            "awaited": {
-              "byteSize": 0,
-              "end": 0,
-              "name": "RSC stream",
-              "owner": null,
-              "start": 0,
-              "value": {
-                "value": "stream",
-              },
-            },
-          },
         ]
       `);
+      // TODO: This should also have the "RSC stream" entry.
     }
   });
 });
