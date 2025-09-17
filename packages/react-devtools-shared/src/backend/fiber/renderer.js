@@ -7758,10 +7758,7 @@ export function attach(
    * @param rootID The root that contains this milestone
    * @param suspendedSet List of IDs of SuspenseComponent Fibers
    */
-  function overrideSuspenseMilestone(
-    rootID: FiberInstance['id'],
-    suspendedSet: Array<FiberInstance['id']>,
-  ) {
+  function overrideSuspenseMilestone(suspendedSet: Array<FiberInstance['id']>) {
     if (
       typeof setSuspenseHandler !== 'function' ||
       typeof scheduleUpdate !== 'function'
@@ -7771,7 +7768,6 @@ export function attach(
       );
     }
 
-    // TODO: Allow overriding the timeline for the specified root.
     forceFallbackForFibers.forEach(fiber => {
       scheduleUpdate(fiber);
     });
@@ -7780,9 +7776,7 @@ export function attach(
     for (let i = 0; i < suspendedSet.length; ++i) {
       const instance = idToDevToolsInstanceMap.get(suspendedSet[i]);
       if (instance === undefined) {
-        console.warn(
-          `Could not suspend ID '${suspendedSet[i]}' since the instance can't be found.`,
-        );
+        // this is an ID from a different root or even renderer.
         continue;
       }
 

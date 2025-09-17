@@ -131,8 +131,6 @@ type OverrideSuspenseParams = {
 };
 
 type OverrideSuspenseMilestoneParams = {
-  rendererID: number,
-  rootID: number,
   suspendedSet: Array<number>,
 };
 
@@ -567,17 +565,13 @@ export default class Agent extends EventEmitter<{
   };
 
   overrideSuspenseMilestone: OverrideSuspenseMilestoneParams => void = ({
-    rendererID,
-    rootID,
     suspendedSet,
   }) => {
-    const renderer = this._rendererInterfaces[rendererID];
-    if (renderer == null) {
-      console.warn(
-        `Invalid renderer id "${rendererID}" to override suspense milestone`,
-      );
-    } else {
-      renderer.overrideSuspenseMilestone(rootID, suspendedSet);
+    for (const rendererID in this._rendererInterfaces) {
+      const renderer = ((this._rendererInterfaces[
+        (rendererID: any)
+      ]: any): RendererInterface);
+      renderer.overrideSuspenseMilestone(suspendedSet);
     }
   };
 
