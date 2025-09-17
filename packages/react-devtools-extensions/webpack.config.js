@@ -261,7 +261,7 @@ module.exports = {
           {
             loader: 'workerize-loader',
             options: {
-              inline: true,
+              inline: false,
               name: '[name]',
             },
           },

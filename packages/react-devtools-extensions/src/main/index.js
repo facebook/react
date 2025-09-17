@@ -24,6 +24,7 @@ import {
   normalizeUrlIfValid,
 } from 'react-devtools-shared/src/utils';
 import {checkConditions} from 'react-devtools-shared/src/devtools/views/Editor/utils';
+import * as parseHookNames from 'react-devtools-shared/src/hooks/parseHookNames';
 
 import {
   setBrowserSelectionFromReact,
@@ -39,6 +40,12 @@ import registerEventsLogger from './registerEventsLogger';
 import getProfilingFlags from './getProfilingFlags';
 import debounce from './debounce';
 import './requestAnimationFramePolyfill';
+
+const resolvedParseHookNames = Promise.resolve(parseHookNames);
+// DevTools assumes this is a dynamically imported module. Since we outline
+// workers in this bundle, we can sync require the module since it's just a thin
+// wrapper around calling the worker.
+const hookNamesModuleLoaderFunction = () => resolvedParseHookNames;
 
 function createBridge() {
   bridge = new Bridge({
@@ -187,12 +194,6 @@ function createBridgeAndStore() {
       column - 1,
     );
   };
-
-  // TODO (Webpack 5) Hopefully we can remove this prop after the Webpack 5 migration.
-  const hookNamesModuleLoaderFunction = () =>
-    import(
-      /* webpackChunkName: 'parseHookNames' */ 'react-devtools-shared/src/hooks/parseHookNames'
-    );
 
   root = createRoot(document.createElement('div'));
 
