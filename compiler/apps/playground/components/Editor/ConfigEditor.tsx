@@ -109,12 +109,6 @@ function ExpandedEditor({
       allowSyntheticDefaultImports: true,
       jsx: monaco.languages.typescript.JsxEmit.React,
     });
-
-    const uri = monaco.Uri.parse(`file:///config.ts`);
-    const model = monaco.editor.getModel(uri);
-    if (model) {
-      model.updateOptions({tabSize: 2});
-    }
   };
 
   const formattedAppliedOptions = appliedOptions
@@ -158,6 +152,7 @@ function ExpandedEditor({
               value={store.config}
               onMount={handleMount}
               onChange={handleChange}
+              loading={''}
               options={{
                 ...monacoOptions,
                 lineNumbers: 'off',
@@ -182,6 +177,7 @@ function ExpandedEditor({
               path={'applied-config.js'}
               language={'javascript'}
               value={formattedAppliedOptions}
+              loading={''}
               options={{
                 ...monacoOptions,
                 lineNumbers: 'off',
