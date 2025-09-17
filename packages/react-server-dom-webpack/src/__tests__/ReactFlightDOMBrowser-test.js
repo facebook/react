@@ -1772,6 +1772,9 @@ describe('ReactFlightDOMBrowser', () => {
         webpackMap,
       ),
     );
+
+    // Snapshot updates change this formatting, so we let prettier ignore it.
+    // prettier-ignore
     const response =
       await ReactServerDOMClient.createFromReadableStream(stream);
 
@@ -2956,14 +2959,11 @@ describe('ReactFlightDOMBrowser', () => {
       return root;
     }
 
+    const [slowDebugStream1, slowDebugStream2] =
+      createDelayedStream(debugReadableStream).tee();
+
     const response = ReactServerDOMClient.createFromReadableStream(stream, {
-      // TODO: The test succeeds without a debug channel, but fails with a debug
-      // channel. However, it fails even without a delay, whereas in the flight
-      // fixture, only an artificial delaying of the debug chunks reproduces the
-      // issue that server components are missing from the devtools component
-      // tree.
-      // debugChannel: {readable: createDelayedStream(debugReadableStream)},
-      debugChannel: {readable: debugReadableStream},
+      debugChannel: {readable: slowDebugStream1},
     });
 
     const container = document.createElement('div');
@@ -2972,6 +2972,18 @@ describe('ReactFlightDOMBrowser', () => {
     await act(() => {
       clientRoot.render(<ClientRoot response={response} />);
     });
+
+    if (__DEV__) {
+      const debugStreamReader = slowDebugStream2.getReader();
+      while (true) {
+        const {done} = await debugStreamReader.read();
+        if (done) {
+          break;
+        }
+        // Allow the client to process each debug chunk as it arrives.
+        await act(() => {});
+      }
+    }
 
     expect(container.innerHTML).toBe('<p>foo</p><p>bar</p>');
 
@@ -2999,9 +3011,9 @@ describe('ReactFlightDOMBrowser', () => {
               [
                 "",
                 "/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMBrowser-test.js",
-                2935,
+                2937,
                 27,
-                2929,
+                2931,
                 34,
               ],
               [
@@ -3015,9 +3027,9 @@ describe('ReactFlightDOMBrowser', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMBrowser-test.js",
-                2929,
+                2931,
                 18,
-                2916,
+                2918,
                 89,
               ],
             ],
