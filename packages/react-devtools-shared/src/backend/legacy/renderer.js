@@ -181,6 +181,7 @@ export function attach(
   }
 
   const supportsTogglingSuspense = false;
+  const supportsSuspenseTree = false;
 
   function getDisplayNameForElementID(id: number): string | null {
     const internalInstance = idToInternalInstanceMap.get(id);
@@ -411,6 +412,7 @@ export function attach(
       pushOperation(0); // StrictMode supported?
       pushOperation(hasOwnerMetadata ? 1 : 0);
       pushOperation(supportsTogglingSuspense ? 1 : 0);
+      pushOperation(supportsSuspenseTree ? 1 : 0);
     } else {
       const type = getElementType(internalInstance);
       const {displayName, key} = getData(internalInstance);

@@ -210,6 +210,7 @@ function updateTree(
           i++; // supportsStrictMode flag
           i++; // hasOwnerMetadata flag
           i++; // supportsTogglingSuspense flag
+          i++; // supportsSuspenseTree flag
 
           if (__DEBUG__) {
             debug('Add', `new root fiber ${id}`);
