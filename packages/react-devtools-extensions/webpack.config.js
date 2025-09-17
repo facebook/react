@@ -6,6 +6,7 @@ const TerserPlugin = require('terser-webpack-plugin');
 const {GITHUB_URL, getVersionString} = require('./utils');
 const {resolveFeatureFlags} = require('react-devtools-shared/buildUtils');
 const SourceMapIgnoreListPlugin = require('react-devtools-shared/SourceMapIgnoreListPlugin');
+const {StatsWriterPlugin} = require('webpack-stats-plugin');
 
 const NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) {
@@ -36,6 +37,21 @@ const IS_INTERNAL_VERSION = process.env.FEATURE_FLAG_TARGET === 'extension-fb';
 const IS_INTERNAL_MCP_BUILD = process.env.IS_INTERNAL_MCP_BUILD === 'true';
 
 const featureFlagTarget = process.env.FEATURE_FLAG_TARGET || 'extension-oss';
+
+let statsFileName = `webpack-stats.${featureFlagTarget}.${__DEV__ ? 'development' : 'production'}`;
+if (IS_CHROME) {
+  statsFileName += `.chrome`;
+}
+if (IS_FIREFOX) {
+  statsFileName += `.firefox`;
+}
+if (IS_EDGE) {
+  statsFileName += `.edge`;
+}
+if (IS_INTERNAL_MCP_BUILD) {
+  statsFileName += `.mcp`;
+}
+statsFileName += '.json';
 
 const babelOptions = {
   configFile: resolve(
@@ -213,6 +229,10 @@ module.exports = {
         );
       },
     },
+    new StatsWriterPlugin({
+      stats: 'verbose',
+      filename: statsFileName,
+    }),
   ],
   module: {
     defaultRules: [
