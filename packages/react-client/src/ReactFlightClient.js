@@ -1150,15 +1150,25 @@ function initializeElement(
     initializeFakeStack(response, owner);
   }
 
-  // In case the JSX runtime has validated the lazy type as a static child, we
-  // need to transfer this information to the element.
-  if (
-    lazyType &&
-    lazyType._store &&
-    lazyType._store.validated &&
-    !element._store.validated
-  ) {
-    element._store.validated = lazyType._store.validated;
+  if (lazyType !== null) {
+    // In case the JSX runtime has validated the lazy type as a static child, we
+    // need to transfer this information to the element.
+    if (
+      lazyType._store &&
+      lazyType._store.validated &&
+      !element._store.validated
+    ) {
+      element._store.validated = lazyType._store.validated;
+    }
+
+    // If the lazy type has debug info, and the element doesn't have any,
+    // we should forward it.
+    if (lazyType._debugInfo !== null && element._debugInfo === null) {
+      element._debugInfo = lazyType._debugInfo;
+      // We need to clean it from the lazy type now, so the element won't show
+      // up twice in the component tree.
+      lazyType._debugInfo = null;
+    }
   }
 
   // TODO: We should be freezing the element but currently, we might write into
@@ -1826,7 +1836,8 @@ function transferReferencedDebugInfo(
       referencedValue !== null &&
       (isArray(referencedValue) ||
         typeof referencedValue[ASYNC_ITERATOR] === 'function' ||
-        referencedValue.$$typeof === REACT_ELEMENT_TYPE)
+        referencedValue.$$typeof === REACT_ELEMENT_TYPE ||
+        referencedValue.$$typeof === REACT_LAZY_TYPE)
     ) {
       // We should maybe use a unique symbol for arrays but this is a React owned array.
       // $FlowFixMe[prop-missing]: This should be added to elements.
@@ -2918,7 +2929,8 @@ function resolveStream<T: ReadableStream | $AsyncIterable<any, any, void>>(
   const resolveListeners = chunk.value;
 
   if (__DEV__) {
-    // Lazily initialize any debug info and block the initializing chunk on any unresolved entries.
+    // Initialize any debug info and block the initializing chunk on any
+    // unresolved entries.
     if (chunk._debugChunk != null) {
       const prevHandler = initializingHandler;
       const prevChunk = initializingChunk;
