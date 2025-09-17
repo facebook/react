@@ -28,7 +28,3 @@ else
     mv ./$browser/build/webpack-stats.*.json ../../build/devtools/
   done
 fi
-
-# Compress all DevTools artifacts into a single tarball for easy download
-cd ../../build/devtools
-tar -zcvf ../devtools.tgz .
