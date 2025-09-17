@@ -17,15 +17,6 @@ export default function AccordionWindow(props: {
   setTabsOpen: (newTab: Set<string>) => void;
   changedPasses: Set<string>;
 }): React.ReactElement {
-  if (props.tabs.size === 0) {
-    return (
-      <div
-        className="flex items-center justify-center"
-        style={{width: 'calc(100vw - 650px)'}}>
-        No compiler output detected, see errors below
-      </div>
-    );
-  }
   return (
     <div className="flex flex-row h-full">
       {Array.from(props.tabs.keys()).map(name => {

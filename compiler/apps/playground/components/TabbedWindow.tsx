@@ -16,13 +16,6 @@ export default function TabbedWindow({
   activeTab: string;
   onTabChange: (tab: string) => void;
 }): React.ReactElement {
-  if (tabs.size === 0) {
-    return (
-      <div className="flex items-center justify-center flex-1 max-w-full">
-        No compiler output detected, see errors below
-      </div>
-    );
-  }
   return (
     <div className="flex flex-col h-full max-w-full">
       <div className="flex p-2 flex-shrink-0">
