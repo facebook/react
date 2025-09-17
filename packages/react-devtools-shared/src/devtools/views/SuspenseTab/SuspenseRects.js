@@ -161,27 +161,6 @@ function getDocumentBoundingRect(
   };
 }
 
-function SuspenseRectsShell({
-  rootID,
-}: {
-  rootID: SuspenseNode['id'],
-}): React$Node {
-  const store = useContext(StoreContext);
-  const root = store.getSuspenseByID(rootID);
-  if (root === null) {
-    console.warn(`<Element> Could not find suspense node id ${rootID}`);
-    return null;
-  }
-
-  return (
-    <g>
-      {root.children.map(childID => {
-        return <SuspenseRects key={childID} suspenseID={childID} />;
-      })}
-    </g>
-  );
-}
-
 function SuspenseRectsContainer(): React$Node {
   const store = useContext(StoreContext);
   // TODO: This relies on a full re-render of all children when the Suspense tree changes.
@@ -202,7 +181,7 @@ function SuspenseRectsContainer(): React$Node {
         style={{width, height}}
         viewBox={`${boundingRect.x} ${boundingRect.y} ${boundingRect.width} ${boundingRect.height}`}>
         {roots.map(rootID => {
-          return <SuspenseRectsShell key={rootID} rootID={rootID} />;
+          return <SuspenseRects key={rootID} suspenseID={rootID} />;
         })}
       </svg>
     </div>
