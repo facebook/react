@@ -25489,6 +25489,10 @@ function isReorderableExpression(builder, expr, allowLocalIdentifiers) {
                 return true;
             }
         }
+        case 'TSInstantiationExpression': {
+            const innerExpr = expr.get('expression');
+            return isReorderableExpression(builder, innerExpr, allowLocalIdentifiers);
+        }
         case 'RegExpLiteral':
         case 'StringLiteral':
         case 'NumericLiteral':
