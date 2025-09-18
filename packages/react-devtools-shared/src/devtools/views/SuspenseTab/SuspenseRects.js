@@ -261,7 +261,7 @@ function SuspenseRectsContainer(): React$Node {
           className={styles.SuspenseRectsViewBox}
           style={{aspectRatio, width}}>
           {roots.map(rootID => {
-            return <SuspenseRectsShell key={rootID} suspenseID={rootID} />;
+            return <SuspenseRectsShell key={rootID} rootID={rootID} />;
           })}
         </div>
       </ViewBox.Provider>
