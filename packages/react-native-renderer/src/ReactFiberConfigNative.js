@@ -673,6 +673,7 @@ export function startViewTransition(
   spawnedWorkCallback: () => void,
   passiveCallback: () => mixed,
   errorCallback: mixed => void,
+  blockedCallback: string => void, // Profiling-only
 ): null | RunningViewTransition {
   mutationCallback();
   layoutCallback();

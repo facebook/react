@@ -125,6 +125,7 @@ import {
   enableViewTransition,
   enableHydrationChangeEvent,
   enableFragmentRefsScrollIntoView,
+  enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -2098,6 +2099,7 @@ export function startViewTransition(
   spawnedWorkCallback: () => void,
   passiveCallback: () => mixed,
   errorCallback: mixed => void,
+  blockedCallback: string => void, // Profiling-only
 ): null | RunningViewTransition {
   const ownerDocument: Document =
     rootContainer.nodeType === DOCUMENT_NODE
@@ -2131,10 +2133,10 @@ export function startViewTransition(
             blockingPromises.push(ownerDocument.fonts.ready);
           }
         }
+        const blockingIndexSnapshot = blockingPromises.length;
         if (suspendedState !== null) {
           // Suspend on any images that still haven't loaded and are in the viewport.
           const suspenseyImages = suspendedState.suspenseyImages;
-          const blockingIndexSnapshot = blockingPromises.length;
           let imgBytes = 0;
           for (let i = 0; i < suspenseyImages.length; i++) {
             const suspenseyImage = suspenseyImages[i];
@@ -2162,6 +2164,15 @@ export function startViewTransition(
           }
         }
         if (blockingPromises.length > 0) {
+          if (enableProfilerTimer) {
+            const blockedReason =
+              blockingIndexSnapshot > 0
+                ? blockingPromises.length > blockingIndexSnapshot
+                  ? 'Waiting on Fonts and Images'
+                  : 'Waiting on Fonts'
+                : 'Waiting on Images';
+            blockedCallback(blockedReason);
+          }
           const blockingReady = Promise.race([
             Promise.all(blockingPromises),
             new Promise(resolve =>

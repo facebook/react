@@ -81,6 +81,7 @@ import {
   logSuspendedWithDelayPhase,
   logSuspenseThrottlePhase,
   logSuspendedCommitPhase,
+  logSuspendedViewTransitionPhase,
   logCommitPhase,
   logPaintYieldPhase,
   logStartViewTransitionYieldPhase,
@@ -704,6 +705,7 @@ let pendingTransitionTypes: null | TransitionTypes = null;
 let pendingDidIncludeRenderPhaseUpdate: boolean = false;
 let pendingSuspendedCommitReason: SuspendedCommitReason = IMMEDIATE_COMMIT; // Profiling-only
 let pendingDelayedCommitReason: DelayedCommitReason = IMMEDIATE_COMMIT; // Profiling-only
+let pendingSuspendedViewTransitionReason: null | string = null; // Profiling-only
 
 // Use these to prevent an infinite loop of nested updates
 const NESTED_UPDATE_LIMIT = 50;
@@ -3445,6 +3447,7 @@ function commitRoot(
     pendingEffectsRenderEndTime = completedRenderEndTime;
     pendingSuspendedCommitReason = suspendedCommitReason;
     pendingDelayedCommitReason = IMMEDIATE_COMMIT;
+    pendingSuspendedViewTransitionReason = null;
   }
 
   if (enableGestureTransition && isGestureRender(lanes)) {
@@ -3604,6 +3607,7 @@ function commitRoot(
       flushSpawnedWork,
       flushPassiveEffects,
       reportViewTransitionError,
+      enableProfilerTimer ? suspendedViewTransition : (null: any),
     );
   } else {
     // Flush synchronously.
@@ -3622,6 +3626,24 @@ function reportViewTransitionError(error: mixed) {
   const root = pendingEffectsRoot;
   const onRecoverableError = root.onRecoverableError;
   onRecoverableError(error, makeErrorInfo(null));
+}
+
+function suspendedViewTransition(reason: string): void {
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // We'll split the commit into two phases, because we're suspended in the middle.
+    recordCommitEndTime();
+    logCommitPhase(
+      pendingSuspendedCommitReason === IMMEDIATE_COMMIT
+        ? pendingEffectsRenderEndTime
+        : commitStartTime,
+      commitEndTime,
+      commitErrors,
+      pendingDelayedCommitReason === ABORTED_VIEW_TRANSITION_COMMIT,
+      workInProgressUpdateTask,
+    );
+    pendingSuspendedViewTransitionReason = reason;
+    pendingSuspendedCommitReason = SUSPENDED_COMMIT;
+  }
 }
 
 function flushAfterMutationEffects(): void {
@@ -3687,6 +3709,21 @@ function flushLayoutEffects(): void {
     return;
   }
   pendingEffectsStatus = NO_PENDING_EFFECTS;
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    const suspendedViewTransitionReason = pendingSuspendedViewTransitionReason;
+    if (suspendedViewTransitionReason !== null) {
+      // We suspended in the middle of the commit for the view transition.
+      // We'll start a new commit track now.
+      recordCommitTime();
+      logSuspendedViewTransitionPhase(
+        commitEndTime, // The start is the end of the first commit part.
+        commitStartTime, // The end is the start of the second commit part.
+        suspendedViewTransitionReason,
+        workInProgressUpdateTask,
+      );
+    }
+  }
 
   const root = pendingEffectsRoot;
   const finishedWork = pendingFinishedWork;

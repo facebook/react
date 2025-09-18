@@ -1254,6 +1254,45 @@ export function logSuspendedCommitPhase(
   }
 }
 
+export function logSuspendedViewTransitionPhase(
+  startTime: number,
+  endTime: number,
+  reason: string,
+  debugTask: null | ConsoleTask,
+): void {
+  // This means the commit was suspended on CSS or images.
+  if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
+    // TODO: Include the exact reason and URLs of what resources suspended.
+    // TODO: This might also be Suspended while waiting on a View Transition.
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          reason,
+          startTime,
+          endTime,
+          currentTrack,
+          LANES_TRACK_GROUP,
+          'secondary-light',
+        ),
+      );
+    } else {
+      console.timeStamp(
+        reason,
+        startTime,
+        endTime,
+        currentTrack,
+        LANES_TRACK_GROUP,
+        'secondary-light',
+      );
+    }
+  }
+}
+
 export function logCommitErrored(
   startTime: number,
   endTime: number,
