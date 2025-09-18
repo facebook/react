@@ -102,6 +102,7 @@ import {
   startSuspendingCommit,
   suspendOnActiveViewTransition,
   waitForCommitToBeReady,
+  getSuspendedCommitReason,
   preloadInstance,
   preloadResource,
   supportsHydration,
@@ -1552,7 +1553,9 @@ function commitRootWhenReady(
           suspendedRetryLanes,
           exitStatus,
           suspendedState,
-          'Suspended on CSS or Images',
+          enableProfilerTimer
+            ? getSuspendedCommitReason(suspendedState, root.containerInfo)
+            : null,
           completedRenderStartTime,
           completedRenderEndTime,
         ),

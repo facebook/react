@@ -6206,6 +6206,13 @@ export function waitForCommitToBeReady(
   return null;
 }
 
+export function getSuspendedCommitReason(
+  state: SuspendedState,
+  rootContainer: Container,
+): null | string {
+  return 'Suspended on CSS or Images';
+}
+
 function checkIfFullyUnsuspended(state: SuspendedState) {
   if (state.count === 0 && (state.imgCount === 0 || !state.waitingForImages)) {
     if (state.stylesheets) {

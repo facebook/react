@@ -621,6 +621,10 @@ export function waitForCommitToBeReady(timeoutOffset) {
   return null;
 }
 
+export function getSuspendedCommitReason(state, rootContainer) {
+  return '';
+}
+
 export const NotPendingTransition = null;
 export const HostTransitionContext: ReactContext<TransitionStatus> = {
   $$typeof: REACT_CONTEXT_TYPE,

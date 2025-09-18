@@ -702,6 +702,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     waitForCommitToBeReady,
 
+    getSuspendedCommitReason(
+      state: SuspendedState,
+      rootContainer: Container,
+    ): null | string {
+      return null;
+    },
+
     NotPendingTransition: (null: TransitionStatus),
 
     resetFormInstance(form: Instance) {},

@@ -114,6 +114,9 @@ describe('ReactFiberHostContext', () => {
       waitForCommitToBeReady(state, timeoutOffset) {
         return null;
       },
+      getSuspendedCommitReason(state, rootContainer) {
+        return null;
+      },
       supportsMutation: true,
     });
 
