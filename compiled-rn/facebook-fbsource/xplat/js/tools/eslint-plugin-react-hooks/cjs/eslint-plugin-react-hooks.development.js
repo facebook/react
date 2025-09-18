@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<1c24fa08b2dab423d92d058c24b11494>>
+ * @generated SignedSource<<74966bae93f7a47b1d09a33c5c9a0c3c>>
  */
 
 'use strict';
@@ -41667,7 +41667,9 @@ function computeSignatureForInstruction(context, env, instr) {
         }
         case 'PropertyStore':
         case 'ComputedStore': {
-            const mutationReason = value.kind === 'PropertyStore' && value.property === 'current'
+            const mutationReason = value.kind === 'PropertyStore' &&
+                value.property === 'current' &&
+                value.object.identifier.type.kind === 'Type'
                 ? { kind: 'AssignCurrentProperty' }
                 : null;
             effects.push({

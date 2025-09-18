@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<4e94780a3025f6e3cfddffbf0c6d761e>>
+ * @generated SignedSource<<81d60690a5772c1e1ff53f3339f44aeb>>
  */
 
 'use strict';
@@ -41446,7 +41446,9 @@ function computeSignatureForInstruction(context, env, instr) {
         }
         case 'PropertyStore':
         case 'ComputedStore': {
-            const mutationReason = value.kind === 'PropertyStore' && value.property === 'current'
+            const mutationReason = value.kind === 'PropertyStore' &&
+                value.property === 'current' &&
+                value.object.identifier.type.kind === 'Type'
                 ? { kind: 'AssignCurrentProperty' }
                 : null;
             effects.push({
