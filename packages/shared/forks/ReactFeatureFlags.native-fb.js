@@ -22,7 +22,6 @@ export const {
   alwaysThrottleRetries,
   enableHiddenSubtreeInsertionEffectCleanup,
   enableObjectFiber,
-  enablePersistedModeClonedFlag,
   enableEagerAlternateStateNodeCleanup,
   passChildrenWhenCloningPersistedNodes,
   renameElementSymbol,
